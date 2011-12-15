@@ -2095,8 +2095,7 @@ class simutil:
                         inb=qinb['value']
                         self.msg("assuming inbright="+str(inbright)+" means "+str(inb)+" Jy/pixel",priority="warn")
                     inbright=inb
-            scalefactor=float(inbright)/arr.max()
-
+            scalefactor=float(inbright)/pl.nanmax(arr)
 
         # check shape characteristics of the input;
         # add degenerate axes as neeed:
@@ -2451,7 +2450,7 @@ class simutil:
                 axmap[ax]=ax
                 axmap[tmp]=tmp                
 
-
+        
         # there's got to be a better way to remove NaNs:
         if outimage!=inimage:
             for i0 in range(arr.shape[0]):

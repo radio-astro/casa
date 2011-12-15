@@ -30,9 +30,10 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 	#Vers8.2 (3.2.0) MKH 2010-12-06 added scan selection
 	#Vers8.3 (3.2.0) GAM 2011-01-18 added switchedpower option (sw power gain/tsys)
 	#Vers8.4 (3.2.0) STM 2011-03-24 fix casalog.post line-length bug
+	#Vers8.5 (3.4.0) STM 2011-12-08 new readflagxml for new Flag.xml format
 	try:
                 casalog.origin('importevla')
-		casalog.post('You are using importevla v8.4 STM Updated 2011-03-24')
+		casalog.post('You are using importevla v8.5 STM Updated 2011-12-08')
 		viso = ''
                 casalog.post('corr_mode is forcibly set to all.')
 		if(len(vis) > 0) :
@@ -91,7 +92,7 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 		# Begin EVLA specific code here
 		# =============================
 		nflags = 0
-		myflagd = {}		
+		myflagd = {}
 		if os.access(asdm+'/Flag.xml',os.F_OK):
 		    # Find (and copy) Antenna.xml and Flag.xml
 		    if os.access(asdm+'/Antenna.xml',os.F_OK):
@@ -107,14 +108,19 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 		    #
 		    # Parse Flag.xml into flag dictionary
 		    #
-		    myflagd = readflagxml(asdm,tbuff)
-		    #
-		    keylist = myflagd.keys()
-		    nkeys = keylist.__len__()
-		    nflags += nkeys
+                    if online:
+                        myflagd = readflagxml(asdm,tbuff)
+                        #
+                        keylist = myflagd.keys()
+                        nkeys = keylist.__len__()
+                        nflags += nkeys
 		else:
-		    #print 'WARNING: No Flag.xml in SDM'
-		    casalog.post('WARNING: No Flag.xml in SDM','WARN')
+                    if online:
+                        #print 'ERROR: No Flag.xml in SDM'
+                        casalog.post('ERROR: No Flag.xml in SDM','SEVERE')
+                    else:
+                        #print 'WARNING: No Flag.xml in SDM'
+                        casalog.post('WARNING: No Flag.xml in SDM','WARN')
 
 		if flagzero or shadow:
 		    # Get overall MS time range for later use (if needed)
@@ -267,9 +273,10 @@ def readflagxml(sdmfile, mytbuff):
 #
 #   Dictionary structure:
 #   fid : 'id' (string)
-#         'mode' (string)         flag mode '','clip','shadow','quack'
+#         'mode' (string)         flag mode ('online')
 #         'antenna' (string)
 #         'timerange' (string)
+#         'reason' (string)
 #         'time' (float)          in mjd seconds
 #         'interval' (float)      in mjd seconds
 #         'cmd' (string)          string (for COMMAND col in FLAG_CMD)
@@ -277,6 +284,8 @@ def readflagxml(sdmfile, mytbuff):
 #         'applied' (bool)        set to True here on read-in
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
+#
+#   Updated STM v8.4 2011-12-08 handle new SDM Flag.xml format from EVLA
 #
     try:
         from xml.dom import minidom
@@ -287,8 +296,6 @@ def readflagxml(sdmfile, mytbuff):
     if type(mytbuff)!=float:
         casalog.post('Warning: incorrect type for tbuff, found "'+str(mytbuff)+'", setting to 1.0')
         mytbuff=1.0
-    else:
-        casalog.post('Padding times with tbuff = '+str(mytbuff))
     
     # construct look-up dictionary of name vs. id from Antenna.xml
     xmlants = minidom.parse(sdmfile+'/Antenna.xml')
@@ -308,15 +315,45 @@ def readflagxml(sdmfile, mytbuff):
     flagdict = {}
     rowlist = xmlflags.getElementsByTagName("row")
     nrows = rowlist.length
+    newsdm = -1
     for fid in range(nrows):
         rownode = rowlist[fid]
         rowfid = rownode.getElementsByTagName("flagId")
         fidstr = str(rowfid[0].childNodes[0].nodeValue)
         flagdict[fid] = {}
         flagdict[fid]['id'] = fidstr
-        rowid = rownode.getElementsByTagName("antennaId")
-        antid = str(rowid[0].childNodes[0].nodeValue)
-        antname = antdict[antid]
+	rowid = rownode.getElementsByTagName("antennaId")
+	antid = rowid[0].childNodes[0].nodeValue
+	# check if there is a numAntenna specified (new format)
+	rownant = rownode.getElementsByTagName("numAntenna")
+	antname = ''
+	if rownant.__len__()>0:
+		xid = antid.split()
+		nant = int(rownant[0].childNodes[0].nodeValue)
+		if newsdm<0:
+			print '  Found numAntenna must be a new style SDM'
+			casalog.post('Found numAntenna='+str(nant)+' must be a new style SDM')
+		newsdm=1
+		if nant>0:
+			for ia in range(nant):
+				aid = xid[2+ia]
+				ana = antdict[aid]
+				if antname=='':
+					antname=ana
+				else:
+					antname+=','+ana
+		else:
+			# numAntenna = 0 means flag all antennas
+			antname = ''
+	else:
+		if newsdm<0:
+			print '  No numAntenna entry found, must be a old style SDM'
+			casalog.post('No numAntenna entry found, must be a old style SDM')
+		newsdm=0
+		nant = 1
+		aid = antid
+		ana = antdict[aid]
+		antname = ana
         # start and end times in mjd ns
         rowstart = rownode.getElementsByTagName("startTime")
         start = int(rowstart[0].childNodes[0].nodeValue)
@@ -336,6 +373,38 @@ def readflagxml(sdmfile, mytbuff):
         # reasons
         rowreason = rownode.getElementsByTagName("reason")
         reas = str(rowreason[0].childNodes[0].nodeValue)
+	# NEW SDM ADDITIONS 2011-11-01
+	rownspw = rownode.getElementsByTagName("numSpectralWindow")
+	spwstring = ''
+	if rownspw.__len__()>0:
+		nspw = int(rownspw[0].childNodes[0].nodeValue)
+		# has a new-style spw specification
+		if nspw>0:
+			rowspwid = rownode.getElementsByTagName("spectralWindowId")
+			spwids = rowspwid[0].childNodes[0].nodeValue
+			xspw = spwids.split()
+			for isp in range(nspw):
+				spid = xspw[2+isp]
+				if spwstring=='':
+					spwstring=spid
+				else:
+					spwstring+=','+spid
+	# polstring = ''
+	# rownpol = rownode.getElementsByTagName("numPolarizationType")
+	# if rownpol.__len__()>0:
+	# 	npol = int(rownpol[0].childNodes[0].nodeValue)
+	# 	# has a new-style pol specification
+	# 	if npol>0:
+	# 		rowpolid = rownode.getElementsByTagName("PolarizationType")
+	# 		polids = rowpolid[0].childNodes[0].nodeValue
+	# 		xpol = polids.split()
+	# 		for ipol in range(npol):
+	# 			polid = xpol[2+ipol]
+	# 			if polstring=='':
+	# 				polstring=polid
+	# 			else:
+	# 				polstring+=','+polid
+	#
         # Construct antenna name and timerange and reason strings
         flagdict[fid]['antenna'] = antname
         timestr = starttime+'~'+endtime
@@ -343,14 +412,18 @@ def readflagxml(sdmfile, mytbuff):
         flagdict[fid]['reason'] = reas
         # Construct command strings (per input flag)
         cmd = "antenna='"+antname+"' timerange='"+timestr+"'"
+	if spwstring!='':
+		cmd += " spw='"+spwstring+"'"
+	# if polstring!='':
+	# 	cmd += " pol='"+polstring+"'"
         flagdict[fid]['cmd'] = cmd
 	#
 	flagdict[fid]['type'] = 'FLAG'
 	flagdict[fid]['applied'] = False
 	flagdict[fid]['level'] = 0
 	flagdict[fid]['severity'] = 0
-	flagdict[fid]['mode'] = ''
-
+	flagdict[fid]['mode'] = 'online'
+	
     flags = {}
     if rowlist.length > 0:
         flags = flagdict
@@ -363,6 +436,7 @@ def readflagxml(sdmfile, mytbuff):
     # return the dictionary for later use
     return flags
 # Done
+
 
 def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
     #

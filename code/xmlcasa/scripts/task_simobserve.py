@@ -128,7 +128,6 @@ def simobserve(
         ##################################################################
         # set up skymodel image
 
-
         if os.path.exists(skymodel):
             components_only = False
             # create a new skymodel called skymodel, or if its already there, called newmodel
@@ -346,10 +345,6 @@ def simobserve(
                 maxbase = 0.
             
 
-
-
-
-
         # now we have an estimate of the psf from the antenna configuration, 
         # so we can guess a model_cell for the case of component-only 
         # simulation, 
@@ -368,6 +363,7 @@ def simobserve(
             needmodel=True
 
             modimsize=int((qa.convert(model_size[0],"arcsec")['value'])/(qa.convert(model_cell[0],"arcsec")['value']))
+            modimsize=max([modimsize,32])
             newepoch,newlat,newlon = util.direction_splitter(model_refdir)
             
             if os.path.exists(newmodel):
@@ -675,7 +671,7 @@ def simobserve(
                 msg("preparing empty measurement set",origin="simobserve")
 
             nbands = 1;    
-            fband  = 'band' + qa.tos(model_center,prec=1)
+            fband  = util.bandname(qa.convert(model_center, 'GHz')['value'])
 
             ############################################
             # predict interferometry observation
@@ -717,6 +713,7 @@ def simobserve(
                         util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
                         return False                
                 sm.open(msfile)
+                sm.setlimits(shadowlimit=0.99) # all of dish area
                 posobs = me.observatory(telescopename)
                 diam = stnd;
                 # WARNING: sm.setspwindow is not consistent with clean::center
@@ -724,9 +721,14 @@ def simobserve(
                 # but the "start" is the center of the first channel:
                 model_start = qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
+                mounttype = 'alt-az'
+                if telescopename in ['DRAO', 'WSRT']:
+                    mounttype = 'EQUATORIAL'
+                # Should ASKAP be BIZARRE or something else?  It may be effectively equatorial.
+
                 sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                              dishdiameter=diam.tolist(), 
-                             mount=['alt-az'], antname=antnames, padname=padnames, 
+                             mount=[mounttype], antname=antnames, padname=padnames, 
                              coordsystem='global', referencelocation=posobs)
                 if str.upper(telescopename).find('VLA') > 0:
                     sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
@@ -1065,7 +1067,7 @@ def simobserve(
                     # show dirty beam from observed uv coverage
                     util.nextfig()
                     im.open(msfile)  
-                    # TODO spectral parms                    
+                    # TODO spectral parms
                     msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([minimsize,128])))
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):

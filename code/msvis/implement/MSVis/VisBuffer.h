@@ -267,6 +267,8 @@ public:
     virtual void dirtyComponentsSet (const VbDirtyComponents & dirtyComponents);
     virtual void dirtyComponentsSet (VisBufferComponents::EnumType component);
 
+    virtual Bool fetch(const asyncio::PrefetchColumns *pfc);
+
     // feed1_pa() and feed2_pa() return an array of parallactic angles
     // (each corresponds to the first receptor of the feed) one for each
     // row in the current buffer. In contrast, feed_pa() calculates
@@ -329,8 +331,16 @@ public:
     // Hour angle for specified time
     virtual Double hourang(Double time) const;
 
+    virtual Int& fieldId() {
+        return fieldIdOK_p ? fieldId_p : This->fillFieldId();
+    }
+
     virtual Int fieldId() const {
         return fieldIdOK_p ? fieldId_p : This->fillFieldId();
+    }
+
+    virtual Int& arrayId() {
+        return arrayIdOK_p ? arrayId_p : This->fillArrayId();
     }
 
     virtual Int arrayId() const {
@@ -467,8 +477,11 @@ public:
     virtual Int polarizationId() const {
       return visIter_p->polarizationId();
     } 
+    virtual Int& dataDescriptionId() {
+      return ddidOK_p ? ddid_p : This->fillDDID();
+    }
     virtual Int dataDescriptionId() const {
-        return visIter_p->dataDescriptionId();
+      return ddidOK_p ? ddid_p : This->fillDDID();
     }
     virtual Vector<Double>& time() {
         return timeOK_p ? time_p : fillTime();
@@ -716,6 +729,7 @@ public:
     // antenna from pointing table is avoided
     //Add more as needed.
     virtual void updateCoordInfo(const VisBuffer * vb = NULL, const Bool dirDependent=True);
+    void copyCoordInfo(const VisBuffer& other, Bool force=False);
 
     // Set the visibility to a constant, note that this only changes the buffer,
     // no values are written back to tables from here.
@@ -926,6 +940,7 @@ private:
     virtual Vector<Int>& fillChannel();
     virtual Vector<SquareMatrix<Complex, 2> >& fillCjones();
     virtual Vector<Int>& fillCorrType();
+    virtual Int & fillDDID();
     virtual Vector<MDirection>& fillDirection1();
     virtual Vector<MDirection>& fillDirection2();
     virtual Vector<Double>& fillExposure();
@@ -995,6 +1010,7 @@ Bool item ## OK_p;
     CacheStatus (correctedVisCube);
     CacheStatus (correctedVisibility);
     CacheStatus (corrType);
+    CacheStatus (ddid);
     CacheStatus (direction1);
     CacheStatus (direction2);
     CacheStatus (exposure);
@@ -1048,6 +1064,7 @@ Bool item ## OK_p;
     Cube<Complex> correctedVisCube_p;
     Matrix<CStokesVector> correctedVisibility_p;
     Vector<Int> corrType_p;
+    Int ddid_p;
     Vector<MDirection> direction1_p; //where the first antenna/feed is pointed to
     Vector<MDirection> direction2_p; //where the second antenna/feed is pointed to
     Vector<Double> exposure_p;

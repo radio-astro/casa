@@ -309,8 +309,9 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_testconcat.py
   scripts/task_tflagcmd.py
   scripts/task_tflagger.py
-  scripts/task_uvcontsub2.py
   scripts/task_uvcontsub.py
+  scripts/task_uvcontsub2.py
+  scripts/task_uvcontsub3.py
   scripts/task_uvmodelfit.py
   scripts/task_uvsub.py
   scripts/task_viewer.py
@@ -434,8 +435,9 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/testconcat.xml
   tasks/tflagcmd.xml
   tasks/tflagger.xml
-  tasks/uvcontsub2.xml
   tasks/uvcontsub.xml
+  tasks/uvcontsub2.xml
+  tasks/uvcontsub3.xml
   tasks/uvmodelfit.xml
   tasks/uvsub.xml
   tasks/viewer.xml

@@ -110,8 +110,8 @@ public:
             const Double lof, const Double hif);
 
   // Set the low and high frequencies, and #s of correlations, antennas, and
-  // channels from vbga.
-  void initFromVBGA(VisBuffGroupAcc& vbga);
+  // channels from vbga.  Returns False if vbga is empty.
+  Bool initFromVBGA(VisBuffGroupAcc& vbga);
 
   // Makes the continuum estimate by fitting a frequency polynomial of order
   // fitorder to the data in vbga.  It sets the low and high frequencies used
@@ -240,6 +240,8 @@ private:
   uInt      nHashes_p;        // Calculated and cached from maxAnt_p.
   uInt      ncorr_p;
   uInt      totnumchan_p;
+
+  PtrBlock<Vector<Bool> * > chanmask_p;
 };
 
 } //# NAMESPACE CASA - END

@@ -170,8 +170,14 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
                     fitaxis = 1
                 else:
                     raise Exception, "Sorry, the task don't support inclined scan with respect to horizontal or vertical axis, right now."
-                polyimage = convimage.fitpolynomial( fitfile=tmppolyname, axis=fitaxis, order=numpoly, overwrite=True )
-		polyimage.done()
+                # Replace duplicated method ia.fitpolynomial with
+                # ia.fitprofile 
+                #polyimage = convimage.fitpolynomial( fitfile=tmppolyname, axis=fitaxis, order=numpoly, overwrite=True )
+                #polyimage.done()
+                if os.path.exists( tmppolyname ):
+                    cu.removetable([tmppolyname])
+                convimage.setbrightnessunit('K')
+                resultdic = convimage.fitprofile( model=tmppolyname, axis=fitaxis, poly=numpoly, ngauss=0, multifit=True )
                 polyimage = ia.newimage( tmppolyname )
 
                 # subtract fitted image from original map
@@ -198,8 +204,8 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
 
                 polyimage.done()
                 convimage.done( remove=True )
-                image.done( remove=True )
-                imageorg.done( remove=True )
+                image.done()
+                imageorg.done()
             elif mode == 'basket':
                 ###
                 # Basket-Weaving (Emerson & Grave 1988)
@@ -274,7 +280,7 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
                         for i in range(len(infiles)):
                             realimage = ia.newimage( tmprealname[i] )
                             for ichan in range(nchan):
-                                pixmsk = image.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
+                                pixmsk = realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
                                 for ix in range(pixmsk.shape[0]):
                                     for iy in range(pixmsk.shape[1]):
                                         if thresh[0] == nolimit:
@@ -466,7 +472,7 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
         except Exception, instance:
             casalog.post( str(instance), priority = 'ERROR' )
             if image is not None:
-                if image.isopen(): image.done( remove=True )
+                if image.isopen(): image.done()
             if convimage is not None:
                 if convimage.isopen(): convimage.done( remove=True )
             if imageorg is not None:

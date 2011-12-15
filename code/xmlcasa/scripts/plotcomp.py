@@ -5,7 +5,8 @@ import os
 import shutil
 import tempfile
 
-def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
+def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
+             include0amp=False, include0bl=False):
     """
     Given a dict including
     
@@ -31,6 +32,9 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
     If wantdict is True, it returns a dictionary with the amplitudes and
     baselines on success.  Otherwise, it returns True or False as its estimated
     success value.
+
+    include0amp: Force the lower limit of the amplitude axis to 0.
+    include0bl: Force the lower limit of the baseline length axis to 0.
     """
     def failval():
         """
@@ -186,6 +190,10 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
             pl.plot(baselines, data[freqnum], symb, label="%.3g GHz" % freq)
         pl.xlabel("Baseline length (" + blunit + ")")
         pl.ylabel("Visibility amplitude (Jy)")
+        if include0amp:
+            pl.ylim(ymin=0.0)
+        if include0bl:
+            pl.xlim(xmin=0.0)
         pl.suptitle(objname + " (predicted)", fontsize=14)
 
         # Unlike compdict['antennalist'], antennalist might have had repodir

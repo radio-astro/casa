@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-debug = True
+debug = False
 
 
 def tflagger(vis,
@@ -55,6 +55,8 @@ def tflagger(vis,
              flagnearfreq,
              datadisplay,
              writeflags,
+             savepars,    # save the current parameters to FLAG_CMD 
+             outfile,   # output file to save flag commands
              flagbackup):
     
 
@@ -68,16 +70,13 @@ def tflagger(vis,
     # Configure the TestFlagger tool -> ::open()
     # Parse the union to the data selection -> ::selectdata()
     # Read the mode and specific parameters.
-    # Parse the agent's parameters -> setupAgent() -> ::parseAgentParameters()
+    # Parse the agent's parameters -> ::parseAgentParameters()
     # Initialize the FlagDataHandler and the agents -> ::init()
     # Run the tool
     # Delete the tool
                         
     # TODO:
-    # * what to do about flagbackup
-    # * Check extendpols, because it is always FALSE
-    # * move correlation to agent's parameters
-    # * implement saving parameters in FLAG_CMD
+    # Implement the new summary schema
     
     
     #
@@ -106,24 +105,54 @@ def tflagger(vis,
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
-        
+
         # Select the data 
+        if (debug):
+#            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
+#                        type(feed),type(scan),type(antenna),type(uvrange),
+#                        type(timerange),type(correlation),type(intent),type(observation))
+
+            print 'selection is: field=%s spw=%s array=%s feed=%s scan=%s antenna=%s uvrange=%s' \
+                        'timerange=%s correlation=%s intent=%s observation=%s'%(field,spw,array,
+                        feed,scan,antenna,uvrange,
+                        timerange,correlation,intent,observation)
+
+        # Correlation should not go in here            
         tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
                            baseline=antenna, uvrange=uvrange, time=timerange, \
-                           correlation=correlation, intent=intent, observation=str(observation))   
+                           intent=intent, observation=str(observation))   
 
-        
-        # Setup global parameters
-        agent_pars = {}
+        # Set constraints to some parameters
         if mode == '':
             mode = 'manualflag'
-            
+
+        if (extend == True and (mode == 'unflag' or mode == 'summary' or mode == 'extendflags')):
+            # It was probably a mistake of the user, reset extend
+            casalog.post('Parameter extend will be reset to False to run together with mode=%s'%mode, 'WARN')
+            extend = False
+
+        if (writeflags == True and mode == 'summary'):
+            # It was probably a mistake of the user, reset writeflags
+            casalog.post('Parameter writeflags will be reset to False to run together with mode=%s'%mode, 'WARN')
+            writeflags = False
+                        
+        # Create a list of the selection parameters to save later
+        sel_pars = ''
+        sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
+                    ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
+                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
+                    ' extend='+str(extend)
+
+        # Setup global parameters
+        agent_pars = {}
+
+        # Add the global parameters to the dictionary of agent's parameters            
         agent_pars['mode'] = mode
         agent_pars['extend'] = extend
         agent_pars['datadisplay'] = datadisplay
         agent_pars['writeflags'] = writeflags
 
-        # Get extend sub parameters
+        # Get extend sub-parameters
         if (extend == True and mode != 'unflag' and mode != 'summary' and mode != 'extendflags'):
             
             agent_pars['extendpols'] = extendpols
@@ -132,45 +161,87 @@ def tflagger(vis,
             agent_pars['growaround'] = growaround
             agent_pars['flagneartime'] = flagneartime
             agent_pars['flagnearfreq'] = flagnearfreq
+            
+            sel_pars = sel_pars+' extendpols='+str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
+                       str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
+                       ' flagnearfreq='+str(flagnearfreq)
         
+        # Set the type of operation to use in FLAG_CMD Type column
+        flag = True
         
-        # Set agent's parameters
+        # Set up agent's parameters based on mode
         if mode == 'manualflag':
             casalog.post('Manualflag mode is active')
             
         elif mode == 'clip':
             agent_pars['expression'] = expression
             agent_pars['datacolumn'] = datacolumn
-            agent_pars['clipminmax'] = clipminmax
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
+            
+            # If clipminmax = [], do not write it in the dictionary.
+            # It will be handled by the framework
+            if clipminmax != []:      
+                # Cast to float to avoid the missing decimal point                 
+                clipmin = float(clipminmax[0])
+                clipmax = float(clipminmax[1])
+                clipminmax = []
+                clipminmax.append(clipmin)
+                clipminmax.append(clipmax)     
+                agent_pars['clipminmax'] = clipminmax
+                
             casalog.post('Clip mode is active')
+            
+            # Replace the white spaces
+            expr = delspace(expression, '_')            
+            cliprange = delspace(str(clipminmax), '')
+            
+            sel_pars = sel_pars+' expression='+str(expr)+' datacolumn='+datacolumn+\
+                       ' clipminmax='+str(cliprange)+' clipoutside='+str(clipoutside)+\
+                       ' channelavg='+str(channelavg)
             
         elif mode == 'shadow':
             agent_pars['diameter'] = diameter
             casalog.post('Shadow mode is active')
+            
+            sel_pars = sel_pars+' diameter='+str(diameter)
 
         elif mode == 'quack':
             agent_pars['quackmode'] = quackmode
             agent_pars['quackinterval'] = quackinterval
             agent_pars['quackincrement'] = quackincrement
             casalog.post('Quack mode is active')
+            
+            sel_pars = sel_pars+' quackmode='+str(quackmode)+' quackinterval='+str(quackinterval)+\
+                       ' quackincrement='+str(quackincrement)
 
         elif mode == 'elevation':
             agent_pars['lowerlimit'] = lowerlimit
             agent_pars['upperlimit'] = upperlimit
             casalog.post('Elevation mode is active')
+            
+            sel_pars = sel_pars+' lowerlimit='+str(lowerlimit)+' upperlimit='+str(upperlimit)
 
         elif mode == 'tfcrop':
+            agent_pars['expression'] = expression
+            agent_pars['datacolumn'] = datacolumn
             agent_pars['timecutoff'] = timecutoff
             agent_pars['freqcutoff'] = freqcutoff
             agent_pars['timefit'] = timefit
             agent_pars['freqfit'] = freqfit
-            agent_pars['maxnpieces'] = maxnpieces
+            agent_pars['maxnpieces'] = str(maxnpieces)
             agent_pars['flagdimension'] = flagdimension
-            agent_pars['usewindowstats'] = usewindowstas
-            agent_pars['halfwin'] = halfwin
+            agent_pars['usewindowstats'] = usewindowstats
+            agent_pars['halfwin'] = str(halfwin)
             casalog.post('Time and Frequency (tfcrop) mode is active')
+
+            expr = delspace(expression, '_')
+            
+            sel_pars = sel_pars+' expression=\"'+str(expr)+'\" datacolumn='+datacolumn+\
+                      ' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
+                      ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
+                      ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
+                      ' halfwin='+str(halfwin)
 
         elif mode == 'extendflags':
             agent_pars['extendpols'] = extendpols
@@ -181,22 +252,15 @@ def tflagger(vis,
             agent_pars['flagnearfreq'] = flagnearfreq
             casalog.post('Extendflags mode is active')
             
-        elif mode == 'unflag':
-            # Remove extend if set
-            if extend:
-                agent_pars['extend'] = False
-
-            casalog.post('Unflag mode is active')
-                
+            sel_pars = sel_pars+' extendpols='+str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
+                       str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
+                       ' flagnearfreq='+str(flagnearfreq)
+            
+        elif mode == 'unflag':                      
+            flag = False  
+            casalog.post('Unflag mode is active')                
             
         elif mode == 'summary':
-            # Remove extend if set
-            if extend:
-                agent_pars['extend'] = False
-            if writeflags:
-                writeflags = False
-                agent_pars['writeflags'] = writeflags
-
             agent_pars['minrel'] = minrel
             agent_pars['maxrel'] = maxrel
             agent_pars['minabs'] = minabs
@@ -204,9 +268,16 @@ def tflagger(vis,
             agent_pars['spwchan'] = spwchan
             agent_pars['spwcorr'] = spwcorr
             casalog.post('Summary mode is active')
-        
+            
+            # Do not save flag command for this mode
+            savepars = False
+
         # Now Parse the agent's parameters
         casalog.post('Parsing the agent\'s parameters')
+        # Due to the way the MS Selection works, the correlation
+        # selection needs to be done in here instead of in the
+        # selectdata()
+        agent_pars['correlation'] = correlation
         if debug:
             print agent_pars
             
@@ -217,10 +288,28 @@ def tflagger(vis,
         # Initialize the agent
         casalog.post('Initializing the agent')
         tflocal.init()
+
+        # Purge the empty parameters from the selection string
+        flagcmd = getLinePars(sel_pars) 
+
+        # Backup the existing flags before applying new ones
+        if flagbackup and writeflags:
+            casalog.post('Backup original flags before applying new flags')
+            backupFlags(tflocal, mode, flagcmd)
+
         
         # Run the tool
         casalog.post('Running the tflagger tool')
         summary_stats = tflocal.run()
+
+
+        # Write the current parameters as flag commands to output
+        if savepars:         
+            ncmd = writeCMD(vis, flagcmd, flag, outfile)
+            
+            
+        # Destroy the tool
+        tflocal.done()
 
         if mode == 'summary':
             #filter out baselines/antennas/fields/spws/...
@@ -238,20 +327,12 @@ def tflagger(vis,
                                flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
                                flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
                                     del summary_stats[x][xx]
-
-
-        if flagbackup and writeflags:
-            print 'Backup the flags before applying new flags'
-            backup_flags(tflocal, mode)
-        
-        # Destroy the tool
-        tflocal.done()
         
         return summary_stats
     
     except Exception, instance:
-            print '*** Error ***', instance
-            raise
+        casalog.post('%s'%instance,'ERROR')
+        raise
         
         #write history
 #        try:
@@ -265,7 +346,136 @@ def tflagger(vis,
         
     return
 
-def backup_flags(tflocal, mode):
+
+#def writeCMD(vis, myflags, tag=''):
+def writeCMD(msfile, flagcmd, flag, outfile):
+    # Reads a list of parameters and save it on the FLAG_CMD table or on a text file    
+    # When saving in the FLAG_CMD table it will also update the APPLIED column to True
+    # Returns the number of flag commands written (it's always one!!!)
+    #
+    
+    
+    nadd = 0
+    try:
+        import pylab as pl
+    except ImportError, e:
+        print 'failed to load pylab:\n', e
+        exit(1)
+
+    # Create lists for each column in the FLAG_CMD table
+    # TODO: How about the TIME column? How to calculate it?
+    tim_list = [0]
+    intv_list = [0]
+    reas_list = ['']
+    if flag:
+        type = 'FLAG'
+    else:
+        type = 'UNFLAG'
+        
+    typ_list = [type]
+    sev_list = [0]
+    lev_list = [0]
+    app_list = [True]
+       
+    
+    if debug:
+        casalog.post("Flag command to save is %s"%flagcmd)
+
+
+    # Save to a text file
+    if outfile != '':
+        try:
+            ffout = open(outfile, 'w')
+        except:
+            raise Exception, 'Error opening output file ' \
+                + outfile
+        try:
+            casalog.post('Will save the current parameters to '+outfile)
+            print >> ffout, '%s' % flagcmd
+        except:
+            raise Exception, 'Error writing parameters to file ' \
+                + outfile
+        ffout.close()
+        return
+    
+    # Save to the FLAG_CMD table    
+    cmdline = []
+    cmdline.append(flagcmd)
+    nadd = cmdline.__len__()
+    mstable = msfile + '/FLAG_CMD'
+    try:
+        tb.open(mstable, nomodify=False)
+    except:
+        raise Exception, 'Error opening FLAG_CMD table ' + mstable
+    
+    nrows = int(tb.nrows())
+    casalog.post('There are ' + str(nrows) + ' rows already in the FLAG_CMD table')
+    
+    # add blank rows
+    if (debug):
+        print pl.array(cmdline)
+        
+    tb.addrows(nadd)
+    # now fill them in
+    tb.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
+    tb.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
+              nrow=nadd)
+    tb.putcol('REASON', pl.array(reas_list), startrow=nrows,
+              nrow=nadd)
+    tb.putcol('COMMAND', pl.array(cmdline), startrow=nrows,
+              nrow=nadd)
+    # Other columns
+    tb.putcol('TYPE', pl.array(typ_list), startrow=nrows, nrow=nadd)
+    tb.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
+              nrow=nadd)
+    tb.putcol('LEVEL', pl.array(lev_list), startrow=nrows,
+              nrow=nadd)
+    tb.putcol('APPLIED', pl.array(app_list), startrow=nrows,
+              nrow=nadd)
+    tb.close()
+#
+    casalog.post('Wrote ' + str(nadd) + ' rows to FLAG_CMD')
+
+    return nadd
+
+
+def getLinePars(cmdline):
+    '''Remove empty parameters from a string:
+       -> cmdline is a string with parameters
+       returns a string containing only parameters with values
+    '''
+            
+   
+    newstr = ''
+    
+    # split by white space
+    keyvlist = cmdline.split()
+    if keyvlist.__len__() > 0:  
+        
+        # Split by '='
+        for keyv in keyvlist:
+
+            (xkey,xval) = keyv.split('=')
+
+            # Remove quotes
+            if type(xval) == str:
+                if xval.count("'") > 0:
+                    xval = xval.strip("'")
+                if xval.count('"') > 0:
+                    xval = xval.strip('"')
+            
+            # Write only parameters with values
+            if xval == '':
+                continue
+            else:
+                newstr = newstr+' '+xkey+'='+xval+' '
+            
+    else:
+        casalog.post('String of parameters is empty','WARN')   
+         
+    return newstr
+
+def backupFlags(tflocal, mode, flagcmd):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
@@ -279,7 +489,7 @@ def backup_flags(tflocal, mode):
     
     # Get the existing flags from the FLAG_VERSION_LIST file
     # in the MS directory
-    existing = tflocal.getflagversionlist(printflags=True)
+    existing = tflocal.getflagversionlist(printflags=False)
 
     # Remove the comments from strings
     existing = [x[0:x.find(' : ')] for x in existing]
@@ -299,10 +509,47 @@ def backup_flags(tflocal, mode):
     if debug:
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-    # Save current flags with a new name
+                      
+#    tflocal.saveflagversion(versionname=versionname,
+#                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
+#                           merge='replace')
     tflocal.saveflagversion(versionname=versionname,
-                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
+                           comment='backup before applying\"'+flagcmd+'\"on ' + time_string,
                            merge='replace')
+
+    # Save flagcmd to flagbackup
+    # Need to consider flagmanager when writing this
+    
+    # We already have the flagbackup in disk, now append the FLAG_CMD
+    # sub-table to it
+#    mstable = msfile + '/FLAG_CMD'
+#    try:
+#        tb.open(mstable, nomodify=False)
+#    except:
+#        raise Exception, 'Error opening FLAG_CMD table ' + mstable
+    
+#    tb.copy(newtablename=versionname + '/FLAG_CMD')
+#    tb.done()
+    
 
     return
 
+def createstr(selpars):
+    '''Get a string par=value. If value is empty, return
+       accumulated string with only par that has non-empty value'''
+    
+    
+    # walk through string and get the value after =
+    # if value is empty, get next
+    
+    return strpar
+
+def delspace(word, replace):
+    '''Replace the white space of a string'''
+    
+    newword = word
+    if word.count(' ') > 0:
+        newword = word.replace(' ', replace)
+    
+    return newword
+    

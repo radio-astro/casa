@@ -94,6 +94,98 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	mapScanStartStop_p = false;
 	mapScanStartStopFlagged_p = false;
 
+	// Set the iteration approach based on the agent
+	setIterationApproach(iterationApproach);
+
+	// Initialize selection ranges
+	timeSelection_p = String("");
+	baselineSelection_p = String("");
+	fieldSelection_p = String("");
+	spwSelection_p = String("*");
+	uvwSelection_p = String("");
+	polarizationSelection_p = String("");
+	scanSelection_p = String("");
+	arraySelection_p = String("");
+	observationSelection_p = String("");
+	scanIntentSelection_p = String("");
+
+	// Initialize iteration parameters
+	chunksInitialized_p = false;
+	buffersInitialized_p = false;
+	iteratorGenerated_p = false;
+	stopIteration_p = false;
+	chunkNo = 0;
+	bufferNo = 0;
+
+	// Initialize stats
+	stats_p = false;
+	cubeAccessCounter_p = 0;
+
+	// Set all the initialized pointers to NULL
+	selectedMeasurementSet_p = NULL;
+	measurementSetSelection_p = NULL;
+	originalMeasurementSet_p = NULL;
+
+	rwVisibilityIterator_p = NULL;
+	roVisibilityIterator_p = NULL;
+	visibilityBuffer_p = NULL;
+
+	antennaNames_p = NULL;
+	antennaDiameters_p = NULL;
+	fieldNames_p = NULL;
+	antennaPairMap_p = NULL;
+	subIntegrationMap_p = NULL;
+	polarizationMap_p = NULL;
+	polarizationIndexMap_p = NULL;
+	antennaPointingMap_p = NULL;
+	scanStartStopMap_p = NULL;
+
+	// Initialize Pre-Load columns
+	preLoadColumns_p.clear();
+
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+// Default destructor
+// -----------------------------------------------------------------------
+FlagDataHandler::~FlagDataHandler()
+{
+	// Delete mapping members
+	if (antennaNames_p) delete antennaNames_p;
+	if (antennaDiameters_p) delete antennaDiameters_p;
+	if (antennaPairMap_p) delete antennaPairMap_p;
+	if (subIntegrationMap_p) delete subIntegrationMap_p;
+	if (polarizationMap_p) delete polarizationMap_p;
+	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
+	if (antennaPointingMap_p) delete antennaPointingMap_p;
+
+	// Delete VisBuffers and iterators
+	if (visibilityBuffer_p) delete visibilityBuffer_p;
+	// ROVisIter is in fact RWVisIter
+	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+
+	// Delete MS objects
+	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
+	if (measurementSetSelection_p) delete measurementSetSelection_p;
+	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
+
+	// Delete logger
+	if (logger_p) delete logger_p;
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Set iteration Approach
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::setIterationApproach(uShort iterationApproach)
+{
+
+	iterationApproach_p = iterationApproach;
+
 	switch (iterationApproach_p)
 	{
 		case COMPLETE_SCAN_MAPPED:
@@ -238,84 +330,6 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 			break;
 		}
 	}
-
-	// Initialize selection ranges
-	timeSelection_p = String("");
-	baselineSelection_p = String("");
-	fieldSelection_p = String("");
-	spwSelection_p = String("*");
-	uvwSelection_p = String("");
-	polarizationSelection_p = String("");
-	scanSelection_p = String("");
-	arraySelection_p = String("");
-	observationSelection_p = String("");
-	scanIntentSelection_p = String("");
-
-	// Initialize iteration parameters
-	chunksInitialized_p = false;
-	buffersInitialized_p = false;
-	iteratorGenerated_p = false;
-	stopIteration_p = false;
-	chunkNo = 0;
-	bufferNo = 0;
-
-	// Initialize stats
-	stats_p = false;
-	cubeAccessCounter_p = 0;
-
-	// Set all the initialized pointers to NULL
-	selectedMeasurementSet_p = NULL;
-	measurementSetSelection_p = NULL;
-	originalMeasurementSet_p = NULL;
-
-	rwVisibilityIterator_p = NULL;
-	roVisibilityIterator_p = NULL;
-	visibilityBuffer_p = NULL;
-
-	antennaNames_p = NULL;
-	antennaDiameters_p = NULL;
-	fieldNames_p = NULL;
-	antennaPairMap_p = NULL;
-	subIntegrationMap_p = NULL;
-	polarizationMap_p = NULL;
-	polarizationIndexMap_p = NULL;
-	antennaPointingMap_p = NULL;
-	scanStartStopMap_p = NULL;
-
-	// Initialize Pre-Load columns
-	preLoadColumns_p.clear();
-
-	return;
-}
-
-
-// -----------------------------------------------------------------------
-// Default destructor
-// -----------------------------------------------------------------------
-FlagDataHandler::~FlagDataHandler()
-{
-	// Delete mapping members
-	if (antennaNames_p) delete antennaNames_p;
-	if (antennaDiameters_p) delete antennaDiameters_p;
-	if (antennaPairMap_p) delete antennaPairMap_p;
-	if (subIntegrationMap_p) delete subIntegrationMap_p;
-	if (polarizationMap_p) delete polarizationMap_p;
-	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
-	if (antennaPointingMap_p) delete antennaPointingMap_p;
-
-	// Delete VisBuffers and iterators
-	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	// ROVisIter is in fact RWVisIter
-	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
-
-	// Delete MS objects
-	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
-	if (measurementSetSelection_p) delete measurementSetSelection_p;
-	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
-
-	// Delete logger
-	if (logger_p) delete logger_p;
-
 	return;
 }
 
@@ -385,6 +399,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		arraySelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no array selection" << LogIO::POST;
 	}
 
@@ -396,6 +411,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		fieldSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no field selection" << LogIO::POST;
 	}
 
@@ -407,6 +423,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		scanSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
 	}
 
@@ -418,6 +435,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		timeSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no timerange selection" << LogIO::POST;
 	}
 
@@ -429,6 +447,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		spwSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
@@ -440,6 +459,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		baselineSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
 	}
 
@@ -451,6 +471,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		uvwSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no uvrange selection" << LogIO::POST;
 	}
 
@@ -462,6 +483,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		polarizationSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
 	}
 
@@ -469,11 +491,12 @@ FlagDataHandler::setDataSelection(Record record)
 	if (exists >= 0)
 	{
 		record.get (record.fieldNumber ("observation"), observationSelection_p);
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " observationSelection selection is " << observationSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " observation selection is " << observationSelection_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no observationSelection selection" << LogIO::POST;
+		observationSelection_p = String("");
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("intent");
@@ -484,6 +507,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		scanIntentSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
 	}
 

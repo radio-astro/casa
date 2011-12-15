@@ -30,6 +30,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 //#include <msvis/MSVis/VisIterator.h>
+#include <msvis/MSVis/VisBufferComponents.h>
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -44,6 +45,13 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define MSVIS_SUBMS_H
+
+namespace subms {
+// Returns wt**-0.5 or -1, depending on whether wt is positive.
+// NOT a member function, so it can be easily passed to other functions
+// (i.e. arrayTransformInPlace).
+Double wtToSigma(Double wt);
+}
 
 // <summary>
 // SubMS provides functionalities to make a subset of an existing MS
@@ -74,6 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // be included in this .h file, but it's only worth it if a lot of other files
 // include this file.
 class MSSelection; // #include <ms/MeasurementSets/MSSelection.h>
+class VBRemapper;
 
   // These typedefs are necessary because a<b::c> doesn't work.
   typedef std::vector<uInt> uivector;
@@ -103,8 +112,6 @@ class SubMS
   
   // construct from an MS
   SubMS(MeasurementSet& ms);
-
-  
 
   virtual ~SubMS();
   
@@ -178,6 +185,13 @@ class SubMS
   //Method to set if a phase Center rotation is needed
   //void setPhaseCenter(Int fieldid, MDirection& newPhaseCenter);
 
+  // Sets the polynomial order for continuum fitting to fitorder.
+  // If < 0, continuum subtraction is not done.
+  void setFitOrder(Int fitorder, Bool advise=true);
+  // Set the selection string for line-free channels.
+  void setFitSpw(const String& fitspw) {fitspw_p = fitspw;}
+  // Selection string for output channels if doing continuum subtraction.
+  void setFitOutSpw(const String& fitoutspw) {fitoutspw_p = fitoutspw;}
 
   //Method to make the subMS
   //
@@ -451,8 +465,17 @@ class SubMS
   Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillDDTables();		// Includes spw and pol.
   Bool fillFieldTable();
-  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
+  
+  // Used to be fillMainTable(colnames), but what distinguishes it from
+  // writeSomeMainRows(colnames) is that it is for cases where there is
+  // a 1-1 match between rows in mssel_p and msOut_p (including order).
+  Bool writeAllMainRows(const Vector<MS::PredefinedColumns>& colNames);
+
+  // Used to be fillAverMainTable(colnames), but what distinguishes it from
+  // writeAllMainRows(colnames) is that it is for cases where there is not
+  // necessarily a 1-1 match between rows in mssel_p and msOut_p.
+  Bool writeSomeMainRows(const Vector<MS::PredefinedColumns>& colNames);
+
   Bool copyAntenna();
   Bool copyFeed();
   Bool copyFlag_Cmd();
@@ -505,6 +528,13 @@ class SubMS
   Bool copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
                          const Bool writeToDataCol);
 
+  // Like doTimeAver(), but it subtracts the continuum instead of time
+  // averaging.  Unlike doTimeAver(), it infers writeToDataCol from
+  // colNames.nelements() (subtractContinuum is intentionally not as general as
+  // copyDataFlagsWtSp), and writes according to fitoutspw_p instead of spw_p.
+  Bool subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
+                         const VBRemapper& remapper);
+  
   // Helper function for parseColumnNames().  Converts col to a list of
   // MS::PredefinedColumnss, and returns the # of recognized data columns.
   // static because parseColumnNames() is static.
@@ -512,6 +542,9 @@ class SubMS
                                 Vector<MS::PredefinedColumns>& colvec);
     
   Bool doChannelMods(const Vector<MS::PredefinedColumns>& colNames);
+
+  void fill_vbmaps(std::map<VisBufferComponents::EnumType,
+                            std::map<Int, Int> >& vbmaps);
 
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
@@ -532,14 +565,16 @@ class SubMS
 				     const Bool writeToDataCol);
 
   // Figures out the number, maximum, and index of the selected antennas.
-  uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
+  uInt fillAntIndexer(std::map<Int, Int>& antIndexer, const ROMSColumns *msc);
 
   // Read the input, time average it to timeBin_p, and write the output.
   // The first version uses VisibilityIterator (much faster), but the second
   // supports correlation selection using VisIterator.  VisIterator should be
   // sped up soon!
-  Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames);
-  Bool doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames);
+  Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
+                  const VBRemapper& remapper);
+  Bool doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames,
+                  const VBRemapper& remapper);
 
   void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
                      const Vector<MS::PredefinedColumns>& colEnums)
@@ -589,6 +624,31 @@ class SubMS
   // Sets up the stub of a POINTING, enough to create an MSColumns.
   void setupNewPointing();
 
+  // Sets sort to a Block of columns that a VisibilityIterator should sort by,
+  // according to combine_p.  Columns that should never be combined in the
+  // calling function, i.e. spw for time averaging, should be listed in
+  // uncombinable.
+  //
+  // verbose: log a message on error.
+  //
+  // Returns whether or not there were any conflicts between combine_p and
+  // uncombinable.
+  Bool setSortOrder(Block<Int>& sort, const String& uncombinable="",
+                    const Bool verbose=true) const;
+
+  // Returns whether col is (not in combine_p) || in uncombinable.
+  // Columns that should never be combined in the
+  // calling function, i.e. spw for time averaging, should be listed in
+  // uncombinable.
+  //
+  // verbose: log a message on error.
+  //
+  // conflict is set to true if there is a conflict between combine_p and
+  // uncombinable.
+  Bool shouldWatch(Bool& conflict, const String& col,
+                   const String& uncombinable="",
+                   const Bool verbose=true) const;
+
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
@@ -611,6 +671,12 @@ class SubMS
   String combine_p;          // Should time averaging not split bins by
                              // scan #, observation, and/or state ID?
                              // Must be lowercase at all times.
+  Int fitorder_p;               // The polynomial order for continuum fitting.
+                                // If < 0 (default), continuum subtraction is
+                                // not done.
+  String fitspw_p;           // Selection string for line-free channels.
+  String fitoutspw_p;        // Selection string for output channels if doing
+                             // continuum subtraction.
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;

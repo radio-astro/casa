@@ -44,7 +44,7 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = true;
+const bool TestFlagger::dbg = false;
 
 LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 
@@ -108,10 +108,6 @@ TestFlagger::done()
 	mode_p = "";
 	agents_config_list_p.clear();
 	agents_list_p.clear();
-
-	if(dbg){
-		cout << "TestFlagger::done() Run the destructor" << endl;
-	}
 
 	return;
 }
@@ -236,21 +232,22 @@ TestFlagger::selectData(String field, String spw, String array,
 		os << LogIO::NORMAL << "Called from selectData(String....)" << LogIO::POST;
 
 	// Create a record with the parameters
+	Record selection = Record();
 
-	dataselection_p.define("spw", spw);
-	dataselection_p.define("scan", scan);
-	dataselection_p.define("field", field);
-	dataselection_p.define("antenna", antenna);
-	dataselection_p.define("timerange", timerange);
-	dataselection_p.define("correlation", correlation);
-	dataselection_p.define("intent", intent);
-	dataselection_p.define("feed", feed);
-	dataselection_p.define("array", array);
-	dataselection_p.define("uvrange", uvrange);
-	dataselection_p.define("observation", observation);
+	selection.define("spw", spw);
+	selection.define("scan", scan);
+	selection.define("field", field);
+	selection.define("antenna", antenna);
+	selection.define("timerange", timerange);
+	selection.define("correlation", correlation);
+	selection.define("intent", intent);
+	selection.define("feed", feed);
+	selection.define("array", array);
+	selection.define("uvrange", uvrange);
+	selection.define("observation", observation);
 
 	// Call the main selectData() method
-	selectData(dataselection_p);
+	selectData(selection);
 
 	return true;
 
@@ -309,6 +306,13 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		agentParams_p.define("mode", mode);
 	}
 	else {
+		if (dbg){
+			ostringstream os;
+			agent_params.print(os);
+			String str(os.str());
+			cout << str << endl;
+
+		}
 
 		agentParams_p = agent_params;
 
@@ -318,9 +322,9 @@ TestFlagger::parseAgentParameters(Record agent_params)
 			agentParams_p.get("mode", mode);
 
 		// If there is a tfcrop agent in the list, we should
-		// change the iterationApproach to all the agents
+		// change the iterationApproach of all the agents
 		if (mode.compare("tfcrop") == 0) {
-			iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY;
+			fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
 		}
 
 	}
@@ -328,13 +332,8 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	// add this agent to the list
 	agents_config_list_p.push_back(agentParams_p);
 
-	// sort the vector of records and define names
+	// TODO:sort the vector of records and define names
 	// for each agent.
-
-
-	if(dbg)
-		os << LogIO::NORMAL << "Will use mode= " << mode << LogIO::POST;
-
 
 	return true;
 }
@@ -394,8 +393,7 @@ TestFlagger::initFlagDataHandler()
 // ---------------------------------------------------------------------
 // TestFlagger::initAgents
 // Initialize the Agents
-// It assumes that parseAgentParameters and initFlagDataHander have
-// been called first
+// Call parseAgentParameters and selectData first
 // ---------------------------------------------------------------------
 bool
 TestFlagger::initAgents()
@@ -415,6 +413,11 @@ TestFlagger::initAgents()
 		Record agent_rec = agents_config_list_p[i];
 		if (dbg){
 			os<< LogIO::NORMAL<< "Record["<<i<<"].nfields()="<<agent_rec.nfields()<<LogIO::POST;
+			ostringstream os;
+			agent_rec.print(os);
+			String str(os.str());
+			cout << str << endl;
+
 		}
 
 		// TODO: should I check for fdh_p existence here?

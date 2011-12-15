@@ -192,12 +192,14 @@ namespace casa
 
     void setBeamCalcGeometries(const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
 			       const String& antennaType = "STANDARD",
-			       const MEpoch& obsTime = MEpoch(Quantity(50000., "d")));
+			       const MEpoch& obsTime = MEpoch(Quantity(50000., "d")),
+			       const String& otherAntRayPath=""); // override the AntennaResponses Table in Observatories
 
     Int getBandID(const Double freq, // in Hz 
 		  const String& obsname,
 		  const String& antennaType="STANDARD",
-		  const MEpoch& obsTime = MEpoch(Quantity(50000., "d")));  
+		  const MEpoch& obsTime = MEpoch(Quantity(50000., "d")),
+		  const String& otherAntRayPath=""); // override the AntennaResponses Table in Observatories 
 
     Int calculateAperture(ApertureCalcParams *ap);
 

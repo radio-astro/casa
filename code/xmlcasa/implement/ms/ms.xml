@@ -7,7 +7,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!--   
  ***************************************************************************
- ** ms.xml:  defines the interface to the measurment set tool.
+ ** ms.xml:  defines the interface to the measurement set tool.
  **
  ** Copyright (C) 2007
  ** Associated Universities, Inc. Washington DC, USA.
@@ -2840,6 +2840,248 @@ for i in range(len(tcoord)):
   </example>
 </method>
  
+<method type="function" name="contsub">
+   <shortdescription>Subtract the continuum from the visibilities</shortdescription>
+   
+  <keyword>contsub</keyword>
+  <input>
+     <param type="string" direction="in" name="outputms">
+     <description>The name of the resulting measurement set</description>
+     <value></value>
+     </param>
+    
+     <param type="variant" direction="in" name="fitspw">
+     <description>Line-free spectral windows (and :channels) to fit to</description>
+     <value>"*"</value>
+     </param>
+    
+     <param type="int" direction="in" name="fitorder">
+     <description>The order of the polynomial to use when fitting.</description>
+     <value>1</value>
+     </param>
+
+     <param type="string" direction="in" name="combine">
+     <description>Ignore changes in these columns (spw, scan, and/or state) when fitting.</description>
+     <value></value>
+     </param>
+
+     <param type="variant" direction="in" name="spw">
+     <description>Spectral windows (and :channels) to select</description>
+     <value type="string">*</value>
+     </param>
+    
+     <param type="variant" direction="in" name="unionspw">
+     <description>The union of fitspw and spw, i.e. how much needs to be read.  '*' always works, but may be more than you need.</description>
+     <value type="string">*</value>
+     </param>
+    
+     <param type="variant" direction="in" name="field">
+     <description>Fields to include, by names or 0-based ids.  ('' =&gt; all)</description>
+     <value type="string"></value>
+     </param>
+    
+     <param type="variant" name="scan">
+     <description>Only use the scan numbers requested using the msselection syntax.</description>
+     <value type="string"></value>
+     </param>
+     
+     <param type="string" direction="in" name="intent">
+     <description>Only use the requested scan intents.</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="correlation">
+     <description>Limit data to specific correlations (LL, XX, LR, XY, etc.).</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="obs">
+     <description>Only use the requested observation IDs.</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="whichcol">
+     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA', and/or 'FLOAT_DATA'</description>
+     <value>CORRECTED_DATA</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    NOT FULLY IMPLEMENTED YET.  uvcontsub uses the cb tool for now.
+    (The only reason to implement it in ms is to save time and disk space.)
+
+    This function estimates the continuum emission of the MS and writes a MS
+    with that estimate subtracted, using the ms tool.  The estimate is made,
+    separately for the real and imaginary parts of each baseline, by fitting a
+    low order polynomial to the unflagged visibilities selected by fitspw
+    (depending on combine).
+  </description>
+  <example>
+  
+  ms.open("multiwin.ms")
+  ms.contsub('contsub.ms', fitspw='0:0~123;145~211,2:124~255', fitorder=0,
+             field=[0], spw='0,2') 
+
+  In this example the continuum estimates are made by seperately averaging
+  channels 0:0~123;145~211 and 2:124~255, and the separate estimates are
+  subtracted from spws 0 and 2.  The output only includes field 0 and spws 0
+  and 2 (now called 1).
+
+  ms.contsub('contsub.ms', fitspw='0:0~123;145~211,2:124~255', fitorder=0,
+             field=[0], combine='spw')
+  ms.close()
+
+  This time the estimate was made by simultaneously averaging channels
+  0:0~123;145~211 and 2:124~255, and the continuum is subtracted from all the
+  spws, including 1 (treated as a completely line-filled spw).  The output only
+  includes field 0.
+
+  </example>
+</method>
+
+<method type="function" name="statwt">
+   <shortdescription>Set WEIGHT and SIGMA from the scatter of the visibilities</shortdescription>
+   
+  <keyword>statwt</keyword>
+  <input>
+     <param type="string" direction="in" name="scattertype">
+     <description>How the scatter should be estimated (rms, stddev, medabsdevmed, or quartile)</description>
+     <value>stddev</value>
+     </param>
+
+     <param type="bool" direction="in" name="byantenna">
+     <description>How the scatters are solved for (by antenna or by baseline)</description>
+     <value>true</value>
+     </param>
+
+     <param type="bool" direction="in" name="seperateacs">
+     <description>If solving by antenna, treat autocorrs separately</description>
+     <value>true</value>
+     </param>
+
+     <param type="variant" direction="in" name="fitspw">
+     <description>Line-free spectral windows (and :channels) to get the scatter from.  ('' =&gt; all)</description>
+     <value>"*"</value>
+     </param>
+    
+     <param type="variant" direction="in" name="fitcorr">
+     <description>Correlations (V, LL, XX, LR, XY, etc.) to get the scatter from.  ('' =&gt; all)</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" direction="in" name="combine">
+     <description>Ignore changes in these columns (spw, scan, and/or state) when getting the scatter.</description>
+     <value></value>
+     </param>
+
+     <param type="variant" direction="in" name="timebin">
+       <description>Duration of the moving window over which to estimate the scatter.  Defaults to 0s, with an effective minimum of 1 integration.</description>
+       <value>0s</value>
+     </param>
+    
+     <param type="int" direction="in" name="minsamp">
+       <description>The minimum number of visibilities for a scatter estimate</description>
+       <value>3</value>
+     </param>
+
+     <param type="variant" direction="in" name="field">
+     <description>Fields to reweight, by names or 0-based ids.  ('' =&gt; all)</description>
+     <value></value>
+     </param>
+    
+     <param type="variant" direction="in" name="spw">
+     <description>Spectral windows to reweight.  ('' =&gt; all)</description>
+     <value>"*"</value>
+     </param>
+    
+     <param type="any" name="antenna">
+       <description>Select data based on antenna/baseline</description>
+       <any type="variant" limittypes="string stringArray int intArray"/>
+       <value type="string"></value>
+     </param>
+
+     <param type="string" name="timerange" >
+       <description>Select data by time range</description>
+       <value></value>
+     </param>
+
+     <param type="variant" name="scan">
+     <description>Scan numbers to reweight.  ('' =&gt; all)</description>
+     <value></value>
+     </param>
+     
+     <param type="string" direction="in" name="intent">
+     <description>Scan intents to reweight.  ('' =&gt; all)</description>
+     <value></value>
+     </param>
+
+     <param type="variant" name="array">
+       <description>Select (sub)array(s) by array ID number</description>
+       <value></value>
+     </param>
+
+     <param type="string" direction="in" name="correlation">
+     <description>Correlations (LL, XX, LR, XY, etc.) to reweight.  ('' =&gt; all)</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="obs">
+     <description>Observation IDs to reweight.  ('' =&gt; all)</description>
+     <value></value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    NOT IMPLEMENTED YET.
+
+    This function estimates the noise from the scatter of the visibilities,
+    sets SIGMA to it, and WEIGHT to SIGMA**-2.
+
+    Ideally the visibilities used to estimate the scatter, as selected by
+    fitspw and fitcorr, should be pure noise.  Since it might not be,
+    scattertype offers a variety of methods to more or less robustly estimate
+    the spread.  Note that there is a tradeoff between robustness and
+    statistical efficiency (how closely the estimate's error approaches
+    O(n**-0.5) in the Gaussian case), and that since a point source in the
+    image plane has its signal scattered among all the visibilities, detecting
+    signal to reject it as an outlier can be difficult.  However, if the noise
+    dominates the signal in the uv plane then by definition the signal does not
+    strongly affect the noise estimate.  Whichever type of estimate is used, it
+    is scaled to match the standard deviation of the presumed underlying noise
+    distribution.
+
+    To beat down the noise of the noise estimate, the sample size per estimate
+    can be made larger than a single spw and baseline.  (Using combine='spw' is
+    to interpolate between spws with line-free channels is recommended when an
+    spw has no line-free channels.)  timebin smooths the noise estimate over
+    time.  windowtype sets the type of time smoothing.
+
+    WEIGHT and SIGMA will not be changed for samples that have fewer than
+    max(2, |minsamp|) visibilities.  If minsamp is &lt; 0, visibilities for
+    which no noise estimate is made will be flagged.
+
+  </description>
+  <example>
+  
+  ms.open("multiwin.ms", nomodify=False)
+  ms.statwt(fitspw='0:0~123;145~211,2:124~255', field=[0], spw='0,2') 
+
+  In this example the noise estimates are seperately made from and applied 
+  to spws 0 and 2.
+
+  ms.statwt(fitspw='0:0~123;145~211,2:124~255', fitorder=0, field=[0],
+            combine='spw')
+  ms.close()
+
+  This time the estimate for each baseline is made from the line-free channels
+  of spws 0 and 2, and applied to all the spws, including 1 (which could be a
+  completely line-filled spw).
+
+  </example>
+</method>
+
 <method type="function" name="split">
    <shortdescription>make a new ms from a subset of an existing ms, adjusting subtables and indices</shortdescription>
    

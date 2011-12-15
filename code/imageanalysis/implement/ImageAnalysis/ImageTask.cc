@@ -49,7 +49,7 @@ ImageTask::ImageTask(
 ) : _image(image), _log(new LogIO()), _regionPtr(regionPtr),
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-	_outname(outname), _overwrite(overwrite) {
+	_outname(outname), _overwrite(overwrite), _stretch(False) {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }

@@ -43,7 +43,11 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_ia_convolve2d.py
   test_ia_decompose.py
   test_ia_fft.py
+  test_ia_getregion.py
+  test_ia_hanning.py
+  test_ia_histograms.py
   test_ia_isconform.py
+  test_ia_modify.py
   test_ia_subimage.py
   test_imcollapse.py
   test_imcontsub.py
@@ -100,7 +104,9 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_splattotable.py
   test_split.py
   test_testconcat.py
+  test_tflagger.py
   test_uvcontsub.py
+  test_uvcontsub3.py
   test_viewer.py
   test_vishead.py
   test_visstat.py

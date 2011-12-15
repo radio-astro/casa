@@ -361,6 +361,7 @@ def simobserve2(
             needmodel=True
 
             modimsize=int((qa.convert(model_size[0],"arcsec")['value'])/(qa.convert(model_cell[0],"arcsec")['value']))
+            modimsize=max([modimsize,32])
             newepoch,newlat,newlon = util.direction_splitter(model_refdir)
             
             if os.path.exists(newmodel):
@@ -668,7 +669,7 @@ def simobserve2(
                 msg(message,origin="simobserve")
 
             nbands = 1;
-            fband  = 'band' + qa.tos(model_center,prec=1)
+            fband  = util.bandname(qa.convert(model_center, 'GHz')['value'])
 
             ############################################
             # predict observation
@@ -715,9 +716,14 @@ def simobserve2(
             # but the "start" is the center of the first channel:
             model_start = qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
+            mounttype = 'alt-az'
+            if telescopename in ['DRAO', 'WSRT']:
+                mounttype = 'EQUATORIAL'
+            # Should ASKAP be BIZARRE or something else?  It may be effectively equatorial.
+
             sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                          dishdiameter=diam.tolist(), 
-                         mount=['alt-az'], antname=antnames, padname=padnames, 
+                         mount=[mounttype], antname=antnames, padname=padnames, 
                          coordsystem='global', referencelocation=posobs)
             if str.upper(telescopename).find('VLA') > 0:
                 sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 

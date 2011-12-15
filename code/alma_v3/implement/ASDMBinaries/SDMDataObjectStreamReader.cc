@@ -49,6 +49,8 @@ namespace asdmbinaries {
       releaseMemory(sdmDataSubset);
       for (unsigned int i = 0; i < remainingSubsets.size(); i++)
 	releaseMemory(remainingSubsets[i]);
+      for (unsigned int i = 0; i < someSubsets.size(); i++)
+	releaseMemory(someSubsets[i]);
       f.close();
       currentState = S_NO_BDF;
     }
@@ -92,6 +94,7 @@ namespace asdmbinaries {
       case T_QUERY:
       case T_TEST_END:
       case T_READ:
+      case T_READ_NEXT:
       case T_READ_ALL:
       case T_CLOSE:
 	return;
@@ -104,6 +107,7 @@ namespace asdmbinaries {
       switch (t) {
       case T_TEST_END:
       case T_READ:
+      case T_READ_NEXT:
       case T_READ_ALL:
       case T_QUERY:
       case T_CLOSE:
@@ -117,6 +121,7 @@ namespace asdmbinaries {
       switch(t) {
       case  T_TEST_END:
       case T_QUERY: 
+      case T_READ_NEXT:
       case T_READ_ALL:
       case T_CLOSE:
 	return;
@@ -137,6 +142,30 @@ namespace asdmbinaries {
     return !atEnd;
   }
  
+  const vector<SDMDataSubset>& SDMDataObjectStreamReader::nextSubsets(unsigned int nSubsets) {
+    checkState(T_READ_NEXT, "nextSubsets");
+    
+    // Deep empty of the vector nextSubsets
+    // Firstly free all memory dynamically allocated in every element of the vector.
+    for (unsigned int i = 0; i < someSubsets.size(); i++)
+      releaseMemory(someSubsets.at(i));
+    
+    // Then clear the vector.
+    someSubsets.clear();
+
+    // Then populate the vector nextSubsets with as many SDMDataSubsets as possible up to a limit
+    // of nSubsets read from the current position.
+    unsigned int nRead = 0;
+    while ((nRead < nSubsets) && hasSubset()) {
+      someSubsets.push_back(SDMDataSubset(&sdmDataObject));
+      integrationIndex++; nRead++;
+      requireSDMDataSubsetMIMEPart(someSubsets.back());
+      string line = nextLine();      
+    }
+
+    return someSubsets;
+  }
+
   const vector<SDMDataSubset>& SDMDataObjectStreamReader::allRemainingSubsets() {
     // cout << "SDMDataObjectStreamReader::allRemainingSubsets: entering." << endl;
     checkState(T_READ_ALL, "allRemainingSubsets");

@@ -2247,6 +2247,118 @@ ms::timesort(const std::string& msname)
     return rstat;
 }
 
+bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
+                 const int fitorder,             const std::string& combine,
+                 const ::casac::variant& spw,    const ::casac::variant& unionspw,
+                 const ::casac::variant& field,  const ::casac::variant& scan,
+                 const std::string&      intent, const std::string& correlation,
+                 const std::string&      obs,    const std::string& whichcol)
+{
+  Bool rstat(False);
+
+  try{
+    *itsLog << LogOrigin("ms", "contsub");
+
+    SubMS subtractor(*itsMS);
+    *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
+    String t_field(m1toBlankCStr_(field));
+    String t_fitspw(m1toBlankCStr_(fitspw));
+    String t_spw(m1toBlankCStr_(spw));
+    String t_unionspw(m1toBlankCStr_(unionspw));
+    if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
+      t_spw = "*";    // at the XML level does not work.
+    if(t_spw != "*" && t_spw != t_unionspw){
+      *itsLog << LogIO::WARN
+              << "The spws in the output will be remapped according to "
+              << t_unionspw << ", not " << t_spw
+              << LogIO::POST;
+      *itsLog << LogIO::WARN
+              << "This only affects the numbering of the spws, not their validity or frequencies."
+              << LogIO::POST;
+    }
+    String t_scan    = toCasaString(scan);
+    String t_intent  = toCasaString(intent);
+    String t_obs     = toCasaString(obs);
+    String t_correlation = upcase(correlation);
+
+    if(!subtractor.setmsselect(t_unionspw, t_field, 
+                               "",                      // antenna
+                               t_scan,
+                               "",                      // uvrange
+                               "",                      // taql
+                               Vector<Int>(1, 1),       // step
+                               "",                      // subarray
+                               t_correlation,
+                               t_intent, t_obs)){
+      *itsLog << LogIO::SEVERE
+	      << "Error selecting data."
+	      << LogIO::POST;
+      return false;
+    }
+    
+    String t_outputms(outputms);
+    String t_whichcol(whichcol);
+    Vector<Int> t_tileshape(1, 0);
+    const String t_combine = downcase(combine);
+
+    subtractor.setFitOrder(fitorder);
+    subtractor.setFitSpw(t_fitspw);
+    subtractor.setFitOutSpw(t_spw);
+
+    if(!subtractor.makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
+      *itsLog << LogIO::SEVERE
+	      << "Error subtracting from " << itsMS->tableName() << " to "
+	      << t_outputms
+	      << LogIO::POST;
+      return false;
+    }
+       
+    *itsLog << LogIO::NORMAL2 << "Continuum subtracted" << LogIO::POST;
+
+    {// Update HISTORY table of newly created MS
+      String message = "Continuum subtracted from " + itsMS->tableName();
+      ostringstream param;
+      param << "fieldids=" << t_field << " spwids=" << t_spw
+	    << " whichcol='" << whichcol << "'";
+      String paramstr=param.str();
+      writehistory(message, paramstr, "ms::contsub()", outputms, "ms");
+    }
+
+    rstat = True;
+  }
+  catch (AipsError x){
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return rstat;
+}
+
+bool ms::statwt(const std::string& scattertype,  const bool byantenna,
+                const bool separateacs,          const ::casac::variant& fitspw,
+                const ::casac::variant& fitcorr, const std::string& combine,
+                const ::casac::variant& timebin, const int minsamp,
+                const ::casac::variant& field,   const ::casac::variant& spw,
+                const ::casac::variant& baseline, const std::string& timerange,
+                const ::casac::variant& scan,    const std::string&      intent,
+                const ::casac::variant& subarray,const std::string& correlation,
+                const std::string&      obs)
+{
+  Bool rstat(False);
+
+  try {
+    *itsLog << LogOrigin("ms", "statwt");
+    *itsLog << LogIO::SEVERE << "Not implemented yet." << LogIO::POST;
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return rstat;
+}
+
 bool
 ms::split(const std::string&      outputms,   const ::casac::variant& field, 
 	  const ::casac::variant& spw,        const std::vector<int>& step,
@@ -2293,7 +2405,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
     splitter->selectTime(timeInSec, String(timerange));
     String t_outputms(outputms);
     String t_whichcol(whichcol);
-    Vector<Int> t_tileshape(1,0);
+    Vector<Int> t_tileshape(1, 0);
     if(toCasaString(tileShape) != String("")){
       t_tileshape.resize();
       t_tileshape=tileShape.toIntVec();

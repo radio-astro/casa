@@ -27,6 +27,8 @@
 #ifndef SYNTHESIS_VPMANAGER_H
 #define SYNTHESIS_VPMANAGER_H
 
+#include <images/Images/AntennaResponses.h>
+
 namespace casa {
   //Forward declarations
   class Record;
@@ -39,13 +41,10 @@ namespace casa {
       //      enum Type{NONE, COMMONPB, AIRY, GAUSS, POLY, IPOLY, COSPOLY,
       //		NUMERIC, IMAGE, ZERNIKE, MAX=ZERNIKE};
 
-      // Default constructor                                        
-      
-      VPManager();
-
-      // Destructor
-      virtual ~VPManager();
-      
+      // this is a SINGLETON class
+      static VPManager* Instance();
+      static void reset();
+            
       Bool saveastable(const String& tablename);
 
       Bool summarizevps(const Bool verbose);
@@ -114,7 +113,7 @@ namespace casa {
 
       Bool setpbimage(const String& telescope, const String& othertelescope, 
 		      const Bool dopb, const String& realimage, 
-		      const String& imagimage, Record& rec);
+		      const String& imagimage, const String& compleximage, Record& rec);
 
       Bool setpbpoly(const String& telescope, const String& othertelescope,
 		     const Bool dopb, const Vector<Double>& coeff,
@@ -126,10 +125,82 @@ namespace casa {
 		     const Quantity& paincrement,
 		     const Bool usesymmetricbeam,
 		     Record &rec);
+      
+
+      Bool setpbantresptable(const String& telescope, const String& othertelescope,
+			     const Bool dopb, const String& tablepath);
+                            // no record filled, need to access via getvp()
+
+      // set the default voltage pattern for the given telescope
+      Bool setuserdefault(const Int vplistfield,
+			  const String& telescope,
+			  const String& antennatype="");
+
+      Bool getuserdefault(Int& vplistfield,
+			  const String& telescope,
+			  const String& antennatype="");
+
+      Bool getanttypes(Vector<String>& anttypes,
+		       const String& telescope,
+		       const MEpoch& obstime,
+		       const MFrequency& freq, 
+		       const MDirection& obsdirection); // default: Zenith
+			      
+      // return number of voltage patterns satisfying the given constraints
+      Int numvps(const String& telescope,
+		 const MEpoch& obstime,
+		 const MFrequency& freq, 
+		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
+							   Quantity(90., "deg"), 
+							   MDirection::AZEL)
+		 ); 
+
+
+      // get the voltage pattern satisfying the given constraints
+      Bool getvp(Record &rec,
+		 const String& telescope,
+		 const MEpoch& obstime,
+		 const MFrequency& freq, 
+		 const String& antennatype="", 
+		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
+							   Quantity(90., "deg"), 
+							   MDirection::AZEL)
+		 ); 
+
+      // get a general voltage pattern for the given telescope and ant type if available
+      Bool getvp(Record &rec,
+		 const String& telescope,
+		 const String& antennatype=""
+		 ); 
+
+    protected:
+      VPManager(Bool verbose=False);
 
     private:
-      Record vplist_p;
+      static VPManager* instance_p;
 
+      Record vplist_p; 
+      SimpleOrderedMap<String, Int > vplistdefaults_p; 
+      AntennaResponses aR_p; 
+
+      inline String antennaDescription(const String& telescope,
+				       const String& antennatype){
+	if(antennatype.empty()) return telescope;
+	return telescope + " " + antennatype;
+      };
+
+      inline String telFromAntDesc(const String& antDesc){
+	String tempstr = antDesc;
+	if(tempstr.contains(" ")) return tempstr.before(" ");
+	return tempstr;
+      };
+
+      inline String antTypeFromAntDesc(const String& antDesc){
+	String tempstr = antDesc;
+	if(tempstr.contains(" ")) return tempstr.after(" ");
+	tempstr = "";
+	return tempstr;
+      };
 
     };
 

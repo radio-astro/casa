@@ -90,9 +90,6 @@ computing aggregate function of pixels along that axis
 
 \item <link anchor="images:image.fitcomponents.function">fitcomponents</link> - Fit model components to an image.
 
-\item <link anchor="images:image.fitpolynomial.function">fitpolynomial</link> - fit 1-d polynomials 
-to profiles and subtract (see also the <link anchor="images:imageprofilefitter">imageprofilefitter</link> \tool.
-
 \item <link anchor="images:image.fitprofile.function">fitprofile</link> - fit a 1-d profile with varying
 combinations of functional forms (see also the <link anchor="images:imageprofilefitter">imageprofilefitter</link> \tool.
 
@@ -791,7 +788,6 @@ ia.close()
 
 
 This capability is useful for fitting functions.
-See the example in the <link anchor="images:image.fitpolynomial.function">fitpolynomial</link> function. 
 </example>
 
 \bigskip
@@ -3960,6 +3956,14 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
+        <param type="bool" direction="in" name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
+            <value>false</value>
+        </param>
+        <param type="bool" direction="in" name="logresults">
+            <description>Output results to logger?</description>
+            <value>true</value>
+        </param>
     </input>
 <returns type="any"><any type="record"/></returns>
 
@@ -4054,106 +4058,6 @@ mycenter0 = res["center0"].reshape([2,3], order="F")
 </method>
 
  
-   <method type="function" name="fitpolynomial">
-   <shortdescription>Fit 1-dimensional polynomials to profiles</shortdescription>
-   
-<input>
-  
-     <param type="string" direction="in" name="residfile">
-     <description>Output fitted residuals image file name.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="fitfile">
-     <description>Output fitted image file name.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="sigmafile">
-     <description>Input weights image for fitting.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="int" direction="in" name="axis">
-     <description>The profile axis to fit, Default is spectral axis if it exists else last axis.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="int" direction="in" name="order">
-     <description>The order of the polynomial</description>
-     <value>0</value>
-     </param>
-  
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
-     </param>
-  
-     <param type="any" direction="in" name="mask">
-	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
-     </param>
-  
-     <param type="bool" direction="in" name="overwrite">
-     <description>Overwrite (unprompted) pre-existing output files?</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="casaimage"/>
-<description>
-
-This function fits 1-dimensional polynomials to profiles and subtracts
-the fits.  You specify the order of the polynomial via the {\stfaf
-order} argument.  The returned on-the-fly Image tool holds the residual
-image. You can optionally also write out the fitted image.
-
-The output mask is a copy of the default input \pixelmask\ (if any); the
-OTF mask does not contribute to the output mask. Any other input
-\pixelmasks\ will not be copied.  Use function
-<link anchor="images:image.maskhandler.function">maskhandler</link> if you need to copy other
-masks too.  Use function <link anchor="images:image.calcmask.function">calcmask</link> if you
-need to  apply the OTF mask to the output.
-
-</description>
-<example>
-
-"""
-#
-print "\t----\t fitpolynomial Ex 1 \t----"
-ia.maketestimage('hcn',overwrite=true)
-myim = ia.fitpolynomial(order=2, axis=1)  # OTF Image tool is virtual
-print myim.summary()
-myim.done()
-ia.close()
-#
-"""
-
-
-
-"""
-#
-print "\t----\t fitpolynomial Ex 2 \t----"
-ia.fromshape(shape=[128,128,64,4])                  # RA/DEC/FREQ/STOKES
-# Specify pixels to fit via mask
-mask = 'indexin(2, [0:19, 29, 34, 49:59, 89:127])'  # LEL's are 0-rel
-myim = ia.fitpolynomial(order=2, mask=mask, axis=2) # axis 3 (0-rel)
-print myim.summary()
-myim.done()
-ia.close()
-#
-"""
-
-
-This example can be thought of as an image-based continuum
-substraction.  You specify the axis and the pixels where the spectrum
-is line free (continuum), do the fit and create an on-the-fly image
-tool attached to the residual (continuum subtracted) image.
-
-</example>
-
-</method>
 
  
 <method type="function" name="fitcomponents">
@@ -4611,6 +4515,11 @@ ia.close()
      <description>Get the pixel mask rather than pixel values</description>
      <value>false</value>
      </param>
+     <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <value>false</value>
+     </param>
+     
 </input>
 <returns type="any"><any type="variant"/></returns>
 <description>
@@ -4799,6 +4708,11 @@ ia.close()
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
+     </param>
+     
+     <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <value>false</value>
      </param>
 </input>
 <returns type="casaimage"/>
@@ -4993,6 +4907,11 @@ and acquires just a read lock.
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
+     </param>
+     
+     <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <value>false</value>
      </param>
 </input>
 <returns type="bool"/>
@@ -5615,6 +5534,11 @@ ia.close()
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
+     </param>
+     
+    <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <value>false</value>
      </param>
 </input>
 <returns type="bool"/>

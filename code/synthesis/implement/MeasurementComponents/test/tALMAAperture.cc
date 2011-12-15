@@ -97,8 +97,9 @@ int main()
 					 xform,                              
 					 63.5, 63.5);  
 
-      Vector<String> units(2); units = "deg";                       
-      dirCoords.setWorldAxisUnits(units);                               
+      Vector<String> units(2); 
+      //units = "deg";                       
+      //dirCoords.setWorldAxisUnits(units);                               
       
 
       // StokesCoordinate
@@ -124,30 +125,37 @@ int main()
       
       // SpectralCoordinate 3
       SpectralCoordinate spectralCoords3(MFrequency::TOPO,           
-					 43 * 1.0E+9,                 
+					 100. * 1.0E+9,                 
 					 20 * 1.0E+3,                   
 					 0,                             
-					 43 * 1.0E+9);          
+					 100. * 1.0E+9);          
       units.resize(1);
       units = "Hz";
       spectralCoords3.setWorldAxisUnits(units);
       
+      ObsInfo myObsInfo;
+      myObsInfo.setTelescope("ALMA");
+
       // CoordinateSystem
       coordsys.addCoordinate(dirCoords);
       coordsys.addCoordinate(stokesCoordsBad);
       coordsys.addCoordinate(spectralCoords);
+      coordsys.setObsInfo(myObsInfo);
       
       coordsys3.addCoordinate(dirCoords);
       coordsys3.addCoordinate(stokesCoordsGood);
       coordsys3.addCoordinate(spectralCoords3);      
+      coordsys3.setObsInfo(myObsInfo);
 
       coordsys3Big.addCoordinate(dirCoordsBig);
       coordsys3Big.addCoordinate(stokesCoordsGood);
       coordsys3Big.addCoordinate(spectralCoords3);      
+      coordsys3Big.setObsInfo(myObsInfo);
 
       coordsys3Small.addCoordinate(dirCoordsSmall);
       coordsys3Small.addCoordinate(stokesCoordsGood);
       coordsys3Small.addCoordinate(spectralCoords3);      
+      coordsys3Small.setObsInfo(myObsInfo);
     }
     
     String name("tab1");

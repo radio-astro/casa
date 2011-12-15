@@ -30,6 +30,7 @@
 
 #include <casa/aips.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
+#include <map>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -81,7 +82,8 @@ public:
   VisBuffGroupAcc (const Int& nAnt, 
 		   const Int& nSpw, 
 		   const Int& nFld,
-		   const Double& subinterval);
+		   const Double& subinterval,
+                   const Bool fillModel=True);
 
   // Null destructor
   ~VisBuffGroupAcc();
@@ -126,6 +128,20 @@ public:
   const Vector<Int>& outToInRow(const Int buf, const Bool hurl=true) const;
   const Vector<Int>& outToInRow(const Int spw, const Int fld,
                                 const Bool hurl=true) const;
+
+  // Setup chanmask from a spw:chan selection string and an MS.
+  // static so a chanmask can be made once and provided to multiple VBGAs.
+  static Bool fillChanMask(std::map<Int, Vector<Bool>*>& chanmask,
+                           const String& spwstr,
+                           const MeasurementSet& ms);
+
+  // Select channels in the accumulated buffers by flagging with the chanmask.
+  // Returns the number of VisBuffers that the chanmask operated on.
+  uInt applyChanMask(std::map<Int, Vector<Bool>*>& chanmask);
+
+  // Empties chanmask (which may have some newed elements).
+  static void clearChanMask(std::map<Int, Vector<Bool>*>& chanmask);
+
 private:
 
   // Prohibit in-public null constructor, copy constructor and assignment
@@ -139,6 +155,8 @@ private:
   // Averaging interval
   Double subinterval_p;
 
+  Bool fillModel_p;     // Whether or not to accumulate MODEL_DATA  
+
   // Pre-normalization flag
   Bool prenorm_p;
 
@@ -150,7 +168,6 @@ private:
   
   // Map spw,fld to the buffer id
   Matrix<Int> spwfldids_p;
-
 };
 
 

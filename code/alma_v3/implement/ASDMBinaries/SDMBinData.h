@@ -173,7 +173,14 @@ class SDMBinData{
       acceptMainRow for an other SDM Main table row.
   */
   bool acceptMainRow( MainRow* const mainRowPtr);
-		      
+
+  /** Accessor to one SDM Main table row.
+   * @param mainrowPtr is a pointer to one row of the SDM Main table,
+   * @return true if the SDM row passed the selection criterium , else false,
+   * @post a true value returned means that the instance of SDMBinData is in 
+   * a state such a call to the getData method can be done, else only another call to openRow (supposedly for another Main row) can be done.
+   */
+  bool openMainRow(MainRow* const mainRowPtr);
 
   /** Filter: rejection of a Main table row if it does not satisfy the criterion
       of selection. 
@@ -238,6 +245,27 @@ class SDMBinData{
 
   const VMSData* getDataCols( Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc );
 
+  /**
+   * Returns a pointer to a VMSData structure containing the values require to populate the MS Main table columns
+   * from what it has got from the reading of at most n SDMDataSubsets in the current BDF file. 
+   * <ul>
+   * <li> This method call be called iteratively as long as there are SDMDataSubsets.  </li>
+   * <li> A returned VMSData having any of its array empty means that all the SDMDataSubsets have been read.</li>
+   * </ul>
+   * @param n gives the maximum number of SDMDataSubsets ([sub]integrations) that one wants to read in the current BDF.
+   * @return a pointer to a VMSData containing the values to populate MS rows.
+   */
+  const VMSData* getNextMSMainCols(unsigned int n);
+
+  const VMSData* getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int n);
+
+  vector<MSData*> getMSDataFromBDFData(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int n);
+
+  /**
+   * Populates the vector v_dataDump after having read at most n DataSubsets in the BDF.
+   */
+  void getNextDataDumps(unsigned int n);
+
   /** To know easily in which order the baselines are returned in a sequence of MSData objects or in a VMSData object.
       @note Let assume the sequence of antennas {1,2,3,4} in the ConfigDescription table. There are two cases: 
       - Return true if the resulting order is (1,2) (1,3) (2,3) (1,4) (2,4) and (3,4)
@@ -270,6 +298,17 @@ class SDMBinData{
    */
   int  attachStreamDataObject(const string& dataOID);
 
+  /** Initialize the sequential reading of the SDMDataSubsets (i.e. [sub]integrations) contained in the BDF referred 
+   * to by dataOID.
+   * <ul>
+   * <li>The BDF file referred to by dataOID is opened and the informations global to the whole BDF are read </li>
+   * <li>The sequential reading of the SDMDataSubsets can be started. </li>
+   * </ul>
+   *
+   * @param dataOID the BDF identifier.
+   * @return an int value. 0 means a problem, 1 means Ok.
+   */
+  int openStreamDataObject(const string& dataOID);
 
   /** Unset the current data binding
    */
@@ -342,7 +381,7 @@ class SDMBinData{
 
   void   deleteMsData(MSData* msDataPtr);
 
-
+  bool verbose_ ;  // A variable to turn on/off the verbosity of the code, traditionnally based on the existence of env var "ASDM_DEBUG"
 };
 
 }

@@ -29,7 +29,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <example>box="4,4,10,10"</example>
         </param>
         <param type="string" direction="in" name="region">
-            <description>Region name, Default: no region ("").</description>
+            <description>Region of interest. See help par.region for possible specifications. Default: Do not use a region.</description>
             <value></value>
             <example>region="myregion.rgn"</example>
         </param>
@@ -131,7 +131,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>True</value>
             <example>wantreturn=True</example>
         </param>
+        <param type="bool" direction="in" name="stretch" subparam="true">
+            <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+            <value>False</value>
+        </param>
+        <param type="bool" direction="in" name="logresults">
+            <description>Output results to logger?</description>
+            <value>True</value>
+        </param>
         <constraints>
+            <when param="mask">
+                <notequals type="string" value="">
+                    <default param="stretch"><value type="bool">False</value></default>
+                </notequals>
+            </when>
             <when param="estimates">
                 <equals type="string" value="">
                     <default param="ngauss">
@@ -182,7 +195,7 @@ box          Direction plane box specification, "blcx, blcy, trcx, trcy". Only o
              may be specified. If not specified, region is used if specified. If region
              is also not specified, entire directional plane unioned with any chans and
              stokes specification determines the region.
-region       Optional region file to use.
+region       Region of interest. See help par.region for possible specifications.
 chans        Optional contiguous frequency channel number specification. Not used if
              region is specified. Default is all channels.
 stokes       Contiguous stokes planes specification. Not used if region is specified.
@@ -190,6 +203,8 @@ stokes       Contiguous stokes planes specification. Not used if region is speci
 axis         Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
              zeroth axis if a spectral axis is not present.
 mask         Optional mask specification.
+stretch      Stretch the input mask if necessary and possible? Only used if a mask is specified.
+             See help par.stretch.
 ngauss       Maximum number of gaussians to fit.
 poly         Order of polynomial to fit. &lt;0 means do not fit a polynomial.
 estimates    Name of file containing initial gaussian estimates.
@@ -206,6 +221,8 @@ fwhmerr      Name of fwhm solution error image. Default: do not write the image 
 integral     Name of integral solution image. Default: do not write the image ("")
 integralerr  Name of integral solution error image. Default: do not write the image ("")
 wantreturn   If true, return a record summarizing the fit results, if false, return false.
+stretch      Stretch the mask if necessary and possible? See help par.stretch 
+logresults   Output results to logger?
 
 The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
 that the zeroth axis should be used.

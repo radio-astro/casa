@@ -36,15 +36,13 @@ namespace casac {
 vpmanager::vpmanager()
 {
 
-  itsVPM = new VPManager();
+  itsVPM = VPManager::Instance();
   itsLog = new LogIO();
 
 }
 
 vpmanager::~vpmanager()
 {
-  if(itsVPM) delete itsVPM;
-  itsVPM=0;
   if(itsLog) delete itsLog;
   itsLog=0;
 
@@ -80,17 +78,6 @@ vpmanager::summarizevps(const bool verbose)
   return rstat;
 }
 
-bool
-vpmanager::done()
-{
-  if(itsVPM) delete itsVPM;
-  itsVPM=0;
-  if(itsLog) delete itsLog;
-  itsLog=0;
-  itsVPM = new VPManager();
-  itsLog = new LogIO();
-  return true;
-}
 
 //TODO!
 // list
@@ -364,7 +351,7 @@ vpmanager::setpbnumeric(const std::string& telescope, const std::string& otherte
 }
 
 ::casac::record*
-vpmanager::setpbimage(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& realimage, const std::string& imagimage)
+vpmanager::setpbimage(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& realimage, const std::string& imagimage, const std::string& compleximage)
 {
 
   ::casac::record* r=0;
@@ -372,7 +359,7 @@ vpmanager::setpbimage(const std::string& telescope, const std::string& othertele
     if(!itsVPM) return r;
     casa::Record rec;
     itsVPM->setpbimage(String(telescope), String(othertelescope), dopb, 
-		       String(realimage), String(imagimage), rec);
+		       String(realimage), String(imagimage), String(compleximage), rec);
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
@@ -425,6 +412,236 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
     RETHROW(x);
   }
   return r;
+}
+
+bool
+vpmanager::setpbantresptable(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& antresppath)
+{
+  *itsLog << LogOrigin("vp", "setantresptable");
+  if(!itsVPM) return False;
+  return itsVPM->setpbantresptable(telescope, othertelescope, dopb, antresppath);
+
+}
+
+
+bool vpmanager::reset(){
+
+  *itsLog << LogOrigin("vp", "reset");
+
+  if(!itsVPM) return False;
+  itsVPM->reset();
+  itsVPM = VPManager::Instance();
+  return True;
+}
+
+bool vpmanager::setuserdefault(const int vplistnum,
+			       const std::string& telescope,
+			       const std::string& anttype)
+{
+
+  *itsLog << LogOrigin("vp", "setuserdefault");
+
+  if(!itsVPM) return False;
+  return itsVPM->setuserdefault(vplistnum, telescope, anttype);
+
+}
+
+int vpmanager::getuserdefault(const std::string& telescope,
+			      const std::string& anttype)
+{
+
+  int rval = -2;
+
+  *itsLog << LogOrigin("vp", "getuserdefault");
+
+  if(!itsVPM 
+     || !itsVPM->getuserdefault(rval, telescope, anttype)){
+    throw(AipsError("Error in vp::getuserdefault()."));
+  }
+  return rval;
+
+}
+
+
+std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
+						const casac::variant& obstime, 
+						const casac::variant& freq, 
+						const casac::variant& obsdirection)
+{
+  std::vector<string> rval(0);
+  Vector<String> antTypes;
+
+  try{
+    
+    *itsLog << LogOrigin("vp", "getanttypes");
+    
+    MEpoch mObsTime;
+    MFrequency mFreq;
+    MDirection mObsDir;
+    
+    if(!casaMEpoch(obstime, mObsTime)){
+      *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
+	      << toCasaString(obstime) << LogIO::POST;
+      return rval;
+    }
+    if(!casaMFrequency(freq, mFreq)){
+      *itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
+	      << toCasaString(freq) << LogIO::POST;
+      return rval;
+    }
+    if(!casaMDirection(obsdirection, mObsDir)){
+      if(toCasaString(obsdirection).empty()){
+	casaMDirection("AZEL 0deg 0deg", mObsDir);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
+		<< toCasaString(obsdirection) << LogIO::POST;
+	return rval;
+      }
+    }
+
+    if(!itsVPM->getanttypes(antTypes, telescope, mObsTime, mFreq, mObsDir)){
+      *itsLog << LogIO::SEVERE << "Error determining antenna types for telescope "
+	      << telescope << LogIO::POST;
+      return rval;
+    }      
+
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  
+  for(uInt i=0; i<antTypes.size(); i++){
+    rval.push_back(antTypes(i));
+  }
+
+  return rval;
+  
+}
+  
+
+int vpmanager::numvps(const std::string& telescope,
+		      const casac::variant& obstime, 
+		      const casac::variant& freq, 
+		      const casac::variant& obsdirection){
+
+  int rval(-1);
+  try{
+
+    *itsLog << LogOrigin("vp", "numvps");
+
+    MEpoch mObsTime;
+    MFrequency mFreq;
+    MDirection mObsDir;
+    
+    if(!casaMEpoch(obstime, mObsTime)){
+      *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
+	      << toCasaString(obstime) << LogIO::POST;
+      return rval;
+    }
+    if(!casaMFrequency(freq, mFreq)){
+      *itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
+	      << toCasaString(freq) << LogIO::POST;
+      return rval;
+    }
+    if(!casaMDirection(obsdirection, mObsDir)){
+      if(toCasaString(obsdirection).empty()){
+	casaMDirection("AZEL 0deg 0deg", mObsDir);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
+		<< toCasaString(obsdirection) << LogIO::POST;
+	return rval;
+      }
+    }
+
+    rval = itsVPM->numvps(telescope, mObsTime, mFreq, mObsDir);
+
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return rval;
+
+}
+
+
+::casac::record* 
+vpmanager::getvp(const std::string& telescope,
+		 const std::string& antennatype, 
+		 const casac::variant& obstime, 
+		 const casac::variant& freq, 
+		 const casac::variant& obsdirection){
+
+  ::casac::record* r=0;
+  try{
+      
+    *itsLog << LogOrigin("vp", "getvp");
+
+    MEpoch mObsTime;
+    MFrequency mFreq;
+    MDirection mObsDir;
+    Record rec;
+    
+    int nRefs = 0;
+
+    if(casaMEpoch(obstime, mObsTime)){
+      nRefs +=1;
+    }
+    else{
+      if(toCasaString(obstime).empty()){
+	casaMEpoch("2000/01/01T00:00:00", mObsTime);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
+		<< toCasaString(obstime) << LogIO::POST;
+	return r;
+      }
+    }
+    if(casaMFrequency(freq, mFreq)){
+      nRefs +=1;
+    }
+    else{
+      if(toCasaString(freq).empty()){
+	casaMFrequency("TOPO 0Hz", mFreq);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
+		<< toCasaString(freq) << LogIO::POST;
+	return r;
+      }
+    }
+
+    if(!casaMDirection(obsdirection, mObsDir)){
+      if(toCasaString(obsdirection).empty()){
+	casaMDirection("AZEL 0deg 90deg", mObsDir);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
+		<< toCasaString(obsdirection) << LogIO::POST;
+	return r;
+      }
+    }
+
+    if(nRefs==0){
+      if(itsVPM->getvp(rec,telescope, antennatype)){
+	r = fromRecord(rec);
+      }
+    }
+    else{
+      if(itsVPM->getvp(rec,telescope, mObsTime, mFreq, antennatype, mObsDir)){
+	r = fromRecord(rec);
+      }
+    }
+
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return r;
+
 }
 
 bool 
@@ -640,7 +857,7 @@ vpmanager::createantresp(const std::string& imdir,
     for(uInt iIm=0; iIm<nIm; iIm++){
 
       String currObsName = obsnameV(iIm);
-      Int currBeamnum = beamnumV(iIm);
+      uInt currBeamnum = beamnumV(iIm);
       String currAntType = anttypeV(iIm);
       String currRecType = rectypeV(iIm);
       Double currAzMin = azminV(iIm);

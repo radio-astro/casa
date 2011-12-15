@@ -532,11 +532,13 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
         _tb1=tbtool.create()
         _tb2=tbtool.create()
         _tb1.open(self.infile)
-        ptab1=_tb1.getkeyword('POINTING').split()[-1]
+        #ptab1=_tb1.getkeyword('POINTING').split()[-1]
+        ptab1=_tb1.getkeyword('POINTING').lstrip('Table: ')
         _tb1.close()
         _tb1.open(ptab1)
         _tb2.open(self.outfile1)
-        ptab2=_tb2.getkeyword('POINTING').split()[-1]
+        #ptab2=_tb2.getkeyword('POINTING').split()[-1]
+        ptab2=_tb2.getkeyword('POINTING').lstrip('Table: ')
         _tb2.close()
         _tb2.open(ptab1)
         badcols = []

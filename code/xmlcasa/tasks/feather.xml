@@ -31,27 +31,24 @@ two images must have the same flux density normalization scale.
 
 <example>
 
-	This algorithm, called feathering, is a simple method for combining two
-        images with different spatial resolution.  The processing steps are:
+	Feathering is a simple method for combining two images with different 
+        spatial resolution.  The processing steps are:
 
-	       0. regrid the low resolution image to a temporary copy matching the
-	          high resolution image,
-               1. transform each image to the gridded visibility plane,
-               2. sum the gridded visibilities
-               3. transform back to the image plane.
+	       1. Regrid the low-resolution image to a temporary copy matching the
+	           resolution of the high-resolution image,
+               2. Transform each image to the spatial-frequency plane (gridded).
+               3. Scale the low-resolution image (uv-grid) by the ratio of the
+                   volumes of the two 'clean beams' (high-res/low-res). 
+               4. Add to this, the uv-grid of the high-resolution image, scaled by
+                   (1-wt) where 'wt' is the Fourier transform of the 'clean beam'
+                   defined in the low-resolution image.
+               5. Transform back to the image plane.
 
-        The task name comes from the  smooth switching from
-	one data set to the other using weights assigned according to the
-	sensitivity of each at any given spatial frequency.  Gaps, if any,
-        between the spatial frequency ranges are not filled.
+	Both input images must have a well-defined beam shape for this task to work. 
+	This could be a 'clean beam' for interferometric images, and a 'primary-beam' 
+        for a single-dish image. 
 
-	Each image must have a well-defined beam shape (clean beam) for
-	feathering to work well.  The two images must have the same flux
-	density normalization scale.
-
-        This task is somewhat experimental and will improve as more experience
-        with single-dish and interferometric data is obtained over the next few years.
-
+        The two images must also have the same flux density normalization scale.
 
 	Keyword arguments:
         imagename -- Name of output feathered image
@@ -68,22 +65,17 @@ two images must have the same flux density normalization scale.
 
         Comments:
 
-            The advantage of feathering is that one does not have to go back to
-            the visibility data and then image and deconvolve.  It starts with
-            the high-quality image (with the accurate clean beam).  This is
-            particularly useful for combining a high-resolution interferometric
-            image with a lower-resolution single-dish image, although
-            D-configuration and A-configuration EVLA data can also be combined.
-            There are often uncertainties in the relative flux density scales
-            between the two images, and the current implementation of feathers
-            does not adjustment.
-
-            The clean task also has a method of combining two sets of data with
-            different resolution.  The high resolution visibility data begins
-            deconvolution, starting with a modelimage of the lower-resolution
-            image.  The lower-resolution image must be clean components (or a
-            sky model), not the low resolution image with its intrinsic
-            resolution.
+        This task can be used as one method of combining single-dish and 
+        interferometric images after they have been separately made.
+        
+        The clean task allows another method of combining single-dish and
+        interferometric data. The single-dish image can be used as a starting 
+        model for the interferometric image-reconstruction. If there is
+        some overlap between the spatial-frequencies contained in the 
+        single-dish image and the interferometer sampling function, then,
+        such a starting model will help constrain the solutions on the 
+        short-baselines of the interferometric data.
+        
 
 </example>
 </task>

@@ -72,7 +72,8 @@ namespace casa{
   // initialise the beam calculation parameters 
   void BeamCalc::setBeamCalcGeometries(const String& obsName,
 				       const String& antType,
-				       const MEpoch& obsTime){
+				       const MEpoch& obsTime,
+				       const String& otherAntRayPath){
     
     Unit uS("s");
 
@@ -101,100 +102,110 @@ namespace casa{
     
     AntennaResponses aR;
     String antRespPath;
-    if(!MeasTable::AntennaResponsesPath(antRespPath, obsName_p)) {
-      // unknown observatory
-      const char *sep=" ";
-      char *aipsPath = strtok(getenv("CASAPATH"),sep);
-      if (aipsPath == NULL)
-	throw(SynthesisError("CASAPATH not found."));
-      String fullFileName(aipsPath);
+    String antRayPath = otherAntRayPath;
 
-      if(obsName_p=="VLA" && antType_p=="STANDARD"){
-	os <<  LogIO::NORMAL << "Will use default geometries for VLA STANDARD." << LogIO::POST;
-	BeamCalc_NumBandCodes_p = VLABeamCalc_NumBandCodes;
-	BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
-	bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
-	bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
-	for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
-	  copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &VLABeamCalcGeometryDefaults[i]);
-	  bandMinFreq_p[i] = VLABandMinFreqDefaults[i]; 
-	  bandMaxFreq_p[i] = VLABandMaxFreqDefaults[i]; 
-	}
-	antRespPath_p = fullFileName + "/data/nrao/VLA";
-	return;
-      }
-      else if(obsName_p=="EVLA" && antType_p=="STANDARD"){
-	os <<  LogIO::NORMAL << "Will use default geometries for EVLA STANDARD." << LogIO::POST;
-	BeamCalc_NumBandCodes_p = EVLABeamCalc_NumBandCodes;
-	BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
-	bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
-	bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
-	for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
-	  copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &EVLABeamCalcGeometryDefaults[i]);
-	  bandMinFreq_p[i] = EVLABandMinFreqDefaults[i]; 
-	  bandMaxFreq_p[i] = EVLABandMaxFreqDefaults[i]; 
-	}
-	antRespPath_p = fullFileName + "/data/nrao/VLA";
-	return;
-      }
-      else if(obsName_p=="ALMA" && (antType_p=="DA" || antType_p=="DV" || antType_p=="PM")){
-	os <<  LogIO::NORMAL << "Will use default geometries for ALMA DA, DV, and PM." << LogIO::POST;
-	BeamCalc_NumBandCodes_p = ALMABeamCalc_NumBandCodes;
-	BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
-	bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
-	bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
-	for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
-	  copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &ALMABeamCalcGeometryDefaults[i]);
-	  if(antType_p=="DA"){
-	    BeamCalcGeometries_p[i].legwidth *= -1.; // change from + to x shape
-	  } 
-	  bandMinFreq_p[i] = ALMABandMinFreqDefaults[i]; 
-	  bandMaxFreq_p[i] = ALMABandMaxFreqDefaults[i]; 
-	}
-	antRespPath_p = fullFileName + "/data/alma";
-	return;
-      }
-      else{
-	String mesg="We don't have any antenna ray tracing parameters available for observatory "
-	  +obsName_p+", antenna type "+antType_p;
-	SynthesisError err(mesg);
-	throw(err);
-      }
-    }
-    else if(!aR.init(antRespPath)){
-      // init failed
-      String mesg="Initialisation of antenna response parameters for observatory "+obsName_p+" failed using path "+antRespPath;
-      SynthesisError err(mesg);
-      throw(err);
-    }
-    
+    Bool useInternal = False;
+
     os <<  LogIO::NORMAL << "Initialisation of geometries for observatory " << obsName_p 
        << ", antenna type " << antType_p << LogIO::POST;
 
-    String antRayPath;
-    uInt respImageChannel;
-    MFrequency respImageNomFreq;
-    AntennaResponses::FuncTypes respImageFType;
-    MVAngle respImageRotOffset;
+    if(otherAntRayPath.empty()){
+      if(!MeasTable::AntennaResponsesPath(antRespPath, obsName_p)) {
+	useInternal = True;
+      }
+      else{
+	if(!aR.init(antRespPath)){
+	  // init failed
+	  String mesg="Initialisation of antenna response parameters for observatory "
+	    +obsName_p+" failed using path "+antRespPath;
+	  SynthesisError err(mesg);
+	  throw(err);
+	}
+	uInt respImageChannel;
+	MFrequency respImageNomFreq;
+	AntennaResponses::FuncTypes respImageFType;
+	MVAngle respImageRotOffset;
     
-    if(!aR.getImageName(antRayPath,
-			respImageChannel,
-			respImageNomFreq,
-			respImageFType,
-			respImageRotOffset,
-			//
-			obsName_p,
-			obsTime_p,
-			MFrequency(Quantity(0.,Unit("Hz")), MFrequency::TOPO), // any frequency
-			AntennaResponses::INTERNAL,
-			antType_p
-			)
-       ){ // no matching response found
-      ostringstream oss;
-      oss << "No matching antenna response found for observatory "
-	  << obsName_p;
-      throw(SynthesisError(oss.str()));
+	if(!aR.getImageName(antRayPath,
+			    respImageChannel,
+			    respImageNomFreq,
+			    respImageFType,
+			    respImageRotOffset,
+			    //
+			    obsName_p,
+			    obsTime_p,
+			    MFrequency(Quantity(0.,Unit("Hz")), MFrequency::TOPO), // any frequency
+			    AntennaResponses::INTERNAL,
+			    antType_p
+			    )
+	   ){ // no matching response found
+	  os <<  LogIO::NORMAL << "No matching antenna response found for observatory "
+	     << obsName_p  << LogIO::POST;
+	  useInternal = True;
+	}
+      }
+
+      if(useInternal){
+	const char *sep=" ";
+	char *aipsPath = strtok(getenv("CASAPATH"),sep);
+	if (aipsPath == NULL)
+	  throw(SynthesisError("CASAPATH not found."));
+	String fullFileName(aipsPath);
+	
+	if(obsName_p=="VLA" && antType_p=="STANDARD"){
+	  os <<  LogIO::NORMAL << "Will use default geometries for VLA STANDARD." << LogIO::POST;
+	  BeamCalc_NumBandCodes_p = VLABeamCalc_NumBandCodes;
+	  BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
+	  bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
+	  bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
+	  for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
+	    copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &VLABeamCalcGeometryDefaults[i]);
+	    bandMinFreq_p[i] = VLABandMinFreqDefaults[i]; 
+	    bandMaxFreq_p[i] = VLABandMaxFreqDefaults[i]; 
+	  }
+	  antRespPath_p = fullFileName + "/data/nrao/VLA";
+	}
+	else if(obsName_p=="EVLA" && antType_p=="STANDARD"){
+	  os <<  LogIO::NORMAL << "Will use default geometries for EVLA STANDARD." << LogIO::POST;
+	  BeamCalc_NumBandCodes_p = EVLABeamCalc_NumBandCodes;
+	  BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
+	  bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
+	  bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
+	  for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
+	    copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &EVLABeamCalcGeometryDefaults[i]);
+	    bandMinFreq_p[i] = EVLABandMinFreqDefaults[i]; 
+	    bandMaxFreq_p[i] = EVLABandMaxFreqDefaults[i]; 
+	  }
+	  antRespPath_p = fullFileName + "/data/nrao/VLA";
+	}
+	else if(obsName_p=="ALMA" && (antType_p=="DA" || antType_p=="DV" || antType_p=="PM")){
+	  os <<  LogIO::NORMAL << "Will use default geometries for ALMA DA, DV, and PM." << LogIO::POST;
+	  BeamCalc_NumBandCodes_p = ALMABeamCalc_NumBandCodes;
+	  BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
+	  bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
+	  bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
+	  for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
+	    copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &ALMABeamCalcGeometryDefaults[i]);
+	    if(antType_p=="DA"){
+	      BeamCalcGeometries_p[i].legwidth *= -1.; // change from + to x shape
+	    } 
+	    bandMinFreq_p[i] = ALMABandMinFreqDefaults[i]; 
+	    bandMaxFreq_p[i] = ALMABandMaxFreqDefaults[i]; 
+	  }
+	  antRespPath_p = fullFileName + "/data/alma/responses";
+	}
+	else{
+	  String mesg="We don't have any antenna ray tracing parameters available for observatory "
+	    +obsName_p+", antenna type "+antType_p;
+	  SynthesisError err(mesg);
+	  throw(err);
+	}
+	return;  
+      } // end if(useInternal)
     }
+    
+    
+    os <<  LogIO::NORMAL << "from file " << antRayPath << endl;
     
     try {
       // read temp table from ASCII file
@@ -238,17 +249,20 @@ namespace casa{
 	  BeamCalcGeometries_p[i].taperpoly[j] = ta2(IPosition(1,j));
 	}
 	BeamCalcGeometries_p[i].ntaperpoly = antParTab.getCell("NTAPERPOLY", i).asInt();
-	cout << "i name bandMinFreq_p bandMaxFreq_p sub_h feedpos feedpos feedpos subangle legwidth legfoot legapex Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly" << endl; 
-	cout << i << " " << BeamCalcGeometries_p[i].name << " " << bandMinFreq_p[i] << " " << bandMaxFreq_p[i] 
-	     << " " << BeamCalcGeometries_p[i].sub_h 
-	     << " " << BeamCalcGeometries_p[i].feedpos[0] << " " << BeamCalcGeometries_p[i].feedpos[1] 
-	     << " " << BeamCalcGeometries_p[i].feedpos[2] 
-	     << " " << BeamCalcGeometries_p[i].subangle << " " << BeamCalcGeometries_p[i].legwidth 
-	     << " " << BeamCalcGeometries_p[i].legfoot << " " << BeamCalcGeometries_p[i].legapex 
-	     << " " << BeamCalcGeometries_p[i].Rhole << " " << BeamCalcGeometries_p[i].Rant << " " << BeamCalcGeometries_p[i].reffreq 
-	     << " " << BeamCalcGeometries_p[i].taperpoly[0] << " " << BeamCalcGeometries_p[i].taperpoly[1] 
-	     << " " << BeamCalcGeometries_p[i].taperpoly[2] << " " << BeamCalcGeometries_p[i].taperpoly[3] 
-	     << " " << BeamCalcGeometries_p[i].taperpoly[4] << " " << BeamCalcGeometries_p[i].ntaperpoly << endl; 
+	if(False){
+	  cout << "i name bandMinFreq_p bandMaxFreq_p sub_h feedpos feedpos feedpos subangle legwidth legfoot legapex"
+	       << " Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly" << endl; 
+	  cout << i << " " << BeamCalcGeometries_p[i].name << " " << bandMinFreq_p[i] << " " << bandMaxFreq_p[i] 
+	       << " " << BeamCalcGeometries_p[i].sub_h 
+	       << " " << BeamCalcGeometries_p[i].feedpos[0] << " " << BeamCalcGeometries_p[i].feedpos[1] 
+	       << " " << BeamCalcGeometries_p[i].feedpos[2] 
+	       << " " << BeamCalcGeometries_p[i].subangle << " " << BeamCalcGeometries_p[i].legwidth 
+	       << " " << BeamCalcGeometries_p[i].legfoot << " " << BeamCalcGeometries_p[i].legapex 
+	       << " " << BeamCalcGeometries_p[i].Rhole << " " << BeamCalcGeometries_p[i].Rant << " " << BeamCalcGeometries_p[i].reffreq 
+	       << " " << BeamCalcGeometries_p[i].taperpoly[0] << " " << BeamCalcGeometries_p[i].taperpoly[1] 
+	       << " " << BeamCalcGeometries_p[i].taperpoly[2] << " " << BeamCalcGeometries_p[i].taperpoly[3] 
+	       << " " << BeamCalcGeometries_p[i].taperpoly[4] << " " << BeamCalcGeometries_p[i].ntaperpoly << endl; 
+	}
       }
 
     } catch (AipsError x) {
@@ -259,7 +273,12 @@ namespace casa{
       throw(err);
     }
 
-    antRespPath_p = antRespPath;
+    if(antRespPath.empty()){ // use containing directory of the antRayPath
+      antRespPath_p = Path(antRayPath).dirName();
+    }
+    else{
+      antRespPath_p = Path(antRespPath).dirName();
+    }
 
     os <<  LogIO::NORMAL << "... successful." << LogIO::POST;
 
@@ -270,9 +289,10 @@ namespace casa{
   Int BeamCalc::getBandID(Double freq, // in Hz 
 			  const String& obsName,
 			  const String& antType,
-			  const MEpoch& obsTime){
+			  const MEpoch& obsTime,
+			  const String& otherAntRayPath){
 
-    setBeamCalcGeometries(obsName, antType, obsTime); 
+    setBeamCalcGeometries(obsName, antType, obsTime, otherAntRayPath); 
 
     for(Int i=0; i<BeamCalc_NumBandCodes_p; i++){
       if((bandMinFreq_p[i]<=freq)&&(freq<=bandMaxFreq_p[i])){

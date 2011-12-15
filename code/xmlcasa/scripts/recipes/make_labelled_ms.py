@@ -302,7 +302,11 @@ def label_itered_ms(msname, labelbases, debug=False, datacol='DATA',
                 # being scalar.
                 if chunk.has_key(q.lower()):
                     if hasattr(labelbases[q], '__call__'):
-                        chunk[datacol][:,:,:] += labelbases[q](chunk)
+                        data = labelbases[q](chunk)
+                        if hasattr(data, 'shape'):
+                            chunk[datacol] += data
+                        else:
+                            chunk[datacol][:,:,:] += data
                     else:
                         chunk[datacol][:,:,:] += chunk[q.lower()] * labelbases[q]
             datshape = chunk[datacol].shape

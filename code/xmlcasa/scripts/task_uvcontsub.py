@@ -107,10 +107,6 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
-        ## for now, forbid requests for fitorder>0 
-        #if (fitorder>0):
-        #    raise Exception, "Sorry, uvcontsub currently only supports fitorder=0."
-        
         # select the data for continuum subtraction
         mycb.reset()
         mycb.selectvis(spw=myfitspw)

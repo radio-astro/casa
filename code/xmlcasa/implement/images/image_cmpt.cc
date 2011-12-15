@@ -1128,9 +1128,10 @@ record* image::fitprofile(const string& box, const string& region,
 	const string& residual, const string& amp,
 	const string& amperr, const string& center, const string& centererr,
 	const string& fwhm, const string& fwhmerr,
-	const string& integral, const string& integralerr
+	const string& integral, const string& integralerr, const bool stretch,
+	const bool logResults
 ) {
-	*_log << LogOrigin("image", __FUNCTION__);
+	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
 		return 0;
 	}
@@ -1153,41 +1154,12 @@ record* image::fitprofile(const string& box, const string& region,
 			amp, amperr, center, centererr, fwhm, fwhmerr,
 			integral, integralerr, minpts
 		);
+		fitter.setStretch(stretch);
+		fitter.setLogResults(logResults);
 		rstat = fromRecord(fitter.fit());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return rstat;
-}
-
-::casac::image *
-image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
-		const std::string& sigmaFile, const int axis, const int order,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const bool overwrite) {
-	::casac::image *rstat = 0;
-	try {
-		*_log << LogOrigin("image", "fitpolynomial");
-		*_log << LogIO::WARN << "DEPRECATED: " << __FUNCTION__
-				<< " will be removed in an upcoming release. "
-				<< "Use fitprofile instead with ngauss=0." << LogIO::POST;
-		if (detached())
-			return rstat;
-
-		Record *Region = toRecord(region);
-		String mask = vmask.toString();
-		if (mask == "[]")
-			mask = "";
-
-		ImageInterface<Float>* tmpIm = _image->fitpolynomial(residFile,
-				fitFile, sigmaFile, axis, order, *Region, mask, overwrite);
-		rstat = new ::casac::image(tmpIm);
-		delete tmpIm;
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 	return rstat;
@@ -1506,14 +1478,14 @@ image* image::pbcor(
 	}
 }
 
-::casac::variant*
-image::getregion(const ::casac::record& region, const std::vector<int>& axes,
-		const ::casac::variant& mask, const bool list, const bool dropdeg,
-		const bool getmask) {
+::casac::variant* image::getregion(
+	const ::casac::record& region, const std::vector<int>& axes,
+	const ::casac::variant& mask, const bool list, const bool dropdeg,
+	const bool getmask, const bool stretch
+) {
 	// Recover some pixels and their mask from a region in the image
-	::casac::variant *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "getregion");
+		*_log << LogOrigin(_class, __FUNCTION__);
 		if (detached())
 			return false;
 
@@ -1524,45 +1496,53 @@ image::getregion(const ::casac::record& region, const std::vector<int>& axes,
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
 			Mask = "";
-		} else if (mask.type() == ::casac::variant::STRING || mask.type()
-				== ::casac::variant::STRINGVEC) {
+		}
+		else if (
+			mask.type() == ::casac::variant::STRING
+			|| mask.type() == ::casac::variant::STRINGVEC
+		) {
 			Mask = mask.toString();
-		} else {
+		}
+		else {
 			*_log << LogIO::WARN
-					<< "Only LEL string handled for mask...region is yet to come"
-					<< LogIO::POST;
+				<< "Only LEL string handled for mask...region is yet to come"
+				<< LogIO::POST;
 			Mask = "";
 		}
 		Vector<Int> iaxes(axes);
 		// if default value change it to empty vector
-		if (iaxes.size() == 1) {
-			if (iaxes[0] < 0)
-				iaxes.resize();
+		if (iaxes.size() == 1 && iaxes[0] < 0) {
+			iaxes.resize();
 		}
-		_image->getregion(pixels, pixelmask, *Region, iaxes, Mask, list,
-				dropdeg, getmask);
+		_image->getregion(
+			pixels, pixelmask, *Region, iaxes,
+			Mask, list, dropdeg, getmask, stretch
+		);
 		if (getmask) {
 			std::vector<bool> s_pixelmask;
 			std::vector<int> s_shape;
 			pixelmask.tovector(s_pixelmask);
 			pixels.shape().asVector().tovector(s_shape);
-			rstat = new ::casac::variant(s_pixelmask, s_shape);
-		} else {
+			return new ::casac::variant(s_pixelmask, s_shape);
+		}
+		else {
 			std::vector<int> s_shape;
 			pixels.shape().asVector().tovector(s_shape);
 			std::vector<double> d_pixels(pixels.nelements());
 			int i(0);
-			for (Array<Float>::iterator iter = pixels.begin(); iter
-					!= pixels.end(); iter++)
+			for (
+				Array<Float>::iterator iter = pixels.begin();
+				iter != pixels.end(); iter++
+			) {
 				d_pixels[i++] = *iter;
-			rstat = new ::casac::variant(d_pixels, s_shape);
+			}
+			return new ::casac::variant(d_pixels, s_shape);
 		}
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*
@@ -1599,32 +1579,35 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 	return rstat;
 }
 
-::casac::image *
-image::hanning(const std::string& outFile, const ::casac::record& region,
-		const ::casac::variant& vmask, const int axis, const bool drop,
-		const bool overwrite, const bool /* async */) {
-	::casac::image *rstat = 0;
+::casac::image* image::hanning(
+	const string& outFile, const ::casac::record& region,
+	const ::casac::variant& vmask, const int axis, const bool drop,
+	const bool overwrite, const bool /* async */, const bool stretch
+) {
+	*_log << LogOrigin(_class, __FUNCTION__);
+	if (detached()) {
+		return 0;
+	}
 	try {
-		*_log << LogOrigin("image", "hanning");
-		if (detached())
-			return rstat;
-
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 
-		ImageInterface<Float> * pImOut = _image->hanning(outFile, *Region,
-				mask, axis, drop, overwrite);
+		std::auto_ptr<ImageInterface<Float> > pImOut(
+			_image->hanning(
+				outFile, *Region, mask, axis, drop,
+				overwrite, stretch
+			)
+		);
 		// Return handle to new file
-		rstat = new ::casac::image(pImOut);
-		delete pImOut;
+		return new image(pImOut.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::vector<bool> image::haslock() {
@@ -1643,27 +1626,32 @@ std::vector<bool> image::haslock() {
 	return rstat;
 }
 
-bool image::histograms(::casac::record& histout, const std::vector<int>& axes,
-		const ::casac::record& region, const ::casac::variant& mask,
-		const int nbins, const std::vector<double>& includepix,
-		const bool gauss, const bool cumu, const bool log, const bool list,
-		const std::string& plotter, const int nx, const int ny,
-		const std::vector<int>& size, const bool force, const bool disk,
-		const bool /* async */) {
-	bool rstat(false);
+bool image::histograms(
+	::casac::record& histout, const vector<int>& axes,
+	const ::casac::record& region, const ::casac::variant& mask,
+	const int nbins, const vector<double>& includepix,
+	const bool gauss, const bool cumu, const bool log, const bool list,
+	const string& plotter, const int nx, const int ny,
+	const vector<int>& size, const bool force, const bool disk,
+	const bool /* async */, bool stretch
+) {
+	*_log << LogOrigin(_class, __FUNCTION__);
+	if (detached()) {
+		return false;
+	}
 	try {
-		*_log << LogOrigin("image", "histograms");
-		if (detached())
-			return rstat;
-
-		Record *regionRec = toRecord(region);
+		std::auto_ptr<Record> regionRec(toRecord(region));
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
 			Mask = "";
-		} else if (mask.type() == ::casac::variant::STRING || mask.type()
-				== ::casac::variant::STRINGVEC) {
+		}
+		else if (
+			mask.type() == ::casac::variant::STRING
+			|| mask.type() == ::casac::variant::STRINGVEC
+		) {
 			Mask = mask.toString();
-		} else {
+		}
+		else {
 			*_log << LogIO::WARN
 					<< "Only LEL string handled for mask...region is yet to come"
 					<< LogIO::POST;
@@ -1680,22 +1668,20 @@ bool image::histograms(::casac::record& histout, const std::vector<int>& axes,
 			includePix.resize(includepix.size());
 			includePix = Vector<Double> (includepix);
 		}
-		_image->histograms(retval, naxes, *regionRec, Mask, nbins, includePix,
-				gauss, cumu, log, list, plotter, nx, ny, Vector<Int> (size),
-				force, disk);
+		_image->histograms(
+			retval, naxes, *regionRec, Mask, nbins, includePix,
+			gauss, cumu, log, list, plotter, nx, ny,
+			Vector<Int> (size), force, disk, stretch
+		);
 
-		delete regionRec;
-		casac::record *tmp = fromRecord(retval); // memory leak???
+		std::auto_ptr<casac::record> tmp(fromRecord(retval));
 		histout = *tmp;
-		//  Cleanup
-		delete tmp;
-		rstat = true;
+		return true;
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::vector<std::string> image::history(const bool list, const bool browse) {
@@ -1851,32 +1837,32 @@ image::miscinfo() {
 	return rstat;
 }
 
-bool image::modify(const ::casac::record& model, const ::casac::record& region,
-		const ::casac::variant& vmask, const bool subtract, const bool list,
-		const bool /* async */) {
-	bool rstat(false);
+bool image::modify(
+	const ::casac::record& model, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool subtract, const bool list,
+	const bool /* async */, bool stretch
+) {
+	*_log << LogOrigin(_class, __FUNCTION__);
+	if (detached()) {
+		return false;
+	}
 	try {
-		*_log << LogOrigin("image", "modify");
-		if (detached())
-			return rstat;
-
-		//
 		String error;
-		Record *Model = toRecord(model);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Model(toRecord(model));
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
-		rstat = _image->modify(*Model, *Region, mask, subtract, list);
-		delete Region;
-		delete Model;
+		}
+		return _image->modify(
+			*Model, *Region, mask, subtract,
+			list, stretch
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*

@@ -62,6 +62,8 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
+#include <synthesis/MeasurementComponents/Utils.h>
+
 #include <synthesis/MeasurementComponents/PBMath1DAiry.h>
 #include <synthesis/MeasurementComponents/PBMath1DNumeric.h>
 #include <synthesis/MeasurementComponents/PBMath2DImage.h>
@@ -114,10 +116,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    antIndexToDiamIndex_p(k)=diamIndex;
 	    antMath_p.resize(diamIndex+1);
 	    if(pbClass_p== PBMathInterface::AIRY){
-	      Quantity qdiam(dishDiam(k),"m");
-	      
-	      //VLA ratio of blockage to dish
-	      Quantity blockDiam(dishDiam(k)/25.0*2.0, "m");	      
+	      Quantity qdiam(10.7, "m");
+	      Quantity blockDiam(0.75, "m");
+	      ///For ALMA 12m dish it is effectively 10.7 m according to Todd Hunter
+	      ///@ 2011-12-06
+	      if(!((vb.msColumns().observation().telescopeName()(0) =="ALMA") 
+		   && (abs(dishDiam[k] - 12.0) < 0.5))){
+		qdiam= Quantity (dishDiam(k),"m");	
+		//VLA ratio of blockage to dish
+		blockDiam= Quantity(dishDiam(k)/25.0*2.0, "m");
+	      }	      
 	      antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
 						    Quantity(150,"arcsec"), 
 						    Quantity(100.0,"GHz"));
@@ -235,11 +243,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	support=max((antMath_p[ii])->support(coords), support);
       }
       support=Int(max(nx_p, ny_p)*2.0)/2;
-      convSize_p=support*convSampling;
-      CompositeNumber cn(convSize_p);
-      convSize_p=cn.nearestEven(convSize_p);
-      //cerr << "CONVSIZE " << convSize_p << endl;
       convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSampling;
+      // Make this a nice composite number, to speed up FFTs
+      CompositeNumber cn(uInt(convSize_p*2.0));    
+      convSize_p  = cn.nextLargerEven(Int(convSize_p));
+      //cout << "convSize : " << convSize_p << endl;
+
     }
     
     
@@ -332,7 +341,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  LatticeFFT::cfft2d(pBScreen);
 	  LatticeFFT::cfft2d(pB2Screen);
-	
 
 	  Int plane=0;
 	  for (uInt jj=0; jj < k; ++jj)

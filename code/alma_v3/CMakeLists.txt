@@ -355,6 +355,16 @@ casa_add_executable( alma_v3 asdm2MS_v3
   apps/asdm2MS_v3/UvwCoords.cc
   )
 
+casa_add_executable( alma_v3 asdm2MS_xl 
+  apps/asdm2MS_xl/asdm2MS_xl.cc
+  apps/asdm2MS_xl/ASDM2MSFiller.cc
+  apps/asdm2MS_xl/ASDMTableBase.cc
+  apps/asdm2MS_xl/ASDMTables.cc
+  apps/asdm2MS_xl/ASDMVerbatimFiller.cc
+  apps/asdm2MS_xl/Name2Table.cc
+  apps/asdm2MS_xl/UvwCoords.cc
+  )
+
 casa_add_executable( alma_v3 MS2asdm_v3
   apps/MS2asdm_v3/MS2asdm_v3.cc 
   )

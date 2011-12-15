@@ -239,6 +239,20 @@ namespace asdmbinaries {
     const SDMDataSubset&	getSubset();
 
     /*
+     * Returns binary data found in the BDF file from the current location and contained in the next 
+     * nDataSubsets at maximum.
+     *
+     * The result is returned as a reference to a vector of SDMDataSubset. Each element of this vector
+     * is an instance of an SDMDataSubset obtained by a sequential read of the file opened with the method open
+     * from the current position in that file.
+     *
+     * The size of the resulting vector determines how many SDMDataSubsets have been actually read. 
+     *
+     * @return const vector<SDMDataSubset>& 
+     */
+    const vector<SDMDataSubset>& nextSubsets(unsigned int nSubsets);
+
+    /*
      * Returns all binary data found in the BDF file from the current location.
      *
      * The result is returned as a reference to a vector of SDMDataSubset. Each element of this vector
@@ -249,12 +263,11 @@ namespace asdmbinaries {
      */
     const vector<SDMDataSubset>& allRemainingSubsets();
 
-
   private:
     // Enumerations to manage the state of an instance of SDMDataObjectStreamReader.
     //
     enum States {S_NO_BDF, S_AT_BEGINNING, S_READING, S_AT_END};
-    enum Transitions {T_OPEN, T_QUERY, T_TEST_END, T_READ, T_READ_ALL, T_CLOSE};
+    enum Transitions {T_OPEN, T_QUERY, T_TEST_END, T_READ, T_READ_NEXT, T_READ_ALL, T_CLOSE};
 
     // Private variables
     unsigned long long integrationStartsAt;
@@ -280,6 +293,7 @@ namespace asdmbinaries {
     SDMDataObject         sdmDataObject;
     SDMDataSubset         sdmDataSubset;
     vector<SDMDataSubset> remainingSubsets;
+    vector<SDMDataSubset> someSubsets;
 
     // Private methods
     void                        checkState(Transitions t, const string& methodName) const; 

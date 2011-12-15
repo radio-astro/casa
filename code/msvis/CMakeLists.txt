@@ -22,6 +22,8 @@ casa_add_library( msvis
   implement/MSVis/AsynchronousInterface.cc
   implement/MSVis/AsynchronousTools.cc
   implement/MSVis/CalVisBuffer.cc
+  implement/MSVis/GroupProcessor.cc
+  implement/MSVis/GroupWorker.cc
   implement/MSVis/MSAnalysis.cc
   implement/MSVis/MsAverager.cc
   implement/MSVis/MSCalEnums.cc
@@ -35,11 +37,14 @@ casa_add_library( msvis
   implement/MSVis/SubMS.cc
   implement/MSVis/UtilJ.cc
   implement/MSVis/VBContinuumSubtractor.cc
+  implement/MSVis/VBGContinuumSubtractor.cc
+  implement/MSVis/VBRemapper.cc
   implement/MSVis/VisBuffAccumulator.cc
   implement/MSVis/VisBuffer.cc
   implement/MSVis/VisBufferAsync.cc
   implement/MSVis/VisBufferAsyncWrapper.cc
   implement/MSVis/VisBufferUtil.cc
+  implement/MSVis/VisBuffGroup.cc
   implement/MSVis/VisBuffGroupAcc.cc
   implement/MSVis/VisibilityIterator.cc
   implement/MSVis/VisibilityIteratorImpl.cc

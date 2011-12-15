@@ -223,6 +223,8 @@ namespace casa{
       }
       cout << "Loaded " << nAntTypes << " images." << endl;
 
+
+
       // check if there are spectral and stokes axes in the output image
       Int pIndex = outImage.coordinates().findCoordinate(Coordinate::STOKES);
       if(pIndex==-1){
@@ -321,6 +323,14 @@ namespace casa{
 	dShapeFinal.resize(4,True);
 	dShapeFinal(3)=1;
 	rNDimFinal +=1;
+      }
+      else if(rSIndex!=-1 && pSIndex==-1){ // no spectral coordinate in input image but response has one
+	dCoordFinal = CoordinateSystem();
+	dCoordFinal.addCoordinate(dCoord.directionCoordinate(dCoord.findCoordinate(Coordinate::DIRECTION))); 
+	dCoordFinal.addCoordinate(dCoord.stokesCoordinate(dCoord.findCoordinate(Coordinate::STOKES))); 
+	dShapeFinal.resize(3,True);
+	rNDimFinal -=1;
+	rSIndex = -1;
       }
 
       TempImage<Complex> nearFinal(dShapeFinal, dCoordFinal);
@@ -430,6 +440,27 @@ namespace casa{
       //cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " " << wAU(0) << endl;
 
       uInt dirCoordIndex = dCoordFinal.findCoordinate(Coordinate::DIRECTION);
+
+      // convert direction coordinate to J2000 if necessary
+      if(dCoordFinal.directionCoordinate(dirCoordIndex).directionType() != MDirection::J2000){
+	Vector<Double> incrV = dCoordFinal.directionCoordinate(dirCoordIndex).increment();
+	Vector<Double> refPV = dCoordFinal.directionCoordinate(dirCoordIndex).referencePixel();
+	Vector<String> wAxUnitsV =  dCoordFinal.directionCoordinate(dirCoordIndex).worldAxisUnits();
+	Projection pproj = dCoordFinal.directionCoordinate(dirCoordIndex).projection();
+	Matrix<Double> xxform = dCoordFinal.directionCoordinate(dirCoordIndex).linearTransform();
+	Quantity incr0(incrV(0),wAxUnitsV(0)); 
+	Quantity incr1(incrV(1),wAxUnitsV(1)); 
+
+	DirectionCoordinate newDC(MDirection::J2000, pproj, 0., 0., 
+				  incr0.getValue(Unit("rad")), incr1.getValue(Unit("rad")),
+				  xxform, refPV(0), refPV(1), 0., 90.);
+	if(!dCoordFinal.replaceCoordinate(newDC, dirCoordIndex)){
+	  ostringstream oss;
+	  oss << "Error: response image direction coordinate cannot be set to direction type J2000.";
+	  throw(SynthesisError(oss.str()));
+	}
+      }
+
       DirectionCoordinate dCoordFinalDir = dCoordFinal.directionCoordinate(0);
 
       // Scale response image with frequency
@@ -449,8 +480,8 @@ namespace casa{
       if(!(wAU(0)==wAUI(0))){
 	Unit uIn(wAU(0));
 	Unit uOut(wAUI(0));
-	Quantum<Double> q0(wCenterOut(0), uIn);
-	Quantum<Double> q1(wCenterOut(1), uIn);
+	Quantity q0(wCenterOut(0), uIn);
+	Quantity q1(wCenterOut(1), uIn);
 	wCenterOut(0) = q0.getValue(uOut);
 	wCenterOut(1) = q1.getValue(uOut);
       }

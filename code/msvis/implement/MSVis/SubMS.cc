@@ -61,8 +61,12 @@
 #include <casa/System/AppInfo.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/Quanta/QuantumHolder.h>
-#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/GroupProcessor.h>
+//#include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferComponents.h>
+#include <msvis/MSVis/VBGContinuumSubtractor.h>
+#include <msvis/MSVis/VBRemapper.h>
 #include <msvis/MSVis/VisChunkAverager.h>
 #include <msvis/MSVis/VisIterator.h>
 //#include <msvis/MSVis/VisibilityIterator.h>
@@ -97,14 +101,14 @@
 
 namespace casa {
 
-//typedef ROVisibilityIterator ROVisIter;
-//typedef VisibilityIterator VisIter;
+typedef ROVisibilityIterator ROVisIter;
+typedef VisibilityIterator VisIter;
 
-Double subms_wtToSigma(Double wt);
-
-Double subms_wtToSigma(Double wt)
+namespace subms {
+Double wtToSigma(Double wt)
 {
   return wt > 0.0 ? 1.0 / sqrt(wt) : -1.0;
+}
 }
   
   SubMS::SubMS(String& theMS, Table::TableOption option) :
@@ -123,7 +127,10 @@ Double subms_wtToSigma(Double wt)
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    combine_p("")
+    combine_p(""),
+    fitorder_p(-1),
+    fitspw_p("*"),
+    fitoutspw_p("*")
   {
   }
   
@@ -143,7 +150,10 @@ Double subms_wtToSigma(Double wt)
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    combine_p("")
+    combine_p(""),
+    fitorder_p(-1),
+    fitspw_p("*"),
+    fitoutspw_p("*")
   {
   }
   
@@ -1004,10 +1014,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   //sameShape_p = areDataShapesConstant();
 
-  if(timeBin_p <= 0.0)
-    success &= fillMainTable(datacols);
+  if(fitorder_p < 0 && timeBin_p <= 0.0)
+    success &= writeAllMainRows(datacols);
   else
-    success &= fillAverMainTable(datacols);
+    success &= writeSomeMainRows(datacols);
   return success;
 }
   
@@ -1024,7 +1034,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Block<Int> sort;
       ROVisibilityIterator(ms_p, sort);
     }
-    
    
     const MeasurementSet *elms;
     elms=&ms_p;
@@ -1650,6 +1659,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                 else
                   os << ".\nRemember that MS selection ranges (unlike Python), *include* the last number.";
                 os << LogIO::POST;
+                os << LogIO::WARN
+                   << "You will not be able to export an MS where the width varies by channel to UVFITS!"
+                   << LogIO::POST;
               }
 
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
@@ -6650,46 +6662,27 @@ Bool SubMS::fillAccessoryMainCols(){
   return True;
 }
 
-  Bool SubMS::fillMainTable(const Vector<MS::PredefinedColumns>& colNames)
+  Bool SubMS::writeAllMainRows(const Vector<MS::PredefinedColumns>& colNames)
   {  
-    LogIO os(LogOrigin("SubMS", "fillMainTable()"));
+    LogIO os(LogOrigin("SubMS", "writeAllMainRows()"));
     Bool success = true;
     Timer timer;
 
     fillAccessoryMainCols();
 
-    //Deal with data
+    //Deal with data, flags, sigma, and weights.
+    timer.mark();
     if(keepShape_p){
-      ROArrayColumn<Complex> data;
       Vector<MS::PredefinedColumns> complexCols;
       const Bool doFloat = sepFloat(colNames, complexCols);
       const uInt nDataCols = complexCols.nelements();
       const Bool writeToDataCol = mustConvertToData(nDataCols, complexCols);
 
-      // timer.mark();
-      // msc_p->weight().putColumn(mscIn_p->weight());
-      // os << LogIO::DEBUG1
-      //    << "Copying weight took " << timer.real() << "s."
-      //    << LogIO::POST;
-      // timer.mark();
-      // msc_p->sigma().putColumn(mscIn_p->sigma());
-      // os << LogIO::DEBUG1
-      //    << "Copying SIGMA took " << timer.real() << "s."
-      //    << LogIO::POST;
-
-      // timer.mark();      
-      // msc_p->flag().putColumn(mscIn_p->flag());
-      // os << LogIO::DEBUG1
-      //    << "Copying FLAG took " << timer.real() << "s."
-      //    << LogIO::POST;
-
-      timer.mark();
       copyDataFlagsWtSp(complexCols, writeToDataCol);
       if(doFloat)
         msc_p->floatData().putColumn(mscIn_p->floatData());
     }
     else{
-      timer.mark();
       doChannelMods(colNames);
     }
     os << LogIO::DEBUG1
@@ -6760,6 +6753,205 @@ Bool SubMS::existsFlagCategory() const
       return false;
     return true;
   }
+
+void SubMS::setFitOrder(Int fitorder, Bool advise)
+{
+  fitorder_p = fitorder;
+
+  if(advise){
+    LogIO os(LogOrigin("SubMS", "setFitOrder()"));
+
+    if(fitorder < 0)
+      os << LogIO::NORMAL
+         << "Keeping the continuum.";
+    else if(fitorder > 1)
+      os << LogIO::WARN
+         << "Fit orders > 1 tend to drastically add noise to line channels.";
+    os << LogIO::POST;
+  }
+}
+
+Bool SubMS::shouldWatch(Bool& conflict, const String& col,
+                        const String& uncombinable,
+                        const Bool verbose) const
+{
+  Bool wantWatch = !combine_p.contains(col);
+
+  if(!wantWatch && uncombinable.contains(col)){
+    conflict = true;
+    wantWatch = false;
+
+    if(verbose){
+      LogIO os(LogOrigin("SubMS", "shouldWatch()"));
+
+      os << LogIO::WARN
+         << "Combining by " << col
+         << " was requested, but it is not allowed by this operation and will be ignored."
+         << LogIO::POST;
+    }
+  }
+  return wantWatch;
+}
+
+Bool SubMS::setSortOrder(Block<Int>& sort, const String& uncombinable,
+                         const Bool verbose) const
+{
+  Bool conflict = false;
+  uInt n_cols_to_watch = 7;     // 3 + #(watchables), whether or not they are watched.
+
+  // Already separated by the chunking.
+  //const Bool watch_array(!combine_p.contains("arr")); // Pirate talk for "array".
+
+  Bool watch_obs   = shouldWatch(conflict, "obs",   uncombinable, verbose);
+  Bool watch_scan  = shouldWatch(conflict, "scan",  uncombinable, verbose);
+  Bool watch_spw   = shouldWatch(conflict, "spw",   uncombinable, verbose);
+  Bool watch_state = shouldWatch(conflict, "state", uncombinable, verbose);
+
+  // if(watch_obs)
+  //   ++n_cols_to_watch;
+  // if(watch_scan)
+  //   ++n_cols_to_watch;
+  // if(watch_spw)
+  //   ++n_cols_to_watch;
+  // if(watch_state)
+  //   ++n_cols_to_watch;
+
+  uInt colnum = 1;
+
+  sort.resize(n_cols_to_watch);
+  sort[0] = MS::ARRAY_ID;
+  if(watch_scan){
+    sort[colnum] = MS::SCAN_NUMBER;
+    ++colnum;
+  }
+  if(watch_state){
+    sort[colnum] = MS::STATE_ID;
+    ++colnum;
+  }
+  sort[colnum] = MS::FIELD_ID;
+  ++colnum;
+  if(watch_spw){
+    sort[colnum] = MS::DATA_DESC_ID;
+    ++colnum;
+  }
+  sort[colnum] = MS::TIME;
+  ++colnum;  
+  if(watch_obs){
+    sort[colnum] = MS::OBSERVATION_ID;
+    ++colnum;
+  }
+
+  // Now all the axes that should be combined should be added, so that they end
+  // up in the same chunk.
+  if(!watch_scan){
+    sort[colnum] = MS::SCAN_NUMBER;
+    ++colnum;
+  }
+  if(!watch_state){
+    sort[colnum] = MS::STATE_ID;
+    ++colnum;
+  }
+  if(!watch_spw){
+    sort[colnum] = MS::DATA_DESC_ID;
+    ++colnum;
+  }
+  if(!watch_obs){
+    sort[colnum] = MS::OBSERVATION_ID;
+    //++colnum;
+  }
+
+  return !conflict;
+}
+
+Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
+                              const VBRemapper& vbmaps)
+{
+  LogIO os(LogOrigin("SubMS", "subtractContinuum()"));
+  Bool retval = True;
+
+  if(colNames.nelements() != 1){
+    os << LogIO::SEVERE
+       << "The continuum cannot be subtracted from > 1 *DATA column at a time."
+       << LogIO::POST;
+    return False;
+  }
+
+  Block<Int> sort;
+  if(!setSortOrder(sort, "obs,scan,state", false)){
+    os << LogIO::WARN
+       << "This version of continuum subtraction intentionally does not support\n"
+       << "time smearing.  The only recommended (and used) values for combine in\n"
+       << "this case are '' or 'spw'."
+       << LogIO::POST;
+  }
+
+  // Aaargh...everywhere else VisIter is used a timeInterval of 0 is treated as
+  // DBL_MAX, meaning that TIME can be in sort but effectively be ignored for
+  // major chunking.  Why couldn't they just have said DBL_MAX in the first
+  // place?
+  ROVisibilityIterator viIn(mssel_p, sort, False, DBL_MIN);
+
+  // Make sure it is initialized before any copies are made.
+  viIn.originChunks();
+
+  VBGContinuumSubtractor vbgcs(msOut_p, msc_p, vbmaps, viIn, fitorder_p,
+                               colNames[0], fitspw_p, fitoutspw_p);
+  ROGroupProcessor rogp(viIn, &vbgcs);
+
+  retval = rogp.go();
+
+  // TODO: Support uvcontsub(3)'s spw parameter by
+  //  * filtering the output by fitoutspw_p
+  //  * remapping DDID as necessary, taking (union)spw into account
+  //  * filtering and rewriting the DATA_DESC_ID and SPECTRAL_WINDOW subtables.
+
+  msOut_p.flush();    // Necessary?
+  return retval;
+}
+
+void SubMS::fill_vbmaps(std::map<VisBufferComponents::EnumType, std::map<Int, Int> >& vbmaps)
+{
+  // In general, _IDs which are row numbers in a subtable must be
+  // remapped, and those which are not probably shouldn't be.
+  if(antennaSel_p){
+    std::map<Int, Int> antIndexer;
+
+    fillAntIndexer(antIndexer, mscIn_p);
+    vbmaps[VisBufferComponents::Ant1] = antIndexer;
+    vbmaps[VisBufferComponents::Ant2] = antIndexer;
+  }
+
+  if(!allEQ(spwRelabel_p, spw_p)){
+    std::map<Int, Int> ddidMapper;
+
+    for(uInt i = 0; i < oldDDSpwMatch_p.nelements(); ++i)
+      ddidMapper[i] = spwRelabel_p[oldDDSpwMatch_p[i]];
+
+    vbmaps[VisBufferComponents::DataDescriptionId] = ddidMapper;
+  }
+
+  if(fieldid_p.nelements() < mscIn_p->field().nrow()){
+    std::map<Int, Int> fldMapper;
+
+    make_map(fldMapper, fieldRelabel_p);
+    vbmaps[VisBufferComponents::FieldId] = fldMapper;
+  }
+
+  if(selObsId_p.nelements() > 0 && selObsId_p.nelements() < mscIn_p->observation().nrow()){
+    std::map<Int, Int> obsMapper;
+
+    make_map(obsMapper, selObsId_p);
+    vbmaps[VisBufferComponents::ObservationId] = obsMapper;
+  }
+
+  //std::map<Int, Int> procMapper;
+  //make_map(procMapper, mscIn_p->processorId().getColumn());
+
+  if(stateRemapper_p.size() < 1)
+    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
+  if(stateRemapper_p.size() < mscIn_p->state().nrow())
+    vbmaps[VisBufferComponents::StateId] = stateRemapper_p;
+}
 
 Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
                               const Bool writeToDataCol)
@@ -6841,7 +7033,7 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
         viIn.weightMat(wtmat);
         viOut.setWeightMat(wtmat);
         if(fromCorrToData)                           // Use SIGMA like a storage place
-          arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+          arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
         else
           viIn.sigmaMat(wtmat);           // Yes, I'm reusing wtmat.
         viOut.setSigmaMat(wtmat);
@@ -7022,26 +7214,32 @@ void SubMS::relabelIDs()
   remapColumn(msc_p->observationId(), mscIn_p->observationId(), selObsId_p);
 }
 
-Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
+Bool SubMS::writeSomeMainRows(const Vector<MS::PredefinedColumns>& colNames)
 {    
-  LogIO os(LogOrigin("SubMS", "fillAverMainTable()"));
+  LogIO os(LogOrigin("SubMS", "writeSomeMainRows()"));
+  Bool retval = True;
     
   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
      << "Before fillAntIndexer(): "
      << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
      << LogIO::POST;
 
-  // fill time and timecentroid and antennas
-  if(fillAntIndexer(mscIn_p, antIndexer_p) < 1)
-    return False;
+  // A set of maps from input ID to output ID, keyed by VisBufferComponent.
+  std::map<VisBufferComponents::EnumType, std::map<Int, Int> > vbmaps;
+  fill_vbmaps(vbmaps);
+  VBRemapper remapper(vbmaps);
 
-  //things to be taken care in doTimeAver()...
+  //things to be taken care of in doTimeAver() or subtractContinuum...
   // flagRow		ScanNumber	uvw		weight		
   // sigma		ant1		ant2		time
   // timeCentroid	feed1 		feed2		exposure
   // stateId		processorId	observationId	arrayId
-  return (corrString_p != "") ? doTimeAverVisIterator(colNames)
-                              : doTimeAver(colNames);
+  if(fitorder_p >= 0)
+    retval = subtractContinuum(colNames, remapper); // writeToDataCol = complexCols == 1
+  else
+    retval = (corrString_p != "") ? doTimeAverVisIterator(colNames, remapper)
+                                  : doTimeAver(colNames, remapper);
+  return retval;
 }
 
 uInt SubMS::addOptionalColumns(const Table& inTab, Table& outTab,
@@ -8050,7 +8248,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
           viOut.setWeightSpectrum(vb.weightSpectrum());
         viOut.setWeightMat(wtmat);
         if(fromCorrToData)                           // Use SIGMA like a storage place
-          arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+          arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
         else
           wtmat.reference(vb.sigmaMat());           // Yes, I'm reusing wtmat.
         viOut.setSigmaMat(wtmat);
@@ -8181,7 +8379,7 @@ uInt SubMS::remapped(const Int ov, const Vector<Int>& mapper, uInt i=0)
   return i;  
 }
 
-uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
+uInt SubMS::fillAntIndexer(std::map<Int, Int>& antIndexer, const ROMSColumns *msc)
 {
   const Vector<Int>& ant1 = msc->antenna1().getColumn();
   const Vector<Int>& ant2 = msc->antenna2().getColumn();
@@ -8201,8 +8399,6 @@ uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
     ++remaval;
   }
     
-  antIndexer.resize(max(selAnt) + 1);
-  antIndexer = -1;
   for(uInt j = 0; j < nant; ++j)
     antIndexer[selAnt[j]] = static_cast<Int>(j);
   return nant;
@@ -8262,7 +8458,8 @@ Bool SubMS::sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
   return doFloat;
 }
 
-Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
+Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
+                       const VBRemapper& remapper)
 {
   LogIO os(LogOrigin("SubMS", "doTimeAver()"));
 
@@ -8272,9 +8469,6 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
     throw(AipsError("Simultaneous time and channel averaging is not handled."));
     return False;
   }
-
-  if(stateRemapper_p.size() < 1)
-    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
      << "Before msOut_p.addRow(): "
@@ -8301,42 +8495,11 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   // calling vi.originChunks(), so that approach does not work with
   // VisibilityIterator.  Instead, get VisibilityIterator's sort (which also
   // controls how the chunks are split) to do the work.
-
-  // Already separated by the chunking.
-  //const Bool watch_array(!combine_p.contains("arr")); // Pirate talk for "array".
-
-  const Bool watch_scan(!combine_p.contains("scan"));
-  const Bool watch_state(!combine_p.contains("state"));
-  const Bool watch_obs(!combine_p.contains("obs"));
-  uInt n_cols_to_watch = 4;     // At least.
-
-  if(watch_scan)
-    ++n_cols_to_watch;
-  if(watch_state)
-    ++n_cols_to_watch;
-  if(watch_obs)
-    ++n_cols_to_watch;
-
-  Block<Int> sort(n_cols_to_watch);
-  uInt colnum = 1;
-
-  sort[0] = MS::ARRAY_ID;
-  if(watch_scan){
-    sort[colnum] = MS::SCAN_NUMBER;
-    ++colnum;
-  }
-  if(watch_state){
-    sort[colnum] = MS::STATE_ID;
-    ++colnum;
-  }
-  sort[colnum] = MS::FIELD_ID;
-  ++colnum;
-  sort[colnum] = MS::DATA_DESC_ID;
-  ++colnum;
-  sort[colnum] = MS::TIME;
-  ++colnum;
-  if(watch_obs)
-    sort[colnum] = MS::OBSERVATION_ID;
+  Block<Int> sort;
+  if(!setSortOrder(sort, "spw", false))
+    os << LogIO::WARN
+       << "The request to combine spws while time averaging is being ignored."
+       << LogIO::POST;
 
   // MSIter tends to produce output INTERVALs that are longer than the
   // requested interval length, by ~0.5 input integrations for a random
@@ -8371,18 +8534,6 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   Matrix<Float> wtmat;
   const Bool doSpWeight = vi.existsWeightSpectrum();
 
-  Vector<Int> spwindex(max(spw_p) + 1);
-  spwindex.set(-1);
-  for(uInt k = 0; k < spw_p.nelements(); ++k)
-    spwindex[spw_p[k]] = k;
-    
-  //std::map<Int, Int> procMapper;
-  //make_map(procMapper, mscIn_p->processorId().getColumn());
-
-  // Vector<Int> inObs;            // mscIn_p->observationId()
-  std::map<Int, Int> obsMapper;
-  make_map(obsMapper, selObsId_p);
-
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
   // All of this ddid/spw confusion really needs cleaning up.
@@ -8425,18 +8576,12 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
       // msOut_p.addRow(rowsnow, True);
       msOut_p.addRow(rowsnow);            // Try it without initialization.
-        
-      //    relabelIDs();
 
       // avb.freqAveCubes();  // Watch out, weight must currently be handled separately.
 
-      // // Fill in the nonaveraging values from slotv0.
-      // // In general, _IDs which are row numbers in a subtable must be
-      // // remapped, and those which are not probably shouldn't be.
-      if(antennaSel_p){
-        remap(avb.antenna1(), antIndexer_p);
-        remap(avb.antenna2(), antIndexer_p);
-      }
+      remapper.remap(avb);
+
+      // Fill in the nonaveraging values from slotv0.
       msc_p->antenna1().putColumnCells(rowstoadd, avb.antenna1());
       msc_p->antenna2().putColumnCells(rowstoadd, avb.antenna2());
 
@@ -8456,9 +8601,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       if(doFloat)
         msc_p->floatData().putColumnCells(rowstoadd, avb.floatDataCube());
 
-      // remap() with a constant value.
       Vector<Int> ddID(rowsnow);
-      ddID.set(spwRelabel_p[oldDDSpwMatch_p[avb.dataDescriptionId()]]);
+      ddID.set(avb.dataDescriptionId());
       msc_p->dataDescId().putColumnCells(rowstoadd, ddID);
 
       msc_p->exposure().putColumnCells(rowstoadd, avb.exposure());
@@ -8466,7 +8610,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       msc_p->feed2().putColumnCells(rowstoadd, avb.feed2());
 
       Vector<Int> fieldID(rowsnow);
-      fieldID.set(fieldRelabel_p[avb.fieldId()]);
+      fieldID.set(avb.fieldId());
       msc_p->fieldId().putColumnCells(rowstoadd, fieldID);
 
       msc_p->flagRow().putColumnCells(rowstoadd, avb.flagRow()); 
@@ -8476,13 +8620,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
         msc_p->flagCategory().putColumnCells(rowstoadd, avb.flagCategory());
 
       msc_p->interval().putColumnCells(rowstoadd, avb.timeInterval());
-
-      remap(avb.observationId(), obsMapper);
       msc_p->observationId().putColumnCells(rowstoadd, avb.observationId());
-
-      //remap(avb.processorId(), procMapper);
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
-
       msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());   // Don't remap!
 
       if(doSpWeight)
@@ -8490,14 +8629,12 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       wtmat.reference(avb.weightMat());
       msc_p->weight().putColumnCells(rowstoadd, wtmat);
       if(fromCorrToData)                           // Use SIGMA like a storage place
-        arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+        arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
       else
         wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.
       msc_p->sigma().putColumnCells(rowstoadd, wtmat);
 
-      remap(avb.stateId(), stateRemapper_p);
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
-
       msc_p->time().putColumnCells(rowstoadd, avb.time());
       msc_p->timeCentroid().putColumnCells(rowstoadd, avb.timeCentroid());
       msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());
@@ -8528,7 +8665,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 }
 
 // This should become the default soon (with a name change).
-Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames)
+Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames,
+                                  const VBRemapper& remapper)
 {
   LogIO os(LogOrigin("SubMS", "doTimeAverVisIterator()"));
 
@@ -8538,9 +8676,6 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
     throw(AipsError("Simultaneous time and channel averaging is not handled."));
     return False;
   }
-
-  if(stateRemapper_p.size() < 1)
-    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
      << "Before msOut_p.addRow(): "
@@ -8567,42 +8702,11 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   // calling vi.originChunks(), so that approach does not work with VisIterator.
   // Instead, get VisIterator's sort (which also controls how the chunks are split)
   // to do the work.
-
-  // Already separated by the chunking.
-  //const Bool watch_array(!combine_p.contains("arr")); // Pirate talk for "array".
-
-  const Bool watch_scan(!combine_p.contains("scan"));
-  const Bool watch_state(!combine_p.contains("state"));
-  const Bool watch_obs(!combine_p.contains("obs"));
-  uInt n_cols_to_watch = 4;     // At least.
-
-  if(watch_scan)
-    ++n_cols_to_watch;
-  if(watch_state)
-    ++n_cols_to_watch;
-  if(watch_obs)
-    ++n_cols_to_watch;
-
-  Block<Int> sort(n_cols_to_watch);
-  uInt colnum = 1;
-
-  sort[0] = MS::ARRAY_ID;
-  if(watch_scan){
-    sort[colnum] = MS::SCAN_NUMBER;
-    ++colnum;
-  }
-  if(watch_state){
-    sort[colnum] = MS::STATE_ID;
-    ++colnum;
-  }
-  sort[colnum] = MS::FIELD_ID;
-  ++colnum;
-  sort[colnum] = MS::DATA_DESC_ID;
-  ++colnum;
-  sort[colnum] = MS::TIME;
-  ++colnum;  
-  if(watch_obs)
-    sort[colnum] = MS::OBSERVATION_ID;
+  Block<Int> sort;
+  if(!setSortOrder(sort, "spw", false))
+    os << LogIO::WARN
+       << "The request to combine spws while time averaging is being ignored."
+       << LogIO::POST;
 
   // MSIter tends to produce output INTERVALs that are longer than the
   // requested interval length, by ~0.5 input integrations for a random
@@ -8631,18 +8735,6 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
 
   Matrix<Float> wtmat;
   const Bool doSpWeight = vi.existsWeightSpectrum();
-
-  Vector<Int> spwindex(max(spw_p) + 1);
-  spwindex.set(-1);
-  for(uInt k = 0; k < spw_p.nelements(); ++k)
-    spwindex[spw_p[k]] = k;
-    
-  //std::map<Int, Int> procMapper;
-  //make_map(procMapper, mscIn_p->processorId().getColumn());
-
-  // Vector<Int> inObs;            // mscIn_p->observationId()
-  std::map<Int, Int> obsMapper;
-  make_map(obsMapper, selObsId_p);
 
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
@@ -8687,17 +8779,12 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       // msOut_p.addRow(rowsnow, True);
       msOut_p.addRow(rowsnow);            // Try it without initialization.
         
-      //    relabelIDs();
+      // avb.freqAveCubes();  // Watch out, weight must currently be handled
+      // separately.
 
-      // avb.freqAveCubes();  // Watch out, weight must currently be handled separately.
+      remapper.remap(avb);
 
-      // // Fill in the nonaveraging values from slotv0.
-      // // In general, _IDs which are row numbers in a subtable must be
-      // // remapped, and those which are not probably shouldn't be.
-      if(antennaSel_p){
-        remap(avb.antenna1(), antIndexer_p);
-        remap(avb.antenna2(), antIndexer_p);
-      }
+      // Fill in the nonaveraging values from slotv0.
       msc_p->antenna1().putColumnCells(rowstoadd, avb.antenna1());
       msc_p->antenna2().putColumnCells(rowstoadd, avb.antenna2());
 
@@ -8717,9 +8804,8 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       if(doFloat)
         msc_p->floatData().putColumnCells(rowstoadd, avb.floatDataCube());
 
-      // remap() with a constant value.
       Vector<Int> ddID(rowsnow);
-      ddID.set(spwRelabel_p[oldDDSpwMatch_p[avb.dataDescriptionId()]]);
+      ddID.set(avb.dataDescriptionId());
       msc_p->dataDescId().putColumnCells(rowstoadd, ddID);
 
       msc_p->exposure().putColumnCells(rowstoadd, avb.exposure());
@@ -8727,7 +8813,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       msc_p->feed2().putColumnCells(rowstoadd, avb.feed2());
 
       Vector<Int> fieldID(rowsnow);
-      fieldID.set(fieldRelabel_p[avb.fieldId()]);
+      fieldID.set(avb.fieldId());
       msc_p->fieldId().putColumnCells(rowstoadd, fieldID);
 
       msc_p->flagRow().putColumnCells(rowstoadd, avb.flagRow()); 
@@ -8737,13 +8823,8 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
         msc_p->flagCategory().putColumnCells(rowstoadd, avb.flagCategory());
 
       msc_p->interval().putColumnCells(rowstoadd, avb.timeInterval());
-
-      remap(avb.observationId(), obsMapper);
       msc_p->observationId().putColumnCells(rowstoadd, avb.observationId());
-
-      //remap(avb.processorId(), procMapper);
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
-
       msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());	// Don't remap!
 
       if(doSpWeight)
@@ -8752,14 +8833,12 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       wtmat.reference(avb.weightMat());
       msc_p->weight().putColumnCells(rowstoadd, wtmat);
       if(fromCorrToData)                           // Use SIGMA like a storage place
-        arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+        arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
       else
         wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.     
       msc_p->sigma().putColumnCells(rowstoadd, wtmat);
 
-      remap(avb.stateId(), stateRemapper_p);
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
-
       msc_p->time().putColumnCells(rowstoadd, avb.time());
       msc_p->timeCentroid().putColumnCells(rowstoadd, avb.timeCentroid());
       msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());

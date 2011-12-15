@@ -51,7 +51,9 @@ namespace casa{
   //
   //------------------------------------------------------------------------
   //
-  ALMACalcIlluminationConvFunc::ALMACalcIlluminationConvFunc():IlluminationConvFunc()
+  ALMACalcIlluminationConvFunc::ALMACalcIlluminationConvFunc():
+    IlluminationConvFunc(),
+    otherAntRayPath_p("")
   {
     ap.oversamp = 3;
     ap.x0=-6.5; ap.y0=-6.5;
@@ -101,7 +103,7 @@ namespace casa{
     MVFrequency freqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
     MEpoch obsTime(vb.msColumns().timeQuant()(0));
     String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime);
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime, otherAntRayPath_p);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
     fillPB(*(ap.aperture),pbImage);
@@ -122,9 +124,46 @@ namespace casa{
     String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
     String antType2 = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[1]); // take the first antenna
     cout << "cfkey, type1, type2 " << cfKey << " " << antType << " " << antType2 << endl;
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime);
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime, otherAntRayPath_p);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
+    pbImage.setCoordinateInfo(skyCS);
+    fillPB(*(ap.aperture),pbImage);
+  }
+
+  void ALMACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
+					     const String& telescope, const MEpoch& obsTime, 
+					     const String& antType0, const String& antType1,
+					     const MVFrequency& freqQ, Double pa,
+					     Bool doSquint)
+  {
+    CoordinateSystem skyCS(pbImage.coordinates());
+    IPosition skyShape(pbImage.shape());
+
+    TempImage<Complex> uvGrid;
+    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), telescope, antType0, obsTime, otherAntRayPath_p);
+    // antType1 ignored for the moment
+    regridAperture(skyCS, skyShape, uvGrid, telescope, freqQ, pa, doSquint, bandID);
+    fillPB(*(ap.aperture),pbImage);
+  }
+
+  void ALMACalcIlluminationConvFunc::applyPB(ImageInterface<Complex>& pbImage, 
+					     const String& telescope, const MEpoch& obsTime, 
+					     const String& antType0, const String& antType1,
+					     const MVFrequency& freqQ, Double pa,
+					     Bool doSquint)
+  {
+    CoordinateSystem skyCS(pbImage.coordinates());
+    IPosition skyShape(pbImage.shape());
+
+    TempImage<Complex> uvGrid;
+    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), telescope, antType0, obsTime, otherAntRayPath_p);
+    // antType1 ignored for the moment
+    regridAperture(skyCS, skyShape, uvGrid, telescope, freqQ, pa, doSquint, bandID);
     pbImage.setCoordinateInfo(skyCS);
     fillPB(*(ap.aperture),pbImage);
   }
@@ -142,10 +181,7 @@ namespace casa{
     CoordinateSystem skyCoords(skyCS);
 
     Int index;
-    Double timeValue = getCurrentTimeStamp(vb);
     Float pa;
-    if (bandID != -1) ap.band = bandID;
-    AlwaysAssert(ap.band>=-1, AipsError);
 
     pa = getPA(vb);
 
@@ -154,154 +190,14 @@ namespace casa{
     Float Freq, freqLo, freqHi;
     Vector<Double> chanFreq = vb.frequency();
 
-    if (lastPA == pa)
-      {
-	logIO << "Your CPU is being used to do computations for the same PA as for the previous call.  Report this!" 
-	      << LogIO::NORMAL1;
-      }
-    //    if (lastPA != pa)
-      {
-	lastPA = pa;
-	
-	// const ROMSSpWindowColumns& spwCol = vb.msColumns().spectralWindow();
-	// ROArrayColumn<Double> chanfreq = spwCol.chanFreq();
-	// ROScalarColumn<Double> reffreq = spwCol.refFrequency();
+    freqHi = max(chanFreq);
+    freqLo = min(chanFreq);
+    Freq   = freqHi;
 
-	// //	Freq = sum(chanFreq)/chanFreq.nelements();
-	// Freq = max(chanfreq.getColumn());
-	// freqHi = max(chanfreq.getColumn());
-	// freqLo = min(chanfreq.getColumn());
-	freqHi = max(chanFreq);
-	freqLo = min(chanFreq);
-	Freq   = freqHi;
-	cerr << "Freq = " << chanFreq << endl;
-	ap.freq = freqHi/1E9;
-	
-	IPosition imsize(skyShape);
-	//	CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,Freq);
-	CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,freqHi);
-
-	index = uvCoords.findCoordinate(Coordinate::LINEAR);
-	LinearCoordinate lc=uvCoords.linearCoordinate(index);
-	Vector<Double> incr = lc.increment();
-	Double Lambda = C::c/freqHi;
-	
-    index = skyCS.findCoordinate(Coordinate::SPECTRAL);
-    SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
-    Vector<Double> refVal = SpC.referenceValue();
-    refVal(0) = freqHi;
-    SpC.setReferenceValue(refVal);
-    skyCS.replaceCoordinate(SpC,index);
-
-	ap.nx = skyShape(0); ap.ny = skyShape(1);
-	IPosition apertureShape(ap.aperture->shape());
-	apertureShape(0) = ap.nx;  apertureShape(1) = ap.ny;
-	ap.aperture->resize(apertureShape);
-	ap.dx = abs(incr(0)*Lambda); ap.dy = abs(incr(1)*Lambda);
-	//	cout << ap.dx << " " << incr(0) << endl;
-	//	ap.x0 = -(25.0/(2*ap.dx)+1)*ap.dx; ap.y0 = -(25.0/(2*ap.dy)+1)*ap.dy;
-	// Following 3 lines go with the ANT tag in BeamCalc.cc
-	//	Double antRadius=BeamCalcGeometryDefaults[ap.band].Rant;
-	//	ap.x0 = -(antRadius/(ap.dx)+1)*ap.dx; 
-	//	ap.y0 = -(antRadius/(ap.dy)+1)*ap.dy;
-	// Following 2 lines go with the PIX tag in BeamCalc.cc
- 	ap.x0 = -(ap.nx/2)*ap.dx; 
- 	ap.y0 = -(ap.ny/2)*ap.dy;
-
-	ap.pa=pa;
-	ap.aperture->set(0.0);
-	BeamCalc::Instance()->calculateAperture(&ap);
-	
-	//  Make the aperture function = (1,0) - for testing
-	
-// 	cout << "Making (1,0) aperture" << endl;
-// 	IPosition ttndx(4,0,0,0,0);
-// 	for(ttndx(3)=0;ttndx(3)<apertureShape(3);ttndx(3)++)
-// 	  for(ttndx(2)=0;ttndx(2)<apertureShape(2);ttndx(2)++)
-// 	    for(ttndx(1)=0;ttndx(1)<apertureShape(1);ttndx(1)++)
-// 	      for(ttndx(0)=0;ttndx(0)<apertureShape(0);ttndx(0)++)
-// 		{
-// 		  Complex val;
-// 		  val = ap.aperture->getAt(ttndx);
-// 		  if (abs(val) != 0.0) val = Complex(1,0);
-// 		  ap.aperture->putAt(val,ttndx);
-// 		}
-	
-	//
-	// Set the phase of the aperture function to zero if doSquint==F
-	// Poln. axis indices
-        // 0: XX, 1:XY, 2:YX, 3:YY
-	// This is electic field. 0=> Poln X, 
-	//                        1=> Leakage of X->Y
-	//                        2=> Leakage of Y->X
-	//                        3=> Poln Y
-	//
-	// The squint is removed in the following code using
-	// honest-to-god pixel indexing. If this is not the most
-	// efficient method of doing this in AIPS++ (i.e. instead use
-	// slices etc.), then this cost will show up in making the
-	// average PB.  Since this goes over each pixel of a full
-	// stokes (poln. really) complex image, look here (also) for
-	// optimization (if required).
-	//
-	if (!doSquint)
-	  {
-	    IPosition PolnXIndex(4,0,0,0,0), PolnYIndex(4,0,0,3,0);
-	    IPosition tndx(4,0,0,0,0);
-	    for(tndx(3)=0;tndx(3)<apertureShape(3);tndx(3)++)   // The freq. axis
-	      for(tndx(2)=0;tndx(2)<apertureShape(2);tndx(2)++) // The Poln. axis
-		for(tndx(1)=0;tndx(1)<apertureShape(1);tndx(1)++)   // The spatial
-		  for(tndx(0)=0;tndx(0)<apertureShape(0);tndx(0)++) // axis.
-		    {
-		      PolnXIndex(0)=PolnYIndex(0)=tndx(0);
-		      PolnXIndex(1)=PolnYIndex(1)=tndx(1);
-		      Complex val, Xval, Yval;
-		      Float phase;
-		      val = ap.aperture->getAt(tndx);
-		      Xval = ap.aperture->getAt(PolnXIndex);
-		      Yval = ap.aperture->getAt(PolnYIndex);
-		      phase = arg(Xval);  Xval=Complex(cos(phase),sin(phase));
-		      phase = arg(Yval);  Yval=Complex(cos(phase),sin(phase));
-		      
-		      if      (tndx(2)==0) ap.aperture->putAt(val*conj(Xval),tndx);
-		      else if (tndx(2)==1) ap.aperture->putAt(val*conj(Yval),tndx);
-		      else if (tndx(2)==2) ap.aperture->putAt(val*conj(Xval),tndx);
-		      else if (tndx(2)==3) ap.aperture->putAt(val*conj(Yval),tndx);
-		    }
-	  }
-
-	Vector<Int> poln(4);
-	poln(0) = Stokes::XX;
-	poln(1) = Stokes::XY;
-	poln(2) = Stokes::YX;
-	poln(3) = Stokes::YY;
-	StokesCoordinate polnCoord(poln);
-	SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
-	//    uvCoords.addCoordinate(dirCoord);
-	index = uvCoords.findCoordinate(Coordinate::STOKES);
-	uvCoords.replaceCoordinate(polnCoord,index);
-	index = uvCoords.findCoordinate(Coordinate::SPECTRAL);
-	uvCoords.replaceCoordinate(spectralCoord,index);
-	
-	ap.aperture->setCoordinateInfo(uvCoords);
-
-	// if (doSquint==True)
-	//   {
-	//     String name("apperture.im");
-	//     storeImg(name,*(ap.aperture));
-	//   }
-
-	//
-	// Now FT the re-gridded Fourier plane to get the primary beam.
-	//
-	ftAperture(*(ap.aperture));
-	// if (doSquint==True)
-	//   {
-	//     String name("ftapperture.im");
-	//     storeImg(name,*(ap.aperture));
-	//   }
-      }
+    regridAperture(skyCS, skyShape, uvGrid, telescopeName, MVFrequency(freqHi), 
+		   pa, doSquint, bandID);
   }
+
   void ALMACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
 						   IPosition& skyShape,
 						   TempImage<Complex>& uvGrid,
@@ -430,7 +326,127 @@ namespace casa{
     ftAperture(*(ap.aperture));
   }
 
-  
+  void ALMACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
+						    IPosition& skyShape,
+						    TempImage<Complex>& uvGrid,
+						    const String& telescope,
+						    const MVFrequency& freqQ,
+						    Float pa,
+						    Bool doSquint, 
+						    Int bandID)
+  {
+    LogIO logIO(LogOrigin("ALMACalcIlluminationConvFunc","regridAperture"));
+    CoordinateSystem skyCoords(skyCS);
+
+    Int index;
+    if (bandID != -1) ap.band = bandID;
+    AlwaysAssert(ap.band>=-1, AipsError);
+
+    String telescopeName=telescope;
+
+    Float Freq;
+
+    if (lastPA == pa){
+      logIO << "Your CPU is being used to do computations for the same PA as for the previous call.  Report this!" 
+	    << LogIO::NORMAL1;
+    }
+
+    lastPA = pa;
+    
+    Freq = freqQ.getValue();
+    ap.freq = Freq/1E9;
+    
+    IPosition imsize(skyShape);
+
+    CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,freqQ.getValue());
+    
+    index = uvCoords.findCoordinate(Coordinate::LINEAR);
+    LinearCoordinate lc=uvCoords.linearCoordinate(index);
+    Vector<Double> incr = lc.increment();
+    Double Lambda = C::c/Freq;
+      
+    index = skyCS.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
+    Vector<Double> refVal = SpC.referenceValue();
+    refVal(0) = freqQ.getValue();
+    SpC.setReferenceValue(refVal);
+    skyCS.replaceCoordinate(SpC,index);
+    
+    ap.nx = skyShape(0); ap.ny = skyShape(1);
+    IPosition apertureShape(ap.aperture->shape());
+    apertureShape(0) = ap.nx;  apertureShape(1) = ap.ny;
+    ap.aperture->resize(apertureShape);
+    ap.dx = abs(incr(0)*Lambda); ap.dy = abs(incr(1)*Lambda);
+    
+    ap.x0 = -(ap.nx/2)*ap.dx; 
+    ap.y0 = -(ap.ny/2)*ap.dy;
+    
+    ap.pa=pa;
+    ap.aperture->set(0.0);
+    BeamCalc::Instance()->calculateAperture(&ap);
+    
+    //
+    // Set the phase of the aperture function to zero if doSquint==F
+    // Poln. axis indices
+    // 0: XX, 1:XY, 2:YX, 3:YY
+    // This is electic field. 0=> Poln X, 
+    //                        1=> Leakage of X->Y
+    //                        2=> Leakage of Y->X
+    //                        3=> Poln Y
+    //
+    // The squint is removed in the following code using
+    // honest-to-god pixel indexing. If this is not the most
+    // efficient method of doing this in AIPS++ (i.e. instead use
+    // slices etc.), then this cost will show up in making the
+    // average PB.  Since this goes over each pixel of a full
+    // stokes (poln. really) complex image, look here (also) for
+    // optimization (if required).
+    //
+    if (!doSquint){
+      IPosition PolnXIndex(4,0,0,0,0), PolnYIndex(4,0,0,3,0);
+      IPosition tndx(4,0,0,0,0);
+      for(tndx(3)=0;tndx(3)<apertureShape(3);tndx(3)++)   // The freq. axis
+	for(tndx(2)=0;tndx(2)<apertureShape(2);tndx(2)++) // The Poln. axis
+	  for(tndx(1)=0;tndx(1)<apertureShape(1);tndx(1)++)   // The spatial
+	    for(tndx(0)=0;tndx(0)<apertureShape(0);tndx(0)++) // axis.
+	      {
+		PolnXIndex(0)=PolnYIndex(0)=tndx(0);
+		PolnXIndex(1)=PolnYIndex(1)=tndx(1);
+		Complex val, Xval, Yval;
+		Float phase;
+		val = ap.aperture->getAt(tndx);
+		Xval = ap.aperture->getAt(PolnXIndex);
+		Yval = ap.aperture->getAt(PolnYIndex);
+		phase = arg(Xval);  Xval=Complex(cos(phase),sin(phase));
+		phase = arg(Yval);  Yval=Complex(cos(phase),sin(phase));
+		
+		if      (tndx(2)==0) ap.aperture->putAt(val*conj(Xval),tndx);
+		else if (tndx(2)==1) ap.aperture->putAt(val*conj(Yval),tndx);
+		else if (tndx(2)==2) ap.aperture->putAt(val*conj(Xval),tndx);
+		else if (tndx(2)==3) ap.aperture->putAt(val*conj(Yval),tndx);
+	      }
+    }
+    
+    Vector<Int> poln(4);
+    poln(0) = Stokes::XX;
+    poln(1) = Stokes::XY;
+    poln(2) = Stokes::YX;
+    poln(3) = Stokes::YY;
+    StokesCoordinate polnCoord(poln);
+    SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
+    
+    index = uvCoords.findCoordinate(Coordinate::STOKES);
+    uvCoords.replaceCoordinate(polnCoord,index);
+    index = uvCoords.findCoordinate(Coordinate::SPECTRAL);
+    uvCoords.replaceCoordinate(spectralCoord,index);
+    
+    ap.aperture->setCoordinateInfo(uvCoords);
+    //
+    // Now FT the re-gridded Fourier plane to get the primary beam.
+    //
+    ftAperture(*(ap.aperture));
+    
+  }
   
   void ALMACalcIlluminationConvFunc::fillPB(ImageInterface<Complex>& inImg,
 					   ImageInterface<Complex>& outImg,

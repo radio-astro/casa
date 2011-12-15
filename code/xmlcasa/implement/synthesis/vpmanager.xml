@@ -26,16 +26,14 @@ description of one or more voltage patterns (vp) or primary beams
 description.  The vp description table can be read by imager's
 <link anchor="imager:imager.setvp.function">setvp</link> method, which instantiates the
 corresponding voltage patterns from the descriptions and applies them
-to the images.  While the vp description table can have multiple
-telescopes in it, limitations to the internal visibility buffers
-currently limit the functionality within imager to a single telescope.
+to the images. 
 <!-- </description> -->
 
 \subsubsection*{What {\tt vpmanager} does:}
 
 \begin{description}
 \item[Set a Given Telescope's VP/PB model] The vpmanager recognizes the
-names of several telescopes: ATCA, GBT, GMRT, HATCREEK, NMA, NRAO12M,
+names of several telescopes: e.g. ATCA, GBT, GMRT, HATCREEK, NMA, NRAO12M,
 NRAO140FT, OVRO, VLA, WSRT.  New telescopes and their default VP/PB models will
 need to be added to the system.
 
@@ -109,7 +107,7 @@ exit()
 
  
    <method type="constructor" name="vpmanager">
-   <shortdescription>Construct a vpmanager tool</shortdescription>
+   <shortdescription>Construct a vpmanager tool (note: the underlying VPManager is a singleton)</shortdescription>
    
 <description>
 The vpmanager constructor has no arguments.
@@ -148,16 +146,6 @@ Summarize the currently accumulated VP descriptions to the logger.
      <value>false</value>
      </param>
 </input>
-<returns type="bool"></returns>
-</method>
-
- 
-   <method type="function" name="done">
-   <shortdescription>Terminate the vpmanager</shortdescription>
-   
-<description>
-Eliminate the current vpmanager.
-</description>
 <returns type="bool"></returns>
 </method>
 
@@ -641,7 +629,12 @@ in the sequence RR, RL, LR, LL or XX, XY, YX, YY.
 \item[Frequency] Only one channel is currently needed - frequency 
 dependence beyond that is ignored. 
 \end{description}
-One or two images may be specified - the real (must be present) and
+
+If a compleximage is specified the real and imaginary images is to be left empty.
+
+The other option is to provide the real and imaginary part of the E-Jones as seperale {\tt float} images
+On that case
+one or two images may be specified - the real (must be present) and
 imaginary parts (optional). 
 
 Note that beamsquint must be intrinsic to the images themselves.
@@ -675,6 +668,12 @@ from Az-El to Ra-Dec according to the parallactic angle.
      <description>Imaginary part of vp as an image</description>
      <value></value>
      </param>
+     
+     <param type="string" name="compleximage">
+     <description>complex vp as an image of complex numbers; if specified realimage and imagimage are ignored </description>
+     <value></value>
+     </param>
+
 </input>
 <returns type="any"><any type="record"/>itemcontainer</returns>
 </method>
@@ -759,6 +758,223 @@ VP(x) = \sum_{i} coeff_{i} * x^{2i}.
 <returns type="any"><any type="record"/>itemcontainer</returns>
 </method>
 
+   <method type="function" name="setpbantresptable">
+   <shortdescription>Declare a reference to an antenna responses table</shortdescription>
+   
+<description>
+Declare a reference to an antenna responses table containing a set of VP/PB definitions.
+</description>
+<input>
+
+     <param type="string" name="telescope">
+     <description>Which telescope in the MS will use this vp/pb?</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="othertelescope">
+     <description>If telescope=="OTHER", specify name here</description>
+     <value></value>
+     </param>
+
+     <param type="bool" name="dopb">
+     <description>Should we apply the vp/pb to this telescope's data?</description>
+     <value>true</value>
+     </param>
+
+     <param type="string" name="antresppath">
+     <description>The path to the antenna responses table (absolute or relative to CASA data dir.)</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="bool"></returns>
+</method>
+
+   <method type="function" name="reset">
+   <shortdescription>Reinitialize the VPManager (will erase all VPs and defaults defined on the command line)</shortdescription>
+   
+<description>
+Reinitialize the VPManager database.
+Erase all VPs and defaults defined on the command line.
+</description>
+<input>
+</input>
+<returns type="bool"></returns>
+</method>
+
+
+   <method type="function" name="setuserdefault">
+   <shortdescription>Select the VP which is to be used by the imager for the given telescope and antenna type</shortdescription>
+   
+<description>
+Selects the VP which is to be used by the imager for the given telescope and antenna type.
+Overwrites a previous default. Returns True if successful.
+</description>  
+<input>
+
+     <param type="int" name="vplistnum">
+     <description>The number of the vp as displayed by summarizevps() or -1 for internal default</description>
+     <value>-1</value>
+     </param>
+
+     <param type="string" name="telescope">
+     <description>Which telescope in the MS will use this vp/pb?</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="anttype">
+     <description>Which antennatype will use this vp/pb? Default: "" = all</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="bool"></returns>
+</method>
+
+   <method type="function" name="getuserdefault">
+   <shortdescription>Get the vp list number of the present default VP/PB for the given parameters (-1 = internal PB)</shortdescription>
+   
+<description>
+Get the vp list number of the present default VP/PB for the given parameters.
+</description>  
+<input>
+
+     <param type="string" name="telescope">
+     <description>Which telescope in the MS will use this vp/pb?</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="anttype">
+     <description>Which antennatype will use this vp/pb? Default: "" = all</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="int"></returns>
+</method>
+
+   <method type="function" name="getanttypes">
+   <shortdescription>Return the list of available antenna types for the given parameters</shortdescription>
+   
+<description>
+Get a list of the available antenna types.
+</description>  
+<input>
+
+     <param type="string" name="telescope">
+     <description>Telescope name</description>
+     <value></value>
+     </param>
+ 
+     <param type="any" direction="in" name="obstime">
+     <description> Time of the observation (for versioning and reference frame calculations) 
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="freq">
+     <description> Frequency of the observation (may include reference frame, default: LSRK)
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="obsdirection">
+     <description> Direction of the observation (may include reference frame, default: J2000). default: Zenith 
+     </description>
+     <any type="variant"/>
+     <value>AZEL 0deg 90deg</value>
+     </param>
+
+</input>
+<returns type="stringArray"></returns>
+</method>
+
+
+   <method type="function" name="numvps">
+   <shortdescription>Return the number of vps/pbs available for the given parameters</shortdescription>
+   
+<description>
+Can be used to, e.g., determine the number of antenna types.
+Note: if a global response is defined for the telescope, this will increase the count of
+available vps/pbs by 1.
+</description>  
+<input>
+
+     <param type="string" name="telescope">
+     <description>Telescope name</description>
+     <value></value>
+     </param>
+ 
+     <param type="any" direction="in" name="obstime">
+     <description> Time of the observation (for versioning and reference frame calculations) 
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+     <param type="any" direction="in" name="freq">
+     <description> Frequency of the observation (may include reference frame, default: LSRK)
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="obsdirection">
+     <description> Direction of the observation (may include reference frame, default: J2000). default: Zenith 
+     </description>
+     <any type="variant"/>
+     <value>AZEL 0deg 90deg</value>
+     </param>
+
+</input>
+<returns type="int"></returns>
+</method>
+
+   <method type="function" name="getvp">
+   <shortdescription>Return the default vps/pbs record for the given parameters</shortdescription>
+   
+<description>
+Record is empty if no matching vp/pb could be found.
+</description>  
+<input>
+
+     <param type="string" name="telescope">
+     <description>Telescope name</description>
+     <value></value>
+     </param>
+ 
+     <param type="string" name="antennatype">
+     <description>The antenna type as a string, e.g. "DV"</description>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="obstime">
+     <description> Time of the observation (for versioning and reference frame calculations), e.g. 2011/12/12T00:00:00 
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="freq">
+     <description> Frequency of the observation (may include reference frame, default: LSRK)
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="obsdirection">
+     <description> Direction of the observation (may include reference frame, default: J2000), default:
+     </description>
+     <any type="variant"/>
+     <value type="string">AZEL 0deg 90deg</value>
+     </param>
+
+</input>
+<returns type="any"><any type="record"/>itemcontainer</returns>
+</method>
+
+
    <method type="function" name="createantresp">
    <shortdescription>Create a standard-format AntennaResponses table</shortdescription>
    
@@ -767,7 +983,7 @@ The AntennaResponses table serves CASA to look up the location of images describ
 response of observatory antennas. Three types of images are supported: "VP" - real voltage patterns,
 "AIF" - complex aperture illumination patterns, "EFP" - complex electric field patterns.
 For each image, a validity range can be defined in Azimuth, Elevation, and Frequency.
-Furthermore, a antenna type (for heterogeneous arrays), a receiver type (for the case of
+Furthermore, an antenna type (for heterogeneous arrays), a receiver type (for the case of
 several receivers on the same antenna having overlapping frequency bands), and a beam number
 (for the case of multiple beams per antenna) are associated with each response image.
 
@@ -887,6 +1103,9 @@ observing direction, and the beam number, find the applicable response image and
 </input>
 <returns type="string"></returns>
 </method>
+
+
+
 
 </tool>
 

@@ -933,6 +933,9 @@ Bool Imager::defineImage(const Int nx, const Int ny,
     }
 
     */
+    // RVU : Disabling this Composite Number check, because image sizes are
+    //          anyway being re-calculated inside the FTMachines (accounding for padding too).
+    if(0)
     {
       CompositeNumber cn(nx);
       if (! cn.isComposite(nx)) {

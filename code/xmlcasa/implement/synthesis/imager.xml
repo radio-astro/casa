@@ -1836,7 +1836,7 @@ deconvolver tool.
 
  
    <method type="function" name="makemodelfromsd">
-   <shortdescription>Make stating model image from a
+   <shortdescription>Make an initial model image from a
     Single Dish image</shortdescription>
    
 <description>
@@ -1852,17 +1852,17 @@ put in at the end. Whereas if one starts with a model from the single
 dish image it will give a different starting point for the deconvolving
 algorithm to interpolate the missing short baseline. 
 
-The function <link anchor="imager:imager.setsdoptions.function">setsdoptions</link> to set
+The function <link anchor="imager:imager.setsdoptions.function">setsdoptions</link> may be used to set
 a factor by which to scale the SD image, if necessary.
 
 The {\tt sdpsf} parameter (optional) should be used if an external PSF image of the 
 single dish is needed to calculate the beam parameters of the primary
 beam of the dish. This is usually needed if the dish image is from a
-non standard telescope or the beam is not in the {\tt aips++} system.
+non standard telescope or the beam is not in the {\tt CASA} system.
 
 The {\tt mask} is a mask image that may be needed to be used for
 clean.  This is usually the case when the dish image does not fully
-cover the field defined by <link anchor="imager:imager.define.function">defineimage</link>.
+cover the field defined by <link anchor="imager:imager.defineimage.function">defineimage</link>.
 
 </description>
 <input>
@@ -1904,7 +1904,7 @@ im.clean(algorithm='mfmultiscale', model='orion\_model',
 residual='orion.residual', image='orion.restored', gain=0.2, niter=500, mask='orion.mask')
 
 
-In the above example we are making a mosaic with the fields 1 to 10. A
+In the above example we are making a mosaic with the fields 0 to 9. A
 single dish image {\tt orion\_gbt.im} is used scaled down by a factor 0.9 to
 make the initial model that is passed to multi-scale clean.
 </example>

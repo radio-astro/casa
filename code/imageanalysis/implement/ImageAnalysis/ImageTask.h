@@ -113,12 +113,10 @@ protected:
 private:
     const ImageInterface<Float> *const _image;
     std::auto_ptr<LogIO> _log;
-    Bool _stretch;
-
     const Record *const _regionPtr;
     Record _regionRecord;
     String _region, _box, _chan, _stokesString, _mask, _outname;
-    Bool _overwrite;
+    Bool _overwrite, _stretch;
 
 
 

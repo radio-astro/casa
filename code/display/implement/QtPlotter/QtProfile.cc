@@ -82,8 +82,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          coordinate("world"), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
          cSysRval(""), fileName(name), position(""), yUnit(""),
          yUnitPrefix(""), xpos(""), ypos(""), cube(0),
-//         npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
-         npoints(0), npoints_old(0), stateMProf(0), stateRel(0),
+         npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
          lastPX(Vector<Double>()), lastPY(Vector<Double>()),
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_xval(Vector<Float>()), z_yval(Vector<Float>()),
@@ -165,10 +164,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
                    "the image to get a spectral profile");
 
     QString lbl = ctype->currentText();
-    pixelCanvas->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
+    pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]");
 
     yUnit = QString(img->units().getName().chars());
-    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
 
     pixelCanvas->setAutoScaleX(true);
     pixelCanvas->setAutoScaleY(true);
@@ -404,18 +403,19 @@ void QtProfile::down()
 
 void QtProfile::preferences()
 {
-	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),stateMProf, stateRel);
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int)),
-			this, SLOT(setPreferences(int, int, int, int)));
+	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(), pixelCanvas->getShowGrid(),stateMProf, stateRel);
+	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int)),
+			this, SLOT(setPreferences(int, int, int, int, int)));
 	profilePrefs->showNormal();
 }
 
-void QtProfile::setPreferences(int inAutoX, int inAutoY, int inMProf, int inRel){
+void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel){
 	bool update=false;
 	if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
 		update=true;
 	pixelCanvas->setAutoScaleX(inAutoX);
 	pixelCanvas->setAutoScaleY(inAutoY);
+	pixelCanvas->setShowGrid(showGrid);
 	stateMProf=inMProf;
 	stateRel  = inRel;
 	if (update)
@@ -466,7 +466,7 @@ void QtProfile::changeCoordinateType(const QString &text) {
     collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 
     QString lbl = text;
-    pixelCanvas->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
+    pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]");
 
     pixelCanvas->setPlotSettings(QtPlotSettings());
 
@@ -531,7 +531,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 
 	QString lbl = ctype->currentText();
-	pixelCanvas->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
+	pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]");
 
 
 	// get reference frame info for frequency axis label
@@ -542,7 +542,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
-	pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+	pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
 
 	xpos = "";
 	ypos = "";
@@ -868,7 +868,7 @@ void QtProfile::wcChanged( const String c,
    	 yUnitPrefix = "";
     }
 
-    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
 
     // plot the graph
 
@@ -1622,7 +1622,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 	yUnitPrefix = "";
     }
 
-    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
 
     // plot the graph
 
@@ -2035,7 +2035,7 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 	yUnitPrefix = "";
     }
 
-    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
 
     // plot the graph
 

@@ -188,7 +188,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	if(!donePSF_p)
 	{
 	   os << "Calculating initial residual images..." << LogIO::POST;
-	   solveResiduals(se);
+	   solveResiduals(se,(numberIterations()<1)?True:False);
 	}
 
 	/* Initialize the MultiTermMatrixCleaners */
@@ -466,7 +466,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
   
   // if(adbg) 
   {
-    os << "Peak Residual : " << maxres  << "  User Threshold : " << threshold() << "  Max PSF Sidelobe : " << abs(minval) <<  " User maxPsfFraction : " << cycleMaxPsfFraction_p  << "  User cyclefactor : " << cycleFactor_p << "  fractionOfPsf = max(maxPsfFraction, PSFsidelobe x cyclefactor) : " << fractionOfPsf << LogIO::POST;
+    os << "Peak Residual : " << maxres  << "  User Threshold : " << threshold() << "  Max PSF Sidelobe : " << abs(minval) <<  " User maxPsfFraction : " << cycleMaxPsfFraction_p  << "  User cyclefactor : " << cycleFactor_p << "  fractionOfPsf = min(maxPsfFraction, PSFsidelobe x cyclefactor) : " << fractionOfPsf << LogIO::POST;
     //    os << "Stopping threshold for this major cycle min(user threshold , fractionOfPsf x Max Residual) : " <<  cyclethreshold  << endl;
   }
   
@@ -658,7 +658,7 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  LatticeExpr<Float> le(iif(ggS(baseindex)>(0.0), -gS(index)/ggS(baseindex), 0.0));
 	  residual(index).copyData(le);
 	  
-	  //storeAsImg(String("TstRes.")+String::toString(thismodel)+String(".")+String::toString(taylor),residual(index));
+	  //storeAsImg(String("Weight.")+String::toString(thismodel)+String(".")+String::toString(taylor),ggS(index));
 	}
     }
   modified_p=False;

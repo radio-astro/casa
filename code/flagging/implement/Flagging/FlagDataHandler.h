@@ -419,6 +419,9 @@ public:
 	// Default destructor
 	~FlagDataHandler();
 
+	// Set the iteration approach
+	void setIterationApproach(uShort iterationApproach);
+
 	// Open Measurement Set
 	bool open();
 
