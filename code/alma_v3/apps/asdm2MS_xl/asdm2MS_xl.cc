@@ -1394,10 +1394,14 @@ int main(int argc, char *argv[]) {
 
   LogSinkInterface& lsif = LogSink::globalSink();
 
+  uint64_t bdfSliceSizeInMb = 0; // The default size of the BDF slice hold in memory.
+
   bool mute = false;
+
 
   //   Process command line options and parameters.
   po::variables_map vm;
+
   try {
 
 
@@ -1430,7 +1434,8 @@ int main(int argc, char *argv[]) {
       ("no-syspower", "the SysPower table will be  ignored.")
       ("no-caldevice", "The CalDevice table will be ignored.")
       ("no-pointing", "The Pointing table will be ignored.")
-      ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined");
+      ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined")
+      ("bdf-slice-size", po::value<uint64_t>(&bdfSliceSizeInMb)->default_value(500),  "The maximum amount of memory expressed as an integer in units of megabytes (1024*1024) allocated for BDF data. The default is 500 (megabytes)") ;
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -1627,10 +1632,17 @@ int main(int argc, char *argv[]) {
       errstream << generic;
       error(errstream.str());
     }
-
-    // Do we want an MS to be produced or not ?
+    
+    // Do we want an MS Main table to be filled or not ?
     mute = vm.count("dry-run") != 0;
+    infostream.str("");
+    infostream << "option dry-run is used, the MS Main table will not be filled" << endl;
+    info(infostream.str());
 
+    // What is the amount of memory allocated to the BDF slices.
+    infostream.str("");
+    infostream << "the BDF slice size is set to " << bdfSliceSizeInMb << " megabytes." << endl;
+    info(infostream.str());
   }
   catch (std::exception& e) {
     errstream.str("");
@@ -3891,7 +3903,7 @@ int main(int argc, char *argv[]) {
 
 	uint32_t		N			 = v[i]->getNumIntegration();
 	uint64_t		bdfSize			 = v[i]->getDataSize();
-	vector<uint64_t>	actualSizeInMemory(sizeInMemory(bdfSize, 100*1024*1024));
+	vector<uint64_t>	actualSizeInMemory(sizeInMemory(bdfSize, bdfSliceSizeInMb*1024*1024));
 	int32_t			numberOfMSMainRows	 = 0;
 	int32_t			numberOfIntegrations	 = 0;
 	int32_t			numberOfReadIntegrations = 0;
@@ -3900,7 +3912,7 @@ int main(int argc, char *argv[]) {
 	for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
 	  numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
 	  infostream.str("");
-	  infostream << "ASDM Main row #" << i << ", next " << numberOfIntegrations << " integrations produced ";
+	  infostream << "ASDM Main row #" << i << " - the next " << numberOfIntegrations << " integrations produced ";
 	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
 	  numberOfReadIntegrations += numberOfIntegrations;
 	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
@@ -3912,7 +3924,7 @@ int main(int argc, char *argv[]) {
 	uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
 	if (numberOfRemainingIntegrations) {
 	  infostream.str("");
-	  infostream << "ASDM Main row #" << i << ", next " << numberOfRemainingIntegrations << " integrations produced ";
+	  infostream << "ASDM Main row #" << i << " - the next " << numberOfRemainingIntegrations << " integrations produced ";
 	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
 	  processMainAndState(ds, i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
