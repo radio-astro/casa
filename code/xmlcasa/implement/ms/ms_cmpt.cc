@@ -2258,7 +2258,6 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
 
   try{
     *itsLog << LogOrigin("ms", "contsub");
-    *itsLog << LogIO::SEVERE << "Not fully implemented yet." << LogIO::POST;
 
     SubMS subtractor(*itsMS);
     *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
@@ -2268,6 +2267,15 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
     String t_unionspw(m1toBlankCStr_(unionspw));
     if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
       t_spw = "*";    // at the XML level does not work.
+    if(t_spw != "*" && t_spw != t_unionspw){
+      *itsLog << LogIO::WARN
+              << "The spws in the output will be remapped according to "
+              << t_unionspw << ", not " << t_spw
+              << LogIO::POST;
+      *itsLog << LogIO::WARN
+              << "This only affects the numbering of the spws, not their validity or frequencies."
+              << LogIO::POST;
+    }
     String t_scan    = toCasaString(scan);
     String t_intent  = toCasaString(intent);
     String t_obs     = toCasaString(obs);
@@ -2327,12 +2335,14 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
   return rstat;
 }
 
-bool ms::statwt(const std::string& scattertype,  const ::casac::variant& fitspw,
-                const ::casac::variant& fitcorr, const ::casac::variant& timebin,
-                const std::string& windowtype,   const std::string& combine,
-                const int minsamp,               const ::casac::variant& spw,
-                const ::casac::variant& field,   const ::casac::variant& scan,
-                const std::string&      intent,  const std::string& correlation,
+bool ms::statwt(const std::string& scattertype,  const bool byantenna,
+                const bool separateacs,          const ::casac::variant& fitspw,
+                const ::casac::variant& fitcorr, const std::string& combine,
+                const ::casac::variant& timebin, const int minsamp,
+                const ::casac::variant& field,   const ::casac::variant& spw,
+                const ::casac::variant& baseline, const std::string& timerange,
+                const ::casac::variant& scan,    const std::string&      intent,
+                const ::casac::variant& subarray,const std::string& correlation,
                 const std::string&      obs)
 {
   Bool rstat(False);

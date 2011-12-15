@@ -2950,6 +2950,16 @@ for i in range(len(tcoord)):
      <value>stddev</value>
      </param>
 
+     <param type="bool" direction="in" name="byantenna">
+     <description>How the scatters are solved for (by antenna or by baseline)</description>
+     <value>true</value>
+     </param>
+
+     <param type="bool" direction="in" name="seperateacs">
+     <description>If solving by antenna, treat autocorrs separately</description>
+     <value>true</value>
+     </param>
+
      <param type="variant" direction="in" name="fitspw">
      <description>Line-free spectral windows (and :channels) to get the scatter from.  ('' =&gt; all)</description>
      <value>"*"</value>
@@ -2960,36 +2970,42 @@ for i in range(len(tcoord)):
      <value>""</value>
      </param>
 
-     <param type="variant" direction="in" name="timebin">
-       <description>Duration of the moving window over which to estimate the scatter.  Defaults to 0s, with an effective minimum of 1 integration.</description>
-       <value>0s</value>
-     </param>
-
-     <param type="string" direction="in" name="windowtype">
-     <description>Type of the binning window (None, chunk, Gaussian, pillbox)</description>
-     <value></value>
-     </param>
-    
      <param type="string" direction="in" name="combine">
      <description>Ignore changes in these columns (spw, scan, and/or state) when getting the scatter.</description>
      <value></value>
      </param>
 
+     <param type="variant" direction="in" name="timebin">
+       <description>Duration of the moving window over which to estimate the scatter.  Defaults to 0s, with an effective minimum of 1 integration.</description>
+       <value>0s</value>
+     </param>
+    
      <param type="int" direction="in" name="minsamp">
        <description>The minimum number of visibilities for a scatter estimate</description>
        <value>3</value>
      </param>
 
-     <param type="variant" direction="in" name="spw">
-     <description>Spectral windows to reweight.  ('' =&gt; all)</description>
-     <value>"*"</value>
-     </param>
-    
      <param type="variant" direction="in" name="field">
      <description>Fields to reweight, by names or 0-based ids.  ('' =&gt; all)</description>
      <value></value>
      </param>
     
+     <param type="variant" direction="in" name="spw">
+     <description>Spectral windows to reweight.  ('' =&gt; all)</description>
+     <value>"*"</value>
+     </param>
+    
+     <param type="any" name="antenna">
+       <description>Select data based on antenna/baseline</description>
+       <any type="variant" limittypes="string stringArray int intArray"/>
+       <value type="string"></value>
+     </param>
+
+     <param type="string" name="timerange" >
+       <description>Select data by time range</description>
+       <value></value>
+     </param>
+
      <param type="variant" name="scan">
      <description>Scan numbers to reweight.  ('' =&gt; all)</description>
      <value></value>
@@ -2998,6 +3014,11 @@ for i in range(len(tcoord)):
      <param type="string" direction="in" name="intent">
      <description>Scan intents to reweight.  ('' =&gt; all)</description>
      <value></value>
+     </param>
+
+     <param type="variant" name="array">
+       <description>Select (sub)array(s) by array ID number</description>
+       <value></value>
      </param>
 
      <param type="string" direction="in" name="correlation">
