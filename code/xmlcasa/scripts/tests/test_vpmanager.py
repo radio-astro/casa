@@ -103,8 +103,7 @@ class vpmanager_test(unittest.TestCase):
 
 
     def test8(self):
-        '''Test 8: define Airy beam for ALMA, then use it'''
-        
+        '''Test 8: define Airy beam for ALMA, then use it'''        
         vp.reset()
         vp.setpbairy(telescope='ALMA',
                      dishdiam=str(12./1.18)+'m',
@@ -215,9 +214,21 @@ class vpmanager_test(unittest.TestCase):
 
 
     def test11(self):
-        '''Test 11: EXPECTED ERROR createantresp Default values'''
-        self.res = vp.createantresp()
-        self.assertFalse(self.res)
+        '''Test 11: getvp without observation parameters'''
+
+        vp.reset()
+
+        vp.setcannedpb(telescope="ALMA")
+
+        myrec = vp.getvp('ALMA')
+        
+        woanttypeok = (myrec['name']=='COMMONPB' and myrec['telescope']=='ALMA')
+
+        myrec = vp.getvp('ALMA', 'DV')
+        
+        withanttypeok = (myrec['name']=='COMMONPB' and myrec['telescope']=='ALMA')
+
+        self.assertTrue(woanttypeok and withanttypeok)
         
         
     def test12(self):

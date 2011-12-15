@@ -567,11 +567,12 @@ int vpmanager::numvps(const std::string& telescope,
 
 }
 
+
 ::casac::record* 
 vpmanager::getvp(const std::string& telescope,
+		 const std::string& antennatype, 
 		 const casac::variant& obstime, 
 		 const casac::variant& freq, 
-		 const std::string& antennatype, 
 		 const casac::variant& obsdirection){
 
   ::casac::record* r=0;
@@ -584,19 +585,38 @@ vpmanager::getvp(const std::string& telescope,
     MDirection mObsDir;
     Record rec;
     
-    if(!casaMEpoch(obstime, mObsTime)){
-      *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
-	      << toCasaString(obstime) << LogIO::POST;
-      return r;
+    int nRefs = 0;
+
+    if(casaMEpoch(obstime, mObsTime)){
+      nRefs +=1;
     }
-    if(!casaMFrequency(freq, mFreq)){
-      *itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
-	      << toCasaString(freq) << LogIO::POST;
-      return r;
+    else{
+      if(toCasaString(obstime).empty()){
+	casaMEpoch("2000/01/01T00:00:00", mObsTime);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
+		<< toCasaString(obstime) << LogIO::POST;
+	return r;
+      }
     }
+    if(casaMFrequency(freq, mFreq)){
+      nRefs +=1;
+    }
+    else{
+      if(toCasaString(freq).empty()){
+	casaMFrequency("TOPO 0Hz", mFreq);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
+		<< toCasaString(freq) << LogIO::POST;
+	return r;
+      }
+    }
+
     if(!casaMDirection(obsdirection, mObsDir)){
       if(toCasaString(obsdirection).empty()){
-	casaMDirection("AZEL 0deg 0deg", mObsDir);
+	casaMDirection("AZEL 0deg 90deg", mObsDir);
       }
       else{
 	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
@@ -605,8 +625,15 @@ vpmanager::getvp(const std::string& telescope,
       }
     }
 
-    if(itsVPM->getvp(rec,telescope, mObsTime, mFreq, antennatype, mObsDir)){
-      r = fromRecord(rec);
+    if(nRefs==0){
+      if(itsVPM->getvp(rec,telescope, antennatype)){
+	r = fromRecord(rec);
+      }
+    }
+    else{
+      if(itsVPM->getvp(rec,telescope, mObsTime, mFreq, antennatype, mObsDir)){
+	r = fromRecord(rec);
+      }
     }
 
   } catch(AipsError x) {

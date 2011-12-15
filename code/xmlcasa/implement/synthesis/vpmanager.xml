@@ -948,22 +948,22 @@ Record is empty if no matching vp/pb could be found.
      <value></value>
      </param>
  
+     <param type="string" name="antennatype">
+     <description>The antenna type as a string, e.g. "DV"</description>
+     <value></value>
+     </param>
+
      <param type="any" direction="in" name="obstime">
      <description> Time of the observation (for versioning and reference frame calculations), e.g. 2011/12/12T00:00:00 
      </description>
      <any type="variant"/>
      <value></value>
      </param>
+
      <param type="any" direction="in" name="freq">
      <description> Frequency of the observation (may include reference frame, default: LSRK)
      </description>
      <any type="variant"/>
-     <value></value>
-     </param>
-
-
-     <param type="string" name="antennatype">
-     <description>The antenna type as a string, e.g. "DV"</description>
      <value></value>
      </param>
 
