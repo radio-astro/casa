@@ -24,15 +24,31 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+// Definition of static members for common pre-processing
+vector<Int> FlagAgentShadow::shadowedAntennas_p;
+casa::async::Mutex FlagAgentShadow::staticMembersMutex_p;
+vector<bool> FlagAgentShadow::startedProcessing_p;
+bool FlagAgentShadow::preProcessingDone_p = false;
+uShort FlagAgentShadow::nAgents_p = 0;
+
 FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
 		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,writePrivateFlagCube)
 {
 	setAgentParameters(config);
 
+	// Set preProcessingDone_p static member to false
+	preProcessingDone_p = false;
+
 	// Request loading antenna1,antenna2 and uvw
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
+
+	// FlagAgentShadow counters and ids to handle static variables
+	staticMembersMutex_p.acquirelock();
+	agentNumber_p = nAgents_p;
+	nAgents_p += 1;
+	staticMembersMutex_p.unlock();
 }
 
 FlagAgentShadow::~FlagAgentShadow()
@@ -62,6 +78,38 @@ FlagAgentShadow::setAgentParameters(Record config)
 
 void
 FlagAgentShadow::preProcessBuffer(const VisBuffer &visBuffer)
+{
+	if (nAgents_p > 1)
+	{
+		staticMembersMutex_p.acquirelock();
+
+		if (!preProcessingDone_p)
+		{
+			// Reset processing state variables
+			if (startedProcessing_p.size() != nAgents_p) startedProcessing_p.resize(nAgents_p,false);
+			for (vector<bool>::iterator iter = startedProcessing_p.begin();iter != startedProcessing_p.end();iter++)
+			{
+				*iter = false;
+			}
+
+			// Do actual pre-processing
+			preProcessBufferCore(visBuffer);
+
+			// Mark pre-processing as done so that other agents don't redo it
+			preProcessingDone_p = true;
+		}
+
+		staticMembersMutex_p.unlock();
+	}
+	else
+	{
+		preProcessBufferCore(visBuffer);
+	}
+
+	return;
+}
+void
+FlagAgentShadow::preProcessBufferCore(const VisBuffer &visBuffer)
 {
 	Vector<Int> antenna1list =  visBuffer.antenna1();
 	Vector<Int> antenna2list =  visBuffer.antenna2();
@@ -120,8 +168,6 @@ FlagAgentShadow::preProcessBuffer(const VisBuffer &visBuffer)
 			}
 		}
 	}
-
-	return;
 }
 
 void
@@ -139,6 +185,16 @@ FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, 
     	{
     		flags.applyFlag(chan_i,row);
     	}
+    	visBufferFlags_p += flags.flagsPerRow();
+	}
+
+	if ((nAgents_p > 1) and preProcessingDone_p)
+	{
+		startedProcessing_p[agentNumber_p] = true;
+		if (std::find (startedProcessing_p.begin(), startedProcessing_p.end(), false) == startedProcessing_p.end())
+		{
+			preProcessingDone_p = false;
+		}
 	}
 
 	return;

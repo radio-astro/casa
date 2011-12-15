@@ -232,6 +232,7 @@ FlagAgentTimeFreqCrop::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMa
 	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
 	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
 	  }
+
 	return;
 }
 
@@ -413,11 +414,19 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	    {
 	      if(mind[0]==nChannels) // if i0 is channel, and i1 is time
 		{
-		  if(avgFlag[i0]) {flags.applyFlag(i0,i1);}
+		  if(avgFlag[i0])
+		  {
+			  flags.applyFlag(i0,i1);
+			  visBufferFlags_p += 1;
+		  }
 		}
 	      else //if i1 is channel, and i0 is time
 		{
-		  if(avgFlag[i0]) {flags.applyFlag(i1,i0);}
+		  if(avgFlag[i0])
+		  {
+			  flags.applyFlag(i1,i0);
+			  visBufferFlags_p += 1;
+		  }
 		}
 	    }// for i0
 	  

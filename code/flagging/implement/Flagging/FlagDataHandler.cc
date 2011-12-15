@@ -88,9 +88,14 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// only one time step, thus invalidating the time interval effect.
 	// See: MSIter.h
 
-	// By default don't map polarizations and antennaPointing
-	mapPolarizations_p = false;
+	// By default we map polarizations because they are needed for the per-chunk logs
+	mapPolarizations_p = true;
+
+	// Antenna pointing map is only needed by the Elevation agent and I have move it there
 	mapAntennaPointing_p = false;
+
+	// These mapping is for the Quack agent, but requires a complete MS iteration, so I put it here,
+	// together with the full swap that I do to pre-compute the amount of memory necessary to run
 	mapScanStartStop_p = false;
 	mapScanStartStopFlagged_p = false;
 
@@ -98,10 +103,13 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	setIterationApproach(iterationApproach);
 
 	// Initialize selection ranges
+	anySelection_p = false;
 	timeSelection_p = String("");
 	baselineSelection_p = String("");
 	fieldSelection_p = String("");
-	spwSelection_p = String("*");
+	// NOTE (after Dic 2011 testing): As far as I know spw selection does not have to be *
+	// (can be empty) and in fact applying a spw selection slows down the MSSelection class
+	spwSelection_p = String("");
 	uvwSelection_p = String("");
 	polarizationSelection_p = String("");
 	scanSelection_p = String("");
@@ -120,6 +128,8 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// Initialize stats
 	stats_p = false;
 	cubeAccessCounter_p = 0;
+	chunkCounts_p = 0;
+	msCounts_p = 0;
 
 	// Set all the initialized pointers to NULL
 	selectedMeasurementSet_p = NULL;
@@ -132,16 +142,29 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 
 	antennaNames_p = NULL;
 	antennaDiameters_p = NULL;
-	fieldNames_p = NULL;
 	antennaPairMap_p = NULL;
 	subIntegrationMap_p = NULL;
+	corrProducts_p = NULL;
 	polarizationMap_p = NULL;
 	polarizationIndexMap_p = NULL;
 	antennaPointingMap_p = NULL;
 	scanStartStopMap_p = NULL;
+	fieldNames_p = NULL;
+
+	// Initialize FlagDataHanler-FlagAgents state
+	flushFlags_p = false;
 
 	// Initialize Pre-Load columns
 	preLoadColumns_p.clear();
+	preLoadColumns_p.push_back(VisBufferComponents::FieldId);
+	preLoadColumns_p.push_back(VisBufferComponents::SpW);
+	preLoadColumns_p.push_back(VisBufferComponents::Scan);
+	preLoadColumns_p.push_back(VisBufferComponents::ArrayId);
+	preLoadColumns_p.push_back(VisBufferComponents::ObservationId);
+
+	preLoadColumns_p.push_back(VisBufferComponents::NRow);
+	preLoadColumns_p.push_back(VisBufferComponents::NChannel);
+	preLoadColumns_p.push_back(VisBufferComponents::NCorr);
 
 	return;
 }
@@ -152,27 +175,30 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 // -----------------------------------------------------------------------
 FlagDataHandler::~FlagDataHandler()
 {
-	// Delete mapping members
-	if (antennaNames_p) delete antennaNames_p;
-	if (antennaDiameters_p) delete antennaDiameters_p;
-	if (antennaPairMap_p) delete antennaPairMap_p;
-	if (subIntegrationMap_p) delete subIntegrationMap_p;
-	if (polarizationMap_p) delete polarizationMap_p;
-	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
-	if (antennaPointingMap_p) delete antennaPointingMap_p;
-
-	// Delete VisBuffers and iterators
-	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	// ROVisIter is in fact RWVisIter
-	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+	// Delete logger
+	if (logger_p) delete logger_p;
 
 	// Delete MS objects
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
 
-	// Delete logger
-	if (logger_p) delete logger_p;
+	// Delete VisBuffers and iterators
+	if (visibilityBuffer_p) delete visibilityBuffer_p;
+	// ROVisIter is in fact RWVisIter
+	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+
+	// Delete mapping members
+	if (antennaNames_p) delete antennaNames_p;
+	if (antennaDiameters_p) delete antennaDiameters_p;
+	if (antennaPairMap_p) delete antennaPairMap_p;
+	if (subIntegrationMap_p) delete subIntegrationMap_p;
+	if (corrProducts_p) delete corrProducts_p;
+	if (polarizationMap_p) delete polarizationMap_p;
+	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
+	if (antennaPointingMap_p) delete antennaPointingMap_p;
+	if (scanStartStopMap_p) delete scanStartStopMap_p;
+	if (fieldNames_p) delete fieldNames_p;
 
 	return;
 }
@@ -330,6 +356,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			break;
 		}
 	}
+
 	return;
 }
 
@@ -354,6 +381,98 @@ FlagDataHandler::open()
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
 	fieldNames_p = new Vector<String>(fieldSubTable->name().getColumn());
+
+	// Read polarizations
+	ROMSPolarizationColumns *polarizationSubTable = new ROMSPolarizationColumns(originalMeasurementSet_p->polarization());
+	ROArrayColumn<Int> corrTypeColum = polarizationSubTable->corrType();
+	corrProducts_p = new std::vector<String>();
+	for (uInt polRow_idx=0;polRow_idx<corrTypeColum.nrow();polRow_idx++)
+	{
+		Array<Int> polRow = corrTypeColum(polRow_idx);
+		for (uInt corr_i=0;corr_i<polRow.size();corr_i++)
+		{
+			switch (polRow(IPosition(1,corr_i)))
+			{
+				case Stokes::I:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product I found" << LogIO::POST;
+					corrProducts_p->push_back("I");
+					break;
+				}
+				case Stokes::Q:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product Q found" << LogIO::POST;
+					corrProducts_p->push_back("Q");
+					break;
+				}
+				case Stokes::U:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product U found" << LogIO::POST;
+					corrProducts_p->push_back("U");
+					break;
+				}
+				case Stokes::V:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product V found" << LogIO::POST;
+					corrProducts_p->push_back("V");
+					break;
+				}
+				case Stokes::XX:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product XX found" << LogIO::POST;
+					corrProducts_p->push_back("XX");
+					break;
+				}
+				case Stokes::YY:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product YY found" << LogIO::POST;
+					corrProducts_p->push_back("YY");
+					break;
+				}
+				case Stokes::XY:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product XY found" << LogIO::POST;
+					corrProducts_p->push_back("XY");
+					break;
+				}
+				case Stokes::YX:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product YX found" << LogIO::POST;
+					corrProducts_p->push_back("YX");
+					break;
+				}
+				case Stokes::RR:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product RR found" << LogIO::POST;
+					corrProducts_p->push_back("RR");
+					break;
+				}
+				case Stokes::LL:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product LL found" << LogIO::POST;
+					corrProducts_p->push_back("LL");
+					break;
+				}
+				case Stokes::RL:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product RL found" << LogIO::POST;
+					corrProducts_p->push_back("RL");
+					break;
+				}
+				case Stokes::LR:
+				{
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product LR found" << LogIO::POST;
+					corrProducts_p->push_back("LR");
+					break;
+				}
+				default:
+				{
+					*logger_p << LogIO::WARN << "FlagDataHandler::" << __FUNCTION__ << " Correlation product unknown found: " << polRow(IPosition(1,corr_i)) << LogIO::POST;
+					break;
+				}
+			}
+		}
+	}
 
 	return true;
 }
@@ -394,6 +513,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("array");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("array"), arraySelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
 	}
@@ -406,6 +526,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("field");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("field"), fieldSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
 	}
@@ -418,6 +539,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("scan");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("scan"), scanSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
 	}
@@ -430,6 +552,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("timerange");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("timerange"), timeSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " timerange selection is " << timeSelection_p << LogIO::POST;
 	}
@@ -442,6 +565,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("spw");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("spw"), spwSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " spw selection is " << spwSelection_p << LogIO::POST;
 	}
@@ -454,6 +578,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("antenna");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("antenna"), baselineSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
 	}
@@ -466,6 +591,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("uvrange");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("uvrange"), uvwSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " uvrange selection is " << uvwSelection_p << LogIO::POST;
 	}
@@ -478,6 +604,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("correlation");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("correlation"), polarizationSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " correlation selection is " << polarizationSelection_p << LogIO::POST;
 	}
@@ -490,6 +617,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("observation");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("observation"), observationSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " observation selection is " << observationSelection_p << LogIO::POST;
 	}
@@ -502,6 +630,7 @@ FlagDataHandler::setDataSelection(Record record)
 	exists = record.fieldNumber ("intent");
 	if (exists >= 0)
 	{
+		anySelection_p = true;
 		record.get (record.fieldNumber ("intent"), scanIntentSelection_p);
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " scan intent selection is " << scanIntentSelection_p << LogIO::POST;
 	}
@@ -1285,7 +1414,7 @@ FlagDataHandler::generateIterator()
 	// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
 	if (slurp_p) rwVisibilityIterator_p->slurp();
 
-	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator un sync mode)
+	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator in sync mode)
 	applyChannelSelection(rwVisibilityIterator_p);
 
 	checkMaxMemory();
@@ -1340,6 +1469,13 @@ FlagDataHandler::generateIterator()
 	return true;
 }
 
+
+// -----------------------------------------------------------------------
+// Apply channel selection for asyn or normal iterator
+// NOTE (first implementation): We always have to do this, even if there is no SPW:channel selection
+// NOTE (after Dic 2011 testing): As far as I know spw selection does not have to be *, it can be empty,
+// therefore this step will in practice do nothing , because the spw and channel lists are empty too.
+// -----------------------------------------------------------------------
 void
 FlagDataHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
 {
@@ -1369,6 +1505,8 @@ FlagDataHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
 bool
 FlagDataHandler::nextChunk()
 {
+	msCounts_p += chunkCounts_p;
+	chunkCounts_p = 0;
 	bool moreChunks = false;
 	if (stopIteration_p)
 	{
@@ -1398,6 +1536,11 @@ FlagDataHandler::nextChunk()
 				bufferNo = 0;
 			}
 		}
+	}
+
+	if (!moreChunks)
+	{
+		*logger_p << LogIO::NORMAL << "==================================================================================== " << LogIO::POST;
 	}
 
 	return moreChunks;
@@ -1436,6 +1579,7 @@ FlagDataHandler::nextBuffer()
 			if (mapPolarizations_p) generatePolarizationsMap();
 			if (mapAntennaPointing_p) generateAntennaPointingMap();
 			moreBuffers = true;
+			flushFlags_p = false;
 			bufferNo++;
 		}
 		else
@@ -1454,6 +1598,7 @@ FlagDataHandler::nextBuffer()
 				if (mapPolarizations_p) generatePolarizationsMap();
 				if (mapAntennaPointing_p) generateAntennaPointingMap();
 				moreBuffers = true;
+				flushFlags_p = false;
 				bufferNo++;
 			}
 		}
@@ -1469,6 +1614,32 @@ FlagDataHandler::nextBuffer()
 		const Cube<Bool> originalFlagCube= visibilityBuffer_p->get()->flagCube();
 		originalFlagCube_p.resize(originalFlagCube.shape());
 		originalFlagCube_p = originalFlagCube;
+
+		// Compute total number of flags per buffer to be used for generating the agents stats
+		chunkCounts_p += modifiedflagCube.shape().product();
+
+		// Print chunk characteristics
+		if (bufferNo == 1)
+		{
+			String corrs = "[ ";
+			for (uInt corr_i=0;corr_i<visibilityBuffer_p->get()->nCorr();corr_i++)
+			{
+				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
+			}
+			corrs += "]";
+
+			*logger_p << LogIO::NORMAL <<
+					"------------------------------------------------------------------------------------ " << endl <<
+					"Chunk = " << chunkNo <<
+					", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
+					", Array = " << visibilityBuffer_p->get()->arrayId() <<
+					", Scan = " << visibilityBuffer_p->get()->scan0() <<
+					", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
+					", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
+					", Channels = " << visibilityBuffer_p->get()->nChannel() <<
+					", Corrs = " << corrs <<
+					", Total Rows = " << visibilityBuffer_p->get()->nRowChunk() << LogIO::POST;
+		}
 	}
 
 	return moreBuffers;
@@ -1481,7 +1652,11 @@ FlagDataHandler::nextBuffer()
 bool
 FlagDataHandler::flushFlags()
 {
-	rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
+	if (flushFlags_p)
+	{
+		rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
+		flushFlags_p = false;
+	}
 
 	return true;
 }
@@ -1861,7 +2036,10 @@ FlagDataHandler::setMapPolarizations(bool activated)
 void
 FlagDataHandler::setMapAntennaPointing(bool activated)
 {
-	mapAntennaPointing_p=activated;
+	// Antenna Pointing mapping is now done by the first
+	// Elevation agent, and stored as static variable
+	// mapAntennaPointing_p=activated;
+
 	// Pre-Load time, antenna1 and antenna2
 	// Azel is derived and this only restriction
 	// is that it can be access by 1 thread only
@@ -2551,6 +2729,7 @@ FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bo
 	privateFlagsView_p = NULL;
 	setParentCubes(commonFlagsView,originalFlagsView,privateFlagsView);
 	setExpressionMapping(selectedCorrelations);
+	nSelectedCorrelations_p = selectedCorrelations.size();
 	flag_p = flag;
 }
 
@@ -2560,6 +2739,7 @@ FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations)
 	originalFlagsView_p = NULL;
 	privateFlagsView_p = NULL;
 	setExpressionMapping(selectedCorrelations);
+	nSelectedCorrelations_p = selectedCorrelations.size();
 	flag_p = flag;
 }
 
@@ -2587,6 +2767,8 @@ FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *origi
 	reducedLength_p(0) = commonFlagCubeSize(1); // chan
 	reducedLength_p(1) = commonFlagCubeSize(2); // row
 	reducedLength_p(2) = commonFlagCubeSize(0); // pol
+
+	flagsPerRow_p = nSelectedCorrelations_p*reducedLength_p(0);
 }
 
 void

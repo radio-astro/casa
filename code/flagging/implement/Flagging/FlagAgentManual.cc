@@ -45,6 +45,8 @@ FlagAgentManual::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, 
 		flags.applyFlag(chan_i,row);
 	}
 
+	visBufferFlags_p += flags.flagsPerRow();
+
 	return;
 
 }

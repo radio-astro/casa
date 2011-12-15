@@ -36,6 +36,12 @@ public:
 
 protected:
 
+	// Common functionality for each visBuffer (don't repeat at the row level)
+	void preProcessBuffer(const VisBuffer &visBuffer);
+
+	// Common preProcessing code for the single/multiple agent cases
+	void preProcessBufferCore(const VisBuffer &visBuffer);
+
 	// Compute flags afor a given mapped visibility point
 	void computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
@@ -47,6 +53,14 @@ private:
 	/// Input parameters ///
 	Double lowerlimit_p;
 	Double upperlimit_p;
+
+	// Declaration of static members for common pre-processing
+	uShort agentNumber_p;
+	static vector< vector<Double> > antennaPointingMap_p;
+	static casa::async::Mutex staticMembersMutex_p;
+	static vector<bool> startedProcessing_p;
+	static bool preProcessingDone_p;
+	static uShort nAgents_p;
 };
 
 

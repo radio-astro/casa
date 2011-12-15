@@ -23,12 +23,12 @@
 #ifndef FLAGDATAHANDLER_H_
 #define FLAGDATAHANDLER_H_
 
-
 // Measurement Set selection
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
+#include <ms/MeasurementSets/MSPolColumns.h>
 
 // Async I/O infrastructure
 #include <msvis/MSVis/AsynchronousTools.h>
@@ -372,6 +372,9 @@ public:
 
     void activateCheckMode() {applyFlag_p = &FlagMapper::checkCommonFlags;}
 
+    uInt nSelectedCorrelations() {return nSelectedCorrelations_p;}
+    uInt flagsPerRow() {return flagsPerRow_p;}
+
 protected:
 
 	void setExpressionMapping(vector<uInt> selectedCorrelations);
@@ -392,6 +395,8 @@ private:
 	CubeView<Bool> *originalFlagsView_p;
 	CubeView<Bool> *privateFlagsView_p;
 	vector<uInt> selectedCorrelations_p;
+	uInt nSelectedCorrelations_p;
+	uInt flagsPerRow_p;
 	void (casa::FlagMapper::*applyFlag_p)(uInt,uInt,uInt);
 };
 
@@ -431,7 +436,8 @@ public:
 	// Set Data Selection parameters
 	bool setDataSelection(Record record);
 
-	// Set Data Selection parameters
+	// Apply channel selection for asyn or normal iterator
+	// NOTE: We always have to do this, even if there is no SPW:channel selection
 	void applyChannelSelection(ROVisibilityIterator *roVisIter);
 
 	// Generate selected Measurement Set
@@ -442,11 +448,11 @@ public:
 	void preLoadColumn(uInt column);
 	void preFetchColumns();
 
-	// Generate Visibility Iterator
-	bool generateIterator();
-
 	// Swap MS to check what is the maximum RAM memory needed
 	void checkMaxMemory();
+
+	// Generate Visibility Iterator
+	bool generateIterator();
 
 	// Move to next chunk
 	bool nextChunk();
@@ -455,7 +461,7 @@ public:
 	bool nextBuffer();
 
 	// Stop iterating
-	bool stopIteration() {stopIteration_p = true;};
+	void stopIteration() {stopIteration_p = true;};
 
 	// Write flag cube into MS
 	bool flushFlags();
@@ -511,6 +517,7 @@ public:
 	Vector<String> *antennaNames_p;
 	Vector<Double> *antennaDiameters_p;
 	Vector<String> *fieldNames_p;
+	std::vector<String> *corrProducts_p;
 
 	// RO Visibility Iterator
 	casa::asyncio::PrefetchColumns prefetchColumns_p;
@@ -519,6 +526,11 @@ public:
 	// Iteration counters
 	uShort chunkNo;
 	uShort bufferNo;
+
+	// FlagDataHanler-FlagAgents interaction
+	bool flushFlags_p;
+	uInt64 chunkCounts_p;
+	uInt64 msCounts_p;
 
 	// Visibility Buffer
 	// WARNING: The attach mechanism only works with pointers or
@@ -533,6 +545,7 @@ protected:
 private:
 
 	// Data Selection ranges
+	bool anySelection_p;
 	casa::String arraySelection_p;
 	casa::String fieldSelection_p;
 	casa::String scanSelection_p;

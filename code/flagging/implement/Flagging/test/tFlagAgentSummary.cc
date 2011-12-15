@@ -45,7 +45,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -86,7 +86,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
@@ -150,7 +150,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
 */
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
@@ -159,7 +159,13 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 			// Wait for completion of flagging process
 			agentList.completeProcess();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
+
+	// Print total stats from each agent
+	agentList.msSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();

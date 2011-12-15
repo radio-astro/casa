@@ -94,9 +94,9 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -157,8 +157,8 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+*/
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
@@ -170,7 +170,13 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 			// Flush flags to MS
 			dh->flushFlags();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
+
+	// Print total stats from each agent
+	agentList.msSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -292,9 +298,9 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -355,8 +361,8 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+*/
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// IMPORTANT: Pre-load vis cube, antenna1 and antenna2
@@ -371,7 +377,13 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			// Flush flags to MS
 			dh->flushFlags();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
+
+	// Print total stats from each agent
+	agentList.msSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();

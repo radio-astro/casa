@@ -87,7 +87,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
@@ -151,7 +151,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
 */
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
@@ -163,7 +163,13 @@ void deleteFlags(string inputFile,Record dataSelection)
 			// Flush flags to MS
 			dh->flushFlags();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
+
+	// Print total stats from each agent
+	agentList.msSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -255,7 +261,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
@@ -319,7 +325,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
 */
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
@@ -331,7 +337,13 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			// Flush flags to MS
 			dh->flushFlags();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
+
+	// Print total stats from each agent
+	agentList.msSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -657,7 +669,7 @@ int main(int argc, char **argv)
 	{
 		casa::IPosition size(1);
 		size[0]=2;
-		casa::Array<Float> cliprange(size);
+		casa::Array<Double> cliprange(size);
 		cliprange[0] = clipmin;
 		cliprange[1] = clipmax;
 		agentParameters.define("clipminmax",cliprange);
@@ -676,6 +688,12 @@ int main(int argc, char **argv)
 	Record agentParameters_i;
 	Record agentParameters_j;
 	vector<Record> agentParamersList;
+
+	// If expression list is empty we flag the list
+	if (expressionList.size()==0)
+	{
+		expressionList.push_back("blabla");
+	}
 
 	if (nThreads>1)
 	{
