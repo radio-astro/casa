@@ -3296,9 +3296,10 @@ namespace sdmbin {
     int64_t                    exposure;
     int64_t                    timeOfInteg;
     int64_t                    timeCentroid;
-    while ((nread < nDataSubsets) && sdmdosr.hasSubset() ) {
-      const SDMDataSubset& currentSubset = sdmdosr.getSubset();
-      cout << "The current integration starts at byte " << sdmdosr.currentIntegrationStartsAt() << endl;
+    const vector<SDMDataSubset>& sdmDataSubsets = sdmdosr.nextSubsets(nDataSubsets);
+
+    for (vector<SDMDataSubset>::const_iterator iter = sdmDataSubsets.begin(); iter != sdmDataSubsets.end(); iter++) {
+      const SDMDataSubset& currentSubset = *iter;
       nread++; 
       
       timeOfInteg  = currentSubset.time();        
