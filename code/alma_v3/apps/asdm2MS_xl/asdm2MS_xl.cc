@@ -108,6 +108,7 @@ string appName;
 bool verbose = true;
 bool isEVLA = false;
 
+bool debug = (getenv("ASDM_DEBUG") != NULL);
 //LogIO os;
 
 #include <casa/Logging/StreamLogSink.h>
@@ -1129,6 +1130,41 @@ public:
 };
 
 
+/**
+ * This function tries to calculate the sizes of the successives slices of the BDF 
+ * to be processed given a) the overall size of the BDF and b) the approximative maximum
+ * size that one wants for one slice.
+ * @paramater BDFsize the overall size of the BDF expressed in bytes,
+ * @parameter approxSizeInMemory the approximative size that one wants for one slice, expressed in byte.
+ *
+ * \par Note:
+ * It tries to avoid a last slice, corresponding to 
+ * the remainder in the euclidean division BDFsize / approxSizeInMemory.
+ */
+vector<uint64_t> sizeInMemory(uint64_t BDFsize, uint64_t approxSizeInMemory) {
+  if (debug) cout << "sizeInMemory: entering" << endl;
+  vector<uint64_t> result;
+  uint64_t Q = BDFsize / approxSizeInMemory;
+  if (Q == 0) { 
+    result.push_back(BDFsize);
+  }
+  else {
+    result.resize(Q, approxSizeInMemory);
+    unsigned int R = BDFsize % approxSizeInMemory;
+    if ( R > (Q * approxSizeInMemory / 5) )  {
+      result.push_back(R); 
+    }
+    else {
+      while (R > 0) 
+	for (unsigned int i = 0; R >0 && i < result.size(); i++) {
+	  result[i]++ ; R--;
+	}
+    }
+  }
+  if (debug) cout << "sizeInMemory: exiting" << endl;
+  return result;
+} 
+
 map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers; // There will be one filler per value of the axis APC.
 
 vector<int> dataDescriptionIdx2Idx;
@@ -1139,10 +1175,11 @@ void processMainAndState(ASDM* ds,
 			 int rowNum,
 			 MainRow* r,
 			 SDMBinData& sdmBinData,
-			 VMSData* vmsDataPtr,
+			 const VMSData* vmsDataPtr,
 			 UvwCoords& uvwCoords,
 			 bool complexData,
 			 bool mute) {
+  if (debug) cout << "processMainAndState : entering" << endl;
 
   // Firstly populate the State table...
   ScanRow* scanR = ds->getScan().getRowByKey(r->getExecBlockId(),
@@ -1194,18 +1231,19 @@ void processMainAndState(ASDM* ds,
 	  pushed = true;
 	}
       }
-    }
-	    
-    // Then populate the Main table.
-    ComplexDataFilter filter; // To process the case numCorr == 3
-	    
-    if (vmsDataPtr->v_antennaId1.size() == 0) {
-      infostream.str("");
-      infostream << "No MS data produced for the current row." << endl;
-      info(infostream.str());
-      continue;
-    }
+    }	    
   }
+
+  // Then populate the Main table.
+  ComplexDataFilter filter; // To process the case numCorr == 3
+  
+  if (vmsDataPtr->v_antennaId1.size() == 0) {
+    infostream.str("");
+    infostream << "No MS data produced for the current row." << endl;
+    info(infostream.str());
+    return;
+  }
+
   vector<vector<unsigned int> > filteredShape = vmsDataPtr->vv_dataShape;
   for (unsigned int ipart = 0; ipart < vmsDataPtr->vv_dataShape.size(); ipart++) {
     if (filteredShape.at(ipart).at(0) == 3)
@@ -1289,12 +1327,6 @@ void processMainAndState(ASDM* ds,
   }
 	  
   if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
-    infostream.str("");
-    infostream << "ASDM Main table row #" << rowNum
-	       << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
-	       << " rows in the wvr uncorrected MS Main table." << endl;
-    info(infostream.str());
-
     if (! mute) {
       msFillers[AP_UNCORRECTED]->addData(complexData,
 					 (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
@@ -1320,12 +1352,6 @@ void processMainAndState(ASDM* ds,
   }
 
   if (correctedData.size() > 0 && (msFillers.find(AP_CORRECTED) != msFillers.end())) {
-    infostream.str("");
-    infostream << "ASDM Main table row #" << rowNum
-	       << " will be transformed into " << correctedAntennaId1.size()
-	       << " rows in the wvr corrected MS Main table." << endl;
-    info(infostream.str());
-
     if (! mute) {
       msFillers[AP_CORRECTED]->addData(complexData,
 				       correctedTime, // this is already time midpoint
@@ -1349,7 +1375,7 @@ void processMainAndState(ASDM* ds,
 				       correctedFlag);
     }
   }
-
+  if (debug) cout << "processMainAndState : exiting" << endl;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3822,8 +3848,138 @@ int main(int argc, char *argv[]) {
   double cpu_time_aips_overall  = 0.0;
   double real_time_aips_overall = 0.0;
 
+#if 1
+  {
+    const MainTable& mainT = ds->getMain();
+    const StateTable& stateT = ds->getState();
 
-#if 1 
+    MainRow* r = 0;
+    vector<MainRow*> v;
+    //
+    //
+    // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection.
+    //
+    const vector<MainRow *>& temp = mainT.get();
+    for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
+      map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
+      if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() )	  
+	v.push_back(*iter_v);
+    }
+      
+    infostream.str("");
+    infostream << "The dataset has " << mainT.size() << " main(s)...";
+    infostream << v.size() << " of them in the selected exec blocks / scans." << endl;
+    info(infostream.str());
+    uint32_t nMain = v.size();
+
+    const VMSData *vmsDataPtr = 0;
+
+    try {
+      // Initialize an UVW coordinates engine.
+      UvwCoords uvwCoords(ds);
+
+      ostringstream oss;
+
+      // For each main row.
+      for (int32_t i = 0; i < nMain; i++) {
+	infostream.str("");
+	infostream << "ASDM Main row #" << i << " - BDF file size is " << v[i]->getDataSize() << " bytes." << endl;
+	info(infostream.str());
+
+	// Open its associate BDF.
+	sdmBinData.openMainRow(v[i]);
+
+	uint32_t		N			 = v[i]->getNumIntegration();
+	uint64_t		bdfSize			 = v[i]->getDataSize();
+	vector<uint64_t>	actualSizeInMemory(sizeInMemory(bdfSize, 100*1024*1024));
+	int32_t			numberOfMSMainRows	 = 0;
+	int32_t			numberOfIntegrations	 = 0;
+	int32_t			numberOfReadIntegrations = 0;
+
+	// For each slice of the BDF with a size approx equal to the required size
+	for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
+	  numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
+	  infostream.str("");
+	  infostream << "ASDM Main row #" << i << ", next " << numberOfIntegrations << " integrations produced ";
+	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
+	  numberOfReadIntegrations += numberOfIntegrations;
+	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
+	  processMainAndState(ds, j, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
+	  info(infostream.str());
+	}
+
+	uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
+	if (numberOfRemainingIntegrations) {
+	  infostream.str("");
+	  infostream << "ASDM Main row #" << i << ", next " << numberOfRemainingIntegrations << " integrations produced ";
+	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
+	  processMainAndState(ds, i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
+	  info(infostream.str());
+	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
+	}
+	infostream.str("");
+	infostream << "ASDM Main row #" << i << "produced a total of " << numberOfMSMainRows << endl;
+      }
+    }
+    catch ( IllegalAccessException& e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( SDMDataObjectStreamReaderException& e ) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( SDMDataObjectReaderException& e ) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch (ConversionException e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());      
+    }
+    catch (Error & e) {
+      errstream.str("");
+      errstream << e.getErrorMessage();
+      error(errstream.str());
+    }
+    infostream.str("");
+    infostream << "The dataset has "  << stateT.size() << " state(s)..." ;
+    info(infostream.str());
+
+    if (stateT.size()) {
+      infostream.str("");
+      infostream << "converted in " << msFiller->ms()->state().nrow() << " state(s) in the measurement set.";
+      info(infostream.str());
+    }
+
+
+    infostream.str("");
+    infostream << "The dataset has " << mainT.size() << " main(s)...";
+    info(infostream.str());
+
+    if (mainT.size()) {
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	string kindOfData = (iter->first == AP_UNCORRECTED) ? "wvr uncorrected" : "wvr corrected";
+	infostream.str("");
+	infostream << "converted in " << iter->second->ms()->nrow() << " main(s) rows in the measurement set containing the " << kindOfData << " data.";
+	info(infostream.str());
+      }
+    }
+  }
+#else 
   {
     const MainTable& mainT = ds->getMain();
     const StateTable& stateT = ds->getState();
