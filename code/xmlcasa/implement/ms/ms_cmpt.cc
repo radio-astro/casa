@@ -2336,7 +2336,7 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
 }
 
 bool ms::statwt(const std::string& scattertype,  const bool byantenna,
-                const bool separateacs,          const ::casac::variant& fitspw,
+                const bool sepacs,               const ::casac::variant& fitspw,
                 const ::casac::variant& fitcorr, const std::string& combine,
                 const ::casac::variant& timebin, const int minsamp,
                 const ::casac::variant& field,   const ::casac::variant& spw,

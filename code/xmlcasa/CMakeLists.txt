@@ -307,6 +307,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_specfit.py
   scripts/task_splattotable.py
   scripts/task_split.py
+  scripts/task_statwt.py
   scripts/task_testconcat.py
   scripts/task_tflagcmd.py
   scripts/task_tflagger.py
@@ -434,6 +435,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/specfit.xml
   tasks/splattotable.xml
   tasks/split.xml
+  tasks/statwt.xml
   tasks/testconcat.xml
   tasks/tflagcmd.xml
   tasks/tflagger.xml

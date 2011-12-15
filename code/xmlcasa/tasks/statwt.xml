@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	  <value>True</value>
 	</param>
 
-	<param type="bool" name="separateacs" subparam="true">
+	<param type="bool" name="sepacs" subparam="true">
 	  <description>If solving by antenna, treat autocorrs separately</description>
 	  <value>True</value>
 	</param>
@@ -113,45 +113,83 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         <constraints>
 	  <when param="byantenna">
-            <equals type="bool" value=True>
-              <default param="seperateacs"><value type="bool">True</value></default>
+            <equals type="bool" value="True">
+              <default param="sepacs"><value type="bool">True</value></default>
             </equals>
           </when>
         </constraints>
 </input>
 <example>
 
-    Statwt is the general purpose program to make a new data set that is a
-    subset or averaged form of an existing data set.  General selection
-    parameters are included, and one or all of the various data columns
-    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
-    CORRECTED_DATA) can be selected.
-    
-    Statwt is often used after the initial calibration of the data to make a
-    smaller measurement set with only the data that will be used in
-    further flagging, imaging and/or self-calibration.  statwt can
-    average over frequency (channels) and time (integrations).
-
+    The WEIGHT and SIGMA columns of measurement sets are often set to arbitrary
+    values (e.g. 1), or theoretically estimated from poorly known antenna and
+    receiver properties.  Many tasks (e.g. clean) are insensitive to an overall
+    scale error in WEIGHT, but are affected by errors in the relative weights
+    between visibilities.  Other tasks, such as uvmodelfit, or anything which
+    depends on theoretical estimates of the noise, require (reasonably) correct
+    weights and sigmas.  statwt empirically measures the visibility scatter
+    (typically as a function of time, antenna, and/or baseline) and uses that
+    to set WEIGHT and SIGMA.
 
         Keyword arguments:
-        vis -- Name of input visibility file
+        vis -- Name of the measurement set.
                 default: none; example: vis='ngc5921.ms'
-        outputvis -- Name of output visibility file
-                default: none; example: outputvis='ngc5921_src.ms'
 
-        datacolumn -- Which data column to statwt out
-                default='corrected'; example: datacolumn='data'
-                Options: 'data', 'model', 'corrected', 'all',
-                'float_data', 'lag_data', 'float_data,data', and
-                'lag_data,data'.
-                N.B.: 'all' = whichever of the above that are present.
-                Otherwise the selected column will go to DATA (or
-                FLOAT_DATA) in the output.
-                Statwtting with the default datacolumn='corrected'
-                before clean is normally required for self-calibration!
+        scattertype -- How to estimate the scatter:
+                       'IQR': Interquartile range.  Robust, but in a certain
+                              sense it ignores half the data.
+                       'rms': Root mean square amplitude.  It is the most
+                              accurate estimate if there is NO signal.
+                       'stddev': Sample standard deviation.
+               default: 'stddev'
+
+        byantenna -- Assume that the noise is factorable by antenna (feed).
+                     If false, treat it seperately for each baseline
+                     (recommended if there is strong signal).
+               default: True
+
+        sepacs -- If solving by antenna, treat autocorrelations separately.
+                  (Acknowledge that what autocorrelations "see" is very
+                   different from what crosscorrelations see.)
+               default: True
+
 
         --- Data Selection (see help par.selectdata for more detailed
             information)
+
+        fitspw -- The (ideally) signal-free spectral window:channels to
+                  estimate the scatter from.
+               default: '' (All)
+
+        fitcorr -- The (ideally) signal-free correlations to
+                   estimate the scatter from.
+               default: '' (All)
+
+        combine -- Let samples span multiple spws, corrs, scans, and/or states.
+                   combine = 'spw': Recommended when a line spans an entire spw 
+                                    - set fitspw to the neighboring spws and
+                                    apply their weight to the line spw(s).
+                                    However, the effect of the line signal per
+                                    visibility may be relatively harmless
+                                    compared to the noise difference between
+                                    spws.
+                   combine = 'scan': Can be useful when the scan number
+                                     goes up with each integration,
+                                     as in many WSRT MSes.
+                   combine = ['scan', 'spw']: disregard scan and spw
+                                              numbers when gathering samples.
+                   combine = 'spw,scan': Same as above.
+              default: '' (None)
+
+        timebin -- Sample interval.
+                   default: '0s' or '-1s' (1 integration at a time)
+                   example: timebin='30s'
+                            '10' means '10s'
+
+        minsamp -- Minimum number of unflagged visibilities for estimating the
+                   scatter.  Baselines for which the weight cannot be estimated
+                   will be flagged.  Note that minsamp is effectively at least
+                   4 for IQR, 1 for rms, and 2 for stddev.
 
         field -- Select field using field id(s) or field name(s).
                   [run listobs to obtain the list id's or names]
@@ -162,7 +200,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                field='0,4,5~7'; field ids 0,4,5,6,7
                field='3C286,3C295'; fields named 3C286 and 3C295
                field = '3,4C*'; field id 3, all names starting with 4C
-        spw -- Select spectral window/channels
+
+        spw -- Select spectral window/channels for changing WEIGHT and SIGMA.
                default: ''=all spectral windows and channels
                spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
@@ -175,12 +214,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                window (';') because it is not clear whether to keep the ranges
                in the original spectral window or make a new spectral window
                for each additional range.
-	width -- Defines the number of channel to average to form the one
-	         output channel.
-		 default: '1' =&gt; no channel averaging
-		 example: width=[2,3] =&gt; average 2 channels of 1st
-		          spectral window selected and 3 in the second one.
-        antenna -- Select data based on antenna/baseline
+
+        antenna -- Select antennas/baselines for changing WEIGHT and SIGMA.
                default: '' (all)
                 Non-negative integers are assumed to be antenna indices, and
                 anything else is taken as an antenna name.
@@ -198,10 +233,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 antenna='!ea03,ea12,ea17': all baselines except those that
                                            include EVLA antennas ea03, ea12, or
                                            ea17.
-        timebin -- Interval width for time averaging.
-                   default: '0s' or '-1s' (no averaging)
-                   example: timebin='30s'
-                            '10' means '10s'
         timerange -- Select data based on time range:
                default = '' (all); examples,
                timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
@@ -212,13 +243,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                on next day
                timerange='09:44:00' data within one integration of time
                timerange='&gt;10:24:00' data after this time
-        array -- (Sub)array number range
-            default: ''=all
-	uvrange -- Select data within uvrange (default units meters)
-            default: ''=all; example:
-            uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
-            uvrange='&gt;4klambda';uvranges greater than 4 kilo-lambda
-            uvrange='0~1000km'; uvrange in kilometers
 	scan -- Scan number range
             default: ''=all
         intent -- Select by scan intent (state).  Case sensitive.
@@ -229,37 +253,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             # Select states that include one or both of CALIBRATE_WVR.REFERENCE
             # or OBSERVE_TARGET_ON_SOURCE.
             intent = 'CALIBRATE_WVR.REFERENCE, OBSERVE_TARGET_ON_SOURCE'
+        array -- (Sub)array number range
+            default: ''=all
         correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
                        default '' (all).
         observation -- Select by observation ID(s).
                        default: '' = all
-        combine -- Let time bins span changes in scan and/or state.
-                   default = '' (separate time bins by both of the above)
-                   combine = 'scan': Can be useful when the scan number
-                                     goes up with each integration,
-                                     as in many WSRT MSes.
-                   combine = ['scan', 'state']: disregard scan and state
-                                                numbers when time averaging.
-                   combine = 'state,scan': Same as above.
-        keepflags -- If practical, keep completely flagged rows instead of
-                     dropping them.  This has absolutely no effect on averaging
-                     calculations, or partially flagged rows.  All of the
-                     channels and correlations of a row must be flagged for it
-                     to be droppable, and a row must be well defined to be
-                     keepable.  The latter condition means that this option has
-                     no effect on time averaging - in that case fully flagged
-                     rows are automatically omitted.  Regardless of this
-                     parameter, flagged data is never included in averaging
-                     calculations.
-
-                     The only time keepflags matters is if 
-                     1. the input MS has some completely flagged rows
-                     and
-                     2. time averaging is not being done.
-
-                     Then, if keepflags is False, the completely flagged rows
-                     will be omitted from the output MS.  Otherwise, they will
-                     be included (subject to the selection parameters).
 </example> 
 </task>
 </casaxml>

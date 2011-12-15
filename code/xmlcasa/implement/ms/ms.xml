@@ -2955,7 +2955,7 @@ for i in range(len(tcoord)):
      <value>true</value>
      </param>
 
-     <param type="bool" direction="in" name="seperateacs">
+     <param type="bool" direction="in" name="sepacs">
      <description>If solving by antenna, treat autocorrs separately</description>
      <value>true</value>
      </param>
