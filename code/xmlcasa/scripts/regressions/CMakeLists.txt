@@ -1,15 +1,3 @@
-
-       New Development: Yes/No
-            JIRA Issue: No/Yes List JIRA ticket.
-        Ready for Test: Yes/No
-     Interface Changes: Yes/No
-What Interface Changed: Please list interface changes
-         Test Programs: List test programs
-  Put in Release Notes: Yes/No
-             Module(s): Module Names change impacts.
-           Description: Describe your changes here...
-
-	
 #
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
