@@ -1169,38 +1169,6 @@ record* image::fitprofile(const string& box, const string& region,
 	return rstat;
 }
 
-::casac::image*
-image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
-		const std::string& sigmaFile, const int axis, const int order,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const bool overwrite) {
-	::casac::image *rstat = 0;
-	try {
-		*_log << LogOrigin(_class, __FUNCTION__);
-		*_log << LogIO::WARN << "DEPRECATED: " << __FUNCTION__
-				<< " will be removed in an upcoming release. "
-				<< "Use fitprofile instead with ngauss=0." << LogIO::POST;
-		if (detached()) {
-			return rstat;
-		}
-
-		Record *Region = toRecord(region);
-		String mask = vmask.toString();
-		if (mask == "[]")
-			mask = "";
-
-		ImageInterface<Float>* tmpIm = _image->fitpolynomial(residFile,
-				fitFile, sigmaFile, axis, order, *Region, mask, overwrite);
-		rstat = new ::casac::image(tmpIm);
-		delete tmpIm;
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return rstat;
-}
-
 image* image::reorder(
 	const std::string& outfile,
 	const variant& order

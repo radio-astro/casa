@@ -6051,7 +6051,7 @@ def imagetest(which=None, size=[32,32,8]):
         info('')
         info('')
         info('')
-        info('Test 35 - fitpolynomial')
+        info('Test 35 - fitprofile polynomial fitting')
         # Make the directory
         testdir = 'imagetest_temp'
         if not cleanup(testdir):
@@ -6062,7 +6062,7 @@ def imagetest(which=None, size=[32,32,8]):
             note(e, "SEVERE")
             raise RuntimeError, "mkdir " + testdir + " fails!"
         #
-        info('Testing fitpolynomial')
+        info('Testing fitprofile polynomial fitting')
         info('')
         shape = [32,32,128]
         #
@@ -6075,18 +6075,18 @@ def imagetest(which=None, size=[32,32,8]):
         residname = testdir+'/'+'ia.fromshape.resid'
         fitname = testdir+'/'+'ia.fromshape.fit'
         #
-        resid = myim.fitpolynomial (residfile=residname, fitfile=fitname, order=0, axis=2)
+        res = myim.fitprofile (multifit=True, residual=residname, model=fitname, poly=0, ngauss=0, axis=2)
         if not ok: fail()
+        myim.done()
+        myim.open(residname)
         #
-        #pixels = abs(resid.getchunk())
-        pixels = resid.getchunk()
+        pixels = myim.getchunk()
         if len(pixels)==0: fail()
         #
         if not alleqnum(pixels,0,tolerance=0.00001):
-            stop('fitpolynomial got the wrong results')
+            stop('fitprofile got the wrong results')
         #
         if not myim.done(): fail()
-        if not resid.done(): fail()
         ###
         return cleanup(testdir)
 
