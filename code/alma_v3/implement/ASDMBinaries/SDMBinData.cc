@@ -1795,9 +1795,9 @@ namespace sdmbin {
 	timeCentroidMJD   = timeCentroidOfDump.getMJD();                      if(coutest)cout<< timeCentroidMJD<<endl;
 	exposure          = (double)v_dataDump_[nt]->exposure()/1000000000LL;
 	floatDataDumpPtr_ = v_dataDump_[nt]->autoData();             // used by getData(na, nfe, ndd, nbi)
-	cout << "floatDataDumpPtr_ = " << floatDataDumpPtr_ << endl;
-	cout << "nt = " << nt << endl;
- 	cout<<"1st & 2nd data for nt="<<nt<<": "<<floatDataDumpPtr_[0]<<" "<<floatDataDumpPtr_[1]<<endl;
+	//cout << "floatDataDumpPtr_ = " << floatDataDumpPtr_ << endl;
+	//cout << "nt = " << nt << endl;
+ 	//cout<<"1st & 2nd data for nt="<<nt<<": "<<floatDataDumpPtr_[0]<<" "<<floatDataDumpPtr_[1]<<endl;
 
 
 // 	for(unsigned int n=0; n<v_integrationPtr_.size();n++){
