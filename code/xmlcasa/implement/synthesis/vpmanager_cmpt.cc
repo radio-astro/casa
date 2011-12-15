@@ -523,7 +523,6 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
 int vpmanager::numvps(const std::string& telescope,
 		      const casac::variant& obstime, 
 		      const casac::variant& freq, 
-		      const std::string& antennatype, 
 		      const casac::variant& obsdirection){
 
   int rval(-1);
@@ -556,7 +555,7 @@ int vpmanager::numvps(const std::string& telescope,
       }
     }
 
-    rval = itsVPM->numvps(telescope, mObsTime, mFreq, antennatype, mObsDir);
+    rval = itsVPM->numvps(telescope, mObsTime, mFreq, mObsDir);
 
   } catch(AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

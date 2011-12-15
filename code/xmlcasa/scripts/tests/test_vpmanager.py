@@ -68,7 +68,6 @@ class vpmanager_test(unittest.TestCase):
         myrval = vp.numvps(telescope='VLA',
                            obstime = '1999/07/24/10:00:00',
                            freq = 'TOPO 30GHz',
-                           antennatype = '',
                            obsdirection = 'AZEL 30deg 60deg')
         
         self.assertTrue(myrval==1)
@@ -79,21 +78,19 @@ class vpmanager_test(unittest.TestCase):
         myrval = vp.numvps(telescope='ALMA',
                            obstime = '2009/07/24/10:00:00',
                            freq = 'TOPO 100GHz',
-                           antennatype = '',
                            obsdirection = 'AZEL 30deg 60deg')
         
         self.assertTrue(myrval==4)
 
     def test6(self):
-        '''Test 6: numvps for ALMA DV'''
+        '''Test 6: numvps for ALMA with too high freq'''
         vp.reset()
         myrval = vp.numvps(telescope='ALMA',
                            obstime = '2009/07/24/10:00:00',
-                           freq = 'TOPO 100GHz',
-                           antennatype = 'DV',
+                           freq = 'TOPO 1000GHz', # freq too high
                            obsdirection = 'AZEL 30deg 60deg')
         
-        self.assertTrue(myrval==1)
+        self.assertTrue(myrval==0)
 
     def test7(self):
         '''Test 7: setuserdefault for ALMA'''
@@ -210,7 +207,15 @@ class vpmanager_test(unittest.TestCase):
                          obsdirection = 'AZEL 30deg 60deg')
         tcmok = (myrec['name']=='AIRY' and myrec['dishdiam']['value']==6)
 
-        self.assertTrue(tdvok and tdaok and tpmok and tcmok)
+        myanttypes = vp.getanttypes('ALMA')
+
+        tantok = (('' in myanttypes)
+                  and ('CM' in myanttypes)
+                  and ('DA' in myanttypes)
+                  and ('DV' in myanttypes)
+                  and ('PM' in myanttypes))
+
+        self.assertTrue(tdvok and tdaok and tpmok and tcmok and tantok)
 
 
     def test11(self):

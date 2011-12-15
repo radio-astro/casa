@@ -751,12 +751,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool rval=False;
 
+    anttypes.resize(0);
+
     Int ifield = -2;
     if(!getuserdefault(ifield,telescope,"")){
       return False;
     }
-
-    anttypes.resize(0);
 
     if(ifield==-1){ // internally defined PB does not distinguish antenna types
       anttypes.resize(1);
@@ -777,10 +777,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     << LogIO::POST;
 	}
 	else{ // init successful
+
+	  // construct a proper MFrequency 
+	  MFrequency::Types fromFrameType;
+	  MFrequency::getType(fromFrameType, freq.getRefString());
+	  MPosition obsPos;
+	  MFrequency::Ref fromFrame;
+	  MFrequency mFreq = freq;
+	  if(fromFrameType!=MFrequency::TOPO){
+	    if(!MeasTable::Observatory(obsPos,telescope)){
+	      os << LogIO::SEVERE << "\"" << telescope << "\" is not listed in the Observatories table."
+		 << LogIO::POST;
+	      return False;
+	    }
+	    fromFrame = MFrequency::Ref(fromFrameType, MeasFrame(obsdirection, obsPos, obstime));
+	    mFreq = MFrequency(freq.get(Unit("Hz")), fromFrame);
+	  } 
+
 	  if(aR_p.getAntennaTypes(anttypes,
 				  telescope, // (the observatory name, e.g. "ALMA" or "ACA")
 				  obstime,
-				  freq,
+				  mFreq,
 				  AntennaResponses::ANY, // the requested function type
 				  obsdirection)){ // success
 	    rval = True;
@@ -792,12 +809,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(uInt i=0; i<vplistdefaults_p.ndefined(); i++){
 	  String aDesc = vplistdefaults_p.getKey(i);
 	  if(telescope == telFromAntDesc(aDesc)){
-	    rval = True;
-	    count++;
-	    anttypes.resize(count);
-	    anttypes(count-1) = antTypeFromAntDesc(aDesc);
+	    String aType = antTypeFromAntDesc(aDesc);
+	    Bool tFound = False;
+	    for(uInt j=0; j<anttypes.size(); j++){
+	      if(aType==anttypes(j)){ // already in list?
+		tFound = True;
+		break;
+	      }
+	    }
+	    if(!tFound){
+	      rval = True;
+	      count++;
+	      anttypes.resize(count, True);
+	      anttypes(count-1) = aType;
+	    }
 	  }
-	}
+	} // end for i
       }
     } // endif ifield==-1
 
@@ -810,78 +837,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Int VPManager::numvps(const String& telescope,
 			const MEpoch& obstime,
 			const MFrequency& freq, 
-			const String& antennatype, // default: any
 			const MDirection& obsdirection // default: Zenith
 			){
     LogIO os;
     os << LogOrigin("VPManager", "numvps");
 
-    Int rval=0;
+    Vector<String> antTypes;
 
-    Int ifield = -2;
-    if(!getuserdefault(ifield,telescope,antennatype)){
-      return rval;
-    }
+    getanttypes(antTypes, telescope, obstime, freq, obsdirection);
 
-    if(ifield==-1){ // internally defined PB does not distinguish antenna types
-      rval = 1;
-    }
-    else{ // externally defined PB
-      TableRecord antRec(vplist_p.asRecord(ifield));
-      String thename = antRec.asString("name");
-      if(thename=="REFERENCE"){ // points to an AntennaResponses table
-	// query the antenna responses
-	String antRespPath = antRec.asString("antresppath");
-	if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
-	   && !aR_p.init(antRespPath)){
-	  os << LogIO::SEVERE
-	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
-	     << antRespPath << endl
-	     << LogIO::POST;
-	}
-	else{ // init successful
-	  Vector<String> antTypes;
-	  if(aR_p.getAntennaTypes(antTypes,
-				  telescope, // (the observatory name, e.g. "ALMA" or "ACA")
-				  obstime,
-				  freq,
-				  AntennaResponses::ANY, // the requested function type
-				  obsdirection)){ // success
-	    if(antennatype.empty()){ // antenna type was not given
-	      rval = antTypes.size();
-	    }
-	    else{
-	      for(uInt i=0; i<antTypes.size(); i++){
-		if(antTypes(i)==antennatype){
-		  rval = 1;
-		break;
-		}
-	      }
-	    }
-	  }
-	  //else{} // error in getAntennaTypes, return 0 
-	}
-      }
-      else{ // we have a PBMath response
-	if(antennatype.empty()){ // no global entry and antenna type not given: need to count specific entries
-	  rval = 0;
-	  for(uInt i=0; i<vplistdefaults_p.ndefined(); i++){
-	    String aDesc = vplistdefaults_p.getKey(i);
-	    if(telescope == telFromAntDesc(aDesc)){
-	      rval++;
-	    }
-	  }
-	}
-	else{ // antenna type given: need to look for specific entry
-	  String antDesc = antennaDescription(telescope,antennatype);
-	  if(vplistdefaults_p.isDefined(antDesc)){
-	    rval = 1;
-	  }
-	} 
-      } 
-    } // endif ifield==-1
-
-    return rval;
+    return antTypes.size();
 
   }
 
@@ -961,7 +926,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  fromFrame = MFrequency::Ref(fromFrameType, MeasFrame(obsdirection, obsPos, obstime));
 	  mFreq = MFrequency(freq.get(Unit("Hz")), fromFrame);
 	} 
-
 	
 	if(!aR_p.getImageName(functionImageName, // the path to the image
 			      funcChannel, // the channel to use in the image  

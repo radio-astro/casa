@@ -150,7 +150,6 @@ namespace casa {
       Int numvps(const String& telescope,
 		 const MEpoch& obstime,
 		 const MFrequency& freq, 
-		 const String& antennatype="", // default: any
 		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
 							   Quantity(90., "deg"), 
 							   MDirection::AZEL)

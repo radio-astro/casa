@@ -897,6 +897,8 @@ Get a list of the available antenna types.
    
 <description>
 Can be used to, e.g., determine the number of antenna types.
+Note: if a global response is defined for the telescope, this will increase the count of
+available vps/pbs by 1.
 </description>  
 <input>
 
@@ -915,12 +917,6 @@ Can be used to, e.g., determine the number of antenna types.
      <description> Frequency of the observation (may include reference frame, default: LSRK)
      </description>
      <any type="variant"/>
-     <value></value>
-     </param>
-
-
-     <param type="string" name="antennatype">
-     <description>The antenna type as a string, e.g. "DV"</description>
      <value></value>
      </param>
 
