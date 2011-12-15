@@ -271,11 +271,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     QuantumHolder(paincrement).toRecord(error, tempholder);
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
-    vplist_p.defineRecord(vplist_p.nfields(), rec);
 
     if(dopb){
       vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
     } 
+
+    vplist_p.defineRecord(vplist_p.nfields(), rec);
 
     return True;
   }
@@ -1167,6 +1168,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
       } // end if internally defined
     }
+    
+    return rval;
+
+  }
+
+  // get the voltage pattern without giving observation parameters
+  Bool VPManager::getvp(Record &rec,
+			const String& telescope,
+			const String& antennatype // default: "" 
+			){ 
+
+    LogIO os;
+    os << LogOrigin("VPManager", "getvp2");
+
+    MEpoch obstime;
+    MFrequency freq;
+    MDirection obsdirection;
+    
+    Int ifield = -2;
+    if(!getuserdefault(ifield,telescope,antennatype)){
+      return False;
+    }
+
+    rec = Record();
+    Int rval=False;
+
+    if(ifield==-1){ // internally defined PB, obs parameters ignored 
+      rval = getvp(rec, telescope, obstime, freq, antennatype, obsdirection);
+    }
+    else if(ifield>=0){ // externally defined PB
+      TableRecord antRec(vplist_p.asRecord(ifield));
+      String thename = antRec.asString("name");
+      if(thename=="REFERENCE"){ // points to an AntennaResponses table
+	os << LogIO::SEVERE
+	   << "Need to provide observation parameters time, frequency, and direction to access AntennaResponses table."
+	   << LogIO::POST;
+	return False;
+      }
+      else{ // we have a PBMath response
+	rec = vplist_p.subRecord(ifield);
+	rval = True;
+      } 
+    }// end if internally defined
     
     return rval;
 

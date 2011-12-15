@@ -168,6 +168,12 @@ namespace casa {
 							   MDirection::AZEL)
 		 ); 
 
+      // get a general voltage pattern for the given telescope and ant type if available
+      Bool getvp(Record &rec,
+		 const String& telescope,
+		 const String& antennatype=""
+		 ); 
+
     protected:
       VPManager(Bool verbose=False);
 
