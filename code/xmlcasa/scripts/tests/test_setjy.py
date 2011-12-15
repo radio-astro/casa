@@ -159,8 +159,8 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
                                            async=False)
-            #record['history'] = get_last_history_line(self.inpms,
-            #                                          hint='model image to I')
+            record['history'] = get_last_history_line(self.inpms,
+                                                      hint='model image to I')
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',
                                             complex_value='amp',
@@ -180,22 +180,22 @@ class setjy_test_modimage(CheckAfterImportuvfits):
             raise e
         return record
 
-    ## def test_history_standard(self):
-    ##     """Flux density in HISTORY (standard)?"""
-    ##     # Don't bother checking it without scaling - it won't be there and isn't
-    ##     # interesting.
-    ##     check_history(self.records[True]['history'],
-    ##                   ["Scaling spw 1's model image to I ="])
+    def test_history_standard(self):
+        """Flux density in HISTORY (standard)?"""
+        # Don't bother checking it without scaling - it won't be there and isn't
+        # interesting.
+        check_history(self.records[True]['history'],
+                      ["Scaling spw 1's model image to I ="])
             
-    ## def test_history_fluxdensity(self):
-    ##     """Flux density in HISTORY (fluxdensity)?"""
-    ##     check_history(self.records['fluxdens']['history'],
-    ##                   ["Scaling spw 1's model image to I ="])
+    def test_history_fluxdensity(self):
+        """Flux density in HISTORY (fluxdensity)?"""
+        check_history(self.records['fluxdens']['history'],
+                      ["Scaling spw 1's model image to I ="])
             
-    ## def test_history_spix(self):
-    ##     """Flux density in HISTORY (spix)?"""
-    ##     check_history(self.records['spix']['history'],
-    ##                   ["Scaling spw 1's model image to I ="])
+    def test_history_spix(self):
+        """Flux density in HISTORY (spix)?"""
+        check_history(self.records['spix']['history'],
+                      ["Scaling spw 1's model image to I ="])
             
 
     def test_no_scaling(self):
@@ -280,13 +280,13 @@ class Uranus(SplitChecker):
             record['med4'] = tb.getcell('MODEL_DATA', 4)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
             tb.close()
-            #record['history'] = get_last_history_line(self.inpms, hint='Uranus')
+            record['history'] = get_last_history_line(self.inpms, hint='Uranus')
         self.__class__.records[corrsel] = record
         return sjran
 
-    ## def test_history_Uranus(self):
-    ##     """Flux density in HISTORY (Uranus)?"""
-    ##     check_history(self.records['']['history'], ["Uranus", "V=0] Jy"])
+    def test_history_Uranus(self):
+        """Flux density in HISTORY (Uranus)?"""
+        check_history(self.records['']['history'], ["Uranus", "V=0] Jy"])
 
     def test_wvr(self):
         """WVR spw"""
@@ -364,13 +364,13 @@ class ScaleUranusByChan(SplitChecker):
             record['auto4'] = tb.getcell('MODEL_DATA', 2)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
             tb.close()
-            #record['history'] = get_last_history_line(self.inpms, hint="V=0] Jy")
+            record['history'] = get_last_history_line(self.inpms, hint="V=0] Jy")
         self.__class__.records[corrsel] = record
         return sjran
 
-    ## def test_history_scalebychan(self):
-    ##     """Flux density in HISTORY (scalebychan)?"""
-    ##     check_history(self.records['']['history'], ["Uranus", "V=0] Jy"])
+    def test_history_scalebychan(self):
+        """Flux density in HISTORY (scalebychan)?"""
+        check_history(self.records['']['history'], ["Uranus", "V=0] Jy"])
 
     def test_wvr(self):
         """WVR spw with scalebychan"""
