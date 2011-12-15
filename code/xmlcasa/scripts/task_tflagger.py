@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-debug = False
+debug = True
 
 
 def tflagger(vis,
@@ -295,7 +295,7 @@ def tflagger(vis,
         # Backup the existing flags before applying new ones
         if flagbackup and writeflags:
             casalog.post('Backup original flags before applying new flags')
-            backupFlags(tflocal, mode)
+            backupFlags(tflocal, mode, flagcmd)
 
         
         # Run the tool
@@ -475,7 +475,7 @@ def getLinePars(cmdline):
          
     return newstr
 
-def backupFlags(tflocal, mode):
+def backupFlags(tflocal, mode, flagcmd):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
@@ -510,8 +510,11 @@ def backupFlags(tflocal, mode):
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
                       
+#    tflocal.saveflagversion(versionname=versionname,
+#                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
+#                           merge='replace')
     tflocal.saveflagversion(versionname=versionname,
-                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
+                           comment='backup before applying\"'+flagcmd+'\"on ' + time_string,
                            merge='replace')
 
     # Save flagcmd to flagbackup
