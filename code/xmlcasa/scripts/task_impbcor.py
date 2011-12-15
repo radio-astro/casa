@@ -67,7 +67,7 @@ from taskinit import *
 def impbcor(
     imagename=None, pbimage=None, outfile=None, overwrite=None,
     box=None, region=None, chans=None, stokes=None, mask=None,
-    mode=None, cutoff=None, wantreturn=None
+    mode=None, cutoff=None, wantreturn=None, stretch=None
 ):
     casalog.origin('impbcor')
     retval = None
@@ -78,7 +78,7 @@ def impbcor(
         ia_tool = myia.pbcor(
             pbimage=pbimage, outfile=outfile, overwrite=overwrite,
             box=box, region=region, chans=chans, stokes=stokes,
-            mask=mask, mode=mode, cutoff=cutoff
+            mask=mask, mode=mode, cutoff=cutoff, stretch=stretch
         )
         if wantreturn:
             retval = ia_tool

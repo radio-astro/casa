@@ -1173,7 +1173,7 @@ image* image::reorder(
 	const std::string& outfile,
 	const variant& order
 ) {
-	*_log << LogOrigin("image", __FUNCTION__);
+	*_log << LogOrigin(_class, __FUNCTION__);
 	*_log << LogIO::WARN << "DEPRECATION WARNING: ia.reorder() has been deprecated and will be "
 		<< "removed in an upcoming version. Please use ia.transpose() instead." << LogIO::POST;
 	return transpose(outfile, order);
@@ -1409,7 +1409,8 @@ image* image::pbcor(
 	const bool overwrite, const string& box,
 	const variant& region, const string& chans,
 	const string& stokes, const string& mask,
-	const string& mode, const float cutoff
+	const string& mode, const float cutoff,
+	const bool stretch
 ) {
 	if (detached()) {
 		return 0;
@@ -1451,14 +1452,9 @@ image* image::pbcor(
 		String modecopy = mode;
 		modecopy.downcase();
 		modecopy.trim();
-		ImagePrimaryBeamCorrector::Mode myMode = ImagePrimaryBeamCorrector::MULTIPLY;
-		if (modecopy.startsWith("d")) {
-			myMode = ImagePrimaryBeamCorrector::DIVIDE;
-		}
-		else {
-			*_log << "Unrecognized value for mode :'"
-				<< mode << "'" << LogIO::EXCEPTION;
-		}
+		ImagePrimaryBeamCorrector::Mode myMode = modecopy.startsWith("d")
+			? ImagePrimaryBeamCorrector::DIVIDE
+			: ImagePrimaryBeamCorrector::MULTIPLY;
 		Bool useCutoff = cutoff >= 0.0;
 		std::auto_ptr<ImagePrimaryBeamCorrector> pbcor(
 			(pb == 0)
@@ -1473,6 +1469,7 @@ image* image::pbcor(
 				cutoff, useCutoff, myMode
 			)
 		);
+		pbcor->setStretch(stretch);
 		auto_ptr<ImageInterface<Float> > corrected(pbcor->correct(True));
 		return new image(corrected.get());
 	} catch (AipsError x) {
