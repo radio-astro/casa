@@ -20,8 +20,49 @@ class ImageTest:
                  resultDir='WEBPAGES/imageTest/',
                  imDir='IMAGES/'):
 
+        import shutil
         self.imTool=image.create()
         self.imTool.open(imageName) #open('tables/squint_corr.restored')
+
+        # fix up images that don't have CASA-canonical stokes and spec:
+        # assume for now that direction is in 01 at least, 
+        mycs=self.imTool.coordsys()
+        findstok=mycs.findcoordinate("stokes")
+        if not findstok["return"]:
+            myImagename=imageName+".k"
+            self.imTool.adddegaxes(stokes=True,outfile=myImagename,overwrite=True)
+            mystokpix=self.imTool.summary()['header']['ndim'] # ct from 0
+            self.imTool.close()
+            shutil.rmtree(imageName)
+            shutil.move(myImagename,imageName)
+            self.imTool.open(imageName)
+            mycs.done()
+            mycs=self.imTool.coordsys()
+        else:
+            mystokpix=findstok["pixel"]
+
+        findspec=mycs.findcoordinate("spectral")    
+        if not findspec["return"]:
+            myImagename=imageName+".s"
+            self.imTool.adddegaxes(spectral=True,outfile=myImagename,overwrite=True)
+            myspecpix=self.imTool.summary()['header']['ndim'] # ct from 0
+            self.imTool.close()
+            shutil.rmtree(imageName)
+            shutil.move(myImagename,imageName)
+            self.imTool.open(imageName)
+            mycs.done()
+            mycs=self.imTool.coordsys()
+        else:
+            myspecpix=findspec["pixel"]                    
+
+        curr_order=[mystokpix,myspecpix]
+        if curr_order != [2,3]:
+            myImagename=imageName+".t"
+            self.imTool.transpose(order="01%1i%1i" % (mystokpix,myspecpix),outfile=myImagename,overwrite=True)
+            shutil.rmtree(imageName)
+            shutil.move(myImagename,imageName)
+            self.imTool.open(imageName)                    
+            
         self.rgTool=regman.create()
         self.qaTool=quanta.create()
 	self.getArr() #instead make explicit call to getArr()

@@ -361,6 +361,9 @@ class runTest:
                                 self.polImageTest(leResult[j], templateImage, testName, WORKING_DIR, RESULT_DIR, 4)
                             elif(leQualityTest=='cube'):
                                 self.cubeImageTest(leResult[j], templateImage, testName, WORKING_DIR, RESULT_DIR)
+                            elif(leQualityTest=='ms'):
+                                self.visStats(leResult[j], templateImage, testName, WORKING_DIR, RESULT_DIR)
+# RI add visStats method here, image ones use ImageTest so going to have to build a MSTest class
                             else:
                                 self.polImageTest(leResult[j], templateImage, testName, WORKING_DIR, RESULT_DIR, 1)
 

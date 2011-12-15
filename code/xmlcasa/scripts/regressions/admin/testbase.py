@@ -217,36 +217,42 @@ class testbase :
         self.testList.clear()
         for k in range(len(theResult)) :
             if(os.path.isdir(theResult[k])):
-            #Good chance its an image for now till i know whether its a caltable or ms
-                self.testList[theResult[k]]=[]
-                self.testList[theResult[k]].append('simple')
-                ia.open(theResult[k])
-                shp=ia.shape()
-                ##Moment images donot have a spectral axis...its a pain later
-                ##lets reduce it then
-                if(len(shp)==3) :
-                    ib=ia.adddegaxes(outfile='kulmuka.im', spectral=True, overwrite=True)
-                    ib.close()
-                    ia.close()
-                    os.system('rm -rf '+theResult[k])
-                    os.system('mv kulmuka.im '+theResult[k])
+                # previous developer said:
+                # Good chance its an image for now till i know whether its a caltable or ms
+                # actually check for ms, if not assume image
+                # a more robust check for !ms than catching an exception 
+                # would be preferable here
+                try:
+                    ms.open(theResult[k])
+                    self.testList[theresult[k]]=[]
+                    self.testList[theResult[k]].append('ms')
+                    ms.done()
+                except:
+                    
+                    self.testList[theResult[k]]=[]
+                    self.testList[theResult[k]].append('simple')
                     ia.open(theResult[k])
                     shp=ia.shape()
-                
-                    ### simple test only for those images
-                else :
-                    ###
-                    print theResult[k]+' SHAPE ', shp
-                    if(shp[3]>5):
-                        print 'SHAPE 3= ', shp[3],' ', theResult[k], k 
-                        self.testList[theResult[k]].append('cube')
-                    elif(shp[2]==1):
-                        self.testList[theResult[k]].append('pol1')
-                    elif( shp[2]==2):
-                        self.testList[theResult[k]].append('pol2')
-                    elif(shp[2]==4):
-                        self.testList[theResult[k]].append('pol4')
-                ia.close()                
+                    ## Moment images do not have a spectral axis...
+                    # much assumes the "canonical" CASA axis order.
+                    # imageTest will adddegaxes to any im it opens (2011/12/15)
+                    mycs=ia.coordsys()
+                    findstok=mycs.findcoordinate("stokes")
+                    findspec=mycs.findcoordinate("spectral")
+                    if findspec["return"]:                        
+                        spix=findspec["pixel"]
+                        if(shp[spix]>5):
+                            print 'spectral shape= ', shp[spix],' ', theResult[k], k 
+                            self.testList[theResult[k]].append('cube')
+                    if findstok["return"]:
+                        kpix=findstok["pixel"]
+                        if(shp[kpix]==1):
+                            self.testList[theResult[k]].append('pol1')
+                        elif( shp[kpix]==2):
+                            self.testList[theResult[k]].append('pol2')
+                        elif(shp[kpix]==4):
+                            self.testList[theResult[k]].append('pol4')
+                    ia.close()                
             
     def whatQualityTest(self):
         if(self.notest):

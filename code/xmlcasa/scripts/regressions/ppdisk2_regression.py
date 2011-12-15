@@ -2,6 +2,13 @@
 # Regression Script for simdata of  #
 #        a protoplanetary disk         #
 
+# this tests:
+#  single pointing
+#  single interferometric measurement
+#  no noise
+
+# 2012/12/14:  moved into framework, i.e. now called by tests/sim_ppdisk.py
+
 import os, time
 
 # configs are in the repository

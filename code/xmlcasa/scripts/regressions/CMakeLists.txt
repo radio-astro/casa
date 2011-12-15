@@ -1,3 +1,15 @@
+
+       New Development: Yes/No
+            JIRA Issue: No/Yes List JIRA ticket.
+        Ready for Test: Yes/No
+     Interface Changes: Yes/No
+What Interface Changed: Please list interface changes
+         Test Programs: List test programs
+  Put in Release Notes: Yes/No
+             Module(s): Module Names change impacts.
+           Description: Describe your changes here...
+
+	
 #
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
@@ -43,7 +55,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   leo2pt_regression.py
   listcal_regression.py
   listvis_regression.py
-  m51_tpsim_regression.py
   maclog_regression.py
   nf_regression.py
   ngc1333_regression.py
@@ -60,13 +71,19 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   plotxy_regression.py
   pointing_regression.py
   polcal_20080224_cband_regression.py
-  run_orionmos4sim.py
   sdtpimaging_regression.py
   stokesimagingtest_regression.py
-  testcube2_regression.py
   unit_tests.py
   vla_uvfits_line_sf.py
   wf_regression.py
   wideband_regression.py
   wproj3ddat_regression.py
+  run_orionmos4sim.py
+  ghii2_regression.py
+  m51_3sim_regression.py
+  m51_tpsim_regression.py
+  m51_bothsim_regression.py
+  ppdisk2_regression.py
+  testcube2_regression.py
+  testcompsim.py
 )
