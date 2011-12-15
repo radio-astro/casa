@@ -1777,6 +1777,7 @@ Date/Time:                         RR:                      RL:                 
      <shortdescription>Use the MSSelection module for data selection.</shortdescription>
      <keyword>msselect</keyword>
      <input>
+
        <param type="any" direction="in" name="items">
 	 <any type="record"/>
 	 <description>
@@ -1787,6 +1788,20 @@ Date/Time:                         RR:                      RL:                 
 	 </description>
 	 <value></value>
        </param>	
+
+       <param type="bool" direction="in" name="onlyparse">
+	 <description>
+	   If set to True, expressions will only be parsed but not
+	   applied to the MS for selection.  When set to False, a
+	   selected MS will also be generated internally.  Default is
+	   False.  
+
+	   When only parsing is requested, the selected-MS is the same
+	   as the original MS.
+	 </description>
+	 <value>false</value>
+       </param>	
+
      </input>
      <returns type="bool"/>
      <description>
@@ -1800,7 +1815,18 @@ Date/Time:                         RR:                      RL:                 
        database).
      </description>
      <example>
-       Watch this space...(or request the User Support Group to fill-in)
+       CASA: staql={'field':'3C286', 'spw':'0~7:10~55'};
+       CASA: ms.open(MSNAME);
+       CASA: ms.msselect(staql, onlyparse=True); # For only getting the list
+                                                 # of indices correspoding to the selection
+       CASA: ndx=ms.msselectedindices();
+       CASA: ndx['field']
+         Out[5]: array([1], dtype=int32)
+          :
+          :
+       CASA: ms.msselect(staql);  # To do the actual selection.
+                                  # From this point on, the ms-tool is
+                                  # attached to the selected MS.
      </example>
    </method>
 

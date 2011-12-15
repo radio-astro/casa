@@ -3115,7 +3115,7 @@ ms::moments(const std::vector<int>& moments,
   return rstat;
 }
 
-bool ms::msselect(const ::casac::record& exprs)
+bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 {
   Bool retVal;
   try
@@ -3139,10 +3139,20 @@ bool ms::msselect(const ::casac::record& exprs)
 	}
       // if (itsSelectedMS) delete itsSelectedMS;
       // itsSelectedMS = new MeasurementSet();
-      retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
-			  timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
-			  "",/*taQLExpr*/ polnExpr, scanExpr,
-			  "",/*arrayExpr*/ scanIntentExpr, obsExpr, itsMSS);
+      
+      //
+      // If only parsing is requested, just set up the itsMSS object.
+      // This is much faster if one is only interseted in the indices
+      // and not the actual selected MS.
+      //
+      if (onlyparse)
+	itsMSS->reset(*itsMS, MSSelection::PARSE_NOW,timeExpr,baselineExpr,fieldExpr,spwExpr,uvDistExpr,
+		      ""/*taqlExpr*/,polnExpr,scanExpr,""/*arrayExpr*/,scanIntentExpr,obsExpr);
+      else
+	retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
+			    timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
+			    "",/*taQLExpr*/ polnExpr, scanExpr,
+			    "",/*arrayExpr*/ scanIntentExpr, obsExpr, itsMSS);
       itsSel->setMS(*itsMS);
       return retVal;
     }
