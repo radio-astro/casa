@@ -109,24 +109,31 @@ void VBContinuumSubtractor::init(const IPosition& shp, const uInt maxAnt,
   setScalingFreqs(lof, hif);
 }
 
-void VBContinuumSubtractor::initFromVBGA(VisBuffGroupAcc& vbga)
+Bool VBContinuumSubtractor::initFromVBGA(VisBuffGroupAcc& vbga)
 {
-  ncorr_p = vbga(0).nCorr();
-  setNAnt(vbga.nAnt());
-  
-  // Count the total number of channels, and get the minimum and maximum
-  // frequencies for scaling.
-  totnumchan_p = 0;
-  hifreq_p = -1.0;
-  lofreq_p = DBL_MAX;
-  for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
-    VisBuffer& vb(vbga(ibuf));
+  Bool retval = True;
 
-    totnumchan_p += vb.nChannel();
-    getMinMaxFreq(vb, lofreq_p, hifreq_p, False);
+  if(vbga.nBuf() > 0){
+    ncorr_p = vbga(0).nCorr();
+    setNAnt(vbga.nAnt());
+  
+    // Count the total number of channels, and get the minimum and maximum
+    // frequencies for scaling.
+    totnumchan_p = 0;
+    hifreq_p = -1.0;
+    lofreq_p = DBL_MAX;
+    for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
+      VisBuffer& vb(vbga(ibuf));
+
+      totnumchan_p += vb.nChannel();
+      getMinMaxFreq(vb, lofreq_p, hifreq_p, False);
+    }
+    midfreq_p = 0.5 * (lofreq_p + hifreq_p);
+    freqscale_p = calcFreqScale();
   }
-  midfreq_p = 0.5 * (lofreq_p + hifreq_p);
-  freqscale_p = calcFreqScale();
+  else
+    retval = False;
+  return retval;
 }
 
 VBContinuumSubtractor::~VBContinuumSubtractor()

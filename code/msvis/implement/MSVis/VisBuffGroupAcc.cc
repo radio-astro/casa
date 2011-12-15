@@ -90,7 +90,7 @@ Bool VisBuffGroupAcc::fillChanMask(std::map<Int, Vector<Bool>*>& chanmask,
   clearChanMask(chanmask);
 
   MSSelection mssel;
-  mssel.setSpwExpr(spwstr);
+  mssel.setSpwExpr(spwstr != "" ? spwstr : "*");
   Matrix<Int> chansel = mssel.getChanList(&ms, 1);
   uInt nranges = chansel.nrow();
   Bool didSel = nranges > 0;
