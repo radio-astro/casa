@@ -43,10 +43,6 @@
 
 #include <memory>
 
-// debug only
-#include <images/Images/PagedImage.h>
-
-
 #include <casa/Arrays.h>
 
 
@@ -266,7 +262,7 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
         }
 	}
     if (
-		extendMask
+		extendMask && outMaskMgr.get() != 0
 		&& outMaskMgr->asWCRegionPtr()->type() == "WCLELMask"
 		&& ! dynamic_cast<const WCLELMask *>(
 			outMaskMgr->asWCRegionPtr()

@@ -99,27 +99,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Add the given antennae selection.
     const TableExprNode* selectAntennaIds(const Vector<Int>& antennaIds, 
-					  BaselineListType autoCorr=CrossOnly,
+					  BaselineListType baselineType=CrossOnly,
                                           Bool negate=False);
 
     // Add the given baseline selection.
     const TableExprNode* selectAntennaIds(const Vector<Int>& antennaIds1,
                                           const Vector<Int>& antennaIds2, 
-					  BaselineListType autoCorr=CrossOnly,
+					  BaselineListType baselineType=CrossOnly,
                                           Bool negate=False);
 
     // Select by name or station number.
     const TableExprNode* selectNameOrStation(const Vector<String>& antenna,
- 					     BaselineListType autoCorr=CrossOnly,
+ 					     BaselineListType baselineType=CrossOnly,
                                              Bool negate=False);
     const TableExprNode* selectNameOrStation(const Vector<String>& antenna1,
                                              const Vector<String>& antenna2, 
- 					     BaselineListType autoCorr=CrossOnly,
+ 					     BaselineListType baselineType=CrossOnly,
                                              Bool negate=False);
 
     const TableExprNode* selectNameOrStation(const String& antenna1,
                                              const String& antenna2, 
- 					     BaselineListType autoCorr=CrossOnly,
+ 					     BaselineListType baselineType=CrossOnly,
                                              Bool negate=False);
     
     // Selection on baseline length
@@ -144,17 +144,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     std::bitset<HIGHESTLEVEL> getComplexity() {return complexity;};
   private:
     const TableExprNode* setTEN(TableExprNode& condition, 
-                                BaselineListType autoCorr=CrossOnly,
+                                BaselineListType baselineType=CrossOnly,
                                 Bool negate=False);
     Matrix<double> getBaselineLengths();
     void makeBaselineList(const Vector<Int>&a1, const Vector<Int>&a2, Matrix<Int>&b, 
-			  BaselineListType autoCorr=CrossOnly,
+			  BaselineListType baselineType=CrossOnly,
 			  Bool negate=False);
     void makeAntennaList(Vector<Int>& antList,const Vector<Int>& thisList,
                          Bool negate=False);
     Bool addBaseline(const Matrix<Int>& baselist,
                      const Int ant1, const Int ant2, 
- 		     BaselineListType autoCorr=CrossOnly);
+ 		     BaselineListType baselineType=CrossOnly);
 
     //# Data members.
   public:

@@ -81,9 +81,13 @@
 %type <iv> stationlist
 %type <iv> antatstation
 %type <iv> antcomp
-%type <iv> stancomp
+%type <iv> stationcomp
 %type <dv> blength
 %type <dv> blengthlist
+
+// %destructor {free ($$);} INT FLOAT UNIT QSTRING REGEX IDENTIFIER identstr
+// %destructor {delete ($$);} antlist antidrange antids antid stationid stationlist antatstation antcomp stationcomp
+// %destructor {delete ($$);} blength blengthlist
 
 %{
 #include <casa/Logging/LogIO.h>
@@ -124,7 +128,8 @@
     Bool level3=(level2 & complexity.test(MSAntennaParse::STATIONREGEX)
 		 & complexity.test(MSAntennaParse::ANTATSTATIONLIST));
     if (level3)
-      logIO << "Oh the brave one!  You successfully passed the deepest abyss of parsing in baseline selection without error. "
+      logIO << "Oh the brave one!  "
+	"You successfully passed the deepest abyss of parsing in baseline selection without error. "
 	"May The Force (or the CASA User Support Group) be with you.  Good luck."
 	    << LogIO::POST;
     else if (level2)
@@ -134,8 +139,6 @@
     else if (level1)
       logIO << "Congratulations.  You are using a respectable level of complextiy in baseline selection." 
 	    << LogIO::POST;
-
-    //    cerr << "Complexity = " << complexity << endl;
   }
 %}
 
@@ -368,6 +371,10 @@ stationlist: stationid
 		MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::STATIONLIST);
 	      }
 
+antids: antid        {$$ = $1;}// A singe antenna ID
+      | antidrange   {$$ = $1;}
+      | antatstation {$$ = $1;}
+
 antlist: antids
           {
 	    if (!($$)) delete $$;
@@ -387,26 +394,26 @@ antcomp: antid {$$=$1;}
        | antidrange {$$=$1;}
        | LPAREN antlist RPAREN {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
 
-stancomp: stationid {$$=$1;}
-        | LPAREN stationlist RPAREN {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
+stationcomp: stationid {$$=$1;}
+           | LPAREN stationlist RPAREN {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
 
-antatstation: antcomp AT stancomp
+antatstation: antcomp AT stationcomp
                {
 		 if (!($$)) delete $$;
 		 $$ = new Vector<Int>(set_intersection(*($1),*($3)));
+		 ostringstream token;token << "AntID("<<*($1)<<")@StationID("<<*($3)<<")";
+		 if ((*($$)).nelements() == 0) reportError((char *)token.str().c_str(),"Ant@Station Expression");
 		 delete $1;
 		 delete $3;
 	       }
-            | AT stancomp  //Implicit ANT. 
+            | AT stationcomp  //Implicit ANT. 
 	       {
 	    	 if (!($$)) delete $$;
 	    	 $$ = new Vector<Int>(*($2));
+		 ostringstream token;token << "@StationID("<<*($2)<<")";
+		 if ((*($$)).nelements() == 0) reportError((char *)token.str().c_str(),"Station Expression");
 	    	 delete $2;
 	       }
-
-antids: antid        {$$ = $1;}// A singe antenna ID
-      | antidrange   {$$ = $1;}
-      | antatstation {$$=$1;}
 
 blengthlist: blength
               {

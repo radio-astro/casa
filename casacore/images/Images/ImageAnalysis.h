@@ -243,29 +243,36 @@ class ImageAnalysis
                   const Bool list = False, const Bool dropdeg = False, 
                   const bool getmask = False);
 
-    Bool getregion(Array<Float>& pixels, Array<Bool>& pixmask, Record& region, 
-                   const Vector<Int>& axes, const String& mask, 
-                   const Bool list = False, const Bool dropdeg = False, 
-                   const bool getmask = False);
+    Bool getregion(
+    	Array<Float>& pixels, Array<Bool>& pixmask, Record& region,
+        const Vector<Int>& axes, const String& mask,
+        const Bool list=False, const Bool dropdeg=False,
+        const Bool getmask=False, const Bool extendMask=False
+    );
 
     Record* getslice(const Vector<Double>& x, const Vector<Double>& y, 
                      const Vector<Int>& axes, const Vector<Int>& coord, 
                      const Int npts = 0, const String& method = "linear");
 
-    ImageInterface<Float> * hanning(const String& outfile, Record& region, 
-                                    const String& mask, const Int axis = -10, 
-                                    const Bool drop = True, 
-                                    const bool overwrite = False);
+    ImageInterface<Float>* hanning(
+    	const String& outfile, Record& region,
+        const String& mask, const Int axis=-10,
+        const Bool drop=True,
+        const bool overwrite=False,
+        const Bool extendMask=True
+    );
 
     Vector<Bool> haslock();
 
-    Bool histograms(Record& histout, const Vector<Int>& axes, Record& region, 
-                    const String& mask, const Int nbins, 
-                    const Vector<Double>& includepix, const Bool gauss, 
-                    const Bool cumu, const Bool log, const Bool list, 
-                    const String& plotter, const Int nx, const Int ny, 
-                    const Vector<Int>& size, const Bool force = False, 
-                    const Bool disk = False);
+    Bool histograms(
+    	Record& histout, const Vector<Int>& axes, Record& region,
+        const String& mask, const Int nbins,
+        const Vector<Double>& includepix, const Bool gauss,
+        const Bool cumu, const Bool log, const Bool list,
+        const String& plotter, const Int nx, const Int ny,
+        const Vector<Int>& size, const Bool force=False,
+        const Bool disk=False, const Bool extendMask=False
+    );
 
     Vector<String> history(const Bool list = False, const Bool browse = True);
 
@@ -285,8 +292,10 @@ class ImageAnalysis
 
     Record miscinfo();
 
-    Bool modify(Record& model, Record& region , const String& mask, 
-                const Bool subtract = True, const Bool list = True);
+    Bool modify(
+    	Record& model, Record& region , const String& mask,
+        const Bool subtract = True, const Bool list=True, const Bool extendMask=False
+    );
 
     Record maxfit(Record& region, const Bool point, const Int width = 5, 
                    const Bool negfind = False, const Bool list = True);

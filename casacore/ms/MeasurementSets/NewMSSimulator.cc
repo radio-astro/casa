@@ -1289,7 +1289,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
     taiRefTime.get("s").getValue("s") + t_offset_p;
   os << "Full time range: " 
      << formatTime(Tstart) << " -- "
-     << formatTime(Tend) << " with int = " << Tint << endl;
+     << formatTime(Tend) << " TAI with int = " << Tint << LogIO::POST;
   
 
 

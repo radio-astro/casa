@@ -2008,9 +2008,12 @@ const ImageInterface<Float>* ImageAnalysis::getImage() const {
 }
 
 
-Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
-		Record& Region, const Vector<Int>& axes, const String& Mask,
-		const Bool list, const Bool dropdeg, const Bool getmask) {
+Bool ImageAnalysis::getregion(
+	Array<Float>& pixels, Array<Bool>& pixelmask,
+	Record& Region, const Vector<Int>& axes, const String& Mask,
+	const Bool list, const Bool dropdeg, const Bool getmask,
+	const bool extendMask
+) {
 	// Recover some pixels and their mask from a region in the image
 	*itsLog << LogOrigin("ImageAnalysis", "getregion");
 
@@ -2023,7 +2026,8 @@ Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 
     SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
-		Mask, (list ? itsLog : 0), False
+		Mask, (list ? itsLog : 0), False, AxesSpecifier(),
+		extendMask
 	);
 	if (getmask) {
         LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
@@ -2079,11 +2083,12 @@ ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 	return outRec;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::hanning(const String& outFile, Record& Region,
-		const String& mask, const Int axis, const Bool drop,
-		const Bool overwrite) {
-	*itsLog << LogOrigin("ImageAnalysis", "hanning");
+ImageInterface<Float>* ImageAnalysis::hanning(
+	const String& outFile, Record& Region,
+	const String& mask, const Int axis, const Bool drop,
+	const Bool overwrite, const Bool extendMask
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfile
 	if (!overwrite && !outFile.empty()) {
@@ -2115,12 +2120,13 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask,
-		itsLog, False
+		itsLog, False, AxesSpecifier(), extendMask
 	);
 	IPosition blc(subImage.ndim(), 0);
 	if (pRegionRegion) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
-				pImage_p->coordinates(), pImage_p->shape());
+			pImage_p->coordinates(), pImage_p->shape()
+		);
 		blc = latRegion.slicer().start();
 	}
 	delete pRegionRegion;
@@ -2131,8 +2137,9 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 	IPosition outShape(inShape);
 	if (drop) {
 		outShape(iAxis) = inShape(iAxis) / 2;
-		if (inShape(iAxis) % 2 == 0)
+		if (inShape(iAxis) % 2 == 0) {
 			outShape(iAxis) = outShape(iAxis) - 1;
+		}
 	}
 	*itsLog << LogIO::NORMAL << "Output image shape = " << outShape
 			<< LogIO::POST;
@@ -2148,8 +2155,9 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 		cInc(iAxis) = 2.0;
 		cBlc(iAxis) += 1.0;
 	}
-	CoordinateSystem cSys = pImage_p->coordinates().subImage(cBlc, cInc,
-			outShape.asVector());
+	CoordinateSystem cSys = pImage_p->coordinates().subImage(
+		cBlc, cInc, outShape.asVector()
+	);
 
 	// Make output image and mask if needed
 	PtrHolder<ImageInterface<Float> > imOut;
@@ -2233,14 +2241,17 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
-Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
-		Record& regionRec, const String& sMask, const Int nbins, const Vector<
-				Double>& includepix, const Bool gauss, const Bool cumu,
-		const Bool log, const Bool list, const String&,
-		const Int nx, const Int ny, const Vector<Int>& size, const Bool force,
-		const Bool disk) {
+Bool ImageAnalysis::histograms(
+	Record& histout, const Vector<Int>& axes,
+	Record& regionRec, const String& sMask, const Int nbins,
+	const Vector<Double>& includepix, const Bool gauss,
+	const Bool cumu, const Bool log, const Bool list,
+	const String&, const Int nx, const Int ny,
+	const Vector<Int>& size, const Bool force,
+	const Bool disk, const Bool extendMask
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "histograms");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
@@ -2248,14 +2259,13 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
-		sMask, itsLog, False
+		sMask, itsLog, False, AxesSpecifier(), extendMask
 	);
 
 	// Make new object only if we need to.
 	Bool forceNewStorage = force;
-	if (pHistograms_p != 0) {
-		if (oldHistStorageForce_p != disk)
-			forceNewStorage = True;
+	if (pHistograms_p != 0 && oldHistStorageForce_p != disk) {
+		forceNewStorage = True;
 	}
 	if (forceNewStorage) {
 		delete pHistograms_p;
@@ -2265,21 +2275,27 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 		delete pOldHistMaskRegion_p;
 		pOldHistMaskRegion_p = 0;
 		//
-		pHistograms_p = new ImageHistograms<Float> (subImage, *itsLog, True,
-				disk);
-	} else {
+		pHistograms_p = new ImageHistograms<Float> (
+			subImage, *itsLog, True, disk
+		);
+	}
+	else {
 		if (pHistograms_p == 0) {
 			// We are here if this is the first time or the image has changed
-			pHistograms_p = new ImageHistograms<Float> (subImage, *itsLog,
-					True, disk);
-		} else {
+			pHistograms_p = new ImageHistograms<Float> (
+				subImage, *itsLog, True, disk
+			);
+		}
+		else {
 			// We already have a histogram object.  We only have to set
 			// the new image (which will force the accumulation image
 			// to be recomputed) if the region has changed.  If the image itself
 			// changed, pHistograms_p will already have been set to 0
 			pHistograms_p->resetError();
-			if (haveRegionsChanged(pRegionRegion, pMaskRegion,
-					pOldHistRegionRegion_p, pOldHistMaskRegion_p)) {
+			if (
+				haveRegionsChanged(pRegionRegion, pMaskRegion,
+				pOldHistRegionRegion_p, pOldHistMaskRegion_p)
+			) {
 				pHistograms_p->setNewImage(subImage);
 			}
 		}
@@ -2308,8 +2324,9 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 
 	// Set pixel include ranges
 	Vector<Float> tmpinclude(includepix.size());
-	for (uInt i = 0; i < includepix.size(); i++)
+	for (uInt i = 0; i < includepix.size(); i++) {
 		tmpinclude[i] = includepix[i];
+	}
 	if (!pHistograms_p->setIncludeRange(tmpinclude)) {
 		*itsLog << pHistograms_p->errorMessage() << LogIO::EXCEPTION;
 	}
@@ -2647,11 +2664,11 @@ Record ImageAnalysis::miscinfo() {
 	return tmp;
 }
 
-Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
-		const Bool subtract, const Bool list) {
-	*itsLog << LogOrigin("ImageAnalysis", "modify");
+Bool ImageAnalysis::modify(
+	Record& Model, Record& Region, const String& mask,
+	const Bool subtract, const Bool list, const Bool extendMask) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
-	//
 	String error;
 	ComponentList cL;
 	if (!cL.fromRecord(error, Model)) {
@@ -2662,10 +2679,10 @@ Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
 	}
 	int nelem = cL.nelements();
 	Vector<SkyComponent> mod(nelem);
-	for (int i = 0; i < nelem; i++)
+	for (int i = 0; i < nelem; i++) {
 		mod[i] = cL.component(i);
+	}
 
-	//
 	const uInt n = mod.nelements();
 	if (n == 0) {
 		*itsLog << "There are no components in the model componentlist"
@@ -2675,7 +2692,7 @@ Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask,  (list ? itsLog : 0), True
+		mask,  (list ? itsLog : 0), True, AxesSpecifier(), extendMask
 	);
 
 	// Allow for subtraction/addition
