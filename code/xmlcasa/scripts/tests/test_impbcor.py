@@ -248,7 +248,7 @@ class impbcor_test(unittest.TestCase):
 
     def _testit(
         self, expected, imagename, pbimage, overwrite, region, box,
-        chans, stokes, mask, mode, cutoff, stretch
+        chans, stokes, mask, mode, cutoff
     ):
         myia = iatool.create()
         myia.open(pbimage)

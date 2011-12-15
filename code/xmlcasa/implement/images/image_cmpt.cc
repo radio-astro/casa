@@ -1452,6 +1452,9 @@ image* image::pbcor(
 		String modecopy = mode;
 		modecopy.downcase();
 		modecopy.trim();
+		if (! modecopy.startsWith("d") && ! modecopy.startsWith("m")) {
+			throw AipsError("Unknown mode " + mode);
+		}
 		ImagePrimaryBeamCorrector::Mode myMode = modecopy.startsWith("d")
 			? ImagePrimaryBeamCorrector::DIVIDE
 			: ImagePrimaryBeamCorrector::MULTIPLY;
