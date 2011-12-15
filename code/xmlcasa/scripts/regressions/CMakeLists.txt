@@ -67,10 +67,8 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   wideband_regression.py
   wproj3ddat_regression.py
   run_orionmos4sim.py
-  ghii2_regression.py
   m51_3sim_regression.py
   m51_tpsim_regression.py
-  m51_bothsim_regression.py
   ppdisk2_regression.py
   testcube2_regression.py
   testcompsim.py
