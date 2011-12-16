@@ -38,6 +38,7 @@ vpmanager::vpmanager()
 
   itsVPM = VPManager::Instance();
   itsLog = new LogIO();
+  itsTimeOut = 10; // seconds of max wait time for VPManager lock
 
 }
 
@@ -45,7 +46,11 @@ vpmanager::~vpmanager()
 {
   if(itsLog) delete itsLog;
   itsLog=0;
+}
 
+void vpmanager::release()
+{
+  itsVPM->release();
 }
 
 bool
@@ -53,13 +58,15 @@ vpmanager::saveastable(const std::string& tablename)
 {
   bool rstat=false;
   try{
-    if(!itsVPM) return rstat;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return rstat;
     rstat=itsVPM->saveastable(String(tablename));
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return rstat;
 }
 
@@ -69,12 +76,16 @@ vpmanager::summarizevps(const bool verbose)
   bool rstat=false;
 
   try {
-    if (!itsVPM) return rstat;
+    if (!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return rstat;
+
     rstat = itsVPM->summarizevps(verbose);
+
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return rstat;
 }
 
@@ -91,7 +102,7 @@ vpmanager::setcannedpb(const std::string& telescope, const std::string& othertel
 {
   ::casac::record* r=0;
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
 
     casa::Quantity pai;
     if(toCasaString(paincrement)==casa::String(""))
@@ -105,9 +116,11 @@ vpmanager::setcannedpb(const std::string& telescope, const std::string& othertel
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return r;
 }
 
@@ -117,7 +130,7 @@ vpmanager::setpbairy(const std::string& telescope, const std::string& otherteles
 
   ::casac::record* r=0;
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
     casa::Quantity rf;
     if(toCasaString(reffreq)==casa::String(""))
       rf=casa::Quantity(1.0,"GHz");
@@ -159,9 +172,11 @@ vpmanager::setpbairy(const std::string& telescope, const std::string& otherteles
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return r;
 }
 
@@ -170,7 +185,7 @@ vpmanager::setpbcospoly(const std::string& telescope, const std::string& otherte
 {
   ::casac::record* r=0;
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
     casa::Quantity mr;
     if(toCasaString(maxrad)==casa::String(""))
       mr=casa::Quantity(0.8,"deg");
@@ -203,9 +218,11 @@ vpmanager::setpbcospoly(const std::string& telescope, const std::string& otherte
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return r;
 }
 
@@ -216,7 +233,7 @@ vpmanager::setpbgauss(const std::string& telescope, const std::string& othertele
   ::casac::record* r=0;
 
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
     casa::Quantity rf;
     if(toCasaString(reffreq)==casa::String(""))
       rf=casa::Quantity(1.0,"GHz");
@@ -254,11 +271,11 @@ vpmanager::setpbgauss(const std::string& telescope, const std::string& othertele
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-
-
+  itsVPM->release();
   return r;
 }
 
@@ -267,7 +284,7 @@ vpmanager::setpbinvpoly(const std::string& telescope, const std::string& otherte
 {
   ::casac::record* r=0;
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
     casa::Quantity mr;
     if(toCasaString(maxrad)==casa::String(""))
       mr=casa::Quantity(0.8,"deg");
@@ -300,9 +317,11 @@ vpmanager::setpbinvpoly(const std::string& telescope, const std::string& otherte
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return r;
 }
 
@@ -311,7 +330,7 @@ vpmanager::setpbnumeric(const std::string& telescope, const std::string& otherte
 {
   ::casac::record* r=0;
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
     casa::Quantity mr;
     if(toCasaString(maxrad)==casa::String(""))
       mr=casa::Quantity(0.8,"deg");
@@ -344,9 +363,11 @@ vpmanager::setpbnumeric(const std::string& telescope, const std::string& otherte
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return r;
 }
 
@@ -356,17 +377,18 @@ vpmanager::setpbimage(const std::string& telescope, const std::string& othertele
 
   ::casac::record* r=0;
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
     casa::Record rec;
     itsVPM->setpbimage(String(telescope), String(othertelescope), dopb, 
 		       String(realimage), String(imagimage), String(compleximage), rec);
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-
+  itsVPM->release();
   return r;
 }
 
@@ -375,7 +397,7 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
 {
   ::casac::record* r=0;
   try{
-    if(!itsVPM) return r;
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
     casa::Quantity mr;
     if(toCasaString(maxrad)==casa::String(""))
       mr=casa::Quantity(0.8,"deg");
@@ -408,18 +430,27 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
     r=fromRecord(rec);
 
   } catch  (AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+  itsVPM->release();
   return r;
 }
 
 bool
-vpmanager::setpbantresptable(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& antresppath)
+vpmanager::setpbantresptable(const std::string& telescope, 
+			     const std::string& othertelescope, 
+			     const bool dopb, 
+			     const std::string& antresppath)
 {
   *itsLog << LogOrigin("vp", "setantresptable");
-  if(!itsVPM) return False;
-  return itsVPM->setpbantresptable(telescope, othertelescope, dopb, antresppath);
+  if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return False;
+
+  Bool rval = itsVPM->setpbantresptable(telescope, othertelescope, dopb, antresppath);
+
+  itsVPM->release();
+  return rval;
 
 }
 
@@ -428,9 +459,10 @@ bool vpmanager::reset(){
 
   *itsLog << LogOrigin("vp", "reset");
 
-  if(!itsVPM) return False;
+  if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return False;
   itsVPM->reset();
   itsVPM = VPManager::Instance();
+  itsVPM->release();
   return True;
 }
 
@@ -441,8 +473,11 @@ bool vpmanager::setuserdefault(const int vplistnum,
 
   *itsLog << LogOrigin("vp", "setuserdefault");
 
-  if(!itsVPM) return False;
-  return itsVPM->setuserdefault(vplistnum, telescope, anttype);
+  if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return False;
+
+  bool rval = itsVPM->setuserdefault(vplistnum, telescope, anttype);
+  itsVPM->release();
+  return rval;
 
 }
 
@@ -454,10 +489,14 @@ int vpmanager::getuserdefault(const std::string& telescope,
 
   *itsLog << LogOrigin("vp", "getuserdefault");
 
-  if(!itsVPM 
-     || !itsVPM->getuserdefault(rval, telescope, anttype)){
+  if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)){
     throw(AipsError("Error in vp::getuserdefault()."));
   }
+  else if(!itsVPM->getuserdefault(rval, telescope, anttype)){
+    itsVPM->release();
+    throw(AipsError("Error in vp::getuserdefault()."));
+  }
+  itsVPM->release();
   return rval;
 
 }
@@ -471,10 +510,11 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
   std::vector<string> rval(0);
   Vector<String> antTypes;
 
-  try{
+  *itsLog << LogOrigin("vp", "getanttypes");
+
+  if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return rval;
     
-    *itsLog << LogOrigin("vp", "getanttypes");
-    
+  try{    
     MEpoch mObsTime;
     MFrequency mFreq;
     MDirection mObsDir;
@@ -482,11 +522,13 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
     if(!casaMEpoch(obstime, mObsTime)){
       *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
 	      << toCasaString(obstime) << LogIO::POST;
+      itsVPM->release();
       return rval;
     }
     if(!casaMFrequency(freq, mFreq)){
       *itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
 	      << toCasaString(freq) << LogIO::POST;
+      itsVPM->release();
       return rval;
     }
     if(!casaMDirection(obsdirection, mObsDir)){
@@ -496,6 +538,7 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
       else{
 	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
 		<< toCasaString(obsdirection) << LogIO::POST;
+	itsVPM->release();
 	return rval;
       }
     }
@@ -503,10 +546,12 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
     if(!itsVPM->getanttypes(antTypes, telescope, mObsTime, mFreq, mObsDir)){
       *itsLog << LogIO::SEVERE << "Error determining antenna types for telescope "
 	      << telescope << LogIO::POST;
+      itsVPM->release();
       return rval;
     }      
 
   } catch(AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
@@ -515,6 +560,7 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
     rval.push_back(antTypes(i));
   }
 
+  itsVPM->release();
   return rval;
   
 }
@@ -526,9 +572,12 @@ int vpmanager::numvps(const std::string& telescope,
 		      const casac::variant& obsdirection){
 
   int rval(-1);
-  try{
 
-    *itsLog << LogOrigin("vp", "numvps");
+  *itsLog << LogOrigin("vp", "numvps");
+
+  if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return rval;
+
+  try{
 
     MEpoch mObsTime;
     MFrequency mFreq;
@@ -537,11 +586,13 @@ int vpmanager::numvps(const std::string& telescope,
     if(!casaMEpoch(obstime, mObsTime)){
       *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
 	      << toCasaString(obstime) << LogIO::POST;
+      itsVPM->release();
       return rval;
     }
     if(!casaMFrequency(freq, mFreq)){
       *itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
 	      << toCasaString(freq) << LogIO::POST;
+      itsVPM->release();
       return rval;
     }
     if(!casaMDirection(obsdirection, mObsDir)){
@@ -551,6 +602,7 @@ int vpmanager::numvps(const std::string& telescope,
       else{
 	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
 		<< toCasaString(obsdirection) << LogIO::POST;
+	itsVPM->release();
 	return rval;
       }
     }
@@ -558,10 +610,12 @@ int vpmanager::numvps(const std::string& telescope,
     rval = itsVPM->numvps(telescope, mObsTime, mFreq, mObsDir);
 
   } catch(AipsError x) {
+    itsVPM->release();
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
+  itsVPM->release();
   return rval;
 
 }
@@ -575,10 +629,13 @@ vpmanager::getvp(const std::string& telescope,
 		 const casac::variant& obsdirection){
 
   ::casac::record* r=0;
+
+  *itsLog << LogOrigin("vp", "getvp");
+
+  if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return r;
+
   try{
       
-    *itsLog << LogOrigin("vp", "getvp");
-
     MEpoch mObsTime;
     MFrequency mFreq;
     MDirection mObsDir;
@@ -596,6 +653,7 @@ vpmanager::getvp(const std::string& telescope,
       else{
 	*itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
 		<< toCasaString(obstime) << LogIO::POST;
+	itsVPM->release();
 	return r;
       }
     }
@@ -609,6 +667,7 @@ vpmanager::getvp(const std::string& telescope,
       else{
 	*itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
 		<< toCasaString(freq) << LogIO::POST;
+	itsVPM->release();
 	return r;
       }
     }
@@ -620,6 +679,7 @@ vpmanager::getvp(const std::string& telescope,
       else{
 	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
 		<< toCasaString(obsdirection) << LogIO::POST;
+	itsVPM->release();
 	return r;
       }
     }
@@ -640,6 +700,7 @@ vpmanager::getvp(const std::string& telescope,
     RETHROW(x);
   }
 
+  itsVPM->release();
   return r;
 
 }
@@ -652,9 +713,12 @@ vpmanager::createantresp(const std::string& imdir,
 			 const std::vector<std::string>& bandmaxfreq)
 {
   bool rstat(False);
-  try{
 
-    *itsLog << LogOrigin("vp", "createantresp");
+  *itsLog << LogOrigin("vp", "createantresp");
+
+  // does not use itsVPM, no lock required
+
+  try{
 
 //     cout << " imdir " << imdir << " starttime " << starttime << endl;
 //     for(uInt i=0; i<bandnames.size(); i++){
@@ -1022,9 +1086,12 @@ vpmanager::getrespimagename(const std::string& telescope,
 			    const int beamnumber)
 {
   std::string rval("");
-  try{
 
-    *itsLog << LogOrigin("vp", "getrespimagename");
+  *itsLog << LogOrigin("vp", "getrespimagename");
+    
+  // does not use itsVPM, no lock required
+
+  try{
 
     String obsName(telescope);
     String antRespPath;

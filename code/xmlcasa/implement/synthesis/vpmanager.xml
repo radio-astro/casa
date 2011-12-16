@@ -113,6 +113,17 @@ exit()
 The vpmanager constructor has no arguments.
 </description>
 </method>
+ 
+   <method type="function" name="release">
+   <shortdescription>Release the VPManager for use by others.</shortdescription>
+   
+<description>
+No arguments.
+</description>
+<input>
+</input>
+<returns type="void"></returns>
+</method>
 
  
    <method type="function" name="saveastable">

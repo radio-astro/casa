@@ -1,6 +1,7 @@
 //# VPManager.cc: Implementation of VPManager.h
-//# Copyright (C) 1996-2007
+//# Copyright (C) 1996-2011
 //# Associated Universities, Inc. Washington DC, USA.
+//# Copyright by ESO (in the framework of the ALMA collaboration)
 //#
 //# This program is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU General Public License as published by the Free
@@ -51,6 +52,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/OS/Directory.h>
 #include <images/Images/PagedImage.h>
+#include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -70,8 +72,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }    
 
+  Bool VPManager::lock(){
+    if(isLocked_p){
+      return False;
+    }
+    else{
+      isLocked_p = True;
+    }
+    return True;
+  }
+
+  Bool VPManager::acquireLock(Double timeoutSecs,
+			      Bool verbose){
+    if(isLocked_p){
+      Timer t;
+      t.mark();
+      while(t.real()<=timeoutSecs){
+	sleep(1);
+	if(!isLocked_p){
+	  isLocked_p = True;
+	  return True;
+	}
+      }
+      // waiting was not successful
+      if(verbose){
+	if(isLocked()){ // still locked
+	  return False;
+	}
+	else{ // we acquired the lock 
+	  isLocked_p = True;
+	  return True;
+	}
+      }
+      return False;
+    }
+    else{
+      isLocked_p = True;
+    }
+    return True;
+  }
+
+  Bool VPManager::isLocked(){
+    if(!isLocked_p){
+	LogIO os;
+	os << LogOrigin("VPManager", "isLocked");
+	os << LogIO::SEVERE << "VPManager is in use. Need to release first." << LogIO::POST;
+	return True;
+    }
+    return False;
+  }    
+
+  void VPManager::release(){
+    isLocked_p = False;
+  }
+
   VPManager::VPManager(Bool verbose):
     vplist_p(),
+    isLocked_p(True),
     vplistdefaults_p(-1),
     aR_p()
   {
@@ -138,7 +195,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(verbose){
       os << LogIO::NORMAL << "VPManager initialized." << LogIO::POST;
     }
-    
+    release();
+
   }
 
 
