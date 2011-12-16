@@ -554,6 +554,7 @@ TestFlagger::run()
 		}*/
 	}
 
+	agents_list_p.clear();
 
 	return summary_stats;
 }
