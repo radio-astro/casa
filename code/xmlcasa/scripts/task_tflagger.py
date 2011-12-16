@@ -261,10 +261,6 @@ def tflagger(vis,
             casalog.post('Unflag mode is active')                
             
         elif mode == 'summary':
-            agent_pars['minrel'] = minrel
-            agent_pars['maxrel'] = maxrel
-            agent_pars['minabs'] = minabs
-            agent_pars['maxabs'] = maxabs
             agent_pars['spwchan'] = spwchan
             agent_pars['spwcorr'] = spwcorr
             casalog.post('Summary mode is active')
