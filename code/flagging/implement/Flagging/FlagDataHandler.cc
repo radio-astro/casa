@@ -395,8 +395,8 @@ FlagDataHandler::open()
 			{
 				case Stokes::I:
 				{
-					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product I found" << LogIO::POST;
-					corrProducts_p->push_back("I");
+					*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation product I found, which should correspond to ALMA WVR data - skipping" << LogIO::POST;
+					// corrProducts_p->push_back("I");
 					break;
 				}
 				case Stokes::Q:
