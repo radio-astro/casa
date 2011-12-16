@@ -3401,11 +3401,12 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	const String& outFile, const Vector<Int>& inshape,
 	const CoordinateSystem& coordinates, const Vector<Int>& inaxes,
 	Record& Region, const String& mask, const String& methodU,
-	const Int decimate, const Bool replicate, const Bool doRefChange,
-	const Bool dropDegenerateAxes, const Bool overwrite,
-	const Bool forceRegrid
+	const Int decimate, const Bool replicate,
+	const Bool doRefChange, const Bool dropDegenerateAxes,
+	const Bool overwrite, const Bool forceRegrid,
+	const Bool extendMask
 ) {
-	*itsLog << LogOrigin("ImageAnalysis", "regrid1");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Int dbg = 0;
 
@@ -3437,7 +3438,8 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 			tmpShape2.resize(j);
 			tmpShape = tmpShape2;
 		}
-	} else {
+	}
+	else {
 		tmpShape = inshape;
 	}
 
@@ -3449,7 +3451,7 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, extendMask
 	);
 
 	// Deal with axes
@@ -3461,20 +3463,19 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 
 	// Make CoordinateSystem from user given
 	CoordinateSystem cSysFrom = subImage.coordinates();
-	CoordinateSystem* pCSTo;
-	if (coordinates.nCoordinates() != 0) {
-		pCSTo = new CoordinateSystem(coordinates);
-	} else {
-
-		pCSTo = new CoordinateSystem(subImage.coordinates());
-	}
-	pCSTo->setObsInfo(cSysFrom.obsInfo());
+	CoordinateSystem pCSTo(
+		coordinates.nCoordinates() != 0
+		? coordinates
+		: subImage.coordinates()
+	);
+	pCSTo.setObsInfo(cSysFrom.obsInfo());
 
 	// Now build a CS which copies the user specified Coordinate for
 	// axes to be regridded and the input image Coordinate for axes not
 	// to be regridded
 	CoordinateSystem cSys = ImageRegrid<Float>::makeCoordinateSystem(*itsLog,
-			*pCSTo, cSysFrom, axes2);
+		pCSTo, cSysFrom, axes2
+	);
 	if (cSys.nPixelAxes() != outShape.nelements()) {
 		*itsLog
 				<< "The number of pixel axes in the output shape and Coordinate System must be the same"
@@ -3503,8 +3504,11 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	ir.disableReferenceConversions(!doRefChange);
-	ir.regrid(*pImOut, method, axes2, subImage, replicate, decimate, True,
-			forceRegrid);
+	ir.regrid(
+		*pImOut, method, axes2, subImage,
+		replicate, decimate, True,
+		forceRegrid
+	);
 
 	// Cleanup and return image
 	return pImOut;
@@ -3517,9 +3521,10 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 	const String& methodU, const Int decimate,
 	const Bool replicate, const Bool doRefChange,
 	const Bool dropDegenerateAxes, const Bool overwrite,
-	const Bool forceRegrid, const Bool specAsVelocity
+	const Bool forceRegrid, const Bool specAsVelocity,
+	const Bool extendMask
 ) {
-	*itsLog << LogOrigin("ImageAnalysis", "regrid2");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// must deal with default shape and dropDegenerateAxes
 	Vector<Int> tmpShape;
@@ -3571,14 +3576,14 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 			outFile, inshape, *csys, inaxes,
 			Region, mask, methodU, decimate,
 			replicate, doRefChange, dropDegenerateAxes,
-			overwrite, forceRegrid
+			overwrite, forceRegrid, extendMask
 		);
 	}
 	else {
 		return _regrid(
 			outFile, inshape, *csys, inaxes, Region, mask, methodU,
 			decimate, replicate, doRefChange, dropDegenerateAxes, overwrite,
-			forceRegrid
+			forceRegrid, extendMask
 		);
 	}
 }
@@ -3590,18 +3595,17 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
     const String& method, const Int decimate,
     const Bool replicate, const Bool doref,
     const Bool dropdeg, const Bool overwrite,
-    const Bool force
+    const Bool force, const Bool extendMask
 ) const {
 	std::auto_ptr<CoordinateSystem> csys(
 		dynamic_cast<CoordinateSystem *>(csysTemplate.clone())
 	);
-	std::auto_ptr<ImageInterface<Float> > clone(
-		new SubImage<Float>(
-			SubImage<Float>::createSubImage(*pImage_p, Record(), "", 0, False)
-		)
+	SubImage<Float> maskedClone = SubImage<Float>::createSubImage(
+		*pImage_p, Record(), mask, 0, False,
+		AxesSpecifier(), extendMask
 	);
 	std::auto_ptr<CoordinateSystem> coordClone(
-		dynamic_cast<CoordinateSystem *>(clone->coordinates().clone())
+		dynamic_cast<CoordinateSystem *>(maskedClone.coordinates().clone())
 	);
 	const SpectralCoordinate saveSpecCoord = csys->spectralCoordinate();
 
@@ -3637,13 +3641,14 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 			*itsLog << "Unable to replace spectral with linear coordinate";
 		}
 	}
-	clone->setCoordinateInfo(*coordClone);
-	ImageAnalysis newIA(clone.get());
+	maskedClone.setCoordinateInfo(*coordClone);
+	ImageAnalysis newIA(&maskedClone);
+	// do not pass the mask info in, the subimage is already masked
 	std::auto_ptr<ImageInterface<Float> > outImage(
 		newIA._regrid(
-			outfile, shape, *csys, axes, region, mask, method,
+			outfile, shape, *csys, axes, region, "", method,
 			decimate, replicate, doref, dropdeg, overwrite,
-			force
+			force, False
 		)
 	);
 	// replace the temporary linear coordinate with the saved spectral coordinate
@@ -3653,7 +3658,7 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 	if (
 		! newCoords->replaceCoordinate(
 			saveSpecCoord,
-			clone->coordinates().linearCoordinateNumber()
+			maskedClone.coordinates().linearCoordinateNumber()
 		)
 	) {
 		*itsLog << LogIO::SEVERE
