@@ -3330,12 +3330,13 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 }
 
-ImageInterface<Float> *
-ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
-		Record& Region, const String& mask, const Bool dropdeg,
-		const Bool overwrite) {
+ImageInterface<Float>* ImageAnalysis::rebin(
+	const String& outFile, const Vector<Int>& factors,
+	Record& Region, const String& mask, const Bool dropdeg,
+	const Bool overwrite, const Bool extendMask
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "rebin");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfile
 	if (!overwrite && !outFile.empty()) {
@@ -3354,7 +3355,7 @@ ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, extendMask
 	);
 
 	// Convert binning factors
