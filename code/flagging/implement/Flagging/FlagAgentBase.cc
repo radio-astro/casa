@@ -1562,11 +1562,11 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 Bool
 FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 {
-	// If we find I directly in the polarization map we assume is Water Vapor Radiometer data
+	// If we find I directly in the polarization map we assume is ALMA Water Vapor Radiometer data
 	// And we only process it if the user requested WVR
-	if (polMap->find(Stokes::I) != polMap->end())
+	if (expression_p.find("WVR") != string::npos)
 	{
-		if (expression_p.find("WVR") != string::npos)
+		if (polMap->find(Stokes::I) != polMap->end())
 		{
 			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Detected Water Vapor data in spw (" <<
 					visibilityBuffer_p->get()->spectralWindow() << "), will be flagged" << LogIO::POST;
@@ -1574,12 +1574,17 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		}
 		else
 		{
-			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Detected Water Vapor data in spw (" <<
-					visibilityBuffer_p->get()->spectralWindow() << "), won't be flagged" << LogIO::POST;
 			return False;
 		}
 	}
+	else if (polMap->find(Stokes::I) != polMap->end())
+	{
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Detected Water Vapor data in spw (" <<
+					visibilityBuffer_p->get()->spectralWindow() << "), won't be flagged" << LogIO::POST;
+		return False;
+	}
 
+	// After WVR - I products check we go ahead with the rest of the generic cases
 	if (expression_p.find("XX") != string::npos)
 	{
 		if (polMap->find(Stokes::XX) != polMap->end())

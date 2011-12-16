@@ -2359,7 +2359,19 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	}
 
 	// Parse polarization
-	if (expression_p.find("XX") != string::npos)
+	if (expression_p.find("WVR") != string::npos)
+	{
+		if (polMap_p->find(Stokes::I) != polMap_p->end())
+		{
+			selectedCorrelations_p.push_back((*polMap_p)[Stokes::I]);
+			getCorr_p = &VisMapper::stokes_i;
+		}
+		else
+		{
+			throw AipsError("Requested polarization parameter (WVR - I) not available");
+		}
+	}
+	else if (expression_p.find("XX") != string::npos)
 	{
 		if (polMap_p->find(Stokes::XX) != polMap_p->end())
 		{
