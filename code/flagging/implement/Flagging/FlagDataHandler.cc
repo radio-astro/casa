@@ -2854,6 +2854,18 @@ FlagMapper::getPrivateFlags(uInt pol, uInt channel, uInt row)
 }
 
 void
+FlagMapper::setModifiedFlags(uInt pol, uInt channel, uInt row)
+{
+	commonFlagsView_p->operator ()(pol,channel,row) = flag_p;
+}
+
+void
+FlagMapper::setPrivateFlags(uInt pol, uInt channel, uInt row)
+{
+	privateFlagsView_p->operator ()(pol,channel,row) = flag_p;
+}
+
+void
 FlagMapper::applyFlag(uInt channel, uInt row)
 {
 	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)

@@ -650,6 +650,7 @@ int main(int argc, char **argv)
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
 	bool summaryFlagsActivated=false;
+	bool writeFlagsActivated=false;
 
 	string parameter, value;
 	Bool multipleAgents = false;
@@ -708,6 +709,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("array", array);
 			}
+			writeFlagsActivated = true;
 			cout << "Array selection is: " << array << endl;
 		}
 		else if (parameter == string("-scan"))
@@ -724,12 +726,14 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("scan", scan);
 			}
+			writeFlagsActivated = true;
 			cout << "Scan selection is: " << scan << endl;
 		}
 		else if (parameter == string("-timerange"))
 		{
 			timerange = casa::String(value);
 			dataSelection.define ("timerange", timerange);
+			writeFlagsActivated = true;
 			cout << "Time range selection is: " << timerange << endl;
 		}
 		else if (parameter == string("-field"))
@@ -746,6 +750,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("field", field);
 			}
+			writeFlagsActivated = true;
 			cout << "Field selection is: " << field << endl;
 		}
 		else if (parameter == string("-spw"))
@@ -762,6 +767,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("spw", spw);
 			}
+			writeFlagsActivated = true;
 			cout << "SPW selection is: " << spw << endl;
 		}
 		else if (parameter == string("-antenna"))
@@ -778,6 +784,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("antenna", antenna);
 			}
+			writeFlagsActivated = true;
 			cout << "Antenna selection is: " << antenna << endl;
 		}
 		else if (parameter == string("-uvrange"))
@@ -794,6 +801,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("uvrange", uvrange);
 			}
+			writeFlagsActivated = true;
 			cout << "UV range selection is: " << uvrange << endl;
 		}
 		else if (parameter == string("-correlation"))
@@ -810,6 +818,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("correlation", correlation);
 			}
+			writeFlagsActivated = true;
 			cout << "Correlation products selection is: " << correlation << endl;
 		}
 		else if (parameter == string("-observation"))
@@ -826,6 +835,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("observation", observation);
 			}
+			writeFlagsActivated = true;
 			cout << "Observation selection is: " << observation << endl;
 		}
 		else if (parameter == string("-intent"))
@@ -842,6 +852,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("intent", intent);
 			}
+			writeFlagsActivated = true;
 			cout << "Scan intention selection is: " << intent << endl;
 		}
 		else if (parameter == string("-flag"))
@@ -926,7 +937,7 @@ int main(int argc, char **argv)
 
 	if (deleteFlagsActivated) clearFlags(targetFile,flag);
 
-	writeFlags(targetFile,recordList,flag);
+	if (writeFlagsActivated) writeFlags(targetFile,recordList,flag);
 
 	if (summaryFlagsActivated) summaryFlags(targetFile);
 }

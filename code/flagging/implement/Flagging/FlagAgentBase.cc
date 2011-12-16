@@ -30,6 +30,7 @@
 #include <flagging/Flagging/FlagAgentElevation.h>
 #include <flagging/Flagging/FlagAgentQuack.h>
 #include <flagging/Flagging/FlagAgentShadow.h>
+#include <flagging/Flagging/FlagAgentExtension.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -244,6 +245,13 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	if (mode.compare("shadow")==0)
 	{
 		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags);
+		return agent;
+	}
+
+	// Extension
+	if (mode.compare("extension")==0)
+	{
+		FlagAgentExtension* agent = new FlagAgentExtension(dh,config,writePrivateFlags);
 		return agent;
 	}
 
@@ -1130,7 +1138,15 @@ FlagAgentBase::chunkSummary()
 	if (chunkFlags_p > 0)
 	{
 		msFlags_p +=  chunkFlags_p;
-		*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+		if (flag_p)
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+		}
+		else
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+		}
+
 	}
 
 	// Only the clipping agent is capable of detecting this, and besides in general
@@ -1153,7 +1169,14 @@ FlagAgentBase::msSummary()
 	// With this check we skip cases like summary or display
 	if (msFlags_p > 0)
 	{
-		*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+		if (flag_p)
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+		}
+		else
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+		}
 	}
 
 	if (msNaNs_p > 0)

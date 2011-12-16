@@ -348,6 +348,10 @@ public:
 	Bool getModifiedFlags(uInt pol, uInt channel, uInt row);
 	Bool getPrivateFlags(uInt pol, uInt channel, uInt row);
 
+	// These methods are needed for flag extension
+	void setModifiedFlags(uInt pol, uInt channel, uInt row);
+	void setPrivateFlags(uInt pol, uInt channel, uInt row);
+
     const IPosition &shape() const
     {
     	return reducedLength_p;
