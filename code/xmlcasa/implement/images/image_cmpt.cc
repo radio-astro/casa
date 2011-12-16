@@ -109,7 +109,7 @@
 
 using namespace std;
 
-#define _ORIGIN LogOrigin(_class, __FUNCTION__)
+#define _ORIGIN LogOrigin(_class, __FUNCTION__, WHERE)
 
 namespace casac {
 
@@ -232,7 +232,7 @@ casac::image * image::collapse(
 	const string& chans, const string& stokes, const string& mask,
 	const bool overwrite, const bool stretch
 ) {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_log << _ORIGIN;
 	if (detached()) {
 		return 0;
 	}
@@ -496,7 +496,7 @@ image::adddegaxes(const std::string& outfile, const bool direction,
 		const bool tabular, const bool overwrite) {
 	::casac::image *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "adddegaxes");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -520,7 +520,7 @@ image::convolve(
 	const bool stretch, const bool async
 ) {
 	try {
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
@@ -598,7 +598,7 @@ image::convolve(
 image::boundingbox(const ::casac::record& region) {
 	::casac::record *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "boundingbox");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 		Record *Region = toRecord(region);
@@ -614,7 +614,7 @@ image::boundingbox(const ::casac::record& region) {
 std::string image::brightnessunit() {
 	std::string rstat;
 	try {
-		*_log << LogOrigin("image", "brightnessunit");
+		*_log << _ORIGIN;
 		if (!detached()) {
 			rstat = _image->brightnessunit();
 		} else {
@@ -630,7 +630,7 @@ std::string image::brightnessunit() {
 
 bool image::calc(const std::string& expr) {
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
+		*_log << _ORIGIN;
 		if (detached()) {
 			return False;
 		}
@@ -646,7 +646,7 @@ bool image::calcmask(const std::string& mask, const std::string& maskName,
 		const bool makeDefault) {
 	bool rstat(false);
 	try {
-		*_log << LogOrigin("image", "calcmask");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -686,7 +686,7 @@ image::continuumsub(const std::string& outline, const std::string& outcont,
 		const std::string& pol, const int in_fitorder, const bool overwrite) {
 	::casac::image *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "continuumsub");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -718,7 +718,7 @@ image::convertflux(const ::casac::variant& qvalue,
 	::casac::record *rstat = 0;
 
 	try {
-		*_log << LogOrigin("image", "convertflux");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -748,7 +748,7 @@ image* image::convolve2d(
 	const variant& vmask, const bool overwrite, const bool stretch
 ) {
 	try {
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
@@ -792,9 +792,9 @@ image* image::convolve2d(
 ::casac::coordsys *
 image::coordsys(const std::vector<int>& pixelAxes) {
 	::casac::coordsys *rstat = 0;
+	*_log << _ORIGIN;
 
 	try {
-		*_log << LogOrigin("image", "coordsys");
 		if (detached())
 			return rstat;
 
@@ -814,7 +814,7 @@ image::coordsys(const std::vector<int>& pixelAxes) {
 image::coordmeasures(const std::vector<double>&pixel) {
 	::casac::record *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "coordmeasures");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -855,7 +855,7 @@ image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
 	const double convCriteria, const bool stretch
 ) {
 	try {
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
@@ -896,7 +896,7 @@ image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
 image::deconvolvecomponentlist(const ::casac::record& complist) {
 	::casac::record *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "decovolvecomponentlist");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -2169,36 +2169,37 @@ bool image::putregion(const ::casac::variant& v_pixels,
 	return rstat;
 }
 
-::casac::image *
-image::rebin(const std::string& outfile, const std::vector<int>& bin,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const bool dropdeg, const bool overwrite, const bool /* async */) {
-	::casac::image *rstat = 0;
+::casac::image* image::rebin(
+	const std::string& outfile, const std::vector<int>& bin,
+	const ::casac::record& region, const ::casac::variant& vmask,
+	const bool dropdeg, const bool overwrite, const bool /* async */,
+	const bool stretch
+) {
+	*_log << _ORIGIN;
+	if (detached()) {
+		return 0;
+	}
 	try {
-		*_log << LogOrigin("image", "rebin");
-		if (detached())
-			return rstat;
-
 		String outFile(outfile);
 		Vector<Int> factors(bin);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
-		ImageInterface<Float> *pImOut = _image->rebin(outFile, factors,
-				*Region, mask, dropdeg, overwrite);
-		rstat = new ::casac::image(pImOut);
-		delete pImOut;
-		delete Region;
-		//Need to delete if the above object makes a copy
-
-	} catch (AipsError x) {
+		}
+		std::auto_ptr<ImageInterface<Float> > pImOut(
+			_image->rebin(
+				outFile, factors, *Region,
+				mask, dropdeg, overwrite, stretch
+			)
+		);
+		return new ::casac::image(pImOut.get());
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 image* image::regrid(

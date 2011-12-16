@@ -32,6 +32,7 @@ test_ia_hanning                 dmehring@nrao.edu
 test_ia_histograms              dmehring@nrao.edu
 test_ia_isconform               dmehring@nrao.edu
 test_ia_modify                  dmehring@nrao.edu
+test_ia_rebin                   dmehring@nrao.edu
 test_ia_subimage                dmehring@nrao.edu
 test_imcollapse                 dmehring@nrao.edu
 test_imcontsub                  dmehring@nrao.edu
