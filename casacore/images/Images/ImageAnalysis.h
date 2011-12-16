@@ -333,10 +333,13 @@ class ImageAnalysis
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
 
-    ImageInterface<Float> * rebin(const String& outfile, 
-                                  const Vector<Int>& bin, Record& region, 
-                                  const String& mask, const Bool dropdeg, 
-                                  const Bool overwrite = False);
+    ImageInterface<Float> * rebin(
+    	const String& outfile,
+        const Vector<Int>& bin, Record& region,
+        const String& mask, const Bool dropdeg,
+        const Bool overwrite=False,
+        const Bool extendMask=False
+    );
 
     //regrids to a given coordinate system...one uses a record that is 
     //converted to a CoordinateSytem 
