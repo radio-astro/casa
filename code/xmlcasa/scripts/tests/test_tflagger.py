@@ -104,6 +104,14 @@ class test_tfcrop(test_base):
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='ea19'), 2199552, 2294)
         test_eq(tflagger(vis=self.vis, mode='summary', spw='7'), 274944, 0)
         
+    def test2(self):
+        '''tflagger:: Test2 of mode = tfcrop ABS ALL'''
+        tflagger(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9')
+        test_eq(tflagger(vis=self.vis, mode='summary'), 4399104, 18696)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4258)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='RL'), 1099776, 4999)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='LR'), 1099776, 4950)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
 
 
 class test_shadow(test_base):
@@ -420,8 +428,9 @@ class test_statistics_queries(test_base):
 
     def test_CAS2212(self):
         '''tflagger: Clipping scan selection, CAS-2212, CAS-3496'''
+        # By default expression='ABS ALL'
         tflagger(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3]) 
-        test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 41735)
+        test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 85404)
         s = tflagger(vis=self.vis, mode='summary')['scan']
         
         # Make sure no other scan is clipped
@@ -431,7 +440,7 @@ class test_statistics_queries(test_base):
         assert s['5']['flagged'] == 0
         assert s['6']['flagged'] == 0
         assert s['7']['flagged'] == 0
-        assert s['2']['flagged'] == 41735
+        assert s['2']['flagged'] == 85404
   
     def test021(self):
         '''tflagger: Test of flagging statistics and queries'''
