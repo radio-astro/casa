@@ -50,6 +50,13 @@ FlagAgentElevation::FlagAgentElevation(FlagDataHandler *dh, Record config, Bool 
 FlagAgentElevation::~FlagAgentElevation()
 {
 	// Compiler automagically calls FlagAgentBase::~FlagAgentBase()
+
+	// NOTE: The following is necessary because the static variables
+	// persist even if all the instances of the class were deleted!
+	staticMembersMutex_p.acquirelock();
+	agentNumber_p = nAgents_p;
+	nAgents_p -= 1;
+	staticMembersMutex_p.unlock();
 }
 
 void
