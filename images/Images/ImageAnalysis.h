@@ -349,14 +349,15 @@ class ImageAnalysis
     	const Vector<Int>& shape,
         const Record& csys, const Vector<Int>& axes,
         Record& region, const String& mask,
-        const String& method = "linear",
-        const Int decimate = 10,
-        const Bool replicate = False,
-        const Bool doref = True,
-        const Bool dropdeg = False,
-        const Bool overwrite = False,
+        const String& method="linear",
+        const Int decimate=10,
+        const Bool replicate=False,
+        const Bool doref=True,
+        const Bool dropdeg=False,
+        const Bool overwrite=False,
         const Bool force=False,
-        const Bool specAsVelocity=False
+        const Bool specAsVelocity=False,
+        const Bool extendAxes=False
     );
     
 
@@ -695,7 +696,7 @@ class ImageAnalysis
         const String& method, const Int decimate,
         const Bool replicate, const Bool doref,
         const Bool dropdeg, const Bool overwrite,
-        const Bool force
+        const Bool force, const Bool extendMask
     );
 
     ImageInterface<Float>* _regridByVelocity(
@@ -705,7 +706,7 @@ class ImageAnalysis
     	const String& method, const Int decimate,
     	const Bool replicate, const Bool doref,
     	const Bool dropdeg, const Bool overwrite,
-    	const Bool force
+    	const Bool force, const Bool extendMask
     ) const;
 };
 
