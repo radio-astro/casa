@@ -297,40 +297,78 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	LogIO os(LogOrigin("TestFlagger", "parseAgentParameters()", WHERE));
 
 	String mode = "manualflag";
+	String expression = "ABS ALL";
 
 	if(agent_params.empty()){
 
-		// TODO: Use the default agent, with default selection.
-		// In this case it will be manualflag on the
-		// MS selected in selectData().
+		// Use the default mode
+		agentParams_p.define("mode", mode);
+
+		// add this agent to the list
+		agents_config_list_p.push_back(agentParams_p);
+		return true;
+	}
+
+	// If there is a Record, continue
+	agentParams_p = agent_params;
+
+	if (! agentParams_p.isDefined("mode")) {
 		agentParams_p.define("mode", mode);
 	}
 	else {
-		if (dbg){
-			ostringstream os;
-			agent_params.print(os);
-			String str(os.str());
-			cout << str << endl;
-
-		}
-
-		agentParams_p = agent_params;
-
-		if (! agentParams_p.isDefined("mode"))
-			agentParams_p.define("mode", mode);
-		else
-			agentParams_p.get("mode", mode);
-
-		// If there is a tfcrop agent in the list, we should
-		// change the iterationApproach of all the agents
-		if (mode.compare("tfcrop") == 0) {
-			fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
-		}
-
+		agentParams_p.get("mode", mode);
 	}
+
+	// If there is a tfcrop agent in the list change
+	// the iterationApproach for all agents
+	if (mode.compare("tfcrop") == 0) {
+		fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
+	}
+
+	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0) {
+
+		if (agentParams_p.isDefined("expression")) {
+
+			agentParams_p.get("expression", expression);
+		}
+		else {
+			agentParams_p.define("expression", expression);
+		}
+
+		// Is the expression polarization an ALL?
+		if (isExpressionPolarizationAll(expression)) {
+
+			// Get the complex unitary function (ABS, NORM, REAL, IMAG, ARG)
+			String function = getExpressionFunction(expression);
+
+			// Get all the polarizations in the MS
+			std::vector<String> *allpol = fdh_p->corrProducts_p;
+
+			for (size_t i=0; i < allpol->size(); i++){
+				// compose the full expression
+				String func = function;
+				String pol = allpol->at(i);
+				String exp = func.append(" ");
+				exp = func.append(pol);
+
+				// Add record to the list of agents
+				agentParams_p.define("expression", exp);
+				agents_config_list_p.push_back(agentParams_p);
+			}
+			return true;
+		}
+	}
+
 
 	// add this agent to the list
 	agents_config_list_p.push_back(agentParams_p);
+
+	if (dbg){
+		ostringstream os;
+		agentParams_p.print(os);
+		String str(os.str());
+		cout << str << endl;
+	}
 
 	// TODO:sort the vector of records and define names
 	// for each agent.
@@ -495,8 +533,10 @@ TestFlagger::run()
 			// cout << "Flush flags to MS " << endl;
 			fdh_p->flushFlags();
 		}
+		agents_list_p.chunkSummary();
 	}
 
+	agents_list_p.msSummary();
 	agents_list_p.terminate();
 	agents_list_p.join();
 
@@ -518,6 +558,62 @@ TestFlagger::run()
 	return summary_stats;
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::isExpressionPolarizationAll
+// Returns true if expression contains a polarization ALL
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::isExpressionPolarizationAll(String expression)
+{
+
+	if (expression.find("ALL") == string::npos){
+		return false;
+	}
+
+	return true;
+}
+
+// ---------------------------------------------------------------------
+// TestFlagger::getExpressionFunction
+// Get the unitary function of a polarization expression
+// returns a String with the function name
+//
+// ---------------------------------------------------------------------
+String
+TestFlagger::getExpressionFunction(String expression)
+{
+
+	String func;
+
+	// Parse complex unitary function
+	if (expression.find("REAL") != string::npos)
+	{
+		func = "REAL";
+	}
+	else if (expression.find("IMAG") != string::npos)
+	{
+		func = "IMAG";
+	}
+	else if (expression.find("ARG") != string::npos)
+	{
+		func = "ARG";
+	}
+	else if (expression.find("ABS") != string::npos)
+	{
+		func = "ABS";
+	}
+	else if (expression.find("NORM") != string::npos)
+	{
+		func = "NORM";
+	}
+	else
+	{
+		return "";
+	}
+
+	return func;
+}
 
 // ---------------------------------------------------------------------
 // TestFlagger::getFlagVersionList
@@ -596,6 +692,5 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 
 	return true;
 }
-
 
 } //#end casa namespace
