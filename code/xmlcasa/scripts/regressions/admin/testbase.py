@@ -14,6 +14,9 @@ import re
 image = casac.homefinder.find_home_by_name('imageHome')
 ia=image.create()
 
+meas = casac.homefinder.find_home_by_name('msHome')
+ms=meas.create()
+
 class testbase :
     def __init__(self, workdir=None):
         if workdir == None:
@@ -224,7 +227,7 @@ class testbase :
                 # would be preferable here
                 try:
                     ms.open(theResult[k])
-                    self.testList[theresult[k]]=[]
+                    self.testList[theResult[k]]=[]
                     self.testList[theResult[k]].append('ms')
                     ms.done()
                 except:

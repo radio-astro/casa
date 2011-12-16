@@ -24,6 +24,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_admin_python python/${PYTHONV}
   memTest.py
   testbase.py
   imageTest.py
+  visTest.py
   locatescript.py
   gprof2dot.py
   profileplot.py

@@ -1,6 +1,7 @@
 import casac
 from taskinit import casalog
 from imageTest import * 
+from visTest import * 
 from testbase import *
 from tableMaker import *
 import time
@@ -507,6 +508,8 @@ class runTest:
         b.done()
         
         self.result['status'] = ['fail', 'pass'][status==1], "result of regression test"
+
+
        
     def simpleStats(self, imageName, templateImage, testname, WORKING_DIR, RESULT_DIR):
         a=ImageTest(imageName,write=True,resultDir=self.resultdir,imDir=self.imdir)
@@ -536,6 +539,57 @@ class runTest:
         self.result['ref_min'] = min1, "reference min"
         self.result['ref_max'] = max1, "reference max"
         self.result['ref_rms'] = rms1, "reference rms"
+
+
+        
+    def visStats(self, msName, templateMS, testname, WORKING_DIR, RESULT_DIR):
+        a=VisTest(msName,write=True,resultDir=self.resultdir,imDir=self.imdir)
+        b=VisTest(templateMS,write=False,resultDir=self.resultdir,imDir=self.imdir)
+        arms1,amax1,amin1,prms1,pmax1,pmin1,returnFlag1=b.simple_stats()
+        b.done()
+        status=1   # 1     : pass
+                   # 2     : unknown
+                   # other : fail
+        
+        arms2,amax2,amin2,prms2,pmax2,pmin2,returnFlag2=a.simple_stats()
+        if(not returnFlag2):
+            status=0
+        quickresult='<pre>'
+        quickresult+='MS       min: %f\nmax: %f\nrms: %f \n' %(amin2,amax2,arms2)
+        quickresult+='Template min: %f\nmax: %f\nrms: %f \n' %(amin1,amax1,arms1)
+        quickresult+='</pre>'
+        page=a.done()
+        #b.done()
+
+        if(arms2 > 2.*arms1):
+            status=status*0
+        if(prms2 > 2.*prms1):
+            status=status*0
+
+        if(abs(amax2-amax1) > arms2/2.0):
+            status=status*0
+        if(abs(amin2-amin1) > arms2/2.0):
+            status=status*0   
+        if(abs(pmax2-pmax1) > prms2/2.0):
+            status=status*0
+        if(abs(pmin2-pmin1) > prms2/2.0):
+            status=status*0   
+                
+        self.result['status'] = ['fail', 'pass'][status==1], "result of regression test"
+        self.result['ms_amp_min'] = amin2, "ms amp min"
+        self.result['ms_amp_max'] = amax2, "ms amp max"
+        self.result['ms_amp_rms'] = arms2, "ms amp rms"
+        self.result['ref_amp_min'] = amin1, "reference amp min"
+        self.result['ref_amp_max'] = amax1, "reference amp max"
+        self.result['ref_amp_rms'] = arms1, "reference amp rms"
+
+        self.result[ 'ms_pha_min'] = pmin2, "ms phase min"
+        self.result[ 'ms_pha_max'] = pmax2, "ms phase max"
+        self.result[ 'ms_pha_rms'] = prms2, "ms phase rms"
+        self.result['ref_pha_min'] = pmin1, "reference phase min"
+        self.result['ref_pha_max'] = pmax1, "reference phase max"
+        self.result['ref_pha_rms'] = prms1, "reference phase rms"
+
         
     def cubeImageTest(self, imageName, templateImage, testname, WORKING_DIR, RESULT_DIR):
         a=ImageTest(imageName,write=True,resultDir=self.resultdir,imDir=self.imdir)

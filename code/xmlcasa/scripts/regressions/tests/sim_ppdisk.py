@@ -31,7 +31,7 @@ def run():
     if not gl['regstate']:
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
-    return ['psim2/psim2.alma.out20.image','psim2/psim2.alma.out20.diff']
+    return ['psim2/psim2.alma.out20.ms','psim2/psim2.alma.out20.image','psim2/psim2.alma.out20.diff']
 
 
 def data():
