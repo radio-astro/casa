@@ -645,7 +645,7 @@ int main(int argc, char **argv)
 	Bool flag = True;
 	string nThreadsParam;
 	Int nThreads = 0;
-	string array,scan,timerange,field,spw,antenna,uvrange,observation,intent;
+	string array,scan,timerange,field,spw,antenna,uvrange,observation,intent,correlation;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -795,6 +795,22 @@ int main(int argc, char **argv)
 				agentParameters.define ("uvrange", uvrange);
 			}
 			cout << "UV range selection is: " << uvrange << endl;
+		}
+		else if (parameter == string("-correlation"))
+		{
+			correlation = casa::String(value);
+			dataSelection.define ("correlation", correlation);
+			if (multipleAgents)
+			{
+				Record rec;
+				rec.define ("correlation", correlation);
+				recordList.push_back(rec);
+			}
+			else
+			{
+				agentParameters.define ("correlation", correlation);
+			}
+			cout << "Correlation products selection is: " << correlation << endl;
 		}
 		else if (parameter == string("-observation"))
 		{
