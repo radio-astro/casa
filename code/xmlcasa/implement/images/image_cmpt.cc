@@ -2209,10 +2209,11 @@ image* image::regrid(
 	const string& method, const int decimate, const bool replicate,
 	const bool doRefChange, const bool dropDegenerateAxes,
 	const bool overwrite, const bool forceRegrid,
-	const bool specAsVelocity, const bool /* async */
+	const bool specAsVelocity, const bool /* async */,
+	const bool stretch
 ) {
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
+		*_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
@@ -2230,8 +2231,9 @@ image* image::regrid(
 		std::auto_ptr<ImageInterface<Float> >pImOut(
 			_image->regrid(
 				outfile, Vector<Int> (inshape), *coordinates,
-				axes, *Region, mask, methodU, decimate, replicate, doRefChange,
-				dropDegenerateAxes, overwrite, forceRegrid, specAsVelocity
+				axes, *Region, mask, methodU, decimate, replicate,
+				doRefChange, dropDegenerateAxes, overwrite,
+				forceRegrid, specAsVelocity, stretch
 			)
 		);
 		return new image(pImOut.get());
