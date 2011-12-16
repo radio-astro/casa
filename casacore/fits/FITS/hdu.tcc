@@ -391,11 +391,15 @@ OFF_T PrimaryArray<TYPE>::set_next(OFF_T ne) {
 //=========================================================================================
 template <class TYPE>
 int PrimaryArray<TYPE>::store(const TYPE *source, int npixels) {
-    if (npixels < 0 || npixels > Int(nelements())) {
-	errmsg(BADSIZE, "npixels < 0 or > nelements()");
+
+    if (npixels < 0) {
+        errmsg(BADSIZE, "npixels < 0");
+        return -1;
+    }
+    if ((OFF_T) npixels > nelements()) {
+	errmsg(BADSIZE, "npixels > nelements()");
 	return -1;
     }
-
     if (set_next(npixels) == -1) {
 	errmsg(BADSIZE, "set_next fails");
 	return -1;
