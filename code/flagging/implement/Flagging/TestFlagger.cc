@@ -108,8 +108,8 @@ TestFlagger::done()
 	agents_config_list_p.clear();
 	agents_list_p.clear();
 
-	if(dbg)
-		cout << "TestFlagger::done() Run the destructor" << endl;
+        //if(dbg)
+	//	cout << "TestFlagger::done() Run the destructor" << endl;
 
 	return;
 }
