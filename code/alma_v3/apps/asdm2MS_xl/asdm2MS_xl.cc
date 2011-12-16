@@ -3895,7 +3895,7 @@ int main(int argc, char *argv[]) {
       // For each main row.
       for (int32_t i = 0; i < nMain; i++) {
 	infostream.str("");
-	infostream << "ASDM Main row #" << i << " - BDF file size is " << v[i]->getDataSize() << " bytes." << endl;
+	infostream << "ASDM Main row #" << i << " - BDF file size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
 	info(infostream.str());
 
 	// Open its associate BDF.
@@ -3912,7 +3912,7 @@ int main(int argc, char *argv[]) {
 	for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
 	  numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
 	  infostream.str("");
-	  infostream << "ASDM Main row #" << i << " - the next " << numberOfIntegrations << " integrations produced ";
+	  infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
 	  numberOfReadIntegrations += numberOfIntegrations;
 	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
@@ -3924,7 +3924,7 @@ int main(int argc, char *argv[]) {
 	uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
 	if (numberOfRemainingIntegrations) {
 	  infostream.str("");
-	  infostream << "ASDM Main row #" << i << " - the next " << numberOfRemainingIntegrations << " integrations produced ";
+	  infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
 	  processMainAndState(ds, i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
