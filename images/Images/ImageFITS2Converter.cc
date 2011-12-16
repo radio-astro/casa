@@ -822,7 +822,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
                 } else {
                    fits32->store(ptr, bufferSize);
                 }
-		if (!fits32->err()) {
+		Int hduErr = 0;
+		if (!(hduErr = fits32->err())){
 		    n = fits32->write(*outfile);
 		    if (n != bufferSize) {
 			delete outfile;
@@ -830,7 +831,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 			return False;
 		    }
 		} else {
-		    error = "Unknown I/O error";
+ 		    error = "ImageFITS2Converter: Storing FITS primary Float array failed with HDU error code "
+		      + String::toString(hduErr);
 		    return False;
 		}
 	    } else if (fits16) {
@@ -868,7 +870,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
                    }
                 }
 		fits16->store(buffer16, bufferSize);
-		if (!fits16->err()) {
+		Int hduErr = 0;
+		if (!(hduErr = fits16->err())) {
 		    n = fits16->write(*outfile);
 		    if (n != bufferSize) {
 			delete outfile;
@@ -876,7 +879,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 			return False;
 		    }
 		} else {
-		    error = "Unknown I/O error";
+ 		    error = "ImageFITS2Converter: Storing FITS primary Short array failed with HDU error code "
+		      + String::toString(hduErr);
 		    return False;
 		}
 	    } else {
