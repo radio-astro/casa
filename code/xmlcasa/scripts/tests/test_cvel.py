@@ -14,7 +14,7 @@ vis_b = 'test.ms'
 vis_c = 'jupiter6cm.demo-thinned.ms'
 vis_d = 'g19_d2usb_targets_line-shortened-thinned.ms'
 vis_e = 'evla-highres-sample-thinned.ms'
-vis_f = 'test_uvcontsub2.ms'
+vis_f = 'test_cvel1.ms'
 outfile = 'cvel-output.ms'
 
 def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
@@ -69,7 +69,14 @@ class cvel_test(unittest.TestCase):
         if(not os.path.exists(vis_e)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample-thinned.ms .') # 74 MB
         if(not os.path.exists(vis_f)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub/test_uvcontsub2.ms .') # 39 MB
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/cvel/test_cvel1.ms .') # 39 MB
+
+        self.assertTrue(os.path.exists(vis_a))
+        self.assertTrue(os.path.exists(vis_b))
+        self.assertTrue(os.path.exists(vis_c))
+        self.assertTrue(os.path.exists(vis_d))
+        self.assertTrue(os.path.exists(vis_e))
+        self.assertTrue(os.path.exists(vis_f))
 
 
     def tearDown(self):
@@ -77,14 +84,14 @@ class cvel_test(unittest.TestCase):
         pass
     
     def test1(self):
-        '''Cvel 1: Testing default'''
+        '''Cvel 1: Testing default - expected error'''
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel()
         self.assertFalse(rval)
     
     def test2(self):
-        '''Cvel 2: Only input vis set'''
+        '''Cvel 2: Only input vis set - expected error'''
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(vis = 'myinput.ms')
