@@ -53,6 +53,9 @@ namespace casa
     Double reffreq;		/* a reference frequency */
     Double taperpoly[5];	/* polynomial expanded about reffreq */
     Int ntaperpoly;		/* number of terms in polynomial */
+    
+    Double astigm_0;     /* astigmatism: coefficient of Zernicke Polyn. Z4 a.k.a. 0-90 */
+    Double astigm_45;    /* astigmatism: coefficient of Zernicke Polyn. Z6 a.k.a. 45-135 */
 
     /* to be added later
        Double focus;

@@ -249,9 +249,11 @@ namespace casa{
 	  BeamCalcGeometries_p[i].taperpoly[j] = ta2(IPosition(1,j));
 	}
 	BeamCalcGeometries_p[i].ntaperpoly = antParTab.getCell("NTAPERPOLY", i).asInt();
-	if(False){
+	BeamCalcGeometries_p[i].astigm_0 = antParTab.getCell("ASTIGM_0", i).asDouble();
+	BeamCalcGeometries_p[i].astigm_45 = antParTab.getCell("ASTIGM_45", i).asDouble();
+	if(!otherAntRayPath.empty()){
 	  cout << "i name bandMinFreq_p bandMaxFreq_p sub_h feedpos feedpos feedpos subangle legwidth legfoot legapex"
-	       << " Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly" << endl; 
+	       << " Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly astigm0 astigm45" << endl; 
 	  cout << i << " " << BeamCalcGeometries_p[i].name << " " << bandMinFreq_p[i] << " " << bandMaxFreq_p[i] 
 	       << " " << BeamCalcGeometries_p[i].sub_h 
 	       << " " << BeamCalcGeometries_p[i].feedpos[0] << " " << BeamCalcGeometries_p[i].feedpos[1] 
@@ -261,7 +263,8 @@ namespace casa{
 	       << " " << BeamCalcGeometries_p[i].Rhole << " " << BeamCalcGeometries_p[i].Rant << " " << BeamCalcGeometries_p[i].reffreq 
 	       << " " << BeamCalcGeometries_p[i].taperpoly[0] << " " << BeamCalcGeometries_p[i].taperpoly[1] 
 	       << " " << BeamCalcGeometries_p[i].taperpoly[2] << " " << BeamCalcGeometries_p[i].taperpoly[3] 
-	       << " " << BeamCalcGeometries_p[i].taperpoly[4] << " " << BeamCalcGeometries_p[i].ntaperpoly << endl; 
+	       << " " << BeamCalcGeometries_p[i].taperpoly[4] << " " << BeamCalcGeometries_p[i].ntaperpoly 
+	       << " " << BeamCalcGeometries_p[i].astigm_0 << " " << BeamCalcGeometries_p[i].astigm_45 << endl; 
 	}
       }
 
@@ -1315,6 +1318,9 @@ namespace casa{
       to->taperpoly[j] = from->taperpoly[j];
     }
     to->ntaperpoly = from->ntaperpoly;
+    to->astigm_0 = from->astigm_0;
+    to->astigm_45 = from->astigm_45;
+
   }
 
 
