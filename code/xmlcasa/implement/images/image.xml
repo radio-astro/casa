@@ -7257,11 +7257,15 @@ print ia.name(strippath=T)
      <description>List the bounding box to the logger</description>
      <value>false</value>
      </param>
+         <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <value>false</value>
+     </param>
 </input>
 <returns type="bool">T or fail</returns>
 <description>
 
-This function <!-- (short-hand name {\stff rmp}) --> replaces the values of all
+This function replaces the values of all
 pixels whose total input mask (default input \pixelmask\ and OTF mask)
 is bad (F) with the specified value.    
 

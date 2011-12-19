@@ -2252,7 +2252,7 @@ image::rotate(const std::string& outfile, const std::vector<int>& inshape,
 		const bool overwrite, const bool /* async */) {
 	::casac::image *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "rotate");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -2283,7 +2283,7 @@ image::rotate(const std::string& outfile, const std::vector<int>& inshape,
 bool image::rename(const std::string& name, const bool overwrite) {
 	bool rstat(false);
 	try {
-		*_log << LogOrigin("image", "rename");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -2299,14 +2299,14 @@ bool image::rename(const std::string& name, const bool overwrite) {
 bool image::replacemaskedpixels(
 	const variant& vpixels,
 	const record& region, const variant& vmask,
-	const bool updateMask, const bool list
+	const bool updateMask, const bool list,
+	const bool stretch
 ) {
+	*_log << _ORIGIN;
+	if (detached()) {
+		return False;
+	}
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
-		if (detached()) {
-			return False;
-		}
-
 		String pixels = vpixels.toString();
 		std::auto_ptr<Record> pRegion(toRecord(region));
 		String maskRegion = vmask.toString();
@@ -2315,7 +2315,7 @@ bool image::replacemaskedpixels(
 		}
 		return _image->replacemaskedpixels(
 			pixels, *pRegion, maskRegion,
-			updateMask, list
+			updateMask, list, stretch
 		);
 	}
 	catch (AipsError x) {

@@ -49,6 +49,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_ia_isconform.py
   test_ia_modify.py
   test_ia_rebin.py
+  test_ia_replacemaskedpixels.py
   test_ia_subimage.py
   test_imcollapse.py
   test_imcontsub.py
