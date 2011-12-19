@@ -385,14 +385,17 @@ class ImageAnalysis
 
     Record restoringbeam();
 
-    ImageInterface<Float> * sepconvolve(const String& outfile, 
-                                        const Vector<Int>& axes, 
-                                        const Vector<String>& types, 
-                                        const Vector<Quantity>& widths, 
-                                        Double scale, 
-                                        Record& region, 
-                                        const String& mask, 
-                                        const bool overwrite = False);
+    ImageInterface<Float>* sepconvolve(
+    	const String& outfile,
+        const Vector<Int>& axes,
+        const Vector<String>& types,
+        const Vector<Quantity>& widths,
+        Double scale,
+        Record& region,
+        const String& mask,
+        const bool overwrite=False,
+        const bool extendMask=False
+    );
 
     Bool set(const String& pixels, const Int pixelmask, 
              Record& region, const Bool list = false);
