@@ -614,6 +614,49 @@ class test_selections2(test_base):
         tflagger(vis=self.vis, observation='10')
         test_eq(tflagger(vis=self.vis, mode='summary'), 2882778, 0)
                 
+class test_elevation(test_base):
+    """Test of mode = 'elevation'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+        self.x55 = 666792    # data below 55 degrees, etc.
+        self.x60 = 1428840
+        self.x65 = 2854278
+        self.all = 2854278
+
+    def test_lower(self):
+        tflagger(vis = self.vis, mode = 'elevation')
+        
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, 0)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 50)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, 0)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 55)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x55)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 60)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x60)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 65)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x65)
+
+    def test_upper(self):
+        tflagger(vis = self.vis, mode = 'elevation', upperlimit = 60)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.all - self.x60)
+
+
+    def test_interval(self):
+        tflagger(vis = self.vis,
+                  mode = 'elevation',
+                  lowerlimit = 55,
+                  upperlimit = 60)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.all - (self.x60 - self.x55))
 
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -641,4 +684,5 @@ def suite():
             test_selections_alma,
             test_statistics_queries,
             test_msselection,
+            test_elevation,
             cleanup]
