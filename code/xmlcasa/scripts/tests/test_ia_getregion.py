@@ -97,9 +97,8 @@ class ia_getregion_test(unittest.TestCase):
         zz = yy.getregion(
             mask=mymask + ">0", stretch=True
         )
-        self.assertTrue(type(zz) == type(yy))
+        self.assertTrue(type(zz) == type(yy.getchunk()))
         yy.done()
-        zz.done()
         
 def suite():
     return [ia_getregion_test]
