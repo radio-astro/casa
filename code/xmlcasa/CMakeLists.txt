@@ -246,7 +246,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_immath.py
   scripts/task_immoments.py
   scripts/task_impbcor.py
-  scripts/task_importaipscaltable.py
   scripts/task_importasdm.py
   scripts/task_importevla.py
   scripts/task_importfits.py
@@ -376,7 +375,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/immath.xml
   tasks/immoments.xml
   tasks/impbcor.xml
-  tasks/importaipscaltable.xml
   tasks/importasdm.xml
   tasks/importevla.xml
   tasks/importfits.xml
