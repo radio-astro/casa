@@ -4014,12 +4014,13 @@ Record ImageAnalysis::restoringbeam() {
 	return rstat;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::sepconvolve(const String& outFile,
-		const Vector<Int>& smoothaxes, const Vector<String>& kernels,
-		const Vector<Quantity>& kernelwidths, Double scale, Record& pRegion,
-		const String& mask, const Bool overwrite) {
-	*itsLog << LogOrigin("ImageAnalysis", "sepconvolve");
+ImageInterface<Float>* ImageAnalysis::sepconvolve(
+	const String& outFile, const Vector<Int>& smoothaxes,
+	const Vector<String>& kernels,
+	const Vector<Quantity>& kernelwidths, Double scale, Record& pRegion,
+	const String& mask, const Bool overwrite, const Bool extendMask
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Bool autoScale(False);
 	if (scale < 0) {
@@ -4041,7 +4042,7 @@ ImageAnalysis::sepconvolve(const String& outFile,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
-		mask, itsLog, False
+		mask, itsLog, False, AxesSpecifier(), extendMask
 	);
 
 	// Create convolver
@@ -4067,7 +4068,8 @@ ImageAnalysis::sepconvolve(const String& outFile,
 				<< subImage.shape() << LogIO::POST;
 		imOut.set(new TempImage<Float> (subImage.shape(),
 				subImage.coordinates()));
-	} else {
+	}
+	else {
 		if (!overwrite) {
 			NewFile validfile;
 			String errmsg;
@@ -4075,19 +4077,20 @@ ImageAnalysis::sepconvolve(const String& outFile,
 				*itsLog << errmsg << LogIO::EXCEPTION;
 			}
 		}
-		//
 		*itsLog << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << subImage.shape() << LogIO::POST;
-		imOut.set(new PagedImage<Float> (subImage.shape(),
-				subImage.coordinates(), outFile));
+		imOut.set(
+			new PagedImage<Float> (
+				subImage.shape(),
+				subImage.coordinates(), outFile
+			)
+		);
 	}
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 	ImageUtilities::copyMiscellaneous(*pImOut, *pImage_p);
 
-	// Do it
 	sic.convolve(*pImOut);
 
-	// Return image
 	return pImOut;
 }
 
