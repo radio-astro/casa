@@ -2244,40 +2244,37 @@ image* image::regrid(
 	}
 }
 
-::casac::image *
-image::rotate(const std::string& outfile, const std::vector<int>& inshape,
-		const ::casac::variant& inpa, const ::casac::record& region,
-		const ::casac::variant& vmask, const std::string& method,
-		const int decimate, const bool replicate, const bool dropdeg,
-		const bool overwrite, const bool /* async */) {
-	::casac::image *rstat = 0;
+::casac::image* image::rotate(
+	const std::string& outfile, const std::vector<int>& inshape,
+	const ::casac::variant& inpa, const ::casac::record& region,
+	const ::casac::variant& vmask, const std::string& method,
+	const int decimate, const bool replicate, const bool dropdeg,
+	const bool overwrite, const bool /* async */, const bool stretch
+) {
 	try {
 		*_log << _ORIGIN;
-		if (detached())
-			return rstat;
-
-		String outFile(outfile);
+		if (detached()) {
+			return 0;
+		}
 		Vector<Int> shape(inshape);
 		Quantum<Double> pa(casaQuantityFromVar(inpa));
-		String methodU(method);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
-		ImageInterface<Float> *pImOut =
-				_image->rotate(outFile, shape, pa, *Region, mask, methodU,
-						decimate, replicate, dropdeg, overwrite);
-
-		delete Region;
-		rstat = new ::casac::image(pImOut);
-		delete pImOut;
+		}
+		std::auto_ptr<ImageInterface<Float> > pImOut(
+			_image->rotate(
+				outfile, shape, pa, *Region, mask, method,
+				decimate, replicate, dropdeg, overwrite, stretch
+			)
+		);
+		return new ::casac::image(pImOut.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::rename(const std::string& name, const bool overwrite) {
