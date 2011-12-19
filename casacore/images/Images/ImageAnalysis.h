@@ -374,9 +374,11 @@ class ImageAnalysis
 
     Bool rename(const String& name, const Bool overwrite = False);
 
-    Bool replacemaskedpixels(const String& pixels, Record& region,
-                             const String& mask, const Bool update = False, 
-                             const Bool list = False);
+    Bool replacemaskedpixels(
+    	const String& pixels, Record& region,
+        const String& mask, const Bool update=False,
+        const Bool list=False, const Bool extendMask=False
+    );
 
     Record restoringbeam();
 
