@@ -3926,7 +3926,7 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 Bool ImageAnalysis::replacemaskedpixels(
 	const String& pixels, Record& pRegion,
 	const String& maskRegion, const Bool updateMask,
-	const Bool list
+	const Bool list, const Bool extendMask
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (pixels.empty()) {
@@ -3942,7 +3942,8 @@ Bool ImageAnalysis::replacemaskedpixels(
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
-		maskRegion, (list ? itsLog : 0), True
+		maskRegion, (list ? itsLog : 0), True,
+		AxesSpecifier(), extendMask
 	);
 
 	// See if we can write to ourselves
