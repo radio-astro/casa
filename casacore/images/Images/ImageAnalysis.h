@@ -362,15 +362,18 @@ class ImageAnalysis
     
 
 
-    ImageInterface<Float> * rotate(const String& outfile, 
-                                   const Vector<int>& shape, 
-                                   const Quantity& pa, Record& region, 
-                                   const String& mask, 
-                                   const String& method = "cubic", 
-                                   const Int decimate = 0, 
-                                   const Bool replicate = False, 
-                                   const Bool dropdeg = False,
-                                   const Bool overwrite = False);
+    ImageInterface<Float>* rotate(
+    	const String& outfile,
+        const Vector<int>& shape,
+        const Quantity& pa, Record& region,
+        const String& mask,
+        const String& method="cubic",
+        const Int decimate=0,
+        const Bool replicate=False,
+        const Bool dropdeg=False,
+        const Bool overwrite=False,
+        const Bool extendMask=False
+    );
 
     Bool rename(const String& name, const Bool overwrite = False);
 

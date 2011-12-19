@@ -3668,12 +3668,14 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 	return outImage.release();
 }
 
-ImageInterface<Float> *
-ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
-		const Quantity& pa, Record& Region, const String& mask,
-		const String& methodU, const Int decimate, const Bool replicate,
-		const Bool dropdeg, const Bool overwrite) {
-	*itsLog << LogOrigin("ImageAnalysis", "rotate");
+ImageInterface<Float>* ImageAnalysis::rotate(
+	const String& outFile, const Vector<Int>& shape,
+	const Quantity& pa, Record& Region, const String& mask,
+	const String& methodU, const Int decimate,
+	const Bool replicate, const Bool dropdeg,
+	const Bool overwrite, const Bool extendMask
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Int dbg = 0;
 
@@ -3702,7 +3704,8 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 			tmpShape2.resize(j);
 			tmpShape = tmpShape2;
 		}
-	} else {
+	}
+	else {
 		tmpShape = shape;
 	}
 
@@ -3718,7 +3721,7 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, extendMask
 	);
 
 	// Get image coordinate system
@@ -3732,7 +3735,7 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	Int linInd = -1;
 	uInt coordInd = 0;
 	Vector<Int> pixelAxes;
-	//
+
 	dirInd = cSysTo.findCoordinate(Coordinate::DIRECTION, after);
 	if (dirInd < 0) {
 		after = -1;
@@ -3743,17 +3746,19 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 			*itsLog << "Rotating LinearCoordinate holding axes " << pixelAxes
 					+ 1 << LogIO::POST;
 		}
-	} else {
+	}
+	else {
 		pixelAxes = cSysTo.pixelAxes(dirInd);
 		coordInd = dirInd;
 		*itsLog << "Rotating DirectionCoordinate holding axes " << pixelAxes
 				+ 1 << LogIO::POST;
 	}
-	//
+
 	if (pixelAxes.nelements() == 0) {
 		*itsLog << "Could not find a Direction or Linear coordinate to rotate"
 				<< LogIO::EXCEPTION;
-	} else if (pixelAxes.nelements() != 2) {
+	}
+	else if (pixelAxes.nelements() != 2) {
 		*itsLog << "Coordinate to rotate must hold exactly two axes"
 				<< LogIO::EXCEPTION;
 	}
@@ -3784,7 +3789,8 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 		DirectionCoordinate c = cSysTo.directionCoordinate(coordInd);
 		c.setLinearTransform(xform);
 		cSysTo.replaceCoordinate(c, coordInd);
-	} else {
+	}
+	else {
 		LinearCoordinate c = cSysTo.linearCoordinate(coordInd);
 		c.setLinearTransform(xform);
 		cSysTo.replaceCoordinate(c, coordInd);
@@ -3811,7 +3817,8 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 		*itsLog << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
 		imOut.set(new TempImage<Float> (outShape, cSys));
-	} else {
+	}
+	else {
 		*itsLog << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
 		imOut.set(new PagedImage<Float> (outShape, cSys, outFile));
@@ -3827,8 +3834,10 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	Bool forceRegrid = False;
-	ir.regrid(*pImOut, method, axes2, subImage, replicate, decimate, True,
-			forceRegrid);
+	ir.regrid(
+		*pImOut, method, axes2, subImage, replicate,
+		decimate, True, forceRegrid
+	);
 
 	// Return image
 	return pImOut;
