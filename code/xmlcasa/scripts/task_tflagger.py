@@ -166,8 +166,6 @@ def tflagger(vis,
                        str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
                        ' flagnearfreq='+str(flagnearfreq)
         
-        # Set the type of operation to use in FLAG_CMD Type column
-        flag = True
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -257,7 +255,6 @@ def tflagger(vis,
                        ' flagnearfreq='+str(flagnearfreq)
             
         elif mode == 'unflag':                      
-            flag = False  
             casalog.post('Unflag mode is active')                
             
         elif mode == 'summary':
@@ -301,7 +298,7 @@ def tflagger(vis,
 
         # Write the current parameters as flag commands to output
         if savepars:         
-            ncmd = writeCMD(vis, flagcmd, flag, outfile)
+            ncmd = writeCMD(vis, flagcmd, outfile)
             
             
         # Destroy the tool
@@ -344,7 +341,7 @@ def tflagger(vis,
 
 
 #def writeCMD(vis, myflags, tag=''):
-def writeCMD(msfile, flagcmd, flag, outfile):
+def writeCMD(msfile, flagcmd, outfile):
     # Reads a list of parameters and save it on the FLAG_CMD table or on a text file    
     # When saving in the FLAG_CMD table it will also update the APPLIED column to True
     # Returns the number of flag commands written (it's always one!!!)
@@ -362,13 +359,8 @@ def writeCMD(msfile, flagcmd, flag, outfile):
     # TODO: How about the TIME column? How to calculate it?
     tim_list = [0]
     intv_list = [0]
-    reas_list = ['']
-    if flag:
-        type = 'FLAG'
-    else:
-        type = 'UNFLAG'
-        
-    typ_list = [type]
+    reas_list = ['']        
+    typ_list = ['FLAG']
     sev_list = [0]
     lev_list = [0]
     app_list = [True]
