@@ -2340,21 +2340,25 @@ image::restoringbeam() {
 	return rstat;
 }
 
-::casac::image *
-image::sepconvolve(const std::string& outFile, const std::vector<int>& axes,
-		const std::vector<std::string>& types, const ::casac::variant& widths,
-		const double Scale, const ::casac::record& region,
-		const ::casac::variant& vmask, const bool overwrite, const bool /* async */) {
-	::casac::image *rstat = 0;
+::casac::image* image::sepconvolve(
+	const std::string& outFile, const std::vector<int>& axes,
+	const std::vector<std::string>& types,
+	const ::casac::variant& widths,
+	const double Scale, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool overwrite,
+	const bool /* async */, const bool stretch
+) {
+	*_log << _ORIGIN;
+	if (detached()) {
+		return 0;
+	}
 	try {
-		*_log << LogOrigin("image", "sepconvolve");
-		if (detached())
-			return rstat;
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
-		Record *pRegion = toRecord(region);
+		std::auto_ptr<Record> pRegion(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 		Vector<Int> smoothaxes(axes);
 		Vector<String> kernels = toVectorString(types);
 
@@ -2371,7 +2375,8 @@ image::sepconvolve(const std::string& outFile, const std::vector<int>& axes,
 			for (int i = 0; i < num; i++) {
 				kernelwidths[i] = casa::Quantity(widthsVec[i], u);
 			}
-		} else if (widths.type() == ::casac::variant::DOUBLEVEC) {
+		}
+		else if (widths.type() == ::casac::variant::DOUBLEVEC) {
 			std::vector<double> widthsVec = widths.toDoubleVec();
 			num = widthsVec.size();
 			kernelwidths.resize(num);
@@ -2379,40 +2384,46 @@ image::sepconvolve(const std::string& outFile, const std::vector<int>& axes,
 			for (int i = 0; i < num; i++) {
 				kernelwidths[i] = casa::Quantity(widthsVec[i], u);
 			}
-		} else if (widths.type() == ::casac::variant::STRING || widths.type()
+		}
+		else if (widths.type() == ::casac::variant::STRING || widths.type()
 				== ::casac::variant::STRINGVEC) {
 			toCasaVectorQuantity(widths, kernelwidths);
 			num = kernelwidths.size();
-		} else {
+		}
+		else {
 			*_log << LogIO::WARN << "Unrecognized kernelwidth datatype"
 					<< LogIO::POST;
-			return rstat;
+			return 0;
 		}
 		if (kernels.size() == 1 && kernels[0] == "") {
 			kernels.resize(num);
-			for (int i = 0; i < num; i++)
+			for (int i = 0; i < num; i++) {
 				kernels[i] = "gauss";
+			}
 		}
-		if (smoothaxes.size() == 0 || ((smoothaxes.size() == 1)
-				&& (smoothaxes[0] = -1))) {
+		if (
+			smoothaxes.size() == 0 || ((smoothaxes.size() == 1)
+			&& (smoothaxes[0] = -1))
+		) {
 			smoothaxes.resize(num);
-			for (int i = 0; i < num; i++)
+			for (int i = 0; i < num; i++) {
 				smoothaxes[i] = i;
+			}
 		}
-
-		ImageInterface<Float> * pImOut = _image->sepconvolve(outFile,
-				smoothaxes, kernels, kernelwidths, Scale, *pRegion, mask,
-				overwrite);
-		delete pRegion;
-		// Return image
-		rstat = new ::casac::image(pImOut);
-		delete pImOut;
-	} catch (AipsError x) {
+		std::auto_ptr<ImageInterface<Float> > pImOut(
+			_image->sepconvolve(outFile,
+				smoothaxes, kernels, kernelwidths,
+				Scale, *pRegion, mask, overwrite,
+				stretch
+			)
+		);
+		return new ::casac::image(pImOut.get());
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::set(const ::casac::variant& vpixels, const int pixelmask,
