@@ -713,7 +713,6 @@ def simobserve(
                         util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
                         return False                
                 sm.open(msfile)
-                sm.setlimits(shadowlimit=0.99) # all of dish area
                 posobs = me.observatory(telescopename)
                 diam = stnd;
                 # WARNING: sm.setspwindow is not consistent with clean::center
@@ -904,14 +903,23 @@ def simobserve(
                 # WARNING: sm.setspwindow is not consistent with clean::center
                 model_start = qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
+                mounttype = 'alt-az'
+                if tp_telescopename in ['DRAO', 'WSRT']:
+                    mounttype = 'EQUATORIAL'
+                    # Should ASKAP be BIZARRE or something else?  It may be effectively equatorial.
+
+#                 sm.setconfig(telescopename=tp_telescopename, x=tpx, y=tpy, z=tpz, 
+#                              dishdiameter=diam.tolist(),
+#                              mount=['alt-az'], antname=tp_antnames, padname=tp_padnames, 
+#                              coordsystem='global', referencelocation=posobs)
                 sm.setconfig(telescopename=tp_telescopename, x=tpx, y=tpy, z=tpz, 
                              dishdiameter=diam.tolist(),
-                             mount=['alt-az'], antname=tp_antnames, padname=tp_padnames, 
+                             mount=[mounttype], antname=tp_antnames, padname=tp_padnames, 
                              coordsystem='global', referencelocation=posobs)
                 sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
                                deltafreq=qa.tos(model_width), 
                                freqresolution=qa.tos(model_width), 
-                               nchannels=model_nchan, 
+                               nchannels=model_nchan, refcode="LSRK",
                                stokes='XX YY')
                 sm.setfeed(mode='perfect X Y',pol=[''])
 
