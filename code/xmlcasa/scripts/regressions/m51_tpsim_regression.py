@@ -152,7 +152,7 @@ ia.close()
 #              'sum': 32650 }
 
 # KS - updated 2011-12-14 (Kumar's PB change and VP)
-diffstats = {'max': 2.4614,
+diffstats = {'max': 2.4615,
              'min': -0.24603,
              'rms': 0.25783,
              'sigma': 0.23474,

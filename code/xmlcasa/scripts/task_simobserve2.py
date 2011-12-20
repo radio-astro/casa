@@ -707,7 +707,7 @@ def simobserve2(
 
             if os.path.exists(msfile) and not overwrite: #redundant check?
                 util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
-                return False                
+                return False
             sm.open(msfile)
             posobs = me.observatory(telescopename)
             diam = stnd;

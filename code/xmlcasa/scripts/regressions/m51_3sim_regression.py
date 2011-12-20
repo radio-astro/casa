@@ -10,16 +10,19 @@ modelname="m51ha.model"
 if os.path.exists(modelname):
     shutil.rmtree(modelname)
 
+projname = "m51c"
+
 startTime = time.time()
 startProc = time.clock()
 
-print '--Running simdata of M51 (total power+interferometer) --'
+print '--Running simlation of M51 (ALMA-12m INT + ACA-7m INT + 12m TP) --'
 # configs are in the repository
 
 l=locals() 
 if not l.has_key("repodir"): 
     repodir=os.getenv("CASAPATH").split(' ')[0]
 
+print casa['build']
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
@@ -31,11 +34,13 @@ shutil.copytree(datadir+modelname,modelname)
 #======================================
 # 12m INT
 
-default("simobserve")
+#default("simobserve")
+default("simobserve2")
 
-project = 'm51c'
+project = projname
 # Clear out results from previous runs.
-os.system('rm -rf '+project+'*')
+#os.system('rm -rf '+project+'*')
+os.system('rm -rf '+project)
 
 skymodel = modelname
 inbright = '0.004'
@@ -50,7 +55,8 @@ mapsize = '1arcmin'
 maptype = "hex"
 pointingspacing = '9arcsec'
 
-observe = True
+#observe = True
+obsmode = "int"
 refdate='2012/11/21/20:00:00'
 totaltime = '3600s'
 #sdantlist = cfgdir+'aca.tp.cfg'
@@ -69,6 +75,7 @@ else:
 verbose=True
 overwrite=True
 
+inp()
 go()
 
 
@@ -78,9 +85,10 @@ go()
 # 12m TP
 
 
-default("simobserve")
+#default("simobserve")
+default("simobserve2")
 
-project = 'm51c'
+project = projname
 
 skymodel = modelname
 inbright = '0.004'
@@ -96,12 +104,13 @@ mapsize = '1arcmin'
 maptype = "square"
 pointingspacing = '9arcsec'
 
-observe = True
+#observe = True
+obsmode = "sd"
 refdate='2012/11/21/20:00:00'
 totaltime = '2h'
 sdantlist = cfgdir+'aca.tp.cfg'
 sdant = 0
-antennalist=""
+#antennalist=""
 
 #thermalnoise = 'tsys-manual'  #w/ noise 
 
@@ -114,6 +123,7 @@ else:
 verbose=True
 overwrite=True
 
+inp()
 go()
 
 
@@ -123,9 +133,10 @@ go()
 # ACA
 
 
-default("simobserve")
+#default("simobserve")
+default("simobserve2")
 
-project = 'm51c'
+project = projname
 
 skymodel = modelname
 inbright = '0.004'
@@ -141,7 +152,8 @@ maptype = "hex"
 #maptype = "square"
 pointingspacing = '15arcsec'
 
-observe = True
+#observe = True
+obsmode = "int"
 refdate='2012/11/21/20:00:00'
 totaltime = '3' # times through the map
 #sdantlist = cfgdir+'aca.tp.cfg'
@@ -160,6 +172,7 @@ else:
 verbose=True
 overwrite=True
 
+inp()
 go()
 
 
@@ -171,13 +184,14 @@ go()
 
 default("simanalyze")
 
-project = 'm51c'
+project = projname
 
 # clean ACA with SD model
 
 image = True
 vis = '$project.aca.i.ms,$project.aca.tp.sd.ms'  #w/ noise
 imsize = [512,512]
+#imdirection = 'B1950 23h59m59.96 -34d59m59.50'
 cell = '0.2arcsec'
 
 analyze = True
@@ -186,6 +200,7 @@ showpsf = False
 showresidual = False
 showconvolved = True
 
+inp()
 go()
 
 
@@ -193,13 +208,14 @@ go()
 
 default("simanalyze")
 
-project = 'm51c'
+project = projname
 
 # clean ALMA with ACA+SD model
 
 image = True
 vis = '$project.alma_0.5arcsec.ms'
 imsize = [512,512]
+#imdirection = 'B1950 23h59m59.96 -34d59m59.50'
 cell = '0.2arcsec'
 modelimage="$project.aca.i.image"
 
@@ -209,6 +225,7 @@ showpsf = False
 showresidual = False
 showconvolved = True
 
+inp()
 go()
 
 
@@ -221,7 +238,7 @@ endProc = time.clock()
 
 # Regression
 
-test_name = """simdata observation of M51 (total power+interferometric)"""
+test_name = """simdata observation of M51 (ALMA-12m INT + ACA-7m INT + 12m TP)"""
 
 ia.open(project+"/"+project + '.alma_0.5arcsec.image')
 m51both_stats=ia.statistics(verbose=False,list=False)
@@ -232,20 +249,34 @@ ia.open(project+"/"+project + '.alma_0.5arcsec.diff')
 m51both_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
+# # reference statistic values for simulated image
+# refstats = { 'max': 0.12078,
+#              'min': -0.022069,
+#              'rms': 0.016695,
+#              'sigma': 0.014399,
+#              'sum': 951.08 }
+
 # reference statistic values for simulated image
-refstats = { 'max': 0.12078,
-             'min': -0.022069,
-             'rms': 0.016695,
-             'sigma': 0.014399,
-             'sum': 951.08 }
+refstats = { 'max': 0.13314,
+             'min': -0.023702,
+             'rms': 0.020402,
+             'sigma': 0.016707,
+             'sum': 1402.5 }
+
+
+# # reference statistic values for diff image
+# diffstats = {'max': 0.030648,
+#              'min': -0.075413,
+#              'rms': 0.0096487,
+#              'sigma': 0.0096155,
+#              'sum': -90.078 }
 
 # reference statistic values for diff image
-diffstats = {'max': 0.030648,
-             'min': -0.075413,
-             'rms': 0.0096487,
-             'sigma': 0.0096155,
-             'sum': -90.078 }
-
+diffstats = {'max': 0.03206,
+             'min': -0.10785,
+             'rms': 0.014134,
+             'sigma': 0.013433,
+             'sum': -526.38 }
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
@@ -260,6 +291,7 @@ outfile    = project+"/"+project + '.' + datestring + '.log'
 logfile    = open(outfile, 'w')
 
 print 'Writing regression output to ' + outfile + "\n"
+print >> logfile,casa['build']
 
 loghdr = """
 ********** Regression *****************
@@ -311,7 +343,7 @@ if regstate:
     print >> logfile, 'Passed',
 else:
     print >> logfile, 'FAILED',
-print >> logfile, 'regression test for simdata of M51 (total power+interferometric).'
+print >> logfile, 'regression test for simdata of M51 (ALMA-12m INT + ACA-7m INT + 12m TP).'
 print >>logfile,'---'
 print >>logfile,'*********************************'
     
