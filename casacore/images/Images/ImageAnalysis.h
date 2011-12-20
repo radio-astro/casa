@@ -418,10 +418,11 @@ class ImageAnalysis
     	Record& statsout, const Vector<Int>& axes, Record& region,
         const String& mask, const Vector<String>& plotstats,
         const Vector<Float>& includepix, const Vector<Float>& excludepix,
-        const String& plotter = "/NULL", const Int nx = 1,
-        const Int ny = 1, const Bool list = True,
-        const Bool force = False, const Bool disk = False,
-        const Bool robust = False, const Bool verbose = True
+        const String& plotter="/NULL", const Int nx=1,
+        const Int ny=1, const Bool list=True,
+        const Bool force=False, const Bool disk=False,
+        const Bool robust=False, const Bool verbose=True,
+        const Bool extendMask=False
     );
 
     bool twopointcorrelation(const String& outfile, Record& region, 
