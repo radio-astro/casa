@@ -4,6 +4,7 @@ dSparseDiff
 tAutoDiff
 tCombinatorics
 tConvolver
+tInterpolateArray1D
 tFFTServer
 tFFTServer2
 tHistAcc
