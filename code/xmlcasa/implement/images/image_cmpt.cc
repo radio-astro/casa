@@ -2576,26 +2576,27 @@ bool image::setrestoringbeam(const ::casac::variant& major,
 	return rstat;
 }
 
-::casac::record*
-image::statistics(const std::vector<int>& axes, const ::casac::record& region,
-		const ::casac::variant& mask,
-		const std::vector<std::string>& plotstats,
-		const std::vector<double>& includepix,
-		const std::vector<double>& excludepix, const std::string& plotter,
-		const int nx, const int ny, const bool list, const bool force,
-		const bool disk, const bool robust, const bool verbose, const bool /* async */) {
-	::casac::record *rstat = 0;
+::casac::record* image::statistics(
+	const std::vector<int>& axes, const ::casac::record& region,
+	const ::casac::variant& mask,
+	const std::vector<std::string>& plotstats,
+	const std::vector<double>& includepix,
+	const std::vector<double>& excludepix, const std::string& plotter,
+	const int nx, const int ny, const bool list, const bool force,
+	const bool disk, const bool robust, const bool verbose,
+	const bool /* async */, const bool stretch
+) {
+	*_log << _ORIGIN;
+	if (detached()) {
+		*_log << "Image not attached" << LogIO::POST;
+		return 0;
+	}
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
-		if (detached()) {
-			*_log << "Image not attached" << LogIO::POST;
-			return rstat;
-		}
-
-		Record *regionRec = toRecord(region);
+		std::auto_ptr<Record> regionRec(toRecord(region));
 		String mtmp = mask.toString();
-		if (mtmp == "false" || mtmp == "[]")
+		if (mtmp == "false" || mtmp == "[]") {
 			mtmp = "";
+		}
 
 		Vector<String> plotStats = toVectorString(plotstats);
 		if (plotStats.size() == 0) {
@@ -2610,33 +2611,44 @@ image::statistics(const std::vector<int>& axes, const ::casac::record& region,
 		}
 		Vector<Float> tmpinclude;
 		Vector<Float> tmpexclude;
-		if (!(includepix.size() == 1 && includepix[0] == -1)) {
+		if (
+			!(
+				includepix.size() == 1
+				&& includepix[0] == -1
+			)
+		) {
 			tmpinclude.resize(includepix.size());
-			for (uInt i = 0; i < includepix.size(); i++)
+			for (uInt i=0; i<includepix.size(); i++) {
 				tmpinclude[i] = includepix[i];
+			}
 		}
 		if (!(excludepix.size() == 1 && excludepix[0] == -1)) {
 			tmpexclude.resize(excludepix.size());
-			for (uInt i = 0; i < excludepix.size(); i++)
+			for (uInt i = 0; i < excludepix.size(); i++) {
 				tmpexclude[i] = excludepix[i];
+			}
 		}
 		*_log << LogIO::NORMAL << "Determining stats for image "
 				<< _image->name(True) << LogIO::POST;
 		Record retval;
-		Bool status;
-		status = _image->statistics(retval, tmpaxes, *regionRec, mtmp,
-				plotStats, tmpinclude, tmpexclude, plotter, nx, ny, list,
-				force, disk, robust, verbose);
-		if (status) {
-			rstat = fromRecord(retval);
+		if (
+			_image->statistics(
+				retval, tmpaxes, *regionRec, mtmp,
+				plotStats, tmpinclude, tmpexclude, plotter,
+				nx, ny, list, force, disk, robust, verbose,
+				stretch
+			)
+		) {
+			return fromRecord(retval);
 		}
-		delete regionRec;
+		else {
+			return 0;
+		}
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::twopointcorrelation(const std::string& outfile,

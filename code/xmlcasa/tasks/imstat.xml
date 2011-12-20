@@ -57,7 +57,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Print additional messages to logger?</description>
         <value>True</value>
     </param>
+    <param type="string" direction="in" name="mask">
+        <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
+        <value></value>
+    </param>
+    <param type="bool" direction="in" name="stretch" subparam="true">
+        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+        <value>False</value>
+    </param>
     <constraints>
+        <when param="mask">
+            <notequals type="string" value="">
+                <default param="stretch"><value type="bool">False</value></default>
+            </notequals>
+        </when>
     </constraints>
 </input>
     <output>
@@ -79,34 +92,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     myoutput = imstat()
    
 
-	Keyword arguments:
-	imagename -- Name of input image
-		Default: none; Example: imagename='ngc5921_task.im'
-    axes -- axes to compute statistics over. -1 => all axes.
-    region -- File path to an ImageRegion file or name.
-                Use the viewer, then region manager to select regions of
-                   the image to process.  Similar to box, but graphical
-                Or the name of a region stored with the image, 
-                      use rg.namesintable()
-                to retrieve the list of names.
-                Default: none
-                Example: region='myimage.im.rgn'
-                         region='region1'
-	box --  A box region on the directional plane
-	        Only pixel values acceptable at this time.
-		Default: none (whole 2-D plane); 
-                  Example: box='10,10,50,50'
-                      box = '10,10,30,30,35,35,50,50' (two boxes)
-	chans -- channel numbers
-	        Range of channel numbers to include in statistics
-                  All spectral windows are included
-		Default:''= all;  Example: chans='3~20'    
-	stokes -- Stokes parameters to analyze.
-                Default: all; Example: stokes='IQUV';  
-                                     Example:stokes='I,Q'
-                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
-    listit   -- Print stats and bounding box to logger? 
-    verbose  -- Print additional messages to logger?
+Keyword arguments:
+imagename    Name of input image
+		     Default: none; Example: imagename='ngc5921_task.im'
+axes         axes to compute statistics over. -1 => all axes.
+region       Region of interest. See help par.region.
+box          A box region specified in pixels on the directional plane
+		     Default: none (whole 2-D plane); 
+             Example: box='10,10,50,50'
+             box = '10,10,30,30,35,35,50,50' (two boxes)
+chans        Zero based channel numbers
+	         Range of channel numbers to include in statistics
+             All spectral windows are included
+		     Default:''= all;  Example: chans='3~20'    
+stokes       Stokes parameters to analyze.
+             Default: all; Example: stokes='IQUV';  
+             Example:stokes='I,Q'
+             Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
+listit       Print stats and bounding box to logger? 
+verbose      Print additional messages to logger?
+mask         Optional mask specification.
+stretch      Stretch the mask if necessary and possible? See help par.stretch 
 
 
       General procedure:
