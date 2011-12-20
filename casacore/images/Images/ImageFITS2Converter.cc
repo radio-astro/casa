@@ -1342,10 +1342,6 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
    	// load the data extension
    	FITSImage *fitsImg = new FITSImage(fitsQI->name(False), 0, fitsQI->whichDataHDU());
 
-   	cout << "ImageInfo: " <<fitsImg->imageInfo() << endl;
-   	cout << "MiscInfo: " <<fitsImg->miscInfo() << endl;
-
-
    	// put the data extension to FITSOut
    	if (!ImageFITSConverter::ImageToFITSOut(error, os, *fitsImg, outfile, memoryInMB,
    			preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
@@ -1359,9 +1355,6 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
 
    	// load the error extension
    	fitsImg = new FITSImage(fitsQI->name(False), 0, fitsQI->whichErrorHDU());
-
-   	cout << "ImageInfo: " <<fitsImg->imageInfo() << endl;
-   	cout << "MiscInfo: " <<fitsImg->miscInfo() << endl;
 
    	// put the error extension  to the FITSOut
    	if (!ImageFITSConverter::ImageToFITSOut(error, os, *fitsImg, outfile, memoryInMB,
@@ -1397,7 +1390,6 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
 		// create the data sub-image and set the metadata
 		SubImage<Float> *subData = new SubImage<Float>(image, subSlicer, AxesSpecifier(False));
 		subData->setMiscInfo(dataExtMiscInfo);
-	   cout << "SubDataMiscInfo: " <<subData->miscInfo() << endl;
 
    	// put the data sub-image to FITSOut
 		if (!ImageFITSConverter::ImageToFITSOut(error, os, *subData, outfile, memoryInMB,
@@ -1416,7 +1408,6 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
 		// create the error sub-image and set the metadata
 	   SubImage<Float> *subError = new SubImage<Float>(image, subSlicer, AxesSpecifier(False));
 	   subError->setMiscInfo(errorExtMiscInfo);
-	   cout << "SubErrMiscInfo: " <<subError->miscInfo() << endl;
 
    	// put the error sub-image to FITSOut
 	   if (!ImageFITSConverter::ImageToFITSOut(error, os, *subError, outfile, memoryInMB,
