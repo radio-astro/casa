@@ -4324,7 +4324,7 @@ Bool ImageAnalysis::statistics(
 	const Vector<Float>& includepix, const Vector<Float>& excludepix,
 	const String&, const Int nx, const Int ny, const Bool list,
 	const Bool force, const Bool disk, const Bool robust,
-	const Bool verbose
+	const Bool verbose, const Bool extendMask
 ) {
 	String pgdevice("/NULL");
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
@@ -4337,7 +4337,8 @@ Bool ImageAnalysis::statistics(
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
-		mtmp,  (verbose ? itsLog : 0), False
+		mtmp,  (verbose ? itsLog : 0), False, AxesSpecifier(),
+		extendMask
 	);
 	{
         /*
@@ -4490,14 +4491,20 @@ Bool ImageAnalysis::statistics(
 					pStatistics_p = new ImageStatistics<Float> (subImage,
 							*itsLog, True, disk);
 
-				} else {
-					pStatistics_p = new ImageStatistics<Float> (subImage, True,
-							disk);
+				}
+				else {
+					pStatistics_p = new ImageStatistics<Float> (
+						subImage, True, disk
+					);
 				}
 			} else {
 				pStatistics_p->resetError();
-				if (haveRegionsChanged(pRegionRegion, pMaskRegion,
-						pOldStatsRegionRegion_p, pOldStatsMaskRegion_p)) {
+				if (
+					haveRegionsChanged(
+						pRegionRegion, pMaskRegion,
+						pOldStatsRegionRegion_p, pOldStatsMaskRegion_p
+					)
+				) {
 					pStatistics_p->setNewImage(subImage);
 				}
 			}
@@ -4546,9 +4553,11 @@ Bool ImageAnalysis::statistics(
 	Bool trobust(robust);
 	if (!trobust) {
 		for (uInt i = 0; i < statsToPlot.nelements(); i++) {
-			if (statsToPlot(i) == Int(LatticeStatsBase::MEDIAN) || statsToPlot(
-					i) == Int(LatticeStatsBase::MEDABSDEVMED) || statsToPlot(i)
-					== Int(LatticeStatsBase::QUARTILE)) {
+			if (
+				statsToPlot(i) == Int(LatticeStatsBase::MEDIAN)
+				|| statsToPlot(i) == Int(LatticeStatsBase::MEDABSDEVMED)
+				|| statsToPlot(i) == Int(LatticeStatsBase::QUARTILE)
+			) {
 				trobust = True;
 			}
 		}
