@@ -4915,9 +4915,12 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 
 }
 
-Bool ImageAnalysis::toASCII(const String& outfile, Record& region,
-		const String& mask, const String& sep, const String& format,
-		const Double maskvalue, const Bool overwrite) {
+Bool ImageAnalysis::toASCII(
+	const String& outfile, Record& region,
+	const String& mask, const String& sep,
+	const String& format, const Double maskvalue,
+	const Bool overwrite, const Bool extendMask
+) {
 	// sep is hard-wired as ' ' which is what imagefromascii expects
 	*itsLog << LogOrigin("ImageAnalysis", "toASCII");
 
@@ -4949,7 +4952,10 @@ Bool ImageAnalysis::toASCII(const String& outfile, Record& region,
 	Vector<Int> axes;
 	Array<Float> pixels;
 	Array<Bool> pixmask;
-	getregion(pixels, pixmask, region, axes, mask, False, False, False);
+	getregion(
+		pixels, pixmask, region, axes, mask,
+		False, False, False, extendMask
+	);
 
 	IPosition shp = pixels.shape();
 	IPosition vshp = pixmask.shape();

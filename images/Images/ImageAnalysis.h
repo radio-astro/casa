@@ -449,9 +449,12 @@ class ImageAnalysis
                 const Bool wavelength = False, const Bool airWavelength = False,
                 const String& origin = String());
 
-    Bool toASCII(const String& outfile, Record& region, const String& mask,
-                 const String& sep = " ", const String& format = "%e", 
-                 const Double maskvalue = -999, const Bool overwrite = False);
+    Bool toASCII(
+    	const String& outfile, Record& region, const String& mask,
+        const String& sep=" ", const String& format="%e",
+        const Double maskvalue=-999, const Bool overwrite=False,
+        const Bool extendMask=False
+    );
 
 
     Vector<Double> topixel(Record& value);
