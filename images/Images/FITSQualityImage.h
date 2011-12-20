@@ -110,6 +110,13 @@ public:
   // Make a copy of the object with new (reference semantics).
   virtual ImageInterface<Float>* cloneII() const;
 
+  // Given the misc-info of a CASA image (with quality-axis)
+  // the misc-info of the data sub-image and the error sub-image
+  // are produced. This ensures that, if written to FITS, the
+  // data and error extensions have the all necessary keywords.
+  Bool static qualFITSInfo(String &error, TableRecord &dataExtMiscInfo, TableRecord &errorExtMiscInfo,
+		  const TableRecord &miscInfo);
+
   // Get the FITS data
   FITSImage      *fitsData() const {return fitsdata_p;};
 
@@ -194,6 +201,14 @@ public:
 
   // Return the (internal) data type (TpFloat or TpShort).
   DataType dataType () const;
+
+  // Return the data HDU number
+  uInt whichDataHDU () const
+    { return whichDataHDU_p; }
+
+  // Return the error HDU number
+  uInt whichErrorHDU () const
+    { return whichErrorHDU_p; }
 
   // Maximum size - not necessarily all used. In pixels.
   virtual uInt maximumCacheSize() const;

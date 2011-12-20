@@ -179,6 +179,76 @@ ImageInterface<Float>* FITSQualityImage::cloneII() const
    return new FITSQualityImage (*this);
 }
 
+Bool FITSQualityImage::qualFITSInfo(String &error, TableRecord &dataExtMiscInfo, TableRecord &errorExtMiscInfo, const TableRecord &miscInfo){
+	String tmpString;
+
+	// check for a dedicated extension name in the record "sciextname"
+	if (miscInfo.fieldNumber("sciextname")>-1 && miscInfo.type(miscInfo.fieldNumber("sciextname")==TpString)){
+
+		// set the given extension name
+		miscInfo.get(String("sciextname"), tmpString);
+		dataExtMiscInfo.define("extname", tmpString);
+	}
+	else {
+		// set the default extension name
+		dataExtMiscInfo.define("extname", "DATA");
+	}
+	dataExtMiscInfo.setComment("extname", "name of data extension");
+
+	// set the data HDU type
+	dataExtMiscInfo.define("hdutype", Quality::name(Quality::DATA));
+	dataExtMiscInfo.setComment("hdutype", "extension type");
+
+	// check for a dedicated extension name in the record "errextname"
+	if (miscInfo.fieldNumber("errextname")>-1 && miscInfo.type(miscInfo.fieldNumber("errextname")==TpString)){
+
+		// set the given extension name
+		miscInfo.get(String("errextname"), tmpString);
+		errorExtMiscInfo.define("extname", tmpString);
+
+		// check for a dedicated extension name in the record "errextname"
+		if (miscInfo.fieldNumber("errtype")>-1 && miscInfo.type(miscInfo.fieldNumber("errtype")==TpString)){
+			// read the string
+			miscInfo.get(String("errtype"), tmpString);
+
+			// make sure the chosen error type does exist
+			if (FITSErrorImage::stringToErrorType(tmpString)==FITSErrorImage::UNKNOWN){
+				error="The error type: " + tmpString + " does not exist!";
+				return False;
+			}
+			// set the given extension name
+			errorExtMiscInfo.define("errtype", tmpString);
+		} else {
+			// set the default error type
+			errorExtMiscInfo.define("errtype", FITSErrorImage::errorTypeToString(FITSErrorImage::MSE));
+		}
+	}
+	else {
+		// set the default extension name and error type
+		errorExtMiscInfo.define("extname", "ERROR");
+		errorExtMiscInfo.define("errtype", FITSErrorImage::errorTypeToString(FITSErrorImage::MSE));
+	}
+	errorExtMiscInfo.setComment("extname", "name of data extension");
+	errorExtMiscInfo.setComment("errtype", "error type");
+
+	// set the error HDU type
+	errorExtMiscInfo.define("hdutype", Quality::name(Quality::ERROR));
+	errorExtMiscInfo.setComment ("hdutype", "extension type");
+
+	// cross-reference between the data and the error extension
+	errorExtMiscInfo.get(String("extname"), tmpString);
+	dataExtMiscInfo.define("errdata", tmpString);
+	dataExtMiscInfo.setComment("errdata", "name of error extension");
+	dataExtMiscInfo.get(String("extname"), tmpString);
+	errorExtMiscInfo.define("scidata", tmpString);
+	errorExtMiscInfo.setComment("scidata", "name of science data extension");
+
+	// add the additional information
+	dataExtMiscInfo.merge(miscInfo, RecordInterface::SkipDuplicates);
+	errorExtMiscInfo.merge(miscInfo, RecordInterface::SkipDuplicates);
+
+	return True;
+}
 
 String FITSQualityImage::imageType() const
 {
