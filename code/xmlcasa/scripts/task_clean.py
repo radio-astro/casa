@@ -3,7 +3,6 @@ import shutil
 from taskinit import *
 from cleanhelper import *
 im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
-#import pdb
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, observation, mode, gridmode,
@@ -17,7 +16,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           cyclespeedup, nterms, reffreq, chaniter, flatnoise, allowchunk):
 
     #Python script
-    
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
 
@@ -54,7 +52,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
  
         try: 
             # estimate the size of the image
-    
             import commands
     
             nstokes=len(stokes)
@@ -441,9 +438,18 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                  phasecenters=phasecenter
                  imageids=imagename
             casalog.post("imsizes="+str(imsizes)+" imageids="+str(imageids), 'DEBUG1')
-#
-# Moved getAlgorithm() to here so that multifield is set using outlier file.
-#
+
+            ###test image sizes
+            optsize=[0,0]
+            tmpsize=imsizes if type(imsizes[0])==list else [imsizes]
+            for ksize in range(len(tmpsize)):
+                optsize[0]=cleanhelper.getOptimumSize(tmpsize[ksize][0])
+                optsize[1]=cleanhelper.getOptimumSize(tmpsize[ksize][1])
+                if((optsize[0] != tmpsize[ksize][0]) or (optsize[1] != tmpsize[ksize][1])):
+                       raise ValueError, str(tmpsize[ksize])+' is not an acceptable imagesize, try '+str(optsize) 
+           #
+           # Moved getAlgorithm() to here so that multifield is set using outlier file.
+           #
             localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode, 
                                           multiscale, multifield, facets, nterms,
                                           'clark');

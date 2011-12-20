@@ -3189,45 +3189,45 @@ class cleanhelper:
     @staticmethod
     def getOptimumSize(size):
         '''
-        This method takes as input the a size parameter.  The return is the smallest
-        integer Y which satisfies the following conditions:
-           * Y > size
-           * Y = 2^a*3^b*5^c where a,b, and c are non-negative integers and at least one
-             of a,b, or c is 0
-        Just for information the mean and maximum fractional expansion (Y-size)/size
-        for each decade of input size is:
-          * [10^1, 10^2]: 0.050175 (max 0.170732)
-          * [10^2, 10^3]: 0.042740 (max 0.177914)
-          * [10^3, 10^4]: 0.031226 (max 0.124837)
-          * [10^4, 10^5]: 0.026900 (max 0.124973)
-          * [10^5, 10^6]: 0.021301 (max 0.067868)
-          * [10^6, 10^7]: 0.017932 (max 0.067871)
-          * [10^7, 10^8]: 0.015522 (max 0.067871)
+        This returns the next largest even composite of 2, 3, 5, 7
         '''
-        def evaluate(pow2, pow3, pow5):
-            # Convience method to calculate the value given multiples
-            return int(math.pow(2,pow2) *math.pow(3,pow3)*math.pow(5,pow5))
+        def prime_factors(n, douniq=True):
+            """ Return the prime factors of the given number. """
+            factors = []
+            lastresult = n
+    
+           # 1 pixel must a single dish user
+            if n == 1:
+                return [1]
+    
+            while 1:
+                if lastresult == 1:
+                    break
+                c = 2
+        
+                while 1:
+                    if lastresult % c == 0:
+                        break            
+                    c += 1
 
-        max5 = int(math.ceil(math.log(size,5)))
-        returnValue = evaluate(0, 0, max5)
-        for pow5 in range(max5,0,-1):
-            pow2 = math.ceil(math.log(size/math.pow(5,pow5),2))
-            if not pow2 < 0:
-                returnValue = min(returnValue, evaluate(pow2,0,pow5))
-
-            pow3 = math.ceil(math.log(size/math.pow(5,pow5),3))
-            if not pow3 < 0:
-                returnValue = min(returnValue, evaluate(0,pow3,pow5))
-
-        max3 = int(math.ceil(math.log(size,3)))
-        for pow3 in range(max3,0,-1):
-            pow2 = math.ceil(math.log(size/math.pow(3,pow3),2))
-            if not pow2 < 0:
-                returnValue = min(returnValue, evaluate(pow2,pow3,0))
-
-        max2 = math.ceil(math.log(size,2))
-        returnValue = min(returnValue, evaluate(max2,0,0))
-        return returnValue
+                factors.append(c)
+                lastresult /= c
+            return  numpy.unique(factors).tolist() if douniq else factors 
+        n=size
+        if(n%2 != 0):
+            n+=1
+        fac=prime_factors(n, False)
+        for k in range(len(fac)):
+            if(fac[k] > 7):
+                val=fac[k]
+                while(numpy.max(prime_factors(val)) > 7):
+                    val +=1
+                fac[k]=val
+        newlarge=numpy.product(fac)
+        for k in range(n, newlarge, 2):
+            if((numpy.max(prime_factors(k)) < 8)):
+                return k
+        return newlarge
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     """

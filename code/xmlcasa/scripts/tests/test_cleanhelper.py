@@ -271,19 +271,19 @@ class cleanhelper_test(unittest.TestCase):
         import time
         # Check that factors of 2,3, and 5 do the right thing
         self.assertEqual(cleanhelper.getOptimumSize(1024),1024)    #2^10
-        self.assertEqual(cleanhelper.getOptimumSize(59049), 59049) #3^10
-        self.assertEqual(cleanhelper.getOptimumSize(15625), 15625) #5^6
+        self.assertEqual(cleanhelper.getOptimumSize(59049), 60000) #2^5*3*5^4
+        self.assertEqual(cleanhelper.getOptimumSize(15625), 15680) #2^6*5*7^2
 
         # Now lets do some random checks to make sure we get the same value
-        self.assertEqual(cleanhelper.getOptimumSize(1375),1458) #2^1*3^6 
-        self.assertEqual(cleanhelper.getOptimumSize(62354),62500) #2^3*5^7
+        self.assertEqual(cleanhelper.getOptimumSize(1375),1400) #2^3*5^2*7 
+        self.assertEqual(cleanhelper.getOptimumSize(62354),62500) #2^2*5^6
         self.assertEqual(cleanhelper.getOptimumSize(981),1000) # 2^3*5^3
         self.assertEqual(cleanhelper.getOptimumSize(8123), 8192) # 2^13
         self.assertEqual(cleanhelper.getOptimumSize(82863),82944) # 2^10*3^4
 
         # Now do some real random checks
         random.seed(time.time())
-        factorList = [2,3,5]
+        factorList = [2,3,5,7]
 
         for i in xrange(100):
             x = random.randint(100,1000000)
