@@ -8867,6 +8867,10 @@ ia.close()
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
+     <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <value>false</value>
+     </param>
 </input>
 <returns type="bool">T or fail</returns>
 <description>

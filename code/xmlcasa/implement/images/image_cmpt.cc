@@ -2775,32 +2775,36 @@ bool image::tofits(const std::string& fitsfile, const bool velocity,
 
 bool image::toASCII(const std::string& outfile, const ::casac::record& region,
 		const ::casac::variant& mask, const std::string& sep,
-		const std::string& format, const double maskvalue, const bool overwrite) {
+		const std::string& format, const double maskvalue, const bool overwrite,
+		const bool stretch) {
 	// sep is hard-wired as ' ' which is what imagefromascii expects
-	bool rstat(false);
-	try {
-		*_log << LogOrigin("image", "toASCII");
-		if (detached())
-			return rstat;
+	*_log << _ORIGIN;
+	if (detached()) {
+		return False;
+	}
 
+	try {
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
 			Mask = "";
-		} else if (mask.type() == ::casac::variant::STRING || mask.type()
-				== ::casac::variant::STRINGVEC) {
+		}
+		else if (
+			mask.type() == ::casac::variant::STRING
+			|| mask.type() == ::casac::variant::STRINGVEC
+		) {
 			Mask = mask.toString();
 		}
-		Record* pRegion = toRecord(region);
-		rstat = _image->toASCII(outfile, *pRegion, Mask, sep, format,
-				maskvalue, overwrite);
-		delete pRegion;
-
-	} catch (AipsError x) {
+		std::auto_ptr<Record> pRegion(toRecord(region));
+		return _image->toASCII(
+			outfile, *pRegion, Mask, sep, format,
+			maskvalue, overwrite, stretch
+		);
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::string image::type() {
