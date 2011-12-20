@@ -34,8 +34,7 @@ shutil.copytree(datadir+modelname,modelname)
 #======================================
 # 12m INT
 
-#default("simobserve")
-default("simobserve2")
+default("simobserve")
 
 project = projname
 # Clear out results from previous runs.
@@ -85,8 +84,7 @@ go()
 # 12m TP
 
 
-#default("simobserve")
-default("simobserve2")
+default("simobserve")
 
 project = projname
 
@@ -133,8 +131,7 @@ go()
 # ACA
 
 
-#default("simobserve")
-default("simobserve2")
+default("simobserve")
 
 project = projname
 

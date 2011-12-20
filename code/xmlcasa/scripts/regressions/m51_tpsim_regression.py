@@ -21,9 +21,8 @@ print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 shutil.copytree(datadir+modelname,modelname)
-#default(sim_observe)
-#default(simobserve)
-default(simobserve2)
+
+default(simobserve)
 
 project = projname
 # Clear out results from previous runs.
@@ -67,9 +66,7 @@ else:
 verbose=True
 
 inp()
-#sim_observe()
-#simobserve()
-simobserve2()
+simobserve()
 
 obsEndTime = time.time()
 obsEndProc = time.clock()

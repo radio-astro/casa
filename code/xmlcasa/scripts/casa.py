@@ -163,7 +163,6 @@ from rmtables import  rmtables
 from setjy import  setjy
 from simdata import  simdata
 from simobserve import  simobserve
-from simobserve2 import  simobserve2
 from simanalyze import  simanalyze
 from smoothcal import  smoothcal
 from specfit import  specfit

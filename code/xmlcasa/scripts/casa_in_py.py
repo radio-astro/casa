@@ -152,7 +152,6 @@ from deconvolve_pg import deconvolve_pg as deconvolve
 from simdata_pg import simdata_pg as simdata
 from simanalyze_pg import simanalyze_pg as simanalyze
 from simobserve_pg import simobserve_pg as simobserve
-from simobserve2_pg import simobserve2_pg as simobserve2
 
 from importasdm_pg import importasdm_pg as importasdm
 from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit

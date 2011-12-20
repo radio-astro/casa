@@ -15,8 +15,7 @@ datadir=repodir+"/data/regression/simdata/"
 if os.path.exists("6334.cl"): shutil.rmtree("6334.cl")
 shutil.copytree(datadir+"6334.cl","6334.cl")
 
-#default("simdata")
-default("simobserve2") 
+default("simobserve") 
 project            =  projname
 complist           =  "6334.cl"
 compwidth          =  "1.875GHz"
@@ -39,7 +38,7 @@ verbose            =  True
 overwrite          =  True
 
 inp()
-simobserve2()
+simobserve()
 
 
 default("simanalyze") 

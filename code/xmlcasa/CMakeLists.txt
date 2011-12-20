@@ -299,7 +299,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_ssoflux.py
   scripts/task_simdata.py
   scripts/task_simobserve.py
-  scripts/task_simobserve2.py
   scripts/task_simanalyze.py
   scripts/task_slsearch.py
   scripts/task_smoothcal.py
@@ -426,7 +425,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/ssoflux.xml
   tasks/simdata.xml
   tasks/simobserve.xml
-  tasks/simobserve2.xml
   tasks/simanalyze.xml
   tasks/slsearch.xml
   tasks/smoothcal.xml

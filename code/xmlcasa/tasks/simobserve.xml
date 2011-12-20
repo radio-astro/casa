@@ -155,9 +155,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--*************************************************************-->
 <!--  observe always reads from $project.skymodel file now -->
 
-    <param type="bool" name="observe">
-      <description>calculate visibilites using ptgfile</description>
-      <value>True</value>
+    <param type="string" name="obsmode">
+      <description>observation mode to simulate [int(interferometer)|sd(singledish)|""(none)]</description>
+      <value></value>
+      <allowed kind="enum">
+	<value type="string"></value>
+	<value type="string">int</value>
+	<value type="string">sd</value>
+      </allowed>
     </param>
 
     <param type="string" name="refdate" subparam="true">
@@ -176,16 +181,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="antennalist" subparam="true">
-      <description>antenna position file or "" for no interferometric MS</description>
-      <value>alma.out10.cfg</value>
+      <description>interferometer antenna position file</description>
+      <value></value>
     </param>
 
 <!-- TODO put in more than one synth_antfile to do ALMA and ACA config - 
 it'll do them for the same amount of time -->
 
     <param type="string" name="sdantlist" subparam="true">
-      <description>single dish antenna position file or "" for no total power MS</description>
-      <value>aca.tp.cfg</value>
+      <description>single dish antenna position file</description>
+      <value></value>
     </param>
 
     <param type="int" name="sdant" subparam="true">
@@ -317,22 +322,29 @@ it'll do them for the same amount of time -->
 	</equals>
       </when>
       <!-- **********************************************************  -->
-      <when param="observe">
-	<equals type="bool" value="True">
+      <when param="obsmode">
+	<equals type="string" value="">
+	  <default param="antennalist"><value type="string"></value>
+	  <description>antenna info can be used to calculate the primary beam</description></default>
+	  <default param="sdantlist"><value type="string"></value>
+	  <description>antenna info can be used to calculate the primary beam</description></default>
+	  <default param="sdant"><value type="int">0</value></default>
+	</equals>
+	<equals type="string" value="int">
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
 	  <default param="hourangle"><value type="string">transit</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
 	  <default param="caldirection"><value type="string"></value></default>
 	  <default param="calflux"><value type="string">1Jy</value></default>
-	  <default param="sdantlist"><value type="string"></value></default>
-	  <default param="sdant"><value type="int">0</value></default>
 	</equals>
-	<equals type="bool" value="False">
-	  <default param="antennalist"><value type="string"></value>
-	  <description>antenna info can be used to calculate the primary beam</description></default>
-	  <default param="sdantlist"><value type="string"></value></default>
+	<equals type="string" value="sd">
+	  <!-- <default param="antennalist"><value type="string">aca.tp.cfg</value></default> -->
+	  <default param="sdantlist"><value type="string">aca.tp.cfg</value></default>
 	  <default param="sdant"><value type="int">0</value></default>
+	  <default param="refdate"><value type="string">2012/05/21</value></default>
+	  <default param="hourangle"><value type="string">transit</value></default>
+	  <default param="totaltime"><value>"7200s"</value></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->
@@ -420,9 +432,12 @@ mosaic simulation task:
          or "0.25PB" to use 1/4 of the primary beam FWHM, or 
          "" will use the primary beam HWHM.
     -------------------------------
-    observe -- calculate visibilities from skymodel (which may have been 
-         modified above, (optionally) complist, and $ptgfile (which 
+    obsmode -- observation mode to calculate visibilities from skymodel (which
+         may have been modified above, (optionally) complist, and $ptgfile (which 
          may have been generated above)
+       * this parameter takes two possible values:
+       - interferometer (or i)
+       - singledish (or s)
        * if graphics are on, display the array (like plotants), the uv 
          coverage, the synthesized (dirty) beam, and ephemeris information
        * if simulating from component list, you should specify
@@ -452,9 +467,6 @@ mosaic simulation task:
          experimental, so please contact us with any questions.
        * The calibrator is implemented as a point source clean component 
          with this direction and flux=calflux
-    sdantlist -- antenna position file with antennas to be used for 
-         single dish or total power simulation 
-       * if "", will not produce a total power MS
     sdant -- the index of the antenna in the list to use for total 
          power.  defaults to the first antenna on the list. 
     -------------------------------
