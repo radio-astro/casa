@@ -3195,23 +3195,26 @@ class cleanhelper:
             """ Return the prime factors of the given number. """
             factors = []
             lastresult = n
-    
+            sqlast=int(numpy.sqrt(n))+1
            # 1 pixel must a single dish user
             if n == 1:
                 return [1]
-    
+            c=2
             while 1:
-                if lastresult == 1:
+                if (lastresult == 1) or (c > sqlast):
                     break
-                c = 2
-        
+                sqlast=int(numpy.sqrt(lastresult))+1
                 while 1:
+                    if(c > sqlast):
+                        c=lastresult
+                        break
                     if lastresult % c == 0:
                         break            
                     c += 1
 
                 factors.append(c)
                 lastresult /= c
+            if(factors==[]): factors=[n]
             return  numpy.unique(factors).tolist() if douniq else factors 
         n=size
         if(n%2 != 0):
