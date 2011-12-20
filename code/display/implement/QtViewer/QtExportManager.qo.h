@@ -72,7 +72,7 @@ class QtExportManager : public QWidget, private Ui::QtExportManager {
   void fillFormatBox(int type);
   QColor getDirColor(int);
   QString getOutFileName(QString &filter);
-  QString getOutDirName(QString &filter);
+  QString getOutDirName(QString &);
   QString getOutDirNameOLD(QString &filter);
 
   enum DATATYPE { UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,

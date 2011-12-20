@@ -282,21 +282,21 @@ QString QtExportManager::getOutFileName(QString &filter){
 	return fileName;
 }
 
-QString QtExportManager::getOutDirName(QString &filter){
+QString QtExportManager::getOutDirName(QString &){
 	QString dirName;
 
 	// make the dialog an add its properties
 	QtExportBrowser browseDialog(this, dirLineEdit_->text());
 	int ret = browseDialog.exec();
 	if (ret==QDialog::Accepted){
-		qDebug() << "Got accepted!";
+		//qDebug() << "Got accepted!";
 		dirName=browseDialog.exportFilePath();
 	}
 	else if (ret==QDialog::Rejected){
-		qDebug() << "Got rejected!";
+		//qDebug() << "Got rejected!";
 		dirName.clear();
 	}
-	qDebug() << "dirName: " << dirName;
+	//qDebug() << "dirName: " << dirName;
 	return dirName;
 }
 
@@ -507,76 +507,27 @@ void QtExportManager::expImageInterfaceToFITS(ImageInterface<Float>* img, String
 	allowOverwrite = True;
 	getSectralCoordFlags(img, preferVelocity, opticalVelocity, preferWavelength, preferAirWavelength);
 
-	// get the coo-sys
-	CoordinateSystem cSys= img->coordinates();
-	if ((img->coordinates()).hasQualityAxis())	{
-		try{
+	// export the image to FITS
+	ImageFITSConverter::ImageToFITS(
+			error,
+			*img,
+			outFile,
+			memoryInMB,
+			preferVelocity,
+			opticalVelocity,
+			BITPIX,
+			minPix,
+			maxPix,
+			allowOverwrite,
+			degenerateLast,
+			verbose,
+			stokesLast,
+			preferWavelength,
+			preferAirWavelength,
+			origin
+	);
 
-			Int specAx = (img->coordinates()).findCoordinate(Coordinate::QUALITY);
-			Vector<Int> nPixelQual = (img->coordinates()).pixelAxes(specAx);
-			uInt nAxisQual=nPixelQual(0);
-
-			// build the appropriate slicer
-			IPosition startPos(img->ndim(), 0);
-			IPosition lengthPos=img->shape();
-			lengthPos(nAxisQual) = 1;
-			Slicer subSlicer(startPos, lengthPos, Slicer::endIsLength);
-
-			// create the sub-data
-			SubImage<Float> *subData = new SubImage<Float>(*img, subSlicer, AxesSpecifier(False));
-
-			ImageFITSConverter::ImageToFITS(
-					error,
-					*subData,
-					outFile,
-					memoryInMB,
-					preferVelocity,
-					opticalVelocity,
-					BITPIX,
-					minPix,
-					maxPix,
-					allowOverwrite,
-					degenerateLast,
-					verbose,
-					stokesLast,
-					preferWavelength,
-					preferAirWavelength,
-					origin
-			);
-			if (error.size()>0){
-				QString msg = "Error while exporting image: \""+ QString(error.c_str()) + "\"!";
-				messageFromEM(msg);
-			}
-			delete subData;
-		}catch (AipsError x) {
-			QString msg = "Error: " + QString((x.getMesg()).c_str());
-			messageFromEM(msg);
-		}
-		//error = String("Can not (yet) export quality images!");
-	}
-	else {
-		cout << "preferVelocity: " << preferVelocity << " opticalVelocity: " << opticalVelocity
-				<< " preferWavelength: " << preferWavelength << " preferAirWavelength: " << preferAirWavelength << endl;;
-		ImageFITSConverter::ImageToFITS(
-				error,
-				*img,
-				outFile,
-				memoryInMB,
-				preferVelocity,
-				opticalVelocity,
-				BITPIX,
-				minPix,
-				maxPix,
-				allowOverwrite,
-				degenerateLast,
-				verbose,
-				stokesLast,
-				preferWavelength,
-				preferAirWavelength,
-				origin
-		);
-	}
-
+	//
 	if (error.size()>0){
 		QString msg = "Error while exporting image: \""+ QString(error.c_str()) + "\"!";
 		messageFromEM(msg);
