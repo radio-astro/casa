@@ -80,7 +80,8 @@ class QtDisplayData : public QObject {
   virtual String dataType() const { return dataType_;  }
   virtual String displayType() { return displayType_;  }
 
-  virtual Bool delTmpData() const;
+  //virtual Bool delTmpData() const;
+  virtual void delTmpData() const;
   virtual void setDelTmpData(Bool delTmpData);
 
   String description( ) const;

@@ -484,7 +484,8 @@ String QtDisplayData::description( ) const {
   return name_ + " (" + path_ + ") " + dataType_ + "/" + displayType_;
 }
 
-Bool QtDisplayData::delTmpData() const {
+//Bool QtDisplayData::delTmpData() const {
+void QtDisplayData::delTmpData() const {
 	dd_->getDelTmpData();
 }
 
