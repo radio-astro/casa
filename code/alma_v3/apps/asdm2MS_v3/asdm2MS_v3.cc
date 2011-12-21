@@ -2219,7 +2219,7 @@ int main(int argc, char *argv[]) {
       string scheduleType("ALMA");
       schedule[0] = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
       schedule[1] = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
-      string project("T.B.D.");
+      string project(r->getProjectUID().getEntityId().toString());
       double releaseDate = r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0;
 
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
