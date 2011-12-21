@@ -33,24 +33,6 @@ def simobserve(
 
         # RI TODO for inbright=unchanged, need to scale input image to jy/pix
         # according to actual units in the input image
-    
-        # it was requested to make the user interface "observe" for what 
-        # is sm.observe and sm.predict.
-        # interally the code is clearer if we stick with predict so
-        predict = obsmode.startswith('i') or obsmode.startswith('s')
-        if predict:
-            uvmode = obsmode.startswith('i')
-            if not uvmode: antennalist = sdantlist
-        elif sdantlist != "":
-            if antennalist == "":
-                uvmode = False
-                antennalist = sdantlist
-            else:
-                uvmode = True
-                msg("Both antennalist and sdantlist are defined. sdantlist will be ignored",priority="warn")
-        else:
-            uvmode = True
-        #    uvmode = (sdant < 0) #when flexible default values come available
 
         casalog.origin('simobserve')
         if verbose: casalog.filter(level="DEBUG2")
@@ -67,6 +49,27 @@ def simobserve(
         if verbose: util.verbose = True
         msg = util.msg
     
+        # it was requested to make the user interface "observe" for what 
+        # is sm.observe and sm.predict.
+        # interally the code is clearer if we stick with predict so
+        predict = obsmode.startswith('i') or obsmode.startswith('s')
+        if predict:
+            uvmode = obsmode.startswith('i')
+            if not uvmode: antennalist = sdantlist
+        elif sdantlist != "":
+            if antennalist == "":
+                uvmode = False
+                antennalist = sdantlist
+            else: 
+                #uvmode = True
+                #msg("Both antennalist and sdantlist are defined. sdantlist will be ignored",priority="warn")
+                msg("Both antennalist and sdantlist are defined. Define one of them.",priority="error")
+                return False
+        else:
+            uvmode = True
+        #    uvmode = (sdant < 0) #when flexible default values come available
+
+
         # put output in directory called "project"
         fileroot = project
         if not os.path.exists(fileroot):

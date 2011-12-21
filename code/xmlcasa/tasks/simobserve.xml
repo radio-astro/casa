@@ -157,7 +157,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="obsmode">
       <description>observation mode to simulate [int(interferometer)|sd(singledish)|""(none)]</description>
-      <value></value>
+      <value>int</value>
       <allowed kind="enum">
 	<value type="string"></value>
 	<value type="string">int</value>
@@ -235,7 +235,7 @@ it'll do them for the same amount of time -->
     </param>
     
     <param type="double" name="leakage">
-      <description>cross polarization</description>
+      <description>cross polarization (interferometer only)</description>
       <value>0.0</value>
     </param>    
 
@@ -323,13 +323,6 @@ it'll do them for the same amount of time -->
       </when>
       <!-- **********************************************************  -->
       <when param="obsmode">
-	<equals type="string" value="">
-	  <default param="antennalist"><value type="string"></value>
-	  <description>antenna info can be used to calculate the primary beam</description></default>
-	  <default param="sdantlist"><value type="string"></value>
-	  <description>antenna info can be used to calculate the primary beam</description></default>
-	  <default param="sdant"><value type="int">0</value></default>
-	</equals>
 	<equals type="string" value="int">
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
@@ -345,6 +338,13 @@ it'll do them for the same amount of time -->
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
 	  <default param="hourangle"><value type="string">transit</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
+	</equals>
+	<equals type="string" value="">
+	  <default param="antennalist"><value type="string"></value>
+	  <description>antenna info can be used to calculate the primary beam</description></default>
+	  <default param="sdantlist"><value type="string"></value>
+	  <description>antenna info can be used to calculate the primary beam</description></default>
+	  <default param="sdant"><value type="int">0</value></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->
