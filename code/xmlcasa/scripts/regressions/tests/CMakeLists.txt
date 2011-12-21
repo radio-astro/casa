@@ -49,4 +49,5 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   wproject_regression.py
   orionmos4sim.py
   sim_ppdisk.py
+  sim_testcube.py
 )

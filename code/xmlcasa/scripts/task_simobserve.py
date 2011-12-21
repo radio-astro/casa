@@ -103,12 +103,6 @@ def simobserve(
             if (predict and (not uvmode) and os.path.exists(fileroot+"/"+project+".sd.ms")):
                 msg(fileroot+"/"+project+".sd.ms exists but overwrite=F",priority="error")
                 return False
-            if (image and os.path.exists(fileroot+"/"+project+".model")):
-                msg(fileroot+"/"+project+".model, image, and other imaging products exist but overwrite=F",priority="error")
-                return False
-            if (image and os.path.exists(fileroot+"/"+project+".fidelity")):
-                msg(fileroot+"/"+project+".fidelity and other analysis products exist but overwrite=F",priority="error")
-                return False
     
     
         saveinputs = myf['saveinputs']

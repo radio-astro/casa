@@ -32,7 +32,7 @@ print casa['build']
 print 'I think the data repository is at '+repodir
 #importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename=my_modelimage)
 
-default("simdata")
+default("simobserve")
 project=my_project
 skymodel=my_modelimage
 skymodel=repodir+"/data/regression/simdata/input50pc_672GHz.fits"
@@ -51,13 +51,25 @@ mapsize="0.76arcsec"
 pointingspacing="0.5arcsec"
 integration="10s"
 
-observe=True
+obsmode="int"
 antennalist=repodir+"/data/alma/simmos/alma.out20.cfg"
 refdate="2012/06/21/03:25:00"
 totaltime="1200s"
 
 noise_thermal="tsys-atm"
 user_pwv=0.5
+
+verbose=True
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
+go()
+
+
+taskname="simanalyze"
 
 image=True
 cleanmode="clark"
@@ -70,15 +82,9 @@ weighting="natural"
 
 analyze=True
 
-verbose=True
-if not l.has_key('interactive'): interactive=False
-if interactive:
-    graphics="both"
-else:
-    graphics="file"
-
-inp()
 go()
+
+
 
 endTime = time.time()
 endProc = time.clock()
@@ -106,7 +112,7 @@ reftol   = {'flux':  0.05,
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile    = project + '.' + datestring + '.log'
+outfile    = project + "/" + project + '.' + datestring + '.log'
 logfile    = open(outfile, 'w')
 
 print 'Writing regression output to ' + outfile + "\n"
