@@ -1405,6 +1405,7 @@ void processMain(int		rowNum,
   if (debug) cout << "processMain : exiting" << endl;
 }
 
+/*
 void processMainAndState(ASDM* ds,
 			 int rowNum,
 			 MainRow* r,
@@ -1490,7 +1491,7 @@ void processMainAndState(ASDM* ds,
   vector<float *> uncorrectedData;
   vector<float *> correctedData;
 
-  /* compute the UVW */
+  // compute the UVW
 
   vector<double> uvw(3*vmsDataPtr->v_time.size());
 	  
@@ -1611,6 +1612,7 @@ void processMainAndState(ASDM* ds,
   }
   if (debug) cout << "processMainAndState : exiting" << endl;
 }
+*/
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2712,7 +2714,7 @@ int main(int argc, char *argv[]) {
       string scheduleType("ALMA");
       schedule[0] = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
       schedule[1] = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
-      string project("T.B.D.");
+      string project(r->getProjectUID().getEntityId().toString());
       double releaseDate = r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0;
 
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
@@ -4162,7 +4164,9 @@ int main(int argc, char *argv[]) {
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
-	  processMainAndState(ds, i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  processState(v[i], vmsDataPtr);
+	  processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  // 	  processMainAndState(ds, i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	  info(infostream.str());
 	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
