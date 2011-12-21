@@ -84,16 +84,16 @@ Double wtToSigma(Double wt);
 class MSSelection; // #include <ms/MeasurementSets/MSSelection.h>
 class VBRemapper;
 
-  // These typedefs are necessary because a<b::c> doesn't work.
-  typedef std::vector<uInt> uivector;
-  struct uIntCmp 
-  {
-    bool operator()(const uInt i1, const uInt i2) const 
-    {
-      return i1 < i2;
-    }
-  };
-  typedef std::map<const uInt, uivector, uIntCmp> ui2vmap;
+  // // These typedefs are necessary because a<b::c> doesn't work.
+  // typedef std::vector<uInt> uivector;
+  // struct uIntCmp 
+  // {
+  //   bool operator()(const uInt i1, const uInt i2) const 
+  //   {
+  //     return i1 < i2;
+  //   }
+  // };
+  // typedef std::map<const uInt, uivector, uIntCmp> ui2vmap;
 
 template<class T> class ROArrayColumn;
   Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);

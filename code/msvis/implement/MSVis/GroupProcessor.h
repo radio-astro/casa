@@ -40,8 +40,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //class MeasurementSet;
 
 // <summary>
-// ROGroupProcessor goes through one or more MeasurementSets, feeding VisBuffGroups
-// to a ROGroupWorker.
+// GroupProcessor goes through one or more MeasurementSets, feeding VisBuffGroups
+// to a GroupWorker.
 // </summary>
 // <use visibility=export>
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
@@ -55,24 +55,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// The ROGroupProcessor processes one VisBuffGroup after another without
-// modifying the input MS.
+// The GroupProcessor processes one VisBuffGroup after another.
 // </etymology>
 //
 // <synopsis>
-// ROGroupProcessor handles iteration with by groups of chunklets
+// GroupProcessor handles iteration with by groups of chunklets
 // for one or more MSs.
 // </synopsis>
 //
 // <example>
 // <code>
-// // VBGContinuumSubtractor is a ROGroupWorker.
+// // VBGContinuumSubtractor is a GroupWorker.
 // VBGContinuumSubtractor vbgcs(msOut_p, fitorder_p);
 //
 // // sort is a Block<Int> with the right columns.
 // VisibilityIterator viIn(mssel_p, sort, 0.0);
 //
-// ROGroupProcessor rogp(viIn, &vbgcs);
+// GroupProcessor rogp(viIn, &vbgcs);
 // Bool success = rogp.go();            // Encapsulates the nested for loops.
 // </code>
 // </example>
@@ -95,111 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Another goal is to encapsulate the commonly repeated boilerplate of setting
 // up VisIters and VisBuffers, and then looping over chunks and then chunklets.
 //
-// A separate ROGroupProcessor is needed so the input MS can be declared const.
-// </motivation>
-//
-// <thrown>
-//    <li>
-//    <li>
-// </thrown>
-//
-// <todo asof="2011/11/07">
-// ProgressMeter
-// </todo>
-class ROGroupProcessor
-{
-public:
-  // Construct from a ROVisibilityIterator (provides the data) and a
-  // pointer to a ROGroupWorker (does something with the data).
-  //
-  // vi should be set up (selection, slurping, and sort order specified) before
-  // calling this, but this will call vi.originChunks() and drive the iteration.
-  //
-  ROGroupProcessor(ROVisibilityIterator& vi, ROGroupWorker *gw,
-                   Double groupInterval=0.0);
-
-  // // Copy construct. This calls the assigment operator.
-  // ROGroupProcessor(const ROGroupProcessor & other){
-  //   vi_p = other.vi_p ? other.vi_p->clone(&(this->vi_p)) : NULL;
-  // }
-
-  // Assigment. Any attached VisBuffers are lost in the assign.
-  // ROGroupProcessor & operator=(const ROGroupProcessor &other);
-  // // Destructor
-  // //virtual ~ROGroupProcessor() {};
-  // ~ROGroupProcessor() {};
-  
-  // Members
-
-  // Return and set the "timebin" for each group, in s.
-  Double groupInterval() {return groupInterval_p;}
-  void setGroupInterval(Double gi) {groupInterval_p = abs(gi);}
-
-  // Once it's all set up, you should just have to tell it to go!
-  // Returns true/false depending on whether it thinks it went all the way.
-  Bool go();
-  
-  static String getAipsRcBase() {return "ROGroupProcessor";}
-
-private:
-  void setGroupOrigin();        // Record the beginning of a new group.
-  Bool groupHasMore();          // Returns whether or not more VisBuffers
-                                // should be added to the group.
-
-  // Initialized by c'tor.
-  ROVisibilityIterator vi_p;
-  ROGroupWorker        *gw_p;
-  Double               groupInterval_p;  // >= 0.0, in s.
-
-  // Uninitialized by c'tor.
-  Vector<Double> timev_p;
-  Double groupStart_p;
-};
-
-// <summary>
-// GroupProcessor goes through one or more MeasurementSets, feeding VisBuffGroups
-// to a GroupWorker.
-// </summary>
-// <use visibility=export>
-// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
-// </reviewed>
-// <prerequisite>
-//   <li> <linkto class="ROGroupProcessor">ROGroupProcessor</linkto>
-// </prerequisite>
-//
-// <etymology>
-// The GroupProcessor processes one VisBuffGroup after another, potentially
-// modifying the input MS.
-// </etymology>
-//
-// <synopsis>
-// GroupProcessor provides iteration with various sort orders
-// for one or more MSs.
-// </synopsis>
-//
-// <example>
-// <code>
-// //
-// </code>
-// </example>
-//
-// <motivation>
-// For imaging and calibration you need to access an MS in some consistent
-// order (by field, spectralwindow, time interval etc.). This class provides
-// that access.  Furthermore, some calculations or applications need more than
-// one VisBuffer.  For example, one might want to estimate and subtract the
-// continuum from the visibilities of an MS that has a broad line completely
-// spanning spw 1, but spws 0 and 2 line-free, so the spws should be combined
-// (combine='spw') for the continuum estimation.
-//
-// It is much more efficient if the group of necessary data can be read only
-// once, worked on, and then written.  The CalTable approach is more flexible
-// in that a CalTable can be applied to an MS with a different number or
-// arrangement of rows from the input MS, but per chunk it requires two more
-// reads (the CalTable and the _output_ MS) and an extra write (the CalTable).
-//
-// Another goal is to encapsulate the commonly repeated boilerplate of setting
-// up VisIters and VisBuffers, and then looping over chunks and then chunklets.
+// A separate GroupProcessor is needed so the input MS can be declared const.
 // </motivation>
 //
 // <thrown>
@@ -213,25 +108,51 @@ private:
 class GroupProcessor
 {
 public:
-  // Construct from a VisibilityIterator (provides the data) and a
-  // pointer to a GroupWorker (does something with and possibly to the data).
+  // Construct from a ROVisibilityIterator (provides the data) and a
+  // pointer to a GroupWorker (does something with the data).
   //
   // vi should be set up (selection, slurping, and sort order specified) before
   // calling this, but this will call vi.originChunks() and drive the iteration.
   //
-  GroupProcessor(VisibilityIterator& vi, GroupWorker *gw);
+  GroupProcessor(ROVisibilityIterator& vi, GroupWorkerBase *gw,
+                   Double groupInterval=0.0);
 
+  // // Copy construct. This calls the assigment operator.
+  // GroupProcessor(const GroupProcessor & other){
+  //   vi_p = other.vi_p ? other.vi_p->clone(&(this->vi_p)) : NULL;
+  // }
+
+  // Assigment. Any attached VisBuffers are lost in the assign.
+  // GroupProcessor & operator=(const GroupProcessor &other);
+  // // Destructor
+  // //virtual ~GroupProcessor() {};
+  // ~GroupProcessor() {};
+  
   // Members
+
+  // Return and set the "timebin" for each group, in s.
+  Double groupInterval() {return groupInterval_p;}
+  void setGroupInterval(Double gi) {groupInterval_p = abs(gi);}
 
   // Once it's all set up, you should just have to tell it to go!
   // Returns true/false depending on whether it thinks it went all the way.
   Bool go();
   
-  static String getAipsRcBase() {return "ROGroupProcessor";}
-  Bool isWritable() const {return vi_p.isWritable();}
+  static String getAipsRcBase() {return "GroupProcessor";}
+
 private:
-  VisibilityIterator vi_p;
-  GroupWorker        *gw_p;
+  void setGroupOrigin();        // Record the beginning of a new group.
+  Bool groupHasMore();          // Returns whether or not more VisBuffers
+                                // should be added to the group.
+
+  // Initialized by c'tor.
+  ROVisibilityIterator vi_p;
+  GroupWorkerBase      *gw_p;
+  Double               groupInterval_p;  // >= 0.0, in s.
+
+  // Uninitialized by c'tor.
+  Vector<Double> timev_p;
+  Double groupStart_p;
 };
 
 } //# NAMESPACE CASA - END

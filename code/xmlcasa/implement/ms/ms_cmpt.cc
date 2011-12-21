@@ -51,6 +51,7 @@
 #include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/Partition.h>
+#include <msvis/MSVis/Reweighter.h>
 #include <msvis/MSVis/SubMS.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -2335,7 +2336,7 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
   return rstat;
 }
 
-bool ms::statwt(const std::string& scattertype,  const bool byantenna,
+bool ms::statwt(const bool dorms,                const bool byantenna,
                 const bool sepacs,               const ::casac::variant& fitspw,
                 const ::casac::variant& fitcorr, const std::string& combine,
                 const ::casac::variant& timebin, const int minsamp,
@@ -2343,14 +2344,61 @@ bool ms::statwt(const std::string& scattertype,  const bool byantenna,
                 const ::casac::variant& baseline, const std::string& timerange,
                 const ::casac::variant& scan,    const std::string&      intent,
                 const ::casac::variant& subarray,const std::string& correlation,
-                const std::string&      obs)
+                const std::string&      obs,     const std::string& datacol)
 {
   Bool rstat(False);
 
   try {
     *itsLog << LogOrigin("ms", "statwt");
     *itsLog << LogIO::SEVERE << "Not implemented yet." << LogIO::POST;
-  } catch (AipsError x) {
+
+    Reweighter reweighter(itsMS->tableName(), dorms, minsamp);
+
+    *itsLog << LogIO::NORMAL2 << "Reweighter created" << LogIO::POST;
+    String t_field(m1toBlankCStr_(field));
+    String t_fitspw(m1toBlankCStr_(fitspw));
+    String t_spw(m1toBlankCStr_(spw));
+    if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
+      t_spw = "*";    // at the XML level does not work.
+
+    String t_baseline = toCasaString(baseline);
+    String t_scan    = toCasaString(scan);
+    String t_intent  = toCasaString(intent);
+    String t_obs     = toCasaString(obs);
+    String t_subarray    = toCasaString(subarray);
+    String t_correlation = upcase(correlation);
+
+    if(!reweighter.setmsselect(t_fitspw, t_spw,
+                               t_field, 
+                               t_baseline,                      // antenna
+                               t_scan,
+                               t_subarray,                      // subarray
+                               t_correlation,
+                               t_intent, t_obs)){
+      *itsLog << LogIO::SEVERE
+	      << "Error selecting data."
+	      << LogIO::POST;
+      return false;
+    }
+
+    String t_whichcol(datacol);
+    const String t_combine = downcase(combine);
+
+    reweighter.setFitSpw(t_fitspw);
+    reweighter.setOutSpw(t_spw);
+    if(!reweighter.reweight(t_whichcol, t_combine)){
+      *itsLog << LogIO::SEVERE
+	      << "Error reweighting " << itsMS->tableName()
+	      << LogIO::POST;
+      return false;
+    }
+       
+    *itsLog << LogIO::NORMAL2
+            << itsMS->tableName() << " reweighted"
+            << LogIO::POST;
+    rstat = True;
+  }
+  catch(AipsError x){
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
@@ -2360,14 +2408,14 @@ bool ms::statwt(const std::string& scattertype,  const bool byantenna,
 }
 
 bool
-ms::split(const std::string&      outputms,   const ::casac::variant& field, 
-	  const ::casac::variant& spw,        const std::vector<int>& step,
-          const ::casac::variant& antenna,    const ::casac::variant& timebin,
-          const std::string&      timerange,  const ::casac::variant& scan,
-          const ::casac::variant& uvrange,    const std::string&      taql,
-          const std::string&      whichcol,   const ::casac::variant& tileShape,
-          const ::casac::variant& subarray,   const std::string&      combine,
-          const std::string& correlation,     const std::string&      intent,
+ms::split(const std::string&      outputms,  const ::casac::variant& field, 
+	  const ::casac::variant& spw,       const std::vector<int>& step,
+          const ::casac::variant& antenna,   const ::casac::variant& timebin,
+          const std::string&      timerange, const ::casac::variant& scan,
+          const ::casac::variant& uvrange,   const std::string&      taql,
+          const std::string&      whichcol,  const ::casac::variant& tileShape,
+          const ::casac::variant& subarray,  const std::string&      combine,
+          const std::string& correlation,    const std::string&      intent,
           const std::string&      obs)
 {
   Bool rstat(False);

@@ -1,8 +1,8 @@
 from taskinit import mstool, tbtool, casalog, write_history
 
-def statwt(vis, scattertype, byantenna, sepacs, fitspw, fitcorr, combine,
+def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
            timebin, minsamp, field, spw, antenna, timerange, scan, intent,
-           array, correlation, obs):
+           array, correlation, obs, datacolumn):
     """
     Sets WEIGHT and SIGMA using the scatter of the visibilities.
     """
@@ -21,11 +21,14 @@ def statwt(vis, scattertype, byantenna, sepacs, fitspw, fitcorr, combine,
                 break
         if datacol == 'junk':
             raise ValueError(vis + " does not have a data column")        
+
+        if ':' in spw:
+            casalog.post('The channel selection part of spw will be ignored.', 'WARN')
         
         myms.open(vis, nomodify=False)
-        retval = myms.statwt(scattertype, byantenna, sepacs, fitspw, fitcorr, combine,
+        retval = myms.statwt(dorms, byantenna, sepacs, fitspw, fitcorr, combine,
                              timebin, minsamp, field, spw, antenna, timerange, scan, intent,
-                             array, correlation, obs)
+                             array, correlation, obs, datacolumn)
         myms.close()
     except Exception, e:
         casalog.post("Error setting WEIGHT and SIGMA for %s:" % vis, 'SEVERE')

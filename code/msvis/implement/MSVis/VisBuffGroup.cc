@@ -94,5 +94,34 @@ VisBuffer& VisBuffGroup::operator()(const Int buf)
   return *(VB_p[buf]);
 }
 
+Bool VisBuffGroup::applyChanMask(Cube<Bool>& chanmaskedflags,
+                                 const Vector<Bool> *chanmask,
+                                 const VisBuffer& vb)
+{
+  Bool retval = True;
+  Int chan0 = vb.channel()(0);
+  Int nchan = vb.nChannel();
+
+  if(sum((*chanmask)(Slice(chan0, nchan))) > 0){
+    // There are some channels to mask...
+    Vector<Bool> fr(vb.flagRow());
+    Vector<Bool> fc;
+    Vector<Bool> chm((*chanmask)(Slice(chan0, nchan)));
+    uInt nr = vb.nRow();
+    uInt ncor = vb.nCorr();
+
+    chanmaskedflags = vb.flagCube();
+    for(Int irow = 0; irow < nr; ++irow){
+      for(Int corr = 0; corr < ncor; ++corr){
+        if(!fr[irow]){
+          fc.reference(chanmaskedflags.xzPlane(corr).column(irow));
+          fc = fc || chm;
+        }
+      }
+    }
+  }
+  return retval;
+}
+
 } //# NAMESPACE CASA - END
 

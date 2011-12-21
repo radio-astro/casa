@@ -18,14 +18,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<value></value>
 	</param>
 
-	<param type="string" name="scattertype" ignorecase="True">
-	  <description>How to estimate the scatter</description>
-	  <value>stddev</value>
-	  <allowed kind="enum" ignorecase="True">
-	    <value>IQR</value>
-	    <value>rms</value>
-	    <value>stddev</value>
-	  </allowed>
+	<param type="bool" name="dorms">
+	  <description>Use rms instead of stddev?</description>
+	  <value>False</value>
 	</param>
 
 	<param type="bool" name="byantenna">
@@ -111,6 +106,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<value type="string"></value>
         </param>
 
+	<param type="string" name="datacolumn" ignorecase="True">
+		<description>Which data column to calculate the scatter from</description>
+		<value>corrected</value>
+		<allowed kind="enum" ignorecase="True">
+			<value>data</value>
+			<value>corrected</value>
+			<value>float_data</value>
+			<value>model</value>
+			<!-- <value>lag_data</value> -->
+		</allowed>
+	</param>
+
         <constraints>
 	  <when param="byantenna">
             <equals type="bool" value="True">
@@ -135,13 +142,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         vis -- Name of the measurement set.
                 default: none; example: vis='ngc5921.ms'
 
-        scattertype -- How to estimate the scatter:
-                       'IQR': Interquartile range.  Robust, but in a certain
-                              sense it ignores half the data.
-                       'rms': Root mean square amplitude.  It is the most
-                              accurate estimate if there is NO signal.
-                       'stddev': Sample standard deviation.
-               default: 'stddev'
+        dorms -- Estimate the scatter using rms instead of the standard
+                 deviation?
+
+                 Ideally the visibilities used to estimate the scatter, as
+                 selected by fitspw and fitcorr, should be pure noise.  If you
+                 know for certain that they are, then setting dorms to True
+                 will give the best result.  Otherwise, use False (standard
+                 sample standard deviation).  More robust scatter estimates
+                 like the interquartile range or median absolute deviation from
+                 the median are not offered because they require sorting by
+                 value, which is not possible for complex numbers.
+               default: False
 
         byantenna -- Assume that the noise is factorable by antenna (feed).
                      If false, treat it seperately for each baseline
@@ -187,9 +199,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                             '10' means '10s'
 
         minsamp -- Minimum number of unflagged visibilities for estimating the
-                   scatter.  Baselines for which the weight cannot be estimated
-                   will be flagged.  Note that minsamp is effectively at least
-                   4 for IQR, 1 for rms, and 2 for stddev.
+                   scatter.  Selected visibilities for which the weight cannot
+                   be estimated will be flagged.  Note that minsamp is
+                   effectively at least 2 if dorms is False, and 1 if it is
+                   True.
 
         field -- Select field using field id(s) or field name(s).
                   [run listobs to obtain the list id's or names]
@@ -259,6 +272,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        default '' (all).
         observation -- Select by observation ID(s).
                        default: '' = all
+       datacolumn -- Which data column to calculate the scatter from
+                  default='corrected'; example: datacolumn='data'
+                  Options: 'data', 'corrected', 'model', 'float_data'
+                  note: 'corrected' will fall back to DATA if CORRECTED_DATA
+                        is absent.
+
 </example> 
 </task>
 </casaxml>

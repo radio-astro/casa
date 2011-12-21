@@ -35,14 +35,26 @@
 
 namespace casa {
 
-const asyncio::PrefetchColumns *ROGroupWorker::prefetchColumns() const
+const asyncio::PrefetchColumns *GroupWorkerBase::prefetchColumns() const
 {
   return &prefetchColumns_p;
 }
 
-GroupWorker::GroupWorker(VisibilityIterator& vi) :
-  vi_p(vi)
+GroupWorker::GroupWorker(const ROVisibilityIterator& invi) :
+  invi_p(invi)
 {
+  // Necessary (or at least a good idea) before the invi calls while
+  // initializing outvi_p.
+  invi_p.originChunks();
+  invi_p.origin();
+
+  outvi_p = VisibilityIterator(const_cast<MeasurementSet&>(invi.ms()),
+                               invi.getSortColumns(), False,
+                               invi.getInterval());
+
+  // Consistency.
+  outvi_p.originChunks();
+  outvi_p.origin();
 }
 
 // GroupWorker& GroupWorker::operator=(const GroupWorker &other)

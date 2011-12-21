@@ -40,7 +40,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# forward decl
 class VisBuffGroup;
 
-//<summary>ROGroupWorkers process VisBuffGroups</summary>
+//<summary>Abstract base class for GroupWorkers</summary>
 //
 // <use visibility=export>
 //
@@ -52,7 +52,7 @@ class VisBuffGroup;
 // </prerequisite>
 //
 // <etymology>
-// ROGroupWorker works on VisBuffGroups.
+// A GroupWorker works on VisBuffGroups.
 // </etymology>
 //
 //<synopsis>
@@ -70,20 +70,20 @@ class VisBuffGroup;
 //<todo>
 // <li> 
 //</todo>
-class ROGroupWorker
+class GroupWorkerBase
 {
 public:
-  // Create empty ROGroupWorker you can assign to or attach.
-  ROGroupWorker() {}
+  // Create empty GroupWorkerBase you can assign to or attach.
+  GroupWorkerBase() {}
 
   //// Copy construct
-  //ROGroupWorker(const ROGroupWorker& other) {}
+  //GroupWorkerBase(const GroupWorkerBase& other) {}
 
   // Destructor
-  virtual ~ROGroupWorker() {}
+  virtual ~GroupWorkerBase() {}
 
   //// Assignment
-  //virtual ROGroupWorker& operator=(const ROGroupWorker& gw) {}
+  //virtual GroupWorkerBase& operator=(const GroupWorkerBase& gw) {}
 
   // // Returns which columns need to be prefetched for process to work.
   virtual const asyncio::PrefetchColumns *prefetchColumns() const;
@@ -93,6 +93,36 @@ public:
 
 protected:
   asyncio::PrefetchColumns prefetchColumns_p;
+};
+
+//<summary>ROGroupWorkers process VisBuffGroups without modifying the input MS(es)</summary>
+//
+// <use visibility=export>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+
+// <prerequisite>
+//   <li> <linkto class="VisBuffGroup">VisBuffGroup</linkto>
+//   <li> <linkto class="GroupProcessor">GroupProcessor</linkto>
+// </prerequisite>
+//
+// <etymology>
+// ROGroupWorker works on VisBuffGroups and is readonly W.R.T. the input MS(es).
+// </etymology>
+//
+//<synopsis>
+// This class cannot be directly used, but it defines an interface so that its
+// derived classes may be called by
+// <linkto class="GroupProcessor">GroupProcessor</linkto>.
+//
+// Essentially an alias for GroupWorkerBase, since it is also RO.
+//</synopsis>
+//
+//<todo>
+// <li> 
+//</todo>
+class ROGroupWorker : public GroupWorkerBase
+{
 };
 
 //<summary>A base class for GroupWorkers that can modify their input MS.</summary>
@@ -117,10 +147,10 @@ protected:
 //<todo>
 // <li> 
 //</todo>
-class GroupWorker : public ROGroupWorker 
+class GroupWorker : public GroupWorkerBase
 {
 public:
-  GroupWorker(VisibilityIterator& vi);
+  GroupWorker(const ROVisibilityIterator& invi);
 
   //// Copy construct
   //GroupWorker(const GroupWorker& gw) {}
@@ -131,7 +161,8 @@ public:
   //// Assignment
   //virtual GroupWorker& operator=(const GroupWorker& gw) {}
 protected:
-  VisibilityIterator vi_p;
+  ROVisibilityIterator invi_p;
+  VisibilityIterator   outvi_p;
 private:
   // Disable default c'tor.
   GroupWorker() {}
@@ -159,7 +190,7 @@ private:
 //<todo>
 // <li> 
 //</todo>
-class GroupWriteToNewMS : public ROGroupWorker 
+class GroupWriteToNewMS : public GroupWorkerBase
 {
 public:
   GroupWriteToNewMS(MeasurementSet& outms, MSColumns *msc,

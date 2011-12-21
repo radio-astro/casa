@@ -6896,9 +6896,9 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
 
   VBGContinuumSubtractor vbgcs(msOut_p, msc_p, vbmaps, viIn, fitorder_p,
                                colNames[0], fitspw_p, fitoutspw_p);
-  ROGroupProcessor rogp(viIn, &vbgcs);
+  GroupProcessor gp(viIn, &vbgcs);
 
-  retval = rogp.go();
+  retval = gp.go();
 
   // TODO: Support uvcontsub(3)'s spw parameter by
   //  * filtering the output by fitoutspw_p

@@ -31,9 +31,11 @@ casa_add_library( msvis
   implement/MSVis/MSUVWGenerator.cc
   implement/MSVis/MSUtil.cc
   implement/MSVis/Partition.cc
+  implement/MSVis/Reweighter.cc
   implement/MSVis/SelectAverageSpw.cc
   implement/MSVis/SimpleSubMS.cc
   implement/MSVis/StokesVector.cc
+  implement/MSVis/StatWT.cc
   implement/MSVis/SubMS.cc
   implement/MSVis/UtilJ.cc
   implement/MSVis/VBContinuumSubtractor.cc
