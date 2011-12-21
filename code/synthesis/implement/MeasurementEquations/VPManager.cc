@@ -734,15 +734,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  Bool VPManager::setuserdefault(const Int vplistfield, // (-1 means reset to standard default)
+  Bool VPManager::setuserdefault(const Int vplistfield, // (-1 = reset to standard default, -2 = unset)
 				 const String& telescope,
 				 const String& antennatype){     
 
     LogIO os;
     os <<  LogOrigin("VPManager", "setuserdefault");
 
-    if((vplistfield < -1) || ((Int)(vplist_p.nfields()) <= vplistfield)){
-      os << LogIO::SEVERE << " entry " << vplistfield << " does not exist in VP list."
+    if((vplistfield < -2) || ((Int)(vplist_p.nfields()) <= vplistfield)){
+      os << LogIO::SEVERE << "Vplist number " << vplistfield << " invalid." << endl
+	 << "Valid entries are -2 (none), -1 (default), up to " << vplist_p.nfields()-1
 	 << LogIO::POST;
       return False;
     }
@@ -769,7 +770,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(vplistdefaults_p.isDefined(antennaDesc)){ 
       vplistdefaults_p.remove(antennaDesc);
     }
-    vplistdefaults_p.define(antennaDesc,vplistfield);
+    if(vplistfield>-2){ // (-2 means don't set a default)
+      vplistdefaults_p.define(antennaDesc,vplistfield);
+    }
 
     return True;
 
@@ -788,6 +791,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       vplistfield = vplistdefaults_p(telescope);
     }
     else{
+      vplistfield = -2;
       return False;
     }
 
@@ -812,16 +816,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     anttypes.resize(0);
 
     Int ifield = -2;
-    if(!getuserdefault(ifield,telescope,"")){
-      return False;
-    }
+    Bool isReference = True;
 
+    // check for global response
+    getuserdefault(ifield,telescope,""); 
+    
     if(ifield==-1){ // internally defined PB does not distinguish antenna types
       anttypes.resize(1);
       anttypes(0) = "";
       rval = True;
     }
-    else{ // externally defined PB
+    else if(ifield>=0){ // externally defined PB 
       TableRecord antRec(vplist_p.asRecord(ifield));
       String thename = antRec.asString("name");
       if(thename=="REFERENCE"){ // points to an AntennaResponses table
@@ -862,29 +867,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	}
       }
-      else{ // we have a PBMath response
-	uInt count = 0;
-	for(uInt i=0; i<vplistdefaults_p.ndefined(); i++){
-	  String aDesc = vplistdefaults_p.getKey(i);
-	  if(telescope == telFromAntDesc(aDesc)){
-	    String aType = antTypeFromAntDesc(aDesc);
-	    Bool tFound = False;
-	    for(uInt j=0; j<anttypes.size(); j++){
-	      if(aType==anttypes(j)){ // already in list?
-		tFound = True;
-		break;
-	      }
-	    }
-	    if(!tFound){
-	      rval = True;
-	      count++;
-	      anttypes.resize(count, True);
-	      anttypes(count-1) = aType;
+      else{ // we don't have a reference response
+	isReference = False;
+      }
+    }
+
+    if(ifield==-2 or !isReference){ // no global response or reference
+      uInt count = 0;
+      for(uInt i=0; i<vplistdefaults_p.ndefined(); i++){
+	String aDesc = vplistdefaults_p.getKey(i);
+	if(telescope == telFromAntDesc(aDesc)){
+	  String aType = antTypeFromAntDesc(aDesc);
+	  Bool tFound = False;
+	  for(uInt j=0; j<anttypes.size(); j++){
+	    if(aType==anttypes(j)){ // already in list?
+	      tFound = True;
+	      break;
 	    }
 	  }
-	} // end for i
-      }
-    } // endif ifield==-1
+	  if(!tFound){
+	    rval = True;
+	    count++;
+	    anttypes.resize(count, True);
+	    anttypes(count-1) = aType;
+	  }
+	}
+      } // end for i
+    } 
 
     return rval;
 

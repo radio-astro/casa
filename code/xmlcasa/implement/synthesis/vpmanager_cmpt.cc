@@ -493,8 +493,10 @@ int vpmanager::getuserdefault(const std::string& telescope,
     throw(AipsError("Error in vp::getuserdefault()."));
   }
   else if(!itsVPM->getuserdefault(rval, telescope, anttype)){
-    itsVPM->release();
-    throw(AipsError("Error in vp::getuserdefault()."));
+    *itsLog << LogIO::WARN << "No default response for telescope \""
+	    << telescope << "\", antenna type \"" << anttype << "\"" 
+	    << LogIO::POST;
+    rval = -2;
   }
   itsVPM->release();
   return rval;
