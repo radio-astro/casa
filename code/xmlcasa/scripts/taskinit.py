@@ -11,7 +11,7 @@ def __taskinit_setlogfile( logger ) :
 	#### needed to allow pushing of the global 'casa' state dictionary
 	####
 	a=inspect.stack()
-	stacklevel=0    
+	stacklevel=0
 	for k in range(len(a)):
 		if a[k][1] == "<string>":
 			stacklevel=k
