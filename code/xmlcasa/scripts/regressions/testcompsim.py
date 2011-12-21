@@ -33,7 +33,12 @@ totaltime          =  "7200s"
 antennalist        =  "alma.cycle0.extended.cfg"
 thermalnoise       =  ""
 
-graphics           =  "both"
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
 verbose            =  True
 overwrite          =  True
 
@@ -50,7 +55,13 @@ imdirection        =  direction
 niter              =  500
 threshold          =  "0.1mJy"
 analyze            =  True
-graphics           =  "both"
+
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
 verbose            =  True
 overwrite          =  True
 

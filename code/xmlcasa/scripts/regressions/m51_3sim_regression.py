@@ -197,6 +197,12 @@ showpsf = False
 showresidual = False
 showconvolved = True
 
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
 inp()
 go()
 
@@ -221,6 +227,12 @@ analyze = True
 showpsf = False
 showresidual = False
 showconvolved = True
+
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
 
 inp()
 go()
