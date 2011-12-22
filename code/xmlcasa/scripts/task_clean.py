@@ -443,9 +443,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             optsize=[0,0]
             tmpsize=imsizes if type(imsizes[0])==list else [imsizes]
             for ksize in range(len(tmpsize)):
+                nksize=len(tmpsize[ksize])
                 optsize[0]=cleanhelper.getOptimumSize(tmpsize[ksize][0])
-                optsize[1]=cleanhelper.getOptimumSize(tmpsize[ksize][1])
-                if((optsize[0] != tmpsize[ksize][0]) or (optsize[1] != tmpsize[ksize][1])):
+                if nksize==1: # imsize can be a single element 
+                    optsize[1]=optsize[0]
+                else:
+                    optsize[1]=cleanhelper.getOptimumSize(tmpsize[ksize][1])
+                if((optsize[0] != tmpsize[ksize][0]) or (nksize!=1 and optsize[1] != tmpsize[ksize][1])):
                        raise ValueError, str(tmpsize[ksize])+' is not an acceptable imagesize, try '+str(optsize) 
            #
            # Moved getAlgorithm() to here so that multifield is set using outlier file.
