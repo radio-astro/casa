@@ -66,7 +66,11 @@ if os.fork( ) == 0 :
 ## ensure that we're the process group leader
 ## of all processes that we fork...
 ##
-os.setpgid(0,0)
+try:
+    os.setpgid(0,0)
+except OSError, e:
+    print "setgpid( ) failed: " + e.strerror
+    print "                   processes may be left dangling..."
 
 
 ##
