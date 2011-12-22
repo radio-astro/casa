@@ -368,6 +368,39 @@ Bool Reweighter::reweight(String& colname, const String& combine)
     GroupProcessor gp(viIn, &statwt);
 
     retval = gp.go();
+
+    // There should be now be statistically determined sigmas and weights for
+    // each selected row.  If smoothing is wanted, i.e. convolving by a
+    // gaussian in time (taking the ends into account), do it now with a pass
+    // over just WEIGHT, SIGMA, and the flags.
+    //
+    // In theory two passes is a little less accurate than gathering all the
+    // data for a time window and then calculating the variance, but I show
+    // here that the loss of accuracy is very small at worst, and in practice
+    // two passes is much better.
+    //
+    // The variance of \sigma^2 is \sigma^4 (\frac{2}{n - 1} + \frac{k}{n}),
+    // where the kurtosis k is 0 for a normal distribution.  It will be dropped
+    // from here on since it does not affect the argument.
+    //
+    // So for a sample of mn visibilities (gather up all the data for a time
+    // window before calculating the variances), the variance of \sigma^2 is
+    // 2 \sigma^4 / (mn - 1).
+    //
+    // If the variance of the time window is instead calculated from the
+    // variances of m groups of size n, the variance of the variance is
+    // 2 \sigma^4 / [m (n - 1)]
+    //
+    // Thus there is a difference, but a small one if n >> 1 (i.e. a reasonable
+    // number of channels).  More importantly, the m groups of n method
+    //  * is robust against the n groups having different means.
+    //    The only likely way that all the groups would have exactly the same
+    //    mean is if the mean is 0, in which case rms should be used instead of
+    //    stddev and the relevant sample size is simply mn no matter how
+    //    they're grouped.  (I think; untested)
+    //  * m groups of n is a lot more flexible for programming and needs less
+    //    memory.  It does mean some extra I/O for another pass, but it's only
+    //    over WEIGHT, SIGMA, FLAG_ROW, and unfortunately FLAG.
     
     return True;
   }

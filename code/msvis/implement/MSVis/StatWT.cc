@@ -191,19 +191,40 @@ Bool StatWT::process(VisBuffGroup& vbg)
     for(Int corr = 0; corr < maxNCorr; ++corr)
       it->second[corr] /= ns[it->first][corr] - 1;
 
+  // TODO
+  // if(byantenna_p){
+  // // The formula for the variance of antenna k is
+  // // \sigma_k^2 = \frac{1}{n - 1} \sum_{i \notequal k} \left(
+  // // \sigma_{ik}^2 \frac{\sum_{j \notequal i,k}^{k - 1} \sigma_{jk}^2}
+  // // {\sum_{j \notequal i,k} \sigma_{ij}^2}\right)
+  // // where \sigma_{ij}^2 is the already calculated variance of baseline ij.
+  //
+  // // So, get the antenna based variances, take their sqrts \sigma_k, and
+  // // update variances to \sigma_i \sigma_j, taking sepacs_p into account all
+  // // along.
+  // }
+
   //uInt oldrowsdone = rowsdone_p;
   for(uInt bufnum = 0; bufnum < nvbs; ++bufnum){
     uInt spw = vbg(bufnum).spectralWindow();
 
+    rowsdone_p += vbg(bufnum).nRow();
     if(outspws_p.find(spw) != outspws_p.end()){
       worked &= apply_variances(vbg(bufnum), ns, variances, maxAnt);      
-      rowsdone_p += vbg(bufnum).nRow();
       //cerr << "Wrote out row IDs " << oldrowsdone << " - " << rowsdone_p - 1 << ",";
     }
     //else
     //  cerr << "No output for";
     //cerr << " spw " << spw << endl;
     //oldrowsdone = rowsdone_p;
+
+    // Catch outvi_p up with invi_p.
+    if(vbg.chunkEnd(bufnum) && outvi_p.moreChunks()){
+      outvi_p.nextChunk();
+      outvi_p.origin();
+    }
+    else if(outvi_p.more())
+      ++outvi_p;
   }
   
   return worked;
@@ -302,6 +323,13 @@ Bool StatWT::apply_variances(VisBuffer& vb,
         vb.flagRow()[r] = true;
     }
   }
+  
+  // argh
+  // outvi_p.setFlagCube(vb.flagCube());
+  outvi_p.setFlag(vb.flag());
+
+  outvi_p.setSigmaMat(vb.sigmaMat());
+  outvi_p.setWeightMat(vb.weightMat());
   return retval;
 }
 
