@@ -1652,7 +1652,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
                 Int nchan = lastChan - inpChan + 1;
                 os << LogIO::WARN
-                   << "The last output channel of spw " << k
+                   << "The last output channel of spw " << spw_p[k]
                    << " has only " << nchan << " input channel";
                 if(nchan > 1)
                   os << "s.";
