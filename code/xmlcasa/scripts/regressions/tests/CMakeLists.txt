@@ -48,6 +48,9 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   wideband.py
   wproject_regression.py
   orionmos4sim.py
+  sim_m51c.py
+  sim_m51tp.py
   sim_ppdisk.py
+  sim_testcomp.py
   sim_testcube.py
 )
