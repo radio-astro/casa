@@ -46,7 +46,6 @@ def tflagger(vis,
              maxabs,
              spwchan,
              spwcorr,
-             extend,    # extend the private flags of any agent
              extendpols,
              growtime,
              growfreq,
@@ -126,11 +125,6 @@ def tflagger(vis,
         if mode == '':
             mode = 'manualflag'
 
-        if (extend == True and (mode == 'unflag' or mode == 'summary' or mode == 'extendflags')):
-            # It was probably a mistake of the user, reset extend
-            casalog.post('Parameter extend will be reset to False to run together with mode=%s'%mode, 'WARN')
-            extend = False
-
         if (writeflags == True and mode == 'summary'):
             # It was probably a mistake of the user, reset writeflags
             casalog.post('Parameter writeflags will be reset to False to run together with mode=%s'%mode, 'WARN')
@@ -140,32 +134,15 @@ def tflagger(vis,
         sel_pars = ''
         sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
-                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
-                    ' extend='+str(extend)
+                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
 
         # Setup global parameters
         agent_pars = {}
 
         # Add the global parameters to the dictionary of agent's parameters            
         agent_pars['mode'] = mode
-        agent_pars['extend'] = extend
         agent_pars['datadisplay'] = datadisplay
         agent_pars['writeflags'] = writeflags
-
-        # Get extend sub-parameters
-        if (extend == True and mode != 'unflag' and mode != 'summary' and mode != 'extendflags'):
-            
-            agent_pars['extendpols'] = extendpols
-            agent_pars['growtime'] = growtime
-            agent_pars['growfreq'] = growfreq
-            agent_pars['growaround'] = growaround
-            agent_pars['flagneartime'] = flagneartime
-            agent_pars['flagnearfreq'] = flagnearfreq
-            
-            sel_pars = sel_pars+' extendpols='+str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
-                       str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
-                       ' flagnearfreq='+str(flagnearfreq)
-        
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -241,14 +218,14 @@ def tflagger(vis,
                       ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
                       ' halfwin='+str(halfwin)
 
-        elif mode == 'extendflags':
+        elif mode == 'extend':
             agent_pars['extendpols'] = extendpols
             agent_pars['growtime'] = growtime
             agent_pars['growfreq'] = growfreq
             agent_pars['growaround'] = growaround
             agent_pars['flagneartime'] = flagneartime
             agent_pars['flagnearfreq'] = flagnearfreq
-            casalog.post('Extendflags mode is active')
+            casalog.post('Extend mode is active')
             
             sel_pars = sel_pars+' extendpols='+str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
                        str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
