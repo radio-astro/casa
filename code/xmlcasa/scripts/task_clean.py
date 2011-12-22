@@ -1,5 +1,6 @@
 import os
 import shutil
+import numpy
 from taskinit import *
 from cleanhelper import *
 im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
@@ -18,7 +19,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #Python script
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
-
     #######################################################################  
     #
     # start of the big cube treatment
@@ -434,9 +434,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         if (imageids.count(imname)!=1):
                            raise Exception, "Duplicate entry for imagename=%s" % imname 
             else:
-                 imsizes=imsize
-                 phasecenters=phasecenter
-                 imageids=imagename
+                
+                imsizes=[imsize[0], imsize[0]] if ((len(imsize)==1) and numpy.isscalar(imsize[0])) else imsize 
+                phasecenters=phasecenter
+                imageids=imagename
             casalog.post("imsizes="+str(imsizes)+" imageids="+str(imageids), 'DEBUG1')
 
             ###test image sizes
