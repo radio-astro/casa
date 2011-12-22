@@ -65,11 +65,11 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 		{
 			parameter = String(argv[i]);
 			value = String(argv[i+1]);
-			if (parameter == String("-clipcolumn"))
+			if (parameter == String("-datacolumn"))
 			{
 				agent_record->define("datacolumn", value);
 			}
-			else if (parameter == String("-clipexpr"))
+			else if (parameter == String("-expression"))
 			{
 				agent_record->define("expression", value);
 			}
@@ -101,23 +101,7 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 		{
 			parameter = String(argv[i]);
 			value = String(argv[i+1]);
-			if (parameter == String("-minrel"))
-			{
-				agent_record->define("minrel", value);
-			}
-			else if (parameter == String("-maxrel"))
-			{
-				agent_record->define("maxrel", value);
-			}
-			else if (parameter == String("-minabs"))
-			{
-				agent_record->define("minabs", value);
-			}
-			else if (parameter == String("-maxabs"))
-			{
-				agent_record->define("maxabs", value);
-			}
-			else if (parameter == String("-spwchan"))
+			if (parameter == String("-spwchan"))
 			{
 				bool spwchan = casa::Bool(atoi(argv[i+1]));
 				agent_record->define("spwchan", spwchan);
@@ -168,6 +152,10 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 			{
 				agent_record->define("usewindowstats", value);
 			}
+			else if (parameter == String("-expression"))
+			{
+				agent_record->define("expression", value);
+			}
 		}
 	}
 	else if (mode == "quack"){
@@ -211,12 +199,61 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 			}
 		}
 	}
+	else if (mode == "extend"){
+		agent_record->define("mode", "extend");
+
+		for (unsigned short i=0; i<argc-1; i++)
+		{
+			parameter = String(argv[i]);
+			value = string(argv[i+1]);
+			Bool extendpols,growaround,flagneartime,flagnearfreq;
+			Double growtime,growfreq;
+
+			if (parameter == String("-extendpols"))
+			{
+				extendpols = casa::Bool(atoi(value.c_str()));
+				agent_record->define ("extendpols", extendpols);
+				cout << "extendpols is: " << extendpols << endl;
+			}
+			else if (parameter == String("-growaround"))
+			{
+				growaround = casa::Bool(atoi(value.c_str()));
+				agent_record->define ("growaround", growaround);
+				cout << "growaround is: " << growaround << endl;
+			}
+			else if (parameter == String("-flagneartime"))
+			{
+				flagneartime = casa::Bool(atoi(value.c_str()));
+				agent_record->define ("flagneartime", flagneartime);
+				cout << "flagneartime is: " << flagneartime << endl;
+			}
+			else if (parameter == String("-flagnearfreq"))
+			{
+				flagnearfreq = casa::Bool(atoi(value.c_str()));
+				agent_record->define ("flagnearfreq", flagnearfreq);
+				cout << "flagnearfreq is: " << flagnearfreq << endl;
+			}
+			else if (parameter == String("-growtime"))
+			{
+				growtime = casa::Bool(atof(value.c_str()));
+				agent_record->define ("growtime", growtime);
+				cout << "growtime is: " << growtime << endl;
+			}
+			else if (parameter == String("-growfreq"))
+			{
+				growfreq = casa::Bool(atof(value.c_str()));
+				agent_record->define ("growfreq", growfreq);
+				cout << "growfreq is: " << growfreq << endl;
+			}
+			}
+
+	}
 
 	if (clipmin_set && clipmax_set)
 	{
 		casa::IPosition size(1);
 		size[0]=2;
-		casa::Array<Float> cliprange(size);
+		casa::Array<Double> cliprange(size);
 		cliprange[0] = clipmin;
 		cliprange[1] = clipmax;
 		agent_record->define("clipminmax",cliprange);
@@ -253,11 +290,11 @@ int main(int argc, char **argv)
 //	}
 
 	if (argc < 2) {
-		cout << "usage: tTestFlagger.cc -msname ngc5921.ms <-...>" << endl;
+		cout << "usage: tTestFlagger.cc -targetFile ngc5921.ms <-...>" << endl;
 		cout << "options:"<<endl;
 		cout << "ntime, observation, array, scan, field, antenna, feed, intent, spw, timerange, "
 				"correlation, uvrange" << endl;
-		cout << "mode (manualflag,clip,quack,tfcrop,shadow,elevation,unflag,summary)" << endl;
+		cout << "mode (manualflag,clip,quack,tfcrop,shadow,elevation,extend,unflag,summary)" << endl;
 
 		exit (0);
 	}
@@ -284,7 +321,7 @@ int main(int argc, char **argv)
 		parameter = String(argv[i]);
 		value = String(argv[i+1]);
 
-		if (parameter == String("-msname"))
+		if (parameter == String("-targetFile"))
 		{
 			msname = value;
 			if (logLevel >= 3) cout << "MS is: " << msname << endl;
@@ -367,8 +404,7 @@ int main(int argc, char **argv)
 		else if (parameter == String("-correlation"))
 		{
 			correlation = value;
-			record.define ("correlation", casa::String(value));
-			if (logLevel >= 3) cout << "Correlation selection is: " << correlation << endl;
+			// do not add here.
 		}
 		else if (parameter == String("-observation"))
 		{
@@ -388,12 +424,12 @@ int main(int argc, char **argv)
 			record.define ("feed", casa::String(value));
 			if (logLevel >= 3) cout << "Feed selection is: " << feed << endl;
 		}
-		else if (parameter == String("-flagbackup"))
+/*		else if (parameter == String("-flagbackup"))
 		{
 			backup = casa::Bool(atoi(argv[i+1]));
 			record.define ("flagbackup", backup);
 			if (logLevel >= 3) cout << "Flagbackup is: " << backup << endl;
-		}
+		}*/
 	}
 
 	// Parse the data selection parameters
@@ -404,7 +440,9 @@ int main(int argc, char **argv)
 
 	// Create a record with the agent's parameters
 	Record arecord;
-	String mode = get_agent_parameters(argc, argv, &record);
+	arecord.define ("correlation", correlation);
+	if (logLevel >= 3) cout << "Correlation selection is: " << correlation << endl;
+	String mode = get_agent_parameters(argc, argv, &arecord);
 	if (mode == "unknown")
 	{
 		cout << "ERROR: Unknown mode requested " << endl;
@@ -416,18 +454,14 @@ int main(int argc, char **argv)
 	{
 		cout << "Parameters of mode " << mode << " are" << endl;
 		ostringstream os;
-		record.print(os);
+		arecord.print(os);
 		String str(os.str());
 		cout << str << endl;
 	}
 
 
-//	if (mode == "clip"){
-		// get clip parameters
-//	}
-	// TODO: do other modes
 	// Parse agent data selection parameters
-	if (not tf->parseAgentParameters(record)) {
+	if (not tf->parseAgentParameters(arecord)) {
 		cout << "ERROR: Failed to parse agent parameters" << endl;
 	}
 
