@@ -249,7 +249,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	}
 
 	// Extension
-	if (mode.compare("extension")==0)
+	if (mode.compare("extend")==0)
 	{
 		FlagAgentExtension* agent = new FlagAgentExtension(dh,config,writePrivateFlags);
 		return agent;
