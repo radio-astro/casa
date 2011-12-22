@@ -800,7 +800,6 @@ class cleanhelper:
 		    if maskobject_tmp[maskid].count(txtf) and oldfmts[txtf]:
 			maskobject_tmp[maskid].remove(txtf)
 		updatedmaskobject = maskobject_tmp
-
 	    else:
 		updatedmaskobject = maskobject 
 	# adjust no. of elements of maskoject list with []
@@ -1756,6 +1755,9 @@ class cleanhelper:
         oldformat=False
         nchar= len(keywd)
         content0=''
+        # set this to True to disallow old outlier file
+        noOldOutlierFileSupport=False;
+
         while 1:
             try:
                 line=f.readline()
@@ -1770,11 +1772,15 @@ class cleanhelper:
                 break
         f.close()
         if oldformat:
-            self._casalog.post("This file format is deprecated. Use of a new format is encouraged.","WARN")
-            # do old to new data format conversion....(watch out for different order of return parameters...)
-            (imsizes,phasecenters,imageids)=self.readoutlier(outlierfile)
-            for i in range(len(imageids)):
-                modelimages.append('')
+            if noOldOutlierFileSupport:
+                self._casalog.post("You are using the old outlier file format no longer supported. Please use the new format (see help).","SEVERE")
+                raise Exception
+            else:
+                self._casalog.post("This file format is deprecated. Use of a new format is encouraged.","WARN")
+                # do old to new data format conversion....(watch out for different order of return parameters...)
+                (imsizes,phasecenters,imageids)=self.readoutlier(outlierfile)
+                for i in range(len(imageids)):
+                    modelimages.append('')
         #f.seek(0)
         #content0 = f.read()
         #f.close()
