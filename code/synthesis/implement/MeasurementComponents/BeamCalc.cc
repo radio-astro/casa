@@ -76,10 +76,13 @@ namespace casa{
 				       const String& otherAntRayPath){
     
     Unit uS("s");
+    Bool verbose = False;
+
 
     if(obsName==obsName_p 
        && antType==antType_p 
        && obsTime.get(uS).getValue()==obsTime_p.get(uS).getValue()
+       && otherAntRayPath.empty()
        ){
       return; // nothing to do (assuming the databases haven't changed)
     }
@@ -251,7 +254,7 @@ namespace casa{
 	BeamCalcGeometries_p[i].ntaperpoly = antParTab.getCell("NTAPERPOLY", i).asInt();
 	BeamCalcGeometries_p[i].astigm_0 = antParTab.getCell("ASTIGM_0", i).asDouble();
 	BeamCalcGeometries_p[i].astigm_45 = antParTab.getCell("ASTIGM_45", i).asDouble();
-	if(!otherAntRayPath.empty()){
+	if(verbose){
 	  cout << "i name bandMinFreq_p bandMaxFreq_p sub_h feedpos feedpos feedpos subangle legwidth legfoot legapex"
 	       << " Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly astigm0 astigm45" << endl; 
 	  cout << i << " " << BeamCalcGeometries_p[i].name << " " << bandMinFreq_p[i] << " " << bandMaxFreq_p[i] 
