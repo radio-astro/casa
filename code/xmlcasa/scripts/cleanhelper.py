@@ -491,183 +491,8 @@ class cleanhelper:
                     ia.set(pixels=1.0)
                     ia.done(verbose=False)
 
-    def makemultifieldmask2(self, maskobject='',slice=-1):
 
-        """
-        (deprecated - will be removed for 3.4)
-        New makemultifieldmask to accomodate different kinds of masks supported
-        in clean with flanking fields (added by TT)
-        required: definemultiimages has already run so that imagelist is defined 
-        """
-        if((len(self.maskimages)==(len(self.imagelist)))):
-            if(not self.maskimages.has_key(self.imagelist[0])):
-                self.maskimages={}
-        else:
-            self.maskimages={}
-
-        # clean up temp mask image 
-        if os.path.exists('__tmp_mask'):
-           shutil.rmtree('__tmp_mask')
- 
-        #print "makemultifieldmask2: intial self.imagelist=",self.imagelist
-        if (not hasattr(maskobject, '__len__')) \
-           or (len(maskobject) == 0) or (maskobject == ['']):
-            return
-        # determine number of input elements
-        if (type(maskobject)==str):
-            maskobject=[maskobject]
-        if(type(maskobject) != list):
-            ##don't know what to do with this
-            raise TypeError, 'Dont know how to deal with mask object'
-        #if(type(maskobject[0])==int or type(maskobject[0])==float):
-        if(numpy.issubdtype(type(maskobject[0]),int) or numpy.issubdtype(type(maskobject[0]),float)):
-            maskobject=[maskobject] 
-        if(type(maskobject[0][0])==list):
-            #if(type(maskobject[0][0][0])!=int and type(maskobject[0][0][0])!=float):        
-            if not (numpy.issubdtype(type(maskobject[0][0][0]),int) or \
-                    numpy.issubdtype(type(maskobject[0][0][0]),float)):        
-                maskobject=maskobject[0]
-                    
-        # define maskimages
-        if(len(self.maskimages)==0):
-            for k in range(len(self.imageids)):
-                if(not self.maskimages.has_key(self.imagelist[k])):
-                    self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
-        # initialize maskimages
-        # --- use outframe or dataframe for mask creation
-        if self.usespecframe=='': 
-            maskframe=self.dataspecframe
-        else:
-            maskframe=self.usespecframe
-        for k in range(len(self.imagelist)):
-            if(not (os.path.exists(self.maskimages[self.imagelist[k]]))):
-                ia.fromimage(outfile=self.maskimages[self.imagelist[k]],
-                        infile=self.imagelist[k])
-                ia.open(self.maskimages[self.imagelist[k]])
-                ia.set(pixels=0.0)
-                mcsys=ia.coordsys().torecord()
-                mcsys['spectral2']['conversion']['system']=maskframe
-                ia.setcoordsys(mcsys)
-                ia.done(verbose=False)
-
-        # assume a file name list for each field
-        masktext=[]
-        # take out extra []'s
-        maskobject=self.flatten(maskobject)
-        for maskid in range(len(maskobject)):
-            masklist=[]
-            tablerecord=[]
-            if(type(maskobject[maskid]))==str:
-                if(maskobject[maskid])=='':
-                    #skipped
-                    continue
-                else:
-                    maskobject[maskid]=[maskobject[maskid]]
-            for masklets in maskobject[maskid]:
-                #if(type(masklets)==int):
-                if(numpy.issubdtype(type(masklets),numpy.int)):
-                    maskobject_tmp = convert_numpydtype(maskobject[maskid])
-                    masklist.append(maskobject[maskid])
-                if(type(masklets)==str):
-                    if(masklets==''):
-                        #skip
-                        continue
-                    if(os.path.exists(masklets)):
-                        if(commands.getoutput('file '+masklets).count('directory')):
-                            if(self.maskimages[self.imagelist[maskid]] == masklets):
-                                self.maskimages[self.imagelist[maskid]]=masklets
-                            else:
-                                # make a copy
-                                ia.open(self.imagelist[maskid])
-                                self.csys=ia.coordsys().torecord()
-                                shp = ia.shape()
-                                ia.done(verbose=False)
-                                if slice>-1:
-                                    self.getchanimage(masklets,masklets+'chanim',slice)
-                                    self.copymaskimage(masklets+'chanim',shp,'__tmp_mask')
-                                    ia.removefile(maskets+'chanim')
-                                else:
-                                    self.copymaskimage(masklets, shp, '__tmp_mask')
-                                #self.copymaskimage(masklets,shp,'__tmp_mask')
-                                ia.open(self.maskimages[self.imagelist[maskid]])
-                                ia.calc(pixels='+ __tmp_mask')
-                                ia.done(verbose=False)
-                                ia.removefile('__tmp_mask')
-                        # had a problem identifying text file conating 'C' as a text file
-                        # on OSX (on OSX, file command returns 'FORTRAN program') 
-                        #elif(commands.getoutput('file '+masklets).count('text')
-                        elif(commands.getoutput('file '+masklets).split(':')[-1].count('data')):
-                            tablerecord.append(masklets)
-                        else:
-                            masktext.append(masklets)
-                        #else:
-                        #    tablerecord.append(masklets)
-                            #raise TypeError, 'Can only read text mask files or mask images'
-                    else:
-                        raise TypeError, masklets+' seems to be non-existant'
-
-                if(type(masklets)==list):
-                    masklist.append(masklets)
-            # initialize mask
-            #if (len(self.maskimages) > 0):
-            #    if(not (os.path.exists(self.maskimages[self.imagelist[maskid]]))):
-            #        ia.fromimage(outfile=self.maskimages[self.imagelist[maskid]],
-            #                     infile=self.imagelist[maskid])
-            #        ia.open(self.maskimages[self.imagelist[maskid]])
-            #        ia.set(pixels=0.0)
-            #        ia.done(verbose=False)
-            #        print "INITIALIZED: ",self.maskimages[self.imagelist[maskid]]
-
-            # handle boxes in lists
-            if(len(masklist) > 0):
-		try:
-                   self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], boxes=masklist)
-		except:
-		   raise Exception, 'Box-file format not recognised. Please use <index> <xmin> <ymin> <xmax> <ymax>'
-            if(len(tablerecord) > 0 ):
-                reg={}
-                try:
-                   for tabl in tablerecord:
-                      reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
-                except:
-                   raise Exception,'Region-file format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line';
-                if(len(reg)==1):
-                    reg=reg[reg.keys()[0]]
-                else:
-                    reg=rg.makeunion(reg)
-                self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], region=reg)
-        #boxfile handling done all at once
-        if(len(masktext) > 0):
-            # fill for all fields in boxfiles
-            circles, boxes=self.readmultifieldboxfile(masktext)
-            #print 'circles : ', circles, '    boxes : ', boxes;
-            #print 'imageids : ', self.imageids
-            #print 'imagelist :', self.imagelist
-            #print 'maskimages : ', self.maskimages;
-            # doit for all fields
-            for k in range(len(self.imageids)):
-                if(circles.has_key(self.imageids[k]) and boxes.has_key(self.imageids[k])):
-                    self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
-                                              boxes=boxes[self.imageids[k]],
-                                              circles=circles[self.imageids[k]])
-                elif(circles.has_key(self.imageids[k])):
-                    self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
-                                              circles=circles[self.imageids[k]])
-                elif(boxes.has_key(self.imageids[k])):
-                    self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
-                                                   boxes=boxes[self.imageids[k]])
-                    #print 'put ', boxes[self.imageids[k]] , ' into ', self.maskimages[self.imagelist[k]];
-        # set unused mask images to 1 for a whole field
-        for key in self.maskimages:
-            if(os.path.exists(self.maskimages[key])):
-                ia.open(self.maskimages[key])
-                fsum=ia.statistics()['sum']
-                if(fsum[0]==0.0):
-                    #ia.set(pixels=1.0)
-                    # make an empty mask
-                    ia.set(pixels=0.0)
-
-    def makemultifieldmask3(self, maskobject='',slice=-1, newformat=True, interactive=False):
+    def makemultifieldmask2(self, maskobject='',slice=-1, newformat=True, interactive=False):
 
         """
         Create mask images for multiple fields (flanking fields) 
@@ -695,11 +520,12 @@ class cleanhelper:
           mask box specification for backward compartibility. But it is planned to
           be removed for 3.4.
 
-        * This is a refactored version of the previous one, makemultifieldmask2
-          and  calls makemaskimage() for each field and will be renamed to makemultifieldmask2 (
-          makemultifieldmask) in 3.4.
+        * This is a refactored version of the previous makemultifieldmask2
+          and  calls makemaskimage() for each field. 
+          this was called makemultifieldmask3 in CASA 3.3 release but now renamed 
+          makemultifieldmask2 as the previous makemultifieldmask2 was removed.
         """
-        #print "Inside makemultifieldmask3"
+        #print "Inside makemultifieldmask2"
         if((len(self.maskimages)==(len(self.imagelist)))):
             if(not self.maskimages.has_key(self.imagelist[0])):
                 self.maskimages=odict()

@@ -83,6 +83,7 @@ class cleanhelper_test(unittest.TestCase):
         refvals= ia.getchunk()
         ia.close()
         diff = refvals - maskvals
+        #print "image diff by pix values=", diff
         return (numpy.all(diff==0)) 
  
     def testDefineimages(self):
@@ -163,12 +164,13 @@ class cleanhelper_test(unittest.TestCase):
 
  
     def testMakemultifieldmaskbox(self):
-        """[Cleanhelper makemultfieldmask3 test: boxes given in argument]"""
+        """[Cleanhelper (new)makemultfieldmask2 test: boxes given in argument]"""
+        # makemultifieldmask3 was renamed to makemultfieldmask2 TT-Dec.22,2011
         self.imset.maskimages={}
         mmask=[[[55,55,65,65],[40,70,50,75]],[20,20,40,40],[5,5,15,10]]
         self.run_defineimages()
-        #self.imset.makemultifieldmask2(mmask)
-        self.imset.makemultifieldmask3(mmask)
+        self.imset.makemultifieldmask2(mmask)
+        #self.imset.makemultifieldmask3(mmask)
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
           retval=self.comparemask(maskimg, self.refpath+'ref-'+maskimg)
@@ -180,11 +182,11 @@ class cleanhelper_test(unittest.TestCase):
           os.system('rm -rf ' + maskimg)
 
     def testMakemultifieldmaskboxfile(self):
-        """[Cleanhelper makemultfieldmask3 test: boxes given as a AIPS boxfile]"""
+        """[Cleanhelper (new)makemultfieldmask2 test: boxes given as a AIPS boxfile]"""
         self.imset.maskimages={}
         self.run_defineimages()
-        #self.imset.makemultifieldmask2(maskobject=self.outlierfile)
-        self.imset.makemultifieldmask3(maskobject=self.outlierfile,newformat=False)
+        #self.imset.makemultifieldmask3(maskobject=self.outlierfile,newformat=False)
+        self.imset.makemultifieldmask2(maskobject=self.outlierfile,newformat=False)
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
           retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)

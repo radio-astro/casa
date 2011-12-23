@@ -538,7 +538,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             else:
                 #print "mask=",loc_mask, " chanslice=", chanslice
                 #imset.makemultifieldmask2(mask,chanslice)
-                imset.makemultifieldmask3(loc_mask,chanslice,newformat, interactive)
+                imset.makemultifieldmask2(loc_mask,chanslice,newformat, interactive)
                 maskimage=[]
                 #for img in sorted(imset.maskimages):
                 for img in imset.maskimages.keys():
