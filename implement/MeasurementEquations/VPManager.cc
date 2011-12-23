@@ -832,8 +832,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(thename=="REFERENCE"){ // points to an AntennaResponses table
 	// query the antenna responses
 	String antRespPath = antRec.asString("antresppath");
-	if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
-	   && !aR_p.init(antRespPath)){
+	if(!aR_p.init(antRespPath)){
 	  os << LogIO::SEVERE
 	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
 	     << antRespPath << endl
@@ -963,8 +962,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// query the antenna responses
 	String antRespPath = antRec.asString("antresppath");
-	if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
-	   && !aR_p.init(antRespPath)){
+	if(!aR_p.init(antRespPath)){
 	  os << LogIO::SEVERE
 	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
 	     << antRespPath << endl
