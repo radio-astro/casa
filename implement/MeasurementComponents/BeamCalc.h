@@ -54,8 +54,8 @@ namespace casa
     Double taperpoly[5];	/* polynomial expanded about reffreq */
     Int ntaperpoly;		/* number of terms in polynomial */
     
-    Double astigm_0;     /* astigmatism: coefficient of Zernicke Polyn. Z4 a.k.a. 0-90 */
-    Double astigm_45;    /* astigmatism: coefficient of Zernicke Polyn. Z6 a.k.a. 45-135 */
+    Double astigm_0;     /* astigmatism: coefficient of Zernike Polyn. Z6 a.k.a. 0-90 */
+    Double astigm_45;    /* astigmatism: coefficient of Zernike Polyn. Z5 a.k.a. 45-135 */
 
     /* to be added later
        Double focus;
@@ -103,6 +103,8 @@ namespace casa
     Double legthick;
     Double hole_radius;
     Double freq, lambda;
+    Double astigm_0;     /* astigmatism: coefficient of Zernike Polyn. Z6 a.k.a. 0-90 */
+    Double astigm_45;    /* astigmatism: coefficient of Zernike Polyn. Z5 a.k.a. 45-135 */
     Double dir[3];
     Double hhat[3], vhat[3];   /* unit vectors orthogonal to dir */
     Double z[MAXGEOM];
@@ -242,6 +244,8 @@ namespace casa
     calcAntenna *newAntennafromApertureCalcParams(ApertureCalcParams *ap);
 
     Int dishvalue(const calcAntenna *a, Double r, Double *z, Double *m);
+
+    Int astigdishvalue(const calcAntenna *a, Double x, Double y, Double *z, Double *m); 
 
     // Returns position of subreflector piece (x, y, z) and
     // its normal (u, v, w)
