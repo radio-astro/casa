@@ -4,22 +4,6 @@ import stat
 import time
 from taskinit import *
 
-def initcal(vis=None):
-
-	# we will initialize scr cols only if we don't create them
-	doinit=False;
-
-	tb.open(vis)
-	doinit = (tb.colnames().count('CORRECTED_DATA')>0)
-	tb.close()
-	cb.open(vis)
-
-	# If necessary (scr col not just created), initialize scr cols
-	if doinit:
-		cb.initcalset()
-	cb.close()
-
-
 def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale,createmms):
 	"""Concatenate two visibility data sets.
 	A second data set is appended to the input data set with
@@ -125,7 +109,7 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 		
 		considerscrcols = False
 		needscrcols = []
-                if ((type(theconcatvis)==str) & (os.path.exists(theconcatvis))):
+                if ((type(theconcatvis)==str) and (os.path.exists(theconcatvis))):
 			
 			# check if all scratch columns are present
 			t.open(theconcatvis)
