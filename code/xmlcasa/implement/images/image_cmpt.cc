@@ -2651,19 +2651,19 @@ bool image::setrestoringbeam(const ::casac::variant& major,
 	}
 }
 
-bool image::twopointcorrelation(const std::string& outfile,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const std::vector<int>& axes, const std::string& method,
-		const bool overwrite) {
-	bool rstat(false);
+bool image::twopointcorrelation(
+	const std::string& outfile,
+	const ::casac::record& region, const ::casac::variant& vmask,
+	const std::vector<int>& axes, const std::string& method,
+	const bool overwrite, const bool stretch
+) {
+	*_log << _ORIGIN;
+	if (detached()) {
+		return false;
+	}
 	try {
-		*_log << LogOrigin("image", "twopointcorrelation");
-		if (detached()) {
-			return rstat;
-		}
-
 		String outFile(outfile);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
 		if (mask == "[]")
 			mask = "";
@@ -2671,16 +2671,15 @@ bool image::twopointcorrelation(const std::string& outfile,
 		if (!(axes.size() == 1 && axes[0] == -1)) {
 			iAxes = axes;
 		}
-
-		rstat = _image->twopointcorrelation(outFile, *Region, mask, iAxes,
-				method, overwrite);
-		delete Region;
+		return _image->twopointcorrelation(
+			outFile, *Region, mask, iAxes,
+			method, overwrite, stretch
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::image* image::subimage(
