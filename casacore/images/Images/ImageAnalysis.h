@@ -425,10 +425,12 @@ class ImageAnalysis
         const Bool extendMask=False
     );
 
-    bool twopointcorrelation(const String& outfile, Record& region, 
-                             const String& mask, const Vector<Int>& axes, 
-                             const String& method = "structurefunction", 
-                             const Bool overwrite = False);
+    bool twopointcorrelation(
+    	const String& outfile, Record& region,
+        const String& mask, const Vector<Int>& axes,
+        const String& method="structurefunction",
+        const Bool overwrite=False, const Bool stretch=False
+    );
 
     ImageInterface<Float> * subimage(const String& outfile, Record& region, 
                                      const String& mask, 
