@@ -763,7 +763,7 @@ image* image::convolve2d(
 		casa::Quantity majorKernel = casaQuantityFromVar(major);
 		casa::Quantity minorKernel = casaQuantityFromVar(minor);
 		casa::Quantity paKernel = casaQuantityFromVar(pa);
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << _ORIGIN;
 
 		Vector<Int> Axes(axes);
 		if (Axes.size() == 0) {
@@ -771,9 +771,6 @@ image* image::convolve2d(
 			Axes[0] = 0;
 			Axes[1] = 1;
 		}
-
-		// Return image
-
 		std::auto_ptr<ImageInterface<Float> > tmpIm(
 			_image->convolve2d(
 				outFile, Axes, type, majorKernel, minorKernel,

@@ -1213,6 +1213,31 @@ class imsmooth_test2(unittest.TestCase):
     
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
+    def test_stretch(self):
+        """ imsmooth(): Test stretch parameter"""
+        yy = iatool.create()
+        mymask = "maskim"
+        yy.fromshape(mymask, [200, 200, 1, 1])
+        yy.addnoise()
+        yy.done()
+        shape = [200,200,1,20]
+        imagename = "tmp.im"
+        yy.fromshape(imagename, shape)
+        yy.addnoise()
+        yy.done()
+        zz = imsmooth(
+            imagename=imagename,
+            mask=mymask + ">0", stretch=False
+        )
+        self.assertTrue(not zz and type(zz) == type(True))
+
+        zz = imsmooth(
+            imagename=imagename,
+            mask=mymask + ">0", stretch=True
+        )
+        self.assertTrue(zz and type(zz) == type(True))
+    
+    
 def suite():
     return [imsmooth_test1,imsmooth_test2]    
     
