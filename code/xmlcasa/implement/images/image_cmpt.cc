@@ -2733,20 +2733,21 @@ std::vector<std::string> image::summary(casac::record& header,
 	return rstat;
 }
 
-bool image::tofits(const std::string& fitsfile, const bool velocity,
-		const bool optical, const int bitpix, const double minpix,
-		const double maxpix, const ::casac::record& region,
-		const ::casac::variant& vmask, const bool overwrite,
-		const bool dropdeg, const bool deglast, const bool dropstokes,
-		const bool stokeslast, const bool wavelength, const bool airwavelength,
-		const bool /* async */) {
-	bool rstat(false);
+bool image::tofits(
+	const std::string& fitsfile, const bool velocity,
+	const bool optical, const int bitpix, const double minpix,
+	const double maxpix, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool overwrite,
+	const bool dropdeg, const bool deglast, const bool dropstokes,
+	const bool stokeslast, const bool wavelength, const bool airwavelength,
+	const bool /* async */, const bool stretch
+) {
+	*_log << _ORIGIN;
+	if (detached()) {
+		return false;
+	}
 	try {
-		*_log << LogOrigin("image", "tofits");
-		if (detached())
-			return rstat;
-
-		Record *pRegion = toRecord(region);
+		std::auto_ptr<Record> pRegion(toRecord(region));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -2759,18 +2760,17 @@ bool image::tofits(const std::string& fitsfile, const bool velocity,
 			VersionInfo::report(buffer);
 			origin = String(buffer);
 		}
-
-		rstat = _image->tofits(fitsfile, velocity, optical, bitpix, minpix,
-				maxpix, *pRegion, mask, overwrite, dropdeg, deglast,
-				dropstokes, stokeslast, wavelength, airwavelength, origin);
-		delete pRegion;
-		//
+		return _image->tofits(
+			fitsfile, velocity, optical, bitpix, minpix,
+			maxpix, *pRegion, mask, overwrite, dropdeg, deglast,
+			dropstokes, stokeslast, wavelength, airwavelength, origin,
+			stretch
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::toASCII(const std::string& outfile, const ::casac::record& region,
