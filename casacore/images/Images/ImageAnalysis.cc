@@ -4833,14 +4833,16 @@ Vector<String> ImageAnalysis::summary(Record& header, const String& doppler,
 
 }
 
-Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
-			   const Bool optical, const Int bitpix, const Double minpix,
-			   const Double maxpix, Record& pRegion, const String& mask,
-			   const Bool overwrite, const Bool dropDeg, const Bool,
-			   const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
-			   const Bool airWavelength, const String& origin) {
+Bool ImageAnalysis::tofits(
+	const String& fitsfile, const Bool velocity,
+	const Bool optical, const Int bitpix, const Double minpix,
+	const Double maxpix, Record& pRegion, const String& mask,
+	const Bool overwrite, const Bool dropDeg, const Bool,
+	const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
+	const Bool airWavelength, const String& origin, const Bool stretch
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "tofits");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	//
 	// Convert image to FITS
@@ -4894,7 +4896,7 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, stretch
 	);
 
 	Bool ok = ImageFITSConverter::ImageToFITS(error, subImage, fitsfile,

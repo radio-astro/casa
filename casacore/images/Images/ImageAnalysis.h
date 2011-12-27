@@ -440,14 +440,16 @@ class ImageAnalysis
                             const Bool list = True, 
                             const Bool pixelorder = True);
 
-    Bool tofits(const String& outfile, const Bool velocity, const Bool optical,
-                const Int bitpix, const Double minpix, const Double maxpix, 
-                Record& region, const String& mask, 
-                const Bool overwrite = False, 
-                const Bool dropdeg = False, const Bool deglast = False, 
-                const Bool dropstokes = False, const Bool stokeslast = False,
-                const Bool wavelength = False, const Bool airWavelength = False,
-                const String& origin = String());
+    Bool tofits(
+    	const String& outfile, const Bool velocity, const Bool optical,
+        const Int bitpix, const Double minpix, const Double maxpix,
+        Record& region, const String& mask,
+        const Bool overwrite=False,
+        const Bool dropdeg=False, const Bool deglast=False,
+        const Bool dropstokes=False, const Bool stokeslast=False,
+        const Bool wavelength=False, const Bool airWavelength=False,
+        const String& origin="", Bool stretch=False
+    );
 
     Bool toASCII(
     	const String& outfile, Record& region, const String& mask,
