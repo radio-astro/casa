@@ -4654,11 +4654,13 @@ Bool ImageAnalysis::statistics(
 	return True;
 }
 
-Bool ImageAnalysis::twopointcorrelation(const String& outFile,
-		Record& theRegion, const String& mask, const Vector<Int>& axes1,
-		const String& method, const Bool overwrite) {
+Bool ImageAnalysis::twopointcorrelation(
+	const String& outFile,
+	Record& theRegion, const String& mask, const Vector<Int>& axes1,
+	const String& method, const Bool overwrite, const Bool stretch
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "twopointcorrelation");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfile
 	if (!overwrite && !outFile.empty()) {
@@ -4673,7 +4675,7 @@ Bool ImageAnalysis::twopointcorrelation(const String& outFile,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&theRegion)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, stretch
 	);
 
 	// Deal with axes and shape
