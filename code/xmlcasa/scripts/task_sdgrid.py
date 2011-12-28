@@ -26,8 +26,9 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
                       + '   plot = %s'%(plot)
             casalog.post( summary, 'DEBUG' )
             
-            # file check
-            #infile=infile.rstrip('/')+'/'
+            # infile
+            if isinstance( infile, str ):
+                infile = [infile]
 
             # scanlist
             if isinstance(scanlist,list) or isinstance(scanlist,numpy.ndarray):
@@ -52,7 +53,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
             # outfile
             outname=outfile
             if len(outname) == 0:
-                outname=infile.rstrip('/')+'.grid'
+                outname=infile[0].rstrip('/')+'.grid'
             if os.path.exists(outname):
                 if overwrite:
                     casalog.post( 'Overwrite existing file %s'%(outname), 'INFO' )

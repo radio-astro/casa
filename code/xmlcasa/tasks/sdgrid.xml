@@ -18,9 +18,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 
   <input>
-    <param type="string" name="infile"  mustexist="true">
-    <description>name of input SD dataset</description>
-    <value></value>
+    <param type="any" name="infiles"  mustexist="true">
+    <description>(list of) input SD dataset</description>
+    <any type="variant" limittype="string stringArray"/>
+    <value type="stringArray">""</value>
     </param>
 
     <param type="any" name="antenna">
@@ -147,7 +148,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
-        infile -- name of input SD dataset
+        infiles -- name of input SD dataset. can be list.
+                example: 'testimage.asap' 
+                         ['testimage1.asap','testimage2.asap']
         antenna -- select data based on antenna name(s) or id(s)
                 default: -1
                 example: 0, 'DV01'
