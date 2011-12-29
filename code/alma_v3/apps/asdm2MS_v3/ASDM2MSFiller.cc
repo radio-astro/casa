@@ -61,6 +61,7 @@ void	timer( double *cpu_time ,		/* cpu timer */
 
 
 #include "ASDM2MSFiller.h"
+#include "msvis/MSVis/SubMS.h"
 
 using namespace casa;
 
@@ -216,7 +217,11 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
 			     bool          withRadioMeters_,
 			     bool          complexData,
 			     bool          withCompression,
-			     bool          withCorrectedData):
+			     //bool          withCorrectedData):
+			     const string& telname_,
+                             int           maxNumCorr,
+                             int           maxNumChan,
+                             bool          withCorrectedData):
   itsFeedTimeMgr(0),
   itsFieldTimeMgr(0),
   itsObservationTimeMgr(0),
@@ -243,7 +248,13 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
   itsScanNumber         = 0;
 
   //cout << "About to call createMS" << endl;
-  status = createMS(name_, complexData, withCompression, withCorrectedData);
+  status = createMS(name_, 
+                    complexData, 
+                    withCompression, 
+                    telname_, 
+                    maxNumCorr,
+                    maxNumChan,
+                    withCorrectedData);
   //cout << "Back from call createMS" << endl;
 
 }
@@ -253,7 +264,7 @@ ASDM2MSFiller::~ASDM2MSFiller() {
   ;
 }
 
-int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCompression, bool withCorrectedData) {
+int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCompression, const string& telescopeName, int maxNumCorr, int maxNumChan, bool withCorrectedData) {
 
   String aName(msName);
 
@@ -266,6 +277,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 
   //cout << "Entering createMS : measurement set = "<< aName <<"\n";
 
+//commented out to replace with SubMS::setupMS()
+#if 0
   // Get the MS main default table description
   TableDesc td = MS::requiredTableDesc();
   //cout << "createMS TableDesc\n";
@@ -392,6 +405,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     
 
   SetupNewTable newTab(aName, td, Table::New);
+#else
+#endif
 
   //cout << "createMS SetupNewTable\n";
     
@@ -401,12 +416,17 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   // const Int tileSizeKBytes = 16;
 
   // Choose the Tile size per column to be 1 MB thanks to Jonas.
-  const Int nTileCorr = 4;
-  const Int nTileChan = 64;
+//  const Int nTileCorr = 4;
+//  const Int nTileChan = 64;
   const Int tileSizeKBytes = 1024;
+//determine from the data
+  const Int nTileCorr = maxNumCorr;
+  const Int nTileChan = maxNumChan;
 
   Int nTileRow;
 
+//commented out (TT)
+#if 0
   // Create an incremental storage manager
   IncrementalStMan      incrStMan;
 
@@ -526,6 +546,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   TiledShapeStMan imWgtStMan("TiledImWgt", imWgtTileShape);
   newTab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT), imWgtStMan);
   */
+#else
+#endif
     
   // WEIGHT and SIGMA hypercolumn
 #if 0
@@ -535,13 +557,12 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
   TiledShapeStMan sigmaStMan("TiledSigma", weightTileShape);
   newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
-#else
+//#else
   StandardStMan weightStMan("StandardStManWeight");
   newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
   StandardStMan sigmaStMan("StandardStManSigma");
   newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
-
-#endif
+//#endif
   // UVW hyperColumn
   nTileRow = (tileSizeKBytes * 1024 / (8 * 3));
   IPosition uvwTileShape(2, 3, nTileRow);
@@ -562,6 +583,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 				    flagCategoryTileShape);
   newTab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),
 		    flagCategoryStMan);
+#else
+#endif
 
   //cout << "createMS bindAll\n";
 
@@ -574,8 +597,33 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   //Table::TableOption openOption = Table::New;
   //itsMS = new MeasurementSet(newTab, openOption);
   //cout << "About to call the Measurement set constructor" << endl;
-  itsMS = new casa::MeasurementSet(newTab);
+  //itsMS = new casa::MeasurementSet(newTab);
   //cout << "createMS MeasurementSet, adress=" << (int) itsMS << endl;
+  
+  //needed to call setupMS
+  String telescop(telescopeName);
+  casa::Int inint = 0;
+  Vector<MS::PredefinedColumns> colnames;
+  if (complexData) {
+    if (withCorrectedData) {
+      colnames.resize(2);
+      colnames(0)=MS::DATA;
+      colnames(1)=MS::CORRECTED_DATA;
+    }
+    else {
+      colnames.resize(1);
+      colnames(0)= MS::DATA;
+    }
+  }
+  else {
+    colnames.resize(1);
+    colnames(0)= MS::FLOAT_DATA;
+  }
+  //Use SubMS::setupMS() 
+
+  itsMS = SubMS::setupMS(msName,nTileChan,nTileCorr,telescop,colnames,inint,withCompression);
+
+
   if (! itsMS) {
     return False;
   }
@@ -584,7 +632,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 
   itsMSCol = new casa::MSMainColumns(*itsMS);
 
-
+//commented out as standard MS subtable creation is
+//done through setupMS
+#if 0
   // Create all subtables and their possible extra columns.
   // Antenna
   {
@@ -602,6 +652,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::DATA_DESCRIPTION),
 				      Table(tabSetup));
   }
+
+
   // Feed
   {
     TableDesc td = MSFeed::requiredTableDesc();
@@ -612,6 +664,17 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FEED),
 				      Table(tabSetup));
   }
+#else
+#endif
+  // Feed (just missing column
+  {
+    TableDesc td;
+    StandardStMan feedStMan("feed standard manager");
+    MSFeed::addColumnToDesc(td, MSFeed::FOCUS_LENGTH);
+    itsMS->feed().addColumn(td, feedStMan);
+  }
+
+#if 0
   // Flag
   {
     SetupNewTable tabSetup(itsMS->flagCmdTableName(),
@@ -620,6 +683,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FLAG_CMD),
 				      Table(tabSetup));
   }
+#else
+#endif
+
 #if 0
   // Field
   //
@@ -638,11 +704,15 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   }
 #else
   // Field
+  // modified by TT : updated Field table
+  // cout<<"update field table"<<endl;
   {
-    TableDesc td = MSField::requiredTableDesc();
-    td.removeColumn("DELAY_DIR");
-    td.removeColumn("PHASE_DIR");
-    td.removeColumn("REFERENCE_DIR");
+    //TableDesc td = MSField::requiredTableDesc();
+    //td.removeColumn("DELAY_DIR");
+    //td.removeColumn("PHASE_DIR");
+    //td.removeColumn("REFERENCE_DIR");
+    TableDesc td;
+    StandardStMan fldStMan("field standard manager");
     {
       ArrayColumnDesc<Double> cdMDir("PHASE_DIR", "variable phase dir",
 				     IPosition(2, 2, 1), ColumnDesc::Direct);
@@ -676,17 +746,20 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
       TableMeasDesc<MDirection> tmdMDirection3(tmvd3, tmrd3);
       tmdMDirection3.write(td);
     }
+    itsMS->field().removeColumn("DELAY_DIR");
+    itsMS->field().removeColumn("PHASE_DIR");
+    itsMS->field().removeColumn("REFERENCE_DIR");
+    itsMS->field().addColumn(td,fldStMan);
     
-    SetupNewTable tabSetup(itsMS->fieldTableName(),
-			   td,
-			   Table::New);
+    //SetupNewTable tabSetup(itsMS->fieldTableName(),
+    //			   td,
+    //			   Table::New);
 
-    itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FIELD),
-				      Table(tabSetup));
+    //itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FIELD),
+    //				      Table(tabSetup));
   }
-
 #endif
-
+#if 0
   // History
   {
     SetupNewTable tabSetup(itsMS->historyTableName(),
@@ -703,7 +776,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::OBSERVATION),
 				      Table(tabSetup));
   }
+#else
   // Pointing
+  // need to add this (TT)
   {
     TableDesc td = MSPointing::requiredTableDesc();
     MSPointing::addColumnToDesc (td, MSPointing::POINTING_OFFSET);
@@ -714,7 +789,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
 				      Table(tabSetup));
   }
+#endif
 
+#if 0
   // Polarization
   {
     TableDesc td = MSPolarization::requiredTableDesc();
@@ -731,31 +808,42 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::PROCESSOR),
 				      Table(tabSetup));
   }
+#else
   // Source
+  // need to update with additional columns (TT) 
   {
-    TableDesc td = MSSource::requiredTableDesc();
+    //TableDesc td = MSSource::requiredTableDesc();
+    TableDesc td;
+    StandardStMan srcStMan("source table col st man");
     MSSource::addColumnToDesc (td, MSSource::POSITION);
     MSSource::addColumnToDesc (td, MSSource::TRANSITION);
     MSSource::addColumnToDesc (td, MSSource::REST_FREQUENCY);
     MSSource::addColumnToDesc (td, MSSource::SYSVEL);
-    SetupNewTable tabSetup(itsMS->sourceTableName(),
-			   td, Table::New);
-    itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
-				      Table(tabSetup));
+    itsMS->source().addColumn(td,srcStMan);
+    //SetupNewTable tabSetup(itsMS->sourceTableName(),
+    //			   td, Table::New);
+    //itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
+    //				      Table(tabSetup));
   }
   // Spectral Window
+  // need to update to add extra columns (TT)
   {
-    TableDesc td = MSSpectralWindow::requiredTableDesc();
+    //TableDesc td = MSSpectralWindow::requiredTableDesc();
+    TableDesc td;
+    StandardStMan spwStMan("SpW optional column Standard Manager");
     MSSpectralWindow::addColumnToDesc (td, MSSpectralWindow::BBC_NO);
     MSSpectralWindow::addColumnToDesc (td, MSSpectralWindow::ASSOC_SPW_ID);
     MSSpectralWindow::addColumnToDesc (td, MSSpectralWindow::ASSOC_NATURE);
-    SetupNewTable tabSetup(itsMS->spectralWindowTableName(),
-			   td, Table::New);
-    itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SPECTRAL_WINDOW),
-				      Table(tabSetup));
+    itsMS->spectralWindow().addColumn(td,spwStMan);
+    //SetupNewTable tabSetup(itsMS->spectralWindowTableName(),
+    //			   td, Table::New);
+    //itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SPECTRAL_WINDOW),
+    //				      Table(tabSetup));
 
   }
+#endif
 
+#if 0
   // State
   {
     SetupNewTable tabSetup(itsMS->stateTableName(),
@@ -764,7 +852,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::STATE),
 				      Table(tabSetup));
   }
+#else
   // Syscal
+  // need to add subtable (TT)
   {
     TableDesc td = MSSysCal::requiredTableDesc();
     MSSysCal::addColumnToDesc (td, MSSysCal::TCAL_SPECTRUM);
@@ -809,6 +899,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::WEATHER),
 				      Table(tabSetup));   
   }
+#endif
 
   //
   // New Tables.

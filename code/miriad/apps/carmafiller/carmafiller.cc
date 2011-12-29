@@ -101,7 +101,7 @@
 //      files that suffer from the Table array conformance error
 
 //  History:
-//   Spring 1997:   written (cloned off uvfitsfiller)       Peter Teuben
+//   Spring 1997:   written (cloned off uvfitsfiller)          Peter Teuben
 //   July 1997:     Y2K, fixed table-interface		                PJT
 //   Dec 1997:      fixed wideband only data (e.g. uvgen)               PJT
 //   ???            somebody fixed up this code for some new release    ???
@@ -122,7 +122,7 @@
 //   Oct 2001:      mirlib changed location
 //   Sep 2009:      revived in CASA, added various tables for CARMA
 //                  also renamed from bimafiller to carmafiller
-//   Jan 2010:      
+//   Sep 2011:      initial release
 
 
 // a placeholder for the MIRIAD spectral window configuration
@@ -2179,7 +2179,7 @@ int main(int argc, char **argv)
     
     // Define inputs
     Input inp(1);
-    inp.version("3 - CARMA to MS filler (25-jun-2010) PJT)");
+    inp.version("3 - CARMA to MS filler (14-oct-2011) PJT)");
     inp.create("vis",     "",        "Name of CARMA dataset name",         "string");    
     inp.create("ms",      "",        "Name of MeasurementSet",             "string");    
     inp.create("useTSM",  "True",    "Use the TiledStorageManager",        "bool");        

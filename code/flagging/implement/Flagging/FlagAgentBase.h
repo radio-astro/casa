@@ -63,6 +63,8 @@ public:
 	void start();
 	void terminate ();
 	void queueProcess();
+	void chunkSummary();
+	void msSummary();
 	void completeProcess();
 	void * run ();
 
@@ -71,7 +73,6 @@ public:
 
 	// Set function to activate check mode
 	void setCheckMode(bool enable) {checkFlags_p = enable;}
-
 
 protected:
 
@@ -101,6 +102,10 @@ protected:
 
 	// For checking pairs
 	bool find(Matrix<Int> validPairs, Int element1, Int element2);
+
+	// Check if a given number is nan (for visibilities,gains and Tsys primarily)
+	bool isNaN(Double number);
+	bool isNaN(Float number);
 
 	// Check if buffer has to be processed
 	bool checkIfProcessBuffer();
@@ -139,6 +144,18 @@ protected:
 	FlagDataHandler *flagDataHandler_p;
 	casa::LogIO *logger_p;
 	String agentName_p;
+
+	// Flag counters
+	uInt64 chunkFlags_p;
+	uInt64 chunkNaNs_p;
+	uInt64 msFlags_p;
+	uInt64 msNaNs_p;
+	uInt64 visBufferFlags_p;
+
+	// Multithreading configuration and agent id
+	Bool multiThreading_p;
+	Int nThreads_p;
+	Int threadId_p;
 
 private:
 	
@@ -192,11 +209,6 @@ private:
 	volatile Bool threadTerminated_p;
 	volatile Bool processing_p;
 
-	// Multithreading configuration and agent id
-	Bool multiThreading_p;
-	Int nThreads_p;
-	Int threadId_p;
-
 	// Data source configuration
 	String expression_p;
 	String dataColumn_p;
@@ -234,6 +246,8 @@ class FlagAgentList
 		void join ();
 		void queueProcess();
 		void completeProcess();
+		void chunkSummary();
+		void msSummary();
 		void setProfiling(bool enable);
 		void setCheckMode(bool enable);
 

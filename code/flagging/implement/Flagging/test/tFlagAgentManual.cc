@@ -38,7 +38,7 @@ void clearFlags(string inputFile,Bool flag)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION);
 
 	// Open MS
 	dh->open();
@@ -52,12 +52,12 @@ void clearFlags(string inputFile,Bool flag)
 	// Now we can create the Flag Agent list
 	Record dummyConfig;
 	dummyConfig.define("name","FlagAgentUnflag");
-	FlagAgentList *agentList = new FlagAgentList();
+	FlagAgentList agentList;
 	FlagAgentBase *agent_i = new FlagAgentManual(dh,dummyConfig,false,!flag);
-	agentList->push_back(agent_i);
+	agentList.push_back(agent_i);
 
 	// Start Flag Agent
-	agentList->start();
+	agentList.start();
 
 	// Set cout precision
 	cout.precision(20);
@@ -68,7 +68,7 @@ void clearFlags(string inputFile,Bool flag)
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
@@ -132,29 +132,35 @@ void clearFlags(string inputFile,Bool flag)
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
 */
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
-			agentList->queueProcess();
+			agentList.queueProcess();
 
 			// Wait for completion of flagging process
-			agentList->completeProcess();
+			agentList.completeProcess();
 
 			// Flush flags to MS
 			dh->flushFlags();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
 
+	// Print total stats from each agent
+	agentList.msSummary();
+
 	// Stop Flag Agent
-	agentList->terminate();
-	agentList->join();
+	agentList.terminate();
+	agentList.join();
 
 	// Close MS
 	dh->close();
 
-	// Delete Flag Agent
-	delete agentList;
+	// Clear Flag Agent List
+	agentList.clear();
 
 	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
 	delete dh;
@@ -174,37 +180,47 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 	unsigned long cumRows = 0;
 	timeval start,stop;
 	double elapsedTime = 0;
+	Double ntime = 0;
 
 	// Start clock
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
+
+	// Enable profiling in the Flag Data Handler
+	dh->setProfiling(false);
 
 	// Open MS
 	dh->open();
+
+	// Parse data selection to Flag Data Handler
+	Record dummySelection;
+	dh->setDataSelection(dummySelection);
 
 	// Select data (creating selected MS)
 	dh->selectData();
 
 	// Now we can create the Flag Agent list
+	FlagAgentList agentList;
 	FlagAgentBase *agent_i = NULL;
-	FlagAgentList *agentList = new FlagAgentList();
 	Int agentNumber = 1;
 	for (vector<Record>::iterator iter = recordList.begin();iter != recordList.end(); iter++)
 	{
 		stringstream agentName;
 		agentName << agentNumber;
 		agent_i= new FlagAgentManual(dh,*iter,false,flag);
-		agentList->push_back(agent_i);
+		agentList.push_back(agent_i);
 		agentNumber++;
 	}
 
 	// Generate iterators and vis buffers
 	dh->generateIterator();
 
+	agentList.setProfiling(false);
+
 	// Start Flag Agent
-	agentList->start();
+	agentList.start();
 
 	// Set cout precision
 	cout.precision(20);
@@ -215,7 +231,7 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
@@ -279,29 +295,35 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
 */
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
-			agentList->queueProcess();
+			agentList.queueProcess();
 
 			// Wait for completion of flagging process
-			agentList->completeProcess();
+			agentList.completeProcess();
 
 			// Flush flags to MS
 			dh->flushFlags();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
 
+	// Print total stats from each agent
+	agentList.msSummary();
+
 	// Stop Flag Agent
-	agentList->terminate();
-	agentList->join();
+	agentList.terminate();
+	agentList.join();
 
 	// Close MS
 	dh->close();
 
-	// Delete Flag Agent
-	delete agentList;
+	// Clear Flag Agent List
+	agentList.clear();
 
 	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
 	delete dh;
@@ -327,7 +349,7 @@ void checkFlags(string inputFile,Record dataSelection,Bool flag)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION);
 	dh->setDataSelection(dataSelection);
 
 	// Open MS
@@ -342,13 +364,13 @@ void checkFlags(string inputFile,Record dataSelection,Bool flag)
 	// Now we can create the Flag Agent list
 	Record dummyConfig;
 	dummyConfig.define("name","FlagAgentCheck");
-	FlagAgentList *agentList = new FlagAgentList();
+	FlagAgentList agentList;
 	FlagAgentBase *agent_i = new FlagAgentManual(dh,dummyConfig,false,flag);
 	agent_i->setCheckMode(true);
-	agentList->push_back(agent_i);
+	agentList.push_back(agent_i);
 
 	// Start Flag Agent
-	agentList->start();
+	agentList.start();
 
 	// Set cout precision
 	cout.precision(20);
@@ -359,149 +381,7 @@ void checkFlags(string inputFile,Record dataSelection,Bool flag)
 		// iterate over visBuffers
 		while (dh->nextBuffer())
 		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
-			nBuffers += 1;
-
-			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
-			{
-				cout << "Observation:"
-					 << dh->visibilityBuffer_p->get()->observationId()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->observationId()[dh->visibilityBuffer_p->get()->observationId().nelements()-1] << " ";
-			}
-			else
-			{
-				cout << "Observation:" << dh->visibilityBuffer_p->get()->observationId()[0] << " ";
-			}
-
-			cout << "Array:" << dh->visibilityBuffer_p->get()->arrayId() << " ";
-
-			if (dh->visibilityBuffer_p->get()->scan().nelements() > 1)
-			{
-				cout << "Scan:"
-					 << dh->visibilityBuffer_p->get()->scan()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->scan()[dh->visibilityBuffer_p->get()->scan().nelements()-1] << " ";
-			}
-			else
-			{
-				cout << "Scan:" << dh->visibilityBuffer_p->get()->scan()[0] << " ";
-			}
-
-			cout << "Field:" << dh->visibilityBuffer_p->get()->fieldId() << " " ;
-
-			cout << "Spw:" << dh->visibilityBuffer_p->get()->spectralWindow() << " ";
-
-			if (dh->visibilityBuffer_p->get()->time().nelements() > 1)
-			{
-				cout << "Time:"
-					 << dh->visibilityBuffer_p->get()->time()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->time()[dh->visibilityBuffer_p->get()->time().nelements()-1] << " ";
-			}
-			else
-			{
-				cout << "Time:" << dh->visibilityBuffer_p->get()->time()[0] << " ";
-			}
-
-			if (dh->visibilityBuffer_p->get()->antenna1().nelements() > 1)
-			{
-				cout << "Antenna1:"
-					 << dh->visibilityBuffer_p->get()->antenna1()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->antenna1()[dh->visibilityBuffer_p->get()->antenna1().nelements()-1] << " ";
-			}
-			else
-			{
-				cout << "Antenna1:" << dh->visibilityBuffer_p->get()->antenna1()[0] << " ";
-			}
-
-			if (dh->visibilityBuffer_p->get()->antenna2().nelements() > 1)
-			{
-				cout << "Antenna2:"
-					 << dh->visibilityBuffer_p->get()->antenna2()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->antenna2()[dh->visibilityBuffer_p->get()->antenna2().nelements()-1] << " ";
-			}
-			else
-			{
-				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
-			}
-
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
-			cumRows += dh->visibilityBuffer_p->get()->nRow();
-
-			// Queue flagging process
-			agentList->queueProcess();
-
-			// Wait for completion of flagging process
-			agentList->completeProcess();
-
-			// Flush flags to MS
-			dh->flushFlags();
-		}
-	}
-
-	// Stop Flag Agent
-	agentList->terminate();
-	agentList->join();
-
-	// Close MS
-	dh->close();
-
-	// Delete Flag Agent
-	delete agentList;
-
-	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
-	delete dh;
-
-	// Stop clock
-	gettimeofday(&stop,0);
-	elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;
-
-	// Report elapsed time
-	cout << "Total Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
-
-}
-
-void summaryFlags(string inputFile)
-{
-	// Stats variables declaration
-	unsigned long nBuffers = 0;
-	unsigned long cumRows = 0;
-	timeval start,stop;
-	double elapsedTime = 0;
-
-	// Start clock
-	gettimeofday(&start,0);
-
-	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
-
-	// Open MS
-	dh->open();
-
-	// Select data (creating selected MS)
-	dh->selectData();
-
-	// Now we can create the Flag Agent list
-	Record dummyConfig;
-	FlagAgentList *agentList = new FlagAgentList();
-	dummyConfig.define("name","FlagAgentSummary");
-	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,dummyConfig);
-	agentList->push_back(summaryAgent);
-
-	// Generate iterators and vis buffers
-	dh->generateIterator();
-
-	// Start Flag Agent
-	agentList->start();
-
-	// Set cout precision
-	cout.precision(20);
-
-	// iterate over chunks
-	while (dh->nextChunk())
-	{
-		// iterate over visBuffers
-		while (dh->nextBuffer())
-		{
-			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
@@ -565,23 +445,177 @@ void summaryFlags(string inputFile)
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
 */
-			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
-			agentList->queueProcess();
+			agentList.queueProcess();
 
 			// Wait for completion of flagging process
-			agentList->completeProcess();
+			agentList.completeProcess();
 
 			// Flush flags to MS
 			dh->flushFlags();
 		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
 	}
 
+	// Print total stats from each agent
+	agentList.msSummary();
+
 	// Stop Flag Agent
-	agentList->terminate();
-	agentList->join();
+	agentList.terminate();
+	agentList.join();
+
+	// Close MS
+	dh->close();
+
+	// Clear Flag Agent List
+	agentList.clear();
+
+	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
+	delete dh;
+
+	// Stop clock
+	gettimeofday(&stop,0);
+	elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;
+
+	// Report elapsed time
+	cout << "Total Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
+
+}
+
+void summaryFlags(string inputFile)
+{
+	// Stats variables declaration
+	unsigned long nBuffers = 0;
+	unsigned long cumRows = 0;
+	timeval start,stop;
+	double elapsedTime = 0;
+
+	// Start clock
+	gettimeofday(&start,0);
+
+	// Create Flag Data Handler
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION);
+
+	// Open MS
+	dh->open();
+
+	// Select data (creating selected MS)
+	dh->selectData();
+
+	// Now we can create the Flag Agent list
+	Record dummyConfig;
+	FlagAgentList agentList;
+	dummyConfig.define("name","FlagAgentSummary");
+	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,dummyConfig);
+	agentList.push_back(summaryAgent);
+
+	// Generate iterators and vis buffers
+	dh->generateIterator();
+
+	// Start Flag Agent
+	agentList.start();
+
+	// Set cout precision
+	cout.precision(20);
+
+	// iterate over chunks
+	while (dh->nextChunk())
+	{
+		// iterate over visBuffers
+		while (dh->nextBuffer())
+		{
+			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			nBuffers += 1;
+/*
+			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
+			{
+				cout << "Observation:"
+					 << dh->visibilityBuffer_p->get()->observationId()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->observationId()[dh->visibilityBuffer_p->get()->observationId().nelements()-1] << " ";
+			}
+			else
+			{
+				cout << "Observation:" << dh->visibilityBuffer_p->get()->observationId()[0] << " ";
+			}
+
+			cout << "Array:" << dh->visibilityBuffer_p->get()->arrayId() << " ";
+
+			if (dh->visibilityBuffer_p->get()->scan().nelements() > 1)
+			{
+				cout << "Scan:"
+					 << dh->visibilityBuffer_p->get()->scan()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->scan()[dh->visibilityBuffer_p->get()->scan().nelements()-1] << " ";
+			}
+			else
+			{
+				cout << "Scan:" << dh->visibilityBuffer_p->get()->scan()[0] << " ";
+			}
+
+			cout << "Field:" << dh->visibilityBuffer_p->get()->fieldId() << " " ;
+
+			cout << "Spw:" << dh->visibilityBuffer_p->get()->spectralWindow() << " ";
+
+			if (dh->visibilityBuffer_p->get()->time().nelements() > 1)
+			{
+				cout << "Time:"
+					 << dh->visibilityBuffer_p->get()->time()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->time()[dh->visibilityBuffer_p->get()->time().nelements()-1] << " ";
+			}
+			else
+			{
+				cout << "Time:" << dh->visibilityBuffer_p->get()->time()[0] << " ";
+			}
+
+			if (dh->visibilityBuffer_p->get()->antenna1().nelements() > 1)
+			{
+				cout << "Antenna1:"
+					 << dh->visibilityBuffer_p->get()->antenna1()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->antenna1()[dh->visibilityBuffer_p->get()->antenna1().nelements()-1] << " ";
+			}
+			else
+			{
+				cout << "Antenna1:" << dh->visibilityBuffer_p->get()->antenna1()[0] << " ";
+			}
+
+			if (dh->visibilityBuffer_p->get()->antenna2().nelements() > 1)
+			{
+				cout << "Antenna2:"
+					 << dh->visibilityBuffer_p->get()->antenna2()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->antenna2()[dh->visibilityBuffer_p->get()->antenna2().nelements()-1] << " ";
+			}
+			else
+			{
+				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
+			}
+*/
+			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			cumRows += dh->visibilityBuffer_p->get()->nRow();
+
+			// Queue flagging process
+			agentList.queueProcess();
+
+			// Wait for completion of flagging process
+			agentList.completeProcess();
+
+			// Flush flags to MS
+			dh->flushFlags();
+		}
+
+		// Print stats from each agent
+		agentList.chunkSummary();
+	}
+
+	// Print total stats from each agent
+	agentList.msSummary();
+
+	// Stop Flag Agent
+	agentList.terminate();
+	agentList.join();
 
 	// Get statistics
 	summaryAgent->getResult();
@@ -590,7 +624,7 @@ void summaryFlags(string inputFile)
 	dh->close();
 
 	// Delete Flag Agent
-	delete agentList;
+	agentList.clear();
 
 	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
 	delete dh;
@@ -607,11 +641,16 @@ void summaryFlags(string inputFile)
 
 int main(int argc, char **argv)
 {
-	string inputFile;
+	string targetFile;
 	Bool flag = True;
+	string nThreadsParam;
 	Int nThreads = 0;
-	string array,scan,timerange,field,spw,antenna,uvrange,observation,intent;
+	string array,scan,timerange,field,spw,antenna,uvrange,observation,intent,correlation;
 
+	// Execution control variables declaration
+	bool deleteFlagsActivated=false;
+	bool summaryFlagsActivated=false;
+	bool writeFlagsActivated=false;
 
 	string parameter, value;
 	Bool multipleAgents = false;
@@ -621,8 +660,16 @@ int main(int argc, char **argv)
 		value = string(argv[i+1]);
 		if (parameter == string("-multipleAgents"))
 		{
-			multipleAgents = casa::Bool(value.c_str());
+			multipleAgents = casa::Bool(atoi(value.c_str()));
 			cout << "multipleAgents is: " << multipleAgents << endl;
+		}
+		else if (parameter == string("-summary"))
+		{
+			if (value.compare("True") == 0)
+			{
+				summaryFlagsActivated = true;
+				cout << "Summary flags step activated" << endl;
+			}
 		}
 	}
 
@@ -635,10 +682,18 @@ int main(int argc, char **argv)
 		parameter = string(argv[i]);
 		value = string(argv[i+1]);
 
-		if (parameter == string("-inputFile"))
+		if (parameter == string("-targetFile"))
 		{
-			inputFile = value;
-			cout << "Target file is: " << inputFile << endl;
+			targetFile = value;
+			cout << "Target file is: " << targetFile << endl;
+		}
+		else if (parameter == string("-unflag"))
+		{
+			if (value.compare("True") == 0)
+			{
+				deleteFlagsActivated = true;
+				cout << "Clean flags step activated" << endl;
+			}
 		}
 		else if (parameter == string("-array"))
 		{
@@ -654,6 +709,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("array", array);
 			}
+			writeFlagsActivated = true;
 			cout << "Array selection is: " << array << endl;
 		}
 		else if (parameter == string("-scan"))
@@ -670,12 +726,14 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("scan", scan);
 			}
+			writeFlagsActivated = true;
 			cout << "Scan selection is: " << scan << endl;
 		}
 		else if (parameter == string("-timerange"))
 		{
 			timerange = casa::String(value);
 			dataSelection.define ("timerange", timerange);
+			writeFlagsActivated = true;
 			cout << "Time range selection is: " << timerange << endl;
 		}
 		else if (parameter == string("-field"))
@@ -692,6 +750,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("field", field);
 			}
+			writeFlagsActivated = true;
 			cout << "Field selection is: " << field << endl;
 		}
 		else if (parameter == string("-spw"))
@@ -708,6 +767,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("spw", spw);
 			}
+			writeFlagsActivated = true;
 			cout << "SPW selection is: " << spw << endl;
 		}
 		else if (parameter == string("-antenna"))
@@ -724,6 +784,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("antenna", antenna);
 			}
+			writeFlagsActivated = true;
 			cout << "Antenna selection is: " << antenna << endl;
 		}
 		else if (parameter == string("-uvrange"))
@@ -740,7 +801,25 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("uvrange", uvrange);
 			}
+			writeFlagsActivated = true;
 			cout << "UV range selection is: " << uvrange << endl;
+		}
+		else if (parameter == string("-correlation"))
+		{
+			correlation = casa::String(value);
+			dataSelection.define ("correlation", correlation);
+			if (multipleAgents)
+			{
+				Record rec;
+				rec.define ("correlation", correlation);
+				recordList.push_back(rec);
+			}
+			else
+			{
+				agentParameters.define ("correlation", correlation);
+			}
+			writeFlagsActivated = true;
+			cout << "Correlation products selection is: " << correlation << endl;
 		}
 		else if (parameter == string("-observation"))
 		{
@@ -756,6 +835,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("observation", observation);
 			}
+			writeFlagsActivated = true;
 			cout << "Observation selection is: " << observation << endl;
 		}
 		else if (parameter == string("-intent"))
@@ -772,6 +852,7 @@ int main(int argc, char **argv)
 			{
 				agentParameters.define ("intent", intent);
 			}
+			writeFlagsActivated = true;
 			cout << "Scan intention selection is: " << intent << endl;
 		}
 		else if (parameter == string("-flag"))
@@ -783,8 +864,9 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-nThreads"))
 		{
-			nThreads = atoi(value.c_str());
-			agentParameters.define ("nThreads", nThreads);
+			nThreadsParam = casa::String(value);
+			agentParameters.define ("nThreads", nThreadsParam);
+			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
 		}
 	}
@@ -853,11 +935,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	clearFlags(inputFile,flag);
+	if (deleteFlagsActivated) clearFlags(targetFile,flag);
 
-	writeFlags(inputFile,recordList,flag);
+	if (writeFlagsActivated) writeFlags(targetFile,recordList,flag);
 
-	if (!multipleAgents) checkFlags(inputFile,dataSelection,flag);
-
-	summaryFlags(inputFile);
+	if (summaryFlagsActivated) summaryFlags(targetFile);
 }

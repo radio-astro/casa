@@ -100,7 +100,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <description>Output, smoothed, image file name </description>
 	<value></value>
     </param>
-
+    <param type="bool" direction="in" name="stretch" subparam="true">
+        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+        <value>False</value>
+    </param>
     <constraints>
         <when param="kernel">
             <equals value="gauss">
@@ -132,6 +135,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		        <default param="minor"><value type="string">2.0arcsec</value></default>
 	        </equals>
 	    </when>
+        <when param="mask">
+            <notequals type="string" value="">
+                <default param="stretch"><value type="bool">False</value></default>
+            </notequals>
+        </when>
     </constraints>
 </input>
 <returns type="any"/>

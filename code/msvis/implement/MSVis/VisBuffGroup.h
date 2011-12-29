@@ -127,6 +127,14 @@ public:
   // // field ID fld.
   // Vector<Int> bufInds(const Int ddid, const Int fld)
 
+  // The flagging approach to channel selection.
+  // Sets chanmaskedflags to True wherever the channels in chanmask or flags in
+  // vb.flagCube() are True, resizing if necessary.
+  // Returns True/False on success/error (i.e. chanmask having a different # of
+  // channels from vb.flagCube()).
+  static Bool applyChanMask(Cube<Bool>& chanmaskedflags,
+                            const Vector<Bool> *chanmask, const VisBuffer& vb);
+
 private:
   // Prohibit public copying and assignment.
   VisBuffGroup(const VisBuffGroup&);

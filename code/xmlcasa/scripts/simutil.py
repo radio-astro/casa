@@ -142,7 +142,7 @@ class simutil:
                         priority="INFO"
         bw="\x1b[0m"
         if origin==None:
-            origin="simdata"            
+            origin="simutil"            
         if toterm:
             print clr+"["+origin+"] "+bw+s
         casalog.post(s,priority=priority,origin=origin)

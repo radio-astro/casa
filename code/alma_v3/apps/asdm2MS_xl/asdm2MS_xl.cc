@@ -108,6 +108,7 @@ string appName;
 bool verbose = true;
 bool isEVLA = false;
 
+bool debug = (getenv("ASDM_DEBUG") != NULL);
 //LogIO os;
 
 #include <casa/Logging/StreamLogSink.h>
@@ -1129,20 +1130,291 @@ public:
 };
 
 
+/**
+ * This function tries to calculate the sizes of the successives slices of the BDF 
+ * to be processed given a) the overall size of the BDF and b) the approximative maximum
+ * size that one wants for one slice.
+ * @paramater BDFsize the overall size of the BDF expressed in bytes,
+ * @parameter approxSizeInMemory the approximative size that one wants for one slice, expressed in byte.
+ *
+ * \par Note:
+ * It tries to avoid a last slice, corresponding to 
+ * the remainder in the euclidean division BDFsize / approxSizeInMemory.
+ */
+vector<uint64_t> sizeInMemory(uint64_t BDFsize, uint64_t approxSizeInMemory) {
+  if (debug) cout << "sizeInMemory: entering" << endl;
+  vector<uint64_t> result;
+  uint64_t Q = BDFsize / approxSizeInMemory;
+  if (Q == 0) { 
+    result.push_back(BDFsize);
+  }
+  else {
+    result.resize(Q, approxSizeInMemory);
+    unsigned int R = BDFsize % approxSizeInMemory;
+    if ( R > (Q * approxSizeInMemory / 5) )  {
+      result.push_back(R); 
+    }
+    else {
+      while (R > 0) 
+	for (unsigned int i = 0; R >0 && i < result.size(); i++) {
+	  result[i]++ ; R--;
+	}
+    }
+  }
+  if (debug) cout << "sizeInMemory: exiting" << endl;
+  return result;
+} 
+
 map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers; // There will be one filler per value of the axis APC.
 
-vector<int> dataDescriptionIdx2Idx;
-int ddIdx;
+vector<int>	dataDescriptionIdx2Idx;
+int		ddIdx;
+vector<int>	msStateId;
 
+/**
+ * This function fills the MS State table.
+ * given :
+ * @parameter r_p a pointer on the row of the ASDM Main table being processed.
+ * @parameter vmsData_p a pointer on a VMSData structure containing the data of the last slice of BDF being processed.
+ *
+ */
 
+void processState(MainRow* r_p,
+		  const VMSData* vmsData_p) {
+ if (debug) cout << "processMainAndState : entering" << endl;
+
+ ASDM&			ds	   = r_p -> getTable() . getContainer();
+ ScanRow*		scanR_p	   = ds.getScan().getRowByKey(r_p -> getExecBlockId(),
+							      r_p -> getScanNumber());
+ vector<ScanIntent>	scanIntent = scanR_p -> getScanIntent();
+	  
+ for (unsigned int iState = 0; iState < vmsData_p -> v_msState.size(); iState++) {
+							      
+   const sdmbin::MSState&	msState	 = vmsData_p -> v_msState.at(iState);
+   SubscanRow*			sscanR_p = ds.getSubscan().getRowByKey(r_p -> getExecBlockId(),
+								       r_p -> getScanNumber(),
+								       msState.subscanNum);
+    if (sscanR_p == 0) {
+      errstream.str("");
+      errstream << "Could not find a row in the Subscan table for the following key value (execBlockId=" << r_p->getExecBlockId().toString()
+		<<", scanNumber="<< r_p->getScanNumber()
+		<<", subscanNum=" << msState.subscanNum << "). Aborting. "
+		<< endl;
+      error(errstream.str());
+      continue;
+    }
+
+    SubscanIntent subscanIntent = sscanR_p->getSubscanIntent();
+    string obs_mode;
+    if (scanIntent.size() > 0) {
+      obs_mode = CScanIntent::name(scanIntent.at(0))+"#"+CSubscanIntent::name(subscanIntent);
+	      
+      for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
+	obs_mode += ",";
+	obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"#"+CSubscanIntent::name(subscanIntent);
+      }
+    }
+	    
+    bool pushed = false;
+    if (!false) {
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	int retId = iter->second->addUniqueState(msState.sig,
+						 msState.ref,
+						 0.0, // msState.cal,
+						 0.0, //msState.load,
+						 msState.subscanNum,
+						 obs_mode, //msState.obsMode.c_str(),
+						 false);
+	if (!pushed) {
+	  msStateId.push_back(retId);
+	  pushed = true;
+	}
+      }
+    }	    
+  }
+  if (debug) cout << "processMainAndState : exiting" << endl;
+}
+
+/**
+ * This function fills the MS Main table.
+ * given:
+ * @parameter rowNum an integer expected to contain the number of the row being processed.
+ * @parameter r_p a pointer to the MainRow being processed.
+ * @parameter sdmBinData a reference to the SDMBinData containing a lot of information about the binary data being processed. Useful to know the requested ordering of data.
+ * @parameter uvwCoords a reference to the UVW calculator.
+ * @parameter complexData a bool which says if the DATA is going to be filled (true) or if it will be the FLOAT_DATA (false).
+ * @parameter mute if the value of this parameter is false then nothing is written in the MS .
+ *
+ * !!!!! One must be carefull to the fact that processState must have been called before processMain. During the execution of processState , the global vector<int> msStateID
+ * is filled and will be used by processMain.
+ */ 
+void processMain(int		rowNum,
+		 MainRow*	r_p,
+		 SDMBinData&	sdmBinData,
+		 const VMSData* vmsData_p,
+		 UvwCoords&	uvwCoords,
+		 bool		complexData,
+		 bool           mute) {
+
+  if (debug) cout << "processMain : entering" << endl;
+
+  ASDM & ds = r_p -> getTable() . getContainer();
+
+  // Then populate the Main table.
+  ComplexDataFilter filter; // To process the case numCorr == 3
+  
+  if (vmsData_p->v_antennaId1.size() == 0) {
+    infostream.str("");
+    infostream << "No MS data produced for the current row." << endl;
+    info(infostream.str());
+    return;
+  }
+
+  vector<vector<unsigned int> > filteredShape = vmsData_p->vv_dataShape;
+  for (unsigned int ipart = 0; ipart < vmsData_p->vv_dataShape.size(); ipart++) {
+    if (filteredShape.at(ipart).at(0) == 3)
+      filteredShape.at(ipart).at(0) = 4;
+  }
+	  
+  vector<int> filteredDD;
+  for (unsigned int idd = 0; idd < vmsData_p->v_dataDescId.size(); idd++)
+    filteredDD.push_back(dataDescriptionIdx2Idx.at(vmsData_p->v_dataDescId.at(idd)));
+  vector<float *> uncorrectedData;
+  vector<float *> correctedData;
+
+  /* compute the UVW */
+  vector<double> uvw(3*vmsData_p->v_time.size());
+	  
+  vector<casa::Vector<casa::Double> > vv_uvw;
+#if DDPRIORITY
+  uvwCoords.uvw_bl(r_p, sdmBinData.timeSequence(), e_query_cm, 
+		   sdmbin::SDMBinData::dataOrder(),
+		   vv_uvw);
+#else
+  uvwCoords.uvw_bl(r, vmsData_p->v_timeCentroid, e_query_cm, 
+		   sdmbin::SDMBinData::dataOrder(),
+		   vv_uvw);
+#endif
+  int k = 0;
+  for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
+    uvw[k++] = vv_uvw[iUvw](0); 
+    uvw[k++] = vv_uvw[iUvw](1);
+    uvw[k++] = vv_uvw[iUvw](2);
+  } 
+
+  ComplexDataFilter cdf;
+  map<AtmPhaseCorrectionMod::AtmPhaseCorrection, float*>::const_iterator iter;
+
+  vector<double>	correctedTime;
+  vector<int>		correctedAntennaId1;
+  vector<int>		correctedAntennaId2;
+  vector<int>		correctedFeedId1;
+  vector<int>		correctedFeedId2;
+  vector<int>		correctedFieldId;
+  vector<int>           correctedFilteredDD;
+  vector<double>	correctedInterval;
+  vector<double>	correctedExposure;
+  vector<double>	correctedTimeCentroid;
+  vector<int>		correctedMsStateId;
+  vector<double>	correctedUvw ;
+  vector<unsigned int>	correctedFlag;
+
+  for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
+
+    if ((msFillers.find(AP_UNCORRECTED) != msFillers.end()) &&
+	(iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+      uncorrectedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					   vmsData_p->vv_dataShape.at(iData).at(1),
+					   iter->second));
+    }
+	    
+    if ((msFillers.find(AP_CORRECTED) != msFillers.end()) &&
+	(iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+      correctedTime.push_back(vmsData_p->v_time.at(iData));
+      correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+      correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+      correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+      correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+      correctedFilteredDD.push_back(filteredDD.at(iData));
+      correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+      correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+      correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+      correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+      correctedMsStateId.push_back(msStateId.at(iData));
+      correctedUvw.push_back(vv_uvw.at(iData)(0));
+      correctedUvw.push_back(vv_uvw.at(iData)(1));
+      correctedUvw.push_back(vv_uvw.at(iData)(2));
+      correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					 vmsData_p->vv_dataShape.at(iData).at(1),
+					 iter->second));
+      correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+    }
+  }
+	  
+  if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
+    if (! mute) {
+      msFillers[AP_UNCORRECTED]->addData(complexData,
+					 (vector<double>&) vmsData_p->v_time, // this is already time midpoint
+					 (vector<int>&) vmsData_p->v_antennaId1,
+					 (vector<int>&) vmsData_p->v_antennaId2,
+					 (vector<int>&) vmsData_p->v_feedId1,
+					 (vector<int>&) vmsData_p->v_feedId2,
+					 filteredDD,
+					 vmsData_p->processorId,
+					 (vector<int>&)vmsData_p->v_fieldId,
+					 (vector<double>&) vmsData_p->v_interval,
+					 (vector<double>&) vmsData_p->v_exposure,
+					 (vector<double>&) vmsData_p->v_timeCentroid,
+					 (int) r_p->getScanNumber(), 
+					 0,                                               // Array Id
+					 (int) r_p->getExecBlockId().getTagValue(), // Observation Id
+					 (vector<int>&)msStateId,
+					 uvw,
+					 filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
+					 uncorrectedData,
+					 (vector<unsigned int>&)vmsData_p->v_flag);
+    }
+  }
+
+  if (correctedData.size() > 0 && (msFillers.find(AP_CORRECTED) != msFillers.end())) {
+    if (! mute) {
+      msFillers[AP_CORRECTED]->addData(complexData,
+				       correctedTime, // this is already time midpoint
+				       correctedAntennaId1, 
+				       correctedAntennaId2,
+				       correctedFeedId1,
+				       correctedFeedId2,
+				       correctedFilteredDD,
+				       vmsData_p->processorId,
+				       correctedFieldId,
+				       correctedInterval,
+				       correctedExposure,
+				       correctedTimeCentroid,
+				       (int) r_p->getScanNumber(), 
+				       0,                                               // Array Id
+				       (int) r_p->getExecBlockId().getTagValue(), // Observation Id
+				       correctedMsStateId,
+				       correctedUvw,
+				       filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
+				       correctedData,
+				       correctedFlag);
+    }
+  }
+  if (debug) cout << "processMain : exiting" << endl;
+}
+
+/*
 void processMainAndState(ASDM* ds,
 			 int rowNum,
 			 MainRow* r,
 			 SDMBinData& sdmBinData,
-			 VMSData* vmsDataPtr,
+			 const VMSData* vmsDataPtr,
 			 UvwCoords& uvwCoords,
 			 bool complexData,
 			 bool mute) {
+  if (debug) cout << "processMainAndState : entering" << endl;
 
   // Firstly populate the State table...
   ScanRow* scanR = ds->getScan().getRowByKey(r->getExecBlockId(),
@@ -1194,18 +1466,19 @@ void processMainAndState(ASDM* ds,
 	  pushed = true;
 	}
       }
-    }
-	    
-    // Then populate the Main table.
-    ComplexDataFilter filter; // To process the case numCorr == 3
-	    
-    if (vmsDataPtr->v_antennaId1.size() == 0) {
-      infostream.str("");
-      infostream << "No MS data produced for the current row." << endl;
-      info(infostream.str());
-      continue;
-    }
+    }	    
   }
+
+  // Then populate the Main table.
+  ComplexDataFilter filter; // To process the case numCorr == 3
+  
+  if (vmsDataPtr->v_antennaId1.size() == 0) {
+    infostream.str("");
+    infostream << "No MS data produced for the current row." << endl;
+    info(infostream.str());
+    return;
+  }
+
   vector<vector<unsigned int> > filteredShape = vmsDataPtr->vv_dataShape;
   for (unsigned int ipart = 0; ipart < vmsDataPtr->vv_dataShape.size(); ipart++) {
     if (filteredShape.at(ipart).at(0) == 3)
@@ -1218,7 +1491,7 @@ void processMainAndState(ASDM* ds,
   vector<float *> uncorrectedData;
   vector<float *> correctedData;
 
-  /* compute the UVW */
+  // compute the UVW
 
   vector<double> uvw(3*vmsDataPtr->v_time.size());
 	  
@@ -1289,12 +1562,6 @@ void processMainAndState(ASDM* ds,
   }
 	  
   if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
-    infostream.str("");
-    infostream << "ASDM Main table row #" << rowNum
-	       << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
-	       << " rows in the wvr uncorrected MS Main table." << endl;
-    info(infostream.str());
-
     if (! mute) {
       msFillers[AP_UNCORRECTED]->addData(complexData,
 					 (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
@@ -1320,12 +1587,6 @@ void processMainAndState(ASDM* ds,
   }
 
   if (correctedData.size() > 0 && (msFillers.find(AP_CORRECTED) != msFillers.end())) {
-    infostream.str("");
-    infostream << "ASDM Main table row #" << rowNum
-	       << " will be transformed into " << correctedAntennaId1.size()
-	       << " rows in the wvr corrected MS Main table." << endl;
-    info(infostream.str());
-
     if (! mute) {
       msFillers[AP_CORRECTED]->addData(complexData,
 				       correctedTime, // this is already time midpoint
@@ -1349,8 +1610,9 @@ void processMainAndState(ASDM* ds,
 				       correctedFlag);
     }
   }
-
+  if (debug) cout << "processMainAndState : exiting" << endl;
 }
+*/
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1368,10 +1630,14 @@ int main(int argc, char *argv[]) {
 
   LogSinkInterface& lsif = LogSink::globalSink();
 
+  uint64_t bdfSliceSizeInMb = 0; // The default size of the BDF slice hold in memory.
+
   bool mute = false;
+
 
   //   Process command line options and parameters.
   po::variables_map vm;
+
   try {
 
 
@@ -1404,7 +1670,8 @@ int main(int argc, char *argv[]) {
       ("no-syspower", "the SysPower table will be  ignored.")
       ("no-caldevice", "The CalDevice table will be ignored.")
       ("no-pointing", "The Pointing table will be ignored.")
-      ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined");
+      ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined")
+      ("bdf-slice-size", po::value<uint64_t>(&bdfSliceSizeInMb)->default_value(500),  "The maximum amount of memory expressed as an integer in units of megabytes (1024*1024) allocated for BDF data. The default is 500 (megabytes)") ;
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -1601,10 +1868,17 @@ int main(int argc, char *argv[]) {
       errstream << generic;
       error(errstream.str());
     }
-
-    // Do we want an MS to be produced or not ?
+    
+    // Do we want an MS Main table to be filled or not ?
     mute = vm.count("dry-run") != 0;
+    infostream.str("");
+    infostream << "option dry-run is used, the MS Main table will not be filled" << endl;
+    info(infostream.str());
 
+    // What is the amount of memory allocated to the BDF slices.
+    infostream.str("");
+    infostream << "the BDF slice size is set to " << bdfSliceSizeInMb << " megabytes." << endl;
+    info(infostream.str());
   }
   catch (std::exception& e) {
     errstream.str("");
@@ -2440,7 +2714,7 @@ int main(int argc, char *argv[]) {
       string scheduleType("ALMA");
       schedule[0] = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
       schedule[1] = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
-      string project("T.B.D.");
+      string project(r->getProjectUID().getEntityId().toString());
       double releaseDate = r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0;
 
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
@@ -3822,8 +4096,142 @@ int main(int argc, char *argv[]) {
   double cpu_time_aips_overall  = 0.0;
   double real_time_aips_overall = 0.0;
 
+#if 1
+  {
+    const MainTable& mainT = ds->getMain();
+    const StateTable& stateT = ds->getState();
 
-#if 1 
+    MainRow* r = 0;
+    vector<MainRow*> v;
+    //
+    //
+    // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection.
+    //
+    const vector<MainRow *>& temp = mainT.get();
+    for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
+      map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
+      if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() )	  
+	v.push_back(*iter_v);
+    }
+      
+    infostream.str("");
+    infostream << "The dataset has " << mainT.size() << " main(s)...";
+    infostream << v.size() << " of them in the selected exec blocks / scans." << endl;
+    info(infostream.str());
+    uint32_t nMain = v.size();
+
+    const VMSData *vmsDataPtr = 0;
+
+    try {
+      // Initialize an UVW coordinates engine.
+      UvwCoords uvwCoords(ds);
+
+      ostringstream oss;
+
+      // For each main row.
+      for (int32_t i = 0; i < nMain; i++) {
+	infostream.str("");
+	infostream << "ASDM Main row #" << i << " - BDF file size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
+	info(infostream.str());
+
+	// Open its associate BDF.
+	sdmBinData.openMainRow(v[i]);
+
+	uint32_t		N			 = v[i]->getNumIntegration();
+	uint64_t		bdfSize			 = v[i]->getDataSize();
+	vector<uint64_t>	actualSizeInMemory(sizeInMemory(bdfSize, bdfSliceSizeInMb*1024*1024));
+	int32_t			numberOfMSMainRows	 = 0;
+	int32_t			numberOfIntegrations	 = 0;
+	int32_t			numberOfReadIntegrations = 0;
+
+	// For each slice of the BDF with a size approx equal to the required size
+	for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
+	  numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
+	  infostream.str("");
+	  infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
+	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
+	  numberOfReadIntegrations += numberOfIntegrations;
+	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
+	  processState(v[i], vmsDataPtr);
+	  processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  //	  processMainAndState(ds, j, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
+	  info(infostream.str());
+	}
+
+	uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
+	if (numberOfRemainingIntegrations) {
+	  infostream.str("");
+	  infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
+	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
+	  processState(v[i], vmsDataPtr);
+	  processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  // 	  processMainAndState(ds, i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
+	  info(infostream.str());
+	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
+	}
+	infostream.str("");
+	infostream << "ASDM Main row #" << i << "produced a total of " << numberOfMSMainRows << endl;
+      }
+    }
+    catch ( IllegalAccessException& e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( SDMDataObjectStreamReaderException& e ) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( SDMDataObjectReaderException& e ) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch (ConversionException e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());      
+    }
+    catch (Error & e) {
+      errstream.str("");
+      errstream << e.getErrorMessage();
+      error(errstream.str());
+    }
+    infostream.str("");
+    infostream << "The dataset has "  << stateT.size() << " state(s)..." ;
+    info(infostream.str());
+
+    if (stateT.size()) {
+      infostream.str("");
+      infostream << "converted in " << msFiller->ms()->state().nrow() << " state(s) in the measurement set.";
+      info(infostream.str());
+    }
+
+
+    infostream.str("");
+    infostream << "The dataset has " << mainT.size() << " main(s)...";
+    info(infostream.str());
+
+    if (mainT.size()) {
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	string kindOfData = (iter->first == AP_UNCORRECTED) ? "wvr uncorrected" : "wvr corrected";
+	infostream.str("");
+	infostream << "converted in " << iter->second->ms()->nrow() << " main(s) rows in the measurement set containing the " << kindOfData << " data.";
+	info(infostream.str());
+      }
+    }
+  }
+#else 
   {
     const MainTable& mainT = ds->getMain();
     const StateTable& stateT = ds->getState();

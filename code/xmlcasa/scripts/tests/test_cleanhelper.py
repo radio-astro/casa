@@ -83,6 +83,7 @@ class cleanhelper_test(unittest.TestCase):
         refvals= ia.getchunk()
         ia.close()
         diff = refvals - maskvals
+        #print "image diff by pix values=", diff
         return (numpy.all(diff==0)) 
  
     def testDefineimages(self):
@@ -163,12 +164,13 @@ class cleanhelper_test(unittest.TestCase):
 
  
     def testMakemultifieldmaskbox(self):
-        """[Cleanhelper makemultfieldmask3 test: boxes given in argument]"""
+        """[Cleanhelper (new)makemultfieldmask2 test: boxes given in argument]"""
+        # makemultifieldmask3 was renamed to makemultfieldmask2 TT-Dec.22,2011
         self.imset.maskimages={}
         mmask=[[[55,55,65,65],[40,70,50,75]],[20,20,40,40],[5,5,15,10]]
         self.run_defineimages()
-        #self.imset.makemultifieldmask2(mmask)
-        self.imset.makemultifieldmask3(mmask)
+        self.imset.makemultifieldmask2(mmask)
+        #self.imset.makemultifieldmask3(mmask)
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
           retval=self.comparemask(maskimg, self.refpath+'ref-'+maskimg)
@@ -180,11 +182,11 @@ class cleanhelper_test(unittest.TestCase):
           os.system('rm -rf ' + maskimg)
 
     def testMakemultifieldmaskboxfile(self):
-        """[Cleanhelper makemultfieldmask3 test: boxes given as a AIPS boxfile]"""
+        """[Cleanhelper (new)makemultfieldmask2 test: boxes given as a AIPS boxfile]"""
         self.imset.maskimages={}
         self.run_defineimages()
-        #self.imset.makemultifieldmask2(maskobject=self.outlierfile)
-        self.imset.makemultifieldmask3(maskobject=self.outlierfile,newformat=False)
+        #self.imset.makemultifieldmask3(maskobject=self.outlierfile,newformat=False)
+        self.imset.makemultifieldmask2(maskobject=self.outlierfile,newformat=False)
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
           retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
@@ -271,19 +273,19 @@ class cleanhelper_test(unittest.TestCase):
         import time
         # Check that factors of 2,3, and 5 do the right thing
         self.assertEqual(cleanhelper.getOptimumSize(1024),1024)    #2^10
-        self.assertEqual(cleanhelper.getOptimumSize(59049), 59049) #3^10
-        self.assertEqual(cleanhelper.getOptimumSize(15625), 15625) #5^6
+        self.assertEqual(cleanhelper.getOptimumSize(59049), 60000) #2^5*3*5^4
+        self.assertEqual(cleanhelper.getOptimumSize(15625), 15680) #2^6*5*7^2
 
         # Now lets do some random checks to make sure we get the same value
-        self.assertEqual(cleanhelper.getOptimumSize(1375),1458) #2^1*3^6 
-        self.assertEqual(cleanhelper.getOptimumSize(62354),62500) #2^3*5^7
+        self.assertEqual(cleanhelper.getOptimumSize(1375),1400) #2^3*5^2*7 
+        self.assertEqual(cleanhelper.getOptimumSize(62354),62500) #2^2*5^6
         self.assertEqual(cleanhelper.getOptimumSize(981),1000) # 2^3*5^3
         self.assertEqual(cleanhelper.getOptimumSize(8123), 8192) # 2^13
         self.assertEqual(cleanhelper.getOptimumSize(82863),82944) # 2^10*3^4
 
         # Now do some real random checks
         random.seed(time.time())
-        factorList = [2,3,5]
+        factorList = [2,3,5,7]
 
         for i in xrange(100):
             x = random.randint(100,1000000)

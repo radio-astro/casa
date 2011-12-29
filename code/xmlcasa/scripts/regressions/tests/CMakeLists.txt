@@ -39,7 +39,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   ngc2403.py
   ngc5921redux.py
   ngc5921uvcontsub2.py
-  orionmos4sim.py
   orionmosaic.py
   polcal_20080224_cband.py
   pylabmem.py
@@ -48,4 +47,10 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   time_then_chan_avg.py
   wideband.py
   wproject_regression.py
+  orionmos4sim.py
+  sim_m51c.py
+  sim_m51tp.py
+  sim_ppdisk.py
+  sim_testcomp.py
+  sim_testcube.py
 )

@@ -1,7 +1,9 @@
 startTime = time.time()
 startProc = time.clock()
 
-if os.path.exists("cltest"): shutil.rmtree("cltest")
+projname="cltest"
+
+if os.path.exists(projname): shutil.rmtree(projname)
 
 l=locals() 
 if not l.has_key("repodir"): 
@@ -13,9 +15,8 @@ datadir=repodir+"/data/regression/simdata/"
 if os.path.exists("6334.cl"): shutil.rmtree("6334.cl")
 shutil.copytree(datadir+"6334.cl","6334.cl")
 
-
-default("simdata") 
-project            =  "cltest"
+default("simobserve") 
+project            =  projname
 complist           =  "6334.cl"
 compwidth          =  "1.875GHz"
 setpointings       =  True
@@ -24,19 +25,43 @@ direction          =  "J2000 17h20m53.2s -35d47m00s"
 mapsize            =  "14arcsec"
 maptype            =  "hexagonal"
 pointingspacing    =  ""
-observe            =  True
+#observe            =  True
+obsmode            =  "int"
 refdate            =  "2014/01/01"
 hourangle          =  "transit"
 totaltime          =  "7200s"
 antennalist        =  "alma.cycle0.extended.cfg"
 thermalnoise       =  ""
+
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
+verbose            =  True
+overwrite          =  True
+
+inp()
+simobserve()
+
+
+default("simanalyze") 
+project            =  projname
 image              =  True
 vis                =  "default"
 imsize             =  300
+imdirection        =  direction
 niter              =  500
 threshold          =  "0.1mJy"
 analyze            =  True
-graphics           =  "both"
+
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
 verbose            =  True
 overwrite          =  True
 
@@ -65,6 +90,11 @@ refstats = { 'max': 5.6306,
              'rms': 0.10197,
              'sum': 370.6 }
 
+# Kumar's rev 17055-17139
+refstats = { 'max': 5.4746,
+             'min': -0.083616,
+             'rms': 0.1006,
+             'sum': 358.2 }
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())

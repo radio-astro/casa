@@ -239,6 +239,39 @@ class imstat_test(unittest.TestCase):
                 
                 """
                 
+    def test_stretch(self):
+        """ ia.statistics(): Test stretch parameter"""
+        yy = iatool.create()
+        mymask = "maskim"
+        yy.fromshape(mymask, [200, 200, 1, 1])
+        yy.addnoise()
+        yy.done()
+        shape = [200,200,1,20]
+        imagename = "tmp.im"
+        yy.fromshape(imagename, shape)
+        yy.addnoise()
+        self.assertRaises(
+            Exception,
+            yy.statistics,
+            mask=mymask + ">0", stretch=False
+        )
+        zz = yy.statistics(
+            mask=mymask + ">0", stretch=True
+        )
+        self.assertTrue(zz and type(zz) == type({}))
+        yy.done()
+        
+        zz = imstat(
+            imagename=imagename, mask=mymask + ">0", stretch=False
+        )
+        self.assertTrue(type(zz) == type({}) and (zz == {}))
+
+        zz = imstat(
+            imagename=imagename, mask=mymask + ">0", stretch=True
+        )
+        self.assertTrue(type(zz) == type({}) and (not zz == {}))
+        yy.done()
+    
 def suite():
     return [imstat_test]
 

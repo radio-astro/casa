@@ -41,7 +41,7 @@
 
             <param type="string" name="mode">
                 <description>Flagging mode (manualflag, clip, shadow, quack, elevation, \
-tfcrop, extendflags, unflag, summary)</description>
+tfcrop, extend, unflag, summary)</description>
                 <value>manualflag</value>
                 <allowed kind="enum">
                     <value>manualflag</value>
@@ -50,7 +50,7 @@ tfcrop, extendflags, unflag, summary)</description>
                     <value>quack</value>
                     <value>elevation</value>
                     <value>tfcrop</value>
-                    <value>extendflags</value>
+                    <value>extend</value>
                     <value>unflag</value>
                     <value>summary</value>
                 </allowed>
@@ -234,11 +234,6 @@ tfcrop, extendflags, unflag, summary)</description>
                 <value type="bool">False</value>
             </param>
 
-            <param type="bool" name="extend">
-                <description>Extend the new flags in various ways</description>
-                <value>False</value>
-            </param>
-
             <param type="any" name="extendpols" subparam="true">
                 <description>If any correlation is flagged, flag all correlations</description>
                 <value type="bool">False</value>
@@ -341,7 +336,7 @@ tfcrop, extendflags, unflag, summary)</description>
                         <default param="usewindowstats"><value type="string">none</value></default>
                         <default param="halfwin"><value type="int">1</value></default>                    
                     </equals>
-                    <equals value="extendflags">
+                    <equals value="extend">
                         <default param="extendpols"><value type="bool">False</value></default>
                         <default param="growtime"><value type="double">50.0</value></default>
                         <default param="growfreq"><value type="double">50.0</value></default>
@@ -359,18 +354,6 @@ tfcrop, extendflags, unflag, summary)</description>
                     </equals>
                 </when>
                 
-               <when param="extend">
-                 <equals type="bool" value="False" />
-                 <equals type="bool" value="True">
-                    <default param="extendpols"><value type="bool">False</value></default>
-                    <default param="growtime"><value type="double">50.0</value></default>
-                    <default param="growfreq"><value type="double">50.0</value></default>
-                    <default param="growaround"><value type="bool">True</value></default>
-                    <default param="flagneartime"><value type="bool">False</value></default>
-                    <default param="flagnearfreq"><value type="bool">False</value></default>
-                </equals>
-               </when>
-
                <when param="savepars">
                 <equals type="bool" value="False" />
                  <equals type="bool" value="True">
@@ -389,7 +372,7 @@ tfcrop, extendflags, unflag, summary)</description>
             shadow      = remove antenna-shadowed data
             elevation   = remove data below/above given elevations
             tfcrop      = automatic identification and flagging of RFI
-            extendflags = extend and/or grow flags beyond what the basic algorithms detect
+            extend      = extend and/or grow flags beyond what the basic algorithms detect
             summary     = report the amount of flagged data
             unflag      = unflag the specified data.
     
@@ -452,7 +435,7 @@ tfcrop, extendflags, unflag, summary)</description>
                     default: '' (all); example: observation='1' or observation=1
 
         mode -- Mode of operation.
-                options: 'manualflag','clip','quack','shadow','elevation', 'tfcrop', 'extendflags',
+                options: 'manualflag','clip','quack','shadow','elevation', 'tfcrop', 'extend',
                          'unflag', 'summary'
                 default: 'manualflag'
 
@@ -610,7 +593,7 @@ tfcrop, extendflags, unflag, summary)</description>
                     options: 1,2,3
                         Note: This is experimental !
 
-            extendflags -- Extend and/or grow flags beyond what the basic algorithms detect.
+            extend -- Extend and/or grow flags beyond what the basic algorithms detect.
                             This mode will extend the accumulated flags available in the MS,
                             regardless of which algorithm created them.
 
@@ -674,45 +657,6 @@ tfcrop, extendflags, unflag, summary)</description>
                     s['total']                  : total number of data
                     s['flagged']                : amount of flagged data
 
-        extend -- Extend and/or grow flags beyond what the basic algorithms detect.
-                  This parameter will extend only the new flags created by the algorithm (mode)
-                  from which it is called from. This parameter can be used together with
-                  any mode, except unflag and summary.
-            default: False
-            options: True/False
-
-            extendpols -- Extend flags to all correlations
-                      default: False
-                      options: True/False
-            growtime -- For any channel, flag the entire timerange in the current 2D chunk (set by 'ntime')
-                             if more than X% of the timerange is already flagged.
-                      default: 50.0
-                      options: 0.0 - 100.0
-                         This option catches the low-intensity parts of time-persistent RFI.
-
-            growfreq -- For any timestep, flag all channels in the current 2D chunk (set by data-selection)
-                            if more than X% of the channels are already flagged.
-                      default: 50.0
-                      options: 0.0 - 100.0
-                         This option catches broad-band RFI that is partially identified by earlier steps.
-
-            growaround -- Extend flags to immediately surrounding points in the time-freq plane.
-                      default: True
-                      options: True/False
-                            For every un-flagged point on the 2D time/freq plane, if more than four
-                            surrounding points are already flagged, flag that point. 
-                            This option catches some wings of strong RFI spikes.
-
-            flagneartime -- Flag points before and after every flagged one, in the time-direction.
-                      default: False
-                      options: True/False
-                            Note: This can result in excessive flagging.
-
-            flagnearfreq -- Flag points before and after every flagged one, in the frequency-direction
-                            default: False
-                            options: True/False
-                            This option allows flagging of wings in the spectral response of strong RFI.
-                            Note: This can result in excessive flagging.
  
         datadisplay -- Display data and flags per-chunck at run-time, within an interactive GUI
                  default: False

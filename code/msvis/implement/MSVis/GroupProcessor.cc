@@ -31,8 +31,8 @@
 
 namespace casa {
 
-ROGroupProcessor::ROGroupProcessor(ROVisibilityIterator& vi, ROGroupWorker *gw,
-                                   Double groupInterval) :
+GroupProcessor::GroupProcessor(ROVisibilityIterator& vi, GroupWorkerBase *gw,
+                               Double groupInterval) :
   vi_p(vi),
   gw_p(gw),
   groupInterval_p(groupInterval)
@@ -46,7 +46,7 @@ ROGroupProcessor::ROGroupProcessor(ROVisibilityIterator& vi, ROGroupWorker *gw,
 //   return *this;
 // }
 
-void ROGroupProcessor::setGroupOrigin()
+void GroupProcessor::setGroupOrigin()
 {
   // cerr << "Starting new group" << endl;
   vi_p.origin();
@@ -54,7 +54,7 @@ void ROGroupProcessor::setGroupOrigin()
   groupStart_p = timev_p[0];
 }
 
-Bool ROGroupProcessor::groupHasMore()
+Bool GroupProcessor::groupHasMore()
 {
   Bool answer = False;
   if(vi_p.moreChunks()){
@@ -64,13 +64,13 @@ Bool ROGroupProcessor::groupHasMore()
   return answer;
 }
 
-Bool ROGroupProcessor::go()
+Bool GroupProcessor::go()
 {
   VisBuffer vb(vi_p);
 
   // Process the MS(es) chunk by chunk.
   uInt ninrows = vi_p.numberCoh();      // Apparently this accounts for selection.
-  ProgressMeter meter(0.0, ninrows * 1.0, "ROGroupProcessor", "rows processed", "", "",
+  ProgressMeter meter(0.0, ninrows * 1.0, "GroupProcessor", "rows processed", "", "",
                       True, 1);
   uInt inrowsdone = 0;  // only for the meter.
   vi_p.originChunks();
@@ -90,37 +90,6 @@ Bool ROGroupProcessor::go()
     if(!gw_p->process(vbg))
       return false;
     meter.update(inrowsdone);
-  }
-  return true;
-}
-
-GroupProcessor::GroupProcessor(VisibilityIterator& vi, GroupWorker *gw) :
-  vi_p(vi),
-  gw_p(gw)
-{
-}
-
-// GroupProcessor& GroupProcessor::operator=(const GroupProcessor &other)
-// {
-//   // trivial so far.
-//   vi_p = other.vi_p;
-//   return *this;
-// }
-
-Bool GroupProcessor::go()
-{
-  VisBuffer vb(vi_p);
-
-  // Process the MS(es) chunk by chunk.
-  // TODO: put a chunkwise ProgressMeter here.
-  for(vi_p.originChunks(); vi_p.moreChunks(); vi_p.nextChunk()){
-    VisBuffGroup vbg;
-
-    for(vi_p.origin(); vi_p.more(); ++vi_p)
-      vbg.store(vb);
-
-    if(!gw_p->process(vbg))
-      return false;
   }
   return true;
 }

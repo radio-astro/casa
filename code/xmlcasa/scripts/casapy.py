@@ -66,7 +66,11 @@ if os.fork( ) == 0 :
 ## ensure that we're the process group leader
 ## of all processes that we fork...
 ##
-os.setpgid(0,0)
+try:
+    os.setpgid(0,0)
+except OSError, e:
+    print "setgpid( ) failed: " + e.strerror
+    print "                   processes may be left dangling..."
 
 
 ##
@@ -1171,6 +1175,14 @@ except:
 casalog.showconsole(showconsole)
 casalog.version()
 
+### Try loading ASAP
+try:
+    asap_init()
+except ImportError, e:
+    casalog.post("%s\nCould not load ASAP. sd* tasks will not be available." % e,'WARN')
+except Exception, instance:
+    casalog.post("Could not load ASAP. sd* tasks will not be available.",'WARN')
+    casalog.post(str(instance),'WARN',origin="asap_init")
 ##
 ## warn when available memory is < 512M (clean throws and exception)
 if cu.hostinfo( )['memory']['available'] < 524288:

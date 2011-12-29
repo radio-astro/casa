@@ -368,3 +368,5 @@ casa_add_executable( alma_v3 asdm2MS_xl
 casa_add_executable( alma_v3 MS2asdm_v3
   apps/MS2asdm_v3/MS2asdm_v3.cc 
   )
+
+casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadBigBDF.cc)

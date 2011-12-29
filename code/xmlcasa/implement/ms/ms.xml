@@ -1777,6 +1777,7 @@ Date/Time:                         RR:                      RL:                 
      <shortdescription>Use the MSSelection module for data selection.</shortdescription>
      <keyword>msselect</keyword>
      <input>
+
        <param type="any" direction="in" name="items">
 	 <any type="record"/>
 	 <description>
@@ -1787,6 +1788,20 @@ Date/Time:                         RR:                      RL:                 
 	 </description>
 	 <value></value>
        </param>	
+
+       <param type="bool" direction="in" name="onlyparse">
+	 <description>
+	   If set to True, expressions will only be parsed but not
+	   applied to the MS for selection.  When set to False, a
+	   selected MS will also be generated internally.  Default is
+	   False.  
+
+	   When only parsing is requested, the selected-MS is the same
+	   as the original MS.
+	 </description>
+	 <value>false</value>
+       </param>	
+
      </input>
      <returns type="bool"/>
      <description>
@@ -1800,7 +1815,18 @@ Date/Time:                         RR:                      RL:                 
        database).
      </description>
      <example>
-       Watch this space...(or request the User Support Group to fill-in)
+       CASA: staql={'field':'3C286', 'spw':'0~7:10~55'};
+       CASA: ms.open(MSNAME);
+       CASA: ms.msselect(staql, onlyparse=True); # For only getting the list
+                                                 # of indices correspoding to the selection
+       CASA: ndx=ms.msselectedindices();
+       CASA: ndx['field']
+         Out[5]: array([1], dtype=int32)
+          :
+          :
+       CASA: ms.msselect(staql);  # To do the actual selection.
+                                  # From this point on, the ms-tool is
+                                  # attached to the selected MS.
      </example>
    </method>
 
@@ -2945,9 +2971,9 @@ for i in range(len(tcoord)):
    
   <keyword>statwt</keyword>
   <input>
-     <param type="string" direction="in" name="scattertype">
-     <description>How the scatter should be estimated (rms, stddev, medabsdevmed, or quartile)</description>
-     <value>stddev</value>
+     <param type="bool" direction="in" name="dorms">
+     <description>How the scatter should be estimated (True -&gt; rms, False -&gt; stddev)</description>
+     <value>false</value>
      </param>
 
      <param type="bool" direction="in" name="byantenna">
@@ -2955,7 +2981,7 @@ for i in range(len(tcoord)):
      <value>true</value>
      </param>
 
-     <param type="bool" direction="in" name="seperateacs">
+     <param type="bool" direction="in" name="sepacs">
      <description>If solving by antenna, treat autocorrs separately</description>
      <value>true</value>
      </param>
@@ -3030,6 +3056,11 @@ for i in range(len(tcoord)):
      <description>Observation IDs to reweight.  ('' =&gt; all)</description>
      <value></value>
      </param>
+
+     <param type="string" direction="in" name="datacolumn">
+     <description>Which data column to calculate the scatter from.</description>
+     <value>corrected_data</value>
+     </param>
   </input>
   <returns type="bool"/>
 
@@ -3040,17 +3071,12 @@ for i in range(len(tcoord)):
     sets SIGMA to it, and WEIGHT to SIGMA**-2.
 
     Ideally the visibilities used to estimate the scatter, as selected by
-    fitspw and fitcorr, should be pure noise.  Since it might not be,
-    scattertype offers a variety of methods to more or less robustly estimate
-    the spread.  Note that there is a tradeoff between robustness and
-    statistical efficiency (how closely the estimate's error approaches
-    O(n**-0.5) in the Gaussian case), and that since a point source in the
-    image plane has its signal scattered among all the visibilities, detecting
-    signal to reject it as an outlier can be difficult.  However, if the noise
-    dominates the signal in the uv plane then by definition the signal does not
-    strongly affect the noise estimate.  Whichever type of estimate is used, it
-    is scaled to match the standard deviation of the presumed underlying noise
-    distribution.
+    fitspw and fitcorr, should be pure noise.  If you know for certain that
+    they are, then setting dorms to True will give the best result.  Otherwise,
+    use False (standard sample standard deviation).  More robust scatter
+    estimates like the interquartile range or median absolute deviation from
+    the median are not offered because they require sorting by value, which is
+    not possible for complex numbers.
 
     To beat down the noise of the noise estimate, the sample size per estimate
     can be made larger than a single spw and baseline.  (Using combine='spw' is
@@ -3059,8 +3085,9 @@ for i in range(len(tcoord)):
     time.  windowtype sets the type of time smoothing.
 
     WEIGHT and SIGMA will not be changed for samples that have fewer than
-    max(2, |minsamp|) visibilities.  If minsamp is &lt; 0, visibilities for
-    which no noise estimate is made will be flagged.
+    minsamp visibilities.  Selected visibilities for which no noise estimate is
+    made will be flagged.  Note that minsamp is effectively at least 2 if dorms
+    is False, and 1 if it is True.
 
   </description>
   <example>

@@ -237,6 +237,35 @@ class imregrid_test(unittest.TestCase):
         shutil.rmtree(image)
         shutil.rmtree(expected)      
         
+    def test_stretch(self):
+        """ ia.regrid(): Test stretch parameter"""
+        yy = iatool.create()
+        mymask = "maskim"
+        yy.fromshape(mymask, [200, 200, 1, 1])
+        yy.addnoise()
+        yy.done()
+        shape = [200,200,1,20]
+        yy.fromshape("", shape)
+        yy.addnoise()
+        mycsys = yy.coordsys()
+        mycsys.setreferencepixel([2.5], "spectral")
+        for i in [0,1]:
+            byvel = i == 0
+            self.assertRaises(
+                Exception,
+                yy.regrid, outfile="", asvelocity=byvel,
+                csys=mycsys.torecord(),
+                mask=mymask + ">0", stretch=False
+            )
+            zz = yy.regrid(
+                outfile="", asvelocity=byvel,
+                csys=mycsys.torecord(),
+                mask=mymask + ">0", stretch=True
+            )
+            self.assertTrue(type(zz) == type(yy))
+            zz.done()
+
+        yy.done()
             
 def suite():
     return [imregrid_test]

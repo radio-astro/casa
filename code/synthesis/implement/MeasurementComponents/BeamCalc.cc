@@ -76,10 +76,13 @@ namespace casa{
 				       const String& otherAntRayPath){
     
     Unit uS("s");
+    Bool verbose = False;
+
 
     if(obsName==obsName_p 
        && antType==antType_p 
        && obsTime.get(uS).getValue()==obsTime_p.get(uS).getValue()
+       && otherAntRayPath.empty()
        ){
       return; // nothing to do (assuming the databases haven't changed)
     }
@@ -249,9 +252,11 @@ namespace casa{
 	  BeamCalcGeometries_p[i].taperpoly[j] = ta2(IPosition(1,j));
 	}
 	BeamCalcGeometries_p[i].ntaperpoly = antParTab.getCell("NTAPERPOLY", i).asInt();
-	if(False){
+	BeamCalcGeometries_p[i].astigm_0 = antParTab.getCell("ASTIGM_0", i).asDouble();
+	BeamCalcGeometries_p[i].astigm_45 = antParTab.getCell("ASTIGM_45", i).asDouble();
+	if(verbose){
 	  cout << "i name bandMinFreq_p bandMaxFreq_p sub_h feedpos feedpos feedpos subangle legwidth legfoot legapex"
-	       << " Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly" << endl; 
+	       << " Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly astigm0 astigm45" << endl; 
 	  cout << i << " " << BeamCalcGeometries_p[i].name << " " << bandMinFreq_p[i] << " " << bandMaxFreq_p[i] 
 	       << " " << BeamCalcGeometries_p[i].sub_h 
 	       << " " << BeamCalcGeometries_p[i].feedpos[0] << " " << BeamCalcGeometries_p[i].feedpos[1] 
@@ -261,7 +266,8 @@ namespace casa{
 	       << " " << BeamCalcGeometries_p[i].Rhole << " " << BeamCalcGeometries_p[i].Rant << " " << BeamCalcGeometries_p[i].reffreq 
 	       << " " << BeamCalcGeometries_p[i].taperpoly[0] << " " << BeamCalcGeometries_p[i].taperpoly[1] 
 	       << " " << BeamCalcGeometries_p[i].taperpoly[2] << " " << BeamCalcGeometries_p[i].taperpoly[3] 
-	       << " " << BeamCalcGeometries_p[i].taperpoly[4] << " " << BeamCalcGeometries_p[i].ntaperpoly << endl; 
+	       << " " << BeamCalcGeometries_p[i].taperpoly[4] << " " << BeamCalcGeometries_p[i].ntaperpoly 
+	       << " " << BeamCalcGeometries_p[i].astigm_0 << " " << BeamCalcGeometries_p[i].astigm_45 << endl; 
 	}
       }
 
@@ -627,6 +633,9 @@ namespace casa{
     
     a->hole_radius = geom->Rhole;
     
+    a->astigm_0 = geom->astigm_0;
+    a->astigm_45 = geom->astigm_45;
+
     Antennasetdir(a, dir);
 
     return a;
@@ -685,6 +694,73 @@ namespace casa{
     
     return 1;
   }
+
+  Int BeamCalc::astigdishvalue(const calcAntenna *a, Double x, Double y, Double *z, Double *m)
+  {
+    Double ma, mb, mc, zav, A, B, C, D;
+    Double r, rr, theta, xp, d, dd, z5, z6, astigm, dastigm;
+    Double s = 1.0;
+    Int n;
+    
+    rr = x*x + y*y;
+    r = sqrt(rr);
+
+    if(r==0. || (a->astigm_0==0. && a->astigm_45==0.))
+      {
+	return dishvalue(a, r, z, m);
+      }
+
+    // the Zernike polynomials Z5 and Z6
+    Double sin2th, cos2th, rho, rho2;
+
+    theta = atan2(y,x);
+    sin2th = sin(2.*theta);
+    cos2th = cos(2.*theta);
+    rho = r / a->radius;
+    rho2 = rho*rho;
+
+    z5 = sqrt(6.) * rho2 * sin2th;
+    z6 = sqrt(6.) * rho2 * cos2th;
+
+    astigm = 1. + a->astigm_45 * z5 + a->astigm_0 * z6;
+    dastigm = 2.* rho2/r * sqrt(6.)*(a->astigm_45*sin2th + a->astigm_0*cos2th);
+
+    d = a->deltar;
+    dd = d*d;
+    
+    n = (Int)floor(r/d + 0.5);	/* the middle point */
+    if(n > a->ngeom-2) n = a->ngeom-2;
+    
+    xp = r - n*d;
+    
+    if(n == 0)
+      {
+	mc = a->m[1];
+	ma = -mc;
+	mb = 0.0;
+	zav = 2.0*a->z[1] + a->z[0];
+      }
+    else
+      {
+	ma = a->m[n-1];
+	mb = a->m[n];
+	mc = a->m[n+1];
+	zav = a->z[n-1] + a->z[n] + a->z[n+1];
+      }
+
+    A = mb;
+    B = 0.5*(mc - ma)/d;
+    C = 0.5*(mc - 2.0*mb + ma)/dd;
+    
+    D = (zav - B*dd)/3.0;
+    
+    
+    Double zn = s*(D + A*xp + B*xp*xp/2.0 + C*xp*xp*xp/3.0);
+    if(z) *z = zn * astigm;
+    if(m) *m = s*(A + B*xp + C*xp*xp) * astigm + dastigm * zn;
+    
+    return 1;
+  }
   
   /* Returns position of subreflector piece (x, y, z) and
    * its normal (u, v, w)
@@ -706,8 +782,8 @@ namespace casa{
       }
     else
       {
-	dishvalue(a, r, &z, &m);
-	
+	astigdishvalue(a, x, y, &z, &m);
+
 	/* Compute reflected unit vector direction */
 	m = tan(2.0*atan(m));
 	w = 1.0/sqrt(1.0+m*m);
@@ -746,6 +822,7 @@ namespace casa{
   
   Int BeamCalc::dishfromsub(const calcAntenna *a, Double x, Double y, Double *dishpoint)
   {
+
     Double x1, y1, dx, dy, mx, my, r, d;
     const Double eps = 0.001;
     Int iter, niter=500;
@@ -1016,7 +1093,7 @@ namespace casa{
 	/* get position (x) and normal (n) on the real dish */
 	for(i = 0; i < 2; i++) x[i] = sub[i] + t*unitdir[i];
 	r = sqrt(x[0]*x[0] + x[1]*x[1]);
-	dishvalue(a, r, &(x[2]), &m);
+	astigdishvalue(a, x[0], x[1], &(x[2]), &m);
 	n[2] = 1.0/sqrt(1.0+m*m);
 	n[0] = -m*(x[0]/r)*n[2];
 	n[1] = -m*(x[1]/r)*n[2];
@@ -1315,6 +1392,9 @@ namespace casa{
       to->taperpoly[j] = from->taperpoly[j];
     }
     to->ntaperpoly = from->ntaperpoly;
+    to->astigm_0 = from->astigm_0;
+    to->astigm_45 = from->astigm_45;
+
   }
 
 
@@ -1478,6 +1558,7 @@ namespace casa{
 	    amp = sqrt(dP);
 	    
 	    L = Raylen(ray);
+
 	    phase = 2.0*M_PI*(L-L0)/a->lambda;
 	    
 	    /* phase retard the wave */

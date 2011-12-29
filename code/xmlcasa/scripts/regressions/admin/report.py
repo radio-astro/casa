@@ -774,6 +774,7 @@ class report:
                     fd.write('Execution')
                 else:
                     txt = {}
+                    txt['ms'] = 'Visibilities'
                     txt['simple'] = 'Statistics'
                     txt['cube']   = 'Cubefit'
                     txt['pol1']   = 'PolImage1'
@@ -1121,6 +1122,17 @@ class report:
                                           float(log['ref_'+pol+'_rms'])))
                                 f.write('</pre>')
                                 f.write('<br>')
+                    elif log['type'] == 'ms':
+                        f.write('<pre>')
+                        f.write('MS       min: %g\nmax: %g\nrms: %g \n' %
+                                (float(log['ms_amp_min']),
+                                 float(log['ms_amp_max']),
+                                 float(log['ms_amp_rms'])))
+                        f.write('Template min: %g\nmax: %g\nrms: %g \n' %
+                                (float(log['ref_amp_min']),
+                                 float(log['ref_amp_max']),
+                                 float(log['ref_amp_rms'])))
+                        f.write('</pre>')
                     else:
                         raise Exception, 'Unknown test type '+log['type']
                     

@@ -1,9 +1,9 @@
 import os
 import shutil
+import numpy
 from taskinit import *
 from cleanhelper import *
 im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
-#import pdb
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, observation, mode, gridmode,
@@ -17,10 +17,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           cyclespeedup, nterms, reffreq, chaniter, flatnoise, allowchunk):
 
     #Python script
-    
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
-
     #######################################################################  
     #
     # start of the big cube treatment
@@ -54,7 +52,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
  
         try: 
             # estimate the size of the image
-    
             import commands
     
             nstokes=len(stokes)
@@ -437,13 +434,27 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         if (imageids.count(imname)!=1):
                            raise Exception, "Duplicate entry for imagename=%s" % imname 
             else:
-                 imsizes=imsize
-                 phasecenters=phasecenter
-                 imageids=imagename
+                
+                imsizes=[imsize[0], imsize[0]] if ((len(imsize)==1) and numpy.isscalar(imsize[0])) else imsize 
+                phasecenters=phasecenter
+                imageids=imagename
             casalog.post("imsizes="+str(imsizes)+" imageids="+str(imageids), 'DEBUG1')
-#
-# Moved getAlgorithm() to here so that multifield is set using outlier file.
-#
+
+            ###test image sizes
+            optsize=[0,0]
+            tmpsize=imsizes if type(imsizes[0])==list else [imsizes]
+            for ksize in range(len(tmpsize)):
+                nksize=len(tmpsize[ksize])
+                optsize[0]=cleanhelper.getOptimumSize(tmpsize[ksize][0])
+                if nksize==1: # imsize can be a single element 
+                    optsize[1]=optsize[0]
+                else:
+                    optsize[1]=cleanhelper.getOptimumSize(tmpsize[ksize][1])
+                if((optsize[0] != tmpsize[ksize][0]) or (nksize!=1 and optsize[1] != tmpsize[ksize][1])):
+                       raise ValueError, str(tmpsize[ksize])+' is not an acceptable imagesize, try '+str(optsize) 
+           #
+           # Moved getAlgorithm() to here so that multifield is set using outlier file.
+           #
             localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode, 
                                           multiscale, multifield, facets, nterms,
                                           'clark');
@@ -527,7 +538,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             else:
                 #print "mask=",loc_mask, " chanslice=", chanslice
                 #imset.makemultifieldmask2(mask,chanslice)
-                imset.makemultifieldmask3(loc_mask,chanslice,newformat, interactive)
+                imset.makemultifieldmask2(loc_mask,chanslice,newformat, interactive)
                 maskimage=[]
                 #for img in sorted(imset.maskimages):
                 for img in imset.maskimages.keys():

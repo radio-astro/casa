@@ -20,88 +20,153 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        
 
 <description>
-The vpmanager, or voltage pattern manager, creates a table with the
+The vpmanager tool serves to set up a list of primary beams or voltage patterns
+(antenna responses) and then select in detail 
+which of them is used for which observatory.
+The distinction of several antenna types for a given observatory (heterogeneous
+arrays) is supported.
+ 
+Antenna responses can be selected from either internally 
+hard-coded ones, or response-groups defined via an AntennaResponses table, or
+user-defined analytic primary beams.
+
+Imaging and simulation routines pick up the selected response definitions
+and instantiate them.
+
+The vpmanager can also create a table with the
 description of one or more voltage patterns (vp) or primary beams
 (pb).  There is a mapping between telescope name and the vp or pb
 description.  The vp description table can be read by imager's
 <link anchor="imager:imager.setvp.function">setvp</link> method, which instantiates the
 corresponding voltage patterns from the descriptions and applies them
 to the images. 
-<!-- </description> -->
 
-\subsubsection*{What {\tt vpmanager} does:}
+The vpmanager tool is the CASA Python object which constitutes the
+user interface to the VPManager C++ class. By default it is named "vp" in casapy.
+This document describes
+the upgraded version of the tool and class to be included in CASA 3.4.
 
-\begin{description}
-\item[Set a Given Telescope's VP/PB model] The vpmanager recognizes the
-names of several telescopes: e.g. ATCA, GBT, GMRT, HATCREEK, NMA, NRAO12M,
-NRAO140FT, OVRO, VLA, WSRT.  New telescopes and their default VP/PB models will
-need to be added to the system.
+The VPManager class is implemented as a singleton, i.e. internally there is only one instance
+at all times. This instance accessed via the static VPManager::Instance() method. It is permanent 
+until casapy is exited or it is reinstantiated via the static VPManager::reset() method.
 
-\item[Common VP/PB Models] Many common voltage pattern (vp) and primary beam (pb)
-models have been coded into \casa.  Currently, the recognized models include
-DEFAULT, ATCA\_L1, ATCA\_L2, ATCA\_L3, ATCA\_S, ATCA\_C, ATCA\_X, GBT, GMRT,
-HATCREEK, NRAO12M, NRAO140FT, OVRO, VLA, VLA\_INVERSE, VLA\_NVSS,
-VLA\_2NULL, VLA\_4, VLA\_P, VLA\_L, VLA\_C, VLA\_X, VLA\_U, VLA\_K, VLA\_Q,
-WSRT, and WSRT\_LOW.  In all cases, the VP/PB model and the beam squint (if
-present) scale linearly with wavelength.  If DEFAULT is selected, the
-appropriate VP/PB model is selected for the telescope and observing frequency.
-\item[1-D Beam Models] Most beam models are rotationally symmetric (excepting
-beam squint).  From the beam parameterization in terms of the various
-coefficients and other terms, an internal lookup table with 10000 elements is
-created for application of the VP/PB to an image.
+The vp tool connects to the single instance of VPManager.
+All settings the user makes with the tool, have effect immediately and are then used
+by all parts of CASA which access the VPManager class (i.e. eventually all imaging and simulation
+routines).
 
-\item[Beam Squint] The VP/PB models include beam squint.  The VLA\_L,
-VLA\_C, VLA\_X, VLA\_U, VLA\_K, and VLA\_Q models (which are the defaults for
-those VLA bands), have the appropriate squint magnitude and orientation, though
-the orientation has not been verified through processing actual data.
-\item[Multiple VP/PB Models for one MS] The VPManager can have VP information
-for multiple telescopes.  However, the internals of imager cannot yet deal with
-VP/PB's for multiple telescopes.  In the case of a MS with multiple
-telescopes present, the primary beam of the first telescope present in
-the MS will be used, even if it is not the first telescope specified
-in the VP description table produced by vpmanager.
+In order to enable parallelization, a simple {\it locking mechanism} protects from simultaneous access
+to the VPManager. Only the application programmer has to be aware of this. On the tool level
+the locking is done automatically.
 
-\item[Antenna-dependent Voltage Patterns] are supported via the AntennaReponses table, see.
-<link anchor="synthesis:imager.vpmanager.createantresp.function">createantresp</link>
+The VPManager instance keeps a simple database of available antenna responses, the {\it vplist}.
+This list is initialized at the startup of CASA or by calling the reset() method
+of the class. In the vp tool, the reset call can be triggered using
+\begin{verbatim}
+   vp.reset()
+\end{verbatim}
 
-\item[Two-dimensional Voltage Pattern Images] are supported via
-<link anchor="synthesis:imager.vpmanager.setpbimage.function">setpbimage</link>.
-\end{description}
+In order to support heterogeneous interferometer arrays, VPManager permits the use
+of {\it antenna types} in addition to observatory or {\it telescope} names.
+
+For defining a simple response which is only spatially scaled by frequency but otherwise
+constant, a simple call to the vp tool is sufficient, e.g.:
+\begin{verbatim}
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam='12.0m',
+                     blockagediam='0.75m',
+                     maxrad='1.784deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+\end{verbatim}
+This will create a new entry in the vplist for an analytic Airy disk antenna response
+and make it the default response for telescope "ALMA".
+Subsequent requests to VPManager for a ALMA antenna response will get this Airy disk.
+
+If whole {\it response systems} are to be defined for a given telescope, the use of an
+{\it AntennaResponses table} is possible. Such a table can be set up using the 
+vp tool method
+{\tt createantresp()} 
+and then connected to a telescope using a command like
+\begin{verbatim}
+vp.setpbantresptable(telescope='ALMA',
+                     antresppath=casa['dirs']['data']
+                     +'/alma/responses/AntennaResponses-ALMA-RT',
+                     dopb=True)
+\end{verbatim}
+where the value of the {\tt antresppath} parameter indicates the path to the AntennaResponses table.
+Subsequent requests for ALMA antenna responses to VPManager will start a search in the 
+indicated AntennaResponses table for responses matching given parameters.
+Presently supported search parameters in VPManager::getvp() and vp.getvp() are:
+\begin{itemize}
+\item antenna type
+\item observation time (used for versioning and for reference frame transformations)
+\item frequency (as a Measure, the reference frame is respected)
+\item observing direction (to support elevation and azimuth dependent responses)
+\end{itemize}
+An example of a call to vp.getvp() is
+\begin{verbatim}
+        myrecord = vp.getvp(telescope='ALMA',
+                            antennatype = 'DV',
+                            obstime = '2009/07/24/10:00:00',
+                            freq = 'TOPO 100GHz',
+                            obsdirection = 'AZEL 30deg 60deg')
+\end{verbatim}
+
+If the default antenna response for the given telescope is not defined via an AntennaResponses
+table, the observation parameters {\tt obstime}, {\tt freq}, and {\tt obsdirection} are not needed 
+and can be omitted. The parameter {\tt antennatype} defaults to empty string. So if no antenna types
+are distinguished for the given telescope, the simplest call to getvp becomes
+\begin{verbatim}
+       myrecord = vp.getvp(telescope='HATCREEK')
+\end{verbatim}
+
+During initialization, VPManager will look for entries in the column "AntennaResponses"
+of the CASA "Observatories" table. If there are non-blank entries, the string found will be
+interpreted as the path to the default AntennaResponses table for the given telescope. 
+
+Note that the casacore AntennaResponses C++ class (which is used by VPManager to
+administrate the AntennaResponses tables) also supports the additional search parameters
+"receiver type" and "beam number". A general interface to the response file name search
+is available through the vp.getrespimagename() method. But presently this accesses only
+AntennaResponse tables which are entered as the default table in the Observatories table.
+
+Generally, the vp tool methods provide functionality:
+to set up new analytic antenna responses,
+select which antenna responses from the vplist to use for which telescope and antenna type, 
+access the contents of the vplist,
+create and access an AntennaResponses table,
+create a voltage pattern table.
 
 </description>
 
 <example>
-The following example shows a simple way to make
-a new voltage pattern table.
+Define Airy beams for ALMA antenna types
 
-Note that this can be more easily
-done from the <link anchor="tasking:toolmanager">toolmanager</link>.
-\begin{verbatim}
-"""
-#
-# make the vpmanager
-#
-vptool = casac.homefinder.find_home_by_name('vpmanagerHome')
-vp =vptool.create()
-#
-# Lets say we want an Airy Disk voltage pattern for our
-# HATCREEK data, but we want to use the system default
-# for the OVRO data:
-#
-vp.setpbairy(telescope='HATCREEK', dopb=T, dishdiam='6.0m',
-             blockagediam='0.6m',  maxrad='2arcmin',
-             reffreq='100GHz', dosquint=F)
-#
-vp.setcannedpb(telescope='OVRO', dopb=T, commonpb='DEFAULT', dosquint=F)
-#
-vp.summarizevps()
-#
-vp.saveastable(tablename='California.Beaming')
-#
-print "Last example.  Exiting..."
-exit()
-"""
-\end{verbatim}
+        vp.reset()
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam='11m',
+                     blockagediam='0.75m',
+                     maxrad='1.784deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+        myid1 = vp.getuserdefault('ALMA')
+        
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam='6m',
+                     blockagediam='0.75m',
+                     maxrad='3.5deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+        myid2 = vp.getuserdefault('ALMA')
+
+        vp.setuserdefault(myid1, 'ALMA', 'DV')
+        vp.setuserdefault(myid1, 'ALMA', 'DA')
+        vp.setuserdefault(myid1, 'ALMA', 'PM')
+        vp.setuserdefault(myid2, 'ALMA', 'CM')
+
+This will define Airy disk primary beams for all four antenna types
+available in the Atacama Large MM/sub-mm Array. 
 </example>
 
 
@@ -112,6 +177,17 @@ exit()
 <description>
 The vpmanager constructor has no arguments.
 </description>
+</method>
+ 
+   <method type="function" name="release">
+   <shortdescription>Release the VPManager for use by others.</shortdescription>
+   
+<description>
+No arguments.
+</description>
+<input>
+</input>
+<returns type="void"></returns>
 </method>
 
  
@@ -813,7 +889,7 @@ Overwrites a previous default. Returns True if successful.
 <input>
 
      <param type="int" name="vplistnum">
-     <description>The number of the vp as displayed by summarizevps() or -1 for internal default</description>
+     <description>The number of the vp as displayed by summarizevps(), or -1 for internal default, or -2 for unset</description>
      <value>-1</value>
      </param>
 
@@ -832,7 +908,7 @@ Overwrites a previous default. Returns True if successful.
 </method>
 
    <method type="function" name="getuserdefault">
-   <shortdescription>Get the vp list number of the present default VP/PB for the given parameters (-1 = internal PB)</shortdescription>
+   <shortdescription>Get the vp list number of the present default VP/PB for the given parameters (-1 = internal PB, -2 = none)</shortdescription>
    
 <description>
 Get the vp list number of the present default VP/PB for the given parameters.

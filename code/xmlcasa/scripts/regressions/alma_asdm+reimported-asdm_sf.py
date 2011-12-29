@@ -443,8 +443,10 @@ except:
     part1 = False
 else:
     print myname, ": Success! Now checking output ..."
+    # when SubMS::setupMS() is used, the main table
+    # somehow starts from table.f1 instead of table.f0
     mscomponents = set(["table.dat",
-                        "table.f0",
+                        #"table.f0",
                         "table.f1",
                         "table.f2",
                         "table.f3",

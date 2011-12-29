@@ -215,7 +215,8 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		}
 		subImage = SubImage<Float>(*_getImage(), LattRegionHolder(LCLELMask(mask)));
 		subImage = SubImage<Float>::createSubImage(
-		    subImage, *_getRegion(), _getMask(), _getLog().get(), False
+		    subImage, *_getRegion(), _getMask(), _getLog().get(), False,
+		    AxesSpecifier(), _getStretch()
 		);
 	}
 	else {
@@ -229,11 +230,13 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 			)
 			: _getImage()->cloneII());
 		subImage = SubImage<Float>::createSubImage(
-		    *tmp, *_getRegion(), _getMask(), _getLog().get(), False
+		    *tmp, *_getRegion(), _getMask(), _getLog().get(),
+		    False, AxesSpecifier(), _getStretch()
 		);
 	}
 	pbSubImage = SubImage<Float>::createSubImage(
-    	*pbTemplate, *_getRegion(), _getMask(), _getLog().get(), False
+    	*pbTemplate, *_getRegion(), _getMask(), _getLog().get(),
+    	False, AxesSpecifier(), _getStretch()
     );
 	tmpStore.reset(0);
 	std::auto_ptr<ImageInterface<Float> > outImage(0);

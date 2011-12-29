@@ -30,6 +30,7 @@
 #include <flagging/Flagging/FlagAgentElevation.h>
 #include <flagging/Flagging/FlagAgentQuack.h>
 #include <flagging/Flagging/FlagAgentShadow.h>
+#include <flagging/Flagging/FlagAgentExtension.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -81,8 +82,9 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Background mode enabled" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Background mode disabled" << LogIO::POST;
 	}
+
 }
 
 FlagAgentBase::~FlagAgentBase()
@@ -105,8 +107,10 @@ FlagAgentBase::initialize()
    timeSelection_p = String("");
    baselineSelection_p = String("");
    fieldSelection_p = String("");
-   // NOTE: According to MS selection syntax, spw must be at least * but since
-   // we are parsing it only if it was provided it should not be a problem
+   // NOTE (first implementation): According to MS selection syntax, spw must be at least *
+   // but since we are parsing it only if it was provided it should not be a problem
+   // NOTE (after Dic 2011 testing): As far as I know spw selection does not have to be *
+   // (can be empty) and in fact applying a spw selection slows down the MSSelection class
    spwSelection_p = String("");
    uvwSelection_p = String("");
    polarizationSelection_p = String("");
@@ -131,11 +135,18 @@ FlagAgentBase::initialize()
    threadTerminated_p = false;
    processing_p = false;
 
+   // Initialize counters
+   chunkFlags_p = 0;
+   chunkNaNs_p = 0;
+   msFlags_p = 0;
+   msNaNs_p = 0;
+   visBufferFlags_p = 0;
+
    //// Initialize configuration ////
 
    /// Running config
    profiling_p = false;
-   backgroundMode_p = true;
+   backgroundMode_p = false;
    iterationApproach_p = ROWS;
    multiThreading_p = false;
    nThreads_p = 0;
@@ -146,7 +157,7 @@ FlagAgentBase::initialize()
    flag_p = true;
    /// Mapping config
    dataColumn_p = "data";
-   expression_p = "ABS I";
+   expression_p = "ABS 1";
    dataReference_p = DATA;
    /// Profiling and testing config
    profiling_p = false;
@@ -237,6 +248,13 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 		return agent;
 	}
 
+	// Extension
+	if (mode.compare("extend")==0)
+	{
+		FlagAgentExtension* agent = new FlagAgentExtension(dh,config,writePrivateFlags);
+		return agent;
+	}
+
 	return ret;
 }
 
@@ -258,8 +276,9 @@ FlagAgentBase::terminate ()
 		{
 			sched_yield();
 		}
-		casa::async::Thread::terminate();
 	}
+
+	casa::async::Thread::terminate();
 
 	return;
 }
@@ -311,6 +330,7 @@ FlagAgentBase::run ()
 
 			if (processing_p) // NOTE: This races with queueProcess but it is harmless
 			{
+				// Carry out processing
 				runCore();
 
 				// Disable processing to enter in idle mode
@@ -338,6 +358,9 @@ FlagAgentBase::runCore()
 
 	// Set vis buffer
 	visibilityBuffer_p = flagDataHandler_p->visibilityBuffer_p;
+
+	// Reset VisBuffer flag counters
+	visBufferFlags_p = 0;
 
 	// Generate indexes applying data selection filters
 	generateAllIndex();
@@ -405,6 +428,12 @@ FlagAgentBase::runCore()
 			}
 		}
 	}
+
+	// If any flag was raised, then we have to flush the flagCube
+	if (visBufferFlags_p>0) flagDataHandler_p->flushFlags_p = true;
+
+	// Update chunk counter
+	chunkFlags_p += visBufferFlags_p;
 
 	return;
 }
@@ -790,7 +819,7 @@ FlagAgentBase::setAgentParameters(Record config)
 		}
 		else
 		{
-			expression_p = "ABS I";
+			expression_p = "ABS 1";
 		}
 
 		expression_p.upcase();
@@ -809,7 +838,13 @@ FlagAgentBase::setAgentParameters(Record config)
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
 					" Unsupported mapping expression: " <<
 					expression_p << ", selecting ABS by default. Supported expressions: REAL,IMAG,ARG,ABS,NORM." << LogIO::POST;
-			expression_p = "ABS I";
+			expression_p = "ABS 1";
+		}
+
+		// If expression is ABS 1 we flag the first correlation product
+		if (expression_p.find("1") != string::npos)
+		{
+			expression_p = "ABS " + flagDataHandler_p->corrProducts_p->at(0);
 		}
 
 		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " visibility expression is " << expression_p << LogIO::POST;
@@ -1081,6 +1116,80 @@ FlagAgentBase::find(Matrix<Int> validPairs, Int element1, Int element2)
 }
 
 bool
+FlagAgentBase::isNaN(Float number)
+{
+	bool result = isnan(number);
+	chunkNaNs_p += result;
+	return result;
+}
+
+bool
+FlagAgentBase::isNaN(Double number)
+{
+	bool result = isnan(number);
+	chunkNaNs_p += result;
+	return result;
+}
+
+void
+FlagAgentBase::chunkSummary()
+{
+	// With this check we skip cases like summary or display
+	if (chunkFlags_p > 0)
+	{
+		msFlags_p +=  chunkFlags_p;
+		if (flag_p)
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+		}
+		else
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+		}
+
+	}
+
+	// Only the clipping agent is capable of detecting this, and besides in general
+	// we should not have NaNs, so it is better not to print this log if possible
+	if (chunkNaNs_p > 0)
+	{
+		msNaNs_p += chunkNaNs_p;
+		*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
+	}
+
+	chunkFlags_p = 0;
+	chunkNaNs_p = 0;
+	visBufferFlags_p = 0;
+	return;
+}
+
+void
+FlagAgentBase::msSummary()
+{
+	// With this check we skip cases like summary or display
+	if (msFlags_p > 0)
+	{
+		if (flag_p)
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+		}
+		else
+		{
+			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+		}
+	}
+
+	if (msNaNs_p > 0)
+	{
+		*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
+	}
+
+	msFlags_p = 0;
+	msNaNs_p = 0;
+	return;
+}
+
+bool
 FlagAgentBase::find(Vector<Int> validRange, Int element)
 {
 	for (uShort idx=0;idx<validRange.size(); idx++)
@@ -1141,7 +1250,7 @@ FlagAgentBase::iterateRows()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p << " from a total of " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
@@ -1152,7 +1261,7 @@ FlagAgentBase::iterateRows()
 	else
 	{
 		// Some logging info
-		*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Going to process a buffer with: " <<
+		*logger_p 	<< LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " Going to process a buffer with: " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
 				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
@@ -1204,7 +1313,7 @@ FlagAgentBase::iterateInRows()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p
 				<< " from a total of " << rowsIndex_p.size() << " rows with " << channelIndex_p.size() << " channels ("
@@ -1213,7 +1322,7 @@ FlagAgentBase::iterateInRows()
 	else
 	{
 		// Some logging info
-		*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Going to process a buffer with: " <<
+		*logger_p 	<< LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " Going to process a buffer with: " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") "<< LogIO::POST;
 	}
@@ -1263,14 +1372,14 @@ FlagAgentBase::iterateAntennaPairs()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " baselines starting with baseline " << threadId_p
 				<< " from a total of " << flagDataHandler_p->getAntennaPairMap()->size() << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
 	}
 
 
@@ -1476,6 +1585,29 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 Bool
 FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 {
+	// If we find I directly in the polarization map we assume is ALMA Water Vapor Radiometer data
+	// And we only process it if the user requested WVR
+	if (expression_p.find("WVR") != string::npos)
+	{
+		if (polMap->find(Stokes::I) != polMap->end())
+		{
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Detected Water Vapor data in spw (" <<
+					visibilityBuffer_p->get()->spectralWindow() << "), will be flagged" << LogIO::POST;
+			return True;
+		}
+		else
+		{
+			return False;
+		}
+	}
+	else if (polMap->find(Stokes::I) != polMap->end())
+	{
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Detected Water Vapor data in spw (" <<
+					visibilityBuffer_p->get()->spectralWindow() << "), won't be flagged" << LogIO::POST;
+		return False;
+	}
+
+	// After WVR - I products check we go ahead with the rest of the generic cases
 	if (expression_p.find("XX") != string::npos)
 	{
 		if (polMap->find(Stokes::XX) != polMap->end())
@@ -1788,6 +1920,26 @@ void FlagAgentList::completeProcess()
 	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
 		(*iterator_p)->completeProcess();
+	}
+
+	return;
+}
+
+void FlagAgentList::chunkSummary()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->chunkSummary();
+	}
+
+	return;
+}
+
+void FlagAgentList::msSummary()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->msSummary();
 	}
 
 	return;

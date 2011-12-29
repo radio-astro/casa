@@ -16,6 +16,8 @@ Unit tests for the vpmanager tool. Tested methods:
         setpbantresptable()
         createantresp()
         getrespimagename()
+        setuserdefault()
+        getuserdefault()
 '''
 class vpmanager_test(unittest.TestCase):
     
@@ -215,7 +217,17 @@ class vpmanager_test(unittest.TestCase):
                   and ('DV' in myanttypes)
                   and ('PM' in myanttypes))
 
-        self.assertTrue(tdvok and tdaok and tpmok and tcmok and tantok)
+        vp.setuserdefault(-2, 'ALMA', '')
+
+        myanttypes = vp.getanttypes('ALMA')
+
+        tantok2 = ((not('' in myanttypes))
+                  and ('CM' in myanttypes)
+                  and ('DA' in myanttypes)
+                  and ('DV' in myanttypes)
+                  and ('PM' in myanttypes))
+
+        self.assertTrue(tdvok and tdaok and tpmok and tcmok and tantok and tantok2)
 
 
     def test11(self):

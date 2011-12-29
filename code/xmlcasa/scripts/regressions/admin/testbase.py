@@ -254,8 +254,8 @@ class testbase :
         return self.testList
     
     def searchscript(self,  testname):
-        print "searching for script", testname
         scriptdir=self.scriptRepository
+        print "searching for script", testname, "in ",scriptdir
         testName=string.lower(testname)
 
         # search for DIR/tests/<name>.py

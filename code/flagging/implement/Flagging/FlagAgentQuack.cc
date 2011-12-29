@@ -163,6 +163,7 @@ FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, u
     	{
     		flags.applyFlag(chan_i,row);
     	}
+    	visBufferFlags_p += flags.flagsPerRow();
 	}
 
 	return;

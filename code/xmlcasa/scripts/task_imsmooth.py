@@ -71,7 +71,10 @@ import os
 import numpy
 from taskinit import *
 
-def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans, stokes, mask, outfile):
+def imsmooth(
+    imagename, kernel, major, minor, pa, targetres, region,
+    box, chans, stokes, mask, outfile, stretch
+):
     casalog.origin( 'imsmooth' )
     retValue = False
 
@@ -125,11 +128,10 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
                
             casalog.post( "ia.convolve2d( major="+str(major)+", minor="\
                           +str(minor)+", outfile="+outfile+")", 'DEBUG2' )
-            #retValue = ia.convolve2d( axes=[0,1], region=reg, major=major, \
-            #                          minor=minor, outfile=outfile )
             _myia.convolve2d(
                 axes=[0,1], region=reg, major=major,
-                minor=minor, pa=pa, outfile=outfile
+                minor=minor, pa=pa, outfile=outfile,
+                mask=mask, stretch=stretch
             )
             _myia.done()
             retValue = True
@@ -155,9 +157,12 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
             #retValue = ia.sepconvolve( axes=[0,1], types=['box','box' ],\
             #                           widths=[ minor, major ], \
             #                           region=reg,outfile=outfile )
-            _myia.sepconvolve( axes=[0,1], types=['box','box' ],\
-                                       widths=[ minor, major ], \
-                                       region=reg,outfile=outfile )
+            _myia.sepconvolve(
+                axes=[0,1], types=['box','box' ],
+                widths=[ minor, major ],
+                region=reg,outfile=outfile,
+                mask=mask, stretch=stretch
+            )
             _myia.done()
             retValue = True
         else:

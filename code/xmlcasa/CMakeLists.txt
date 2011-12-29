@@ -246,7 +246,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_immath.py
   scripts/task_immoments.py
   scripts/task_impbcor.py
-  scripts/task_importaipscaltable.py
   scripts/task_importasdm.py
   scripts/task_importevla.py
   scripts/task_importfits.py
@@ -285,6 +284,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdfit.py
   scripts/task_sdflag.py
   scripts/task_sdflagmanager.py
+  scripts/task_sdgrid.py
   scripts/task_sdimaging.py
   scripts/task_sdimprocess.py
   scripts/task_sdlist.py
@@ -299,13 +299,13 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_ssoflux.py
   scripts/task_simdata.py
   scripts/task_simobserve.py
-  scripts/task_simobserve2.py
   scripts/task_simanalyze.py
   scripts/task_slsearch.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
   scripts/task_splattotable.py
   scripts/task_split.py
+  scripts/task_statwt.py
   scripts/task_testconcat.py
   scripts/task_tflagcmd.py
   scripts/task_tflagger.py
@@ -374,7 +374,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/immath.xml
   tasks/immoments.xml
   tasks/impbcor.xml
-  tasks/importaipscaltable.xml
   tasks/importasdm.xml
   tasks/importevla.xml
   tasks/importfits.xml
@@ -411,6 +410,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdfit.xml
   tasks/sdflag.xml
   tasks/sdflagmanager.xml
+  tasks/sdgrid.xml
   tasks/sdimaging.xml
   tasks/sdimprocess.xml
   tasks/sdlist.xml
@@ -425,13 +425,13 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/ssoflux.xml
   tasks/simdata.xml
   tasks/simobserve.xml
-  tasks/simobserve2.xml
   tasks/simanalyze.xml
   tasks/slsearch.xml
   tasks/smoothcal.xml
   tasks/specfit.xml
   tasks/splattotable.xml
   tasks/split.xml
+  tasks/statwt.xml
   tasks/testconcat.xml
   tasks/tflagcmd.xml
   tasks/tflagger.xml

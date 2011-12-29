@@ -8,7 +8,10 @@ def asap_init():
     a=inspect.stack()
     stacklevel=0
     for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
+        #if (string.find(a[k][1], 'ipython console') > 0):
+        if a[k][1] == "<string>" or \
+               (string.find(a[k][1], 'ipython console') > 0) or \
+               string.find(a[k][1],"casapy.py") > 0:
             stacklevel=k
             break
     myf=sys._getframe(stacklevel).f_globals
@@ -24,6 +27,7 @@ def asap_init():
     from sdfit_cli import sdfit_cli as sdfit
     from sdflag_cli import sdflag_cli as sdflag
     from sdflagmanager_cli import sdflagmanager_cli as sdflagmanager
+    from sdgrid_cli import sdgrid_cli as sdgrid
     from sdimaging_cli import sdimaging_cli as sdimaging
     from sdimprocess_cli import sdimprocess_cli as sdimprocess
     from sdlist_cli import sdlist_cli as sdlist
@@ -42,6 +46,7 @@ def asap_init():
     myf['sdfit']=sdfit
     myf['sdflag']=sdflag
     myf['sdflagmanager']=sdflagmanager
+    myf['sdgrid']=sdgrid
     myf['sdimaging']=sdimaging
     myf['sdimprocess']=sdimprocess
     myf['sdlist']=sdlist

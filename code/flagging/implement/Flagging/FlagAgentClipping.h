@@ -39,6 +39,11 @@ protected:
 	// Compute flags afor a given mapped visibility point
 	void computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
+	// Specialization of the different clipping cases
+	bool checkVisForClipOutside(Float visExpression);
+	bool checkVisForClipInside(Float visExpression);
+	bool checkVisForNaNs(Float visExpression);
+
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
 
@@ -49,6 +54,9 @@ private:
 	Bool channelavg_p;
 	Float clipmin_p;
 	Float clipmax_p;
+
+	// Specialization for the clipping case
+	bool (casa::FlagAgentClipping::*checkVis_p)(Float);
 
 };
 

@@ -4,7 +4,7 @@
 import os, time
 
 # Clear out results from previous runs.
-os.system('rm -rf testcube2 tc2*')
+#os.system('rm -rf testcube2 tc2*')
 
 startTime = time.time()
 startProc = time.clock()
@@ -19,7 +19,13 @@ print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"testcube.fits",imagename="testcube2")
-default("simdata")
+
+# test
+#default("simdata")
+#image=False
+#project="tc2_simdata"
+
+default("simobserve")
 project="tc2"
 
 skymodel="testcube2"
@@ -32,13 +38,12 @@ inwidth="0.5MHz"
 setpointings=False
 ptgfile=datadir+"testcube.ptg.txt"
 
-observe=True
+obsmode="int"
 antennalist=cfgdir+"alma.out01.cfg"
 refdate="2012/06/21/03:25:00"
 totaltime="7200s"
 
 thermalnoise=""
-image=False
 verbose=True
 overwrite=False
 
@@ -63,11 +68,10 @@ newdata= ms.getdata(items="data")['data']
 
 refshape=[2,10,882000]
 
-# 200101119 my error with startfreq
-refstats = { 'max': 0.188+0.00373j,
-             'min':-0.154+0.00643j,
-             'sum': 21700.-1150.j,
-             'std': 0.05 }
+refstats = { 'max': 2.05e-01 +  7.52e-03j,
+             'min':-1.90e-01 +  4.33e-02j,
+             'sum': 1.72e+04 + -1.53e+03j,
+             'std': 5.53e-02 }
 
 ### tight 
 reftol   = {'max':  5e-3,

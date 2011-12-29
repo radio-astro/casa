@@ -1,8 +1,8 @@
 from taskinit import mstool, tbtool, casalog, write_history
 
-def task_statwt(vis, scattertype, byantenna, separateacs, fitspw, fitcorr, combine,
-                timebin, minsamp, field, spw, antenna, timerange, scan, intent,
-                array, correlation, obs):
+def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
+           timebin, minsamp, field, spw, antenna, timerange, scan, intent,
+           array, correlation, obs, datacolumn):
     """
     Sets WEIGHT and SIGMA using the scatter of the visibilities.
     """
@@ -21,22 +21,29 @@ def task_statwt(vis, scattertype, byantenna, separateacs, fitspw, fitcorr, combi
                 break
         if datacol == 'junk':
             raise ValueError(vis + " does not have a data column")        
+
+        if ':' in spw:
+            casalog.post('The channel selection part of spw will be ignored.', 'WARN')
         
-        myms.open(vis)
-        myms.statwt(scattertype, byantenna, separateacs, fitspw, fitcorr, combine,
-                    timebin, minsamp, field, spw, antenna, timerange, scan, intent,
-                    array, correlation, obs)
+        myms.open(vis, nomodify=False)
+        retval = myms.statwt(dorms, byantenna, sepacs, fitspw, fitcorr, combine,
+                             timebin, minsamp, field, spw, antenna, timerange, scan, intent,
+                             array, correlation, obs, datacolumn)
         myms.close()
     except Exception, e:
         casalog.post("Error setting WEIGHT and SIGMA for %s:" % vis, 'SEVERE')
         casalog.post("%s" % e, 'SEVERE')
+        if False:  # Set True for debugging.
+            for p in statwt.func_code.co_varnames[:statwt.func_code.co_argcount]:
+                v = eval(p)
+                print p, "=", v, ", type =", type(v)
         retval = False
 
     if retval:
         try:
             param_names = statwt.func_code.co_varnames[:statwt.func_code.co_argcount]
             param_vals = [eval(p) for p in param_names]
-            retval &= write_history(myms, outputvis, 'statwt', param_names, param_vals,
+            retval &= write_history(myms, vis, 'statwt', param_names, param_vals,
                                     casalog)
         except Exception, instance:
             casalog.post("*** Error \'%s\' updating HISTORY" % (instance),

@@ -319,6 +319,42 @@ class impbcor_test(unittest.TestCase):
             cutoff=0.001
         )
 
+    def test_stretch(self):
+        """ ia.pbcor(): Test stretch parameter"""
+        yy = iatool.create()
+        mymask = "maskim"
+        yy.fromshape("", [113, 76, 1, 1])
+        yy.addnoise()
+        xx = yy.transpose(mymask, "0132")
+        yy.done()
+        xx.done()
+        for i in [0,1]:
+            if i == 0:
+                yy.open(im2)
+                self.assertRaises(
+                    Exception,
+                    yy.pbcor, pbimage=pb2,
+                    mask=mymask + ">0", stretch=False
+                )
+                zz = yy.pbcor(
+                    pbimage=pb2, mask=mymask + ">0", stretch=True
+                )
+                self.assertTrue(type(yy) == type(zz))
+                yy.done()
+            else:
+                zz = impbcor(
+                    imagename=im2, pbimage=pb2,
+                    mask=mymask + ">0", stretch=False,
+                    wantreturn=True
+                )
+                self.assertTrue(zz == None)
+                zz = impbcor(
+                    imagename=im2, pbimage=pb2, mask=mymask + ">0", stretch=True,
+                    wantreturn=True
+                )
+                self.assertTrue(type(zz) == type(ia))
+            zz.done()
+        
 
 def suite():
     return [impbcor_test]

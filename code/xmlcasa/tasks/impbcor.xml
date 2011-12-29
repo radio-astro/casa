@@ -68,6 +68,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Return an image tool referencing the corrected image?</description>
             <value>False</value>
         </param>
+        <param type="bool" direction="in" name="stretch" subparam="true">
+            <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+            <value>False</value>
+        </param>
         <constraints>
             <when param="outfile">
                 <notequals type="string" value="">
@@ -83,6 +87,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
                 </equals>
             </when>
+            <when param="mask">
+                <notequals type="string" value="">
+                   <default param="stretch"><value type="bool">False</value></default>
+             </notequals>
+         </when>
         </constraints>
     </input>
     <returns type="image"/>
@@ -105,6 +114,7 @@ chans            Optional contiguous frequency channel number specification. Not
 stokes           Contiguous stokes planes specification. Not used if region is specified.
                  Default is all stokes.
 mask             Optional LEL mask specification.
+stretch          Stretch the input mask if necessary and possible. See help par.mask.
 mode             Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"
 cutoff           PB cutoff. If mode is "d", all values less than this will be masked. If "m", all values greater will be masked. Less than 0, no cutoff. Default no cutoff
 wantreturn       If true, return an image analysis tool referencing the collapsed image, if

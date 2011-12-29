@@ -104,6 +104,14 @@ class test_tfcrop(test_base):
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='ea19'), 2199552, 2294)
         test_eq(tflagger(vis=self.vis, mode='summary', spw='7'), 274944, 0)
         
+    def test2(self):
+        '''tflagger:: Test2 of mode = tfcrop ABS ALL'''
+        tflagger(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9')
+        test_eq(tflagger(vis=self.vis, mode='summary'), 4399104, 18696)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4258)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='RL'), 1099776, 4999)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='LR'), 1099776, 4950)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
 
 
 class test_shadow(test_base):
@@ -420,8 +428,9 @@ class test_statistics_queries(test_base):
 
     def test_CAS2212(self):
         '''tflagger: Clipping scan selection, CAS-2212, CAS-3496'''
+        # By default expression='ABS ALL'
         tflagger(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3]) 
-        test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 41735)
+        test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 85404)
         s = tflagger(vis=self.vis, mode='summary')['scan']
         
         # Make sure no other scan is clipped
@@ -431,7 +440,7 @@ class test_statistics_queries(test_base):
         assert s['5']['flagged'] == 0
         assert s['6']['flagged'] == 0
         assert s['7']['flagged'] == 0
-        assert s['2']['flagged'] == 41735
+        assert s['2']['flagged'] == 85404
   
     def test021(self):
         '''tflagger: Test of flagging statistics and queries'''
@@ -545,7 +554,10 @@ class test_selections(test_base):
     def test_correlation(self):
         tflagger(vis=self.vis, correlation='LL')
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
+        tflagger(vis=self.vis, mode='unflag')
         tflagger(vis=self.vis, correlation='LL,RR')
+        test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 #        flagdata(vis=self.vis, correlation='LL RR')
 #        flagdata(vis=self.vis, correlation='LL ,, ,  ,RR')
 #        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
@@ -582,6 +594,28 @@ class test_selections_alma(test_base):
         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
         tflagger(vis=self.vis, intent='CAL*POINT*')
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
+        
+    def test_wvr(self):
+        '''tflagger: flag WVR correlation'''
+        tflagger(vis=self.vis, correlation='I')
+        test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 22752)
+
+    def test_abs_wvr(self):
+        '''tflagger: clip ABS WVR'''
+        tflagger(vis=self.vis, mode='clip',clipminmax=[0,50], expression='ABS WVR')
+        test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 22752)
+        
+    def test_abs_i(self):
+        '''tflagger: clip ABS I. Do not flag WVR'''
+        tflagger(vis=self.vis, mode='clip', clipminmax=[0,50], expression='ABS I')
+        test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 0)
+
+    def test_abs_all(self):
+        '''tflagger: clip ABS ALL. Do not flag WVR'''
+        tflagger(vis=self.vis, mode='clip', clipminmax=[0,1], expression='ABS ALL')
+        test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 130736)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='I'),22752, 0)
+        
 
 class test_selections2(test_base):
     '''Test other selections'''
@@ -605,6 +639,49 @@ class test_selections2(test_base):
         tflagger(vis=self.vis, observation='10')
         test_eq(tflagger(vis=self.vis, mode='summary'), 2882778, 0)
                 
+class test_elevation(test_base):
+    """Test of mode = 'elevation'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+        self.x55 = 666792    # data below 55 degrees, etc.
+        self.x60 = 1428840
+        self.x65 = 2854278
+        self.all = 2854278
+
+    def test_lower(self):
+        tflagger(vis = self.vis, mode = 'elevation')
+        
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, 0)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 50)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, 0)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 55)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x55)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 60)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x60)
+
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 65)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x65)
+
+    def test_upper(self):
+        tflagger(vis = self.vis, mode = 'elevation', upperlimit = 60)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.all - self.x60)
+
+
+    def test_interval(self):
+        tflagger(vis = self.vis,
+                  mode = 'elevation',
+                  lowerlimit = 55,
+                  upperlimit = 60)
+
+        test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.all - (self.x60 - self.x55))
 
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -632,4 +709,5 @@ def suite():
             test_selections_alma,
             test_statistics_queries,
             test_msselection,
+            test_elevation,
             cleanup]

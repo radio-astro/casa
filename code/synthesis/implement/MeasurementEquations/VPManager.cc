@@ -1,6 +1,7 @@
 //# VPManager.cc: Implementation of VPManager.h
-//# Copyright (C) 1996-2007
+//# Copyright (C) 1996-2011
 //# Associated Universities, Inc. Washington DC, USA.
+//# Copyright by ESO (in the framework of the ALMA collaboration)
 //#
 //# This program is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU General Public License as published by the Free
@@ -51,6 +52,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/OS/Directory.h>
 #include <images/Images/PagedImage.h>
+#include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -70,8 +72,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }    
 
+  Bool VPManager::lock(){
+    if(isLocked_p){
+      return False;
+    }
+    else{
+      isLocked_p = True;
+    }
+    return True;
+  }
+
+  Bool VPManager::acquireLock(Double timeoutSecs,
+			      Bool verbose){
+    if(isLocked_p){
+      Timer t;
+      t.mark();
+      while(t.real()<=timeoutSecs){
+	sleep(1);
+	if(!isLocked_p){
+	  isLocked_p = True;
+	  return True;
+	}
+      }
+      // waiting was not successful
+      if(verbose){
+	if(isLocked()){ // still locked
+	  return False;
+	}
+	else{ // we acquired the lock 
+	  isLocked_p = True;
+	  return True;
+	}
+      }
+      return False;
+    }
+    else{
+      isLocked_p = True;
+    }
+    return True;
+  }
+
+  Bool VPManager::isLocked(){
+    if(!isLocked_p){
+	LogIO os;
+	os << LogOrigin("VPManager", "isLocked");
+	os << LogIO::SEVERE << "VPManager is in use. Need to release first." << LogIO::POST;
+	return True;
+    }
+    return False;
+  }    
+
+  void VPManager::release(){
+    isLocked_p = False;
+  }
+
   VPManager::VPManager(Bool verbose):
     vplist_p(),
+    isLocked_p(True),
     vplistdefaults_p(-1),
     aR_p()
   {
@@ -138,7 +195,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(verbose){
       os << LogIO::NORMAL << "VPManager initialized." << LogIO::POST;
     }
-    
+    release();
+
   }
 
 
@@ -676,15 +734,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  Bool VPManager::setuserdefault(const Int vplistfield, // (-1 means reset to standard default)
+  Bool VPManager::setuserdefault(const Int vplistfield, // (-1 = reset to standard default, -2 = unset)
 				 const String& telescope,
 				 const String& antennatype){     
 
     LogIO os;
     os <<  LogOrigin("VPManager", "setuserdefault");
 
-    if((vplistfield < -1) || ((Int)(vplist_p.nfields()) <= vplistfield)){
-      os << LogIO::SEVERE << " entry " << vplistfield << " does not exist in VP list."
+    if((vplistfield < -2) || ((Int)(vplist_p.nfields()) <= vplistfield)){
+      os << LogIO::SEVERE << "Vplist number " << vplistfield << " invalid." << endl
+	 << "Valid entries are -2 (none), -1 (default), up to " << vplist_p.nfields()-1
 	 << LogIO::POST;
       return False;
     }
@@ -711,7 +770,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(vplistdefaults_p.isDefined(antennaDesc)){ 
       vplistdefaults_p.remove(antennaDesc);
     }
-    vplistdefaults_p.define(antennaDesc,vplistfield);
+    if(vplistfield>-2){ // (-2 means don't set a default)
+      vplistdefaults_p.define(antennaDesc,vplistfield);
+    }
 
     return True;
 
@@ -730,6 +791,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       vplistfield = vplistdefaults_p(telescope);
     }
     else{
+      vplistfield = -2;
       return False;
     }
 
@@ -754,23 +816,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     anttypes.resize(0);
 
     Int ifield = -2;
-    if(!getuserdefault(ifield,telescope,"")){
-      return False;
-    }
+    Bool isReference = True;
 
+    // check for global response
+    getuserdefault(ifield,telescope,""); 
+    
     if(ifield==-1){ // internally defined PB does not distinguish antenna types
       anttypes.resize(1);
       anttypes(0) = "";
       rval = True;
     }
-    else{ // externally defined PB
+    else if(ifield>=0){ // externally defined PB 
       TableRecord antRec(vplist_p.asRecord(ifield));
       String thename = antRec.asString("name");
       if(thename=="REFERENCE"){ // points to an AntennaResponses table
 	// query the antenna responses
 	String antRespPath = antRec.asString("antresppath");
-	if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
-	   && !aR_p.init(antRespPath)){
+	if(!aR_p.init(antRespPath)){
 	  os << LogIO::SEVERE
 	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
 	     << antRespPath << endl
@@ -804,29 +866,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	}
       }
-      else{ // we have a PBMath response
-	uInt count = 0;
-	for(uInt i=0; i<vplistdefaults_p.ndefined(); i++){
-	  String aDesc = vplistdefaults_p.getKey(i);
-	  if(telescope == telFromAntDesc(aDesc)){
-	    String aType = antTypeFromAntDesc(aDesc);
-	    Bool tFound = False;
-	    for(uInt j=0; j<anttypes.size(); j++){
-	      if(aType==anttypes(j)){ // already in list?
-		tFound = True;
-		break;
-	      }
-	    }
-	    if(!tFound){
-	      rval = True;
-	      count++;
-	      anttypes.resize(count, True);
-	      anttypes(count-1) = aType;
+      else{ // we don't have a reference response
+	isReference = False;
+      }
+    }
+
+    if(ifield==-2 or !isReference){ // no global response or reference
+      uInt count = 0;
+      for(uInt i=0; i<vplistdefaults_p.ndefined(); i++){
+	String aDesc = vplistdefaults_p.getKey(i);
+	if(telescope == telFromAntDesc(aDesc)){
+	  String aType = antTypeFromAntDesc(aDesc);
+	  Bool tFound = False;
+	  for(uInt j=0; j<anttypes.size(); j++){
+	    if(aType==anttypes(j)){ // already in list?
+	      tFound = True;
+	      break;
 	    }
 	  }
-	} // end for i
-      }
-    } // endif ifield==-1
+	  if(!tFound){
+	    rval = True;
+	    count++;
+	    anttypes.resize(count, True);
+	    anttypes(count-1) = aType;
+	  }
+	}
+      } // end for i
+    } 
 
     return rval;
 
@@ -896,8 +962,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// query the antenna responses
 	String antRespPath = antRec.asString("antresppath");
-	if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
-	   && !aR_p.init(antRespPath)){
+	if(!aR_p.init(antRespPath)){
 	  os << LogIO::SEVERE
 	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
 	     << antRespPath << endl

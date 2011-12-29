@@ -289,7 +289,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="intArray" name="imsize">
-	    <description>x and y image size in pixels. Single value: same for both</description>
+	    <description>x and y image size in pixels.  Single value: same for both</description>
 	    <value type="vector">
     <value>256</value><value>256</value>
     </value>
@@ -1028,7 +1028,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    default: 0.6
 
        imsize -- Image size in pixels (x, y).  DOES NOT HAVE TO BE A POWER
-                 OF 2 (just avoid large primes).
+                 OF 2 (but has to be even and factorizable to 2,3,5,7 only).
                default = [256,256]; example: imsize=[350,350]
                imsize = 500 is equivalent to [500,500]
                If include outlier fields, e.g., [[400,400],[100,100]] or

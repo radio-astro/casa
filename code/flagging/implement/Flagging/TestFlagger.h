@@ -151,6 +151,9 @@ public:
 
 	// parse the parameters of the agent
 	bool parseAgentParameters(Record agent_params);
+	String getExpressionFunction(String expression);
+	bool isExpressionPolarizationAll(String expression);
+
 
 	// DEPRECATED
 	bool initFlagDataHandler();
