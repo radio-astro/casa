@@ -3330,12 +3330,13 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 }
 
-ImageInterface<Float> *
-ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
-		Record& Region, const String& mask, const Bool dropdeg,
-		const Bool overwrite) {
+ImageInterface<Float>* ImageAnalysis::rebin(
+	const String& outFile, const Vector<Int>& factors,
+	Record& Region, const String& mask, const Bool dropdeg,
+	const Bool overwrite, const Bool extendMask
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "rebin");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfile
 	if (!overwrite && !outFile.empty()) {
@@ -3354,7 +3355,7 @@ ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, extendMask
 	);
 
 	// Convert binning factors
@@ -3400,11 +3401,12 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	const String& outFile, const Vector<Int>& inshape,
 	const CoordinateSystem& coordinates, const Vector<Int>& inaxes,
 	Record& Region, const String& mask, const String& methodU,
-	const Int decimate, const Bool replicate, const Bool doRefChange,
-	const Bool dropDegenerateAxes, const Bool overwrite,
-	const Bool forceRegrid
+	const Int decimate, const Bool replicate,
+	const Bool doRefChange, const Bool dropDegenerateAxes,
+	const Bool overwrite, const Bool forceRegrid,
+	const Bool extendMask
 ) {
-	*itsLog << LogOrigin("ImageAnalysis", "regrid1");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Int dbg = 0;
 
@@ -3436,7 +3438,8 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 			tmpShape2.resize(j);
 			tmpShape = tmpShape2;
 		}
-	} else {
+	}
+	else {
 		tmpShape = inshape;
 	}
 
@@ -3448,7 +3451,7 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, extendMask
 	);
 
 	// Deal with axes
@@ -3460,20 +3463,19 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 
 	// Make CoordinateSystem from user given
 	CoordinateSystem cSysFrom = subImage.coordinates();
-	CoordinateSystem* pCSTo;
-	if (coordinates.nCoordinates() != 0) {
-		pCSTo = new CoordinateSystem(coordinates);
-	} else {
-
-		pCSTo = new CoordinateSystem(subImage.coordinates());
-	}
-	pCSTo->setObsInfo(cSysFrom.obsInfo());
+	CoordinateSystem pCSTo(
+		coordinates.nCoordinates() != 0
+		? coordinates
+		: subImage.coordinates()
+	);
+	pCSTo.setObsInfo(cSysFrom.obsInfo());
 
 	// Now build a CS which copies the user specified Coordinate for
 	// axes to be regridded and the input image Coordinate for axes not
 	// to be regridded
 	CoordinateSystem cSys = ImageRegrid<Float>::makeCoordinateSystem(*itsLog,
-			*pCSTo, cSysFrom, axes2);
+		pCSTo, cSysFrom, axes2
+	);
 	if (cSys.nPixelAxes() != outShape.nelements()) {
 		*itsLog
 				<< "The number of pixel axes in the output shape and Coordinate System must be the same"
@@ -3502,8 +3504,11 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	ir.disableReferenceConversions(!doRefChange);
-	ir.regrid(*pImOut, method, axes2, subImage, replicate, decimate, True,
-			forceRegrid);
+	ir.regrid(
+		*pImOut, method, axes2, subImage,
+		replicate, decimate, True,
+		forceRegrid
+	);
 
 	// Cleanup and return image
 	return pImOut;
@@ -3516,9 +3521,10 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 	const String& methodU, const Int decimate,
 	const Bool replicate, const Bool doRefChange,
 	const Bool dropDegenerateAxes, const Bool overwrite,
-	const Bool forceRegrid, const Bool specAsVelocity
+	const Bool forceRegrid, const Bool specAsVelocity,
+	const Bool extendMask
 ) {
-	*itsLog << LogOrigin("ImageAnalysis", "regrid2");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// must deal with default shape and dropDegenerateAxes
 	Vector<Int> tmpShape;
@@ -3570,14 +3576,14 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 			outFile, inshape, *csys, inaxes,
 			Region, mask, methodU, decimate,
 			replicate, doRefChange, dropDegenerateAxes,
-			overwrite, forceRegrid
+			overwrite, forceRegrid, extendMask
 		);
 	}
 	else {
 		return _regrid(
 			outFile, inshape, *csys, inaxes, Region, mask, methodU,
 			decimate, replicate, doRefChange, dropDegenerateAxes, overwrite,
-			forceRegrid
+			forceRegrid, extendMask
 		);
 	}
 }
@@ -3589,18 +3595,17 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
     const String& method, const Int decimate,
     const Bool replicate, const Bool doref,
     const Bool dropdeg, const Bool overwrite,
-    const Bool force
+    const Bool force, const Bool extendMask
 ) const {
 	std::auto_ptr<CoordinateSystem> csys(
 		dynamic_cast<CoordinateSystem *>(csysTemplate.clone())
 	);
-	std::auto_ptr<ImageInterface<Float> > clone(
-		new SubImage<Float>(
-			SubImage<Float>::createSubImage(*pImage_p, Record(), "", 0, False)
-		)
+	SubImage<Float> maskedClone = SubImage<Float>::createSubImage(
+		*pImage_p, Record(), mask, 0, False,
+		AxesSpecifier(), extendMask
 	);
 	std::auto_ptr<CoordinateSystem> coordClone(
-		dynamic_cast<CoordinateSystem *>(clone->coordinates().clone())
+		dynamic_cast<CoordinateSystem *>(maskedClone.coordinates().clone())
 	);
 	const SpectralCoordinate saveSpecCoord = csys->spectralCoordinate();
 
@@ -3636,13 +3641,14 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 			*itsLog << "Unable to replace spectral with linear coordinate";
 		}
 	}
-	clone->setCoordinateInfo(*coordClone);
-	ImageAnalysis newIA(clone.get());
+	maskedClone.setCoordinateInfo(*coordClone);
+	ImageAnalysis newIA(&maskedClone);
+	// do not pass the mask info in, the subimage is already masked
 	std::auto_ptr<ImageInterface<Float> > outImage(
 		newIA._regrid(
-			outfile, shape, *csys, axes, region, mask, method,
+			outfile, shape, *csys, axes, region, "", method,
 			decimate, replicate, doref, dropdeg, overwrite,
-			force
+			force, False
 		)
 	);
 	// replace the temporary linear coordinate with the saved spectral coordinate
@@ -3652,7 +3658,7 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 	if (
 		! newCoords->replaceCoordinate(
 			saveSpecCoord,
-			clone->coordinates().linearCoordinateNumber()
+			maskedClone.coordinates().linearCoordinateNumber()
 		)
 	) {
 		*itsLog << LogIO::SEVERE
@@ -3662,12 +3668,14 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 	return outImage.release();
 }
 
-ImageInterface<Float> *
-ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
-		const Quantity& pa, Record& Region, const String& mask,
-		const String& methodU, const Int decimate, const Bool replicate,
-		const Bool dropdeg, const Bool overwrite) {
-	*itsLog << LogOrigin("ImageAnalysis", "rotate");
+ImageInterface<Float>* ImageAnalysis::rotate(
+	const String& outFile, const Vector<Int>& shape,
+	const Quantity& pa, Record& Region, const String& mask,
+	const String& methodU, const Int decimate,
+	const Bool replicate, const Bool dropdeg,
+	const Bool overwrite, const Bool extendMask
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Int dbg = 0;
 
@@ -3696,7 +3704,8 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 			tmpShape2.resize(j);
 			tmpShape = tmpShape2;
 		}
-	} else {
+	}
+	else {
 		tmpShape = shape;
 	}
 
@@ -3712,7 +3721,7 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, extendMask
 	);
 
 	// Get image coordinate system
@@ -3726,7 +3735,7 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	Int linInd = -1;
 	uInt coordInd = 0;
 	Vector<Int> pixelAxes;
-	//
+
 	dirInd = cSysTo.findCoordinate(Coordinate::DIRECTION, after);
 	if (dirInd < 0) {
 		after = -1;
@@ -3737,17 +3746,19 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 			*itsLog << "Rotating LinearCoordinate holding axes " << pixelAxes
 					+ 1 << LogIO::POST;
 		}
-	} else {
+	}
+	else {
 		pixelAxes = cSysTo.pixelAxes(dirInd);
 		coordInd = dirInd;
 		*itsLog << "Rotating DirectionCoordinate holding axes " << pixelAxes
 				+ 1 << LogIO::POST;
 	}
-	//
+
 	if (pixelAxes.nelements() == 0) {
 		*itsLog << "Could not find a Direction or Linear coordinate to rotate"
 				<< LogIO::EXCEPTION;
-	} else if (pixelAxes.nelements() != 2) {
+	}
+	else if (pixelAxes.nelements() != 2) {
 		*itsLog << "Coordinate to rotate must hold exactly two axes"
 				<< LogIO::EXCEPTION;
 	}
@@ -3778,7 +3789,8 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 		DirectionCoordinate c = cSysTo.directionCoordinate(coordInd);
 		c.setLinearTransform(xform);
 		cSysTo.replaceCoordinate(c, coordInd);
-	} else {
+	}
+	else {
 		LinearCoordinate c = cSysTo.linearCoordinate(coordInd);
 		c.setLinearTransform(xform);
 		cSysTo.replaceCoordinate(c, coordInd);
@@ -3805,7 +3817,8 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 		*itsLog << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
 		imOut.set(new TempImage<Float> (outShape, cSys));
-	} else {
+	}
+	else {
 		*itsLog << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
 		imOut.set(new PagedImage<Float> (outShape, cSys, outFile));
@@ -3821,8 +3834,10 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	Bool forceRegrid = False;
-	ir.regrid(*pImOut, method, axes2, subImage, replicate, decimate, True,
-			forceRegrid);
+	ir.regrid(
+		*pImOut, method, axes2, subImage, replicate,
+		decimate, True, forceRegrid
+	);
 
 	// Return image
 	return pImOut;
@@ -3920,7 +3935,7 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 Bool ImageAnalysis::replacemaskedpixels(
 	const String& pixels, Record& pRegion,
 	const String& maskRegion, const Bool updateMask,
-	const Bool list
+	const Bool list, const Bool extendMask
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (pixels.empty()) {
@@ -3936,7 +3951,8 @@ Bool ImageAnalysis::replacemaskedpixels(
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
-		maskRegion, (list ? itsLog : 0), True
+		maskRegion, (list ? itsLog : 0), True,
+		AxesSpecifier(), extendMask
 	);
 
 	// See if we can write to ourselves
@@ -3998,12 +4014,13 @@ Record ImageAnalysis::restoringbeam() {
 	return rstat;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::sepconvolve(const String& outFile,
-		const Vector<Int>& smoothaxes, const Vector<String>& kernels,
-		const Vector<Quantity>& kernelwidths, Double scale, Record& pRegion,
-		const String& mask, const Bool overwrite) {
-	*itsLog << LogOrigin("ImageAnalysis", "sepconvolve");
+ImageInterface<Float>* ImageAnalysis::sepconvolve(
+	const String& outFile, const Vector<Int>& smoothaxes,
+	const Vector<String>& kernels,
+	const Vector<Quantity>& kernelwidths, Double scale, Record& pRegion,
+	const String& mask, const Bool overwrite, const Bool extendMask
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Bool autoScale(False);
 	if (scale < 0) {
@@ -4025,7 +4042,7 @@ ImageAnalysis::sepconvolve(const String& outFile,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
-		mask, itsLog, False
+		mask, itsLog, False, AxesSpecifier(), extendMask
 	);
 
 	// Create convolver
@@ -4051,7 +4068,8 @@ ImageAnalysis::sepconvolve(const String& outFile,
 				<< subImage.shape() << LogIO::POST;
 		imOut.set(new TempImage<Float> (subImage.shape(),
 				subImage.coordinates()));
-	} else {
+	}
+	else {
 		if (!overwrite) {
 			NewFile validfile;
 			String errmsg;
@@ -4059,19 +4077,20 @@ ImageAnalysis::sepconvolve(const String& outFile,
 				*itsLog << errmsg << LogIO::EXCEPTION;
 			}
 		}
-		//
 		*itsLog << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << subImage.shape() << LogIO::POST;
-		imOut.set(new PagedImage<Float> (subImage.shape(),
-				subImage.coordinates(), outFile));
+		imOut.set(
+			new PagedImage<Float> (
+				subImage.shape(),
+				subImage.coordinates(), outFile
+			)
+		);
 	}
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 	ImageUtilities::copyMiscellaneous(*pImOut, *pImage_p);
 
-	// Do it
 	sic.convolve(*pImOut);
 
-	// Return image
 	return pImOut;
 }
 
@@ -4305,7 +4324,7 @@ Bool ImageAnalysis::statistics(
 	const Vector<Float>& includepix, const Vector<Float>& excludepix,
 	const String&, const Int nx, const Int ny, const Bool list,
 	const Bool force, const Bool disk, const Bool robust,
-	const Bool verbose
+	const Bool verbose, const Bool extendMask
 ) {
 	String pgdevice("/NULL");
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
@@ -4318,7 +4337,8 @@ Bool ImageAnalysis::statistics(
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
-		mtmp,  (verbose ? itsLog : 0), False
+		mtmp,  (verbose ? itsLog : 0), False, AxesSpecifier(),
+		extendMask
 	);
 	{
         /*
@@ -4471,14 +4491,20 @@ Bool ImageAnalysis::statistics(
 					pStatistics_p = new ImageStatistics<Float> (subImage,
 							*itsLog, True, disk);
 
-				} else {
-					pStatistics_p = new ImageStatistics<Float> (subImage, True,
-							disk);
+				}
+				else {
+					pStatistics_p = new ImageStatistics<Float> (
+						subImage, True, disk
+					);
 				}
 			} else {
 				pStatistics_p->resetError();
-				if (haveRegionsChanged(pRegionRegion, pMaskRegion,
-						pOldStatsRegionRegion_p, pOldStatsMaskRegion_p)) {
+				if (
+					haveRegionsChanged(
+						pRegionRegion, pMaskRegion,
+						pOldStatsRegionRegion_p, pOldStatsMaskRegion_p
+					)
+				) {
 					pStatistics_p->setNewImage(subImage);
 				}
 			}
@@ -4527,9 +4553,11 @@ Bool ImageAnalysis::statistics(
 	Bool trobust(robust);
 	if (!trobust) {
 		for (uInt i = 0; i < statsToPlot.nelements(); i++) {
-			if (statsToPlot(i) == Int(LatticeStatsBase::MEDIAN) || statsToPlot(
-					i) == Int(LatticeStatsBase::MEDABSDEVMED) || statsToPlot(i)
-					== Int(LatticeStatsBase::QUARTILE)) {
+			if (
+				statsToPlot(i) == Int(LatticeStatsBase::MEDIAN)
+				|| statsToPlot(i) == Int(LatticeStatsBase::MEDABSDEVMED)
+				|| statsToPlot(i) == Int(LatticeStatsBase::QUARTILE)
+			) {
 				trobust = True;
 			}
 		}
@@ -4626,11 +4654,13 @@ Bool ImageAnalysis::statistics(
 	return True;
 }
 
-Bool ImageAnalysis::twopointcorrelation(const String& outFile,
-		Record& theRegion, const String& mask, const Vector<Int>& axes1,
-		const String& method, const Bool overwrite) {
+Bool ImageAnalysis::twopointcorrelation(
+	const String& outFile,
+	Record& theRegion, const String& mask, const Vector<Int>& axes1,
+	const String& method, const Bool overwrite, const Bool stretch
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "twopointcorrelation");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfile
 	if (!overwrite && !outFile.empty()) {
@@ -4645,7 +4675,7 @@ Bool ImageAnalysis::twopointcorrelation(const String& outFile,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&theRegion)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, stretch
 	);
 
 	// Deal with axes and shape
@@ -4805,14 +4835,16 @@ Vector<String> ImageAnalysis::summary(Record& header, const String& doppler,
 
 }
 
-Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
-			   const Bool optical, const Int bitpix, const Double minpix,
-			   const Double maxpix, Record& pRegion, const String& mask,
-			   const Bool overwrite, const Bool dropDeg, const Bool,
-			   const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
-			   const Bool airWavelength, const String& origin) {
+Bool ImageAnalysis::tofits(
+	const String& fitsfile, const Bool velocity,
+	const Bool optical, const Int bitpix, const Double minpix,
+	const Double maxpix, Record& pRegion, const String& mask,
+	const Bool overwrite, const Bool dropDeg, const Bool,
+	const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
+	const Bool airWavelength, const String& origin, const Bool stretch
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "tofits");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	//
 	// Convert image to FITS
@@ -4866,7 +4898,7 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
-		mask, itsLog, False, axesSpecifier
+		mask, itsLog, False, axesSpecifier, stretch
 	);
 
 	Bool ok = ImageFITSConverter::ImageToFITS(error, subImage, fitsfile,
@@ -4887,9 +4919,12 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 
 }
 
-Bool ImageAnalysis::toASCII(const String& outfile, Record& region,
-		const String& mask, const String& sep, const String& format,
-		const Double maskvalue, const Bool overwrite) {
+Bool ImageAnalysis::toASCII(
+	const String& outfile, Record& region,
+	const String& mask, const String& sep,
+	const String& format, const Double maskvalue,
+	const Bool overwrite, const Bool extendMask
+) {
 	// sep is hard-wired as ' ' which is what imagefromascii expects
 	*itsLog << LogOrigin("ImageAnalysis", "toASCII");
 
@@ -4921,7 +4956,10 @@ Bool ImageAnalysis::toASCII(const String& outfile, Record& region,
 	Vector<Int> axes;
 	Array<Float> pixels;
 	Array<Bool> pixmask;
-	getregion(pixels, pixmask, region, axes, mask, False, False, False);
+	getregion(
+		pixels, pixmask, region, axes, mask,
+		False, False, False, extendMask
+	);
 
 	IPosition shp = pixels.shape();
 	IPosition vshp = pixmask.shape();

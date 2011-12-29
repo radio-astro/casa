@@ -37,6 +37,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 
+#include <measures/Measures/Quality.h>
+
 #include <images/Images/FITSQualityImage.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSErrorImage.h>
@@ -48,8 +50,9 @@
 
 #include <casa/namespace.h>
 Bool allNear (const Array<Float>& data, const Array<Bool>& dataMask,
-              const Array<Float>& fits, const Array<Bool>& fitsMask, Float tol=1.0e-5);
-
+		const Array<Float>& fits, const Array<Bool>& fitsMask, Float tol=1.0e-5);
+Bool checkRecFieldString(String &error, const RecordInterface &theRec, const String &theField, const String &theValue);
+Bool testQualFITSInfo(const TableRecord &dataInfo, const TableRecord &errorInfo, const String &sciHDU, const String &errHDU, const String &errType);
 Bool testQualImg(FITSQualityImage &fQualImg, const String &in, const uInt &hdu_sci,
 		 const uInt &hdu_err, const Bool &print, const Int &size);
 
@@ -103,9 +106,61 @@ try {
    	}
    }
 
-   // test the quality image
-   testQualImg(fitsQI, in_fits, hdu_sci, hdu_err, print, size);
+   {
 
+   	// create the default header information for data and error
+   	TableRecord dataInfo, errorInfo, miscInfo;
+   	String sciHDU("DATA"), errHDU("ERROR"), errType("MSE");
+   	String error;
+   	// get the default values for data-info and error-info
+   	if (!FITSQualityImage::qualFITSInfo(error, dataInfo, errorInfo, miscInfo)){
+   		String msg = String("General problem to define the miscInfo for the data and error extension!");
+   		throw(AipsError(msg));
+   	}
+
+   	// check the data- and error-header information
+   	testQualFITSInfo(dataInfo, errorInfo, sciHDU, errHDU, errType);
+   }
+
+   {
+   	// create the header information for data and error
+   	// with dedicated extension names
+   	TableRecord dataInfo, errorInfo, miscInfo;
+   	String sciHDU("IFU1.SCI"), errHDU("IFU1.ERR"), errType("INVMSE");
+   	String error;
+   	miscInfo.define("sciextname", sciHDU);
+   	miscInfo.define("errextname", errHDU);
+   	miscInfo.define("errtype", errType);
+
+   	// get the data-info and error-info default values
+   	if (!FITSQualityImage::qualFITSInfo(error, dataInfo, errorInfo, miscInfo)){
+   		String msg = String("General problem to define the miscInfo for the data and error extension: "+error);
+   		throw(AipsError(msg));
+   	}
+
+   	// check the data- and error-header information
+   	testQualFITSInfo(dataInfo, errorInfo, sciHDU, errHDU, errType);
+   }
+
+   {
+   	// try to create header information which includes
+   	// a non-existing error type. This has to fail!
+   	TableRecord dataInfo, errorInfo, miscInfo;
+   	String sciHDU("IFU1.SCI"), errHDU("IFU1.ERR");
+   	String error;
+
+   	// give a non-existing error type
+   	String errType("WHATEVER");
+   	miscInfo.define("sciextname", sciHDU);
+   	miscInfo.define("errextname", errHDU);
+   	miscInfo.define("errtype", errType);
+
+   	// this one HAS to bark!
+   	if (FITSQualityImage::qualFITSInfo(error, dataInfo, errorInfo, miscInfo)){
+   		String msg = String("The error type: " + errType + " was wrongly accepted");
+   		throw(AipsError(msg));
+   	}
+   }
 
    // create the quality image with the extension expression
    FITSQualityImage fitsQI_II(in_ext);
@@ -119,6 +174,9 @@ try {
 
    // test the quality image
    testQualImg(fitsQI_II, in_ext, hdu_sci, hdu_err, print, size);
+
+   // test the FITS info routine
+   //testQualFITSInfo();
 
    cerr << "ok " << endl;
 
@@ -158,6 +216,67 @@ Bool allNear (const Array<Float>& data, const Array<Bool>& dataMask,
    fits.freeStorage(pFITS, deletePtrFITS);
    fitsMask.freeStorage(pFITSMask, deletePtrFITSMask);
    return True;
+}
+
+Bool checkRecFieldString(String &error, const RecordInterface &theRec, const String &theField, const String &theValue){
+	String tmpString;
+
+	// check the existence of the desired field in the record
+	if (!(theRec.fieldNumber(theField)>-1 && theRec.type(theRec.fieldNumber(theField)==TpString))){
+		error = String("Field "+theField+" does not exits!");
+		return False;
+	}
+
+	// check the value of the field
+	theRec.get(String(theField), tmpString);
+	if (tmpString.compare(theValue)){
+		error = String("Field "+theField+" has NOT the value: "+theValue);
+        return False;
+	}
+
+	return True;
+}
+
+Bool testQualFITSInfo(const TableRecord &dataInfo, const TableRecord &errorInfo,
+		const String &sciHDU, const String &errHDU, const String &errType){
+	String error;
+
+	// check the data-info for "EXTNAME"
+	if (!checkRecFieldString(error, dataInfo, String("extname"), sciHDU)){
+        throw(AipsError(error));
+	}
+
+	// check the data-info for "HDUTYPE"
+	if (!checkRecFieldString(error, dataInfo, String("hdutype"), Quality::name(Quality::DATA))){
+        throw(AipsError(error));
+	}
+
+	// check the data-info for "ERRDATA"
+	if (!checkRecFieldString(error, dataInfo, String("errdata"), errHDU)){
+        throw(AipsError(error));
+	}
+
+	// check the error-info for "EXTNAME"
+	if (!checkRecFieldString(error, errorInfo, String("extname"), errHDU)){
+        throw(AipsError(error));
+	}
+
+	// check the error-info for "HDUTYPE"
+	if (!checkRecFieldString(error, errorInfo, String("hdutype"), Quality::name(Quality::ERROR))){
+        throw(AipsError(error));
+	}
+
+	// check the error-info for "SCIDATA"
+	if (!checkRecFieldString(error, errorInfo, String("scidata"), sciHDU)){
+        throw(AipsError(error));
+	}
+
+	// check the error-info for "ERRTYPE"
+	if (!checkRecFieldString(error, errorInfo, String("errtype"), errType)){
+        throw(AipsError(error));
+	}
+
+	return True;
 }
 
 Bool testQualImg(FITSQualityImage &fitsQI, const String &in, const uInt &hdu_sci,
@@ -237,6 +356,40 @@ Bool testQualImg(FITSQualityImage &fitsQI, const String &in, const uInt &hdu_sci
 		   String msg = String("The object MUST be OK!");
 		   throw(AipsError(msg));
 	   }
+   }
+   {
+	   // make sure there is the right science HDU
+	   if (fitsQI.whichDataHDU()!=hdu_sci){
+		   String msg = String("The object has the wrong science HDU number!");
+		   throw(AipsError(msg));
+	   }
+   }
+   {
+	   // make sure there is the right error HDU
+	   if (fitsQI.whichErrorHDU()!=hdu_err){
+		   String msg = String("The object has the wrong error HDU number!");
+		   throw(AipsError(msg));
+	   }
+   }
+   {
+   	// get the pointer to the data
+   	FITSImage *fromQI = fitsQI.fitsData();
+
+   	// make sure there is the right science HDU
+	   if (fromQI->whichHDU()!=hdu_sci){
+		   String msg = String("The data in the object has the wrong HDU number!");
+		   throw(AipsError(msg));
+	   }
+   }
+   {
+   	// get the pointer to the error
+   	FITSErrorImage *fromQI = fitsQI.fitsError();
+
+   	// make sure there is the right science HDU
+   	if (fromQI->whichHDU()!=hdu_err){
+   		String msg = String("The error in the object has the wrong HDU number!");
+   		throw(AipsError(msg));
+   	}
    }
 
    // extract the FITS file name

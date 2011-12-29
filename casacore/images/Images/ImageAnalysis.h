@@ -333,10 +333,13 @@ class ImageAnalysis
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
 
-    ImageInterface<Float> * rebin(const String& outfile, 
-                                  const Vector<Int>& bin, Record& region, 
-                                  const String& mask, const Bool dropdeg, 
-                                  const Bool overwrite = False);
+    ImageInterface<Float> * rebin(
+    	const String& outfile,
+        const Vector<Int>& bin, Record& region,
+        const String& mask, const Bool dropdeg,
+        const Bool overwrite=False,
+        const Bool extendMask=False
+    );
 
     //regrids to a given coordinate system...one uses a record that is 
     //converted to a CoordinateSytem 
@@ -346,44 +349,53 @@ class ImageAnalysis
     	const Vector<Int>& shape,
         const Record& csys, const Vector<Int>& axes,
         Record& region, const String& mask,
-        const String& method = "linear",
-        const Int decimate = 10,
-        const Bool replicate = False,
-        const Bool doref = True,
-        const Bool dropdeg = False,
-        const Bool overwrite = False,
+        const String& method="linear",
+        const Int decimate=10,
+        const Bool replicate=False,
+        const Bool doref=True,
+        const Bool dropdeg=False,
+        const Bool overwrite=False,
         const Bool force=False,
-        const Bool specAsVelocity=False
+        const Bool specAsVelocity=False,
+        const Bool extendAxes=False
     );
     
 
 
-    ImageInterface<Float> * rotate(const String& outfile, 
-                                   const Vector<int>& shape, 
-                                   const Quantity& pa, Record& region, 
-                                   const String& mask, 
-                                   const String& method = "cubic", 
-                                   const Int decimate = 0, 
-                                   const Bool replicate = False, 
-                                   const Bool dropdeg = False,
-                                   const Bool overwrite = False);
+    ImageInterface<Float>* rotate(
+    	const String& outfile,
+        const Vector<int>& shape,
+        const Quantity& pa, Record& region,
+        const String& mask,
+        const String& method="cubic",
+        const Int decimate=0,
+        const Bool replicate=False,
+        const Bool dropdeg=False,
+        const Bool overwrite=False,
+        const Bool extendMask=False
+    );
 
     Bool rename(const String& name, const Bool overwrite = False);
 
-    Bool replacemaskedpixels(const String& pixels, Record& region,
-                             const String& mask, const Bool update = False, 
-                             const Bool list = False);
+    Bool replacemaskedpixels(
+    	const String& pixels, Record& region,
+        const String& mask, const Bool update=False,
+        const Bool list=False, const Bool extendMask=False
+    );
 
     Record restoringbeam();
 
-    ImageInterface<Float> * sepconvolve(const String& outfile, 
-                                        const Vector<Int>& axes, 
-                                        const Vector<String>& types, 
-                                        const Vector<Quantity>& widths, 
-                                        Double scale, 
-                                        Record& region, 
-                                        const String& mask, 
-                                        const bool overwrite = False);
+    ImageInterface<Float>* sepconvolve(
+    	const String& outfile,
+        const Vector<Int>& axes,
+        const Vector<String>& types,
+        const Vector<Quantity>& widths,
+        Double scale,
+        Record& region,
+        const String& mask,
+        const bool overwrite=False,
+        const bool extendMask=False
+    );
 
     Bool set(const String& pixels, const Int pixelmask, 
              Record& region, const Bool list = false);
@@ -406,16 +418,19 @@ class ImageAnalysis
     	Record& statsout, const Vector<Int>& axes, Record& region,
         const String& mask, const Vector<String>& plotstats,
         const Vector<Float>& includepix, const Vector<Float>& excludepix,
-        const String& plotter = "/NULL", const Int nx = 1,
-        const Int ny = 1, const Bool list = True,
-        const Bool force = False, const Bool disk = False,
-        const Bool robust = False, const Bool verbose = True
+        const String& plotter="/NULL", const Int nx=1,
+        const Int ny=1, const Bool list=True,
+        const Bool force=False, const Bool disk=False,
+        const Bool robust=False, const Bool verbose=True,
+        const Bool extendMask=False
     );
 
-    bool twopointcorrelation(const String& outfile, Record& region, 
-                             const String& mask, const Vector<Int>& axes, 
-                             const String& method = "structurefunction", 
-                             const Bool overwrite = False);
+    bool twopointcorrelation(
+    	const String& outfile, Record& region,
+        const String& mask, const Vector<Int>& axes,
+        const String& method="structurefunction",
+        const Bool overwrite=False, const Bool stretch=False
+    );
 
     ImageInterface<Float> * subimage(const String& outfile, Record& region, 
                                      const String& mask, 
@@ -427,18 +442,23 @@ class ImageAnalysis
                             const Bool list = True, 
                             const Bool pixelorder = True);
 
-    Bool tofits(const String& outfile, const Bool velocity, const Bool optical,
-                const Int bitpix, const Double minpix, const Double maxpix, 
-                Record& region, const String& mask, 
-                const Bool overwrite = False, 
-                const Bool dropdeg = False, const Bool deglast = False, 
-                const Bool dropstokes = False, const Bool stokeslast = False,
-                const Bool wavelength = False, const Bool airWavelength = False,
-                const String& origin = String());
+    Bool tofits(
+    	const String& outfile, const Bool velocity, const Bool optical,
+        const Int bitpix, const Double minpix, const Double maxpix,
+        Record& region, const String& mask,
+        const Bool overwrite=False,
+        const Bool dropdeg=False, const Bool deglast=False,
+        const Bool dropstokes=False, const Bool stokeslast=False,
+        const Bool wavelength=False, const Bool airWavelength=False,
+        const String& origin="", Bool stretch=False
+    );
 
-    Bool toASCII(const String& outfile, Record& region, const String& mask,
-                 const String& sep = " ", const String& format = "%e", 
-                 const Double maskvalue = -999, const Bool overwrite = False);
+    Bool toASCII(
+    	const String& outfile, Record& region, const String& mask,
+        const String& sep=" ", const String& format="%e",
+        const Double maskvalue=-999, const Bool overwrite=False,
+        const Bool extendMask=False
+    );
 
 
     Vector<Double> topixel(Record& value);
@@ -692,7 +712,7 @@ class ImageAnalysis
         const String& method, const Int decimate,
         const Bool replicate, const Bool doref,
         const Bool dropdeg, const Bool overwrite,
-        const Bool force
+        const Bool force, const Bool extendMask
     );
 
     ImageInterface<Float>* _regridByVelocity(
@@ -702,7 +722,7 @@ class ImageAnalysis
     	const String& method, const Int decimate,
     	const Bool replicate, const Bool doref,
     	const Bool dropdeg, const Bool overwrite,
-    	const Bool force
+    	const Bool force, const Bool extendMask
     ) const;
 };
 

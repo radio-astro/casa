@@ -314,7 +314,7 @@ void FITSImage::crackExtHeader (CoordinateSystem& cSys,
 // Get rid of anything else we don't want to end up in MiscInfo
 // that will have passed through the FITS parsing process
 
-    Vector<String> ignore(9);
+    Vector<String> ignore(12);
     ignore(0) = "^datamax$";
     ignore(1) = "^datamin$";
     ignore(2) = "^origin$";
@@ -324,6 +324,10 @@ void FITSImage::crackExtHeader (CoordinateSystem& cSys,
     ignore(6) = "^simple$";
     ignore(7) = "bscale";
     ignore(8) = "bzero";
+    ignore(9) = "xtension";
+    ignore(10) = "pcount";
+    ignore(11) = "gcount";
+
     FITSKeywordUtil::removeKeywords(headerRec, ignore);
 
 // MiscInfo is whats left
