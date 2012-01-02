@@ -2,6 +2,7 @@ from tasks import *
 from taskinit import *
 from __main__ import default
 import os
+from locatescript import copydata
 
 epsilon = 0.0001
 
@@ -22,7 +23,13 @@ def description():
 def data():
     return caltables
 
-def run():
+def run( fetch=False ):
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
     expected = {'ggtau.3mm.ph.gcal0':
                 {'SPLINE_KNOTS_PHASE':{'rms': 4362063360.0,
                                        'medabsdevmed': 8704.0,
