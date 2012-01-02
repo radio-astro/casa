@@ -40,29 +40,33 @@ def tflagger(vis,
              flagdimension,
              usewindowstats,
              halfwin,
-             minrel,        # mode summary
-             maxrel,
-             minabs,
-             maxabs,
-             spwchan,
-             spwcorr,
              extendpols,
              growtime,
              growfreq,
              growaround,
              flagneartime,
              flagnearfreq,
+             summarydisplay,
+             minrel,        # mode summary
+             maxrel,
+             minabs,
+             maxabs,
+             spwchan,
+             spwcorr,
+             plotfile,
              datadisplay,
              writeflags,
              savepars,    # save the current parameters to FLAG_CMD 
              outfile,   # output file to save flag commands
              flagbackup):
-    
+
+    # Global parameters
+    # vis, ntime, savepars, flagbackup, datadisplay, writeflags, summarydisplay
 
     # Things to consider:
     #
     # * Default mode is manualflag
-    # * Extendflags can be applied to every mode
+    # * Extend can be applied to every mode
     # * Parameter ntime can be applied only once per session
     # 
     # Schema
@@ -141,8 +145,8 @@ def tflagger(vis,
 
         # Add the global parameters to the dictionary of agent's parameters            
         agent_pars['mode'] = mode
+        agent_pars['summarydisplay'] = summarydisplay
         agent_pars['datadisplay'] = datadisplay
-        agent_pars['writeflags'] = writeflags
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -241,6 +245,7 @@ def tflagger(vis,
             
             # Do not save flag command for this mode
             savepars = False
+            
 
         # Now Parse the agent's parameters
         casalog.post('Parsing the agent\'s parameters')
@@ -254,6 +259,22 @@ def tflagger(vis,
         if (not tflocal.parseAgentParameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
+        # Do summarydisplay if requested
+        if mode != 'summary' and summarydisplay != '':
+            
+            agent_pars = {}
+            if summarydisplay == 'text':
+                agent_pars['mode'] = 'summary'
+            
+            elif summarydisplay == 'screen':
+                agent_pars['mode'] = 'display'
+                
+            elif summarydisplay == 'file':
+                agent_pars['mode'] = 'display'
+                agent_pars['plotfile'] = plotfile
+                
+            casalog.post('Parsing the summarydisplay parameters')
+            tflocal.parseAgentParameters(agent_pars)
 
         # Initialize the agent
         casalog.post('Initializing the agent')
@@ -270,7 +291,7 @@ def tflagger(vis,
         
         # Run the tool
         casalog.post('Running the tflagger tool')
-        summary_stats = tflocal.run()
+        summary_stats = tflocal.run(writeflags)
 
 
         # Write the current parameters as flag commands to output
