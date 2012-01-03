@@ -104,9 +104,15 @@ try:
         (abs(dMin) < EPS)):
         regstate=True;
         print >>logfile,REGNAME+" Regression passed.";
+        print ''
+        print 'Regression PASSED'
+        print ''
     else:
         regstate=False;
         print >>logfile,REGNAME+" Regression failed.";
+        print ''
+        print 'Regression FAILED'
+        print ''
 
     print >>logfile,''
     print >>logfile,''

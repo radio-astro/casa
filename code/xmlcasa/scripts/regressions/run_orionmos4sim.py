@@ -1106,6 +1106,9 @@ if regression['exist']:
         print >>logfile,'---'
         lprint('Passed Regression test for ' + mydataset, logfile)
         print >>logfile,'---'
+        print ''
+        print 'Regression PASSED'
+        print ''
     else:
         regstate=False
         lprint('----FAILED Regression test for ' + mydataset, logfile)

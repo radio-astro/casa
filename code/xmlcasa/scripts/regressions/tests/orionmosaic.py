@@ -15,7 +15,11 @@ gl=sys._getframe(stacklevel).f_globals
 def description():
     return "feather, image mosaic"
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return []
+
+def run(fetch=False):
     lepath=locatescript('orion_regression.py')
     print 'Script used is ',lepath
     gl['regstate']=True
@@ -26,7 +30,3 @@ def run():
 #    import lepath+'/g192_regression.py'
 ###resturn the images that will be templated and compared in future runs
     return ['orion_tfeather.im','orion_tfeather2.im','orion_tsdmem.image','orion_tjoint3.image']
-
-def data():
-    ### return the data files that is needed by the regression script
-    return []

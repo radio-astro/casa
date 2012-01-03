@@ -1652,6 +1652,10 @@ if (regressmodel.has_key(src)):
     print 'POLCAL Regression '+passfailstr
     print >>logfile,'POLCAL Regression '+passfailstr
 
+    print ''
+    print 'Regression '+passfailstr
+    print ''
+
 new_regression['results'] = outpolmodel
 
 # Should see something like:

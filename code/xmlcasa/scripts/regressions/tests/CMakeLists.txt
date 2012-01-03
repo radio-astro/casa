@@ -47,7 +47,11 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   ngc2403.py
   ngc5921redux.py
   ngc5921uvcontsub2.py
+  ori_hc3n.py
+  ori_sio.py
   orionmosaic.py
+  plotxy_test.py
+  pointing_test.py
   polcal_20080224_cband.py
   pylabmem.py
   third4826.py

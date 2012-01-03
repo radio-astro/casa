@@ -216,9 +216,16 @@ if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for OrionS-SiO'
         print >>logfile,'---'
+        print ''
+        print 'Regression PASSED'
+        print ''
 else: 
 	regstate=False
         print >>logfile,'----FAILED Regression test for OrionS-SiO'
+        print ''
+        print 'Regression FAILED'
+        print ''
+
 print >>logfile,'*********************************'
 
 print >>logfile,''

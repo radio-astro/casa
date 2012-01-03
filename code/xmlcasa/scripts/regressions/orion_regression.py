@@ -319,8 +319,15 @@ if regstate:
         print >>logfile, '---'
         print >>logfile, 'Passed Regression test for Orion'
         print >>logfile, '---'
+        print ''
+        print 'Regression PASSED'
+        print ''
 else:
         print >>logfile, '----FAILED Regression test for Orion'
+        print ''
+        print 'Regression FAILED'
+        print ''
+
 print >>logfile, '*********************************'
 
 print >>logfile,''
