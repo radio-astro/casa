@@ -34,8 +34,9 @@
                 <value />
             </param>
 
-            <param type="double" name="ntime">
-                <description>Time-range to use for each chunk (in seconds)</description>
+            <param type="double" name="ntime" units="s">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
                 <value>0.0</value>
             </param>
 
@@ -206,34 +207,6 @@ tfcrop, extend, unflag, summary)</description>
                 <value>1</value>
             </param>
 
-
-             <param type="double" name="minrel" subparam="true">
-                <description>minimum number of flags (relative)</description>
-                <value type="double">0.0</value>
-            </param>
-             
-            <param type="double" name="maxrel" subparam="true">
-                <description>maximum number of flags (relative)</description>
-                <value type="double">1.0</value>
-            </param>
-            <param type="int" name="minabs" subparam="true">
-                <description>minimum number of flags (absolute)</description>
-                <value type="int">0</value>
-            </param>
-            <param type="int" name="maxabs" subparam="true">
-                <description>maximum number of flags (absolute). \
-                             Use a negative value to indicate infinity.</description>
-                <value type="int">-1</value>
-            </param>
-            <param type="bool" name="spwchan" subparam="true">
-                <description>Print summary of channels per spw</description>
-                <value type="bool">False</value>
-            </param>
-            <param type="bool" name="spwcorr" subparam="true">
-                <description>Print summary of correlation per spw</description>
-                <value type="bool">False</value>
-            </param>
-
             <param type="any" name="extendpols" subparam="true">
                 <description>If any correlation is flagged, flag all correlations</description>
                 <value type="bool">False</value>
@@ -258,6 +231,41 @@ tfcrop, extend, unflag, summary)</description>
             <param type="bool" name="flagnearfreq" subparam="true">
                 <description>Flag one channel before and after a flagged one (True/False)</description>
                 <value type="bool">False</value>
+            </param>
+
+            <param type="string" name="summarydisplay">
+                <description>Create summary plots or text summary after flagging</description>
+                <value type="string"></value>
+            </param>
+
+             <param type="double" name="minrel" subparam="true">
+                <description>minimum number of flags (relative)</description>
+                <value type="double">0.0</value>
+            </param>             
+            <param type="double" name="maxrel" subparam="true">
+                <description>maximum number of flags (relative)</description>
+                <value type="double">1.0</value>
+            </param>
+            <param type="int" name="minabs" subparam="true">
+                <description>minimum number of flags (absolute)</description>
+                <value type="int">0</value>
+            </param>
+            <param type="int" name="maxabs" subparam="true">
+                <description>maximum number of flags (absolute). \
+                             Use a negative value to indicate infinity.</description>
+                <value type="int">-1</value>
+            </param>
+            <param type="bool" name="spwchan" subparam="true">
+                <description>Print summary of channels per spw</description>
+                <value type="bool">False</value>
+            </param>
+            <param type="bool" name="spwcorr" subparam="true">
+                <description>Print summary of correlation per spw</description>
+                <value type="bool">False</value>
+            </param>
+            <param type="string" name="plotfile" subparam="true">
+                    <description>Name of output file to save summary plots</description>
+                    <value></value>
             </param>
 
             <param type="bool" name="datadisplay">
@@ -353,6 +361,18 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="spwcorr"><value type="bool">False</value></default>                    
                     </equals>
                 </when>
+
+               <when param="summarydisplay">
+                <equals type="string" value="" />
+                <equals type="string" value="text">
+                        <default param="spwchan"><value type="bool">False</value></default>
+                        <default param="spwcorr"><value type="bool">False</value></default>
+                </equals>                    
+                <equals type="string" value="screen"></equals>
+                <equals type="string" value="file">                
+                    <default param="plotfile"><value type="string"></value></default>
+                </equals>
+               </when>
                 
                <when param="savepars">
                 <equals type="bool" value="False" />

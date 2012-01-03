@@ -102,9 +102,32 @@ def tflagger(vis,
 
 
     try: 
+        # Verify the ntime value
+        newtime = 0.0
+        if type(ntime) == float or type(ntime) == int:
+            # units are seconds
+            newtime = float(ntime)
+            
+        elif type(ntime) == str:
+            # read the units from the string
+            qtime = qa.quantity(ntime)
+            if qtime['unit'] == 'min':
+                # convert to seconds
+                qtime = qa.convert(qtime, 's')
+                
+            # check units
+            if qtime['unit'] == 's':
+                newtime = qtime['value']
+            else:
+                casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
+        
+        if debug:
+            casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime))
+        
+        
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, ntime)
+            tflocal.open(vis, newtime)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -138,7 +161,8 @@ def tflagger(vis,
         sel_pars = ''
         sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
-                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
+                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
+                    ' ntime='+str(newtime)
 
         # Setup global parameters
         agent_pars = {}
