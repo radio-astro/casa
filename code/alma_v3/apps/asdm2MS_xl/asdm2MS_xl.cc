@@ -4130,6 +4130,24 @@ int main(int argc, char *argv[]) {
 
       // For each main row.
       for (int32_t i = 0; i < nMain; i++) {
+
+	// What's the processor for this Main row ?
+	Tag cdId = v[i]->getConfigDescriptionId();
+	ConfigDescriptionTable& cT = ds->getConfigDescription();
+	ConfigDescriptionRow* cR = cT.getRowByKey(cdId);
+	Tag pId = cR->getProcessorId();
+	ProcessorTable& pT = ds->getProcessor();
+	ProcessorRow* pR = pT.getRowByKey(pId);
+	ProcessorType processorType = ds->getProcessor().getRowByKey(pId)->getProcessorType();
+	infostream.str("");
+	infostream << "ASDM Main row #" << i << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
+	if (processorType == RADIOMETER) {
+	  infostream << " The application is not yet able to process radiometric data, this row is ignored."; 
+	  info(infostream.str());
+	  continue;
+	}
+	info(infostream.str());
+
 	infostream.str("");
 	infostream << "ASDM Main row #" << i << " - BDF file size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
 	info(infostream.str());
