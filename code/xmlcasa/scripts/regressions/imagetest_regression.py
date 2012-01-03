@@ -6476,6 +6476,9 @@ def imagetest(which=None, size=[32,32,8]):
     test38()
     test39()  # update once functionals is available
     test40()  # doesn't do much without gui
+    print ''
+    print 'Regression PASSED'
+    print ''
     
 imagedemo()
 

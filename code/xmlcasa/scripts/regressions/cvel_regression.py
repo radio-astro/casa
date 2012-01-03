@@ -480,8 +480,12 @@ if(numpoints > 0.):
     print "   maximum deviation = ", maxdev, " in ", maxdevat 
                     
 if passed:
-    print "PASSED"
+    print ''
+    print 'Regression PASSED'
+    print ''
 else:
     print "Execution successful but found ", problems, " issues in analysis of results."
-    print "FAILED"
+    print ''
+    print 'Regression FAILED'
+    print ''
     raise

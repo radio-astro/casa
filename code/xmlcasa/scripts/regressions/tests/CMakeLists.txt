@@ -28,18 +28,30 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   calstat_test.py
   cleanchan_test.py
   cleanhelper_test.py
+  coordsystest.py
   cvel_test.py
   cvel_test2.py
   equinox_vis.py
   fits-import-export.py
+  fls3a_hi.py
   h121.py
   ic2233.py
+  imagepoltest.py
+  imagetest.py
+  irc_hc3n_task.py
+  irc_cs_task.py
   l02d.py
   leo2pt_test.py
+  listcal_test.py
+  listvis_test.py
   ngc2403.py
   ngc5921redux.py
   ngc5921uvcontsub2.py
+  ori_hc3n.py
+  ori_sio.py
   orionmosaic.py
+  plotxy_test.py
+  pointing_test.py
   polcal_20080224_cband.py
   pylabmem.py
   third4826.py

@@ -1,6 +1,7 @@
 import sys
 import os
 import string
+from locatescript import copydata
 from locatescript import locatescript
 import inspect
 
@@ -16,7 +17,12 @@ gl=sys._getframe(stacklevel).f_globals
 def description():
     return "Test clean spw and channelization in various ways"
 
-def run():
+
+def data():
+    ### return the data files that is needed by the regression script
+    return []
+    
+def run( fetch=False ):
     #####locate the regression script
     lepath=locatescript('cleanhelper_regression.py')
     print 'Script used is ',lepath
@@ -27,9 +33,3 @@ def run():
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
     return []
-
-def data():
-    ### return the data files that is needed by the regression script
-    return []
-
-    

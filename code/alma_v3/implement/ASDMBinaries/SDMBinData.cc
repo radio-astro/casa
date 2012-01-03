@@ -2233,8 +2233,6 @@ namespace sdmbin {
 
     if(coutest)cout<<"scaleFactor="<<scaleFactor<<endl;
 
-    // cout<<"v_napc.size()="<<v_napc.size()<<endl;
-
     unsigned int nfe=nfe1;                                  // TODO multi-beam
 
     unsigned int numBin = baselinesSet_->numBin(ndd);                            if(coutest)cout << "numBin=" << numBin << endl;

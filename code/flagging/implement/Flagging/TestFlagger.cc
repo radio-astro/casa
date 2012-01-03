@@ -319,11 +319,16 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		agentParams_p.get("mode", mode);
 	}
 
-	// If there is a tfcrop agent in the list change
+	// If there is a tfcrop or extend agent in the list change
 	// the iterationApproach for all agents
-	if (mode.compare("tfcrop") == 0) {
+	if (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0) {
 		fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
 	}
+
+	// Call the Display Agent with the correct constructor
+	// if datadisplay=true
+	// if summarydisplay=screen or file
+	// this had to be handled by the create() method in the base class
 
 	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0) {
 
@@ -370,8 +375,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		cout << str << endl;
 	}
 
-	// TODO:sort the vector of records and define names
-	// for each agent.
+	// TODO: define names for each agent.
 
 	return true;
 }
@@ -496,7 +500,7 @@ TestFlagger::initAgents()
 // It assumes that initAgents has been called first
 // ---------------------------------------------------------------------
 Record
-TestFlagger::run()
+TestFlagger::run(Bool writeflags)
 {
 
 	LogIO os(LogOrigin("TestFlagger", "run()", WHERE));
@@ -530,13 +534,16 @@ TestFlagger::run()
 			agents_list_p.completeProcess();
 
 			// Flush flags to MS
-			// cout << "Flush flags to MS " << endl;
-			fdh_p->flushFlags();
+			if (writeflags)
+				fdh_p->flushFlags();
 		}
-		agents_list_p.chunkSummary();
+		if (writeflags)
+			agents_list_p.chunkSummary();
 	}
 
-	agents_list_p.msSummary();
+	if (writeflags)
+		agents_list_p.msSummary();
+
 	agents_list_p.terminate();
 	agents_list_p.join();
 

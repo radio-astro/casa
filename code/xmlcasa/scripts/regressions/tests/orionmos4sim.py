@@ -1,6 +1,7 @@
 import sys
 import os
 import string
+from locatescript import copydata
 from locatescript import locatescript
 import inspect
 
@@ -16,7 +17,17 @@ gl=sys._getframe(stacklevel).f_globals
 def description():
     return "mosaicing"
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return ['run_orionmos4sim.pickle', 'orion.ms']
+
+def run(fetch=False):
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
     #####locate the regression script
     lepath=locatescript('run_orionmos4sim.py')
     print 'Script used is ',lepath
@@ -27,7 +38,3 @@ def run():
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
     return []
-
-def data():
-    ### return the data files that is needed by the regression script
-    return ['run_orionmos4sim.pickle', 'orion.ms']

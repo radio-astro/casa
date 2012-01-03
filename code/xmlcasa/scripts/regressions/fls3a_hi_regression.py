@@ -155,8 +155,14 @@ if ((diff_immax<0.05) & (diff_imrms<0.05)):
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for FLS3a HI'
         print >>logfile,'---'
+	print ''
+	print 'Regression PASSED'
+	print ''
 else: 
 	regstate=False
+	print ''
+	print 'Regression FAILED'
+	print ''
         print >>logfile,'----FAILED Regression test for FLS3a HI'
 print >>logfile,'*********************************'
 #

@@ -411,8 +411,14 @@ else:
 print >> logfile,'---'
 if regstate:
     print >> logfile, 'Passed',
+    print ''
+    print 'Regression PASSED'
+    print ''
 else:
     print >> logfile, 'FAILED',
+    print ''
+    print 'Regression FAILED'
+    print ''
 print >> logfile, 'regression test for clean chan/spw'
 print >>logfile,'---'
 print >>logfile,'*********************************'

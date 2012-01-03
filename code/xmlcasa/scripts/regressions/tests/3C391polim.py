@@ -15,7 +15,7 @@ gl=sys._getframe(stacklevel).f_globals
 def description():
     return "Tests linear polarization imaging (multiscale clean) using 3C391 data set"
 
-def run():
+def run(fetch=False):
     #####locate the regression script
     lepath=locatescript('3C391polim_regression.py')
     print 'Script used is ',lepath

@@ -120,6 +120,7 @@ protected:
 	String mode_p;
 	Record agentParams_p;
 	FlagAgentSummary *summaryAgent_p;
+	Bool writeflags_p;
 
 
 	// variables for initFlagDataHandler and initAgents
@@ -160,7 +161,7 @@ public:
 
 	bool initAgents();
 
-	Record run();
+	Record run(Bool writeflags);
 
 	// Flag backup methods
 	bool printFlagSelections();

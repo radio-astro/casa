@@ -30,7 +30,7 @@
        </size>
       </property>
       <property name="cursor">
-       <cursorShape>CrossCursor</cursorShape>
+       <cursorShape>ArrowCursor</cursorShape>
       </property>
       <property name="focusPolicy">
        <enum>Qt::StrongFocus</enum>
@@ -362,9 +362,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionWrite"/>
+   <addaction name="actionExport"/>
    <addaction name="actionPrint"/>
-   <addaction name="actionSave"/>
+   <addaction name="actionSaveGraphic"/>
    <addaction name="actionPreferences"/>
    <addaction name="separator"/>
    <addaction name="actionMoveLeft"/>
@@ -377,21 +377,21 @@
    <addaction name="actionZoomOut"/>
   </widget>
   <widget class="QStatusBar" name="profileStatus"/>
-  <action name="actionWrite">
+  <action name="actionExport">
    <property name="icon">
-    <iconset>
-     <normaloff>:/images/write.png</normaloff>:/images/write.png</iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+     <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
    </property>
    <property name="text">
-    <string>Write</string>
+    <string>Export</string>
    </property>
    <property name="toolTip">
-    <string>Save data in a file.</string>
+    <string>Export profile to file</string>
    </property>
   </action>
   <action name="actionPrint">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/print.png</normaloff>:/images/print.png</iconset>
    </property>
    <property name="text">
@@ -403,8 +403,8 @@
   </action>
   <action name="actionPreferences">
    <property name="icon">
-    <iconset>
-     <normaloff>:/images/cross.png</normaloff>:/images/cross.png</iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+     <normaloff>:/images/settings.png</normaloff>:/images/settings.png</iconset>
    </property>
    <property name="text">
     <string>preferences</string>
@@ -415,7 +415,7 @@
   </action>
   <action name="actionMoveLeft">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/leftarrow.png</normaloff>:/images/leftarrow.png</iconset>
    </property>
    <property name="text">
@@ -427,7 +427,7 @@
   </action>
   <action name="actionMoveRight">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/rightarrow.png</normaloff>:/images/rightarrow.png</iconset>
    </property>
    <property name="text">
@@ -439,7 +439,7 @@
   </action>
   <action name="actionMoveUp">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/uparrow.png</normaloff>:/images/uparrow.png</iconset>
    </property>
    <property name="text">
@@ -451,7 +451,7 @@
   </action>
   <action name="actionMoveDown">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/downarrow.png</normaloff>:/images/downarrow.png</iconset>
    </property>
    <property name="text">
@@ -463,7 +463,7 @@
   </action>
   <action name="actionZoomIn">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/zoomi.png</normaloff>:/images/zoomi.png</iconset>
    </property>
    <property name="text">
@@ -475,7 +475,7 @@
   </action>
   <action name="actionZoomOut">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/zoomo.png</normaloff>:/images/zoomo.png</iconset>
    </property>
    <property name="text">
@@ -485,13 +485,13 @@
     <string>Zoom out.  (ctrl -)</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="actionSaveGraphic">
    <property name="icon">
-    <iconset>
-     <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+     <normaloff>:/images/saveGraphic.png</normaloff>:/images/saveGraphic.png</iconset>
    </property>
    <property name="text">
-    <string>Save</string>
+    <string>Save graphics</string>
    </property>
    <property name="toolTip">
     <string>Save as a (standard graphics) image.</string>
@@ -499,7 +499,7 @@
   </action>
   <action name="actionZoomNeutral">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/zoomn.png</normaloff>:/images/zoomn.png</iconset>
    </property>
    <property name="text">

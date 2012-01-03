@@ -111,6 +111,7 @@ public:
 
 	void setTitle(const QString &text, int fontSize = 12,   int iclr = 1,
 			const QString &font = "Helvetica [Cronyx]");
+	QString getTitle(){return title.text;};
 	void setXLabel(const QString &text, int fontSize = 10,  int iclr = 1,
 			const QString &font = "Helvetica [Cronyx]");
 	void setYLabel(const QString &text, int fontSize = 10,  int iclr = 1,

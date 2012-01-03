@@ -2538,4 +2538,8 @@ if Benchmarking:
 else:
     coordsystest()
 
+print ''
+print 'Regression PASSED'
+print ''
+
 #exit()

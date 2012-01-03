@@ -2,6 +2,15 @@ import sys
 import os
 import string
 import inspect
+import shutil
+
+a=inspect.stack()
+stacklevel=0
+for k in range(len(a)):
+    if (string.find(a[k][1], 'ipython console') > 0):
+        stacklevel=k
+        break
+gl=sys._getframe(stacklevel).f_globals
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
@@ -44,3 +53,36 @@ def locatescript(lescript=''):
     else:
         raise Exception, "Regression script %s not found "%(lescript)
     return lepath
+
+def copydata(name, destdir):
+    destdir = str(destdir)
+    ok = False
+    if not os.path.isdir(destdir):
+        raise RuntimeError('destination directory (' + destdir + ') must exist...')
+    for root, dirs, files in os.walk(gl['casa']['dirs']['data'] + "/regression"):
+        if name in dirs:
+            full_path = root + "/" + name
+            shutil.copytree(full_path,destdir + "/" + name)
+            ok = True
+            break
+        elif name in files:
+            full_path = root + "/" + name
+            shutil.copy(full_path,destdir)
+            ok = True
+            break
+
+    if not ok:
+        for root, dirs, files in os.walk(gl['casa']['dirs']['data']):
+            if name in dirs:
+                full_path = root + "/" + name
+                shutil.copytree(full_path,destdir + "/" + name)
+                ok = True
+                break
+            elif name in files:
+                full_path = root + "/" + name
+                shutil.copy(full_path,destdir)
+                ok = True
+                break
+
+    if not ok:
+        raise RuntimeError( 'failed to find "' + name + '" in ' + gl['casa']['dirs']['data'] )

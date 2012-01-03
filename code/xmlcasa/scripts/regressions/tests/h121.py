@@ -15,7 +15,11 @@ gl=sys._getframe(stacklevel).f_globals
 def description():
     return "PdB, calibration, imaging"
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return []
+
+def run(fetch=False):
     lepath=locatescript('h121_regression.py')
     print 'Script used is ',lepath
     gl['regstate']=True
@@ -26,7 +30,3 @@ def run():
 #    import lepath+'/g192_regression.py'
 ###resturn the images that will be templated and compared in future runs
     return ['nrao150.3mm.image', 'h121.co10.image',  '0224b.3mm.image', 'h121b.co10.image', 'h121all.3mm.image', 'h121c.co10.image' ]
-
-def data():
-    ### return the data files that is needed by the regression script
-    return []

@@ -362,9 +362,14 @@ if((abs(ref1_rms-a1['rms']) > 0.001) or (abs(ref2_rms-a2['rms']) > 0.001)):
     print abs(ref1_rms-a1['rms'])
     print abs(ref2_rms-a2['rms'])
     regstate=False
+    print ''
+    print 'Regression FAILED'
+    print ''
     raise Exception, 'Regression test failed for 3C219D. Absolute differences are larger than 1e-03.'
 else:
-    print 'Regression tests passed'
+    print ''
+    print 'Regression PASSED'
+    print ''
         
 
 #  End of 3C219D regression

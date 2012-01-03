@@ -195,8 +195,14 @@ def stats():
             ):
             regstate=True;
             print >>logfile,"IC2233 Regression passed.";
+            print ''
+            print 'Regression PASSED'
+            print ''
         else:
             regstate=False;
+            print ''
+            print 'Regression FAILED'
+            print ''
             print >>logfile,"IC2233 Regression failed.";
         
             print >>logfile,''

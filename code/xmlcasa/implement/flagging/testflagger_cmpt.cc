@@ -164,6 +164,7 @@ testflagger::parseAgentParameters(const ::casac::record& aparams)
 {
 	try
 	{
+
 		Record agent_params = *toRecord(aparams);
 
 		if(testflagger_p){
@@ -195,13 +196,13 @@ testflagger::init()
 }
 
 ::casac::record*
-testflagger::run()
+testflagger::run(bool writeflags)
 {
     casac::record *rstat(0);
 	try
 	{
 		if(testflagger_p){
-			rstat =  fromRecord(testflagger_p->run());
+			rstat =  fromRecord(testflagger_p->run(writeflags));
 		}
 		else{
 			rstat = fromRecord(Record());
@@ -215,6 +216,9 @@ testflagger::run()
 }
 
 
+/*
+ * Methods to deal with flag backup
+ */
 std::vector<std::string>
 testflagger::getflagversionlist(const bool printflags)
 {
@@ -271,7 +275,6 @@ testflagger::saveflagversion(const std::string& versionname, const std::string& 
 		RETHROW(x);
 	}
 }
-
 
 
 } // casac namespace

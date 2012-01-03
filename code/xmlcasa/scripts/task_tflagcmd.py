@@ -39,6 +39,7 @@ def tflagcmd(
     # implement backup for the whole input file
     # decide about actions: unapply, set, extract
     # remove correlation from data selection and move it to agent's parameters
+    # add support for ASDM.xml ????
 
 
 
@@ -214,21 +215,22 @@ def tflagcmd(
             listmode = ''
 
 #********************************  REFACTORING **********************************
-        # Get the list of parameters
-        sel_list = []
-        if myflagcmd.__len__() > 0:
-            for i in range(myflagcmd.__len__()):
-                cmdline = myflagcmd[i]['cmd']
-                sel_list.append(cmdline)
-                
-        # Get the union of all parameters
-        unionpars = getUnion(sel_list)
-        if debug:
-            casalog.post('The union of all parameters is %s' %(unionpars))
-        
-        # Select the data
-        # Correlation should not go in here            
-        tflocal.selectdata(unionpars)   
+        if action != 'set' or action != 'clear':
+            # Get the list of parameters
+            sel_list = []
+            if myflagcmd.__len__() > 0:
+                for i in range(myflagcmd.__len__()):
+                    cmdline = myflagcmd[i]['cmd']
+                    sel_list.append(cmdline)
+                    
+            # Get the union of all parameters
+            unionpars = getUnion(sel_list)
+            if debug:
+                casalog.post('The union of all parameters is %s' %(unionpars))
+            
+            # Select the data
+            # Correlation should not go in here            
+            tflocal.selectdata(unionpars)   
 
                         
 #********************************************************************************
@@ -243,15 +245,17 @@ def tflagcmd(
                     cmdstr += " reason='" + myflagcmd[key]['reason'] \
                         + "'"
                 mycmdlist.append(cmdstr)
+                
         casalog.post('Extracted ' + str(mycmdlist.__len__())
                      + ' flag command strings')
 
-        casalog.post('Executing action = ' + action)
 
         #
         # ACTION to perform on input file
         #
         # REVIEW LIST and SAVE LATER
+        casalog.post('Executing action = ' + action)
+
         if (action == 'list'):
             casalog.post('List the commands from the FLAG_CMD in %:'+vis)
             # It will list the flag commands from inputfile on the screen/logger
@@ -740,7 +744,7 @@ def setupAgent(tflocal, cmdlist, apply):
     ''' Setup the parameters of each agent and call the tflagger tool
         cmdlist --> it is a list of string with selection parameters
                     and mode's specific parameters 
-        apply --> if a boolean to control whether to apply or unapply the flags'''
+        apply --> it's a boolean to control whether to apply or unapply the flags'''
         
     # TODO: correlation is to be considered here
     # Read the mode
@@ -759,7 +763,7 @@ def setupAgent(tflocal, cmdlist, apply):
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['expression','datacolumn','timecutoff','freqcutoff','timefit','freqfit',
                   'maxnpieces','flagdimension','usewindowstats','halfwin']
-    extendflagspars = ['extendpols','growtime','growfreq','growaround','flagneartime','flagnearfreq']
+    extendpars = ['extendpols','growtime','growfreq','growaround','flagneartime','flagnearfreq']
     
     nrows = cmdlist.__len__()
     if debug:
@@ -796,9 +800,9 @@ def setupAgent(tflocal, cmdlist, apply):
             elif cmdline.__contains__('tfcrop'):
                 mode = 'tfcrop'
                 modepars = getLinePars(cmdline,tfcroppars)
-            elif cmdline.__contains__('extendflags'):
-                mode = 'extendflags'
-                modepars = getLinePars(cmdline,extendflagspars)
+            elif cmdline.__contains__('extend'):
+                mode = 'extend'
+                modepars = getLinePars(cmdline,extendpars)
             elif cmdline.__contains__('unflag'):
                 mode = 'unflag'
                 modepars = getLinePars(cmdline,manualpars)

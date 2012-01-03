@@ -265,11 +265,16 @@ and selecting the data according to what was parsed previously by parseDataSelec
 Executes a flagging run.
 </description>
 <input>
+     <param type="bool" name="writeflags">
+     <description>Write flags to MS</description>
+     <value>true</value>
+     </param>
 </input>
 <returns type="record"/>
 <example>
 </example>
 </method>
+
 
 <!-- ********************************************************************** -->
 

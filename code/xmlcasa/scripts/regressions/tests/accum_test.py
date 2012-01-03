@@ -11,6 +11,7 @@
 import sys
 import os
 import string
+from locatescript import copydata
 from locatescript import locatescript
 import inspect
 
@@ -25,7 +26,19 @@ gl=sys._getframe(stacklevel).f_globals
 def description():
     return "Based on accum_regression.py"
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return ['ngc5921.fits']
+#    return []
+
+def run( fetch=False ):
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
+    #####locate the regression script
     lepath=locatescript('accum_regression.py')
     gl['regstate']=True
     execfile(lepath, gl)
@@ -34,8 +47,3 @@ def run():
         raise Exception, 'regstate = False'
 
     return []
-
-def data():
-    ### return the data files that is needed by the regression script
-    return ['ngc5921.fits']
-#    return []

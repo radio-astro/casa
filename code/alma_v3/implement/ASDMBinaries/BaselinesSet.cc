@@ -107,7 +107,7 @@ unsigned int BaselinesSet::getNumAntennas(){ return numAntennas_; }
 
 unsigned int BaselinesSet::getNumEffAntennas(){ return numEffAntennas_; }
 
-Tag BaselinesSet::getEffAntennaId(unsigned int na) throw (Error){
+Tag BaselinesSet::getEffAntennaId(unsigned int na) { // throw (Error){
   if(na>=v_effAntennaIdArray_.size())
     Error(SERIOUS,
 	  "The antenna index, %d, exceeds the maximum limit of %d",
@@ -115,7 +115,7 @@ Tag BaselinesSet::getEffAntennaId(unsigned int na) throw (Error){
   return v_effAntennaIdArray_[na];
 }
 
-int BaselinesSet::getFeedId(unsigned int na, unsigned int nfe) throw (Error){
+int BaselinesSet::getFeedId(unsigned int na, unsigned int nfe) { // throw (Error){
   if(na>=v_effAntennaIdArray_.size())
     Error(SERIOUS,
 	  "The antenna index, %d, exceeds the maximum limit of %d",
@@ -131,7 +131,7 @@ unsigned int BaselinesSet::getNumBaselines(){ return numBaselines_; }
 
 unsigned int BaselinesSet::getNumEffBaselines(){ return numEffBaselines_; }
 
-unsigned int BaselinesSet::baselineIndex( Tag antennaId1, Tag antennaId2) throw (Error){
+unsigned int BaselinesSet::baselineIndex( Tag antennaId1, Tag antennaId2) { // throw (Error){
 //   int iNum = 0;          // iNum will be the (1 based) antennaNum in the list for antennaId1 
 //   int jNum = 0;          // jNum will be the (1 based) antennaNum in the list for antennaId2 
 //   for(int n=0; n<numEffAntennas_; n++)if(v_effAntennaIdArray_[n]==antennaId1)iNum=n+1; if(iNum==0)return 0;
@@ -148,7 +148,7 @@ unsigned int BaselinesSet::baselineIndex( Tag antennaId1, Tag antennaId2) throw 
   return m+iIdx;
 }
 
-unsigned int BaselinesSet::baselineIndex( Tag antennaId ) throw (Error){
+unsigned int BaselinesSet::baselineIndex( Tag antennaId ) { // throw (Error){
   for(unsigned int n=0; n<numEffAntennas_; n++)
     if(v_effAntennaIdArray_[n]==antennaId)return n;
   Error(FATAL,"No baseline index for antennaId=%s",antennaId.toString().c_str());
@@ -156,33 +156,37 @@ unsigned int BaselinesSet::baselineIndex( Tag antennaId ) throw (Error){
 }
 
 
-unsigned int BaselinesSet::baselineIndex( unsigned int na1, unsigned int na2) throw(Error){
-  if(na1>=v_effAntennaIdArray_.size()){
-    Error(FATAL,"The antenna index, %d, exceeds the limit of %d",
-	  na1,v_effAntennaIdArray_.size()-1);
-    return 0;
-  }
-  if(na2>=v_effAntennaIdArray_.size()){
-    Error(FATAL,"The antenna index, %d, exceeds the limit of %d",
-	  na2,v_effAntennaIdArray_.size()-1);
-    return 0;
-  }
-  unsigned int iIdx;
-  unsigned int jIdx;
-  if(na1<na2){
-    iIdx = na1;
-    jIdx = na2;
-  }else{
-    iIdx = na2;
-    jIdx = na1;
-  }
-  unsigned int m = 0;
-  for(unsigned int n=0; n<jIdx; n++)m=m+n;
-  return m+iIdx;
-}
+// unsigned int BaselinesSet::baselineIndex( unsigned int na1, unsigned int na2) { // throw(Error){
+
+//   // if(na1>=v_effAntennaIdArray_.size()){
+//   //   Error(FATAL,"The antenna index, %d, exceeds the limit of %d",
+//   // 	  na1,v_effAntennaIdArray_.size()-1);
+//   //   return 0;
+//   // }
+//   // if(na2>=v_effAntennaIdArray_.size()){
+//   //   Error(FATAL,"The antenna index, %d, exceeds the limit of %d",
+//   // 	  na2,v_effAntennaIdArray_.size()-1);
+//   //   return 0;
+//   // }
+
+//   unsigned int iIdx = min (na1, na2);
+//   unsigned int jIdx = max (na1, na2);
+//   /*
+//   if(na1<na2){
+//     iIdx = na1;
+//     jIdx = na2;
+//   }else{
+//     iIdx = na2;
+//     jIdx = na1;
+//   }
+//   unsigned int m = 0;
+//   for(unsigned int n=0; n<jIdx; n++)m=m+n;
+//   */
+//   return jIdx * (jIdx - 1) / 2 + iIdx;
+// }
 
 
-unsigned int BaselinesSet::antenna1( unsigned int baselineIdx)  throw (Error){
+unsigned int BaselinesSet::antenna1( unsigned int baselineIdx)  { // throw (Error){
   unsigned int iIdx;
   unsigned int jIdx;
   unsigned int m;
@@ -199,7 +203,7 @@ unsigned int BaselinesSet::antenna1( unsigned int baselineIdx)  throw (Error){
   return 0;
 }
 
-unsigned int BaselinesSet::antenna2( unsigned int baselineIdx)  throw (Error){
+unsigned int BaselinesSet::antenna2( unsigned int baselineIdx)  { // throw (Error){
   unsigned int iIdx;
   unsigned int jIdx;
   unsigned int m;
@@ -217,7 +221,7 @@ unsigned int BaselinesSet::antenna2( unsigned int baselineIdx)  throw (Error){
   return 0;
 }
 
-unsigned int BaselinesSet::feedIndex(Tag antId, int feedId) throw (Error){
+unsigned int BaselinesSet::feedIndex(Tag antId, int feedId) { // throw (Error){
   int na  = -1;
   for(unsigned int n=0; n<numAntennas_; n++)if(antId==v_AntennaIdArray_[n])na=n;
   if(na<0){
@@ -375,19 +379,19 @@ unsigned int BaselinesSet::transferId(unsigned int na1, unsigned int na2, unsign
   return transferId(na1,na2, nfe, ndd, nbin, napc);
 }
 
-unsigned int BaselinesSet::transferId(unsigned int na1,unsigned int na2,unsigned int nfe, unsigned int ndd,unsigned int nbin,unsigned int napc){
+// unsigned int BaselinesSet::transferId(unsigned int na1,unsigned int na2,unsigned int nfe, unsigned int ndd,unsigned int nbin,unsigned int napc){
 
-  unsigned int baselineidx = baselineIndex(na1,na2);                   //cout << "baselineidx=" << baselineidx << endl;
+//   unsigned int baselineidx = baselineIndex(na1,na2);                   //cout << "baselineidx=" << baselineidx << endl;
 
-  unsigned int v_cumulCrossSize_ndd=0; if(v_cumulCrossSize_.size()!=0)v_cumulCrossSize_ndd = v_cumulCrossSize_[ndd];
-  unsigned int v_crossSize_ndd=0;      if(v_crossSize_.size()!=0)     v_crossSize_ndd      = v_crossSize_[ndd];
+//   unsigned int v_cumulCrossSize_ndd=0; if(v_cumulCrossSize_.size()!=0)v_cumulCrossSize_ndd = v_cumulCrossSize_[ndd];
+//   unsigned int v_crossSize_ndd=0;      if(v_crossSize_.size()!=0)     v_crossSize_ndd      = v_crossSize_[ndd];
 
-  unsigned int n = 
-    baselineidx*numFeeds_*sumCrossSize_ +                           // /baseline
-    nfe*sumCrossSize_ +                                             // /baseline/feed     
-    v_cumulCrossSize_ndd +                                          // /baseline/feed/datadesc
-    nbin*(v_crossSize_ndd/numBin(ndd)) +                            // /baseline/feed/datadesc/bin
-    napc*(v_crossSize_ndd/(numBin(ndd)*numApc_));                   // /baseline/feed/datadesc/bin/napc
+//   unsigned int n = 
+//     baselineidx*numFeeds_*sumCrossSize_ +                           // /baseline
+//     nfe*sumCrossSize_ +                                             // /baseline/feed     
+//     v_cumulCrossSize_ndd +                                          // /baseline/feed/datadesc
+//     nbin*(v_crossSize_ndd/numBin(ndd)) +                            // /baseline/feed/datadesc/bin
+//     napc*(v_crossSize_ndd/(numBin(ndd)*numApc_));                   // /baseline/feed/datadesc/bin/napc
 
-  return n;
-}
+//   return n;
+// }
