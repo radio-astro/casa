@@ -1909,9 +1909,8 @@ int ASDM2MSFiller::addUniqueState(bool sig_,
 				  unsigned int sub_scan_,
 				  string& obs_mode_,
 				  bool flag_row_) {
-  MSState msstate = itsMS -> state();
-  MSStateColumns msstateCol(msstate);
-  uInt crow = msstate.nrow();
+  MSStateColumns msstateCol(itsMS -> state());
+  uInt crow = itsMS->state().nrow();
   
   uInt i = 0;
   
@@ -1927,7 +1926,7 @@ int ASDM2MSFiller::addUniqueState(bool sig_,
     }
   }
   
-  msstate.addRow();
+  itsMS->state().addRow();
   msstateCol.sig().put(crow, sig_);
   msstateCol.ref().put(crow, ref_);
   msstateCol.cal().put(crow, cal_);
