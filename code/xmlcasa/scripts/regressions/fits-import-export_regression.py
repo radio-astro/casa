@@ -399,6 +399,9 @@ if len(failed_tests)>0:
     raise Exception, repr(len(failed_tests))+' out of '+repr(len(mydict.keys()))+' subtests failed.'
 else:
     print 'All subtests passed.'
+    print ''
+    print 'Regression PASSED'
+    print ''
 print 'Done.'
 
 

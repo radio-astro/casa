@@ -423,9 +423,13 @@ def analyseASDM(basename, caltablename0):
             isOK = False
             
     if (isOK):
-        print ">> Test passed."
+        print ''
+        print 'Regression PASSED'
+        print ''
     else:
-        print ">> Test failed."
+        print ''
+        print 'Regression FAILED'
+        print ''
 
     return isOK
 

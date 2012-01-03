@@ -3,6 +3,7 @@ import os
 import shutil
 from taskinit import *
 from tasks import *
+from locatescript import copydata
 
 def description():
     # clean, imfit, and im(.advise) are also used.
@@ -13,8 +14,14 @@ def data():
     return ['0420+417.ms']
     
     
-def run():
+def run( fetch=False ):
     """Run the tasks and compare the results."""
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
     nsigma    = 3.0
     advice    = None
     lazy      = True

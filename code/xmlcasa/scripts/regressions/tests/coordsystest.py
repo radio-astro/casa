@@ -1,7 +1,6 @@
 import sys
 import os
 import string
-from locatescript import copydata
 from locatescript import locatescript
 import inspect
 
@@ -13,23 +12,21 @@ for k in range(len(a)):
         break
 gl=sys._getframe(stacklevel).f_globals
 
-# Short description
 def description():
-    return "Test clean spw and channelization in various ways"
-
+    return "test casapy coordsys tool"
 
 def data():
     ### return the data files that is needed by the regression script
     return []
-    
-def run( fetch=False ):
+
+def run(fetch=False):
     #####locate the regression script
-    lepath=locatescript('cleanhelper_regression.py')
+    lepath=locatescript('coordsystest_regression.py')
     print 'Script used is ',lepath
     gl['regstate']=True
     execfile(lepath, gl)
     print 'regstate =', gl['regstate']
     if not gl['regstate']:
         raise Exception, 'regstate = False'
-###return the images that will be templated and compared in future runs
+
     return []

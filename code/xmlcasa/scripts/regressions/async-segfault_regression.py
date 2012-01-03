@@ -4,5 +4,7 @@ os.system('rm -rf test.fits')
 exportuvfits(vis='test.ms', fitsfile='test.uvfits', async=False, datacolumn = 'data')
 exportfits(fitsimage='test.fits', imagename='test.clean.image', async=False)
 importuvfits(vis='test-reimport.ms', fitsfile='test.uvfits', async=False)
-print 'No segfault -> PASSED.'
+print ''
+print 'Regression PASSED'
+print ''
 

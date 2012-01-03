@@ -262,10 +262,16 @@ try:
     if fail > 0 :
         perc = fail*100/total
         regstate = False
+        print >> sys.stdout, ''
+        print >> sys.stdout, 'Regression FAILED'
+        print >> sys.stdout, ''
         print >> sys.stderr, "Regression test failed: %f %% of values are different "\
                         "by more than the allowed maximum %s" %(perc,EPS)
     else :
         regstate = True
+        print >> sys.stdout, ''
+        print >> sys.stdout, 'Regression PASSED'
+        print >> sys.stdout, ''
         print >> sys.stdout, "Regression tests passed. %s rows were analysed" %total
 
     print >>sys.stdout,'********* Benchmarking *****************'

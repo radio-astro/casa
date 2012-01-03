@@ -692,8 +692,8 @@ if benchmarking:
     print ''
     print 'Regression PASSED'
     print ''
-    print '  Total wall clock time was: %10.3f ' % walltime
-    print '  Total CPU        time was: %10.3f ' % cputime
+    print 'Total wall clock time was: %10.3f ' % walltime
+    print 'Total CPU        time was: %10.3f ' % cputime
     print ''
 
 #

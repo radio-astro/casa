@@ -2,6 +2,7 @@
 import sys
 import os
 import string
+from locatescript import copydata
 from locatescript import locatescript
 import inspect
 
@@ -20,18 +21,6 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 
-def run():
-    #####locate the regression script
-    try: 
-        lepath=locatescript('cvel_regression.py')
-        print 'Script used is ',lepath
-        execfile(lepath, gl, pass_on)
-    except:
-        print 'execution failed: ', sys.exc_info()
-        raise
-###return the images that will be templated and compared in future runs
-    return []
-
 def data():
     ### return the data files that are needed by the regression script
     return [pass_on["dataset_name"]]
@@ -44,3 +33,21 @@ def doCopy():
     ###   the work directory
 
     return [0]
+
+def run( fetch=False ):
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
+    #####locate the regression script
+    try: 
+        lepath=locatescript('cvel_regression.py')
+        print 'Script used is ',lepath
+        execfile(lepath, gl, pass_on)
+    except:
+        print 'execution failed: ', sys.exc_info()
+        raise
+###return the images that will be templated and compared in future runs
+    return []

@@ -144,4 +144,7 @@ def run( fetch=False ):
                         raise Exception("Error! " + str(s))
                 elif not type(s) is dict:
                     raise Exception("Error! Return value " + str(s) + " is not a dictionary")
+    print ''
+    print 'Regression PASSED'
+    print ''
     return []
