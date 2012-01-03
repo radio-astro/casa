@@ -1299,6 +1299,10 @@ def imagepoltest(which=None):
     test10()
     test11()
     test12()
+    print ''
+    print 'Regression PASSED'
+    print ''
+    
     
 
 #####################################################################

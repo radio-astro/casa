@@ -185,11 +185,17 @@ if (diff_sum < 0.05): print >>logfile,'* Passed spectrum (line) sum test'
 print >>logfile,'*  Line integral '+str(sum)
 if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
 	regstate=True
+        print ''
+        print 'Regression PASSED'
+        print ''
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for IRC-HC3N'
         print >>logfile,'---'
 else:
 	regstate=False
+        print ''
+        print 'Regression FAILED'
+        print ''
         print >>logfile,'----FAILED Regression test for IRC-HC3N'
 print >>logfile,'*********************************'
 

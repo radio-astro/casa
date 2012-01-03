@@ -420,6 +420,15 @@ print "  number of tests PASSED: " + str(testPassed)
 print "  number of tests FAILED: " + str(testFailed)
 print ""
 
+if testFailed > 0:
+    print ''
+    print 'Regression FAILED'
+    print ''
+else:
+    print ''
+    print 'Regression PASSED'
+    print ''
+
 print "END: listvis_regression.py"
 
 if (testFailed > 0):

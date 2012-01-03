@@ -845,6 +845,15 @@ print "  number of tests PASSED: " + str(testPassed)
 print "  number of tests FAILED: " + str(testFailed)
 print ""
 
+if testFailed > 0:
+    print ''
+    print 'Regression FAILED'
+    print ''
+else:
+    print ''
+    print 'Regression PASSED'
+    print ''
+
 # # If running in automated mode, remove all data files.
 # if (automate): 
 #     print "Removing all listcal_regression files..."

@@ -13,14 +13,15 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "NGC 5921, VLA D-array, import, export, flagging, calibration, imaging, image statistics"
+    return "test casapy coordsys tool"
 
 def data():
     ### return the data files that is needed by the regression script
     return []
 
 def run(fetch=False):
-    lepath=locatescript('ngc5921_regression.py')
+    #####locate the regression script
+    lepath=locatescript('listvis_regression.py')
     print 'Script used is ',lepath
     gl['regstate']=True
     execfile(lepath, gl)
@@ -28,5 +29,4 @@ def run(fetch=False):
     if not gl['regstate']:
         raise Exception, 'regstate = False'
 
-###return the images that will be templated and compared in future runs
-    return ['ngc5921_regression/ngc5921.clean.image']
+    return []

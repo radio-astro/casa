@@ -1243,12 +1243,18 @@ else:
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for NGC5921'
 	print >>logfile,'---'
+        print ''
+        print 'Regression PASSED'
+        print ''
         tstutl.note("Passed Regression test for NGC5921","NORMAL")
     else: 
 	regstate=False
 	print >>logfile,'---'
 	print >>logfile,'FAILED Regression test for NGC5921'
 	print >>logfile,'---'
+        print ''
+        print 'Regression FAILED'
+        print ''
         tstutl.note("FAILED Regression test for NGC5921","SEVERE")
         # Specify what failed here...just saying "FAILED" is aggravating.
         for d in (listvisresults, listcalresults, exportresults, quantresults):

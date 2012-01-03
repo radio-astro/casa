@@ -1498,10 +1498,16 @@ if (final_status == 'Passed'):
     print >>logfile,'---'
     print >>logfile,'Passed Regression test for NGC 2403'
     print >>logfile,'---'
+    print ''
+    print 'Regression PASSED'
+    print ''
     print 'Passed Regression test for NGC 2403'
 else:
     regstate=False
     print >>logfile,'----FAILED Regression test for NGC 2403'
+    print ''
+    print 'Regression FAILED'
+    print ''
     print '----FAILED Regression test for NGC 2403'
     
 #

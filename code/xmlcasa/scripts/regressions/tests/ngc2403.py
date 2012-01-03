@@ -1,6 +1,7 @@
 import sys
 import os
 import string
+from locatescript import copydata
 from locatescript import locatescript
 import inspect
 
@@ -15,7 +16,17 @@ gl=sys._getframe(stacklevel).f_globals
 def description():
     return "VLA, NGC 2403 HI line data, import, flagging, calibration, imaging"
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return ['AS649_1','AS649_2','AS649_3','AS649_4']
+
+def run(fetch=False):
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
     #####locate the regression script
     lepath=locatescript('ngc2403_tutorial_regression.py')
     print 'Script used is ',lepath
@@ -29,7 +40,3 @@ def run():
 
     #not in repository: return ['n2403.tutorial.final.clean.image','n2403.tutorial.dirty.image']
     return []
-
-def data():
-    ### return the data files that is needed by the regression script
-    return ['AS649_1','AS649_2','AS649_3','AS649_4']
