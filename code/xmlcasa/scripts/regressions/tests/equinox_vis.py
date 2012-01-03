@@ -29,10 +29,16 @@ def run( fetch=False ):
     # 'BMEAN', 'BTRUE', 'APP', 'JMEAN', 'JTRUE']
     convert_phasecenter = False
     origvisses = data()
-    
+
+    passes = True
     for origvis in origvisses:
         peaks = run_tasks(origvis, advice, lazy, equinoxes, convert_phasecenter)
-        compare(peaks, nsigma)
+        passes = passes and compare(peaks, nsigma)
+
+    if passes:
+        print ''
+        print 'Regression PASSED'
+        print ''
 
     return []
 
@@ -151,6 +157,7 @@ def compare(peaks, nsigma=3.0):
     equinoxes = peaks.keys()
     equinoxes.remove('original')
     equinoxes.sort()
+    result = True
     for equinox in equinoxes:
         try:
             dist_from_original = me.separation(origdir,
@@ -180,7 +187,10 @@ def compare(peaks, nsigma=3.0):
             for q in ('majoraxis', 'minoraxis', 'positionangle'):
                 cmp_shape_param(peaks, equinox, q, nsigma)
         except Exception, e:
+            result = False
             print "Error", e, "comparing to test equinox", equinox
+
+    return result
 
         
 def cmp_shape_param(peaks, equinox, q, nsigma):

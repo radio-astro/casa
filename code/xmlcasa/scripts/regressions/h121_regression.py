@@ -423,8 +423,14 @@ if ((diff_3mma<0.05) & (diff_3mmb<0.05) & (diff_co10a<0.05) & (diff_co10b<0.05) 
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for H121'
         print >>logfile,'---'
+	print ''
+	print 'Regression PASSED'
+	print ''
 else:
         regstate=False
+	print ''
+	print 'Regression FAILED'
+	print ''
         print >>logfile,'----FAILED Regression test for H121'
 print >>logfile,'*********************************'
 
