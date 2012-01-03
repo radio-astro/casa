@@ -49,33 +49,33 @@ namespace sdmbin {
       SwitchCycleRow*     scPtr=rscSet.getRowByKey(v_switchCycleId[n]);
       v_spwr.push_back(ddPtr->getSpectralWindowUsingSpectralWindowId());
       //      if(v_spwr[n]->isBasebandNameExists()){    mandatory since ASDMv1
-	BasebandName   bbn = ddPtr->getSpectralWindowUsingSpectralWindowId()->getBasebandName();
-	DataDescParams ddp;
-	ddp.ddIdx   = n;
-	ddp.scId    = v_switchCycleId[n];
-	ddp.polId   = ddPtr->getPolOrHoloId();
-	ddp.spwId   = ddPtr->getSpectralWindowId();
-	ddp.numChan = ddPtr->getSpectralWindowUsingSpectralWindowId()->getNumChan();
-	ddp.numCorr = ddPtr->getPolarizationUsingPolOrHoloId()->getNumCorr();
-	ddp.numBin  = scPtr->getNumStep();
-	itbnddpf = m_bn_v_ddp_.find(bbn);
-	itbnddpe = m_bn_v_ddp_.end();
-	// a map view, the  DataDescriptions being grouped as a function of their parent babseband name
-	if(itbnddpf==itbnddpe){
-	  vector<DataDescParams> v_ddp; v_ddp.push_back(ddp);
-	  m_bn_v_ddp_.insert(make_pair(bbn,v_ddp));
-	}else{
-	  itbnddpf->second.push_back(ddp);
-	}
-	// also a flat description, the DataDescription view:
-	v_basebandName_.push_back(bbn);
-	v_spwId_.push_back(ddp.spwId);
-	v_numChan_.push_back(ddp.numChan);
-	v_numPol_.push_back(ddp.numCorr);
-//       }else{
-// 	Error(SERIOUS,"BasebandName ASDM item missing when spectralWindowId=%d",
-// 	      atoi(ddPtr->getSpectralWindowId().toString().c_str()));
-//       }
+      BasebandName   bbn = ddPtr->getSpectralWindowUsingSpectralWindowId()->getBasebandName();
+      DataDescParams ddp;
+      ddp.ddIdx   = n;
+      ddp.scId    = v_switchCycleId[n];
+      ddp.polId   = ddPtr->getPolOrHoloId();
+      ddp.spwId   = ddPtr->getSpectralWindowId();
+      ddp.numChan = ddPtr->getSpectralWindowUsingSpectralWindowId()->getNumChan();
+      ddp.numCorr = ddPtr->getPolarizationUsingPolOrHoloId()->getNumCorr();
+      ddp.numBin  = scPtr->getNumStep();
+      itbnddpf = m_bn_v_ddp_.find(bbn);
+      itbnddpe = m_bn_v_ddp_.end();
+      // a map view, the  DataDescriptions being grouped as a function of their parent babseband name
+      if(itbnddpf==itbnddpe){
+	vector<DataDescParams> v_ddp; v_ddp.push_back(ddp);
+	m_bn_v_ddp_.insert(make_pair(bbn,v_ddp));
+      }else{
+	itbnddpf->second.push_back(ddp);
+      }
+      // also a flat description, the DataDescription view:
+      v_basebandName_.push_back(bbn);
+      v_spwId_.push_back(ddp.spwId);
+      v_numChan_.push_back(ddp.numChan);
+      v_numPol_.push_back(ddp.numCorr);
+      //       }else{
+      // 	Error(SERIOUS,"BasebandName ASDM item missing when spectralWindowId=%d",
+      // 	      atoi(ddPtr->getSpectralWindowId().toString().c_str()));
+      //       }
       /*
 	if(v_basebandNum_[n]<1||v_basebandNum_[n]>numBaseband_){
 	cout << "ERROR: bbcNo must have a value in the range [1,"<<numBaseband_<<"]"<<endl;
@@ -97,11 +97,11 @@ namespace sdmbin {
 		    << endl;
 
 
-//     // check that the basebands are in the order constrained by the definition of the BasebandName enumeration:
-//     for(unsigned int n=1; n<v_basebandName_.size(); n++){
-//       if(v_basebandName_[n]<v_basebandName_)
-// 	Error( SERIOUS,"The sequence of spectral windows does not correspond to an ascending\n sequence of basebands");
-//     }
+    //     // check that the basebands are in the order constrained by the definition of the BasebandName enumeration:
+    //     for(unsigned int n=1; n<v_basebandName_.size(); n++){
+    //       if(v_basebandName_[n]<v_basebandName_)
+    // 	Error( SERIOUS,"The sequence of spectral windows does not correspond to an ascending\n sequence of basebands");
+    //     }
       
     // sequence of basebands, nb of spw/bb for each member of this sequence and nb of spectral point within each of these spw
     bool                  newBaseband;
@@ -134,7 +134,7 @@ namespace sdmbin {
       vector<int> v_ndd;
       // nb of spectral point within each of these spw, baseband organized, following the sequence input order
       for(unsigned int ndd=0; ndd<itbnddpf->second.size(); ndd++)
-	  v_ndd.push_back(itbnddpf->second[ndd].numChan);
+	v_ndd.push_back(itbnddpf->second[ndd].numChan);
       vv_nsp_.push_back(v_ndd);
     }
 
@@ -211,7 +211,7 @@ namespace sdmbin {
 	    if(v_polPtr[j]->getNumCorr()<=4){                                       //  this row could be for an auto-correlation
 	      vv_corrProduct = v_polPtr[j]->getCorrProduct();
 	      v_corrType = v_polPtr[j]->getCorrType();
-// 	      EnumSet<StokesParameter> es; es.set(v_corrTyp); cout<<es.str()<<endl;
+	      // 	      EnumSet<StokesParameter> es; es.set(v_corrTyp); cout<<es.str()<<endl;
 	      if(v_corrTyp.size()==4){                                             //  all 4 pol products in interfero mode
 		if(vv_corrProduct.size()==3){                                       //     case of 3 prod, XX, XY and YY ==> single-dish  
 		  autoPolarizationId = v_polPtr[j]->getPolarizationId();
@@ -225,21 +225,21 @@ namespace sdmbin {
 		    break;
 		  }
 		}
-// 		for(int i=0; i<vv_corrProduct.size(); i++){                         // we need to know if it is XX or YY or both
-// 		  // cout << "     " << Enum<PolarizationType>(vv_corrProduct[0][i]).str() 
-// // 		       << " compared with "<< Enum<PolarizationType>(vv_corrProduct[1][i]).str() << endl;
-// 		  if(vv_corrProduct[i][0]==vv_corrProduct[i][1])                    //  this is an auto-product XX or YY (RR or LL)
-// 		    v_autoProduct.push_back(vv_corrProduct[i][0]);
+		// 		for(int i=0; i<vv_corrProduct.size(); i++){                         // we need to know if it is XX or YY or both
+		// 		  // cout << "     " << Enum<PolarizationType>(vv_corrProduct[0][i]).str() 
+		// // 		       << " compared with "<< Enum<PolarizationType>(vv_corrProduct[1][i]).str() << endl;
+		// 		  if(vv_corrProduct[i][0]==vv_corrProduct[i][1])                    //  this is an auto-product XX or YY (RR or LL)
+		// 		    v_autoProduct.push_back(vv_corrProduct[i][0]);
 	      
-// 		  cout << v_autoProduct.size() << endl;
-// 		}
-// 		autoPolar=true;
-// 		for(unsigned int i=0; i<v_autoProduct.size(); i++)
-// 		  if(v_autoProduct[i]!=vv_corrProd[i][0])autoPolar=false;
-// 		if(autoPolar){
-// 		  autoPolarizationId = v_polPtr[j]->getPolarizationId();
-// 		  break;
-// 		}
+		// 		  cout << v_autoProduct.size() << endl;
+		// 		}
+		// 		autoPolar=true;
+		// 		for(unsigned int i=0; i<v_autoProduct.size(); i++)
+		// 		  if(v_autoProduct[i]!=vv_corrProd[i][0])autoPolar=false;
+		// 		if(autoPolar){
+		// 		  autoPolarizationId = v_polPtr[j]->getPolarizationId();
+		// 		  break;
+		// 		}
 	      }
 	    }
 	  }
@@ -383,7 +383,7 @@ namespace sdmbin {
      * Note that the number of values and size of a leaf is null for auto when a cross 
      * dataDescrition has no associated auto  dataDescrition (use-case CROSS_AND_AUTO with 
      * DSB 90d phase switching, the auto having no sideband separation).
-    */  
+     */  
     bool coutest=false;
     sumAutoSize_  = 0;
     sumCrossSize_ = 0;
@@ -445,21 +445,21 @@ namespace sdmbin {
     return;
   }
 
-void DataDescriptionsSet::metaDataIndex(){
-  sumMetaDataIndex_ = 0;
+  void DataDescriptionsSet::metaDataIndex(){
+    sumMetaDataIndex_ = 0;
 
-  for(unsigned int ndd=0; ndd<numDataDescription_; ndd++){
-    v_metaDataIndex_.push_back(sumMetaDataIndex_);
-    sumMetaDataIndex_  = sumMetaDataIndex_  + v_numBin_[ndd];
+    for(unsigned int ndd=0; ndd<numDataDescription_; ndd++){
+      v_metaDataIndex_.push_back(sumMetaDataIndex_);
+      sumMetaDataIndex_  = sumMetaDataIndex_  + v_numBin_[ndd];
+    }
+    return;
   }
-  return;
-}
 
   unsigned int DataDescriptionsSet::sumMetaDataIndex(){
     return sumMetaDataIndex_;
   }
 
-  unsigned int DataDescriptionsSet::metaDataIndex( unsigned int ndd) throw(Error){
+  unsigned int DataDescriptionsSet::metaDataIndex( unsigned int ndd) { // throw(Error){
     if((unsigned int)ndd>=v_metaDataIndex_.size())
       Error(FATAL,"The dataDescription index index must be smaller than %d",
 	    v_metaDataIndex_.size());
@@ -467,92 +467,92 @@ void DataDescriptionsSet::metaDataIndex(){
   }
 
 
-  unsigned long DataDescriptionsSet::getNumAutoData(Tag autoDataDescriptionId) throw (Error){
-  bool coutest=false;
-  int m=-1;
-  for(unsigned int n=0; n<v_autoDataDescriptionId_.size(); n++){
-    if(coutest)cout << autoDataDescriptionId.toString()
-		    << " compared with" 
-		    << v_autoDataDescriptionId_[n].toString()
-		    << endl;
-    if(autoDataDescriptionId==v_autoDataDescriptionId_[n])m=n;
+  unsigned long DataDescriptionsSet::getNumAutoData(Tag autoDataDescriptionId) { //throw (Error){
+    bool coutest=false;
+    int m=-1;
+    for(unsigned int n=0; n<v_autoDataDescriptionId_.size(); n++){
+      if(coutest)cout << autoDataDescriptionId.toString()
+		      << " compared with" 
+		      << v_autoDataDescriptionId_[n].toString()
+		      << endl;
+      if(autoDataDescriptionId==v_autoDataDescriptionId_[n])m=n;
+    }
+    if(m<0){
+      Error(SERIOUS, "requested autoDataDescriptionId %s not present for the spectro-polarization setup", 
+	    autoDataDescriptionId.getTag().c_str());
+      return 0;
+    }
+    return v_numAutoData_[m];
   }
-  if(m<0){
-    Error(SERIOUS, "requested autoDataDescriptionId %s not present for the spectro-polarization setup", 
-	  autoDataDescriptionId.getTag().c_str());
-    return 0;
+
+  unsigned long DataDescriptionsSet::getNumAutoData(){
+    unsigned long numData=0;
+    for(unsigned int n=0; n<v_autoDataDescriptionId_.size(); n++)
+      numData = numData+getNumAutoData(v_autoDataDescriptionId_[n]);
+    return numData;
   }
-  return v_numAutoData_[m];
-}
 
-unsigned long DataDescriptionsSet::getNumAutoData(){
-  unsigned long numData=0;
-  for(unsigned int n=0; n<v_autoDataDescriptionId_.size(); n++)
-    numData = numData+getNumAutoData(v_autoDataDescriptionId_[n]);
-  return numData;
-}
-
-unsigned long DataDescriptionsSet::getNumCrossData(Tag crossDataDescriptionId)  throw (Error){
-  int m=-1;
-  for(unsigned int n=0; n<v_crossDataDescriptionId_.size(); n++)
-    if(crossDataDescriptionId==v_crossDataDescriptionId_[n])m=n;
-  if(m<0){
-    Error(SERIOUS,"requested crossDataDescriptionId %s not present in the spectro-polarization setup", 
-	  crossDataDescriptionId.getTag().c_str()); 
-    return 0;
+  unsigned long DataDescriptionsSet::getNumCrossData(Tag crossDataDescriptionId)  { // throw (Error){
+    int m=-1;
+    for(unsigned int n=0; n<v_crossDataDescriptionId_.size(); n++)
+      if(crossDataDescriptionId==v_crossDataDescriptionId_[n])m=n;
+    if(m<0){
+      Error(SERIOUS,"requested crossDataDescriptionId %s not present in the spectro-polarization setup", 
+	    crossDataDescriptionId.getTag().c_str()); 
+      return 0;
+    }
+    return v_numCrossData_[m];
   }
-  return v_numCrossData_[m];
-}
 
 
-unsigned long DataDescriptionsSet::getNumCrossData(){
-  unsigned long numData=0;
-  for(unsigned int n=0; n<v_crossDataDescriptionId_.size(); n++)
-    numData = numData+getNumCrossData(v_crossDataDescriptionId_[n]);
-  return numData;
-}
-
-  Tag         DataDescriptionsSet::getAutoDataDescriptionId(Tag crossDataDescriptionId) throw(Error){
-
-  for(unsigned int ndd=0; ndd<v_crossDataDescriptionId_.size(); ndd++){
-    if(crossDataDescriptionId==v_crossDataDescriptionId_[ndd])
-      return v_autoDataDescriptionId_[ndd];
+  unsigned long DataDescriptionsSet::getNumCrossData(){
+    unsigned long numData=0;
+    for(unsigned int n=0; n<v_crossDataDescriptionId_.size(); n++)
+      numData = numData+getNumCrossData(v_crossDataDescriptionId_[n]);
+    return numData;
   }
-  Error(SERIOUS,
-	"The data description identifier %s does not exist in the spectro-polarization setup",
-	crossDataDescriptionId.toString().c_str()); 
-  return Tag((unsigned int)32767);
-}
+
+  Tag         DataDescriptionsSet::getAutoDataDescriptionId(Tag crossDataDescriptionId) { // throw(Error){
+
+    for(unsigned int ndd=0; ndd<v_crossDataDescriptionId_.size(); ndd++){
+      if(crossDataDescriptionId==v_crossDataDescriptionId_[ndd])
+	return v_autoDataDescriptionId_[ndd];
+    }
+    Error(SERIOUS,
+	  "The data description identifier %s does not exist in the spectro-polarization setup",
+	  crossDataDescriptionId.toString().c_str()); 
+    return Tag((unsigned int)32767);
+  }
 
 
-vector<Tag> DataDescriptionsSet::getAutoDataDescriptionId(){
-  return v_autoDataDescriptionId_;
-}
+  vector<Tag> DataDescriptionsSet::getAutoDataDescriptionId(){
+    return v_autoDataDescriptionId_;
+  }
 
 
 
-vector<Tag> DataDescriptionsSet::getCrossDataDescriptionId(){
-  return v_crossDataDescriptionId_;
-}
+  vector<Tag> DataDescriptionsSet::getCrossDataDescriptionId(){
+    return v_crossDataDescriptionId_;
+  }
 
-unsigned int DataDescriptionsSet::numBaseband(){
-  return v_basebandSet_.size();
-}
+  unsigned int DataDescriptionsSet::numBaseband(){
+    return v_basebandSet_.size();
+  }
 
-  unsigned int DataDescriptionsSet::getNumChan(unsigned int ndd) throw(Error){
+  unsigned int DataDescriptionsSet::getNumChan(unsigned int ndd) { // throw(Error){
     if((unsigned int)ndd>=v_numChan_.size())
       Error(SERIOUS,"The dataDescription number exceeds %d",
 	    v_numChan_.size());
     return v_numChan_[ndd];
   }
 
-  unsigned int DataDescriptionsSet::getNumPol(unsigned int basebandIndex) throw(Error){
+  unsigned int DataDescriptionsSet::getNumPol(unsigned int basebandIndex) { // throw(Error){
     if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
 
     return getNumPol(v_basebandSet_[basebandIndex]);
   }
 
-  unsigned int DataDescriptionsSet::getNumPol(BasebandName basebandName) throw(Error){
+  unsigned int DataDescriptionsSet::getNumPol(BasebandName basebandName) { // throw(Error){
 
 
     unsigned int numpp=0;
@@ -573,13 +573,13 @@ unsigned int DataDescriptionsSet::numBaseband(){
     return numpp;
   }
 
-  unsigned int DataDescriptionsSet::getNumSdPol(unsigned int basebandIndex) throw(Error){
+  unsigned int DataDescriptionsSet::getNumSdPol(unsigned int basebandIndex) { // throw(Error){
     if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
 
     return getNumSdPol(v_basebandSet_[basebandIndex]);
   }
 
-  unsigned int DataDescriptionsSet::getNumSdPol(BasebandName basebandName) throw(Error){
+  unsigned int DataDescriptionsSet::getNumSdPol(BasebandName basebandName) { // throw(Error){
 
     int numpp=0;
   
@@ -604,7 +604,7 @@ unsigned int DataDescriptionsSet::numBaseband(){
     return numpp;
   }
 
-  unsigned int DataDescriptionsSet::getNumSpw(unsigned int basebandIndex) throw(Error){
+  unsigned int DataDescriptionsSet::getNumSpw(unsigned int basebandIndex) { // throw(Error){
     if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
     return v_basebandSet_.size() ;
   }
@@ -617,13 +617,13 @@ unsigned int DataDescriptionsSet::numBaseband(){
     return itbbnddpf->second.size();
   }
 
-  unsigned int DataDescriptionsSet::getNdd(unsigned int basebandIndex, unsigned int i) throw(Error){
+  unsigned int DataDescriptionsSet::getNdd(unsigned int basebandIndex, unsigned int i) { // throw(Error){
     if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
 
     return getNdd(v_basebandSet_[basebandIndex],i);
   }
 
-  unsigned int DataDescriptionsSet::getNdd(BasebandName basebandName, unsigned int i) throw(Error){
+  unsigned int DataDescriptionsSet::getNdd(BasebandName basebandName, unsigned int i) { // throw(Error){
 
     map<BasebandName,vector<DataDescParams> >::iterator 
       itbbnddpf=m_bn_v_ddp_.find(basebandName),
@@ -640,22 +640,22 @@ unsigned int DataDescriptionsSet::numBaseband(){
     return 0;
   }
 
-unsigned long     DataDescriptionsSet::getAutoSize(){
-  return sumAutoSize_; 
-}
+  unsigned long     DataDescriptionsSet::getAutoSize(){
+    return sumAutoSize_; 
+  }
 
-unsigned long     DataDescriptionsSet::getCrossSize(){
-  return sumCrossSize_;
-}
+  unsigned long     DataDescriptionsSet::getCrossSize(){
+    return sumCrossSize_;
+  }
 
-  BasebandName      DataDescriptionsSet::getBasebandName(unsigned int ndd)throw (Error){
+  BasebandName      DataDescriptionsSet::getBasebandName(unsigned int ndd) { // throw (Error){
     if(ndd>v_basebandName_.size()-1)
       Error(SERIOUS,"The dataDescription index index must be smaller than %d",
 	    v_basebandName_.size());
     return v_basebandName_[ndd];
   }
 
-  unsigned int      DataDescriptionsSet::getBasebandIndex(unsigned int ndd) throw(Error){
+  unsigned int      DataDescriptionsSet::getBasebandIndex(unsigned int ndd) { // throw(Error){
     if(ndd>v_basebandName_.size()-1)
       Error(SERIOUS,"The dataDescription index index must be smaller than %d",
 	    v_basebandName_.size());
@@ -673,7 +673,7 @@ unsigned long     DataDescriptionsSet::getCrossSize(){
     return numDataDescription_;
   }
 
-  unsigned int    DataDescriptionsSet::getDataDescriptionIndex( Tag dataDescriptionId) throw(Error){
+  unsigned int    DataDescriptionsSet::getDataDescriptionIndex( Tag dataDescriptionId) { // throw(Error){
     int ndd = -1;
     for(unsigned int n=0; n<numDataDescription_; n++)
       if(dataDescriptionId==v_dataDescriptionIdArray_[n])ndd=n; // numbers are 1 based
@@ -684,12 +684,12 @@ unsigned long     DataDescriptionsSet::getCrossSize(){
   }
 
 
-  unsigned int    DataDescriptionsSet::numBin(unsigned int ndd) throw(Error){
-  if(ndd>=v_basebandName_.size())
-    Error(SERIOUS,"The dataDescription index must be smaller than %d",
-	  v_basebandName_.size());
-  return v_numBin_[ndd];  
-}
+  // unsigned int    DataDescriptionsSet::numBin(unsigned int ndd) { // throw(Error){
+  //   // if(ndd>=v_basebandName_.size())
+  //   //   Error(SERIOUS,"The dataDescription index must be smaller than %d",
+  //   // 	    v_basebandName_.size());
+  //   return v_numBin_[ndd];  
+  // }
 
 
   unsigned int    DataDescriptionsSet::numApc(){
@@ -700,12 +700,12 @@ unsigned long     DataDescriptionsSet::getCrossSize(){
   Enum<AtmPhaseCorrection> DataDescriptionsSet::atmPhaseCorrection(unsigned int atmPhaseCorrectionIndex){
     Enum<AtmPhaseCorrection> e_apc;
     e_apc=v_atmPhaseCorrection_[atmPhaseCorrectionIndex];
-//     for(unsigned int n=0; n<v_atmPhaseCorrection_.size(); n++)
-//       if(v_atmPhaseCorrection_[n]==atmPhaseCorrectionIndex)e_apc = v_atmPhaseCorrection_[n];
+    //     for(unsigned int n=0; n<v_atmPhaseCorrection_.size(); n++)
+    //       if(v_atmPhaseCorrection_[n]==atmPhaseCorrectionIndex)e_apc = v_atmPhaseCorrection_[n];
     return e_apc;
   }
 
-  unsigned int             DataDescriptionsSet::atmPhaseCorrectionIndex(AtmPhaseCorrection apc) throw (Error){
+  unsigned int             DataDescriptionsSet::atmPhaseCorrectionIndex(AtmPhaseCorrection apc) { // throw (Error){
     for(unsigned int n=0; n<v_atmPhaseCorrection_.size(); n++)
       if(v_atmPhaseCorrection_[n]==apc)return n;
     Enum<AtmPhaseCorrection> e_apc=apc;
@@ -713,66 +713,66 @@ unsigned long     DataDescriptionsSet::getCrossSize(){
     return 0;
   }
 
-  unsigned int    DataDescriptionsSet::numPol(unsigned int ndd) throw(Error){
+  unsigned int    DataDescriptionsSet::numPol(unsigned int ndd) { // throw(Error){
     if((unsigned int)ndd>=v_numPol_.size())
       Error(SERIOUS,"The dataDescription index index must be smaller than %d",
 	    v_numPol_.size());
     return v_numPol_[ndd];
   }
 
-  unsigned int    DataDescriptionsSet::numSdPol(unsigned int ndd) throw(Error){
+  unsigned int    DataDescriptionsSet::numSdPol(unsigned int ndd) { // throw(Error){
     if(e_cm_[CROSS_ONLY])return 0;
-  if(ndd>=v_numPol_.size())
-    Error(SERIOUS,"The dataDescription index index must be smaller than %d",
-	  v_numPol_.size());
-  if(e_cm_[AUTO_ONLY])return v_numPol_[ndd];	
-  if(v_numPol_[ndd]<=2)return v_numPol_[ndd];
-  return 3;                                        // could be 2 but dropping XY not supported yet!
-}
-
-unsigned int  DataDescriptionsSet::numChan(unsigned int ndd) throw(Error){
-  if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
-  return v_numChan_[ndd];
-}
-
-Tag DataDescriptionsSet::getSpwId(unsigned int ndd) throw (Error){
-  if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
-  return v_spwId_[ndd];
-}
-
-Frequency DataDescriptionsSet::totBandwidth(unsigned int ndd) throw(Error){
-  if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
-  if(ndd>=numDataDescription_){
-    Error(SERIOUS,"The index for a DataDescriptions cannot exceed %d",
-	  numDataDescription_);
-    return 0;
+    if(ndd>=v_numPol_.size())
+      Error(SERIOUS,"The dataDescription index index must be smaller than %d",
+	    v_numPol_.size());
+    if(e_cm_[AUTO_ONLY])return v_numPol_[ndd];	
+    if(v_numPol_[ndd]<=2)return v_numPol_[ndd];
+    return 3;                                        // could be 2 but dropping XY not supported yet!
   }
-  DataDescriptionTable&  rddSet =  datasetPtr_->getDataDescription();
-  return rddSet.getRowByKey(v_dataDescriptionIdArray_[ndd])->getSpectralWindowUsingSpectralWindowId()->getTotBandwidth();
-}
 
-
-int               DataDescriptionsSet::numAutoData(unsigned int ndd) throw(Error){
-  if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
-  if(v_numAutoData_.size()==0){
-    Error(WARNING, "no auto data expected");
-    return 0;
-  }else if((unsigned int)ndd>=v_numAutoData_.size()){
-    Error(SERIOUS, "The index for a DataDescriptions cannot exceed %d",
-	  v_numAutoData_.size());
+  unsigned int  DataDescriptionsSet::numChan(unsigned int ndd) { // throw(Error){
+    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    return v_numChan_[ndd];
   }
-  return v_numAutoData_[ndd];
-}
 
-unsigned int      DataDescriptionsSet::numCrossData(unsigned int ndd) throw(Error){
-  if(!v_numCrossData_.size()){
-    Error(WARNING, "no cross data expected");
-    return 0;
-  }else if((unsigned int)ndd>=v_numCrossData_.size()){
-    Error(SERIOUS, "The index for a DataDescriptions cannot exceed %d",
-	  v_numCrossData_.size());
+  Tag DataDescriptionsSet::getSpwId(unsigned int ndd) { // throw (Error){
+    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    return v_spwId_[ndd];
   }
-  return v_numCrossData_[ndd];
-}
+
+  Frequency DataDescriptionsSet::totBandwidth(unsigned int ndd) { // throw(Error){
+    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    if(ndd>=numDataDescription_){
+      Error(SERIOUS,"The index for a DataDescriptions cannot exceed %d",
+	    numDataDescription_);
+      return 0;
+    }
+    DataDescriptionTable&  rddSet =  datasetPtr_->getDataDescription();
+    return rddSet.getRowByKey(v_dataDescriptionIdArray_[ndd])->getSpectralWindowUsingSpectralWindowId()->getTotBandwidth();
+  }
+
+
+  int               DataDescriptionsSet::numAutoData(unsigned int ndd) { // throw(Error){
+    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    if(v_numAutoData_.size()==0){
+      Error(WARNING, "no auto data expected");
+      return 0;
+    }else if((unsigned int)ndd>=v_numAutoData_.size()){
+      Error(SERIOUS, "The index for a DataDescriptions cannot exceed %d",
+	    v_numAutoData_.size());
+    }
+    return v_numAutoData_[ndd];
+  }
+
+  unsigned int      DataDescriptionsSet::numCrossData(unsigned int ndd) { // throw(Error){
+    if(!v_numCrossData_.size()){
+      Error(WARNING, "no cross data expected");
+      return 0;
+    }else if((unsigned int)ndd>=v_numCrossData_.size()){
+      Error(SERIOUS, "The index for a DataDescriptions cannot exceed %d",
+	    v_numCrossData_.size());
+    }
+    return v_numCrossData_[ndd];
+  }
 
 }
