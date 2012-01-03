@@ -22,7 +22,12 @@ def description():
     return "Simulates a mosaic 12m ALMA pointings from a components list. No noise, imaged."
 
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return []
+
+
+def run(fetch=False):
     #####locate the regression script
     lepath=locatescript('testcompsim.py')
     print 'Script used is ',lepath
@@ -33,12 +38,4 @@ def run():
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
     return ['cltest/cltest.alma_cycle0.extended.ms','cltest/cltest.alma_cycle0.extended.image','cltest/cltest.alma_cycle0.extended.diff']
-
-
-def data():
-    ### return the data files that is needed by the regression script
-    return []
-
-
-
 

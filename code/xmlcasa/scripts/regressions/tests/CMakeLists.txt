@@ -65,4 +65,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   sim_ppdisk.py
   sim_testcomp.py
   sim_testcube.py
+  stokesimaging_test.py
+  testcube2.py
 )

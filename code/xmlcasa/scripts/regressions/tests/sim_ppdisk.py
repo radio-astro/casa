@@ -21,7 +21,12 @@ def description():
     return "Simulates a single 12m ALMA pointing from a model image. No noise, imaged."
 
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return []
+
+
+def run(fetch=False):
     #####locate the regression script
     lepath=locatescript('ppdisk2_regression.py')
     print 'Script used is ',lepath
@@ -32,12 +37,4 @@ def run():
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
     return ['psim2/psim2.alma.out20.ms','psim2/psim2.alma.out20.image','psim2/psim2.alma.out20.diff']
-
-
-def data():
-    ### return the data files that is needed by the regression script
-    return []
-
-
-
 

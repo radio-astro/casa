@@ -3,6 +3,7 @@ import pprint
 import os, re, shutil
 from tasks import *
 from taskinit import *
+from locatescript import copydata
 
 def description():
     return "Tests time and channel averaging with split."
@@ -361,7 +362,23 @@ def isquantized(val):
     return retval
 
 
-def run():
+def data():
+    """As I understand it, this must return the filenames of needed input data."""
+    
+    # Just in case order matters.
+    inplist = expected.keys()
+    inplist.sort()
+    
+    #return ['split/' + inpms for inpms in inplist]
+    return inplist
+
+def run(fetch=False):
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
     input_mses = data()
     badcells = {}
     for input_ms in input_mses:
@@ -462,16 +479,6 @@ def run():
         raise Exception, "There were unexpected values in the averaged MSes.  Check the log."
     return []
 
-
-def data():
-    """As I understand it, this must return the filenames of needed input data."""
-    
-    # Just in case order matters.
-    inplist = expected.keys()
-    inplist.sort()
-    
-    #return ['split/' + inpms for inpms in inplist]
-    return inplist
 
 def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True,
                        zaporig=False, chanselstr="", datacolstr='corrected'):
