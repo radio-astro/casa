@@ -18,8 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_definitions( -DWITHOUT_ACS )
+#add_definitions( -DWITHOUT_ACS -pg )
+#set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg" )
+#set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg" )
+#set( CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -pg" )
 
+add_definitions( -DWITHOUT_ACS )
 if( APPLE AND
     NOT CMAKE_CXX_FLAGS MATCHES x86_64 AND
     NOT _gcc_machine MATCHES x86_64 AND
@@ -370,3 +374,4 @@ casa_add_executable( alma_v3 MS2asdm_v3
   )
 
 casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadBigBDF.cc)
+casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadAllBDFs.cc)
