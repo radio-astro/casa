@@ -5,7 +5,7 @@
     <file>images/zoomi.png</file>
     <file>images/zoomo.png</file>
     <file>images/zoomn.png</file>
-	<file>images/prev.png</file>
+	 <file>images/prev.png</file>
     <file>images/next.png</file>
     <file>images/tick.png</file>
     <file>images/cross.png</file>
@@ -15,8 +15,10 @@
     <file>images/downarrow.png</file>
     <file>images/print.png</file>
     <file>images/save.png</file>
+    <file>images/settings.png</file>
     <file>images/printExp.png</file>
     <file>images/saveExp.png</file>
+    <file>images/saveGraphic.png</file>
     <file>images/nrao.png</file>
     <file>images/write.png</file>
     <file>images/open.png</file>

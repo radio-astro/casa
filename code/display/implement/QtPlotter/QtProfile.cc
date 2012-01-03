@@ -46,6 +46,7 @@
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/ImageFITSConverter.h>
 #include <casa/Logging/LogFilter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
@@ -87,7 +88,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_xval(Vector<Float>()), z_yval(Vector<Float>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
-         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO())
+         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0)
 {
     setupUi(this);
     initPlotterResource();
@@ -176,8 +177,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(actionZoomOut, SIGNAL(triggered()), this, SLOT(zoomOut()));
     connect(actionZoomNeutral, SIGNAL(triggered()), this, SLOT(zoomNeutral()));
     connect(actionPrint, SIGNAL(triggered()), this, SLOT(print()));
-    connect(actionSave, SIGNAL(triggered()), this, SLOT(save()));
-    connect(actionWrite, SIGNAL(triggered()), this, SLOT(writeText()));
+    connect(actionSaveGraphic, SIGNAL(triggered()), this, SLOT(saveGraphic()));
+    connect(actionExport, SIGNAL(triggered()), this, SLOT(exportProfile()));
     connect(actionMoveLeft, SIGNAL(triggered()), this, SLOT(left()));
     connect(actionMoveRight, SIGNAL(triggered()), this, SLOT(right()));
     connect(actionMoveUp, SIGNAL(triggered()), this, SLOT(up()));
@@ -289,7 +290,7 @@ void QtProfile::printExp()
 #endif
 }
 
-void QtProfile::save()
+void QtProfile::saveGraphic()
 {
     QString dflt = fileName + position + ".png";
 
@@ -325,22 +326,171 @@ void QtProfile::saveExp()
     //qDebug() << "save ok";
     return ;
 }
-void QtProfile::writeText()
+
+void QtProfile::exportProfile()
 {
     QString fn = QFileDialog::getSaveFileName(this,
-       tr("Write profile data as text"),
-       QString(), tr( "(*.txt);;(*.plt)"));
+       tr("Export profile"),
+       QString(), tr( "FITS files (*.fits);; Text files (*.txt, *.plt)"));
 
     if (fn.isEmpty())
         return ;
 
     QString ext = fn.section('.', -1);
+    bool ok;
+    if (ext =="fits")
+   	 ok = exportFITSSpectrum(fn);
+    else {
     if (ext != "txt" && ext != "plt")
         fn.append(".txt");
+		 ok = exportASCIISpectrum(fn);
+    }
+}
 
-    QFile file(fn);
+bool QtProfile::exportFITSSpectrum(QString &fn)
+{
+	// get the image coo and the spectral axis therein
+   CoordinateSystem cSys = image->coordinates();
+   Int wCoord = cSys.findCoordinate(Coordinate::SPECTRAL);
+   Vector<Int> pCoord = cSys.pixelAxes(wCoord);
+
+   if (wCoord <0){
+   	// well, it REALLY should not get to here
+   	QString msg="No spectral coordinate in image:\n" + QString((image->name(True)).c_str());
+   	messageFromProfile(msg);
+   	return false;
+   }
+
+   // create a new coo and add the spectral one
+   CoordinateSystem csysProfile = CoordinateSystem();
+   csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
+
+   // get the spectral dimension and make some checks
+   Int nPoints=(image->shape())(pCoord(0));
+   if (nPoints != z_yval.size()){
+   	// well, this should not happen
+   	QString msg="The dimension of the image and\nthe extracted profile do not match!";
+   	messageFromProfile(msg);
+   	return false;
+   }
+   else if (nPoints<1){
+   	// well, this should not happen
+   	QString msg="The extracted profile contains no points!";
+   	messageFromProfile(msg);
+   	return false;
+   }
+
+   // create the temp image
+   TempImage<Float> profile((TiledShape(IPosition(1,nPoints))),csysProfile);
+
+   // scale the data and store the values in the
+   // temp-image
+   IPosition posIndex(1);
+   Float scaleFactor=pow(10.,ordersOfM_);
+   for (Int index=0; index<nPoints; index++){
+   	posIndex(0)=index;
+   	profile.putAt (z_yval(index)/scaleFactor, posIndex);
+   	//cout << " " << z_yval(index)/scaleFactor;
+   }
+   //cout << endl;
+
+   // thats the default values for the call "ImageFITSConverter::ImageToFITS"
+	String error; uInt memoryInMB(64); Bool preferVelocity(True);
+	Bool opticalVelocity(True); Int BITPIX(-32); Float minPix(1.0); Float maxPix(-1.0);
+	Bool allowOverwrite(False); Bool degenerateLast(False); Bool verbose(True);
+	Bool stokesLast(False); Bool preferWavelength(False); Bool preferAirWavelength(False);
+	String origin("Spectral Profiler");
+	allowOverwrite=True;
+	String outFile(fn.toStdString());
+
+	// find the "natural" flags for the spectral axis
+	SpectralCoordinate::SpecType spcType = (cSys.spectralCoordinate(wCoord)).nativeType();
+	switch (spcType) {
+	case SpectralCoordinate::FREQ:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::VRAD:
+		preferVelocity      = True;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::VOPT:
+		preferVelocity      = True;
+		opticalVelocity     = True;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::BETA:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::WAVE:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = True;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::AWAV:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = True;
+		preferAirWavelength = True;
+		break;
+	default:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+	}
+
+	try {
+		// export the image to FITS
+		ImageFITSConverter::ImageToFITS(
+				error,
+				profile,
+				outFile,
+				memoryInMB,
+				preferVelocity,
+				opticalVelocity,
+				BITPIX,
+				minPix,
+				maxPix,
+				allowOverwrite,
+				degenerateLast,
+				verbose,
+				stokesLast,
+				preferWavelength,
+				preferAirWavelength,
+				origin
+		);
+	} catch (AipsError x) {
+		// catch an exception and report
+   	QString msg="Error while exporting FITS:\n"+QString((x.getMesg()).c_str());
+   	messageFromProfile(msg);
+   	return false;
+	}
+
+	// check for any error indicated via the error-string
+	if (error.size()>0){
+   	QString msg="Error while exporting FITS:\n"+QString((error.c_str()));
+   	messageFromProfile(msg);
+   	return false;
+	}
+
+	return true;
+}
+
+bool QtProfile::exportASCIISpectrum(QString &fn)
+	{
+   QFile file(fn);
     if (!file.open(QFile::WriteOnly | QIODevice::Text))
-        return ;
+        return false;
     QTextStream ts(&file);
 
     ts << "#title: Spectral profile - " << fileName << " "
@@ -375,8 +525,17 @@ void QtProfile::writeText()
       }
     }
 
-    return ;
+    return true;
 }
+
+void QtProfile::messageFromProfile(QString &msg){
+	//QMessageBox qMsg(this);
+	//qMsg.setText(msg);
+	//qMsg.exec();
+	// critical
+	QMessageBox::critical(this, "Error", msg);
+}
+
 void QtProfile::left()
 {
    QApplication::sendEvent(pixelCanvas,
@@ -825,6 +984,9 @@ void QtProfile::wcChanged( const String c,
    		 }
    	 }
     }
+
+    // store the scaling factor
+    ordersOfM_=ordersOfM;
 
     if(ordersOfM!=0){
    	 // correct unit string
@@ -1583,6 +1745,9 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 	}
     }
 
+    // store the scaling factor
+    ordersOfM_=ordersOfM;
+
     if(ordersOfM!=0){
 	// correct unit string
 	if( yUnit.startsWith("(") || yUnit.startsWith("[") || yUnit.startsWith("\"") ){
@@ -1995,6 +2160,9 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 	    }
 	}
     }
+
+    // store the scaling factor
+    ordersOfM_=ordersOfM;
 
     if(ordersOfM!=0){
 	// correct unit string

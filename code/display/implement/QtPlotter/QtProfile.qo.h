@@ -66,7 +66,6 @@
 #include <QHash>
 #include <QHashIterator>
 #include <graphics/X11/X_exit.h>
-
 #include <display/QtPlotter/QtProfileGUI.ui.h>
 
 inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
@@ -108,58 +107,58 @@ public:
 			QWidget *parent = 0, std::string rcstr="prf");
 
 	~QtProfile();
-    MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
+	MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
 
-    virtual std::string rcid( ) const { return rcid_; }
+	virtual std::string rcid( ) const { return rcid_; }
 
 public slots:
-    void zoomIn();
-    void zoomOut();
-    void zoomNeutral();
-    void print();
-    void save();
-    void printExp();
-    void saveExp();
-    void writeText();
-    void up();
-    void down();
-    void left();
-    void right();
-    void preferences();
+	void zoomIn();
+	void zoomOut();
+	void zoomNeutral();
+	void print();
+	void saveGraphic();
+	void printExp();
+	void saveExp();
+	void exportProfile();
+	void up();
+	void down();
+	void left();
+	void right();
+	void preferences();
 	void setPreferences(int stateAutoX, int stateAutoY, int showGrid, int stateMProf, int stateRel);
 
-    void setPlotError(int);
-    void changeCoordinate(const QString &text);
-    void changeFrame(const QString &text);
-    void changeCoordinateType(const QString &text);
-    virtual void closeEvent ( QCloseEvent *);
-    void resetProfile(ImageInterface<Float>* img, const char *name = 0);
-    void wcChanged( const String,
-		    const Vector<Double>, const Vector<Double>,
-		    const Vector<Double>, const Vector<Double>,
-		    const ProfileType);
-    void redraw( );
-    void changePlotType(const QString &text);
-    void changeErrorType(const QString &text);
-    void changeCollapseType(const QString &text);
-    void changeCollapseError(const QString &text);
+	void setPlotError(int);
+	void changeCoordinate(const QString &text);
+	void changeFrame(const QString &text);
+	void changeCoordinateType(const QString &text);
+	virtual void closeEvent ( QCloseEvent *);
+	void resetProfile(ImageInterface<Float>* img, const char *name = 0);
+	void wcChanged( const String,
+			const Vector<Double>, const Vector<Double>,
+			const Vector<Double>, const Vector<Double>,
+			const ProfileType);
+	void redraw( );
+	void changePlotType(const QString &text);
+	void changeErrorType(const QString &text);
+	void changeCollapseType(const QString &text);
+	void changeCollapseError(const QString &text);
 
-    void changeAxisOld(String xa, String ya, String za, std::vector<int>);
-    void changeAxis(String xa, String ya, String za, std::vector<int>);
-    void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
-    void doImgCollapse();
-    void setCollapseRange(float xmin, float xmax);
+	void changeAxisOld(String xa, String ya, String za, std::vector<int>);
+	void changeAxis(String xa, String ya, String za, std::vector<int>);
+	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
+	void doImgCollapse();
+	void setCollapseRange(float xmin, float xmax);
 
 
-    void overplot(QHash<QString, ImageInterface<float>*>);
+	void overplot(QHash<QString, ImageInterface<float>*>);
 
-    void newRegion( int, const QString &shape, const QString &name,
-		    const QList<double> &world_x, const QList<double> &world_y,
-		    const QList<int> &pixel_x, const QList<int> &pixel_y,
-		    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+	void newRegion( int, const QString &shape, const QString &name,
+			const QList<double> &world_x, const QList<double> &world_y,
+			const QList<int> &pixel_x, const QList<int> &pixel_y,
+			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
 
-    void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
-		       const QList<int> &pixel_x, const QList<int> &pixel_y );
+	void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
+			const QList<int> &pixel_x, const QList<int> &pixel_y );
 
 signals:
    void hideProfile();
@@ -167,76 +166,80 @@ signals:
    void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData);
 
 private:
+   void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
+   void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
+   void fillPlotTypes();
+   void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
+   void printIt(QPrinter*);
+   bool exportASCIISpectrum(QString &fn);
+   bool exportFITSSpectrum(QString &fn);
+   void messageFromProfile(QString &msg);
 
-	void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
-    void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
-    void fillPlotTypes();
-    void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
-    void printIt(QPrinter*);
-    QString getRaDec(double x, double y);
+   QString getRaDec(double x, double y);
 
-	ImageAnalysis* analysis;
-	ImageInterface<Float>* image;
+   ImageAnalysis* analysis;
+   ImageInterface<Float>* image;
 
-	SpectralCollapser *collapser;
+   SpectralCollapser *collapser;
 
-	QHash<QString, ImageAnalysis*> *over;
-	String coordinate;
-	String coordinateType;
-	String xaxisUnit;
-	String ctypeUnit;
-	String spcRefFrame;
-	String cSysRval;
-	QString fileName;
-	QString position;
-	QString yUnit;
-	QString yUnitPrefix;
+   QHash<QString, ImageAnalysis*> *over;
+   String coordinate;
+   String coordinateType;
+   String xaxisUnit;
+   String ctypeUnit;
+   String spcRefFrame;
+   String cSysRval;
+   QString fileName;
+   QString position;
+   QString yUnit;
+   QString yUnitPrefix;
 
-	QString xpos;
-	QString ypos;
-	int cube;
+   QString xpos;
+   QString ypos;
+   int cube;
 
-	int npoints;
-	int npoints_old;
+   int npoints;
+   int npoints_old;
 
-	int stateMProf;
-	int stateRel;
+   int stateMProf;
+   int stateRel;
 
-	Vector<Double> lastPX, lastPY;
-	Vector<Double> lastWX, lastWY;
-	Vector<Float> z_xval;
-	Vector<Float> z_yval;
-	Vector<Float> z_eval;
-	QString region;
+   Vector<Double> lastPX, lastPY;
+   Vector<Double> lastWX, lastWY;
+   Vector<Float> z_xval;
+   Vector<Float> z_yval;
+   Vector<Float> z_eval;
+   QString region;
 
-	String last_event_cs;
-    Vector<Double> last_event_px, last_event_py;
-    Vector<Double> last_event_wx, last_event_wy;
+   String last_event_cs;
+   Vector<Double> last_event_px, last_event_py;
+   Vector<Double> last_event_wx, last_event_wy;
 
-    // connection to rc file
-    Casarc &rc;
-    // rc id for this panel type
-    std::string rcid_;
+   // connection to rc file
+   Casarc &rc;
+   // rc id for this panel type
+   std::string rcid_;
 
-    QtProfile::PlotType  itsPlotType;
-    QtProfile::ErrorType itsErrorType;
-    SpectralCollapser::CollapseType  itsCollapseType;
-    SpectralCollapser::CollapseError itsCollapseError;
-    LogIO *itsLog;
+   QtProfile::PlotType  itsPlotType;
+   QtProfile::ErrorType itsErrorType;
+   SpectralCollapser::CollapseType  itsCollapseType;
+   SpectralCollapser::CollapseError itsCollapseError;
+   LogIO *itsLog;
+   Int ordersOfM_;
 
-    class spectra_info {
-	public:
-	    spectra_info( ) { }
-	    spectra_info( const QString &s ) : shape_(s) { }
-	    spectra_info( const spectra_info &other ) : shape_(other.shape_) { }
-	    const spectra_info &operator=( const spectra_info &other ) { shape_ = other.shape_; return *this; }
-	    const QString &shape( ) { return shape_; }
-	private:
-	    QString shape_;
-    };
+   class spectra_info {
+   public:
+   	spectra_info( ) { }
+   	spectra_info( const QString &s ) : shape_(s) { }
+   	spectra_info( const spectra_info &other ) : shape_(other.shape_) { }
+   	const spectra_info &operator=( const spectra_info &other ) { shape_ = other.shape_; return *this; }
+   	const QString &shape( ) { return shape_; }
+   private:
+   	QString shape_;
+   };
 
-    typedef std::map<int,spectra_info> SpectraInfoMap;
-    SpectraInfoMap spectra_info_map;
+   typedef std::map<int,spectra_info> SpectraInfoMap;
+   SpectraInfoMap spectra_info_map;
 
 };
 
