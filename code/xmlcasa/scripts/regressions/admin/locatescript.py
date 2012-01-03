@@ -59,25 +59,30 @@ def copydata(name, destdir):
     ok = False
     if not os.path.isdir(destdir):
         raise RuntimeError('destination directory (' + destdir + ') must exist...')
-    for root, dir, files in os.walk(gl['casa']['dirs']['data'] + "/regression"):
-        if name in files:
+    for root, dirs, files in os.walk(gl['casa']['dirs']['data'] + "/regression"):
+        if name in dirs:
             full_path = root + "/" + name
-            if os.path.isfile(full_path):
-                shutil.copy(full_path,destdir)
-                ok = True
-            elif os.path.isdir(full_path):
-                shutil.copytree(full_path,destdir + "/" + name)
-                ok = True
+            shutil.copytree(full_path,destdir + "/" + name)
+            ok = True
+            break
+        elif name in files:
+            full_path = root + "/" + name
+            shutil.copy(full_path,destdir)
+            ok = True
+            break
 
     if not ok:
-        for root, dir, files in os.walk(gl['casa']['dirs']['data']):
-            if name in files:
+        for root, dirs, files in os.walk(gl['casa']['dirs']['data']):
+            if name in dirs:
                 full_path = root + "/" + name
-                if os.path.isfile(full_path):
-                    shutil.copy(full_path,destdir)
-                    ok = True
-                elif os.path.isdir(full_path):
-                    shutil.copytree(full_path,destdir + "/" + name)
-                    ok = True
+                shutil.copytree(full_path,destdir + "/" + name)
+                ok = True
+                break
+            elif name in files:
+                full_path = root + "/" + name
+                shutil.copy(full_path,destdir)
+                ok = True
+                break
+
     if not ok:
         raise RuntimeError( 'failed to find "' + name + '" in ' + gl['casa']['dirs']['data'] )
