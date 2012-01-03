@@ -47,6 +47,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageFITSConverter.h>
+#include <coordinates/Coordinates/QualityCoordinate.h>
 #include <casa/Logging/LogFilter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
@@ -361,12 +362,8 @@ bool QtProfile::exportFITSSpectrum(QString &fn)
    	return false;
    }
 
-   // create a new coo and add the spectral one
-   CoordinateSystem csysProfile = CoordinateSystem();
-   csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
-
    // get the spectral dimension and make some checks
-   Int nPoints=(image->shape())(pCoord(0));
+   uInt nPoints=(image->shape())(pCoord(0));
    if (nPoints != z_yval.size()){
    	// well, this should not happen
    	QString msg="The dimension of the image and\nthe extracted profile do not match!";
@@ -380,19 +377,83 @@ bool QtProfile::exportFITSSpectrum(QString &fn)
    	return false;
    }
 
-   // create the temp image
-   TempImage<Float> profile((TiledShape(IPosition(1,nPoints))),csysProfile);
+   // create a new coo and add the spectral one
+   CoordinateSystem csysProfile = CoordinateSystem();
+   csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
+
+   // if necessary, add a quality coordinate
+   IPosition profDim;
+   if (z_eval.size()>0){
+   	Vector<Int> quality(2);
+   	quality(0) = Quality::DATA;
+   	quality(1) = Quality::ERROR;
+   	QualityCoordinate qualAxis(quality);
+   	csysProfile.addCoordinate(qualAxis);
+
+   	profDim = IPosition(2,nPoints,2);
+   }
+   else{
+   	profDim = IPosition(1,nPoints);
+   }
+
+   // create the temp-image
+   TempImage<Float> profile(TiledShape(profDim),csysProfile);
 
    // scale the data and store the values in the
    // temp-image
-   IPosition posIndex(1);
-   Float scaleFactor=pow(10.,ordersOfM_);
-   for (Int index=0; index<nPoints; index++){
-   	posIndex(0)=index;
-   	profile.putAt (z_yval(index)/scaleFactor, posIndex);
-   	//cout << " " << z_yval(index)/scaleFactor;
+	Float scaleFactor=pow(10.,ordersOfM_);
+	IPosition posIndex;
+   if (z_eval.size()>0){
+   	Int qualPos;
+   	posIndex = IPosition(2, 0);
+
+   	(csysProfile.qualityCoordinate(1)).toPixel(qualPos, Quality::DATA);
+   	posIndex(1)=qualPos;
+   	for (uInt index=0; index<nPoints; index++){
+   		posIndex(0)=index;
+   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
+   		//cout << " " << z_yval(index)/scaleFactor << " : " << posIndex;
+   	}
+
+   	(csysProfile.qualityCoordinate(1)).toPixel(qualPos, Quality::ERROR);
+   	posIndex(1)=qualPos;
+   	//posIndex(1) = Quality::ERROR;
+   	for (uInt index=0; index<nPoints; index++){
+   		posIndex(0)=index;
+   		profile.putAt (z_eval(index)/scaleFactor, posIndex);
+   		//cout << " " << z_eval(index)/scaleFactor << " : " << posIndex;
+   	}
    }
-   //cout << endl;
+   else{
+   	posIndex = IPosition(1);
+   	for (uInt index=0; index<nPoints; index++){
+   		posIndex(0)=index;
+   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
+   		//cout << " " << z_yval(index)/scaleFactor;
+   	}
+   }
+
+   // attach a mask to the temp-image
+	Array<Bool> maskArray(profDim, True);
+	ArrayLattice<Bool> maskLattice=ArrayLattice<Bool>(maskArray);
+	profile.attachMask(maskLattice);
+
+	// compile and set the miscInfo
+	TableRecord miscInfo;
+	miscInfo.define("inimage", image->name(True));
+	miscInfo.setComment("inimage", "name input image");
+	miscInfo.define("position", position.toStdString());
+	miscInfo.setComment("position", "extraction position");
+	miscInfo.define("proftype", (pixelCanvas->getTitle()).toStdString());
+	miscInfo.setComment("proftype", "the profile type");
+	miscInfo.define("plottype", (plotMode->currentText()).toStdString());
+	miscInfo.setComment("plottype", "the plot type");
+   if (z_eval.size()>0){
+   	miscInfo.define("errtype", (errorMode->currentText()).toStdString());
+   	miscInfo.setComment("errtype", "the error type");
+   }
+	profile.setMiscInfo(miscInfo);
+	//cout << "Temp-image miscInfo: " <<profile.miscInfo()<<endl;
 
    // thats the default values for the call "ImageFITSConverter::ImageToFITS"
 	String error; uInt memoryInMB(64); Bool preferVelocity(True);
