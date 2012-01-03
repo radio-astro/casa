@@ -32,6 +32,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
         # v4.1 Updated STM 2011-11-02 (3.4.0) work on SDMs for some modes
         # v4.1 Updated STM 2011-11-03 (3.4.0) improved plotting
 	# v4.1 Updated STM 2011-12-14 (3.4.0) merge with SMC changes
+	# v4.1 Updated STM 2011-12-19 (3.4.0) bug fix, better history handling
 	#
 	try:
 		from xml.dom import minidom
@@ -39,7 +40,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v4.1 Updated STM 2011-12-14')
+	casalog.post('You are using flagcmd v4.1 Updated STM 2011-12-19')
 
         fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
         mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -122,7 +123,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			casalog.post('Read '+str(cmdlist.__len__())+' lines from file '+flagtable)
 
 			if cmdlist.__len__()>0:
-				myflagcmd = getflagcmds(cmdlist,ms_startmjds,ms_endmjds)
+				myflagcmd = getflagcmds(cmdlist,t1sdata,t2sdata)
 
 			listmode = ''
 
@@ -153,7 +154,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			casalog.post('Input '+str(cmdlist.__len__())+' lines from input list')
 
 			if cmdlist.__len__()>0:
-				myflagcmd = getflagcmds(cmdlist,ms_startmjds,ms_endmjds)
+				myflagcmd = getflagcmds(cmdlist,t1sdata,t2sdata)
 
 			listmode = ''
 
@@ -324,7 +325,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
                 #raise
 				
         #write history
-	if msopened:
+	if msopened and not (optype=='list' or optype=='plot' or optype=='extract'):
 	    try:
 		mslocal.open(vis,nomodify=False)
 		mslocal.writehistory(message='taskname = flagcmd', origin='flagcmd')
