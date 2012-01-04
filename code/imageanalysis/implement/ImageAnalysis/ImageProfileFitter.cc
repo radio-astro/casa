@@ -1264,7 +1264,6 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 				nConv++;
 			}
 		} catch (AipsError x) {
-			cout << "exception " << x.getMesg() << endl;
 			ok = False;                       // Some other error
 			nFail++;
 		}
