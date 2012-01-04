@@ -318,6 +318,7 @@ int main() {
     		Array<Bool> converged = results.asArrayBool("converged");
     		AlwaysAssert(converged.size() == 81, AipsError);
     		writeTestString("  -- test all but one fits converged");
+    		cout << "number not converged " << nfalse(converged) << endl;
     		AlwaysAssert(nfalse(converged) == 1, AipsError);
     		AlwaysAssert(! converged(IPosition(4, 0, 8, 0, 0)), AipsError);
     		writeTestString("  -- Test of fit units");

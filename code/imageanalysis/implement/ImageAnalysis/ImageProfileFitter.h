@@ -158,12 +158,12 @@ private:
     ) const;
 
     String _gaussianToString(
-    	const SpectralElement& gauss, const CoordinateSystem& csys,
+    	const GaussianSpectralElement& gauss, const CoordinateSystem& csys,
     	const Vector<Double> world, const IPosition imPos
     ) const;
 
     String _polynomialToString(
-    	const SpectralElement& poly, const CoordinateSystem& csys,
+    	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
     	const Vector<Double> imPix, const Vector<Double> world
     ) const;
 
@@ -201,7 +201,7 @@ private:
     // in pixel space here and requiring the caller to deal with converting
     // to something astronomer friendly if it so desires.
 
-    Array<ImageFit1D<Float> > _fitProfiles (
+    Array<ImageFit1D<Float> > _fitProfiles(
     	ImageInterface<Float>* &pFit,
         ImageInterface<Float>* &pResid,
         const ImageInterface<Float> *const &weightsImage=0,
@@ -211,7 +211,7 @@ private:
     Double _fitAxisIncrement() const;
 
     Double _centerWorld(
-    	const SpectralElement solution, const IPosition imPos
+    	const GaussianSpectralElement& solution, const IPosition& imPos
     ) const;
 
     Bool _inVelocitySpace() const;

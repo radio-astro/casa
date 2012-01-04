@@ -156,10 +156,10 @@ void ProfileFitterEstimatesFileParser::_parseFile(
 
 void ProfileFitterEstimatesFileParser::_createSpectralList() {
 	for (uInt i=0; i<_peakValues.size(); i++) {
-		SpectralElement se(
-			SpectralElement::GAUSSIAN, _peakValues[i],
+		GaussianSpectralElement se(
+			_peakValues[i],
 			_centerValues[i],
-			_fwhmValues[i]/SpectralElement::SigmaToFWHM
+			_fwhmValues[i]/GaussianSpectralElement::SigmaToFWHM
 		);
 		if (_fixedValues[i].contains("c")) {
 			se.fixCenter();
