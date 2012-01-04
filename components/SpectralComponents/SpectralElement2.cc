@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# SpectralElement.cc: Describes (a set of related) spectral lines
+//# Copyright (C) 2001,2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,35 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: SpectralElement.cc 21024 2011-03-01 11:46:18Z gervandiepen $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#include <components/SpectralComponents/CompiledSpectralElement.h>
+#include <components/SpectralComponents/GaussianSpectralElement.h>
+#include <components/SpectralComponents/PolynomialSpectralElement.h>
 
-#include <string>
-
-#define CASACORE_VERSION "1.0.142"
+#include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+ostream &operator<<(ostream &os, const SpectralElement &elem) {
+	switch (elem.getType()) {
+	case SpectralElement::GAUSSIAN:
+		os << *dynamic_cast<const GaussianSpectralElement*>(&elem);
+		break;
+	case SpectralElement::POLYNOMIAL:
+		os << *dynamic_cast<const PolynomialSpectralElement*>(&elem);
+		break;
+	case SpectralElement::COMPILED:
+		break;
+		os << *dynamic_cast<const CompiledSpectralElement*>(&elem);
+	default:
+		throw AipsError("Logic Error: Unhandled spectral element type");
+	}
+    return os;
+}
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+
 
 } //# NAMESPACE CASA - END
 
-#endif
+
