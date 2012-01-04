@@ -32,8 +32,9 @@
 #include <casa/string.h>      //# needed for strerror
 #include <execinfo.h> //# needed for backtrace
 
-#define AipsError_StackTracing
-#define AipsError_StackTracing_Default False
+#define AipsError_StackTracing  // Allows removing calls to trace addition logic at compile time
+
+#define AipsError_StackTracing_Default True  // Assume enabled unless told otherwise
 
 #if defined (AipsError_StackTracing)
 #    define AddStackTrace() addStackTrace()
@@ -84,6 +85,8 @@ AipsError::addStackTrace ()
 
     if (enabled) {
 
+        // If permitted, generate stack trace text and append to the error message.
+
         String trace = generateStackTrace();
 
         message += trace;
@@ -93,18 +96,29 @@ AipsError::addStackTrace ()
 String
 AipsError::generateStackTrace()
 {
+    // Get the most recent 512 levels of the stack trace.
+    // This ought to handle all cases but very deep recursion.
+
+    void * stack [512]; // Allow for up to 512 levels
+    int nLevels = backtrace (stack, 512);
+
+    // Convert the internal stack representation into one string
+    // per level.
+
+    char ** trace = backtrace_symbols (stack, nLevels);
+
+    // Put a header on the message and then append all of the
+    // strings onto the message.
 
     String stackTrace;
-
-    void * stack [512];
-    int n = backtrace (stack, 512);
-    char ** trace = backtrace_symbols (stack, n);
-
     stackTrace += "\nStack trace (use c++filt to demangle):\n";
 
-    for (int i = 0; i < n; i++){
+    for (int i = 0; i < nLevels; i++){
         stackTrace += trace[i] + String ("\n");
     }
+
+    // Free up the array returned by backtrace_symbols.  The
+    // strings it points to must not be deleted by this method.
 
     free (trace);
 
