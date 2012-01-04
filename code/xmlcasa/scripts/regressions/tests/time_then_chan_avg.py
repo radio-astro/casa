@@ -477,6 +477,11 @@ def run(fetch=False):
         pp = pprint.PrettyPrinter(indent=0, width=80)
         pp.pprint(badcells)
         raise Exception, "There were unexpected values in the averaged MSes.  Check the log."
+    
+    print ''
+    print 'Regression PASSED'
+    print ''
+
     return []
 
 
