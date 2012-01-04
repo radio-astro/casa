@@ -126,7 +126,6 @@ MeasurementSet::MeasurementSet(const String& tableName, const String &tableDescN
       PredefinedKeywords>(tableName, tableDescName, option),
       hasBeenDestroyed_p(False)
 {
-
   mainLock_p=TableLock(TableLock::AutoNoReadLocking);
     // verify that the now opened table is valid 
     checkVersion();
@@ -159,7 +158,6 @@ MeasurementSet::MeasurementSet(SetupNewTable &newTab, uInt nrrow,
       PredefinedKeywords>(newTab, nrrow, initialize), 
       hasBeenDestroyed_p(False)
 {
-
   mainLock_p=TableLock(TableLock::AutoNoReadLocking);
     // verify that the now opened table is valid
     addCat(); 
@@ -175,7 +173,6 @@ MeasurementSet::MeasurementSet(SetupNewTable &newTab,
       PredefinedKeywords>(newTab, lockOptions, nrrow, initialize), 
       hasBeenDestroyed_p(False)
 {
-
   mainLock_p=lockOptions;
     // verify that the now opened table is valid
     addCat(); 
@@ -184,18 +181,25 @@ MeasurementSet::MeasurementSet(SetupNewTable &newTab,
 			 "table is not a valid MS"));
 }
 
-MeasurementSet::MeasurementSet(const Table &table)
-    : MSTable<PredefinedColumns,
-      PredefinedKeywords>(table), hasBeenDestroyed_p(False)
+MeasurementSet::MeasurementSet(const Table &table, const MeasurementSet * otherMs)
+: MSTable<PredefinedColumns, PredefinedKeywords>(table),
+  hasBeenDestroyed_p(False)
 {
+    mainLock_p=TableLock(TableLock::AutoNoReadLocking);
 
-  mainLock_p=TableLock(TableLock::AutoNoReadLocking);
-    // verify that the now opened table is valid 
-    checkVersion();
+    checkVersion(); // verify that the now opened table is valid
+
     addCat(); 
-    if (! validate(this->tableDesc()))
-	throw (AipsError("MS(const Table &) - "
-			 "table is not a valid MS"));
+
+    if (! validate(this->tableDesc())){
+        throw (AipsError("MS(const Table &) - "
+                "table is not a valid MS"));
+    }
+
+    if (otherMs != NULL){
+        copySubtables (* otherMs); // others will be handled by initRefs
+    }
+
     initRefs();
 }
 
@@ -204,8 +208,7 @@ MeasurementSet::MeasurementSet(const MeasurementSet &other)
   PredefinedKeywords>(other),
   hasBeenDestroyed_p(False)
 {
-
-  copyMrSubtables (other); // others will be handled by initRefs
+  copySubtables (other); // others will be handled by initRefs
 
   mainLock_p=TableLock(TableLock::AutoNoReadLocking);
 
@@ -218,7 +221,9 @@ MeasurementSet::MeasurementSet(const MeasurementSet &other)
                   "MeasurementSet is not a valid MS"));
   }
 
-  if (!isNull())initRefs();
+  if (!isNull()){
+      initRefs();
+  }
 }
 
 MeasurementSet::~MeasurementSet()
@@ -252,7 +257,7 @@ MeasurementSet::operator=(const MeasurementSet &other)
 	mrsDebugLevel_p = other.mrsDebugLevel_p;
 	memoryResidentSubtables_p = other.memoryResidentSubtables_p;
 
-	copyMrSubtables (other);
+	copySubtables (other);
 
 	hasBeenDestroyed_p=other.hasBeenDestroyed_p;
 
@@ -263,38 +268,44 @@ MeasurementSet::operator=(const MeasurementSet &other)
 }
 
 void
-MeasurementSet::copyMrSubtables (const MeasurementSet & other)
+MeasurementSet::copySubtables (const MeasurementSet & other)
 {
-  copyMrSubtable (other.antenna_p, antenna_p);
-  copyMrSubtable (other.dataDesc_p, dataDesc_p);
-  copyMrSubtable (other.doppler_p, doppler_p);
-  copyMrSubtable (other.feed_p, feed_p);
-  copyMrSubtable (other.field_p, field_p);
-  copyMrSubtable (other.flagCmd_p, flagCmd_p);
-  copyMrSubtable (other.freqOffset_p, freqOffset_p);
-  copyMrSubtable (other.history_p, history_p);
-  copyMrSubtable (other.observation_p, observation_p);
-  copyMrSubtable (other.pointing_p, pointing_p);
-  copyMrSubtable (other.polarization_p, polarization_p);
-  copyMrSubtable (other.processor_p, processor_p);
-  copyMrSubtable (other.source_p, source_p);
-  copyMrSubtable (other.spectralWindow_p, spectralWindow_p);
-  copyMrSubtable (other.state_p, state_p);
-  copyMrSubtable (other.sysCal_p, sysCal_p);
-  copyMrSubtable (other.weather_p, weather_p);
+  copySubtable (other.antenna_p, antenna_p);
+  copySubtable (other.dataDesc_p, dataDesc_p);
+  copySubtable (other.doppler_p, doppler_p);
+  copySubtable (other.feed_p, feed_p);
+  copySubtable (other.field_p, field_p);
+  copySubtable (other.flagCmd_p, flagCmd_p);
+  copySubtable (other.freqOffset_p, freqOffset_p);
+  copySubtable (other.history_p, history_p);
+  copySubtable (other.observation_p, observation_p);
+  copySubtable (other.pointing_p, pointing_p);
+  copySubtable (other.polarization_p, polarization_p);
+  copySubtable (other.processor_p, processor_p);
+  copySubtable (other.source_p, source_p);
+  copySubtable (other.spectralWindow_p, spectralWindow_p);
+  copySubtable (other.state_p, state_p);
+  copySubtable (other.sysCal_p, sysCal_p);
+  copySubtable (other.weather_p, weather_p);
 }
 
 
 void
-MeasurementSet::copyMrSubtable (const Table & otherSubtable, Table & subTable)
+MeasurementSet::copySubtable (const Table & otherSubtable, Table & subTable)
 {
-    // If the other table is not null and it is a memory type then assign
+    // If the other table is not null then assign
     // it to the provided subtable
 
-    if (! otherSubtable.isNull () && otherSubtable.tableType() == Table::Memory){
+    if (! otherSubtable.isNull ()){
         subTable = otherSubtable;
     }
 }
+
+MrsEligibility
+MeasurementSet::getMrsEligibility () const {
+    return mrsEligibility_p;
+}
+
 
 void MeasurementSet::init()
 {
@@ -751,7 +762,7 @@ MeasurementSet::openSubtable (Subtable & subtable, const String & subtableName, 
     if (subtable.isNull() && this->keywordSet().isDefined (subtableName)){
 
         // Only open a subtable if it does not already exist in this object and if
-        // the subtable is defined in the on disk MeasurementSet
+        // the subtable is defined in the on-disk MeasurementSet
 
         if (useLock){
             subtable = Subtable (this->keywordSet().asTable(subtableName, mainLock_p));
@@ -774,6 +785,7 @@ void MeasurementSet::initRefs(Bool clear)
 
     // write the table info if needed
     if (this->tableInfo().type()=="") {
+
       String reqdType=this->tableInfo().type(TableInfo::MEASUREMENTSET);
       this->tableInfo().setType(reqdType);
       String reqdSubType=this->tableInfo().subType(TableInfo::MEASUREMENTSET);
@@ -782,7 +794,7 @@ void MeasurementSet::initRefs(Bool clear)
 				      " holding measurements from a Telescope");
     }
 
-    Bool useLock = (this->tableOption()!= Table::Scratch);
+    Bool useLock = (this->tableOption() != Table::Scratch);
 
     openSubtable (antenna_p, "ANTENNA", useLock);
     openSubtable (dataDesc_p, "DATA_DESCRIPTION", useLock);
