@@ -56,12 +56,32 @@ int main() {
     (*var3).name() << ".." <<
     (*var4).name() << ".." << endl;
 
-  var2.replace(new myobj("betty"));
+  // Check to see if the no-delete feature is honored
+  // by the copy constructor and the assignment operator
 
-  cout << var->name() << ".." <<
-    var2->name() << ".." << 
-    prt(var3) << ".." << 
-    var4->name() << ".." << endl;
+  myobj * doNotDelete = new myobj ("Don't delete me!");
+
+  {
+      CountedPtr<myobj> p1 (doNotDelete, False);
+      CountedPtr<myobj> p2 (p1);
+      CountedPtr<myobj> p3;
+
+      p3 = p1;
+  }
+
+  cout << "Now explicitly delete object" << endl;
+
+  delete doNotDelete;
+
+// Replace is deprecated and not possible when
+// using a boost or c++0x smart pointer implementation
+//
+//  var2.replace(new myobj("betty"));
+//
+//  cout << var->name() << ".." <<
+//    var2->name() << ".." <<
+//    prt(var3) << ".." <<
+//    var4->name() << ".." << endl;
 
   return 0;
 }
