@@ -152,6 +152,7 @@ class VisBuffer {
     friend class asyncio::VLAT; // for async i/o
     friend class VisBufferAsync; // for async i/o
     friend class VisBufferAsyncWrapper; // for async i/o
+    friend class ViReadImplAsync; // for async I/O
 
 public:
     // Create empty VisBuffer you can assign to or attach.

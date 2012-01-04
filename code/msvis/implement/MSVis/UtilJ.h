@@ -358,6 +358,8 @@ public:
     ThreadTimes () { * this = getTime();}
 
     Double cpu () const { return cpu_p;}
+    void clear () { empty_p = True;}
+    Bool empty () const { return empty_p;}
     Double elapsed () const { return elapsed_p;}
 
     static ThreadTimes
@@ -396,6 +398,7 @@ public:
 
 protected:
 
+    Bool empty_p;
     Double cpu_p;
     Double elapsed_p;
 

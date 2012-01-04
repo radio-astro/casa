@@ -628,6 +628,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
             PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
                                               VisBufferComponents::Ant2,
                                               VisBufferComponents::ArrayId,
+                                              VisBufferComponents::DataDescriptionId,
                                               VisBufferComponents::Direction1,
                                               VisBufferComponents::Direction2,
                                               VisBufferComponents::Feed1,
@@ -689,6 +690,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     //    Timers tCheckVisRows=Timers::getTime();
     checkVisIterNumRows(*rvi_p);
     VisBufferAutoPtr vb (rvi_p);
+
     //    Timers tVisAutoPtr=Timers::getTime();
 
     /**** Do we need to do this
@@ -950,7 +952,7 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   }
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
-  vb_p->assign(vb, False);
+  vb_p->assign(vb, True);
   vb_p->updateCoordInfo(& vb, dirDep);
 }
 

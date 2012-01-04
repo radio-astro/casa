@@ -67,7 +67,10 @@ bool calibrater::open(const std::string& filename,
     itsMS = new MeasurementSet(String(filename),
 			       TableLock(TableLock::AutoLocking),
 			       Table::Update);
-    itsMS->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
+    itsMS->setMemoryResidentSubtables (MrsEligibility::defaultEligible() -
+                                       MSMainEnums::FLAG_CMD -
+                                       MSMainEnums::PROCESSOR -
+                                       MSMainEnums::STATE);
     AlwaysAssert(itsMS, AipsError);
     rstat = itsCalibrater->initialize(*itsMS, compress,addscratch);
 

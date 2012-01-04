@@ -339,16 +339,20 @@ void Calibrater::selectvis(const String& time,
 
 
     // Assume no selection, for starters
-    mssel_p = new MeasurementSet(sorted);
+    mssel_p = new MeasurementSet(sorted, ms_p);
 
     // Apply user-supplied selection
     Bool nontrivsel=False;
-    nontrivsel= mssSetData(MeasurementSet(sorted),
+    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
 			   *mssel_p,"",
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,
 			   "",scan,"",intent, obsIDs);
+
+    // Keep any MR status for the MS
+
+    mssel_p->setMemoryResidentSubtables(ms_p->getMrsEligibility());
 
     // If non-trivial MSSelection invoked and nrow reduced:
     if(nontrivsel && mssel_p->nrow()<ms_p->nrow()) {

@@ -1605,12 +1605,13 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       }
     }
     if(!(exprNode.isNull())){
-      mssel_p = new MeasurementSet((*ms_p)(exprNode));
+      mssel_p = new MeasurementSet((*ms_p)(exprNode), &* ms_p);
     }
     else{
       // Null take all the ms ...setdata() blank means that
       mssel_p = new MeasurementSet(*ms_p);
     }
+
     AlwaysAssert(!mssel_p.null(), AipsError);
     if(mssel_p->nrow()==0) {
       //delete mssel_p; 

@@ -370,7 +370,7 @@ public:
 
     Bool fillCanStart () const;
     void fillComplete (VlaDatum * datum);
-    VlaDatum * fillStart (SubChunkPair);
+    VlaDatum * fillStart (SubChunkPair, const ThreadTimes & fillStartTime);
     asyncio::ChannelSelection getChannelSelection () const;
     void initialize (const AsynchronousInterface *);
     void insertValidChunk (Int chunkNumber);

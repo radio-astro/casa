@@ -108,7 +108,8 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
         }
 
         visIter_p = other.getVisibilityIterator ();
-        oldMSId_p = other.getOldMsId ();
+        other.copyMsInfo(oldMSId_p, msOK_p, newMS_p);
+
         twoWayConnection_p = False;
 
         if (visIter_p == static_cast<ROVisibilityIterator *>(0)) {
@@ -157,7 +158,7 @@ VisBuffer::copyCache (const VisBuffer & other, Bool force)
     cacheCopyArray  (correctedVisibilityOK_p, other.correctedVisibilityOK (),
                      correctedVisibility_p, other, & VisBuffer::correctedVisibility, force);
     cacheCopyArray  (corrTypeOK_p, other.corrTypeOK (), corrType_p, other, & VisBuffer::corrType, force);
-    cacheCopyNormal(ddidOK_p, other.ddidOK(), ddid_p, other, & VisBuffer::dataDescriptionId, force);
+    cacheCopyNormal (ddidOK_p, other.ddidOK(), ddid_p, other, & VisBuffer::dataDescriptionId, force);
     cacheCopyArray  (direction1OK_p, other.direction1OK (), direction1_p, other, & VisBuffer::direction1, force);
     cacheCopyArray  (direction2OK_p, other.direction2OK (), direction2_p, other, & VisBuffer::direction2, force);
     cacheCopyArray  (exposureOK_p, other.exposureOK (), exposure_p, other, & VisBuffer::exposure, force);

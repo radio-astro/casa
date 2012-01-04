@@ -627,11 +627,11 @@ VlaData::fillCanStart () const
 
 
 VlaDatum *
-VlaData::fillStart (SubChunkPair subchunk)
+VlaData::fillStart (SubChunkPair subchunk, const ThreadTimes & fillStartTime)
 {
     LockGuard lg (mutex_p);
 
-    statsEnabled () && (timing_p.fill1_p = ThreadTimes(), True);
+    statsEnabled () && (timing_p.fill1_p = fillStartTime, True);
 
     Assert ((int) data_p.size() < MaxNBuffers_p);
 
@@ -844,7 +844,6 @@ VlaData::readStart (SubChunkPair subchunk)
     delete datum;
     return vba;
 }
-
 
 void
 VlaData::resetBufferData ()

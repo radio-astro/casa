@@ -221,6 +221,8 @@ VLAT::createFillerDictionary ()
     fillerDictionary_p.add (VisBufferComponents::CorrectedCube,
                            vlatFunctor1(& VisBuffer::fillVisCube,
                                         VisibilityIterator::Corrected));
+    fillerDictionary_p.add (VisBufferComponents::DataDescriptionId,
+                           vlatFunctor0 (& VisBuffer::fillDDID));
     fillerDictionary_p.add (VisBufferComponents::Direction1,
                            vlatFunctor0 (& VisBuffer::fillDirection1));
     fillerDictionary_p.add (VisBufferComponents::Direction2,
@@ -614,11 +616,13 @@ VLAT::sweepVi ()
                  visibilityIterator_p->more();
                  ++ (* visibilityIterator_p), readSubchunk_p.incrementSubChunk ()){
 
+                ThreadTimes startTime = ThreadTimes ();
+
                 waitUntilFillCanStart ();
 
                 throwIfSweepTerminated ();
 
-                VlaDatum * vlaDatum = vlaData_p -> fillStart (readSubchunk_p);
+                VlaDatum * vlaDatum = vlaData_p -> fillStart (readSubchunk_p, startTime);
 
                 throwIfSweepTerminated();
 
