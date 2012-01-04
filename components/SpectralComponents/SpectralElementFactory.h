@@ -41,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // FIXME fix documentation
 
 // <summary>
-// Describes (a set of related) spectral lines
+// Class for creating spectral elements
 // </summary>
 
 // <use visibility=export>
@@ -50,41 +50,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto module=Functionals>Functionals</linkto> module
-//   <li> <linkto class=RecordInterface>RecordInterface</linkto> class
+//   <li> <linkto module=Functionals>SpectralElement</linkto> module
 // </prerequisite>
 //
 // <etymology>
-// From spectral line and element
+// From spectral and element and factory. As in to manufacture a SpectralElement
 // </etymology>
 //
 // <synopsis>
-// The SpectralElement class is a container for a spectral line descriptor.
-// It can contain a single line (like a Gaussian profile), or a set of
-// related lines (like a doublet or so).
-//
-// The element can be used in the
-// <linkto class=SpectralFit>SpectralFit</linkto> class and in the
-// <linkto class=SpectralEstimate>SpectralEstimate</linkto> class.
-//
-// The default type is a Gaussian, defined as:
-// <srcblock>
-//	AMPL.exp[ -(x-CENTER)<sup>2</sup>/2 SIGMA<sup>2</sup>]
-// </srcblock>
-//
+// SpectralElementFactory contains methods for creating SpectralElements.
 // </synopsis>
 //
 // <example>
 // </example>
 //
 // <motivation>
-// To have a container for fitting of spectral profiles to an observed spectrum
+// To have a factory class for producing types of SpectralElements.
 // </motivation>
 //
-// <todo asof="2001/02/04">
-//   <li> add more profile types
-// </todo>
-
 class SpectralElementFactory {
 public:
 

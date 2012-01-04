@@ -46,7 +46,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <prerequisite>
 //   <li> <linkto module=Functionals>Functionals</linkto> module
-//   <li> <linkto class=RecordInterface>RecordInterface</linkto> class
 // </prerequisite>
 //
 // <etymology>
@@ -54,18 +53,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// The SpectralElement class is a container for a spectral line descriptor.
-// It can contain a single line (like a Gaussian profile), or a set of
-// related lines (like a doublet or so).
+// The SpectralElement class is the abstract base class for classes
+// describing spectral components (Gaussian, Polynonomial, etc).
 //
 // The element can be used in the
 // <linkto class=SpectralFit>SpectralFit</linkto> class and in the
 // <linkto class=SpectralEstimate>SpectralEstimate</linkto> class.
-//
-// The default type is a Gaussian, defined as:
-// <srcblock>
-//	AMPL.exp[ -(x-CENTER)<sup>2</sup>/2 SIGMA<sup>2</sup>]
-// </srcblock>
 //
 // </synopsis>
 //
