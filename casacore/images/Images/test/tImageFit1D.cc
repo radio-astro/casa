@@ -235,7 +235,7 @@ void makeSpectralData (Vector<Double>& pPars, Vector<Double>& gPars,
       uInt idx = 15;                                  // Make width 10 pixels
       AlwaysAssert(n>idx,AipsError);
       gPars(2) = abs(x(idx) - x(0));
-      SpectralElement g(SpectralElement::GAUSSIAN, gPars(0), 
+      GaussianSpectralElement g(gPars(0),
                         gPars(1), gPars(2));
 
 // Generate ordinate
@@ -258,7 +258,7 @@ void makeSpectralData (Vector<Double>& pPars, Vector<Double>& gPars,
       pPars(1) = yMax / (x[n-1] - x[0]);         // 0->yMax
       pPars(0) = -pPars(1) * x[0];
 //
-      SpectralElement p(pPars.nelements()-1);
+      PolynomialSpectralElement p(pPars.nelements()-1);
       p.set(pPars);
 /*
 cerr << "x[0], x[1] = " << x[0] << ", " << x[n-1] << endl;
@@ -345,7 +345,7 @@ void check  (const Vector<Double>& pPars, const Vector<Double>& gPars,
       AlwaysAssert(fitter.setGaussianElements(nGauss),AipsError);
    }
    if (doPoly) {
-      SpectralElement s(pPars.nelements()-1);            // 0 parameters
+      PolynomialSpectralElement s(pPars.nelements()-1);            // 0 parameters
       fitter.addElement(s);
    }
 
@@ -372,7 +372,7 @@ cerr << "Estimate = " << list << endl;
    Vector<Double> p;
 //
    if (doGauss) {
-      list[0].get(p);
+      list[0]->get(p);
       AlwaysAssert(p.nelements()==3,AipsError);
       cerr << "      Parameters of gaussian model = " << gPars << endl;
       cerr << "      Parameters of gaussian fit   = " << p << endl;
@@ -384,10 +384,10 @@ cerr << "Estimate = " << list << endl;
    }
    if (doPoly) {
       if (doGauss) {
-         list[1].get(p);
+         list[1]->get(p);
          cerr << endl;
       } else {
-         list[0].get(p);
+         list[0]->get(p);
       }
       cerr << "      Parameters of polynomial model = " << pPars << endl;
       cerr << "      Parameters of polynomial fit   = " << p << endl;
