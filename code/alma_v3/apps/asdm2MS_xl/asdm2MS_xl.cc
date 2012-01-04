@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
+#include <map>
 #include <assert.h>
 #include <cmath>
 #include <complex>
@@ -1169,7 +1170,7 @@ map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers; // There will be one filler p
 
 vector<int>	dataDescriptionIdx2Idx;
 int		ddIdx;
-vector<int>	msStateId;
+map<MainRow*, int>     stateIdx2Idx;
 
 /**
  * This function fills the MS State table.
@@ -1179,62 +1180,56 @@ vector<int>	msStateId;
  *
  */
 
-void processState(MainRow* r_p,
-		  const VMSData* vmsData_p) {
- if (debug) cout << "processMainAndState : entering" << endl;
+void processState(MainRow* r_p) {
+ if (debug) cout << "processState : entering" << endl;
 
  ASDM&			ds	   = r_p -> getTable() . getContainer();
- ScanRow*		scanR_p	   = ds.getScan().getRowByKey(r_p -> getExecBlockId(),
-							      r_p -> getScanNumber());
+ ScanRow*		scanR_p	   = ds.getScan().getRowByKey(r_p -> getExecBlockId(),	r_p -> getScanNumber());
  vector<ScanIntent>	scanIntent = scanR_p -> getScanIntent();
-	  
- for (unsigned int iState = 0; iState < vmsData_p -> v_msState.size(); iState++) {
-							      
-   const sdmbin::MSState&	msState	 = vmsData_p -> v_msState.at(iState);
-   SubscanRow*			sscanR_p = ds.getSubscan().getRowByKey(r_p -> getExecBlockId(),
-								       r_p -> getScanNumber(),
-								       msState.subscanNum);
-    if (sscanR_p == 0) {
+ SubscanRow*		sscanR_p   = ds.getSubscan().getRowByKey(r_p -> getExecBlockId(),
+								 r_p -> getScanNumber(),
+								 r_p -> getSubscanNumber());
+ if (sscanR_p == 0) {
       errstream.str("");
       errstream << "Could not find a row in the Subscan table for the following key value (execBlockId=" << r_p->getExecBlockId().toString()
 		<<", scanNumber="<< r_p->getScanNumber()
-		<<", subscanNum=" << msState.subscanNum << "). Aborting. "
+		<<", subscanNum=" << r_p->getSubscanNumber() << "). Aborting. "
 		<< endl;
       error(errstream.str());
-      continue;
-    }
+ }	  
 
-    SubscanIntent subscanIntent = sscanR_p->getSubscanIntent();
-    string obs_mode;
-    if (scanIntent.size() > 0) {
-      obs_mode = CScanIntent::name(scanIntent.at(0))+"#"+CSubscanIntent::name(subscanIntent);
-	      
-      for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
-	obs_mode += ",";
-	obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"#"+CSubscanIntent::name(subscanIntent);
-      }
-    }
-	    
+ SubscanIntent subscanIntent = sscanR_p->getSubscanIntent();
+ string obs_mode;
+ if (scanIntent.size() > 0) {
+   obs_mode = CScanIntent::name(scanIntent.at(0))+"#"+CSubscanIntent::name(subscanIntent);
+   
+   for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
+     obs_mode += ",";
+     obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"#"+CSubscanIntent::name(subscanIntent);
+   }
+ }
+
+ const vector<StateRow *>& sRs =  ds.getState().get() ;
+ for (unsigned int iState = 0; iState < sRs.size(); iState++) {							     	    
     bool pushed = false;
-    if (!false) {
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	int retId = iter->second->addUniqueState(msState.sig,
-						 msState.ref,
-						 0.0, // msState.cal,
-						 0.0, //msState.load,
-						 msState.subscanNum,
-						 obs_mode, //msState.obsMode.c_str(),
-						 false);
-	if (!pushed) {
-	  msStateId.push_back(retId);
-	  pushed = true;
-	}
+    
+    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	 iter != msFillers.end();
+	 ++iter) {
+      int retId = iter->second->addUniqueState(sRs[iState]->getSig(),
+					       sRs[iState]->getRef(),
+					       0.0, 
+					       0.0, 
+					       r_p->getSubscanNumber(),
+					       obs_mode, 
+					       false);
+      if (!pushed) {
+	stateIdx2Idx[r_p] = retId;
+	pushed = true;
       }
     }	    
-  }
-  if (debug) cout << "processMainAndState : exiting" << endl;
+ }
+ if (debug) cout << "processState : exiting" << endl;
 }
 
 /**
@@ -1304,6 +1299,10 @@ void processMain(int		rowNum,
     uvw[k++] = vv_uvw[iUvw](2);
   } 
 
+  // Here we make the assumption that the State is the same for all the antennas and let's use the first State found in the vector stateId contained in the ASDM Main Row
+  int asdmStateIdx = r_p->getStateId().at(0).getTagValue();  
+  vector<int> msStateId(vmsData_p->v_m_data.size(), stateIdx2Idx[r_p]);
+
   ComplexDataFilter cdf;
   map<AtmPhaseCorrectionMod::AtmPhaseCorrection, float*>::const_iterator iter;
 
@@ -1317,7 +1316,7 @@ void processMain(int		rowNum,
   vector<double>	correctedInterval;
   vector<double>	correctedExposure;
   vector<double>	correctedTimeCentroid;
-  vector<int>		correctedMsStateId;
+  vector<int>		correctedMsStateId(msStateId);
   vector<double>	correctedUvw ;
   vector<unsigned int>	correctedFlag;
 
@@ -1342,7 +1341,6 @@ void processMain(int		rowNum,
       correctedInterval.push_back(vmsData_p->v_interval.at(iData));
       correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
       correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-      correctedMsStateId.push_back(msStateId.at(iData));
       correctedUvw.push_back(vv_uvw.at(iData)(0));
       correctedUvw.push_back(vv_uvw.at(iData)(1));
       correctedUvw.push_back(vv_uvw.at(iData)(2));
@@ -4170,7 +4168,7 @@ int main(int argc, char *argv[]) {
 	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
 	  numberOfReadIntegrations += numberOfIntegrations;
 	  numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
-	  processState(v[i], vmsDataPtr);
+	  processState(v[i]);
 	  processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  //	  processMainAndState(ds, j, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
@@ -4182,7 +4180,7 @@ int main(int argc, char *argv[]) {
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	  vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
-	  processState(v[i], vmsDataPtr);
+	  processState(v[i]);
 	  processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  // 	  processMainAndState(ds, i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
