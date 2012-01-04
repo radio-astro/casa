@@ -50,7 +50,9 @@ class runTest:
                  RESULT_DIR='/tmp/casa_regression_result/', \
                  retemplate=False,
                  cleanup=True,
-                 profile=False):
+                 profile=False,
+                 RESULT_SUBDIR='',
+                 REDIRECT=True):
         """cleanup: set to False to keep data around.
         profile: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
         Note, a profile is created only for the casapy process. If you want to include profiles for async / child processes, refer to the documentation for opreport."""
@@ -95,11 +97,14 @@ class runTest:
                 testName=string.split(self.tester.testname(k)[6:], ".py")[0]
             else:
                 testName=string.split(self.tester.testname(k), ".py")[0]
-            self.resultsubdir = \
-                              self.resultdir + "/result-" + \
-                              testName       + "-" + \
-                              uname1         + "-" + \
-                              time.strftime('%Y_%m_%d_%H_%M')
+            if not RESULT_SUBDIR:
+                self.resultsubdir = self.resultdir + "/result-" + \
+                                    testName       + "-" + \
+                                    uname1         + "-" + \
+                                    time.strftime('%Y_%m_%d_%H_%M')
+            else:
+                self.resultsubdir = self.resultdir + "/" + RESULT_SUBDIR
+
             if not os.path.isdir(self.resultsubdir):
                 os.mkdir(self.resultsubdir)
 
@@ -109,21 +114,26 @@ class runTest:
 
             # redirect stdout and stderr and casalog
             print 'Run test '+testName
-            print "Redirect stdout/stderr to", self.resultsubdir+'/'+logfilename
-            save_stdout = sys.stdout
-            save_stderr = sys.stderr
-            fsock = open(self.resultsubdir+'/'+logfilename, 'w')
-            sys.stdout = logger("STDOUT", [save_stdout, fsock])
-            sys.stderr = logger("STDERR", [save_stderr, fsock])
+            if REDIRECT:
+                print "Redirect stdout/stderr to", self.resultsubdir+'/'+logfilename
+                save_stdout = sys.stdout
+                save_stderr = sys.stderr
+                fsock = open(self.resultsubdir+'/'+logfilename, 'w')
+                sys.stdout = logger("STDOUT", [save_stdout, fsock])
+                sys.stderr = logger("STDERR", [save_stderr, fsock])
 
-            testlog = self.tester.workingDirectory+"/test.log"
-            open(testlog, "w").close()  # create empty file
-            casalog.setlogfile(testlog) # seems to append to an existing file
+                testlog = self.tester.workingDirectory+"/test.log"
+                open(testlog, "w").close()  # create empty file
+                casalog.setlogfile(testlog) # seems to append to an existing file
 
             try:
                 self.tester.getTest(self.tester.testname(k), testName)
 
-                profilepage = RESULT_DIR+'/'+time.strftime('%Y_%m_%d/')+testName+'_profile.html'
+                if RESULT_SUBDIR != testName:
+                    profilepage = RESULT_DIR+'/'+time.strftime('%Y_%m_%d/')+testName+'_profile.html'
+                else:
+                    profilepage = RESULT_DIR+'/'+RESULT_SUBDIR+'/'+'profile.html'
+
                 process_data = "%s/profile.txt"  % self.tester.workingDirectory
 
                 os.system("echo -n > " + process_data)
@@ -144,7 +154,7 @@ class runTest:
                                            pyt,
                                            pyt,
                                            pp,
-                                           testName, RESULT_DIR,
+                                           testName, RESULT_DIR + ("/" + RESULT_SUBDIR if RESULT_SUBDIR == testName else ''),
                                            profilepage,
                                            process_data,
                                            str(os.getpid()))
@@ -386,20 +396,23 @@ class runTest:
                 self.create_log("")
 
                 # Restore stdout/stderr
-                sys.stderr = save_stderr
-                sys.stdout = save_stdout
-                fsock.close()
-                casalog.setlogfile("casapy.log")
-                os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
+                if REDIRECT:
+                    sys.stderr = save_stderr
+                    sys.stdout = save_stdout
+                    fsock.close()
+
+                    casalog.setlogfile("casapy.log")
+                    os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
 
                 if not dry and cleanup:
                     self.tester.cleanup()
-            except:                
-                sys.stderr = save_stderr
-                sys.stdout = save_stdout
-                fsock.close()
-                casalog.setlogfile("casapy.log")
-                os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
+            except:
+                if REDIRECT:
+                    sys.stderr = save_stderr
+                    sys.stdout = save_stdout
+                    fsock.close()
+                    casalog.setlogfile("casapy.log")
+                    os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
 
                 print "Unexpected error:", sys.exc_info()[0]
                 raise
