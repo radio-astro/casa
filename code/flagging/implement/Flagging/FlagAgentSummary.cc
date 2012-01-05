@@ -272,7 +272,7 @@ FlagAgentSummary::getResult()
 				stats_key1.defineRecord(spw_stringStream.str() + ":" + channel_stringStream.str(), stats_key2);
 				// Calculate percentage flagged
 				stringstream percentage;
-				percentage.precision(1);
+				percentage.precision(3);percentage.fixed;
 				if( key2->second > 0 )
 				{
 				        percentage << " (" << 100.0 * 
@@ -315,7 +315,7 @@ FlagAgentSummary::getResult()
 
 				// Calculate percentage flagged
 				stringstream percentage;
-				percentage.precision(1);
+				percentage.precision(3);percentage.fixed;
 				if( key2->second > 0 )
 				{
 				  percentage << " (" << 100.0 * 
@@ -348,7 +348,7 @@ FlagAgentSummary::getResult()
 
 			// Calculate percentage flagged
 			stringstream percentage;
-			percentage.precision(1);
+			percentage.precision(3);percentage.fixed;
 			if( key2->second > 0 )
 			{
 			  percentage << " (" << 100.0 * 
@@ -372,7 +372,7 @@ FlagAgentSummary::getResult()
 
         // Calculate percentage flagged
 	stringstream percentage;
-	percentage.precision(1);
+	percentage.precision(3);percentage.fixed;
 	if( accumTotalCount > 0 )
 	{
  	      percentage << " (" << 100.0 * 

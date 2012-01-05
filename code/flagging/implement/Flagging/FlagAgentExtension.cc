@@ -40,6 +40,7 @@ FlagAgentExtension::~FlagAgentExtension()
 
 void FlagAgentExtension::setAgentParameters(Record config)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
 	exists = config.fieldNumber ("extendpols");
@@ -51,7 +52,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		extendpols_p = False;
 	}
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " extendpols is " << extendpols_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " extendpols is " << extendpols_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growtime");
@@ -63,7 +64,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		growtime_p = 50.0;
 	}
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " growtime is " << growtime_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " growtime is " << growtime_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growfreq");
@@ -75,7 +76,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		growfreq_p = 50.0;
 	}
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " growfreq is " << growfreq_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " growfreq is " << growfreq_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growaround");
@@ -87,7 +88,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		growaround_p = True;
 	}
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " growaround is " << growaround_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " growaround is " << growaround_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("flagneartime");
@@ -99,7 +100,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		flagneartime_p = False;
 	}
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " flagneartime is " << flagneartime_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " flagneartime is " << flagneartime_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("flagnearfreq");
@@ -111,7 +112,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		flagnearfreq_p = False;
 	}
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " flagnearfreq is " << flagnearfreq_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " flagnearfreq is " << flagnearfreq_p << LogIO::POST;
 
 
 	return;
@@ -120,6 +121,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 void
 FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	IPosition flagCubeShape = flags.shape();
 	Int nPols,nChannels,nTimesteps;
 	flags.shape(nPols, nChannels, nTimesteps);

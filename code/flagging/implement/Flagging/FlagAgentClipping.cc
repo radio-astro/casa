@@ -41,6 +41,7 @@ FlagAgentClipping::~FlagAgentClipping()
 void
 FlagAgentClipping::setAgentParameters(Record config)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
 	exists = config.fieldNumber ("clipoutside");
@@ -62,7 +63,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 		checkVis_p = &FlagAgentClipping::checkVisForClipInside;
 	}
 
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " clipoutside is " << clipoutside_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " clipoutside is " << clipoutside_p << LogIO::POST;
 
 	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
@@ -72,14 +73,14 @@ FlagAgentClipping::setAgentParameters(Record config)
 		clipmin_p = cliprange.getStorage(deleteIt)[0];
 		clipmax_p = cliprange.getStorage(deleteIt)[1];
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " clipmin is " << clipmin_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " clipmax is " << clipmax_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " clipmin is " << clipmin_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " clipmax is " << clipmax_p << LogIO::POST;
 	}
 	else
 	{
 		checkVis_p = &FlagAgentClipping::checkVisForNaNs;
 
-		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ << " no clipminmax range provided, will clip only NaNs " << clipmax_p << LogIO::POST;
+		*logger_p << LogIO::WARN << " no clipminmax range provided, will clip only NaNs " << clipmax_p << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("channelavg");
@@ -92,7 +93,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 		channelavg_p = False;
 	}
 
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " channelavg is " << channelavg_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " channelavg is " << channelavg_p << LogIO::POST;
 
 
 	return;

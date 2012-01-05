@@ -66,6 +66,7 @@ FlagAgentShadow::~FlagAgentShadow()
 void
 FlagAgentShadow::setAgentParameters(Record config)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
 	exists = config.fieldNumber ("diameter");
@@ -78,7 +79,7 @@ FlagAgentShadow::setAgentParameters(Record config)
 		antennaDiameter_p = -1.0;
 	}
 
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " diameter is " << antennaDiameter_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " diameter is " << antennaDiameter_p << LogIO::POST;
 
 	return;
 }

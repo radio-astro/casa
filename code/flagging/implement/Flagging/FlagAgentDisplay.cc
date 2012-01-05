@@ -51,6 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   void FlagAgentDisplay::setAgentParameters(Record config)
   {
+    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     int exists;
     
     exists = config.fieldNumber ("pause");
@@ -63,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pause_p = True;
       }
     
-    *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " pause is " << pause_p << LogIO::POST;
+    *logger_p << LogIO::NORMAL << " pause is " << pause_p << LogIO::POST;
     
     
   }
@@ -82,6 +83,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
   void
   FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
   {
+    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     // Check if the visibility expression is suitable for this spw
     if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
     
@@ -236,6 +238,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
   void
   FlagAgentDisplay::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
   {
+    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     // Gather shapes
     IPosition flagCubeShape = visibilities.shape();
     uInt nChannels = flagCubeShape(0);
@@ -275,7 +278,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
       corrTypes[pol] = (*polMap)[polarizations[pol]];
     
     // Print where we are...
-    //    *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " Baseline : " << baselineName << " Field : " << fieldName_p << " Spw : " << spwName << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
+    //    *logger_p << LogIO::NORMAL  << " Baseline : " << baselineName << " Field : " << fieldName_p << " Spw : " << spwName << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
     
     // Build the Plot Window for the first time
     if(ShowPlots && plotter_p==NULL) BuildPlotWindow();
@@ -377,9 +380,10 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
   
   //----------------------------------------------------------------------------------------------------------
   
-  void 
+ void 
   FlagAgentDisplay::getChunkInfo(const VisBuffer &visBuffer)
   {
+    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     // Read current Field name, SPW id, and scan info.
     fieldId_p = visBuffer.fieldId();
     fieldName_p = flagDataHandler_p->fieldNames_p->operator()(fieldId_p);
@@ -658,124 +662,6 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 </ui>								\
 ";
     
-    
-    /*
-      
-      dock_xml_p = "\
-      <?xml version=\"1.0\" encoding=\"UTF-8\"?>	\
-      <ui version=\"4.0\">				\
-      <class>dock01</class>				\
-      <widget class=\"QDockWidget\" name=\"dock01\">		\
-      <property name=\"sizePolicy\">				\
-      <sizepolicy hsizetype=\"Preferred\" vsizetype=\"Preferred\">	\
-      <horstretch>0</horstretch>					\
-      <verstretch>0</verstretch>					\
-      </sizepolicy>							\
-      </property>							\
-      <property name=\"minimumSize\">					\
-      <size>								\
-      <width>770</width>						\
-      <height>80</height>						\
-      </size>								\
-      </property>							\
-      <property name=\"windowTitle\">					\
-      <string/>								\
-      </property>							\
-      <widget class=\"QWidget\" name=\"dockWidgetContents\">		\
-      <widget class=\"QWidget\" name=\"\">				\
-      <property name=\"geometry\">					\
-      <rect>								\
-      <x>12</x>								\
-      <y>13</y>								\
-      <width>735</width>						\
-      <height>46</height>						\
-      </rect>								\
-      </property>							\
-      <layout class=\"QGridLayout\" name=\"gridLayout\">		\
-      <item row=\"0\" column=\"0\">					\
-      <widget class=\"QPushButton\" name=\"PrevBaseline\">		\
-      <property name=\"text\">						\
-      <string>Prev Baseline</string>					\
-      </property>							\
-      </widget>								\
-      </item>								\
-      <item row=\"0\" column=\"1\">					\
-      <widget class=\"QPushButton\" name=\"NextBaseline\">		\
-      <property name=\"text\">						\
-      <string>Next Baseline</string>					\
-      </property>							\
-      </widget>								\
-      </item>								\
-      <item row=\"0\" column=\"2\">					\
-      <layout class=\"QVBoxLayout\" name=\"verticalLayout\">		\
-      <property name=\"spacing\">					\
-      <number>0</number>						\
-      </property>							\
-      <property name=\"sizeConstraint\">				\
-      <enum>QLayout::SetMinimumSize</enum>				\
-      </property>							\
-      <item>								\
-      <widget class=\"QCheckBox\" name=\"FixAntenna1\">			\
-      <property name=\"text\">						\
-      <string>Fix Antenna1</string>					\
-      </property>							\
-      </widget>								\
-      </item>								\
-      <item>								\
-      <widget class=\"QCheckBox\" name=\"FixAntenna2\">			\
-      <property name=\"text\">						\
-      <string>Fix Antenna2</string>					\
-      </property>							\
-      </widget>								\
-      </item>								\
-      </layout>								\
-      </item>								\
-      <item row=\"0\" column=\"3\">					\
-      <widget class=\"QPushButton\" name=\"NextScan\">			\
-      <property name=\"text\">						\
-      <string>Next Scan</string>					\
-      </property>							\
-      </widget>								\
-      </item>								\
-      <item row=\"0\" column=\"4\">					\
-      <widget class=\"QPushButton\" name=\"NextSpw\">			\
-      <property name=\"text\">						\
-      <string>Next SPW</string>						\
-      </property>							\
-      </widget>								\
-      </item>								\
-      <item row=\"0\" column=\"5\">					\
-      <widget class=\"QPushButton\" name=\"NextField\">			\
-      <property name=\"text\">						\
-      <string>Next Field</string>					\
-      </property>							\
-      </widget>								\
-      </item>								\
-      <item row=\"0\" column=\"6\">					\
-      <widget class=\"QPushButton\" name=\"StopDisplay\">		\
-      <property name=\"text\">						\
-      <string>Stop Display</string>					\
-      </property>							\
-      </widget>								\
-      </item>								\
-      <item row=\"0\" column=\"7\">					\
-      <widget class=\"QPushButton\" name=\"Quit\">			\
-      <property name=\"text\">						\
-      <string>Quit</string>						\
-      </property>							\
-      </widget>								\
-      </item>								\
-      </layout>								\
-      </widget>								\
-      </widget>								\
-      </widget>								\
-      <resources/>							\
-      <connections/>							\
-      </ui>								\
-      ";
-      
-      
-    */
     
   }// end of SetLayout
   

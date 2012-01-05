@@ -62,6 +62,7 @@ FlagAgentElevation::~FlagAgentElevation()
 void
 FlagAgentElevation::setAgentParameters(Record config)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
 	exists = config.fieldNumber ("lowerlimit");
@@ -74,7 +75,7 @@ FlagAgentElevation::setAgentParameters(Record config)
 		lowerlimit_p = 0.0;
 	}
 
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " lowerlimit is " << lowerlimit_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " lowerlimit is " << lowerlimit_p << LogIO::POST;
 
 	exists = config.fieldNumber ("upperlimit");
 	if (exists >= 0)
@@ -86,7 +87,7 @@ FlagAgentElevation::setAgentParameters(Record config)
 		upperlimit_p = 90.0;
 	}
 
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " upperlimit is " << upperlimit_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " upperlimit is " << upperlimit_p << LogIO::POST;
 
 
 	return;
