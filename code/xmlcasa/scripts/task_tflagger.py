@@ -8,6 +8,7 @@ debug = False
 
 def tflagger(vis,
              ntime, # taken only once per session
+             combinescans,
              mode,
              selectdata,
              spw, # data selection parameters
@@ -63,11 +64,6 @@ def tflagger(vis,
     # Global parameters
     # vis, ntime, savepars, flagbackup, datadisplay, writeflags, summarydisplay
 
-    # Things to consider:
-    #
-    # * Default mode is manualflag
-    # * Extend can be applied to every mode
-    # * Parameter ntime can be applied only once per session
     # 
     # Schema
     # Configure the TestFlagger tool -> ::open()
@@ -80,6 +76,7 @@ def tflagger(vis,
                         
     # TODO:
     # Implement the new summary schema
+    # enable combinescans sub-parameter
     
     
     #
@@ -105,22 +102,32 @@ def tflagger(vis,
         # Verify the ntime value
         newtime = 0.0
         if type(ntime) == float or type(ntime) == int:
-            # units are seconds
-            newtime = float(ntime)
-            
-        elif type(ntime) == str:
-            # read the units from the string
-            qtime = qa.quantity(ntime)
-            if qtime['unit'] == 'min':
-                # convert to seconds
-                qtime = qa.convert(qtime, 's')
-                
-            # check units
-            if qtime['unit'] == 's':
-                newtime = qtime['value']
+            if ntime == 0:
+                raise Exception, 'Parameter ntime cannot be 0.0'
             else:
-                casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
+                # units are seconds
+                newtime = float(ntime)
         
+        elif type(ntime) == str:
+            if ntime == 'scan':
+                # iteration time step is a scan
+                newtime = 0.0
+            else:
+                # read the units from the string
+                qtime = qa.quantity(ntime)
+                
+                if qtime['unit'] == 'min':
+                    # convert to seconds
+                    qtime = qa.convert(qtime, 's')
+                elif qtime['unit'] == '':
+                    qtime['unit'] = 's'
+                    
+                # check units
+                if qtime['unit'] == 's':
+                    newtime = qtime['value']
+                else:
+                    casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
+                                    
         if debug:
             casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime))
         

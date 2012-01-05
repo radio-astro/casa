@@ -581,6 +581,11 @@ class test_selections(test_base):
         '''tflagger: array selection'''
         tflagger(vis=self.vis, array='0')
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+        
+    def test_ntime1(self):
+        '''tflagger: ntime = 0'''
+        ret = tflagger(vis=self.vis, ntime = 0)
+        self.assertNotEqual(type(ret), dict, 'Return type of task should be None')
 
 class test_selections_alma(test_base):
     # Test various selections for alma data 
