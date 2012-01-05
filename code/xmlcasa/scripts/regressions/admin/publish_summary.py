@@ -212,7 +212,10 @@ class runTest:
 
                         for line in open(f, 'r'):
                             #print f + '    ddd'+line
-                            fsock.write(f + ': ' + line)
+                            if REDIRECT:
+                                fsock.write(f + ': ' + line)
+                            else:
+                                print f + ': ' + line
 
                 #
                 # Report and deal with out of diskspace
