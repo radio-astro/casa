@@ -101,11 +101,6 @@
                         <value>True</value>
                 </param>
 
-                <param type="bool" name="reset" subparam="true">
-                        <description>Reset all flags before application?</description>
-                        <value>False</value>
-                </param>
-
                 <param type="bool" name="clearall" subparam="true">
                         <description>Delete all rows from FLAG_CMD?</description>
                         <value>False</value>
@@ -172,7 +167,6 @@
                                 <equals value="apply">
                                         <default param="outfile"><value type="string"></value></default>
                                         <default param="flagbackup"><value>True</value></default>
-                                        <default param="reset"><value>False</value></default>
                                 </equals>
                                 <equals value="unapply">
                                         <default param="sort"><value type="string">antenna</value></default>

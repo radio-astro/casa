@@ -56,7 +56,7 @@ def tflagcmd(
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
-    mslocal.writehistory(message='taskname = tflagcmd', origin='tflagger')
+    mslocal.writehistory(message='taskname = tflagcmd', origin='tflagcmd')
     mslocal.open(vis, nomodify=False)
 
     try:
@@ -228,38 +228,22 @@ def tflagcmd(
 
             listmode = ''
 
-        if action == 'apply' or action == 'unapply':
-            
-            # Get the list of parameters
-            sel_list = []
-            if myflagcmd.__len__() > 0:
-                for i in range(myflagcmd.__len__()):
-                    cmdline = myflagcmd[i]['cmd']
-                    sel_list.append(cmdline)
+        # Specific for some actions
+        # Get the commands as a list of strings with reason back in
+        if action == 'apply' or action == 'unapply'  or action == 'save':               
+            # Turn into command string list (add reason back in)
+            mycmdlist = []
+            keylist = myflagcmd.keys()
+            if keylist.__len__() > 0:
+                for key in keylist:
+                    cmdstr = myflagcmd[key]['cmd']
+                    if myflagcmd[key]['reason'] != '':
+                        cmdstr += " reason='" + myflagcmd[key]['reason'] \
+                            + "'"
+                    mycmdlist.append(cmdstr)
                     
-            # Get the union of all parameters
-            unionpars = getUnion(sel_list)
-            if debug:
-                casalog.post('The union of all parameters is %s' %(unionpars))
-            
-            # Select the data
-            # Correlation should not go in here            
-            tflocal.selectdata(unionpars)   
-
-                                
-        # Turn into command string list (add reason back in)
-        mycmdlist = []
-        keylist = myflagcmd.keys()
-        if keylist.__len__() > 0:
-            for key in keylist:
-                cmdstr = myflagcmd[key]['cmd']
-                if myflagcmd[key]['reason'] != '':
-                    cmdstr += " reason='" + myflagcmd[key]['reason'] \
-                        + "'"
-                mycmdlist.append(cmdstr)
-                
-        casalog.post('Extracted ' + str(mycmdlist.__len__())
-                     + ' flag command strings')
+            casalog.post('Extracted ' + str(mycmdlist.__len__())
+                         + ' flag commands')
 
         if debug:
             print myflagcmd
@@ -277,51 +261,56 @@ def tflagcmd(
         # Apply the flag commands to the data
         elif action == 'apply' or action == 'unapply':
             apply = True
-            # Apply flags to data using tflagger
-#            nappl = applyflagcmd(tflocal, vis, flagbackup, myflagd,
-#                                 reset)
-            
-            # Hopefully we still have cmdlist, so let's use it
-            # Apply or unapply the flags
-#            nap = applyFlags(tflocal,cmdlist,flagbackup,reset)
+
+            # Get the list of parameters
+            if myflagcmd.__len__() > 0:
+                for key in myflagcmd.keys():
+                    cmdline = myflagcmd[key]['cmd']
+                    cmdlist.append(cmdline)
+                    
+            # Get the union of all selection parameters
+            unionpars = getUnion(cmdlist)
+            if debug:
+                casalog.post('The union of all parameters is %s' %(unionpars))
+
+            # Select the data
+            # Correlation should not go in here            
+            tflocal.selectdata(unionpars)   
+
 
             # Parse the agents parameters
             if action == 'unapply':
                 apply = False
                 
-            list2save = setupAgent(tflocal, cmdlist, apply)
+            list2save = setupAgent(tflocal, myflagcmd, apply)
             
             # Initialize the Agents
             tflocal.init()
-                        
+     
             # Run the tool
-            stats = tflocal.run(writeflags)
+            stats = tflocal.run(writeflags=writeflags)
                         
             tflocal.done()
                         
-            # Save the valid command lines to the output file
+            # Save the valid command lines to the output file or FLAG_CMD
             valid_rows = list2save.keys()
 
             if valid_rows.__len__() > 0:
                 if outfile == '':
-                    if inputmode == 'table' and flagfile == '':
-                        # These flags came from internal FLAG_CMD, update APPLIED
+                    if inputmode == 'table' and inputfile == '':
+                        # These flags came from internal FLAG_CMD, only update APPLIED
                         myrowlist = myflagcmd.keys()
                         if myrowlist.__len__() > 0:     
                             if apply:       
-#                                updateTable(vis, mycol='APPLIED', myval=True, myrowlist=myrowlist)
                                 updateTable(vis, mycol='APPLIED', myval=True, myrowlist=valid_rows)
                             else:
-#                                updateTable(vis, mycol='APPLIED', myval=False, myrowlist=myrowlist)
                                 updateTable(vis, mycol='APPLIED', myval=False, myrowlist=valid_rows)
                             
                     else:
                         # Add the flag commands to the MS and update APPLIED
                         if apply:
                             writeFlagCmd(vis, myflagcmd, valid_rows, tag='applied')
-#                            writeFlagCmd(vis, myflagcmd, list2save, tag='applied')
                         else:
-#                            writeFlagCmd(vis, myflagcmd, tag='unapplied')
                             writeFlagCmd(vis, myflagcmd, valid_rows, tag='unapplied')
                         
                 else:
@@ -344,20 +333,6 @@ def tflagcmd(
                             
         elif action == 'save':
 
-            # Possibly resort and/or select flags by antenna or reason
-#            if sort != '' and sort != 'id':
-#                myflagd = sortflags(myflagcmd, myantenna='',
-#                                    myreason='any', myflagsort=sort)
-#                mycmdl = []
-#                keylist = myflagd.keys()
-#                if keylist.__len__() > 0:
-#                    for key in keylist:
-#                        cmdstr = myflagd[key]['cmd']
-#                        if myflagd[key]['reason'] != '':
-#                            cmdstr += ' reason="' \
-#                                + myflagd[key]['reason'] + '"'
-#                        mycmdl.append(cmdstr)
-#            else:
             myflagd = myflagcmd
             mycmdl = mycmdlist
 
@@ -370,7 +345,8 @@ def tflagcmd(
                         pstr = '%s' % cmd
                         casalog.post(pstr)
                 else:
-                    writeFlagCmd(vis, myflagd)
+                    valid_rows = myflagcmd.keys()
+                    writeFlagCmd(vis, myflagd, valid_rows)
             else:
                 # Save to ascii file
                 try:
@@ -389,8 +365,9 @@ def tflagcmd(
         elif action == 'clear':
             # Clear flag commands from FLAG_CMD in vis
             msfile = vis
+
             if clearall:
-                casalog.post('Warning: deleting all rows from FLAG_CMD in MS '
+                casalog.post('Deleting all rows from FLAG_CMD in MS '
                               + msfile)
                 clearFlagCmd(msfile, myrowlist=rowlist)
             else:
@@ -412,17 +389,14 @@ def tflagcmd(
             keylist = myflagcmd.keys()
             if keylist.__len__() > 0:
                 # Plot flag commands from FLAG_CMD or xml
-                print 'Warning: will only reliably plot individual per-antenna flags'
                 casalog.post('Warning: will only reliably plot individual per-antenna flags'
                              )
                 plotflags(myflagcmd, outfile, t1sdata, t2sdata)
             else:
-                print 'Warning: empty flagcmd dictionary, nothing to plot'
                 casalog.post('Warning: empty flag dictionary, nothing to plot'
                              )
         elif action == 'extract':
             # Output flag dictionary
-            print 'Secret mode extract : Returning flag dictionary'
             casalog.post('Secret mode extract : Returning flag dictionary'
                          )
             return myflagcmd
@@ -436,19 +410,19 @@ def tflagcmd(
     # write history
     try:
         mslocal.open(vis, nomodify=False)
-        mslocal.writehistory(message='taskname = testflagcmd',
-                             origin='testflagcmd')
+        mslocal.writehistory(message='taskname = tflagcmd',
+                             origin='tflagcmd')
         mslocal.writehistory(message='vis      = "' + str(vis) + '"',
                              origin='testflagcmd')
         mslocal.writehistory(message='inputmode = "' + str(inputmode)
-                             + '"', origin='testflagcmd')
+                             + '"', origin='tflagcmd')
         if inputmode == 'file':
-            mslocal.writehistory(message='flagfile = "' + str(flagfile)
-                                 + '"', origin='testflagcmd')
+            mslocal.writehistory(message='inputfile = "' + str(inputfile)
+                                 + '"', origin='tflagcmd')
         elif inputmode == 'cmd':
             for cmd in command:
                 mslocal.writehistory(message='command  = "' + str(cmd)
-                        + '"', origin='testflagcmd')
+                        + '"', origin='tflagcmd')
         mslocal.close()
     except:
         casalog.post('Cannot open vis for history, ignoring', 'WARN')
@@ -751,20 +725,12 @@ def delEmptyPars(cmdline):
          
     return newstr
 
-def setupAgent(tflocal, cmdlist, apply):
+def setupAgent(tflocal, myflagcmd, apply):
     ''' Setup the parameters of each agent and call the tflagger tool
-        cmdlist --> it is a list of string with selection parameters
-                    and mode's specific parameters 
+        myflagcmd --> it is a dictionary coming from readFromTable, readFromFile, etc.
         apply --> it's a boolean to control whether to apply or unapply the flags'''
-        
-    # TODO: correlation is to be considered here
-    # Read the mode
-    # First remove the blank lines from the list (if any)
-    blanks = cmdlist.count('\n')
-    if blanks > 0:
-        for i in range(blanks):
-            cmdlist.remove('\n')
-    
+
+
     # Parameters for each mode
     # TO DO summary!!!!!!
     manualpars = []
@@ -775,86 +741,86 @@ def setupAgent(tflocal, cmdlist, apply):
     tfcroppars = ['expression','datacolumn','timecutoff','freqcutoff','timefit','freqfit',
                   'maxnpieces','flagdimension','usewindowstats','halfwin']
     extendpars = ['extendpols','growtime','growfreq','growaround','flagneartime','flagnearfreq']
-    
-    nrows = cmdlist.__len__()
-    if debug:
-        'nrows=%s'%nrows
-    
+
     # dictionary of successful command lines to save to outfile
     savelist = {}
     
     # Setup the agent for each input line
-    for i in range(nrows):
-        cmdline = cmdlist[i]
-        if cmdline.startswith('#'):
-            continue
+    if myflagcmd.__len__() > 0:
+        for key in myflagcmd.keys():
+            cmdline = myflagcmd[key]['cmd']
 
-        modepars = {}
-        parslist = {}
-        mode = ''    
-        valid = True          
-        # Get the specific parameters for the mode and call the agents
-        if cmdline.__contains__('mode'):                 
-            if cmdline.__contains__('manualflag'): 
-                mode = 'manualflag'
-                modepars = getLinePars(cmdline,manualpars)   
-            elif cmdline.__contains__('clip'):
-                mode = 'clip'
-                modepars = getLinePars(cmdline,clippars)
-            elif cmdline.__contains__('quack'):
-                mode = 'quack'
-                modepars = getLinePars(cmdline,quackpars)
-            elif cmdline.__contains__('shadow'):
-                mode = 'shadow'
-                modepars = getLinePars(cmdline,shadowpars)
-            elif cmdline.__contains__('elevation'):
-                mode = 'elevation'
-                modepars = getLinePars(cmdline,elevationpars)
-            elif cmdline.__contains__('tfcrop'):
-                mode = 'tfcrop'
-                modepars = getLinePars(cmdline,tfcroppars)
-            elif cmdline.__contains__('extend'):
-                mode = 'extend'
-                modepars = getLinePars(cmdline,extendpars)
-            elif cmdline.__contains__('unflag'):
-                mode = 'unflag'
-                modepars = getLinePars(cmdline,manualpars)
+            if cmdline.startswith('#'):
+                continue
+    
+            modepars = {}
+            parslist = {}
+            mode = ''    
+            valid = True          
+            # Get the specific parameters for the mode and call the agents
+            if cmdline.__contains__('mode'):                 
+                if cmdline.__contains__('manualflag'): 
+                    mode = 'manualflag'
+                    modepars = getLinePars(cmdline,manualpars)   
+                elif cmdline.__contains__('clip'):
+                    mode = 'clip'
+                    modepars = getLinePars(cmdline,clippars)
+                elif cmdline.__contains__('quack'):
+                    mode = 'quack'
+                    modepars = getLinePars(cmdline,quackpars)
+                elif cmdline.__contains__('shadow'):
+                    mode = 'shadow'
+                    modepars = getLinePars(cmdline,shadowpars)
+                elif cmdline.__contains__('elevation'):
+                    mode = 'elevation'
+                    modepars = getLinePars(cmdline,elevationpars)
+                elif cmdline.__contains__('tfcrop'):
+                    mode = 'tfcrop'
+                    modepars = getLinePars(cmdline,tfcroppars)
+                elif cmdline.__contains__('extend'):
+                    mode = 'extend'
+                    modepars = getLinePars(cmdline,extendpars)
+                elif cmdline.__contains__('unflag'):
+                    mode = 'unflag'
+                    modepars = getLinePars(cmdline,manualpars)
+                else:
+                    # Unknown mode, ignore it
+                    casalog.post('Ignoring unknown mode', 'WARN')
+                    valid = False
+    #            elif cmdline.__contains__('summary'):
+    #                mode = 'summary'
+    #                modepars = getLinePars(cmdline,summarypars)
             else:
-                # Unknown mode, ignore it
-                casalog.post('Ignoring unknown mode', 'WARN')
-                valid = False
-#            elif cmdline.__contains__('summary'):
-#                mode = 'summary'
-#                modepars = getLinePars(cmdline,summarypars)
-        else:
-            #no mode means manualflag
-            mode = 'manualflag'
-            cmdline = cmdline+' mode=manualflag'
-            modepars = getLinePars(cmdline,manualpars)   
-                
-        # Cast the correct type to some parameters
-        fixType(modepars)
-
-        if debug:
-            print modepars
-        
-        # Add the apply parameter to the dictionary
-        modepars['apply'] = apply
-        
-        # Parse the dictionary of valid agents
-        if valid:
+                #no mode means manualflag
+                mode = 'manualflag'
+                cmdline = cmdline+' mode=manualflag'
+                modepars = getLinePars(cmdline,manualpars)   
+                    
+            # Cast the correct type to some parameters
+            fixType(modepars)
+    
+            if debug:
+                print 'Parameters of mode'
+                print modepars
             
-            if (not tflocal.parseAgentParameters(modepars)):
-                casalog.post('Failed to parse parameters to agent %s' %mode, 'WARN')
-                            
-            # add this command line to list to save in outfile
-            parslist['row'] = i
-            parslist['cmd'] = cmdline
-            savelist[i] = parslist
+            # Add the apply parameter to the dictionary
+            modepars['flag'] = apply
+            
+            # Parse the dictionary of valid agents
+            if valid:
+                
+                if (not tflocal.parseAgentParameters(modepars)):
+                    casalog.post('Failed to parse parameters to agent %s' %mode, 'WARN')
+                                
+                # add this command line to list to save in outfile
+                parslist['row'] = key
+                parslist['cmd'] = cmdline
+                savelist[key] = parslist
         
         # FIXME: Backup the flags
 #        if (flagbackup):
 #            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
+
     if debug:
         print 'Dictionary of valid commands to save'
         print savelist
@@ -1163,10 +1129,9 @@ def readFromTable(
             # Keep original key index, might need this later
             myflagcmd[i] = flagd
             nflagd += 1
-        casalog.post('Read ' + str(nflagd)+ ' rows from FLAG_CMD table in MS')
+        casalog.post('Read ' + str(nflagd)+ ' rows from FLAG_CMD table in '+msfile)
     else:
-        casalog.post('FLAG_CMD table is empty, no flags extracted'
-                     , 'WARN')
+        casalog.post('FLAG_CMD table in %s is empty, no flags extracted'%msfile, 'WARN')
 
     return myflagcmd
 
@@ -1663,15 +1628,18 @@ def updateTable(
         return
 
     nlist = myrowlist.__len__()
+    
     if nlist > 0:
         rowlist = myrowlist
-        casalog.post('Will update column ' + mycol + ' for '
-                     + str(nlist) + ' rows')
+#        casalog.post('Will update column ' + mycol + ' for '
+#                     + str(nlist) + ' rows')
     else:
         rowlist = range(nrows)
         nlist = nrows
-        casalog.post('Will update column ' + mycol + ' for all rows')
-
+#        casalog.post('Will update column ' + mycol + ' for all rows')
+    if debug:
+        print 'Number of rows to update %s'%nlist
+        
     if nlist > 0:
         try:
             tb.putcell(mycol, rowlist, myval)
@@ -2009,7 +1977,6 @@ def clearFlagCmd(msfile, myrowlist=[]):
                 + ' from table ' + mstable
 
         nnew = int(tb.nrows())
-        casalog.post('There are ' + str(nnew) + ' rows in FLAG_CMD')
     else:
         casalog.post('No rows to clear')
         
