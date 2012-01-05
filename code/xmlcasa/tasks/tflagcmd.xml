@@ -22,10 +22,14 @@
                         <value></value>
                 </param>
 
-            <param type="double" name="ntime" units="s">
+            <param type="any" name="ntime">
                 <description>Time-range to use for each chunk (in seconds or minutes)</description>
                 <any type="variant" limittypes="double string" />
-                <value>0.0</value>
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description></description>
+                <value>False</value>
             </param>
 
                 <param type="string" name="inputmode">
@@ -143,54 +147,59 @@
                 </param>
 
                 <constraints>
-                        <when param="inputmode">
-                                <equals value="table">
-                                        <default param="inputfile"><value type="string"></value></default>
-                                        <default param="tablerows"><value type="vector"></value></default>
-                                        <default param="useapplied"><value>False</value></default>
-                                        <default param="reason"><value type="string">any</value></default>
-                                </equals>
-                                <equals value="file">
-                                        <default param="inputfile"><value type="string"></value></default>
-                                </equals>
-                                <equals value="cmd">
-                                        <default param="command"><value>['']</value></default>
-                                </equals>
-                                <equals value="xml">
-                                        <default param="tbuff"><value>1.0</value></default>
-                                        <default param="ants"><value type="string"></value></default>
-                                        <default param="reason"><value type="string">any</value></default>
-                                </equals>
-                        </when>
+                    <when param="ntime">
+                        <notequals type="string" value="scan">
+                            <default param="combinescans"><value type="bool">False</value></default>
+                        </notequals>
+                    </when>             
+                    <when param="inputmode">
+                            <equals value="table">
+                                    <default param="inputfile"><value type="string"></value></default>
+                                    <default param="tablerows"><value type="vector"></value></default>
+                                    <default param="useapplied"><value>False</value></default>
+                                    <default param="reason"><value type="string">any</value></default>
+                            </equals>
+                            <equals value="file">
+                                    <default param="inputfile"><value type="string"></value></default>
+                            </equals>
+                            <equals value="cmd">
+                                    <default param="command"><value>['']</value></default>
+                            </equals>
+                            <equals value="xml">
+                                    <default param="tbuff"><value>1.0</value></default>
+                                    <default param="ants"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
+                            </equals>
+                    </when>
 
-                        <when param="action">
-                                <equals value="apply">
-                                        <default param="outfile"><value type="string"></value></default>
-                                        <default param="flagbackup"><value>True</value></default>
-                                </equals>
-                                <equals value="unapply">
-                                        <default param="sort"><value type="string">antenna</value></default>
-                                        <default param="flagbackup"><value>True</value></default>
-                                </equals>
-                                <equals value="list">
-                                        <default param="outfile"><value type="string"></value></default>
-                                </equals>
-                                <equals value="save">
-                                        <default param="outfile"><value type="string"></value></default>
-                                </equals>
-                                <equals value="plot">
-                                        <default param="outfile"><value type="string"></value></default>
-                                </equals>
-                                <equals value="clear">
-                                        <default param="clearall"><value>False</value></default>
-                                        <default param="rowlist"><value type="vector"></value></default>
-                                </equals>
-                                <equals value="set">
-                                        <default param="rowlist"><value type="vector"></value></default>
-                                        <default param="setcol"><value type="string"></value></default>
-                                        <default param="setval"><value type="string"></value></default>
-                                </equals>
-                        </when>
+                    <when param="action">
+                            <equals value="apply">
+                                    <default param="outfile"><value type="string"></value></default>
+                                    <default param="flagbackup"><value>True</value></default>
+                            </equals>
+                            <equals value="unapply">
+                                    <default param="sort"><value type="string">antenna</value></default>
+                                    <default param="flagbackup"><value>True</value></default>
+                            </equals>
+                            <equals value="list">
+                                    <default param="outfile"><value type="string"></value></default>
+                            </equals>
+                            <equals value="save">
+                                    <default param="outfile"><value type="string"></value></default>
+                            </equals>
+                            <equals value="plot">
+                                    <default param="outfile"><value type="string"></value></default>
+                            </equals>
+                            <equals value="clear">
+                                    <default param="clearall"><value>False</value></default>
+                                    <default param="rowlist"><value type="vector"></value></default>
+                            </equals>
+                            <equals value="set">
+                                    <default param="rowlist"><value type="vector"></value></default>
+                                    <default param="setcol"><value type="string"></value></default>
+                                    <default param="setval"><value type="string"></value></default>
+                            </equals>
+                    </when>
                 </constraints>
         </input>
 <returns type="void"/>
