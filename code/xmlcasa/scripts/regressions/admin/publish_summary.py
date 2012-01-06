@@ -50,11 +50,12 @@ class runTest:
                  RESULT_DIR='/tmp/casa_regression_result/', \
                  retemplate=False,
                  cleanup=True,
-                 profile=False,
+                 CPP_PROFILE=False,
                  RESULT_SUBDIR='',
-                 REDIRECT=True):
+                 REDIRECT=True,
+                 PY_PROFILE=True):
         """cleanup: set to False to keep data around.
-        profile: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
+        CPP_PROFILE: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
         Note, a profile is created only for the casapy process. If you want to include profiles for async / child processes, refer to the documentation for opreport."""
         casalog.showconsole(onconsole=True)
         
@@ -168,16 +169,22 @@ class runTest:
                           short_description
                     short_description = short_description.replace("'", "")
 
-                prof = cProfile.Profile()
+                if PY_PROFILE:
+                    prof = cProfile.Profile()
+                else:
+                    prof = False
                 
                 try:
-                    self.op_init(profile)
+                    self.op_init(CPP_PROFILE)
                     time1=time.time()
                     mem1 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
-                    #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
-                    (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry)
+                    if prof:
+                        #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
+                        #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
+                        #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
+                        (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry)
+                    else:
+                        (leResult, leImages) = self.tester.runtests(testName, k, dry)
 
                     # returns absolute_paths, relative_paths
                     exec_success = True
@@ -192,13 +199,14 @@ class runTest:
                 time2=(time2-time1)/60.0
 
                 print "Net memory allocated:", (int(mem2) - int(mem1))/1024, "MB"
-                
-                try:
-                    prof.dump_stats(self.resultsubdir+'/cProfile.profile')
-                except:
-                    print >> sys.stderr, "Failed to write profiling data!"
+
+                if prof:
+                    try:
+                        prof.dump_stats(self.resultsubdir+'/cProfile.profile')
+                    except:
+                        print >> sys.stderr, "Failed to write profiling data!"
                
-                self.op_done(profile)
+                self.op_done(CPP_PROFILE)
 
                 # Dump contents of any *.log file produced
                 # by the regression script
@@ -242,7 +250,7 @@ class runTest:
                         self.tester.cleanup()
                         
                 # Copy C++ profiling info
-                if profile:
+                if CPP_PROFILE:
                     os.system('cp cpp_profile.* ' + self.resultsubdir)
 
                 os.chdir(presentDir)
