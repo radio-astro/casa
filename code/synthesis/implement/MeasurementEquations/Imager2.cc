@@ -3828,9 +3828,11 @@ void Imager::makeVisSet(MeasurementSet& ms,
   Matrix<Int> noselection;
   Double timeInterval=0;
   //if you want to use scratch col...make sure they are there
-  if(useModelCol_p)
+  if(useModelCol_p){
     VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
-  
+    //delete keyword models to make sure data column is read
+    VisModelData::clearModel(ms);
+  }
   if(imwgt_p.getType()=="none"){
       imwgt_p=VisImagingWeight("natural");
   }

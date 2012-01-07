@@ -96,7 +96,10 @@ class VisModelData {
 
   //this is a helper function that writes the model record to the ms 
   static void putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfields, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist=True, Bool incremental=False);
-  
+
+  //helper function to clear the keywordSet of the ms of the model  for the fields 
+  //in that ms
+  static void clearModel(const MeasurementSet& thems);
 
   //check if an addFT or addCompFT is necessary
   //Bool hasFT(Int msid, Int fieldid);

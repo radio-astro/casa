@@ -52,6 +52,32 @@ VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0){
 
   }
 
+void VisModelData::clearModel(const MeasurementSet& thems){
+ 
+  Table newTab(thems);
+  if(!newTab.isWritable())
+    return;
+  ROMSColumns msc(thems);
+  Vector<Int> fields=msc.fieldId().getColumn();
+  const Sort::Order order=Sort::Ascending;
+  const Int option=Sort::HeapSort | Sort::NoDuplicates;
+  Int nfields=GenSort<Int>::sort (fields, order, option);
+  for (Int k=0; k< nfields; ++k){
+    if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+
+      {
+	String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
+	if(newTab.rwKeywordSet().isDefined(elkey))
+	  newTab.rwKeywordSet().removeField(elkey);
+	newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+      }
+  }
+  
+
+
+
+}
+
 void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfieldids, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist, Bool incremental){
 
     //A field can have multiple FTmachines and ComponentList associated with it 
