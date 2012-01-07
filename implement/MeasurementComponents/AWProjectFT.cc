@@ -38,8 +38,8 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/ImageInterface.h>
 
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
@@ -2055,9 +2055,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vi.origin();
     
     if(vb.polFrame()==MSIter::Linear) 
-      StokesImageUtil::changeCStokesRep(theImage, SkyModel::LINEAR);
+      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
     else 
-      StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
+      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
     
     initializeToSky(theImage,weight,vb);
 

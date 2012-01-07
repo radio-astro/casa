@@ -36,8 +36,8 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <synthesis/MeasurementComponents/GridFT.h>
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <msvis/SynthesisUtils/GridFT.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
