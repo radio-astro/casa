@@ -46,24 +46,18 @@ casa_add_library( synthesis
  implement/MeasurementComponents/CalCorruptor.cc
  implement/MeasurementComponents/Calibrater.cc
  implement/MeasurementComponents/CEMemImageSkyModel.cc
- implement/MeasurementComponents/CFCache.cc
- implement/MeasurementComponents/CFStore.cc
  implement/MeasurementComponents/ClarkCleanAlgorithm.cc
  implement/MeasurementComponents/ClarkCleanImageSkyModel.cc
  implement/MeasurementComponents/CleanImageSkyModel.cc
- implement/MeasurementComponents/ComponentFTMachine.cc
  implement/MeasurementComponents/ConvFuncDiskCache.cc
- implement/MeasurementComponents/ConvolutionFunction.cc
  implement/MeasurementComponents/CSCleanImageSkyModel.cc
  implement/MeasurementComponents/DBeamSkyJones.cc
  implement/MeasurementComponents/EVLAConvFunc.cc
  implement/MeasurementComponents/EVLAAperture.cc
  implement/MeasurementComponents/EJones.cc
  implement/MeasurementComponents/EPJones.cc
- implement/MeasurementComponents/FTMachine.cc
  implement/MeasurementComponents/GlobalFTMachineCallbacks.cc
  implement/MeasurementComponents/GridBoth.cc
- implement/MeasurementComponents/GridFT.cc
  implement/MeasurementComponents/rGridFT.cc
  implement/MeasurementComponents/GSpline.cc
  implement/MeasurementComponents/HetArrayConvFunc.cc
@@ -107,17 +101,12 @@ casa_add_library( synthesis
  implement/MeasurementComponents/SDGrid.cc
  implement/MeasurementComponents/SimACohCalc.cc
  implement/MeasurementComponents/SimACoh.cc
- implement/MeasurementComponents/SimpCompGridMachine.cc
- implement/MeasurementComponents/SimpComponentGridMachine.cc
- implement/MeasurementComponents/SimpleComponentFTMachine.cc
  implement/MeasurementComponents/SimplePBConvFunc.cc
  implement/MeasurementComponents/SkyJones.cc
  implement/MeasurementComponents/SolvableVisCal.cc
  implement/MeasurementComponents/StandardVisCal.cc
  implement/MeasurementComponents/SteepestDescentSolver.cc
- implement/MeasurementComponents/SynthesisError.cc
  implement/MeasurementComponents/TsysGainCal.cc
- implement/MeasurementComponents/Utils.cc
  implement/MeasurementComponents/UVMod.cc
  implement/MeasurementComponents/VisCal.cc
  implement/MeasurementComponents/VisCalGlobals.cc
@@ -130,10 +119,8 @@ casa_add_library( synthesis
  implement/MeasurementComponents/VPSkyJones.cc
  implement/MeasurementComponents/WBCleanImageSkyModel.cc
  implement/MeasurementComponents/WFCleanImageSkyModel.cc
- implement/MeasurementComponents/WPConvFunc.cc
  implement/MeasurementComponents/WOnlyConvFunc.cc
  implement/MeasurementComponents/WTerm.cc
- implement/MeasurementComponents/WProjectFT.cc
  implement/MeasurementEquations/CCList.cc
  implement/MeasurementEquations/CEMemModel.cc
  implement/MeasurementEquations/CEMemProgress.cc
@@ -157,7 +144,6 @@ casa_add_library( synthesis
  implement/MeasurementEquations/MultiTermMatrixCleaner.cc
  implement/MeasurementEquations/Simulator.cc
  implement/MeasurementEquations/SkyEquation.cc
- implement/MeasurementEquations/StokesImageUtil.cc
  implement/MeasurementEquations/StokesUtil2.cc
  implement/MeasurementEquations/VisEquation.cc
  implement/MeasurementEquations/VPManager.cc
@@ -168,12 +154,10 @@ casa_add_library( synthesis
  implement/Parallel/SerialTransport.cc
  implement/Utilities/FixVis.cc
  implement/Utilities/ThreadCoordinator.cc
- implement/fortran/fgridft.f
- implement/fortran/fmosaic.f
- implement/fortran/fpbmos.f
- implement/fortran/fpbwproj.f
+ implement/fortran/fpbmos.f	
+ implement/fortran/fpbwproj.f	
  implement/fortran/leakantso.f
- implement/fortran/wprojgrid.f  )
+  )
 casa_add_assay( synthesis implement/DataSampling/test/tPixonProcessor.cc )
 casa_add_assay( synthesis implement/IDL/test/tIDL.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tALMAAperture.cc )
