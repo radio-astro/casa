@@ -34,7 +34,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 

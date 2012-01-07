@@ -44,7 +44,7 @@
 #include <synthesis/MeasurementEquations/VPManager.h>
 #include <synthesis/MeasurementComponents/PBMathInterface.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/ALMACalcIlluminationConvFunc.h>
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>

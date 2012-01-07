@@ -145,7 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else{
       MeasurementSet thisms;
-      if(useModelCol_p)
+      if(Table::isWritable(msname))
 	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Update);
       else
@@ -552,7 +552,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       wvi_p=0;
 
       //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
-      if(!useModelCol_p){
+      if(!(mssel_p->isWritable())){
 	rvi_p=new ROVisibilityIterator(blockMSSel_p, sort);
 	
       }
