@@ -27,13 +27,13 @@
 //# $Id$
 //
 #include <synthesis/MeasurementComponents/WOnlyConvFunc.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/WTerm.h>
 #include <synthesis/MeasurementComponents/PSTerm.h>
 #include <images/Images/ImageInterface.h>
-#include <synthesis/MeasurementComponents/Utils.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
+#include <msvis/SynthesisUtils/Utils.h>
+#include <msvis/SynthesisUtils/CFStore.h>
+#include <msvis/SynthesisUtils/ConvolutionFunction.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
