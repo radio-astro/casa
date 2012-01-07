@@ -34,6 +34,7 @@
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayUtil.h>
+#include <components/ComponentModels/ComponentList.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -441,6 +442,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     weightMatOK_p = status;
     weightOK_p = status;
     weightSpectrumOK_p = status;
+    
 }
 
 Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol)
@@ -2288,9 +2290,25 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 {
   switch (whichOne) {
   case VisibilityIterator::Model:
-    CheckVisIter1 (" (Model)");
-    modelVisCubeOK_p = True;
-    return visIter_p->visibility(modelVisCube_p, whichOne);
+    {
+      CheckVisIter1 (" (Model)");
+      modelVisCubeOK_p = True;
+      String modelkey=String("definedmodel_field_")+String::toString(fieldId());
+      if(visIter_p->ms().keywordSet().isDefined(modelkey)){
+	
+	if(!visModelData_p.hasModel(msId(), fieldId(), spectralWindow())){
+	  String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
+	  Record modrec(visIter_p->ms().keywordSet().asRecord(whichrec));
+	  visModelData_p.addModel(modrec, Vector<Int>(1, msId()));
+	}
+	
+	visModelData_p.getModelVis(*this);
+      }
+      else{
+	visIter_p->visibility(modelVisCube_p, whichOne);
+      }
+    }
+    return modelVisCube_p;
     break;
   case VisibilityIterator::Corrected:
     CheckVisIter1 (" (Corrected)");

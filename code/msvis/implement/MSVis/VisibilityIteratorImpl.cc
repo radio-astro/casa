@@ -1,5 +1,5 @@
 //# VisibilityIterator.cc: Step through MeasurementEquation by visibility
-//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 1996-2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/UtilJ.h>
+#include <msvis/SynthesisUtils/VisModelData.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
@@ -3248,6 +3249,24 @@ VisibilityIteratorWriteImpl::putCol (ArrayColumn<Complex> &column,
      VisibilityIteratorReadImpl * readImpl = getReadImpl();
 
    column.putColumnCells (readImpl->selRows_p, slicer, array);
+}
+
+
+
+void VisibilityIteratorWriteImpl::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental){
+  Vector<Int> fields=getReadImpl()->msColumns().fieldId().getColumn();
+  const Int option=Sort::HeapSort | Sort::NoDuplicates;
+  const Sort::Order order=Sort::Ascending;
+  Int nfields=GenSort<Int>::sort (fields, order, option);
+  //make sure  we have the right size
+  fields.resize(nfields, True);
+  Int msid=getReadImpl()->msId();
+  Vector<Int> spws= getReadImpl()->msChannels_p.spw_p[msid];
+  Vector<Int> starts=getReadImpl()->msChannels_p.start_p[msid];
+  Vector<Int> nchan=getReadImpl()->msChannels_p.width_p[msid];
+  Vector<Int> incr=getReadImpl()->msChannels_p.inc_p[msid];
+  VisModelData::putModel(getReadImpl()->ms(), rec, fields, spws, starts, nchan, incr, iscomponentlist, incremental);
+    
 }
 
 

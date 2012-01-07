@@ -994,6 +994,16 @@ public:
   void setSigma(const Vector<Float>& sig);
   // Set/modify the ncorr x nrow SigmaMat.
   void setSigmaMat(const Matrix<Float>& sigmat);
+  
+  //This puts a model into the descriptor of the current ms in the iterator
+  //Set iscomponentlist to True if the record represent a componentlist
+  //if False then it is a FTMachine Record that holds the model image 
+  //note the spw and fields selected are going to be associated with this model
+  //incremetal =True implies add the model to previous any existant model 
+  //in the ms for the spw and fields 
+  //false means any existant model will be replaces.
+  void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
+
 
   void writeBack (VisBuffer *);
 

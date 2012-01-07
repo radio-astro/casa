@@ -1243,6 +1243,14 @@ protected:
     // non-virtual, no reason to template this function because Bool is the only type needed
     void putColScalar (ScalarColumn<Bool> & column, const Vector<Bool> & array);
 
+    //This puts a model into the descriptor of the actual ms
+    //Set iscomponentlist to True if the record represent a componentlist
+    //if False then it is a FTMachine Record that holds the model image
+    // a [-1] vector in validfields mean the model applies to all fields of the active ms 
+    void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
+
+
+
 
 
 private:

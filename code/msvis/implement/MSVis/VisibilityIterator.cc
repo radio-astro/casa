@@ -1769,8 +1769,15 @@ VisibilityIterator::setWeightSpectrum (const Cube<Float>& wtsp)
     writeImpl_p->setWeightSpectrum (wtsp);
 }
 
-void
-VisibilityIterator::writeBack (VisBuffer * vb)
+void VisibilityIterator::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental){
+  CheckImplementationPointerW ();
+  writeImpl_p->putModel(rec, iscomponentlist, incremental);
+  
+}
+
+
+
+void VisibilityIterator::writeBack (VisBuffer * vb)
 {
     CheckImplementationPointerW ();
     writeImpl_p->writeBack (vb);
