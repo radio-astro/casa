@@ -708,8 +708,8 @@ imager::open(const std::string& thems, const bool compress, const bool useScratc
 	delete itsImager;
 	itsImager=new Imager();
       }
-      if(useScratch){
-	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoLocking), Table::Update);
+      if(Table::isWritable(thems)){
+	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoNoReadLocking), Table::Update);
 	itsMS->setMemoryResidentSubtables(MrsEligibility::defaultEligible());
 
       }
