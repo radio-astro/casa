@@ -32,7 +32,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -41,11 +41,11 @@
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
 
-#include <synthesis/MeasurementComponents/ComponentFTMachine.h>
+#include <msvis/SynthesisUtils/ComponentFTMachine.h>
 #include <synthesis/MeasurementComponents/SkyModel.h>
 
 #include <msvis/MSVis/VisSet.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/VisBufferUtil.h>
 
@@ -142,7 +142,7 @@ SkyEquation::SkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
 
   //visiter is read only
   rvi_p=&vi;
-  if(!noModelCol)
+  if(rvi_p->ms().isWritable())
     wvi_p=static_cast<VisibilityIterator *>(&vi);
   else
     wvi_p=NULL;
@@ -211,8 +211,10 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
   
    // Do the component model only if this is not an incremental update;
   if(sm_->hasComponentList() &&  !incremental ) {
-    if(noModelCol_p)
-        throw(AipsError("Cannot deal with componentlists without using scratch columns yet"));
+    //if(noModelCol_p)
+    //    throw(AipsError("Cannot deal with componentlists without using scratch columns yet"));
+    if(wvi_p==NULL)
+      throw(AipsError("Cannot save model in non-writable ms"));
     VisIter& vi=*wvi_p;
     checkVisIterNumRows(vi);
     VisBufferAutoPtr vb(vi);
@@ -230,30 +232,46 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 //    ProgressMeter pm(1.0, Double(vi.numberCoh()),
 //		     "Predicting component coherences",
 //		     "", "", "", True);
+    Int oldmsid=-1;
 
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-        if(!incremental&&!initialized) {
+	if(!noModelCol_p){
+	  if(!incremental&&!initialized) {
 	    vb->setModelVisCube(Complex(0.0,0.0));
-	  //	  vi.setVis(vb->modelVisCube(),VisibilityIterator::Model);
+	    //	  vi.setVis(vb->modelVisCube(),VisibilityIterator::Model);
+	  }
+	
+
+	  // get always fills Model
+	  get(* vb, sm_->componentList() );
+	  
+	  // and write it to the model MS
+	  switch(Type) {
+	  case MS::MODEL_DATA:	  
+	    vi.setVis(vb->modelVisCube(),VisibilityIterator::Model);
+	    break;
+	  case MS::DATA:	  
+	    vi.setVis(vb->modelVisCube(),VisibilityIterator::Observed);
+	    break;
+	  case MS::CORRECTED_DATA:	  
+	    vi.setVis(vb->modelVisCube(),VisibilityIterator::Corrected);
+	    break;
+	  default:
+	    throw (AipsError("Programmer made a wrong call"));
+	  }
 	}
+	else{
+	  if(vb->msId() != oldmsid){
+	    oldmsid=vb->msId();
+	    String err;
+	    Record clrec;
+	    //cerr << "in componentlist saving" << endl;
+	    if(!sm_->componentList().toRecord(err, clrec))
+	      throw(AipsError("Error saving componentlist: "+err));
+	    vi.putModel(clrec, True, incremental);
+	  }
 
-	// get always fills Model
-	get(* vb, sm_->componentList() );
-
-	// and write it to the model MS
-	switch(Type) {
-	case MS::MODEL_DATA:	  
-	  vi.setVis(vb->modelVisCube(),VisibilityIterator::Model);
-	  break;
-	case MS::DATA:	  
-	  vi.setVis(vb->modelVisCube(),VisibilityIterator::Observed);
-	  break;
-	case MS::CORRECTED_DATA:	  
-	  vi.setVis(vb->modelVisCube(),VisibilityIterator::Corrected);
-	  break;
-	default:
-	  throw (AipsError("Programmer made a wrong call"));
 	}
 //  See above commented-out code
 //	cohDone+=vb->nRow();
@@ -324,11 +342,11 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
       // Change the model polarization frame
       if(vb->polFrame()==MSIter::Linear) {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::LINEAR);
+					  StokesImageUtil::LINEAR);
       }
       else {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::CIRCULAR);
+					  StokesImageUtil::CIRCULAR);
       }
       
       scaleImage(model, incremental);
@@ -480,11 +498,11 @@ void SkyEquation::fullGradientsChiSquared(Bool incremental) {
       // Change the model polarization frame
       if(vb.polFrame()==MSIter::Linear) {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::LINEAR);
+					  StokesImageUtil::LINEAR);
       }
       else {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::CIRCULAR);
+					  StokesImageUtil::CIRCULAR);
       }
 
       initializePut(vb, model);
@@ -551,11 +569,11 @@ void SkyEquation::incrementGradientsChiSquared() {
       // Change the model polarization frame
       if(vb.polFrame()==MSIter::Linear) {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::LINEAR);
+					  StokesImageUtil::LINEAR);
       }
       else {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::CIRCULAR);
+					  StokesImageUtil::CIRCULAR);
       }
 
       Int numXFR=0;
@@ -598,11 +616,11 @@ void SkyEquation::makeComplexXFRs()
       // Change the model polarization frame
       if(vb.polFrame()==MSIter::Linear) {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::LINEAR);
+					  StokesImageUtil::LINEAR);
       }
       else {
 	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::CIRCULAR);
+					  StokesImageUtil::CIRCULAR);
       }
 
       // Initialize put (i.e. transform to Sky) for this model
@@ -676,11 +694,11 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
     // Change the model polarization frame
     if(vb.polFrame()==MSIter::Linear) {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::LINEAR);
+					StokesImageUtil::LINEAR);
     }
     else {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::CIRCULAR);
+					StokesImageUtil::CIRCULAR);
     }
     
     IPosition start(4, sm_->image(model).shape()(0)/2,
@@ -694,7 +712,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
     line=1.0;
     sm_->image(model).putSlice(line, start);
     //initializeGet(vb, -1, model, False);
-    StokesImageUtil::From(sm_->cImage(model), sm_->image(model));
+    StokesImageUtil::From(sm_->cImage(model), static_cast <const ImageInterface<Float>& >(sm_->image(model)));
     ft_->initializeToVis(sm_->cImage(model),vb);
     // Loop over all visibilities
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -730,11 +748,11 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   // Change the model polarization frame
   if(vb.polFrame()==MSIter::Linear) {
     StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-				      SkyModel::LINEAR);
+				      StokesImageUtil::LINEAR);
   }
   else {
     StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-				      SkyModel::CIRCULAR);
+				      StokesImageUtil::CIRCULAR);
   }
 
 

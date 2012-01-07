@@ -44,22 +44,22 @@
 #include <synthesis/MeasurementComponents/SkyModel.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
-#include <synthesis/MeasurementComponents/rGridFT.h>
+#include <msvis/SynthesisUtils/GridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <synthesis/MeasurementComponents/WPConvFunc.h>
+#include <msvis/SynthesisUtils/WPConvFunc.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
-#include <synthesis/MeasurementComponents/ComponentFTMachine.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/ComponentFTMachine.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
@@ -302,9 +302,11 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
   AlwaysAssert(sm_, AipsError);
   //AlwaysAssert(vs_, AipsError);
   if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
-  if(noModelCol_p)
-    throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
+  // if(noModelCol_p)
+  //  throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
   // Initialize 
+  if(wvi_p==NULL)
+    throw(AipsError("Cannot save model in non-writable ms"));
   VisIter& vi=*wvi_p;
   //Lets get the channel selection for later use
   vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
@@ -330,8 +332,10 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     // We are at the begining with an empty model as starting point
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	vb->setModelVisCube(Complex(0.0,0.0));
-	vi.setVis(vb->modelVisCube(),visCol);
+	if(!noModelCol_p){
+	  vb->setModelVisCube(Complex(0.0,0.0));
+	  vi.setVis(vb->modelVisCube(),visCol);
+	}
       }
     }
   }
@@ -339,7 +343,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     //If all model is zero...no need to continue
   if(isEmpty) 
     return;
-  
+  //TODO if nomodel set flat to 0.0
   
   
   // Now do the images
@@ -347,11 +351,11 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     // Change the model polarization frame
     if(vb->polFrame()==MSIter::Linear) {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::LINEAR);
+					StokesImageUtil::LINEAR);
     }
     else {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::CIRCULAR);
+					StokesImageUtil::CIRCULAR);
     }
     ft_=&(*ftm_p[model]);
     scaleImage(model, incremental);
@@ -366,16 +370,34 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 			    cubeSlice, nCubeSlice) || changedVI;
     vi.originChunks();
     vi.origin();
-    //vb.invalidate();
     initializeGetSlice(* vb, 0,incremental, cubeSlice, nCubeSlice);
+    ///vb->newMS does not seem to be set to true with originchunks
+    //so have to monitor msid
+    Int oldmsid=-1;
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	if(!incremental&&!initialized) {
-	  vb->setModelVisCube(Complex(0.0,0.0));
+	if(noModelCol_p){
+	  //cerr << "noModelCol_p " << noModelCol_p << " newms " << vb->newMS() << " nummod " << (sm_->numberOfModels()) << endl;
+	  if(vb->msId() != oldmsid){
+	    oldmsid=vb->msId();
+	    for (Int model=0; model < (sm_->numberOfModels());++model){
+	      Record ftrec;
+	      String error;
+	      //cerr << "in ftrec saving" << endl;
+	      if(!(ftm_p[model]->toRecord(error, ftrec, True)))
+		throw(AipsError("Error in record saving:  "+error));
+	      vi.putModel(ftrec, False, (model>0 || incremental));
+	    }
+	  }
 	}
-	// get the model visibility and write it to the model MS
-	getSlice(* vb,incremental, cubeSlice, nCubeSlice);
-	vi.setVis(vb->modelVisCube(),visCol);
+	else{
+	  if(!incremental&&!initialized) {
+	    vb->setModelVisCube(Complex(0.0,0.0));
+	  }
+	  // get the model visibility and write it to the model MS
+	  getSlice(* vb,incremental, cubeSlice, nCubeSlice);
+	  vi.setVis(vb->modelVisCube(),visCol);
+	}
       }
     }
     finalizeGetSlice();
@@ -495,11 +517,11 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     for (Int model=0; model < nmodels; ++model){
         if(vb->polFrame()==MSIter::Linear) {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::LINEAR);
+                                              StokesImageUtil::LINEAR);
         }
         else {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::CIRCULAR);
+                                              StokesImageUtil::CIRCULAR);
         }
     }
 
@@ -715,11 +737,11 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // Change the model polarization frame
         if(vb->polFrame()==MSIter::Linear) {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::LINEAR);
+                                              StokesImageUtil::LINEAR);
         }
         else {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::CIRCULAR);
+                                              StokesImageUtil::CIRCULAR);
         }
         //scaleImage(model, incremental);
         ft_=&(*ftm_p[model]);

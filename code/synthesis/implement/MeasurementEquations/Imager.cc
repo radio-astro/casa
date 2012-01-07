@@ -113,14 +113,13 @@
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
-#include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
-#include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
+#include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
@@ -128,7 +127,6 @@
 #include <synthesis/DataSampling/ImageDataSampling.h>
 #include <synthesis/DataSampling/PixonProcessor.h>
 
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
 #include <lattices/Lattices/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
@@ -4632,8 +4630,8 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   
   LogIO os(LogOrigin("imager", "ft()", WHERE));
 
-  if (useModelCol_p == False)
-    os << LogIO::WARN << "Please start the imager tool with \"usescratch=true\" when using Imager::ft" << LogIO::EXCEPTION;
+  if (wvi_p==NULL)
+    os << LogIO::WARN << "Please make sure MS is writable when using Imager::ft" << LogIO::EXCEPTION;
   
   this->lock();
   try {

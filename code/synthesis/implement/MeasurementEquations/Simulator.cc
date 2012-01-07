@@ -79,16 +79,16 @@
 #include <synthesis/MeasurementComponents/SimACoh.h>
 //#include <synthesis/MeasurementComponents/SimVisJones.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeExpr.h> 
 
 #include <synthesis/MeasurementEquations/Simulator.h>
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
-#include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
+#include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
 #include <casa/OS/HostInfo.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/Cube.h>
