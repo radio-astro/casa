@@ -43,7 +43,7 @@
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
@@ -80,8 +80,8 @@
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
-#include <synthesis/MeasurementComponents/Utils.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/Utils.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/MathFunc.h>
@@ -3879,9 +3879,9 @@ Bool nPBWProjectFT::fromRecord(String&, //error,
     vi.origin();
     
     if(vb.polFrame()==MSIter::Linear) 
-      StokesImageUtil::changeCStokesRep(theImage, SkyModel::LINEAR);
+      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
     else 
-      StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
+      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
     
     initializeToSky(theImage,weight,vb);
 

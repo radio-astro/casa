@@ -36,7 +36,7 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <msvis/SynthesisUtils/CFStore.h>
 
 namespace casa{
   // <summary>  A class to apply the W-Term to the given image </summary>

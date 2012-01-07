@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_PBMOSAICFT_H
 #define SYNTHESIS_PBMOSAICFT_H
 
-// #include <synthesis/MeasurementComponents/FTMachine.h>
+// #include <msvis/SynthesisUtils/FTMachine.h>
 // #include <casa/Arrays/Matrix.h>
 // #include <scimath/Mathematics/FFTServer.h>
 // #include <msvis/MSVis/VisBuffer.h>

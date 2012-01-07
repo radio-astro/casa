@@ -62,7 +62,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/SynthesisUtils/Utils.h>
 
 #include <synthesis/MeasurementComponents/PBMath1DAiry.h>
 #include <synthesis/MeasurementComponents/PBMath1DNumeric.h>

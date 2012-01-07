@@ -29,8 +29,8 @@
 #ifndef SYNTHESIS_AWCONVFUNC_H
 #define SYNTHESIS_AWCONVFUNC_H
 
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <msvis/SynthesisUtils/ConvolutionFunction.h>
+#include <msvis/SynthesisUtils/CFStore.h>
 #include <synthesis/MeasurementComponents/ATerm.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>

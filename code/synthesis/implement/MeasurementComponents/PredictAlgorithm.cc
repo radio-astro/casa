@@ -42,7 +42,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <casa/System/ProgressMeter.h>
 #include <synthesis/Parallel/Applicator.h>
 #include <unistd.h>
@@ -127,11 +127,11 @@ void PredictAlgorithm::task(){
   // Change the model polarization frame
   if(vb.polFrame()==MSIter::Linear) {
     StokesImageUtil::changeCStokesRep(*cImage_p,
-				      SkyModel::LINEAR);
+				      StokesImageUtil::LINEAR);
   }
   else {
     StokesImageUtil::changeCStokesRep(*cImage_p,
-				      SkyModel::CIRCULAR);
+				      StokesImageUtil::CIRCULAR);
   }
       
 

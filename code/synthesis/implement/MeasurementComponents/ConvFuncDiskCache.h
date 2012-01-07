@@ -40,7 +40,7 @@
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 // Apparently not required here? (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/EPTimeVarVisJones.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/SynthesisUtils/Utils.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   // <summary> 
   //

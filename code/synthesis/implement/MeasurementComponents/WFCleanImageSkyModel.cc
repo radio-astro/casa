@@ -41,7 +41,7 @@
 #include <casa/Utilities/Assert.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <casa/sstream.h>
 
 #include <casa/Logging/LogMessage.h>
