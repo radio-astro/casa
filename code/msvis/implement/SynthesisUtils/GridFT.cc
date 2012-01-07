@@ -760,7 +760,7 @@ void GridFT::get(VisBuffer& vb, Int row)
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
-  cerr << "chanMap " << chanMap << endl;
+  //cerr << "chanMap " << chanMap << endl;
   //No point in reading data if its not matching in frequency
   if(max(chanMap)==-1)
     return;
@@ -769,7 +769,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   Cube<Int> flags;
   getInterpolateArrays(vb, data, flags);
 
-  cerr << "get flags " << min(flags) << "  " << max(flags) << endl;
+  //cerr << "get flags " << min(flags) << "  " << max(flags) << endl;
   Complex *datStorage;
   Bool isCopy;
   datStorage=data.getStorage(isCopy);
@@ -816,7 +816,7 @@ void GridFT::get(VisBuffer& vb, Int row)
 	    polMap.getStorage(del));
     
     data.putStorage(datStorage, isCopy);
-    cerr << "Get min max " << min(data) << "   " << max(data) << endl;
+    //cerr << "Get min max " << min(data) << "   " << max(data) << endl;
   }
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 

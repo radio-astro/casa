@@ -27,7 +27,7 @@
 //# $Id$
 #ifndef SYNTHESIS_CFSTORE_H
 #define SYNTHESIS_CFSTORE_H
-#include <msvis/MSVis/CFDefs.h>
+#include <msvis/SynthesisUtils/CFDefs.h>
 #include <msvis/SynthesisUtils/SynthesisError.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Logging/LogIO.h>

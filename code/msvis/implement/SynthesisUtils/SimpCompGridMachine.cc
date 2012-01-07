@@ -25,7 +25,7 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/SimpCompGridMachine.h>
+#include <msvis/SynthesisUtils/SimpCompGridMachine.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>

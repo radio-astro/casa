@@ -29,7 +29,6 @@
 #ifndef SYNTHESIS_COMPONENTFTMACHINE_H
 #define SYNTHESIS_COMPONENTFTMACHINE_H
 
-#include <msvis/MSVis/VisBuffer.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
@@ -41,6 +40,8 @@
 #include <casa/Logging/LogMessage.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+
 
 // <summary> 
 // ComponentFTMachine: a abstract base class defining the interface
@@ -95,7 +96,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 class ComponentList;
-
+class VisBuffer;
 
 
 class ComponentFTMachine {

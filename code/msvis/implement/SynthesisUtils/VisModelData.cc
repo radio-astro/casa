@@ -29,7 +29,6 @@
 
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Vector.h>
 #include <components/ComponentModels/ComponentList.h>
 
@@ -38,14 +37,74 @@
 #include <msvis/SynthesisUtils/FTMachine.h>
 #include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
 #include <msvis/SynthesisUtils/GridFT.h>
+#include <msvis/SynthesisUtils/WProjectFT.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0), cft_p(NULL){
+
+VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0){
+  
+  cft_p=new SimpleComponentFTMachine();
+  }
+
+  VisModelData::~VisModelData(){
 
 
   }
-  VisModelData::VisModelData(const Record& ftmachine, const Vector<Int>& validfieldids, const Vector<Int>& msIds): clholder_p(0), flatholder_p(0), cft_p(NULL){
+
+void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfieldids, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist, Bool incremental){
+
+    //A field can have multiple FTmachines and ComponentList associated with it 
+    //For example having many flanking images for the model
+    //For componentlist it may have multiple componentlist ...for different spw
+
+
+    Int counter=0;
+    Record modrec;
+    modrec.define("fields", validfieldids);
+    modrec.define("spws", spws);
+    modrec.define("start", starts);
+    modrec.define("nchan", nchan);
+    modrec.define("incr", incr);
+    modrec.defineRecord("container", rec);
+    String elkey="model";
+    for (uInt k=0; k < validfieldids.nelements();  ++k){
+      elkey=elkey+"_"+String::toString(validfieldids[k]);
+    }
+    Table newTab(thems);
+    Record outRec;
+    if(incremental){
+      if(newTab.rwKeywordSet().isDefined(elkey))
+	outRec=newTab.rwKeywordSet().asRecord(elkey); 
+    }
+    if(iscomponentlist){
+      modrec.define("type", "componentlist");
+      if(outRec.isDefined("numcl"))
+	counter=incremental ? outRec.asInt("numcl") : 0;
+            
+    }
+    else{
+      modrec.define("type", "ftmachine");
+      if(outRec.isDefined("numft"))
+	counter=incremental ? outRec.asInt("numft") : 0;
+    }
+    iscomponentlist ? outRec.define("numcl", counter+1) : outRec.define("numft", counter+1); 
+  
+    for (uInt k=0; k < validfieldids.nelements();  ++k){
+      newTab.rwKeywordSet().define("definedmodel_field_"+String::toString(validfieldids[k]), elkey);
+      
+    }
+    iscomponentlist ? outRec.defineRecord("cl_"+String::toString(counter), modrec):
+      outRec.defineRecord("ft_"+String::toString(counter), modrec);
+    if(newTab.rwKeywordSet().isDefined(elkey))
+	newTab.rwKeywordSet().removeField(elkey);
+    newTab.rwKeywordSet().defineRecord(elkey, outRec); 
+  }
+
+
+
+
+  /*  VisModelData::VisModelData(const Record& ftmachine, const Vector<Int>& validfieldids, const Vector<Int>& msIds): clholder_p(0), flatholder_p(0), cft_p(NULL){
 
     addFTMachine(ftmachine, validfieldids, msIds); 
 
@@ -75,6 +134,116 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  */
+
+  void VisModelData::addModel(const Record& rec,  const Vector<Int>& msids){
+    Vector<Int>fields;
+    Vector<Int> spws;
+
+   
+
+    Int indexft=-1;
+    if(rec.isDefined("numft")){
+      Int numft=rec.asInt("numft");
+      if(numft >0){
+	indexft=ftholder_p.nelements();
+	ftholder_p.resize(indexft+1, False, True);
+	ftholder_p[indexft].resize(numft);
+	for(Int ftk=0; ftk < numft; ++ftk){
+	  Record ftrec(rec.asRecord("ft_"+String::toString(ftk)));
+	  ftrec.get("fields", fields);
+	  ftrec.get("spws", spws);
+	  ftholder_p[indexft][ftk]=NEW_FT(ftrec.asRecord("container"));
+	} 
+      }	      
+    }
+    Int indexcl=-1;
+    if(rec.isDefined("numcl")){
+      Int numcl=rec.asInt("numcl");
+      if(numcl >0){
+	indexcl=clholder_p.nelements();
+	clholder_p.resize(indexcl+1, False, True);
+	clholder_p[indexcl].resize(numcl);
+	for(Int clk=0; clk < numcl; ++clk){
+	  Record clrec(rec.asRecord("cl_"+String::toString(clk)));
+	  clrec.get("fields", fields);
+	  clrec.get("spws", spws);
+	  String err;
+	  clholder_p[indexcl][clk]=new ComponentList();
+	  if(!((clholder_p[indexcl][clk])->fromRecord(err, clrec.asRecord("container"))))
+	    throw(AipsError("Component model failed to load for field "+String::toString(fields)));
+	} 
+      }	      
+    }
+
+    //cerr << "fields " << fields << "  spws " << spws << endl;
+
+    //make sure indexes are with size
+    hasModel(max(msids), max(fields), max(spws));
+
+
+    for (uInt msi=0; msi < msids.nelements() ; ++msi){
+      for (uInt fi=0; fi < fields.nelements(); ++fi){
+	for(uInt spi=0; spi < spws.nelements(); ++spi){
+	  ftindex_p(spi, fi, msi)=indexft;	  
+	  clindex_p(spi, fi, msi)=indexcl;
+	}
+      }
+    }
+
+  }
+
+  FTMachine* VisModelData::NEW_FT(const Record& ftrec){
+    String name=ftrec.asString("name");
+    if(name=="GridFT")
+      return new GridFT(ftrec);
+    if(name=="WProjectFT")
+      return new WProjectFT(ftrec);
+    return NULL;
+  }
+
+  Bool VisModelData::hasModel(Int msid, Int field, Int spw){
+
+    IPosition oldcubeShape=ftindex_p.shape();
+    if(oldcubeShape(0) <(spw+1) || oldcubeShape(1) < (field+1) || oldcubeShape(2) < (msid+1)){
+      Cube<Int> newind((spw+1), (field+1), (msid+1));
+      newind.set(-1);
+      newind(IPosition(3, 0,0,0), (oldcubeShape-1))=ftindex_p;
+      ftindex_p.assign(newind);
+      newind.set(-1);
+      newind(IPosition(3, 0,0,0), (oldcubeShape-1))=clindex_p;
+      clindex_p.assign(newind);
+    }
+
+    if( (clindex_p(spw, field, msid) <0)  &&  (ftindex_p(spw, field, msid) <0))
+      return False;
+    return True;
+
+
+  }
+
+  /* Bool VisModelData::hasFT(Int msid, Int fieldid){
+    
+    uInt indx=fieldid*(msid+1);
+    if( (indx >= ftholder_p.nelements()) || ftholder_p[indx].null()){
+      return False;
+    }
+    return True;
+
+
+  }
+  Bool VisModelData::hasCL(Int msid, Int fieldid){
+    
+    uInt indx=fieldid*(msid+1);
+    if( (indx >= clholder_p.nelements()) || clholder_p[indx].null()){
+      return False;
+    }
+    return True;
+
+
+  }
+  */
+  /*
   void VisModelData::addCompFTMachine(const ComponentList& cl, const Vector<Int>& validfieldIds, const Vector<Int>& msIds){
 
     cerr << "Max field ids " << max(validfieldIds)*(max(msIds)+1) << " nelements " << (clholder_p.nelements()-1) << endl;
@@ -99,30 +268,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cerr << "Do the ComponentFT Machine " << endl;
     }
   }
+  */
   void VisModelData::initializeToVis(){
 
 
   }
   Bool VisModelData::getModelVis(VisBuffer& vb){
 
-    CountedPtr<ComponentList> cl=getCL(vb.msId(), vb.fieldId());
-    CountedPtr<FTMachine> ft=getFT(vb.msId(), vb.fieldId());
+    Vector<CountedPtr<ComponentList> >cl=getCL(vb.msId(), vb.fieldId(), vb.spectralWindow());
+    Vector<CountedPtr<FTMachine> > ft=getFT(vb.msId(), vb.fieldId(), vb.spectralWindow());
     //Fill the buffer with 0.0; also prevents reading from disk if MODEL_DATA exists
     vb.setModelVisCube(Complex(0.0,0.0));
     Bool incremental=False;
-    if( !cl.null()){
-      cerr << "In cft" << endl;
-      cft_p->get(vb, *cl, -1); 
+    if( cl.nelements()>0){
+      //cerr << "In cft" << endl;
+      for (uInt k=0; k < cl.nelements(); ++k)
+	cft_p->get(vb, *(cl[k]), -1); 
+      //cerr << "max " << max(vb.modelVisCube()) << endl;
       incremental=True;
     }
-    if(!ft.null()){
-      //if(incremental)
-      //	tmpModel.assign(vb.modelVisCube());
-      //FTMachines  does an incremental ..saves on memcopy
-      ft->get(vb, -1);
-      cerr << "min max after ft " << min(vb.modelVisCube()) << max(vb.modelVisCube()) << endl;
-      //if(incremental)
-      //  vb.modelVisCube()+=tmpModel;
+    if(ft.nelements()>0){
+      Cube<Complex> tmpModel;
+      if(incremental || ft.nelements() >1)
+	tmpModel.assign(vb.modelVisCube());
+      for (uInt k=0; k < ft.nelements(); ++k){
+	ft[k]->get(vb, -1);
+	if(ft.nelements()>1 || incremental){
+	  tmpModel+=vb.modelVisCube();
+	}
+      }
+      //cerr << "min max after ft " << min(vb.modelVisCube()) << max(vb.modelVisCube()) << endl; 
+      if(ft.nelements()>1 || incremental)
+	vb.modelVisCube()=tmpModel;
       incremental=True;      
     }
     if(!incremental){
@@ -144,28 +321,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  CountedPtr<ComponentList> VisModelData::getCL(const Int msId, const Int fieldId){
-    uInt indx=fieldId *(msId+1);
-    cerr << "indx " << indx << " nelements " << clholder_p.nelements()  << endl;
-    if (indx >= clholder_p.nelements()){
-      CountedPtr<ComponentList> nullptr=NULL;
-      return nullptr;
-    }   
-    cerr << "indx " << indx << endl;
+  Vector<CountedPtr<ComponentList> > VisModelData::getCL(const Int msId, const Int fieldId, const Int spwId){
+    if(!hasModel(msId, fieldId, spwId))
+      return Vector<CountedPtr<ComponentList> >(0);
+    Int indx=clindex_p(spwId, fieldId, msId);
+    //cerr << "indx " << indx << endl;
+    if(indx <0)
+      return Vector<CountedPtr<ComponentList> >(0);
     return clholder_p[indx];
 	
 
   }
 
-  CountedPtr<FTMachine> VisModelData::getFT(const Int msId, const Int fieldId){
-    uInt indx=fieldId *(msId+1);
-    if (indx >= ftholder_p.nelements()){
-      CountedPtr<FTMachine> nullptr=NULL;
-      return nullptr;
-    }
-    return ftholder_p[indx];
-    
+  Vector<CountedPtr<FTMachine> >VisModelData::getFT(const Int msId, const Int fieldId, Int spwId){
 
+    if(!hasModel(msId, fieldId, spwId))
+      return Vector<CountedPtr<FTMachine> >(0);
+    Int indx=ftindex_p(spwId, fieldId, msId);
+    //cerr << "indx " << indx << endl;
+    if(indx <0)
+      return Vector<CountedPtr<FTMachine> >(0);
+    return ftholder_p[indx];
   }
 
 

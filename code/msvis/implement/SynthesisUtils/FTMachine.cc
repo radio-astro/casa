@@ -1487,7 +1487,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool spwFlagIsSet=( (spwChanSelFlag_p.shape()(1) > selspw) && 
 			(spwChanSelFlag_p.shape()(0) > msid) && 
 			(spwChanSelFlag_p.shape()(2) >=nchan));
-    cerr << "spwFlagIsSet " << spwFlagIsSet << endl;
+    //cerr << "spwFlagIsSet " << spwFlagIsSet << endl;
     for (uInt i=0;i<nchan;i++) {
       //Flag those channels that  did not get selected...
       //respect the flags from vb  if selected  or 

@@ -43,7 +43,7 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <msvis/SynthesisUtils/CFStore.h>
-#include <msvis/MSVis/CFDefs.h>
+#include <msvis/SynthesisUtils/CFDefs.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace CFDefs;
