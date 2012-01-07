@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_MULTITERMFT_H
 #define SYNTHESIS_MULTITERMFT_H
 
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>

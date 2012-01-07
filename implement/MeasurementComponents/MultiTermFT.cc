@@ -57,8 +57,8 @@
 #include <synthesis/MeasurementComponents/MultiTermFT.h>
 
 // This is the list of FTMachine types supported by MultiTermFT
-#include <synthesis/MeasurementComponents/GridFT.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <msvis/SynthesisUtils/GridFT.h>
+#include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
 

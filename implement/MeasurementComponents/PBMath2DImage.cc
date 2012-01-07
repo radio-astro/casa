@@ -38,7 +38,7 @@
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSummary.h>
 #include <msvis/MSVis/StokesVector.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeExpr.h>
@@ -475,14 +475,14 @@ ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
 
   // Find out if these are circular images
   Vector<Int> polmap(4);
-  SkyModel::PolRep polframe;
+  StokesImageUtil::PolRep polframe;
   Int insm=StokesImageUtil::CStokesPolMap(polmap, polframe, in.coordinates());
   Int outsm=StokesImageUtil::CStokesPolMap(polmap, polframe, out.coordinates());
   if(insm!=outsm) {
     os << "Input and Output images have different polarization frames"
        << LogIO::EXCEPTION;
   }
-  Bool circular=(polframe==SkyModel::CIRCULAR);
+  Bool circular=(polframe==StokesImageUtil::CIRCULAR);
 	      
   // Now get the polarization remapping for the Jones image
   //Int jsm=    // CStokesPolMap sets polmap and polframe.
@@ -566,7 +566,7 @@ ImageInterface<Float>& PBMath2DImage::apply(const ImageInterface<Float>& in,
 
   // Find out if these are circular images
   Vector<Int> polmap(4);
-  SkyModel::PolRep polframe;
+  StokesImageUtil::PolRep polframe;
   Int insm=StokesImageUtil::CStokesPolMap(polmap, polframe, in.coordinates());
   Int outsm=StokesImageUtil::CStokesPolMap(polmap, polframe, out.coordinates());
   if(insm!=outsm) {
@@ -632,7 +632,7 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
 
   // Now get the polarization remapping for the Jones image
   Vector<Int> polmap(4);
-  SkyModel::PolRep polframe;
+  StokesImageUtil::PolRep polframe;
 
   // jsm (= circular or linear) is not used, but CStokesPolMap also sets polframe.
   //Int jsm=
@@ -773,7 +773,7 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
     
     // Now apply the Jones matrix
     Vector<Complex> compFluxIn(4);
-    if(polframe==SkyModel::CIRCULAR) {
+    if(polframe==StokesImageUtil::CIRCULAR) {
       in.flux().convertPol(ComponentType::CIRCULAR);
     }
     else {

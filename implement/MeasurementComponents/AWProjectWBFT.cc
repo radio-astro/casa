@@ -27,7 +27,7 @@
 //# $Id$
 
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <lattices/Lattices/LatticeFFT.h>

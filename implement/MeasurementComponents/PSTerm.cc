@@ -26,7 +26,7 @@
 //#
 //# $Id$
 #include <synthesis/MeasurementComponents/PSTerm.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
