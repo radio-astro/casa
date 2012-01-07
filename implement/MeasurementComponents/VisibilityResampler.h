@@ -29,8 +29,8 @@
 #ifndef SYNTHESIS_VISIBILITYRESAMPLER_H
 #define SYNTHESIS_VISIBILITYRESAMPLER_H
 
-#include <synthesis/MeasurementComponents/CFStore.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/SynthesisUtils/CFStore.h>
+#include <msvis/SynthesisUtils/Utils.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 #include <msvis/MSVis/VisBuffer.h>

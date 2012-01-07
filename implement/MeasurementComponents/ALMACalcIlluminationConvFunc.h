@@ -39,7 +39,7 @@
 #include <casa/Exceptions.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/sstream.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/SynthesisUtils/Utils.h>
 namespace casa{
 
   class ALMACalcIlluminationConvFunc: public IlluminationConvFunc

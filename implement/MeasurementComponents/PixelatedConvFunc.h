@@ -32,7 +32,7 @@
 #include <casa/Arrays/Vector.h>
 //#include <synthesis/MeasurementComponents/Exp.h>
 #include <synthesis/MeasurementComponents/CExp.h>
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
+#include <msvis/SynthesisUtils/ConvolutionFunction.h>
 
 namespace casa{
 

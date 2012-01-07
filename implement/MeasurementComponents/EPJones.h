@@ -38,7 +38,7 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInfo.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <msvis/MSVis/VisSet.h>
 #include <casa/OS/Timer.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
