@@ -31,7 +31,7 @@
 
 #include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <msvis/SynthesisUtils/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
 //#include <msvis/MSVis/UtilJ.h>
