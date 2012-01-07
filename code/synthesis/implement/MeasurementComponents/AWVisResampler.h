@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_AWVISRESAMPLER_H
 #define SYNTHESIS_AWVISRESAMPLER_H
 
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <msvis/SynthesisUtils/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <msvis/MSVis/VisBuffer.h>

@@ -26,9 +26,9 @@
 //#
 //# $Id$
 
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/AWVisResampler.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/SynthesisUtils/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <fstream>

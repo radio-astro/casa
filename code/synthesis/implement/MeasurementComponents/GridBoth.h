@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_GRIDBOTH_H
 #define SYNTHESIS_GRIDBOTH_H
 
-#include <synthesis/MeasurementComponents/GridFT.h>
+#include <msvis/SynthesisUtils/GridFT.h>
 #include <synthesis/MeasurementComponents/SDGrid.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
