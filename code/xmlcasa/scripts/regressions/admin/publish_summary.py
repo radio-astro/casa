@@ -130,35 +130,40 @@ class runTest:
             try:
                 self.tester.getTest(self.tester.testname(k), testName)
 
-                if RESULT_SUBDIR != testName:
-                    profilepage = RESULT_DIR+'/'+time.strftime('%Y_%m_%d/')+testName+'_profile.html'
+                if PY_PROFILE:
+                    if RESULT_SUBDIR != testName:
+                        profilepage = RESULT_DIR+'/'+time.strftime('%Y_%m_%d/')+testName+'_profile.html'
+                    else:
+                        profilepage = RESULT_DIR+'/'+RESULT_SUBDIR+'/'+'profile.html'
+
+                    process_data = "%s/profile.txt"  % self.tester.workingDirectory
+
+                    os.system("echo -n > " + process_data)
+                    pp = SCRIPT_REPOS + '/profileplot.py'  # for release
+                    if not os.path.isfile(pp):
+                        pp = SCRIPT_REPOS + '/../profileplot.py' # for devel
+                        pyt = UTILS_DIR + '/python'  # for release
+                    if not os.path.isfile(pyt):
+                        lib = "lib64" if os.uname()[4] == 'x86_64' else "lib"
+                        pyt = '/usr/' + lib + '/casapy/bin/python'
+                    if not os.path.isfile(pyt):
+                        pyt = '/usr/lib64/casapy/bin/python'    # for devel
+                    if not os.path.isfile(pyt):
+                        pyt = '/usr/lib/casapy/bin/python'    # for devel
+                    if not os.path.isfile(pyt):
+                        pyt = commands.getoutput('which python') # Mac devel
+                    profileplot_pid=os.spawnlp(os.P_NOWAIT,
+                                               pyt,
+                                               pyt,
+                                               pp,
+                                               testName, RESULT_DIR + ("/" + RESULT_SUBDIR if RESULT_SUBDIR == testName else ''),
+                                               profilepage,
+                                               process_data,
+                                               str(os.getpid()))
+                    prof = cProfile.Profile()
                 else:
-                    profilepage = RESULT_DIR+'/'+RESULT_SUBDIR+'/'+'profile.html'
+                    prof = False
 
-                process_data = "%s/profile.txt"  % self.tester.workingDirectory
-
-                os.system("echo -n > " + process_data)
-                pp = SCRIPT_REPOS + '/profileplot.py'  # for release
-                if not os.path.isfile(pp):
-                    pp = SCRIPT_REPOS + '/../profileplot.py' # for devel
-                pyt = UTILS_DIR + '/python'  # for release
-                if not os.path.isfile(pyt):
-                    lib = "lib64" if os.uname()[4] == 'x86_64' else "lib"
-                    pyt = '/usr/' + lib + '/casapy/bin/python'
-                if not os.path.isfile(pyt):
-                    pyt = '/usr/lib64/casapy/bin/python'    # for devel
-                if not os.path.isfile(pyt):
-                    pyt = '/usr/lib/casapy/bin/python'    # for devel
-                if not os.path.isfile(pyt):
-                    pyt = commands.getoutput('which python') # Mac devel
-                profileplot_pid=os.spawnlp(os.P_NOWAIT,
-                                           pyt,
-                                           pyt,
-                                           pp,
-                                           testName, RESULT_DIR + ("/" + RESULT_SUBDIR if RESULT_SUBDIR == testName else ''),
-                                           profilepage,
-                                           process_data,
-                                           str(os.getpid()))
                 presentDir=os.getcwd()
                 os.chdir(self.tester.workingDirectory)
 
@@ -169,11 +174,6 @@ class runTest:
                           short_description
                     short_description = short_description.replace("'", "")
 
-                if PY_PROFILE:
-                    prof = cProfile.Profile()
-                else:
-                    prof = False
-                
                 try:
                     self.op_init(CPP_PROFILE)
                     time1=time.time()
@@ -255,10 +255,11 @@ class runTest:
 
                 os.chdir(presentDir)
 
-                # Terminate profiling process
-                os.kill(profileplot_pid,signal.SIGHUP)
-                status = os.waitpid(profileplot_pid, 0)[1]
-                #print str(profileplot_pid) + ' exit: ' + str(status)
+                if PY_PROFILE:
+                    # Terminate profiling process
+                    os.kill(profileplot_pid,signal.SIGHUP)
+                    status = os.waitpid(profileplot_pid, 0)[1]
+                    #print str(profileplot_pid) + ' exit: ' + str(status)
 
                 pagename=time.strftime('%Y_%m_%d/')+testName+'_profile.html'
 
@@ -296,12 +297,16 @@ class runTest:
                 exec_result['disk'] = space_used, "disk space (KB) in use after test"
                 exec_result['runlog'] = logfilename, "execution logfile"
 
-                # read time/memory data
-                mem = ""
-                try:
-                    process_file = open(process_data, "r")
-                except:
-                    print "Warning: Failed to open file:", process_data
+
+                if PY_PROFILE:
+                    # read time/memory data
+                    mem = ""
+                    try:
+                        process_file = open(process_data, "r")
+                    except:
+                        print "Warning: Failed to open file:", process_data
+                        process_file = None
+                else:
                     process_file = None
 
                 if process_file != None:
@@ -325,7 +330,7 @@ class runTest:
                                 print >> sys.stderr, "Error parsing %s:%d: '%s'" % \
                                       (process_data, lineno, line)
                     process_file.close()
-                exec_result['resource'] = mem, "time(s),virtual(Mbytes),resident(Mbytes),nfiledesc,cpu_us,cpu_sy,cpu_id,cpu_wa"
+                    exec_result['resource'] = mem, "time(s),virtual(Mbytes),resident(Mbytes),nfiledesc,cpu_us,cpu_sy,cpu_id,cpu_wa"
 
                 whatToTest=self.tester.whatQualityTest()
                 keys=[]
