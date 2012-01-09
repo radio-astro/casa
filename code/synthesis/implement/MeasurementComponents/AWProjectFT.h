@@ -35,7 +35,7 @@
 //#include <msvis/SynthesisUtils/ConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <msvis/SynthesisUtils/VPSkyJones.h>
 #include <msvis/SynthesisUtils/FTMachine.h>
 #include <msvis/SynthesisUtils/CFCache.h>
 #include <msvis/SynthesisUtils/Utils.h>
