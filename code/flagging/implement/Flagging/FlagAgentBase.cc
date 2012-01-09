@@ -707,7 +707,7 @@ FlagAgentBase::setDataSelection(Record config)
 		}
 		else
 		{
-			parser.setPolnExpr(observationSelection_p);
+			parser.setObservationExpr(observationSelection_p);
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			observationList_p=parser.getObservationList();
 			filterRows_p=true;
@@ -735,7 +735,7 @@ FlagAgentBase::setDataSelection(Record config)
 		}
 		else
 		{
-			parser.setPolnExpr(scanIntentSelection_p);
+			parser.setStateExpr(scanIntentSelection_p);
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			scanIntentList_p=parser.getStateObsModeList();
 			filterRows_p=true;
