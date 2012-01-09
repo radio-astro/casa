@@ -32,8 +32,8 @@
 #include <casa/aips.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MPosition.h>
-#include <synthesis/MeasurementComponents/BeamSquint.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <msvis/SynthesisUtils/BeamSquint.h>
+#include <msvis/SynthesisUtils/VPSkyJones.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 //#include <synthesis/MeasurementComponents/EPJones.h>
 

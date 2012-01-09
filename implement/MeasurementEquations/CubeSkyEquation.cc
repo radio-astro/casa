@@ -43,11 +43,11 @@
 
 #include <synthesis/MeasurementComponents/SkyModel.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
-#include <synthesis/MeasurementComponents/SkyJones.h>
+#include <msvis/SynthesisUtils/SkyJones.h>
 #include <msvis/SynthesisUtils/FTMachine.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
 #include <msvis/SynthesisUtils/GridFT.h>
-#include <synthesis/MeasurementComponents/MosaicFT.h>
+#include <msvis/SynthesisUtils/MosaicFT.h>
 #include <synthesis/MeasurementComponents/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <msvis/SynthesisUtils/WProjectFT.h>
@@ -56,7 +56,7 @@
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <msvis/SynthesisUtils/WPConvFunc.h>
-#include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
+#include <msvis/SynthesisUtils/SimplePBConvFunc.h>
 #include <msvis/SynthesisUtils/ComponentFTMachine.h>
 #include <msvis/SynthesisUtils/SynthesisError.h>
 #include <msvis/SynthesisUtils/StokesImageUtil.h>
