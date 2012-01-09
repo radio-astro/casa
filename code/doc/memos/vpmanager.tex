@@ -17,7 +17,7 @@
 \begin{document}
 \title{The CASA vpmanager tool\\ and the VPManager class}
 \author{D. Petry (ESO, Garching)}
-\date{Dec 21, 2011\\%{\small (Updated: )}
+\date{Jan 9, 2012\\%{\small (Updated: )}
 }
 \maketitle
 \normalsize
@@ -28,6 +28,7 @@
 %\end{center}
 
 \begin{abstract}
+\noindent
 The VPManager class in the synthesis module of CASA code permits 
 CASA imaging and simulation routines to hook up to the vpmanager and let it determine
 which antenna responses to use for which observatory.
@@ -143,17 +144,18 @@ to set up new analytic antenna responses,
 select which antenna responses from the vplist to use for which telescope and antenna type, 
 access the contents of the vplist,
 create and access an AntennaResponses table,
-create a voltage pattern table.
+create and load a voltage pattern table.
+
+The latter is achieved with the methods vp.saveastable() and vp.loadfromtable() which
+can be used to save the vplist and the defaults in a CASA table and reload
+them at a later time.
 
 In section \ref{secvptoolmethods}, the methods are described in more detail.
 The appendix \ref{appex} gives example Python scripts.
-
 The appendices \ref{appVPMan} and \ref{appVPManex} show the methods of the VPManager C++ class
 and give an example of how to use it to get a primary beam in application code.
-
 But beforehand, section \ref{seclib} describes the library of predefined responses 
 available to the vpmanager and section \ref{secvp} describes the use of a voltage pattern table.
-
 Finally, section \ref{secrt} describes the access to ray traced responses for ALMA.
 
 \section{The antenna responses library accessible to the vp tool}
@@ -196,7 +198,6 @@ imager.setvp() method, which instantiates the
 corresponding voltage patterns from the descriptions and applies them
 to the images.
 
-
 \begin{verbatim}
 #
 # Lets say we want an Airy Disk voltage pattern for our
@@ -215,6 +216,9 @@ vp.saveastable(tablename='California.Beaming')
 #
 \end{verbatim}
 
+The voltage pattern table created by vp.saveastable() can also
+be loaded back into the vpmanager thereby restoring a previous state
+using the method vp.loadfromtable().
 
 \section{The vp tool methods}
 \label{secvptoolmethods}
@@ -238,6 +242,17 @@ row of the table. (bool)
 \end{verbatim} 
 }
  
+\item[loadfromtable]
+Load the vp or pb descriptions from a table (deleting all previous definitions) (bool)
+{\small
+\begin{verbatim}
+    --- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+      tablename:  Name of table to load vp descriptions from 
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+\end{verbatim} 
+}
+
+
   \item[summarizevps]
 Summarize the currently accumulated VP descriptions to the logger. (bool)
 {\small
@@ -781,6 +796,8 @@ Bool isLocked();
 void release();
      
 Bool saveastable(const String& tablename);
+
+Bool loadfromtable(const String& tablename);
 
 Bool summarizevps(const Bool verbose);
 
