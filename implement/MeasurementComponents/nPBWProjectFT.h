@@ -46,7 +46,7 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <msvis/SynthesisUtils/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
 #include <msvis/SynthesisUtils/Utils.h>

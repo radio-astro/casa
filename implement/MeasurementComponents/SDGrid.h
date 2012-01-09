@@ -30,7 +30,7 @@
 #define SYNTHESIS_SDGRID_H
 
 #include <msvis/SynthesisUtils/FTMachine.h>
-#include <synthesis/MeasurementComponents/SkyJones.h>
+#include <msvis/SynthesisUtils/SkyJones.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
