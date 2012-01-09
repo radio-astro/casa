@@ -78,7 +78,7 @@
 #include <synthesis/MeasurementComponents/SimACohCalc.h>
 #include <synthesis/MeasurementComponents/SimACoh.h>
 //#include <synthesis/MeasurementComponents/SimVisJones.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <msvis/SynthesisUtils/VPSkyJones.h>
 #include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeExpr.h> 
 
@@ -87,7 +87,7 @@
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/MosaicFT.h>
+#include <msvis/SynthesisUtils/MosaicFT.h>
 #include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
 #include <casa/OS/HostInfo.h>
 #include <images/Images/PagedImage.h>

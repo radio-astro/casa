@@ -31,7 +31,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
-#include <synthesis/MeasurementComponents/SkyJones.h>
+#include <msvis/SynthesisUtils/SkyJones.h>
 #include <msvis/SynthesisUtils/FTMachine.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>

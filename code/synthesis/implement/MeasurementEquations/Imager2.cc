@@ -114,16 +114,16 @@
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
-#include <synthesis/MeasurementComponents/MosaicFT.h>
+#include <msvis/SynthesisUtils/MosaicFT.h>
 #include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
+#include <msvis/SynthesisUtils/PBMath.h>
 #include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
 #include <msvis/SynthesisUtils/SimpCompGridMachine.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <msvis/SynthesisUtils/VPSkyJones.h>
 #include <msvis/SynthesisUtils/SynthesisError.h>
-#include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
+#include <msvis/SynthesisUtils/HetArrayConvFunc.h>
 #include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
@@ -149,7 +149,7 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCIntersection.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
+#include <msvis/SynthesisUtils/PBMath.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>

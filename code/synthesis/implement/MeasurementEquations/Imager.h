@@ -46,7 +46,7 @@
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/EVLAAperture.h>
-#include <synthesis/MeasurementComponents/BeamSquint.h>
+#include <msvis/SynthesisUtils/BeamSquint.h>
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
