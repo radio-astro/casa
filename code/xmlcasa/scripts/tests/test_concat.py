@@ -991,6 +991,199 @@ class test_concat(unittest.TestCase):
 
         self.assertTrue(retValue['success'])
 
+    def test11(self):
+        '''Concat 11: 3 parts, different sources, same spws, different scratch columns: no, yes, no'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+
+        shutil.rmtree('part2-mod2-wscratch.ms',ignore_errors=True)
+        shutil.copytree('part2-mod2.ms', 'part2-mod2-wscratch.ms')
+        print 'creating scratch columns in part2-mod2-wscratch.ms'
+        cb.open('part2-mod2-wscratch.ms') # calibrator-open creates scratch columns
+        cb.close()
+
+        self.res = concat(vis=['part1.ms','part2-mod2-wscratch.ms','part3.ms'],concatvis=msname)
+        self.assertEqual(self.res,None)
+
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f0",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test11.ms' in glob.glob("*.ms"):
+                shutil.rmtree('tes11.ms',ignore_errors=True)
+            shutil.copytree(msname,'test11.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+            # check source table
+            name = "SOURCE"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['SOURCE_ID',           28, 13, 0],
+                ['SPECTRAL_WINDOW_ID',  28, 1, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+            # check spw table
+            name = "SPECTRAL_WINDOW"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['NUM_CHAN',           1, 128, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+
+        self.assertTrue(retValue['success'])
+        
+    def test12(self):
+        '''Concat 12: 3 parts, different sources, same spws, different scratch columns: yes, no, no'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+
+        shutil.rmtree('part1-wscratch.ms',ignore_errors=True)
+        shutil.copytree('part1.ms', 'part1-wscratch.ms')
+        print 'creating scratch columns in part1-wscratch.ms'
+        cb.open('part1-wscratch.ms') # calibrator-open creates scratch columns
+        cb.close()
+
+        self.res = concat(vis=['part1-wscratch.ms','part2-mod2.ms','part3.ms'],concatvis=msname)
+        self.assertEqual(self.res,None)
+
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f0",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test12.ms' in glob.glob("*.ms"):
+                shutil.rmtree('tes12.ms',ignore_errors=True)
+            shutil.copytree(msname,'test12.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+            # check source table
+            name = "SOURCE"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['SOURCE_ID',           28, 13, 0],
+                ['SPECTRAL_WINDOW_ID',  28, 1, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+            # check spw table
+            name = "SPECTRAL_WINDOW"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['NUM_CHAN',           1, 128, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+
+        self.assertTrue(retValue['success'])
 
 
 
