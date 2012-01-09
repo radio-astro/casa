@@ -7,8 +7,6 @@ debug = False
 
 
 def tflagger(vis,
-             ntime, # taken only once per session
-             combinescans,
              mode,
              selectdata,
              spw, # data selection parameters
@@ -47,6 +45,8 @@ def tflagger(vis,
              growaround,
              flagneartime,
              flagnearfreq,
+             ntime, # taken only once per session
+             combinescans,
              summarydisplay,
              minrel,        # mode summary
              maxrel,

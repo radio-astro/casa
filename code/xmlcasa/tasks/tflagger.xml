@@ -34,16 +34,6 @@
                 <value />
             </param>
 
-            <param type="any" name="ntime">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
-                <any type="variant" limittypes="double string" />
-                <value type="string">scan</value>
-            </param>
-            <param type="bool" name="combinescans" subparam="true">
-                <description></description>
-                <value>False</value>
-            </param>
-
             <param type="string" name="mode">
                 <description>Flagging mode (manualflag, clip, shadow, quack, elevation, \
 tfcrop, extend, unflag, summary)</description>
@@ -237,6 +227,16 @@ tfcrop, extend, unflag, summary)</description>
                 <value type="bool">False</value>
             </param>
 
+            <param type="any" name="ntime">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description>Accumulate data across scans.</description>
+                <value>False</value>
+            </param>
+
             <param type="string" name="summarydisplay">
                 <description>Create summary plots or text summary after flagging</description>
                 <value type="string"></value>
@@ -298,11 +298,6 @@ tfcrop, extend, unflag, summary)</description>
             </param>
 
             <constraints>      
-                <when param="ntime">
-                    <notequals type="string" value="scan">
-                        <default param="combinescans"><value type="bool">False</value></default>
-                    </notequals>
-                </when>             
                 <when param="selectdata">
                     <equals type="bool" value="True">
                         <default param="field"><value type="string"></value></default>
@@ -371,6 +366,12 @@ tfcrop, extend, unflag, summary)</description>
                     </equals>
                 </when>
 
+                <when param="ntime">
+                    <notequals type="string" value="scan">
+                        <default param="combinescans"><value type="bool">False</value></default>
+                    </notequals>
+                </when>             
+
                <when param="summarydisplay">
                 <equals type="string" value="" />
                 <equals type="string" value="text">
@@ -409,11 +410,6 @@ tfcrop, extend, unflag, summary)</description>
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
 
-        ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
-               default: 0.0 (taken in seconds)
-               example: '1.5min'
-               The dataset will be iterated through in time-chunks defined here.
-        
         selectdata -- Select a subset of data for flagging?
                     default: False
                     options: True,False
@@ -687,6 +683,18 @@ tfcrop, extend, unflag, summary)</description>
                     s['total']                  : total number of data
                     s['flagged']                : amount of flagged data
 
+        ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
+                options: 'scan' or any other float value or string containing the units.
+                default: 'scan'
+                
+            combinescans -- accumulate data across scans.
+                default: False
+                Only available when ntime not equal 'scan'.
+                
+                Example: '1.5min'
+                       : 1.2 (taken in seconds)
+               The dataset will be iterated through in time-chunks defined here.
+        
  
         datadisplay -- Display data and flags per-chunck at run-time, within an interactive GUI
                  default: False
