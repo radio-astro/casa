@@ -40,8 +40,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/AWVisResampler.cc
  implement/MeasurementComponents/BeamCalc.cc
  implement/MeasurementComponents/BeamCalcParams.cc
- implement/MeasurementComponents/BeamSkyJones.cc
- implement/MeasurementComponents/BeamSquint.cc
  implement/MeasurementComponents/BPoly.cc
  implement/MeasurementComponents/CalCorruptor.cc
  implement/MeasurementComponents/Calibrater.cc
@@ -51,7 +49,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/CleanImageSkyModel.cc
  implement/MeasurementComponents/ConvFuncDiskCache.cc
  implement/MeasurementComponents/CSCleanImageSkyModel.cc
- implement/MeasurementComponents/DBeamSkyJones.cc
  implement/MeasurementComponents/EVLAConvFunc.cc
  implement/MeasurementComponents/EVLAAperture.cc
  implement/MeasurementComponents/EJones.cc
@@ -60,7 +57,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/GridBoth.cc
  implement/MeasurementComponents/rGridFT.cc
  implement/MeasurementComponents/GSpline.cc
- implement/MeasurementComponents/HetArrayConvFunc.cc
  implement/MeasurementComponents/HogbomCleanImageSkyModel.cc
  implement/MeasurementComponents/IlluminationConvFunc.cc
  implement/MeasurementComponents/ImageSkyModel.cc
@@ -71,24 +67,12 @@ casa_add_library( synthesis
  implement/MeasurementComponents/MFCEMemImageSkyModel.cc
  implement/MeasurementComponents/MFCleanImageSkyModel.cc
  implement/MeasurementComponents/MFMSCleanImageSkyModel.cc
- implement/MeasurementComponents/MosaicFT.cc
  implement/MeasurementComponents/MSCleanImageSkyModel.cc
  implement/MeasurementComponents/Mueller.cc
  implement/MeasurementComponents/MultiTermFT.cc
  implement/MeasurementComponents/MultiThreadedVisResampler.cc
  implement/MeasurementComponents/NNLSImageSkyModel.cc
  implement/MeasurementComponents/nPBWProjectFT.cc
- implement/MeasurementComponents/PBMath1DAiry.cc
- implement/MeasurementComponents/PBMath1D.cc
- implement/MeasurementComponents/PBMath1DCosPoly.cc
- implement/MeasurementComponents/PBMath1DGauss.cc
- implement/MeasurementComponents/PBMath1DIPoly.cc
- implement/MeasurementComponents/PBMath1DNumeric.cc
- implement/MeasurementComponents/PBMath1DPoly.cc
- implement/MeasurementComponents/PBMath2D.cc
- implement/MeasurementComponents/PBMath2DImage.cc
- implement/MeasurementComponents/PBMath.cc
- implement/MeasurementComponents/PBMathInterface.cc
  implement/MeasurementComponents/PBMosaicFT.cc
  implement/MeasurementComponents/PClarkCleanImageSkyModel.cc
  implement/MeasurementComponents/PixelatedConvFunc.cc
@@ -101,8 +85,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/SDGrid.cc
  implement/MeasurementComponents/SimACohCalc.cc
  implement/MeasurementComponents/SimACoh.cc
- implement/MeasurementComponents/SimplePBConvFunc.cc
- implement/MeasurementComponents/SkyJones.cc
  implement/MeasurementComponents/SolvableVisCal.cc
  implement/MeasurementComponents/StandardVisCal.cc
  implement/MeasurementComponents/SteepestDescentSolver.cc
@@ -116,7 +98,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/VisibilityResampler.cc
  implement/MeasurementComponents/VLACalcIlluminationConvFunc.cc
  implement/MeasurementComponents/VLAIlluminationConvFunc.cc
- implement/MeasurementComponents/VPSkyJones.cc
  implement/MeasurementComponents/WBCleanImageSkyModel.cc
  implement/MeasurementComponents/WFCleanImageSkyModel.cc
  implement/MeasurementComponents/WOnlyConvFunc.cc
