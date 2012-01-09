@@ -197,10 +197,10 @@ public:
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-  virtual void normalizeImage(Lattice<Complex>& skyImage,
-			      const Matrix<Double>& sumOfWts,
-			      Lattice<Float>& sensitivityImage,
-			      Bool fftNorm)
+  virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
+			      const Matrix<Double>& /*sumOfWts*/,
+			      Lattice<Float>& /*sensitivityImage*/,
+			      Bool /*fftNorm*/)
     {throw(AipsError("WProjectFT::normalizeImage() called"));}
  
   // Get the final weights image
@@ -225,7 +225,7 @@ public:
   void setConvFunc(CountedPtr<WPConvFunc>& pbconvFunc);
   CountedPtr<WPConvFunc>& getConvFunc();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
+  virtual void ComputeResiduals(VisBuffer& /*vb*/, Bool /*useCorrected*/) {};
 
 protected:
 
@@ -284,15 +284,6 @@ protected:
   Array<Complex> griddedData;
   Array<DComplex> griddedData2;
 
-  DirectionCoordinate directionCoord;
-
-  MDirection::Convert* pointingToImage;
-
-  Vector<Double> xyPos;
-
-  MDirection worldPosMeas;
-
-  Int priorCacheSize;
 
   // Grid/degrid zero spacing points?
   Bool usezero_p;
@@ -311,8 +302,6 @@ protected:
 
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
 	       const Double& interval);
-
-  Bool getXYPos(const VisBuffer& vb, Int row);
 
   String machineName_p;
 

@@ -85,8 +85,7 @@ WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize,
   : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), 
-    maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero), 
+    maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)), usezero_p(usezero), 
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -104,7 +103,7 @@ WProjectFT::WProjectFT(Int nWPlanes,
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero),  
+    usezero_p(usezero),  
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -124,7 +123,7 @@ WProjectFT::WProjectFT(
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero), 
+    usezero_p(usezero), 
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -180,7 +179,6 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;
-    pointingToImage=other.pointingToImage;
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
     wpConvFunc_p=other.wpConvFunc_p;
@@ -324,7 +322,7 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
 			       const VisBuffer& vb)
 {
   image=&iimage;
-  
+  toVis_p=True;
   ok();
   
   //   if(convSize==0) {
@@ -428,7 +426,6 @@ void WProjectFT::finalizeToVis()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
-  if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 
 
@@ -440,6 +437,7 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
 {
   // image always points to the image
   image=&iimage;
+  toVis_p=False;
   
   //  if(convSize==0) {
   init();
@@ -506,7 +504,6 @@ void WProjectFT::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
-  if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 
 Array<Complex>* WProjectFT::getDataPointer(const IPosition& centerLoc2D,
@@ -1040,32 +1037,71 @@ void WProjectFT::getWeightImage(ImageInterface<Float>& weightImage,
   }
 }
 
-Bool WProjectFT::toRecord(String&, //error,
+Bool WProjectFT::toRecord(String& error,
 			  RecordInterface& outRec, Bool withImage)
 {  
+
+  /*
+
+
+  Int nWPlanes_p;
+
+
+  // Image cache
+  LatticeCache<Complex> * imageCache;
+
+  // Gridder
+  ConvolveGridder<Double, Complex>* gridder;
+
+
+  // Array lattice
+  CountedPtr<Lattice<Complex> > arrayLattice;
+
+  // Lattice. For non-tiled gridding, this will point to arrayLattice,
+  //  whereas for tiled gridding, this points to the image
+  CountedPtr<Lattice<Complex> > lattice;
+
+  Double savedWScale_p;
+
+  // Array for non-tiled gridding
+  Array<Complex> griddedData;
+  Array<DComplex> griddedData2;
+
+
+
+  // Grid/degrid zero spacing points?
+  Bool usezero_p;
+
+  Cube<Complex> convFunc;
+  Int convSampling;
+  Int convSize;
+  Vector<Int> convSupport;
+
+  Vector<Int> convSizes_p;
+
+
+  Int wConvSize;
+
+  Int lastIndex_p;
+
+
+  String machineName_p;
+
+  CountedPtr<WPConvFunc> wpConvFunc_p;
+  */
+
   // Save the current WProjectFT object to an output state record
   Bool retval = True;
-  Double cacheVal=(Double) cachesize;
-  outRec.define("cache", cacheVal);
-  outRec.define("tile", tilesize);
-  
-  Vector<Double> phaseValue(2);
-  String phaseUnit;
-  phaseValue=mTangent_p.getAngle().getValue();
-  phaseUnit= mTangent_p.getAngle().getUnit();
-  outRec.define("phasevalue", phaseValue);
-  outRec.define("phaseunit", phaseUnit);
-  
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  dirValue=mLocation_p.get("m").getValue();
-  dirUnit=mLocation_p.get("m").getUnit();
-  outRec.define("dirvalue", dirValue);
-  outRec.define("dirunit", dirUnit);
-  
-  outRec.define("padding", padding_p);
-  outRec.define("maxdataval", maxAbsData);
-  
+  //save the base class variables
+  if(!FTMachine::toRecord(error, outRec, withImage))
+    return False;
+
+  outRec.define("uvscale", uvScale);
+  outRec.define("uvoffset", uvOffset);
+  outRec.define("istiled", isTiled);
+  outRec.define("cachesize", Int64(cachesize));
+  outRec.define("tilesize", tilesize);
+  outRec.define("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   for (Int k=0; k<4 ; k++){
     center_loc(k)=centerLoc(k);
@@ -1073,14 +1109,8 @@ Bool WProjectFT::toRecord(String&, //error,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("sumofweights", sumWeight);
-  if(withImage && image){ 
-    ImageInterface<Complex>& tempimage(*image);
-    Record imageContainer;
-    String error;
-    retval = (retval || tempimage.toRecord(error, imageContainer));
-    outRec.defineRecord("image", imageContainer);
-  }
+  outRec.define("padding", padding_p);
+
   return retval;
 }
 
