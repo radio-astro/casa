@@ -24,8 +24,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FlagAgentClipping::FlagAgentClipping(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-		FlagAgentBase(dh,config,IN_ROWS,writePrivateFlagCube)
+FlagAgentClipping::FlagAgentClipping(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
+		FlagAgentBase(dh,config,IN_ROWS,writePrivateFlagCube,flag)
 {
 	setAgentParameters(config);
 

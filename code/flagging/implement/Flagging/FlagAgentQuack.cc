@@ -24,8 +24,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FlagAgentQuack::FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube)
+FlagAgentQuack::FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
+		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube,flag)
 {
 	setAgentParameters(config);
 

@@ -172,6 +172,7 @@ FlagAgentBase *
 FlagAgentBase::create (FlagDataHandler *dh,Record config)
 {
 	String mode;
+	Bool flag = true;
 	FlagAgentBase *ret = NULL;
 
 	// Retrieve mode
@@ -185,6 +186,12 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 		return ret;
 	}
 
+	// Parameter to apply or not the flags
+	if (config.fieldNumber("flag") >= 0)
+	{
+		flag = config.asBool("flag");
+	}
+
 	// Write private flags only if extension is required
 	bool writePrivateFlags = false;
 	if ((config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true))
@@ -195,7 +202,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
-		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
+		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,flag);
 		return agent;
 	}
 
@@ -209,14 +216,14 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// TimeFreqCrop
 	if (mode.compare("tfcrop")==0)
 	{
-		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags);
+		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags,flag);
 		return agent;
 	}
 
 	// Clip
 	if (mode.compare("clip")==0)
 	{
-		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags);
+		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags,flag);
 		return agent;
 	}
 
@@ -230,21 +237,21 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Elevation
 	if (mode.compare("elevation")==0)
 	{
-		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags);
+		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags,flag);
 		return agent;
 	}
 
 	// Quack
 	if (mode.compare("quack")==0)
 	{
-		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags);
+		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags,flag);
 		return agent;
 	}
 
 	// Shadow
 	if (mode.compare("shadow")==0)
 	{
-		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags);
+		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags,flag);
 		return agent;
 	}
 

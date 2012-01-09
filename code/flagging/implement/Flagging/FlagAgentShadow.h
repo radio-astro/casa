@@ -31,7 +31,7 @@ class FlagAgentShadow : public FlagAgentBase {
 
 public:
 
-	FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+	FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentShadow();
 
 protected:

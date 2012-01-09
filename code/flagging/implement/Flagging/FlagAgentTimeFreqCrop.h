@@ -31,7 +31,7 @@ class FlagAgentTimeFreqCrop : public FlagAgentBase {
 
 public:
 
-	FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+	FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentTimeFreqCrop();
 
 protected:

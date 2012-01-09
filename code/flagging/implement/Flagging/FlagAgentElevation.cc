@@ -32,8 +32,8 @@ bool FlagAgentElevation::preProcessingDone_p = false;
 uShort FlagAgentElevation::nAgents_p = 0;
 
 
-FlagAgentElevation::FlagAgentElevation(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,writePrivateFlagCube)
+FlagAgentElevation::FlagAgentElevation(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
+		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,writePrivateFlagCube,flag)
 {
 	setAgentParameters(config);
 

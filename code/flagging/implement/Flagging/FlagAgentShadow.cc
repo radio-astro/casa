@@ -31,8 +31,8 @@ vector<bool> FlagAgentShadow::startedProcessing_p;
 bool FlagAgentShadow::preProcessingDone_p = false;
 uShort FlagAgentShadow::nAgents_p = 0;
 
-FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,writePrivateFlagCube)
+FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
+		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,writePrivateFlagCube,flag)
 {
 	setAgentParameters(config);
 

@@ -33,8 +33,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // TODO : Get rid of this macro ?
 #define MIN(a,b) ((a)<=(b) ? (a) : (b))
 
-FlagAgentTimeFreqCrop::FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-		FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube)
+FlagAgentTimeFreqCrop::FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
+		FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube,flag)
 {
 	setAgentParameters(config);
 
