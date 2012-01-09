@@ -30,7 +30,7 @@
 #define SYNTHESIS_IMAGEDATASAMPLING_H
 
 #include <synthesis/DataSampling/DataSampling.h>
-#include <synthesis/MeasurementComponents/SkyJones.h>
+#include <msvis/SynthesisUtils/SkyJones.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Array.h>
