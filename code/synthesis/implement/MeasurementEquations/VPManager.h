@@ -58,6 +58,8 @@ namespace casa {
             
       Bool saveastable(const String& tablename);
 
+      Bool loadfromtable(const String& tablename);
+
       Bool summarizevps(const Bool verbose);
 
 

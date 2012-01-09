@@ -202,8 +202,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool VPManager::saveastable(const String& tablename){
     
-    if (vplist_p.nfields() == 0)
-      return False;
     TableDesc td("vptable", "1", TableDesc::New);
     td.addColumn(ScalarColumnDesc<String>("telescope"));
     td.addColumn(ScalarColumnDesc<Int>("antenna"));
@@ -219,12 +217,82 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       String tel=antRec.asString("telescope");
       telcol.put(k, tel);
       antcol.put(k,k);
-      pbcol.put(k,antRec);      
-	 
+      pbcol.put(k,antRec);       
     }
+
+    // create subtable for the vplistdefaults
+    TableDesc td2("vplistdefaultstable", "1", TableDesc::New);
+    td2.addColumn(ScalarColumnDesc<String>("tel_and_anttype"));
+    td2.addColumn(ScalarColumnDesc<Int>("vplistnum"));
+    SetupNewTable defaultsSetup("VPLIST_DEFAULTS", td2, Table::New);
+    
+    Table tb2(defaultsSetup, Table::Plain, vplistdefaults_p.ndefined());
+    ScalarColumn<String> telcol2(tb2, "tel_and_anttype");
+    ScalarColumn<Int> listnumcol(tb2, "vplistnum");
+    for (uInt k=0; k < vplistdefaults_p.ndefined(); ++k){
+      telcol2.put(k, vplistdefaults_p.getKey(k));
+      listnumcol.put(k, vplistdefaults_p.getVal(k));
+    }
+
+    tb.rwKeywordSet().defineTable("VPLIST_DEFAULTS", tb2);
+
+    tb2.flush();
     tb.flush();
     return True;
   }
+
+
+  Bool VPManager::loadfromtable(const String& tablename){
+
+    LogIO os(LogOrigin("vpmanager", "loadfromtable"));
+
+    Table tb(tablename);
+    ROScalarColumn<TableRecord> pbcol(tb, "pbdescription");
+
+    Table tb2;
+
+    if (tb.keywordSet().isDefined("VPLIST_DEFAULTS")) {
+      tb2 = tb.keywordSet().asTable("VPLIST_DEFAULTS");
+    }
+    else{
+      os << "Format error: table " << tablename 
+	 << " does not contain a VPLIST_DEFAULTS subtable." << LogIO::POST;
+      return False;
+    }
+
+    ROScalarColumn<String> telcol2(tb2, "tel_and_anttype");
+    ROScalarColumn<Int> listnumcol(tb2, "vplistnum");
+
+    Record tempvplist;
+    SimpleOrderedMap<String, Int> tempvplistdefaults(-1);
+
+    for (uInt k=0; k < tb.nrow(); k++){
+      tempvplist.defineRecord(k, Record(pbcol(k)));
+    }
+    for (uInt k=0; k < tb2.nrow(); k++){
+      Int vplistnum =  listnumcol(k);
+      if((vplistnum < -2) || (vplistnum>=(Int)tempvplist.nfields())){
+	os << "Error: invalid vplist number " << vplistnum 
+	   << " in subtable VPLIST_DEFAULTS of table " 
+	   << tablename << endl
+	   << "Valid value range is -2 to " << (Int)tempvplist.nfields()-1 
+	   << LogIO::POST;
+	return False;
+      }
+      tempvplistdefaults.define(telcol2(k), vplistnum);
+    }
+
+    // overwrite existing information
+    vplist_p = tempvplist;
+    vplistdefaults_p = tempvplistdefaults;
+
+    os << "Loaded " << tb.nrow() << " VP definitions and " << tb2.nrow() 
+       << " VP default settings from table " << tablename << LogIO:: POST;
+
+    return True;
+
+  }
+
 
   Bool VPManager::summarizevps(const Bool verbose) {
 
