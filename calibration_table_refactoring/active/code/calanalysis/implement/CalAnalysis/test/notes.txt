@@ -1,0 +1,92 @@
+tNewCalTableIter.cc:
+
+* The code appears to be in two main blocks: one to create the table and the
+  other reads it in.
+
+* Create a description for a new caltable using the NewCalTableDesc() class.  I
+  suspect that this is similar to the descriptions I've seen from the python
+  level.
+  - The default contructor was chosen.
+  - In turn, the default constructor calls member function defaultCalMain() with
+    a null name.
+  - In turn, defaultCalMain() creates a TableDesc() object and populates it with
+    keyword and column (key, non-key, and parameter) definitions.  It also adds
+    table measures information (I will have to study this later).
+  - The TableDesc() object is saved as a private variable in NewCalTabledesc().
+
+* Create a NewCalTable() object named "testNCT.tab".
+  - The NewCalTableDesc() object is an input.
+  - The table access (Table::Scratch) and type (Table::Memory) enums are inputs
+    as well.
+  - It inherits and initializes the Table() class.
+  - Use the SetUpNewTable class to create the main, antenna, field, spw, and
+    history tables.
+
+* Set the CASA and data paths.  Set the MS name.
+
+* Set the meta info in the new caltable (antenna, field, and spectral window
+  tables, keywords).
+
+* Get the spectral window column using ROMSSpWindowColumns (in
+  ms/MeasurementSets/MSSpWindowColumns.cc).  It's rather strange that the number
+  of channels comes from <col>.numChan().getColumn().
+
+* Generate "interesting" table contents.
+  - I know what indgen() is (I've seen it in IDL).  Where is it defined?  Is it
+    STL?
+  - NewCalMainColumns appears to be an interface to read and write scalar and
+    array columns.
+    ^ I see only read and not write.  Must investigate.
+    ^ I don't understand the attach methods.
+  - RefRows holds row numbers (?) in a RefTable.
+  - Fill the columns on the NewCalMainColumns object by rows.
+  - Put the parameters.
+  - It appears that NewCalMainColumns is an important class!
+
+* The new caltable in memory is written to disk.
+
+---
+
+* The new caltable is read into memory with the NewCalTable class.
+
+* A new caltable iterator is created and sort columns are defined.
+
+* The new caltable is iterated and the results printed.
+  - I have to determine what sort column means in this context.  How does it
+    relate to the class I created?  Can ranges be implemented as well?
+
+===
+===
+
+NewCalTable inherits Table
+NewCalTable creates a SetupNewTable object, feeds it to a Table object, and sets
+  *this to it.
+NewCalTable uses SetUpNewTable to create antenna, field, spectral window, and
+  history tables.  It also adds the keywords.
+
+NewCalTabIter creates a TableIterator with the NewCalTable input
+A NewCalTable is created (copy?) using the table method of the TableIterator
+A NewCalMainColumns is created with the NewCalTable
+
+NewCalTableIter::next iterates the TableIterator
+NewCalTableIter::next deletes NewCalMainColumns and NewCalTable and recreates
+  them using the iterated Table
+
+For time, field, spw, and scan, there are "0", "" no arg, and "" arg methods
+that call the NewCalMainColumns methods.  Antenna and parameter methods are
+different.  I must determine what they are, since there is no documentation.
+
+NewCalMainColumns creates column accessors.
+NewCalMainColumns returns ScalarColumn and ArrayColumn objects corresponding to
+  columns.
+
+ScalarColumn inherits ROScalarColumn and TableColumn.  ROScalarColumn inherits
+  ROTableColumn. Yikes.  ScalarColumn can read and write, while ROScalarColumn
+  can only read.
+ArrayColumn inherits ROArrayColumn and TableColumn. ROArrayColumn inherits
+  ROTableColumn.  ArrayColumn can read and write, while ROArrayColumn can only
+  read.
+
+===
+
+The sort order goes slowest at the first index.
