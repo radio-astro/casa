@@ -45,17 +45,16 @@ def tflagger(vis,
              growaround,
              flagneartime,
              flagnearfreq,
-             ntime, # taken only once per session
-             combinescans,
-             summarydisplay,
              minrel,        # mode summary
              maxrel,
              minabs,
              maxabs,
              spwchan,
              spwcorr,
-             plotfile,
-             datadisplay,
+             ntime, # taken only once per session
+             combinescans,
+             display,
+             format,
              writeflags,
              savepars,    # save the current parameters to FLAG_CMD 
              outfile,   # output file to save flag commands
@@ -169,15 +168,13 @@ def tflagger(vis,
         sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
                     ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
-                    ' ntime='+str(newtime)
+                    ' ntime='+str(newtime)+' combinescans='+str(combinescans)
 
         # Setup global parameters
         agent_pars = {}
 
         # Add the global parameters to the dictionary of agent's parameters            
         agent_pars['mode'] = mode
-        agent_pars['summarydisplay'] = summarydisplay
-        agent_pars['datadisplay'] = datadisplay
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -279,7 +276,7 @@ def tflagger(vis,
             
 
         # Now Parse the agent's parameters
-        casalog.post('Parsing the agent\'s parameters')
+        casalog.post('Parsing the parameters for the %s agent'%mode)
         # Due to the way the MS Selection works, the correlation
         # selection needs to be done in here instead of in the
         # selectdata()
@@ -290,22 +287,30 @@ def tflagger(vis,
         if (not tflocal.parseAgentParameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
-        # Do summarydisplay if requested
-        if mode != 'summary' and summarydisplay != '':
+        # Do display if requested
+        # TODO: uncomment when FlagAgentDisplay is implemented!
+        if mode != 'summary' and display != '':
             
             agent_pars = {}
-            if summarydisplay == 'text':
-                agent_pars['mode'] = 'summary'
-            
-            elif summarydisplay == 'screen':
-                agent_pars['mode'] = 'display'
+            casalog.post('Parsing the display parameters')
                 
-            elif summarydisplay == 'file':
-                agent_pars['mode'] = 'display'
-                agent_pars['plotfile'] = plotfile
+            # need to create different parameters for both, data and report.
+#            if display == 'both':
+#                agent_pars['mode'] = 'datadisplay'
+#                tflocal.parseAgentParameters(agent_pars)
+#                agent_pars['mode'] = 'reportdisplay'
+#                agent_pars['format'] = format
+#                tflocal.parseAgentParameters(agent_pars)
+#            
+#            elif display == 'data':
+#                agent_pars['mode'] = 'datadisplay'
+#                tflocal.parseAgentParameters(agent_pars)
+#            
+#            elif display == 'report':
+#                agent_pars['mode'] = 'reportdisplay'
+#                agent_pars['format'] = format
+#                tflocal.parseAgentParameters(agent_pars)
                 
-            casalog.post('Parsing the summarydisplay parameters')
-            tflocal.parseAgentParameters(agent_pars)
 
         # Initialize the agent
         casalog.post('Initializing the agent')

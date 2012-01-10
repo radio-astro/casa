@@ -227,21 +227,6 @@ tfcrop, extend, unflag, summary)</description>
                 <value type="bool">False</value>
             </param>
 
-            <param type="any" name="ntime">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
-                <any type="variant" limittypes="double string" />
-                <value type="string">scan</value>
-            </param>
-            <param type="bool" name="combinescans" subparam="true">
-                <description>Accumulate data across scans.</description>
-                <value>False</value>
-            </param>
-
-            <param type="string" name="summarydisplay">
-                <description>Create summary plots or text summary after flagging</description>
-                <value type="string"></value>
-            </param>
-
              <param type="double" name="minrel" subparam="true">
                 <description>minimum number of flags (relative)</description>
                 <value type="double">0.0</value>
@@ -267,14 +252,25 @@ tfcrop, extend, unflag, summary)</description>
                 <description>Print summary of correlation per spw</description>
                 <value type="bool">False</value>
             </param>
-            <param type="string" name="plotfile" subparam="true">
-                    <description>Name of output file to save summary plots</description>
-                    <value></value>
+
+            <param type="any" name="ntime">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description>Accumulate data across scans.</description>
+                <value>False</value>
             </param>
 
-            <param type="bool" name="datadisplay">
-                <description>Display data and flags at runtime </description>
-                <value>False</value>
+            <param type="string" name="display">
+                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <value type="string"></value>
+            </param>
+
+            <param type="string" name="format" subparam="true">
+                <description>Display plots on the screen or save on a file</description>
+                <value type="string">screen</value>
             </param>
 
             <param type="bool" name="writeflags">
@@ -372,16 +368,15 @@ tfcrop, extend, unflag, summary)</description>
                     </notequals>
                 </when>             
 
-               <when param="summarydisplay">
+               <when param="display">
                 <equals type="string" value="" />
-                <equals type="string" value="text">
-                        <default param="spwchan"><value type="bool">False</value></default>
-                        <default param="spwcorr"><value type="bool">False</value></default>
+                <equals type="string" value="data" />
+                <equals type="string" value="report">
+                        <default param="format"><value type="string">screen</value></default>
                 </equals>                    
-                <equals type="string" value="screen"></equals>
-                <equals type="string" value="file">                
-                    <default param="plotfile"><value type="string"></value></default>
-                </equals>
+                <equals type="string" value="both">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
                </when>
                 
                <when param="savepars">
