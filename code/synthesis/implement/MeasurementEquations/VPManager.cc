@@ -42,8 +42,8 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
-#include <synthesis/MeasurementComponents/PBMathInterface.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
+#include <msvis/SynthesisUtils/PBMathInterface.h>
+#include <msvis/SynthesisUtils/PBMath.h>
 #include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/ALMACalcIlluminationConvFunc.h>
 #include <casa/Logging.h>
