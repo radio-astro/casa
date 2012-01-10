@@ -1043,56 +1043,15 @@ Bool WProjectFT::toRecord(String& error,
 
   /*
 
-
-  Int nWPlanes_p;
-
-
-  // Image cache
-  LatticeCache<Complex> * imageCache;
-
-  // Gridder
-  ConvolveGridder<Double, Complex>* gridder;
-
-
-  // Array lattice
-  CountedPtr<Lattice<Complex> > arrayLattice;
-
-  // Lattice. For non-tiled gridding, this will point to arrayLattice,
-  //  whereas for tiled gridding, this points to the image
-  CountedPtr<Lattice<Complex> > lattice;
-
-  Double savedWScale_p;
-
-  // Array for non-tiled gridding
-  Array<Complex> griddedData;
-  Array<DComplex> griddedData2;
-
-
-
-  // Grid/degrid zero spacing points?
-  Bool usezero_p;
-
-  Cube<Complex> convFunc;
-  Int convSampling;
-  Int convSize;
-  Vector<Int> convSupport;
-
-  Vector<Int> convSizes_p;
-
-
-  Int wConvSize;
-
-  Int lastIndex_p;
-
-
-  String machineName_p;
-
   CountedPtr<WPConvFunc> wpConvFunc_p;
   */
 
   // Save the current WProjectFT object to an output state record
   Bool retval = True;
   //save the base class variables
+  Record wpconvrec;
+  if(wpConvFunc_p->toRecord(wpconvrec))
+    outRec.defineRecord("wpconvfunc", wpconvrec);
   if(!FTMachine::toRecord(error, outRec, withImage))
     return False;
 
@@ -1110,43 +1069,36 @@ Bool WProjectFT::toRecord(String& error,
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
   outRec.define("padding", padding_p);
+  outRec.define("nwplanes", nWPlanes_p);
+  outRec.define("savedwscale", savedWScale_p);
+  outRec.define("usezero", usezero_p);
+  outRec.define("convfunc", convFunc);
+  outRec.define("convsampling", convSampling);
+  outRec.define("convsize", convSize);
+  outRec.define("convsupport", convSupport);
+  outRec.define("convsizes", convSizes_p);
+  outRec.define("wconvsize", wConvSize);
+  outRec.define("lastindex", lastIndex_p);
+
+
 
   return retval;
 }
 
-Bool WProjectFT::fromRecord(String&, //error,
+Bool WProjectFT::fromRecord(String& error,
 			    const RecordInterface& inRec)
 {
+  if(!FTMachine::fromRecord(error, inRec))
+    return False;
+  machineName_p="WProjectFT";
   Bool retval = True;
   imageCache=0; lattice=0; arrayLattice=0;
-  Double cacheVal;
-  inRec.get("cache", cacheVal);
-  cachesize=(Long) cacheVal;
-  inRec.get("tile", tilesize);
-  
-  Vector<Double> phaseValue(2);
-  inRec.get("phasevalue",phaseValue);
-  String phaseUnit;
-  inRec.get("phaseunit",phaseUnit);
-  Quantity val1(phaseValue(0), phaseUnit);
-  Quantity val2(phaseValue(1), phaseUnit); 
-  MDirection phasecenter(val1, val2);
-  
-  mTangent_p=phasecenter;
-  // This should be passed down too but the tangent plane is 
-  // expected to be specified in all meaningful cases.
-  tangentSpecified_p=True;  
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  inRec.get("dirvalue", dirValue);
-  inRec.get("dirunit", dirUnit);
-  MVPosition dummyMVPos(dirValue(0), dirValue(1), dirValue(2));
-  MPosition mLocation(dummyMVPos, MPosition::ITRF);
-  mLocation_p=mLocation;
-  
-  inRec.get("padding", padding_p);
-  inRec.get("maxdataval", maxAbsData);
-  
+  inRec.get("uvscale", uvScale);
+  inRec.get("uvoffset", uvOffset);
+  inRec.get("istiled", isTiled);
+  cachesize=inRec.asInt64("cachesize");
+  inRec.get("tilesize", tilesize);
+  inRec.get("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   inRec.get("centerloc", center_loc);
   inRec.get("offsetloc", offset_loc);
@@ -1155,20 +1107,29 @@ Bool WProjectFT::fromRecord(String&, //error,
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 		      offset_loc(3));
-  inRec.get("sumofweights", sumWeight);
-  if(inRec.nfields() > 12 ){
-    Record imageAsRec=inRec.asRecord("image");
-    if(!image) { 
-      image= new TempImage<Complex>(); 
-    };
-    String error;
-    retval = (retval || image->fromRecord(error, imageAsRec));    
-    
+  if(inRec.isDefined("wpconvfunc"))
+    wpConvFunc_p=new WPConvFunc(inRec.asRecord("wpconvfunc"));
+  else
+    wpConvFunc_p=new WPConvFunc();
+  inRec.get("padding", padding_p);
+  inRec.get("nwplanes", nWPlanes_p);
+  inRec.get("savedwscale", savedWScale_p);
+  inRec.get("usezero", usezero_p);
+  inRec.get("convfunc", convFunc);
+  inRec.get("convsampling", convSampling);
+  inRec.get("convsize", convSize);
+  inRec.get("convsupport", convSupport);
+  inRec.get("convsizes", convSizes_p);
+  inRec.get("wconvsize", wConvSize);
+  inRec.get("lastindex", lastIndex_p);
+    ///setup some of the parameters
+  init();
+  if(inRec.isDefined("image")){
+    //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
-    init(); 
     
     if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> > (image, False);
+      lattice=CountedPtr<Lattice<Complex> >(image, False);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice
@@ -1176,20 +1137,54 @@ Bool WProjectFT::fromRecord(String&, //error,
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
-		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition start(4, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc) = image->getSlice(start, image->shape());
+      griddedData(blc, trc)=image->getSlice(start, image->shape());
       
       //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
     }
-    
-    //AlwaysAssert(lattice, AipsError);
-    AlwaysAssert(image, AipsError);
+    ////if this FTMachine is a forward one then we need to go to the vis domain
+    if(toVis_p)
+      {
+
+	  Int npixCorr=max(nx,ny);
+	  Vector<Float> sincConv(npixCorr);
+	  for (Int ix=0;ix<npixCorr;ix++) {
+	    Float x=C::pi*Float(ix-npixCorr/2)/(Float(npixCorr)*Float(convSampling));
+	    if(ix==npixCorr/2) {
+	      sincConv(ix)=1.0;
+	    }
+	    else {
+	      sincConv(ix)=sin(x)/x;
+	    }
+	  }
+
+	  
+	  Vector<Complex> correction(nx);
+	  correction=Complex(1.0, 0.0);
+	  // Do the Grid-correction
+	  IPosition cursorShape(4, nx, 1, 1, 1);
+	  IPosition axisPath(4, 0, 1, 2, 3);
+	  LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+	  LatticeIterator<Complex> lix(*lattice, lsx);
+	  for(lix.reset();!lix.atEnd();lix++) {
+	    Int iy=lix.position()(1);
+	    gridder->correctX1D(correction,iy);
+	    for (Int ix=0;ix<nx;ix++) {
+	      correction(ix)/=(sincConv(ix)*sincConv(iy));
+	    }
+	    lix.rwVectorCursor()/=correction;
+	  }
+	
+	// Now do the FFT2D in place
+	LatticeFFT::cfft2d(*lattice);
+      }
+   
+
   };
   return retval;
 }

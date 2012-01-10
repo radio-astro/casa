@@ -76,6 +76,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  WPConvFunc::WPConvFunc(const RecordInterface& rec):convFunctionMap_p(-1), 
+   actualConvIndex_p(-1), convSize_p(0), convSupport_p(0){
+    String error;
+    if (!fromRecord(error, rec)) {
+      throw (AipsError("Failed to create WPConvFunc: " + error));
+    }
+
+  }
+
   void WPConvFunc::findConvFunction(const ImageInterface<Complex>& image, 
 				    const VisBuffer& vb,
 				    const Int& wConvSize,
@@ -431,6 +440,74 @@ Bool WPConvFunc::checkCenterPix(const ImageInterface<Complex>& image){
 
   return True;
 }
+
+Bool WPConvFunc::toRecord(RecordInterface& rec){
+
+  Int numConv=convFunctions_p.nelements();
+  try{
+    rec.define("numconv", numConv);
+    for (Int k=0; k < numConv; ++k){
+      rec.define("convfunctions"+String::toString(k), *(convFunctions_p[k]));
+      rec.define("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
+      rec.define("key"+String::toString(k),convFunctionMap_p.getKey(k));
+      rec.define("val"+String::toString(k), convFunctionMap_p.getVal(k));
+    }
+    rec.define("convsizes", convSizes_p);
+    rec.define("actualconvIndex",actualConvIndex_p);
+    rec.define("convsize", convSize_p);
+    rec.define("convsupport", convSupport_p);
+    rec.define("convfunc",convFunc_p);
+    rec.define("wscale", wScale_p);
+    rec.define("convsampling", convSampling_p);
+    rec.define("nx", nx_p);
+    rec.define("ny", ny_p);
+  }
+  catch(AipsError x) {
+    return False;
+  }
+  return True;
+
+ 
+
+}
+
+ Bool WPConvFunc::fromRecord(String& err, const RecordInterface& rec){
+  
+  Int numConv=0;
+  try{
+    rec.get("numconv", numConv);
+    convFunctions_p.resize(numConv, True, False);
+    convSupportBlock_p.resize(numConv, True, False);
+    convFunctionMap_p=SimpleOrderedMap<String, Int>(-1);
+    for (Int k=0; k < numConv; ++k){
+      convFunctions_p=new Cube<Complex>();
+      convSupportBlock_p=new Vector<Int>();
+      rec.get("convfunctions"+String::toString(k), *(convFunctions_p[k]));
+      rec.get("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
+      String key;
+      Int val;
+      rec.get("key"+String::toString(k), key);
+      rec.get("val"+String::toString(k), val);
+      convFunctionMap_p.define(key,val);
+    }
+    rec.get("convsizes", convSizes_p);
+    rec.get("actualconvIndex",actualConvIndex_p);
+    rec.get("convsize", convSize_p);
+    rec.get("convsupport", convSupport_p);
+    rec.get("convfunc",convFunc_p);
+    rec.get("wscale", wScale_p);
+    rec.get("convsampling", convSampling_p);
+    rec.get("nx", nx_p);
+    rec.get("ny", ny_p);
+  }
+  catch(AipsError x) {
+    err=x.getMesg();
+    return False;
+  }
+  return True;
+
+  }
+
 
 
 

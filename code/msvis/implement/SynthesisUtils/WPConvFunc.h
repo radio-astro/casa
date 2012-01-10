@@ -60,6 +60,7 @@ namespace casa{
     {
     public:
       WPConvFunc();
+      WPConvFunc(const RecordInterface& rec);
       virtual ~WPConvFunc();
 
       // Inputs are the image, visbuffer,  wConvsize
@@ -85,7 +86,9 @@ namespace casa{
 				       ImageInterface<Float>& /*theavgPB*/,
 				       Bool /*reset=True*/)
     {throw(AipsError("WPConvFunc::makeAverageRes() called"));};
-
+      //Serialization
+      Bool toRecord(RecordInterface& rec);
+      Bool fromRecord(String& err, const RecordInterface& rec);
     private:
       Bool checkCenterPix(const ImageInterface<Complex>& image);
       Block <CountedPtr<Cube<Complex> > > convFunctions_p;
