@@ -42,8 +42,8 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
-#include <msvis/SynthesisUtils/PBMathInterface.h>
-#include <msvis/SynthesisUtils/PBMath.h>
+#include <synthesis/MeasurementComponents/PBMathInterface.h>
+#include <synthesis/MeasurementComponents/PBMath.h>
 #include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/ALMACalcIlluminationConvFunc.h>
 #include <casa/Logging.h>
@@ -202,7 +202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool VPManager::saveastable(const String& tablename){
     
-    TableDesc td("vptable", "1", TableDesc::New);
+    TableDesc td("vptable", "1", TableDesc::Scratch);
     td.addColumn(ScalarColumnDesc<String>("telescope"));
     td.addColumn(ScalarColumnDesc<Int>("antenna"));
     td.addColumn(ScalarRecordColumnDesc("pbdescription"));
@@ -221,10 +221,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     // create subtable for the vplistdefaults
-    TableDesc td2("vplistdefaultstable", "1", TableDesc::New);
+    TableDesc td2("vplistdefaultstable", "1", TableDesc::Scratch);
     td2.addColumn(ScalarColumnDesc<String>("tel_and_anttype"));
     td2.addColumn(ScalarColumnDesc<Int>("vplistnum"));
-    SetupNewTable defaultsSetup("VPLIST_DEFAULTS", td2, Table::New);
+    SetupNewTable defaultsSetup(tablename+"/VPLIST_DEFAULTS", td2, Table::New);
     
     Table tb2(defaultsSetup, Table::Plain, vplistdefaults_p.ndefined());
     ScalarColumn<String> telcol2(tb2, "tel_and_anttype");
@@ -271,11 +271,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     for (uInt k=0; k < tb2.nrow(); k++){
       Int vplistnum =  listnumcol(k);
-      if((vplistnum < -2) || (vplistnum>=(Int)tempvplist.nfields())){
+      if((vplistnum < -1) || (vplistnum>=(Int)tempvplist.nfields())){
 	os << "Error: invalid vplist number " << vplistnum 
 	   << " in subtable VPLIST_DEFAULTS of table " 
 	   << tablename << endl
-	   << "Valid value range is -2 to " << (Int)tempvplist.nfields()-1 
+	   << "Valid value range is -1 to " << (Int)tempvplist.nfields()-1 
 	   << LogIO::POST;
 	return False;
       }
