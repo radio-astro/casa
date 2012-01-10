@@ -34,7 +34,7 @@
 
 #define AipsError_StackTracing  // Allows removing calls to trace addition logic at compile time
 
-#define AipsError_StackTracing_Default True  // Assume enabled unless told otherwise
+#define AipsError_StackTracing_Default False  // Assume enabled unless told otherwise
 
 #if defined (AipsError_StackTracing)
 #    define AddStackTrace() addStackTrace()
