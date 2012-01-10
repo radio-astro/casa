@@ -1076,6 +1076,7 @@ casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis imageanalysis Boost ca
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( flagging CASACORE Boost casadbus tableplot msvis casaqt QT4)
 casa_add_module( calibration CASACORE tableplot msvis Boost )
+casa_add_module( calanalysis CASACORE calibration )
 casa_add_module( synthesis CASACORE ATM casadbus msvis Boost calibration )
 casa_add_module( alma CASACORE LIBXML2 Boost )
 casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost msvis)
