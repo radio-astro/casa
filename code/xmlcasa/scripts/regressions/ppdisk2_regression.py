@@ -32,6 +32,7 @@ print casa['build']
 print 'I think the data repository is at '+repodir
 #importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename=my_modelimage)
 
+default("simanalyze")
 default("simobserve")
 project=my_project
 skymodel=my_modelimage
@@ -100,7 +101,8 @@ ia.close()
 # 20100428
 refstats = { 'flux': 0.0363,
              'max': 5.44e-04,
-             'min': -0.633e-05,
+#             'min': -0.633e-05,
+             'min': -0.9e-05,  # 20120110
              'rms': 1.84e-04,
              'sigma': 1.27e-04 }
 
