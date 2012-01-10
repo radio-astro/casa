@@ -154,9 +154,13 @@ def tflagger(vis,
                            baseline=antenna, uvrange=uvrange, time=timerange, \
                            intent=intent, observation=str(observation))   
 
+        
         # Set constraints to some parameters
         if mode == '':
             mode = 'manualflag'
+            
+        # Hold the name of the agent
+        agent_name = mode.capitalize()
 
         if (writeflags == True and mode == 'summary'):
             # It was probably a mistake of the user, reset writeflags
@@ -172,6 +176,7 @@ def tflagger(vis,
 
         # Setup global parameters
         agent_pars = {}
+        agent_pars['name'] = agent_name
 
         # Add the global parameters to the dictionary of agent's parameters            
         agent_pars['mode'] = mode
