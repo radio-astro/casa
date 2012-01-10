@@ -46,7 +46,6 @@ namespace casa {
 
 const bool TestFlagger::dbg = false;
 
-LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 
 // TODO: add wrapping functions to existing fg.setdata(), fg.setclearflags(), etc?!
 
@@ -120,7 +119,7 @@ bool
 TestFlagger::open(String msname, Double ntime)
 {
 
-	LogIO os(LogOrigin("TestFlagger", "open()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if (msname.empty()) {
 		os << LogIO::SEVERE << "No Measurement Set has been parsed"
@@ -156,7 +155,7 @@ bool
 TestFlagger::selectData(Record selrec)
 {
 
-	LogIO os(LogOrigin("TestFlagger", "selectData()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 	if (dbg)
 		os << LogIO::NORMAL << "Called from selectData(Record)" << LogIO::POST;
 
@@ -226,7 +225,7 @@ TestFlagger::selectData(String field, String spw, String array,
 						String intent, String observation)
 {
 
-	LogIO os(LogOrigin("TestFlagger", "selectData()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if (dbg)
 		os << LogIO::NORMAL << "Called from selectData(String....)" << LogIO::POST;
@@ -261,7 +260,7 @@ bool
 TestFlagger::parseDataSelection(Record selrec)
 {
 
-	LogIO os(LogOrigin("TestFlagger", "parseDataSelection()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if(selrec.empty()) {
 		return false;
@@ -294,30 +293,39 @@ TestFlagger::parseDataSelection(Record selrec)
 bool
 TestFlagger::parseAgentParameters(Record agent_params)
 {
-	LogIO os(LogOrigin("TestFlagger", "parseAgentParameters()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
-	String mode = "manualflag";
+	String mode = "";
 	String expression = "ABS ALL";
+	String agent_name = "";
+
+	// create a temporary vector of agents
+	std::vector<Record> listOfAgents;
+
 
 	if(agent_params.empty()){
-
-		// Use the default mode
-		agentParams_p.define("mode", mode);
-
-		// add this agent to the list
-		agents_config_list_p.push_back(agentParams_p);
-		return true;
+		os << LogIO::SEVERE << "No agent's record has been provided."
+				<< LogIO::POST;
+		return false;
 	}
 
-	// If there is a Record, continue
+	// Use the given Record of paramters
 	agentParams_p = agent_params;
 
 	if (! agentParams_p.isDefined("mode")) {
-		agentParams_p.define("mode", mode);
+		os << LogIO::SEVERE << "No mode has been provided for the agent"
+				<< LogIO::POST;
+		return false;
 	}
-	else {
-		agentParams_p.get("mode", mode);
-	}
+
+	agentParams_p.get("mode", mode);
+
+	// Name for the logging output
+	if (! agentParams_p.isDefined("name"))
+			agentParams_p.define("name", mode);
+
+
+	agentParams_p.get("name", agent_name);
 
 	// If there is a tfcrop or extend agent in the list change
 	// the iterationApproach for all agents
@@ -325,10 +333,6 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
 	}
 
-	// Call the Display Agent with the correct constructor
-	// if datadisplay=true
-	// if summarydisplay=screen or file
-	// this had to be handled by the create() method in the base class
 
 	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0) {
 
@@ -356,26 +360,35 @@ TestFlagger::parseAgentParameters(Record agent_params)
 				String exp = func.append(" ");
 				exp = func.append(pol);
 
-				// Add record to the list of agents
+				// Save the record to a list of agents
 				agentParams_p.define("expression", exp);
-				agents_config_list_p.push_back(agentParams_p);
+				String name = agent_name;
+				name = name.append("_");
+				name = name.append(pol);
+				agentParams_p.define("name", name);
+				listOfAgents.push_back(agentParams_p);
 			}
-			return true;
 		}
 	}
 
-
-	// add this agent to the list
-	agents_config_list_p.push_back(agentParams_p);
-
-	if (dbg){
-		ostringstream os;
-		agentParams_p.print(os);
-		String str(os.str());
-		cout << str << endl;
+	if (listOfAgents.size() > 0) {
+		// add the agent(s) to the list
+		for (size_t i=0; i < listOfAgents.size(); i++) {
+			agents_config_list_p.push_back(listOfAgents.at(i));
+		}
+	}
+	else {
+		agents_config_list_p.push_back(agentParams_p);
 	}
 
-	// TODO: define names for each agent.
+	if (dbg){
+		for (size_t i=0; i < agents_config_list_p.size(); i++) {
+			ostringstream os;
+			agents_config_list_p.at(i).print(os);
+			String str(os.str());
+			cout << str << endl;
+		}
+	}
 
 	return true;
 }
@@ -391,7 +404,7 @@ TestFlagger::initFlagDataHandler()
 
 	bool ret_status = true;
 
-	LogIO os(LogOrigin("TestFlagger", "initFlagDataHandler()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if (msname_p.empty()) {
 		os << LogIO::SEVERE << "No Measurement Set has been parsed"
@@ -441,12 +454,13 @@ bool
 TestFlagger::initAgents()
 {
 
-	LogIO os(LogOrigin("TestFlagger", "initAgents()", WHERE));
+    LogIO os(LogOrigin("TestFlagger",__FUNCTION__,WHERE));
 
 	if (agents_config_list_p.empty()){
 		return false;
 	}
 
+	os<< LogIO::NORMAL<< "There are "<< agents_config_list_p.size()<< " agents in the list"<<LogIO::POST;
 
 	// loop through the vector of agents
 	for (size_t i=0; i < agents_config_list_p.size(); i++) {
@@ -478,10 +492,6 @@ TestFlagger::initAgents()
 		String mode;
 		agent_rec.get("mode", mode);
 		if (mode.compare("summary") == 0) {
-			if(dbg)
-				os << LogIO::NORMAL << "Get the summary agent from the agent's list."
-						<< LogIO::POST;
-
 			summaryAgent_p = (FlagAgentSummary *) fa;
 		}
 
@@ -503,11 +513,15 @@ Record
 TestFlagger::run(Bool writeflags)
 {
 
-	LogIO os(LogOrigin("TestFlagger", "run()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if (agents_list_p.empty()) {
 		return Record();
 	}
+
+	// Reset the flags before flagging
+//	if (resetflags)
+//		fdh_p->setResetFlags(resetflags);
 
 	// Generate the iterators
 	// It will iterate through the data to evaluate the necessary memory
@@ -633,7 +647,7 @@ bool
 TestFlagger::getFlagVersionList(Vector<String> &verlist)
 {
 
-	LogIO os(LogOrigin("TestFlagger", "getFlagVersionList()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	verlist.resize(0);
 	Int num;
@@ -662,7 +676,7 @@ bool
 TestFlagger::printFlagSelections()
 {
 
-	LogIO os(LogOrigin("TestFlagger", "printFlagSelections()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if (! agents_config_list_p.empty())
 	{
@@ -694,11 +708,13 @@ TestFlagger::printFlagSelections()
 bool
 TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 {
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
 	fv.saveFlagVersion(versionname, comment, merge);
 
 	return true;
 }
+
 
 } //#end casa namespace
