@@ -21,7 +21,7 @@ import publish_summary
 try:
     publish_summary.runTest(test_name,
                             data_dir, work_dir + '/work', work_dir + '/result',
-                            profile = p)
+                            CPP_PROFILE = p)
 except:
     print "runTest execution failed"
     raise
