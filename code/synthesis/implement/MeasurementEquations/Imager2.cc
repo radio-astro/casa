@@ -114,16 +114,16 @@
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
-#include <synthesis/MeasurementComponents/MosaicFT.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <msvis/SynthesisUtils/MosaicFT.h>
+#include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
-#include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
-#include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
-#include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
+#include <msvis/SynthesisUtils/PBMath.h>
+#include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
+#include <msvis/SynthesisUtils/SimpCompGridMachine.h>
+#include <msvis/SynthesisUtils/VPSkyJones.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
+#include <msvis/SynthesisUtils/HetArrayConvFunc.h>
 #include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
@@ -131,7 +131,6 @@
 #include <synthesis/DataSampling/ImageDataSampling.h>
 #include <synthesis/DataSampling/PixonProcessor.h>
 
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
 #include <lattices/Lattices/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
@@ -150,7 +149,7 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCIntersection.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
+#include <msvis/SynthesisUtils/PBMath.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>
@@ -722,12 +721,12 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
   }
   
   if (polType(0)=="X" || polType(0)=="Y") {
-    polRep_p=SkyModel::LINEAR;
+    polRep_p=StokesImageUtil::LINEAR;
     os << LogIO::DEBUG1 
        << "Preferred polarization representation is linear" << LogIO::POST;
   }
   else {
-    polRep_p=SkyModel::CIRCULAR;
+    polRep_p=StokesImageUtil::CIRCULAR;
     os << LogIO::DEBUG1
        << "Preferred polarization representation is circular" << LogIO::POST;
   }
@@ -738,7 +737,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
   Vector<Int> whichStokes = decideNPolPlanes(True);
   if(whichStokes.nelements()==0 || (whichStokes.nelements()==1 && whichStokes[0]==0) ) 
     {
-      if(polRep_p==SkyModel::CIRCULAR) 
+      if(polRep_p==StokesImageUtil::CIRCULAR) 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Circular feeds." << LogIO::EXCEPTION;
       else 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Linear feeds." << LogIO::EXCEPTION;
@@ -1282,12 +1281,12 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
   }
   
   if (polType(0)=="X" || polType(0)=="Y") {
-    polRep_p=SkyModel::LINEAR;
+    polRep_p=StokesImageUtil::LINEAR;
     os << LogIO::DEBUG1 
        << "Preferred polarization representation is linear" << LogIO::POST;
   }
   else {
-    polRep_p=SkyModel::CIRCULAR;
+    polRep_p=StokesImageUtil::CIRCULAR;
     os << LogIO::DEBUG1
        << "Preferred polarization representation is circular" << LogIO::POST;
   }
@@ -1298,7 +1297,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
   Vector<Int> whichStokes = decideNPolPlanes(True);
   if(whichStokes.nelements()==0 || (whichStokes.nelements()==1 && whichStokes[0]==0) ) 
     {
-      if(polRep_p==SkyModel::CIRCULAR) 
+      if(polRep_p==StokesImageUtil::CIRCULAR) 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Circular feeds." << LogIO::EXCEPTION;
       else 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Linear feeds." << LogIO::EXCEPTION;
@@ -1361,14 +1360,14 @@ Vector<Int> Imager::decideNPolPlanes(Bool checkwithMS)
            // Fill in the stokes vector for the output image
            whichStokes.resize(npol_p);
            // The first 8 depend on circular vs linear
-           if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RR")  whichStokes(0)=Stokes::RR;
-           else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="LL")  whichStokes(0)=Stokes::LL;
-           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RL")  whichStokes(0)=Stokes::RL;
-           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="LR")  whichStokes(0)=Stokes::LR;
-           else if(polRep_p==SkyModel::LINEAR && stokes_p=="XX") whichStokes(0)=Stokes::XX;
-           else if(polRep_p==SkyModel::LINEAR && stokes_p=="YY")  whichStokes(0)=Stokes::YY;
-           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="XY")  whichStokes(0)=Stokes::XY;
-           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="YX")  whichStokes(0)=Stokes::YX;
+           if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RR")  whichStokes(0)=Stokes::RR;
+           else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="LL")  whichStokes(0)=Stokes::LL;
+           ////else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RL")  whichStokes(0)=Stokes::RL;
+           ////else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="LR")  whichStokes(0)=Stokes::LR;
+           else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XX") whichStokes(0)=Stokes::XX;
+           else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="YY")  whichStokes(0)=Stokes::YY;
+           ////else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XY")  whichStokes(0)=Stokes::XY;
+           ////else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="YX")  whichStokes(0)=Stokes::YX;
            // these next 4 don't depend on circular vs linear
            else if(stokes_p=="I") whichStokes(0)=Stokes::I;
            else if(stokes_p=="Q") whichStokes(0)=Stokes::Q;
@@ -1392,13 +1391,13 @@ Vector<Int> Imager::decideNPolPlanes(Bool checkwithMS)
             // Check with polrep and fill in the stokes vector for the output image
            whichStokes.resize(npol_p);
            // The first 4 depend on circular vs linear
-           if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RRLL")  
+           if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RRLL")  
                  {whichStokes(0)=Stokes::RR; whichStokes(1)=Stokes::LL;}
-           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RLLR") 
+           ////else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RLLR") 
            ////      {whichStokes(0)=Stokes::RL; whichStokes(1)=Stokes::LR;}
-           else if(polRep_p==SkyModel::LINEAR && stokes_p=="XXYY") 
+           else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XXYY") 
                   {whichStokes(0)=Stokes::XX; whichStokes(1)=Stokes::YY;}
-           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="XYYX") 
+           ////else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XYYX") 
 	   ////      {whichStokes(0)=Stokes::XY; whichStokes(1)=Stokes::YX;}
            // These 4 don't care about circular vs linear
            else if(stokes_p=="IV") 
@@ -3120,12 +3119,12 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     }
   
     if (polType(0)=="X" || polType(0)=="Y") {
-      polRep_p=SkyModel::LINEAR;
+      polRep_p=StokesImageUtil::LINEAR;
       os << LogIO::DEBUG1 
           << "Preferred polarization representation is linear" << LogIO::POST;
     }
     else {
-      polRep_p=SkyModel::CIRCULAR;
+      polRep_p=StokesImageUtil::CIRCULAR;
       os << LogIO::DEBUG1
          << "Preferred polarization representation is circular" << LogIO::POST;
     }
@@ -3829,14 +3828,16 @@ void Imager::makeVisSet(MeasurementSet& ms,
   Matrix<Int> noselection;
   Double timeInterval=0;
   //if you want to use scratch col...make sure they are there
-  if(useModelCol_p)
+  if(useModelCol_p){
     VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
-  
+    //delete keyword models to make sure data column is read
+    VisModelData::clearModel(ms);
+  }
   if(imwgt_p.getType()=="none"){
       imwgt_p=VisImagingWeight("natural");
   }
 
-  if(!useModelCol_p){
+  if(!ms.isWritable()){
     rvi_p=new ROVisibilityIterator(ms, sort, timeInterval);
   }
   else{

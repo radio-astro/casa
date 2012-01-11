@@ -350,8 +350,15 @@ regstate=True
 print >> logfile,'---'
 if regstate:
     print >> logfile, 'Passed',
+    print ''
+    print 'Regression PASSED'
+    print ''
 else:
     print >> logfile, 'FAILED',
+    print ''
+    print 'Regression FAILED'
+    print ''
+
 print >> logfile, 'regression test for simdata of M51 (ALMA-12m INT + ACA-7m INT + 12m TP).'
 print >>logfile,'---'
 print >>logfile,'*********************************'

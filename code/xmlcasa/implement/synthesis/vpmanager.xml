@@ -208,6 +208,22 @@ row of the table.
 <returns type="bool"></returns>
 </method>
 
+   <method type="function" name="loadfromtable">
+   <shortdescription>Load the vp or pb descriptions from a table (deleting all previous definitions)</shortdescription>
+   
+<description>
+Load the vp or pb descriptions from a table created, e.g., with saveastable().
+</description>
+<input>
+
+     <param type="string" name="tablename">
+     <description>Name of table to load vp descriptions from</description>
+     <value></value>
+     </param>
+</input>
+<returns type="bool"></returns>
+</method>
+
  
    <method type="function" name="summarizevps">
    <shortdescription>Summarize the currently accumulated VP descriptions</shortdescription>

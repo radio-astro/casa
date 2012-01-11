@@ -294,7 +294,7 @@ class cleanhelper_test(unittest.TestCase):
             
             # Now Factorize this return
             remainder = float(y)
-            expList = [0,0,0]
+            expList = [0,0,0,0]
             for idx in range(len(factorList)):
                 while remainder > 0 and \
                         (remainder/factorList[idx] == int(remainder/factorList[idx])):
@@ -306,7 +306,8 @@ class cleanhelper_test(unittest.TestCase):
             for idx in range(len(factorList)):
                 value *= factorList[idx]**expList[idx]
             self.assertEqual(y,value)
-            self.assertTrue(expList.count(0) > 0)
+            #self.assertTrue(expList.count(0) > 0)
+            self.assertTrue(expList.count(0) < len(expList))
             
 
 

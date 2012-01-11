@@ -38,7 +38,7 @@
 // UVWs from an antenna table.
 // FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 //                      const VisBuffer& vb)
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

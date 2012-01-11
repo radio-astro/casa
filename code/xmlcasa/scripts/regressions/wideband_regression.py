@@ -199,8 +199,15 @@ else:
 # Final verdict
 if(regstate):
    print >>logfile,'PASSED regression test for wideband-imaging.'
+   print ''
+   print 'Regression PASSED'
+   print ''
 else:
    print >>logfile,'FAILED regression test for wideband-imaging.'
+   print ''
+   print 'Regression FAILED'
+   print ''
+
 print >>logfile,''
 
 # Print timing info

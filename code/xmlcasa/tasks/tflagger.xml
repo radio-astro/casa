@@ -34,12 +34,6 @@
                 <value />
             </param>
 
-            <param type="double" name="ntime" units="s">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
-                <any type="variant" limittypes="double string" />
-                <value>0.0</value>
-            </param>
-
             <param type="string" name="mode">
                 <description>Flagging mode (manualflag, clip, shadow, quack, elevation, \
 tfcrop, extend, unflag, summary)</description>
@@ -233,11 +227,6 @@ tfcrop, extend, unflag, summary)</description>
                 <value type="bool">False</value>
             </param>
 
-            <param type="string" name="summarydisplay">
-                <description>Create summary plots or text summary after flagging</description>
-                <value type="string"></value>
-            </param>
-
              <param type="double" name="minrel" subparam="true">
                 <description>minimum number of flags (relative)</description>
                 <value type="double">0.0</value>
@@ -263,14 +252,25 @@ tfcrop, extend, unflag, summary)</description>
                 <description>Print summary of correlation per spw</description>
                 <value type="bool">False</value>
             </param>
-            <param type="string" name="plotfile" subparam="true">
-                    <description>Name of output file to save summary plots</description>
-                    <value></value>
+
+            <param type="any" name="ntime">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description>Accumulate data across scans.</description>
+                <value>False</value>
             </param>
 
-            <param type="bool" name="datadisplay">
-                <description>Display data and flags at runtime </description>
-                <value>False</value>
+            <param type="string" name="display">
+                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <value type="string"></value>
+            </param>
+
+            <param type="string" name="format" subparam="true">
+                <description>Display plots on the screen or save on a file</description>
+                <value type="string">screen</value>
             </param>
 
             <param type="bool" name="writeflags">
@@ -293,7 +293,7 @@ tfcrop, extend, unflag, summary)</description>
                 <value>False</value>
             </param>
 
-            <constraints>                   
+            <constraints>      
                 <when param="selectdata">
                     <equals type="bool" value="True">
                         <default param="field"><value type="string"></value></default>
@@ -362,16 +362,21 @@ tfcrop, extend, unflag, summary)</description>
                     </equals>
                 </when>
 
-               <when param="summarydisplay">
+                <when param="ntime">
+                    <notequals type="string" value="scan">
+                        <default param="combinescans"><value type="bool">False</value></default>
+                    </notequals>
+                </when>             
+
+               <when param="display">
                 <equals type="string" value="" />
-                <equals type="string" value="text">
-                        <default param="spwchan"><value type="bool">False</value></default>
-                        <default param="spwcorr"><value type="bool">False</value></default>
+                <equals type="string" value="data" />
+                <equals type="string" value="report">
+                        <default param="format"><value type="string">screen</value></default>
                 </equals>                    
-                <equals type="string" value="screen"></equals>
-                <equals type="string" value="file">                
-                    <default param="plotfile"><value type="string"></value></default>
-                </equals>
+                <equals type="string" value="both">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
                </when>
                 
                <when param="savepars">
@@ -400,10 +405,6 @@ tfcrop, extend, unflag, summary)</description>
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
 
-        ntime -- Timerange (in seconds) over which to accumulate data before running the algorithms. 
-               default: 0.0 
-               The dataset will be iterated through in time-chunks defined here.
-        
         selectdata -- Select a subset of data for flagging?
                     default: False
                     options: True,False
@@ -677,6 +678,18 @@ tfcrop, extend, unflag, summary)</description>
                     s['total']                  : total number of data
                     s['flagged']                : amount of flagged data
 
+        ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
+                options: 'scan' or any other float value or string containing the units.
+                default: 'scan'
+                
+            combinescans -- accumulate data across scans.
+                default: False
+                Only available when ntime not equal 'scan'.
+                
+                Example: '1.5min'
+                       : 1.2 (taken in seconds)
+               The dataset will be iterated through in time-chunks defined here.
+        
  
         datadisplay -- Display data and flags per-chunck at run-time, within an interactive GUI
                  default: False

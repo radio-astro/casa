@@ -108,7 +108,9 @@ int main() {
     const ImageInterface<Float> *jykms = new FITSImage(datadir + "jyperbeamkmpersec.fits");
     const ImageInterface<Float> *gaussNoPol = new FITSImage(datadir + "gauss_no_pol.fits");
     const ImageInterface<Float> *twoGauss = new FITSImage(datadir + "two_gaussian_model.fits");
-    const ImageInterface<Float> *multiplane = new FITSImage(datadir + "gauss_multiplane.fits");
+    std::auto_ptr<const ImageInterface<Float> > multiplane(
+    	new FITSImage(datadir + "gauss_multiplane.fits")
+    );
 	const Path compTable(dirName + "/myCompList.cl");
 	int returnValue = 0;
 
@@ -658,7 +660,7 @@ int main() {
 				String modelImage = dirName + "/modelImage_multi";
         		String mask = datadir + "gauss_multiplane.fits<15";
         		ImageFitter fitter(
-        			multiplane, "", 0, "", "0~3", "I", mask, Vector<Float>(0), Vector<Float>(0),
+        			multiplane.get(), "", 0, "", "0~3", "I", mask, Vector<Float>(0), Vector<Float>(0),
         			residImage, modelImage, datadir + "estimates_2gauss_multiplane.txt",
         			"", True, "", compTable.absoluteName(), ImageFitter::OVERWRITE
         		);
@@ -752,6 +754,25 @@ int main() {
          	fitter.getZeroLevelSolution(zeroLevelSolution, zeroLevelError);
          	AlwaysAssert(nearAbs(zeroLevelSolution[0], -0.102277, 1e-6), AipsError);
          	AlwaysAssert(zeroLevelError[0] == 0.0, AipsError);
+        }
+        {
+         	writeTestString(
+ 				"test fitting for channel number other than zero (CAS-3676)"
+         	);
+
+         	ImageFitter fitter(
+         		multiplane.get(), "", 0, "", "1~3"
+         	);
+         	ComponentList compList = fitter.fit();
+         	AlwaysAssert(fitter.converged(0), AipsError);
+         	Vector<Quantity> flux;
+         	compList.getFlux(flux,0);
+         	AlwaysAssert(near(flux(0).getValue(), 757.2717438, 1e-5), AipsError);
+         	compList.getFlux(flux,1);
+         	AlwaysAssert(near(flux(0).getValue(), 1048.7750351, 1e-5), AipsError);
+         	compList.getFlux(flux,2);
+         	AlwaysAssert(near(flux(0).getValue(), 2712.41789, 1e-5), AipsError);
+
         }
         cout << "ok" << endl;
     }

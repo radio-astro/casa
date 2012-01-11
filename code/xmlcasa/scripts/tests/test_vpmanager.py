@@ -18,13 +18,14 @@ Unit tests for the vpmanager tool. Tested methods:
         getrespimagename()
         setuserdefault()
         getuserdefault()
+        saveastable()
+        loadfromtable()
 '''
 class vpmanager_test(unittest.TestCase):
     
     # Input and output names
     res = None
     inputdir = 'mydir3'
-    out = 'hanningsmooth_test'
 
     def setUp(self):
         self.res = None
@@ -294,6 +295,38 @@ class vpmanager_test(unittest.TestCase):
         self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","INTERNAL","CM","0deg","0deg","",0)
         self.assertTrue(self.res)
 
+    def test17(self):
+        '''Test 17: define Airy beam for ALMA, save it, load it, then use it'''        
+        vp.reset()
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam=str(12./1.18)+'m',
+                     blockagediam='0.75m',
+                     maxrad='1.784deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+
+        shutil.rmtree('mydefs.tab', ignore_errors=True)
+        vp.saveastable('mydefs.tab')
+        vp.reset()
+        vp.loadfromtable('mydefs.tab')
+        
+        myrec = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = '',
+                         obsdirection = 'AZEL 30deg 60deg')
+        
+        woanttypeok = (myrec['name']=='AIRY' and myrec['telescope']=='ALMA')
+
+        myrec = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'DV', # should not matter since AIRY entry global
+                         obsdirection = 'AZEL 30deg 60deg')
+        
+        withanttypeok = (myrec['name']=='AIRY' and myrec['telescope']=='ALMA')
+
+        self.assertTrue(woanttypeok and withanttypeok)
     
 
 

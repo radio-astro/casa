@@ -217,8 +217,15 @@ for ke in rskes:
 print >> logfile,'---'
 if regstate:
     print >> logfile, 'Passed',
+    print ''
+    print 'Regression PASSED'
+    print ''
 else:
     print >> logfile, 'FAILED',
+    print ''
+    print 'Regression FAILED'
+    print ''
+
 print >> logfile, 'regression test for simdata of M51 (total power).'
 print >>logfile,'---'
 print >>logfile,'*********************************'

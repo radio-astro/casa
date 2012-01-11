@@ -26,9 +26,9 @@
 //#
 //# $Id$
 //
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/SynthesisUtils/Utils.h>
 #include <synthesis/MeasurementComponents/ALMAAperture.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 #include <synthesis/MeasurementComponents/WTerm.h>
 #include <synthesis/MeasurementComponents/ALMACalcIlluminationConvFunc.h>

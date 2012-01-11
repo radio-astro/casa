@@ -31,7 +31,7 @@ class FlagAgentClipping : public FlagAgentBase {
 
 public:
 
-	FlagAgentClipping(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+	FlagAgentClipping(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentClipping();
 
 protected:

@@ -1932,10 +1932,16 @@ if (final_status == 'Passed'):
     print >>logfile,'Passed Regression test for NGC 4826 Mosaic'
     print >>logfile,'---'
     print 'Passed Regression test for NGC 4826 Mosaic'
+    print ''
+    print 'Regression PASSED'
+    print ''
 else:
     regstate=False
     print >>logfile,'----FAILED Regression test for NGC 4826 Mosaic'
     print '----FAILED Regression test for NGC 4826 Mosaic'
+    print ''
+    print 'Regression FAILED'
+    print ''
     
 #
 ##########################################################################

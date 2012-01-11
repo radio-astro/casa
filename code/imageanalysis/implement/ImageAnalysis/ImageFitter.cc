@@ -880,7 +880,8 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			}
 		}
 		else {
-			*_getLog() << LogIO::SEVERE << "Could not deconvolve source from beam" << LogIO::POST;
+
+			size << "    Could not deconvolve source from beam. Source may be (only marginally) resolved in only one direction.";
 		}
 	}
 	return size.str();
@@ -916,8 +917,8 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	fd[1] = fluxDensityError.getValue();
 	Quantity peakIntensity = _peakIntensities[compNumber];
 	Quantity intensityToFluxConversion = _getImage()->units().getName().contains("/beam")
-    				? Quantity(1.0, "beam")
-    						: Quantity(1.0, "pixel");
+    	? Quantity(1.0, "beam")
+    	: Quantity(1.0, "pixel");
 
 	Quantity tmpFlux = peakIntensity * intensityToFluxConversion;
 	tmpFlux.convert("Jy");
@@ -994,7 +995,7 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 	}
 
 	spec << "Spectrum ---" << endl;
-	spec << "      --- frequency:        " << frequency << " (" << wavelength << ")" << endl;
+	spec << std::setprecision(7) << std::showpoint << "      --- frequency:        " << frequency << " (" << wavelength << ")" << endl;
 	return spec.str();
 }
 
@@ -1145,7 +1146,6 @@ ComponentList ImageFitter::_fitsky(
 	*_getLog() << origin;
 
 	String error;
-
 	Vector<SkyComponent> estimate;
 
 	ComponentList compList;
@@ -1161,7 +1161,6 @@ ComponentList ImageFitter::_fitsky(
 			estimate(i) = compList.component(i);
 		}
 	}
-
 	converged = False;
 	const uInt nModels = models.nelements();
 	const uInt nGauss = _doZeroLevel ? nModels - 1 : nModels;
@@ -1187,7 +1186,6 @@ ComponentList ImageFitter::_fitsky(
 			AxesSpecifier(True), _getStretch()
 		);
 	}
-
 	SubImage<Float> allAxesSubImage;
 	{
 		IPosition imShape = subImageTmp.shape();
@@ -1201,22 +1199,21 @@ ComponentList ImageFitter::_fitsky(
 
 		if (imcsys.hasSpectralAxis()) {
 			uInt spectralAxisNumber = imcsys.spectralAxisNumber();
-			startPos[spectralAxisNumber] = chan;
-			endPos[spectralAxisNumber] = chan;
+			startPos[spectralAxisNumber] = chan - _chanVec[0];
+			endPos[spectralAxisNumber] = startPos[spectralAxisNumber];
 		}
 		if (imcsys.hasPolarizationCoordinate()) {
 			uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
 			startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(stokesString);
 			endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
 		}
-
 		Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
+
 		// CAS-1966, CAS-2633 keep degenerate axes
 		allAxesSubImage = SubImage<Float>(
 			subImageTmp, slice, False, AxesSpecifier(True)
 		);
 	}
-
 	// for some things we don't want the degenerate axes,
 	// so make a subimage without them as well
 	SubImage<Float> subImage = SubImage<Float>(
@@ -1229,7 +1226,6 @@ ComponentList ImageFitter::_fitsky(
 
 	pixels = subImage.get(True);
 	IPosition shape = pixels.shape();
-
 	pixelMask = subImage.getMask(True).copy();
 
 	// What Stokes type does this plane hold ?

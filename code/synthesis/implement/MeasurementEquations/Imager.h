@@ -34,14 +34,19 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
+
+#include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/FluxStandard.h>
-//#include <measures/Measures/MDirection.h>
+//#include <measures/Measures/MDirection.h
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 
+#include <msvis/SynthesisUtils/FTMachine.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
+
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/EVLAAperture.h>
-#include <synthesis/MeasurementComponents/BeamSquint.h>
+#include <msvis/SynthesisUtils/BeamSquint.h>
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
@@ -856,7 +861,7 @@ protected:
   Bool freqFrameValid_p;
 
   // Preferred complex polarization representation
-  SkyModel::PolRep polRep_p;
+  StokesImageUtil::PolRep polRep_p;
 
   //Whether to use model column or use it in memory on the fly
   Bool useModelCol_p;

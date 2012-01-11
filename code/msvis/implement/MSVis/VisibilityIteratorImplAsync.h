@@ -174,8 +174,8 @@ public:
     Vector<Double>& lsrFrequency(Vector<Double>& ) const { NotImplementedROVIA; }
     void lsrFrequency(const Int& , Vector<Double>& , Bool& ) { NotImplementedROVIA; }
     const MeasurementSet& ms() const  { NotImplementedROVIA; }
-    //////const ROMSColumns& msColumns() const { NotImplementedROVIA; }
-    Int msId() const  { NotImplementedROVIA; }
+    const ROMSColumns& msColumns() const;
+    Int msId() const;
     Int nCorr() const { NotImplementedROVIA; }
     Int nRow() const { NotImplementedROVIA; }
     Int nRowChunk() const { NotImplementedROVIA; }

@@ -31,6 +31,7 @@
 
 #include <casa/aips.h>
 #include <synthesis/MeasurementEquations/Iterate.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <casa/BasicSL/String.h>
@@ -133,8 +134,8 @@ class SkyModel : public Iterate {
 public:
   
   enum PolRep {
-    CIRCULAR=0,
-    LINEAR
+    CIRCULAR=StokesImageUtil::CIRCULAR,
+    LINEAR=StokesImageUtil::LINEAR
   };
 
   SkyModel() : itsAlgorithm(""), itsSubAlgorithm(""), imageRegion_p(0) { }  

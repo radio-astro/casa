@@ -19,6 +19,43 @@
 #
 
 casa_add_library( msvis
+  implement/SynthesisUtils/BeamSkyJones.cc
+  implement/SynthesisUtils/BeamSquint.cc
+  implement/SynthesisUtils/CFCache.cc
+  implement/SynthesisUtils/CFStore.cc
+  implement/SynthesisUtils/ComponentFTMachine.cc
+  implement/SynthesisUtils/ConvolutionFunction.cc
+  implement/SynthesisUtils/DBeamSkyJones.cc
+  implement/SynthesisUtils/FTMachine.cc
+  implement/SynthesisUtils/GridFT.cc
+  implement/SynthesisUtils/HetArrayConvFunc.cc
+  implement/SynthesisUtils/MosaicFT.cc
+  implement/SynthesisUtils/PBMath1DAiry.cc
+  implement/SynthesisUtils/PBMath1D.cc
+  implement/SynthesisUtils/PBMath1DCosPoly.cc
+  implement/SynthesisUtils/PBMath1DGauss.cc
+  implement/SynthesisUtils/PBMath1DIPoly.cc
+  implement/SynthesisUtils/PBMath1DNumeric.cc
+  implement/SynthesisUtils/PBMath1DPoly.cc
+  implement/SynthesisUtils/PBMath2D.cc
+  implement/SynthesisUtils/PBMath2DImage.cc
+  implement/SynthesisUtils/PBMath.cc
+  implement/SynthesisUtils/PBMathInterface.cc
+  implement/SynthesisUtils/SimpCompGridMachine.cc
+  implement/SynthesisUtils/SimpComponentGridMachine.cc
+  implement/SynthesisUtils/SimpleComponentFTMachine.cc
+  implement/SynthesisUtils/SimplePBConvFunc.cc
+  implement/SynthesisUtils/SkyJones.cc
+  implement/SynthesisUtils/StokesImageUtil.cc
+  implement/SynthesisUtils/SynthesisError.cc
+  implement/SynthesisUtils/Utils.cc
+  implement/SynthesisUtils/VisModelData.cc
+  implement/SynthesisUtils/VPSkyJones.cc
+  implement/SynthesisUtils/WProjectFT.cc
+  implement/SynthesisUtils/WPConvFunc.cc
+  implement/fortran/fgridft.f		
+  implement/fortran/fmosaic.f
+  implement/fortran/wprojgrid.f
   implement/MSVis/AsynchronousInterface.cc
   implement/MSVis/AsynchronousTools.cc
   implement/MSVis/CalVisBuffer.cc
@@ -51,7 +88,7 @@ casa_add_library( msvis
   implement/MSVis/VisibilityIterator.cc
   implement/MSVis/VisibilityIteratorImpl.cc
   implement/MSVis/VisibilityIteratorImplAsync.cc
-  implement/MSVis/VisibilityProcessing.cc
+  implement/MSVis/VisibilityProcessing.cc 
   implement/MSVis/VisImagingWeight.cc
   implement/MSVis/VisIterator.cc
   implement/MSVis/VisSet.cc
@@ -69,3 +106,4 @@ casa_add_assay( msvis implement/MSVis/test/tVisibilityIterator.cc )
 casa_add_assay( msvis implement/MSVis/test/tVisibilityIteratorAsync.cc )
 casa_add_assay( msvis implement/MSVis/test/VisibilityProcessing_Test.cc )
 casa_add_assay( msvis implement/MSVis/test/tVisIter.cc )
+casa_add_assay( msvis implement/SynthesisUtils/test/tVisModelData.cc )

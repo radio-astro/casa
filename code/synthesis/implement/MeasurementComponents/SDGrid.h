@@ -29,8 +29,8 @@
 #ifndef SYNTHESIS_SDGRID_H
 #define SYNTHESIS_SDGRID_H
 
-#include <synthesis/MeasurementComponents/FTMachine.h>
-#include <synthesis/MeasurementComponents/SkyJones.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
+#include <msvis/SynthesisUtils/SkyJones.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>

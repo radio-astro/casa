@@ -39,7 +39,7 @@
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
@@ -72,7 +72,7 @@ ImageSkyModel::ImageSkyModel(const Int maxNumModels) :
   cycleMaxPsfFraction_p(0.8),
   donePSF_p(False),
   modified_p(True),
-  dataPolRep_p(SkyModel::CIRCULAR)
+  dataPolRep_p(StokesImageUtil::CIRCULAR)
  {}
 
 void ImageSkyModel::setMaxNumberModels(const Int maxNumModels) {
@@ -350,7 +350,7 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
 				    image_p[model]->coordinates(),
 				    whichStokes,
 				    dataPolRep_p);
-    //				    SkyModel::CIRCULAR);
+    //				    StokesImageUtil::CIRCULAR);
 
     /* STOKESDBG */ //cout << "ImageSkyModel::CImage : Correlation Planes 'whichStokes' : " << whichStokes << endl;
     cimageShape(2)=whichStokes.nelements();

@@ -37,7 +37,7 @@
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <msvis/SynthesisUtils/SynthesisError.h>
 #include <calibration/CalTables/CalSet.h>
 #include <calibration/CalTables/CalSetMetaInfo.h>
 #include <calibration/CalTables/CalInterp.h>

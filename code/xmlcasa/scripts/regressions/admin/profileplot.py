@@ -62,9 +62,14 @@ def handler(signum, frame):
     #s="test-plot.png"
 
     #set up special images directory?
-    png_filename=myf['RESULT_DIR']+time.strftime('/%Y_%m_%d/')+myf['testname']+'_profile.png'
-    if not os.path.isdir(myf['RESULT_DIR']+time.strftime('/%Y_%m_%d/')):
-        os.mkdir(myf['RESULT_DIR']+time.strftime('/%Y_%m_%d/'))
+    if os.path.basename(myf['RESULT_DIR']) == myf['testname']:
+        png_path=myf['RESULT_DIR']
+    else:
+        png_path=myf['RESULT_DIR']+time.strftime('/%Y_%m_%d')
+
+    png_filename=png_path +'/'+myf['testname']+'_profile.png'
+    if not os.path.isdir(png_path):
+        os.mkdir(png_path)
 
     pl.savefig(png_filename);
     ht=htmlPub(myf['webpage'], 'Memory profile of '+myf['testname'])

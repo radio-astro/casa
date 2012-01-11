@@ -125,7 +125,6 @@ Record ImageProfileFitter::fit() {
 			_subImage = SubImage<Float>::createSubImage(
 				*x, Record(), "", _getLog().get(),
 				False, AxesSpecifier(), False
-
 			);
 			_fitters.resize(IPosition(1,1));
 			_fitters(IPosition(1, 0)) = fitter;
@@ -243,18 +242,22 @@ void ImageProfileFitter::_setResults() {
 			nCompArr(idx) = (Int)fitter->getList().nelements();
 			solutions = fitter->getList();
 			for (uInt i=0; i<solutions.nelements(); i++) {
-				typeMat(count, i) = SpectralElement::fromType(solutions[i].getType());
-				if (solutions[i].getType() == SpectralElement::GAUSSIAN) {
-					centerMat(count, i) = _centerWorld(solutions[i], subimPos);
-					fwhmMat(count, i) = solutions[i].getFWHM() * increment;
-					ampMat(count, i) = solutions[i].getAmpl();
-					centerErrMat(count, i) = solutions[i].getCenterErr() * increment;
-					fwhmErrMat(count, i) = solutions[i].getFWHMErr() * increment;
-					ampErrMat(count, i) = solutions[i].getAmplErr();
+				typeMat(count, i) = SpectralElement::fromType(solutions[i]->getType());
+				if (solutions[i]->getType() == SpectralElement::GAUSSIAN) {
+					const GaussianSpectralElement *g = dynamic_cast<
+							const GaussianSpectralElement*
+						>(solutions[i]);
+					centerMat(count, i) = _centerWorld(*g, subimPos);
+					fwhmMat(count, i) = g->getFWHM() * increment;
+					ampMat(count, i) = g->getAmpl();
+					centerErrMat(count, i) = g->getCenterErr() * increment;
+					fwhmErrMat(count, i) = g->getFWHMErr() * increment;
+					ampErrMat(count, i) = g->getAmplErr();
 					integralMat(count, i) = integralConst * ampMat(count, i) * fwhmMat(count, i);
 					Double ampFErr = ampErrMat(count, i)/ampMat(count, i);
 					Double fwhmFErr = fwhmErrMat(count, i)/fwhmMat(count, i);
-					integralErrMat(count, i) = integralMat(count, i) * sqrt(ampFErr*ampFErr + fwhmFErr*fwhmFErr);
+					integralErrMat(count, i) = integralMat(count, i)
+						* sqrt(ampFErr*ampFErr + fwhmFErr*fwhmFErr);
 				}
 			}
 		}
@@ -324,7 +327,7 @@ void ImageProfileFitter::_setResults() {
 		_results.define(key, typeMat.column(i).reform(shape));
 		if (
 			_multiFit && someConverged
-			&& solutions[i].getType() == SpectralElement::GAUSSIAN
+			&& solutions[i]->getType() == SpectralElement::GAUSSIAN
 		) {
 			String gnum = String::toString(gaussCount);
 			String mUnit = _xUnit;
@@ -360,7 +363,6 @@ Bool ImageProfileFitter::_inVelocitySpace() const {
 }
 
 Double ImageProfileFitter::_fitAxisIncrement() const {
-	Double increment;
 	if (_inVelocitySpace()) {
 		Vector<Double> pixels(2);
 		pixels[0] = 0;
@@ -378,7 +380,7 @@ Double ImageProfileFitter::_fitAxisIncrement() const {
 }
 
 Double ImageProfileFitter::_centerWorld(
-    const SpectralElement solution, const IPosition imPos
+    const GaussianSpectralElement& solution, const IPosition& imPos
 ) const {
 	Vector<Double> pixel(imPos.size());
 	for (uInt i=0; i<pixel.size(); i++) {
@@ -532,13 +534,15 @@ void ImageProfileFitter::_resultsToLog() const {
 				summary << "    Iterations   : " << fitter->getNumberIterations() << endl;
 				for (uInt i=0; i<solutions.nelements(); i++) {
 					summary << "    Results for component " << i << ":" << endl;
-					if (solutions[i].getType() == SpectralElement::GAUSSIAN) {
+					if (solutions[i]->getType() == SpectralElement::GAUSSIAN) {
+						const GaussianSpectralElement *g = dynamic_cast<const GaussianSpectralElement*>(solutions[i]);
 						summary << _gaussianToString(
-							solutions[i], csys, world.copy(), subimPos
+							*g, csys, world.copy(), subimPos
 						);
 					}
-					else if (solutions[i].getType() == SpectralElement::POLYNOMIAL) {
-						summary << _polynomialToString(solutions[i], csys, imPix, world);
+					else if (solutions[i]->getType() == SpectralElement::POLYNOMIAL) {
+						const PolynomialSpectralElement *p = dynamic_cast<const PolynomialSpectralElement*>(solutions[i]);
+						summary << _polynomialToString(*p, csys, imPix, world);
 					}
 				}
 			}
@@ -612,7 +616,7 @@ String ImageProfileFitter::_elementToString(
 }
 
 String ImageProfileFitter::_gaussianToString(
-	const SpectralElement& gauss, const CoordinateSystem& csys,
+	const GaussianSpectralElement& gauss, const CoordinateSystem& csys,
 	const Vector<Double> world, const IPosition imPos
 ) const {
 	Vector<Double> myWorld = world;
@@ -717,7 +721,7 @@ String ImageProfileFitter::_gaussianToString(
 }
 
 String ImageProfileFitter::_polynomialToString(
-	const SpectralElement& poly, const CoordinateSystem& csys,
+	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
 	const Vector<Double> imPix, const Vector<Double> world
 ) const {
 	ostringstream summary;
@@ -733,15 +737,12 @@ String ImageProfileFitter::_polynomialToString(
 		summary << "         c" << j << " : "
             << _elementToString(parms[j], errs[j], unit) << endl;
 	}
-    // coefficents in pixel
+    // coefficients in pixel coordinates
     Double x0;
     Double deltaX = _fitAxisIncrement();
 
     if (Quantity(1,_xUnit).isConform(Quantity(1, "m/s"))) {
-        // Double x1;
         csys.spectralCoordinate(csys.findCoordinate(Coordinate::SPECTRAL)).pixelToVelocity(x0, 0);
-       // csys.spectralCoordinate(csys.findCoordinate(Coordinate::SPECTRAL)).pixelToVelocity(x1, 1);
-       // deltaX = x1 - x0;
     }
     else {
         Vector<Double> p0 = imPix;
@@ -915,7 +916,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 		}
 		if (_polyOrder >= 0) {
 			// Add baseline
-			SpectralElement polyEl(_polyOrder);
+			PolynomialSpectralElement polyEl(_polyOrder);
 			fitter.addElement(polyEl);
 		}
 		if (! fitter.fit()) {
@@ -999,7 +1000,8 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	if (axis2 < 0) {
 		if (pAxis != -1) {
 			axis2 = pAxis;
-		} else {
+		}
+		else {
 			axis2 = _subImage.ndim() - 1;
 		}
 	}
@@ -1009,8 +1011,8 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	ImageInterface<Float>* pResid = 0;
 	if (
 		ImageAnalysis::makeExternalImage(
-		fitImage, _model, cSys, imageShape, _subImage,
-		*_getLog(), True, False, True
+			fitImage, _model, cSys, imageShape, _subImage,
+			*_getLog(), True, False, True
 		)
 	) {
 		pFit = fitImage.ptr();
@@ -1031,7 +1033,6 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 		ImageUtilities::getUnitAndDoppler(
 			_xUnit, doppler, _fitAxis, cSys
 		);
-		//_convertEstimates();
 	}
 	return _fitProfiles(
 		pFit, pResid,
@@ -1039,53 +1040,6 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 		showProgress
 	);
 }
-
-/*
-void ImageProfileFitter::_convertEstimates() {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	if (_estimates.nelements() == 0) {
-		return;
-	}
-
-	cout << "*** estimates " << _estimates << endl;
-	for (uInt i=0; i<_estimates.nelements(); i++) {
-		Double center = 0;
-		Double fwhm = 0;
-		if (Quantity(1, _xUnit).isConform("km/s")) {
-			SpectralCoordinate specCoord = _subImage.coordinates().spectralCoordinate();
-			if (! specCoord.pixelToVelocity(center, _estimates[i].getCenter())) {
-				*_getLog() << "Unable to convert center estimate to velocity"
-					<< LogIO::EXCEPTION;
-			}
-			fwhm = abs(
-				_estimates[i].getFWHM()
-					* specCoord.increment()[0]
-					/ specCoord.restFrequency()
-					* Quantity(C::c, "m/s").getValue(_xUnit)
-				);
-		}
-		else {
-			Vector<Double> world;
-			if (
-				! _subImage.coordinates().coordinate(_fitAxis).toWorld(
-					world, Vector<Double>(1, _estimates[i].getCenter())
-				)
-			) {
-				*_getLog() << "Unable to convert center estimate to world coordinate value"
-					<< LogIO::EXCEPTION;
-			}
-			center = world[0];
-			fwhm = abs(
-				_estimates[i].getFWHM()
-				* _subImage.coordinates().coordinate(_fitAxis).increment()[0]
-			);
-		}
-		_estimates[i].setCenter(center);
-		_estimates[i].setFWHM(fwhm);
-	}
-
-}
-*/
 
 // moved from ImageUtilities
 Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
@@ -1167,25 +1121,17 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
 
-	if ( /*
-		! ImageFit1D<Float>::setAbcissaState(
-			errMsg, abcissaType, csys, _xUnit, doppler, _fitAxis
-		)
-		*/
+	if (
 		! ImageFit1D<Float>::setAbcissaState(
 			errMsg, abcissaType, csys, "pix", doppler, _fitAxis
 		)
 	) {
 		throw AipsError(errMsg);
 	}
-
-	SpectralElement polyEl(_polyOrder);
-
 	IPosition inTileShape = _subImage.niceCursorShape();
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
 
-	Bool ok(False);
 	uInt nFail = 0;
 	uInt nConv = 0;
 	uInt nProfiles = 0;
@@ -1228,8 +1174,13 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 			: ImageFit1D<Float>(_subImage, *weightsImage, _fitAxis);
 
 		fitter.errorMessage();
-		ok = fitter.setData (curPos, abcissaType, True);
-		ok = ok ? fitter.setGaussianElements (_ngauss) : False;
+		if (! fitter.setData (curPos, abcissaType, True)) {
+			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
+		}
+		if (! fitter.setGaussianElements (_ngauss)) {
+			*_getLog() << "Unable to set gaussian elements"
+				<< LogIO::EXCEPTION;
+		}
 		if (_estimates.nelements() > 0) {
 			// user supplied initial estimates
 			if (goodPos.size() > 0) {
@@ -1270,47 +1221,51 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 				SpectralList goodList = fitters(nearest).getList();
 				uInt count = 0;
 				for (uInt i=0; i<newEstimates.nelements(); i++) {
-					if (newEstimates[i].getType() != SpectralElement::GAUSSIAN) {
+					if (newEstimates[i]->getType() != SpectralElement::GAUSSIAN) {
 						continue;
 					}
 					while (
 						count<goodList.nelements()
-						&& goodList[count].getType() != SpectralElement::GAUSSIAN
+						&& goodList[count]->getType() != SpectralElement::GAUSSIAN
 					) {
 						count++;
 					}
 					if (count >= goodList.nelements()) {
 						break;
 					}
-					SpectralElement myel = newEstimates[i];
-					myel.setAmpl(goodList[count].getAmpl());
-					myel.setCenter(goodList[count].getCenter());
-					myel.setFWHM(goodList[count].getFWHM());
-					newEstimates.set(myel, i);
+					auto_ptr<GaussianSpectralElement> myel(
+						dynamic_cast<GaussianSpectralElement*>(newEstimates[i]->clone())
+					);
+					const GaussianSpectralElement *goodListGauss = dynamic_cast<
+							const GaussianSpectralElement*
+						>(goodList[count]);
+					myel->setAmpl(goodListGauss->getAmpl());
+					myel->setCenter(goodListGauss->getCenter());
+					myel->setFWHM(goodListGauss->getFWHM());
+					newEstimates.set(*myel, i);
 				}
 			}
 			fitter.setElements(newEstimates);
 		}
-		if (ok && _polyOrder>=0) {
+		if (_polyOrder >= 0) {
+			PolynomialSpectralElement polyEl(_polyOrder);
 			fitter.addElement (polyEl);
 		}
-		if (ok) {
-			nFit++;
-			try {
-				ok = fitter.fit();                // ok == False means no convergence
-				if (ok) {
-					if (_estimates.nelements() > 0) {
-						goodFits(curPos) = &fitter;
-						goodPos.push_back(curPos);
-					}
+		nFit++;
+		Bool ok = False;
+		try {
+			if (ok = fitter.fit()) {               // ok == False means no convergence
+				if (_estimates.nelements() > 0) {
+					goodFits(curPos) = &fitter;
+					goodPos.push_back(curPos);
 				}
-				else if (! ok) {
-					nConv++;
-				}
-			} catch (AipsError x) {
-				ok = False;                       // Some other error
-				nFail++;
 			}
+			else {
+				nConv++;
+			}
+		} catch (AipsError x) {
+			ok = False;                       // Some other error
+			nFail++;
 		}
 		fitters(curPos) = fitter;
 		// Evaluate and fill

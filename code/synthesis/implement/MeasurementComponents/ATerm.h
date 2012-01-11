@@ -37,7 +37,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Containers/Block.h>
 #include <synthesis/MeasurementComponents/CFTerms.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <msvis/SynthesisUtils/CFStore.h>
 
 namespace casa{
   // <summary>  

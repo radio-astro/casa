@@ -67,6 +67,7 @@ FlagAgentSummary::~FlagAgentSummary()
 void
 FlagAgentSummary::setAgentParameters(Record config)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	int exists;
 
@@ -82,11 +83,11 @@ FlagAgentSummary::setAgentParameters(Record config)
 
 	if (spwChannelCounts)
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Channel count activated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " Spw-Channel count activated " << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Channel count deactivated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " Spw-Channel count deactivated " << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("spwcorr");
@@ -101,11 +102,11 @@ FlagAgentSummary::setAgentParameters(Record config)
 
 	if (spwPolarizationCounts)
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Correlation count activated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " Spw-Correlation count activated " << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Correlation count deactivated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " Spw-Correlation count deactivated " << LogIO::POST;
 	}
 
 	return;
@@ -243,6 +244,7 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 Record
 FlagAgentSummary::getResult()
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	Record result;
 
 	if (spwChannelCounts)
@@ -268,11 +270,21 @@ FlagAgentSummary::getResult()
 
 				// Construct spw:channel string as first key
 				stats_key1.defineRecord(spw_stringStream.str() + ":" + channel_stringStream.str(), stats_key2);
+				// Calculate percentage flagged
+				stringstream percentage;
+				percentage.precision(3);percentage.fixed;
+				if( key2->second > 0 )
+				{
+				        percentage << " (" << 100.0 * 
+                                                               (Double) accumChannelflags[key1->first][key2->first]/
+				                               (Double) key2->second << "%)";
+				}
 
-				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
+				*logger_p 	<< LogIO::NORMAL 
 						<< " Spw:" << key1->first << " Channel:" << key2->first
 						<< " flagged: " <<  (Double) accumChannelflags[key1->first][key2->first]
 						<< " total: " <<  (Double) key2->second
+				                << percentage.str() 
 						<< LogIO::POST;
 			}
 
@@ -301,10 +313,21 @@ FlagAgentSummary::getResult()
 				// Construct spw:correlation string as first key (Polarization already comes as a string)
 				stats_key1.defineRecord(spw_stringStream.str() + ":" + key2->first, stats_key2);
 
-				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
+				// Calculate percentage flagged
+				stringstream percentage;
+				percentage.precision(3);percentage.fixed;
+				if( key2->second > 0 )
+				{
+				  percentage << " (" << 100.0 * 
+                                                        (Double) accumPolarizationflags[key1->first][key2->first]/
+				    (Double) key2->second << "%)";
+				}
+
+				*logger_p 	<< LogIO::NORMAL 
 						<< " Spw:" << key1->first << " Correlation:" << key2->first
 						<< " flagged: " <<  (Double) accumPolarizationflags[key1->first][key2->first]
 						<< " total: " <<  (Double) key2->second
+				                << percentage.str()
 						<< LogIO::POST;
 			}
 		}
@@ -323,10 +346,21 @@ FlagAgentSummary::getResult()
 			stats_key2.define("total", (Double) key2->second);
 			stats_key1.defineRecord(key2->first, stats_key2);
 
-			*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
+			// Calculate percentage flagged
+			stringstream percentage;
+			percentage.precision(3);percentage.fixed;
+			if( key2->second > 0 )
+			{
+			  percentage << " (" << 100.0 * 
+                                                 (Double) accumflags[key1->first][key2->first] /
+			                         (Double) key2->second << "%)";
+			}
+
+			*logger_p 	<< LogIO::NORMAL 
 					<< " " << key1->first << " " << key2->first
 					<< " flagged: " <<  (Double) accumflags[key1->first][key2->first]
 					<< " total: " <<  (Double) key2->second
+			                << percentage.str()
 					<< LogIO::POST;
 		}
 
@@ -336,9 +370,19 @@ FlagAgentSummary::getResult()
 	result.define("flagged", (Double) accumTotalFlags);
 	result.define("total"  , (Double) accumTotalCount);
 
-	*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
+        // Calculate percentage flagged
+	stringstream percentage;
+	percentage.precision(3);percentage.fixed;
+	if( accumTotalCount > 0 )
+	{
+ 	      percentage << " (" << 100.0 * 
+                                     (Double) accumTotalFlags / 
+		                     (Double) accumTotalCount << "%)";
+	}
+	*logger_p 	<< LogIO::NORMAL 
 			<< " Total Flagged: " <<  (Double) accumTotalFlags
 			<< " Total Counts: " <<  (Double) accumTotalCount
+			<< percentage.str()
 			<< LogIO::POST;
 
 	return result;

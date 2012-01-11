@@ -81,6 +81,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </allowed>
     </param>
 
+    <param type="bool" name="clipminmax">
+      <description>clip minimum and maximum values during gridding</description>
+      <value>False</value>
+    </param>
+
     <param type="string" name="outfile">
       <description>output image name</description>
       <value></value>
@@ -173,6 +178,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         for BOX gridding
                    default: -1 (use default for each gridfunction)
                    example: 3
+        weight -- weight type (both lower-case and upper-case are 
+                  acceptable)
+                options: 'UNIFORM',
+                         'TSYS'  (1/Tsys**2 weighted)
+                         'TINT'  (integration time weighted)
+                         'TINTSYS'  (Tint/Tsys**2)
+                default: 'UNIFORM'
+        clipminmax -- do min/max cliping if True
+                default: False
         outfile -- output data name
                 default: '' (outfile will be set to infile+'.grid')
                 example: 'mydata.asap.grid'

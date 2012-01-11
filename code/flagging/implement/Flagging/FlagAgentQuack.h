@@ -39,7 +39,7 @@ class FlagAgentQuack : public FlagAgentBase {
 
 public:
 
-	FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+	FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentQuack();
 
 protected:

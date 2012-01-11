@@ -85,8 +85,7 @@ WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize,
   : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), 
-    maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero), 
+    maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)), usezero_p(usezero), 
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -104,7 +103,7 @@ WProjectFT::WProjectFT(Int nWPlanes,
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero),  
+    usezero_p(usezero),  
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -124,7 +123,7 @@ WProjectFT::WProjectFT(
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero), 
+    usezero_p(usezero), 
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -180,7 +179,6 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;
-    pointingToImage=other.pointingToImage;
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
     wpConvFunc_p=other.wpConvFunc_p;
@@ -189,7 +187,7 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
 };
 
 //----------------------------------------------------------------------
-WProjectFT::WProjectFT(const WProjectFT& other) :machineName_p("WProjectFT")
+  WProjectFT::WProjectFT(const WProjectFT& other) :FTMachine(), machineName_p("WProjectFT")
 {
   operator=(other);
 }
@@ -324,7 +322,7 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
 			       const VisBuffer& vb)
 {
   image=&iimage;
-  
+  toVis_p=True;
   ok();
   
   //   if(convSize==0) {
@@ -342,39 +340,39 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
   //  npol  = image->shape()(2);
   //  nchan = image->shape()(3);
 
-  if(image->shape().product()>cachesize) {
-    isTiled=True;
-  }
-  else {
-    isTiled=False;
-  }
 
   isTiled=False;
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
-  if(isTiled) {
+  /*if(isTiled) {
     lattice=CountedPtr<Lattice<Complex> > (image, False);
   }
   else {
-    IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
-    
-    IPosition stride(4, 1);
-    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
-		  (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-    IPosition trc(blc+image->shape()-stride);
-    
-    IPosition start(4, 0);
-    griddedData(blc, trc) = image->getSlice(start, image->shape());
-    
-    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-    arrayLattice = new ArrayLattice<Complex>(griddedData);
-    lattice=arrayLattice;
-  }
-  
+   }
+  */
   //AlwaysAssert(lattice, AipsError);
   
+  prepGridForDegrid();
+}
+
+void WProjectFT::prepGridForDegrid(){
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  griddedData.resize(gridShape);
+  griddedData=Complex(0.0);
+  
+
+  IPosition stride(4, 1);
+  IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		(ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+  IPosition trc(blc+image->shape()-stride);
+  
+  IPosition start(4, 0);
+  griddedData(blc, trc) = image->getSlice(start, image->shape());
+  
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  arrayLattice = new ArrayLattice<Complex>(griddedData);
+  lattice=arrayLattice;
+
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
   
   Int npixCorr=max(nx,ny);
@@ -405,14 +403,15 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
     }
     lix.rwVectorCursor()/=correction;
   }
-
+  
   // Now do the FFT2D in place
   LatticeFFT::cfft2d(*lattice);
   
   logIO() << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
-  
-}
 
+
+
+}
 
 
 void WProjectFT::finalizeToVis()
@@ -428,7 +427,6 @@ void WProjectFT::finalizeToVis()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
-  if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 
 
@@ -440,6 +438,7 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
 {
   // image always points to the image
   image=&iimage;
+  toVis_p=False;
   
   //  if(convSize==0) {
   init();
@@ -506,7 +505,6 @@ void WProjectFT::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
-  if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 
 Array<Complex>* WProjectFT::getDataPointer(const IPosition& centerLoc2D,
@@ -795,6 +793,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 {
   
 
+  findConvFunction(*image, vb);
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row==-1) {
@@ -1040,32 +1039,31 @@ void WProjectFT::getWeightImage(ImageInterface<Float>& weightImage,
   }
 }
 
-Bool WProjectFT::toRecord(String&, //error,
+Bool WProjectFT::toRecord(String& error,
 			  RecordInterface& outRec, Bool withImage)
 {  
+
+  /*
+
+  CountedPtr<WPConvFunc> wpConvFunc_p;
+  */
+
   // Save the current WProjectFT object to an output state record
   Bool retval = True;
-  Double cacheVal=(Double) cachesize;
-  outRec.define("cache", cacheVal);
-  outRec.define("tile", tilesize);
-  
-  Vector<Double> phaseValue(2);
-  String phaseUnit;
-  phaseValue=mTangent_p.getAngle().getValue();
-  phaseUnit= mTangent_p.getAngle().getUnit();
-  outRec.define("phasevalue", phaseValue);
-  outRec.define("phaseunit", phaseUnit);
-  
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  dirValue=mLocation_p.get("m").getValue();
-  dirUnit=mLocation_p.get("m").getUnit();
-  outRec.define("dirvalue", dirValue);
-  outRec.define("dirunit", dirUnit);
-  
-  outRec.define("padding", padding_p);
-  outRec.define("maxdataval", maxAbsData);
-  
+  //save the base class variables
+  /*Record wpconvrec;
+  if(wpConvFunc_p->toRecord(wpconvrec))
+    outRec.defineRecord("wpconvfunc", wpconvrec);
+  */
+  if(!FTMachine::toRecord(error, outRec, withImage))
+    return False;
+
+  outRec.define("uvscale", uvScale);
+  outRec.define("uvoffset", uvOffset);
+  outRec.define("istiled", isTiled);
+  outRec.define("cachesize", Int64(cachesize));
+  outRec.define("tilesize", tilesize);
+  outRec.define("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   for (Int k=0; k<4 ; k++){
     center_loc(k)=centerLoc(k);
@@ -1073,50 +1071,37 @@ Bool WProjectFT::toRecord(String&, //error,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("sumofweights", sumWeight);
-  if(withImage && image){ 
-    ImageInterface<Complex>& tempimage(*image);
-    Record imageContainer;
-    String error;
-    retval = (retval || tempimage.toRecord(error, imageContainer));
-    outRec.defineRecord("image", imageContainer);
-  }
+  outRec.define("padding", padding_p);
+  outRec.define("nwplanes", nWPlanes_p);
+  outRec.define("savedwscale", savedWScale_p);
+  outRec.define("usezero", usezero_p);
+  outRec.define("convfunc", convFunc);
+  outRec.define("convsampling", convSampling);
+  outRec.define("convsize", convSize);
+  outRec.define("convsupport", convSupport);
+  outRec.define("convsizes", convSizes_p);
+  outRec.define("wconvsize", wConvSize);
+  outRec.define("lastindex", lastIndex_p);
+
+
+
   return retval;
 }
 
-Bool WProjectFT::fromRecord(String&, //error,
+Bool WProjectFT::fromRecord(String& error,
 			    const RecordInterface& inRec)
 {
+  if(!FTMachine::fromRecord(error, inRec))
+    return False;
+  machineName_p="WProjectFT";
   Bool retval = True;
   imageCache=0; lattice=0; arrayLattice=0;
-  Double cacheVal;
-  inRec.get("cache", cacheVal);
-  cachesize=(Long) cacheVal;
-  inRec.get("tile", tilesize);
-  
-  Vector<Double> phaseValue(2);
-  inRec.get("phasevalue",phaseValue);
-  String phaseUnit;
-  inRec.get("phaseunit",phaseUnit);
-  Quantity val1(phaseValue(0), phaseUnit);
-  Quantity val2(phaseValue(1), phaseUnit); 
-  MDirection phasecenter(val1, val2);
-  
-  mTangent_p=phasecenter;
-  // This should be passed down too but the tangent plane is 
-  // expected to be specified in all meaningful cases.
-  tangentSpecified_p=True;  
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  inRec.get("dirvalue", dirValue);
-  inRec.get("dirunit", dirUnit);
-  MVPosition dummyMVPos(dirValue(0), dirValue(1), dirValue(2));
-  MPosition mLocation(dummyMVPos, MPosition::ITRF);
-  mLocation_p=mLocation;
-  
-  inRec.get("padding", padding_p);
-  inRec.get("maxdataval", maxAbsData);
-  
+  inRec.get("uvscale", uvScale);
+  inRec.get("uvoffset", uvOffset);
+  inRec.get("istiled", isTiled);
+  cachesize=inRec.asInt64("cachesize");
+  inRec.get("tilesize", tilesize);
+  inRec.get("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   inRec.get("centerloc", center_loc);
   inRec.get("offsetloc", offset_loc);
@@ -1125,41 +1110,40 @@ Bool WProjectFT::fromRecord(String&, //error,
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 		      offset_loc(3));
-  inRec.get("sumofweights", sumWeight);
-  if(inRec.nfields() > 12 ){
-    Record imageAsRec=inRec.asRecord("image");
-    if(!image) { 
-      image= new TempImage<Complex>(); 
-    };
-    String error;
-    retval = (retval || image->fromRecord(error, imageAsRec));    
-    
+  if(inRec.isDefined("wpconvfunc")){
+    wpConvFunc_p=new WPConvFunc(inRec.asRecord("wpconvfunc"));
+  }
+  else{
+    wpConvFunc_p=new WPConvFunc();
+  }
+  inRec.get("padding", padding_p);
+  inRec.get("nwplanes", nWPlanes_p);
+  inRec.get("savedwscale", savedWScale_p);
+  inRec.get("usezero", usezero_p);
+  inRec.get("convfunc", convFunc);
+  inRec.get("convsampling", convSampling);
+  inRec.get("convsize", convSize);
+  inRec.get("convsupport", convSupport);
+  inRec.get("convsizes", convSizes_p);
+  inRec.get("wconvsize", wConvSize);
+  inRec.get("lastindex", lastIndex_p);
+    ///setup some of the parameters
+  init();
+  if(inRec.isDefined("image")){
+    //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
-    init(); 
     
-    if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> > (image, False);
-    }
-    else {
-      // Make the grid the correct shape and turn it into an array lattice
-      // Check the section from the image BEFORE converting to a lattice 
+      ////if this FTMachine is a forward one then we need to go to the vis domain
+    if(!toVis_p){
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
-		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-      IPosition start(4, 0);
-      IPosition stride(4, 1);
-      IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc) = image->getSlice(start, image->shape());
-      
-      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-      arrayLattice = new ArrayLattice<Complex>(griddedData);
-      lattice=arrayLattice;
     }
-    
-    //AlwaysAssert(lattice, AipsError);
-    AlwaysAssert(image, AipsError);
+    else{
+      prepGridForDegrid();
+    }
+     
+
   };
   return retval;
 }

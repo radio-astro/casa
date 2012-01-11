@@ -7,7 +7,6 @@ debug = False
 
 
 def tflagger(vis,
-             ntime, # taken only once per session
              mode,
              selectdata,
              spw, # data selection parameters
@@ -46,15 +45,16 @@ def tflagger(vis,
              growaround,
              flagneartime,
              flagnearfreq,
-             summarydisplay,
              minrel,        # mode summary
              maxrel,
              minabs,
              maxabs,
              spwchan,
              spwcorr,
-             plotfile,
-             datadisplay,
+             ntime, # taken only once per session
+             combinescans,
+             display,
+             format,
              writeflags,
              savepars,    # save the current parameters to FLAG_CMD 
              outfile,   # output file to save flag commands
@@ -63,11 +63,6 @@ def tflagger(vis,
     # Global parameters
     # vis, ntime, savepars, flagbackup, datadisplay, writeflags, summarydisplay
 
-    # Things to consider:
-    #
-    # * Default mode is manualflag
-    # * Extend can be applied to every mode
-    # * Parameter ntime can be applied only once per session
     # 
     # Schema
     # Configure the TestFlagger tool -> ::open()
@@ -80,6 +75,7 @@ def tflagger(vis,
                         
     # TODO:
     # Implement the new summary schema
+    # enable combinescans sub-parameter
     
     
     #
@@ -105,22 +101,32 @@ def tflagger(vis,
         # Verify the ntime value
         newtime = 0.0
         if type(ntime) == float or type(ntime) == int:
-            # units are seconds
-            newtime = float(ntime)
-            
-        elif type(ntime) == str:
-            # read the units from the string
-            qtime = qa.quantity(ntime)
-            if qtime['unit'] == 'min':
-                # convert to seconds
-                qtime = qa.convert(qtime, 's')
-                
-            # check units
-            if qtime['unit'] == 's':
-                newtime = qtime['value']
+            if ntime == 0:
+                raise Exception, 'Parameter ntime cannot be 0.0'
             else:
-                casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
+                # units are seconds
+                newtime = float(ntime)
         
+        elif type(ntime) == str:
+            if ntime == 'scan':
+                # iteration time step is a scan
+                newtime = 0.0
+            else:
+                # read the units from the string
+                qtime = qa.quantity(ntime)
+                
+                if qtime['unit'] == 'min':
+                    # convert to seconds
+                    qtime = qa.convert(qtime, 's')
+                elif qtime['unit'] == '':
+                    qtime['unit'] = 's'
+                    
+                # check units
+                if qtime['unit'] == 's':
+                    newtime = qtime['value']
+                else:
+                    casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
+                                    
         if debug:
             casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime))
         
@@ -148,9 +154,13 @@ def tflagger(vis,
                            baseline=antenna, uvrange=uvrange, time=timerange, \
                            intent=intent, observation=str(observation))   
 
+        
         # Set constraints to some parameters
         if mode == '':
             mode = 'manualflag'
+            
+        # Hold the name of the agent
+        agent_name = mode.capitalize()
 
         if (writeflags == True and mode == 'summary'):
             # It was probably a mistake of the user, reset writeflags
@@ -162,15 +172,14 @@ def tflagger(vis,
         sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
                     ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
-                    ' ntime='+str(newtime)
+                    ' ntime='+str(newtime)+' combinescans='+str(combinescans)
 
         # Setup global parameters
         agent_pars = {}
+        agent_pars['name'] = agent_name
 
         # Add the global parameters to the dictionary of agent's parameters            
         agent_pars['mode'] = mode
-        agent_pars['summarydisplay'] = summarydisplay
-        agent_pars['datadisplay'] = datadisplay
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -272,7 +281,7 @@ def tflagger(vis,
             
 
         # Now Parse the agent's parameters
-        casalog.post('Parsing the agent\'s parameters')
+        casalog.post('Parsing the parameters for the %s agent'%mode)
         # Due to the way the MS Selection works, the correlation
         # selection needs to be done in here instead of in the
         # selectdata()
@@ -283,22 +292,30 @@ def tflagger(vis,
         if (not tflocal.parseAgentParameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
-        # Do summarydisplay if requested
-        if mode != 'summary' and summarydisplay != '':
+        # Do display if requested
+        # TODO: uncomment when FlagAgentDisplay is implemented!
+        if display != '':
             
             agent_pars = {}
-            if summarydisplay == 'text':
-                agent_pars['mode'] = 'summary'
-            
-            elif summarydisplay == 'screen':
-                agent_pars['mode'] = 'display'
+            casalog.post('Parsing the display parameters')
                 
-            elif summarydisplay == 'file':
-                agent_pars['mode'] = 'display'
-                agent_pars['plotfile'] = plotfile
+            # need to create different parameters for both, data and report.
+#            if display == 'both':
+#                agent_pars['mode'] = 'datadisplay'
+#                tflocal.parseAgentParameters(agent_pars)
+#                agent_pars['mode'] = 'reportdisplay'
+#                agent_pars['format'] = format
+#                tflocal.parseAgentParameters(agent_pars)
+#            
+#            elif display == 'data':
+#                agent_pars['mode'] = 'datadisplay'
+#                tflocal.parseAgentParameters(agent_pars)
+#            
+#            elif display == 'report':
+#                agent_pars['mode'] = 'reportdisplay'
+#                agent_pars['format'] = format
+#                tflocal.parseAgentParameters(agent_pars)
                 
-            casalog.post('Parsing the summarydisplay parameters')
-            tflocal.parseAgentParameters(agent_pars)
 
         # Initialize the agent
         casalog.post('Initializing the agent')

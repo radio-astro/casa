@@ -1255,6 +1255,53 @@ class imfit_test(unittest.TestCase):
         )
         self.assertTrue(zz['results']['nelements'] == 4)
 
+    def test_non_zero_channel(self):
+        """imfit: test fitting for channel number other than zero (CAS-3676)"""
+        imagename = multiplane_image
+        chans = "1~3"
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(imagename)
+            res = myia.fitcomponents(
+                chans=chans, mask="", complist="",
+                estimates="", overwrite=True,
+                model="", residual=""
+            )
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(
+                imagename=imagename, chans=chans,
+                mask="", complist="", estimates="",
+                overwrite=True, model="", residual=""
+            )
+        mycl = cltool.create()
+        epsilon = 1e-5
+        for code in (run_fitcomponents, run_imfit):
+            res = code()
+            mycl.fromrecord(res["results"])
+            self.assertTrue(
+                near(mycl.getfluxvalue(0)[0], 757.2717438, epsilon),
+                str(code) + " didn't get right flux for comp 0"
+            )
+            self.assertTrue(
+                near(mycl.getfluxvalue(1)[0], 1048.7750351, epsilon),
+                str(code) + " didn't get right flux for comp 1"
+            )
+            self.assertTrue(
+                near(mycl.getfluxvalue(2)[0], 2712.41789, epsilon),
+                str(code) + " didn't get right flux for comp 2"
+            )
+            mycl.done()
+            self.assertTrue(
+                res['converged'].size == 3,
+                "Size of converged array is not 3"
+            )
+            self.assertTrue(
+                all(res['converged']),
+                "One or more of the converged elements are False"
+            )
 
 def suite():
     return [imfit_test]

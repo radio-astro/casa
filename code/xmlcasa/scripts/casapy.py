@@ -206,12 +206,39 @@ print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revis
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )
+__ipython_colors = 'LightBG'
 while len(a) > 0:
     c = a.pop()
-    ##
-    ## we join multi-arg parameters here
-    ##
-    if c == '--logfile' or c == '-c' or c == '--rcdir':
+    if c == '-colors':
+        ##
+        ## strip out 2 element ipython flags (which we recognize) here...
+        ##
+        if len(a) == 0 :
+            print "A option must be specified with " + c + "..."
+            sys.exit(1)
+        else:
+            c = a.pop( )
+            if c != 'NoColor' and c != 'Linux' and c != 'LightBG':
+                print "unrecognized option for '-color': " + c
+                sys.exit(1)
+            else:
+                __ipython_colors = c
+
+    elif c.startswith('--colors='):
+        ##
+        ## strip out single element ipython flags (which we recognize) here...
+        ##
+        c = c.split('=')[1]
+        if c != 'NoColor' and c != 'Linux' and c != 'LightBG':
+            print "unrecognized option for '-color': " + c
+            sys.exit(1)
+        else:
+            __ipython_colors = c
+        
+    elif c == '--logfile' or c == '-c' or c == '--rcdir':
+        ##
+        ## we join multi-arg parameters here
+        ##
         if len(a) == 0 :
             print "A file must be specified with " + c + "..."
             sys.exit(1)
@@ -1131,37 +1158,37 @@ if ipython:
                 ###
                 ###  assume casa['flags']['-c'] is a file to execute...
                 ###
-                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
             else:
                 ###
                 ###  assume casa['flags']['-c'] is a python command...
                 ###
-                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
         else:
             if os.path.exists( casa['flags']['-c'] ) :
                 ###
                 ###  assume casa['flags']['-c'] is a file to execute...
                 ###
-                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
             else:
                 ###
                 ###  assume casa['flags']['-c'] is a python command...
                 ###
-                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
     else:
         if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
 	    if(thelogfile != 'null') :
-               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
             else :
-               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
         else:
 	    if(thelogfile != 'null') :
-               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
             else :
-               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+               ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
         ipshell.IP.runlines('execfile("'+fullpath+'")')
 
-#ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+#ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors,'-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
 
 casalog.setlogfile(thelogfile)
 

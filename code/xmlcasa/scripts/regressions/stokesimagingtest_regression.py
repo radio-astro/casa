@@ -315,8 +315,15 @@ if( not (totalcount==true_totalcount) or not (countpass==true_countpass) or not 
 # Final verdict
 if(regstate):
    print >>logfile,'PASSED regression test for stokes selection in imager'
+   print ''
+   print 'Regression PASSED'
+   print ''
 else:
    print >>logfile,'FAILED regression test for stokes selection in imager'
+   print ''
+   print 'Regression FAILED'
+   print ''
+
 print >>logfile,''
 
 # Print timing info

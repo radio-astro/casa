@@ -42,7 +42,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <lattices/Lattices/LCBox.h>
 #include <lattices/Lattices/SubLattice.h>   
 #include <lattices/Lattices/TiledShape.h>  
@@ -148,11 +148,11 @@ void ResidualAlgorithm::task(){
   // Change the model polarization frame
   if(vb.polFrame()==MSIter::Linear) {
     StokesImageUtil::changeCStokesRep(*cImage_p,
-				      SkyModel::LINEAR);
+				      StokesImageUtil::LINEAR);
   }
   else {
     StokesImageUtil::changeCStokesRep(*cImage_p,
-				      SkyModel::CIRCULAR);
+				      StokesImageUtil::CIRCULAR);
   }
 
   vi.originChunks();

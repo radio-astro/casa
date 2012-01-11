@@ -80,12 +80,16 @@ import filecmp
 
 import regression_utility as tstutl
 
-#print sys.argv
+pathname = ''
+try:
+   pathname = casa['dirs']['data'] + '/regression/plotxy/'
+except:
+   # Get path to CASA home directory by stipping name from '$CASAPATH'
+   pathname=os.environ.get('CASAPATH').split()[0]
+   pathname=pathname+'/data/regression/plotxy/'
 
-# Get path to CASA home directory by stipping name from '$CASAPATH'
-pathname=os.environ.get('CASAPATH').split()[0]
-#pathname='/users/hye/regression/plotxy/'
-pathname=pathname+'/data/regression/plotxy/'
+if not os.path.isdir(pathname):
+   raise RuntimeError('could not find data path: ' + pathname)
 
 # The testdir where all output files will be kept
 testdir='plotxy_regression'
@@ -217,7 +221,7 @@ msList=['NGC5921'
         ,'coma' 
         ,'m87test' 
         ,'n4826_16apr98'
-        ,'uid___X1eb_Xa30_X1'
+        #,'uid___X1eb_Xa30_X1'
         #,'uid___X1eb_X7888_X1'
         #,'uid___X1eb_Xa885_X1'
         ,'n2403'

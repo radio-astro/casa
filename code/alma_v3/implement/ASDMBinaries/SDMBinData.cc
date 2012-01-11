@@ -2227,18 +2227,12 @@ namespace sdmbin {
   MSData* SDMBinData::getData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2,
 			       unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
 			       float scaleFactor){
-
-
-    bool coutest=false;                                   // temporary: to check
-
-    if(coutest)cout<<"scaleFactor="<<scaleFactor<<endl;
-
     unsigned int nfe=nfe1;                                  // TODO multi-beam
 
-    unsigned int numBin = baselinesSet_->numBin(ndd);                            if(coutest)cout << "numBin=" << numBin << endl;
+    unsigned int numBin = baselinesSet_->numBin(ndd);                            
     if((nbin+1)>numBin)return 0;
 
-    unsigned int numApc = baselinesSet_->numApc();                               if(coutest)cout << "numApc=" << numApc << endl;
+    unsigned int numApc = baselinesSet_->numApc();                               
     for(unsigned int i=0; i<v_napc.size(); i++){
       if((v_napc[i]+1)>numApc){
 	Error(FATAL,"error in the program: apc index exceeds  %d",numApc);
@@ -2246,139 +2240,43 @@ namespace sdmbin {
       }
     }
 
-
     msDataPtr_ = new MSData;
 
-    msDataPtr_->numData = baselinesSet_->numCrossData(ndd)/(numBin*numApc);  if(coutest)cout << "numCrossData="
-											     << baselinesSet_->numCrossData(ndd) << endl;
-    msDataPtr_->v_data.resize(v_napc.size());
-    // the data (visibilities)
-    if(coutest) {
-      cout << "About to retrieve " <<  msDataPtr_->numData << " visibilities per dump"<< endl;
-      cout << "with v_napc.size = " << v_napc.size() << endl;
-    }
+    msDataPtr_->numData = baselinesSet_->numCrossData(ndd)/(numBin*numApc);  
 
+    msDataPtr_->v_data.resize(v_napc.size());
+
+    // the data (visibilities)
 
     for(unsigned int n=0; n<v_napc.size(); n++)
       msDataPtr_->v_data[n] = new float[2*msDataPtr_->numData];               // a complex is composed of 2 floats
+    float oneOverSF = 1./scaleFactor;
+    int base = 0;
 
-    if(shortDataPtr_){ // case 2 bytes
-      if (coutest) cout << " short <-> 2 bytes" << endl;
+    if(shortDataPtr_){ // case short ints 2 bytes
       for(unsigned int i=0; i<v_napc.size(); i++){
-	if(coutest){
-	  cout << "2 bytes case: baselinesSet_->transferId(na1="<<na1
-	       <<",na2="<<na2<<",ndd="<<ndd<<",nbin="<<nbin<<",napc="<<v_napc[i]<<")="
-	       << baselinesSet_->transferId(na1,na2,ndd,nbin,v_napc[i])
-	       << endl;
-	  cout<<"msDataPtr_->numData="<<msDataPtr_->numData<<" scaleFactor="<<scaleFactor<<endl;
-	}
+	base = baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i]);
 	for(int n=0; n<2*msDataPtr_->numData; n++)
-	  msDataPtr_->v_data[i][n] =
-	    (1./scaleFactor) * (float)shortDataPtr_[baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i])+n];
+	  msDataPtr_->v_data[i][n] = oneOverSF * (float)shortDataPtr_[base+n];
       }
-    }else{   // case 4 bytes
-      if (coutest) cout << " float or int <-> 4 bytes" << endl;
+    }
+
+    else if (longDataPtr_){   // case ints 4 bytes
       for(unsigned int i=0; i<v_napc.size(); i++){
-	if(coutest)
-	  cout << "4 bytes case: baselinesSet_->transferId(na="<<na1<<",na2="<<na2
-	       <<",ndd="<<ndd<<",nbin="<<nbin<<",napc="<<v_napc[i]<<")="
-	       << baselinesSet_->transferId(na1,na2,ndd,nbin,v_napc[i])
-	       << endl;
-	if(longDataPtr_){
-	  for(int n=0; n<2*msDataPtr_->numData; n++){
-	    msDataPtr_->v_data[i][n] =
-	      (1./scaleFactor) * (float)longDataPtr_[baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i])+n];
-	  }
-	}else{
-	  for(int n=0; n<2*msDataPtr_->numData; n++){
-	    msDataPtr_->v_data[i][n] =
-	      (1./scaleFactor) * floatDataPtr_[baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i])+n];
-	  }
+	base = baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i]);
+	for(int n=0; n<2*msDataPtr_->numData; n++)
+	  msDataPtr_->v_data[i][n] = oneOverSF * (float)longDataPtr_[base+n];
+      }
+    }
+    else{       // case floats
+      for(unsigned int i=0; i<v_napc.size(); i++){
+	base = baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i]);
+	for(int n=0; n<2*msDataPtr_->numData; n++){
+	  msDataPtr_->v_data[i][n] = oneOverSF * floatDataPtr_[base+n];
 	}
       }
     }
-    if(coutest){
-      cout << "numData=" << msDataPtr_->numData << endl;
-      for(unsigned int i=0; i<v_napc.size(); i++)
-	cout << "1st vis apc=v_napc[i]: re " << msDataPtr_->v_data[i][0]
-	     << " im " <<  msDataPtr_->v_data[i][1] << endl;
-      cout << " na1=" << na1
-	   << " na2=" << na2
-	   << " ndd=" << ndd
-	   << " napc="; for(unsigned int i=0; i< v_napc.size(); i++)cout<<v_napc[i]<<" ";
-      cout << " nbin=" << nbin
-	   << endl;
-    }
-
-//     vector<vector<vector<int64_t> > > vvv_times;
-//     vector<vector<vector<int64_t> > > vvv_durations;
-
-//     int basebandIndex = v_basebandIndex_[ndd];      if(coutest)cout<<"ndd="<<ndd<<" ==> basebandIndex="<<basebandIndex<<endl;
-
-//   if(timeDurationsPtr_){
-//     vvv_times     = timeDurationsPtr_->getTimes(na1,na2);
-//     vvv_durations = timeDurationsPtr_->getDurations(na1,na2);
-//   }else{
-//     Error(FATAL,"Method getData(na1,na2,nfe,ndd,nbin,apcCode): Pointer on the timeDurationsPtr_ container NULL");
-//   }
-
-//   // the EXPOSURE in the MeasurementSet is taken as the mean over the different polarization products:
-//   // the TIME_CENTROID is taken as a weighted mean
-
-//   double sd  = 0;
-//   double std = 0;
-//   for(unsigned int npp=0; npp<vvv_times[basebandIndex][nbin].size(); npp++){
-//     sd  = sd  + vvv_durations[basebandIndex][nbin][npp]/1.000000000E9;
-//     std = std + vvv_durations[basebandIndex][nbin][npp]/1.000000000E9 *
-//                 ArrayTime(vvv_times[basebandIndex][nbin][npp]).getMJD();
-//   }
-//   msDataPtr_->timeCentroid = std/sd;                             if(coutest)cout <<"timeCentroid "<<msDataPtr_->timeCentroid<<" MJD"<< endl;
-//   msDataPtr_->exposure     = sd/vvv_times[basebandIndex][nbin].size(); if(coutest)cout <<"exposure " << msDataPtr_->exposure <<" s" << endl;
-
-//   msDataPtr_->atmospherePhaseCode = apcCode;    if(coutest)cout <<"msDataPtr_->atmospherePhaseCode="<<msDataPtr_->atmospherePhaseCode<<endl;
-//   msDataPtr_->binNum              = nbin+1;
-//   msDataPtr_->time                = time_.getMJD();
-
-//   if(baselineFlagsPtr_){
-//     if(coutest)
-//       cout<<"ABout to retrieve the flags from the baselineFlags container ("
-// 	  <<baselineFlagsPtr_->getBaselineFlagsContainer()<<") for "
-// 	  <<" nbin="<<nbin
-// 	  <<" basebandIndex="<<basebandIndex
-// 	  <<" na1="<<na1
-// 	  <<" na2="<<na2<<endl;
-
-//     msDataPtr_->flag=0;
-//     if(baselineFlagsPtr_->isFlagged()){
-//       vector<unsigned long int> v_flag;
-//       for(int npp=0; npp<baselineFlagsPtr_->numPolProduct(basebandIndex+1); npp++){
-// 	v_flag = baselineFlagsPtr_->getBaselineFlags(npp,basebandIndex,na1,na2);
-// 	if(v_flag[nbin]>0)msDataPtr_->flag = (unsigned int)v_flag[nbin];
-//       }
-//     }
-//     if(coutest)cout<<"msDataPtr_->flag="<<msDataPtr_->flag<<endl;
-//   }else{
-//     Error(FATAL,"Method getData(na1,na2,nfe,ndd,nbin,apcCode): Pointer baselineFlagsPtr_ not expected to be null!");
-//   }
-// //   msDataPtr_->flag=0;  // PROVISOIREMENT
-
-//   /*
-
-//   unsigned long int* flag = (unsigned int*)
-//     sdmBinaryBlockPtr_->getBaselineFlag()[sizeof(unsigned int)* (baselinesSet_->sumMetaDataIndex()*nbl +
-// 							 baselinesSet_->metaDataIndex(ndd) ) ];
-//   msDataPtr_->flag        = *flag;
-
-
-//   msDataPtr_->fieldId             = mrPtr_->getFieldUsingFieldId()->getFieldId().getTagValue();
-//   msDataPtr_->interval            = mrPtr_->getInterval().get()/1.000000000000E9;
-
-//   */
-
-//   // the last 2 remaining items which requires the SDM main table
-//   msDataPtr_->fieldId             = mrPtr_->getFieldUsingFieldId()->getFieldId().getTagValue();
-//   msDataPtr_->interval            = mrPtr_->getInterval().get()/1.000000000000E9;
-
+  
     return msDataPtr_;
   }
 

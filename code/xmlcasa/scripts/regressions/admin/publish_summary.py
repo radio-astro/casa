@@ -49,9 +49,12 @@ class runTest:
                  RESULT_DIR='/tmp/casa_regression_result/', \
                  retemplate=False,
                  cleanup=True,
-                 profile=False):
+                 CPP_PROFILE=False,
+                 RESULT_SUBDIR='',
+                 REDIRECT=True,
+                 PY_PROFILE=True):
         """cleanup: set to False to keep data around.
-        profile: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
+        CPP_PROFILE: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
         Note, a profile is created only for the casapy process. If you want to include profiles for async / child processes, refer to the documentation for opreport."""
         casalog.showconsole(onconsole=True)
         
@@ -94,11 +97,14 @@ class runTest:
                 testName=string.split(self.tester.testname(k)[6:], ".py")[0]
             else:
                 testName=string.split(self.tester.testname(k), ".py")[0]
-            self.resultsubdir = \
-                              self.resultdir + "/result-" + \
-                              testName       + "-" + \
-                              uname1         + "-" + \
-                              time.strftime('%Y_%m_%d_%H_%M')
+            if not RESULT_SUBDIR:
+                self.resultsubdir = self.resultdir + "/result-" + \
+                                    testName       + "-" + \
+                                    uname1         + "-" + \
+                                    time.strftime('%Y_%m_%d_%H_%M')
+            else:
+                self.resultsubdir = self.resultdir + "/" + RESULT_SUBDIR
+
             if not os.path.isdir(self.resultsubdir):
                 os.mkdir(self.resultsubdir)
 
@@ -108,45 +114,55 @@ class runTest:
 
             # redirect stdout and stderr and casalog
             print 'Run test '+testName
-            print "Redirect stdout/stderr to", self.resultsubdir+'/'+logfilename
-            save_stdout = sys.stdout
-            save_stderr = sys.stderr
-            fsock = open(self.resultsubdir+'/'+logfilename, 'w')
-            sys.stdout = logger("STDOUT", [save_stdout, fsock])
-            sys.stderr = logger("STDERR", [save_stderr, fsock])
+            if REDIRECT:
+                print "Redirect stdout/stderr to", self.resultsubdir+'/'+logfilename
+                save_stdout = sys.stdout
+                save_stderr = sys.stderr
+                fsock = open(self.resultsubdir+'/'+logfilename, 'w')
+                sys.stdout = logger("STDOUT", [save_stdout, fsock])
+                sys.stderr = logger("STDERR", [save_stderr, fsock])
 
-            testlog = self.tester.workingDirectory+"/test.log"
-            open(testlog, "w").close()  # create empty file
-            casalog.setlogfile(testlog) # seems to append to an existing file
+                testlog = self.tester.workingDirectory+"/test.log"
+                open(testlog, "w").close()  # create empty file
+                casalog.setlogfile(testlog) # seems to append to an existing file
 
             try:
                 self.tester.getTest(self.tester.testname(k), testName)
 
-                profilepage = RESULT_DIR+'/'+time.strftime('%Y_%m_%d/')+testName+'_profile.html'
-                process_data = "%s/profile.txt"  % self.tester.workingDirectory
+                if PY_PROFILE:
+                    if RESULT_SUBDIR != testName:
+                        profilepage = RESULT_DIR+'/'+time.strftime('%Y_%m_%d/')+testName+'_profile.html'
+                    else:
+                        profilepage = RESULT_DIR+'/'+RESULT_SUBDIR+'/'+'profile.html'
 
-                os.system("echo -n > " + process_data)
-                pp = SCRIPT_REPOS + '/profileplot.py'  # for release
-                if not os.path.isfile(pp):
-                    pp = SCRIPT_REPOS + '/../profileplot.py' # for devel
-                pyt = UTILS_DIR + '/python'  # for release
-                if not os.path.isfile(pyt):
-                    lib = "lib64" if os.uname()[4] == 'x86_64' else "lib"
-                    pyt = '/usr/' + lib + '/casapy/bin/python'
-                if not os.path.isfile(pyt):
-                    pyt = '/usr/lib64/casapy/bin/python'    # for devel
-                if not os.path.isfile(pyt):
-                    pyt = '/usr/lib/casapy/bin/python'    # for devel
-                if not os.path.isfile(pyt):
-                    pyt = commands.getoutput('which python') # Mac devel
-                profileplot_pid=os.spawnlp(os.P_NOWAIT,
-                                           pyt,
-                                           pyt,
-                                           pp,
-                                           testName, RESULT_DIR,
-                                           profilepage,
-                                           process_data,
-                                           str(os.getpid()))
+                    process_data = "%s/profile.txt"  % self.tester.workingDirectory
+
+                    os.system("echo -n > " + process_data)
+                    pp = SCRIPT_REPOS + '/profileplot.py'  # for release
+                    if not os.path.isfile(pp):
+                        pp = SCRIPT_REPOS + '/../profileplot.py' # for devel
+                        pyt = UTILS_DIR + '/python'  # for release
+                    if not os.path.isfile(pyt):
+                        lib = "lib64" if os.uname()[4] == 'x86_64' else "lib"
+                        pyt = '/usr/' + lib + '/casapy/bin/python'
+                    if not os.path.isfile(pyt):
+                        pyt = '/usr/lib64/casapy/bin/python'    # for devel
+                    if not os.path.isfile(pyt):
+                        pyt = '/usr/lib/casapy/bin/python'    # for devel
+                    if not os.path.isfile(pyt):
+                        pyt = commands.getoutput('which python') # Mac devel
+                    profileplot_pid=os.spawnlp(os.P_NOWAIT,
+                                               pyt,
+                                               pyt,
+                                               pp,
+                                               testName, RESULT_DIR + ("/" + RESULT_SUBDIR if RESULT_SUBDIR == testName else ''),
+                                               profilepage,
+                                               process_data,
+                                               str(os.getpid()))
+                    prof = cProfile.Profile()
+                else:
+                    prof = False
+
                 presentDir=os.getcwd()
                 os.chdir(self.tester.workingDirectory)
 
@@ -157,16 +173,17 @@ class runTest:
                           short_description
                     short_description = short_description.replace("'", "")
 
-                prof = cProfile.Profile()
-                
                 try:
-                    self.op_init(profile)
+                    self.op_init(CPP_PROFILE)
                     time1=time.time()
                     mem1 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
-                    #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
-                    (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry)
+                    if prof:
+                        #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
+                        #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
+                        #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
+                        (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry)
+                    else:
+                        (leResult, leImages) = self.tester.runtests(testName, k, dry)
 
                     # returns absolute_paths, relative_paths
                     exec_success = True
@@ -181,13 +198,14 @@ class runTest:
                 time2=(time2-time1)/60.0
 
                 print "Net memory allocated:", (int(mem2) - int(mem1))/1024, "MB"
-                
-                try:
-                    prof.dump_stats(self.resultsubdir+'/cProfile.profile')
-                except:
-                    print >> sys.stderr, "Failed to write profiling data!"
+
+                if prof:
+                    try:
+                        prof.dump_stats(self.resultsubdir+'/cProfile.profile')
+                    except:
+                        print >> sys.stderr, "Failed to write profiling data!"
                
-                self.op_done(profile)
+                self.op_done(CPP_PROFILE)
 
                 # Dump contents of any *.log file produced
                 # by the regression script
@@ -201,7 +219,10 @@ class runTest:
 
                         for line in open(f, 'r'):
                             #print f + '    ddd'+line
-                            fsock.write(f + ': ' + line)
+                            if REDIRECT:
+                                fsock.write(f + ': ' + line)
+                            else:
+                                print f + ': ' + line
 
                 #
                 # Report and deal with out of diskspace
@@ -228,15 +249,16 @@ class runTest:
                         self.tester.cleanup()
                         
                 # Copy C++ profiling info
-                if profile:
+                if CPP_PROFILE:
                     os.system('cp cpp_profile.* ' + self.resultsubdir)
 
                 os.chdir(presentDir)
 
-                # Terminate profiling process
-                os.kill(profileplot_pid,signal.SIGHUP)
-                status = os.waitpid(profileplot_pid, 0)[1]
-                #print str(profileplot_pid) + ' exit: ' + str(status)
+                if PY_PROFILE:
+                    # Terminate profiling process
+                    os.kill(profileplot_pid,signal.SIGHUP)
+                    status = os.waitpid(profileplot_pid, 0)[1]
+                    #print str(profileplot_pid) + ' exit: ' + str(status)
 
                 pagename=time.strftime('%Y_%m_%d/')+testName+'_profile.html'
 
@@ -274,12 +296,16 @@ class runTest:
                 exec_result['disk'] = space_used, "disk space (KB) in use after test"
                 exec_result['runlog'] = logfilename, "execution logfile"
 
-                # read time/memory data
-                mem = ""
-                try:
-                    process_file = open(process_data, "r")
-                except:
-                    print "Warning: Failed to open file:", process_data
+
+                if PY_PROFILE:
+                    # read time/memory data
+                    mem = ""
+                    try:
+                        process_file = open(process_data, "r")
+                    except:
+                        print "Warning: Failed to open file:", process_data
+                        process_file = None
+                else:
                     process_file = None
 
                 if process_file != None:
@@ -303,7 +329,7 @@ class runTest:
                                 print >> sys.stderr, "Error parsing %s:%d: '%s'" % \
                                       (process_data, lineno, line)
                     process_file.close()
-                exec_result['resource'] = mem, "time(s),virtual(Mbytes),resident(Mbytes),nfiledesc,cpu_us,cpu_sy,cpu_id,cpu_wa"
+                    exec_result['resource'] = mem, "time(s),virtual(Mbytes),resident(Mbytes),nfiledesc,cpu_us,cpu_sy,cpu_id,cpu_wa"
 
                 whatToTest=self.tester.whatQualityTest()
                 keys=[]
@@ -382,20 +408,23 @@ class runTest:
                 self.create_log("")
 
                 # Restore stdout/stderr
-                sys.stderr = save_stderr
-                sys.stdout = save_stdout
-                fsock.close()
-                casalog.setlogfile("casapy.log")
-                os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
+                if REDIRECT:
+                    sys.stderr = save_stderr
+                    sys.stdout = save_stdout
+                    fsock.close()
+
+                    casalog.setlogfile("casapy.log")
+                    os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
 
                 if not dry and cleanup:
                     self.tester.cleanup()
-            except:                
-                sys.stderr = save_stderr
-                sys.stdout = save_stdout
-                fsock.close()
-                casalog.setlogfile("casapy.log")
-                os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
+            except:
+                if REDIRECT:
+                    sys.stderr = save_stderr
+                    sys.stdout = save_stdout
+                    fsock.close()
+                    casalog.setlogfile("casapy.log")
+                    os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
 
                 print "Unexpected error:", sys.exc_info()[0]
                 raise

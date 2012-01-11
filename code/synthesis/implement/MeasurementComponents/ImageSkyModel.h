@@ -230,7 +230,7 @@ public:
   // Set a variable to indicate the polarization frame in the data (circular or linear).
   // This is used along with the user's choice of output Stokes parameter
   // to decide the stokesCoordinate of the temporary images "cImage".
-  void setDataPolFrame(SkyModel::PolRep datapolrep) {dataPolRep_p = datapolrep;};
+  void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {dataPolRep_p = datapolrep;};
 
   // Tries to return a pointer to a TempImage (allocated with new, so remember
   // to use delete) with the given shape and CoordinateSystem.
@@ -320,7 +320,7 @@ protected:
   Bool modified_p;
   // Parameter to indicate the polaraization type of the data (circular or linear)
   // Required by cImage() to decide shapes.
-  SkyModel::PolRep dataPolRep_p;
+  StokesImageUtil::PolRep dataPolRep_p;
 };
 
 

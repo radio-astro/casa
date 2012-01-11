@@ -5,7 +5,7 @@ import pylab as pl
 import asap as sd
 from taskinit import * 
 
-def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight, outfile, overwrite, npix, cell, center, plot):
+def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
 
         casalog.origin('sdgrid')
         try:
@@ -18,6 +18,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   width = %s\n'%(width) \
                       + '   weight = %s\n'%(weight) \
+                      + '   clipminmax = %s\n'%(clipminmax) \
                       + '   outfile = %s\n'%(outfile) \
                       + '   overwrite = %s\n'%(overwrite) \
                       + '   npix = %s\n'%(npix) \
@@ -128,6 +129,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   width = %s\n'%(width) \
                       + '   weight = %s\n'%(weight) \
+                      + '   clipminmax = %s\n'%(clipminmax) \
                       + '   outname = %s\n'%(outname) \
                       + '   nx = %s\n'%(nx) \
                       + '   ny = %s\n'%(ny) \
@@ -140,7 +142,11 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
             gridder.setPolList( pols )
             gridder.setScanList( scans )
             if ( ifno >= 0 ):
-                gridder.setIF( ifno ) 
+                gridder.setIF( ifno )
+            if ( clipminmax ):
+                gridder.enableClip()
+            else:
+                gridder.disableClip()
             gridder.setWeight( weight ) 
             gridder.defineImage( nx=nx, ny=ny,
                                  cellx=cellx, celly=celly,

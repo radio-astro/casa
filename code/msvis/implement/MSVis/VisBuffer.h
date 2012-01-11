@@ -35,6 +35,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
+#include <msvis/SynthesisUtils/VisModelData.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBufferComponents.h>
@@ -45,6 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //#forward
+
 
 // <summary>
 // VbDirtyComponents allows marking portions of a VisBuffer as
@@ -147,11 +149,13 @@ namespace asyncio {
 // VisIter, operations like -=, freqAverage() are only done for
 // visibility() and flag().
 //</todo>
+
 class VisBuffer {
 
     friend class asyncio::VLAT; // for async i/o
     friend class VisBufferAsync; // for async i/o
     friend class VisBufferAsyncWrapper; // for async i/o
+    friend class ViReadImplAsync; // for async I/O
 
 public:
     // Create empty VisBuffer you can assign to or attach.
@@ -908,6 +912,7 @@ private:
     VisBuffer * This;
     Bool twoWayConnection_p;
     ROVisibilityIterator * visIter_p;
+    VisModelData visModelData_p;
 
     // +-------------------------------------------------+
     // | Cache Declarations (fillers, statuses and data) |
@@ -1108,6 +1113,7 @@ Bool item ## OK_p;
     Cube<Float> weightCube_p;
     Matrix<Float> weightMat_p;
     Cube<Float> weightSpectrum_p;
+
 };
 
 // <summary>

@@ -30,12 +30,14 @@
 #include <casa/aips.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/Block.h>
+#include <casa/Arrays/Cube.h>
 #include <msvis/SynthesisUtils/ComponentFTMachine.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 //#forward
   class VisBuffer;
   class ComponentList;  
   class FTMachine;
+  class MeasurementSet;
   template <class T> class Vector;
   template <class T> class CountedPtr;
 // <summary>
@@ -74,30 +76,46 @@ class VisModelData {
   //empty constructor
   VisModelData();
   //From a FTMachine Record
-  VisModelData(const Record& ftmachinerec, const Vector<Int>& validfieldids, const Vector<Int>& msIds);
+  //VisModelData(const Record& ftmachinerec, const Vector<Int>& validfieldids, const Vector<Int>& msIds);
+  virtual ~VisModelData();
   //Add Image/FTMachine to generate visibilities for
-  void addFTMachine(const Record& recordFTMachine, const Vector<Int>& validfieldids, const Vector<Int>& msIds);
+  //void addFTMachine(const Record& recordFTMachine, const Vector<Int>& validfieldids, const Vector<Int>& msIds);
   //Add componentlist to generate visibilities for
-  void addCompFTMachine(const ComponentList& cl, const Vector<Int>& validfieldids, 
-			const Vector<Int>& msIds);
+  //void addCompFTMachine(const ComponentList& cl, const Vector<Int>& validfieldids, 
+  //			const Vector<Int>& msIds);
   //For simple model a special case for speed 
+  
   void addFlatModel(const Vector<Double>& value, const Vector<Int>& validfieldids, 
 		    const Vector<Int>& msIds);
+
+  //add componentlists or ftmachines 
+  void addModel(const Record& rec,  const Vector<Int>& msids);
+
   //put the model data for this VisBuffer in the modelVisCube
   Bool getModelVis(VisBuffer& vb);
-  
-  
 
+  //this is a helper function that writes the model record to the ms 
+  static void putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfields, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist=True, Bool incremental=False);
 
+  //helper function to clear the keywordSet of the ms of the model  for the fields 
+  //in that ms
+  static void clearModel(const MeasurementSet& thems);
 
+  //check if an addFT or addCompFT is necessary
+  //Bool hasFT(Int msid, Int fieldid);
+  //Bool hasCL(Int msid, Int fieldid);
+  Bool hasModel(Int msid, Int field, Int spw); 
  private:
   void initializeToVis();
-  CountedPtr<ComponentList> getCL(const Int msId, const Int fieldId);
-  CountedPtr<FTMachine> getFT(const Int msId, const Int fieldId);
-  Block<CountedPtr<ComponentList> > clholder_p;
-  Block<CountedPtr<FTMachine> > ftholder_p;
+  FTMachine* NEW_FT(const Record& ftrec);
+  Vector<CountedPtr<ComponentList> >getCL(const Int msId, const Int fieldId, Int spw);
+  Vector<CountedPtr<FTMachine> >getFT(const Int msId, const Int fieldId, Int spw);
+  Block<Vector<CountedPtr<ComponentList> > > clholder_p;
+  Block<Vector<CountedPtr<FTMachine> > > ftholder_p;
   Block<Vector<Double> > flatholder_p;
   CountedPtr<ComponentFTMachine> cft_p;
+  Cube<Int> ftindex_p;
+  Cube<Int> clindex_p;
 
 };
 

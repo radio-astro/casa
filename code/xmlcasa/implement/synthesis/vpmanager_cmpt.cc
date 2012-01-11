@@ -71,6 +71,23 @@ vpmanager::saveastable(const std::string& tablename)
 }
 
 bool
+vpmanager::loadfromtable(const std::string& tablename)
+{
+  bool rstat=false;
+  try{
+    if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return rstat;
+    rstat=itsVPM->loadfromtable(String(tablename));
+
+  } catch  (AipsError x) {
+    itsVPM->release();
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  itsVPM->release();
+  return rstat;
+}
+
+bool
 vpmanager::summarizevps(const bool verbose)
 {
   bool rstat=false;

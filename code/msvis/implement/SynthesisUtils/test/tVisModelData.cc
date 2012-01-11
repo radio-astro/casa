@@ -60,8 +60,19 @@ main(int argc, char **argv){
     otherPoint.flux() = Flux<Double>(0.00001, 0.0, 0.0, 0.00000);
     otherPoint.shape().setRefDirection(myDir);
     cl.add(otherPoint);
+    Record container;
+    String err;
+    cl.toRecord(err, container);
+    Record clrec;
+    clrec.define("type", "componentlist");
+    clrec.define("fields", Vector<Int>(1, 0));
+    clrec.define("spws", Vector<Int>(1, 0));
+    clrec.defineRecord("container", container);
+    Record outRec;
+    outRec.define("numcl", 1);
+    outRec.defineRecord("cl_0", clrec);
     VisModelData vm;
-    vm.addCompFTMachine(cl, Vector<Int>(1, 0), Vector<Int>(1, 0));
+    vm.addModel(outRec, Vector<Int>(1, 0));
     VisBuffer vb(vi);
     if(argc>2){
       PagedImage<Float> modim(argv[2]);
@@ -72,8 +83,16 @@ main(int argc, char **argv){
       Record elrec;
       String err;
       ftm.toRecord(err, elrec, True);
+      Record ftrec;
+      ftrec.define("type", "ftmachine");
+      ftrec.define("fields", Vector<Int>(1, 0));
+      ftrec.define("spws", Vector<Int>(1, 0));
+      ftrec.defineRecord("container", elrec);
+      Record outRec1;
+      outRec1.define("numft", 1);
+      outRec1.defineRecord("ft_0", ftrec);
       cerr << "Error string for Record " << err << endl;
-      vm.addFTMachine(elrec, Vector<Int>(1, 0) , Vector<Int>(1, 0));
+      vm.addModel(outRec1, Vector<Int>(1, 0) );
 		 
     } 
 

@@ -2,6 +2,7 @@ import sys
 import os
 import string
 import time
+from locatescript import copydata
 from locatescript import locatescript
 import inspect
 
@@ -12,7 +13,18 @@ for k in range(len(a)):
         stacklevel=k
         break
 gl=sys._getframe(stacklevel).f_globals
-def run():
+
+def data():
+    ### return the data files that is needed by the regression script
+    return ['coma.ms']
+
+def run(fetch=False):
+
+    #####fetch data
+    if fetch:
+        for f in data( ):
+            copydata( f, os.getcwd( ) )
+    
     im=gl['imtool'].create()
     me=gl['me']
     time1=time.time()
@@ -34,6 +46,3 @@ def run():
     #resturn the images that will be templated and compared in future runs
     return ['bla1re.restored', 'outlier1re.restored']
 
-def data():
-    ### return the data files that is needed by the regression script
-    return ['coma.ms']

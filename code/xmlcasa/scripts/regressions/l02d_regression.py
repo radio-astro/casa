@@ -773,9 +773,16 @@ if ((diff_3mm<0.05) & (diff_1mm<0.05) & (diff_ch3oh<0.05) & (diff_ch3oh<0.05) & 
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for L02D'
         print >>logfile,'---'
+	print ''
+	print 'Regression PASSED'
+	print ''
 else:
         regstate=False
         print >>logfile,'----FAILED Regression test for L02D'
+	print ''
+	print 'Regression FAILED'
+	print ''
+
 print >>logfile,'*********************************'
 
 print >>logfile,''

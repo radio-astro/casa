@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_RGRIDFT_H
 #define SYNTHESIS_RGRIDFT_H
 
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <msvis/SynthesisUtils/FTMachine.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <casa/Arrays/Matrix.h>

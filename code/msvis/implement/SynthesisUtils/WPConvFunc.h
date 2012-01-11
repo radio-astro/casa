@@ -60,6 +60,7 @@ namespace casa{
     {
     public:
       WPConvFunc();
+      WPConvFunc(const RecordInterface& rec);
       virtual ~WPConvFunc();
 
       // Inputs are the image, visbuffer,  wConvsize
@@ -77,15 +78,17 @@ namespace casa{
 			    Vector<Int>& convSupport,
 			    Double& wScale);
 
-    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+      Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/) 
     {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
-    virtual Bool makeAverageResponse(const VisBuffer& vb, 
-				     const ImageInterface<Complex>& image,
+      virtual Bool makeAverageResponse(const VisBuffer& /*vb*/, 
+				       const ImageInterface<Complex>& /*image*/,
 				     //				     TempImage<Float>& theavgPB,
-				     ImageInterface<Float>& theavgPB,
-				     Bool reset=True)
+				       ImageInterface<Float>& /*theavgPB*/,
+				       Bool /*reset=True*/)
     {throw(AipsError("WPConvFunc::makeAverageRes() called"));};
-
+      //Serialization
+      Bool toRecord(RecordInterface& rec);
+      Bool fromRecord(String& err, const RecordInterface& rec);
     private:
       Bool checkCenterPix(const ImageInterface<Complex>& image);
       Block <CountedPtr<Cube<Complex> > > convFunctions_p;

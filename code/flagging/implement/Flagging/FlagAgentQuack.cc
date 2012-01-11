@@ -24,8 +24,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FlagAgentQuack::FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube)
+FlagAgentQuack::FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
+		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube,flag)
 {
 	setAgentParameters(config);
 
@@ -42,6 +42,7 @@ FlagAgentQuack::~FlagAgentQuack()
 void
 FlagAgentQuack::setAgentParameters(Record config)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
 	exists = config.fieldNumber ("quackinterval");
@@ -54,7 +55,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		quackinterval_p = 0.0;
 	}
 
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " quackinterval is " << quackinterval_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " quackinterval is " << quackinterval_p << LogIO::POST;
 
 	exists = config.fieldNumber ("quackmode");
 	String quackmode;
@@ -79,7 +80,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		}
 		else
 		{
-			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
+			*logger_p << LogIO::WARN <<
 					" Unsupported quack mode: " <<
 					quackmode_p << ", selecting beg by default. Supported modes: beg,endb,end,tail." << LogIO::POST;
 			quackmode_p = BEGINNING_OF_SCAN;
@@ -92,7 +93,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		quackmode = "beg";
 	}
 
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " quackmode is " << quackmode << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " quackmode is " << quackmode << LogIO::POST;
 
 	exists = config.fieldNumber ("quackincrement");
 	if (exists >= 0)
@@ -103,7 +104,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 	{
 		quackincrement_p = False;
 	}
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " quackincrement is " << quackincrement_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << " quackincrement is " << quackincrement_p << LogIO::POST;
 
 
 	return;
@@ -112,6 +113,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 void
 FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	// TODO: This is not generic but in all the iteration modes provided
 	// by the FlagDataHandler scan and observation are constant over rows
@@ -120,7 +122,7 @@ FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, u
 	// First of all check if this scan is in the scan start/stop map
 	if ( (*flagDataHandler_p->getMapScanStartStop()).find(scan) == (*flagDataHandler_p->getMapScanStartStop()).end())
 	{
-		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ << " start/stop time for scan "
+		*logger_p << LogIO::WARN << " start/stop time for scan "
 				<< scan << " not found" << LogIO::POST;
 		return;
 	}

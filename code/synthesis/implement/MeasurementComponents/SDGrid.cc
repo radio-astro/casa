@@ -39,11 +39,10 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/MeasurementComponents/SDGrid.h>
-#include <synthesis/MeasurementComponents/SkyJones.h>
-#include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
+#include <msvis/SynthesisUtils/SkyJones.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
 
 #include <components/ComponentModels/Flux.h>

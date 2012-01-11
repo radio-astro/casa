@@ -389,6 +389,24 @@ ViReadImplAsync::moreChunks () const
     return b;
 }
 
+const ROMSColumns &
+ViReadImplAsync::msColumns() const
+{
+    Assert (visBufferAsync_p != 0);
+
+    return visBufferAsync_p->msColumns();
+}
+
+
+Int
+ViReadImplAsync::msId() const
+{
+    Assert (visBufferAsync_p != 0);
+
+    return visBufferAsync_p->oldMSId_p;
+}
+
+
 ViReadImplAsync &
 ViReadImplAsync::nextChunk ()
 {

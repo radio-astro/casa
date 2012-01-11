@@ -34,6 +34,7 @@
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayUtil.h>
+#include <components/ComponentModels/ComponentList.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -108,7 +109,8 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
         }
 
         visIter_p = other.getVisibilityIterator ();
-        oldMSId_p = other.getOldMsId ();
+        other.copyMsInfo(oldMSId_p, msOK_p, newMS_p);
+
         twoWayConnection_p = False;
 
         if (visIter_p == static_cast<ROVisibilityIterator *>(0)) {
@@ -157,7 +159,7 @@ VisBuffer::copyCache (const VisBuffer & other, Bool force)
     cacheCopyArray  (correctedVisibilityOK_p, other.correctedVisibilityOK (),
                      correctedVisibility_p, other, & VisBuffer::correctedVisibility, force);
     cacheCopyArray  (corrTypeOK_p, other.corrTypeOK (), corrType_p, other, & VisBuffer::corrType, force);
-    cacheCopyNormal(ddidOK_p, other.ddidOK(), ddid_p, other, & VisBuffer::dataDescriptionId, force);
+    cacheCopyNormal (ddidOK_p, other.ddidOK(), ddid_p, other, & VisBuffer::dataDescriptionId, force);
     cacheCopyArray  (direction1OK_p, other.direction1OK (), direction1_p, other, & VisBuffer::direction1, force);
     cacheCopyArray  (direction2OK_p, other.direction2OK (), direction2_p, other, & VisBuffer::direction2, force);
     cacheCopyArray  (exposureOK_p, other.exposureOK (), exposure_p, other, & VisBuffer::exposure, force);
@@ -440,6 +442,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     weightMatOK_p = status;
     weightOK_p = status;
     weightSpectrumOK_p = status;
+    
 }
 
 Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol)
@@ -2287,9 +2290,25 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 {
   switch (whichOne) {
   case VisibilityIterator::Model:
-    CheckVisIter1 (" (Model)");
-    modelVisCubeOK_p = True;
-    return visIter_p->visibility(modelVisCube_p, whichOne);
+    {
+      CheckVisIter1 (" (Model)");
+      modelVisCubeOK_p = True;
+      String modelkey=String("definedmodel_field_")+String::toString(fieldId());
+      if(visIter_p->ms().keywordSet().isDefined(modelkey)){
+	
+	if(!visModelData_p.hasModel(msId(), fieldId(), spectralWindow())){
+	  String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
+	  Record modrec(visIter_p->ms().keywordSet().asRecord(whichrec));
+	  visModelData_p.addModel(modrec, Vector<Int>(1, msId()));
+	}
+	
+	visModelData_p.getModelVis(*this);
+      }
+      else{
+	visIter_p->visibility(modelVisCube_p, whichOne);
+      }
+    }
+    return modelVisCube_p;
     break;
   case VisibilityIterator::Corrected:
     CheckVisIter1 (" (Corrected)");

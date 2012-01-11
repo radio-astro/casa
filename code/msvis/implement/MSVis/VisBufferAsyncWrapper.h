@@ -483,6 +483,7 @@ Bool item ## OK () const\
     CacheStatus (correctedVisCube);
     CacheStatus (correctedVisibility);
     CacheStatus (corrType);
+    CacheStatus (ddid);
     CacheStatus (direction1);
     CacheStatus (direction2);
     CacheStatus (exposure);

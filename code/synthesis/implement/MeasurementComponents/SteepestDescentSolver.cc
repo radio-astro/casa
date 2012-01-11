@@ -27,7 +27,7 @@
 //# $Id: ConjugateGradientSolver.cc,v 1.4 2006/05/02 15:59:22 sbhatnag Exp $
 
 #include <synthesis/MeasurementComponents/SteepestDescentSolver.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/SynthesisUtils/Utils.h>
 #include <casa/Arrays/MatrixMath.h>
 namespace casa {
 

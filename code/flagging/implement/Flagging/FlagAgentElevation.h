@@ -31,7 +31,7 @@ class FlagAgentElevation : public FlagAgentBase {
 
 public:
 
-	FlagAgentElevation(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+	FlagAgentElevation(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentElevation();
 
 protected:

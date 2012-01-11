@@ -31,7 +31,7 @@
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <casa/OS/File.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <msvis/SynthesisUtils/StokesImageUtil.h>
 #include <synthesis/MeasurementEquations/LatticeModel.h>
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 #include <casa/Exceptions/Error.h>

@@ -21,7 +21,12 @@ def description():
     return "Simulates ALMA-12m + ACA-7m + ALMA single-dish mosaics from a model image. No noise, imaged."
 
 
-def run():
+def data():
+    ### return the data files that is needed by the regression script
+    return []
+
+
+def run(fetch=False):
     #####locate the regression script
     lepath=locatescript('m51_3sim_regression.py')
     print 'Script used is ',lepath
@@ -32,12 +37,3 @@ def run():
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
     return ['m51c/m51c.aca.tp.sd.ms','m51c/m51c.aca.i.ms','m51c/m51c.alma_0.5arcsec.ms','m51c/m51c.alma_0.5arcsec.image']
-
-
-def data():
-    ### return the data files that is needed by the regression script
-    return []
-
-
-
-
