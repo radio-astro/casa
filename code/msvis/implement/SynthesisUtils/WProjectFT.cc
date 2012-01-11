@@ -187,7 +187,7 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
 };
 
 //----------------------------------------------------------------------
-WProjectFT::WProjectFT(const WProjectFT& other) :machineName_p("WProjectFT")
+  WProjectFT::WProjectFT(const WProjectFT& other) :FTMachine(), machineName_p("WProjectFT")
 {
   operator=(other);
 }
@@ -340,39 +340,39 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
   //  npol  = image->shape()(2);
   //  nchan = image->shape()(3);
 
-  if(image->shape().product()>cachesize) {
-    isTiled=True;
-  }
-  else {
-    isTiled=False;
-  }
 
   isTiled=False;
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
-  if(isTiled) {
+  /*if(isTiled) {
     lattice=CountedPtr<Lattice<Complex> > (image, False);
   }
   else {
-    IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
-    
-    IPosition stride(4, 1);
-    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
-		  (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-    IPosition trc(blc+image->shape()-stride);
-    
-    IPosition start(4, 0);
-    griddedData(blc, trc) = image->getSlice(start, image->shape());
-    
-    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-    arrayLattice = new ArrayLattice<Complex>(griddedData);
-    lattice=arrayLattice;
-  }
-  
+   }
+  */
   //AlwaysAssert(lattice, AipsError);
   
+  prepGridForDegrid();
+}
+
+void WProjectFT::prepGridForDegrid(){
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  griddedData.resize(gridShape);
+  griddedData=Complex(0.0);
+  
+
+  IPosition stride(4, 1);
+  IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		(ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+  IPosition trc(blc+image->shape()-stride);
+  
+  IPosition start(4, 0);
+  griddedData(blc, trc) = image->getSlice(start, image->shape());
+  
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  arrayLattice = new ArrayLattice<Complex>(griddedData);
+  lattice=arrayLattice;
+
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
   
   Int npixCorr=max(nx,ny);
@@ -403,14 +403,15 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
     }
     lix.rwVectorCursor()/=correction;
   }
-
+  
   // Now do the FFT2D in place
   LatticeFFT::cfft2d(*lattice);
   
   logIO() << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
-  
-}
 
+
+
+}
 
 
 void WProjectFT::finalizeToVis()
@@ -792,6 +793,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 {
   
 
+  findConvFunction(*image, vb);
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row==-1) {
@@ -1049,9 +1051,10 @@ Bool WProjectFT::toRecord(String& error,
   // Save the current WProjectFT object to an output state record
   Bool retval = True;
   //save the base class variables
-  Record wpconvrec;
+  /*Record wpconvrec;
   if(wpConvFunc_p->toRecord(wpconvrec))
     outRec.defineRecord("wpconvfunc", wpconvrec);
+  */
   if(!FTMachine::toRecord(error, outRec, withImage))
     return False;
 
@@ -1107,10 +1110,12 @@ Bool WProjectFT::fromRecord(String& error,
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 		      offset_loc(3));
-  if(inRec.isDefined("wpconvfunc"))
+  if(inRec.isDefined("wpconvfunc")){
     wpConvFunc_p=new WPConvFunc(inRec.asRecord("wpconvfunc"));
-  else
+  }
+  else{
     wpConvFunc_p=new WPConvFunc();
+  }
   inRec.get("padding", padding_p);
   inRec.get("nwplanes", nWPlanes_p);
   inRec.get("savedwscale", savedWScale_p);
@@ -1128,62 +1133,16 @@ Bool WProjectFT::fromRecord(String& error,
     //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
     
-    if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> >(image, False);
-    }
-    else {
-      // Make the grid the correct shape and turn it into an array lattice
-      // Check the section from the image BEFORE converting to a lattice 
+      ////if this FTMachine is a forward one then we need to go to the vis domain
+    if(!toVis_p){
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-      IPosition start(4, 0);
-      IPosition stride(4, 1);
-      IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc)=image->getSlice(start, image->shape());
-      
-      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-      arrayLattice = new ArrayLattice<Complex>(griddedData);
-      lattice=arrayLattice;
     }
-    ////if this FTMachine is a forward one then we need to go to the vis domain
-    if(toVis_p)
-      {
-
-	  Int npixCorr=max(nx,ny);
-	  Vector<Float> sincConv(npixCorr);
-	  for (Int ix=0;ix<npixCorr;ix++) {
-	    Float x=C::pi*Float(ix-npixCorr/2)/(Float(npixCorr)*Float(convSampling));
-	    if(ix==npixCorr/2) {
-	      sincConv(ix)=1.0;
-	    }
-	    else {
-	      sincConv(ix)=sin(x)/x;
-	    }
-	  }
-
-	  
-	  Vector<Complex> correction(nx);
-	  correction=Complex(1.0, 0.0);
-	  // Do the Grid-correction
-	  IPosition cursorShape(4, nx, 1, 1, 1);
-	  IPosition axisPath(4, 0, 1, 2, 3);
-	  LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-	  LatticeIterator<Complex> lix(*lattice, lsx);
-	  for(lix.reset();!lix.atEnd();lix++) {
-	    Int iy=lix.position()(1);
-	    gridder->correctX1D(correction,iy);
-	    for (Int ix=0;ix<nx;ix++) {
-	      correction(ix)/=(sincConv(ix)*sincConv(iy));
-	    }
-	    lix.rwVectorCursor()/=correction;
-	  }
-	
-	// Now do the FFT2D in place
-	LatticeFFT::cfft2d(*lattice);
-      }
-   
+    else{
+      prepGridForDegrid();
+    }
+     
 
   };
   return retval;

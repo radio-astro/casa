@@ -247,6 +247,7 @@ protected:
 
   void init();
 
+  void prepGridForDegrid();
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
   Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
