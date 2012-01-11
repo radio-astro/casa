@@ -109,35 +109,6 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                         if ret == 0:
                                 import commands
                                 casalog.post( 'found %s'%(theexecutable) )
-                                casapath_split = os.environ['CASAPATH'].split()
-                                casaroot = casapath_split[0]
-                                if ( len(casapath_split) > 1 ):
-                                        casaarch = casapath_split[1]
-                                else:
-                                        casaarch = 'none'
-                                cmd = 'find %s -name asap'%(casaroot+'/'+casaarch)
-                                lpath = commands.getoutput( cmd )
-                                if len(lpath) == 0:
-                                        cmd = 'find %s -name asap'%(casaroot)
-                                        lpath = commands.getoutput( cmd )
-                                if lpath.find('\n') != -1:
-                                        paths = lpath.split('\n')
-                                        for p in paths:
-                                                if p.find('python') != -1:
-                                                        lpath = p
-                                                        break
-                                casalog.post( 'path to asap library is %s'%(lpath) )
-                                import sys
-                                if sys.platform == 'darwin':
-                                        libpath='DYLD_LIBRARY_PATH'
-                                else:
-                                        libpath='LD_LIBRARY_PATH'
-                                if os.environ.has_key(libpath) == False:
-					casalog.post( 'defining %s as %s'%(lpath,libpath) )
-                                        os.environ[libpath] = lpath
-                                elif lpath not in os.environ[libpath].split(':'):
-                                        casalog.post( 'appending %s to %s'%(lpath,libpath) )
-                                        os.environ[libpath] += ':%s'%(lpath)
                                 if showversion:
                                         execute_string = theexecutable + ' --help'
                                 else:
