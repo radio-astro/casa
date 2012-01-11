@@ -134,7 +134,8 @@ unless ( $casa_pid = fork( ) ) {
     $expect->log_stdout(0);
 
     my $timeout = 30;
-    $expect->expect( $timeout,	[ qr/CASA\s+<\S*?>/ =>	 				sub { $expect->send("exit\n"); exp_continue; } ],
+    $expect->expect( $timeout,	[ qr/CASA\s+<\S*?>/ =>	 				sub { ### seems like quick startup/shutdown leaves the viewer dangling
+											      sleep(10); $expect->send("exit\n"); exp_continue; } ],
 				[ qr/leaving casapy.../ =>				sub { my $exp = shift; sleep(5); } ],
 				[ qr/CASA Version\s+(\S+)\s+\(r(\d+)\)/ =>		sub { my @m = $expect->matchlist( ); print "VERSION> $m[0] $m[1]\n";
 											      my $exp = shift; exp_continue; } ],
