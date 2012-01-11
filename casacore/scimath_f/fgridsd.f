@@ -305,8 +305,10 @@ C-------------------------------------------------------------------
 C update variables for clipping
 C-------------------------------------------------------------------
                               if (wt .gt. 0.0) then
-                                 npoints(ax,ay,apol)=
-     $                                npoints(ax,ay,apol)+1
+                                 if (ichan .eq. 1) then
+                                    npoints(ax,ay,apol)=
+     $                                   npoints(ax,ay,apol)+1
+                                 end if
                                  if (real(values(ipol,ichan,irow)) .lt. 
      $                                real(gmin(ax,ay,apol,achan))) then
                                     gmin(ax,ay,apol,achan)=
