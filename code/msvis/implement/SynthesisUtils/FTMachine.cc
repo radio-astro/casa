@@ -886,9 +886,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     outRecord.define("name", this->name());
     if(withImage){
+      
       Record imrec;
       if(image->toRecord(error, imrec))
 	outRecord.defineRecord("image", imrec);
+      
     }
     outRecord.define("nantenna", nAntenna_p);
     outRecord.define("distance", distance_p);
@@ -930,6 +932,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outRecord.define("usedoublegrid", useDoubleGrid_p);
     outRecord.define("cfstokes", cfStokes_p);
     outRecord.define("polinuse", polInUse_p);
+    outRecord.define("tovis", toVis_p);
     outRecord.define("sumweight", sumWeight);
     return True;
   };
@@ -958,8 +961,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       const Record rec=inRecord.asRecord("image");
       if(!cmplxImage_p->fromRecord(error, rec))
 	return False;      
+      
     }
-    cerr << "Addresses of image " << &(*cmplxImage_p) <<  "   " << image << endl;
+    //cerr << "Addresses of image " << &(*cmplxImage_p) <<  "   " << image << endl;
     nAntenna_p=inRecord.asuInt("nantenna");
     distance_p=inRecord.asDouble("distance");
     lastFieldId_p=inRecord.asInt("lastfieldid");
@@ -1030,6 +1034,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inRecord.get("usedoublegrid", useDoubleGrid_p);
     inRecord.get("cfstokes", cfStokes_p);
     inRecord.get("polinuse", polInUse_p);
+    inRecord.get("tovis", toVis_p);
     inRecord.get("sumweight", sumWeight);
     
     

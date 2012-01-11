@@ -230,9 +230,13 @@ protected:
 
   void init();
 
+  //Prepare the grid for degridding
+  void prepGridForDegrid();
+
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
   Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
+
 
   // Image cache
   LatticeCache<Complex> * imageCache;

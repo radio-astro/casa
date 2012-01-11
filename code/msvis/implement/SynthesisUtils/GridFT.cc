@@ -293,65 +293,71 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   // Padding is possible only for non-tiled processing
   
 
-  cerr << "initialize to vis nx" << nx << "   " << ny <<  "  " << npol << " " << nchan << endl;
+  //cerr << "initialize to vis nx" << nx << "   " << ny <<  "  " << npol << " " << nchan << endl;
 
-  cerr << "image shape " << image->shape() << endl;
+  //cerr << "image shape " << image->shape() << endl;
 
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
-  if(isTiled) {
+  /*if(isTiled) {
     lattice=CountedPtr<Lattice<Complex> >(image, False);
   }
   else {
-     IPosition gridShape(4, nx, ny, npol, nchan);
-     griddedData.resize(gridShape);
-     //griddedData can be a reference of image data...if not using model col
-     //hence using an undocumented feature of resize that if 
-     //the size is the same as old data it is not changed.
-     //if(!usePut2_p) griddedData.set(0);
-     griddedData.set(Complex(0.0));
-
-     IPosition stride(4, 1);
-     IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-     IPosition trc(blc+image->shape()-stride);
-
-     IPosition start(4, 0);
-     griddedData(blc, trc) = image->getSlice(start, image->shape());
-
-     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-     arrayLattice = new ArrayLattice<Complex>(griddedData);
-     lattice=arrayLattice;
-  }
+     
+  }*/
+  prepGridForDegrid();
 
   //AlwaysAssert(lattice, AipsError);
 
-  logIO() << LogIO::DEBUGGING
+ 
+    
+}
+
+void GridFT::prepGridForDegrid(){
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  griddedData.resize(gridShape);
+  //griddedData can be a reference of image data...if not using model col
+  //hence using an undocumented feature of resize that if 
+  //the size is the same as old data it is not changed.
+  //if(!usePut2_p) griddedData.set(0);
+  griddedData.set(Complex(0.0));
+
+
+  IPosition stride(4, 1);
+  IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+  IPosition trc(blc+image->shape()-stride);
+  
+  IPosition start(4, 0);
+  griddedData(blc, trc) = image->getSlice(start, image->shape());
+  
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  arrayLattice = new ArrayLattice<Complex>(griddedData);
+  lattice=arrayLattice;
+   logIO() << LogIO::DEBUGGING
 	  << "Starting grid correction and FFT of image" << LogIO::POST;
 
-  // Do the Grid-correction. 
-    {
-      Vector<Complex> correction(nx);
-      correction=Complex(1.0, 0.0);
-      // Do the Grid-correction
-      IPosition cursorShape(4, nx, 1, 1, 1);
-      IPosition axisPath(4, 0, 1, 2, 3);
-      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-      LatticeIterator<Complex> lix(*lattice, lsx);
-      for(lix.reset();!lix.atEnd();lix++) {
-        gridder->correctX1D(correction, lix.position()(1));
-        lix.rwVectorCursor()/=correction;
-      }
-    }
-  
-    // Now do the FFT2D in place
-    LatticeFFT::cfft2d(*lattice);
-    
+   // Do the Grid-correction. 
+   {
+     Vector<Complex> correction(nx);
+     correction=Complex(1.0, 0.0);
+     // Do the Grid-correction
+     IPosition cursorShape(4, nx, 1, 1, 1);
+     IPosition axisPath(4, 0, 1, 2, 3);
+     LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+     LatticeIterator<Complex> lix(*lattice, lsx);
+     for(lix.reset();!lix.atEnd();lix++) {
+       gridder->correctX1D(correction, lix.position()(1));
+       lix.rwVectorCursor()/=correction;
+     }
+   }
+   
+   // Now do the FFT2D in place
+   LatticeFFT::cfft2d(*lattice);
+   
     logIO() << LogIO::DEBUGGING
 	    << "Finished grid correction and FFT of image" << LogIO::POST;
     
 }
-
-
 
 
 void GridFT::finalizeToVis()
@@ -1021,43 +1027,15 @@ Bool GridFT::fromRecord(String& error,
     else {
       // Make the grid the correct shape and turn it into an array lattice
       // Check the section from the image BEFORE converting to a lattice 
-      IPosition gridShape(4, nx, ny, npol, nchan);
-      griddedData.resize(gridShape);
-      griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-      IPosition start(4, 0);
-      IPosition stride(4, 1);
-      IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc)=image->getSlice(start, image->shape());
-      
-      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-      arrayLattice = new ArrayLattice<Complex>(griddedData);
-      lattice=arrayLattice;
-    }
-
-    
- 
-    ////if this FTMachine is a forward one then we need to go to the vis domain
-    if(toVis_p)
-    {
-      //grid correction
-      Vector<Complex> correction(nx);
-      correction=Complex(1.0, 0.0);
-      // Do the Grid-correction
-      IPosition cursorShape(4, nx, 1, 1, 1);
-      IPosition axisPath(4, 0, 1, 2, 3);
-      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-      LatticeIterator<Complex> lix(*lattice, lsx);
-      for(lix.reset();!lix.atEnd();lix++) {
-        gridder->correctX1D(correction, lix.position()(1));
-        lix.rwVectorCursor()/=correction;
+      if(!toVis_p){
+	IPosition gridShape(4, nx, ny, npol, nchan);
+	griddedData.resize(gridShape);
+	griddedData=Complex(0.0);
       }
-    
-  
-      // Now do the FFT2D in place
-      LatticeFFT::cfft2d(*lattice);
+      else{
+	prepGridForDegrid();
+      }
     }
-
   };
   return retval;
 }
