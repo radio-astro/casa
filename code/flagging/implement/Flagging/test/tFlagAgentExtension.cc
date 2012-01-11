@@ -649,13 +649,13 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-growtime"))
 		{
-			growtime = casa::Bool(atof(value.c_str()));
+			growtime = casa::Float(atof(value.c_str()));
 			agentParameters.define ("growtime", growtime);
 			cout << "growtime is: " << growtime << endl;
 		}
 		else if (parameter == string("-growfreq"))
 		{
-			growfreq = casa::Bool(atof(value.c_str()));
+			growfreq = casa::Float(atof(value.c_str()));
 			agentParameters.define ("growfreq", growfreq);
 			cout << "growfreq is: " << growfreq << endl;
 		}
