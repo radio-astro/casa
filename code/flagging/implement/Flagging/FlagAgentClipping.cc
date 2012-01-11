@@ -42,6 +42,7 @@ void
 FlagAgentClipping::setAgentParameters(Record config)
 {
         logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	int exists;
 
 	exists = config.fieldNumber ("clipoutside");
@@ -80,7 +81,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 	{
 		checkVis_p = &FlagAgentClipping::checkVisForNaNs;
 
-		*logger_p << LogIO::WARN << " no clipminmax range provided, will clip only NaNs " << clipmax_p << LogIO::POST;
+		*logger_p << LogIO::WARN << " no clipminmax range provided, will clip only NaNs " << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("channelavg");
