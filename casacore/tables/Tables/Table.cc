@@ -259,6 +259,8 @@ Table::~Table()
         unlock();
 #endif
 	BaseTable::unlink (baseTabPtr_p);
+
+
     }
 }
 
@@ -444,6 +446,7 @@ void Table::open (const String& name, const String& type, int tableOption,
     //# Look if the table is already in the cache.
     //# If so, link to it.
     BaseTable* btp = lookCache (absName, tableOption, lockOptions);
+
     if (btp != 0) {
 	baseTabPtr_p = btp;
     }else{

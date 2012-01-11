@@ -300,17 +300,14 @@ Bool ImageStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 
 
 // Write statistics to logger.  We write the pixel location
-// relative to the parent image
+// relative to the parent image (zero based)
 
    for (uInt j=0; j<n1; j++) {
-      os_p.output() << setw(len0)     << j+blcParent_p(displayAxes_p(0))+1;
+      os_p.output() << setw(len0)     << j+blcParent_p(displayAxes_p(0));
       os_p.output() << setw(oCWidth)   << sWorld(j);
-//
       ostringstream os00; setStream(os00, oPrec);
       os00 << stats.column(NPTS)(j);   
-//
       os_p.output() << setw(oDWidth)   << String(os00);   
-//
       if (LattStatsSpecialize::hasSomePoints(stats.column(NPTS)(j))) {
 
 // Convert to strings.

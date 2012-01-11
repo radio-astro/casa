@@ -33,7 +33,8 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/Assert.h>
-#include <components/SpectralComponents/SpectralElement.h>
+#include <components/SpectralComponents/GaussianSpectralElement.h>
+#include <components/SpectralComponents/PolynomialSpectralElement.h>
 
 #include <casa/iostream.h>
 
@@ -53,7 +54,6 @@ try {
   {
 
 // Data
-
       Vector<Double> x,y;
       Vector<Bool> m;
       Double amp, cen, sig, p0, p1;
@@ -61,14 +61,16 @@ try {
       const uInt n = x.nelements();
  
 // Make fitter, set data and fit
-
       ProfileFit1D<Double> fitter;
       fitter.setData (x,y,m);
       fitter.setGaussianElements (1);
-      SpectralElement p(1);
+      const SpectralElement *firstEl = fitter.getList(False)[0];
+      AlwaysAssert(
+    		  firstEl->getType() == SpectralElement::GAUSSIAN, AipsError
+      );
+      PolynomialSpectralElement p(1);
       fitter.addElement(p);
       AlwaysAssert(fitter.fit(), AipsError);
-
 // Check ok
 
       AlwaysAssert(fitter.getDataMask().nelements()==n, AipsError);
@@ -76,7 +78,7 @@ try {
       AlwaysAssert(fitter.getRangeMask().nelements()==0, AipsError);
       AlwaysAssert(fitter.getTotalMask().nelements()==n, AipsError);
       AlwaysAssert(allEQ(fitter.getTotalMask(), True), AipsError);
-//
+
       {
          const SpectralList& fitList = fitter.getList(True);
          check (amp, cen, sig, p0, p1, fitList);
@@ -142,14 +144,14 @@ void makeData (Vector<Double>& x, Vector<Double>& y, Vector<Bool>& m,
    sigma = (x[n-1] - x[0]) / 50.0;
    p0 = 0.15;
    p1 = 1.2;
-   SpectralElement g(SpectralElement::GAUSSIAN, amp, cen, sigma);
+   GaussianSpectralElement g(amp, cen, sigma);
    cerr << "Gaussian: " << amp << ", " << cen << ", " << sigma << endl;
    cerr << "Polynomial: " << p0 << ", " << p1 << endl;
 //
    Vector<Double> pars(2);
    pars(0) = p0;
    pars(1) = p1;
-   SpectralElement p(SpectralElement::POLYNOMIAL, pars);
+   PolynomialSpectralElement p(pars);
    for (uInt i=0; i<x.nelements(); i++) {
      y(i) = g(x[i]) + p(x[i]);
    }
@@ -160,15 +162,16 @@ void check (Double amp, Double cen, Double sig, Double p0, Double p1,
 {
       Double tol(1e-4);
       Vector<Double> p;
-      SpectralElement elG = list[0];
-      SpectralElement elP = list[1];
-//
-      elG.get(p);
+      const SpectralElement *elG = list[0];
+      const SpectralElement *elP = list[1];
+
+      elG->get(p);
+      cout << "p " << p << " amp " << amp << " tol " << tol << endl;
       AlwaysAssert(near(amp, p[0], tol), AipsError);
       AlwaysAssert(near(cen, p[1], tol), AipsError);
       AlwaysAssert(near(sig, p[2], tol), AipsError);
-//
-      elP.get(p);
+
+      elP->get(p);
       AlwaysAssert(near(p0, p[0], tol), AipsError);
       AlwaysAssert(near(p1, p[1], tol), AipsError);
 }

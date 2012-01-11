@@ -268,7 +268,7 @@ public:
 		  Bool initialize = False);
   MeasurementSet (SetupNewTable &newTab, const TableLock& lockOptions,
 		  uInt nrrow = 0, Bool initialize = False);
-  MeasurementSet (const Table &table);
+  MeasurementSet (const Table &table, const MeasurementSet * otherMs = NULL);
   MeasurementSet (const MeasurementSet &other);
   // </group>
 
@@ -359,6 +359,7 @@ public:
   const MSWeather& weather() const {return weather_p;}
   // </group>
 
+  MrsEligibility getMrsEligibility () const;
 
   // Initialize the references to the subtables. You need to call
   // this only if you assign new subtables to the table keywords.
@@ -407,10 +408,10 @@ protected:
 
   // Assigns one subtable to another if the original subtable (otherSubtable)
   // is not null and is also memory resident
-  void copyMrSubtable (const Table & otherSubtable, Table & subTable);
+  void copySubtable (const Table & otherSubtable, Table & subTable);
 
   // Copies (assigns) all of the non-null subtables from the other MS into this one.
-  void copyMrSubtables (const MeasurementSet & other);
+  void copySubtables (const MeasurementSet & other);
 
   // Returns true if the named subtable is eligible for memory residency.
   Bool isEligibleForMemoryResidency (const String & subtableName) const;

@@ -1,5 +1,5 @@
-//# CountedPtr2.cc: Referenced counted pointer classes (non-templated functions)
-//# Copyright (C) 1993,1994,1995,1996,2000
+//# SpectralElement.cc: Describes (a set of related) spectral lines
+//# Copyright (C) 2001,2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,16 +23,35 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CountedPtr2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: SpectralElement.cc 21024 2011-03-01 11:46:18Z gervandiepen $
 
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/Exceptions/Error.h>
+#include <components/SpectralComponents/CompiledSpectralElement.h>
+#include <components/SpectralComponents/GaussianSpectralElement.h>
+#include <components/SpectralComponents/PolynomialSpectralElement.h>
+
+#include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-void throw_Null_CountedPtr_dereference_error() {
-  throw (AipsError("CountedPtr: null dereference error"));
+ostream &operator<<(ostream &os, const SpectralElement &elem) {
+	switch (elem.getType()) {
+	case SpectralElement::GAUSSIAN:
+		os << *dynamic_cast<const GaussianSpectralElement*>(&elem);
+		break;
+	case SpectralElement::POLYNOMIAL:
+		os << *dynamic_cast<const PolynomialSpectralElement*>(&elem);
+		break;
+	case SpectralElement::COMPILED:
+		break;
+		os << *dynamic_cast<const CompiledSpectralElement*>(&elem);
+	default:
+		throw AipsError("Logic Error: Unhandled spectral element type");
+	}
+    return os;
 }
 
+
+
 } //# NAMESPACE CASA - END
+
 
