@@ -294,7 +294,7 @@ def tflagger(vis,
         
         # Do display if requested
         # TODO: uncomment when FlagAgentDisplay is implemented!
-        if mode != 'summary' and display != '':
+        if display != '':
             
             agent_pars = {}
             casalog.post('Parsing the display parameters')
