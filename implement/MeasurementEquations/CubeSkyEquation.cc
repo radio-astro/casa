@@ -800,6 +800,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // aInitGetSlice += tInitPutSlice - tInitGetSlice;
         // aInitPutSlice += tDonePutSlice - tInitPutSlice;
 
+	Int oldmsid=-1;
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
 
@@ -816,8 +817,24 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 //saving the model for self-cal most probably
                 //	Timers tSetModel=Timers::getTime();
                 //		Timers tsetModel=Timers::getTime();
-                if(commitModel && !noModelCol_p)
+                if(commitModel){
+		  ///Bow commit model to disk or to the record keyword
+		  if(!noModelCol_p)
                     wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+		  else{
+		    if(vb->msId() != oldmsid){
+		      oldmsid=vb->msId();
+		      for (Int model=0; model < (sm_->numberOfModels());++model){
+			Record ftrec;
+			String error;
+			//cerr << "in ftrec saving" << endl;
+			if(!(ftm_p[model]->toRecord(error, ftrec, True)))
+			  throw(AipsError("Error in saving model;  "+error));
+			wvi_p->putModel(ftrec, False, (model>0 || predictedComp || incremental));
+		      }
+		    }
+		  }
+		}
                 // Now lets grid the -ve of residual
                 // use visCube if there is no correctedData
                 //		Timers tGetRes=Timers::getTime();
