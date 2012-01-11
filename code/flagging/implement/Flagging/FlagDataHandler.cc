@@ -2359,6 +2359,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	selectedCorrelations_p.clear();
 	expression_p = expression;
 	polMap_p = polMap;
+	bool matchExpression = false;
 
 	// Parse complex unitary function
 	if (expression_p.find("REAL") != string::npos)
@@ -2393,206 +2394,227 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::I]);
 			getCorr_p = &VisMapper::stokes_i;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (WVR - I) not available");
 		}
 	}
-	else if (expression_p.find("XX") != string::npos)
+	if (expression_p.find("XX") != string::npos)
 	{
 		if (polMap_p->find(Stokes::XX) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XX]);
 			getCorr_p = &VisMapper::linear_xx;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (XX) not available");
 		}
 	}
-	else if (expression_p.find("YY") != string::npos)
+	if (expression_p.find("YY") != string::npos)
 	{
 		if (polMap_p->find(Stokes::YY) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YY]);
 			getCorr_p = &VisMapper::linear_yy;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (YY) not available");
 		}
-
 	}
-	else if (expression_p.find("XY") != string::npos)
+	if (expression_p.find("XY") != string::npos)
 	{
 		if (polMap_p->find(Stokes::XY) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XY]);
 			getCorr_p = &VisMapper::linear_xy;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (XY) not available");
 		}
 	}
-	else if (expression_p.find("YX") != string::npos)
+	if (expression_p.find("YX") != string::npos)
 	{
 		if (polMap_p->find(Stokes::YX) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YX]);
 			getCorr_p = &VisMapper::linear_yx;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (YX) not available");
 		}
 	}
-	else if (expression_p.find("RR") != string::npos)
+	if (expression_p.find("RR") != string::npos)
 	{
 		if (polMap_p->find(Stokes::RR) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RR]);
 			getCorr_p = &VisMapper::circular_rr;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (RR) not available");
 		}
 	}
-	else if (expression_p.find("LL") != string::npos)
+	if (expression_p.find("LL") != string::npos)
 	{
 		if (polMap_p->find(Stokes::LL) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LL]);
 			getCorr_p = &VisMapper::circular_ll;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (LL) not available");
 		}
 	}
-	else if (expression_p.find("LR") != string::npos)
+	if (expression_p.find("LR") != string::npos)
 	{
 		if (polMap_p->find(Stokes::LR) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LR]);
 			getCorr_p = &VisMapper::circular_lr;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (LR) not available");
 		}
 	}
-	else if (expression_p.find("RL") != string::npos)
+	if (expression_p.find("RL") != string::npos)
 	{
 		if (polMap_p->find(Stokes::RL) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RL]);
 			getCorr_p = &VisMapper::circular_rl;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested polarization parameter (RL) not available");
 		}
 	}
-	else if (expression_p.find("I") != string::npos)
+	if (expression_p.find("I") != string::npos)
 	{
 		if (polMap_p->find(Stokes::I) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::I]);
 			getCorr_p = &VisMapper::stokes_i;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XX) != polMap_p->end()) and (polMap_p->find(Stokes::YY) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XX]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YY]);
 			getCorr_p = &VisMapper::stokes_i_from_linear;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RR) != polMap_p->end()) and (polMap_p->find(Stokes::LL) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RR]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LL]);
 			getCorr_p = &VisMapper::stokes_i_from_circular;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested Stokes parameter (I) cannot be computed from available polarizations");
 		}
 	}
-	else if (expression_p.find("Q") != string::npos)
+	if (expression_p.find("Q") != string::npos)
 	{
 		if (polMap_p->find(Stokes::Q) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::Q]);
 			getCorr_p = &VisMapper::stokes_q;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XX) != polMap_p->end()) and (polMap_p->find(Stokes::YY) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XX]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YY]);
 			getCorr_p = &VisMapper::stokes_q_from_linear;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RL) != polMap_p->end()) and (polMap_p->find(Stokes::LR) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RL]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LR]);
 			getCorr_p = &VisMapper::stokes_q_from_circular;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested Stokes parameter (Q) cannot be computed from available polarizations");
 		}
 	}
-	else if (expression_p.find("U") != string::npos)
+	if (expression_p.find("U") != string::npos)
 	{
 		if (polMap_p->find(Stokes::U) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::U]);
 			getCorr_p = &VisMapper::stokes_u;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XY) != polMap_p->end()) and (polMap_p->find(Stokes::YX) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XY]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YX]);
 			getCorr_p = &VisMapper::stokes_u_from_linear;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RL) != polMap_p->end()) and (polMap_p->find(Stokes::LR) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RL]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LR]);
 			getCorr_p = &VisMapper::stokes_u_from_circular;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested Stokes parameter (U) cannot be computed from available polarizations");
 		}
 	}
-	else if (expression_p.find("V") != string::npos)
+	if (expression_p.find("V") != string::npos)
 	{
 		if (polMap_p->find(Stokes::V) != polMap_p->end())
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::V]);
 			getCorr_p = &VisMapper::stokes_v;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XY) != polMap_p->end()) and (polMap_p->find(Stokes::YX) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XY]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YX]);
 			getCorr_p = &VisMapper::stokes_v_from_linear;
+			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RR) != polMap_p->end()) and (polMap_p->find(Stokes::LL) != polMap_p->end()))
 		{
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RR]);
 			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LL]);
 			getCorr_p = &VisMapper::stokes_v_from_circular;
+			matchExpression = true;
 		}
 		else
 		{
 			throw AipsError("Requested Stokes parameter (V) cannot be computed from available polarizations");
 		}
 	}
-	else
+
+	if (!matchExpression)
 	{
 		throw AipsError("Unknown polarization requested, (" + expression_p + ") supported types are: XX,YY,XY,YX,RR,LL,RL,LR,I,Q,U,V");
 	}
