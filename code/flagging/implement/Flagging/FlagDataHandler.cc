@@ -2586,7 +2586,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			throw AipsError("Requested Stokes parameter (U) cannot be computed from available polarizations");
 		}
 	}
-	if (expression_p.find("V") != string::npos)
+	if ((expression_p.find("V") != string::npos) and (expression_p.find("WVR") == string::npos))
 	{
 		if (polMap_p->find(Stokes::V) != polMap_p->end())
 		{
