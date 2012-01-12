@@ -189,7 +189,7 @@
 
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
-#include <synthesis/MeasurementComponents/MultiTermFT.h>
+#include <msvis/SynthesisUtils/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/AWConvFunc.h>
 
 using namespace std;
