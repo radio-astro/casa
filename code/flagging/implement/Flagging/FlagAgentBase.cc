@@ -1905,13 +1905,12 @@ void FlagAgentList::clear()
 
 bool FlagAgentList::empty()
 {
-
-	return container_flag_p.empty();
+	return (container_unflag_p.empty() and container_flag_p.empty());
 }
 
 size_t FlagAgentList::size()
 {
-	return container_flag_p.size();
+	return (container_unflag_p.size() + container_flag_p.size());
 }
 
 void FlagAgentList::start()
