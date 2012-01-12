@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-debug = False
+debug = True
 
 
 def tflagger(vis,
@@ -172,8 +172,11 @@ def tflagger(vis,
         sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
                     ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
-                    ' ntime='+str(newtime)+' combinescans='+str(combinescans)
-
+                    ' ntime='+str(ntime)
+                    
+        if combinescans:
+            sel_pars = sel_pars+' combinescans='+str(combinescans)
+            
         # Setup global parameters
         agent_pars = {}
         agent_pars['name'] = agent_name
@@ -268,7 +271,7 @@ def tflagger(vis,
                        str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
                        ' flagnearfreq='+str(flagnearfreq)
             
-        elif mode == 'unflag':                      
+        elif mode == 'unflag':                     
             casalog.post('Unflag mode is active')                
             
         elif mode == 'summary':
@@ -286,6 +289,7 @@ def tflagger(vis,
         # selection needs to be done in here instead of in the
         # selectdata()
         agent_pars['correlation'] = correlation
+
         if debug:
             print agent_pars
             
