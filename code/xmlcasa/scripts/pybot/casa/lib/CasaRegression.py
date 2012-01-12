@@ -129,7 +129,7 @@ class CasaRegression:
     
             p = subprocess.Popen( [ "/bin/tar", '-C', self._path['casa'], '-x', '--strip-components', '1', '-f', f ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
             for line in p.stdout:
-                print line
+                print "tar> " + line.rstrip( )
             p.wait( )
         finally:
             while len(cleanup) > 0:
@@ -332,9 +332,10 @@ class CasaRegression:
         ###
         ### do report post processing (to set the title)...
         ###
-        p = subprocess.Popen( [ self._path['bin'] + "/postprocess-report", report_path ], stdout=subprocess.PIPE )
+        print self._path['bin'] + "/postprocess-report " + report_path
+        p = subprocess.Popen( [ self._path['bin'] + "/postprocess-report", report_path ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
         for line in p.stdout:
-            print "postprocess> " + line
+            print "postprocess> " + line.rstrip( )
         p.wait( )
         
         ###

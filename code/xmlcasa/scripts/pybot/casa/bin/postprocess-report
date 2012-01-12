@@ -7,12 +7,12 @@ use File::Basename;
 use FileHandle;
 
 die "a single argument (report file path) is required" unless scalar(@ARGV) == 1;
-die "report file does not exit" unless -f $ARGV[0];
+die "cannot find report file: $ARGV[0]" unless -f $ARGV[0];
 
 $reportfile = $ARGV[0];
 
 $reportdir = dirname($reportfile);
-die "failed to find report path" unless -d $reportdir;
+die "cannot find report path: $reportdir" unless -d $reportdir;
 
 ###
 ### find the version information
@@ -21,7 +21,7 @@ die "no version information (i.e. version.txt file) in '$reportdir'" unless -f "
 open( V, "<", "$reportdir/version.txt");
 $v = <V>;
 close(V);
-die "version file format error" unless $v =~ m|^VERSION>\s+([0-9.]+)\s+(\d+)|;
+die "version file format error: $v" unless $v =~ m|^VERSION>\s+([0-9.]+)\s+(\d+)|;
 $version = $1;
 $revision = $2;
 
