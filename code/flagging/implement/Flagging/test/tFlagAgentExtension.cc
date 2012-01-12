@@ -155,11 +155,8 @@ void deleteFlags(string inputFile,Record dataSelection)
 			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
-			// Queue flagging process
-			agentList.queueProcess();
-
-			// Wait for completion of flagging process
-			agentList.completeProcess();
+			// Apply flags
+			agentList.apply();
 
 			// Flush flags to MS
 			dh->flushFlags();
@@ -329,11 +326,8 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
-			// Queue flagging process
-			agentList.queueProcess();
-
-			// Wait for completion of flagging process
-			agentList.completeProcess();
+			// Apply flags
+			agentList.apply();
 
 			// Flush flags to MS
 			dh->flushFlags();

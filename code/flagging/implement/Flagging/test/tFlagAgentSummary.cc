@@ -153,11 +153,8 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
-			// Queue flagging process
-			agentList.queueProcess();
-
-			// Wait for completion of flagging process
-			agentList.completeProcess();
+			// Apply flags
+			agentList.apply();
 		}
 
 		// Print stats from each agent

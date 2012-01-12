@@ -1793,7 +1793,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 			return False;
 		}
 	}
-	else if (expression_p.find("V") != string::npos)
+	else if ((expression_p.find("V") != string::npos) and (expression_p.find("WVR") == string::npos))
 	{
 		if (polMap->find(Stokes::V) != polMap->end())
 		{
@@ -1850,7 +1850,9 @@ FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &vi
 
 FlagAgentList::FlagAgentList()
 {
-	container_p.clear();
+	container_flag_p.clear();
+	container_unflag_p.clear();
+	lastAdded_p = true;
 }
 
 FlagAgentList::~FlagAgentList()
@@ -1860,52 +1862,82 @@ FlagAgentList::~FlagAgentList()
 
 void FlagAgentList::push_back(FlagAgentBase *agent_i)
 {
-	container_p.push_back(agent_i);
+	lastAdded_p = agent_i->flag_p;
+	if (lastAdded_p)
+	{
+		container_flag_p.push_back(agent_i);
+	}
+	else
+	{
+		container_unflag_p.push_back(agent_i);
+	}
 	return;
 }
 
 void FlagAgentList::pop_back()
 {
-	container_p.pop_back();
+	if (lastAdded_p)
+	{
+		container_flag_p.pop_back();
+	}
+	else
+	{
+		container_unflag_p.pop_back();
+	}
 	return;
 }
 
 void FlagAgentList::clear()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
 	{
-		delete (*iterator_p);
+		delete (*iterator_flag_p);
 	}
-	container_p.clear();
+	container_flag_p.clear();
+
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	{
+		delete (*iterator_unflag_p);
+	}
+	container_unflag_p.clear();
 	return;
 }
 
 bool FlagAgentList::empty()
 {
 
-	return container_p.empty();
+	return container_flag_p.empty();
 }
 
 size_t FlagAgentList::size()
 {
-	return container_p.size();
+	return container_flag_p.size();
 }
 
 void FlagAgentList::start()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->start();
+		(*iterator_unflag_p)->start();
 	}
 
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->start();
+	}
 	return;
 }
 
 void FlagAgentList::terminate()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->terminate();
+		(*iterator_unflag_p)->terminate();
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->terminate();
 	}
 
 	return;
@@ -1913,19 +1945,28 @@ void FlagAgentList::terminate()
 
 void FlagAgentList::join()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->join();
+		(*iterator_unflag_p)->join();
 	}
 
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->join();
+	}
 	return;
 }
 
 void FlagAgentList::queueProcess()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->queueProcess();
+		(*iterator_unflag_p)->queueProcess();
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->queueProcess();
 	}
 
 	return;
@@ -1933,9 +1974,39 @@ void FlagAgentList::queueProcess()
 
 void FlagAgentList::completeProcess()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->completeProcess();
+		(*iterator_unflag_p)->completeProcess();
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->completeProcess();
+	}
+
+	return;
+}
+
+void FlagAgentList::apply()
+{
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	{
+		(*iterator_unflag_p)->queueProcess();
+	}
+
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	{
+		(*iterator_unflag_p)->completeProcess();
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->queueProcess();
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->completeProcess();
 	}
 
 	return;
@@ -1943,9 +2014,14 @@ void FlagAgentList::completeProcess()
 
 void FlagAgentList::chunkSummary()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->chunkSummary();
+		(*iterator_unflag_p)->chunkSummary();
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->chunkSummary();
 	}
 
 	return;
@@ -1953,9 +2029,14 @@ void FlagAgentList::chunkSummary()
 
 void FlagAgentList::msSummary()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->msSummary();
+		(*iterator_unflag_p)->msSummary();
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->msSummary();
 	}
 
 	return;
@@ -1963,9 +2044,14 @@ void FlagAgentList::msSummary()
 
 void FlagAgentList::setProfiling(bool enable)
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->setProfiling(enable);
+		(*iterator_unflag_p)->setProfiling(enable);
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->setProfiling(enable);
 	}
 
 	return;
@@ -1973,9 +2059,14 @@ void FlagAgentList::setProfiling(bool enable)
 
 void FlagAgentList::setCheckMode(bool enable)
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
 	{
-		(*iterator_p)->setCheckMode(enable);
+		(*iterator_unflag_p)->setCheckMode(enable);
+	}
+
+	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	{
+		(*iterator_flag_p)->setCheckMode(enable);
 	}
 
 	return;

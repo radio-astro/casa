@@ -74,6 +74,9 @@ public:
 	// Set function to activate check mode
 	void setCheckMode(bool enable) {checkFlags_p = enable;}
 
+	// Flagging mode configuration
+	Bool flag_p;
+
 protected:
 
 	void initialize();
@@ -224,7 +227,6 @@ private:
 
 	// Flagging mode configuration
 	Bool writePrivateFlagCube_p;
-	Bool flag_p;
 };
 
 class FlagAgentList
@@ -246,6 +248,7 @@ class FlagAgentList
 		void join ();
 		void queueProcess();
 		void completeProcess();
+		void apply();
 		void chunkSummary();
 		void msSummary();
 		void setProfiling(bool enable);
@@ -254,8 +257,11 @@ class FlagAgentList
 	protected:
 
 	private:
-		vector<FlagAgentBase *> container_p;
-		vector<FlagAgentBase *>::iterator iterator_p;
+		vector<FlagAgentBase *> container_flag_p;
+		vector<FlagAgentBase *>::iterator iterator_flag_p;
+		vector<FlagAgentBase *> container_unflag_p;
+		vector<FlagAgentBase *>::iterator iterator_unflag_p;
+		bool lastAdded_p;
 };
 
 } //# NAMESPACE CASA - END
