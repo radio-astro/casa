@@ -35,32 +35,31 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Constructors
-template<class Ms>
-MeasRef<Ms>::MeasRef()
-: rep(0)
-{}
+template<class Ms> MeasRef<Ms>::MeasRef() :
+  rep(0) {}
 
 template<class Ms>
-MeasRef<Ms>::MeasRef(const MeasRef<Ms> &other)
-: MRBase(other)
-{
+MeasRef<Ms>::MeasRef(const MeasRef<Ms> &other) :
+  MRBase(other) {
   rep = other.rep;
+  if (rep) rep->cnt++;
 }
 
 template<class Ms>
-MeasRef<Ms> &
-MeasRef<Ms>::operator=(const MeasRef<Ms> &other) {
-
+MeasRef<Ms> &MeasRef<Ms>::operator=(const MeasRef<Ms> &other) {
   if (this != &other) {
+    if (other.rep) other.rep->cnt++;
+    if (rep && --rep->cnt == 0) {
+      delete rep;
+    }
     rep = other.rep;
   }
-
   return *this;
 }
 
 template<class Ms>
-MeasRef<Ms>::MeasRef(const uInt tp)
-: rep(0) {
+MeasRef<Ms>::MeasRef(const uInt tp) :
+  rep(0) {
   create();
   rep->type = Ms::castType(tp);
 }
@@ -92,13 +91,16 @@ MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf, const Ms &ep) :
 
 template<class Ms>
 void MeasRef<Ms>::create() {
-  if (rep.null()) rep = new RefRep();
+  if (!rep) rep = new RefRep();
 }
 
 //# Destructor
 template<class Ms>
-MeasRef<Ms>::~MeasRef()
-{}
+MeasRef<Ms>::~MeasRef() {
+  if (rep && --rep->cnt <= 0) {
+    delete rep;
+  }
+}
 
 //# Operators
 template<class Ms>
@@ -114,7 +116,7 @@ Bool MeasRef<Ms>::operator!=(const MeasRef<Ms> &other) const {
 //# Member functions
 template<class Ms>
 Bool MeasRef<Ms>::empty() const {
-  return (rep.null());
+  return (!rep);
 }
 
 template<class Ms>
@@ -124,7 +126,7 @@ const String &MeasRef<Ms>::showMe() {
 
 template<class Ms>
 uInt MeasRef<Ms>::getType() const{
-  return (! rep.null() ? rep->type : 0);
+  return (rep ? rep->type : 0);
 }
 
 template<class Ms>
@@ -200,7 +202,7 @@ const MeasFrame &MeasRef<Ms>::frameComet(MRBase &ref1,
 
 template<class Ms>
 const Measure* MeasRef<Ms>::offset() const {
-  return ( ! rep.null() ? rep->offmp : 0);
+  return ( rep ? rep->offmp : 0);
 }
 
 template<class Ms>
