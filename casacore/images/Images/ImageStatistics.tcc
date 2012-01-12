@@ -484,7 +484,7 @@ void ImageStatistics<T>::getLabels(String& hLabel, String& xLabel, const IPositi
 {
    CoordinateSystem cSys = pInImage_p->coordinates();
    xLabel = cSys.worldAxisNames()(displayAxes_p(0)) + " (pixels)";
-//
+
    hLabel =String("");
    const uInt nDisplayAxes = displayAxes_p.nelements();
    ostringstream oss;
@@ -493,18 +493,18 @@ void ImageStatistics<T>::getLabels(String& hLabel, String& xLabel, const IPositi
       Vector<Double> pixels(1);
       IPosition blc(pInImage_p->ndim(),0);
       IPosition trc(pInImage_p->shape()-1);
-//
+
       for (uInt j=1; j<nDisplayAxes; j++) {
          Int worldAxis = cSys.pixelAxisToWorldAxis(displayAxes_p(j));
          String name = cSys.worldAxisNames()(worldAxis);
          pixels(0) = Double(locInLattice(dPos,False)(j));
-//
+
          if (!ImageUtilities::pixToWorld (sWorld, cSys,
                                      displayAxes_p(j), cursorAxes_p,
                                      blc, trc, pixels, -1)) return;
-//
+
          oss <<  ImageUtilities::shortAxisName(name)
-             << " = " << locInLattice(dPos,True)(j)+1 << " (" << sWorld(0) << ")";
+             << " = " << locInLattice(dPos,True)(j) << " (" << sWorld(0) << ")";
          if (j < nDisplayAxes-1) oss << ", ";
       }
       hLabel = String(oss);
