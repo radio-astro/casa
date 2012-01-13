@@ -1151,10 +1151,21 @@ record* image::fitprofile(const string& box, const string& region,
 		ImageProfileFitter fitter(
 			_image->getImage(), region, 0,
 			box, chans, stokes, mask, axis,
-			multifit, residual, model, ngauss, poly, estimates,
-			amp, amperr, center, centererr, fwhm, fwhmerr,
-			integral, integralerr, minpts
+			ngauss, estimates
 		);
+		fitter.setDoMultiFit(multifit);
+		fitter.setPolyOrder(poly);
+		fitter.setModel(model);
+		fitter.setResidual(residual);
+		fitter.setAmpName(amp);
+		fitter.setAmpErrName(amperr);
+		fitter.setCenterName(center);
+		fitter.setCenterErrName(centererr);
+		fitter.setFWHMName(fwhm);
+		fitter.setFWHMErrName(fwhmerr);
+		fitter.setIntegralName(integral);
+		fitter.setIntegralErrName(integralerr);
+		fitter.setMinGoodPoints(minpts > 0 ? minpts : 0);
 		fitter.setStretch(stretch);
 		fitter.setLogResults(logResults);
 		rstat = fromRecord(fitter.fit());

@@ -89,14 +89,8 @@ public:
 		const ImageInterface<Float> *const &image, const String& region,
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const Bool multiFit, const String& residual,
-		const String& model, const uInt ngauss, const Int polyOrder,
-		const String& estimatesFilename,
-		const String& ampName = "", const String& ampErrName = "",
-		const String& centerName="", const String& centerErrName="",
-		const String& fwhmName="", const String& fwhmErrName="",
-		const String& integralName="", const String& integralErrErrName="",
-		uInt minGoodPoints=0
+		const Int axis, const uInt ngauss,
+		const String& estimatesFilename
 	);
 
 	// destructor
@@ -118,7 +112,33 @@ public:
     	return vector<Coordinate::Type>(0);
     }
 
+    inline void setPolyOrder(const Int p) { _polyOrder = p;}
+
+    inline void setDoMultiFit(const Bool m) { _multiFit = m; }
+
     inline void setLogResults(const Bool logResults) { _logResults = logResults; }
+
+    inline void setMinGoodPoints(const uInt mgp) { _minGoodPoints = mgp; }
+
+    inline void setModel(const String& model) { _model = model; }
+
+    inline void setResidual(const String& residual) { _residual = residual; }
+
+    inline void setAmpName(const String& s) { _ampName = s; }
+
+    inline void setAmpErrName(const String& s) { _ampErrName = s; }
+
+    inline void setCenterName(const String& s) { _centerName = s; }
+
+    inline void setCenterErrName(const String& s) { _centerErrName = s; }
+
+    inline void setFWHMName(const String& s) { _fwhmName = s; }
+
+    inline void setFWHMErrName(const String& s) { _fwhmErrName = s; }
+
+    inline void setIntegralName(const String& s) { _integralName = s; }
+
+    inline void setIntegralErrName(const String& s) { _integralErrName = s; }
 
 private:
 
@@ -135,7 +155,7 @@ private:
 	// on which the fit is performed.
 	SubImage<Float> _subImage;
 	Record _results;
-	SpectralList _estimates;
+	SpectralList _gaussEstimates;
 
 	const static String _class;
 
