@@ -377,6 +377,7 @@ class CasaRegression:
                 txt = MIMEText( msg % (name[0],script,url), 'plain')
                 html = MIMEText( logfp.read( ), 'html')
                 html.add_header('Content-Disposition', 'attachment', filename=os.path.basename(logfile))
+                html.add_header('Content-Description', script + ' failure log')
                 mime.attach(txt)
                 mime.attach(html)
                 logfp.close( )
