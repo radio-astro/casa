@@ -332,8 +332,8 @@ class CasaRegression:
         ###
         ### do report post processing (to set the title)...
         ###
-        print self._path['bin'] + "/postprocess-report " + report_path
-        p = subprocess.Popen( [ self._path['bin'] + "/postprocess-report", report_path ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+        print self._path['bin'] + "/postprocess-report " + "[DELAY:120]::" + report_path
+        p = subprocess.Popen( [ self._path['bin'] + "/postprocess-report", "[DELAY:120]::" + report_path ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
         for line in p.stdout:
             print "postprocess> " + line.rstrip( )
         p.wait( )
