@@ -141,6 +141,11 @@ Bool Reweighter::selectSpw(std::set<Int>& spwset, Vector<Int>& chanStartv,
   if(chansel.nrow() > 0) {         // Use myspwstr if it selected anything...
     Vector<Int> spwv(chansel.column(0));
 
+    uInt nspwsel = spwv.size();
+    chanStartv.resize(nspwsel);
+    chanEndv.resize(nspwsel);
+    chanStepv.resize(nspwsel);
+
     chanStartv = chansel.column(1);
     chanEndv   = chansel.column(2);
     chanStepv  = chansel.column(3);
@@ -226,6 +231,7 @@ Bool Reweighter::setmsselect(const String& fitspw, const String& outspw,
        << LogIO::POST;
     ok = false;
   }
+  chanSlices_p.resize(0);
   // Check for : in outspw, and warn about it, at the Python level.
 
   if(!selectSpw(fitspwset_p, fitStart_p, fitEnd_p, fitStep_p, fitspw)){
@@ -234,7 +240,6 @@ Bool Reweighter::setmsselect(const String& fitspw, const String& outspw,
        << LogIO::POST;
     ok = false;
   }
-    
   Record selrec = ms_p.msseltoindex(outspw, field);
   ok = selectSource(selrec.asArrayInt("field"));
 
@@ -251,8 +256,10 @@ Bool Reweighter::setmsselect(const String& fitspw, const String& outspw,
     selectArray(subarray);
 
   if(!selectCorrelations(correlation)){
-    os << LogIO::SEVERE << "No correlations selected." << LogIO::POST;
-    ok = false;
+    //os << LogIO::SEVERE << "No correlations selected." << LogIO::POST;
+    //For now, false here means no selection== use all available correlations
+    //so no nead to raise an error.
+    //ok = false;
   }
 
   return ok;
