@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-debug = True
+debug = False
 
 
 def tflagger(vis,
@@ -69,7 +69,7 @@ def tflagger(vis,
     # Parse the union to the data selection -> ::selectdata()
     # Read the mode and specific parameters.
     # Parse the agent's parameters -> ::parseAgentParameters()
-    # Initialize the FlagDataHandler and the agents -> ::init()
+    # Initialize the agents -> ::init()
     # Run the tool
     # Delete the tool
                         
@@ -154,14 +154,17 @@ def tflagger(vis,
                            baseline=antenna, uvrange=uvrange, time=timerange, \
                            intent=intent, observation=str(observation))   
 
+        # Set apply parameter
+        apply = True
         
-        # Set constraints to some parameters
+        # Default mode
         if mode == '':
             mode = 'manualflag'
             
         # Hold the name of the agent
         agent_name = mode.capitalize()
 
+        # Disable writing the flags for summary mode
         if (writeflags == True and mode == 'summary'):
             # It was probably a mistake of the user, reset writeflags
             casalog.post('Parameter writeflags will be reset to False to run together with mode=%s'%mode, 'WARN')
@@ -271,7 +274,8 @@ def tflagger(vis,
                        str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
                        ' flagnearfreq='+str(flagnearfreq)
             
-        elif mode == 'unflag':                     
+        elif mode == 'unflag':      
+            apply = False               
             casalog.post('Unflag mode is active')                
             
         elif mode == 'summary':
