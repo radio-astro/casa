@@ -74,7 +74,10 @@ public:
 	// Set function to activate check mode
 	void setCheckMode(bool enable) {checkFlags_p = enable;}
 
-	// Flagging mode configuration
+	// Externally visible configuration
+	Bool backgroundMode_p;
+	LogIO::Command logLevel_p;
+	Bool apply_p;
 	Bool flag_p;
 
 protected:
@@ -223,7 +226,6 @@ private:
 
 	// Running mode configuration
 	uShort iterationApproach_p;
-	Bool backgroundMode_p;
 
 	// Flagging mode configuration
 	Bool writePrivateFlagCube_p;
@@ -246,9 +248,7 @@ class FlagAgentList
 		void start();
 		void terminate ();
 		void join ();
-		void queueProcess();
-		void completeProcess();
-		void apply();
+		void apply(bool sequential = false);
 		void chunkSummary();
 		void msSummary();
 		void setProfiling(bool enable);
@@ -257,11 +257,8 @@ class FlagAgentList
 	protected:
 
 	private:
-		vector<FlagAgentBase *> container_flag_p;
-		vector<FlagAgentBase *>::iterator iterator_flag_p;
-		vector<FlagAgentBase *> container_unflag_p;
-		vector<FlagAgentBase *>::iterator iterator_unflag_p;
-		bool lastAdded_p;
+		vector<FlagAgentBase *> container_p;
+		vector<FlagAgentBase *>::iterator iterator_p;
 };
 
 } //# NAMESPACE CASA - END

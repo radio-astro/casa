@@ -541,11 +541,14 @@ TestFlagger::run(Bool writeflags)
 			// Queue flagging process
 			// cout << "Put flag process in queue " << endl;
 
-			agents_list_p.queueProcess();
+			// agents_list_p.queueProcess();
 
 			// Wait for completion of flagging process
 			// cout << "Wait for completion of flagging process " << endl;
-			agents_list_p.completeProcess();
+			// agents_list_p.completeProcess();
+
+			// jagonzal: queueProcess()/completeProcess() methods removed from FlagAgentList
+			agents_list_p.apply();
 
 			// Flush flags to MS
 			if (writeflags)
