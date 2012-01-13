@@ -29,6 +29,7 @@
 
 #include <casa/BasicSL/Constants.h>
 #include <casa/BasicSL/String.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/MUString.h>
 #include <scimath/Mathematics/AutoDiffMath.h>
@@ -49,8 +50,11 @@ SpectralElement &SpectralElement::operator=(
 ) {
 	if (this != &other) {
 		tp_p = other.tp_p;
+		par_p.resize(other.par_p.size());
 		par_p = other.par_p.copy();
+		err_p.resize(other.err_p.size());
 		err_p = other.err_p.copy();
+		fix_p.resize(other.fix_p.size());
 		fix_p = other.fix_p.copy();
 	}
 	return *this;
@@ -63,19 +67,34 @@ Double SpectralElement::operator[](const uInt n) const {
 	return par_p(n);
 }
 
+Bool SpectralElement::operator==(
+	const SpectralElement& other
+) const {
+	if (this == &other) {
+		return True;
+	}
+	return (
+		tp_p == other.tp_p && allNear(par_p, other.par_p, 1e-8)
+		&& allNear(err_p, other.err_p, 1e-8)
+		&& allTrue(fix_p == other.fix_p)
+	);
+}
+
 const String* SpectralElement::allTypes(
 	Int &nall, const SpectralElement::Types *&typ
 ) {
 	static const String tname[SpectralElement::N_Types] = {
 		String("GAUSSIAN"),
 		String("POLYNOMIAL"),
-		String("COMPILED")
+		String("COMPILED"),
+		String("GAUSSIAN MULTIPLET")
 	};
 
 	static const SpectralElement::Types oname[SpectralElement::N_Types] = {
 		SpectralElement::GAUSSIAN,
 		SpectralElement::POLYNOMIAL,
-		SpectralElement::COMPILED
+		SpectralElement::COMPILED,
+		SpectralElement::GMULTIPLET
 	};
 
 	nall = SpectralElement::N_Types;
@@ -84,7 +103,7 @@ const String* SpectralElement::allTypes(
 }
 
 void SpectralElement::_set(const Vector<Double>& params) {
-	par_p = params;
+	par_p = params.copy();
 }
 
 void SpectralElement::_setType(const SpectralElement::Types type) {
@@ -117,20 +136,20 @@ Bool SpectralElement::toType(
 
 void SpectralElement::get(Vector<Double> &param) const {
   param.resize(par_p.nelements());
-  param = par_p;
+  param = par_p.copy();
 }
 
 Vector<Double> SpectralElement::get() const {
-	return par_p;
+	return par_p.copy();
 }
 
 void SpectralElement::getError(Vector<Double> &err) const {
 	err.resize(err_p.nelements());
-	err = err_p;
+	err = err_p.copy();
 }
 
 Vector<Double> SpectralElement::getError() const {
-	return err_p;
+	return err_p.copy();
 }
 
 void SpectralElement::setError(const Vector<Double> &err) {
@@ -142,7 +161,7 @@ void SpectralElement::setError(const Vector<Double> &err) {
 			)
 		);
 	}
-	err_p = err;
+	err_p = err.copy();
 }
 
 void SpectralElement::fix(const Vector<Bool> &fix) {
@@ -154,7 +173,7 @@ void SpectralElement::fix(const Vector<Bool> &fix) {
 			)
 		);
 	}
-	fix_p = fix;
+	fix_p = fix.copy();
 }
 
 const Vector<Bool>& SpectralElement::fixed() const {
@@ -184,7 +203,7 @@ void SpectralElement::_construct(
 	const Types type, const Vector<Double>& params
 ) {
 	tp_p = type;
-	par_p = params;
+	par_p = params.copy();
 	err_p = Vector<Double>(params.size(), 0);
 	fix_p = Vector<Bool>(params.size(), 0);
 }

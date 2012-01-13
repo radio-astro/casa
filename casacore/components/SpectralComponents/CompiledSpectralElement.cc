@@ -33,13 +33,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+CompiledSpectralElement::CompiledSpectralElement() {}
+
 CompiledSpectralElement::CompiledSpectralElement(
-		const String& str,
+		const String& function,
 		const Vector<Double>& param
-) : SpectralElement(), str_p(str) {
+) : SpectralElement(), _function(function) {
 	CompiledFunction<Double> comp;
-	if (! comp.setFunction(str_p)) {
-		AipsError(
+	if (! comp.setFunction(_function)) {
+		throw AipsError(
 			"CompiledSpectralElement: An illegal functional string "
 			"was specified for a compiled SpectralElement"
 		);
@@ -53,11 +55,11 @@ CompiledSpectralElement::CompiledSpectralElement(
 	_construct(SpectralElement::COMPILED, param);
 }
 
+
+
 CompiledSpectralElement::CompiledSpectralElement(
-		const CompiledSpectralElement &other
-) : SpectralElement(other) {
-	str_p = other.str_p;
-}
+	const CompiledSpectralElement& other
+) : SpectralElement(other), _function(other._function) {}
 
 CompiledSpectralElement::~CompiledSpectralElement() {}
 
@@ -66,24 +68,28 @@ SpectralElement* CompiledSpectralElement::clone() const {
 }
 
 CompiledSpectralElement& CompiledSpectralElement::operator=(
-		const CompiledSpectralElement &other
+	const CompiledSpectralElement &other
 ) {
 	if (this != &other) {
 		SpectralElement::operator=(other);
-		str_p = other.str_p;
+		_function = other._function;
 	}
 	return *this;
 }
 
 Double CompiledSpectralElement::operator()(const Double x) const {
 	CompiledFunction<Double> comp;
-	comp.setFunction(str_p);
+	comp.setFunction(_function);
 	comp.parameters().setParameters(get());
 	return comp(x);
 }
 
-const String& CompiledSpectralElement::getCompiled() const {
-	return str_p;
+const String& CompiledSpectralElement::getFunction() const {
+	return _function;
+}
+
+void CompiledSpectralElement::_setFunction(const String& function) {
+	_function = function;
 }
 
 Bool CompiledSpectralElement::toRecord(RecordInterface& out) const {
@@ -92,13 +98,13 @@ Bool CompiledSpectralElement::toRecord(RecordInterface& out) const {
 	Vector<Double> etmp(getError().copy());
 	out.define(RecordFieldId("parameters"), ptmp);
 	out.define(RecordFieldId("errors"), etmp);
-	out.define(RecordFieldId("compiled"), str_p);
+	out.define(RecordFieldId("compiled"), _function);
 	return True;
 }
 
-ostream &operator<<(ostream &os, const CompiledSpectralElement &elem) {
+ostream &operator<<(ostream& os, const CompiledSpectralElement& elem) {
 	os << SpectralElement::fromType((elem.getType())) << " element: " << endl;
-	os << "  Function:    " << elem.getCompiled() << endl;
+	os << "  Function:    " << elem.getFunction() << endl;
 	return os;
 }
 

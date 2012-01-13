@@ -27,6 +27,7 @@
 
 #include <components/SpectralComponents/CompiledSpectralElement.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
+#include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 
 #include <casa/iostream.h>
@@ -44,6 +45,9 @@ ostream &operator<<(ostream &os, const SpectralElement &elem) {
 	case SpectralElement::COMPILED:
 		break;
 		os << *dynamic_cast<const CompiledSpectralElement*>(&elem);
+	case SpectralElement::GMULTIPLET:
+		break;
+		os << *dynamic_cast<const GaussianMultipletSpectralElement*>(&elem);
 	default:
 		throw AipsError("Logic Error: Unhandled spectral element type");
 	}

@@ -92,10 +92,12 @@ Bool SpectralFit::fit(const Vector<MT> &sigma,
 			func.addFunction(poly);
 		}
 		break;
-		case SpectralElement::COMPILED: {
+		case SpectralElement::COMPILED:
+			// Allow fall through; these use the same code
+		case SpectralElement::GMULTIPLET: {
 			CompiledSpectralElement *x = dynamic_cast<CompiledSpectralElement *>(slist_p[i]);
 			CompiledFunction<AutoDiff<MT> > comp;
-			comp.setFunction(x->getCompiled());
+			comp.setFunction(x->getFunction());
 			Vector<Double> param;
 			x->get(param);
 			for (uInt j=0; j<comp.nparameters(); ++j) {
