@@ -2932,6 +2932,14 @@ Bool Imager::createFTMachine()
     
   }
 
+ 
+  ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
+  ft_p->setFreqInterpolation(freqInterpMethod_p);
+  if(doTrackSource_p){
+    ft_p->setMovingSource(trackDir_p);
+  }
+  ft_p->setSpwChanSelection(spwchansels_p);
+
   /******* Start MTFT code ********/
   // MultiTermFT is a container for an FTMachine of any type.
   //    It will apply Taylor-polynomial weights during gridding and degridding
@@ -2943,17 +2951,11 @@ Bool Imager::createFTMachine()
   { 
     //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
      FTMachine *tempftm = new MultiTermFT(ft_p, ftmachine_p, ntaylor_p, reffreq_p);
-     tempftm->setBasePrivates(*ft_p);
      ft_p = tempftm;
   }
   /******* End MTFT code ********/
 
-  ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
-  ft_p->setFreqInterpolation(freqInterpMethod_p);
-  if(doTrackSource_p){
-    ft_p->setMovingSource(trackDir_p);
-  }
-  ft_p->setSpwChanSelection(spwchansels_p);
+
 
   return True;
 }
