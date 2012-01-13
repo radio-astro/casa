@@ -100,14 +100,13 @@ class VisModelData {
   //helper function to clear the keywordSet of the ms of the model  for the fields 
   //in that ms
   static void clearModel(const MeasurementSet& thems);
-
+  static FTMachine* NEW_FT(const Record& ftrec);
   //check if an addFT or addCompFT is necessary
   //Bool hasFT(Int msid, Int fieldid);
   //Bool hasCL(Int msid, Int fieldid);
   Bool hasModel(Int msid, Int field, Int spw); 
  private:
   void initializeToVis();
-  FTMachine* NEW_FT(const Record& ftrec);
   Vector<CountedPtr<ComponentList> >getCL(const Int msId, const Int fieldId, Int spw);
   Vector<CountedPtr<FTMachine> >getFT(const Int msId, const Int fieldId, Int spw);
   Block<Vector<CountedPtr<ComponentList> > > clholder_p;
