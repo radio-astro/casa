@@ -5,6 +5,7 @@
 add_library (casa_components
 SpectralComponents/CompiledSpectralElement.cc
 SpectralComponents/GaussianSpectralElement.cc
+SpectralComponents/GaussianMultipletSpectralElement.cc
 SpectralComponents/PolynomialSpectralElement.cc
 SpectralComponents/SpectralFit.cc
 SpectralComponents/SpectralEstimate.cc
@@ -73,6 +74,7 @@ DESTINATION include/casacore/components/ComponentModels
 install (FILES
 SpectralComponents/CompiledSpectralElement.h
 SpectralComponents/GaussianSpectralElement.h
+SpectralComponents/GaussianMultipletSpectralElement.h
 SpectralComponents/ProfileFit1D.h
 SpectralComponents/ProfileFit1D.tcc
 SpectralComponents/PolynomialSpectralElement.h

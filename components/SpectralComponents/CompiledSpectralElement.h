@@ -68,32 +68,38 @@ public:
 
 	// Construct a compiled string
 	explicit CompiledSpectralElement(
-		const String &str, const Vector<Double> &param
+		const String& function, const Vector<Double>& param
 	);
 
-	CompiledSpectralElement(const CompiledSpectralElement &other);
+	CompiledSpectralElement(const CompiledSpectralElement& other);
 
 	virtual ~CompiledSpectralElement();
 
 	SpectralElement* clone() const;
 
 	CompiledSpectralElement &operator=(
-		const CompiledSpectralElement &other
+		const CompiledSpectralElement& other
 	);
 	// Evaluate the value of the element at x
 	virtual Double operator()(const Double x) const;
 
 
 	// Get the string of a compiled functional
-	const String& getCompiled() const;
+	const String& getFunction() const;
 	// </group>
 
 	// Save to a record.
 	virtual Bool toRecord(RecordInterface& out) const;
 
+protected:
+
+	CompiledSpectralElement();
+
+	virtual void _setFunction(const String& function);
+
 private:
 	// The string value for compiled functional
-	String str_p;
+	String _function;
 };
 
 //# Global functions
