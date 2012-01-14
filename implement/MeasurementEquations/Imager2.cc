@@ -1919,7 +1919,8 @@ Bool Imager::pixon(const String& algorithm,
       os << LogIO::NORMAL << "Single dish pixon processing" << LogIO::POST; // Loglevel PROGRESS
       os << LogIO::NORMAL // Loglevel INFO
          << "Using defaults for primary beams in pixon processing" << LogIO::POST;
-      gvp_p=new VPSkyJones(*mssel_p, True, parAngleInc_p, squintType_p,
+      ROMSColumns msc(*mssel_p);
+      gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                            skyPosThreshold_p);
       os << LogIO::NORMAL << "Calculating data sampling, etc." << LogIO::POST; // Loglevel PROGRESS
       SDDataSampling ds(*mssel_p, *gvp_p, modelImage.coordinates(),
@@ -2442,16 +2443,17 @@ Bool Imager::createFTMachine()
     os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
     if(gridfunction_p=="pb") {
       if(!gvp_p) {
+	ROMSColumns msc(*ms_p);
 	if (doDefaultVP_p) {
 	  os << LogIO::NORMAL // Loglevel INFO
              << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	  gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	  gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
 	} else {
 	  os << LogIO::NORMAL // Loglevel INFO
              << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
 	  Table vpTable( vpTableStr_p ); 
-	  gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,
+	  gvp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
 	}
       } 
@@ -2531,7 +2533,8 @@ Bool Imager::createFTMachine()
       {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	ROMSColumns msc(*ms_p);
+	gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
       }
 
@@ -2600,7 +2603,8 @@ Bool Imager::createFTMachine()
       {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	ROMSColumns msc(*ms_p);
+	gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
       }
     ft_p = new PBMosaicFT(*ms_p, wprojPlanes_p, cache_p/2, 
@@ -2667,7 +2671,8 @@ Bool Imager::createFTMachine()
     if(!gvp_p) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Using defaults for primary beams used in gridding" << LogIO::POST;
-      gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+      ROMSColumns msc(*ms_p);
+      gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
     }
     if(sdScale_p != 1.0)
@@ -3303,11 +3308,12 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 
   // Now add any SkyJones that are needed
   if(doVP_p && (ft_p->name()!="MosaicFT")) {
+    ROMSColumns msc(*ms_p);
     if (doDefaultVP_p) {
-      vp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
+      vp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
     } else { 
       Table vpTable( vpTableStr_p ); 
-      vp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p, skyPosThreshold_p);
+      vp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p, skyPosThreshold_p);
     }
     se_p->setSkyJones(*vp_p);
   }
@@ -4227,16 +4233,17 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
        (kpb==PBMath::OVRO) || (kpb==PBMath::ALMA) || (kpb==PBMath::ACA))){
     
     if(!gvp_p) {
+      ROMSColumns msc(*ms_p);
       if (doDefaultVP_p) {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
       } else {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
 	Table vpTable( vpTableStr_p ); 
-	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,
+	gvp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
       }
     } 

@@ -2296,7 +2296,8 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     if((ftmachine_p=="sd")||(ftmachine_p=="both")||(ftmachine_p=="mosaic")) {
       if(!gvp_p) {
 	os << "Using default primary beams for gridding" << LogIO::POST;
-	gvp_p=new VPSkyJones(*ams, True, parAngleInc_p, squintType_p);
+	ROMSColumns msc(*ams);
+	gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p);
       }
       if(ftmachine_p=="sd") {
 	os << "Single dish gridding " << LogIO::POST;
@@ -2422,12 +2423,13 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     
     // Now add any SkyJones that are needed
     if(doVP_p) {
+      ROMSColumns msc(*ams);
       if (doDefaultVP_p) {
 	os << "Using default primary beams for mosaicing (use setvp to change)" << LogIO::POST;
-	vp_p=new VPSkyJones(*ams, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
+	vp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
       } else {
 	Table vpTable( vpTableStr_p );
-	vp_p=new VPSkyJones(*ams, vpTable, parAngleInc_p, squintType_p);
+	vp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p);
       }
       vp_p->summary();
       se_p->setSkyJones(*vp_p);
