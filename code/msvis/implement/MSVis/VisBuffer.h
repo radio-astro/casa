@@ -796,6 +796,8 @@ public:
         This->checkMSId();
         return newMS_p;
     }
+    //get the name of the ms the buffer is at empty string if no visiter is attached
+    virtual String msName(Bool stripPath=False) const;
 
     virtual Bool newArrayId () const;
     virtual Bool newFieldId () const;
