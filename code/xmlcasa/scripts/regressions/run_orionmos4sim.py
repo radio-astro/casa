@@ -12,6 +12,7 @@
 # Updated STM 2009-08-27 pbcor=F on clean
 # Updated STM 2009-08-27 noise only option
 # Updated STM 2009-10-22 point to Release0 pickle file
+#         RI  2012-01-15 prefer pickle in DATADIR/regressions/ if exists
 #
 # Simulates point sources and cleans
 #                                                                       
@@ -30,7 +31,7 @@
 #====================================================================
 # IMPORTANT: VERSIONING HERE
 #====================================================================
-myscriptvers = '2009-12-02 STM'
+myscriptvers = '2012-01-15 RI'
 
 import time
 import os
@@ -887,6 +888,10 @@ regression = {}
 regressfile = scriptprefix + '.pickle'
 prev_results = {}
 
+repodir=os.getenv("CASAPATH")
+repodir=repodir.split()[0]
+regressdirfile= repodir+ "/data/regression/orionmos4sim/"+scriptprefix + '.pickle'
+
 # Path to web archive (latest version)
 #webfile = 'http://casa.nrao.edu/Doc/Scripts/'+scriptprefix+'.pickle'
 #webfile = 'http://casa.nrao.edu/Patch4/Doc/Scripts/'+scriptprefix+'.pickle'
@@ -896,10 +901,15 @@ if os.access(regressfile,F_OK):
     # pickle file in current directory
     print "  Found "+regressfile+" in current directory"
 else:
-    print "Trying web download of "+webfile
-    os.system('curl '+webfile+' -f -o '+regressfile)
-    # NOTE: could also use wget
-    #os.system('wget '+webfile)
+    if os.access(regressdirfile,F_OK):
+        # pickle file in local copy of regressions dir
+        print "  Found "+regressdirfile+" in your local data repo"
+        regressfile=regressdirfile
+    else:
+        print "Trying web download of "+webfile
+        os.system('curl '+webfile+' -f -o '+regressfile)
+        # NOTE: could also use wget
+        # os.system('wget '+webfile)
 
 # Now try to access this file
 try:
