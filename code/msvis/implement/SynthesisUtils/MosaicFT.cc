@@ -1334,7 +1334,6 @@ Bool MosaicFT::fromRecord(String& error,
 
   inRec.get("uvscale", uvScale);
   inRec.get("uvoffset", uvOffset);
-  inRec.get("istiled", isTiled);
   cachesize=inRec.asInt64("cachesize");
   inRec.get("tilesize", tilesize);
   inRec.get("maxabsdata", maxAbsData);
