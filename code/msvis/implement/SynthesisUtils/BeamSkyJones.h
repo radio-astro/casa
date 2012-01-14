@@ -43,7 +43,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
 class SkyModel;
-class MeasurementSet;
       
 //# Need forward declaration for Solve in the Jones Matrices
 class SkyEquation;
@@ -93,8 +92,7 @@ public:
   // Till then, we either guess the PB to use or explicitly define it upon construction.
   // Construct from a Measurement Set, figure out the most appropriate PBMath object
   // from MS information
-  BeamSkyJones(MeasurementSet &ms, 
-	       const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"), // def= 1 PA interval
+  BeamSkyJones(const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"), // def= 1 PA interval
 	       BeamSquint::SquintType doSquint = BeamSquint::NONE,  // def= no beam squint offsets
 	       const Quantity &skyPositionThreshold = Quantity(180,"deg"));  // def= assume there is no change of
 	                                                     // this operator due to position offset
@@ -259,12 +257,14 @@ public:
   // n =  m => plot m samples of the PB profile
   virtual void summary(Int n=0);
 
+  //return the telescope it is on at this state
+  String telescope();
+
   //Get an idea of the support of the PB in number of pixels
   virtual Int support(const VisBuffer& vb, const CoordinateSystem& cs);
 
 private:  
 
-  MeasurementSet* ms_p;
 
   String telescope_p;
 

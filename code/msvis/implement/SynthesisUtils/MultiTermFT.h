@@ -89,8 +89,8 @@ public:
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
   // Have a const version for compatibility with other FTMs.. Throw an exception if called.
-  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	   FTMachine::Type type=FTMachine::OBSERVED)
+  void put(const VisBuffer& /*vb*/, Int /*row=-1*/, Bool /*dopsf=False*/,
+	   FTMachine::Type /*type=FTMachine::OBSERVED*/)
   {throw(AipsError("MultiTermFT::put called with a const vb. This FTM needs to modify the vb."));};
 
   // Calculate residual visibilities if possible.
@@ -110,10 +110,10 @@ public:
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
   // Place-holder for possible use with AWProject and AWProjectWB FTMs
-  virtual void normalizeImage(Lattice<Complex>& skyImage,
-			      const Matrix<Double>& sumOfWts,
-			      Lattice<Float>& sensitivityImage,
-			      Bool fftNorm)
+  virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
+			      const Matrix<Double>& /*sumOfWts*/,
+			      Lattice<Float>& /*sensitivityImage*/,
+			      Bool /*fftNorm*/)
     {throw(AipsError("MultiTermFT::normalizeImage() is not implemented"));}
 
   // Get the final weights image - this will hold PB2
@@ -138,18 +138,17 @@ protected:
   // Restore vb.imagingweights to the original
   Bool restoreImagingWeights(VisBuffer &vb);
 
-  Matrix<Float> imweights_p;
-
-  String machineName_p;
-
+ 
   //// New MTFT specific internal parameters and functions
+  CountedPtr<FTMachine> subftm_p; 
   String  subFTMname_p;
   Int nterms_p;
   Int thisterm_p;
   Double reffreq_p;
-  CountedPtr<FTMachine> subftm_p;
 
+  Matrix<Float> imweights_p;
   Double sumwt_p;
+  String machineName_p;
 
   Bool dbg_p,dotime_p;
   Timer tmr_p;

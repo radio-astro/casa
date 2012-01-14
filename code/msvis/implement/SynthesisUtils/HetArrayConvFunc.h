@@ -61,6 +61,7 @@ namespace casa{
     HetArrayConvFunc();
     HetArrayConvFunc(const PBMathInterface::PBClass 
 		     typeToUse);
+    HetArrayConvFunc(const RecordInterface& rec);
     virtual ~HetArrayConvFunc();
 
     //Returns the convfunctions in the Cubes...the rowMap maps the vb.row 
@@ -78,7 +79,10 @@ namespace casa{
     virtual ImageInterface<Float>&  getFluxScaleImage();
     // slice flux scale images 
     virtual void sliceFluxScale(const Int npol);
-    
+    //Serialization
+    Bool toRecord(RecordInterface& rec);
+    Bool fromRecord(String& err, const RecordInterface& rec);
+
     //----------------------------------------------
 
     private:

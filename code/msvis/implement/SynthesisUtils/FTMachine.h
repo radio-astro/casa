@@ -52,6 +52,8 @@ class VisSet;
 class VisBuffer;
 class ROVisibilityIterator;
 class UVWMachine;
+ class GridFT;
+
 
 // <summary> defines interface for the Fourier Transform Machine </summary>
 
@@ -118,6 +120,7 @@ public:
 
   FTMachine();
 
+
   FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cfctor);
 
   FTMachine(const FTMachine& other);
@@ -127,7 +130,7 @@ public:
   void setBasePrivates(const FTMachine& other){FTMachine::operator=(other);}
 
   virtual ~FTMachine();
-
+  
   // Initialize transform to Visibility plane
   virtual void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb) = 0;
 

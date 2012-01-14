@@ -186,10 +186,10 @@ public:
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-  virtual void normalizeImage(Lattice<Complex>& skyImage,
-			      const Matrix<Double>& sumOfWts,
-			      Lattice<Float>& sensitivityImage,
-			      Bool fftNorm)
+  virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
+			      const Matrix<Double>& /*sumOfWts*/,
+			      Lattice<Float>& /*sensitivityImage*/,
+			      Bool /*fftNorm*/)
   {throw(AipsError("MosaicFT::normalizeImage() called"));}
     
  
@@ -223,7 +223,7 @@ public:
   //reset weight image
   virtual void reset();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
+  virtual void ComputeResiduals(VisBuffer&/*vb*/, Bool /*useCorrected*/) {};
 
 protected:        
 
@@ -234,7 +234,7 @@ protected:
 			const VisBuffer& vb);
 
   void addBeamCoverage(ImageInterface<Complex>& image);
-
+  void prepGridForDegrid();
 
   SkyJones* sj_p;
 
@@ -328,7 +328,6 @@ protected:
  //Later this 
   String machineName_p;
   Bool doneWeightImage_p;
-  MosaicFT *otherFT_p;
   String stokes_p;
 
 

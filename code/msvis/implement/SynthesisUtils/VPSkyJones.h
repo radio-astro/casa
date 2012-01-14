@@ -89,13 +89,13 @@ class VPSkyJones : public BeamSkyJones {
 public:
 
   // constructor from a VP Table
-  VPSkyJones(MeasurementSet& ms, Table& table,
+  VPSkyJones(const ROMSColumns& msc, Table& table,
 	     const Quantity &parAngleInc,
 	     BeamSquint::SquintType doSquint,
 	     const Quantity &skyPositionThreshold = Quantity(180.,"deg"));
 
   // constructor for default PB type associated with MS
-  VPSkyJones(MeasurementSet& ms, 
+  VPSkyJones(const ROMSColumns& msc, 
 	     Bool makeDefaultPBsFromMS = True,
 	     const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"),
 	     BeamSquint::SquintType doSquint = BeamSquint::NONE,
@@ -103,14 +103,14 @@ public:
 
   
   // constructor for common PB type
-  VPSkyJones(MeasurementSet& ms,
+  VPSkyJones(const String& tel,
 	     PBMath::CommonPB commonPBType,
 	     const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"),
 	     BeamSquint::SquintType doSquint = BeamSquint::NONE,
 	     const Quantity &skyPositionThreshold = Quantity(180.,"deg"));
 
   // constructor for given PBMath type
-  VPSkyJones(MeasurementSet& ms,
+  VPSkyJones(const String& tel,
 	     PBMath& myPBMath,
 	     const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"),
 	     BeamSquint::SquintType doSquint = BeamSquint::NONE,

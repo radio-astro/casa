@@ -68,11 +68,11 @@ void printDirection(std::ostream &os,const casa::MDirection &dir) throw (casa::A
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-BeamSkyJones::BeamSkyJones(MeasurementSet& ms, 
+BeamSkyJones::BeamSkyJones( 
 			   const Quantity &parallacticAngleIncrement,
 			   BeamSquint::SquintType doSquint,
 			   const Quantity &skyPositionThreshold) :
-     ms_p(&ms), doSquint_p(doSquint),
+     doSquint_p(doSquint),
      parallacticAngleIncrement_p(parallacticAngleIncrement.getValue("rad")),
      skyPositionThreshold_p(skyPositionThreshold.getValue("rad")),
      lastUpdateVisBuffer_p(NULL), lastUpdateRow_p(-1),
@@ -88,7 +88,7 @@ void BeamSkyJones::reset()
   lastFieldId_p=-1;
   lastArrayId_p=-1;
   lastMSId_p=0;  
-  telescope_p=" ";
+  telescope_p="";
 }
 
 BeamSkyJones::~BeamSkyJones()
@@ -111,6 +111,9 @@ void BeamSkyJones::showState(LogIO& os)
   os << "SquintType  = " << (Int)(doSquint_p) << LogIO::POST;
 };
 
+String BeamSkyJones::telescope(){
+  return telescope_p;
+}
 // update the indices cache. This method could be made protected in the
 // future (need access functions for lastUpdateIndex?_p to benefit from it)
 // Cache will be valid for a given VisBuffer and row

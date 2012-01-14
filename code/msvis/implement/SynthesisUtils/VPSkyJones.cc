@@ -58,11 +58,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-VPSkyJones::VPSkyJones(MeasurementSet& ms, Table& tab,
+VPSkyJones::VPSkyJones(const ROMSColumns& msc, Table& tab,
 		       const Quantity &parAngleInc,
 		       BeamSquint::SquintType doSquint,
 		       const Quantity &skyPositionThreshold) 
-  : BeamSkyJones(ms, parAngleInc, doSquint,skyPositionThreshold)
+  : BeamSkyJones(parAngleInc, doSquint,skyPositionThreshold)
 { 
   LogIO os(LogOrigin("VPSkyJones", "VPSkyJones"));
 
@@ -94,7 +94,6 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms, Table& tab,
 	String band;
 	PBMath::CommonPB whichPB;
 	String commonPBName;
-	ROMSColumns msc(ms);
 	ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
 	Quantity freq( msc.spectralWindow().refFrequency()(0), "Hz");	
 	String tele =  telCol(i);
@@ -118,17 +117,16 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms, Table& tab,
 };
 
 
-VPSkyJones::VPSkyJones(MeasurementSet& ms,
+VPSkyJones::VPSkyJones(const ROMSColumns& msc,
 		       Bool makePBs,
 		       const Quantity &parAngleInc,
 		       BeamSquint::SquintType doSquint,
 		       const Quantity &skyPositionThreshold) 
-  : BeamSkyJones(ms, parAngleInc, doSquint, skyPositionThreshold)
+  : BeamSkyJones(parAngleInc, doSquint, skyPositionThreshold)
 { 
   LogIO os(LogOrigin("VPSkyJones", "VPSkyJones"));
 
   if (makePBs) {
-    ROMSColumns msc(ms);
     ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
     
 
@@ -174,20 +172,18 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms,
 };
 
 
-VPSkyJones::VPSkyJones(MeasurementSet& ms,
+VPSkyJones::VPSkyJones(const String& telescope,
 		       PBMath::CommonPB commonPBType,
 		       const Quantity &parAngleInc,
 		       BeamSquint::SquintType doSquint,
 		       const Quantity &skyPositionThreshold) 
-  : BeamSkyJones(ms, parAngleInc, doSquint,skyPositionThreshold)
+  : BeamSkyJones(parAngleInc, doSquint,skyPositionThreshold)
 {
   LogIO os(LogOrigin("VPSkyJones", "VPSkyJones"));
    
-  ROMSColumns msc(ms);
-  ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
 
   // we need a way to do this for multiple telescope cases
-  String telescope_p = telescopesCol(0);
+  String telescope_p = telescope;
   PBMath  myPBMath(commonPBType);
   setPBMath (telescope_p, myPBMath);
 
@@ -196,20 +192,18 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms,
  
 
 
-VPSkyJones::VPSkyJones(MeasurementSet& ms,
+VPSkyJones::VPSkyJones(const String& telescope,
 		       PBMath& myPBMath,
 		       const Quantity &parAngleInc,
 		       BeamSquint::SquintType doSquint,
 		       const Quantity &skyPositionThreshold) 
-  : BeamSkyJones(ms, parAngleInc, doSquint,skyPositionThreshold)
+  : BeamSkyJones(parAngleInc, doSquint,skyPositionThreshold)
 { 
   LogIO os(LogOrigin("VPSkyJones", "VPSkyJones"));
    
-  ROMSColumns msc(ms);
-  ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
 
   // we need a way to do this for multiple telescope cases
-  String telescope_p = telescopesCol(0);
+  String telescope_p = telescope;
   setPBMath (telescope_p, myPBMath);
 
 };

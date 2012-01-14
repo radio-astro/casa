@@ -84,6 +84,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  HetArrayConvFunc::HetArrayConvFunc(const RecordInterface& rec):convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1) {
+    String err;
+    fromRecord(err, rec);
+  }
+
   HetArrayConvFunc::~HetArrayConvFunc(){
     //
   }
@@ -432,6 +437,62 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+   Bool HetArrayConvFunc::toRecord(RecordInterface& rec){
+     
+     try{
+       rec.define("name", "HetArrayConvFunc");
+       rec.define("ndefined", nDefined_p);
+       rec.define("convfunctionmap", convFunctionMap_p);
+       for (Int64 k=0; k < nDefined_p; ++k){
+	 rec.define("convfunctions"+String::toString(k), *(convFunctions_p[k]));
+	 rec.define("convweights"+String::toString(k), *(convWeights_p[k]));
+	 rec.define("convsizes"+String::toString(k), *(convSizes_p[k]));
+	 rec.define("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
+       }
+       rec.define("pbclass", Int(pbClass_p));
+       
+    }
+    catch(AipsError x) {
+      return False;
+    }
+    return True;   
+
+   }
+
+  Bool HetArrayConvFunc::fromRecord(String& err, const RecordInterface& rec){
+    //Force pbmath stuff and saved image stuff
+    nchan_p=0;
+    msId_p=-1;
+    try{
+      if(!rec.isDefined("name") || rec.asString("name") != "HetArrayConvFunc"){
+	throw(AipsError("Wrong record to recover HetArray from"));
+      }
+      nDefined_p=rec.asInt64("ndefined");
+      rec.get("convfunctionmap", convFunctionMap_p);
+      convFunctions_p.resize(nDefined_p, True, False);
+      convSupportBlock_p.resize(nDefined_p, True, False);
+      convWeights_p.resize(nDefined_p, True, False);
+      convSizes_p.resize(nDefined_p, True, False);
+      for (Int64 k=0; k < nDefined_p; ++k){
+	convFunctions_p[k]=new Cube<Complex>();
+	convWeights_p[k]=new Cube<Complex>();
+	convSizes_p[k]=new Vector<Int>();
+	convSupportBlock_p[k]=new Vector<Int>();
+	rec.get("convfunctions"+String::toString(k), *(convFunctions_p[k]));
+	rec.get("convweights"+String::toString(k), *(convWeights_p[k]));
+	rec.get("convsizes"+String::toString(k), *(convSizes_p[k]));
+	rec.get("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
+      }
+      pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
+    }
+    catch(AipsError x) {
+      err=x.getMesg();
+      return False;
+    } 
+      
+    return True;
+  }
+
 
   void HetArrayConvFunc::supportAndNormalize(Int plane, Int convSampling){
 
@@ -539,7 +600,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     String pointingid=String::toString(pixdepoint(0))+"_"+String::toString(pixdepoint(1));
     //Int fieldid=vb.fieldId();
-    Int msid=vb.msId();
+    String msid=vb.msName(True);
     //If channel or pol length has changed underneath...then its time to 
     //restart the map
     /*
@@ -556,7 +617,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	nDefined_p=0;
       }
     }
-    String mapid=String::toString(msid)+String("_")+pointingid;
+    String mapid=msid+String("_")+pointingid;
     /*
     if(convFunctionMap_p.ndefined() == 0){
       convFunctionMap_p.define(mapid, 0);    

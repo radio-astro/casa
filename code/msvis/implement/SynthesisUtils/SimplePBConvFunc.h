@@ -65,6 +65,7 @@ namespace casa{
     public:
       SimplePBConvFunc();
       SimplePBConvFunc(const PBMathInterface::PBClass typeToUse);
+      SimplePBConvFunc(const RecordInterface& rec);
       virtual ~SimplePBConvFunc();
       // Inputs are the image, visbuffer, convSampling and skyjones
       // findconv return a cached convvolution function appropriate for this 
@@ -97,16 +98,17 @@ namespace casa{
 
       virtual void setSkyJones(SkyJones* sj);
 
-      Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+      Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/) 
       {throw(AipsError("SimplePBConvFunc::findSupport() not implemented"));};
-      virtual Bool makeAverageResponse(const VisBuffer& vb, 
-				       const ImageInterface<Complex>& image,
-				       //				       TempImage<Float>& theavgPB,
-				       ImageInterface<Float>& theavgPB,
-				       Bool reset=True)
+      virtual Bool makeAverageResponse(const VisBuffer& /*vb*/, 
+				       const ImageInterface<Complex>& /*image*/,
+				       ImageInterface<Float>& /*theavgPB*/,
+				       Bool /*reset=True*/)
       {throw(AipsError("SimplePBConvFunc::makeAverageRes() called"));};
 
-
+      //Serialization
+      Bool toRecord(RecordInterface& outRec);
+      Bool fromRecord(String& err, const RecordInterface& rec);
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;

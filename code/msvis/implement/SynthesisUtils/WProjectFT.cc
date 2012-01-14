@@ -1051,7 +1051,8 @@ Bool WProjectFT::toRecord(String& error,
   // Save the current WProjectFT object to an output state record
   Bool retval = True;
   //save the base class variables
-  /*Record wpconvrec;
+  //this is a memory hog and slow on saving and recovering...better to recompute convfunctions
+  /* Record wpconvrec;
   if(wpConvFunc_p->toRecord(wpconvrec))
     outRec.defineRecord("wpconvfunc", wpconvrec);
   */
