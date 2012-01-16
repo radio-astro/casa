@@ -116,7 +116,7 @@ TestFlagger::done()
 // Configure some parameters to the TestFlagger
 // ---------------------------------------------------------------------
 bool
-TestFlagger::open(String msname, Double ntime)
+TestFlagger::open(String msname, Double ntime, Bool combinescans)
 {
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
@@ -139,6 +139,7 @@ TestFlagger::open(String msname, Double ntime)
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
+	// TODO: Add the combinescans parameter when available!!!
 	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
 
 	// Open the MS
@@ -516,12 +517,10 @@ TestFlagger::run(Bool writeflags)
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if (agents_list_p.empty()) {
+		os << LogIO::SEVERE << "There is no agent to run in list"<< LogIO::POST;
 		return Record();
 	}
 
-	// Reset the flags before flagging
-//	if (resetflags)
-//		fdh_p->setResetFlags(resetflags);
 
 	// Generate the iterators
 	// It will iterate through the data to evaluate the necessary memory

@@ -120,7 +120,9 @@ protected:
 	String mode_p;
 	Record agentParams_p;
 	FlagAgentSummary *summaryAgent_p;
-	Bool writeflags_p;
+
+	// True if there are apply and unapply parameters in the list
+	Bool mixed_p;
 
 
 	// variables for initFlagDataHandler and initAgents
@@ -139,7 +141,7 @@ public:
 	void done();
 
 	// configure the tool
-	bool open(String msname, Double ntime);
+	bool open(String msname, Double ntime, Bool combinescans = false);
 
 	// DEPRECATED
 	bool parseDataSelection(Record selrec);
