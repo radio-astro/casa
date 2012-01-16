@@ -40,6 +40,7 @@
 #include <fits/FITS/FITSHistoryUtil.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
+#include <coordinates/Coordinates/QualityCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/ObsInfo.h>
@@ -1377,13 +1378,20 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
    	}
 
    	// find the quality axis
-		Int specAx = (image.coordinates()).findCoordinate(Coordinate::QUALITY);
-		Vector<Int> nPixelQual = (image.coordinates()).pixelAxes(specAx);
+   	CoordinateSystem cSys = image.coordinates();
+		Int qualAx = cSys.findCoordinate(Coordinate::QUALITY);
+		Vector<Int> nPixelQual = cSys.pixelAxes(qualAx);
 		uInt nAxisQual=nPixelQual(0);
 
 		// build a slicer for the data
+		Int qualIndex;
+		if (!(cSys.qualityCoordinate(qualAx)).toPixel(qualIndex, Quality::DATA)){
+			error = "Could not locate DATA index in quality coordinate!";
+			return False;
+		}
 		IPosition startPos(image.ndim(), 0);
 		IPosition lengthPos=image.shape();
+		startPos(nAxisQual)  = qualIndex;
 		lengthPos(nAxisQual) = 1;
 		Slicer subSlicer(startPos, lengthPos, Slicer::endIsLength);
 
@@ -1401,8 +1409,12 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
    	}
 	   delete subData;
 
-	   // build the error slicer
-	   startPos(nAxisQual)=1;
+		// build the error slicer
+		if (!(cSys.qualityCoordinate(qualAx)).toPixel(qualIndex, Quality::ERROR)){
+			error = "Could not locate ERROR index in quality coordinate!";
+			return False;
+		}
+	   startPos(nAxisQual)=qualIndex;
 	   subSlicer=Slicer(startPos, lengthPos, Slicer::endIsLength);
 
 		// create the error sub-image and set the metadata
