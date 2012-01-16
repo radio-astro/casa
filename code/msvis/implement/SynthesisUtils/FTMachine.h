@@ -48,12 +48,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class VisSet;
-class VisBuffer;
-class ROVisibilityIterator;
-class UVWMachine;
- class GridFT;
-
+  class VisSet;
+  class VisBuffer;
+  class ROVisibilityIterator;
+  class UVWMachine;
+  class VisModelData;
 
 // <summary> defines interface for the Fourier Transform Machine </summary>
 
@@ -262,6 +261,7 @@ public:
   //virtual void ComputeResiduals(VBStore& vb)=0;
 protected:
 
+  friend class VisModelData;
   LogIO logIO_p;
 
   LogIO& logIO();
