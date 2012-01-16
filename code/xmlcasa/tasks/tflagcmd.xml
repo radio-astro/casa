@@ -22,16 +22,6 @@
                         <value></value>
                 </param>
 
-            <param type="any" name="ntime">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
-                <any type="variant" limittypes="double string" />
-                <value type="string">scan</value>
-            </param>
-            <param type="bool" name="combinescans" subparam="true">
-                <description></description>
-                <value>False</value>
-            </param>
-
                 <param type="string" name="inputmode">
                         <description>Input mode for flag commands(table/file/xml/cmd)</description>
                         <value>table</value>
@@ -135,6 +125,16 @@
                         <description>value to set column to</description>
                         <value type="string"></value>
                 </param>
+
+            <param type="any" name="ntime">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description></description>
+                <value>False</value>
+            </param>
 
                 <param type="bool" name="datadisplay">
                     <description>Display data and flags at runtime </description>

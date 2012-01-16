@@ -7,8 +7,6 @@ debug = False
 
 def tflagcmd(
     vis=None,
-    ntime=None,
-    combinescans=None,
     inputmode=None,
     inputfile=None,
     tablerows=None,
@@ -24,6 +22,8 @@ def tflagcmd(
     rowlist=None,
     setcol=None,
     setval=None,
+    ntime=None,
+    combinescans=None,
     datadisplay=None,
     writeflags=None,
     async=None
