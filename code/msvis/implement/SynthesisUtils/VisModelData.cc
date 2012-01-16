@@ -168,7 +168,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
   */
 
-  void VisModelData::addModel(const Record& rec,  const Vector<Int>& msids){
+  void VisModelData::addModel(const Record& rec,  const Vector<Int>& msids, const VisBuffer& vb){
     Vector<Int>fields;
     Vector<Int> spws;
 
@@ -186,6 +186,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	  ftrec.get("fields", fields);
 	  ftrec.get("spws", spws);
 	  ftholder_p[indexft][ftk]=NEW_FT(ftrec.asRecord("container"));
+	  ftholder_p[indexft][ftk]->initMaps(vb);
 	} 
       }	      
     }
@@ -306,7 +307,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
   }
   */
   void VisModelData::initializeToVis(){
-
+    
 
   }
   Bool VisModelData::getModelVis(VisBuffer& vb){

@@ -2316,7 +2316,7 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 	if(!visModelData_p.hasModel(msId(), fieldId(), spectralWindow())){
 	  String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
 	  Record modrec(visIter_p->ms().keywordSet().asRecord(whichrec));
-	  visModelData_p.addModel(modrec, Vector<Int>(1, msId()));
+	  visModelData_p.addModel(modrec, Vector<Int>(1, msId()), *this);
 	}
 	
 	visModelData_p.getModelVis(*this);

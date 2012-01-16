@@ -61,7 +61,9 @@ namespace casa{
     HetArrayConvFunc();
     HetArrayConvFunc(const PBMathInterface::PBClass 
 		     typeToUse);
-    HetArrayConvFunc(const RecordInterface& rec);
+    //Constructor from record
+    //if for prediction only no need to recover fluxscale
+    HetArrayConvFunc(const RecordInterface& rec, Bool calcFluxscale);
     virtual ~HetArrayConvFunc();
 
     //Returns the convfunctions in the Cubes...the rowMap maps the vb.row 
@@ -81,7 +83,7 @@ namespace casa{
     virtual void sliceFluxScale(const Int npol);
     //Serialization
     Bool toRecord(RecordInterface& rec);
-    Bool fromRecord(String& err, const RecordInterface& rec);
+    Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxscale=False);
 
     //----------------------------------------------
 

@@ -587,7 +587,7 @@ Bool BeamSkyJones::getPBMath(const String &telescope, PBMath &myPBMath,
 
 Bool BeamSkyJones::getPBMath(uInt whichAnt, PBMath &myPBMath) const
 {
-  if (whichAnt <  myPBMaths_p.nelements() && whichAnt>=0) {
+  if (whichAnt <  myPBMaths_p.nelements() && Int(whichAnt)>=0) {
     if (myPBMaths_p[whichAnt].ok()) {
       myPBMath = myPBMaths_p[whichAnt];
       return True;

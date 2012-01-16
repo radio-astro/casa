@@ -72,21 +72,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   HetArrayConvFunc::HetArrayConvFunc() : convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
   {
-    
+    calcFluxScale_p=True;
     init(PBMathInterface::AIRY);
   }
 
   HetArrayConvFunc::HetArrayConvFunc(const PBMathInterface::PBClass typeToUse):
-    convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1) 
+    convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
   {
-    
+    calcFluxScale_p=True;
     init(typeToUse);
 
   }
 
-  HetArrayConvFunc::HetArrayConvFunc(const RecordInterface& rec):convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1) {
+  HetArrayConvFunc::HetArrayConvFunc(const RecordInterface& rec, Bool calcFluxneeded):convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1) {
     String err;
-    fromRecord(err, rec);
+    fromRecord(err, rec, calcFluxneeded);
   }
 
   HetArrayConvFunc::~HetArrayConvFunc(){
@@ -459,7 +459,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
    }
 
-  Bool HetArrayConvFunc::fromRecord(String& err, const RecordInterface& rec){
+  Bool HetArrayConvFunc::fromRecord(String& err, const RecordInterface& rec, Bool calcfluxscale){
     //Force pbmath stuff and saved image stuff
     nchan_p=0;
     msId_p=-1;
@@ -484,6 +484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	rec.get("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
       }
       pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
+      calcFluxScale_p=calcfluxscale;
     }
     catch(AipsError x) {
       err=x.getMesg();
@@ -612,7 +613,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     */
     if(convFunctionMap_p.nelements() > 0){
-      if ((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p)){
+      if (calcFluxScale_p && ((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p))){
 	convFunctionMap_p.resize();
 	nDefined_p=0;
       }
@@ -634,9 +635,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convFunctionMap_p[pixdepoint[1]*nx_p+pixdepoint[0]]=0;
       nDefined_p=1;
       actualConvIndex_p=0;
-      fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
-      filledFluxScale_p=False;
-      fluxScale_p.set(0.0);
+      if(calcFluxScale_p){
+	fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
+	filledFluxScale_p=False;
+	fluxScale_p.set(0.0);
+      }
       return -1;
     }
     
@@ -696,6 +699,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   ImageInterface<Float>&  HetArrayConvFunc::getFluxScaleImage(){
+    if(!calcFluxScale_p)
+      throw(AipsError("Programmer Error: flux image cannot be retrieved"));
     if(!filledFluxScale_p){ 
       //The best flux image for a heterogenous array is the weighted coverage
       fluxScale_p.copyData(*(convWeightImage_p));

@@ -1373,10 +1373,11 @@ Bool MosaicFT::fromRecord(String& error,
   if(inRec.isDefined("pbconvfunc")){
     Record subRec=inRec.asRecord("pbconvfunc");
     String elname=subRec.asString("name");
+    // if we are predicting only ...no need to estimate fluxscale
     if(elname=="HetArrayConvFunc")
-      pbConvFunc_p=new HetArrayConvFunc(subRec);
+      pbConvFunc_p=new HetArrayConvFunc(subRec, !toVis_p);
     else
-      pbConvFunc_p=new SimplePBConvFunc(subRec);
+      pbConvFunc_p=new SimplePBConvFunc(subRec, !toVis_p);
   }
   else{
     pbConvFunc_p=0;

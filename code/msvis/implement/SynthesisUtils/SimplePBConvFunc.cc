@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					filledFluxScale_p(False),doneMainConv_p(False),
 					convFunctionMap_p(-1), 
 					actualConvIndex_p(-1), convSize_p(0), 
-					convSupport_p(0) {
+					convSupport_p(0), calcFluxScale_p(True) {
     //
 
      pbClass_p=PBMathInterface::COMMONPB;
@@ -83,16 +83,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
     nchan_p(-1),npol_p(-1),pointToPix_p(),
     directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
-    convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0) {
+    convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), calcFluxScale_p(True) {
     //
     pbClass_p=typeToUse;
 
   }
-  SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec): nchan_p(-1),npol_p(-1),pointToPix_p(),
+  SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded): nchan_p(-1),npol_p(-1),pointToPix_p(),
     directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
-								  convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0){
+								  convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), calcFluxScale_p(calcfluxneeded){
     String err;
-    fromRecord(err, rec);
+    fromRecord(err, rec, calcfluxneeded);
   }
   SimplePBConvFunc::~SimplePBConvFunc(){
     //
@@ -177,6 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SimplePBConvFunc::setWeightImage(CountedPtr<TempImage<Float> >& wgtimage){
     convWeightImage_p=wgtimage;
+    calcFluxScale_p=True;
 
   }
  
@@ -622,7 +623,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int fieldid=vb.fieldId();
     String msid=vb.msName(True);
     if(convFunctionMap_p.ndefined() > 0){
-      if ((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p)){
+      if (((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p)) && calcFluxScale_p){
 	convFunctionMap_p.clear();
       }
     }
@@ -631,9 +632,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(convFunctionMap_p.ndefined() == 0){
       convFunctionMap_p.define(mapid, 0);    
       actualConvIndex_p=0;
-      fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
-      filledFluxScale_p=False;
-      fluxScale_p.set(0.0);
+      if(calcFluxScale_p){
+	fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
+	filledFluxScale_p=False;
+	fluxScale_p.set(0.0);
+      }
       return False;
     }
     
@@ -664,6 +667,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   ImageInterface<Float>&  SimplePBConvFunc::getFluxScaleImage(){
 
+    if(!calcFluxScale_p)
+      throw(AipsError("Programmer error: Cannot get flux scale"));
     if(!filledFluxScale_p){
       IPosition blc(4,nx_p, ny_p, npol_p, nchan_p);
       IPosition trc(4, ny_p, ny_p, npol_p, nchan_p);
@@ -699,6 +704,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
 
     return fluxScale_p;
+    
   }
 
 
@@ -727,7 +733,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
 
-  Bool SimplePBConvFunc::fromRecord(String& err, const RecordInterface& rec){
+  Bool SimplePBConvFunc::fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded){
      Int numConv=0;
      //make sure storeImageParams is triggered
      nchan_p=0;
@@ -759,7 +765,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        }
        pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
        rec.get("actualconvindex",  actualConvIndex_p);
-       
+       calcFluxScale_p=calcFluxneeded;
+
      }
      catch(AipsError x) {
        err=x.getMesg();
@@ -769,13 +776,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      
   }
   void SimplePBConvFunc::addPBToFlux(const VisBuffer& vb){
-    TempImage<Float> thispb(fluxScale_p.shape(), fluxScale_p.coordinates());
-    thispb.set(1.0);
-    sj_p->applySquare(thispb, thispb, vb, 0);
-    LatticeExpr<Float> le(fluxScale_p+thispb);
-    fluxScale_p.copyData(le);
-
-    if(0) {
+    if(calcFluxScale_p){
+      TempImage<Float> thispb(fluxScale_p.shape(), fluxScale_p.coordinates());
+      thispb.set(1.0);
+      sj_p->applySquare(thispb, thispb, vb, 0);
+      LatticeExpr<Float> le(fluxScale_p+thispb);
+      fluxScale_p.copyData(le);
+      
+      if(0) {
 	ostringstream os1;
 	os1 << "SINGLE_" << vb.fieldId() ;
 	PagedImage<Float> thisScreen(fluxScale_p.shape(), fluxScale_p.coordinates(), String(os1));
@@ -785,7 +793,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	PagedImage<Float> thisScreen2(fluxScale_p.shape(), fluxScale_p.coordinates(), String(os2));
 	thisScreen2.copyData(fluxScale_p);
       }
-
+    }
 
   }
 

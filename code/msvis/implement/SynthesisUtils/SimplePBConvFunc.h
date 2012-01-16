@@ -65,7 +65,7 @@ namespace casa{
     public:
       SimplePBConvFunc();
       SimplePBConvFunc(const PBMathInterface::PBClass typeToUse);
-      SimplePBConvFunc(const RecordInterface& rec);
+      SimplePBConvFunc(const RecordInterface& rec, Bool calcFlux_needed);
       virtual ~SimplePBConvFunc();
       // Inputs are the image, visbuffer, convSampling and skyjones
       // findconv return a cached convvolution function appropriate for this 
@@ -108,7 +108,9 @@ namespace casa{
 
       //Serialization
       Bool toRecord(RecordInterface& outRec);
-      Bool fromRecord(String& err, const RecordInterface& rec);
+      //From record 
+      //set calcfluxneeded to True if flux scale need to be computed
+      Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded=False);
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;
@@ -128,6 +130,7 @@ namespace casa{
       Vector<Double> thePix_p;
       Bool filledFluxScale_p;
       Bool doneMainConv_p;
+      Bool calcFluxScale_p;
       virtual void storeImageParams(const ImageInterface<Complex>& iimage, const VisBuffer& vb);
       //return the direction pixel corresponding to a direction
       virtual void toPix(const VisBuffer& vb);
