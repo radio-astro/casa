@@ -92,7 +92,7 @@ def tflagcmd(
         
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, newtime)
+            tflocal.open(vis, newtime, combinescans)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
