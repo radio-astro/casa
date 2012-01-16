@@ -78,7 +78,7 @@ testflagger::done()
 }
 
 bool
-testflagger::open(const std::string& msname, const double ntime)
+testflagger::open(const std::string& msname, const double ntime, bool combinescans)
 {
 	try
 	{
@@ -86,7 +86,7 @@ testflagger::open(const std::string& msname, const double ntime)
 		    testflagger_p = new TestFlagger();
 		}
 		if (testflagger_p) {
-			return testflagger_p->open(msname, ntime);
+			return testflagger_p->open(msname, ntime, combinescans);
 		}
 
 		return false;
