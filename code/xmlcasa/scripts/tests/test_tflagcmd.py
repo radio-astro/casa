@@ -158,7 +158,32 @@ class test_unapply(test_base):
         # Unapply only the quack line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1)
         result = tflagger(vis=self.vis,mode='summary',scan='1')
-        self.assertEqual(result['flagged'], 523908, 'Expected 523908 flags, found %s'%result['flagged'])
+        
+        # Only the manualflag flags should be there
+        self.assertEqual(result['flagged'], 568134, 'Expected 568134 flags, found %s'%result['flagged'])
+        self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
+        
+    def test_umanualflag(self):
+        '''tflagcmd: unapply manualflag agent'''
+        # Remove any cmd from table
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+
+        # Flag using manualflag agent
+        input = "scan=1"
+        filename = create_input(input)
+        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply')
+
+        # Flag using the quack agent
+        input = "scan=1~3 mode=quack quackinterval=1.0"
+        filename = create_input(input)
+        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply')
+        
+        # Unapply only the manualflag line
+        tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0)
+        result = tflagger(vis=self.vis,mode='summary',scan='1')
+        
+        # Only the quack flags should be left
+        self.assertEqual(result['flagged'], 44226, 'Expected 44226 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
         
         
