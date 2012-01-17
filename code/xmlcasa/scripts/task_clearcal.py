@@ -2,7 +2,7 @@ import os
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-def clearcal(vis=None,field=None,spw=None,intent=None):
+def clearcal(vis=None,field=None,spw=None,intent=None, addmodel=None):
 
         casalog.origin('clearcal')
 
@@ -28,7 +28,7 @@ def clearcal(vis=None,field=None,spw=None,intent=None):
 			if (not(doinit)):
 				casalog.post('Need to create scratch columns; ignoring selection.')
 
-                        cb.open(vis)
+                        cb.open(vis, addmodel=addmodel)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 

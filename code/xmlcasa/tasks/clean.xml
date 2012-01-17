@@ -396,9 +396,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>0.2</value>
     </param>
 <!--========================================================= -->
-    <param type="bool" name="calready">
-	    <description>True required for self-calibration</description>
-	    <value>True</value>
+    <param type="bool" name="usescratch">
+	    <description>True if to save model visibilities in MODEL_DATA column</description>
+	    <value>False</value>
     </param>
 <!--========================================================= -->
     <param type="any" name="noise"  subparam="true">
@@ -1219,9 +1219,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    minpb is always used to create a mask (regardless of
                    pbcor=True/False) 
 
-       calready -- if True will create scratch columns if they are 
+       usescratch -- if True will create scratch columns if they are 
                not there. And after clean completes the predicted model 
-               visibility is from the clean components are written to the ms.
+               visibility is from the clean components are written to the ms. This increases
+               the ms size by the data volume. if False then the model is saved in the ms
+               header and the calculation of the visibilities is done on the fly when using 
+               calibration or plotms. Use True if you want to access the moedl visibilities 
+               in python, say.
 
        allowchunk -- Partition the image cube by channel-chunks.
                default=False;  

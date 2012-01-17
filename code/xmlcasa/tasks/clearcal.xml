@@ -26,7 +26,10 @@
 		<description>Select observing intent</description>
 		<value></value>
 	</param>
-
+	<param type="bool" name="addmodel">
+		<description>Add a model</description>
+		<value>True</value>
+	</param>
 
 	</input>
 <returns type="void"/>

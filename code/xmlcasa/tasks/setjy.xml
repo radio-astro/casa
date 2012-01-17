@@ -114,7 +114,11 @@
                         <value>Butler-JPL-Horizons 2010</value>
 			</allowed>
 		</param>
-                
+
+		<param type="bool" name="usescratch">
+		  <description>Will create if necessary and use the MODEL_DATA </description>
+		  <value>True</value>
+		  </param>
                 <constraints>
                   <when param="selectdata">
 		    <equals type="bool" value="False"/>
@@ -390,6 +394,11 @@
 	       with descriptions of the models used by setjy (both
 	       extragalactic and Solar System).
 
+        usescratch  -- If True: he model visibility will be evaulated and saved on 
+	disk in the MODEL_DATA column. This will increase your ms by size 
+	by the data volume. If False: then the model is saved header and model visibilities 
+	are evaluated when calculating calibration  or plotting in plotms.
+        Use True if you need to interact with the  MODEL_DATA in python, say.
             
 </example>
 </task>

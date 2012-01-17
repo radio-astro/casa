@@ -13,7 +13,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           interactive, mask, nchan, start, width, outframe,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
-          pbcor, minpb, calready, noise, npixels, npercycle, cyclefactor,
+          pbcor, minpb, usescratch, noise, npixels, npercycle, cyclefactor,
           cyclespeedup, nterms, reffreq, chaniter, flatnoise, allowchunk):
 
     #Python script
@@ -43,7 +43,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
 	casalog.post('analysing intended channalization...')
         imCln=imtool.create()
-        imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
+        imset=cleanhelper(imCln, vis, usescratch, casalog)
 
         (npage, localstart, localwidth)=imset.setChannelizeNonDefault(mode,
                 spw, field,nchan,start,width,outframe,veltype,phasecenter, restfreq)
@@ -131,7 +131,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                           robust=robust,uvtaper=uvtaper,outertaper=outertaper,
                           innertaper=innertaper,modelimage=modelimage,
                           restoringbeam=restoringbeam,pbcor=pbcor,minpb=minpb,
-                          calready=calready,noise=noise,npixels=npixels,npercycle=npercycle,
+                          usescratch=usescratch,noise=noise,npixels=npixels,npercycle=npercycle,
                           cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,nterms=nterms,
                           reffreq=reffreq,chaniter=chaniter,flatnoise=flatnoise,
                           allowchunk=False)
@@ -214,10 +214,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         #     ftmachine='pbwproject';
 
         imCln=imtool.create()
-        ###if calready open ms with scratch column
+        ###if usescratch open ms with scratch column
         ###if mosweight use scratch columns as there in no
         ###mosweight available for no scratch column /readonly ms yet
-        imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
+        imset=cleanhelper(imCln, vis, usescratch, casalog)
 
         # multims input only (do sorting of vis list based on spw)
         if  type(vis)==list: imset.sortvislist(spw,mode,width)
@@ -268,7 +268,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     localnchan, localstart, localwidth, outframe, veltype,
                                     imsize, cell,  phasecenter, restfreq, stokes, weighting,
                                     robust, uvtaper, outertaper, innertaper, modelimage, 
-                                    restoringbeam, calready, noise, npixels, padding)
+                                    restoringbeam, usescratch, noise, npixels, padding)
 
             nchaniter=localnchan
             # check nchan in templatecube
@@ -489,7 +489,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                          timerange=timerange, uvrange=uvrange,
                          antenna=antenna,
                          scan=scan, observation=str(observation),
-                         calready=calready, nchan=visnchan,
+                         usescratch=usescratch, nchan=visnchan,
                          start=visstart, width=1)
 
             imset.definemultiimages(rootname=rootname, imsizes=imsizes,
@@ -511,7 +511,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                   uvtaper=uvtaper,
                                   innertaper=innertaper,
                                   outertaper=outertaper,
-                                  calready=calready, nchan=visnchan,
+                                  usescratch=usescratch, nchan=visnchan,
                                   start=visstart, width=1)
 
 # Do data selection and wieghting,papering all at once.

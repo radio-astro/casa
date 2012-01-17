@@ -51,13 +51,16 @@ cb2=calibrater.create()
      <param type="string" direction="in" name="filename">
      <description>MeasurementSet file name.  No default</description>
      </param>
-
      <param type="bool" direction="in" name="compress">
      <description>Compress calibration columns?</description>
      <value>false</value>
      </param>
      <param type="bool" direction="in" name="addscratch">
      <description>Add scratch columns?</description>
+     <value>true</value>
+     </param>
+     <param type="bool" direction="in" name="addmodel">
+     <description>Add MODEL_DATA column along with CORRECTED_DATA ?</description>
      <value>true</value>
      </param>
 </input>

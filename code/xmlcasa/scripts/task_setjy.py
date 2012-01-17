@@ -8,7 +8,7 @@ def setjy(vis=None, field=None, spw=None,
           selectdata=None, timerange=None, scan=None, observation=None,
           modimage=None, listmodimages=None,
           scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
-          standard=None):
+          standard=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
   retval = True
   try:
@@ -50,9 +50,9 @@ def setjy(vis=None, field=None, spw=None,
           # setjy should only operate on member MSes that have the selection anyway.
           for m in n_selected_rows:
             if n_selected_rows[m] > 0:
-              myim.selectvis(vis=m, usescratch=True)
+              myim.selectvis(vis=m, usescratch=usescractch)
         else:
-          myim.open(vis, usescratch=True)
+          myim.open(vis, usescratch=usescratch)
       else:
         raise Exception, 'Visibility data set not found - please verify the name'
 

@@ -122,13 +122,13 @@ public:
   // The MS calibration scratch columns can be optionally compressed.
   VisSet(MeasurementSet & ms, const Block<Int>& columns, 
 	 const Matrix<Int>& chanSelection, Double timeInterval=0,
-	 Bool compress=False);
+	 Bool compress=False, Bool doModelData=True);
 
   // Same as above, but provide scratch column option
   VisSet(MeasurementSet& ms,const Block<Int>& columns, 
 	 const Matrix<Int>& chanSelection, 
 	 Bool addScratch,
-	 Double timeInterval=0,Bool compress=False);
+	 Double timeInterval=0,Bool compress=False, Bool doModelData=True);
 
   // This is a constructor for multiple MS...but everything is same as the one 
   // above
@@ -136,7 +136,7 @@ public:
 
   VisSet(Block<MeasurementSet>& mss, const Block<Int>& columns, 
          const Block< Matrix<Int> >& chanSelections, Bool addStratch=False, Double timeInterval=0,
-         Bool compress=False);
+         Bool compress=False, Bool doModelData=True);
 
 
 
@@ -216,13 +216,13 @@ public:
 private:
 
   //Add the scratch columns
-  void addScratchCols(MeasurementSet& ms, Bool compress=False);
+  void addScratchCols(MeasurementSet& ms, Bool compress=False, Bool doModelData=True);
 
   // Add a calibration set (comprising a set of CORRECTED_DATA and MODEL_DATA)
   // to the MeasurementSet (MS). Optionally compress these columns using the 
   // CompressComplex column engine.
-  void addCalSet(MeasurementSet& ms, Bool compress=True);
-  void addCalSet2(MeasurementSet& ms, Bool compress=False);
+  void addCalSet(MeasurementSet& ms, Bool compress=True, Bool doModelData=True);
+  void addCalSet2(MeasurementSet& ms, Bool compress=False, Bool doModelData=True);
 
   // Remove an existing cal set (a CORRECTED_DATA and MODEL_DATA 
   // column set and, optionally, any associated compression columns)
