@@ -506,7 +506,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (!MeasTable::Observatory(mp,obsName)) {
       // unknown observatory
       LogIO os(LogOrigin("AntennaResponses",
-			 String("getRowAndIndex"),
+			 String("getAntennaTypes"),
 			 WHERE));
       os << LogIO::NORMAL << String("Unknown observatory ") << obsName 
 	 << LogIO::POST;
