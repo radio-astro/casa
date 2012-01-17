@@ -68,14 +68,10 @@ tf.done()
      <description>Time interval. If not given, the default will be used. Default: </description>
      <value>0.0</value>
      </param>
-     <param type="bool" name="combinescans">
-     <description>Accumulate data across scans. Default: </description>
-     <value>false</value>
-     </param>
 </input>
 
 <example>
-tf.open(msname,ntime,combinescans)
+tf.open(msname,ntime)
 </example>
 <returns type="bool"/> 
 </method>
