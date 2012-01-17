@@ -217,7 +217,7 @@ Logger* Logger::singleton_p = NULL;
 
 Logger::Logger ()
 : loggingStarted_p (False),
-  nameMutex_p (NULL)
+  nameMutex_p (new Mutex ())
 {}
 
 Logger::~Logger ()
@@ -301,7 +301,6 @@ Logger::start (const char * filename)
 {
     if (! loggingStarted_p){  // ignore multiple starts
 
-        nameMutex_p = new Mutex ();
         loggerThread_p = new LoggerThread ();
 
         loggerThread_p ->setLogFilename (filename == NULL ? "" : filename);
