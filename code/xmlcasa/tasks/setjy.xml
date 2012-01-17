@@ -395,8 +395,8 @@
 	       extragalactic and Solar System).
 
         usescratch  -- If True: he model visibility will be evaulated and saved on 
-	disk in the MODEL_DATA column. This will increase your ms by size 
-	by the data volume. If False: then the model is saved header and model visibilities 
+	disk in the MODEL_DATA column. This will increase your ms in size 
+	by a factor of 3. If False: then the model is saved header and model visibilities 
 	are evaluated when calculating calibration  or plotting in plotms.
         Use True if you need to interact with the  MODEL_DATA in python, say.
             

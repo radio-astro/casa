@@ -27,7 +27,7 @@
 		<value></value>
 	</param>
 	<param type="bool" name="addmodel">
-		<description>Add a model</description>
+		<description>Add MODEL_DATA scratch column</description>
 		<value>True</value>
 	</param>
 
@@ -69,6 +69,9 @@
                 default: ''  (no selection by intent)
                 intent='*BANDPASS*'  (selects data labelled with
                                       BANDPASS intent)
+      addmodel -- add MODEL_DATA along with CORRECTED_DATA if True; 
+                        otherwise it will add/reset only CORRECTED_DATA, model visibilities
+                        will then be evaluated when needed.
 
  </example>
  </task>
