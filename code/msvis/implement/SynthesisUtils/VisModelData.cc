@@ -314,8 +314,12 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
     Vector<CountedPtr<ComponentList> >cl=getCL(vb.msId(), vb.fieldId(), vb.spectralWindow());
     Vector<CountedPtr<FTMachine> > ft=getFT(vb.msId(), vb.fieldId(), vb.spectralWindow());
+
     //Fill the buffer with 0.0; also prevents reading from disk if MODEL_DATA exists
-    vb.setModelVisCube(Complex(0.0,0.0));
+    ///Oh boy this is really dangerous...
+    //nCorr etc are public..who know who changed these values before reaching here.
+    Cube<Complex> mod(vb.nCorr(), vb.nChannel(), vb.nRow(), Complex(0.0));
+    vb.setModelVisCube(mod);
     Bool incremental=False;
     if( cl.nelements()>0){
       //cerr << "In cft" << endl;
