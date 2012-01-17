@@ -91,7 +91,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (ms.tableDesc().isColumn("CORRECTED_DATA")) {
       init=False;
     }
-    
+    // in case model data exists and the user do not want it anymore
+    if(ms.tableDesc().isColumn("MODEL_DATA") && !doModelData){
+      init=True;
+    }
     // Add scratch columns
     if (init) {
       
@@ -151,10 +154,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     Bool init=True;
+
     if (ms.tableDesc().isColumn("CORRECTED_DATA")) {
       init=False;
     }
-    
+    // in case model data exists and the user do not want it anymore
+    if(ms.tableDesc().isColumn("MODEL_DATA") && !doModelData){
+      init=True;
+    }
     //    cout << boolalpha << "addScratch = " << addScratch << endl;
 
     // Add scratch columns
