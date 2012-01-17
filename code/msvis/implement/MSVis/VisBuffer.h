@@ -228,15 +228,14 @@ public:
     // }
 
     ///Because of it being publicly exposed ...using nRow, nChannel, nCorr etc to 
-    /// determine the size of the buffer can be totally WRONG...so please do not use
-    /// these till they are made really private...They MAY NOT  represent the shape 
-    /// of a buffer filled in this iteration
-    /// detemine ncorr, nchan, nrow by looking at the size of the data cube you 
-    // are accessing
+    /// determine the size of the buffer can be totally WRONG
+    ///They MAY NOT  represent the shape 
+    /// of a buffer filled in this iteration.
     // Decide what is the right value (depending on where the vb is coming from) 
     // for you for the size of the buffer. i.e (nCorr(), nChannel(), nRow()) or vb.visCube().shape()
-    // The latter comes from the VisIter state ...the former be carefull...
-    /// For example VisBuffAccumulator changes these nilly willy. without updating fillnrow 
+    // The latter comes from the VisIter state ...the former be careful...
+    /// For example VisBuffAccumulator changes these in an unconnected fashion; 
+    //without updating fillnrow 
     /// datacube shape  etc etc.
     /// You are warned nrow_p etc are public variables effectively (despite being 
     ///declared private) so it can be changed
