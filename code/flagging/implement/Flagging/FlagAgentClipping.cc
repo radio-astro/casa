@@ -64,7 +64,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 		checkVis_p = &FlagAgentClipping::checkVisForClipInside;
 	}
 
-	*logger_p << LogIO::NORMAL << " clipoutside is " << clipoutside_p << LogIO::POST;
+	*logger_p << logLevel_p << " clipoutside is " << clipoutside_p << LogIO::POST;
 
 	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
@@ -74,8 +74,8 @@ FlagAgentClipping::setAgentParameters(Record config)
 		clipmin_p = cliprange.getStorage(deleteIt)[0];
 		clipmax_p = cliprange.getStorage(deleteIt)[1];
 
-		*logger_p << LogIO::NORMAL << " clipmin is " << clipmin_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << " clipmax is " << clipmax_p << LogIO::POST;
+		*logger_p << logLevel_p << " clipmin is " << clipmin_p << LogIO::POST;
+		*logger_p << logLevel_p << " clipmax is " << clipmax_p << LogIO::POST;
 	}
 	else
 	{
@@ -94,7 +94,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 		channelavg_p = False;
 	}
 
-	*logger_p << LogIO::NORMAL << " channelavg is " << channelavg_p << LogIO::POST;
+	*logger_p << logLevel_p << " channelavg is " << channelavg_p << LogIO::POST;
 
 
 	return;
