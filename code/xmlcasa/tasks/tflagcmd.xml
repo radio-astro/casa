@@ -136,11 +136,16 @@
                 <value>False</value>
             </param>
 
-                <param type="bool" name="datadisplay">
-                    <description>Display data and flags at runtime </description>
-                    <value>False</value>
-                </param>
-    
+            <param type="string" name="display">
+                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <value type="string"></value>
+            </param>
+
+            <param type="string" name="format" subparam="true">
+                <description>Display plots on the screen or save to a file</description>
+                <value type="string">screen</value>
+            </param>
+
                 <param type="bool" name="writeflags">
                     <description>Write Flags to the MS</description>
                     <value>True</value>
@@ -200,6 +205,18 @@
                                     <default param="setval"><value type="string"></value></default>
                             </equals>
                     </when>
+
+               <when param="display">
+                <equals type="string" value="" />
+                <equals type="string" value="data" />
+                <equals type="string" value="report">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
+                <equals type="string" value="both">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
+               </when>
+                    
                 </constraints>
         </input>
 <returns type="void"/>

@@ -24,7 +24,8 @@ def tflagcmd(
     setval=None,
     ntime=None,
     combinescans=None,
-    datadisplay=None,
+    display=None,
+    format=None,
     writeflags=None,
     async=None
     ):
@@ -92,7 +93,7 @@ def tflagcmd(
         
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, newtime, combinescans)
+            tflocal.open(vis, newtime)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -120,7 +121,8 @@ def tflagcmd(
         # NOTE: could also use values from OBSERVATION table col TIME_RANGE
         casalog.post('MS spans timerange ' + ms_starttime + ' to '
                      + ms_endtime)
-
+            
+        
         myflagcmd = {}
         cmdlist = []
         unionpars = {}
@@ -276,11 +278,19 @@ def tflagcmd(
                 backupCmd(tflocal, list2save)
                 
             # Run the tool
-            stats = tflocal.run(writeflags=writeflags)
+            stats = tflocal.run(writeflags)
                         
             tflocal.done()
                         
             # Save the valid command lines to the output file or FLAG_CMD
+            # First, add the global parameters to the list
+            global_pars = ' ntime='+str(ntime)
+            if combinescans:
+                global_pars = global_pars+' combinescans='+str(combinescans)
+                
+            for k in list2save.keys():
+                list2save[k]['cmd'] = list2save[k]['cmd']+global_pars
+                
             valid_rows = list2save.keys()
 
             if valid_rows.__len__() > 0:
@@ -722,7 +732,6 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         return
     
     # Parameters for each mode
-    # TO DO summary!!!!!!
     manualpars = []
     clippars = ['clipminmax', 'expression', 'clipsoutside','datacolumn', 'clipchanavg']
     quackpars = ['quackinterval','quackmode','quackincrement']
