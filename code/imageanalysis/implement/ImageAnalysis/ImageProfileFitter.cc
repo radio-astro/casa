@@ -67,7 +67,6 @@ ImageProfileFitter::ImageProfileFitter(
 	_polyOrder(-1), _fitAxis(axis), _ngauss(ngauss),
 	_minGoodPoints(0), _results(Record()),
 	_gaussEstimates(SpectralList()) {
-    _checkNGaussAndPolyOrder();
     if (! estimatesFilename.empty()) {
     	*_getLog() << LogOrigin(_class, __FUNCTION__);
     	if (_ngauss > 0) {
@@ -89,6 +88,7 @@ ImageProfileFitter::ImageProfileFitter(
 ImageProfileFitter::~ImageProfileFitter() {}
 
 Record ImageProfileFitter::fit() {
+    _checkNGaussAndPolyOrder();
     LogOrigin logOrigin(_class, __FUNCTION__);
     *_getLog() << logOrigin;
     {
