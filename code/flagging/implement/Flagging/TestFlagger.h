@@ -141,7 +141,7 @@ public:
 	void done();
 
 	// configure the tool
-	bool open(String msname, Double ntime, Bool combinescans = false);
+	bool open(String msname, Double ntime);
 
 	// DEPRECATED
 	bool parseDataSelection(Record selrec);
