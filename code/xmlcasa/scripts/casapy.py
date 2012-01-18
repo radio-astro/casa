@@ -209,7 +209,7 @@ a.reverse( )
 __ipython_colors = 'LightBG'
 while len(a) > 0:
     c = a.pop()
-    if c == '-colors':
+    if c == '--colors':
         ##
         ## strip out 2 element ipython flags (which we recognize) here...
         ##
@@ -219,7 +219,7 @@ while len(a) > 0:
         else:
             c = a.pop( )
             if c != 'NoColor' and c != 'Linux' and c != 'LightBG':
-                print "unrecognized option for '-color': " + c
+                print "unrecognized option for '--color': " + c
                 sys.exit(1)
             else:
                 __ipython_colors = c
@@ -230,7 +230,7 @@ while len(a) > 0:
         ##
         c = c.split('=')[1]
         if c != 'NoColor' and c != 'Linux' and c != 'LightBG':
-            print "unrecognized option for '-color': " + c
+            print "unrecognized option for '--color': " + c
             sys.exit(1)
         else:
             __ipython_colors = c
@@ -264,6 +264,7 @@ if casa['flags'].has_key('--help') :
 	print "   --nologger"
 	print "   --nologfile"
 	print "   --nogui"
+        print "   --colors=[NoColor|Linux|LightBG]"
 	print "   --noipython"
 	print "   -c filename-or-expression"
 	print "   --help, print this text and exit"
