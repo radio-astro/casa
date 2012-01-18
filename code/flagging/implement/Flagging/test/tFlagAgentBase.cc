@@ -395,16 +395,10 @@ void writeFlags(string inputFile,Record record,vector<Record> recordList)
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
-			// Queue flagging process
-			// cout << "Put flag process in queue " << endl;
-			agentList->queueProcess();
-
-			// Wait for completion of flagging process
-			// cout << "Wait for completion of flagging process " << endl;
-			agentList->completeProcess();
+			// Apply flags
+			agentList->apply();
 
 			// Flush flags to MS
-			// cout << "Flush flags to MS " << endl;
 			dh->flushFlags();
 		}
 	}
@@ -611,11 +605,8 @@ void checkFlags(string inputFile,Record record,vector<Record> recordList)
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
-			// Queue flagging process
-			agentList->queueProcess();
-
-			// Wait for completion of flagging process
-			agentList->completeProcess();
+			// Apply flags
+			agentList->apply();
 
 			// Flush flags to MS
 			dh->flushFlags();

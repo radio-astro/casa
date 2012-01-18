@@ -69,7 +69,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/MFMSCleanImageSkyModel.cc
  implement/MeasurementComponents/MSCleanImageSkyModel.cc
  implement/MeasurementComponents/Mueller.cc
- implement/MeasurementComponents/MultiTermFT.cc
  implement/MeasurementComponents/MultiThreadedVisResampler.cc
  implement/MeasurementComponents/NNLSImageSkyModel.cc
  implement/MeasurementComponents/nPBWProjectFT.cc

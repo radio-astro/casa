@@ -922,7 +922,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outRecord.defineRecord("multichanmaprec", multichmaprec);
     outRecord.define("chanmap", chanMap);
     outRecord.define("polmap", polMap);
-    outRecord.define("nvischan", nVisChan_p);
+    outRecord.define("nvischanmulti", nVisChan_p);
     spectralCoord_p.save(outRecord, "spectralcoord");
     outRecord.define("doconversion", doConversion_p);
     outRecord.define("pointingdircol", pointingDirCol_p);
@@ -1010,7 +1010,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       multichmaprec.get(k, multiChanMap_p[k]);
     inRecord.get("chanmap", chanMap);
     inRecord.get("polmap", polMap);
-    inRecord.get("nvischan", nVisChan_p);
+    inRecord.get("nvischanmulti", nVisChan_p);
     SpectralCoordinate *tmpSpec=SpectralCoordinate::restore(inRecord, "spectralcoord");
     if(tmpSpec){
       spectralCoord_p=*tmpSpec;

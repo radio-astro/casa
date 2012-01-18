@@ -6,24 +6,67 @@ use HTML::Element;
 use File::Basename;
 use FileHandle;
 
-die "a single argument (report file path) is required" unless scalar(@ARGV) == 1;
-die "report file does not exit" unless -f $ARGV[0];
+die "a single argument is required" unless scalar(@ARGV) == 1;
 
+$commands = '';
 $reportfile = $ARGV[0];
+if ( $reportfile =~ m|\[([^\]]+)\]::(.*)| ) {
+    $commands = $1;
+    $reportfile = $2;
+}
+
+$delay = 0;
+@commands = split(';',$commands);
+foreach ( @commands ) {
+    $delay = $1 if m|DELAY:(\d+)|;
+}
 
 $reportdir = dirname($reportfile);
-die "failed to find report path" unless -d $reportdir;
+die "cannot find report path: $reportdir" unless -d $reportdir;
+die "no version information (i.e. version.txt file) in '$reportdir'" unless -f "$reportdir/version.txt";
 
 ###
-### find the version information
+### read version information
 ###
-die "no version information (i.e. version.txt file) in '$reportdir'" unless -f "$reportdir/version.txt";
 open( V, "<", "$reportdir/version.txt");
 $v = <V>;
 close(V);
-die "version file format error" unless $v =~ m|^VERSION>\s+([0-9.]+)\s+(\d+)|;
+die "version file format error: $v" unless $v =~ m|^VERSION>\s+([0-9.]+)\s+(\d+)|;
 $version = $1;
 $revision = $2;
+
+if ( $delay > 0 ) {
+    $pid = fork( );
+    if ( $pid < 0 ) { die "forking delay process failed"; }
+    if ( $pid > 0 ) {
+	### parent
+	print "postprocessing of $reportfile will happen in about " . ($delay > 60 ? ($delay / 60) . " minutes" : "$delay seconds") . "...\n";
+	exit(0);
+    }
+    
+    #### first child
+    setpgrp(0,0);
+    $SIG{TTOU} = "IGNORE";
+    $SIG{TTIN} = "IGNORE";
+    $SIG{TSTP} = "IGNORE";
+    $SIG{HUP} = "IGNORE";
+    $SIG{INT} = "IGNORE";
+    close(STDIN);
+    close(STDOUT);
+    close(STDERR);
+
+    if ( fork( ) != 0 ) { exit(0); }	### new process group leader exits...
+    #### second child
+        
+    sleep($delay);
+    exec( "$0 $reportfile" );
+    exit(0);
+}
+
+###
+### check for the report file after the delay... since it may not have appeared yet...
+###
+die "cannot find report file: $reportfile" unless -f $reportfile;
 
 ###
 ### parse html...

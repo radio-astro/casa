@@ -30,6 +30,7 @@ casa_add_library( msvis
   implement/SynthesisUtils/GridFT.cc
   implement/SynthesisUtils/HetArrayConvFunc.cc
   implement/SynthesisUtils/MosaicFT.cc
+  implement/SynthesisUtils/MultiTermFT.cc	
   implement/SynthesisUtils/PBMath1DAiry.cc
   implement/SynthesisUtils/PBMath1D.cc
   implement/SynthesisUtils/PBMath1DCosPoly.cc

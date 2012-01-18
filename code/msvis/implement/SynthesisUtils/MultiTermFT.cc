@@ -54,13 +54,13 @@
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
 
-#include <synthesis/MeasurementComponents/MultiTermFT.h>
+#include <msvis/SynthesisUtils/MultiTermFT.h>
 
 // This is the list of FTMachine types supported by MultiTermFT
 #include <msvis/SynthesisUtils/GridFT.h>
 #include <msvis/SynthesisUtils/WProjectFT.h>
-#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
-#include <synthesis/MeasurementComponents/rGridFT.h>
+//#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+//#include <synthesis/MeasurementComponents/rGridFT.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 //---------------------------------------------------------------------- 
@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     dbg_p=False;
     dotime_p=False;
-
+    this->setBasePrivates(*subftm_p);
     canComputeResiduals_p = subftm_p->canComputeResiduals();
     if(dbg_p) cout << "MTFT :: constructor with subftm : "<< subFTMname_p << endl;
     if(dbg_p) cout << "can compute residuals : " << canComputeResiduals_p << endl;
@@ -115,9 +115,6 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
 	 
 	 //if(other.subftm_p==0) throw(AipsError("Internal Error : Empty subFTMachine"));
 	 
-	 // Copy MTFT's base-class vars to subftm's base-class vars
-	 other.subftm_p->setBasePrivates(*this);
-	 
 	 // The operator= would have copied only the pointer, and not made a new instance of subftm_p
 	 // Make the new instance of subftm_p here. 
 	 // Ideally, this should call "clone" of that ftm, so that the if/else stuff can all go away.
@@ -125,13 +122,14 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
 	   { subftm_p = new GridFT(static_cast<const GridFT&>(*other.subftm_p)); }
 	 else if(other.subFTMname_p=="wproject") 
 	   { subftm_p = new WProjectFT(static_cast<const WProjectFT&>(*other.subftm_p)); }
-	 else if(other.subFTMname_p=="wbawp") 
+	 /*	 else if(other.subFTMname_p=="wbawp") 
 	   { subftm_p = new AWProjectWBFT(static_cast<const AWProjectWBFT&>(*other.subftm_p)); }
 	 else if(other.subFTMname_p=="nift") 
 	   { 
 	     subftm_p = ((rGridFT*)&(*other.subftm_p))->clone();
 	     //cout << "MTFT : copy constructor : newft->visresampler_p : " << &(*(subftm_p->visResampler_p)) << endl;
 	   }
+	 */
 	 else 
 	   {throw(AipsError("FTMachine "+other.subFTMname_p+" is not supported with MS-MFS")); }
 	 
@@ -345,7 +343,11 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
   {
     if(dbg_p) cout << "MTFT :: toRecord for term " << thisterm_p << endl;
     Bool retval = True;
-    
+    //no image is held in this machine so no image need to be saved
+    // the subftm holds the image
+    if(!FTMachine::toRecord(error, outRec, False))
+      return False;
+
     Record subFTContainer;
     subftm_p->toRecord(error, subFTContainer,withImage);
     
@@ -355,7 +357,12 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
     outRec.define("nterms",nterms_p);
     outRec.define("thisterm",thisterm_p);
     outRec.define("reffreq",reffreq_p);
-    
+    outRec.define("dbg", dbg_p);
+    outRec.define("dotime", dotime_p);
+    outRec.define("time_get", time_get);
+    outRec.define("time_put", time_put);
+    outRec.define("time_res", time_res);
+
     return retval;
   }
   
@@ -365,14 +372,24 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
     if(dbg_p) cout << "MTFT :: fromRecord for term " << thisterm_p << endl;
     Bool retval = True;
     
+    if(!FTMachine::fromRecord(error, inRec))
+      return False;
+
     Record subFTMRec=inRec.asRecord("subftm");
-    retval = (retval || subftm_p->fromRecord(error, subFTMRec));    
+    subftm_p=VisModelData::NEW_FT(subFTMRec);
+    if (subftm_p.null())
+      return False;
+    
     
     inRec.get("subftname",subFTMname_p);
     inRec.get("nterms",nterms_p);
     inRec.get("thisterm",thisterm_p);
     inRec.get("reffreq",reffreq_p);
-    
+    inRec.get("dbg", dbg_p);
+    inRec.get("dotime", dotime_p);
+    inRec.get("time_get", time_get);
+    inRec.get("time_put", time_put);
+    inRec.get("time_res", time_res);
     return retval;
   }
   //---------------------------------------------------------------------------------------------------

@@ -140,7 +140,28 @@ class test_unapply(test_base):
         self.assertEqual(result['flagged'], 0, 'Expected 0 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 762048,'Expected total 762048, found %s'%result['total'])
 
+    def test_uquack(self):
+        '''tflagcmd: unapply quack agent'''
+        # Remove any cmd from table
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
 
+        # Flag using manualflag agent
+        input = "scan=1"
+        filename = create_input(input)
+        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply')
+
+        # Flag using the quack agent
+        input = "scan=1~3 mode=quack quackinterval=1.0"
+        filename = create_input(input)
+        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply')
+        
+        # Unapply only the quack line
+        tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1)
+        result = tflagger(vis=self.vis,mode='summary',scan='1')
+        self.assertEqual(result['flagged'], 523908, 'Expected 523908 flags, found %s'%result['flagged'])
+        self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
+        
+        
         
 # Dummy class which cleans up created files
 class cleanup(test_base):

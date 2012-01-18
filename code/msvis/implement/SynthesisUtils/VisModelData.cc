@@ -30,6 +30,7 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/OS/Timer.h>
 #include <components/ComponentModels/ComponentList.h>
 
 #include <msvis/MSVis/VisBuffer.h>
@@ -37,7 +38,9 @@
 #include <msvis/SynthesisUtils/FTMachine.h>
 #include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
 #include <msvis/SynthesisUtils/GridFT.h>
+#include <msvis/SynthesisUtils/MosaicFT.h>
 #include <msvis/SynthesisUtils/WProjectFT.h>
+#include <msvis/SynthesisUtils/MultiTermFT.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -83,8 +86,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     //A field can have multiple FTmachines and ComponentList associated with it 
     //For example having many flanking images for the model
     //For componentlist it may have multiple componentlist ...for different spw
-
-
+  Timer tim;
+  tim.mark();
     Int counter=0;
     Record modrec;
     modrec.define("fields", validfieldids);
@@ -124,8 +127,11 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       outRec.defineRecord("ft_"+String::toString(counter), modrec);
     if(newTab.rwKeywordSet().isDefined(elkey))
 	newTab.rwKeywordSet().removeField(elkey);
-    newTab.rwKeywordSet().defineRecord(elkey, outRec); 
-  }
+    newTab.rwKeywordSet().defineRecord(elkey, outRec);
+    
+    tim.show("Time taken to save record ");
+ 
+}
 
 
 
@@ -225,6 +231,10 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       return new GridFT(ftrec);
     if(name=="WProjectFT")
       return new WProjectFT(ftrec);
+    if(name=="MultiTermFT")
+      return new MultiTermFT(ftrec);
+    if(name=="MosaicFT")
+      return new MosaicFT(ftrec);
     return NULL;
   }
 

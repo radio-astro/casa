@@ -48,7 +48,7 @@
 #include <synthesis/MeasurementComponents/rGridFT.h>
 #include <msvis/SynthesisUtils/GridFT.h>
 #include <msvis/SynthesisUtils/MosaicFT.h>
-#include <synthesis/MeasurementComponents/MultiTermFT.h>
+#include <msvis/SynthesisUtils/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <msvis/SynthesisUtils/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
