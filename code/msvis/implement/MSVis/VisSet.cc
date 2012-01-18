@@ -27,6 +27,7 @@
 
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/SynthesisUtils/VisModelData.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -976,6 +977,8 @@ void VisSet::removeCalSet(MeasurementSet& ms) {
   // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
   // and MODEL_DATA columns) from the MeasurementSet.
 
+  //Remove model in header
+  VisModelData::clearModel(ms);
   Vector<String> colNames(2);
   colNames(0)=MS::columnName(MS::MODEL_DATA);
   colNames(1)=MS::columnName(MS::CORRECTED_DATA);
