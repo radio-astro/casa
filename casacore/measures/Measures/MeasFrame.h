@@ -294,7 +294,7 @@ private:
   
   //# Data
   // Representation of MeasFrame
-  CountedPtr<FrameRep> rep;
+  FrameRep *rep;
   
   //# Member functions
   // Create an instance of the MeasFrame class
