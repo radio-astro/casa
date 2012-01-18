@@ -348,15 +348,15 @@ public:
     // Hour angle for specified time
     virtual Double hourang(Double time) const;
 
-    virtual Int& fieldId() {
-        return fieldIdOK_p ? fieldId_p : This->fillFieldId();
-    }
-
     virtual Int fieldId() const {
         return fieldIdOK_p ? fieldId_p : This->fillFieldId();
     }
 
-    virtual Int& arrayId() {
+    virtual Int& fieldIdRef() {
+        return fieldIdOK_p ? fieldId_p : This->fillFieldId();
+    }
+
+    virtual Int& arrayIdRef() {
         return arrayIdOK_p ? arrayId_p : This->fillArrayId();
     }
 
@@ -494,7 +494,7 @@ public:
     virtual Int polarizationId() const {
       return visIter_p->polarizationId();
     } 
-    virtual Int& dataDescriptionId() {
+    virtual Int& dataDescriptionIdRef() {
       return ddidOK_p ? ddid_p : This->fillDDID();
     }
     virtual Int dataDescriptionId() const {
@@ -861,9 +861,8 @@ protected:
     }
 
 
-
-
 private:
+
 
     // validate the cache
     virtual void validate();

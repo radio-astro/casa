@@ -70,10 +70,10 @@ Bool VBRemapper::remap(VisBuffer& vb, const Bool squawk) const
       colOK = remapVector(vb.antenna2(), c->second);
       break;
     case VisBufferComponents::ArrayId:
-      colOK = remapScalar(vb.arrayId(), c->second);
+      colOK = remapScalar(vb.arrayIdRef(), c->second);
       break;
     case VisBufferComponents::DataDescriptionId:
-      colOK = remapScalar(vb.dataDescriptionId(), c->second);
+      colOK = remapScalar(vb.dataDescriptionIdRef(), c->second);
       break;
     case VisBufferComponents::Feed1:
       colOK = remapVector(vb.feed1(), c->second);
@@ -82,7 +82,7 @@ Bool VBRemapper::remap(VisBuffer& vb, const Bool squawk) const
       colOK = remapVector(vb.feed2(), c->second);
       break;
     case VisBufferComponents::FieldId:
-      colOK = remapScalar(vb.fieldId(), c->second);
+      colOK = remapScalar(vb.fieldIdRef(), c->second);
       break;
     case VisBufferComponents::ObservationId:
       colOK = remapVector(vb.observationId(), c->second);
