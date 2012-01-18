@@ -3623,7 +3623,6 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
   LogIO os(LogOrigin("Imager", "selectDataChannel()", WHERE));
 
 
-
   if(dataMode=="channel") {
       if (dataNchan.nelements() != spectralwindowids.nelements()){
 	if(dataNchan.nelements()==1){
@@ -3708,10 +3707,29 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
           else
             os << "channel " << dataStart[i];
           os << " for spw " << spwid << LogIO::POST;
-	  rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
-				     Int(dataStep[i]), spwid);
+	  
+	  ///////////This is totally funked ...does not respect the spw selection
+	  //whatever you do the the ngroups is always all the spw in the ms !!!
+	  //vi.allSelectedSpectralWindows gets borked because of that
+	  //rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
+	  //			     Int(dataStep[i]), spwid);
 	  dataNchan[i]=nch;
 	}
+	/////Temporary replacement via the multims one
+	Block<Vector<Int> > blspw(1);
+	Block<Vector<Int> > blngr(1);
+	Block<Vector<Int> > blstart(1);
+	Block<Vector<Int> > blwid(1);
+	Block<Vector<Int> > blinr(1);
+	blspw[0]=spectralwindowids;
+	blngr[0]=Vector<Int>(spectralwindowids.nelements(),1);
+	blstart[0]=dataStart;
+	blwid=dataNchan;
+	blinr[0]=dataStep;
+	rvi_p->selectChannel(blngr, blstart, blwid,
+				     blinr, blspw);
+	////////////////////////
+
       }	else {
         VisBufferAutoPtr vb (rvi_p);
         rvi_p->originChunks ();
