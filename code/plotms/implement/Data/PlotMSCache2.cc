@@ -477,10 +477,10 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
   }
 
   // Check if scr cols present
-  Bool scrcolOk(False);
+  Bool corcolOk(False);
   {
     const ColumnDescSet cds=Table(msname).tableDesc().columnDescSet();
-    scrcolOk=cds.isDefined("CORRECTED_DATA");
+    corcolOk=cds.isDefined("CORRECTED_DATA");
 
   }
 
@@ -510,8 +510,8 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
 
   logLoad(ss.str());
 
-  if (!scrcolOk) 
-    logLoad("NB: Scratch columns not present; will use DATA exclusively.");
+  if (!corcolOk) 
+    logLoad("NB: CORRECTED_DATA column not present; will use DATA instead.");
 
   // Calculate which axes need to be loaded; those that have already been
   // loaded do NOT need to be reloaded (assuming that the rest of PlotMS has
@@ -551,7 +551,11 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
     // if data vector is not the same length as axes vector, assume
     // default data column
     dc = PMS::DEFAULT_DATACOLUMN;
-    if(i < data.size() && scrcolOk) dc = data[i];
+    if (i < data.size()) 
+      dc = data[i];
+    if (!corcolOk && 
+	(dc==PMS::CORRECTED || dc==PMS::RESIDUAL))
+      dc = PMS::DATA;
 
     // 1)
     for(unsigned int j = 0; !found && j < loadAxes.size(); j++)
