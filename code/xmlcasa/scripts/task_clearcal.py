@@ -35,7 +35,7 @@ def clearcal(vis=None,field=None,spw=None,intent=None, addmodel=None):
 		# If necessary (scr col not just created), initialize scr cols
 		if doinit:
 			cb.selectvis(field=field,spw=spw,intent=intent)
-			cb.initcalset()
+			cb.initcalset(1)
 		cb.close()
 
 

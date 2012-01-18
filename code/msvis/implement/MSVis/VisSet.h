@@ -224,10 +224,7 @@ private:
   void addCalSet(MeasurementSet& ms, Bool compress=True, Bool doModelData=True);
   void addCalSet2(MeasurementSet& ms, Bool compress=False, Bool doModelData=True);
 
-  // Remove an existing cal set (a CORRECTED_DATA and MODEL_DATA 
-  // column set and, optionally, any associated compression columns)
-  void removeCalSet(MeasurementSet& ms);
-
+ 
   MeasurementSet ms_p;
   VisIter* iter_p;
   Matrix<Int> selection_p;

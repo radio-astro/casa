@@ -440,6 +440,9 @@ calibrater::initcalset(const int calset)
 
   try {
     
+    //remove the model from the header
+    if(calset==1)
+      VisModelData::clearModel(*itsMS);
     // Set up history logging infrastructure
     logSink_p.clearLocally();
     LogIO os(LogOrigin("calibrater", "initcalset"), logSink_p);

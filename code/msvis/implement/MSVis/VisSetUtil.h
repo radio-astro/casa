@@ -33,10 +33,11 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/Quanta/Quantum.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+  class VisSet;
 
 // <summary> 
 // Utilities for operating on VisSets.
@@ -82,6 +83,11 @@ public:
   // Subtract/add model from/to corrected visibility data
   static void UVSub(VisSet &vs, Bool reverse=False);
   static void UVSub(VisibilityIterator &vs, Bool reverse=False);
+   // Remove an existing cal set (a CORRECTED_DATA and MODEL_DATA 
+  // column set and, optionally, any associated compression columns)
+  //if removeModel=True...any model for OTF model vis saved in the header is removed
+  static void removeCalSet(MeasurementSet& ms, Bool removeModel=False);
+
 };
 
 } //# NAMESPACE CASA - END

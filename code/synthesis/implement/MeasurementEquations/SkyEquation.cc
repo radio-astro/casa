@@ -269,7 +269,7 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 	    //cerr << "in componentlist saving" << endl;
 	    if(!sm_->componentList().toRecord(err, clrec))
 	      throw(AipsError("Error saving componentlist: "+err));
-	    vi.putModel(clrec, True, incremental);
+	    vi.putModel(clrec, True, True);
 	  }
 
 	}

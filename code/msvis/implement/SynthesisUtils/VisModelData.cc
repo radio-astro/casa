@@ -136,90 +136,84 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
 
 
-  /*  VisModelData::VisModelData(const Record& ftmachine, const Vector<Int>& validfieldids, const Vector<Int>& msIds): clholder_p(0), flatholder_p(0), cft_p(NULL){
-
-    addFTMachine(ftmachine, validfieldids, msIds); 
-
-  }
-  
-  void VisModelData::addFTMachine(const Record& ftrec, const Vector<Int>& validfieldIds, const Vector<Int>& msIds){
-    if(max(validfieldIds)*(max(msIds)+1) > (Int(ftholder_p.nelements())-1)){
-      uInt oldMaxInd=ftholder_p.nelements()-1;
-      ftholder_p.resize(max(validfieldIds)*(max(msIds)+1)+1, False, True);
-      for (uInt k=oldMaxInd+1; k < ftholder_p.nelements(); ++k)
-	ftholder_p[k]=NULL;
-      CountedPtr<FTMachine> ftp;
-      String ftname=ftrec.asString("name");
-      if(ftname=="GridFT"){
-	ftp=new GridFT(ftrec);
-      }
-      for (uInt nms=0; nms < msIds.nelements(); ++nms){
-	for (uInt nfield=0; nfield < validfieldIds.nelements(); ++ nfield){
-	  uInt indx=nfield*(nms+1);
-	  ftholder_p[indx]=ftp;
-	}
-      }
-      
-     
-
-    }
-
-  }
-
-  */
 
   void VisModelData::addModel(const Record& rec,  const Vector<Int>& msids, const VisBuffer& vb){
-    Vector<Int>fields;
-    Vector<Int> spws;
+    
 
-   
 
     Int indexft=-1;
     if(rec.isDefined("numft")){
       Int numft=rec.asInt("numft");
       if(numft >0){
-	indexft=ftholder_p.nelements();
-	ftholder_p.resize(indexft+1, False, True);
-	ftholder_p[indexft].resize(numft);
 	for(Int ftk=0; ftk < numft; ++ftk){
+	  indexft=ftholder_p.nelements();
+	  ftholder_p.resize(indexft+1, False, True);
+	  ftholder_p[indexft].resize(1);
 	  Record ftrec(rec.asRecord("ft_"+String::toString(ftk)));
+	  ftholder_p[indexft][0]=NEW_FT(ftrec.asRecord("container"));
+	  ftholder_p[indexft][0]->initMaps(vb);
+	  Vector<Int>fields;
+	  Vector<Int> spws;
 	  ftrec.get("fields", fields);
 	  ftrec.get("spws", spws);
-	  ftholder_p[indexft][ftk]=NEW_FT(ftrec.asRecord("container"));
-	  ftholder_p[indexft][ftk]->initMaps(vb);
-	} 
+	  for( uInt fi=0; fi < fields.nelements(); ++fi){
+	    for(uInt spi=0; spi < spws.nelements(); ++spi){
+	      Int indx=-1;
+	      Int ftindx=-1;
+	      if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		indx=ftindex_p(spws[spi], fields[fi], vb.msId());
+		ftindx=clholder_p[indx].nelements();
+		ftholder_p[indx].resize(ftindx+1, True);
+		ftholder_p[indx][ftindx]=ftholder_p[indexft][0];
+	      }
+	      else{
+		ftindex_p(spws[spi], fields[fi], vb.msId())=indexft;
+		indx=ftholder_p.nelements();
+		ftindx=0;
+		ftholder_p.resize(indx+1, False, True);
+		ftholder_p[indx].resize(1);
+		ftindex_p(spws[spi], fields[fi], vb.msId())=indx;
+	      }
+	    }
+	  }
+
+
+	  
+	}
       }	      
     }
     Int indexcl=-1;
     if(rec.isDefined("numcl")){
       Int numcl=rec.asInt("numcl");
       if(numcl >0){
-	indexcl=clholder_p.nelements();
-	clholder_p.resize(indexcl+1, False, True);
-	clholder_p[indexcl].resize(numcl);
 	for(Int clk=0; clk < numcl; ++clk){
+	  Vector<Int>fields;
+	  Vector<Int> spws;
 	  Record clrec(rec.asRecord("cl_"+String::toString(clk)));
+	  indexcl=clholder_p.nelements();
+	  clholder_p.resize(indexcl+1, False, True);
+	  clholder_p[indexcl].resize(1);
+	  clholder_p[indexcl][0]=new ComponentList();
+	  String err;
+	  if(!((clholder_p[indexcl][0])->fromRecord(err, clrec.asRecord("container"))))
+	    throw(AipsError("Component model failed to load for field "+String::toString(fields)));
 	  clrec.get("fields", fields);
 	  clrec.get("spws", spws);
-	  String err;
-	  clholder_p[indexcl][clk]=new ComponentList();
-	  if(!((clholder_p[indexcl][clk])->fromRecord(err, clrec.asRecord("container"))))
-	    throw(AipsError("Component model failed to load for field "+String::toString(fields)));
-	} 
-      }	      
-    }
-
-    //cerr << "fields " << fields << "  spws " << spws << endl;
-
-    //make sure indexes are with size
-    hasModel(max(msids), max(fields), max(spws));
-
-
-    for (uInt msi=0; msi < msids.nelements() ; ++msi){
-      for (uInt fi=0; fi < fields.nelements(); ++fi){
-	for(uInt spi=0; spi < spws.nelements(); ++spi){
-	  ftindex_p(spi, fi, msi)=indexft;	  
-	  clindex_p(spi, fi, msi)=indexcl;
+	  for( uInt fi=0; fi < fields.nelements(); ++fi){
+	    for(uInt spi=0; spi < spws.nelements(); ++spi){
+	      Int indx=-1;
+	      Int clindx=-1;
+	      if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		indx=clindex_p(spws[spi], fields[fi], vb.msId());
+		clindx=clholder_p[indx].nelements();
+		clholder_p[indx].resize(clindx+1, True);
+		clholder_p[indx][clindx]=clholder_p[indexcl][0];
+	      }
+	      else{
+		clindex_p(spws[spi], fields[fi], vb.msId())=indexcl;
+	      }
+	    }
+	  }	      
 	}
       }
     }
@@ -243,7 +237,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
     IPosition oldcubeShape=ftindex_p.shape();
     if(oldcubeShape(0) <(spw+1) || oldcubeShape(1) < (field+1) || oldcubeShape(2) < (msid+1)){
-      Cube<Int> newind((spw+1), (field+1), (msid+1));
+      Cube<Int> newind(max((spw+1), oldcubeShape(0)), max((field+1),oldcubeShape(1)) , max((msid+1), oldcubeShape(2)));
       newind.set(-1);
       newind(IPosition(3, 0,0,0), (oldcubeShape-1))=ftindex_p;
       ftindex_p.assign(newind);
@@ -259,54 +253,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
   }
 
-  /* Bool VisModelData::hasFT(Int msid, Int fieldid){
-    
-    uInt indx=fieldid*(msid+1);
-    if( (indx >= ftholder_p.nelements()) || ftholder_p[indx].null()){
-      return False;
-    }
-    return True;
-
-
-  }
-  Bool VisModelData::hasCL(Int msid, Int fieldid){
-    
-    uInt indx=fieldid*(msid+1);
-    if( (indx >= clholder_p.nelements()) || clholder_p[indx].null()){
-      return False;
-    }
-    return True;
-
-
-  }
-  */
-  /*
-  void VisModelData::addCompFTMachine(const ComponentList& cl, const Vector<Int>& validfieldIds, const Vector<Int>& msIds){
-
-    cerr << "Max field ids " << max(validfieldIds)*(max(msIds)+1) << " nelements " << (clholder_p.nelements()-1) << endl;
-    if((max(validfieldIds)*(max(msIds)+1) > (Int(clholder_p.nelements())-1))){
-      Int oldMaxInd=Int(clholder_p.nelements())-1;
-      clholder_p.resize(max(validfieldIds)*(max(msIds)+1)+1, False, True);
-      for (Int k=oldMaxInd+1; k < Int(clholder_p.nelements()); ++k){
-	clholder_p[k]=NULL;
-	cerr <<"Doing the NULL thing " << endl;
-      }
-      for (uInt nms=0; nms < msIds.nelements(); ++nms){
-	for (uInt nfield=0; nfield < validfieldIds.nelements(); ++ nfield){
-	  uInt indx=nfield*(nms+1);
-	  cerr << "doing the indx " << indx  << endl;
-	  clholder_p[indx]=new ComponentList(cl);
-	}
-      }
-    }
-    //for now use SimpleComponentFT always
-    if(clholder_p.nelements() > 0){
-      cft_p=new SimpleComponentFTMachine();
-      cerr << "Do the ComponentFT Machine " << endl;
-    }
-  }
-  */
-  void VisModelData::initializeToVis(){
+   void VisModelData::initializeToVis(){
     
 
   }
@@ -322,7 +269,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     vb.setModelVisCube(mod);
     Bool incremental=False;
     if( cl.nelements()>0){
-      //cerr << "In cft" << endl;
+      //cerr << "In cft " << cl.nelements() << endl;
       for (uInt k=0; k < cl.nelements(); ++k)
 	cft_p->get(vb, *(cl[k]), -1); 
       //cerr << "max " << max(vb.modelVisCube()) << endl;
@@ -366,7 +313,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     if(!hasModel(msId, fieldId, spwId))
       return Vector<CountedPtr<ComponentList> >(0);
     Int indx=clindex_p(spwId, fieldId, msId);
-    //cerr << "indx " << indx << endl;
+    //cerr << "indx " << indx << "   " << clholder_p[indx].nelements() <<  " spw " << spwId << endl;
     if(indx <0)
       return Vector<CountedPtr<ComponentList> >(0);
     return clholder_p[indx];

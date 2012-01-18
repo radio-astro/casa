@@ -26,6 +26,7 @@
 //# $Id$
 
 #include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/SynthesisUtils/VisModelData.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -99,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Add scratch columns
     if (init) {
       
-      removeCalSet(ms);
+      VisSetUtil::removeCalSet(ms);
       addCalSet2(ms, compress, doModelData);
       
       
@@ -168,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Add scratch columns
     if (addScratch && init) {
 
-      removeCalSet(ms);
+      VisSetUtil::removeCalSet(ms);
       addCalSet2(ms, compress, doModelData);
       
       
@@ -973,31 +974,6 @@ void VisSet::addCalSet2(MeasurementSet& ms, Bool compress, Bool doModelData) {
 
 
 
-void VisSet::removeCalSet(MeasurementSet& ms) {
-  // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
-  // and MODEL_DATA columns) from the MeasurementSet.
-
-  //Remove model in header
-  VisModelData::clearModel(ms);
-  Vector<String> colNames(2);
-  colNames(0)=MS::columnName(MS::MODEL_DATA);
-  colNames(1)=MS::columnName(MS::CORRECTED_DATA);
-
-  for (uInt j=0; j<colNames.nelements(); j++) {
-    if (ms.tableDesc().isColumn(colNames(j))) {
-      ms.removeColumn(colNames(j));
-    };
-    if (ms.tableDesc().isColumn(colNames(j)+"_COMPRESSED")) {
-      ms.removeColumn(colNames(j)+"_COMPRESSED");
-    };
-    if (ms.tableDesc().isColumn(colNames(j)+"_SCALE")) {
-      ms.removeColumn(colNames(j)+"_SCALE");
-    };
-    if (ms.tableDesc().isColumn(colNames(j)+"_OFFSET")) {
-      ms.removeColumn(colNames(j)+"_OFFSET");
-    };
-  };
-}
 
 void VisSet::addScratchCols(MeasurementSet& ms, Bool compress, Bool doModelData){
 
@@ -1028,7 +1004,7 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress, Bool doModelData)
   // Add scratch columns
   if (init) {
     
-    removeCalSet(ms);
+    VisSetUtil::removeCalSet(ms);
     addCalSet(ms, compress, doModelData);
       
 
