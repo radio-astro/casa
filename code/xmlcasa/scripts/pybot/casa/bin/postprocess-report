@@ -6,6 +6,8 @@ use HTML::Element;
 use File::Basename;
 use FileHandle;
 
+$symlinkfile = "/export/data/jenkins/userContent/promotion/stage01/report.html";
+
 die "a single argument is required" unless scalar(@ARGV) == 1;
 
 $commands = '';
@@ -102,3 +104,17 @@ die "could not open output file" unless defined $fh;
 $hpp->select($fh);
 $hpp->format($html);
 undef $fh;               ### close file
+
+###
+### symlink is only created for report files that *seem* to be daily runs...
+### i.e. which have a date string as the report directory...
+### this prevents testing from overwriting the report link...
+###
+### NOTE: should fix this to make the link a relative path...
+###
+if ( basename($reportdir) =~ m|\d{8}_\d{4}| ) {
+    $symlinkdir = dirname($symlinkfile);
+    unlink($symlinkfile) if -e $symlinkfile;
+    symlink($reportfile, $symlinkfile) if -d $symlinkdir;
+}
+
