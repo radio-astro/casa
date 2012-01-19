@@ -364,6 +364,8 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
 
     datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
 
+    datum->getVisBuffer()->setPolarizationId (visibilityIterator_p->polarizationId());
+
     datum->getVisBuffer()->setNCoh(visibilityIterator_p->numberCoh ());
 
     datum->getVisBuffer()->setNRowChunk (visibilityIterator_p->nRowChunk());
@@ -601,10 +603,25 @@ VLAT::setPrefetchColumns (const ViReadImplAsync::PrefetchColumns & columns)
 void
 VLAT::sweepVi ()
 {
+
+    // Configure the iterator(s) to start a new sweep through the data.
+    // Reset the subchunk counters, apply any queued modifiers and if
+    // the write iterator exists reset it to the chunk origin (the
+    // read iterator gets reset at the start of the sweep loop).
+
     readSubchunk_p.resetToOrigin ();
     writeSubchunk_p.resetToOrigin ();
 
     applyModifiers (visibilityIterator_p, writeIterator_p);
+
+    if (writeIterator_p != NULL){
+        writeIterator_p->originChunks (True);
+    }
+
+    // Start sweeping the data with the read only iterator.  If there
+    // is a write iterator it will write behind the RO iterator; the RW
+    // iterator is advanced to align with the appropriate subchunk when
+    // a request is made to write a particular subchunk.
 
     try {
 
