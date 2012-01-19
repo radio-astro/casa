@@ -286,7 +286,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
 			       const VisBuffer& vb)
 {
   image=&iimage;
-  
+  toVis_p=True;
   ok();
   
   //  if(convSize==0) {

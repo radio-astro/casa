@@ -161,6 +161,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	      Int indx=-1;
 	      Int ftindx=-1;
 	      if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		
 		indx=ftindex_p(spws[spi], fields[fi], vb.msId());
 		ftindx=clholder_p[indx].nelements();
 		ftholder_p[indx].resize(ftindx+1, True);
@@ -168,11 +169,6 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	      }
 	      else{
 		ftindex_p(spws[spi], fields[fi], vb.msId())=indexft;
-		indx=ftholder_p.nelements();
-		ftindx=0;
-		ftholder_p.resize(indx+1, False, True);
-		ftholder_p[indx].resize(1);
-		ftindex_p(spws[spi], fields[fi], vb.msId())=indx;
 	      }
 	    }
 	  }
