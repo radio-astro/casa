@@ -416,6 +416,10 @@ public:
 		COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY,
 		COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,
 		COMPLETE_SCAN_UNMAPPED,
+		COMBINE_SCANS_MAPPED,
+		COMBINE_SCANS_MAP_SUB_INTEGRATIONS_ONLY,
+		COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY,
+		COMBINE_SCANS_UNMAPPED,
 		ANTENNA_PAIR,
 		SUB_INTEGRATION,
 		ARRAY_FIELD
@@ -528,6 +532,7 @@ public:
 	VisibilityIterator *rwVisibilityIterator_p;
 	ROVisibilityIterator *roVisibilityIterator_p;
 	// Iteration counters
+	uLong maxChunkRows;
 	uShort chunkNo;
 	uShort bufferNo;
 
@@ -562,7 +567,7 @@ private:
 	casa::String observationSelection_p;
 
 	// Async I/O stuff
-	bool asyncio_disabled_p;
+	bool asyncio_enabled_p;
 	// Pre-Load columns (in order to avoid parallelism problems when not using
 	// async i/o, and also to know what columns to pre-fetch in async i/o mode)
 	vector<uInt> preLoadColumns_p;
