@@ -62,7 +62,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		time_cutoff_p = 4.0;
 	}
 
-	*logger_p << LogIO::NORMAL << " time_amp_cutoff is " << time_cutoff_p << LogIO::POST;
+	*logger_p << logLevel_p << " time_amp_cutoff is " << time_cutoff_p << LogIO::POST;
 
 	exists = config.fieldNumber ("freq_amp_cutoff");
 	if (exists >= 0)
@@ -74,7 +74,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		freq_cutoff_p = 3.0;
 	}
 
-	*logger_p << LogIO::NORMAL << " freq_amp_cutoff is " << freq_cutoff_p << LogIO::POST;
+	*logger_p << logLevel_p << " freq_amp_cutoff is " << freq_cutoff_p << LogIO::POST;
 
 	exists = config.fieldNumber ("maxnpieces");
 	if (exists >= 0)
@@ -94,7 +94,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		maxNPieces_p = 7;
 	}
 
-	*logger_p << LogIO::NORMAL << " maxnpieces is " << maxNPieces_p << LogIO::POST;
+	*logger_p << logLevel_p << " maxnpieces is " << maxNPieces_p << LogIO::POST;
 
 	exists = config.fieldNumber ("timefit");
 	if (exists >= 0)
@@ -114,7 +114,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		timeFitType_p = "line";
 	}
 
-	*logger_p << LogIO::NORMAL << " timefit is " << timeFitType_p << LogIO::POST;
+	*logger_p << logLevel_p << " timefit is " << timeFitType_p << LogIO::POST;
 
 	exists = config.fieldNumber ("freqfit");
 	if (exists >= 0)
@@ -133,7 +133,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		freqFitType_p = "poly";
 	}
 
-	*logger_p << LogIO::NORMAL << " freqfit is " << freqFitType_p << LogIO::POST;
+	*logger_p << logLevel_p << " freqfit is " << freqFitType_p << LogIO::POST;
 
 	exists = config.fieldNumber ("flagdimension");
 	if (exists >= 0)
@@ -153,7 +153,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		flagDimension_p = "freqtime";
 	}
 
-	*logger_p << LogIO::NORMAL << " flagdimension is " << flagDimension_p << LogIO::POST;
+	*logger_p << logLevel_p << " flagdimension is " << flagDimension_p << LogIO::POST;
 
 	exists = config.fieldNumber ("halfwin");
 	if (exists >= 0)
@@ -172,7 +172,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		halfWin_p = 1;
 	}
 
-	*logger_p << LogIO::NORMAL << " halfwin is " << halfWin_p << LogIO::POST;
+	*logger_p << logLevel_p << " halfwin is " << halfWin_p << LogIO::POST;
 
 	exists = config.fieldNumber ("usewindowstats");
 	if (exists >= 0)
@@ -192,7 +192,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		winStats_p = "none";
 	}
 
-	*logger_p << LogIO::NORMAL << " usewindowstats is " << winStats_p << LogIO::POST;
+	*logger_p << logLevel_p << " usewindowstats is " << winStats_p << LogIO::POST;
 
 	/*
 	exists = config.fieldNumber ("usepreflags");
@@ -206,7 +206,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 		usePreFlags_p = True;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " usepreflags is " << usePreFlags_p << LogIO::POST;
+	*logger_p << logLevel_p << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " usepreflags is " << usePreFlags_p << LogIO::POST;
 	*/
 	return;
 }

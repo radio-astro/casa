@@ -220,7 +220,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert(image, AipsError);
     
     // Set the frame for the UVWMachine
-    mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s")), mLocation_p);
+    mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s"), vb.msColumns().timeMeas()(0).getRef()), mLocation_p);
     
     // First get the CoordinateSystem for the image and then find
     // the DirectionCoordinate
@@ -744,7 +744,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(doUVWRotation_p || tangentSpecified_p){
       ok();
       
-      mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s")));
+      mFrame_p.epoch() != 0 ? 
+	mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s"))):
+	mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), vb.msColumns().timeMeas()(0).getRef()));
       
       // Set up the UVWMachine only if the field id has changed. If
       // the tangent plane is specified then we need a UVWMachine that

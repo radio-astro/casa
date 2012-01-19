@@ -60,13 +60,13 @@ DBeamSkyJones::DBeamSkyJones(MeasurementSet& ms,
 			     Bool makePBs,
 			     const Quantity &parAngleInc,
 			     BeamSquint::SquintType doSquint) 
-  : BeamSkyJones(ms, parAngleInc, doSquint)
+  : BeamSkyJones(parAngleInc, doSquint)
 {
   LogIO os(LogOrigin("DBeamSkyJones", "DBeamSkyJones"));
 
   if (makePBs) {
-    MSColumns msc(ms);
-    ScalarColumn<String> telescopesCol(msc.observation().telescopeName());
+    ROMSColumns msc(ms);
+    ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
         
     for (uInt i=0; i < telescopesCol.nrow(); i++) {
       String telescope_p = telescopesCol(i); // access to protected member of

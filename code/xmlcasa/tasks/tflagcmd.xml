@@ -22,16 +22,6 @@
                         <value></value>
                 </param>
 
-            <param type="any" name="ntime">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
-                <any type="variant" limittypes="double string" />
-                <value type="string">scan</value>
-            </param>
-            <param type="bool" name="combinescans" subparam="true">
-                <description></description>
-                <value>False</value>
-            </param>
-
                 <param type="string" name="inputmode">
                         <description>Input mode for flag commands(table/file/xml/cmd)</description>
                         <value>table</value>
@@ -101,17 +91,17 @@
                 </param>
 
                 <param type="bool" name="flagbackup" subparam="true">
-                        <description>Automatically backup the FLAG column before execution?</description>
+                        <description>Automatically backup the FLAG column before execution</description>
                         <value>True</value>
                 </param>
 
                 <param type="bool" name="clearall" subparam="true">
-                        <description>Delete all rows from FLAG_CMD?</description>
+                        <description>Delete all rows from FLAG_CMD</description>
                         <value>False</value>
                 </param>
 
                 <param type="intArray" name="rowlist" subparam="true">
-                        <description>FLAG_CMD rows to operate on</description>
+                        <description>FLAG_CMD rows to clear</description>
                         <value type="vector"></value>
                 </param>
 
@@ -136,11 +126,26 @@
                         <value type="string"></value>
                 </param>
 
-                <param type="bool" name="datadisplay">
-                    <description>Display data and flags at runtime </description>
-                    <value>False</value>
-                </param>
-    
+            <param type="any" name="ntime">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description></description>
+                <value>False</value>
+            </param>
+
+            <param type="string" name="display">
+                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <value type="string"></value>
+            </param>
+
+            <param type="string" name="format" subparam="true">
+                <description>Display plots on the screen or save to a file</description>
+                <value type="string">screen</value>
+            </param>
+
                 <param type="bool" name="writeflags">
                     <description>Write Flags to the MS</description>
                     <value>True</value>
@@ -175,11 +180,11 @@
                     <when param="action">
                             <equals value="apply">
                                     <default param="outfile"><value type="string"></value></default>
-                                    <default param="flagbackup"><value>True</value></default>
+                                    <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="unapply">
                                     <default param="sort"><value type="string">antenna</value></default>
-                                    <default param="flagbackup"><value>True</value></default>
+                                    <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="list">
                                     <default param="outfile"><value type="string"></value></default>
@@ -200,6 +205,18 @@
                                     <default param="setval"><value type="string"></value></default>
                             </equals>
                     </when>
+
+               <when param="display">
+                <equals type="string" value="" />
+                <equals type="string" value="data" />
+                <equals type="string" value="report">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
+                <equals type="string" value="both">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
+               </when>
+                    
                 </constraints>
         </input>
 <returns type="void"/>

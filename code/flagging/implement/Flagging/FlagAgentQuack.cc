@@ -55,7 +55,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		quackinterval_p = 0.0;
 	}
 
-	*logger_p << LogIO::NORMAL << " quackinterval is " << quackinterval_p << LogIO::POST;
+	*logger_p << logLevel_p << " quackinterval is " << quackinterval_p << LogIO::POST;
 
 	exists = config.fieldNumber ("quackmode");
 	String quackmode;
@@ -93,7 +93,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		quackmode = "beg";
 	}
 
-	*logger_p << LogIO::NORMAL << " quackmode is " << quackmode << LogIO::POST;
+	*logger_p << logLevel_p << " quackmode is " << quackmode << LogIO::POST;
 
 	exists = config.fieldNumber ("quackincrement");
 	if (exists >= 0)
@@ -104,7 +104,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 	{
 		quackincrement_p = False;
 	}
-	*logger_p << LogIO::NORMAL << " quackincrement is " << quackincrement_p << LogIO::POST;
+	*logger_p << logLevel_p << " quackincrement is " << quackincrement_p << LogIO::POST;
 
 
 	return;

@@ -113,7 +113,7 @@ try:
     cell = '0.3arcsec'
     weighting = 'briggs'
     pbcor = False
-    calready = True
+    usescratch = False
 #    async = T
     clean()
 
@@ -139,7 +139,7 @@ try:
     imsize = 4096
     cell = '0.4arcsec'
     weighting = 'briggs'
-    calready = True
+    usescratch = False
     async = False
     clean()  
     

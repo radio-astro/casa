@@ -207,7 +207,7 @@ try:
       imsize=[576,576],cell=['2.5arcsec','2.5arcsec'],
       stokes='QU',
       weighting='briggs',robust=0.0,
-      calready=True)
+      usescratch=False)
 
   endTime = time.time()
   endProc = time.clock()

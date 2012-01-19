@@ -44,7 +44,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iterationApproach, Bool writePrivateFlagCube, Bool flag): polarizationList_p(Vector<Int>(0))
 {
 	// Initialize logger
-        logger_p = new LogIO(LogOrigin("FlagAgentBase",__FUNCTION__,WHERE));
+	if (config.fieldNumber ("loglevel") >= 0)
+	{
+		logLevel_p = (LogIO::Command)config.asuChar("loglevel");
+	}
+	else if (agentName_p.empty())
+	{
+		logLevel_p = LogIO::NORMAL;
+	}
+	logger_p = new LogIO(LogOrigin("FlagAgentBase",__FUNCTION__,WHERE));
 
 	// Initialize members
 	initialize();
@@ -55,8 +63,25 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	// Set private flag cube (needed for flag extension)
 	writePrivateFlagCube_p = writePrivateFlagCube;
 
-	// Set flag/un-flag mode
-	flag_p = flag;
+	// Retrieve apply mode
+	if (config.fieldNumber ("apply") >= 0)
+	{
+		apply_p = config.asBool("apply");
+	}
+	else
+	{
+		apply_p = true;
+	}
+
+	// Set apply/unapply
+	if (apply_p == true)
+	{
+		flag_p = flag;
+	}
+	else
+	{
+		flag_p = !flag;
+	}
 
 	// Set flag data handler
 	flagDataHandler_p = dh;
@@ -78,11 +103,11 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	AipsrcValue<Bool>::find (backgroundMode_p,"FlagAgent.background", false);
 	if (backgroundMode_p)
 	{
-		*logger_p << LogIO::NORMAL << " Background mode enabled" << LogIO::POST;
+		*logger_p << logLevel_p << " Background mode enabled" << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << " Background mode disabled" << LogIO::POST;
+		*logger_p << logLevel_p << " Background mode disabled" << LogIO::POST;
 	}
 
 }
@@ -172,7 +197,6 @@ FlagAgentBase *
 FlagAgentBase::create (FlagDataHandler *dh,Record config)
 {
 	String mode;
-	Bool flag = true;
 	FlagAgentBase *ret = NULL;
 
 	// Retrieve mode
@@ -186,12 +210,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 		return ret;
 	}
 
-	// Parameter to apply or not the flags
-	if (config.fieldNumber("flag") >= 0)
-	{
-		flag = config.asBool("flag");
-	}
-
 	// Write private flags only if extension is required
 	bool writePrivateFlags = false;
 	if ((config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true))
@@ -202,7 +220,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
-		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,flag);
+		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;
 	}
 
@@ -216,14 +234,14 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// TimeFreqCrop
 	if (mode.compare("tfcrop")==0)
 	{
-		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags,flag);
+		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags,true);
 		return agent;
 	}
 
 	// Clip
 	if (mode.compare("clip")==0)
 	{
-		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags,flag);
+		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags,true);
 		return agent;
 	}
 
@@ -237,28 +255,28 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Elevation
 	if (mode.compare("elevation")==0)
 	{
-		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags,flag);
+		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags,true);
 		return agent;
 	}
 
 	// Quack
 	if (mode.compare("quack")==0)
 	{
-		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags,flag);
+		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags,true);
 		return agent;
 	}
 
 	// Shadow
 	if (mode.compare("shadow")==0)
 	{
-		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags,flag);
+		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags,true);
 		return agent;
 	}
 
 	// Extension
 	if (mode.compare("extend")==0)
 	{
-		FlagAgentExtension* agent = new FlagAgentExtension(dh,config,writePrivateFlags);
+		FlagAgentExtension* agent = new FlagAgentExtension(dh,config);
 		return agent;
 	}
 
@@ -451,7 +469,7 @@ FlagAgentBase::runCore()
 void
 FlagAgentBase::setDataSelection(Record config)
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 	MSSelection parser;
 
@@ -475,8 +493,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load ArrayId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
 
-			*logger_p << LogIO::NORMAL << " array selection is " << arraySelection_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " array ids are " << arrayList_p << LogIO::POST;
+			*logger_p << logLevel_p << " array selection is " << arraySelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " array ids are " << arrayList_p << LogIO::POST;
 		}
 	}
 	else
@@ -504,8 +522,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load FieldId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
 
-			*logger_p << LogIO::NORMAL << " field selection is " << fieldSelection_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " field ids are " << fieldList_p << LogIO::POST;
+			*logger_p << logLevel_p << " field selection is " << fieldSelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " field ids are " << fieldList_p << LogIO::POST;
 		}
 	}
 	else
@@ -532,8 +550,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load scan
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
 
-			*logger_p << LogIO::NORMAL << " scan selection is " << scanSelection_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " scan ids are " << scanList_p << LogIO::POST;
+			*logger_p << logLevel_p << " scan selection is " << scanSelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " scan ids are " << scanList_p << LogIO::POST;
 		}
 	}
 	else
@@ -560,9 +578,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load time
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
 
-
-			*logger_p << LogIO::NORMAL << " timerange selection is " << timeSelection_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " time ranges in MJD are " << timeList_p << LogIO::POST;
+			*logger_p << logLevel_p << " timerange selection is " << timeSelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " time ranges in MJD are " << timeList_p << LogIO::POST;
 		}
 	}
 	else
@@ -592,8 +609,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load spw
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
 
-			*logger_p << LogIO::NORMAL << " spw selection is " << spwSelection_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " channel selection are " << channelList_p << LogIO::POST;
+			*logger_p << logLevel_p << " spw selection is " << spwSelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " channel selection are " << channelList_p << LogIO::POST;
 		}
 	}
 	else
@@ -612,7 +629,7 @@ FlagAgentBase::setDataSelection(Record config)
 		}
 		else
 		{
-			*logger_p << LogIO::NORMAL << " antenna selection is " << baselineSelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " antenna selection is " << baselineSelection_p << LogIO::POST;
 
 			// Remove antenna negation operator (!) and set antenna negation flag
 			size_t pos = baselineSelection_p.find(String("!"));
@@ -620,7 +637,7 @@ FlagAgentBase::setDataSelection(Record config)
 			{
 				antennaNegation_p = true;
 				baselineSelection_p.replace(pos,1,String(""));
-				*logger_p << LogIO::NORMAL << " antenna selection is the negation of " << baselineSelection_p << LogIO::POST;
+				*logger_p << logLevel_p << " antenna selection is the negation of " << baselineSelection_p << LogIO::POST;
 				pos = baselineSelection_p.find(String("!"));
 			}
 
@@ -635,7 +652,7 @@ FlagAgentBase::setDataSelection(Record config)
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
 
-			*logger_p << LogIO::NORMAL << " selected baselines are " << baselineList_p << LogIO::POST;
+			*logger_p << logLevel_p << " selected baselines are " << baselineList_p << LogIO::POST;
 		}
 	}
 	else
@@ -662,8 +679,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load uvw
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
 
-			*logger_p << LogIO::NORMAL << " uvrange selection is " << uvwSelection_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " uvrange ids are " << uvwList_p << LogIO::POST;
+			*logger_p << logLevel_p << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " uvrange ids are " << uvwList_p << LogIO::POST;
 		}
 	}
 	else
@@ -694,8 +711,8 @@ FlagAgentBase::setDataSelection(Record config)
 			ostringstream polarizationListToPrint (ios::in | ios::out);
 			polarizationListToPrint << polarizationList_p;
 
-			*logger_p << LogIO::NORMAL << " correlation selection is " << polarizationSelection_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+			*logger_p << logLevel_p << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+			*logger_p << logLevel_p << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
 		}
 	}
 	else
@@ -722,8 +739,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load ObservationId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
 
-			*logger_p << LogIO::NORMAL << " observation selection is " << observationList_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " observation ids are " << observationList_p << LogIO::POST;
+			*logger_p << logLevel_p << " observation selection is " << observationList_p << LogIO::POST;
+			*logger_p << logLevel_p << " observation ids are " << observationList_p << LogIO::POST;
 		}
 	}
 	else
@@ -750,8 +767,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load StateId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::StateId);
 
-			*logger_p << LogIO::NORMAL << " scan intent selection is " << scanIntentList_p << LogIO::POST;
-			*logger_p << LogIO::NORMAL << " scan intent ids are " << scanIntentList_p << LogIO::POST;
+			*logger_p << logLevel_p << " scan intent selection is " << scanIntentList_p << LogIO::POST;
+			*logger_p << logLevel_p << " scan intent ids are " << scanIntentList_p << LogIO::POST;
 		}
 	}
 	else
@@ -785,7 +802,7 @@ FlagAgentBase::setAgentParameters(Record config)
 	if (exists >= 0)
 	{
 		nThreads_p = atoi(config.asString("nThreads").c_str());
-		*logger_p << LogIO::NORMAL << " nThreads is " << nThreads_p << LogIO::POST;
+		*logger_p << logLevel_p << " nThreads is " << nThreads_p << LogIO::POST;
 
 		if (nThreads_p > 0)
 		{
@@ -794,7 +811,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			if (exists >= 0)
 			{
 				threadId_p = atoi(config.asString("threadId").c_str());
-				*logger_p << LogIO::NORMAL << " threadId is " << threadId_p << LogIO::POST;
+				*logger_p << logLevel_p << " threadId is " << threadId_p << LogIO::POST;
 
 				if (threadId_p < 0 or threadId_p>=nThreads_p)
 				{
@@ -856,7 +873,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			expression_p = "ABS " + flagDataHandler_p->corrProducts_p->at(0);
 		}
 
-		*logger_p << LogIO::NORMAL << " visibility expression is " << expression_p << LogIO::POST;
+		*logger_p << logLevel_p << " visibility expression is " << expression_p << LogIO::POST;
 
 		exists = config.fieldNumber ("datacolumn");
 		if (exists >= 0)
@@ -919,7 +936,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 		}
 
-		*logger_p << LogIO::NORMAL << " data column is " << dataColumn_p << LogIO::POST;
+		*logger_p << logLevel_p << " data column is " << dataColumn_p << LogIO::POST;
 	}
 
 	return;
@@ -1143,18 +1160,18 @@ FlagAgentBase::isNaN(Double number)
 void
 FlagAgentBase::chunkSummary()
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	// With this check we skip cases like summary or display
 	if (chunkFlags_p > 0)
 	{
 		msFlags_p +=  chunkFlags_p;
 		if (flag_p)
 		{
-			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 
 	}
@@ -1164,7 +1181,7 @@ FlagAgentBase::chunkSummary()
 	if (chunkNaNs_p > 0)
 	{
 		msNaNs_p += chunkNaNs_p;
-		*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
 	}
 
 	chunkFlags_p = 0;
@@ -1176,23 +1193,23 @@ FlagAgentBase::chunkSummary()
 void
 FlagAgentBase::msSummary()
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	// With this check we skip cases like summary or display
 	if (msFlags_p > 0)
 	{
 		if (flag_p)
 		{
-			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 	}
 
 	if (msNaNs_p > 0)
 	{
-		*logger_p << LogIO::NORMAL << "=> " << agentName_p.c_str()  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
 	}
 
 	msFlags_p = 0;
@@ -1249,7 +1266,7 @@ FlagAgentBase::preProcessBuffer(const VisBuffer &visBuffer)
 void
 FlagAgentBase::iterateRows()
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	// Create FlagMapper objects and parse the correlation selection
 	FlagMapper flagsMap = FlagMapper(flag_p,polarizationIndex_p);
 
@@ -1306,7 +1323,7 @@ FlagAgentBase::iterateRows()
 void
 FlagAgentBase::iterateInRows()
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	// Check if the visibility expression is suitable for this spw
 	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
@@ -1367,7 +1384,7 @@ FlagAgentBase::iterateInRows()
 void
 FlagAgentBase::iterateAntennaPairs()
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	// Check if the visibility expression is suitable for this spw
 	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
@@ -1479,7 +1496,7 @@ FlagAgentBase::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr
 void
 FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	std::pair<Int,Int> antennaPair = std::make_pair(antenna1,antenna2);
 	antennaPairMapIterator index = flagDataHandler_p->getAntennaPairMap()->find(antennaPair);
 	if (index != flagDataHandler_p->getAntennaPairMap()->end())
@@ -1494,11 +1511,11 @@ FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
 			// Check if antenna pair is in the baselines list of this agent
 			if ((baselineList_p.size()>0) and (!find(baselineList_p,antennaPair.first,antennaPair.second)))
 			{
-				*logger_p << LogIO::NORMAL <<  "Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") is not included in the selected baseline range" << LogIO::POST;
+				*logger_p << logLevel_p <<  "Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") is not included in the selected baseline range" << LogIO::POST;
 			}
 			else
 			{
-				*logger_p << LogIO::NORMAL <<  " Going to process requested baseline (" << antennaPair.first << "," << antennaPair.second << ") " << LogIO::POST;
+				*logger_p << logLevel_p <<  " Going to process requested baseline (" << antennaPair.first << "," << antennaPair.second << ") " << LogIO::POST;
 
 				// Create VisMapper and FlagMapper objects and parse the polarization expression
 				VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
@@ -1600,7 +1617,7 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 Bool
 FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	// If we find I directly in the polarization map we assume is ALMA Water Vapor Radiometer data
 	// And we only process it if the user requested WVR
 	if (expression_p.find("WVR") != string::npos)
@@ -1850,9 +1867,7 @@ FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &vi
 
 FlagAgentList::FlagAgentList()
 {
-	container_flag_p.clear();
-	container_unflag_p.clear();
-	lastAdded_p = true;
+	container_p.clear();
 }
 
 FlagAgentList::~FlagAgentList()
@@ -1862,81 +1877,53 @@ FlagAgentList::~FlagAgentList()
 
 void FlagAgentList::push_back(FlagAgentBase *agent_i)
 {
-	lastAdded_p = agent_i->flag_p;
-	if (lastAdded_p)
-	{
-		container_flag_p.push_back(agent_i);
-	}
-	else
-	{
-		container_unflag_p.push_back(agent_i);
-	}
+	container_p.push_back(agent_i);
+
 	return;
 }
 
 void FlagAgentList::pop_back()
 {
-	if (lastAdded_p)
-	{
-		container_flag_p.pop_back();
-	}
-	else
-	{
-		container_unflag_p.pop_back();
-	}
+	container_p.pop_back();
+
 	return;
 }
 
 void FlagAgentList::clear()
 {
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		delete (*iterator_flag_p);
+		delete (*iterator_p);
 	}
-	container_flag_p.clear();
+	container_p.clear();
 
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
-	{
-		delete (*iterator_unflag_p);
-	}
-	container_unflag_p.clear();
 	return;
 }
 
 bool FlagAgentList::empty()
 {
-	return (container_unflag_p.empty() and container_flag_p.empty());
+	return container_p.empty();
 }
 
 size_t FlagAgentList::size()
 {
-	return (container_unflag_p.size() + container_flag_p.size());
+	return container_p.size();
 }
 
 void FlagAgentList::start()
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_unflag_p)->start();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->start();
+		(*iterator_p)->start();
 	}
 	return;
 }
 
 void FlagAgentList::terminate()
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_unflag_p)->terminate();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->terminate();
+		(*iterator_p)->terminate();
 	}
 
 	return;
@@ -1944,68 +1931,45 @@ void FlagAgentList::terminate()
 
 void FlagAgentList::join()
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_unflag_p)->join();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->join();
-	}
-	return;
-}
-
-void FlagAgentList::queueProcess()
-{
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
-	{
-		(*iterator_unflag_p)->queueProcess();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->queueProcess();
+		(*iterator_p)->join();
 	}
 
 	return;
 }
 
-void FlagAgentList::completeProcess()
+void FlagAgentList::apply(bool sequential)
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	if (sequential)
 	{
-		(*iterator_unflag_p)->completeProcess();
+		for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+		{
+			(*iterator_p)->queueProcess();
+			(*iterator_p)->completeProcess();
+		}
 	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
+	else
 	{
-		(*iterator_flag_p)->completeProcess();
-	}
+		for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+		{
+			if ((*iterator_p)->flag_p == false) (*iterator_p)->queueProcess();
+		}
 
-	return;
-}
+		for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+		{
+			if ((*iterator_p)->flag_p == false) (*iterator_p)->completeProcess();
+		}
 
-void FlagAgentList::apply()
-{
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
-	{
-		(*iterator_unflag_p)->queueProcess();
-	}
+		for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+		{
+			if ((*iterator_p)->flag_p == true) (*iterator_p)->queueProcess();
+		}
 
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
-	{
-		(*iterator_unflag_p)->completeProcess();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->queueProcess();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->completeProcess();
+		for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+		{
+			if ((*iterator_p)->flag_p == true) (*iterator_p)->completeProcess();
+		}
 	}
 
 	return;
@@ -2013,14 +1977,9 @@ void FlagAgentList::apply()
 
 void FlagAgentList::chunkSummary()
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_unflag_p)->chunkSummary();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->chunkSummary();
+		(*iterator_p)->chunkSummary();
 	}
 
 	return;
@@ -2028,14 +1987,9 @@ void FlagAgentList::chunkSummary()
 
 void FlagAgentList::msSummary()
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_unflag_p)->msSummary();
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->msSummary();
+		(*iterator_p)->msSummary();
 	}
 
 	return;
@@ -2043,14 +1997,9 @@ void FlagAgentList::msSummary()
 
 void FlagAgentList::setProfiling(bool enable)
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_unflag_p)->setProfiling(enable);
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->setProfiling(enable);
+		(*iterator_p)->setProfiling(enable);
 	}
 
 	return;
@@ -2058,14 +2007,9 @@ void FlagAgentList::setProfiling(bool enable)
 
 void FlagAgentList::setCheckMode(bool enable)
 {
-	for (iterator_unflag_p = container_unflag_p.begin();iterator_unflag_p != container_unflag_p.end(); iterator_unflag_p++)
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_unflag_p)->setCheckMode(enable);
-	}
-
-	for (iterator_flag_p = container_flag_p.begin();iterator_flag_p != container_flag_p.end(); iterator_flag_p++)
-	{
-		(*iterator_flag_p)->setCheckMode(enable);
+		(*iterator_p)->setCheckMode(enable);
 	}
 
 	return;

@@ -112,9 +112,8 @@ void testException(
     const ImageInterface<Float>& image, const String& region,
     const String& box, const String& chans,
     const String& stokes, const String& mask,
-    const uInt axis, const Bool multiFit,
-    const String& residual, const String& model,
-    const uInt ngauss, const Int polyOrder,
+    const uInt axis,
+    const uInt ngauss,
     const String& estimatesFilename=""
 ) {
 	writeTestString(test);
@@ -123,9 +122,9 @@ void testException(
 		ImageProfileFitter fitter(
 			&image, region, 0, box,
 		    chans, stokes,
-		    mask, axis, multiFit,
-		    residual, model, ngauss,
-		    polyOrder, estimatesFilename
+		    mask, axis,
+		    ngauss,
+		    estimatesFilename
 		);
 
 		// should not get here, fail if we do.
@@ -151,47 +150,47 @@ int main() {
     try {
     	testException(
     	    "Exception if given axis is out of range", goodImage, "",
-    	    "", "", "", "", 5, False, "", "", 1, -1
+    	    "", "", "", "", 5, 1
     	);
     	testException(
     		"Exception if given axis is out of range", goodImage, "bogus",
-    		"", "", "", "", 2, False, "", "", 1, -1
+    		"", "", "", "", 2, 1
     	);
     	testException(
     		"Exception if bogus box string given #1", goodImage, "",
-    		"abc", "", "", "", 2, False, "", "", 1, -1
+    		"abc", "", "", "", 2, 1
     	);
     	testException(
     		"Exception if bogus box string given #2", goodImage, "",
-    		"0,0,1000,1000", "", "", "", 2, False, "", "", 1, -1
+    		"0,0,1000,1000", "", "", "", 2, 1
     	);
     	testException(
     		"Exception if bogus chans string given #1", goodImage, "",
-    		"", "abc", "", "", 2, False, "", "", 1, -1
+    		"", "abc", "", "", 2, 1
     	);
     	testException(
     		"Exception if bogus chans string given #2", goodImage, "",
-    		"", "0-200", "", "", 2, False, "", "", 1, -1
+    		"", "0-200", "", "", 2, 1
     	);
     	testException(
     		"Exception if bogus stokes string given #1", goodImage, "",
-    		"", "", "abc", "", 2, False, "", "", 1, -1
+    		"", "", "abc", "", 2, 1
     	);
     	testException(
     		"Exception if bogus stokes string given #2", goodImage, "",
-    		"", "", "v", "", 2, False, "", "", 1, -1
+    		"", "", "v", "", 2, 1
     	);
     	testException(
     		"Exception if no gaussians and no polynomial specified", goodImage, "",
-    		"", "", "", "", 2, False, "", "", 0, -1
+    		"", "", "", "", 2, 0
     	);
     	testException(
     		"Exception if bogus estimates file given", goodImage, "",
-    		"", "", "", "", 2, False, "", "", 1, -1, "bogusfile"
+    		"", "", "", "", 2, 1, "bogusfile"
     	);
     	testException(
     		"Exception if badly formatted estimates file given", goodImage, "",
-    		"", "", "", "", 2, False, "", "", 1, -1,
+    		"", "", "", "", 2, 1,
     		datadir + "badProfileEstimatesFormat.txt"
     	);
     	{
@@ -199,8 +198,8 @@ int main() {
             ImageProfileFitter *fitter;
             LogIO log;
             fitter =  new ImageProfileFitter(
-            	&goodImage, "", 0, "", "", "", "", 2, False,
-            	"", "", 2, -1, ""
+            	&goodImage, "", 0, "", "", "", "", 2,
+            	2, ""
             );
 
     		Record results = fitter->fit();
@@ -234,9 +233,10 @@ int main() {
     	{
     		writeTestString("test results of multi-pixel two gaussian fit");
     		ImageProfileFitter fitter(
-    				&goodImage, "", 0, "", "", "", "", 2, True,
-    				"", "", 2, -1, ""
+    				&goodImage, "", 0, "", "", "", "", 2,
+    				2, ""
     		);
+    		fitter.setDoMultiFit(True);
     		Record results = fitter.fit();
 
     		writeTestString("-- test correct number of fits performed");
@@ -268,9 +268,7 @@ int main() {
     		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
     		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
     	}
-    	/*
-    	 * FIXME reinstitute when isNaN() issue resolved
-*/
+
     	{
     		writeTestString("test writing result images of multi-pixel two gaussian fit");
     		String center = dirName + "/center";
@@ -281,10 +279,17 @@ int main() {
     		String ampErr = dirName + "/ampErr";
 
     		ImageProfileFitter fitter(
-    			&goodImage, "", 0, "", "", "", "", 2, True,
-    			"", "", 2, -1, "", amp, ampErr, center, centerErr,
-    			fwhm, fwhmErr
+    			&goodImage, "", 0, "", "", "", "", 2,
+    			2, ""
     		);
+    		fitter.setDoMultiFit(True);
+    		fitter.setAmpName(amp);
+    		fitter.setAmpErrName(ampErr);
+    		fitter.setCenterName(center);
+    		fitter.setCenterErrName(centerErr);
+    		fitter.setFWHMName(fwhm);
+    		fitter.setFWHMErrName(fwhmErr);
+
     		Record results = fitter.fit();
 
     		Vector<String> names(12);
@@ -309,9 +314,11 @@ int main() {
     	{
     		writeTestString("test results of multi-pixel two gaussian, order 3 polynomial fit");
     		ImageProfileFitter fitter(
-    				&goodPolyImage, "", 0, "", "", "", "", 2, True,
-    				"", "", 2, 3, ""
+    				&goodPolyImage, "", 0, "", "", "", "", 2,
+    				2, ""
     		);
+    		fitter.setPolyOrder(3);
+    		fitter.setDoMultiFit(True);
     		Record results = fitter.fit();
 
     		writeTestString(" -- test correct number of fits attempted");
@@ -330,8 +337,8 @@ int main() {
             ImageProfileFitter *fitter;
             LogIO log;
             fitter =  new ImageProfileFitter(
-            	&goodImage, "", 0, "", "", "", "", 2, False,
-            	"", "", 1, -1, datadir + "goodProfileEstimatesFormat_2.txt"
+            	&goodImage, "", 0, "", "", "", "", 2,
+            	1, datadir + "goodProfileEstimatesFormat_2.txt"
             );
 
     		Record results = fitter->fit();
@@ -363,14 +370,13 @@ int main() {
     		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
     		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
     	}
-
     	{
     		writeTestString("test results of non-multi-pixel one gaussian fit with estimates file holding peak constant");
             ImageProfileFitter *fitter;
             LogIO log;
             fitter =  new ImageProfileFitter(
-            	&goodImage, "", 0, "", "", "", "", 2, False,
-            	"", "", 1, -1, datadir + "goodProfileEstimatesFormat_3.txt"
+            	&goodImage, "", 0, "", "", "", "", 2,
+            	1, datadir + "goodProfileEstimatesFormat_3.txt"
             );
 
     		Record results = fitter->fit();

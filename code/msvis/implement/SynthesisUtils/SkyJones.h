@@ -277,11 +277,14 @@ public:
 				const Float fPad=1.2,  
 				const Int iChan=0, 
 				const SkyJones::SizeType sizeType=COMPOSITE)=0;
+
+  virtual String telescope()=0;
   
   virtual Int support(const VisBuffer& vb, const CoordinateSystem& cs)=0;
 
   virtual void setThreshold(const Float t){threshold_p=t;};
   virtual const Float threshold(){return threshold_p;};
+
 
 protected:
 

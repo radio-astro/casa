@@ -51,13 +51,16 @@ cb2=calibrater.create()
      <param type="string" direction="in" name="filename">
      <description>MeasurementSet file name.  No default</description>
      </param>
-
      <param type="bool" direction="in" name="compress">
      <description>Compress calibration columns?</description>
      <value>false</value>
      </param>
      <param type="bool" direction="in" name="addscratch">
      <description>Add scratch columns?</description>
+     <value>true</value>
+     </param>
+     <param type="bool" direction="in" name="addmodel">
+     <description>Add MODEL_DATA column along with CORRECTED_DATA ?</description>
      <value>true</value>
      </param>
 </input>
@@ -1073,8 +1076,8 @@ cb.reset()
 <input>
 
      <param type="int" direction="in" name="calset">
-     <description>Not yet used.</description>
-     <value>1</value>
+     <description>if it set to 1 the model saved in the header is removed</description>
+     <value>0</value>
      </param>
 </input>
 <returns type="bool">true</returns>
@@ -1083,7 +1086,11 @@ cb.reset()
 
 This function re-initializes the calibration scratch columns:
 MODEL\_DATA to unity (in total intensity, and unpolarized), and
-CORRECTED\_DATA to (observed) DATA.  </description>
+CORRECTED\_DATA to (observed) DATA.  
+Optionally if calset is set to 1 any model saved in the MS header to for calibration
+purposes is deleted
+
+</description>
 
 <example>
 

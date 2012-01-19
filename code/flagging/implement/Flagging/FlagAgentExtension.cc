@@ -52,7 +52,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		extendpols_p = False;
 	}
-	*logger_p << LogIO::NORMAL << " extendpols is " << extendpols_p << LogIO::POST;
+	*logger_p << logLevel_p << " extendpols is " << extendpols_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growtime");
@@ -64,7 +64,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		growtime_p = 50.0;
 	}
-	*logger_p << LogIO::NORMAL << " growtime is " << growtime_p << LogIO::POST;
+	*logger_p << logLevel_p << " growtime is " << growtime_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growfreq");
@@ -76,7 +76,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		growfreq_p = 50.0;
 	}
-	*logger_p << LogIO::NORMAL << " growfreq is " << growfreq_p << LogIO::POST;
+	*logger_p << logLevel_p << " growfreq is " << growfreq_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growaround");
@@ -88,7 +88,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		growaround_p = True;
 	}
-	*logger_p << LogIO::NORMAL << " growaround is " << growaround_p << LogIO::POST;
+	*logger_p << logLevel_p << " growaround is " << growaround_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("flagneartime");
@@ -100,7 +100,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		flagneartime_p = False;
 	}
-	*logger_p << LogIO::NORMAL << " flagneartime is " << flagneartime_p << LogIO::POST;
+	*logger_p << logLevel_p << " flagneartime is " << flagneartime_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("flagnearfreq");
@@ -112,7 +112,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	{
 		flagnearfreq_p = False;
 	}
-	*logger_p << LogIO::NORMAL << " flagnearfreq is " << flagnearfreq_p << LogIO::POST;
+	*logger_p << logLevel_p << " flagnearfreq is " << flagnearfreq_p << LogIO::POST;
 
 
 	return;

@@ -897,7 +897,7 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
     
     outpointer->markForDelete();
     //Hmmmmmm....memory...... 
-    if(sizeInMB <  (Double)(HostInfo::memoryTotal())/(2048.0) 
+    if(sizeInMB <  (Double)(HostInfo::memoryTotal(True))/(2048.0) 
        || forceInMemory){
       MeasurementSet* a = outpointer;
       outpointer= new MeasurementSet(a->copyToMemoryTable("TmpMemoryMS"));

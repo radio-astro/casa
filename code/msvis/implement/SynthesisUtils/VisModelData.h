@@ -89,7 +89,7 @@ class VisModelData {
 		    const Vector<Int>& msIds);
 
   //add componentlists or ftmachines 
-  void addModel(const Record& rec,  const Vector<Int>& msids);
+  void addModel(const Record& rec,  const Vector<Int>& msids, const VisBuffer& vb);
 
   //put the model data for this VisBuffer in the modelVisCube
   Bool getModelVis(VisBuffer& vb);

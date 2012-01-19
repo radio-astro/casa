@@ -97,7 +97,7 @@ MultiTermFT::MultiTermFT(const RecordInterface& stateRec)
 
 //----------------------------------------------------------------------
 // Copy constructor
-MultiTermFT::MultiTermFT(const MultiTermFT& other) : machineName_p("MultiTermFT")
+  MultiTermFT::MultiTermFT(const MultiTermFT& other) : FTMachine(), machineName_p("MultiTermFT")
 { 
     operator=(other);
 }
@@ -207,6 +207,7 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
       AlwaysAssert( imweights_p.shape() == vb.imagingWeight().shape() ,AipsError);
       vb.imagingWeight() = imweights_p;
     }
+  return True;
 }
 
   
@@ -390,6 +391,7 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
     inRec.get("time_get", time_get);
     inRec.get("time_put", time_put);
     inRec.get("time_res", time_res);
+    machineName_p="MultiTermFT";
     return retval;
   }
   //---------------------------------------------------------------------------------------------------

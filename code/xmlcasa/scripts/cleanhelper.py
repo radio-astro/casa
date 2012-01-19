@@ -946,7 +946,7 @@ class cleanhelper:
 
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                            wgttype, robust, noise, npixels, mosweight,
-                           innertaper, outertaper, calready, nchan=-1, start=0, width=1):
+                           innertaper, outertaper, usescratch, nchan=-1, start=0, width=1):
         """
         Make data selection 
         (not in use, split into datsel and  datweightfileter)
@@ -971,7 +971,7 @@ class cleanhelper:
         if(weighting=='natural'):
             mosweight=False
         self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
-                              baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
+                              baseline=antenna, scan=scan, uvrange=uvrange, usescratch=usescratch)
         self.im.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
         if((type(outertaper)==list) and (len(outertaper) > 0)):
             if(len(outertaper)==1):
@@ -984,7 +984,7 @@ class cleanhelper:
     
     # split version of datselweightfilter
     def datsel(self, field, spw, timerange, uvrange, antenna, scan, observation,
-                           calready, nchan=-1, start=0, width=1):
+                           usescratch, nchan=-1, start=0, width=1):
         """
         Make selections in visibility data 
         """ 
@@ -1032,13 +1032,13 @@ class cleanhelper:
             self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
                               spw=inspw,time=intimerange, baseline=inantenna,
                               scan=inscan, observation=inobs, uvrange=inuvrange,
-                              usescratch=calready)
+                              usescratch=usescratch)
           else:
             #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
             self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
                               field=self.fieldindex[i], spw=inspw,time=intimerange,
                               baseline=inantenna, scan=inscan,
-                              uvrange=inuvrange, usescratch=calready)
+                              uvrange=inuvrange, usescratch=usescratch)
 
     # private function for datsel and datweightfilter
     def _selectlistinputs(self,nvis,indx,params):
@@ -1073,7 +1073,7 @@ class cleanhelper:
     # as a parameter.  Both are used via self._selectlistinputs().
     def datweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                         wgttype, robust, noise, npixels, mosweight,
-                        uvtaper,innertaper, outertaper, calready, nchan=-1, start=0, width=1):
+                        uvtaper,innertaper, outertaper, usescratch, nchan=-1, start=0, width=1):
         """
         Apply weighting and tapering 
         """
@@ -2667,7 +2667,7 @@ class cleanhelper:
           imagermode, localFTMachine, mosweight, locnchan, locstart, locwidth, outframe,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
-          calready, noise, npixels, padding):
+          usescratch, noise, npixels, padding):
         """
         make template cubes to be used for chaniter=T interactive clean
         """
@@ -2737,7 +2737,7 @@ class cleanhelper:
         self.imageids=imageids
         # readoutlier need to be run first....
         self.datsel(field=field, spw=spw, timerange=timerange, uvrange=uvrange, 
-                    antenna=antenna,scan=scan, observation=observation, calready=calready,
+                    antenna=antenna,scan=scan, observation=observation, usescratch=usescratch,
                     nchan=-1, start=0, width=1)
 
         self.definemultiimages(rootname=rootname,imsizes=imsizes,cell=cell,
@@ -2754,7 +2754,7 @@ class cleanhelper:
                              wgttype=weighting, robust=robust, noise=noise, 
                              npixels=npixels, mosweight=mosweight,
                              uvtaper=uvtaper, innertaper=innertaper, outertaper=outertaper, 
-                             calready=calready, nchan=-1, start=0, width=1)
+                             usescratch=usescratch, nchan=-1, start=0, width=1)
         # split this 
         #self.datselweightfilter(field=field, spw=spw,
         #                         timerange=timerange, uvrange=uvrange,

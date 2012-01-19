@@ -49,13 +49,13 @@ class cleanhelper_test(unittest.TestCase):
     res = None
 
     def setUp(self):
-        calready=False
+        usescratch=False
         mosweight=False
         if (os.path.exists(self.msfile)):
             os.system('rm -rf ' + self.msfile)
   
         shutil.copytree(self.datapath+self.msfile, self.msfile)
-        self.imset = cleanhelper(im, self.msfile, (calready or mosweight))
+        self.imset = cleanhelper(im, self.msfile, (usescratch or mosweight))
 
     def tearDown(self):
         if (os.path.exists(self.msfile)):

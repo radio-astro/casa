@@ -269,7 +269,7 @@ tfcrop, extend, unflag, summary)</description>
             </param>
 
             <param type="string" name="format" subparam="true">
-                <description>Display plots on the screen or save on a file</description>
+                <description>Display plots on the screen or save to a file</description>
                 <value type="string">screen</value>
             </param>
 
@@ -286,6 +286,11 @@ tfcrop, extend, unflag, summary)</description>
             <param type="string" name="outfile" subparam="true">
                     <description>Name of output file to save current parameters</description>
                     <value></value>
+            </param>
+
+            <param type="bool" name="sequential">
+                <description>Run the task in sequential or in parallel.</description>
+                <value>False</value>
             </param>
 
             <param type="bool" name="flagbackup">
@@ -691,9 +696,11 @@ tfcrop, extend, unflag, summary)</description>
                The dataset will be iterated through in time-chunks defined here.
         
  
-        datadisplay -- Display data and flags per-chunck at run-time, within an interactive GUI
-                 default: False
-                 options: True/False
+        display -- Display data and/or end-of-MS reports at runtime.
+        
+               default: 'none'
+               options: 'none', 'data', 'report', 'both'
+                  'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
                       This option opens a GUI to show the 2D time-freq planes of
                       the data with old and new flags, for all correlations per baseline.
                       -- The GUI allows stepping through all baselines (prev/next) in
@@ -701,6 +708,14 @@ tfcrop, extend, unflag, summary)</description>
                       -- The 'testautoflag' task can be quit from the GUI, in case it becomes
                       obvious that the current set of parameters is just wrong.
                       -- There is an option to stop the display but continue flagging.
+
+                  'report' --> displays enf-of-MS reports on the screen or save on a file using the
+                                 format sub-parameter.
+                      format -- 'screen' or 'file'
+                                file is the name of the filename to be saved in disk.
+                                
+                  'both' --> displays data per chunk and end-of-MS reports on the screen or saved on a file in disk.
+                                 
 
         writeflags -- Choose whether or not to write flags to the MS 
                  default: True
@@ -710,13 +725,19 @@ tfcrop, extend, unflag, summary)</description>
                     dataset.
                     Note: this parameter is disabled when mode='summary'.
                     
-        savepars -- Save the current parameters to the MS or to an output text file.
-                default: False
+        savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
+                default: True
                 options: True/False
                 
                 outfile -- Name of output file to save the current parameters.
                     default: ' '; it will save the parameters in the FLAG_CMD table of the MS.
                     example: outfile='flags.txt' will save the parameters in a text file.
+                    
+        sequential -- Run the task in sequential or in parallel. Very useful for modes that
+                      take an expression parameter such as: tfcrop or clip. The different
+                      expressions can be run in parallel, one agent for each one of them.
+                default: False
+                option: False/True
                 
         flagbackup -- Automatically backup flags?
                 default: False

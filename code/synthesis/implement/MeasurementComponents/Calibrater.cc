@@ -118,7 +118,7 @@ String Calibrater::timerString() {
 
 Bool Calibrater::initialize(MeasurementSet& inputMS, 
 			    Bool compress,
-			    Bool addScratch)  {
+			    Bool addScratch, Bool addModel)  {
   
   logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL3;
   
@@ -171,7 +171,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     Block<Int> nosort(0);
     Matrix<Int> noselection;
     Double timeInterval=0;
-    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress);
+    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress, addModel);
 
     // Size-up the chanmask PB
     initChanMask();

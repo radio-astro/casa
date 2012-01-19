@@ -158,7 +158,7 @@ clean(vis='src.split.ms',imagename='tmosaicb',
       scaletype='SAULT',
       pbcor=False,
       minpb=0.01,
-      cyclefactor=2.0, calready=False, mask=[66,72,195,185])
+      cyclefactor=2.0, usescratch=False, mask=[66,72,195,185])
 imagesrc1time=time.time()
 ## Write image to a fits file:
 ##
@@ -275,7 +275,7 @@ clean(vis='srca.split.ms',imagename='tmosaica',
        spw='0~2',field='0~6',
        cell=[1.,1.],imsize=[256,256],
        stokes='I',mode='channel',
-       psfmode='clark',niter=300,imagermode='mosaic', ftmachine='mosaic',scaletype='SAULT',cyclefactor=3, calready=False)
+       psfmode='clark',niter=300,imagermode='mosaic', ftmachine='mosaic',scaletype='SAULT',cyclefactor=3, usescratch=False)
 ###################################################
 ## Write image to a fits file:
 ##
@@ -301,7 +301,7 @@ clean(vis='n4826_tboth.ms',imagename='tmosaic',
 	 cell=[1.,1.],imsize=[256,256],
 	 stokes='I',mode='channel',
 	 psfmode='clark',niter=500,imagermode='mosaic',ftmachine='mosaic',scaletype='SAULT',
-	 cyclefactor=3, calready=False)
+	 cyclefactor=3, usescratch=False)
 
 ia.open(infile='tmosaic.image');
 ia.moments(outfile='n4826_tmom0.im',

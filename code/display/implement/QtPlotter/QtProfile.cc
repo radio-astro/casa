@@ -348,255 +348,6 @@ void QtProfile::exportProfile()
     }
 }
 
-bool QtProfile::exportFITSSpectrum(QString &fn)
-{
-	// get the image coo and the spectral axis therein
-   CoordinateSystem cSys = image->coordinates();
-   Int wCoord = cSys.findCoordinate(Coordinate::SPECTRAL);
-   Vector<Int> pCoord = cSys.pixelAxes(wCoord);
-
-   if (wCoord <0){
-   	// well, it REALLY should not get to here
-   	QString msg="No spectral coordinate in image:\n" + QString((image->name(True)).c_str());
-   	messageFromProfile(msg);
-   	return false;
-   }
-
-   // get the spectral dimension and make some checks
-   uInt nPoints=(image->shape())(pCoord(0));
-   if (nPoints != z_yval.size()){
-   	// well, this should not happen
-   	QString msg="The dimension of the image and\nthe extracted profile do not match!";
-   	messageFromProfile(msg);
-   	return false;
-   }
-   else if (nPoints<1){
-   	// well, this should not happen
-   	QString msg="The extracted profile contains no points!";
-   	messageFromProfile(msg);
-   	return false;
-   }
-
-   // create a new coo and add the spectral one
-   CoordinateSystem csysProfile = CoordinateSystem();
-   csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
-
-   // if necessary, add a quality coordinate
-   IPosition profDim;
-   if (z_eval.size()>0){
-   	Vector<Int> quality(2);
-   	quality(0) = Quality::DATA;
-   	quality(1) = Quality::ERROR;
-   	QualityCoordinate qualAxis(quality);
-   	csysProfile.addCoordinate(qualAxis);
-
-   	profDim = IPosition(2,nPoints,2);
-   }
-   else{
-   	profDim = IPosition(1,nPoints);
-   }
-
-   // create the temp-image
-   TempImage<Float> profile(TiledShape(profDim),csysProfile);
-
-   // scale the data and store the values in the
-   // temp-image
-	Float scaleFactor=pow(10.,ordersOfM_);
-	IPosition posIndex;
-   if (z_eval.size()>0){
-   	Int qualPos;
-   	posIndex = IPosition(2, 0);
-
-   	(csysProfile.qualityCoordinate(1)).toPixel(qualPos, Quality::DATA);
-   	posIndex(1)=qualPos;
-   	for (uInt index=0; index<nPoints; index++){
-   		posIndex(0)=index;
-   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
-   		//cout << " " << z_yval(index)/scaleFactor << " : " << posIndex;
-   	}
-
-   	(csysProfile.qualityCoordinate(1)).toPixel(qualPos, Quality::ERROR);
-   	posIndex(1)=qualPos;
-   	//posIndex(1) = Quality::ERROR;
-   	for (uInt index=0; index<nPoints; index++){
-   		posIndex(0)=index;
-   		profile.putAt (z_eval(index)/scaleFactor, posIndex);
-   		//cout << " " << z_eval(index)/scaleFactor << " : " << posIndex;
-   	}
-   }
-   else{
-   	posIndex = IPosition(1);
-   	for (uInt index=0; index<nPoints; index++){
-   		posIndex(0)=index;
-   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
-   		//cout << " " << z_yval(index)/scaleFactor;
-   	}
-   }
-
-   // attach a mask to the temp-image
-	Array<Bool> maskArray(profDim, True);
-	ArrayLattice<Bool> maskLattice=ArrayLattice<Bool>(maskArray);
-	profile.attachMask(maskLattice);
-
-	// compile and set the miscInfo
-	TableRecord miscInfo;
-	miscInfo.define("inimage", image->name(True));
-	miscInfo.setComment("inimage", "name input image");
-	miscInfo.define("position", position.toStdString());
-	miscInfo.setComment("position", "extraction position");
-	miscInfo.define("proftype", (pixelCanvas->getTitle()).toStdString());
-	miscInfo.setComment("proftype", "the profile type");
-	miscInfo.define("plottype", (plotMode->currentText()).toStdString());
-	miscInfo.setComment("plottype", "the plot type");
-   if (z_eval.size()>0){
-   	miscInfo.define("errtype", (errorMode->currentText()).toStdString());
-   	miscInfo.setComment("errtype", "the error type");
-   }
-	profile.setMiscInfo(miscInfo);
-	//cout << "Temp-image miscInfo: " <<profile.miscInfo()<<endl;
-
-   // thats the default values for the call "ImageFITSConverter::ImageToFITS"
-	String error; uInt memoryInMB(64); Bool preferVelocity(True);
-	Bool opticalVelocity(True); Int BITPIX(-32); Float minPix(1.0); Float maxPix(-1.0);
-	Bool allowOverwrite(False); Bool degenerateLast(False); Bool verbose(True);
-	Bool stokesLast(False); Bool preferWavelength(False); Bool preferAirWavelength(False);
-	String origin("Spectral Profiler");
-	allowOverwrite=True;
-	String outFile(fn.toStdString());
-
-	// find the "natural" flags for the spectral axis
-	SpectralCoordinate::SpecType spcType = (cSys.spectralCoordinate(wCoord)).nativeType();
-	switch (spcType) {
-	case SpectralCoordinate::FREQ:
-		preferVelocity      = False;
-		opticalVelocity     = False;
-		preferWavelength    = False;
-		preferAirWavelength = False;
-		break;
-	case SpectralCoordinate::VRAD:
-		preferVelocity      = True;
-		opticalVelocity     = False;
-		preferWavelength    = False;
-		preferAirWavelength = False;
-		break;
-	case SpectralCoordinate::VOPT:
-		preferVelocity      = True;
-		opticalVelocity     = True;
-		preferWavelength    = False;
-		preferAirWavelength = False;
-		break;
-	case SpectralCoordinate::BETA:
-		preferVelocity      = False;
-		opticalVelocity     = False;
-		preferWavelength    = False;
-		preferAirWavelength = False;
-		break;
-	case SpectralCoordinate::WAVE:
-		preferVelocity      = False;
-		opticalVelocity     = False;
-		preferWavelength    = True;
-		preferAirWavelength = False;
-		break;
-	case SpectralCoordinate::AWAV:
-		preferVelocity      = False;
-		opticalVelocity     = False;
-		preferWavelength    = True;
-		preferAirWavelength = True;
-		break;
-	default:
-		preferVelocity      = False;
-		opticalVelocity     = False;
-		preferWavelength    = False;
-		preferAirWavelength = False;
-	}
-
-	try {
-		// export the image to FITS
-		ImageFITSConverter::ImageToFITS(
-				error,
-				profile,
-				outFile,
-				memoryInMB,
-				preferVelocity,
-				opticalVelocity,
-				BITPIX,
-				minPix,
-				maxPix,
-				allowOverwrite,
-				degenerateLast,
-				verbose,
-				stokesLast,
-				preferWavelength,
-				preferAirWavelength,
-				origin
-		);
-	} catch (AipsError x) {
-		// catch an exception and report
-   	QString msg="Error while exporting FITS:\n"+QString((x.getMesg()).c_str());
-   	messageFromProfile(msg);
-   	return false;
-	}
-
-	// check for any error indicated via the error-string
-	if (error.size()>0){
-   	QString msg="Error while exporting FITS:\n"+QString((error.c_str()));
-   	messageFromProfile(msg);
-   	return false;
-	}
-
-	return true;
-}
-
-bool QtProfile::exportASCIISpectrum(QString &fn)
-	{
-   QFile file(fn);
-    if (!file.open(QFile::WriteOnly | QIODevice::Text))
-        return false;
-    QTextStream ts(&file);
-
-    ts << "#title: Spectral profile - " << fileName << " "
-       << region << "(" << position << ")\n";
-    ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
-    ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-    ts << "#yLabel: " << "(" << yUnitPrefix << yUnit << ") "<< plotMode->currentText() << "\n";
-    if (z_eval.size() > 0)
-        ts << "#eLabel: " << "(" << yUnitPrefix << yUnit << ") " << errorMode->currentText() << "\n";
-
-    ts.setRealNumberNotation(QTextStream::ScientificNotation);
-
-    if (z_eval.size() > 0){
-    	for (uInt i = 0; i < z_xval.size(); i++) {
-    		ts << z_xval(i) << "    " << z_yval(i) << "    "  << z_eval(i) << "\n";
-    	}
-    }
-    else {
-    	for (uInt i = 0; i < z_xval.size(); i++) {
-    		ts << z_xval(i) << "    " << z_yval(i) << "\n";
-    	}
-    }
-
-    int i = pixelCanvas->getLineCount();
-    for (int k = 1; k < i; k++) {
-      ts << "\n";
-      ts << "# " << pixelCanvas->getCurveName(k) << "\n";
-      CurveData data = *(pixelCanvas->getCurveData(k));
-      int j = data.size() / 2;
-      for (int m = 0; m < j; m++) {
-         ts << data[2 * m] << " " << data[2 * m + 1] << "\n";
-      }
-    }
-
-    return true;
-}
-
-void QtProfile::messageFromProfile(QString &msg){
-	//QMessageBox qMsg(this);
-	//qMsg.setText(msg);
-	//qMsg.exec();
-	// critical
-	QMessageBox::critical(this, "Error", msg);
-}
-
 void QtProfile::left()
 {
    QApplication::sendEvent(pixelCanvas,
@@ -880,16 +631,47 @@ void QtProfile::wcChanged( const String c,
     }
     pixelCanvas->setWelcome("");
 
+	 Double xmean, ymean, minval, maxval;
     if (coordinate == "world") {
-       //xpos, ypos and position only used for display
-       xpos = QString::number(floor(wxv[0]+0.5));
-       ypos = QString::number(floor(wyv[0]+0.5));
-       position = getRaDec(wxv[0], wyv[0]);
+   	 if (wxv.size()==1){
+          xmean =  wxv[0];
+          ymean =  wyv[0];
+   	 }
+   	 else if (wxv.size()==2){
+          xmean =  0.5*(wxv[0]+wxv[1]);
+          ymean =  0.5*(wyv[0]+wyv[1]);
+   	 }
+   	 else {
+          minMax(minval, maxval, wxv);
+          xmean =  0.5*(minval + maxval);
+          minMax(minval, maxval, wyv);
+          ymean =  0.5*(minval + maxval);
+   	 }
+   	 //xpos, ypos and position only used for display
+       xpos = QString::number(floor(xmean+0.5));
+       ypos = QString::number(floor(ymean+0.5));
+
+       position = getRaDec(xmean, ymean);
     }
     else {
+   	 if (pxv.size()==1){
+   		 xmean = pxv[0];
+   		 ymean = pyv[0];
+   	 }
+   	 else if (pxv.size()==1){
+   		 xmean = 0.5*(pxv[0]+pxv[1]);
+   		 ymean = 0.5*(pyv[0]+pyv[0]);
+   	 }
+   	 else{
+          minMax(minval, maxval, pxv);
+          xmean =  0.5*(minval + maxval);
+          minMax(minval, maxval, pyv);
+          ymean =  0.5*(minval + maxval);
+   	 }
+
        //xpos, ypos and position only used for display
-       xpos = QString::number(floor(pxv[0]+0.5));
-       ypos = QString::number(floor(pyv[0]+0.5));
+       xpos = QString::number(floor(xmean+0.5));
+       ypos = QString::number(floor(ymean+0.5));
        position = QString("[%1, %2]").arg(xpos).arg(ypos);
     }
     profileStatus->showMessage(position);
@@ -1652,16 +1434,48 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
     }
     pixelCanvas->setWelcome("");
 
+	 Double xmean, ymean, minval, maxval;
     if (coordinate == "world") {
-	//xpos, ypos and position only used for display
-	xpos = QString::number(floor(wxv[0]+0.5));
-	ypos = QString::number(floor(wyv[0]+0.5));
-	position = getRaDec(wxv[0], wyv[0]);
-    } else {
-	//xpos, ypos and position only used for display
-	xpos = QString::number(floor(pxv[0]+0.5));
-	ypos = QString::number(floor(pyv[0]+0.5));
-	position = QString("[%1, %2]").arg(xpos).arg(ypos);
+   	 if (wxv.size()==1){
+          xmean =  wxv[0];
+          ymean =  wyv[0];
+   	 }
+   	 else if (wxv.size()==2){
+          xmean =  0.5*(wxv[0]+wxv[1]);
+          ymean =  0.5*(wyv[0]+wyv[1]);
+   	 }
+   	 else {
+          minMax(minval, maxval, wxv);
+          xmean =  0.5*(minval + maxval);
+          minMax(minval, maxval, wyv);
+          ymean =  0.5*(minval + maxval);
+   	 }
+   	 //xpos, ypos and position only used for display
+       xpos = QString::number(floor(xmean+0.5));
+       ypos = QString::number(floor(ymean+0.5));
+
+       position = getRaDec(xmean, ymean);
+    }
+    else {
+   	 if (pxv.size()==1){
+   		 xmean = pxv[0];
+   		 ymean = pyv[0];
+   	 }
+   	 else if (pxv.size()==1){
+   		 xmean = 0.5*(pxv[0]+pxv[1]);
+   		 ymean = 0.5*(pyv[0]+pyv[0]);
+   	 }
+   	 else{
+          minMax(minval, maxval, pxv);
+          xmean =  0.5*(minval + maxval);
+          minMax(minval, maxval, pyv);
+          ymean =  0.5*(minval + maxval);
+   	 }
+
+       //xpos, ypos and position only used for display
+       xpos = QString::number(floor(xmean+0.5));
+       ypos = QString::number(floor(ymean+0.5));
+       position = QString("[%1, %2]").arg(xpos).arg(ypos);
     }
     profileStatus->showMessage(position);
 
@@ -2068,16 +1882,48 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
     }
     pixelCanvas->setWelcome("");
 
+	 Double xmean, ymean, minval, maxval;
     if (coordinate == "world") {
-	//xpos, ypos and position only used for display
-	xpos = QString::number(floor(wxv[0]+0.5));
-	ypos = QString::number(floor(wyv[0]+0.5));
-	position = getRaDec(wxv[0], wyv[0]);
-    } else {
-	//xpos, ypos and position only used for display
-	xpos = QString::number(floor(pxv[0]+0.5));
-	ypos = QString::number(floor(pyv[0]+0.5));
-	position = QString("[%1, %2]").arg(xpos).arg(ypos);
+   	 if (wxv.size()==1){
+          xmean =  wxv[0];
+          ymean =  wyv[0];
+   	 }
+   	 else if (wxv.size()==2){
+          xmean =  0.5*(wxv[0]+wxv[1]);
+          ymean =  0.5*(wyv[0]+wyv[1]);
+   	 }
+   	 else {
+          minMax(minval, maxval, wxv);
+          xmean =  0.5*(minval + maxval);
+          minMax(minval, maxval, wyv);
+          ymean =  0.5*(minval + maxval);
+   	 }
+   	 //xpos, ypos and position only used for display
+       xpos = QString::number(floor(xmean+0.5));
+       ypos = QString::number(floor(ymean+0.5));
+
+       position = getRaDec(xmean, ymean);
+    }
+    else {
+   	 if (pxv.size()==1){
+   		 xmean = pxv[0];
+   		 ymean = pyv[0];
+   	 }
+   	 else if (pxv.size()==1){
+   		 xmean = 0.5*(pxv[0]+pxv[1]);
+   		 ymean = 0.5*(pyv[0]+pyv[0]);
+   	 }
+   	 else{
+          minMax(minval, maxval, pxv);
+          xmean =  0.5*(minval + maxval);
+          minMax(minval, maxval, pyv);
+          ymean =  0.5*(minval + maxval);
+   	 }
+
+       //xpos, ypos and position only used for display
+       xpos = QString::number(floor(xmean+0.5));
+       ypos = QString::number(floor(ymean+0.5));
+       position = QString("[%1, %2]").arg(xpos).arg(ypos);
     }
     profileStatus->showMessage(position);
 
@@ -2372,6 +2218,275 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
     lastWY.assign(wyv);
     lastPX.assign(pxv);
     lastPY.assign(pyv);
+}
+
+
+bool QtProfile::exportFITSSpectrum(QString &fn)
+{
+	// get the image coo and the spectral axis therein
+   CoordinateSystem cSys = image->coordinates();
+   Int wCoord = cSys.findCoordinate(Coordinate::SPECTRAL);
+   Vector<Int> pCoord = cSys.pixelAxes(wCoord);
+
+   if (wCoord <0){
+   	// well, it REALLY should not get to here
+   	QString msg="No spectral coordinate in image:\n" + QString((image->name(True)).c_str());
+   	messageFromProfile(msg);
+   	return false;
+   }
+
+   // get the spectral dimension and make some checks
+   uInt nPoints=(image->shape())(pCoord(0));
+   if (nPoints != z_yval.size()){
+   	// well, this should not happen
+   	QString msg="The dimension of the image and\nthe extracted profile do not match!";
+   	messageFromProfile(msg);
+   	return false;
+   }
+   else if (nPoints<1){
+   	// well, this should not happen
+   	QString msg="The extracted profile contains no points!";
+   	messageFromProfile(msg);
+   	return false;
+   }
+
+   // create a new coo and add the spectral one
+   CoordinateSystem csysProfile = CoordinateSystem();
+   csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
+
+   // if necessary, add a quality coordinate
+   IPosition profDim;
+   if (z_eval.size()>0){
+   	Vector<Int> quality(2);
+   	quality(0) = Quality::DATA;
+   	quality(1) = Quality::ERROR;
+   	QualityCoordinate qualAxis(quality);
+   	csysProfile.addCoordinate(qualAxis);
+
+   	profDim = IPosition(2,nPoints,2);
+   }
+   else{
+   	profDim = IPosition(1,nPoints);
+   }
+
+   // create the temp-image
+   TempImage<Float> profile(TiledShape(profDim),csysProfile);
+
+   // scale the data and store the values in the
+   // temp-image
+	Float scaleFactor=pow(10.,ordersOfM_);
+	IPosition posIndex;
+   if (z_eval.size()>0){
+   	Int qualCooPos, qualIndex;
+   	posIndex = IPosition(2, 0);
+
+   	// re-find the quality coordinate
+   	qualCooPos = csysProfile.findCoordinate(Coordinate::QUALITY);
+   	if (qualCooPos<0){
+   		// this really should not happen
+      	QString msg="Error finding the Quality coordinate!";
+      	messageFromProfile(msg);
+      	return false;
+   	}
+
+   	// get the pixel index of DATA
+   	if (!(csysProfile.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::DATA)){
+      	QString msg="Error finding the DATA index in quality coordinate!";
+      	messageFromProfile(msg);
+      	return false;
+   	}
+   	posIndex(1)=qualIndex;
+   	for (uInt index=0; index<nPoints; index++){
+   		posIndex(0)=index;
+   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
+   		//cout << " " << z_yval(index)/scaleFactor << " : " << posIndex;
+   	}
+
+
+   	// get the pixel index of ERROR
+   	if (!(csysProfile.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::ERROR)){
+      	QString msg="Error finding the ERROR index in quality coordinate!";
+      	messageFromProfile(msg);
+      	return false;
+   	}
+   	posIndex(1)=qualIndex;
+   	for (uInt index=0; index<nPoints; index++){
+   		posIndex(0)=index;
+   		profile.putAt (z_eval(index)/scaleFactor, posIndex);
+   		//cout << " " << z_eval(index)/scaleFactor << " : " << posIndex;
+   	}
+   }
+   else{
+   	posIndex = IPosition(1);
+   	for (uInt index=0; index<nPoints; index++){
+   		posIndex(0)=index;
+   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
+   		//cout << " " << z_yval(index)/scaleFactor;
+   	}
+   }
+
+   // attach a mask to the temp-image
+	Array<Bool> maskArray(profDim, True);
+	ArrayLattice<Bool> maskLattice=ArrayLattice<Bool>(maskArray);
+	profile.attachMask(maskLattice);
+
+	// compile and set the miscInfo
+	TableRecord miscInfo;
+	miscInfo.define("inimage", image->name(True));
+	miscInfo.setComment("inimage", "name input image");
+	miscInfo.define("position", position.toStdString());
+	miscInfo.setComment("position", "extraction position");
+	miscInfo.define("proftype", (pixelCanvas->getTitle()).toStdString());
+	miscInfo.setComment("proftype", "the profile type");
+	miscInfo.define("plottype", (plotMode->currentText()).toStdString());
+	miscInfo.setComment("plottype", "the plot type");
+   if (z_eval.size()>0){
+   	miscInfo.define("errtype", (errorMode->currentText()).toStdString());
+   	miscInfo.setComment("errtype", "the error type");
+   }
+	profile.setMiscInfo(miscInfo);
+	//cout << "Temp-image miscInfo: " <<profile.miscInfo()<<endl;
+
+   // thats the default values for the call "ImageFITSConverter::ImageToFITS"
+	String error; uInt memoryInMB(64); Bool preferVelocity(True);
+	Bool opticalVelocity(True); Int BITPIX(-32); Float minPix(1.0); Float maxPix(-1.0);
+	Bool allowOverwrite(False); Bool degenerateLast(False); Bool verbose(True);
+	Bool stokesLast(False); Bool preferWavelength(False); Bool preferAirWavelength(False);
+	String origin("CASA Viewer / Spectral Profiler");
+	allowOverwrite=True;
+	String outFile(fn.toStdString());
+
+	// find the "natural" flags for the spectral axis
+	SpectralCoordinate::SpecType spcType = (cSys.spectralCoordinate(wCoord)).nativeType();
+	switch (spcType) {
+	case SpectralCoordinate::FREQ:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::VRAD:
+		preferVelocity      = True;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::VOPT:
+		preferVelocity      = True;
+		opticalVelocity     = True;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::BETA:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::WAVE:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = True;
+		preferAirWavelength = False;
+		break;
+	case SpectralCoordinate::AWAV:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = True;
+		preferAirWavelength = True;
+		break;
+	default:
+		preferVelocity      = False;
+		opticalVelocity     = False;
+		preferWavelength    = False;
+		preferAirWavelength = False;
+	}
+
+	try {
+		// export the image to FITS
+		ImageFITSConverter::ImageToFITS(
+				error,
+				profile,
+				outFile,
+				memoryInMB,
+				preferVelocity,
+				opticalVelocity,
+				BITPIX,
+				minPix,
+				maxPix,
+				allowOverwrite,
+				degenerateLast,
+				verbose,
+				stokesLast,
+				preferWavelength,
+				preferAirWavelength,
+				origin
+		);
+	} catch (AipsError x) {
+		// catch an exception and report
+   	QString msg="Error while exporting FITS:\n"+QString((x.getMesg()).c_str());
+   	messageFromProfile(msg);
+   	return false;
+	}
+
+	// check for any error indicated via the error-string
+	if (error.size()>0){
+   	QString msg="Error while exporting FITS:\n"+QString((error.c_str()));
+   	messageFromProfile(msg);
+   	return false;
+	}
+
+	return true;
+}
+
+bool QtProfile::exportASCIISpectrum(QString &fn)
+	{
+   QFile file(fn);
+    if (!file.open(QFile::WriteOnly | QIODevice::Text))
+        return false;
+    QTextStream ts(&file);
+
+    ts << "#title: Spectral profile - " << fileName << " "
+       << region << "(" << position << ")\n";
+    ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
+    ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
+    ts << "#yLabel: " << "(" << yUnitPrefix << yUnit << ") "<< plotMode->currentText() << "\n";
+    if (z_eval.size() > 0)
+        ts << "#eLabel: " << "(" << yUnitPrefix << yUnit << ") " << errorMode->currentText() << "\n";
+
+    ts.setRealNumberNotation(QTextStream::ScientificNotation);
+
+    if (z_eval.size() > 0){
+    	for (uInt i = 0; i < z_xval.size(); i++) {
+    		ts << z_xval(i) << "    " << z_yval(i) << "    "  << z_eval(i) << "\n";
+    	}
+    }
+    else {
+    	for (uInt i = 0; i < z_xval.size(); i++) {
+    		ts << z_xval(i) << "    " << z_yval(i) << "\n";
+    	}
+    }
+
+    int i = pixelCanvas->getLineCount();
+    for (int k = 1; k < i; k++) {
+      ts << "\n";
+      ts << "# " << pixelCanvas->getCurveName(k) << "\n";
+      CurveData data = *(pixelCanvas->getCurveData(k));
+      int j = data.size() / 2;
+      for (int m = 0; m < j; m++) {
+         ts << data[2 * m] << " " << data[2 * m + 1] << "\n";
+      }
+    }
+
+    return true;
+}
+
+void QtProfile::messageFromProfile(QString &msg){
+	//QMessageBox qMsg(this);
+	//qMsg.setText(msg);
+	//qMsg.exec();
+	// critical
+	QMessageBox::critical(this, "Error", msg);
 }
 
 

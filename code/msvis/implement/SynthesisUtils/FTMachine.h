@@ -48,10 +48,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class VisSet;
-class VisBuffer;
-class ROVisibilityIterator;
-class UVWMachine;
+  class VisSet;
+  class VisBuffer;
+  class ROVisibilityIterator;
+  class UVWMachine;
+  class VisModelData;
 
 // <summary> defines interface for the Fourier Transform Machine </summary>
 
@@ -118,6 +119,7 @@ public:
 
   FTMachine();
 
+
   FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cfctor);
 
   FTMachine(const FTMachine& other);
@@ -127,7 +129,7 @@ public:
   void setBasePrivates(const FTMachine& other){FTMachine::operator=(other);}
 
   virtual ~FTMachine();
-
+  
   // Initialize transform to Visibility plane
   virtual void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb) = 0;
 
@@ -259,6 +261,7 @@ public:
   //virtual void ComputeResiduals(VBStore& vb)=0;
 protected:
 
+  friend class VisModelData;
   LogIO logIO_p;
 
   LogIO& logIO();

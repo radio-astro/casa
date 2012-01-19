@@ -34,6 +34,7 @@
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayUtil.h>
+#include <casa/OS/Path.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
@@ -125,6 +126,7 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
     }
     return *this;
 }
+
 
 void VisBuffer::copyCoordInfo(const VisBuffer& other, Bool force)
 {
@@ -285,6 +287,21 @@ Int
 VisBuffer::getOldMsId () const
 {
     return oldMSId_p;
+}
+
+String VisBuffer::msName(Bool stripPath) const{
+  String name="";
+  if(visIter_p != NULL){
+    name=visIter_p->ms().antenna().tableName();
+    name.erase(name.length()-8);
+    if(stripPath){
+      Path path(name);
+      return path.baseName();
+    }
+    
+  }
+  
+  return name;
 }
 
 ROVisibilityIterator *
@@ -2294,12 +2311,14 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
       CheckVisIter1 (" (Model)");
       modelVisCubeOK_p = True;
       String modelkey=String("definedmodel_field_")+String::toString(fieldId());
-      if(visIter_p->ms().keywordSet().isDefined(modelkey)){
-	
+      Bool hasmodkey=visIter_p->ms().keywordSet().isDefined(modelkey);
+      if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA"))){
 	if(!visModelData_p.hasModel(msId(), fieldId(), spectralWindow())){
-	  String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
-	  Record modrec(visIter_p->ms().keywordSet().asRecord(whichrec));
-	  visModelData_p.addModel(modrec, Vector<Int>(1, msId()));
+	  if(hasmodkey){
+	    String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
+	    Record modrec(visIter_p->ms().keywordSet().asRecord(whichrec));
+	    visModelData_p.addModel(modrec, Vector<Int>(1, msId()), *this);
+	  }
 	}
 	
 	visModelData_p.getModelVis(*this);
@@ -2504,6 +2523,7 @@ VisBuffer::dirtyComponentsGet () const
 {
     return dirtyComponents_p;
 }
+
 
 void
 VisBuffer::dirtyComponentsSet (const VbDirtyComponents & dirtyComponents)

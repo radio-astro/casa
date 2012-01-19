@@ -41,7 +41,7 @@ if(regstate):
    npix=1024;
    ret = clean(vis='VLA_multifrequency_3C286.ms',imagename='reg_3C286',nterms=3,reffreq='1.4GHz',
                niter=50,gain=0.8,threshold='7.0mJy',imsize=[npix,npix],
-               cell=['2.5arcsec','2.5arcsec'],weighting='briggs',calready=False);
+               cell=['2.5arcsec','2.5arcsec'],weighting='briggs',usescratch=False);
 
 # Stop timers
 endProc=time.clock()

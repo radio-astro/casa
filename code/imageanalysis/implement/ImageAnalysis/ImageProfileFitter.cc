@@ -52,32 +52,31 @@ ImageProfileFitter::ImageProfileFitter(
 	const ImageInterface<Float> *const &image, const String& region,
 	const Record *const &regionPtr,	const String& box,
 	const String& chans, const String& stokes,
-	const String& mask, const Int axis, const Bool multiFit,
-	const String& residual, const String& model, const uInt ngauss,
-	const Int polyOrder, const String& estimatesFilename, const String& ampName,
-	const String& ampErrName, const String& centerName,
-	const String& centerErrName, const String& fwhmName,
-	const String& fwhmErrName, const String& integralName,
-	const String& integralErrName, const uInt minGoodPoints
+	const String& mask, const Int axis,
+	const uInt ngauss, const String& estimatesFilename
 ) : ImageTask(
 		image, region, regionPtr, box, chans, stokes,
 		mask, "", False
 	),
-	_residual(residual), _model(model), _xUnit(""),
-	_centerName(centerName), _centerErrName(centerErrName),
-	_fwhmName(fwhmName), _fwhmErrName(fwhmErrName),
-	_ampName(ampName), _ampErrName(ampErrName),
-	_integralName(integralName), _integralErrName(integralErrName),
-	_multiFit(multiFit), _deleteImageOnDestruct(False), _logResults(True),
-	_polyOrder(polyOrder), _fitAxis(axis), _ngauss(ngauss),
-	_minGoodPoints(minGoodPoints), _results(Record()),
-	_estimates(SpectralList()) {
-    _checkNGaussAndPolyOrder();
+	_residual(""), _model(""), _xUnit(""),
+	_centerName(""), _centerErrName(""),
+	_fwhmName(""), _fwhmErrName(""),
+	_ampName(""), _ampErrName(""),
+	_integralName(""), _integralErrName(""),
+	_multiFit(False), _deleteImageOnDestruct(False), _logResults(True),
+	_polyOrder(-1), _fitAxis(axis), _ngauss(ngauss),
+	_minGoodPoints(0), _results(Record()),
+	_gaussEstimates(SpectralList()) {
     if (! estimatesFilename.empty()) {
-    	ProfileFitterEstimatesFileParser parser(estimatesFilename);
-    	_estimates = parser.getEstimates();
-    	_ngauss = _estimates.nelements();
     	*_getLog() << LogOrigin(_class, __FUNCTION__);
+    	if (_ngauss > 0) {
+    	    *_getLog() << LogIO::WARN
+    	    	<< "Estimates file specified so ignoring input value of ngauss"
+    	    	<< LogIO::POST;
+    	}
+    	ProfileFitterEstimatesFileParser parser(estimatesFilename);
+    	_gaussEstimates = parser.getEstimates();
+    	_ngauss = _gaussEstimates.nelements();
     	*_getLog() << LogIO::NORMAL << "Number of gaussians to fit found to be "
     		<< _ngauss << " in estimates file " << estimatesFilename
     		<< LogIO::POST;
@@ -89,6 +88,7 @@ ImageProfileFitter::ImageProfileFitter(
 ImageProfileFitter::~ImageProfileFitter() {}
 
 Record ImageProfileFitter::fit() {
+    _checkNGaussAndPolyOrder();
     LogOrigin logOrigin(_class, __FUNCTION__);
     *_getLog() << logOrigin;
     {
@@ -905,9 +905,9 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	Vector<Float> model(0), residual(0);
 
 	if (fitIt) {
-		if (_estimates.nelements() > 0) {
+		if (_gaussEstimates.nelements() > 0) {
 			//_convertEstimates();
-			fitter.setElements(_estimates);
+			fitter.setElements(_gaussEstimates);
 		} else {
 			// Set auto estimate
 			if (! fitter.setGaussianElements(_ngauss)) {
@@ -952,8 +952,8 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 		}
 	}
 	else {
-		if (_estimates.nelements() > 0) {
-			fitter.setElements(_estimates); // Set list
+		if (_gaussEstimates.nelements() > 0) {
+			fitter.setElements(_gaussEstimates); // Set list
 			model = fitter.getEstimate(); // Evaluate list
 			residual = fitter.getResidual(-1, False);
 		}
@@ -1028,7 +1028,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	// Do fits
 	// FIXME give users the option to show a progress bar
 	Bool showProgress = False;
-	if (_estimates.nelements() > 0) {
+	if (_gaussEstimates.nelements() > 0) {
 		String doppler = "";
 		ImageUtilities::getUnitAndDoppler(
 			_xUnit, doppler, _fitAxis, cSys
@@ -1145,7 +1145,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 	vector<IPosition> goodPos(0);
 	goodFits.set(0);
 	Bool checkMinPts = _minGoodPoints > 0 && _subImage.isMasked();
-	SpectralList newEstimates = _estimates;
+	SpectralList newEstimates = _gaussEstimates;
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
 		if (count % 1000 == 0 && count > 0) {
@@ -1181,7 +1181,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 			*_getLog() << "Unable to set gaussian elements"
 				<< LogIO::EXCEPTION;
 		}
-		if (_estimates.nelements() > 0) {
+		if (_gaussEstimates.nelements() > 0) {
 			// user supplied initial estimates
 			if (goodPos.size() > 0) {
 				IPosition nearest;
@@ -1255,7 +1255,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 		Bool ok = False;
 		try {
 			if (ok = fitter.fit()) {               // ok == False means no convergence
-				if (_estimates.nelements() > 0) {
+				if (_gaussEstimates.nelements() > 0) {
 					goodFits(curPos) = &fitter;
 					goodPos.push_back(curPos);
 				}

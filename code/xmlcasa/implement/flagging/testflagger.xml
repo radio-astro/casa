@@ -269,6 +269,7 @@ Executes a flagging run.
      <description>Write flags to MS</description>
      <value>true</value>
      </param>
+
 </input>
 <returns type="record"/>
 <example>

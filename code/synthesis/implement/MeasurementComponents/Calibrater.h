@@ -313,9 +313,11 @@ class Calibrater
   // Initialize the calibrator object from an input MeasurementSet.
   // Optional compression of the calibration columns (MODEL_DATA,
   // and CORRECTED_DATA) is supported.
+  //if addScratch=True, optionally one can just add CORRECTED_DATA by
+  //setting addModel to False
   Bool initialize(MeasurementSet& inputMS, 
 		  Bool compress=True,
-		  Bool addScratch=True);
+		  Bool addScratch=True, Bool addModel=True);
 
   // Re-initialize the calibration scratch columns
   Bool initCalSet(const Int& calSet);

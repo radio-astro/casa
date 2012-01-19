@@ -227,6 +227,19 @@ public:
     //     return This->nCat();
     // }
 
+    ///Because of it being publicly exposed ...using nRow, nChannel, nCorr etc to 
+    /// determine the size of the buffer can be totally WRONG
+    ///They MAY NOT  represent the shape 
+    /// of a buffer filled in this iteration.
+    // Decide what is the right value (depending on where the vb is coming from) 
+    // for you for the size of the buffer. i.e (nCorr(), nChannel(), nRow()) or vb.visCube().shape()
+    // The latter comes from the VisIter state ...the former be careful...
+    /// For example VisBuffAccumulator changes these in an unconnected fashion; 
+    //without updating fillnrow 
+    /// datacube shape  etc etc.
+    /// You are warned nrow_p etc are public variables effectively (despite being 
+    ///declared private) so it can be changed
+    /// anywhere the code uses a vb, intentionally or accidentally.
     virtual Int & nRow() {
         return nRowOK_p ? nRow_p : fillnRow();
     }
@@ -335,15 +348,15 @@ public:
     // Hour angle for specified time
     virtual Double hourang(Double time) const;
 
-    virtual Int& fieldId() {
-        return fieldIdOK_p ? fieldId_p : This->fillFieldId();
-    }
-
     virtual Int fieldId() const {
         return fieldIdOK_p ? fieldId_p : This->fillFieldId();
     }
 
-    virtual Int& arrayId() {
+    virtual Int& fieldIdRef() {
+        return fieldIdOK_p ? fieldId_p : This->fillFieldId();
+    }
+
+    virtual Int& arrayIdRef() {
         return arrayIdOK_p ? arrayId_p : This->fillArrayId();
     }
 
@@ -481,7 +494,7 @@ public:
     virtual Int polarizationId() const {
       return visIter_p->polarizationId();
     } 
-    virtual Int& dataDescriptionId() {
+    virtual Int& dataDescriptionIdRef() {
       return ddidOK_p ? ddid_p : This->fillDDID();
     }
     virtual Int dataDescriptionId() const {
@@ -796,6 +809,8 @@ public:
         This->checkMSId();
         return newMS_p;
     }
+    //get the name of the ms the buffer is at empty string if no visiter is attached
+    virtual String msName(Bool stripPath=False) const;
 
     virtual Bool newArrayId () const;
     virtual Bool newFieldId () const;
@@ -846,9 +861,8 @@ protected:
     }
 
 
-
-
 private:
+
 
     // validate the cache
     virtual void validate();

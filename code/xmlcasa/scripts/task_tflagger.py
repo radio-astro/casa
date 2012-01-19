@@ -8,8 +8,8 @@ debug = False
 
 def tflagger(vis,
              mode,
-             selectdata,
-             spw, # data selection parameters
+             selectdata,    # data selection parameters
+             spw,           
              field,
              antenna,
              uvrange,
@@ -20,18 +20,18 @@ def tflagger(vis,
              feed,
              array,
              observation,
-             expression, # mode=clip parameters
+             expression,    # mode clip parameters
              clipminmax,
              datacolumn,
              clipoutside,
              channelavg,
-             quackinterval, # mode=quack parameters
+             quackinterval, # mode quack parameters
              quackmode,
              quackincrement,
-             diameter, # mode=shadow parameter
-             lowerlimit, # mode=elevation parameters
+             diameter,      # mode shadow parameter
+             lowerlimit,    # mode elevation parameters
              upperlimit,
-             timecutoff, # mode=tfcrop parameters
+             timecutoff,    # mode tfcrop parameters
              freqcutoff,
              timefit,
              freqfit,
@@ -39,7 +39,7 @@ def tflagger(vis,
              flagdimension,
              usewindowstats,
              halfwin,
-             extendpols,
+             extendpols,    # mode extend
              growtime,
              growfreq,
              growaround,
@@ -51,32 +51,33 @@ def tflagger(vis,
              maxabs,
              spwchan,
              spwcorr,
-             ntime, # taken only once per session
+             ntime,         # taken only once per session
              combinescans,
              display,
              format,
              writeflags,
-             savepars,    # save the current parameters to FLAG_CMD 
-             outfile,   # output file to save flag commands
+             savepars,      # save the current parameters to FLAG_CMD 
+             outfile,       # output file to save flag commands
+             sequential,    # run in sequential or in parallel
              flagbackup):
 
     # Global parameters
-    # vis, ntime, savepars, flagbackup, datadisplay, writeflags, summarydisplay
+    # vis, ntime, savepars, flagbackup, display, writeflags, sequential
 
     # 
     # Schema
-    # Configure the TestFlagger tool -> ::open()
+    # Open the MS with the TestFlagger tool -> ::open()
     # Parse the union to the data selection -> ::selectdata()
     # Read the mode and specific parameters.
     # Parse the agent's parameters -> ::parseAgentParameters()
+    # Parse the display parameters if requested -> ::parsetAgentParameters()
     # Initialize the agents -> ::init()
     # Run the tool
     # Delete the tool
+    # Print the summary dictionary, if any
                         
     # TODO:
-    # Implement the new summary schema
-    # enable combinescans sub-parameter
-    
+    # implement MS history
     
     #
     # Task tflagger
@@ -127,32 +128,32 @@ def tflagger(vis,
                 else:
                     casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
                                     
-        if debug:
-            casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime))
+        casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime), 'DEBUG')
         
         
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, newtime)
+            tflocal.open(vis, newtime, combinescans)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
 
         # Select the data 
         if (debug):
-#            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
-#                        type(feed),type(scan),type(antenna),type(uvrange),
-#                        type(timerange),type(correlation),type(intent),type(observation))
+            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
+                        type(feed),type(scan),type(antenna),type(uvrange),
+                        type(timerange),type(correlation),type(intent),type(observation))
 
-            print 'selection is: field=%s spw=%s array=%s feed=%s scan=%s antenna=%s uvrange=%s' \
-                        'timerange=%s correlation=%s intent=%s observation=%s'%(field,spw,array,
-                        feed,scan,antenna,uvrange,
-                        timerange,correlation,intent,observation)
+        casalog.post('selection is: field=%s spw=%s array=%s feed=%s scan=%s antenna=%s uvrange=%s' \
+                     'timerange=%s correlation=%s intent=%s observation=%s'%(field,spw,array, \
+                      feed,scan,antenna,uvrange,timerange,correlation,intent,observation), 'DEBUG')
+
 
         # Correlation should not go in here            
         tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
                            baseline=antenna, uvrange=uvrange, time=timerange, \
                            intent=intent, observation=str(observation))   
+
 
         # Set apply parameter
         apply = True
@@ -180,12 +181,11 @@ def tflagger(vis,
         if combinescans:
             sel_pars = sel_pars+' combinescans='+str(combinescans)
             
-        # Setup global parameters
+        # Setup global parameters in the agent's dictionary
         agent_pars = {}
         agent_pars['name'] = agent_name
-
-        # Add the global parameters to the dictionary of agent's parameters            
         agent_pars['mode'] = mode
+        agent_pars['sequential'] = sequential
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -275,7 +275,6 @@ def tflagger(vis,
                        ' flagnearfreq='+str(flagnearfreq)
             
         elif mode == 'unflag':      
-            apply = False               
             casalog.post('Unflag mode is active')                
             
         elif mode == 'summary':
@@ -293,9 +292,11 @@ def tflagger(vis,
         # selection needs to be done in here instead of in the
         # selectdata()
         agent_pars['correlation'] = correlation
+        
+        # Add the apply parameter to be consistent with the tool
+        agent_pars['apply'] = apply
 
-        if debug:
-            print agent_pars
+        casalog.post('%s'%agent_pars, 'DEBUG')
             
         if (not tflocal.parseAgentParameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
@@ -374,20 +375,19 @@ def tflagger(vis,
         casalog.post('%s'%instance,'ERROR')
         raise
         
-        #write history
-#        try:
-#                param_names = flagdata.func_code.co_varnames[:flagdata.func_code.co_argcount]
-#                param_vals = [eval(p) for p in param_names]
-#                retval &= write_history(mslocal, vis, 'flagdata', param_names,
-#                                        param_vals, casalog)
-#        except Exception, instance:
-#                casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
-#                             'WARN')
+    # write history to the MS
+    try:
+            param_names = tflagger.func_code.co_varnames[:tflagger.func_code.co_argcount]
+            param_vals = [eval(p) for p in param_names]
+            retval &= write_history(mslocal, vis, 'tflagger', param_names,
+                                    param_vals, casalog)
+    except Exception, instance:
+            casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                         'WARN')
         
     return
 
 
-#def writeCMD(vis, myflags, tag=''):
 def writeCMD(msfile, flagcmd, outfile):
     # Reads a list of parameters and save it on the FLAG_CMD table or on a text file    
     # When saving in the FLAG_CMD table it will also update the APPLIED column to True

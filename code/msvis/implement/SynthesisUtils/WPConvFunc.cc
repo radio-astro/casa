@@ -480,8 +480,8 @@ Bool WPConvFunc::toRecord(RecordInterface& rec){
     convSupportBlock_p.resize(numConv, True, False);
     convFunctionMap_p=SimpleOrderedMap<String, Int>(-1);
     for (Int k=0; k < numConv; ++k){
-      convFunctions_p=new Cube<Complex>();
-      convSupportBlock_p=new Vector<Int>();
+      convFunctions_p[k]=new Cube<Complex>();
+      convSupportBlock_p[k]=new Vector<Int>();
       rec.get("convfunctions"+String::toString(k), *(convFunctions_p[k]));
       rec.get("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
       String key;

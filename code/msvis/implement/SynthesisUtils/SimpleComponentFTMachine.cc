@@ -74,8 +74,8 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,
     rotateUVW(uvw, dphase, vb, component.shape().refDirection());
     dphase *= -C::_2pi;
   }
-  const uInt npol=vb.visCube().shape()(0);
-  const uInt nChan=vb.visCube().shape()(1);
+  const uInt npol=vb.modelVisCube().shape()(0);
+  const uInt nChan=vb.modelVisCube().shape()(1);
   Cube<Complex> modelData;
   modelData.reference(vb.modelVisCube());
   Vector<Complex> visibility(4);
@@ -150,8 +150,8 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
   }
 
   uInt ncomponents=compList.nelements();
-  const uInt npol=vb.visCube().shape()(0);
-  const uInt nChan=vb.visCube().shape()(1);
+  const uInt npol=vb.modelVisCube().shape()(0);
+  const uInt nChan=vb.modelVisCube().shape()(1);
   Cube<Complex> modelData;
   modelData.reference(vb.modelVisCube());
   modelData=0.0;

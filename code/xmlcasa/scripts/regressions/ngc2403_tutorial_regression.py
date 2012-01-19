@@ -17,10 +17,11 @@
 #      40 minutes to run depending on your machine.                      #
 #                                                                        #
 #    o Uses the VLA export files AS649_1 to 4, which should be in the    #
-#      working directory that casapy was started in                      #
+#      working directory that casapy was started in.  These VLA archive  #
+#      can be found in in the data repository at data/regression/ngc2403 #
 #                                                                        #
 #    o This script has some interactive commands, such as with           #
-#      plotxy and the viewer.  If scriptmode=True, then this script      #
+#      the viewer.  If scriptmode=True, then this script                 #
 #      will stop and require a carriage-return to continue at these      #
 #      points.                                                           #
 #                                                                        #
@@ -142,172 +143,44 @@ if benchmarking:
 
 #=====================================================================
 # FLAGGING
-# Now we edit the MS either interactively or with flagdata
-# Plot the calibrator visibilities
 #=====================================================================
 #
 
-print "--plotxy--"
-print ""
-print " plots all calibrator visibilities"
-
-default('plotxy')
+    
+default('flagdata')
 
 vis=msfile
 spw='0:5~112'
-field='1~4'
-
-print " vector averaging channels 5 to 112"
-width='108'
-
-if scriptmode:
-    interactive=T
-    figfile=''
-    saveinputs('plotxy',prefix+'.saved.plotxy.cal')
-
-    plotxy()
-
-    print ""
-    print " Showing all visiblities for all calibrators in one plot"
-    print " no points absolutely require flagging, so let's continue"
-    print ""
-    print " you can leave the plotter running, so don't click quit\n"
-
-    user_check=raw_input('instead, hit Return to continue script\n')
-    print ""
-else:
-    interactive=F
-    figfile=prefix+'.plotxy.cal.png'
-    saveinputs('plotxy',prefix+'.saved.plotxy.cal')
-
-    print ""
-    print " Plotting calibrator to "+figfile
-    plotxy()
-    
-#=====================================================================
-# Plot the source visibilities
-#=====================================================================
-#
-print "--plotxy--"
-print ""
-print " plots source visibilities, just RR for now"
-
-default('plotxy')
-
-vis=msfile
-selectdata=True
 correlation='RR'
-spw='0:5~112'
 field='0'
+mode='manualflag'
+timerange='03:51:07~03:52:48'
+saveinputs('flagdata',prefix+'.saved.flagdata.n2403.rr.time0351')
 
-print " vector averaging channels 5 to 112"
-width='108'
-
-if scriptmode:
-    interactive=T
-    figfile=''
-    saveinputs('plotxy',prefix+'.saved.plotxy.n2403.rr')
-
-    plotxy()
-
-    print ""
-    print " Showing NGC 2403, RR"
-    print " clearly, there is one bad time interval"
-    print " click Mark Region, then draw a rectangle around the bad data"
-    print " click Locate to list the points, and Flag to flag them.  After"
-    print " Flag, the plot will be redrawn with the appropriate scale.  Do"
-    print " more flagging if necessary"
-    print ""
-    print " when happy with flagging, don't click quit"
-
-    user_check=raw_input('hit Return to continue script\n')
-else:
-    interactive=F
-    figfile=prefix+'.plotxy.n2403.rr.png'
-    saveinputs('plotxy',prefix+'.saved.plotxy.n2403.rr')
-
-    print ""
-    print " Plotting source RR to "+figfile
-    plotxy()
+flagdata()
 
 print ""
+print " now we clip RR above 0.4Jy"
+print ""
 
+timerange = ''
+clipexpr = 'RR'
+clipminmax = [-100, 0.4]
+saveinputs('flagdata',prefix+'.saved.flagdata.n2403.rr.clip')
+
+flagdata()
+
+print ""
+print " now we clip LL above 1.0Jy"
+print ""
+
+timerange = ''
 correlation='LL'
+clipexpr = 'LL'
+clipminmax = [-100, 1.0]
+saveinputs('flagdata',prefix+'.saved.flagdata.n2403.ll.clip')
 
-if scriptmode:
-    interactive=T
-    figfile=''
-    saveinputs('plotxy',prefix+'.saved.plotxy.n2403.ll')
-
-    plotxy()
-
-    print ""
-    print " Now showing NGC 2403, LL"
-    print " one bad point is visible in the upper right corner"
-    print " click Mark Region, then draw a rectangle around it"
-    print " Might be good to flag the ones on either side of the bad"
-    print " click Locate to list the point, then Flag to flag them"
-    print " the plot will be redrawn with an appropriate scale"
-    print " do more flagging if necessary"
-    print ""
-
-    user_check=raw_input('when done with flagging, Return to continue script\n')
-
-    if benchmarking:
-        plotxy2time=time.time()
-    
-else:
-    interactive=F
-    figfile=prefix+'.plotxy.n2403.ll.png'
-    saveinputs('plotxy',prefix+'.saved.plotxy.n2403.ll')
-
-    print ""
-    print " Plotting source LL to "+figfile
-    plotxy()
-
-    if benchmarking:
-        plotxy2time=time.time()
-
-    # run flagdata instead of interactive plotxy to do flagging
-    print "--flagdata--"
-    print ""
-    print " first we flag the time range 03:51:07 to 03:52:48 RR"
-    print ""
-
-    default('flagdata')
-
-    vis=msfile
-    spw='0:5~112'
-    correlation='RR'
-    field='0'
-    mode='manualflag'
-    timerange='03:51:07~03:52:48'
-    saveinputs('flagdata',prefix+'.saved.flagdata.n2403.rr.time0351')
-
-    flagdata()
-
-    print ""
-    print " now we clip RR above 0.4Jy"
-    print ""
-
-    timerange = ''
-    clipexpr = 'RR'
-    clipminmax = [-100, 0.4]
-    saveinputs('flagdata',prefix+'.saved.flagdata.n2403.rr.clip')
-
-    flagdata()
-
-    print ""
-    print " now we clip LL above 1.0Jy"
-    print ""
-
-    timerange = ''
-    correlation='LL'
-    clipexpr = 'LL'
-    clipminmax = [-100, 1.0]
-    saveinputs('flagdata',prefix+'.saved.flagdata.n2403.ll.clip')
-
-    flagdata()
+flagdata()
 
 #=====================================================================
 # Save flagging done up to this point
@@ -332,8 +205,8 @@ print " then, we save the flagging we just did"
 # then we save the flagging we just did
 
 mode='save'
-versionname='afterplotxy'
-comment='flags after running plotxy'
+versionname='afterflagdata'
+comment='flags after running flagdata'
 merge='replace'
 
 flagmanager()
@@ -670,51 +543,6 @@ applycal()
 if benchmarking:
     correct2time=time.time()
 
-#=====================================================================
-# Use plotxy again, but now on channel 50 only 
-#=====================================================================
-#
-print "--plotxy (applycal)--"
-print ""
-print " plots visibility data"
-print ""
-
-execfile(prefix+'.saved.plotxy.n2403.ll')
-
-spw='0:50'
-correlation=''
-width='1'
-
-if scriptmode:
-    interactive=T
-    figfile=''
-    saveinputs('plotxy',prefix+'.saved.plotxy.applycal.n2403.ch50')
-
-    plotxy()
-
-    print " Note that bad data not flagged previously now show up."
-    print " Use the Locate button to see what's going on."
-    print ""
-    print " If you didn't previously flag the integrations at 03:52"
-    print " adjacent to the bad data you saw originally, you will see"
-    print " it here."
-    print ""
-    print " In addition, antenna 0 (LL) is suspect throughout the observation"
-    print ""
-    print " Don't flag these points interactively, as you are only plotting"
-    print " channel 50.  We will use the non-interactive task flagdata"
-    print " when we are done here."
-    print ""
-    user_check=raw_input('Return to continue script\n')
-else:
-    interactive=F
-    figfile=prefix+'.plotxy.applycal.n2403.ch50.png'
-    saveinputs('plotxy',prefix+'.saved.plotxy.applycal.n2403.ch50')
-
-    plotxy()
-
-if benchmarking:
-    plotcorrect2time=time.time()
 
 #=====================================================================
 # Flag data non-interactively
@@ -1294,31 +1122,29 @@ if benchmarking:
 
     new_regression['timing']['total'] = total
 
-    nstages = 21
+    nstages = 19
     new_regression['timing']['nstages'] = nstages
 
     stages = {}
     stages[0] = ['import',(import2time-startTime)]
     stages[1] = ['listobs',(list2time-import2time)]
-    stages[2] = ['plotxy',(plotxy2time-list2time)]
-    stages[3] = ['flagdata',(flag2time-plotxy2time)]
-    stages[4] = ['setjy',(setjy2time-flag2time)]
-    stages[5] = ['gaincal',(gaincal2time-setjy2time)]
-    stages[6] = ['plotgcal',(plotgcal2time-gaincal2time)]
-    stages[7] = ['fluxscale',(fluxscale2time-plotgcal2time)]
-    stages[8] = ['bandpass',(bandpass2time-fluxscale2time)]
-    stages[9] = ['plotbcal',(plotbcal2time-bandpass2time)]
-    stages[10] = ['applycal',(correct2time-plotbcal2time)]
-    stages[11] = ['plotfinal',(plotcorrect2time-correct2time)]
-    stages[12] = ['flagfinal',(flagcorrect2time-plotcorrect2time)]
-    stages[13] = ['split',(split2time-flagcorrect2time)]
-    stages[14] = ['uvcontsub',(uvcontsub2time-split2time)]
-    stages[15] = ['clean(dirty)',(dirty2time-uvcontsub2time)]
-    stages[16] = ['stat(dirty)',(dirtystat2time-dirty2time)]
-    stages[17] = ['clean',(clean2time-dirtystat2time)]
-    stages[18] = ['stat',(stat2time-clean2time)]
-    stages[19] = ['moments',(moments2time-stat2time)]
-    stages[20] = ['momstat',(momstat2time-moments2time)]
+    stages[2] = ['flagdata',(flag2time-list2time)]
+    stages[3] = ['setjy',(setjy2time-flag2time)]
+    stages[4] = ['gaincal',(gaincal2time-setjy2time)]
+    stages[5] = ['plotgcal',(plotgcal2time-gaincal2time)]
+    stages[6] = ['fluxscale',(fluxscale2time-plotgcal2time)]
+    stages[7] = ['bandpass',(bandpass2time-fluxscale2time)]
+    stages[8] = ['plotbcal',(plotbcal2time-bandpass2time)]
+    stages[9] = ['applycal',(correct2time-plotbcal2time)]
+    stages[10] = ['flagfinal',(flagcorrect2time-correct2time)]
+    stages[11] = ['split',(split2time-flagcorrect2time)]
+    stages[12] = ['uvcontsub',(uvcontsub2time-split2time)]
+    stages[13] = ['clean(dirty)',(dirty2time-uvcontsub2time)]
+    stages[14] = ['stat(dirty)',(dirtystat2time-dirty2time)]
+    stages[15] = ['clean',(clean2time-dirtystat2time)]
+    stages[16] = ['stat',(stat2time-clean2time)]
+    stages[17] = ['moments',(moments2time-stat2time)]
+    stages[18] = ['momstat',(momstat2time-moments2time)]
     
     new_regression['timing']['stages'] = stages
 

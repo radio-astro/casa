@@ -276,7 +276,7 @@ print 'Create scratch columns and initialize in '+'ngc4826.tutorial.ms'
 # Force create/initialize of scratch columns
 # NOTE: plotxy will not run properly without this step.
 #
-clearcal(vis='ngc4826.tutorial.ms')
+clearcal(vis='ngc4826.tutorial.ms', addmodel=False)
 
 if benchmarking:
     clearcal2time=time.time()
@@ -340,27 +340,27 @@ if benchmarking:
 #
 # The plotxy task is the interactive x-y display and flagging GUI
 #
-print '--Plotxy--'
-default(plotxy)
+#print '--Plotxy--'
+#default(plotxy)
 
 # First look at amplitude as a funciton of uv-distance using an
 # average over all times and channels for each source.
-if scriptmode:
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',
-           field='0',spw='0~3',
-           averagemode='vector',timebin='1e7',width='1000',crossscans=True,
-           selectplot=True,title='Field 0 SPW 0~3')
+#if scriptmode:
+#    plotxy(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',
+#           field='0',spw='0~3',
+#           averagemode='vector',timebin='1e7',width='1000',crossscans=True,
+#           selectplot=True,title='Field 0 SPW 0~3')
 
-    print "Looking at 3C273 versus uvdist with time and chan average"
+#    print "Looking at 3C273 versus uvdist with time and chan average"
     # Pause script if you are running in scriptmode
-    user_check=raw_input('Return to continue script\n')
-else:
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',
-           field='0',spw='0~3',
-           averagemode='vector',timebin='1e7',width='1000',crossscans=True,
-           selectplot=True,title='Field 0 SPW 0~3',
-           interactive=False,
-           figfile='ngc4826.tutorial.ms.plotxy.field0.ampuv.allavg.png')
+#    user_check=raw_input('Return to continue script\n')
+#else:
+#    plotxy(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',
+#           field='0',spw='0~3',
+#           averagemode='vector',timebin='1e7',width='1000',crossscans=True,
+#           selectplot=True,title='Field 0 SPW 0~3',
+#           interactive=False,
+#           figfile='ngc4826.tutorial.ms.plotxy.field0.ampuv.allavg.png')
 
 # NOTE: width here needs to be larger than combination of all channels
 # selected with spw and/or field. Since field and spw are unique in this
@@ -383,81 +383,81 @@ else:
 # But this data is relatively clean, and flagging will not improve results.
 #
 # Interactive plotxy
-if scriptmode:
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
-           field='2',spw='12~15',
-           averagemode='vector',timebin='1e7',crossscans=True,
-           selectplot=True,newplot=False,title='Field 2 SPW 12~15')
+#if scriptmode:
+#    plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
+#           field='2',spw='12~15',
+#           averagemode='vector',timebin='1e7',crossscans=True,
+#           selectplot=True,newplot=False,title='Field 2 SPW 12~15')
 
-    print "You could Mark Region around outliers and Flag"
+#    print "You could Mark Region around outliers and Flag"
     # Pause script if you are running in scriptmode
-    user_check=raw_input('Return to continue script\n')
-else:
+#    user_check=raw_input('Return to continue script\n')
+#else:
     # Output to file
     # Set up a Python loop to do all the N4826 fields:
-    for fld in range(2,9):
-        field = str(fld)
-        plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
-               field=field,spw='12~15',
-               averagemode='vector',timebin='1e7',crossscans=True,
-               selectplot=True,newplot=False,title='Field 2 SPW 12~15',
-               interactive=False,
-               figfile='ngc4826.tutorial.ms.plotxy.field2.ampvel.tavg.png')
+#    for fld in range(2,9):
+#        field = str(fld)
+#        plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
+#               field=field,spw='12~15',
+#               averagemode='vector',timebin='1e7',crossscans=True,
+#               selectplot=True,newplot=False,title='Field 2 SPW 12~15',
+#               interactive=False,
+#               figfile='ngc4826.tutorial.ms.plotxy.field2.ampvel.tavg.png')
 
     # Now the 1310+323 field
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
-           field='1',spw='4~11',
-           averagemode='vector',timebin='1e7',crossscans=True,
-           selectplot=True,newplot=False,title='Field 1 SPW 4~11',
-           interactive=False,
-           figfile='ngc4826.tutorial.ms.plotxy.field1.ampvel.tavg.png')
+#    plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
+#           field='1',spw='4~11',
+#           averagemode='vector',timebin='1e7',crossscans=True,
+#           selectplot=True,newplot=False,title='Field 1 SPW 4~11',
+#           interactive=False,
+#           figfile='ngc4826.tutorial.ms.plotxy.field1.ampvel.tavg.png')
 
     # Now the 3C273 field
     # This one should be time and channel averaged to test this
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
-           field='0',spw='0~3',
-           averagemode='vector',timebin='1e7',crossscans=True,
-           selectplot=True,newplot=False,title='Field 0 SPW 0~3',
-           interactive=False,
-           figfile='ngc4826.tutorial.ms.plotxy.field0.ampvel.tavg.png')
+#   plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',
+#         field='0',spw='0~3',
+#         averagemode='vector',timebin='1e7',crossscans=True,
+#           selectplot=True,newplot=False,title='Field 0 SPW 0~3',
+#           interactive=False,
+#           figfile='ngc4826.tutorial.ms.plotxy.field0.ampvel.tavg.png')
 
 # You can also have it iterate over baselines, using Next to advance
 # Set to NOT plot autocorrelations
 # Example using 3C273: (interactive only)
-if scriptmode:
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='channel',yaxis='amp',
-           field='0',spw='0~3',
-           selectdata=True,antenna='*&*',
-           averagemode='vector',timebin='1e7',crossscans=True,
-           iteration='baseline',
-           selectplot=True,newplot=False,title='Field 0 SPW 0~3')
+#if scriptmode:
+#    plotxy(vis='ngc4826.tutorial.ms',xaxis='channel',yaxis='amp',
+#           field='0',spw='0~3',
+#           selectdata=True,antenna='*&*',
+#           averagemode='vector',timebin='1e7',crossscans=True,
+#           iteration='baseline',
+#           selectplot=True,newplot=False,title='Field 0 SPW 0~3')
 	
     # Pause script if you are running in scriptmode
-    user_check=raw_input('Return to continue script\n')
+#    user_check=raw_input('Return to continue script\n')
 
 #
 # Finally, look for bad data. Here we look at field 8 w/o averaging
-if scriptmode:
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='time',yaxis='amp',field='8',spw='12~15',
-           selectplot=True,newplot=False,title='Field 8 SPW 12~15')
+#if scriptmode:
+#    plotxy(vis='ngc4826.tutorial.ms',xaxis='time',yaxis='amp',field='8',spw='12~15',
+#           selectplot=True,newplot=False,title='Field 8 SPW 12~15')
 
-    print "You can see some bad data here"
-    print "Mark Region and Locate, look in logger"
-    print "This is a correlator glitch in baseline 3-9 at 06:19:30"
-    print "PLEASE DON\'T FLAG ANYTHING HERE. THE SCRIPT WILL DO IT!"
-    print "In a normal session you could Mark Region and Flag."
-    print "Here we will use flagdata instead."
+#    print "You can see some bad data here"
+#    print "Mark Region and Locate, look in logger"
+#    print "This is a correlator glitch in baseline 3-9 at 06:19:30"
+#    print "PLEASE DON\'T FLAG ANYTHING HERE. THE SCRIPT WILL DO IT!"
+#    print "In a normal session you could Mark Region and Flag."
+#    print "Here we will use flagdata instead."
     # Pause script if you are running in scriptmode
-    user_check=raw_input('Return to continue script\n')
+#    user_check=raw_input('Return to continue script\n')
 
     # If you change xaxis='channel' you see its all channels
-else:
+#else:
     # Plot to file
-    plotxy(vis='ngc4826.tutorial.ms',xaxis='time',yaxis='amp',
-           field='8',spw='12~15',
-           selectplot=True,newplot=False,title='Field 8 SPW 12~15',
-           interactive=False,
-           figfile='ngc4826.tutorial.ms.plotxy.field2.amptime.noavg.png')
+#    plotxy(vis='ngc4826.tutorial.ms',xaxis='time',yaxis='amp',
+#           field='8',spw='12~15',
+#           selectplot=True,newplot=False,title='Field 8 SPW 12~15',
+#           interactive=False,
+#           figfile='ngc4826.tutorial.ms.plotxy.field2.amptime.noavg.png')
     
 if benchmarking:
     plotxy2time=time.time()
@@ -554,7 +554,7 @@ print "Completed pre-calibration flagging"
 print '--Setjy (3C273)--'
 default('setjy')
 
-setjy(vis='ngc4826.tutorial.ms',field='0',fluxdensity=[23.0,0.,0.,0.],spw='0~3')
+setjy(vis='ngc4826.tutorial.ms',field='0',fluxdensity=[23.0,0.,0.,0.],spw='0~3', usescratch=False)
 #
 # Not really necessary to set spw but you get lots of warning messages if
 # you don't
@@ -859,7 +859,7 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
 ### flat snr it converges less well
  ###     cyclefactor=1.5,niter=10000,threshold='45mJy',
       cyclefactor=4,niter=10000,threshold='45mJy',
-      minpb=0.3,pbcor=False)
+      minpb=0.3,pbcor=False, usescratch=False)
 
 ### NOTE: mosaic data ...Sault weighting implies a noise unform image
 

@@ -79,7 +79,7 @@ FlagAgentShadow::setAgentParameters(Record config)
 		antennaDiameter_p = -1.0;
 	}
 
-	*logger_p << LogIO::NORMAL << " diameter is " << antennaDiameter_p << LogIO::POST;
+	*logger_p << logLevel_p << " diameter is " << antennaDiameter_p << LogIO::POST;
 
 	return;
 }

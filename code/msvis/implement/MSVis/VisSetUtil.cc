@@ -264,6 +264,37 @@ void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& d
     }
   }
 }
+
+
+  void VisSetUtil::removeCalSet(MeasurementSet& ms, Bool removeModel) {
+  // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
+  // and MODEL_DATA columns) from the MeasurementSet.
+
+  //Remove model in header
+    if(removeModel)
+      VisModelData::clearModel(ms);
+  
+  Vector<String> colNames(2);
+  colNames(0)=MS::columnName(MS::MODEL_DATA);
+  colNames(1)=MS::columnName(MS::CORRECTED_DATA);
+
+  for (uInt j=0; j<colNames.nelements(); j++) {
+    if (ms.tableDesc().isColumn(colNames(j))) {
+      ms.removeColumn(colNames(j));
+    };
+    if (ms.tableDesc().isColumn(colNames(j)+"_COMPRESSED")) {
+      ms.removeColumn(colNames(j)+"_COMPRESSED");
+    };
+    if (ms.tableDesc().isColumn(colNames(j)+"_SCALE")) {
+      ms.removeColumn(colNames(j)+"_SCALE");
+    };
+    if (ms.tableDesc().isColumn(colNames(j)+"_OFFSET")) {
+      ms.removeColumn(colNames(j)+"_OFFSET");
+    };
+  };
+}
+
+
 void VisSetUtil::UVSub(VisSet &vs, Bool reverse)
 {
   VisIter& vi(vs.iter());

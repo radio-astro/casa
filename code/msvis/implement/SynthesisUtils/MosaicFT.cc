@@ -40,6 +40,9 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/SynthesisUtils/MosaicFT.h>
 #include <msvis/SynthesisUtils/SimplePBConvFunc.h>
+#include <msvis/SynthesisUtils/HetArrayConvFunc.h>
+#include <msvis/SynthesisUtils/PBMath.h>
+#include <msvis/SynthesisUtils/VPSkyJones.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/SynthesisUtils/StokesImageUtil.h>
@@ -165,7 +168,7 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 };
 
 //----------------------------------------------------------------------
-MosaicFT::MosaicFT(const MosaicFT& other): machineName_p("MosaicFT")
+  MosaicFT::MosaicFT(const MosaicFT& other): FTMachine(),machineName_p("MosaicFT")
 {
   operator=(other);
 }
@@ -252,33 +255,6 @@ void MosaicFT::setConvFunc(CountedPtr<SimplePBConvFunc>& pbconvFunc){
 CountedPtr<SimplePBConvFunc>& MosaicFT::getConvFunc(){
   return pbConvFunc_p;
 }
-//copy the innards to save on conv function calculation and storage
-/*
-void MosaicFT::copySharedInfo(){
-  convFunctions_p.resize(otherFT_p->convFunctions_p.size());
-  for (uInt k=0; k< otherFT_p->convFunctions_p.size(); ++k){
-    convFunctions_p[k]=otherFT_p->convFunctions_p[k];
-  }
-  convWeights_p.resize(otherFT_p->convWeights_p.size());
-  for (uInt k=0; k< otherFT_p->convWeights_p.size(); ++k)
-    convWeights_p[k]=otherFT_p->convWeights_p[k];
-
-  skyCoverage_p=otherFT_p->skyCoverage_p;
-
-  convSupportBlock_p.resize(otherFT_p->convSupportBlock_p.size());
-  for (uInt k=0; k< otherFT_p->convSupportBlock_p.size(); ++k)
-    convSupportBlock_p[k]=otherFT_p->convSupportBlock_p[k];
-
-  convFunctionMap_p=otherFT_p->convFunctionMap_p;
-
-  convSizes_p.resize(otherFT_p->convSizes_p.size());
-  for (uInt k=0; k< otherFT_p->convSizes_p.size(); ++k)
-    convSizes_p[k]=otherFT_p->convSizes_p[k];
-
-  convSampling=otherFT_p->convSampling;
-
-}
-*/
 
 void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
 				const VisBuffer& vb) {
@@ -291,7 +267,8 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
     convSampling=1;
   if(pbConvFunc_p.null())
     pbConvFunc_p=new SimplePBConvFunc();
-  pbConvFunc_p->setSkyJones(sj_p);
+  if(sj_p)
+    pbConvFunc_p->setSkyJones(sj_p);
   pbConvFunc_p->findConvFunction(iimage, vb, convSampling, convFunc, weightConvFunc_p, convSizePlanes_p, convSupportPlanes_p, convRowMap_p);
   //For now only use one size and support
   if(convSizePlanes_p.nelements() ==0)
@@ -309,7 +286,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
 			       const VisBuffer& vb)
 {
   image=&iimage;
-  
+  toVis_p=True;
   ok();
   
   //  if(convSize==0) {
@@ -320,13 +297,13 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  
-  if((image->shape().product())>cachesize) {
-    isTiled=True;
-  }
-  else {
-    isTiled=False;
-  }
+  prepGridForDegrid();
+   
+}
+
+
+void MosaicFT::prepGridForDegrid(){
+
   //For now isTiled=False
   isTiled=False;
   nx    = image->shape()(0);
@@ -334,51 +311,25 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   npol  = image->shape()(2);
   nchan = image->shape()(3);
 
-  // If we are memory-based then read the image in and create an
-  // ArrayLattice otherwise just use the PagedImage
-  if(isTiled) {
-    lattice=CountedPtr<Lattice<Complex> > (image, False);
-  }
-  else {
-    IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
-    
-    IPosition stride(4, 1);
-    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
-		  (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-    IPosition trc(blc+image->shape()-stride);
-    
-    IPosition start(4, 0);
-    griddedData(blc, trc) = image->getSlice(start, image->shape());
-    
-    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-    arrayLattice = new ArrayLattice<Complex>(griddedData);
-    lattice=arrayLattice;
-    
-  }
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  griddedData.resize(gridShape);
+  griddedData=Complex(0.0);
   
-  //AlwaysAssert(lattice, AipsError);
+  IPosition stride(4, 1);
+  IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		(ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+  IPosition trc(blc+image->shape()-stride);
+    
+  IPosition start(4, 0);
+  griddedData(blc, trc) = image->getSlice(start, image->shape());
+  
+    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  arrayLattice = new ArrayLattice<Complex>(griddedData);
+  lattice=arrayLattice;
+    
   
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
-  /*
-  if(!sj_p) {
-
-    Vector<Complex> correction(nx);
-    correction=Complex(1.0, 0.0);
-    // Do the Grid-correction
-    IPosition cursorShape(4, nx, 1, 1, 1);
-    IPosition axisPath(4, 0, 1, 2, 3);
-    LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-    LatticeIterator<Complex> lix(*lattice, lsx);
-    for(lix.reset();!lix.atEnd();lix++) {
-      gridder->correctX1D(correction, lix.position()(1));
-      lix.rwVectorCursor()/=correction;
-    }
-  
-  }
-  */
-  // Now do the FFT2D in place
+   // Now do the FFT2D in place
   LatticeFFT::cfft2d(*lattice);
   ///////////////////////
   /*{
@@ -395,7 +346,9 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
     }*/
   ////////////////////////
   logIO() << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
-  
+
+
+
 }
 
 
@@ -880,6 +833,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Bool gridcopy;
   Bool convcopy;
   const Complex *convstor=convFunc.getStorage(convcopy);
+ 
   Bool weightcopy;
   if(useDoubleGrid_p) {
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
@@ -966,7 +920,9 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   uvw.freeStorage(uvwstor, uvwcopy);
   if(!dopsf)
     data.freeStorage(datStorage, isCopy);
+
   elWeight.freeStorage(wgtStorage,iswgtCopy);
+  
 
 
 
@@ -1313,31 +1269,21 @@ CountedPtr<TempImage<Float> >& MosaicFT::getConvWeightImage(){
   return skyCoverage_p;
 }
 
-Bool MosaicFT::toRecord(String&, // error,
+Bool MosaicFT::toRecord(String&  error,
 			RecordInterface& outRec, Bool withImage)
 {  
   // Save the current MosaicFT object to an output state record
   Bool retval = True;
-  Double cacheVal=(Double) cachesize;
-  outRec.define("cache", cacheVal);
-  outRec.define("tile", tilesize);
+  if(!FTMachine::toRecord(error, outRec, withImage))
+    return False;
   
-  Vector<Double> phaseValue(2);
-  String phaseUnit;
-  phaseValue=mTangent_p.getAngle().getValue();
-  phaseUnit= mTangent_p.getAngle().getUnit();
-  outRec.define("phasevalue", phaseValue);
-  outRec.define("phaseunit", phaseUnit);
-  
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  dirValue=mLocation_p.get("m").getValue();
-  dirUnit=mLocation_p.get("m").getUnit();
-  outRec.define("dirvalue", dirValue);
-  outRec.define("dirunit", dirUnit);
-  
-  outRec.define("maxdataval", maxAbsData);
-  
+  if(sj_p)
+    outRec.define("telescope", sj_p->telescope());
+  outRec.define("uvscale", uvScale);
+  outRec.define("uvoffset", uvOffset);
+  outRec.define("cachesize", Int64(cachesize));
+  outRec.define("tilesize", tilesize);
+  outRec.define("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   for (Int k=0; k<4 ; k++){
     center_loc(k)=centerLoc(k);
@@ -1345,49 +1291,52 @@ Bool MosaicFT::toRecord(String&, // error,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("sumofweights", sumWeight);
-  if(withImage && image){ 
-    ImageInterface<Complex>& tempimage(*image);
-    Record imageContainer;
-    String error;
-    retval = (retval || tempimage.toRecord(error, imageContainer));
-    outRec.defineRecord("image", imageContainer);
+  outRec.define("usezero", usezero_p);
+  outRec.define("convfunc", convFunc);
+  outRec.define("weightconvfunc", weightConvFunc_p);
+  outRec.define("convsampling", convSampling);
+  outRec.define("convsize", convSize);
+  outRec.define("convsupport", convSupport);
+  outRec.define("convsupportplanes", convSupportPlanes_p);
+  outRec.define("convsizeplanes", convSizePlanes_p);
+  outRec.define("convRowMap",  convRowMap_p);
+  outRec.define("stokes", stokes_p);
+  if(!pbConvFunc_p.null()){
+    Record subRec;
+    pbConvFunc_p->toRecord(subRec);
+    outRec.defineRecord("pbconvfunc", subRec);
   }
+  
+
   return retval;
 }
 
-Bool MosaicFT::fromRecord(String&,// error,
+Bool MosaicFT::fromRecord(String& error,
 			  const RecordInterface& inRec)
 {
   Bool retval = True;
-  imageCache=0; lattice=0; arrayLattice=0;
-  Double cacheVal;
-  inRec.get("cache", cacheVal);
-  cachesize=(Long)cacheVal;
-  inRec.get("tile", tilesize);
-  
-  Vector<Double> phaseValue(2);
-  inRec.get("phasevalue",phaseValue);
-  String phaseUnit;
-  inRec.get("phaseunit",phaseUnit);
-  Quantity val1(phaseValue(0), phaseUnit);
-  Quantity val2(phaseValue(1), phaseUnit); 
-  MDirection phasecenter(val1, val2);
-  
-  mTangent_p=phasecenter;
-  // This should be passed down too but the tangent plane is 
-  // expected to be specified in all meaningful cases.
-  tangentSpecified_p=True;  
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  inRec.get("dirvalue", dirValue);
-  inRec.get("dirunit", dirUnit);
-  MVPosition dummyMVPos(dirValue(0), dirValue(1), dirValue(2));
-  MPosition mLocation(dummyMVPos, MPosition::ITRF);
-  mLocation_p=mLocation;
-  
-  inRec.get("maxdataval", maxAbsData);
-  
+  pointingToImage=0;
+  doneWeightImage_p=False;
+  machineName_p="MosaicFT";
+  if(!FTMachine::fromRecord(error, inRec))
+    return False;
+  sj_p=0;
+  if(inRec.isDefined("telescope")){
+    String tel=inRec.asString("telescope");
+    PBMath::CommonPB pbtype;
+    Quantity freq(1e12, "Hz");// no useful band...just get default beam
+    String band="";
+    String pbname;
+    PBMath::whichCommonPBtoUse(tel, freq, band, pbtype, pbname);
+    if(pbtype != PBMath::UNKNOWN)
+      sj_p=new VPSkyJones(tel,pbtype); 
+  }
+
+  inRec.get("uvscale", uvScale);
+  inRec.get("uvoffset", uvOffset);
+  cachesize=inRec.asInt64("cachesize");
+  inRec.get("tilesize", tilesize);
+  inRec.get("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   inRec.get("centerloc", center_loc);
   inRec.get("offsetloc", offset_loc);
@@ -1396,43 +1345,44 @@ Bool MosaicFT::fromRecord(String&,// error,
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 		      offset_loc(3));
-  inRec.get("sumofweights", sumWeight);
-  if(inRec.nfields() > 12 ){
-    Record imageAsRec=inRec.asRecord("image");
-    if(!image) { 
-      image= new TempImage<Complex>(); 
-    };
-    String error;
-    retval = (retval || image->fromRecord(error, imageAsRec));    
-    
+  imageCache=0; lattice=0; arrayLattice=0;
+  inRec.get("usezero", usezero_p);
+  inRec.get("convfunc", convFunc);
+  inRec.get("weightconvfunc", weightConvFunc_p);
+  inRec.get("convsampling", convSampling);
+  inRec.get("convsize", convSize);
+  inRec.get("convsupport", convSupport);
+  inRec.get("convsupportplanes", convSupportPlanes_p);
+  inRec.get("convsizeplanes", convSizePlanes_p);
+  inRec.get("convRowMap",  convRowMap_p);
+  if(inRec.isDefined("image")){
+    //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
-    init(); 
     
-    if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> > (image, False);
-    }
-    else {
-      // Make the grid the correct shape and turn it into an array lattice
-      // Check the section from the image BEFORE converting to a lattice 
+    ////if this FTMachine is a forward one then we need to go to the vis domain
+    if(!toVis_p){
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
-		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-      IPosition start(4, 0);
-      IPosition stride(4, 1);
-      IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc) = image->getSlice(start, image->shape());
-      
-      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-      arrayLattice = new ArrayLattice<Complex>(griddedData);
-      lattice=arrayLattice;
     }
-    
-    //AlwaysAssert(lattice, AipsError);
-    AlwaysAssert(image, AipsError);
-  };
-  return retval;
+    else{
+      prepGridForDegrid();
+    }
+  }
+  inRec.get("stokes", stokes_p);
+  if(inRec.isDefined("pbconvfunc")){
+    Record subRec=inRec.asRecord("pbconvfunc");
+    String elname=subRec.asString("name");
+    // if we are predicting only ...no need to estimate fluxscale
+    if(elname=="HetArrayConvFunc")
+      pbConvFunc_p=new HetArrayConvFunc(subRec, !toVis_p);
+    else
+      pbConvFunc_p=new SimplePBConvFunc(subRec, !toVis_p);
+  }
+  else{
+    pbConvFunc_p=0;
+  }
+   return retval;
 }
 
 void MosaicFT::ok() {
@@ -1513,8 +1463,8 @@ Bool MosaicFT::getXYPos(const VisBuffer& vb, Int row) {
   
   
   const ROMSPointingColumns& act_mspc=vb.msColumns().pointing();
-  uInt pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
-  if((pointIndex<0)||(pointIndex>=act_mspc.time().nrow())) {
+  Int pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+  if((pointIndex<0)||pointIndex>=Int(act_mspc.time().nrow())) {
     //    ostringstream o;
     //    o << "Failed to find pointing information for time " <<
     //      MVTime(vb.time()(row)/86400.0);
@@ -1570,7 +1520,7 @@ Bool MosaicFT::getXYPos(const VisBuffer& vb, Int row) {
 // One could cure this by searching but it would be considerably
 // costlier.
 Int MosaicFT::getIndex(const ROMSPointingColumns& mspc, const Double& time,
-		       const Double& interval) {
+		       const Double& /*interval*/) {
   Int start=lastIndex_p;
   // Search forwards
   Int nrows=mspc.time().nrow();

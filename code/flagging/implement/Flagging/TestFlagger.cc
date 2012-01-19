@@ -139,6 +139,7 @@ TestFlagger::open(String msname, Double ntime)
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
+	// TODO: Add the combinescans parameter when available!!!
 	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
 
 	// Open the MS
@@ -462,8 +463,37 @@ TestFlagger::initAgents()
 
 	os<< LogIO::NORMAL<< "There are "<< agents_config_list_p.size()<< " agents in the list"<<LogIO::POST;
 
+	// Check if list has a mixed state of apply and unapply parameters
+	Bool mixed, apply0;
+	size_t list_size = agents_config_list_p.size();
+	if (list_size > 1){
+		Record agent_rec = agents_config_list_p[0];
+		agent_rec.get("apply", apply0);
+		for (size_t j=1; j < list_size; j++)
+		{
+			Bool apply;
+			agent_rec = agents_config_list_p[j];
+			agent_rec.get("apply", apply);
+			if (apply0 != apply){
+				mixed = true;
+				if (dbg) cout << "List has a mixed state"<<endl;
+				break;
+			}
+			else {
+				mixed = false;
+			}
+		}
+	}
+	else if (list_size == 1){
+		mixed = false;
+	}
+
+	// Send the re-applying agents to the debug as we are only
+	// interested in seeing the unapply action
+	uChar loglevel = LogIO::DEBUGGING;
+
 	// loop through the vector of agents
-	for (size_t i=0; i < agents_config_list_p.size(); i++) {
+	for (size_t i=0; i < list_size; i++) {
 
 		// get agent record
 		Record agent_rec = agents_config_list_p[i];
@@ -483,6 +513,13 @@ TestFlagger::initAgents()
 			os << LogIO::SEVERE << "FlagDataHandler has not been initialized."
 					<< LogIO::POST;
 			return false;
+		}
+
+		// Change the log level if apply=True in a mixed state
+		Bool apply;
+		agent_rec.get("apply", apply);
+		if (mixed and apply){
+			agent_rec.define("loglevel", loglevel);
 		}
 
 		// TODO: Catch error, print a warning and continue to next agent.
@@ -516,12 +553,10 @@ TestFlagger::run(Bool writeflags)
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
 	if (agents_list_p.empty()) {
+		os << LogIO::SEVERE << "There is no agent to run in list"<< LogIO::POST;
 		return Record();
 	}
 
-	// Reset the flags before flagging
-//	if (resetflags)
-//		fdh_p->setResetFlags(resetflags);
 
 	// Generate the iterators
 	// It will iterate through the data to evaluate the necessary memory
@@ -538,14 +573,8 @@ TestFlagger::run(Bool writeflags)
 		while (fdh_p->nextBuffer())
 		{
 
-			// Queue flagging process
-			// cout << "Put flag process in queue " << endl;
-
-			agents_list_p.queueProcess();
-
-			// Wait for completion of flagging process
-			// cout << "Wait for completion of flagging process " << endl;
-			agents_list_p.completeProcess();
+			// Apply or unapply the flags
+			agents_list_p.apply();
 
 			// Flush flags to MS
 			if (writeflags)
@@ -691,7 +720,8 @@ TestFlagger::printFlagSelections()
 			agent_rec.print(out);
 			os << out.str() << LogIO::POST;
 		}
-		cout << "size of original list " << agents_config_list_p.size() << endl;
+		if (dbg)
+			cout << "size of original list " << agents_config_list_p.size() << endl;
 
 	}
 	else os << " No current agents " << LogIO::POST;
