@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+
+ 
+<tool name="vo" module="vo">
+        <shortdescription>Allows access to voclient methods</shortdescription>
+<code>
+	<include>xmlcasa/vo/vo_forward.h</include>
+<private>
+
+	<include>xmlcasa/vo/vo_private.h</include>
+</private>
+</code>
+       
+<description>
+	Test tool for vo
+</description>
+
+<example>
+	an example here
+</example>
+
+
+
+ 
+<method type="function" name="sesame">
+<shortdescription>Exposes sesame to CASA</shortdescription>
+   
+<description>
+	some text here
+</description>
+<input>
+
+     <param type="stringArray"  name="target">
+     <description>Target names to return positions</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="stringArray"/>
+</method>
+
+<method type="function" name="data">
+	<shortdescription>
+		Query VO resources for information.
+	</shortdescription>
+	<description>
+		Your slogan here...
+	</description>
+	<input>
+		<param type="stringArray" name="resources">
+		</param>
+		<param type="stringArray" name="object">
+			<value/>
+		</param>
+		<param type="stringArray" name="position">
+			<value/>
+		</param>
+		<param type="string" name="searchradius">
+			<value>0.5deg</value>
+		</param>
+		<param type="stringArray" name="ServiceURL">
+		</param>
+	</input>
+<returns type="stringArray"/>
+</method>
+<method type="function" name="registry">
+	<shortdescription>
+	</shortdescription>
+	<description>
+	</description>
+	<input>
+		<param type="string" name="keywords">
+			<value/>
+		</param>
+		<param type="string" name="service">
+			<value>any</value>
+		</param>
+	</input>
+	<returns type="stringArray"/>
+</method>
+
+ 
+</tool>
+</casaxml>

@@ -157,15 +157,18 @@ casa_add_library( xmlcasa
   implement/xerces/asdmCasaSaxHandler.cc
   implement/xerces/asdmCasaXMLUtil.cc
   implement/xerces/stdcasaXMLUtil.cc
+  implement/xerces/VOTable.cc
   version.cc
   )
 add_dependencies( libxmlcasa_fast xmlcasa_definitions )
 add_dependencies( libxmlcasa      xmlcasa_definitions )
 
+casa_add_executable( xmlcasa casa2vo  apps/casa2vo/casa2vo.cc )
 casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
 casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
 casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
 casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
+casa_add_executable( xmlcasa vo2casa  apps/vo2casa/vo2casa.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
