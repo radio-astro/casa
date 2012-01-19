@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+        <tool name="testflagger" module="testflagger">
+<code>
+	<include>xmlcasa/flagging/testflagger_forward.h</include>
+<private>
+	#include &lt;xmlcasa/flagging/testflagger_private.h&gt;
+</private>
+</code>
+
+        <shortdescription>Refactored tool for manual and automated flagging</shortdescription>
+       
+<description>
+The {\tt testflagger} tool performs manual as well as automatic synthesis
+flagging operations within casapy. The {\tt testflagger} tool can operate on
+one measurement set at a time.  
+</description>
+
+<!-- ********************************************************************** -->
+
+   <method type="constructor" name="testflagger">
+   <shortdescription>Construct a flag tool</shortdescription>
+   
+<description>
+Create a {\tt testflagger} tool, and initializes some variables.
+</description>
+<input>
+
+</input>
+<returns type="unknown">testflagger tool</returns>
+<example>
+
+tf.testflagger()      
+
+</example>
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="done">
+   <shortdescription>Destroys the flag tool</shortdescription>
+   
+<returns type="bool"/>
+<example>
+tf.done()
+
+</example>
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="open">
+   <shortdescription>Opens the MS and attaches it to the tool.</shortdescription>
+
+<input>
+
+     <param type="string" name="msname">
+     <description>Measurement set to be processed. Default:  </description>
+     <value>''</value>
+     </param>
+     <param type="double" name="ntime">
+     <description>Time interval. If not given, the default will be used. Default: </description>
+     <value>0.0</value>
+     </param>
+</input>
+
+<example>
+tf.open(msname,ntime)
+</example>
+<returns type="bool"/> 
+</method>
+
+
+<!-- ********************************************************************** -->
+
+ 
+   <method type="function" name="selectdata">
+   <shortdescription>Selects the data based on the given parameters.
+For unspecified parameters, the full data range is assumed.
+All data selection parameters follow the ms-selection syntax.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="any" name="config"> 
+     <any type="record"/>
+     <description>The record (dictionary) config may be given or not. If it is not given, 
+     \n the whole MS will be selected. The record may contain any data selection parameters 
+     \n supported by MSSelection such as:
+     \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange,observation
+     </description>     
+     </param>
+
+     <param type="string" name="field">
+     <description>Field indices or source names : example : '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>Spectral Window Indices or names : example : '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>Array Indices or names : example : 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>Feed index or name : example : '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>Scan number : example : '1,2,3' </description>
+     <value>""</value>
+     </param>   
+
+     <param type="string" name="baseline">
+     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'</description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id : example : '2~4' </description>
+     <value>""</value>
+     </param>
+
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+Select the whole MS
+tf.selectdata()
+
+Select a portion of the MS
+myrecord={}
+myrecord['scan']='1~3'
+myrecord['spw']='0:1~10'
+tf.selectdata(myrecord)
+
+Another way to select a portion of the MS
+tf.selectdata(scan='3~5', spw='0')
+</example>
+
+<returns type="bool"/> 
+</method>
+
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parseDataSelection">
+   <shortdescription>Parses the union of all input data selections.
+</shortdescription>
+   
+<description>If possible, a union of all input data selections will be done and
+passed to the tool. Only the union of data will be selected from the MS to
+avoid reading unnecessary data. See the example below.
+</description>
+
+<input>
+
+     <param type="any" name="config">
+         <any type="record"/>
+     </param>
+     <description>Parse the data selection parameters. The record may contain
+     any data selection parameter supported by MSSelection such as:
+     \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange
+     \n (2) mode for flagging: manualflag,clip,quack,shadow,elevation,rfi,autoflag
+     </description>
+</input>
+<example>
+myrecord={}
+myrecord['mode']='clip'
+myrecord['scan']='1~3'
+myrecord['clipminmax']=[0.02,0.3]
+tf:=parseDataSelection(myrecord)
+</example>
+<returns type="bool"/> 
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parseAgentParameters">
+   <shortdescription>Parses the parameters for the agent (flagging mode).</shortdescription>
+   
+<description>The specific data selection parameters for the agent (flagging mode)
+are parsed. These parameters are the data selection and mode-specific parameters.
+See the example below:
+</description>
+
+<input>
+
+     <param type="any" name="aparams">
+         <any type="record"/>
+     <description>It takes a record (dictionary) with the specific parameters for the flagging mode. 
+     \n The record may contain any data selection parameters supported by MSSelection, as well as 
+     \n mode-specific parameters such as:
+     \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange,observation
+     \n (2) mode (which can be: manualflag,clip,quack,shadow,elevation,tfcrop,extendflags,unflag or summary)
+     \n (2) For flagging mode=clip, the parameters are: expression, datacolumns, clipminmax, etc.
+     \n See the documentation of the task tflagger for all the available parameters for each mode.
+     </description>
+     </param>
+     
+</input>
+<example>
+myrecord={}
+myrecord['mode']='clip'
+myrecord['scan']='1~3'
+myrecord['clipminmax']=[0.02,0.3]
+tf.parseAgentParameters(myrecord)
+</example>
+<returns type="bool"/> 
+</method>
+
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="init">
+   <shortdescription>Initialize the FlagDataHandler and FlagAgentBase.</shortdescription>
+   
+<description>This method will initialize the FlagDataHandler by opening the MS
+and selecting the data according to what was parsed previously by parseDataSelection.
+</description>
+
+<input>
+</input>
+<returns type="bool"/> 
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="run">
+   <shortdescription>Executes a flagging run</shortdescription>
+   
+<description>
+Executes a flagging run.
+</description>
+<input>
+     <param type="bool" name="writeflags">
+     <description>Write flags to MS</description>
+     <value>true</value>
+     </param>
+
+</input>
+<returns type="record"/>
+<example>
+</example>
+</method>
+
+
+<!-- ********************************************************************** -->
+
+    <method type="function" name="getflagversionlist">
+   <shortdescription>*** \n Print out a list of saved flag_versions. 
+              ***</shortdescription>
+<description> 
+Print out the list of flag versions in the MS, unless the parameter printflags=False. The list of names is returned.
+</description>
+<input>
+     <param type="bool" name="printflags">
+     <description>Print flagversions in logger?</description>
+     <value>true</value>
+     </param>
+</input>
+<returns type="stringArray"/>
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="printflagselection">
+   <shortdescription>Print out a list of current manual and auto flag selections.
+   </shortdescription>
+   
+<description>
+Print out a list of current manual and auto flag selections.
+</description>
+<input>
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="saveflagversion">
+   <shortdescription>*** \n Save current flags with a version name.*** 
+            </shortdescription>
+<description> 
+</description>
+<input>
+     <param type="string" name="versionname">
+     <description>Version name </description>
+     <value>""</value>
+     </param>
+     <param type="string" name="comment">
+     <description>Comment for this flag table </description>
+     <value>""</value>
+     </param>
+     <param type="string" name="merge">
+     <description>merge type </description>
+     <value>""</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+ 
+</tool>
+</casaxml>
+
+
+

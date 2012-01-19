@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="uvcontsub2" category="modeling, manipulation" visibility="deprecated">
+<shortdescription>Temporarily a clone of uvcontsub</shortdescription>
+<description>
+<!-- description is a decoy!  Use the example tag for now. -->
+</description>
+<input>
+	<param type="string" name="vis" mustexist="true">
+		<description>Name of input MS.  Output goes to vis + ".contsub"</description>
+		<value></value>
+	</param>
+
+        <param type="any" name="field">
+                <description>Select field(s) using id(s) or name(s)</description>
+		<any type="variant" limittypes="string stringArray int intArray"/>
+                <value type="string"></value>
+        </param>
+
+	<param type="string" name="fitspw">
+		<description>Spectral window:channel selection for fitting the continuum</description>
+		<value></value>
+	</param>
+
+        <param type="string" name="combine">
+                <description>Data axes to combine for the continuum estimation (none or spw and/or scan)</description>
+                <value></value>
+        </param>
+
+	<param type="any" name="solint">
+		<description>Continuum fit timescale (stick to int!)</description>
+                <any type="variant"/>
+                <value type="string">int</value>
+	</param>
+
+	<param type="int" name="fitorder">
+		<description>Polynomial order for the fits</description>
+		<value>0</value>
+	</param>
+
+	<param type="string" name="spw">
+		<description>Spectral window selection for output</description>
+		<value></value>
+	</param>
+
+	<param type="bool" name="want_cont">
+		<description>Create vis + ".cont" to hold the continuum estimate.</description>
+		<value>False</value>
+	</param>
+
+</input>
+<example>
+  
+	uvcontsub2 has been renamed to uvcontsub.  For now uvcontsub2 is an
+	alias for uvcontsub, but that may change.
+	
+        For parameter descriptions, please see the help of uvcontsub.
+
+</example> 
+</task>
+</casaxml>

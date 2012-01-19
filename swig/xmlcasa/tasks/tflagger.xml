@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+    <task type="function" name="tflagger" category="editing" visibility="experimental">
+        <shortdescription> All purpose flagging task based on selections</shortdescription>
+        <description>
+            The task will select a subset of data explicitly
+            for flagging, quacking, clipping, autocorrelation flagging,
+            or flagging of shadowed antennas. Unflagging is also
+            available.
+
+            In a dual polarization data set, each polarization
+            can be flagged separately. However, at present the
+            calibration and imaging will only use data with both parallel
+            hands unflagged.
+
+            There is a vector mode of operation, which
+            executes several flagging
+            options in one go.
+
+            The current flags
+            are automatically backed up before applying new flags.
+            Previous flag versions can be recovered using the
+            flagmanager task.
+        </description>
+
+        <input>
+            <param type="string" name="vis" mustexist="true">
+                <description>Name of MS file to flag</description>
+                <value />
+            </param>
+
+            <param type="string" name="mode">
+                <description>Flagging mode (manualflag, clip, shadow, quack, elevation, \
+tfcrop, extend, unflag, summary)</description>
+                <value>manualflag</value>
+                <allowed kind="enum">
+                    <value>manualflag</value>
+                    <value>clip</value>
+                    <value>shadow</value>
+                    <value>quack</value>
+                    <value>elevation</value>
+                    <value>tfcrop</value>
+                    <value>extend</value>
+                    <value>unflag</value>
+                    <value>summary</value>
+                </allowed>
+            </param>
+
+            <param type="bool" name="selectdata">
+                <description>Data selection parameters</description>
+                <value>True</value>
+            </param>
+
+            <param type="any" name="spw" subparam="true">
+                <description>spectral-window/frequency/channel</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="field" subparam="true">
+                <description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="antenna" subparam="true">
+                <description>antenna/baselines: \'\'==>all, antenna =\'3,VA04\'</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="uvrange" subparam="true">
+                <description>uv range: \'\'==>all; uvrange =\'0~100klambda\', default units=meters</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="timerange" subparam="true"><description>time range: \'\'==>all,timerange=\'09:14:0~09:54:0\'</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="correlation" subparam="true">
+                <description>Select data based on correlation</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="scan" subparam="true">
+                <description>scan numbers: \'\'==>all</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="intent" subparam="true">
+                <description>Select data based on observation intent: \'\'==>all</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="feed" subparam="true">
+                <description>multi-feed numbers: Not yet implemented</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="array" subparam="true">
+                <description>(sub)array numbers: \'\'==>all</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="observation" subparam="true">
+                <description>Select data based on observation ID: \'\'==>all</description>
+                <any type="variant" limittypes="string int" />
+                <value type="string" />
+            </param>
+
+            <param type="any" name="expression" subparam="true">
+                <description>Expression to flag on</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string">ABS ALL</value>
+            </param>
+            <param type="any" name="clipminmax" subparam="true">
+                <description>Range to use for clipping</description>
+                <any type="variant" limittypes="doubleArray doubleyArrayArray" />
+                <value type="doubleArray"></value>
+            </param>
+            <param type="any" name="datacolumn" subparam="true">
+                <description>Data column on which to operate (data,corrected,model,residual)</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string">DATA</value>
+            </param>
+            <param type="any" name="clipoutside" subparam="true">
+                <description>Clip outside the range, or within it</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">True</value>
+            </param>
+            <param type="any" name="channelavg" subparam="true">
+                <description>Average over channels (scalar average)</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">False</value>
+            </param>
+
+            <param type="any" name="quackinterval" subparam="true">
+                <description>Quack n seconds from scan beginning or end</description>
+                <any type="variant" limittypes="double doubleArray" />
+                <value type="double">0.0</value>
+            </param>
+            <param type="any" name="quackmode" subparam="true">
+                <description>Quack mode. \'beg\' ==> beginning of scan.\'endb\' ==> end of scan. \'end\' ==> all but end of scan. \'tail\' ==> all but beginning of scan</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string">beg</value>
+            </param>
+            <param type="any" name="quackincrement" subparam="true">
+                <description>Flag incrementally in time?</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">False</value>
+            </param>
+
+            <param type="double" name="diameter" subparam="true">
+                <description>Effective diameter to use (in meters)</description>
+                <value>-1.0</value>
+            </param>
+
+            <param type="double" name="lowerlimit" subparam="true">
+                <description>Lower limiting elevation (in degrees)</description>
+                <value>0.0</value>
+            </param>
+            <param type="double" name="upperlimit" subparam="true">
+                <description>Upper limiting elevation (in degrees)</description>
+                <value>90.0</value>
+            </param>
+
+            <param type="double" name="timecutoff" subparam="true">
+                <description>Flagging thresholds in units of deviation from the fit</description>
+                <value>4.0</value>
+            </param>
+            <param type="double" name="freqcutoff" subparam="true">
+                <description>Flagging thresholds in units of deviation from the fit</description>
+                <value>3.0</value>
+            </param>
+            <param type="string" name="timefit" subparam="true">
+                <description>Fitting function for the time direction (poly/line)</description>
+                <value>line</value>
+            </param>
+            <param type="string" name="freqfit" subparam="true">
+                <description>Fitting function for the frequency direction (poly/line)</description>
+                <value>poly</value>
+            </param>
+            <param type="int" name="maxnpieces" subparam="true">
+                <description>Number of pieces in the polynomial-fits (for \'freqfit\' or \'timefit\' = \'poly\')</description>
+                <value>7</value>
+            </param>
+
+            <param type="string" name="flagdimension" subparam="true">
+                <description>Dimensions along which to calculate fits (freq/time/freqtime/timefreq)</description>
+                <value>freqtime</value>
+            </param>
+            <param type="string" name="usewindowstats" subparam="true">
+                <description>Calculate additional flags using sliding window statistics (none,sum,std,both)</description>
+                <value>none</value>
+            </param>
+            <param type="int" name="halfwin" subparam="true">
+                <description>Half-width of sliding window to use with \'usewindowstats\' (1,2,3).</description>
+                <value>1</value>
+            </param>
+
+            <param type="any" name="extendpols" subparam="true">
+                <description>If any correlation is flagged, flag all correlations</description>
+                <value type="bool">False</value>
+            </param>
+
+           <param type="double" name="growtime" subparam="true">
+                <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
+                <value>50.0</value>
+            </param>
+            <param type="double" name="growfreq" subparam="true">
+                <description>Flag all selected channels if more than X% of the frequency range is flagged(0-100)</description>
+                <value>50.0</value>
+            </param>
+            <param type="bool" name="growaround" subparam="true">
+                <description>Flag data based on surrounding flags</description>
+                <value type="bool">True</value>
+            </param>
+            <param type="bool" name="flagneartime" subparam="true">
+                <description>Flag one timestep before and after a flagged one (True/False)</description>
+                <value type="bool">False</value>
+            </param>
+            <param type="bool" name="flagnearfreq" subparam="true">
+                <description>Flag one channel before and after a flagged one (True/False)</description>
+                <value type="bool">False</value>
+            </param>
+
+             <param type="double" name="minrel" subparam="true">
+                <description>minimum number of flags (relative)</description>
+                <value type="double">0.0</value>
+            </param>             
+            <param type="double" name="maxrel" subparam="true">
+                <description>maximum number of flags (relative)</description>
+                <value type="double">1.0</value>
+            </param>
+            <param type="int" name="minabs" subparam="true">
+                <description>minimum number of flags (absolute)</description>
+                <value type="int">0</value>
+            </param>
+            <param type="int" name="maxabs" subparam="true">
+                <description>maximum number of flags (absolute). \
+                             Use a negative value to indicate infinity.</description>
+                <value type="int">-1</value>
+            </param>
+            <param type="bool" name="spwchan" subparam="true">
+                <description>Print summary of channels per spw</description>
+                <value type="bool">False</value>
+            </param>
+            <param type="bool" name="spwcorr" subparam="true">
+                <description>Print summary of correlation per spw</description>
+                <value type="bool">False</value>
+            </param>
+
+            <param type="any" name="ntime">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description>Accumulate data across scans.</description>
+                <value>False</value>
+            </param>
+
+            <param type="string" name="display">
+                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <value type="string"></value>
+            </param>
+
+            <param type="string" name="format" subparam="true">
+                <description>Display plots on the screen or save to a file</description>
+                <value type="string">screen</value>
+            </param>
+
+            <param type="bool" name="writeflags">
+                <description>Write Flags to the MS</description>
+                <value>True</value>
+            </param>
+
+            <param type="bool" name="savepars">
+                <description>Save the current parameters to the MS or to an output</description>
+                <value>False</value>
+            </param>
+
+            <param type="string" name="outfile" subparam="true">
+                    <description>Name of output file to save current parameters</description>
+                    <value></value>
+            </param>
+
+            <param type="bool" name="sequential">
+                <description>Run the task in sequential or in parallel.</description>
+                <value>False</value>
+            </param>
+
+            <param type="bool" name="flagbackup">
+                <description>Automatically back up the state of flags before the run</description>
+                <value>False</value>
+            </param>
+
+            <constraints>      
+                <when param="selectdata">
+                    <equals type="bool" value="True">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
+                        </equals>
+                    <equals type="bool" value="False"/>
+                </when>                    
+                    
+                <when param="mode">
+                    <equals value="manualflag" />
+                    <equals value="clip">
+                        <default param="expression"><value type="string">ABS ALL</value></default>
+                        <default param="datacolumn"><value type="string">DATA</value></default>
+                        <default param="clipminmax"><value type="doubleArray"></value></default>
+                        <default param="clipoutside"><value type="bool">True</value></default>
+                        <default param="channelavg"> <value type="bool">False</value></default>
+                    </equals>
+                    <equals value="quack">
+                        <default param="quackinterval"><value type="double">0.0</value></default>
+                        <default param="quackmode"><value type="string">beg</value></default>
+                        <default param="quackincrement"><value type="bool">False</value></default>                   
+                    </equals>                    
+                    <equals value="shadow">
+                        <default param="diameter"><value type="double">-1.0</value></default>
+                    </equals>
+                    <equals value="elevation">
+                        <default param="lowerlimit"><value type="double">0.0</value></default>
+                        <default param="upperlimit"><value type="double">90.0</value></default>                    
+                    </equals>
+                    <equals value="tfcrop">
+                        <default param="expression"><value type="string">ABS ALL</value></default>
+                        <default param="datacolumn"><value type="string">DATA</value></default>
+                        <default param="timecutoff"><value type="double">4.0</value></default>
+                        <default param="freqcutoff"><value type="double">3.0</value></default>
+                        <default param="timefit"><value type="string">line</value></default>
+                        <default param="freqfit"><value type="string">poly</value></default>
+                        <default param="maxnpieces"><value type="int">7</value></default>
+                        <default param="flagdimension"><value type="string">freqtime</value></default>
+                        <default param="usewindowstats"><value type="string">none</value></default>
+                        <default param="halfwin"><value type="int">1</value></default>                    
+                    </equals>
+                    <equals value="extend">
+                        <default param="extendpols"><value type="bool">False</value></default>
+                        <default param="growtime"><value type="double">50.0</value></default>
+                        <default param="growfreq"><value type="double">50.0</value></default>
+                        <default param="growaround"><value type="bool">True</value></default>
+                        <default param="flagneartime"><value type="bool">False</value></default>
+                        <default param="flagnearfreq"><value type="bool">False</value></default>                    
+                    </equals>
+                    <equals value="summary">
+                        <default param="minrel"><value type="double">0.0</value></default>
+                         <default param="maxrel"><value type="double">1.0</value></default>
+                        <default param="minabs"><value type="int">0</value></default>
+                        <default param="maxabs"><value type="int">-1</value></default>
+                        <default param="spwchan"><value type="bool">False</value></default>
+                        <default param="spwcorr"><value type="bool">False</value></default>                    
+                    </equals>
+                </when>
+
+                <when param="ntime">
+                    <notequals type="string" value="scan">
+                        <default param="combinescans"><value type="bool">False</value></default>
+                    </notequals>
+                </when>             
+
+               <when param="display">
+                <equals type="string" value="" />
+                <equals type="string" value="data" />
+                <equals type="string" value="report">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
+                <equals type="string" value="both">
+                        <default param="format"><value type="string">screen</value></default>
+                </equals>                    
+               </when>
+                
+               <when param="savepars">
+                <equals type="bool" value="False" />
+                 <equals type="bool" value="True">
+                    <default param="outfile"><value type="string"></value></default>
+                </equals>
+               </when>
+
+             </constraints>
+        </input>
+<returns type="void"/>
+<example>
+        The task will flag a subset of data explicitly using any of the modes:
+            manualflag  = flagging based on specific selection parameters
+            clip        = clip data according to values
+            quack       = remove/keep specific time range at scan beginning/end
+            shadow      = remove antenna-shadowed data
+            elevation   = remove data below/above given elevations
+            tfcrop      = automatic identification and flagging of RFI
+            extend      = extend and/or grow flags beyond what the basic algorithms detect
+            summary     = report the amount of flagged data
+            unflag      = unflag the specified data.
+    
+        Keyword arguments:
+        vis -- Name of input visibility file
+                default: none example: vis='ngc5921.ms'
+
+        selectdata -- Select a subset of data for flagging?
+                    default: False
+                    options: True,False
+                    Any flagging will only be applied to the specified selection.
+
+              antenna -- Select data based on baseline
+                    default: '' (all); example: antenna='5&amp;6' baseline 5-6
+                    antenna='5&amp;6;7&amp;8' #baseline 5-6 and 7-8
+                    antenna='5' # all cross-correlation baselines between antenna 5 and all other available
+                                  antennas
+                    antenna='5,6' # all baselines with antennas 5 and 6
+                    antenna='1&amp;&amp;1' # only the auto-correlation baselines for antenna 1
+                    antenna='1&amp;&amp;*' # cross and auto-correlation baselines between antenna 1
+                                             and all other available antennas
+                    antenna='1~7&amp;&amp;&amp;' # only the auto-correlation baselines for antennas in range 1~7
+              spw -- Select data based on spectral window and channels
+                    default: '' (all); example: spw='1'
+                    spw='&lt;2' #spectral windows less than 2
+                    spw='&gt;1' #spectral windows greater than 1
+                    spw='0:0~10' # first 10 channels from spw 0
+                    spw='0:0~5;56~60' # multiple separated channel chunks.
+              correlation -- Correlation types
+                    default: '' (all);
+                    example: correlation='RR LL'
+              field -- Select data based on field id(s) or name(s)
+                    default: '' (all); example: field='1'
+                    field='0~2' # field ids inclusive from 0 to 2
+                    field='3C*' # all field names starting with 3C
+              uvrange -- Select data within uvrange (default units meters)
+                    default: '' (all); example:
+                    uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lamgda
+                    uvrange='&gt;4klamda';uvranges greater than 4 kilo-lambda
+                    uvrange='0~1000km'; uvrange in kilometers
+              timerange  -- Select data based on time range:
+                    default = '' (all); example,
+                    timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                    Note: YYYY/MM/DD can be dropped as needed:
+                    timerange='09:14:0~09:54:0' # this time range
+                    timerange='09:44:00' # data within one integration of time
+                    timerange='&gt;10:24:00' # data after this time
+                    timerange='09:44:00+00:13:00' #data 13 minutes after time
+              scan -- Select data based on scan number
+                    default: '' (all); example: scan='&gt;3'
+              intent -- Select data based on observation intent
+                    default: '' (all); example: intent='*CAL*,*BAND*'
+              feed -- Selection based on the feed - NOT IMPLEMENTED YET
+              array -- Selection based on the antenna array
+              observation -- Selection based on the observation ID
+                    default: '' (all); example: observation='1' or observation=1
+
+        mode -- Mode of operation.
+                options: 'manualflag','clip','quack','shadow','elevation', 'tfcrop', 'extend',
+                         'unflag', 'summary'
+                default: 'manualflag'
+
+            manualflag -- Flag according to the data selection specified.
+                  If data is pre-selected using selectdata=True, then flagging
+                  will apply only to that subset of the MS.
+                  
+            clip -- Clip data according to values of the following subparameters.
+
+               expression -- Clip using the following:
+                    default: 'ABS ALL'; use all the available polarizations.
+                    options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
+                             any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
+                             'WVR' refers to the water vapour radiometer of ALMA data.
+                    example: expression='RE XX'
+               channelavg -- Average data over (selected) channels? Channel
+                            selections are taken into account. Flagged channels
+                            are excluded from the average. The average is done
+                            after applying the specified clipexpr, i.e. scalar
+                            averaging.
+                    default: False
+                    options: True,False
+               clipminmax -- Range of data (Jy) that will NOT be flagged
+                    default: []; it will flag only the NaN data.
+                    example: [0.0,1.5]
+                    It will always flag the NaN data, independent of the values used.
+               datacolumn -- Column to use for clipping.
+                    default: 'DATA'
+                    options: 'DATA','CORRECTED','MODEL', 'RESIDUAL, "RESIDUAL_DATA"
+               clipoutside -- Clip OUTSIDE the range?
+                    default: True
+                    example: False; flag data WITHIN the range.
+
+            quack -- Option to remove specified part of scan beginning/end
+
+                quackinterval -- Time in seconds from scan beginning/end to flag. Make time slightly 
+                                 smaller than the desired time.
+                    default: 0.0
+                quackmode -- Quack mode
+                    default: 'beg'
+                    options: 'beg'  ==> beginning of scan
+                             'endb' ==> end of scan. 
+                             'tail' ==> all but beginning of scan
+                             'end'  ==> all but end of scan.
+                quackincrement -- Quack incrementally in time?
+                    default: False
+                             False  ==> the quack interval is counted from the
+                                        beginning of the scan
+                             True   ==> the quack interval is counted from the
+                                        first unflagged data in the scan
+
+            shadow -- Option to flag data of shadowed antennas
+                     
+                diameter -- Effective diameter to use when determining if an antenna
+                            is shadowed at a given time stamp. The given value is used
+                            for all antennas. If this is set to a negative number the actual 
+                            antenna diameters are used.
+                   default: -1.0
+
+            elevation -- Option to flag based on antenna elevation
+                 
+               lowerlimit -- Lower limiting elevation in degrees. Data coming from a baseline
+                             where one or both antennas were pointing at a strictly lower elevation
+                             (as function of time), will be flagged.
+                   default: 0.0
+               upperlimit -- Upper limiting elevation in degrees. Data coming from a baseline
+                             where one or both antennas were pointing at a strictly higher elevation
+                             (as function of time), will be flagged.
+                   default: 90.0
+
+            tfcrop -- Flag using the TFCrop autoflag algorithm
+
+               expression -- Flag using the following:
+                    default: 'ABS ALL'; use all the available polarizations.
+                    options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
+                             any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
+                             'WVR' refers to the water vapour radiometer of ALMA data.
+                    example: expression='RE XX'
+               datacolumn -- Column to use for flagging.
+                    default: 'DATA'
+                    options: 'DATA','CORRECTED','MODEL', 'RESIDUAL, "RESIDUAL_DATA"
+
+               timecutoff -- Flag threshold in time. Flag all data-points further than N-stddev from the fit.
+                    default: 4.0
+                          Flagging is done in upto 5 iterations. The stddev calculation is adaptive and 
+                          converges to a value that reflects only the data and no RFI. At each iteration,
+                          the same relative threshold is applied to detect flags. (Step (3) of the algorithm).
+
+               freqcutoff -- Flag threshold in frequency. Flag all data-points further than N-stddev from the fit.
+                    default: 3.0
+                        Same as above, and is used in Steps (1) and (2) of the algorithm.                       
+
+               timefit --  Fitting function for the time direction
+                    default: 'line'
+                    options: 'line', 'poly'
+                      A 'line' fit is a robust straight-line fit across the entire timerange (defined by 'ntime').
+                      A 'poly' fit is a robust piece-wise polynomial fit across the timerange.
+                      Note: A robust fit is computed in upto 5 iterations. At each iteration, the stddev
+                                between the data and the fit is computed, values beyond N-stddev are flagged,
+                                and the fit and stddev are re-calculated with the remaining points.
+                                This stddev calculation is adaptive, and converges to a value that reflects 
+                                only the data and no RFI.  It also provides a varying set of flagging thresholds,
+                                that allows deep flagging only when the fit represents the true data best.
+                      Choose 'poly' only if the visibilities are expected to vary significantly over the
+                      timerange selected by 'ntime', or if there is a lot of strong but intermittent RFI.
+
+               freqfit -- Fitting function for the frequency direction
+                    default: 'poly'
+                    options: 'line','poly'
+                        Same as for the 'timefit' parameter.
+                        Choose 'line' only if you are operating on bandpass-corrected data, or residuals, 
+                        and expect that the bandshape is linear. The 'poly' option works better when there
+                        are multiple lines of strong narrow-band RFI. 
+
+               maxnpieces -- Maxinum number of pieces to allow in the piecewise-polynomial fits 
+                    default: 7
+                    options: 1 - 9
+                        This parameter is used only if 'timefit' or 'freqfit' are chosen as 'poly'.
+                        If there is significant broad-band RFI, reduce this number. Using too many
+                        pieces could result in the RFI being fitted in the 'clean' bandpass.    
+                        In later stages of the fit, a third-order polynomial is fit per piece, so 
+                        for best results, please ensure that nchan/maxnpieces is at-least 10.
+
+               flagdimension -- Choose the directions along which to perform flagging
+                    default: 'freqtime'; first flag along frequency, and then along time 
+                                           (Step (3) followed by (1),(2))
+                    options: 'time', 'freq', 'timefreq', 'freqtime'
+                         For most cases, 'freqtime' or 'timefreq' are appropriate, and differences
+                         between these choices are apparant only if RFI in one dimension is 
+                         significantly stronger than the other. The goal is to flag the dominant RFI first.
+                         If there are very few (less than 5) channels of data, then choose 'time'.
+                         Similarly for 'freq'.
+
+               usewindowstats -- Use sliding-window statistics to find additional flags.
+                    default: 'none' 
+                    options: 'none', 'sum', 'std', 'both'   
+                         Note: This is experimental !
+                           The 'sum' option chooses to flag a point, if the mean-value in a 
+                           window centered on that point deviates from the fit by more than
+                           N-stddev/2.0. 
+                         Note: stddev is calculated between the data and fit as explained in Step (2).
+                            This option is an attempt to catch broad-band or 
+                            time-persistent RFI  that the above polynomial fits will mistakenly fit
+                            as the clean band. It is an approximation to the sumThreshold
+                            method found to be effective by Offringa et.al (2010) for LOFAR data. 
+                            The 'std' option chooses to flag a point, if the 'local' stddev calculated
+                            in a window centered on that point is larger than N-stddev/2.0. 
+                            This option is an attempt to catch noisy RFI that is not excluded in the
+                            polynomial fits, and which increases the global stddev, and results in 
+                            fewer flags (based on the N-stddev threshold). This is an approximation to
+                            the idea behind 'rflag' in AIPS (which E.Greisen is currently refining).
+                                                                
+                halfwin -- Half width of sliding window to use with 'usewindowstats'
+                    default: 1  (a 3-point window size)
+                    options: 1,2,3
+                        Note: This is experimental !
+
+            extend -- Extend and/or grow flags beyond what the basic algorithms detect.
+                            This mode will extend the accumulated flags available in the MS,
+                            regardless of which algorithm created them.
+
+                extendpols -- Extend flags to all correlations
+                      default: False
+                      options: True/False
+                growtime -- For any channel, flag the entire timerange in the current 2D chunk (set by 'ntime')
+                             if more than X% of the timerange is already flagged.
+                      default: 50.0
+                      options: 0.0 - 100.0
+                         This option catches the low-intensity parts of time-persistent RFI.
+
+                growfreq -- For any timestep, flag all channels in the current 2D chunk (set by data-selection)
+                            if more than X% of the channels are already flagged.
+                      default: 50.0
+                      options: 0.0 - 100.0
+                         This option catches broad-band RFI that is partially identified by earlier steps.
+
+                growaround -- Extend flags to immediately surrounding points in the time-freq plane.
+                      default: True
+                      options: True/False
+                            For every un-flagged point on the 2D time/freq plane, if more than four
+                            surrounding points are already flagged, flag that point. 
+                            This option catches some wings of strong RFI spikes.
+
+                flagneartime -- Flag points before and after every flagged one, in the time-direction.
+                      default: False
+                      options: True/False
+                            Note: This can result in excessive flagging.
+
+                flagnearfreq -- Flag points before and after every flagged one, in the frequency-direction
+                            default: False
+                            options: True/False
+                            This option allows flagging of wings in the spectral response of strong RFI.
+                            Note: This can result in excessive flagging.
+
+
+            unflag -- Unflag according to the data selection specified.
+
+            summary -- List the number of rows and data points flagged.
+                  
+                minrel -- Minimum number of flags (relative) to include in histogram
+                    default: 0.0
+                maxrel -- Maximum number of flags (relative) to include in histogram
+                    default: 1.0
+                minabs -- Minimum number of flags (absolute, inclusive) to include in histogram
+                    default: 0
+                maxabs -- Maximum number of flags (absolute, inclusive) to include in histogram
+                          To indicate infinity, use any negative number.
+                    default: -1
+                spwchan -- list the number of flags per spw and per channel.
+                    default: False
+                spwcorr -- list the number of flags per spw and per correlation.
+                    default: False
+                    In this mode, the task returns a dictionary of flagging statistics.
+                    Example:
+
+                        s = tflagger(..., mode='summary')
+
+                     Then s will be a dictionary which contains
+                    s['total']                  : total number of data
+                    s['flagged']                : amount of flagged data
+
+        ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
+                options: 'scan' or any other float value or string containing the units.
+                default: 'scan'
+                
+            combinescans -- accumulate data across scans.
+                default: False
+                Only available when ntime not equal 'scan'.
+                
+                Example: '1.5min'
+                       : 1.2 (taken in seconds)
+               The dataset will be iterated through in time-chunks defined here.
+        
+ 
+        display -- Display data and/or end-of-MS reports at runtime.
+        
+               default: 'none'
+               options: 'none', 'data', 'report', 'both'
+                  'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
+                      This option opens a GUI to show the 2D time-freq planes of
+                      the data with old and new flags, for all correlations per baseline.
+                      -- The GUI allows stepping through all baselines (prev/next) in
+                      the current chunk (set by 'ntime'), and stepping to the next-chunk.
+                      -- The 'testautoflag' task can be quit from the GUI, in case it becomes
+                      obvious that the current set of parameters is just wrong.
+                      -- There is an option to stop the display but continue flagging.
+
+                  'report' --> displays enf-of-MS reports on the screen or save on a file using the
+                                 format sub-parameter.
+                      format -- 'screen' or 'file'
+                                file is the name of the filename to be saved in disk.
+                                
+                  'both' --> displays data per chunk and end-of-MS reports on the screen or saved on a file in disk.
+                                 
+
+        writeflags -- Choose whether or not to write flags to the MS 
+                 default: True
+                 options: True/False
+                    The tflagger task can be run in 'writeflags=False' mode just to inspect the data,
+                    or to try different parameters and converge on a set that works for a particular
+                    dataset.
+                    Note: this parameter is disabled when mode='summary'.
+                    
+        savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
+                default: True
+                options: True/False
+                
+                outfile -- Name of output file to save the current parameters.
+                    default: ' '; it will save the parameters in the FLAG_CMD table of the MS.
+                    example: outfile='flags.txt' will save the parameters in a text file.
+                    
+        sequential -- Run the task in sequential or in parallel. Very useful for modes that
+                      take an expression parameter such as: tfcrop or clip. The different
+                      expressions can be run in parallel, one agent for each one of them.
+                default: False
+                option: False/True
+                
+        flagbackup -- Automatically backup flags?
+                default: False
+                options: True/False
+
+    
+</example>
+
+
+    </task>
+</casaxml>
+        
