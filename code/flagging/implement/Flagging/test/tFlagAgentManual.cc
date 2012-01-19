@@ -38,7 +38,7 @@ void clearFlags(string inputFile,Bool flag)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Open MS
 	dh->open();
@@ -183,7 +183,7 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -343,7 +343,7 @@ void checkFlags(string inputFile,Record dataSelection,Bool flag)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 	dh->setDataSelection(dataSelection);
 
 	// Open MS
@@ -490,7 +490,7 @@ void summaryFlags(string inputFile)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Open MS
 	dh->open();

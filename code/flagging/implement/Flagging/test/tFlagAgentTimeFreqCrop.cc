@@ -376,14 +376,14 @@ bool checkFlags(string targetFile,string referenceFile, Record dataSelection)
 	bool returnCode=true;
 
 	// Create data handler for target file
-	FlagDataHandler *targetFiledh = new FlagDataHandler(targetFile,FlagDataHandler::SUB_INTEGRATION);
+	FlagDataHandler *targetFiledh = new FlagDataHandler(targetFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 	targetFiledh->open();
 	targetFiledh->setDataSelection(dataSelection);
 	targetFiledh->selectData();
 	targetFiledh->generateIterator();
 
 	// Create data handler for reference file
-	FlagDataHandler *referenceFiledh = new FlagDataHandler(referenceFile,FlagDataHandler::SUB_INTEGRATION);
+	FlagDataHandler *referenceFiledh = new FlagDataHandler(referenceFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 	referenceFiledh->open();
 	referenceFiledh->setDataSelection(dataSelection);
 	referenceFiledh->selectData();
