@@ -27,7 +27,7 @@ class CasaRegression:
         self._path = { 'top': str(topdir), 'bin': str(bindir), \
                        'casa': str(casadir), 'test': str(testdir), \
                        'cache': str(cachedir), 'output': str(outputdir) }
-        self._state = { 'script': '', 'statedb': '', 'maildb': '', 'result': 'fail', 'stamp': str(0), 'time': str(0), 'master': 'Darrell Schiebel', 'master-email': 'drs@nrao.edu' }
+        self._state = { 'script': '', 'statedb': '', 'maildb': '', 'result': 'fail', 'stamp': str(0), 'time': str(0), 'master': 'Scott Rankin', 'master-email': 'srankin@nrao.edu' }
         if not os.path.isdir(self._path['top']):
             raise RuntimeError('top directory (' + self._path['top'] + ') must exist...')
         temppath = self._path['top'] + "/tmp"
@@ -388,8 +388,8 @@ class CasaRegression:
                 mime['Subject'] = "[regression malfunction] " + regression
             else:
                 mime['Subject'] = "[regression failure] " + regression
-            mime['From'] = "CASA Jenkins <darrell@schiebel.us>"
-            #email = "darrell@schiebel.us"      #### override to prevent email from going to regression owners
+            mime['From'] = "CASA Jenkins <" + self._state['master-email'] + ">"
+            #email = self._state['master-email']      #### override to prevent email from going to regression owners
             mime['To'] = full_name + " <" + email + ">"
             s.sendmail( "CASA Jenkins <" + self._state['master-email'] + ">", [full_name + " <" + email + ">", self._state['master'] + " <" + self._state['master-email'] + ">"], mime.as_string( ) )
 
@@ -398,7 +398,7 @@ class CasaRegression:
         ###
         if count > 0:
             mime = MIMEMultipart( )
-            mime['From'] = "CASA Jenkins <darrell@schiebel.us>"
+            mime['From'] = "CASA Jenkins <" + self._state['master-email'] + ">"
             mime['Subject'] = "casa " + str(self._state['version']) +  " regression digest (r" + self._state['revision'] + ")"
             txt = MIMEText( "\n\n" + url + "\n\n", 'plain' )
             mime.attach(txt)
