@@ -101,8 +101,6 @@ public:
 
 	SpectralElement* clone() const;
 
-
-	//# Operators
 	// Assignment (copy semantics)
 	// <thrown>
 	//   <li> AipsError if sigma == 0.0
@@ -191,12 +189,7 @@ public:
 	// </group>
 };
 
-//# Global functions
-// <summary> Global functions </summary>
-// <group name=Output>
-// Output declaration
-ostream &operator<<(ostream &os, const GaussianSpectralElement &elem);
-// </group>
+ostream &operator<<(ostream& os, const GaussianSpectralElement& elem);
 
 
 } //# NAMESPACE CASA - END

@@ -85,6 +85,8 @@ public:
 		POLYNOMIAL,
 		// Any compiled string functional
 		COMPILED,
+		// Gaussian multiplet
+		GMULTIPLET,
 		N_Types
 	};
 
@@ -95,6 +97,7 @@ public:
 	// Evaluate the value of the element at x
 	virtual Double operator()(const Double x) const = 0;
 
+	virtual Bool operator==(const SpectralElement& other) const;
 
 	// Get parameter n
 	// <thrown>
@@ -133,7 +136,7 @@ public:
 	uInt getOrder() const { return par_p.nelements(); };
 
 	// Set the error fields
-	void setError(const Vector<Double> &err);
+	virtual void setError(const Vector<Double> &err);
 
 	// Set fixed parameters (True) or unset them (False)
 	// <thrown>
@@ -141,7 +144,7 @@ public:
 	// </thrown>
 
 	// Fix/unfix all in one go
-	void fix(const Vector<Bool> &fix);
+	virtual void fix(const Vector<Bool> &fix);
 
 	// Get the fix state[s]
 	const Vector<Bool> &fixed() const;
