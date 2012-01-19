@@ -19,6 +19,7 @@
 #include &lt;vector&gt;
 #include &lt;string&gt;
 #include &lt;complex&gt;
+#include &lt;xmlcasa/record.h&gt;
 </xsl:text>
 <xsl:for-each select="aps:needs">
 	<xsl:text disable-output-escaping="yes">#include &lt;casa</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">.idl&gt;
@@ -32,6 +33,7 @@
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
 using namespace std;
+using namespace casac;
 
 typedef  std::vector&lt;std::string&gt; StringVec;
 typedef  std::vector&lt;double&gt; DoubleVec;

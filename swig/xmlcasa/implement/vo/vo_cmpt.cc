@@ -13,6 +13,7 @@
 #include <iostream>
 #include <casa/aips.h>
 #include <vo_cmpt.h>
+#include <xmlcasa/record.h>
 #include <vo/VOClient/VOClient.hpp>
 
 using namespace std;
@@ -73,10 +74,10 @@ vo::data(std::vector<std::string> resources,
 //
 //
 
-std::vector<std::string>
+casac::record
 vo::registry(string keywords,
 	     string service){
-  std::vector<std::string> rstat(0);
+	casac::record rstat;
   stringstream sql;
   if(service == string("CONE")){
 	  sql << "cone" << ends;
@@ -94,12 +95,13 @@ vo::registry(string keywords,
   int nresources = vao::registry::resGetCount(res);
   cerr << "Number of reources: " << nresources << endl;
   string serviceURL("ServiceUrl");
-  for(int i=6;i<nresources;i++){
+  for(int i=0;i<nresources;i++){
 	  char *title = vao::registry::resGetStr(res, "Title", i);
 	  char *surl = vao::registry::resGetStr(res, const_cast<char*>(serviceURL.c_str()), i);
 	  char *rtype = vao::registry::resGetStr(res, "ServiceType", i);
 	  char *sname = vao::registry::resGetStr(res, "ShortName", i);
 	  char *clev = vao::registry::resGetStr(res, "ContentLevel", i);
+	  /*
 	  cerr << endl << "-------------------------------" <<endl;
 	  cerr << "(" << i << " of " << nresources << ")";
 	  if(title)
@@ -111,6 +113,16 @@ vo::registry(string keywords,
 	  if(rtype)
 	     cerr << "\tService Type: " << rtype << endl;
 	  cerr << "ContentLevel: " <<  (clev ? clev : "none provided") << endl;
+	  */
+	  record subrec;
+	  if(title)subrec.insert("title", string(title));
+	  if(surl)subrec.insert("surl", string(surl));
+	  if(rtype)subrec.insert("rtype", string(rtype));
+	  if(sname)subrec.insert("sname", string(sname));
+	  if(clev)subrec.insert("clev", string(clev));
+	  ostringstream oss;
+	  oss << i << ends;
+	  rstat.insert(oss.str(), subrec);
 	  if(title)delete title;
 	  if(surl)delete surl;
 	  if(rtype)delete rtype;

@@ -83,7 +83,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<value>any</value>
 		</param>
 	</input>
-	<returns type="stringArray"/>
+	<returns type="record"/>
 </method>
 
  

@@ -13,6 +13,12 @@
 #include <string>
 #include <vector>
 #include <complex>
+#include <xmlcasa/record.h>
+#include <xmlcasa/swigconvert_python.h>
+
+using casac::record;
+using casac::variant;
+
 %}
 %typemap(in) string {
    $1 = string(PyString_AsString($input));
@@ -43,4 +49,15 @@
    $result = PyList_New($1.size());
    for(int i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
+}
+
+%typemap(out) record {
+   $result = PyDict_New();
+   for(record::const_iterator iter = $1.begin(); iter != $1.end(); ++iter){
+      const std::string &key = (*iter).first;
+      const variant &val = (*iter).second;
+      PyObject *v = variant2pyobj(val);
+      PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
+      Py_DECREF(v);
+   }
 }

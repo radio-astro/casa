@@ -144,10 +144,10 @@
 <xsl:if test="@units"> <xsl:attribute name="units"><xsl:value-of select="@units"/></xsl:attribute></xsl:if>
 <xsl:choose>
 <xsl:when test="@type='variant'">
-<xsl:attribute name="xsi:type">any</xsl:attribute>
+<xsl:attribute name="xsi:type">variant</xsl:attribute>
 </xsl:when>
 <xsl:when test="@type='record'">
-<xsl:attribute name="xsi:type">any</xsl:attribute>
+<xsl:attribute name="xsi:type">record</xsl:attribute>
 </xsl:when>
 <xsl:otherwise>
 <xsl:attribute name="xsi:type"><xsl:value-of select="@type"/></xsl:attribute>
@@ -170,10 +170,10 @@
 <xsl:element name="param">
 <xsl:choose>
 <xsl:when test="@type='variant'">
-<xsl:attribute name="xsi:type">any</xsl:attribute>
+<xsl:attribute name="xsi:type">variant</xsl:attribute>
 </xsl:when>
 <xsl:when test="@type='record'">
-<xsl:attribute name="xsi:type">any</xsl:attribute>
+<xsl:attribute name="xsi:type">record</xsl:attribute>
 </xsl:when>
 <xsl:otherwise>
 <xsl:attribute name="xsi:type"><xsl:value-of select="@type"/></xsl:attribute>
