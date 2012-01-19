@@ -101,7 +101,9 @@ Bool VisBuffGroup::applyChanMask(Cube<Bool>& chanmaskedflags,
   Bool retval = True;
   Int chan0 = vb.channel()(0);
   Int nchan = vb.nChannel();
-
+  //initialize chanmaskedflags
+  chanmaskedflags.resize(vb.flagCube().shape());
+  chanmaskedflags.set(False);
   if(sum((*chanmask)(Slice(chan0, nchan))) > 0){
     // There are some channels to mask...
     Vector<Bool> fr(vb.flagRow());
@@ -114,7 +116,8 @@ Bool VisBuffGroup::applyChanMask(Cube<Bool>& chanmaskedflags,
     for(Int irow = 0; irow < nr; ++irow){
       for(Int corr = 0; corr < ncor; ++corr){
         if(!fr[irow]){
-          fc.reference(chanmaskedflags.xzPlane(corr).column(irow));
+          //fc.reference(chanmaskedflags.xzPlane(corr).column(irow));
+          fc.reference(chanmaskedflags.yzPlane(corr).column(irow));
           fc = fc || chm;
         }
       }

@@ -11,7 +11,7 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
     try:
         myms = mstool.create()
         mytb = tbtool.create()
-
+        
         datacol = 'DATA'
         mytb.open(vis)
         colnames  = mytb.colnames()
@@ -21,6 +21,10 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
                 break
         if datacol == 'junk':
             raise ValueError(vis + " does not have a data column")        
+
+        if datacol != datacolumn: # no CORRECTED_DATA case
+           casalog.post("No %s column found, using %s column" % (datacolumn.upper()+'_DATA', datacol),'WARN')
+           datacolumn = datacol
 
         if ':' in spw:
             casalog.post('The channel selection part of spw will be ignored.', 'WARN')
