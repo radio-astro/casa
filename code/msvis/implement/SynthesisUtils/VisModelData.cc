@@ -289,7 +289,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     if(!incremental){
       //No model was set so....
       ///Set the Model to 1.0 for parallel hand and 0.0 for x-hand
-      vb.setModelVisCube(Complex(1.0,0.0));
+      
+      vb.modelVisCube().set(Complex(1.0));
       Vector<Int> corrType=vb.corrType();
       uInt nCorr = corrType.nelements();
       for (uInt i=0; i<nCorr; i++) {
