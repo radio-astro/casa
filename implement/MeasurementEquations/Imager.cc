@@ -5258,7 +5258,6 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
         createFTMachine();
       sm_p = new CleanImageSkyModel();
       sm_p->add(*tmodimage, 1);
-      useModelCol_p = True;
       ft_p->setFreqInterpolation("linear");
       setSkyEquation();
       se_p->predict(False);
