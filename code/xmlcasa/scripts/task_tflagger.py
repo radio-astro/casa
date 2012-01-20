@@ -132,8 +132,9 @@ def tflagger(vis,
         
         
         # Open the MS and attach it to the tool
+        # TODO: pass combinescans to tflocal.open()
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, newtime, combinescans)
+            tflocal.open(vis, newtime)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
