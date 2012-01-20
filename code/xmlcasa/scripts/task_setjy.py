@@ -68,22 +68,22 @@ def setjy(vis=None, field=None, spw=None,
           cand = calmoddir + '/' + modimage
           if os.path.isdir(cand):
             candidates.append(cand)
-          if not candidates:
-            casalog.post("%s was not found for modimage in %s." %(modimage,
+        if not candidates:
+          casalog.post("%s was not found for modimage in %s." %(modimage,
                                                                   ', '.join(calmoddirs)),
+                       'SEVERE')
+          return False
+        elif len(candidates) > 1:
+          casalog.post("More than 1 candidate for modimage was found:",
+                       'SEVERE')
+          for c in candidates:
+            casalog.post("\t" + c, 'SEVERE')
+            casalog.post("Please pick 1 and use the absolute path (starting with /).",
                          'SEVERE')
             return False
-          elif len(candidates) > 1:
-            casalog.post("More than 1 candidate for modimage was found:",
-                         'SEVERE')
-            for c in candidates:
-              casalog.post("\t" + c, 'SEVERE')
-              casalog.post("Please pick 1 and use the absolute path (starting with /).",
-                           'SEVERE')
-              return False
-          else:
-            modimage = candidates[0]
-            casalog.post("Using %s for modimage." % modimage, 'INFO')
+        else:
+          modimage = candidates[0]
+          casalog.post("Using %s for modimage." % modimage, 'INFO')
 
       # Write the parameters to HISTORY before the tool writes anything.
       try:
