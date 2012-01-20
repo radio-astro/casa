@@ -243,7 +243,7 @@ void CubeSkyEquation::init(FTMachine& ft){
     }
      for (Int k=0; k < (nmod); ++k){ 
        uInt tayindex = k/(sm_->numberOfModels()/sm_->numberOfTaylorTerms());
-       //       cout << "CubeSkyEqn : model : " << k << " : setting taylor index : " << tayindex << endl;
+       //cout << "CubeSkyEqn : model : " << k << " : setting taylor index : " << tayindex << endl;
        ftm_p[k]->setMiscInfo(tayindex);
       iftm_p[k]->setMiscInfo(tayindex);
     }
