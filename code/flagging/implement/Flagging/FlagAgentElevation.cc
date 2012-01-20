@@ -151,24 +151,19 @@ FlagAgentElevation::preProcessBufferCore(const VisBuffer &visBuffer)
 	return;
 }
 
-void
+bool
 FlagAgentElevation::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
     double antenna1_elevation = antennaPointingMap_p.at(row).at(0);
     double antenna2_elevation = antennaPointingMap_p.at(row).at(1);
+    bool flagRow = false;
 
     if ( antenna1_elevation < lowerlimit_p ||
          antenna2_elevation < lowerlimit_p ||
          antenna1_elevation > upperlimit_p ||
          antenna2_elevation > upperlimit_p )
     {
-    	IPosition flagCubeShape = flags.shape();
-    	uInt nChannels = flagCubeShape(0);
-    	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
-    	{
-    		flags.applyFlag(chan_i,row);
-    	}
-    	visBufferFlags_p += flags.flagsPerRow();
+    	flagRow = true;
     }
 
 	if ((nAgents_p > 1) and preProcessingDone_p)
@@ -180,7 +175,7 @@ FlagAgentElevation::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flag
 		}
 	}
 
-	return;
+	return flagRow;
 }
 
 } //# NAMESPACE CASA - END

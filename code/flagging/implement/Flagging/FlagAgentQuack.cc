@@ -42,7 +42,7 @@ FlagAgentQuack::~FlagAgentQuack()
 void
 FlagAgentQuack::setAgentParameters(Record config)
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
 	exists = config.fieldNumber ("quackinterval");
@@ -110,13 +110,12 @@ FlagAgentQuack::setAgentParameters(Record config)
 	return;
 }
 
-void
+bool
 FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
-	// TODO: This is not generic but in all the iteration modes provided
-	// by the FlagDataHandler scan and observation are constant over rows
+	// Get scan for each particular row to cover for the "combine scans" case
 	Int scan = visBuffer.scan()[row];
 
 	// First of all check if this scan is in the scan start/stop map
@@ -124,51 +123,40 @@ FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, u
 	{
 		*logger_p << LogIO::WARN << " start/stop time for scan "
 				<< scan << " not found" << LogIO::POST;
-		return;
+		return false;
 	}
 
 	// If the scan is available in the map, then we proceed with the algorithm
 	Double scan_start = (*flagDataHandler_p->getMapScanStartStop())[scan].at(0);
 	Double scan_stop = (*flagDataHandler_p->getMapScanStartStop())[scan].at(1);
 	Double row_time = visBuffer.time()[row];
-	Bool flagRow = False;
+	bool flagRow = false;
 
 	switch (quackmode_p)
 	{
 		case BEGINNING_OF_SCAN:
 		{
-			if (row_time <= (scan_start + quackinterval_p)) flagRow = True;
+			if (row_time <= (scan_start + quackinterval_p)) flagRow = true;
 			break;
 		}
 		case END_OF_SCAN:
 		{
-			if (row_time >= (scan_stop - quackinterval_p)) flagRow = True;
+			if (row_time >= (scan_stop - quackinterval_p)) flagRow = true;
 			break;
 		}
 		case ALL_BUT_BEGINNING_OF_SCAN:
 		{
-			if (row_time > (scan_start + quackinterval_p)) flagRow = True;
+			if (row_time > (scan_start + quackinterval_p)) flagRow = true;
 			break;
 		}
 		case ALL_BUT_END_OF_SCAN:
 		{
-			if (row_time < (scan_stop - quackinterval_p)) flagRow = True;
+			if (row_time < (scan_stop - quackinterval_p)) flagRow = true;
 			break;
 		}
 	}
 
-	if (flagRow)
-	{
-    	IPosition flagCubeShape = flags.shape();
-    	uInt nChannels = flagCubeShape(0);
-    	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
-    	{
-    		flags.applyFlag(chan_i,row);
-    	}
-    	visBufferFlags_p += flags.flagsPerRow();
-	}
-
-	return;
+	return flagRow;
 }
 
 } //# NAMESPACE CASA - END

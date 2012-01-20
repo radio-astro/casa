@@ -247,6 +247,84 @@ private:
 	T &(casa::CubeView<T>::*access_p)(uInt,uInt,uInt);
 };
 
+template<class T> class VectorView
+{
+
+public:
+	VectorView(Vector<T> *parentVector, std::vector<uInt> *rows = NULL)
+	{
+		IPosition parentVectorShape = parentVector->shape();
+		parentVector_p = parentVector;
+		reducedLength_p = IPosition(1);
+
+		if ((rows != NULL) and (rows->size() > 0))
+		{
+			access_p = &VectorView::accessMapped;
+		}
+		else
+		{
+			access_p = &VectorView::accessUnmapped;
+		}
+
+		if ((rows != NULL) and (rows->size() > 0))
+		{
+			rows_p = rows;
+			reducedLength_p(0) = rows_p->size();
+		}
+		else
+		{
+			rows_p = NULL;
+			reducedLength_p(0) = parentVectorShape(0);
+		}
+	}
+
+    T &operator()(uInt i1)
+    {
+    	return (*this.*access_p)(i1);
+    }
+
+    const IPosition &shape() const
+    {
+    	return reducedLength_p;
+    }
+
+    void shape(Int &s1) const
+    {
+    	s1 = reducedLength_p(0);
+    	return;
+    }
+
+protected:
+
+    vector<uInt> *createIndex(uInt size)
+    {
+    	vector<uInt> *index = new vector<uInt>(size);
+    	index->clear();
+    	for (uInt i=0; i<size; i++ )
+    	{
+    		index->push_back(i);
+    	}
+    	return index;
+    }
+
+    T &accessUnmapped(uInt i1)
+    {
+    	return parentVector_p->operator()(i1);
+    }
+
+    T &accessMapped(uInt i1)
+    {
+    	uInt i1_index = rows_p->at(i1);
+    	return parentVector_p->operator()(i1_index);
+    }
+
+private:
+    Vector<T> *parentVector_p;
+	std::vector<uInt> *rows_p;
+	IPosition reducedLength_p;
+	T &(casa::VectorView<T>::*access_p)(uInt);
+};
+
 class VisMapper
 {
 
@@ -332,13 +410,21 @@ class FlagMapper
 
 public:
 
-	FlagMapper(Bool flag,vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	FlagMapper(Bool flag,	vector<uInt> selectedCorrelations,
+							CubeView<Bool> *commonFlagsView,
+							CubeView<Bool> *originalFlagsView,
+							CubeView<Bool> *privateFlagsView=NULL,
+							VectorView<Bool> *commonFlagRowView=NULL,
+							VectorView<Bool> *originalFlagRowView=NULL,
+							VectorView<Bool> *privateFlagRowView=NULL);
 	FlagMapper(Bool flag,vector<uInt> selectedCorrelations);
 	~FlagMapper();
 
 	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	void setParentFlagRow(VectorView<Bool> *commonFlagRowView,VectorView<Bool> *originalFlagRowView,VectorView<Bool> *privateFlagRowView=NULL);
 
 	void applyFlag(uInt chan, uInt row);
+	void applyFlagRow(uInt row);
 
 	Bool getOriginalFlags(uInt chan, uInt row);
 	Bool getModifiedFlags(uInt chan, uInt row);
@@ -351,6 +437,10 @@ public:
 	// These methods are needed for flag extension
 	void setModifiedFlags(uInt pol, uInt channel, uInt row);
 	void setPrivateFlags(uInt pol, uInt channel, uInt row);
+
+	Bool getOriginalFlagRow(uInt row);
+	Bool getModifiedFlagRow(uInt row);
+	Bool getPrivateFlagRow(uInt row);
 
     const IPosition &shape() const
     {
@@ -390,6 +480,11 @@ protected:
 	// Apply flags to common and private flag cubes
 	void checkCommonFlags(uInt pol, uInt channel, uInt row);
 
+	// Apply flags to common flag rows
+	void applyCommonFlagRow(uInt row);
+	// Apply flags to common and private flag rows
+	void applyPrivateFlagRow(uInt row);
+
 
 private:
 
@@ -398,10 +493,14 @@ private:
 	CubeView<Bool> *commonFlagsView_p;
 	CubeView<Bool> *originalFlagsView_p;
 	CubeView<Bool> *privateFlagsView_p;
+	VectorView<Bool> *commonFlagRowView_p;
+	VectorView<Bool> *originalFlagRowView_p;
+	VectorView<Bool> *privateFlagRowView_p;
 	vector<uInt> selectedCorrelations_p;
 	uInt nSelectedCorrelations_p;
 	uInt flagsPerRow_p;
 	void (casa::FlagMapper::*applyFlag_p)(uInt,uInt,uInt);
+	void (casa::FlagMapper::*applyFlagRow_p)(uInt);
 };
 
 // Flag Data Handler class definition
@@ -477,6 +576,8 @@ public:
 	// As requested by Urvashi R.V. provide access to the original and modified flag cubes
 	Cube<Bool> * getModifiedFlagCube();
 	Cube<Bool> * getOriginalFlagCube();
+	Vector<Bool> * getModifiedFlagRow();
+	Vector<Bool> * getOriginalFlagRow();
 
 	// Functions to switch on/off mapping functions
 	void setMapAntennaPairs(bool activated);
@@ -538,6 +639,7 @@ public:
 
 	// FlagDataHanler-FlagAgents interaction
 	bool flushFlags_p;
+	bool flushFlagRow_p;
 	uInt64 chunkCounts_p;
 	uInt64 msCounts_p;
 
@@ -588,6 +690,10 @@ private:
 	// Flag Cubes
 	Cube<Bool> originalFlagCube_p;
 	Cube<Bool> modifiedFlagCube_p;
+
+	// FlagRows
+	Vector<Bool> originalFlagRow_p;
+	Vector<Bool> modifiedFlagRow_p;
 
 	// Mapping members
 	antennaPairMap *antennaPairMap_p;

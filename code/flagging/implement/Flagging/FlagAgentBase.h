@@ -138,13 +138,13 @@ protected:
 	Bool checkVisExpression(polarizationMap *polMap);
 
 	// Compute flags for a given visibilities point
-	virtual void computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+	virtual bool computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual void computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+	virtual bool computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
-	virtual void computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	virtual bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;
@@ -157,6 +157,7 @@ protected:
 	uInt64 msFlags_p;
 	uInt64 msNaNs_p;
 	uInt64 visBufferFlags_p;
+	bool flagRow_p;
 
 	// Multithreading configuration and agent id
 	Bool multiThreading_p;
@@ -172,6 +173,10 @@ private:
 	Cube<Bool> *commonFlagCube_p;
 	Cube<Bool> *originalFlagCube_p;
 	Cube<Bool> *privateFlagCube_p;
+
+	Vector<Bool> *commonFlagRow_p;
+	Vector<Bool> *originalFlagRow_p;
+	Vector<Bool> *privateFlagRow_p;
 
 	// Own data selection ranges
 	casa::String arraySelection_p;

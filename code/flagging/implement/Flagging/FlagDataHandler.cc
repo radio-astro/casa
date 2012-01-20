@@ -98,6 +98,18 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	mapScanStartStop_p = false;
 	mapScanStartStopFlagged_p = false;
 
+	// Initialize Pre-Load columns
+	preLoadColumns_p.clear();
+	preLoadColumns_p.push_back(VisBufferComponents::FieldId);
+	preLoadColumns_p.push_back(VisBufferComponents::SpW);
+	preLoadColumns_p.push_back(VisBufferComponents::Scan);
+	preLoadColumns_p.push_back(VisBufferComponents::ArrayId);
+	preLoadColumns_p.push_back(VisBufferComponents::ObservationId);
+
+	preLoadColumns_p.push_back(VisBufferComponents::NRow);
+	preLoadColumns_p.push_back(VisBufferComponents::NChannel);
+	preLoadColumns_p.push_back(VisBufferComponents::NCorr);
+
 	// Set the iteration approach based on the agent
 	setIterationApproach(iterationApproach);
 
@@ -154,18 +166,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 
 	// Initialize FlagDataHanler-FlagAgents state
 	flushFlags_p = false;
-
-	// Initialize Pre-Load columns
-	preLoadColumns_p.clear();
-	preLoadColumns_p.push_back(VisBufferComponents::FieldId);
-	preLoadColumns_p.push_back(VisBufferComponents::SpW);
-	preLoadColumns_p.push_back(VisBufferComponents::Scan);
-	preLoadColumns_p.push_back(VisBufferComponents::ArrayId);
-	preLoadColumns_p.push_back(VisBufferComponents::ObservationId);
-
-	preLoadColumns_p.push_back(VisBufferComponents::NRow);
-	preLoadColumns_p.push_back(VisBufferComponents::NChannel);
-	preLoadColumns_p.push_back(VisBufferComponents::NCorr);
+	flushFlagRow_p = false;
 
 	return;
 }
@@ -231,6 +232,8 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			groupTimeSteps_p = true;
 			mapAntennaPairs_p = true;
 			mapSubIntegrations_p = true;
+			setMapAntennaPairs(true);
+			setMapSubIntegrations(true);
 			break;
 		}
 		case COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY:
@@ -248,6 +251,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			groupTimeSteps_p = true;
 			mapAntennaPairs_p = false;
 			mapSubIntegrations_p = true;
+			setMapSubIntegrations(true);
 			break;
 		}
 		case COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY:
@@ -265,6 +269,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			groupTimeSteps_p = true;
 			mapAntennaPairs_p = true;
 			mapSubIntegrations_p = false;
+			setMapAntennaPairs(true);
 			break;
 		}
 		case COMPLETE_SCAN_UNMAPPED:
@@ -298,6 +303,8 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			groupTimeSteps_p = true;
 			mapAntennaPairs_p = true;
 			mapSubIntegrations_p = true;
+			setMapAntennaPairs(true);
+			setMapSubIntegrations(true);
 			break;
 		}
 		case COMBINE_SCANS_MAP_SUB_INTEGRATIONS_ONLY:
@@ -314,6 +321,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			groupTimeSteps_p = true;
 			mapAntennaPairs_p = false;
 			mapSubIntegrations_p = true;
+			setMapSubIntegrations(true);
 			break;
 		}
 		case COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY:
@@ -330,6 +338,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			groupTimeSteps_p = true;
 			mapAntennaPairs_p = true;
 			mapSubIntegrations_p = false;
+			setMapAntennaPairs(true);
 			break;
 		}
 		case COMBINE_SCANS_UNMAPPED:
@@ -1501,7 +1510,10 @@ FlagDataHandler::generateIterator()
 	if (asyncio_enabled_p)
 	{
 		// Set preFetchColumns
-		prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,VisBufferComponents::NRow,VisBufferComponents::FieldId);
+		prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,
+																			VisBufferComponents::FlagRow,
+																			VisBufferComponents::NRow,
+																			VisBufferComponents::FieldId);
 		preFetchColumns();
 
 
@@ -1657,6 +1669,7 @@ FlagDataHandler::nextBuffer()
 			if (mapAntennaPointing_p) generateAntennaPointingMap();
 			moreBuffers = true;
 			flushFlags_p = false;
+			flushFlagRow_p = false;
 			bufferNo++;
 		}
 		else
@@ -1676,6 +1689,7 @@ FlagDataHandler::nextBuffer()
 				if (mapAntennaPointing_p) generateAntennaPointingMap();
 				moreBuffers = true;
 				flushFlags_p = false;
+				flushFlagRow_p = false;
 				bufferNo++;
 			}
 		}
@@ -1685,16 +1699,23 @@ FlagDataHandler::nextBuffer()
 	if (moreBuffers)
 	{
 		logger_p->origin(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
-		// WARNING: We have to modify the shape of the cube before re-assigning it
-		Cube<Bool> modifiedflagCube= visibilityBuffer_p->get()->flagCube();
-		modifiedFlagCube_p.resize(modifiedflagCube.shape());
-		modifiedFlagCube_p = modifiedflagCube;
-		const Cube<Bool> originalFlagCube= visibilityBuffer_p->get()->flagCube();
-		originalFlagCube_p.resize(originalFlagCube.shape());
-		originalFlagCube_p = originalFlagCube;
+
+		// Get flag  (WARNING: We have to modify the shape of the cube before re-assigning it)
+		Cube<Bool> curentFlagCube= visibilityBuffer_p->get()->flagCube();
+		modifiedFlagCube_p.resize(curentFlagCube.shape());
+		modifiedFlagCube_p = curentFlagCube;
+		originalFlagCube_p.resize(curentFlagCube.shape());
+		originalFlagCube_p = curentFlagCube;
+
+		// Get flag row (WARNING: We have to modify the shape of the cube before re-assigning it)
+		Vector<Bool> curentflagRow= visibilityBuffer_p->get()->flagRow();
+		modifiedFlagRow_p.resize(curentflagRow.shape());
+		modifiedFlagRow_p = curentflagRow;
+		originalFlagRow_p.resize(curentflagRow.shape());
+		originalFlagRow_p = curentflagRow;
 
 		// Compute total number of flags per buffer to be used for generating the agents stats
-		chunkCounts_p += modifiedflagCube.shape().product();
+		chunkCounts_p += curentFlagCube.shape().product();
 
 		// Print chunk characteristics
 		if (bufferNo == 1)
@@ -1736,6 +1757,12 @@ FlagDataHandler::flushFlags()
 		flushFlags_p = false;
 	}
 
+	if (flushFlagRow_p)
+	{
+		rwVisibilityIterator_p->setFlagRow(modifiedFlagRow_p);
+		flushFlagRow_p = false;
+	}
+
 	return true;
 }
 
@@ -1753,6 +1780,18 @@ Cube<Bool> *
 FlagDataHandler::getOriginalFlagCube()
 {
 	return &originalFlagCube_p;
+}
+
+Vector<Bool> *
+FlagDataHandler::getModifiedFlagRow()
+{
+	return &modifiedFlagRow_p;
+}
+
+Vector<Bool> *
+FlagDataHandler::getOriginalFlagRow()
+{
+	return &originalFlagRow_p;
 }
 
 // -----------------------------------------------------------------------
@@ -2846,12 +2885,22 @@ VisMapper::stokes_v_from_circular(uInt chan, uInt row)
 //////////////////////////////////////
 /// FlagMapper implementation ////////
 //////////////////////////////////////
-FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView)
+FlagMapper::FlagMapper(Bool flag, 	vector<uInt> selectedCorrelations,
+									CubeView<Bool> *commonFlagsView,
+									CubeView<Bool> *originalFlagsView,
+									CubeView<Bool> *privateFlagsView,
+									VectorView<Bool> *commonFlagRowView,
+									VectorView<Bool> *originalFlagRowView,
+									VectorView<Bool> *privateFlagRowView)
 {
 	commonFlagsView_p = NULL;
 	originalFlagsView_p = NULL;
 	privateFlagsView_p = NULL;
+	commonFlagRowView_p = NULL;
+	originalFlagRowView_p = NULL;
+	privateFlagRowView_p = NULL;
 	setParentCubes(commonFlagsView,originalFlagsView,privateFlagsView);
+	setParentFlagRow(commonFlagRowView,originalFlagRowView,privateFlagRowView);
 	setExpressionMapping(selectedCorrelations);
 	nSelectedCorrelations_p = selectedCorrelations.size();
 	flag_p = flag;
@@ -2862,6 +2911,9 @@ FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations)
 	commonFlagsView_p = NULL;
 	originalFlagsView_p = NULL;
 	privateFlagsView_p = NULL;
+	commonFlagRowView_p = NULL;
+	originalFlagRowView_p = NULL;
+	privateFlagRowView_p = NULL;
 	setExpressionMapping(selectedCorrelations);
 	nSelectedCorrelations_p = selectedCorrelations.size();
 	flag_p = flag;
@@ -2896,6 +2948,29 @@ FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *origi
 }
 
 void
+FlagMapper::setParentFlagRow(VectorView<Bool> *commonFlagRowView,VectorView<Bool> *originalFlagRowView,VectorView<Bool> *privateFlagRowView)
+{
+	if (commonFlagRowView_p != NULL) delete commonFlagRowView_p;
+	if (originalFlagRowView_p != NULL) delete originalFlagRowView_p;
+	if (privateFlagRowView_p != NULL) delete privateFlagRowView_p;
+
+	commonFlagRowView_p = commonFlagRowView;
+	originalFlagRowView_p = originalFlagRowView;
+	if (privateFlagRowView_p != NULL)
+	{
+		privateFlagRowView_p = privateFlagRowView;
+		applyFlagRow_p = &FlagMapper::applyCommonFlagRow;
+	}
+	else
+	{
+		applyFlagRow_p = &FlagMapper::applyPrivateFlagRow;
+	}
+
+	return;
+}
+
+
+void
 FlagMapper::setExpressionMapping(vector<uInt> selectedCorrelations)
 {
 	selectedCorrelations_p = selectedCorrelations;
@@ -2908,7 +2983,11 @@ FlagMapper::setExpressionMapping(vector<uInt> selectedCorrelations)
 FlagMapper::~FlagMapper()
 {
 	if (commonFlagsView_p != NULL) delete commonFlagsView_p;
+	if (originalFlagsView_p != NULL) delete originalFlagsView_p;
 	if (privateFlagsView_p != NULL) delete privateFlagsView_p;
+	if (commonFlagRowView_p != NULL) delete commonFlagRowView_p;
+	if (originalFlagRowView_p != NULL) delete originalFlagRowView_p;
+	if (privateFlagRowView_p != NULL) delete privateFlagRowView_p;
 }
 
 Bool
@@ -2965,6 +3044,24 @@ FlagMapper::getPrivateFlags(uInt pol, uInt channel, uInt row)
 	return privateFlagsView_p->operator ()(pol,channel,row);
 }
 
+Bool
+FlagMapper::getOriginalFlagRow(uInt row)
+{
+	return originalFlagRowView_p->operator ()(row);
+}
+
+Bool
+FlagMapper::getModifiedFlagRow(uInt row)
+{
+	return commonFlagRowView_p->operator ()(row);
+}
+
+Bool
+FlagMapper::getPrivateFlagRow(uInt row)
+{
+	return privateFlagRowView_p->operator ()(row);
+}
+
 void
 FlagMapper::setModifiedFlags(uInt pol, uInt channel, uInt row)
 {
@@ -2984,6 +3081,22 @@ FlagMapper::applyFlag(uInt channel, uInt row)
 	{
 		(*this.*applyFlag_p)(*iter,channel,row);
 	}
+}
+
+void
+FlagMapper::applyFlagRow(uInt row)
+{
+	// Flag cube
+	for (uInt chan_i=0;chan_i<reducedLength_p(0);chan_i++)
+	{
+		for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+		{
+			(*this.*applyFlag_p)(*iter,chan_i,row);
+		}
+	}
+
+	// Flag row
+	(*this.*applyFlagRow_p)(row);
 }
 
 void
@@ -3011,6 +3124,23 @@ FlagMapper::checkCommonFlags(uInt pol, uInt channel, uInt row)
 	{
 		cerr << "FlagMapper::" << __FUNCTION__ <<  " Flag missmatch at pol=" << pol << ",channel=" << channel << ",row=" << row << endl;
 	}
+	return;
+}
+
+void
+FlagMapper::applyCommonFlagRow(uInt row)
+{
+	// NOTE: Notice that the position is pol,channel,row, not the other way around
+	commonFlagRowView_p->operator()(row) = flag_p;
+	return;
+}
+
+void
+FlagMapper::applyPrivateFlagRow(uInt row)
+{
+	// NOTE: Notice that the position is pol,channel,row, not the other way around
+	commonFlagRowView_p->operator()(row) = flag_p;
+	originalFlagRowView_p->operator()(row) = flag_p;
 	return;
 }
 

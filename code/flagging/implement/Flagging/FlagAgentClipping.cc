@@ -100,7 +100,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 	return;
 }
 
-void
+bool
 FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
 	IPosition flagCubeShape= flags.shape();
@@ -149,7 +149,7 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 		}
 	}
 
-	return;
+	return false;
 }
 
 bool

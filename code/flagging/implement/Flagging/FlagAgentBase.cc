@@ -127,6 +127,9 @@ FlagAgentBase::initialize()
    privateFlagCube_p = NULL;
    commonFlagCube_p = NULL;
    originalFlagCube_p = NULL;
+   privateFlagRow_p = NULL;
+   commonFlagRow_p = NULL;
+   originalFlagRow_p = NULL;
 
    // Initialize selection ranges
    timeSelection_p = String("");
@@ -381,6 +384,10 @@ FlagAgentBase::runCore()
 	commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
 	originalFlagCube_p = flagDataHandler_p->getOriginalFlagCube();
 
+	// Set pointer to common flag row
+	commonFlagRow_p = flagDataHandler_p->getModifiedFlagRow();
+	originalFlagRow_p = flagDataHandler_p->getOriginalFlagRow();
+
 	// Set vis buffer
 	visibilityBuffer_p = flagDataHandler_p->visibilityBuffer_p;
 
@@ -453,6 +460,9 @@ FlagAgentBase::runCore()
 			}
 		}
 	}
+
+	// If any row was flag, then we have to flush the flagRow
+	if (flagRow_p) flagDataHandler_p->flushFlagRow_p = true;
 
 	// If any flag was raised, then we have to flush the flagCube
 	if (visBufferFlags_p>0) flagDataHandler_p->flushFlags_p = true;
@@ -1069,7 +1079,7 @@ FlagAgentBase::generatePolarizationIndex(uInt nPolarizations)
 		// but this functionality is not implemented yet, therefore we are getting
 		// it from the RW Visibility Iterator which is always a conventional one
 		// (not asyn I/O which does not implement it)
-		Int polId = flagDataHandler_p->rwVisibilityIterator_p->polarizationId();
+		Int polId = visibilityBuffer_p->get()->polarizationId();
 		Vector<Int> polarizations = polarizationList_p(polId);
 
 		// Get accepted polarizations
@@ -1298,6 +1308,7 @@ FlagAgentBase::iterateRows()
 
 	// Loop trough selected rows
 	Int rowIdx = 0;
+	bool flagRow = false;
 	vector<uInt>::iterator rowIter;
 	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
 	{
@@ -1311,7 +1322,14 @@ FlagAgentBase::iterateRows()
 		}
 
 		// Compute flags for this row
-		computeRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()), flagsMap,*rowIter);
+		flagRow = false;
+		flagRow = computeRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()), flagsMap,*rowIter);
+		if (flagRow)
+		{
+			flagsMap.applyFlagRow(*rowIter);
+			visBufferFlags_p += flagsMap.flagsPerRow();
+			if ((filterChannels_p == false) and (filterPols_p == false)) flagRow_p = true;
+		}
 
 		// Increment row index
 		rowIdx++;
@@ -1611,6 +1629,19 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 	// Third step: Set CubeViews in mapper
 	flagMap->setParentCubes(commonFlagCube,originalFlagCube,privateFlagCube);
 
+	// 4th step create common/private CubeViews
+	VectorView<Bool> *commonFlagRow = NULL;
+	VectorView<Bool> *originalFlagRow = NULL;
+	VectorView<Bool> *privateFlagRow = NULL;
+
+	// 5th step create CubeViews from selected vis cubes
+	commonFlagRow= new VectorView<Bool>(commonFlagRow_p,rows);
+	originalFlagRow= new VectorView<Bool>(originalFlagRow_p,rows);
+	if (writePrivateFlagCube_p) privateFlagRow= new VectorView<Bool>(privateFlagRow_p,rows);
+
+	// 6th step: Set CubeViews in mapper
+	flagMap->setParentFlagRow(commonFlagRow,originalFlagRow,privateFlagRow);
+
 	return;
 }
 
@@ -1839,25 +1870,25 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 	return False;
 }
 
-void
+bool
 FlagAgentBase::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
-	return;
+	return false;
 }
 
-void
+bool
 FlagAgentBase::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
-	return;
+	return false;
 }
 
-void
+bool
 FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// TODO: This class must be re-implemented in the derived classes
-	return;
+	return false;
 }
 
 
