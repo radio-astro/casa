@@ -172,7 +172,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
     applyoffsets=False;
     pbgridcorrect=True;
-    reffreqVal=0.0;
     padding=1.2;
     #
     # While the following condition is irrelavent due to the change in
@@ -191,29 +190,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         scan=''
         observation = ''
 
-    # handle mode='mfs' explicitly
-    if (mode=='mfs'):
-        start=0
-
-
     try:
-        if nterms > 1:
-            qat=qatool.create();
-            try:
-                rff=qat.canonical(reffreq);
-            except Exception, instance:
-                print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
-                raise Exception, instance
-            reffreqVal=rff['value'];  # This is the frequency in Hz
-            #qat.close()
-            
-        # if (gridmode =='widefield'):
-        #     if (wprojplanes > 1):
-        #         ftmachine='wproject';
-        # elif (gridmode == 'aprojection'):
-        #     ftmachine='pbwproject';
+        # Create a new imager tool
+        imCln=imtool.create();
 
-        imCln=imtool.create()
         ###if usescratch open ms with scratch column
         ###if mosweight use scratch columns as there in no
         ###mosweight available for no scratch column /readonly ms yet
@@ -222,22 +202,27 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # multims input only (do sorting of vis list based on spw)
         if  type(vis)==list: imset.sortvislist(spw,mode,width)
 
+        # Check imagename
         if((len(imagename) == 0) or
            ((type(imagename) == str) and imagename.isspace())):
             raise Exception, 'Cannot proceed with blank imagename'
-    
+
         multifield=False
         if (type(imagename)==list) & (len(imagename) > 1):
             multifield=True
         elif (type(phasecenter) == list) and (len(phasecenter) >1):
             raise TypeError, 'Number of phasecenters has to be equal to number of images'
 
+        # Figure out which FTMachine to use.
         localFTMachine = getFTMachine(gridmode, imagermode, mode, wprojplanes,
                                       ftmachine);
 
         casalog.post("FTMachine used is  %s "%localFTMachine)
 
 
+        # handle mode='mfs' explicitly
+        if (mode=='mfs'):
+            start=0;
         
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
@@ -343,8 +328,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             # 
             newformat=False
             # make a copy of the input, mask, modelimage (will be modified)
+            if type(modelimage)==str:
+                modelimage=[modelimage];
             loc_modelimage= modelimage
+            if type(mask)==str:
+                mask=[mask];
             loc_mask = mask
+
             # new handling:
             # need to combine task parameter inputs and outlier file input
             if len(outlierfile) != 0:
@@ -387,14 +377,18 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         phasecenters=phasecenter
                 # for mask, modelimage  task input 
                 # turn them into list or list of list 
+                if(loc_mask == []):  ## UU
+                    loc_mask = [''];   ## UU
                 if type(loc_mask) !=  list:
                     loc_mask=[loc_mask] 
                 elif type(loc_mask[0]) != list:
                     loc_mask=[loc_mask]
 
+                if(loc_modelimage == []):  ## UU
+                    loc_modelimage = [''];   ## UU
                 if type(loc_modelimage) != list:
                     loc_modelimage=[loc_modelimage]
-                elif type(loc_modelimage[0]) != list and type(imagename) != str:
+                elif type(loc_modelimage[0]) != list: ## UUU and type(imagename) != str:
                     loc_modelimage=[loc_modelimage]
                 # add extra bracket to correct matching to image
                 #elif type(loc_modelimage[0]) != list:
@@ -403,6 +397,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                      if (type(imagename)==list and len(imagename) != len(loc_modelimage)) or \
                         (type(imagename)==str and len(loc_modelimage)>1):
                          loc_modelimage=[loc_modelimage]
+
+
                 # now append readoutlier content
                 for indx, name in enumerate(f_imageids): 
                     if not dochaniter:
@@ -439,6 +435,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 phasecenters=phasecenter
                 imageids=imagename
             casalog.post("imsizes="+str(imsizes)+" imageids="+str(imageids), 'DEBUG1')
+
 
             ###test image sizes
             optsize=[0,0]
@@ -559,156 +556,87 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              applypointingoffsets=applyoffsets,
                              dopbgriddingcorrections=pbgridcorrect);
 
-            #if(alg=='mfmultiscale' and multifield): 
-            #    raise Exception, 'Multiscale clean with flanking fields is not supported yet'
 
-            ##restoring
+            ##Set the restoring beam
             imset.setrestoringbeam(restoringbeam)
-            
-            ### combine input models to a modelimage (per field)
-            # move to cleanhelper..
-            # input: loc_modelimage, nterms, dochaniter, j, tmppath
-            # outout 
-            # imset. 
-            imset.convertAllModelImages(modelimage, mode, nterms, dochaniter, j, tmppath)
-            
-            # -------old code (moved to cleanhelper.convertAllModelImages)
-            #if not multifield:
-            #         imset.convertmodelimage(modelimages=modelimage,
-            #                 outputmodel=imagename+'.model')
-	    ##if (type(loc_modelimage)!=str and type(loc_modelimage)!=list):
-            ##		    raise Exception,'modelimage must be a string or a list of strings';
-            #if loc_modelimage != '' and loc_modelimage != [] and nterms==1 :
-            #
-            ##if (not all(img=='' or img==[] or img==[''] for img in loc_modelimage)) and nterms==1 :
-            ##    if dochaniter:
-            ##        imset.defineChaniterModelimages(loc_modelimage,j,tmppath)
-            ##    else:
-            ##        if type(loc_modelimage)== str or \
-            ##           (type(loc_modelimage)==list and len(imset.imagelist)==1 and len(loc_modelimage)>1): 
-            ##            loc_modelimage=[loc_modelimage]
-                    #if len(imset.imagelist)!= len(modelimage):
-                    #    raise Exception, "Number of modelimage does not match with number of image field"
-            ##        for j in range(len(imset.imagelist)): 
-                  # imset.convertmodelimage(modelimages=modelimage,
-                  #                outputmodel=imset.imagelist.values()[0]+'.model')
-                        #print "modelimage[",j,"]=", modelimage[j]
-            ##            casalog.post("Use modelimages: "+str(loc_modelimage[j])+" to create a combined modelimage: " \
-            ##                               +imset.imagelist.values()[j]+".model", 'DEBUG1')
-            ##            if loc_modelimage[j] != '' and loc_modelimage[j] != []:
-            ##                imset.convertmodelimage(modelimages=loc_modelimage[j],
-            ##                                 outputmodel=imset.imagelist.values()[j]+'.model',imindex=j)
+
+            #(1) print "Making image names for ", nterms, " terms and " ,len(imset.imagelist)  , " fields";
             modelimages=[]
             restoredimage=[]
             residualimage=[]
             psfimage=[]
             fluximage=[]
-            for k in range(len(imset.imagelist)):
-                ia.open(imset.imagelist[k])
-                if ((loc_modelimage =='' or loc_modelimage==[]) or \
-                    (type(loc_modelimage)==list and \
-                     (loc_modelimage[k]=='' or loc_modelimage[k]==[''] or loc_modelimage[k]==[]))) and \
-                    multifield:
-                    ia.rename(imset.imagelist[k]+'.model',overwrite=True)
-                else:
-                    ia.remove(verbose=False)
-                ia.close() 
-                modelimages.append(imset.imagelist[k]+'.model')
-                restoredimage.append(imset.imagelist[k]+'.image')
-                residualimage.append(imset.imagelist[k]+'.residual')
-                psfimage.append(imset.imagelist[k]+'.psf')
-                if(imagermode=='mosaic'):
-                    fluximage.append(imset.imagelist[k]+'.flux')
 
-        #####################################################################
-        #
-        # The various settings, which trigger the logic which
-        # controls (1) whether MFS algo. is fired, and (2)
-        # controls the logic of the various settings of the
-        # MFS algo. are in this block.
-        #
-        # multiscale=[] is used in other algorithms to detect
-        # if MS-Clean should be used.  However since
-        # multi-term MFS algo. is really only MS-MFS, it
-        # always requires MS settings to be done. And
-        # multiscale should be == [0] for a point-source pixel
-        # model to be used during MFS.
-        #
-        # alg should always be "msmfs".
-        #
-        # Unless the number of images is same as the number of Taylor Terms (nterms)
-        # the MFS algorithm is not triggered (Yuck!)
-        #
-        # If number of images is > 1 and alg != "msmfs", it
-        # will trigger multi-field algorithm.
-        #
-        # So to trigger MFS, the settings should be:
-        #   Algorithm = "msmfs"
-        #   mutliscale = [0] or larger
-        #   nterms > 1
-        #   modelimage,retoredimage, residualimage should all be vectors of length
-        #     == nterms
-        #
-        #   (the names for these, for MS-MFS case, are generated internally in
-        #   the following block by appending qualifiers to the imagename given
-        #   by the user)
-        #
+            if(nterms==1):
+               for k in range(len(imset.imagelist)):
+                  modelimages.append(imset.imagelist[k]+'.model')
+                  restoredimage.append(imset.imagelist[k]+'.image')
+                  residualimage.append(imset.imagelist[k]+'.residual')
+                  psfimage.append(imset.imagelist[k]+'.psf')
+                  if(imagermode=='mosaic'):
+                      fluximage.append(imset.imagelist[k]+'.flux')
+            else:
+                  for tt in range(0, nterms):
+                      for k in range(len(imset.imagelist)):
+                         # make names of all images
+                         modelimages.append( imset.imagelist[k]+'.model.tt'+str(tt) )
+                         restoredimage.append(imset.imagelist[k]+'.image.tt'+str(tt))
+                         residualimage.append(imset.imagelist[k]+'.residual.tt'+str(tt))
+                         psfimage.append(imset.imagelist[k]+'.psf.tt'+str(tt))
+                         if(imagermode=='mosaic'):
+                              fluximage.append(imset.imagelist[k]+'.flux.tt' + str(tt))
+
+            # (2)  print 'Make sure the model images exist on disk'
+            for tt in range(0, nterms):
+               for k in range(len(imset.imagelist)):
+                  if nterms==1:
+                      modname = imset.imagelist[k]+'.model';
+                  else:
+                      modname =  imset.imagelist[k]+'.model.tt'+str(tt) ;
+                  if(not os.path.exists( modname ) ):
+                            if( not os.path.exists(  imset.imagelist[k] ) ):
+                                    raise Exception, "Internal task error. Model image " + imset.imagelist[k] + " does not exist";
+                            shutil.copytree( imset.imagelist[k] , modname );		
+                            casalog.post("No model found. Making empty initial model : "+modname);
+                  else:
+		            casalog.post("Found and starting from existing model on disk : "+modname);
+
+
+            # (3) print 'Add user-specified model images to the default ones on disk';           
+            imset.convertAllModelImages(loc_modelimage, mode, nterms, dochaniter, j, tmppath);
+
+            # (4) print "Delete the template images made per field.";
+            for k in range(len(imset.imagelist)):
+                     ia.open( imset.imagelist[k] ); 
+                     ia.remove(verbose=False);
+                     ia.close();
+
+            # Multi-term parameters.
             if (mode == "mfs") and (nterms > 1):
-                if len(imset.imagelist) > 1:
-                    raise Exception, 'Multi-term MFS for multi-field imaging not supported'
                 if multiscale == []:
                     multiscale = [0]
-                # imCln.setscales(scalemethod='uservector',
-                #         uservector=multiscale);
-                # imCln.setsmallscalebias(smallscalebias)
+
+                # Check that reference-frequency is a valid string
+                reffreqVal=0.0;
+                qat=qatool.create();
+                try:
+                    rff=qat.canonical(reffreq);
+                except Exception, instance:
+                    print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
+                    raise Exception, instance
+                reffreqVal=rff['value'];  # This is the frequency in Hz
+
+                # Set the number of terms and reference-frequency
                 imCln.settaylorterms(ntaylorterms=nterms,
                                      reffreq=reffreqVal);
+
                 # forbid pbcorrection with msmfs for now
                 if(pbcor):
                     raise Exception, 'Primary-beam correction is currently not supported with nterms>1'
 
-                modelimages[0]=modelimages[0]+'.tt'+str(0);
-                restoredimage[0]=restoredimage[0]+'.tt'+str(0);
-                residualimage[0]=residualimage[0]+'.tt'+str(0);
-
-                # Make image names...
-                for tt in range(1, nterms):
-                    modelimages.append(imset.imagelist[0] + '.model'
-                                       + '.tt' +str(tt))
-                    restoredimage.append(imset.imagelist[0] + '.image' +
-                                         '.tt' + str(tt))
-                    residualimage.append(imset.imagelist[0] + '.residual'
-                                         + '.tt' + str(tt))
-		# Check if starting models exist 
-		#   - either same name as that derived from 'imagename', stored in 'modelimages'
-		#   - or, if the user has explicitly specified via 'modelimage'.
-		# If neither, make empty ones.
-		# Note : modelimages is an internal variable and modelimage is user-specified
-                for tt in range(0, nterms):
-		    if not os.path.exists(modelimages[tt]):
-			 imCln.make(modelimages[tt]);
-		         casalog.post("No model found. Making empty initial model : "+modelimages[tt]);
-	            else:
-		         casalog.post("Found and starting from existing model on disk : "+modelimages[tt]);
-               # Check for a user-specified modelimage list to add to current model
-		if( modelimage != '' and modelimage != [] ):
-		   if( type(modelimage)==str ):
-		       modelimage = [modelimage];
-		   if( type(modelimage)==list ):
-		       nimages = min( len(modelimage), len(modelimages) );
-                       shutil.copytree(modelimages[0] , imset.imagelist[0]);		
-		       for tt in range(0,nimages):
-			   if( os.path.exists(modelimage[tt]) ):
-			       imset.convertmodelimage(modelimages=[modelimage[tt]],outputmodel=modelimages[tt]);
-			       casalog.post("Found user-specified model image : "+modelimage[tt]+" . Adding to starting model : "+modelimages[tt]);
-			   else:
-			       casalog.post("Cannot find user-specified model image : "+modelimage[tt]+" . Continuing with current model : "+modelimages[tt]);
-                       shutil.rmtree(imset.imagelist[0]); 
-		   else:
-		      raise Exception,'Model image(s) must be a string or a list of strings';
-		
 		casalog.post('Running MS-MFS with '+str(nterms)+' Taylor-terms on dataset : ' + str(vis));
-            #####################################################################
+            ###########################################################
+
             if len(multiscale) > 0:
                 imCln.setscales(scalemethod='uservector',
                                 uservector=multiscale)

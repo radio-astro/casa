@@ -39,6 +39,7 @@
 #include <casa/Utilities/Assert.h>
 
 #include <images/Images/PagedImage.h>
+#include <images/Images/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCBox.h>
@@ -138,7 +139,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	os << "MSMFS algorithm (v2.4) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
+	os << "MSMFS algorithm (v2.5) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
 	Int nchan=0,npol=0;
 
@@ -393,7 +394,8 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/******************* END MAJOR CYCLE LOOP *****************/
 	
 	/* Compute and write alpha,beta results to disk */
-	writeResultsToDisk();
+	///writeResultsToDisk();
+	calculateCoeffResiduals();
 	
 	/* stopflag=1 -> stopped because the user-threshold was reached */
         /* stopflag=-1 -> stopped because number of iterations was reached */
@@ -474,6 +476,161 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
 }
 
 /***********************************************************************/
+Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredNames, 
+                                                                           const Vector<String> &residualNames)
+{
+  Int index=0;
+  Bool writeerror=False;
+  
+  for(Int field=0;field<nfields_p;field++)
+    {
+      Int baseindex = getModelIndex(field,0);
+      String alphaname,betaname, alphaerrorname;
+      if(  ( (restoredNames[baseindex]).substr( (restoredNames[baseindex]).length()-3 , 3 ) ).matches("tt0") )
+	{
+	  alphaname = (restoredNames[baseindex]).substr(0,(restoredNames[baseindex]).length()-3) + "alpha";
+	  betaname = (restoredNames[baseindex]).substr(0,(restoredNames[baseindex]).length()-3) + "beta";
+	  if(writeerror) alphaerrorname = alphaname+".error";
+	}
+      else
+	{
+	  alphaname = (restoredNames[baseindex]) +  String(".alpha");
+	  betaname = (restoredNames[baseindex]) +  String(".beta");
+	}
+      
+      /* Create empty alpha image, and alpha error image */
+      PagedImage<Float> imalpha(image(baseindex).shape(),image(baseindex).coordinates(),alphaname); 
+      imalpha.set(0.0);
+
+      /* Open restored images */
+      PagedImage<Float> imtaylor0(restoredNames[getModelIndex(field,0)]);
+      PagedImage<Float> imtaylor1(restoredNames[getModelIndex(field,1)]);
+
+      /* Open first residual image */
+      PagedImage<Float> residual0(residualNames[getModelIndex(field,0)]);
+
+      /* Create a mask - make this adapt to the signal-to-noise */
+      LatticeExprNode leMaxRes=max(residual0);
+      Float maxres = leMaxRes.getFloat();
+      // Threshold is either 10% of the peak residual (psf sidelobe level) or 
+      // user threshold, if deconvolution has gone that deep.
+      Float specthreshold = MAX( threshold()*5 , maxres/5.0 );
+      os << "Calculating spectral parameters for  Intensity > MAX(threshold*5,peakresidual/5) = " << specthreshold << " Jy/beam" << LogIO::POST;
+      LatticeExpr<Float> mask1(iif((imtaylor0)>(specthreshold),1.0,0.0));
+      LatticeExpr<Float> mask0(iif((imtaylor0)>(specthreshold),0.0,1.0));
+
+      /////// Calculate alpha
+      LatticeExpr<Float> alphacalc( ((imtaylor1)*mask1)/((imtaylor0)+(mask0)) );
+      imalpha.copyData(alphacalc);
+
+      // Set the restoring beam for alpha
+      ImageInfo ii = imalpha.imageInfo();
+      ii.setRestoringBeam( (imtaylor0.imageInfo()).restoringBeam() );
+      imalpha.setImageInfo(ii);
+      //imalpha.setUnits(Unit("Spectral Index"));
+      imalpha.table().unmarkForDelete();
+
+      // Make a mask for the alpha image
+      ImageAnalysis iman;
+      iman.open(alphaname);
+      Record regions;
+      String scalcmask( restoredNames[getModelIndex(field,0)] 
+			+ String(">") + String::toString(specthreshold)  );
+      iman.calcmask(scalcmask, regions, String("mask_alpha"), True);
+
+      os << "Written Spectral Index Image : " << alphaname << LogIO::POST;
+
+
+      ////// Calculate error on alpha
+      if(writeerror)
+	{
+	  PagedImage<Float> imalphaerror(image(baseindex).shape(),image(baseindex).coordinates(),alphaerrorname); 
+	  imalphaerror.set(0.0);
+	  PagedImage<Float> residual1(residualNames[getModelIndex(field,1)]);
+
+	  LatticeExpr<Float> alphacalcerror( abs(alphacalc) * sqrt( ( (residual0*mask1)/(imtaylor0+mask0) )*( (residual0*mask1)/(imtaylor0+mask0) ) + ( (residual1*mask1)/(imtaylor1+mask0) )*( (residual1*mask1)/(imtaylor1+mask0) )  ) );
+	  imalphaerror.copyData(alphacalcerror);
+	  imalphaerror.setImageInfo(ii);
+	  imalphaerror.table().unmarkForDelete();      
+	  ImageAnalysis ierr;
+	  ierr.open(alphaerrorname);
+	  ierr.calcmask(scalcmask, regions, String("mask_error"), True);
+	  os << "Written Spectral Index Error Image : " << alphaerrorname << LogIO::POST;
+	}
+
+      ////// Calculate beta
+      if(ntaylor_p>2)
+	{
+	  PagedImage<Float> imbeta(image(baseindex).shape(),image(baseindex).coordinates(),betaname); 
+	  imbeta.set(0.0);
+	  PagedImage<Float> imtaylor2(restoredNames[getModelIndex(field,2)]);
+	  
+	  LatticeExpr<Float> betacalc( ((imtaylor2)*mask1)/((imtaylor0)+(mask0))-0.5*(imalpha)*(imalpha-1.0) );
+	  imbeta.copyData(betacalc);
+	  imbeta.setImageInfo(ii);
+	  //imbeta.setUnits(Unit("Spectral Curvature"));
+	  imbeta.table().unmarkForDelete();
+	  ImageAnalysis iman2;
+	  iman2.open(betaname);
+	  iman2.calcmask(scalcmask, regions, String("mask_beta"), True);
+	  os << "Written Spectral Curvature Image : " << betaname << LogIO::POST;
+	}
+      
+    }// field loop
+
+  return 0;
+
+}
+
+/***********************************************************************/
+Bool WBCleanImageSkyModel::calculateCoeffResiduals()
+{
+  for(Int field=0;field<nfields_p;field++)
+    {
+      Int baseindex = getModelIndex(field,0);
+      
+      /* Apply Inverse Hessian to the residuals */
+      IPosition gip(4,image(baseindex).shape()[0],image(baseindex).shape()[1],1,1);
+      Matrix<Double> invhessian;
+      lc_p[field].getinvhessian(invhessian);
+      //cout << "Inverse Hessian : " << invhessian << endl;
+      
+      Int tindex;
+      LatticeExprNode len_p;
+      PtrBlock<TempLattice<Float>* > coeffresiduals(ntaylor_p); //,smoothresiduals(ntaylor_p);
+      for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+	{
+	  coeffresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
+	}
+      
+      /* Apply the inverse Hessian to the residuals */
+      for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+	{
+	  len_p = LatticeExprNode(0.0);
+	  for(Int taylor2=0;taylor2<ntaylor_p;taylor2++)
+	    {
+	      tindex = getModelIndex(field,taylor2);
+	      len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(residual(tindex)));
+	    }
+	  (*coeffresiduals[taylor1]).copyData(LatticeExpr<Float>(len_p));
+	}
+
+      /* Fill in the residual images with these coefficient residuals */
+      for(Int taylor=0;taylor<ntaylor_p;taylor++)
+	{
+          tindex = getModelIndex(field,taylor);
+	  (residual(tindex)).copyData(LatticeExpr<Float>(*coeffresiduals[taylor]));
+	}
+
+      for(uInt i=0;i<coeffresiduals.nelements();i++) 
+	{
+	  if(coeffresiduals[i]) delete coeffresiduals[i];
+	}
+
+    }//end of field loop
+
+}//end of calculateCoeffResiduals
+
 /***********************************************************************/
 ///// Write alpha and beta to disk. Calculate from smoothed model + residuals.
 Int WBCleanImageSkyModel::writeResultsToDisk()
@@ -513,7 +670,6 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
       PagedImage<Float> imalpha(image(baseindex).shape(),image(baseindex).coordinates(),alphaname); 
       imalpha.set(0.0);
       
-      
       /* Apply Inverse Hessian to the residuals */
       IPosition gip(4,image(baseindex).shape()[0],image(baseindex).shape()[1],1,1);
       Matrix<Double> invhessian;
@@ -539,7 +695,15 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	    }
 	  (*coeffresiduals[taylor1]).copyData(LatticeExpr<Float>(len_p));
 	}
-      
+
+      /* Fill in the residual images with these coefficient residuals */
+      for(Int taylor=0;taylor<ntaylor_p;taylor++)
+	{
+          tindex = getModelIndex(field,taylor);
+	  (residual(taylor)).copyData(LatticeExpr<Float>(*coeffresiduals[taylor]));
+	}
+
+
       /* Smooth the model images and add the above coefficient residuals */
       for(uInt i=0;i<smoothed.nelements();i++)
 	{
@@ -549,6 +713,8 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	  LatticeExpr<Float> cop(image(index));
 	  imalpha.copyData(cop);
 	  StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa);
+	  //cout << "Clean Beam from WBC : " << bmaj  << " , " << bmin << " , " << bpa << endl;
+          //cout << "SkyModel internally-recorded beam for index " << index << " : " << beam(index) << endl;
 	  //LatticeExpr<Float> le(imalpha); 
 	  LatticeExpr<Float> le(imalpha+( *coeffresiduals[i] )); 
 	  (*smoothed[i]).copyData(le);
@@ -712,7 +878,7 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se)
 	  Float maxpsf=maxPSF2.getFloat();
 	  if(adbg) os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
 	  
-	  storeAsImg(String("TstPsf.")+String::toString(thismodel)+String(".")+String::toString(taylor),PSF(index));
+	  ///	  storeAsImg(String("TstPsf.")+String::toString(thismodel)+String(".")+String::toString(taylor),PSF(index));
 	}
       
       //     index = getModelIndex(thismodel,0);

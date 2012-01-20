@@ -126,6 +126,9 @@ public:
    Int getTaylorIndex(uInt index){return Int(index/nfields_p);};
    Int getFieldIndex(uInt index){return index%nfields_p;};
 
+  Bool calculateAlphaBeta(const Vector<String> &restoredNames, 
+			               const Vector<String> &residualNames);
+
    // Major axis for ordering : Models
    //inline Int getModelIndex(uInt model, uInt taylor){return model * (ntaylor_p) + (taylor);};
    //inline Int getPSFModelIndex(uInt model, uInt taylor){return model * (2*ntaylor_p-1) + (taylor);};
@@ -167,6 +170,7 @@ private:
   Int makeSpectralPSFs(SkyEquation& se);
    //Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
   Int writeResultsToDisk();
+  Bool calculateCoeffResiduals();
   Float computeFluxLimit(Float &fractionOfPsf);
 
   void blankOverlappingModels();

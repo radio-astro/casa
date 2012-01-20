@@ -128,6 +128,9 @@ public:
   // MFS : Number of taylor terms per model
   virtual Int numberOfTaylorTerms() {return 1;};
 
+  // MFS : Calculate restored alpha and beta.
+  virtual Bool calculateAlphaBeta(const Vector<String>& restoredNames, const Vector<String>& residualNames){return False;};
+
   // MFS : Reference Frequency
   virtual Double getReferenceFrequency(){return 0.0;}
 

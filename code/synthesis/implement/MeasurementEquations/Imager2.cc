@@ -2187,8 +2187,14 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	  }
 	}
 	
-      }
-
+      }// end of for 'thismodel'
+ 
+      // If msmfs, calculate alpha, beta too
+      if(doWideBand_p && ntaylor_p>1)
+	{
+	  sm_p->calculateAlphaBeta(restoredNames, residualNames);
+	}
+   
     }
   }
 catch (exception &x) { 
@@ -2937,7 +2943,6 @@ Bool Imager::createFTMachine()
     
   }
 
- 
   ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
   ft_p->setFreqInterpolation(freqInterpMethod_p);
   if(doTrackSource_p){
@@ -2959,8 +2964,6 @@ Bool Imager::createFTMachine()
      ft_p = tempftm;
   }
   /******* End MTFT code ********/
-
-
 
   return True;
 }
