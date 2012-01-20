@@ -68,7 +68,7 @@ class CasaRegression:
             else:
                 shutil.rmtree(self._path['testbase'])
 
-        os.mkdir(self._path['testbase'],0755)
+        os.makedirs(self._path['testbase'],0755)
 
 
     # regression suite
