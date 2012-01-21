@@ -104,7 +104,10 @@ class VisModelData {
   //check if an addFT or addCompFT is necessary
   //Bool hasFT(Int msid, Int fieldid);
   //Bool hasCL(Int msid, Int fieldid);
-  Bool hasModel(Int msid, Int field, Int spw); 
+  //returns a -1 if there is no model for this combination of ms,field,spw...but has not been  // checked yet if there is one
+  //returns a -2 if it has been tested before but does have it.
+  //returns a 1 if it has a model stored 
+  Int hasModel(Int msid, Int field, Int spw); 
  private:
   void initializeToVis();
   Vector<CountedPtr<ComponentList> >getCL(const Int msId, const Int fieldId, Int spw);

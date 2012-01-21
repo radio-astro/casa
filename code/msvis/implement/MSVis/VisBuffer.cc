@@ -38,6 +38,7 @@
 #include <components/ComponentModels/ComponentList.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
+#include <casa/OS/Timer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 
 #define CheckVisIter() checkVisIter (__func__, __FILE__, __LINE__)
@@ -2313,14 +2314,13 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
       String modelkey=String("definedmodel_field_")+String::toString(fieldId());
       Bool hasmodkey=visIter_p->ms().keywordSet().isDefined(modelkey);
       if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA"))){
-	if(!visModelData_p.hasModel(msId(), fieldId(), spectralWindow())){
+	if(visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) ==-1){
 	  if(hasmodkey){
 	    String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
 	    Record modrec(visIter_p->ms().keywordSet().asRecord(whichrec));
 	    visModelData_p.addModel(modrec, Vector<Int>(1, msId()), *this);
 	  }
 	}
-	
 	visModelData_p.getModelVis(*this);
       }
       else{

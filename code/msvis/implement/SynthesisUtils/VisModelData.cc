@@ -146,33 +146,39 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       Int numft=rec.asInt("numft");
       if(numft >0){
 	for(Int ftk=0; ftk < numft; ++ftk){
-	  indexft=ftholder_p.nelements();
-	  ftholder_p.resize(indexft+1, False, True);
-	  ftholder_p[indexft].resize(1);
 	  Record ftrec(rec.asRecord("ft_"+String::toString(ftk)));
-	  ftholder_p[indexft][0]=NEW_FT(ftrec.asRecord("container"));
-	  ftholder_p[indexft][0]->initMaps(vb);
 	  Vector<Int>fields;
 	  Vector<Int> spws;
 	  ftrec.get("fields", fields);
 	  ftrec.get("spws", spws);
-	  for( uInt fi=0; fi < fields.nelements(); ++fi){
-	    for(uInt spi=0; spi < spws.nelements(); ++spi){
-	      Int indx=-1;
-	      Int ftindx=-1;
-	      if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
-		
-		indx=ftindex_p(spws[spi], fields[fi], vb.msId());
-		ftindx=clholder_p[indx].nelements();
-		ftholder_p[indx].resize(ftindx+1, True);
-		ftholder_p[indx][ftindx]=ftholder_p[indexft][0];
-	      }
-	      else{
-		ftindex_p(spws[spi], fields[fi], vb.msId())=indexft;
+	  if(anyEQ(spws, vb.spectralWindow())){
+	    indexft=ftholder_p.nelements();
+	    ftholder_p.resize(indexft+1, False, True);
+	    ftholder_p[indexft].resize(1);
+	    ftholder_p[indexft][0]=NEW_FT(ftrec.asRecord("container"));
+	    ftholder_p[indexft][0]->initMaps(vb);
+	    
+	    for( uInt fi=0; fi < fields.nelements(); ++fi){
+	      for(uInt spi=0; spi < spws.nelements(); ++spi){
+		Int indx=-1;
+		Int ftindx=-1;
+		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		  
+		  indx=ftindex_p(spws[spi], fields[fi], vb.msId());
+		  ftindx=clholder_p[indx].nelements();
+		  ftholder_p[indx].resize(ftindx+1, True);
+		  ftholder_p[indx][ftindx]=ftholder_p[indexft][0];
+		}
+		else{
+		  ftindex_p(spws[spi], fields[fi], vb.msId())=indexft;
+		}
 	      }
 	    }
 	  }
-
+	  else{
+	    if(hasModel(vb.spectralWindow(), vb.fieldId(), vb.msId()) < 0)
+	      ftindex_p(vb.spectralWindow(), vb.fieldId(), vb.msId())=-2;
+	  }
 
 	  
 	}
@@ -186,33 +192,41 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	  Vector<Int>fields;
 	  Vector<Int> spws;
 	  Record clrec(rec.asRecord("cl_"+String::toString(clk)));
-	  indexcl=clholder_p.nelements();
-	  clholder_p.resize(indexcl+1, False, True);
-	  clholder_p[indexcl].resize(1);
-	  clholder_p[indexcl][0]=new ComponentList();
-	  String err;
-	  if(!((clholder_p[indexcl][0])->fromRecord(err, clrec.asRecord("container"))))
-	    throw(AipsError("Component model failed to load for field "+String::toString(fields)));
 	  clrec.get("fields", fields);
 	  clrec.get("spws", spws);
-	  for( uInt fi=0; fi < fields.nelements(); ++fi){
-	    for(uInt spi=0; spi < spws.nelements(); ++spi){
-	      Int indx=-1;
-	      Int clindx=-1;
-	      if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
-		indx=clindex_p(spws[spi], fields[fi], vb.msId());
-		clindx=clholder_p[indx].nelements();
-		clholder_p[indx].resize(clindx+1, True);
-		clholder_p[indx][clindx]=clholder_p[indexcl][0];
-	      }
-	      else{
-		clindex_p(spws[spi], fields[fi], vb.msId())=indexcl;
+	  if(anyEQ(spws, vb.spectralWindow())){
+	    indexcl=clholder_p.nelements();
+	    clholder_p.resize(indexcl+1, False, True);
+	    clholder_p[indexcl].resize(1);
+	    clholder_p[indexcl][0]=new ComponentList();
+	    String err;
+	    if(!((clholder_p[indexcl][0])->fromRecord(err, clrec.asRecord("container"))))
+	      throw(AipsError("Component model failed to load for field "+String::toString(fields)));
+	    for( uInt fi=0; fi < fields.nelements(); ++fi){
+	      for(uInt spi=0; spi < spws.nelements(); ++spi){
+		Int indx=-1;
+		Int clindx=-1;
+		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		  indx=clindex_p(spws[spi], fields[fi], vb.msId());
+		  clindx=clholder_p[indx].nelements();
+		  clholder_p[indx].resize(clindx+1, True);
+		  clholder_p[indx][clindx]=clholder_p[indexcl][0];
+		}
+		else{
+		  clindex_p(spws[spi], fields[fi], vb.msId())=indexcl;
+		}
 	      }
 	    }
-	  }	      
+	  }
+	  else{
+	    if(hasModel(vb.spectralWindow(), vb.fieldId(), vb.msId()) < 0)
+	      clindex_p(vb.spectralWindow(), vb.fieldId(), vb.msId())=-2;
+	  }
+
 	}
       }
     }
+
 
   }
 
@@ -229,7 +243,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     return NULL;
   }
 
-  Bool VisModelData::hasModel(Int msid, Int field, Int spw){
+  Int VisModelData::hasModel(Int msid, Int field, Int spw){
 
     IPosition oldcubeShape=ftindex_p.shape();
     if(oldcubeShape(0) <(spw+1) || oldcubeShape(1) < (field+1) || oldcubeShape(2) < (msid+1)){
@@ -242,9 +256,11 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       clindex_p.assign(newind);
     }
 
-    if( (clindex_p(spw, field, msid) <0)  &&  (ftindex_p(spw, field, msid) <0))
-      return False;
-    return True;
+    if( clindex_p(spw, field, msid) + ftindex_p(spw, field, msid) < -2)
+      return -2;
+    else if( (clindex_p(spw, field, msid) ==-1)  &&  (ftindex_p(spw, field, msid) ==-1))
+      return -1;
+    return 1;
 
 
   }
@@ -257,7 +273,6 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
     Vector<CountedPtr<ComponentList> >cl=getCL(vb.msId(), vb.fieldId(), vb.spectralWindow());
     Vector<CountedPtr<FTMachine> > ft=getFT(vb.msId(), vb.fieldId(), vb.spectralWindow());
-
     //Fill the buffer with 0.0; also prevents reading from disk if MODEL_DATA exists
     ///Oh boy this is really dangerous...
     //nCorr etc are public..who know who changed these values before reaching here.
@@ -267,24 +282,32 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     if( cl.nelements()>0){
       //cerr << "In cft " << cl.nelements() << endl;
       for (uInt k=0; k < cl.nelements(); ++k)
-	cft_p->get(vb, *(cl[k]), -1); 
+	if(!cl[k].null()){
+	  cft_p->get(vb, *(cl[k]), -1); 
       //cerr << "max " << max(vb.modelVisCube()) << endl;
-      incremental=True;
+	  incremental=True;
+	}
     }
     if(ft.nelements()>0){
       Cube<Complex> tmpModel;
       if(incremental || ft.nelements() >1)
 	tmpModel.assign(vb.modelVisCube());
+      Bool allnull=True;
       for (uInt k=0; k < ft.nelements(); ++k){
-	ft[k]->get(vb, -1);
-	if(ft.nelements()>1 || incremental){
-	  tmpModel+=vb.modelVisCube();
+	if(!ft[k].null()){
+	  ft[k]->get(vb, -1);
+	  if(ft.nelements()>1 || incremental){
+	    tmpModel+=vb.modelVisCube();
+	  }
+	  allnull=False;
 	}
       }
-      //cerr << "min max after ft " << min(vb.modelVisCube()) << max(vb.modelVisCube()) << endl; 
-      if(ft.nelements()>1 || incremental)
-	vb.modelVisCube()=tmpModel;
-      incremental=True;      
+      //cerr << "min max after ft " << min(vb.modelVisCube()) << max(vb.modelVisCube()) << endl;
+      if(!allnull){
+	if(ft.nelements()>1 || incremental)
+	  vb.modelVisCube()=tmpModel;
+	incremental=True;
+      }      
     }
     if(!incremental){
       //No model was set so....
