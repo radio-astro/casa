@@ -2350,7 +2350,6 @@ bool ms::statwt(const bool dorms,                const bool byantenna,
 
   try {
     *itsLog << LogOrigin("ms", "statwt");
-    *itsLog << LogIO::SEVERE << "Not implemented yet." << LogIO::POST;
 
     Reweighter reweighter(itsMS->tableName(), dorms, minsamp);
 
@@ -2367,6 +2366,7 @@ bool ms::statwt(const bool dorms,                const bool byantenna,
     String t_obs     = toCasaString(obs);
     String t_subarray    = toCasaString(subarray);
     String t_correlation = upcase(correlation);
+    //*itsLog << LogIO::NORMAL2 << "apply selections to Reweighter" << LogIO::POST;
 
     if(!reweighter.setmsselect(t_fitspw, t_spw,
                                t_field, 
@@ -2386,6 +2386,7 @@ bool ms::statwt(const bool dorms,                const bool byantenna,
 
     reweighter.setFitSpw(t_fitspw);
     reweighter.setOutSpw(t_spw);
+    //*itsLog << LogIO::NORMAL2 << "running reweight..." << LogIO::POST;
     if(!reweighter.reweight(t_whichcol, t_combine)){
       *itsLog << LogIO::SEVERE
 	      << "Error reweighting " << itsMS->tableName()
