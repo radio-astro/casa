@@ -45,7 +45,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);

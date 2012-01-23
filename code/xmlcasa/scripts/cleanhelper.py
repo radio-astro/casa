@@ -381,6 +381,7 @@ class cleanhelper:
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
+
                 
     def checkpsf(self,chan):
         """
@@ -1257,8 +1258,7 @@ class cleanhelper:
                              pixels=modelos[k]+' + '+'__temp_model2',
                              overwrite=True)
             ia.removefile('__temp_model2')
-            ia.removefile(modelos[k])
-            
+            ia.removefile(modelos[k]);
     
     def readboxfile(self, boxfile):
         """ Read a file containing clean boxes (compliant with AIPS BOXFILE)
@@ -2927,7 +2927,7 @@ class cleanhelper:
             # clean up temporary channel model image
             self.cleanupTempFiles(chanmodimg)
 
-    def convertAllModelImages(self,modelimage, mode, nterms, dochaniter, chan, tmppath):
+    def convertAllModelImages_old(self,modelimage, mode, nterms, dochaniter, chan, tmppath):
         """
         wrapper function for convertmodelimage for all different cases
         """
@@ -2942,7 +2942,8 @@ class cleanhelper:
                     if type(modelimage)== str or \
                        (type(modelimage)==list and len(self.imagelist)==1 and len(modelimage)>1):
                         modelimage=[modelimage]
-
+                    
+                    #print "Run convertmodelimage for this list : ", self.imagelist, " with these models : ", modelimage;
                     for j in range(len(self.imagelist)):
                         self._casalog.post("Use modelimages: "+str(modelimage[j])+" to create a combined modelimage: " \
                                            +self.imagelist.values()[j]+".model", 'DEBUG1')
@@ -2952,6 +2953,68 @@ class cleanhelper:
 
         # elif .......
         # put mfs with nterms>1 case here
+
+    ##########################################################
+    # Multiple models for one field : [ [ 'm0', 'm1' ] ]
+    # Multiple taylor terms and one field : [ [ 't0','t1'] ]
+    # Multiple models per field : [ [ 'm0f0', 'm1f0' ] ,  [ 'm0f1', 'm1f1' ] ]
+    # Multiple taylor terms per field : [ [ 't0f0','t1f0' ] , [ 't0f1','t1f1' ] ]
+    ##########################################################
+    # Cannot do multiple models per taylor term and per field for now.
+    # ....... later...  [  [ ['m0t0f0','m1t0f0'],['m0t1f0','m1t1f0'] ] , [ [ ['t0f1'] ],[ ['t1f1'] ] ] ]
+    ##########################################################
+    def convertAllModelImages(self,modelimage, mode, nterms, dochaniter, chan, tmppath):
+        """
+        wrapper function for convertmodelimage for all different cases
+        """
+        if (type(modelimage)!=str and type(modelimage)!=list):
+                    raise Exception,'modelimage must be a string or a list of strings';
+        if (not all(img=='' or img==[] or img==[''] for img in modelimage)):
+             if dochaniter:
+                    self.defineChaniterModelimages(modelimage,chan,tmppath)
+             else:
+                    if type(modelimage)== str or \
+                       (type(modelimage)==list and len(self.imagelist)==1 and len(modelimage)>1):
+                        modelimage=[modelimage]
+
+             #print "Run convertmodelimage for this list : ", self.imagelist, " with these models : ", modelimage;
+             #spectralline modes + basic mfs
+#             if (not mode=='mfs') or (mode=='mfs' and nterms==1):
+#                    for j in range(len(self.imagelist)):   # = nfield
+#                        self._casalog.post("Use modelimages: "+str(modelimage[j])+" to create a combined modelimage: " \
+#                                           +self.imagelist.values()[j]+".model", 'DEBUG1')
+#                        if modelimage[j] != '' and modelimage[j] != []:
+#                            self.convertmodelimage(modelimages=modelimage[j],
+#                                    outputmodel=self.imagelist.values()[j]+'.model',imindex=j)
+
+#             else: # mfs and nterms>1
+             if 1:
+                    nfld = len(self.imagelist);
+                    # if only one field, then modelimage must be a list of strings. convert to list of list of str
+                    # if multiple fields, then model image : list of list of strings
+                    if nfld != len(modelimage):
+                       raise Exception,'Model images must be same length as fields : '+str(nfld) + str(modelimage);
+
+                    for fld in range(nfld):
+                       modsforfield = modelimage[fld]; # a list
+                       if type(modsforfield)==str:
+                            modsforfield = [modsforfield];
+                       if nterms==1:
+                            nimages = len(modsforfield);
+                       else:
+		            nimages = min( len(modsforfield), nterms ); ## one model per term
+		       for tt in range(0,nimages):
+                           if nterms==1:
+                               modname = self.imagelist[fld]+'.model';
+                           else:
+                               modname = self.imagelist[fld]+'.model.tt'+str(tt) ;
+			   if( os.path.exists(modsforfield[tt]) ):
+#			       print "Found user-specified model image : "+modsforfield[tt]+" . Adding to starting model : "+modname;
+			       self._casalog.post("Found user-specified model image : "+modsforfield[tt]+" . Adding to starting model : "+modname);
+			       self.convertmodelimage(modelimages=modsforfield[tt],outputmodel=modname, imindex=fld);
+			   else:
+			       self._casalog.post("Cannot find user-specified model image : "+modsforfield[tt]+" . Continuing with current model : "+modname);
+
 
 
         
@@ -3101,7 +3164,8 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
                raise Exception, 'msmfs (nterms>1) not allowed with imagermode=' + imagermode + '. For now, msmfs automatically performs cs-clean type iterations';
         if (multifield): 
 		addMultiField = True;
-		raise Exception, 'For now, msmfs (nterms>1) is not allowed in multi-field mode. Please supply a single image name.'
+    if( (mode=='mfs') and (nterms<1) ):
+         raise Exception, 'nterms must be > 0';
 
 #    if (gridmode == 'widefield'): alg='mfclark';
 

@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     
     // Compute flags for a given (time,freq) map
-    void computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
+    bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
 
     void preProcessBuffer(const VisBuffer &visBuffer);
     

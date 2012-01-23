@@ -76,7 +76,7 @@ TestFlagger::done()
 
 	// Default values of parameters
 	msname_p = "";
-	iterationApproach_p = FlagDataHandler::SUB_INTEGRATION;
+	iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_UNMAPPED;
 	timeInterval_p = 0.0;
 	spw_p = "";
 	scan_p = "";

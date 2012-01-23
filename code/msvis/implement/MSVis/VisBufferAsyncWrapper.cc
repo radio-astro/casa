@@ -475,6 +475,14 @@ VisBufferAsyncWrapper::fieldId () const
   return wrappedVba_p->fieldId ();
 }
 
+Int
+VisBufferAsyncWrapper::polarizationId() const
+{
+  CheckWrap ();
+  return wrappedVba_p->polarizationId ();
+}
+
+
 
 // Fill Routines
 

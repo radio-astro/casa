@@ -196,6 +196,8 @@ public:
 
     Int arrayId() const;
 
+    Int polarizationId() const;
+
     // Return flag for each channel & row
     Matrix<Bool>& flag();
     const Matrix<Bool>& flag() const;

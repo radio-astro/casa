@@ -64,6 +64,7 @@ public:
     Int numberCoh () const;
     virtual Vector<Float> parang(Double time) const;
     virtual Float parang0(Double time) const;
+    virtual Int polarizationId() const;
     virtual Vector<uInt>& rowIds(){throw(AipsError("rowIds() not implemented for VBA."));}
     virtual const Vector<uInt>& rowIds() const {throw(AipsError("rowIds() const not implemented for VBA."));}
     virtual void setCorrectedVisCube(Complex c);
@@ -112,6 +113,7 @@ protected:
     void setNAntennas (Int);
     void setNCoh (Int);
     void setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpectralWindow);
+    void setPolarizationId (Int);
     void setNRowChunk (Int);
     void setReceptor0Angle (const Vector<Float> & receptor0Angle);
     void setRowIds (const Vector<uInt> & rowIds);
@@ -147,6 +149,7 @@ private:
     Int                            nRowChunk_p;
     //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;
+    Int                            polarizationId_p;
     Vector<Float>                  receptor0Angle_p;
     Vector<Double>                 selFreq_p;
     Vector<Int>                    selectedNVisibilityChannels_p;

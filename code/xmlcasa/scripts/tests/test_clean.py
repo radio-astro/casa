@@ -610,6 +610,118 @@ class clean_multifield_test(unittest.TestCase):
         self.assertTrue(all(stat0['maxpos']==numpy.array([256,256,0,0])) and
                all(stat1['maxpos']==numpy.array([256,356,0,0])))
 
+class clean_multiterm_multifield_test(unittest.TestCase):
+
+    msfile = 'tpts_2chan_split.ms'
+    #msfile = 'tpts_2chan.ms'
+    res = None
+    img = ['mtmf1','mtmf2']
+    outlierfile = 'mtmf_outlier_withmodel.txt'
+    inmodeldir = 'testmodels';
+    modim2=['testmodels/inmodel0.model.tt0','testmodels/inmodel1.model.tt1']
+
+    def setUp(self):
+        self.res = None
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/multiterm_multifield_data/'
+##        datapath = '/home/vega/rurvashi/CASAtrees/DATATree/clean/multiterm_multifield_data/'
+        default(clean)
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+
+        shutil.copytree(datapath+self.msfile, self.msfile)
+        shutil.copy(datapath+self.outlierfile,self.outlierfile)
+        shutil.copytree(datapath+self.inmodeldir, self.inmodeldir)
+
+    def tearDown(self):
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+        if (os.path.exists(self.inmodeldir)):
+            os.system('rm -rf ' + self.inmodeldir)
+        if (os.path.exists(self.outlierfile)):
+            os.system('rm -rf ' + self.outlierfile)
+
+	for imext in ['.image.tt0','.image.tt1','.model.tt0','.model.tt1','.residual.tt0','.residual.tt1','.psf.tt0','.psf.tt1','.image.alpha','.flux','.mask']:
+            if (os.path.exists(self.img[0]+imext)):
+	        shutil.rmtree(self.img[0]+imext)
+            if (os.path.exists(self.img[1]+imext)):
+	        shutil.rmtree(self.img[1]+imext)
+
+    def testMultiTermOutlier(self):
+        """Clean test3 (multi-term+multi-field : CAS-2664) : test task param input with nterms=2 and outlier file and with user-specified mask and model"""
+
+        # Run clean with outlier file
+        self.res= clean(vis=self.msfile,
+                        imagename=self.img[0],
+                        outlierfile=self.outlierfile,
+                        mode="mfs",
+                        nterms=2,
+                        niter=10,
+                        mask='circle[[50pix , 50pix] ,15pix ]', 
+                        modelimage=['testmodels/inmodel0.model.tt0','testmodels/inmodel0.model.tt1'],
+                        imsize=[100, 100],
+                        interactive=False,
+                        npercycle=10,
+                        cell="8.0arcsec",
+                        weighting="briggs",
+                        pbcor=False,
+                        minpb=0.1)
+
+        self.assertEqual(self.res,None)
+
+        # quick check on the peaks apear at the location as expected
+        for img in self.img:
+              self.assertTrue(os.path.exists(img+".image.tt0"))
+              self.assertTrue(os.path.exists(img+".image.tt1"))
+        stat00 = imstat(self.img[0]+'.model.tt0')
+        stat10 = imstat(self.img[1]+'.model.tt0')
+        stat01 = imstat(self.img[0]+'.model.tt1')
+        stat11 = imstat(self.img[1]+'.model.tt1')
+
+        self.assertTrue(all(stat00['maxpos']==numpy.array([50,50,0,0])) and
+                 all(stat10['maxpos']==numpy.array([15,15,0,0])))
+        self.assertTrue(all(stat01['minpos']==numpy.array([50,50,0,0])) and
+                 all(stat11['minpos']==numpy.array([15,15,0,0])))
+
+### Uncomment after CAS-3688 gets fixed, so that this can run in the same casapy session.
+### It will test re-running clean twice, in different ways.
+#    def testMultiTermLists(self):
+#        """Clean test3 (multi-term+multi-field) : test task param input with nterms=2 and inline lists for modelimages and masks"""
+#
+#        # Run clean with inline lists
+#        self.res= clean(vis=self.msfile,
+#                        imagename=self.img,
+#                        mode="mfs",
+#                        nterms=2,
+#                        niter=10,
+#                        mask=[ 'circle[[50pix , 50pix] ,15pix ]' , 'circle[[15pix , 15pix] ,8pix ]' ], 
+#                        modelimage=[ ['testmodels/inmodel0.model.tt0','testmodels/inmodel0.model.tt1'] , ['testmodels/inmodel1.model.tt0','testmodels/inmodel1.model.tt1' ] ],
+#                        imsize=[ [100,100] , [50,50] ],
+#                        phasecenter = [0 ,'J2000 19h58m34.032 +40d57m20.763' ],
+#                        interactive=True,
+#                        npercycle=10,
+#                        cell="8.0arcsec",
+#                        weighting="briggs",
+#                        pbcor=False,
+#                        minpb=0.1)
+#
+#        self.assertEqual(self.res,None)
+#
+#        # quick check on the peaks apear at the location as expected
+#        for img in self.img:
+#              self.assertTrue(os.path.exists(img+".image.tt0"))
+#              self.assertTrue(os.path.exists(img+".image.tt1"))
+#        stat00 = imstat(self.img[0]+'.model.tt0')
+#        stat10 = imstat(self.img[1]+'.model.tt0')
+#        stat01 = imstat(self.img[0]+'.model.tt1')
+#        stat11 = imstat(self.img[1]+'.model.tt1')
+#
+#        self.assertTrue(all(stat00['maxpos']==numpy.array([50,50,0,0])) and
+#                 all(stat10['maxpos']==numpy.array([15,15,0,0])))
+#        self.assertTrue(all(stat01['minpos']==numpy.array([50,50,0,0])) and
+#                 all(stat11['minpos']==numpy.array([15,15,0,0])))
+
+
+
 class clean_multims_test(unittest.TestCase):
     # unit tests for multiple ms inputs
     msfiles = ['point_spw1.ms', 'point_spw2.ms']
@@ -731,5 +843,5 @@ class clean_multims_test(unittest.TestCase):
 
 def suite():
     #return [clean_test1]
-    return [clean_test1,clean_multifield_test,clean_multims_test]
+    return [clean_test1,clean_multifield_test,clean_multims_test,clean_multiterm_multifield_test]
 

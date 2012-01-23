@@ -38,6 +38,9 @@ def get_last_history_line(vis, origin='setjy::imager::setjy()',
         st = tb.query('ORIGIN == "%s"' % origin, columns='MESSAGE')
         nstrows = st.nrows()
         startrow = st.nrows() - 1 - nback
+        # don't go back more than selected rows
+        if maxnback > nstrows:
+            maxnback = nstrows - 1
         stoprow = startrow - maxnback
         for linenum in xrange(startrow, stoprow - 1, -1):
             curline = st.getcell('MESSAGE', linenum)
@@ -122,7 +125,9 @@ class setjy_test_modimage(CheckAfterImportuvfits):
     # The MS is in Q band, so deliberately choose the U band model so that the
     # structure is not too far off, but whether or not its flux density is
     # scaled makes a difference.
-    modelim = datapath + '/../nrao/VLA/CalModels/3C147_U.im'
+    #modelim = datapath + '/../nrao/VLA/CalModels/3C147_U.im'
+    # without full path to test a recent feature to search model image data path - TT 
+    modelim = '3C147_U.im'
 
     records = {}
     
@@ -160,6 +165,7 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                                            spix=spix, reffreq=reffreq,
                                            async=False)
             record['history'] = get_last_history_line(self.inpms,
+                                                      origin='imager::setjy()',
                                                       hint='model image to I')
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',

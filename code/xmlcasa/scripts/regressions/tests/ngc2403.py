@@ -39,4 +39,4 @@ def run(fetch=False):
 ###return the images that will be templated and compared in future runs
 
     #not in repository: return ['n2403.tutorial.final.clean.image','n2403.tutorial.dirty.image']
-    return []
+    return ['n2403.tutorial.final.clean.image']

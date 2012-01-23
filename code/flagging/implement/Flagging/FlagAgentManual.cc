@@ -35,19 +35,10 @@ FlagAgentManual::~FlagAgentManual()
 	// Compiler automagically calls FlagAgentBase::~FlagAgentBase()
 }
 
-void
+bool
 FlagAgentManual::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
-	IPosition flagCubeShape = flags.shape();
-	uInt nChannels = flagCubeShape(0);
-	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
-	{
-		flags.applyFlag(chan_i,row);
-	}
-
-	visBufferFlags_p += flags.flagsPerRow();
-
-	return;
+	return true;
 
 }
 

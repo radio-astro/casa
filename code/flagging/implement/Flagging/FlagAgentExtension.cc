@@ -118,7 +118,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	return;
 }
 
-void
+bool
 FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// Set logger origin
@@ -300,7 +300,7 @@ FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMappe
 		}
 	}
 
-	return;
+	return false;
 }
 
 } //# NAMESPACE CASA - END

@@ -66,7 +66,7 @@ FlagAgentShadow::~FlagAgentShadow()
 void
 FlagAgentShadow::setAgentParameters(Record config)
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
 	exists = config.fieldNumber ("diameter");
@@ -178,22 +178,17 @@ FlagAgentShadow::preProcessBufferCore(const VisBuffer &visBuffer)
 	}
 }
 
-void
+bool
 FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
+	bool flagRow = false;
 	// Flag row if either antenna1 or antenna2 are in the list of shadowed antennas
 	Int antenna1 = visBuffer.antenna1()[row];
 	Int antenna2 = visBuffer.antenna2()[row];
 	if (	(std::find (shadowedAntennas_p.begin(), shadowedAntennas_p.end(), antenna1) != shadowedAntennas_p.end()) or
 			(std::find (shadowedAntennas_p.begin(), shadowedAntennas_p.end(), antenna2) != shadowedAntennas_p.end()) )
 	{
-    	IPosition flagCubeShape = flags.shape();
-    	uInt nChannels = flagCubeShape(0);
-    	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
-    	{
-    		flags.applyFlag(chan_i,row);
-    	}
-    	visBufferFlags_p += flags.flagsPerRow();
+		flagRow = true;
 	}
 
 	if ((nAgents_p > 1) and preProcessingDone_p)
@@ -205,7 +200,7 @@ FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, 
 		}
 	}
 
-	return;
+	return flagRow;
 }
 
 } //# NAMESPACE CASA - END

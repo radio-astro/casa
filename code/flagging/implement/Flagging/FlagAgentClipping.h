@@ -37,7 +37,7 @@ public:
 protected:
 
 	// Compute flags afor a given mapped visibility point
-	void computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+	bool computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Specialization of the different clipping cases
 	bool checkVisForClipOutside(Float visExpression);

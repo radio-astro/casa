@@ -1,8 +1,24 @@
 import os
 from taskinit import *
 
-def listobs(vis=None,verbose=None,listfile=None):
-       """List data set summary in the logger:
+
+def listobs(vis=None, 
+            selectdata=None,
+            spw=None,           
+            field=None,
+            antenna=None,
+            uvrange=None,
+            timerange=None,
+            correlation=None,
+            scan=None,
+            intent=None,
+            feed=None,
+            array=None,
+            observation=None,
+            verbose=None, 
+            listfile=None):
+    
+    """List data set summary in the logger:
 
        Lists following properties of a measurement set:
        scan list, field list, spectral window list with
@@ -11,34 +27,48 @@ def listobs(vis=None,verbose=None,listfile=None):
        Keyword arguments:
        vis -- Name of input visibility file
                default: none. example: vis='ngc5921.ms'
+       selectdata -- select data from the MS
        verbose -- level of detail
              verbose=True: (default); scan and antenna lists
              verbose=False: less information
        listfile -- save the output in a file
              default: none. Example: listfile="mylist.txt"
 
-      Additional comments:  The simplest way to obtain a hard copy
-      of the output is: 1) Open a file in your favorite editor;
-      2) Cut relevant portion of message log.  You may have to use
-      cntr-O to store the text; 3) Paste text in the editor window.
-
-      You can also copy the ascii text from the end of the casapy.log
-      file in the working directory.
-
        """
-       casalog.origin('listobs')
 
-       #Python script
-       #parameter_printvalues(arg_names,arg_values,arg_types)
-       try:
-           if ((type(vis)==str) & (os.path.exists(vis))):
-                   ms.open(thems=vis)
-           else:
-                   raise Exception, 'Visibility data set not found - please verify the name'
-           ms.summary(verbose=verbose, listfile=listfile)
-#               ms.listobs(verbose,listfile)
-           ms.close()
-       except Exception, instance:
-           ms.close()
-           print '*** Error ***',instance
+    casalog.origin('listobs')
+
+       # Python script
+       # parameter_printvalues(arg_names,arg_values,arg_types)
+    try:
+        if (type(vis) == str) & os.path.exists(vis):
+            ms.open(thems=vis)
+        else:
+            raise Exception, \
+                'Visibility data set not found - please verify the name'
+                
+        sel = {}
+        if (selectdata):
+            sel['spw'] = spw
+            sel['time'] = timerange
+            sel['field'] = field
+            sel['baseline'] = antenna
+            sel['scan'] = scan
+            sel['scanintent'] = intent
+            sel['polarization'] = correlation
+            sel['uvdist'] = uvrange
+            sel['observation'] = str(observation)
+            sel['array'] = array
+            sel['feed'] = feed
+
+        # Select the data. Only-parse is set to false.
+        ms.msselect(sel, False)
+            
+        ms.summary(verbose=verbose, listfile=listfile)
+
+        ms.close()
+    except Exception, instance:
+        ms.close()
+        print '*** Error ***', instance
+
 

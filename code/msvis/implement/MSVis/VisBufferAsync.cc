@@ -699,6 +699,13 @@ VisBufferAsync::parang0(Double time) const
     return parang0;
 }
 
+Int
+VisBufferAsync::polarizationId() const
+{
+    return polarizationId_p;
+}
+
+
 
 //Vector<uInt>&
 //VisBufferAsync::rowIds()
@@ -850,6 +857,11 @@ VisBufferAsync::setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpe
     newSpectralWindow_p = newSpectralWindow;
 }
 
+void
+VisBufferAsync::setPolarizationId (Int pId)
+{
+    polarizationId_p = pId;
+}
 
 void
 VisBufferAsync::setReceptor0Angle (const Vector<Float> & angles)
