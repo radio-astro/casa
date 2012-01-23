@@ -127,8 +127,9 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     outfile=prefix+sdimaging_unittest_base.postfix
 
     def setUp(self):
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if os.path.exists(self.rawfile):
+            shutil.rmtree(self.rawfile)
+        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
         default(sdimaging)
 
@@ -246,8 +247,9 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     mode='channel'
 
     def setUp(self):
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if os.path.exists(self.rawfile):
+            shutil.rmtree(self.rawfile)
+        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
         default(sdimaging)
 
@@ -437,8 +439,9 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
     mode='GHz'
 
     def setUp(self):
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if os.path.exists(self.rawfile):
+            shutil.rmtree(self.rawfile)
+        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
         default(sdimaging)
 
@@ -523,8 +526,9 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
     mode='km/s'
 
     def setUp(self):
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if os.path.exists(self.rawfile):
+            shutil.rmtree(self.rawfile)
+        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
         default(sdimaging)
 
@@ -593,5 +597,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
         self._checkstats(self.outfile,refstats)
 
 def suite():
-    return [sdimaging_test0,sdimaging_test1,
-            sdimaging_test2,sdimaging_test3]
+#     return [sdimaging_test0,sdimaging_test1,
+#             sdimaging_test2,sdimaging_test3]
+    return [sdimaging_test1,
+            sdimaging_test2,sdimaging_test3,sdimaging_test0]
