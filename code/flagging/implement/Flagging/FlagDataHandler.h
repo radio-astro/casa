@@ -543,6 +543,9 @@ public:
 	// Set Data Selection parameters
 	bool setDataSelection(Record record);
 
+	// Set time interval (also known as ntime)
+	void setTimeInterval(Double timeInterval);
+
 	// Apply channel selection for asyn or normal iterator
 	// NOTE: We always have to do this, even if there is no SPW:channel selection
 	void applyChannelSelection(ROVisibilityIterator *roVisIter);
