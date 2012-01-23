@@ -279,6 +279,18 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
 
   if (prtlev()>2) cout << "  VBA::initialize()" << endl;
 
+
+
+  
+  ///KG notes
+  ////Really dangerous and unmaintainable code changing private variables of vb without 
+  ////really changing the internal connnections ...so if say some internal or vb or like here
+  //// vb.modelVisCube decides to use its private variables ...its nrow is totally wrong ...
+  /// after the next few lines !
+  ////function decide to use nRow_p or nChannel_p it is bound to be wrong
+  //// that is why i am calling the damn visCube and modelVisCube above because
+  /// coders belive that vb.nRow should give the visbuffer number of rows when accessing /// a given array
+
   Int nRowAdd = hashFunction (nAnt_p-1, nAnt_p-1) + 1;
   avBuf_p.nRow() += nRowAdd;
   avBuf_p.nChannel() = nChan_p;
@@ -294,7 +306,9 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
 
   avBuf_p.visCube().resize(nCorr_p,nChan_p, nRow,copydata);
   if(fillModel_p)
-    avBuf_p.modelVisCube().resize(nCorr_p,nChan_p, nRow,copydata);
+    copydata ?
+      avBuf_p.modelVisCube().resize(nCorr_p,nChan_p, nRow,copydata):
+      avBuf_p.setModelVisCube(Cube<Complex>(nCorr_p,nChan_p, nRow));
 
   avBuf_p.weight().resize(nRow, copydata); 
   avBuf_p.weightMat().resize(nCorr_p,nRow, copydata); 

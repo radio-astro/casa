@@ -235,7 +235,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     return  (  (userFixA1_p != ""  && userFixA1_p != antenna1Name)  ||   (userFixA2_p != ""  && userFixA2_p != antenna2Name) ) ;
   }
   
-  void
+  bool
   FlagAgentDisplay::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
   {
     logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
@@ -375,7 +375,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 	
       }// end if ShowPlots
     
-    return;
+    return false;
   }
   
   //----------------------------------------------------------------------------------------------------------

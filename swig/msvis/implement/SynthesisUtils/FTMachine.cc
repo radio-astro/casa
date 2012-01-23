@@ -965,7 +965,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	return False;      
       
     }
-    //cerr << "Addresses of image " << &(*cmplxImage_p) <<  "   " << image << endl;
+    
     nAntenna_p=inRecord.asuInt("nantenna");
     distance_p=inRecord.asDouble("distance");
     lastFieldId_p=inRecord.asInt("lastfieldid");
@@ -997,9 +997,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mLocation_p=mh.asMPosition();
     }
     inRecord.get("douvwrotation", doUVWRotation_p);
-    Int tmpInt;
-    inRecord.get("freqinterpmethod", tmpInt);
-    freqInterpMethod_p=static_cast<InterpolateArray1D<Double, Complex >::InterpolationMethod>(tmpInt);
+   
     inRecord.get("spwchanselflag", spwChanSelFlag_p);
     inRecord.get("freqframevalid", freqFrameValid_p);
     inRecord.get("selectedspw", selectedSpw_p);
@@ -1037,8 +1035,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inRecord.get("cfstokes", cfStokes_p);
     inRecord.get("polinuse", polInUse_p);
     inRecord.get("tovis", toVis_p);
-    inRecord.get("sumweight", sumWeight);
     
+    inRecord.get("sumweight", sumWeight);
+    if(toVis_p){
+      freqInterpMethod_p=InterpolateArray1D<Double, Complex>::nearestNeighbour;
+    }
+    else{
+     Int tmpInt;
+      inRecord.get("freqinterpmethod", tmpInt);
+      freqInterpMethod_p=static_cast<InterpolateArray1D<Double, Complex >::InterpolationMethod>(tmpInt);
+    }
     
     return True;
   };

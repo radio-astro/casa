@@ -87,15 +87,23 @@ print >>logfile,'***************************************************************
 if(not regstate):
    print >>logfile,'* Data file VLA_multifrequency_3C286.ms cannot be found';
 else:
-   # V.5 : (V2.3) This is the truth (for active, 02Mar2010) - included residuals in alpha/beta calcs.
-   # Changes from previous numbers 'active r14198' are within the noise, and only for alpha/beta.
-   correct_sigma = 0.00095682840;
-   correct_sumsq = 0.959992192;
-   correct_intensity = 14.84169483;
-   correct_alpha = -0.4716707468;
-   correct_beta = -0.124309256;
+   # (6) : (V2.5) This is the truth (for active, 19Jan2012) - wrote coefficient residuals to the output residual image, instead of using them only for alpha,beta calculations
+   # Changes from previous numbers 'active r17725' are mainly 'noise' levels. 
+   correct_sigma = 0.00126019103471;
+   correct_sumsq = 1.6652231052;
+   correct_intensity = 14.8404045105;
+   correct_alpha = -0.471577763557;
+   correct_beta = -0.124552100897;
 
-   # V.4 : (V2.2) This is the truth (for active, 21Jan2010) - removed extra vecpsf0 conv.
+   # (5) : (V2.3) This is the truth (for active, 02Mar2010) - included coefficient residuals in alpha/beta calcs.
+   # Changes from previous numbers 'active r14198' are within the noise, and only for alpha/beta.
+   #correct_sigma = 0.00095682840;
+   #correct_sumsq = 0.959992192;
+   #correct_intensity = 14.84169483;
+   #correct_alpha = -0.4716707468;
+   #correct_beta = -0.124309256;
+
+   # (4) : (V2.2) This is the truth (for active, 21Jan2010) - removed extra vecpsf0 conv.
    # Changes from previous numbers 'active r13845' are within the noise.
    #correct_sigma = 0.00095682840;
    #correct_sumsq = 0.959992192;
@@ -103,7 +111,7 @@ else:
    #correct_alpha = -0.471375882;
    #correct_beta = -0.127162337;
 
-   # V.3 : This is the truth (for active, 20Dec2010) - change from MTLC to MTMC (+ algorithm fiddling).
+   # (3) : This is the truth (for active, 20Dec2010) - change from MTLC to MTMC (+ algorithm fiddling).
    # Changes from previous numbers for 'active r13787' are within the noise.
    #correct_sigma = 0.00095900;
    #correct_sumsq = 0.9644402;
@@ -111,14 +119,14 @@ else:
    #correct_alpha = -0.47158026;
    #correct_beta = -0.12506663;
 
-   # V.2 : This is the truth (for active, 21Oct2010) - with SB's gridding fixes
+   # (2) : This is the truth (for active, 21Oct2010) - with SB's gridding fixes
    #correct_sigma = 0.00099339;
    #correct_sumsq = 1.03476342;
    #correct_intensity = 14.8406724;
    #correct_alpha = -0.4706874;
    #correct_beta = -0.12786445;
 
-   # V.1 : This is the truth (for prerelease, 21Oct2010) - without SB's gridding fixes.
+   # (1) : This is the truth (for prerelease, 21Oct2010) - without SB's gridding fixes.
    #correct_sigma = 0.0010294;
    #correct_sumsq = 1.11118678;
    #correct_intensity = 14.838494;

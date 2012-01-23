@@ -25,7 +25,7 @@ class CasaRegression:
         ###
         ( bindir, topdir, casadir, testdir, cachedir, outputdir ) = str(arglist).split(";;")
         self._path = { 'top': str(topdir), 'bin': str(bindir), \
-                       'casa': str(casadir), 'test': str(testdir), \
+                       'casa': str(casadir), 'testbase': str(testdir), \
                        'cache': str(cachedir), 'output': str(outputdir) }
         self._state = { 'script': '', 'statedb': '', 'maildb': '', 'result': 'fail', 'stamp': str(0), 'time': str(0), 'master': 'Scott Rankin', 'master-email': 'srankin@nrao.edu' }
         if not os.path.isdir(self._path['top']):
@@ -61,6 +61,15 @@ class CasaRegression:
                 raise RuntimeError('casa root (' + self._path['casa'] + ') exists but is not a directory...')
             else:
                 shutil.rmtree(self._path['casa'])
+
+        if os.path.exists(self._path['testbase']):
+            if not os.path.isdir(self._path['testbase']):
+                raise RuntimeError('run-test root (' + self._path['testbase'] + ') exists but is not a directory...')
+            else:
+                shutil.rmtree(self._path['testbase'])
+
+        os.makedirs(self._path['testbase'],0755)
+
 
     # regression suite
     def initialize_dbs( self, resultdb, maildb ):
@@ -198,6 +207,7 @@ class CasaRegression:
         py_prof = 'python' in profile_list
         cpp_prof = 'cpp' in profile_list
         self._state['script'] = script
+        self._path['test'] = self._path['testbase'] + "/" + script
         if ( not self._path['test'].startswith(self._path['top']) or self._path['test'] == self._path['top'] ) :
             raise RuntimeError('casa root (' + self._path['test'] + ') must be a subdirectory of top dir (' + self._path['top'] +')...')
 

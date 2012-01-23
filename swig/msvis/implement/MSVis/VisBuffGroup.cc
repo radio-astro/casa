@@ -101,7 +101,7 @@ Bool VisBuffGroup::applyChanMask(Cube<Bool>& chanmaskedflags,
   Bool retval = True;
   Int chan0 = vb.channel()(0);
   Int nchan = vb.nChannel();
-  //initialize chanmaskedflags
+  //initialize
   chanmaskedflags.resize(vb.flagCube().shape());
   chanmaskedflags.set(False);
   if(sum((*chanmask)(Slice(chan0, nchan))) > 0){

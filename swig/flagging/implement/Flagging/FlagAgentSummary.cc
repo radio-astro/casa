@@ -129,13 +129,6 @@ FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
 	spw_stringStream << spw;
 	spw_str = spw_stringStream.str();
 
-	// TODO: This is not generic but in all the iteration modes provided
-	// by the FlagDataHandler scan and observation are constant over rows
-	scan = visBuffer.scan()[0];
-	stringstream scan_stringStream;
-	scan_stringStream << scan;
-	scan_str = scan_stringStream.str();
-
 	observationId = visBuffer.observationId()[0];
 	stringstream observationId_stringStream;
 	observationId_stringStream << observationId;
@@ -144,7 +137,7 @@ FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
 	return;
 }
 
-void
+bool
 FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	Int antenna1 = visBuffer.antenna1()[row];
@@ -152,6 +145,12 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 	String antenna1Name = flagDataHandler_p->antennaNames_p->operator()(antenna1);
 	String antenna2Name = flagDataHandler_p->antennaNames_p->operator()(antenna2);
     String baseline = antenna1Name + "&&" + antenna2Name;
+
+    // Get scan for each particular row to cover for the "combine scans" case
+	scan = visBuffer.scan()[row];
+	stringstream scan_stringStream;
+	scan_stringStream << scan;
+	scan_str = scan_stringStream.str();
 
     // Compute totals
 	Int nChannels,nRows;
@@ -238,7 +237,7 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 	accumTotalFlags += rowFlags;
 	accumTotalCount += rowTotal;
 
-	return;
+	return false;
 }
 
 Record

@@ -22,7 +22,7 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
         if datacol == 'junk':
             raise ValueError(vis + " does not have a data column")        
 
-        if datacol != datacolumn: # no CORRECTED_DATA case
+        if datacol != datacolumn: # no CORRECTED_DATA case (fall back to DATA)
            casalog.post("No %s column found, using %s column" % (datacolumn.upper()+'_DATA', datacol),'WARN')
            datacolumn = datacol
 

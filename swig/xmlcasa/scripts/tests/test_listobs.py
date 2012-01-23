@@ -11,6 +11,7 @@ import unittest
 '''
 Unit tests for task listobs. It tests the following parameters:
     vis:        wrong and correct values
+    selectdata: several data selection parameters
     verbose     true or false
     listfile:   save on a file
     
@@ -115,7 +116,7 @@ class listobs_test1(unittest.TestCase):
         '''Listobs 6: Save on a file, verbose=True'''
         output = 'listobs6.txt'
         out = "newobs6.txt"
-        diff = "diff1listobs6"
+        diff = "difflistobs6"
         reference = reffile+'6'
         self.res = listobs(vis=msfile1, listfile=output, verbose = True)
 #        # Remove the name of the MS from output before comparison
@@ -125,6 +126,35 @@ class listobs_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file %s.'%(out,reference,diff))
         
+
+    def test7(self):
+        '''Listobs 7: test scan selection parameters'''
+        output = "listobs7.txt"
+        out = "newobs7.txt"
+        diff = "difflistobs7"
+        reference = reffile+'7'
+        self.res = listobs(vis=msfile1, scan='2', listfile=output, verbose=True)
+#        # Remove the name of the MS from output before comparison
+        os.system("sed '1,3d' "+ output+ ' > '+ out)        
+        os.system("diff "+reference+" "+out+" > "+diff)    
+        self.assertTrue(lt.compare(out,reference),
+                        'New and reference files are different. %s != %s. '
+                        'See the diff file %s.'%(out,reference,diff))
+
+    def test8(self):
+        '''Listobs 8: test antenna selection parameters'''
+        output = "listobs8.txt"
+        out = "newobs8.txt"
+        diff = "difflistobs8"
+        reference = reffile+'8'
+        self.res = listobs(vis=msfile1, antenna='3&&4', listfile=output, verbose=True)
+#        # Remove the name of the MS from output before comparison
+        os.system("sed '1,3d' "+ output+ ' > '+ out)        
+        os.system("diff "+reference+" "+out+" > "+diff)    
+        self.assertTrue(lt.compare(out,reference),
+                        'New and reference files are different. %s != %s. '
+                        'See the diff file %s.'%(out,reference,diff))
+
 
 class listobs_cleanup(unittest.TestCase):
 

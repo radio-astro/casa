@@ -527,7 +527,7 @@ Bool Reweighter::makeSelection()
                                        // It is possible to exclude baselines
     antennaSel_p = !trivial;           // without excluding any antennas.
   }                                    // This still gets tripped up by VLA:OUT.
-      
+   
   if(mssel_p.nrow() < ms_p.nrow()){
     os << LogIO::NORMAL
        << mssel_p.nrow() << " out of " << ms_p.nrow() << " rows are going to be" 

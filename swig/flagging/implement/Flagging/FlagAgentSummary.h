@@ -42,7 +42,7 @@ protected:
 	void preProcessBuffer(const VisBuffer &visBuffer);
 
 	// Compute flags for a given mapped visibility point
-	void computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+	bool computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
