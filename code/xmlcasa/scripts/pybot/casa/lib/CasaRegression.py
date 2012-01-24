@@ -435,7 +435,7 @@ class CasaRegression:
             txt2 = MIMEText( "\n\n\n", 'plain' )
             mime.attach(txt2)
 
-            mime['To'] = self._state['master'] + " <" + self._state['master-email'] + ">"
+            mime['To'] = summary_email_list.replace(';;',', ')
             s.sendmail( "CASA Jenkins <" + self._state['master-email'] + ">", summary_email_recipients, mime.as_string( ) )
 
         maildb.close( )
