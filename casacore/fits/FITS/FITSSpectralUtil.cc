@@ -387,6 +387,7 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 				    Double &crval, 
 				    Double &cdelt,
 				    Double &crpix, 
+				    String &cunit,
 				    Bool &haveAlt, 
 				    Double &altrval,
 				    Double &altrpix,
@@ -484,6 +485,29 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
         	crval = roundDouble(C::c/refFrequency, 12);
         	cdelt = roundDouble(C::c/(refFrequency+freqIncrement) - crval, 12);
         	crpix = refChannel;
+    	}
+    	// set the wavelength unit:
+    	//            crval >= 0.1m:     "m"
+    	// 0.1m     > crval >= 0.1e-03m: "mm"  <-- ALMA wavelength range
+    	// 0.1e-03m > crval >= 1.0e-06m: "um"
+    	// 1.0e-06m > crval:             "nm"
+    	if (crval >=0.1){
+    		cunit  = "m";
+    	}
+    	else if ((0.1 > crval) && (crval >=0.1e-03)){
+    		crval *= 1.0e+03;
+    		cdelt *= 1.0e+03;
+    		cunit  = "mm";
+    	}
+    	else if ((0.1e-03 > crval) && (crval >=1.0e-06)){
+    		crval *= 1.0e+06;
+    		cdelt *= 1.0e+06;
+    		cunit  = "um";
+    	}
+    	else if (1.0e-06 > crval){
+    		crval *= 1.0e+09;
+    		cdelt *= 1.0e+09;
+    		cunit  = "nm";
     	}
     }
     else if (!haveAlt || !preferVelocity) {

@@ -43,7 +43,7 @@ int main()
 {
     try {
 	// to from FITSHeader
-	String ctype;
+	String ctype, cunit;
 	Double crval, cdelt, crpix, altrval, altrpix;
 	Int velref;
 	Bool haveAlt;
@@ -57,7 +57,7 @@ int main()
 	LogIO logger;
 	AlwaysAssertExit(FITSSpectralUtil::
 			 toFITSHeader(ctype, crval, cdelt,
-				      crpix, haveAlt, altrval,
+				      crpix, cunit, haveAlt, altrval,
 				      altrpix, velref, restFreq, 
 				      specsys, logger,
 				      refFreq, refPix, freqInc,
@@ -174,7 +174,7 @@ int main()
     }
     try { // same as above, however with wavelength spectral axis
 	// to from FITSHeader
-      String ctype, specsys;
+      String ctype, cunit, specsys;
 	Double crval, cdelt, crpix, altrval, altrpix;
 	Int velref;
 	Bool haveAlt;
@@ -187,7 +187,7 @@ int main()
 	LogIO logger;
 	AlwaysAssertExit(FITSSpectralUtil::
 			 toFITSHeader(ctype, crval, cdelt,
-				      crpix, haveAlt, altrval,
+				      crpix, cunit, haveAlt, altrval,
 				      altrpix, velref, restFreq, 
 				      specsys, logger,
 				      refFreq, refPix, freqInc,
@@ -226,13 +226,13 @@ int main()
 	crvalVec(0) = crval;
 	crpixVec(0) = crpix;
 	cdeltVec(0) = cdelt;
+	cunitVec(0) = cunit;
 	
 	ctypeVec(1) = "STOKES";
 	crvalVec(1) = 1;
 	crpixVec(1) = 1;
 	cdeltVec(1) = 1;
 	
-	cunitVec(0) = "m";
 	cunitVec(1) = "";
 	
 	// OK, put the primary header information back
@@ -275,7 +275,7 @@ int main()
     }
     try { // same as above, however with air wavelength spectral axis
     	// to from FITSHeader
-    	String ctype, specsys;
+    	String ctype, cunit, specsys;
     	Double crval, cdelt, crpix, altrval, altrpix;
     	Int velref;
     	Bool haveAlt;
@@ -288,12 +288,12 @@ int main()
     	LogIO logger;
     	AlwaysAssertExit(FITSSpectralUtil::
     			toFITSHeader(ctype, crval, cdelt,
-    					crpix, haveAlt, altrval,
+    					crpix, cunit, haveAlt, altrval,
     					altrpix, velref, restFreq,
     					specsys, logger,
     					refFreq, refPix, freqInc,
     					refFrame, False, velPref,
-    					True, True)); // wavelength preferred
+    					True, True)); // air wavelength preferred
     	// Actually construct the header record
     	Record header;
     	if (restFreq > 0) {
@@ -323,18 +323,17 @@ int main()
     	Vector<String> ctypeVec(2), cunitVec(2);
     	Vector<Double> crvalVec(2), crpixVec(2), cdeltVec(2);
 
-    	// use mm as units
     	ctypeVec(0) = ctype;
-    	crvalVec(0) = 1000.0*crval;
+    	crvalVec(0) = crval;
     	crpixVec(0) = crpix;
-    	cdeltVec(0) = 1000.0*cdelt;
+    	cdeltVec(0) = cdelt;
+    	cunitVec(0) = cunit;
 
     	ctypeVec(1) = "STOKES";
     	crvalVec(1) = 1;
     	crpixVec(1) = 1;
     	cdeltVec(1) = 1;
 
-    	cunitVec(0) = "mm";
     	cunitVec(1) = "";
 
     	// OK, put the primary header information back
