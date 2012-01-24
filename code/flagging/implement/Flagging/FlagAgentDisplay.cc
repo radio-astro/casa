@@ -24,29 +24,30 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-    //    FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube), 
+  FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, 
+				                        Bool dataDisplay, Bool reportDisplay):
         FlagAgentBase(dh,config,ANTENNA_PAIRS_INTERACTIVE,writePrivateFlagCube), 
-	plotter_p(NULL), ShowPlots(True), 
+	dataplotter_p(NULL),
 	userChoice_p("Continue"), userFixA1_p(""), userFixA2_p(""),
 	skipScan_p(-1), skipSpw_p(-1), skipField_p(-1),pause_p(False),
 	fieldId_p(-1), fieldName_p(""), scanStart_p(-1), scanEnd_p(-1), spwId_p(-1),
 	nPolarizations_p(1), freqList_p(Vector<Double>()),
-	antenna1_p(""),antenna2_p("")
+	antenna1_p(""),antenna2_p(""),
+        dataDisplay_p(dataDisplay), reportDisplay_p(reportDisplay),ShowPlots(dataDisplay),
+	reportReturn_p(False)
   {
-
-
+    // Parse parameters and set base variables.
     setAgentParameters(config);
-    
     // Request loading polarization map to FlagDataHandler
     flagDataHandler_p->setMapPolarizations(true);
   }
+
   
   FlagAgentDisplay::~FlagAgentDisplay()
   {
     // Compiler automagically calls FlagAgentBase::~FlagAgentBase()
     
-    if(plotter_p != NULL) { plotter_p->done(); plotter_p=NULL; }
+    if(dataplotter_p != NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
   }
   
   void FlagAgentDisplay::setAgentParameters(Record config)
@@ -179,7 +180,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 		    ShowPlots = False; 
 		    StopAndExit = True;
 		    cout << "Exiting flagger" << endl;
-		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
+		    if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
 		    flagDataHandler_p->stopIteration();
 		    return ;
 		  }
@@ -187,7 +188,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 		  {
 		    ShowPlots = False;
 		    cout << "Stopping display. Continuing flagging." << endl;
-		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
+		    if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
 		  }
 		else if(userChoice_p=="PrevBaseline")
 		  {
@@ -223,7 +224,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
       }// end antennaMapIterator
     
     return;
-  }
+  }// end iterateAntennaPairsInteractive
   
   
   Bool 
@@ -281,7 +282,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     //    *logger_p << LogIO::NORMAL  << " Baseline : " << baselineName << " Field : " << fieldName_p << " Spw : " << spwName << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
     
     // Build the Plot Window for the first time
-    if(ShowPlots && plotter_p==NULL) BuildPlotWindow();
+    if(ShowPlots && dataplotter_p==NULL) BuildDataPlotWindow();
     
     // Initialize Plot Arrays and other vars
     Float runningsum=0, runningflag=0,runningpreflag=0;
@@ -335,9 +336,9 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 	    
 	    // Make the Before/After Raster Plots
 	    DisplayRaster(nChannels,nTimes,vecdispdat,panels_p[pl].getInt());
-	    plotter_p->setlabel(" ",pl?" ":"Time",ostr1.str(),panels_p[pl].getInt());
+	    dataplotter_p->setlabel(" ",pl?" ":"Time",ostr1.str(),panels_p[pl].getInt());
 	    DisplayRaster(nChannels,nTimes,vecflagdat,panels_p[pl+nPolarizations_p].getInt());
-	    plotter_p->setlabel("Frequency",pl?" ":"Time",ostr2.str(),panels_p[pl+nPolarizations_p].getInt());
+	    dataplotter_p->setlabel("Frequency",pl?" ":"Time",ostr2.str(),panels_p[pl+nPolarizations_p].getInt());
 	    
 	    // Make the Before/After bandpass plots
 	    for(uInt ch=0;ch<nChannels;ch++)
@@ -376,7 +377,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
       }// end if ShowPlots
     
     return false;
-  }
+  }// end computeAntennaPairFlags
   
   //----------------------------------------------------------------------------------------------------------
   
@@ -393,63 +394,115 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     
     *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " Field : " << fieldId_p << " , " << fieldName_p << " Spw : " << spwId_p << " Scan : " << scanStart_p << " : " << scanEnd_p << LogIO::POST;
   }
-  
+
+  //----------------------------------------------------------------------------------------------------------
+
+ Record
+ FlagAgentDisplay::getReport()
+ {
+       logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+       //       FlagReport dispRep("plot",agentName_p);
+
+       FlagReport dispRep("list");
+
+       dispRep.addReport( FlagReport("plot",agentName_p) );
+       dispRep.addReport( FlagReport("plot",agentName_p) );
+       dispRep.addReport( FlagReport("plot",agentName_p) );
+
+       if( ! dispRep.verifyFields() )
+	 cout << "Problem ! " << endl;
+
+       return dispRep;
+ }// end of getReport()
+
+  //----------------------------------------------------------------------------------------------------------
+  // Go through the list of reports and make plots 
+ Bool
+ FlagAgentDisplay::displayReports(Record &combinedReport)
+ {
+        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+	if(reportDisplay_p)
+	  {
+            Int nReports;
+            combinedReport.get( RecordFieldId("nreports") , nReports );
+	    for (uInt reportid=0; reportid<nReports; reportid++)
+	      {
+		String repName(String("report")+String::toString(reportid));
+		Record oneAgent = combinedReport.subRecord( RecordFieldId(repName) ); 
+		String repType; oneAgent.get( RecordFieldId("type") , repType );
+		String agentName; oneAgent.get( RecordFieldId("name") , agentName );
+                
+                if(repType == "plot") *logger_p << "Make a Display for :  " << repName  << " : " << agentName << LogIO::POST;
+                else *logger_p << "NO Display for : " << repName << " : " << agentName << LogIO::POST;
+
+	      }// end of for-report-in-list
+	
+
+	  }// end of reportDisplay_p==True
+	else
+	  {
+	    *logger_p << "Report Displays are turned OFF " << LogIO::POST;
+	  }
+
+ } // end of displayReports()
   
   /***********************************************************************/  
   /******************     Plot Functions      ******************************/  
   /***********************************************************************/  
   
-  Bool FlagAgentDisplay::BuildPlotWindow()
+  Bool FlagAgentDisplay::BuildDataPlotWindow()
   {
     
-    setLayout();
+    setDataLayout();
     AlwaysAssert( dock_xml_p != NULL , AipsError );
     
-    plotter_p = dbus::launch<FlagPlotServerProxy>();
+    dataplotter_p = dbus::launch<FlagPlotServerProxy>();
     
     panels_p.resize(nPolarizations_p*3);
     string zoomloc="";
     string legendloc="bottom";
-    panels_p[0] = plotter_p->panel( "", "", "", "",
+    panels_p[0] = dataplotter_p->panel( "", "", "", "",
 				    std::vector<int>( ),legendloc,zoomloc,0,false,false);
     
     if(nPolarizations_p>1)
       {
 	for(Int i=1;i<nPolarizations_p;i++)
 	  {
-	    panels_p[i] = plotter_p->panel( "", "", "", "",
+	    panels_p[i] = dataplotter_p->panel( "", "", "", "",
 					    std::vector<int>( ),legendloc,zoomloc,panels_p[i-1].getInt(),false,false);
 	  }
       }
     
-    panels_p[nPolarizations_p] = plotter_p->panel( "", "", "", "",
+    panels_p[nPolarizations_p] = dataplotter_p->panel( "", "", "", "",
 						   std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
     
     if(nPolarizations_p>1)
       {
 	for(int i=nPolarizations_p+1;i<2*nPolarizations_p;i++)
 	  {
-	    panels_p[i] = plotter_p->panel( "", "", "", "",
+	    panels_p[i] = dataplotter_p->panel( "", "", "", "",
 					    std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
 	  }
       }
-    panels_p[2*nPolarizations_p] = plotter_p->panel( "", "", "", "",
+    panels_p[2*nPolarizations_p] = dataplotter_p->panel( "", "", "", "",
 						     std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
     if(nPolarizations_p>1)
       {
 	for(int i=2*nPolarizations_p+1;i<3*nPolarizations_p;i++)
 	  {
-	    panels_p[i] = plotter_p->panel( "", "", "", "",
+	    panels_p[i] = dataplotter_p->panel( "", "", "", "",
 					    std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
 	  }
       }
     /*
     // Misc panel
-    panels_p[8] = plotter_p->panel( "BandPass", "Frequency", "Amp", "",
+    panels_p[8] = dataplotter_p->panel( "BandPass", "Frequency", "Amp", "",
     std::vector<int>( ),legendloc,zoomloc, panels_p[3].getInt(),false,false);
     
     // Dummy panel
-    panels_p[9] = plotter_p->panel( "---", "----", "---", "",
+    panels_p[9] = dataplotter_p->panel( "---", "----", "---", "",
     std::vector<int>( ),legendloc,zoomloc, panels_p[7].getInt(),false,false);
     */
     
@@ -463,11 +516,11 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     std::vector<std::string> loc;
     //loc.push_back("top");
     loc.push_back("top");
-    plotter_p->loaddock(dock_xml_p,"bottom",loc,panels_p[0].getInt());
+    dataplotter_p->loaddock(dock_xml_p,"bottom",loc,panels_p[0].getInt());
     
     
     
-  }// end BuildPlotWindow
+  }// end BuildDataPlotWindow
   
   
   
@@ -481,7 +534,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     while( ! exitEventLoop)
       {
 	
-	returnvalue = plotter_p->eventloop();
+	returnvalue = dataplotter_p->eventloop();
 	if(returnvalue == "NextBaseline" || returnvalue == "PrevBaseline" || returnvalue == "NextScan"
 	   || returnvalue == "NextField" || returnvalue == "NextSpw" 
 	   || returnvalue == "StopDisplay" || returnvalue == "Quit") 
@@ -517,28 +570,28 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
   {
     //    cout << "panel id : " << frame << endl;;
     
-    // plotter_p->release( panel_p.getInt( ) );
-    plotter_p->erase( frame );
+    // dataplotter_p->release( panel_p.getInt( ) );
+    dataplotter_p->erase( frame );
     
-    //	plotter_p->line(x, y, "blue", "time", panel_p.getInt() );
-    plotter_p->raster(dbus::af(data), xdim,ydim, "Hot Metal 1", frame);
+    //	dataplotter_p->line(x, y, "blue", "time", panel_p.getInt() );
+    dataplotter_p->raster(dbus::af(data), xdim,ydim, "Hot Metal 1", frame);
   }
   
   void FlagAgentDisplay::DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
-    if( hold==False ) plotter_p->erase( frame );
-    plotter_p->line(dbus::af(xdata), dbus::af(ydata),color,label,frame);
+    if( hold==False ) dataplotter_p->erase( frame );
+    dataplotter_p->line(dbus::af(xdata), dbus::af(ydata),color,label,frame);
   }
   
   void FlagAgentDisplay::DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
-    if( hold==False ) plotter_p->erase( frame );
-    plotter_p->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"dot",1,4,frame);
+    if( hold==False ) dataplotter_p->erase( frame );
+    dataplotter_p->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"dot",1,4,frame);
   }
   
   
   
-  Bool FlagAgentDisplay :: setLayout()
+  Bool FlagAgentDisplay :: setDataLayout()
   {
     
     dock_xml_p = "\

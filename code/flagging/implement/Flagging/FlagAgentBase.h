@@ -80,6 +80,16 @@ public:
 	Bool apply_p;
 	Bool flag_p;
 
+        // Get a report Record from the agent, at the end of the run
+        // The report returned by getReport() can be of multiple types
+        //   -- a single report of type "none"  : FlagReport("none",agentName_p)
+        //   -- a single report of type "plot" : FlagReport("plot",agentName_p)
+        //   -- a list of reports  : 
+        //          FlagReport repList("list");
+        //          repList.addReport( FlagReport("plot",agentName_p) );
+        //          repList.addReport( FlagReport("plot",agentName_p) );
+        virtual Record getReport();
+
 protected:
 
 	void initialize();
@@ -259,11 +269,33 @@ class FlagAgentList
 		void setProfiling(bool enable);
 		void setCheckMode(bool enable);
 
+                // Method to accumulate reports from all agents
+                Record gatherReports();
+
 	protected:
 
 	private:
 		vector<FlagAgentBase *> container_p;
 		vector<FlagAgentBase *>::iterator iterator_p;
+};
+
+class FlagReport : public Record
+{
+	public:
+                FlagReport(String type=String("none"),String name=String(""));
+                FlagReport(const Record &other); // TODO : By value. Change to by-reference
+		~FlagReport();
+
+                // TODO : This function copies by value. Change to by-reference if possible
+                Bool addReport(Record inpReport); 
+           
+                // Check validity of FlagReport.
+                Bool verifyFields();
+
+	protected:
+
+	private:
+                casa::LogIO *logger_p;
 };
 
 } //# NAMESPACE CASA - END
