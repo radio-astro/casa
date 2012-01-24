@@ -732,7 +732,7 @@ void
 FlagDataHandler::setTimeInterval(Double timeInterval)
 {
 	logger_p->origin(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
-	if (timeInterval_p > 0)
+	if (timeInterval >= 0)
 	{
 		timeInterval_p = timeInterval;
 	}
