@@ -167,6 +167,15 @@ tfcrop, extend, unflag, summary)</description>
                 <value>90.0</value>
             </param>
 
+            <param type="any" name="ntime" subparam="true">
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <any type="variant" limittypes="double string" />
+                <value type="string">scan</value>
+            </param>
+            <param type="bool" name="combinescans" subparam="true">
+                <description>Accumulate data across scans.</description>
+                <value>False</value>
+            </param>
             <param type="double" name="timecutoff" subparam="true">
                 <description>Flagging thresholds in units of deviation from the fit</description>
                 <value>4.0</value>
@@ -187,7 +196,6 @@ tfcrop, extend, unflag, summary)</description>
                 <description>Number of pieces in the polynomial-fits (for \'freqfit\' or \'timefit\' = \'poly\')</description>
                 <value>7</value>
             </param>
-
             <param type="string" name="flagdimension" subparam="true">
                 <description>Dimensions along which to calculate fits (freq/time/freqtime/timefreq)</description>
                 <value>freqtime</value>
@@ -251,16 +259,6 @@ tfcrop, extend, unflag, summary)</description>
             <param type="bool" name="spwcorr" subparam="true">
                 <description>Print summary of correlation per spw</description>
                 <value type="bool">False</value>
-            </param>
-
-            <param type="any" name="ntime">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
-                <any type="variant" limittypes="double string" />
-                <value type="string">scan</value>
-            </param>
-            <param type="bool" name="combinescans" subparam="true">
-                <description>Accumulate data across scans.</description>
-                <value>False</value>
             </param>
 
             <param type="string" name="display">
@@ -338,6 +336,8 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="upperlimit"><value type="double">90.0</value></default>                    
                     </equals>
                     <equals value="tfcrop">
+                        <default param="ntime"><value type="string">scan</value></default>
+                        <default param="combinescans"><value type="bool">False</value></default>
                         <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
                         <default param="timecutoff"><value type="double">4.0</value></default>
@@ -350,6 +350,8 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="halfwin"><value type="int">1</value></default>                    
                     </equals>
                     <equals value="extend">
+                        <default param="ntime"><value type="string">scan</value></default>
+                        <default param="combinescans"><value type="bool">False</value></default>
                         <default param="extendpols"><value type="bool">False</value></default>
                         <default param="growtime"><value type="double">50.0</value></default>
                         <default param="growfreq"><value type="double">50.0</value></default>
@@ -366,12 +368,6 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="spwcorr"><value type="bool">False</value></default>                    
                     </equals>
                 </when>
-
-                <when param="ntime">
-                    <notequals type="string" value="scan">
-                        <default param="combinescans"><value type="bool">False</value></default>
-                    </notequals>
-                </when>             
 
                <when param="display">
                 <equals type="string" value="" />
