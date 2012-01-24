@@ -2700,6 +2700,8 @@ void FITSIDItoMS1::fillFieldTable()
   ROArrayColumn<Float> vflux;
   ROArrayColumn<Float> alpha;
   ROArrayColumn<Float> foffset;  
+  ROArrayColumn<Double> foffsetD;  
+  Bool foffsetIsDouble = False;
   ROArrayColumn<Double> sysvel;
   ROArrayColumn<Double> restfreq;
 
@@ -2717,8 +2719,15 @@ void FITSIDItoMS1::fillFieldTable()
     qflux.attach(suTab,"QFLUX"); // Q 
     uflux.attach(suTab,"UFLUX"); // U 
     vflux.attach(suTab,"VFLUX"); // V 
-    alpha.attach(suTab,"ALPHA"); // sp. index  
-    foffset.attach(suTab,"FREQOFF"); // fq. offset  
+    alpha.attach(suTab,"ALPHA"); // sp. index
+    try{
+      foffset.attach(suTab,"FREQOFF"); // fq. offset  
+    }
+    catch(AipsError x){
+      foffsetD.attach(suTab,"FREQOFF"); // fq. offset  
+      *itsLog << LogIO::WARN << "Column FREQOFF is Double but should be Float." << LogIO::POST;
+      foffsetIsDouble = True;
+    }
     sysvel.attach(suTab,"SYSVEL"); // sys vel. (m/s)  
     restfreq.attach(suTab,"RESTFREQ"); // rest freq. (hz)  
   }
