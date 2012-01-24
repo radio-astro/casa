@@ -530,12 +530,24 @@ tfcrop, extend, unflag, summary)</description>
 
             tfcrop -- Flag using the TFCrop autoflag algorithm
 
+               ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
+                    options: 'scan' or any other float value or string containing the units.
+                    default: 'scan'
+                    example: '1.5min'
+                           : 1.2 (taken in seconds)
+                        The dataset will be iterated through in time-chunks defined here.
+                
+               combinescans -- accumulate data across scans.
+                    default: False
+                        It only makes sense when ntime not equal 'scan'.                
+
                expression -- Flag using the following:
                     default: 'ABS ALL'; use all the available polarizations.
                     options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
                              any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
                              'WVR' refers to the water vapour radiometer of ALMA data.
                     example: expression='RE XX'
+                    
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA','CORRECTED','MODEL', 'RESIDUAL, "RESIDUAL_DATA"
@@ -619,6 +631,17 @@ tfcrop, extend, unflag, summary)</description>
                             This mode will extend the accumulated flags available in the MS,
                             regardless of which algorithm created them.
 
+                ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
+                     options: 'scan' or any other float value or string containing the units.
+                     default: 'scan'
+                     example: '1.5min'
+                            : 1.2 (taken in seconds)
+                        The dataset will be iterated through in time-chunks defined here.
+                
+                combinescans -- accumulate data across scans.
+                      default: False
+                          It only makes sense when ntime not equal 'scan'.                
+
                 extendpols -- Extend flags to all correlations
                       default: False
                       options: True/False
@@ -678,18 +701,6 @@ tfcrop, extend, unflag, summary)</description>
                      Then s will be a dictionary which contains
                     s['total']                  : total number of data
                     s['flagged']                : amount of flagged data
-
-        ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
-                options: 'scan' or any other float value or string containing the units.
-                default: 'scan'
-                
-            combinescans -- accumulate data across scans.
-                default: False
-                Only available when ntime not equal 'scan'.
-                
-                Example: '1.5min'
-                       : 1.2 (taken in seconds)
-               The dataset will be iterated through in time-chunks defined here.
         
  
         display -- Display data and/or end-of-MS reports at runtime.
