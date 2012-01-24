@@ -1821,7 +1821,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	header.get("cunit", cunit);
     }
 
-    String Ctype, Specsys;
+    String Ctype, Cunit, Specsys;
     Double Crval, Cdelt, Crpix, Altrval, Altrpix;
     Int Velref;
     Bool HaveAlt;
@@ -1939,7 +1939,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     }
 
 
-    AlwaysAssert(FITSSpectralUtil::toFITSHeader(Ctype, Crval, Cdelt, Crpix, HaveAlt, Altrval,
+    AlwaysAssert(FITSSpectralUtil::toFITSHeader(Ctype, Crval, Cdelt, Crpix, Cunit, HaveAlt, Altrval,
 						Altrpix, Velref, Restfreq, Specsys, 
 						logger,
 						RefFreq, RefPix,
@@ -1957,7 +1957,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	} else if (Ctype.contains("FREQ")) {
 	    cunit(whichAxis) = "Hz";
 	} else if (Ctype.contains("WAVE")|| Ctype.contains("AWAV")) {
-	    cunit(whichAxis) = "m";
+	    cunit(whichAxis) = Cunit;
 	} else {
 	    AlwaysAssert(0, AipsError); // NOTREACHED
 	}
