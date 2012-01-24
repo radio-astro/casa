@@ -78,6 +78,7 @@ TestFlagger::done()
 	msname_p = "";
 	iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_UNMAPPED;
 	timeInterval_p = 0.0;
+	combinescans_p = false;
 	spw_p = "";
 	scan_p = "";
 	field_p = "";
@@ -89,6 +90,10 @@ TestFlagger::done()
 	array_p = "";
 	uvrange_p = "";
 	observation_p = "";
+
+	max_p = 0.0;
+	timeset_p = false;
+	iterset_p = false;
 
 	if (! dataselection_p.empty()) {
 		Record temp;
@@ -119,7 +124,7 @@ bool
 TestFlagger::open(String msname, Double ntime)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	if (msname.empty()) {
 		os << LogIO::SEVERE << "No Measurement Set has been parsed"
@@ -132,6 +137,8 @@ TestFlagger::open(String msname, Double ntime)
 	if (ntime)
 		timeInterval_p = ntime;
 
+	max_p = timeInterval_p;
+
 	if(dbg){
 		os << LogIO::NORMAL << "msname = " << msname_p << " ntime = " << timeInterval_p << LogIO::POST;
 	}
@@ -139,7 +146,6 @@ TestFlagger::open(String msname, Double ntime)
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
-	// TODO: Add the combinescans parameter when available!!!
 	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
 
 	// Open the MS
@@ -156,7 +162,7 @@ bool
 TestFlagger::selectData(Record selrec)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 	if (dbg)
 		os << LogIO::NORMAL << "Called from selectData(Record)" << LogIO::POST;
 
@@ -226,7 +232,7 @@ TestFlagger::selectData(String field, String spw, String array,
 						String intent, String observation)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	if (dbg)
 		os << LogIO::NORMAL << "Called from selectData(String....)" << LogIO::POST;
@@ -261,7 +267,7 @@ bool
 TestFlagger::parseDataSelection(Record selrec)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	if(selrec.empty()) {
 		return false;
@@ -294,7 +300,7 @@ TestFlagger::parseDataSelection(Record selrec)
 bool
 TestFlagger::parseAgentParameters(Record agent_params)
 {
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	String mode = "";
 	String expression = "ABS ALL";
@@ -319,6 +325,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		return false;
 	}
 
+	// Get mode
 	agentParams_p.get("mode", mode);
 
 	// Name for the logging output
@@ -328,13 +335,28 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	agentParams_p.get("name", agent_name);
 
-	// If there is a tfcrop or extend agent in the list change
-	// the iterationApproach for all agents
+	// If there is a tfcrop or extend agent in the list,
+	// get the maximum value of ntime and the combinescans parameter
 	if (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0) {
-		fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
+		Double ntime;
+		if (agentParams_p.isDefined("ntime")){
+			agentParams_p.get("ntime", ntime);
+			getMax(ntime);
+		}
+
+		// Get the combinescans parameter. If any of them is True,
+		// it will be True for the whole list
+		Bool combine = false;
+		if (agentParams_p.isDefined("combinescans"))
+			agentParams_p.get("combinescans", combine);
+
+		combinescans_p = combinescans_p || combine;
+
+		os << LogIO::DEBUGGING << "max ntime="<<max_p<<" and combinescans="<< combinescans_p << LogIO::POST;
+
 	}
 
-
+	// Create one agent for each polarization
 	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0) {
 
 		if (agentParams_p.isDefined("expression")) {
@@ -455,11 +477,12 @@ bool
 TestFlagger::initAgents()
 {
 
-    LogIO os(LogOrigin("TestFlagger",__FUNCTION__,WHERE));
+    LogIO os(LogOrigin("TestFlagger",__FUNCTION__));
 
 	if (agents_config_list_p.empty()){
 		return false;
 	}
+
 
 	os<< LogIO::NORMAL<< "There are "<< agents_config_list_p.size()<< " agents in the list"<<LogIO::POST;
 
@@ -488,8 +511,8 @@ TestFlagger::initAgents()
 		mixed = false;
 	}
 
-	// Send the re-applying agents to the debug as we are only
-	// interested in seeing the unapply action
+	// Send the logging of the re-applying agents to the debug
+	// as we are only interested in seeing the unapply action
 	uChar loglevel = LogIO::DEBUGGING;
 
 	// loop through the vector of agents
@@ -522,17 +545,36 @@ TestFlagger::initAgents()
 			agent_rec.define("loglevel", loglevel);
 		}
 
+		// Get the mode
+		String mode;
+		agent_rec.get("mode", mode);
+
+		// Set the new time interval only once
+		if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0)) {
+			fdh_p->setTimeInterval(max_p);
+			timeset_p = true;
+		}
+
+		// Change the new iteration approach only once
+		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0)) {
+			if (combinescans_p)
+				fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
+			else
+				fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
+
+			iterset_p = true;
+		}
+
 		// TODO: Catch error, print a warning and continue to next agent.
+		// Create this agent
 		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
 
 		// Get the summary agent to list the results later
-		String mode;
-		agent_rec.get("mode", mode);
 		if (mode.compare("summary") == 0) {
 			summaryAgent_p = (FlagAgentSummary *) fa;
 		}
 
-		// add to list of FlagAgentList
+		// add the agent to the FlagAgentList
 		agents_list_p.push_back(fa);
 
 	}
@@ -550,13 +592,17 @@ Record
 TestFlagger::run(Bool writeflags)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	if (agents_list_p.empty()) {
 		os << LogIO::SEVERE << "There is no agent to run in list"<< LogIO::POST;
 		return Record();
 	}
 
+
+	// Use the maximum ntime of the list
+	os << LogIO::NORMAL3 << "ntime for all agents will be "<< max_p << LogIO::POST;
+	os << LogIO::NORMAL3 << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
 
 	// Generate the iterators
 	// It will iterate through the data to evaluate the necessary memory
@@ -665,6 +711,17 @@ TestFlagger::getExpressionFunction(String expression)
 
 	return func;
 }
+
+void
+TestFlagger::getMax(Double value)
+{
+	if (value > max_p)
+		max_p = value;
+
+	return;
+
+}
+
 
 // ---------------------------------------------------------------------
 // TestFlagger::getFlagVersionList
