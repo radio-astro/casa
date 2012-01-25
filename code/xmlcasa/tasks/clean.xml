@@ -799,25 +799,45 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                Make a continuum image from the selected frequency
                channels/range using Multi-frequency synthesis
                algorithm for wide-band narrow field imaging.  
+               mode='mfs' examples:
+               spw = '0,1'; mode = 'mfs'
+                  will produce one image made from all channels in spw 
+ 		       0 and 1
+               spw='0:5~28^2'; mode = 'mfs'
+                  will produce one image made with channels 
+ 		       (5,7,9,...,25,27)
+
              nterms -- Number of Taylor terms to be used to model the
                frequency dependence of the sky emission.  nterms=1 is
                equivalent to assuming no frequency dependence.
                nterms>1 runs the MS-MFS algorithm, and the choice of nterms 
                should depend on the expected shape and SNR of the spectral
-               structure, across the chosen bandwidth. 
+               structure, across the chosen bandwidth. Output images 
+               represent taylor-coefficients of the sky spectrum. 
+               A spectral index map is also  computed as the ratio of the 
+               first two terms.  Additionally, a spectral-index error image is made
+               by treating taylor-coefficient residuals as errors, and propagating
+               them through the division used to compute spectral-index. 
+               It is meant to be a guide to which parts of the spectral-index 
+               image to trust, and the values may not always represent a 
+               statistically-correct error.
+                
+	       ** Note that the software implementation of the MS-MFS algorithm
+	       for nterms>1 currently does not allow combination with  
+               mosaics, and pbcor.**
+
              reffreq -- The reference frequency (for nterms>1) about which
                 the Taylor expansion is done. reffreq='' defaults to the
                 middle frequency of the selected range. 
-	       ** Note that the software implementation of the MS-MFS algorithm
-	       for nterms>1 is still new, and will be integrated with multi-field, 
-               mosaics, and pbcor, in a future release **
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
+
                nchan -- Total number of channels in the output image.
                  Example: nchan=100. 
                  Default: -1; Automatically selects enough channels to cover 
                  data selected by 'spw' consistent with 'start' and 'width'. 
 	         It is often easiest to leave nchan at the default value. 
+
                start -- First channel, velocity, or frequency. 
                  For mode='channel'; This selects the channel index number 
                  from the MS (0 based) that you want to correspond to the
@@ -835,6 +855,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  For mode='velocity' or 'frequency': default=''; 
                  starts at first input channel of first input spw
                  examples: start='5.0km/s', or start='22.3GHz'.
+
                width -- Output channel width
                  For mode='channel', default=1; &gt;1 indicates channel averaging
                  example: width=4.
@@ -848,6 +869,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  examples: width='1.0km/s', or width='24.2kHz'.
                  Setting width>0 gives channels of increasing frequency for 
                  mode='frequency', and increasing velocity for mode='velocity'. 
+
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'linear' 
@@ -856,28 +878,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         are therefore possible at edge  channels, or near
                         flagged data channels.
                  For mode='channel', please use 'nearest'.
+
                chaniter -- specify how spectral CLEAN is performed, 
                  default: chaniter=False;
                  example: chaniter=True; step through channels 
+
                outframe -- For mode='velocity', 'frequency', or 'channel':
                              velocity reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
                           'LGROUP','CMB'
                  default: ''; same as input data
                  example: frame='bary' for Barycentric frame 
+
                veltype -- for mode='velocity' gives the velocity definition
                  Options: 'radio','optical' 
                  default: 'radio'
                  NOTE: the viewer always defaults to displaying the 'radio'
                    frame, but that can be changed in the position tracking
                    pull down.
-           mode='mfs' examples:
-               spw = '0,1'; mode = 'mfs'
-                  will produce one image made from all channels in spw 
- 		       0 and 1
-               spw='0:5~28^2'; mode = 'mfs'
-                  will produce one image made with channels 
- 		       (5,7,9,...,25,27)
 
            mode='channel' examples:
                spw = '0'; mode = 'channel': nchan=3; start=5; width=4
@@ -1057,7 +1075,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default='I'; example: stokes='IQUV';
                Options: 'I','Q','U','V','IV','QU','IQ','UV','IQU','IUV','IQUV','RR','LL','XX','YY','RRLL','XXYY'
        niter -- Maximum number iterations,
-               if niter=0, then no CLEANing is done ("invert" only)
+               if niter=0, then no CLEANing is done ("invert" only).
+               (niter=0 can be used instead of the 'ft' task to predict/save a model)
                default: 500; example: niter=5000
        gain -- Loop gain for CLEANing
                default: 0.1; example: gain=0.5
@@ -1301,10 +1320,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 M1.0.residual, M1_1.residual, M1_2.residual     residual images
 
 	  
-             Note : The old outlier-file and boxfile formats have been deprecated. 
-                       They are still supported in CASA 3.3, but will be removed from 
-                       the next release. Please update your scripts. 
-                     
+             Note : The old AIPS-style outlier-file and boxfile formats have been deprecated. 
+                       However, due to user-requests, they will continue be supported
+                       in CASA 3.4. Note that the old outlier file format does not support 
+                       the specification of modelimage and mask for each field. 
+                       The new format is more complete, and less ambiguous, so please 
+                       consider updating your scripts.
+
   </example>
 
 </task>
