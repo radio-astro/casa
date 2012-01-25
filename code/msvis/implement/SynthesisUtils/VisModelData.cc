@@ -176,7 +176,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	    }
 	  }
 	  else{
-	    if(hasModel(vb.spectralWindow(), vb.fieldId(), vb.msId()) < 0)
+	    if(hasModel(vb.msId(), vb.fieldId(), vb.spectralWindow()) < 0)
 	      ftindex_p(vb.spectralWindow(), vb.fieldId(), vb.msId())=-2;
 	  }
 
@@ -219,7 +219,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	    }
 	  }
 	  else{
-	    if(hasModel(vb.spectralWindow(), vb.fieldId(), vb.msId()) < 0)
+	    if(hasModel(vb.msId(), vb.fieldId(), vb.spectralWindow()) < 0)
 	      clindex_p(vb.spectralWindow(), vb.fieldId(), vb.msId())=-2;
 	  }
 
@@ -256,7 +256,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       clindex_p.assign(newind);
     }
 
-    if( clindex_p(spw, field, msid) + ftindex_p(spw, field, msid) < -2)
+    if( (clindex_p(spw, field, msid) + ftindex_p(spw, field, msid)) < -2)
       return -2;
     else if( (clindex_p(spw, field, msid) ==-1)  &&  (ftindex_p(spw, field, msid) ==-1))
       return -1;
@@ -280,7 +280,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     vb.setModelVisCube(mod);
     Bool incremental=False;
     if( cl.nelements()>0){
-      //cerr << "In cft " << cl.nelements() << endl;
+      // cerr << "In cft " << cl.nelements() << endl;
       for (uInt k=0; k < cl.nelements(); ++k)
 	if(!cl[k].null()){
 	  cft_p->get(vb, *(cl[k]), -1); 
