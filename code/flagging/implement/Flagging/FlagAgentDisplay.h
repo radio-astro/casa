@@ -45,10 +45,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ~FlagAgentDisplay();
 
     // Make plots and either display or write to a file
-    Bool displayReports(Record &combinedReport);
+    Bool displayReports(FlagReport &combinedReport);
     
     // Get a report/summary
-    Record getReport();
+    FlagReport getReport();
     
   protected:
     
@@ -67,15 +67,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Bool setDataLayout();
     Bool setReportLayout();
-    Bool BuildDataPlotWindow();
-    Bool BuildReportPlotWindow();
-    //    virtual Bool ShowFlagPlots();
+    Bool buildDataPlotWindow();
+    Bool buildReportPlotWindow();
+
 
     void getChunkInfo(const VisBuffer &visBuffer);
     Bool skipBaseline(std::pair<Int,Int> antennaPair);
  
     void getUserInput();
-    char *dock_xml_p;
     
     void DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame);
     void DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
@@ -84,10 +83,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Plotter members
     FlagPlotServerProxy *dataplotter_p;  // UUU Make this a CountedPtr
     FlagPlotServerProxy *reportplotter_p;
-    Vector<dbus::variant> panels_p;
+    Vector<dbus::variant> panels_p, report_panels_p;
+    char *dock_xml_p, *report_dock_xml_p;
 
     // Control parameters
-    Bool ShowPlots, StopAndExit;
+    Bool showPlots_p, stopAndExit_p;
     Bool pause_p;
     Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
     Bool reportReturn_p;

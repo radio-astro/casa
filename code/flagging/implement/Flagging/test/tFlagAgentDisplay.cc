@@ -398,7 +398,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	agentList.join();
 
         // Gather reports from all Agents that make them
-        Record combinedReport = agentList.gatherReports();
+        FlagReport combinedReport = agentList.gatherReports();
 
 	// Print the combined Record (for debugging)
 	stringstream replist;

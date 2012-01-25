@@ -1891,7 +1891,7 @@ FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &vi
 	return false;
 }
 
-Record
+FlagReport
 FlagAgentBase::getReport()
 {
 	// TODO: This class must be re-implemented in the derived classes
@@ -2053,7 +2053,7 @@ void FlagAgentList::setCheckMode(bool enable)
 	return;
 }
 
-Record FlagAgentList::gatherReports()
+FlagReport FlagAgentList::gatherReports()
 {
         FlagReport combinedReport("list");
 
@@ -2065,164 +2065,6 @@ Record FlagAgentList::gatherReports()
 	return combinedReport;
 }
 
-////////////////////////////////////
-/// FlagReport implementation ///
-////////////////////////////////////
-
-FlagReport::FlagReport(String type, String name):Record(),logger_p(NULL)
-{
-        logger_p = new LogIO(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-
-        // Type of report. Options "none","list","plot"
-        if( ! ( type == "list" || type == "none" || type == "plot" ) )
-	{
-	       *logger_p << LogIO::WARN << "Invalid FlagReport type : " << type << ". Setting to 'none' " << LogIO::POST;
-	       type="none";
-	}
-
-        this->define( RecordFieldId("type") , type );
-
-        if( type == "list" ) // List of reports
- 	{
-	      this->define( RecordFieldId("nreports") , (Int)0 );
-	}
-        else // One report
-	{
-	      this->define( RecordFieldId("name") , name );
-	}
-
-        // One report of type "plot"
-        if( type == "plot") 
-	{
-	       this->define( RecordFieldId("title") , String("") );
-	       this->define( RecordFieldId("xlabel") , String("") );
-	       this->define( RecordFieldId("ylabel") , String("") );
-	}
-
-}
-
-FlagReport::FlagReport(const Record &other)
-{
-        this->assign(other);
-        logger_p = new LogIO(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-}
-
-FlagReport::~FlagReport()
-{
-        if(logger_p != NULL) delete logger_p;
-}
-
-// Add a FlagReport of any type to a FlagReport of type "list".
-// If it is a single report, add as a subRecord
-// If it is a list of reports, append this list, and re-index.
-Bool
-FlagReport::addReport(Record inpReport)
-{
-        logger_p->origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-
-       // Verify and read type of current record
-       if( !verifyFields() ) 
-	 {
-	         return False;
-	 }
-       String thisType;
-       this->get( RecordFieldId("type") , thisType );
-
-       // Reports can be added only to flagreports of type 'list'
-       if(thisType != String("list")) 
-           { 
-	     *logger_p << LogIO::WARN << "Current FlagReport must be of type 'list' " << LogIO::POST; 
-	     return False; 
-	   }
-
-       // Now that we know it's of type list, read nreports
-       Int nReports;
-       this->get( RecordFieldId("nreports") , nReports );
-     
-       // React to different types of input FlagReports
-       String inpType;
-       inpReport.get( RecordFieldId("type") , inpType );
-       if(inpType != String("list")) // It's not a list. Add as a subRecord
-         {
-                  this->defineRecord( RecordFieldId(String("report")+String::toString(nReports)) , inpReport );
-                  this->define( RecordFieldId("nreports") , (Int)(nReports+1) );
-         }
-       else // It's a list. Append the input list to the current one, re-indexing appropriately
-         {
-                  Int nInpReps;
-		  inpReport.get( RecordFieldId("nreports") , nInpReps );
-     
-		  for(Int rep=0;rep<nInpReps;rep++)
-		  {
-                           this->defineRecord( RecordFieldId(String("report")+String::toString(nReports+rep)) , inpReport.asRecord( (String("report")+String::toString(rep)) ) );
-		  }
-		  this->define( RecordFieldId("nreports") , (Int)(nReports + nInpReps) );
-         }
-
-}// end of addReport
-
-//----------------------------------------------------------------------------------------------
-
-// Check that all required fields have valid values.
-Bool
- FlagReport::verifyFields()
-{
-     logger_p->origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-
-     if( ! (this->isDefined("type") ) ) 
-     { 
-         *logger_p << LogIO::WARN << "Invalid FlagReport state !" << LogIO::POST; 
-         return False; 
-     }
-
-     // Read type of current record
-     String thisType;
-     this->get( RecordFieldId("type") , thisType );
-
-     // For a FlagReport of type "list", check that nreports exists and is correct.
-     if(thisType == "list")
-     {
-          if( ! this->isDefined("nreports") ) 
-          {
-	       *logger_p << LogIO::WARN << "No 'nreports' defined" << LogIO::POST;
-	       return False; // nreports field is not defined
-          }
-          else // check that nreports subRecords exist, and verify each one.
-	  {
-	        Int nReps;
-                this->get( RecordFieldId("nreports") , nReps );
-                for(Int rep=0; rep<nReps; rep++)
-                {
-                         String repname = String("report")+String::toString(rep);
-                         if( ! this->isDefined(repname) ) 
-		         {
-		                 *logger_p << LogIO::WARN << "Report : " << repname << " is not defined" << LogIO::POST;
-		                  return False; // Does not contain a subReport
-                         }
-                         else
-                         {
-			           FlagReport subRep(this->subRecord( RecordFieldId(repname) ));
-				   if( ! subRep.verifyFields() ) 
-				   {
-				            *logger_p << LogIO::WARN << "Invalid subRecord for " << repname << LogIO::POST;
-					    return False; // subReport is invalid
-				   }
-			 }
-		}
-	  }
-     }
-     else if(thisType=="plot")
-     {
-            if( !this->isDefined("name") || !this->isDefined("title") || !this->isDefined("xlabel") || !this->isDefined("ylabel") )
-	    {
-	           *logger_p << LogIO::WARN << "Invalid FlagReport of type 'plot'" << LogIO::POST;
-                   return False;
-	    } 
-     }
-
-     return True;
-
-}// end of verifyFields()
 
 } //# NAMESPACE CASA - END
 

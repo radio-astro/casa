@@ -24,6 +24,7 @@
 #define FlagAgentBase_H_
 
 #include <flagging/Flagging/FlagDataHandler.h>
+#include <flagging/Flagging/FlagReport.h>
 #include <casa/Containers/OrdMapIO.h>
 #include <measures/Measures/Stokes.h>
 
@@ -88,7 +89,7 @@ public:
         //          FlagReport repList("list");
         //          repList.addReport( FlagReport("plot",agentName_p) );
         //          repList.addReport( FlagReport("plot",agentName_p) );
-        virtual Record getReport();
+        virtual FlagReport getReport();
 
 protected:
 
@@ -270,32 +271,13 @@ class FlagAgentList
 		void setCheckMode(bool enable);
 
                 // Method to accumulate reports from all agents
-                Record gatherReports();
+                FlagReport gatherReports();
 
 	protected:
 
 	private:
 		vector<FlagAgentBase *> container_p;
 		vector<FlagAgentBase *>::iterator iterator_p;
-};
-
-class FlagReport : public Record
-{
-	public:
-                FlagReport(String type=String("none"),String name=String(""));
-                FlagReport(const Record &other); // TODO : By value. Change to by-reference
-		~FlagReport();
-
-                // TODO : This function copies by value. Change to by-reference if possible
-                Bool addReport(Record inpReport); 
-           
-                // Check validity of FlagReport.
-                Bool verifyFields();
-
-	protected:
-
-	private:
-                casa::LogIO *logger_p;
 };
 
 } //# NAMESPACE CASA - END
