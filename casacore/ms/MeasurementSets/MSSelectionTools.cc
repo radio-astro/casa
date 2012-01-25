@@ -103,22 +103,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Parse the various expressions and produce the accmuluated TEN
     // internally.
     //
-	
+    
     MSSelection *mss=mymss;
+    Bool rstat;
     if (mss == NULL) mss= new MSSelection();
+    
+    try
+      {
+	mss->reset(ms,MSSelection::PARSE_NOW,
+		   timeExpr,antennaExpr,fieldExpr,spwExpr,
+		   uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
+		   stateExpr, obsExpr);
+	//
+	// Apply the internal accumulated TEN to the MS and produce the
+	// selected MS.  
+	//
+	// If the accumulated TEN is NULL, this returns False.  Else
+	// return True.
+	//
+	rstat = mss->getSelectedMS(selectedMS,outMSName);
+      }
+    catch (AipsError& x)
+      {
+	if (mymss==NULL) delete mss;
+	throw(x);
+      }
 
-    mss->reset(ms,MSSelection::PARSE_NOW,
-	       timeExpr,antennaExpr,fieldExpr,spwExpr,
-	       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
-	       stateExpr, obsExpr);
-    //
-    // Apply the internal accumulated TEN to the MS and produce the
-    // selected MS.  
-    //
-    // If the accumulated TEN is NULL, this returns False.  Else
-    // return True.
-    //
-    Bool rstat = mss->getSelectedMS(selectedMS,outMSName);
     if (mymss==NULL) delete mss;
     return rstat;
   }
@@ -150,25 +160,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // internally.
     //
     MSSelection *mss=mymss;
+    Bool rstat;
     if (mss == NULL) mss = new MSSelection();
 
-    mss->reset(ms,MSSelection::PARSE_NOW,
-	       timeExpr,antennaExpr,fieldExpr,spwExpr,
-	       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
-	       stateExpr, obsExpr);
-    //
-    // Apply the internal accumulated TEN to the MS and produce the
-    // selected MS.  
-    //
-    // If the accumulated TEN is NULL, this returns False.  Else
-    // return True.
-    //
-    Bool rstat = mss->getSelectedMS(selectedMS,outMSName);
-
-    // Get in-row selection info
-    mss->getChanSlices(chanSlices,&ms,defaultChanStep);
-    mss->getCorrSlices(corrSlices,&ms);
-
+    try
+      {
+	mss->reset(ms,MSSelection::PARSE_NOW,
+		   timeExpr,antennaExpr,fieldExpr,spwExpr,
+		   uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
+		   stateExpr, obsExpr);
+	//
+	// Apply the internal accumulated TEN to the MS and produce the
+	// selected MS.  
+	//
+	// If the accumulated TEN is NULL, this returns False.  Else
+	// return True.
+	//
+	rstat = mss->getSelectedMS(selectedMS,outMSName);
+	
+	// Get in-row selection info
+	mss->getChanSlices(chanSlices,&ms,defaultChanStep);
+	mss->getCorrSlices(corrSlices,&ms);
+      }
+    catch (AipsError& x)
+      {
+	if (mymss == NULL) delete mss;
+	throw(x);
+      }
     if (mymss == NULL) delete mss;
     return rstat;
   }

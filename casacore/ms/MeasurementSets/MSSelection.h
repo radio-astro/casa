@@ -315,6 +315,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void clear(const MSExprType type=NO_EXPR);
     Bool exprIsNull(const MSExprType type=NO_EXPR);
     
+    // Convey to the various parsers to delete the TENs they hold
+    void deleteNodes();
+
     // Convert to TableExprNode format (C++ interface to TaQL)
     TableExprNode toTableExprNode(const MeasurementSet* ms);
     

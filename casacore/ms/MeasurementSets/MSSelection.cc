@@ -161,6 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   MSSelection::~MSSelection()
   {
+    deleteNodes();
     // Default desctructor
     //
   }
@@ -302,6 +303,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   //----------------------------------------------------------------------------
   
+  void MSSelection::deleteNodes()
+  {
+    //    msArrayGramParseDeleteNode();
+    msCorrGramParseDeleteNode();
+    msFieldGramParseDeleteNode();
+    //    msScanGramParseDeleteNode();
+    msSpwGramParseDeleteNode();
+    msTimeGramParseDeleteNode();
+    msUvDistGramParseDeleteNode();
+    msStateGramParseDeleteNode();
+  }
+  
+  //----------------------------------------------------------------------------
+  
   TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
   {
     // Convert the MS selection to a TableExprNode object, 
@@ -317,149 +332,149 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     resetMS(*ms);
     TableExprNode condition;
-    
-    for(uInt i=0; i<exprOrder_p.nelements(); i++)
+    try
       {
-	TableExprNode node;
-	switch(exprOrder_p[i])
+	for(uInt i=0; i<exprOrder_p.nelements(); i++)
 	  {
-	  case ANTENNA_EXPR:
-	    {
-	      antenna1IDs_p.resize(0);
-	      antenna2IDs_p.resize(0);
-	      baselineIDs_p.resize(0,2);
-	      if(antennaExpr_p != "") {
-                node = msAntennaGramParseCommand(ms, antennaExpr_p, 
-                                                 antenna1IDs_p, 
-                                                 antenna2IDs_p,
-                                                 baselineIDs_p);
-              }
-	      break;
-	    }
-	  case FIELD_EXPR:
-	    {
-	      fieldIDs_p.resize(0);
-	      if(fieldExpr_p != "" &&
-		 msFieldGramParseCommand(ms, fieldExpr_p,fieldIDs_p) == 0)
-		node = *(msFieldGramParseNode());
-	      break;
-	    }
-	  case SPW_EXPR:
-	    {
-	      spwIDs_p.resize(0);
-	      if (spwExpr_p != "" &&
-		  msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
-		node = *(msSpwGramParseNode());
-	      break;
-	    }
-	  case SCAN_EXPR:
-	    {
-	      scanIDs_p.resize(0);
-	      if(scanExpr_p != "")
-		node = msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p);
-		//		node = *(msScanGramParseNode());
-	      break;
-	    }
-	  case OBSERVATION_EXPR:
-	    {
-	      observationIDs_p.resize(0);
-	      if(observationExpr_p != "")
-		node = msObservationGramParseCommand(ms, observationExpr_p, 
-						     observationIDs_p, maxObs_p);
-	      break;
-	    }
-	  case ARRAY_EXPR:
-	    {
-	      arrayIDs_p.resize(0);
-	      if(arrayExpr_p != "")
-		node = msArrayGramParseCommand(ms, arrayExpr_p, arrayIDs_p, maxArray_p);
-	      break;
-	    }
-	    /*
-	      case TIME_EXPR:
-	      if(timeExpr_p != "" &&
-	      msTimeGramParseCommand(ms, timeExpr_p) == 0)
-	      node = *(msTimeGramParseNode());
-	      break;
-	    */
-	  case UVDIST_EXPR:
-	    {
-	      selectedUVRange_p.resize(2,0);
-	      selectedUVUnits_p.resize(0);
-	      if(uvDistExpr_p != "" &&
-		 msUvDistGramParseCommand(ms, uvDistExpr_p, 
-					  selectedUVRange_p, 
-					  selectedUVUnits_p) == 0)
-		node = *(msUvDistGramParseNode());
-	      break;
-	    }
-	  case TAQL_EXPR:
-	    {
-	      if(taqlExpr_p != "")
+	    TableExprNode node;
+	    switch(exprOrder_p[i])
+	      {
+	      case ANTENNA_EXPR:
 		{
-		  //	      taql = tableCommand(taqlExpr_p).node();
-		  node = RecordGram::parse(*ms,taqlExpr_p);
+		  antenna1IDs_p.resize(0);
+		  antenna2IDs_p.resize(0);
+		  baselineIDs_p.resize(0,2);
+		  if(antennaExpr_p != "") {
+		    node = msAntennaGramParseCommand(ms, antennaExpr_p, 
+						     antenna1IDs_p, 
+						     antenna2IDs_p,
+						     baselineIDs_p);
+		  }
+		  break;
 		}
-	      break;
-	    }
-	  case POLN_EXPR:
-	    {
-	      if (polnExpr_p != "")
+	      case FIELD_EXPR:
 		{
-		  msPolnGramParseCommand(ms, 
-					 polnExpr_p,
-					 node,
-					 ddIDs_p,
-					 selectedPolMap_p,
-					 selectedSetupMap_p);
+		  fieldIDs_p.resize(0);
+		  if(fieldExpr_p != "" &&
+		     msFieldGramParseCommand(ms, fieldExpr_p,fieldIDs_p) == 0)
+		    node = *(msFieldGramParseNode());
+		  break;
 		}
-	      break;
-	    }
-	  case STATE_EXPR:
-	    {
-	      stateObsModeIDs_p.resize(0);
-	      if(stateExpr_p != "" &&
-		 msStateGramParseCommand(ms, stateExpr_p,stateObsModeIDs_p) == 0)
-		node = *(msStateGramParseNode());
-	      break;
-	    }
-	  case NO_EXPR:break;
-	  default:  break;
-	  } // Switch
+	      case SPW_EXPR:
+		{
+		  spwIDs_p.resize(0);
+		  if (spwExpr_p != "" &&
+		      msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
+		    node = *(msSpwGramParseNode());
+		  break;
+		}
+	      case SCAN_EXPR:
+		{
+		  scanIDs_p.resize(0);
+		  if(scanExpr_p != "")
+		    node = msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p);
+		  //		node = *(msScanGramParseNode());
+		  break;
+		}
+	      case OBSERVATION_EXPR:
+		{
+		  observationIDs_p.resize(0);
+		  if(observationExpr_p != "")
+		    node = msObservationGramParseCommand(ms, observationExpr_p, 
+							 observationIDs_p, maxObs_p);
+		  break;
+		}
+	      case ARRAY_EXPR:
+		{
+		  arrayIDs_p.resize(0);
+		  if(arrayExpr_p != "")
+		    node = msArrayGramParseCommand(ms, arrayExpr_p, arrayIDs_p, maxArray_p);
+		  break;
+		}
+		/*
+		  case TIME_EXPR:
+		  if(timeExpr_p != "" &&
+		  msTimeGramParseCommand(ms, timeExpr_p) == 0)
+		  node = *(msTimeGramParseNode());
+		  break;
+		*/
+	      case UVDIST_EXPR:
+		{
+		  selectedUVRange_p.resize(2,0);
+		  selectedUVUnits_p.resize(0);
+		  if(uvDistExpr_p != "" &&
+		     msUvDistGramParseCommand(ms, uvDistExpr_p, 
+					      selectedUVRange_p, 
+					      selectedUVUnits_p) == 0)
+		    node = *(msUvDistGramParseNode());
+		  break;
+		}
+	      case TAQL_EXPR:
+		{
+		  if(taqlExpr_p != "")
+		    {
+		      //	      taql = tableCommand(taqlExpr_p).node();
+		      node = RecordGram::parse(*ms,taqlExpr_p);
+		    }
+		  break;
+		}
+	      case POLN_EXPR:
+		{
+		  if (polnExpr_p != "")
+		    {
+		      msPolnGramParseCommand(ms, 
+					     polnExpr_p,
+					     node,
+					     ddIDs_p,
+					     selectedPolMap_p,
+					     selectedSetupMap_p);
+		    }
+		  break;
+		}
+	      case STATE_EXPR:
+		{
+		  stateObsModeIDs_p.resize(0);
+		  if(stateExpr_p != "" &&
+		     msStateGramParseCommand(ms, stateExpr_p,stateObsModeIDs_p) == 0)
+		    node = *(msStateGramParseNode());
+		  break;
+		}
+	      case NO_EXPR:break;
+	      default:  break;
+	      } // Switch
+	    
+	    condition = condition && node;
+	  }//For
+	//
+	// Now parse the time expression.  Internally use the condition
+	// generated so far to find the first logical row to use to get
+	// value of the wild-card fields in the time expression. 
+	//
+	const TableExprNode *timeNode = 0x0;
+	selectedTimesList_p.resize(2,0);
+	if(timeExpr_p != "" &&
+	   msTimeGramParseCommand(ms, timeExpr_p, condition, selectedTimesList_p) == 0)
+	  timeNode = msTimeGramParseNode();
+	//
+	// Add the time-expression TEN to the condition
+	//
+	if(timeNode && !timeNode->isNull()) {
+	  if(condition.isNull()) {
+	    condition = *timeNode;
+	  } else {
+	    condition = condition && *timeNode;
+	  }
+	}
 	
-        condition = condition && node;
-      }//For
-    //
-    // Now parse the time expression.  Internally use the condition
-    // generated so far to find the first logical row to use to get
-    // value of the wild-card fields in the time expression. 
-    //
-    const TableExprNode *timeNode = 0x0;
-    selectedTimesList_p.resize(2,0);
-    if(timeExpr_p != "" &&
-       msTimeGramParseCommand(ms, timeExpr_p, condition, selectedTimesList_p) == 0)
-      timeNode = msTimeGramParseNode();
-    //
-    // Add the time-expression TEN to the condition
-    //
-    if(timeNode && !timeNode->isNull()) {
-      if(condition.isNull()) {
-	condition = *timeNode;
-      } else {
-	condition = condition && *timeNode;
+	fullTEN_p = condition;
       }
-    }
-    
-    fullTEN_p = condition;
-    //    msArrayGramParseDeleteNode();
-    msCorrGramParseDeleteNode();
-    msFieldGramParseDeleteNode();
-    //    msScanGramParseDeleteNode();
-    msSpwGramParseDeleteNode();
-    msTimeGramParseDeleteNode();
-    msUvDistGramParseDeleteNode();
-    msStateGramParseDeleteNode();
-    
+    catch(AipsError& x)
+      {
+	deleteNodes();
+	throw(x);
+      }	
+
+    deleteNodes();
     return condition;
   }
   
@@ -483,7 +498,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	selectedMS.flush();
 	newRefMS=True;
       }
-
+    
     return newRefMS;
   }
   
@@ -509,26 +524,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    (observationExpr_p == "");
 	}
     else
-	{
-	  switch (type)
-	    {
-	    case ANTENNA_EXPR:     exprIsNull = (antennaExpr_p == "");break;
-	    case FIELD_EXPR:       exprIsNull = (fieldExpr_p   == "");break;
-	    case SPW_EXPR:         exprIsNull = (spwExpr_p     == "");break;
-	    case SCAN_EXPR:        exprIsNull = (scanExpr_p    == "");break;
-	    case ARRAY_EXPR:       exprIsNull = (arrayExpr_p   == "");break;
-	    case TIME_EXPR:        exprIsNull = (timeExpr_p    == "");break;
-	    case UVDIST_EXPR:      exprIsNull = (uvDistExpr_p  == "");break;
-	    case TAQL_EXPR:        exprIsNull = (taqlExpr_p    == "");break;
-	    case POLN_EXPR:        exprIsNull = (polnExpr_p    == "");break;
-	    case STATE_EXPR:       exprIsNull = (stateExpr_p   == "");break;
-	    case OBSERVATION_EXPR: exprIsNull = (observationExpr_p    == "");break;
-	    default:;
-	    };
-	}
+      {
+	switch (type)
+	  {
+	  case ANTENNA_EXPR:     exprIsNull = (antennaExpr_p == "");break;
+	  case FIELD_EXPR:       exprIsNull = (fieldExpr_p   == "");break;
+	  case SPW_EXPR:         exprIsNull = (spwExpr_p     == "");break;
+	  case SCAN_EXPR:        exprIsNull = (scanExpr_p    == "");break;
+	  case ARRAY_EXPR:       exprIsNull = (arrayExpr_p   == "");break;
+	  case TIME_EXPR:        exprIsNull = (timeExpr_p    == "");break;
+	  case UVDIST_EXPR:      exprIsNull = (uvDistExpr_p  == "");break;
+	  case TAQL_EXPR:        exprIsNull = (taqlExpr_p    == "");break;
+	  case POLN_EXPR:        exprIsNull = (polnExpr_p    == "");break;
+	  case STATE_EXPR:       exprIsNull = (stateExpr_p   == "");break;
+	  case OBSERVATION_EXPR: exprIsNull = (observationExpr_p    == "");break;
+	  default:;
+	  };
+      }
     return exprIsNull;
   }
-
+  
   //----------------------------------------------------------------------------
   
   void MSSelection::clear(const MSExprType type)
@@ -690,7 +705,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return False;
   }
-
+  
   //----------------------------------------------------------------------------
   
   Bool MSSelection::setObservationExpr(const String& observationExpr)
@@ -816,44 +831,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Matrix<Int> MSSelection::getChanList(const MeasurementSet* ms, const Int defaultStep,
 				       const Bool sorted) 
-    {
-      if (chanIDs_p.nelements() <= 0) getTEN(ms); 
-      uInt nrows=chanIDs_p.nrow(), ncols=chanIDs_p.ncolumn();
-      Matrix<Int> chanIDList;
-      if (nrows > 0)
-	{
-	  if (sorted)
-	    {
-	      Vector<Int> spwIDList(chanIDs_p.column(0));//Extract the SPW IDs
-	      Vector<uInt> sortedNdx;
-	      //
-	      // Make a list of indices which will sort the chanID_p Matrix on
-	      // SPW ID (the first column of each row).
-	      //
-	      Bool deleteit;
-	      Sort sort(spwIDList.getStorage(deleteit), sizeof(Int));
-	      sort.sortKey((uInt)0, TpInt);
-	      sort.sort(sortedNdx, nrows);
-	      //
-	      // Using the sorted indices, copy from the unsorted private
-	      // ChaIDs_p to the output (sorted) Matrix chandIDList.
-	      //
-	      chanIDList.resize(chanIDs_p.shape());
-	      for(uInt targetRow=0; targetRow<nrows; targetRow++)
-		for (uInt j=0; j<ncols; j++)
-		  chanIDList(targetRow,j)=chanIDs_p(sortedNdx(targetRow),j);
-	    }
-	  else
-	    chanIDList = chanIDs_p;
-
-	  for(uInt targetRow=0; targetRow<nrows; targetRow++)
-	    if (chanIDList(targetRow,ncols-1) < 1) 
-	      chanIDList(targetRow,ncols-1)=defaultStep;
-	}
-
-
-      return chanIDList.copy();
-    }
+  {
+    if (chanIDs_p.nelements() <= 0) getTEN(ms); 
+    uInt nrows=chanIDs_p.nrow(), ncols=chanIDs_p.ncolumn();
+    Matrix<Int> chanIDList;
+    if (nrows > 0)
+      {
+	if (sorted)
+	  {
+	    Vector<Int> spwIDList(chanIDs_p.column(0));//Extract the SPW IDs
+	    Vector<uInt> sortedNdx;
+	    //
+	    // Make a list of indices which will sort the chanID_p Matrix on
+	    // SPW ID (the first column of each row).
+	    //
+	    Bool deleteit;
+	    Sort sort(spwIDList.getStorage(deleteit), sizeof(Int));
+	    sort.sortKey((uInt)0, TpInt);
+	    sort.sort(sortedNdx, nrows);
+	    //
+	    // Using the sorted indices, copy from the unsorted private
+	    // ChaIDs_p to the output (sorted) Matrix chandIDList.
+	    //
+	    chanIDList.resize(chanIDs_p.shape());
+	    for(uInt targetRow=0; targetRow<nrows; targetRow++)
+	      for (uInt j=0; j<ncols; j++)
+		chanIDList(targetRow,j)=chanIDs_p(sortedNdx(targetRow),j);
+	  }
+	else
+	  chanIDList = chanIDs_p;
+	
+	for(uInt targetRow=0; targetRow<nrows; targetRow++)
+	  if (chanIDList(targetRow,ncols-1) < 1) 
+	    chanIDList(targetRow,ncols-1)=defaultStep;
+      }
+    
+    
+    return chanIDList.copy();
+  }
   //----------------------------------------------------------------------------
   // This function also optionally sorts the matrix of SPWIDs and
   // associated channel selection indices in ascending order of
@@ -861,31 +876,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Matrix<Double> MSSelection::getChanFreqList(const MeasurementSet* ms, 
 					      const Bool sorted) 
-    {
-      if (chanIDs_p.nelements() == 0) getTEN(ms); 
-      Matrix<Int> chanList_l = getChanList(ms, 1, sorted);
-      Matrix<Double> freqList_l;
-      freqList_l.resize(chanList_l.shape());
-
-      const ROMSSpWindowColumns msSpwSubTable(ms_p->spectralWindow());
-
-      IPosition row(1,0);
-      for (uInt i=0; i < chanList_l.shape()(0); i++)
-	{
-	  row(0) = i;
-	  Array<Double> chanFreq(msSpwSubTable.chanFreq()(i));
-	  Double avgChanWidth = sum(msSpwSubTable.chanWidth()(i))/msSpwSubTable.chanWidth()(i).nelements();
-
-	  freqList_l(i,0) = (Double)chanList_l(i,0);
-	  freqList_l(i,1) = chanFreq(IPosition(1,chanList_l(i,1)));
-	  freqList_l(i,2) = chanFreq(IPosition(1,chanList_l(i,2)));
-	  freqList_l(i,3) = avgChanWidth;
-	}
-
-      return freqList_l.copy();
-    }
+  {
+    if (chanIDs_p.nelements() == 0) getTEN(ms); 
+    Matrix<Int> chanList_l = getChanList(ms, 1, sorted);
+    Matrix<Double> freqList_l;
+    freqList_l.resize(chanList_l.shape());
+    
+    const ROMSSpWindowColumns msSpwSubTable(ms_p->spectralWindow());
+    
+    IPosition row(1,0);
+    for (uInt i=0; i < chanList_l.shape()(0); i++)
+      {
+	row(0) = i;
+	Array<Double> chanFreq(msSpwSubTable.chanFreq()(i));
+	Double avgChanWidth = sum(msSpwSubTable.chanWidth()(i))/msSpwSubTable.chanWidth()(i).nelements();
+	
+	freqList_l(i,0) = (Double)chanList_l(i,0);
+	freqList_l(i,1) = chanFreq(IPosition(1,chanList_l(i,1)));
+	freqList_l(i,2) = chanFreq(IPosition(1,chanList_l(i,2)));
+	freqList_l(i,3) = avgChanWidth;
+      }
+    
+    return freqList_l.copy();
+  }
   //----------------------------------------------------------------------------
-
+  
   void MSSelection::getChanSlices(Vector<Vector<Slice> >& chanslices,
 				  const MeasurementSet* ms,const Int defaultChanStep) {
     
@@ -912,12 +927,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     
   }
-
-
+  
+  
   //----------------------------------------------------------------------------
   void MSSelection::getCorrSlices(Vector<Vector<Slice> >& corrslices,
 				  const MeasurementSet* ms) {
-
+    
     // The total number of polids
     Int npol=ms->polarization().nrow();
     
@@ -927,7 +942,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Get the corr indices as an ordered map
     OrderedMap<Int, Vector<Vector<Int> > > corrmap(this->getCorrMap(ms));
-
+    
     // Iterate over the ordered map to fill the slices
     ConstMapIter<Int, Vector<Vector<Int> > > mi(corrmap);
     for (mi.toStart(); !mi.atEnd(); mi++) {
@@ -941,7 +956,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     
   }
-
+  
   //----------------------------------------------------------------------------
   
   void MSSelection::fromSelectionItem(const Record& selectionItem)
