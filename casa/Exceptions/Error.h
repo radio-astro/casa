@@ -126,12 +126,20 @@ public:
 
   String generateStackTrace ();
 
+  static void getLastInfo (String & message, String & stackTrace);
+  static void clearLastInfo ();
+  static String noMessage ();
+  static String noStackTrace ();
+
 protected:
 
   void addStackTrace ();
 
   String message;
   Category category;
+
+  static String lastMessage;
+  static String lastStackTrace;
 
 };
 

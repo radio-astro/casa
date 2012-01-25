@@ -44,6 +44,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+String AipsError::lastMessage = AipsError::noMessage ();
+String AipsError::lastStackTrace = AipsError::noStackTrace();
+
 AipsError::AipsError (Category c)
 : message(), category(c)
 {
@@ -80,14 +83,18 @@ AipsError::~AipsError() throw()
 void
 AipsError::addStackTrace ()
 {
+    lastMessage = message;
+    lastStackTrace = noStackTrace ();
+
     Bool enabled;
     AipsrcValue<Bool>::find (enabled, "AipsError.enableStackTrace", AipsError_StackTracing_Default);
 
+    String trace = generateStackTrace();
+    lastStackTrace = trace;
+
     if (enabled) {
 
-        // If permitted, generate stack trace text and append to the error message.
-
-        String trace = generateStackTrace();
+        // If permitted, append to the error message.
 
         message += trace;
     }
@@ -111,7 +118,7 @@ AipsError::generateStackTrace()
     // strings onto the message.
 
     String stackTrace;
-    stackTrace += "\nStack trace (use c++filt to demangle):\n";
+    stackTrace += "\n||> Stack trace (use c++filt to demangle):\n";
 
     for (int i = 0; i < nLevels; i++){
         stackTrace += trace[i] + String ("\n");
@@ -124,6 +131,34 @@ AipsError::generateStackTrace()
 
     return stackTrace;
 }
+
+void
+AipsError::getLastInfo (String & message, String & stackTrace)
+{
+    message = lastMessage;
+    stackTrace = lastStackTrace;
+}
+
+void
+AipsError::clearLastInfo ()
+{
+    lastMessage = noMessage ();
+    lastStackTrace = noStackTrace ();
+}
+
+String
+AipsError::noMessage ()
+{
+    return "*none*";
+}
+
+String
+AipsError::noStackTrace ()
+{
+    return "*no-stack-trace*";
+}
+
+
 
 
 AllocError::~AllocError() throw()
