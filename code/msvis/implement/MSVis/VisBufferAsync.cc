@@ -139,6 +139,10 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
         if (other.corrSorted_p)
             throw(AipsError("Cannot assign a VisBuffer that has had correlations sorted!"));
 
+        azelCachedTime_p = 0; // flush this cached value
+        feedpaCachedTime_p = 0; // flush this cached value
+        parangCachedTime_p = 0; // flush this cached value
+
         if (copy){
 
             // Let the standard VisBuffer do the copying of values
@@ -168,14 +172,14 @@ VisBufferAsync::attachToVisIter(ROVisibilityIterator & iter)
 Vector<MDirection>
 VisBufferAsync::azel(Double time) const
 {
-    Vector<MDirection> azel;
+    if (time != azelCachedTime_p){
 
-    //MSDerivedValues msd;
-    //msd.setMeasurementSet (* measurementSet_p);
+        azelCachedTime_p = time;
 
-    ROVisibilityIterator::azelCalculate (time, * msd_p, azel, nAntennas_p, mEpoch_p);
+        ROVisibilityIterator::azelCalculate (time, * msd_p, azelCached_p, nAntennas_p, mEpoch_p);
+    }
 
-    return azel;
+    return azelCached_p;
 }
 
 MDirection
@@ -337,6 +341,9 @@ void
 VisBufferAsync::construct ()
 {
     Log (2, "Constructing VisBufferAsync; addr=0x%016x\n", this);
+    azelCachedTime_p = 0; // tag azel as currently uncached
+    feedpaCachedTime_p = 0; // tag azel as currently uncached
+    parangCachedTime_p = 0; // tag azel as currently uncached
     msColumns_p = NULL;
     visIter_p = NULL;
     isFilling_p = False;
@@ -485,25 +492,29 @@ VisBufferAsync::detachFromVisIter ()
 Vector<Float>
 VisBufferAsync::feed_pa(Double time) const
 {
-    Vector<Float> feedpa;
+    if (time != feedpaCachedTime_p){
 
-    if (visIter_p != NULL){
+        feedpaCachedTime_p = time;
 
-        // This method can be called during filling; if so then let it
-        // work the original way (possible hole for detached VBAs).
+        if (visIter_p != NULL){
 
-        feedpa = VisBuffer::feed_pa (time);
+            // This method can be called during filling; if so then let it
+            // work the original way (possible hole for detached VBAs).
+
+            feedpaCached_p = VisBuffer::feed_pa (time);
+        }
+        else{
+
+            //MSDerivedValues msd;
+            //msd.setMeasurementSet (* measurementSet_p);
+
+            feedpaCached_p.assign (ROVisibilityIterator::feed_paCalculate (time, * msd_p, nAntennas_p,
+                                                                           mEpoch_p, receptor0Angle_p));
+        }
+
     }
-    else{
 
-        //MSDerivedValues msd;
-        //msd.setMeasurementSet (* measurementSet_p);
-
-        feedpa.assign (ROVisibilityIterator::feed_paCalculate (time, * msd_p, nAntennas_p,
-                                                               mEpoch_p, receptor0Angle_p));
-    }
-
-    return feedpa;
+    return feedpaCached_p;
 }
 
 void
@@ -563,6 +574,13 @@ VisBufferAsync::fillPhaseCenter()
 
     return phaseCenter_p;
 }
+
+const MeasurementSet &
+VisBufferAsync::getMs () const
+{
+    return * measurementSet_p;
+}
+
 
 Double
 VisBufferAsync::hourang(Double time) const
@@ -680,12 +698,14 @@ VisBufferAsync::numberCoh () const
 Vector<Float>
 VisBufferAsync::parang(Double time) const
 {
-    //MSDerivedValues msd;
-    //msd.setMeasurementSet (* measurementSet_p);
+    if (time != parangCachedTime_p){
 
-    Vector<Float> parang = ROVisibilityIterator::parangCalculate (time, * msd_p, nAntennas_p, mEpoch_p);
+        parangCachedTime_p = time;
 
-    return parang;
+        parangCached_p = ROVisibilityIterator::parangCalculate (time, * msd_p, nAntennas_p, mEpoch_p);
+    }
+
+    return parangCached_p;
 }
 
 Float

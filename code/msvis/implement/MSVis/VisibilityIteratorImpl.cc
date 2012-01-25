@@ -3253,19 +3253,28 @@ VisibilityIteratorWriteImpl::putCol (ArrayColumn<Complex> &column,
 
 
 
-void VisibilityIteratorWriteImpl::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental){
-  Vector<Int> fields=getReadImpl()->msColumns().fieldId().getColumn();
-  const Int option=Sort::HeapSort | Sort::NoDuplicates;
-  const Sort::Order order=Sort::Ascending;
-  Int nfields=GenSort<Int>::sort (fields, order, option);
-  //make sure  we have the right size
+void
+VisibilityIteratorWriteImpl::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental)
+{
+
+  Vector<Int> fields = getReadImpl()->msColumns().fieldId().getColumn();
+  const Int option = Sort::HeapSort | Sort::NoDuplicates;
+  const Sort::Order order = Sort::Ascending;
+
+  Int nfields = GenSort<Int>::sort (fields, order, option);
+
+  // Make sure  we have the right size
+
   fields.resize(nfields, True);
-  Int msid=getReadImpl()->msId();
-  Vector<Int> spws= getReadImpl()->msChannels_p.spw_p[msid];
-  Vector<Int> starts=getReadImpl()->msChannels_p.start_p[msid];
-  Vector<Int> nchan=getReadImpl()->msChannels_p.width_p[msid];
-  Vector<Int> incr=getReadImpl()->msChannels_p.inc_p[msid];
-  VisModelData::putModel(getReadImpl()->ms(), rec, fields, spws, starts, nchan, incr, iscomponentlist, incremental);
+  Int msid = getReadImpl()->msId();
+
+  Vector<Int> spws =  getReadImpl()->msChannels_p.spw_p[msid];
+  Vector<Int> starts = getReadImpl()->msChannels_p.start_p[msid];
+  Vector<Int> nchan = getReadImpl()->msChannels_p.width_p[msid];
+  Vector<Int> incr = getReadImpl()->msChannels_p.inc_p[msid];
+
+  VisModelData::putModel(getReadImpl()->ms(), rec, fields, spws, starts, nchan, incr,
+                         iscomponentlist, incremental);
     
 }
 
