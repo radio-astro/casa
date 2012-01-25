@@ -46,6 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <prerequisite>
 //   <li> <linkto module=SpectralElement>SpectralElement</linkto> module
+//   <li> <linkto module=GaussianSpectralElement>CompiledSpectralElement</linkto> module
 //   <li> <linkto module=CompiledSpectralElement>CompiledSpectralElement</linkto> module
 // </prerequisite>
 //
@@ -58,21 +59,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // of Gaussian shaped spectral lines for describing spectral profile.
 //
 // Relationships between Gaussians in the multiplet must be specified.
-// Any combination of one or more of fixed relationships between Gaussian
-// centers, Gaussian amplitudes, and/or Gaussian widths. The constructor
-// takes a Vector of GaussianSpectralElements which describe the estimates
+// Any combination of one or more of fixed relationships between line
+// center offsets, line amplitude ratios, and/or line width ratios can
+// be specified between a single reference line in the multiplet and
+// other (non-reference) lines in the multiplet. The constructor
+// takes a Vector of GaussianSpectralElements which describes the estimates
 // of the n Gaussians in the multiplet. These objects themselves are not
-// used in the fitting but just to create the function that describes the
-// multiplet. It takes a string, describing which, if any, of the parameters
-// of the zeroth (reference) Gaussian should be fixed. It takes an n-1 x 3
-// Matrix<Double> describing these fixed relationships. Each ith row describes
-// the fixed relationship(s) between the ith and the zeroth (reference) Gaussian.
-// The first element of each row describes the ratio of amplitudes between the
-// ith and reference Gaussian, the second element describes the difference between
-// the centers of the ith and reference Gaussian, and the third represents the
-// ratios of the FWHM of the ith and reference Gaussian. A value of 0 for any of
-// these indicates there is no fixed relationship for that parameter. At least one
-// and possibly all three values must be non-zero for each row.
+// used in the fitting, but are used only to create the function that describes
+// the multiplet. The first element in this Vector represents the reference line
+// to which parameters of the other lines are constrained. In addition, the
+// constructor takes an n-1 x 3 Matrix<Double> describing the fixed relationships
+// between the reference line and the other lines in the multiplet. Each ith row
+// describes the fixed relationship(s) between the (i+1)th and the zeroth
+// (reference) Gaussian. The first element of each row describes the ratio of
+// amplitudes between the (i+1)th and reference Gaussian, the second element
+// describes the difference between the center locations of the (i+1)th and
+// reference Gaussian, and the third represents the ratio of the FWHM of the
+// (i+1)th and reference Gaussian. A value of 0 for any of these indicates there
+// is no fixed relationship for that parameter. At least one value must be non-zero
+// for each row and any combination of elements (including all of them) can be
+// non-zero for any row in this matrix. The values of parameters of non-reference
+// lines in the input vector that are constrained to the reference line are
+// implicitly ignored and set in the constructor according to the specified
+// constraint. If any of the parameters of the reference line are specified as
+// fixed, the corresponding parameters of any non-reference lines which have the
+// corresponding parameters constrained to the reference line are also implicitly
+// fixed. Fixing a parameter in a non-reference line that is constrained to the
+// corresponding parameter of the reference line that is not fixed will cause an
+// exception.
 // </synopsis>
 //
 // <example>
@@ -83,19 +97,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // GaussianSpectralElement reference(5, 25, 16);
 // // The amplitude value of first is ignored because of the relationship to the
-////  reference, but it still must be specified in the constructor
+// // reference, but it still must be specified in the constructor and must be
+// // non-zero or an exception will be thrown.
 // GaussianSpectralElement first(1, 40, 17);
 // Vector<GaussianSpectralElement> pair(2);
 // pair[0] = reference;
 // pair[1] = first;
-// Matrix<Double> fixedRel(1, 3);
+// // initialize constraints matrix to have nothing constrained (all values 0)
+// Matrix<Double> fixedRel(1, 3, 0);
+// // Set the ratio of amplitudes between the first and reference (zeroth) line
+// // to be 0.6.
 // fixedRel[0][0] = 0.6
 // GaussianMultipletSpectralElement doublet(pair,"",fixedRel);
 // </example>
 //
 // <motivation>
 // To allow specifying constraints between different Gaussian spectral
-// lines for fitting
+// lines for fitting, eg to support fitting of doublets.
 // </motivation>
 
 class GaussianMultipletSpectralElement: public CompiledSpectralElement {
@@ -131,14 +149,23 @@ public:
 	// get the gaussians
 	const Vector<GaussianSpectralElement>& getGaussians() const;
 
+	// get the constraints matrix
 	const Matrix<Double>& getConstraints() const;
 
+	//<group>
+	// These methods must be public because the architecture of
+	// the class hierarchy requires it and set() and setError()
+	// must be accessible by fitters. However, it is strongly
+	// recommended that other classes not call these methods for
+	// object configuration but rather set them implicitly at
+	// construction via the Vector<GaussianSpectralElement>
+	// passed to the constructor.
 	void set(const Vector<Double>& param);
 
 	void setError(const Vector<Double> &err);
 
 	void fix(const Vector<Bool>& fix);
-
+	// </group>
 	// Save to a record.
 	Bool toRecord(RecordInterface& out) const;
 
