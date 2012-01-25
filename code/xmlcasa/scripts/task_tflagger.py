@@ -426,11 +426,12 @@ def writeCMD(msfile, flagcmd, outfile):
 
     # Save to a text file
     if outfile != '':
-        try:
-            ffout = open(outfile, 'w')
-        except:
-            raise Exception, 'Error opening output file ' \
-                + outfile
+        if os.path.exists(outfile):
+            raise Exception, 'Output file already exists, ' \
+                            + outfile
+            
+        ffout = open(outfile, 'w')
+
         try:
             casalog.post('Will save the current parameters to '+outfile)
             print >> ffout, '%s' % flagcmd
