@@ -164,7 +164,7 @@ public:
 
 	bool initAgents();
 
-	Record run(Bool writeflags);
+	Record run(Bool writeflags, Bool sequential);
 
 	// Flag backup methods
 	bool printFlagSelections();

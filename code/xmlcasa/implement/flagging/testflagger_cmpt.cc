@@ -196,13 +196,13 @@ testflagger::init()
 }
 
 ::casac::record*
-testflagger::run(bool writeflags)
+testflagger::run(bool writeflags, bool sequential)
 {
     casac::record *rstat(0);
 	try
 	{
 		if(testflagger_p){
-			rstat =  fromRecord(testflagger_p->run(writeflags));
+			rstat =  fromRecord(testflagger_p->run(writeflags, sequential));
 		}
 		else{
 			rstat = fromRecord(Record());

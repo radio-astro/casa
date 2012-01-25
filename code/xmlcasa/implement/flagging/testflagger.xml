@@ -270,6 +270,11 @@ Executes a flagging run.
      <value>true</value>
      </param>
 
+     <param type="bool" name="sequential">
+     <description>Run the task in sequential or parallel mode</description>
+     <value>false</value>
+     </param>
+
 </input>
 <returns type="record"/>
 <example>

@@ -539,8 +539,11 @@ TestFlagger::initAgents()
 		}
 
 		// Change the log level if apply=True in a mixed state
-		Bool apply;
-		agent_rec.get("apply", apply);
+		Bool apply = true;;
+		if (agent_rec.isDefined("apply")) {
+			agent_rec.get("apply", apply);
+		}
+
 		if (mixed and apply){
 			agent_rec.define("loglevel", loglevel);
 		}
@@ -589,7 +592,7 @@ TestFlagger::initAgents()
 // It assumes that initAgents has been called first
 // ---------------------------------------------------------------------
 Record
-TestFlagger::run(Bool writeflags)
+TestFlagger::run(Bool writeflags, Bool sequential)
 {
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
@@ -601,8 +604,8 @@ TestFlagger::run(Bool writeflags)
 
 
 	// Use the maximum ntime of the list
-	os << LogIO::NORMAL3 << "ntime for all agents will be "<< max_p << LogIO::POST;
-	os << LogIO::NORMAL3 << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
+	os << LogIO::DEBUGGING << "ntime for all agents will be "<< max_p << LogIO::POST;
+	os << LogIO::DEBUGGING << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
 
 	// Generate the iterators
 	// It will iterate through the data to evaluate the necessary memory
@@ -619,8 +622,8 @@ TestFlagger::run(Bool writeflags)
 		while (fdh_p->nextBuffer())
 		{
 
-			// Apply or unapply the flags
-			agents_list_p.apply();
+			// Apply or unapply the flags, in sequential or in parallel
+			agents_list_p.apply(sequential);
 
 			// Flush flags to MS
 			if (writeflags)
