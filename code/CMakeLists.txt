@@ -576,7 +576,6 @@ else()
     DEFINITIONS -DSIGNBIT )
 endif()
 
-
 # FFTW
 # Does not provide its version number in a header nor
 # in the library, which is a pity because CASACore needs
@@ -664,7 +663,14 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux )
     )
 endif()
 
-
+# ALMAWVR
+if( USE_ALMAWVR )
+  casa_find( ALMAWVR
+             VERSION 0.23.2
+             PREFIX_HINTS ${ALMWVR_ROOT_DIR}
+             LIBS almawvr
+           )
+endif()
 
 # Python
 
@@ -1085,7 +1091,11 @@ casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( spectrallines CASACORE imageanalysis )
 casa_add_module( miriad CASACORE msvis )
-
+if( USE_ALMAWVR )
+  casa_add_module( air_casawvr CASACORE ALMAWVR Boost msvis tableplot calibration WCSLIB CFITSIO LAPACK )
+else()
+  message( WARNING "Will not build wvrgcal." )
+endif()
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis miriad )
 
 #
