@@ -22,8 +22,6 @@ def tflagcmd(
     rowlist=None,
     setcol=None,
     setval=None,
-    ntime=None,
-    combinescans=None,
     display=None,
     format=None,
     writeflags=None,
@@ -38,8 +36,6 @@ def tflagcmd(
     # add reason selection in all input types
     # what to do with the TIME column?
     # implement backup for the whole input file
-    # decide about actions: unapply, set, extract
-    # remove correlation from data selection and move it to agent's parameters
     # add support for ASDM.xml ????
 
 
@@ -60,40 +56,13 @@ def tflagcmd(
     mslocal.open(vis, nomodify=False)
 
     try:
-        # Verify the ntime value
-        newtime = 0.0
-        if type(ntime) == float or type(ntime) == int:
-            if ntime == 0:
-                raise Exception, 'Parameter ntime cannot be 0.0'
-            else:
-                # units are seconds
-                newtime = float(ntime)
-        
-        elif type(ntime) == str:
-            if ntime == 'scan':
-                # iteration time step is a scan
-                newtime = 0.0
-            else:
-                # read the units from the string
-                qtime = qa.quantity(ntime)
-                
-                if qtime['unit'] == 'min':
-                    # convert to seconds
-                    qtime = qa.convert(qtime, 's')
-                elif qtime['unit'] == '':
-                    qtime['unit'] = 's'
-                    
-                # check units
-                if qtime['unit'] == 's':
-                    newtime = qtime['value']
-                else:
-                    casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
-        
-        casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime),'DEBUG')
+        # Use a default ntime to open the MS. The user-set ntime will be
+        # used in the tool later
+        ntime = 0.0
         
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, newtime)
+            tflocal.open(vis, ntime)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -282,15 +251,7 @@ def tflagcmd(
                         
             tflocal.done()
                         
-            # Save the valid command lines to the output file or FLAG_CMD
-            # First, add the global parameters to the list
-            global_pars = ' ntime='+str(ntime)
-            if combinescans:
-                global_pars = global_pars+' combinescans='+str(combinescans)
-                
-            for k in list2save.keys():
-                list2save[k]['cmd'] = list2save[k]['cmd']+global_pars
-                
+            # Save the valid command lines to the output file or FLAG_CMD                                
             valid_rows = list2save.keys()
 
             if valid_rows.__len__() > 0:
@@ -733,13 +694,17 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     
     # Parameters for each mode
     manualpars = []
-    clippars = ['clipminmax', 'expression', 'clipsoutside','datacolumn', 'clipchanavg']
+    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'clipchanavg']
     quackpars = ['quackinterval','quackmode','quackincrement']
     shadowpars = ['diameter']
     elevationpars = ['lowerlimit','upperlimit'] 
-    tfcroppars = ['expression','datacolumn','timecutoff','freqcutoff','timefit','freqfit',
-                  'maxnpieces','flagdimension','usewindowstats','halfwin']
-    extendpars = ['extendpols','growtime','growfreq','growaround','flagneartime','flagnearfreq']
+    tfcroppars = ['ntime','combinescans','expression','datacolumn','timecutoff','freqcutoff',
+                  'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
+    extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
+                  'flagneartime','flagnearfreq']
+    
+#    allpars = []
+#    allpars = allpars+clippars+quackpars+shadowpars+elevationpars+tfcroppars+extendpars
 
     # dictionary of successful command lines to save to outfile
     savelist = {}
@@ -798,6 +763,10 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             cmdline = cmdline+' mode=manualflag'
             modepars = getLinePars(cmdline,manualpars)   
                 
+                
+        # Read ntime
+        readNtime(modepars)
+        
         # Cast the correct type to some parameters
         fixType(modepars)
         
@@ -819,7 +788,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         agent_name = mode.capitalize()+'_'+str(key)
         modepars['name'] = agent_name
         
-        # remove the data selection parameters if there is only one agent
+        # remove the data selection parameters if there is only one agent,s
         # for performance reasons
         if myflagcmd.__len__() == 1:
             sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
@@ -922,6 +891,7 @@ def getLinePars(cmdline, mlist=[]):
                 for m in mlist:
                     if xkey == m:
                         dicpars[m] = xval
+                        
             
     return dicpars
 
@@ -948,7 +918,7 @@ def fixType(params):
         
     if params.has_key('clipoutside'):
         if type(params['clipoutside']) == str:
-            params['clipoutside'] = eval(params['clipoutside'])
+            params['clipoutside'] = eval(params['clipoutside'].capitalize())
         else:
             params['clipoutside'] = params['clipoutside']
 #    if params.has_key('expression'):
@@ -962,14 +932,14 @@ def fixType(params):
 
     if params.has_key('clipchanavg'):
         if type(params['clipchanavg']) == str:
-            params['clipchanavg'] = eval(params['clipchanavg'])
+            params['clipchanavg'] = eval(params['clipchanavg'].capitalize())
             
     if params.has_key('quackinterval'):
         params['quackinterval'] = float(params['quackinterval'])
         
     if params.has_key('quackincrement'):
         if type(params['quackincrement']) == str:
-            params['quackincrement'] = eval(params['quackincrement'])
+            params['quackincrement'] = eval(params['quackincrement'].capitalize())
             
     if params.has_key('diameter'):
         params['diameter'] = float(params['diameter'])
@@ -980,9 +950,53 @@ def fixType(params):
     if params.has_key('upperlimit'):
         params['upperlimit'] = float(params['upperlimit'])
         
-    if params.has_key('extendpols'):
-        params['extendpols'] = eval(params['extendpols'])
+    if params.has_key('extendpols'):        
+        params['extendpols'] = eval(params['extendpols'].capitalize())
 
+    if params.has_key('combinescans'):
+        params['combinescans'] = eval(params['combinescans'].capitalize())
+        
+
+def readNtime(params):
+    '''Check the value and units of ntime
+       params --> dictionary of agent's parameters '''
+
+    newtime = 0.0
+    
+    if params.has_key('ntime'):
+        ntime = params['ntime']
+
+        # Verify the ntime value
+        if type(ntime) == float or type(ntime) == int:
+            if ntime <= 0:
+                raise Exception, 'Parameter ntime cannot be < = 0'
+            else:
+                # units are seconds
+                newtime = float(ntime)
+        
+        elif type(ntime) == str:
+            if ntime == 'scan':
+                # iteration time step is a scan
+                newtime = 0.0
+            else:
+                # read the units from the string
+                qtime = qa.quantity(ntime)
+                
+                if qtime['unit'] == 'min':
+                    # convert to seconds
+                    qtime = qa.convert(qtime, 's')
+                elif qtime['unit'] == '':
+                    qtime['unit'] = 's'
+                    
+                # check units
+                if qtime['unit'] == 's':
+                    newtime = qtime['value']
+                else:
+                    casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
+          
+    params['ntime'] = float(newtime)
+        
+     
 def isUnflag(cmdline):
         
     # split by white space

@@ -1891,6 +1891,13 @@ FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &vi
 	return false;
 }
 
+FlagReport
+FlagAgentBase::getReport()
+{
+	// TODO: This class must be re-implemented in the derived classes
+        return FlagReport(String("none"),agentName_p);
+}
+
 
 ////////////////////////////////////
 /// FlagAgentList implementation ///
@@ -2044,6 +2051,18 @@ void FlagAgentList::setCheckMode(bool enable)
 	}
 
 	return;
+}
+
+FlagReport FlagAgentList::gatherReports()
+{
+        FlagReport combinedReport("list");
+
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+                combinedReport.addReport( (*iterator_p)->getReport() );
+	}
+
+	return combinedReport;
 }
 
 

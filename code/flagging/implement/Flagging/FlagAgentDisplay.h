@@ -41,8 +41,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   public:
     
-    FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+    FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool dataDisplay = true, Bool reportDisplay = false);
     ~FlagAgentDisplay();
+
+    // Make plots and either display or write to a file
+    Bool displayReports(FlagReport &combinedReport);
+    
+    // Get a report/summary
+    FlagReport getReport();
     
   protected:
     
@@ -56,30 +62,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Parse configuration parameters
     void setAgentParameters(Record config);
-    
+
   private:
     
-    Bool setLayout();
-    Bool BuildPlotWindow();
-    //    virtual Bool ShowFlagPlots();
+    Bool setDataLayout();
+    Bool setReportLayout();
+    Bool buildDataPlotWindow();
+    Bool buildReportPlotWindow();
+
 
     void getChunkInfo(const VisBuffer &visBuffer);
     Bool skipBaseline(std::pair<Int,Int> antennaPair);
  
     void getUserInput();
-    char *dock_xml_p;
     
     void DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame);
     void DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
     void DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
-    
+
     // Plotter members
-    FlagPlotServerProxy *plotter_p;  // UUU Make this a CountedPtr
-    Vector<dbus::variant> panels_p;
+    FlagPlotServerProxy *dataplotter_p;  // UUU Make this a CountedPtr
+    FlagPlotServerProxy *reportplotter_p;
+    Vector<dbus::variant> panels_p, report_panels_p;
+    char *dock_xml_p, *report_dock_xml_p;
 
     // Control parameters
-    Bool ShowPlots, StopAndExit;
+    Bool showPlots_p, stopAndExit_p;
     Bool pause_p;
+    Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
+    Bool reportReturn_p;
     
     // visBuffer state variables
     Int fieldId_p;
@@ -99,6 +110,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String userFixA1_p, userFixA2_p;
     
     Int skipScan_p, skipSpw_p, skipField_p;
+
+    // Accumulation arrays
     
     
   };

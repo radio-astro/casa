@@ -24,6 +24,7 @@
 #define FlagAgentBase_H_
 
 #include <flagging/Flagging/FlagDataHandler.h>
+#include <flagging/Flagging/FlagReport.h>
 #include <casa/Containers/OrdMapIO.h>
 #include <measures/Measures/Stokes.h>
 
@@ -79,6 +80,16 @@ public:
 	LogIO::Command logLevel_p;
 	Bool apply_p;
 	Bool flag_p;
+
+        // Get a report Record from the agent, at the end of the run
+        // The report returned by getReport() can be of multiple types
+        //   -- a single report of type "none"  : FlagReport("none",agentName_p)
+        //   -- a single report of type "plot" : FlagReport("plot",agentName_p)
+        //   -- a list of reports  : 
+        //          FlagReport repList("list");
+        //          repList.addReport( FlagReport("plot",agentName_p) );
+        //          repList.addReport( FlagReport("plot",agentName_p) );
+        virtual FlagReport getReport();
 
 protected:
 
@@ -258,6 +269,9 @@ class FlagAgentList
 		void msSummary();
 		void setProfiling(bool enable);
 		void setCheckMode(bool enable);
+
+                // Method to accumulate reports from all agents
+                FlagReport gatherReports();
 
 	protected:
 

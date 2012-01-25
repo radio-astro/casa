@@ -732,13 +732,14 @@ void
 FlagDataHandler::setTimeInterval(Double timeInterval)
 {
 	logger_p->origin(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
-	if (timeInterval_p > 0)
+	if (timeInterval >= 0)
 	{
 		timeInterval_p = timeInterval;
+		*logger_p << LogIO::NORMAL << "Set time interval to " << timeInterval_p << "s"<<LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::WARN << " Provided time interval is negative: " <<  timeInterval << LogIO::POST;
+		*logger_p << LogIO::WARN << "Provided time interval is negative: " <<  timeInterval << LogIO::POST;
 	}
 
 	return;

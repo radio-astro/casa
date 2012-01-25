@@ -241,8 +241,9 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	FlagAgentList agentList;
 	FlagAgentDisplay *flaggingAgent = NULL;
         FlagAgentManual *flaggingAgent2 = NULL;
+	//        FlagAgentSummary *flaggingAgent3 = NULL;
 
-	                
+                
         // Add a manual-flag agent (the list has only one here)
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
@@ -266,7 +267,20 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
           else iter->define("spw",spwstr);
 	}
         cout << "Agent Count after Manual flag only : " << agentNumber-1 << endl;
-        
+
+	/*	
+	// Add a summary agent
+	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
+	{
+		stringstream agentName;
+		agentName << agentNumber;
+		iter->define("name","FlagAgentSummary_" + agentName.str());
+		flaggingAgent3 = new FlagAgentSummary(dh,*iter);
+		agentList.push_back(flaggingAgent3);
+		agentNumber++;
+	}
+        cout << "Agent Count after adding Summary : " << agentNumber-1 << endl;
+	*/
 
         // Add the display agent
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
@@ -274,7 +288,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		stringstream agentName;
 		agentName << agentNumber;
 		iter->define("name","FlagAgentDisplay_" + agentName.str());
-		flaggingAgent = new FlagAgentDisplay(dh,*iter);
+		flaggingAgent = new FlagAgentDisplay(dh,*iter,False/*writePrivFlagCube*/, True/*dataDisplay*/, True/*reportDisplay*/);
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
 	}
@@ -382,6 +396,18 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	// Stop Flag Agent
 	agentList.terminate();
 	agentList.join();
+
+        // Gather reports from all Agents that make them
+        FlagReport combinedReport = agentList.gatherReports();
+
+	// Print the combined Record (for debugging)
+	stringstream replist;
+	combinedReport.print(replist);
+        cout << " Combined Report : " << endl << replist.str() << endl;
+
+	// Send them to display.
+        flaggingAgent->displayReports(combinedReport);
+
 
 	// Close MS
 	dh->close();

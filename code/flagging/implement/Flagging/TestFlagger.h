@@ -120,6 +120,7 @@ protected:
 	String mode_p;
 	Record agentParams_p;
 	FlagAgentSummary *summaryAgent_p;
+	Bool combinescans_p;
 
 	// True if there are apply and unapply parameters in the list
 	Bool mixed_p;
@@ -179,11 +180,20 @@ private:
 
 	TestFlagger& operator=(const TestFlagger &)  {return *this;};
 
+	void getMax(Double value);
+
 	// Sink used to store history
 	LogSink logSink_p;
 
 	// Debug message flag
 	static const bool dbg;
+
+	// Store the temporary maximum value
+	Double max_p;
+
+	// Helper members
+	Bool timeset_p;
+	Bool iterset_p;
 
 };
 

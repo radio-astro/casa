@@ -126,16 +126,6 @@
                         <value type="string"></value>
                 </param>
 
-            <param type="any" name="ntime">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
-                <any type="variant" limittypes="double string" />
-                <value type="string">scan</value>
-            </param>
-            <param type="bool" name="combinescans" subparam="true">
-                <description></description>
-                <value>False</value>
-            </param>
-
             <param type="string" name="display">
                 <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
                 <value type="string"></value>
@@ -152,11 +142,6 @@
                 </param>
 
                 <constraints>
-                    <when param="ntime">
-                        <notequals type="string" value="scan">
-                            <default param="combinescans"><value type="bool">False</value></default>
-                        </notequals>
-                    </when>             
                     <when param="inputmode">
                             <equals value="table">
                                     <default param="inputfile"><value type="string"></value></default>
@@ -251,11 +236,6 @@
         Keyword arguments:
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
-
-        ntime -- Timerange (in seconds or minutes) over which to accumulate data before running the algorithms. 
-               default: 0.0 (taken in seconds)
-               example: '1.5min'
-               The dataset will be iterated through in time-chunks defined here.
 
         inputmode -- Input mode for flags
                 options: 'table','file','cmd','xml'
