@@ -42,7 +42,6 @@ GaussianMultipletSpectralElement::GaussianMultipletSpectralElement(
 	const Matrix<Double>& constraints
 ) : _gaussians(estimates.copy()) ,_constraints(constraints),
 	_paramIndices(estimates.size(), 3, 0) {
-
 	if(estimates.size() != constraints.nrow()+1) {
 		throw AipsError(
 			_ORIGIN

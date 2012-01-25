@@ -192,6 +192,21 @@ void GaussianSpectralElement::fixSigma(const Bool isFixed) {
 	fix(myFixed);
 }
 
+void GaussianSpectralElement::fixByString(const String& s) {
+	String fix(s);
+	fix.downcase();
+	if (fix.contains("p")) {
+		fixAmpl(True);
+	}
+	if (fix.contains("c")) {
+		fixCenter(True);
+	}
+	if (fix.contains("f")) {
+		fixFWHM(True);
+	}
+}
+
+
 void GaussianSpectralElement::fixFWHM(const Bool fix) {
 	fixSigma(fix);
 }

@@ -162,6 +162,9 @@ public:
 	void fixCenter(const Bool fix=True);
 	void fixSigma(const Bool fix=True);
 	void fixFWHM(const Bool fix=True);
+	// fix parameters via encoded string. If s contains a, fix amplitude. If s contains f, fix fwhm.
+	// If s contains c, fix center.
+	void fixByString(const String& s);
 	// </group>
 
 	// Get the fix state[s]
