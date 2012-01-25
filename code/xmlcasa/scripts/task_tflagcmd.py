@@ -25,6 +25,7 @@ def tflagcmd(
     display=None,
     format=None,
     writeflags=None,
+    sequential=None,
     async=None
     ):
     #
@@ -247,7 +248,7 @@ def tflagcmd(
                 backupCmd(tflocal, list2save)
                 
             # Run the tool
-            stats = tflocal.run(writeflags)
+            stats = tflocal.run(writeflags, sequential)
                         
             tflocal.done()
                         

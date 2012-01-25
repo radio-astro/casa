@@ -141,6 +141,12 @@
                     <value>True</value>
                 </param>
 
+            <param type="bool" name="sequential">
+                <description>Run the task in sequential or in parallel.</description>
+                <value>False</value>
+            </param>
+
+
                 <constraints>
                     <when param="inputmode">
                             <equals value="table">
@@ -471,6 +477,14 @@
                     or to try different parameters and converge on a set that works for a particular
                     dataset.
                     Note: this parameter is disabled when mode='summary'.
+
+
+        sequential -- Run the task in sequential or in parallel. If you want to preserve the
+                      order in which the commands appear in the list, set sequential to True.
+                      When set to False, the framework will run the commands in parallel for
+                      optimization.
+                default: False
+                option: False/True
 
      ===========================================================================
 
