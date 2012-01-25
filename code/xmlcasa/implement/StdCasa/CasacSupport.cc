@@ -1310,4 +1310,74 @@ Int sepCommaToVectorStrings(Vector<String>& lesStrings,
 
 }
 
+vector<double> toVectorDouble(const casac::variant& v, const String& varName) {
+	vector<double> ret(0);
+	switch (v.type()) {
+	case casac::variant::BOOLVEC:
+		return ret;
+	case casac::variant::INT:
+	case casac::variant::DOUBLE:
+		ret.push_back(v.toDouble());
+		return ret;
+	case casac::variant::INTVEC:
+	case casac::variant::DOUBLEVEC:
+		return v.toDoubleVec();
+	case casac::variant::STRING:
+		if (v.toString().size() > 0) {
+			throw AipsError(varName + " cannot be a non-empty string");
+		}
+		else {
+			return ret;
+		}
+	default:
+		ostringstream os;
+		os << "Illegal type for " << varName << ": " << v.type();
+		throw AipsError(os.str());
+	}
+}
+
+vector<string> toVectorString(const ::casac::variant& v, const String& varName) {
+	vector<string> ret(0);
+	switch (v.type()) {
+	case casac::variant::BOOLVEC:
+		return ret;
+	case casac::variant::STRING:
+		if (v.toString().size() > 0) {
+			ret.push_back(v.toString());
+		}
+		return ret;
+	case casac::variant::STRINGVEC:
+		return v.toStringVec();
+	default:
+		ostringstream os;
+		os << "Illegal type for " << varName;
+		throw AipsError(os.str());
+	}
+}
+
+vector<int> toVectorInt(const ::casac::variant& v, const String& varName) {
+	vector<int> ret(0);
+	switch (v.type()) {
+	case casac::variant::BOOLVEC:
+		return ret;
+	case casac::variant::INT:
+		ret.push_back(v.toInt());
+		return ret;
+	case casac::variant::INTVEC:
+		return v.toIntVec();
+	case casac::variant::STRING:
+		if (v.toString().size() > 0) {
+			throw AipsError(varName + " cannot be a non-empty string");
+		}
+		else {
+			return ret;
+		}
+	default:
+		ostringstream os;
+		os << "Illegal type for " << varName << ": " << v.type();
+		throw AipsError(os.str());
+	}
+}
+
+
 }  // End namespace casa

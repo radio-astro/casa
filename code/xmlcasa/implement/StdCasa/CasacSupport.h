@@ -66,4 +66,18 @@ Bool             casaMEpoch(const ::casac::variant& theVar,
  Int sepCommaToVectorStrings(Vector<String>& retStr,
  				  const std::string& str);
 
+ // allow variant types DOUBLE, DOUBLEVEC, INT, INVEC. An empty string or a BOOLVEC
+ // will return a 0 element vector. Any other type will cause an exception to be thrown.
+ vector<double> toVectorDouble(const ::casac::variant& v, const String& varName);
+
+// Allow variant types STRING or STRINGVEC. BOOLVEC will return a 0 element vector.
+ // all other types will cause an excpetion to be thrown.
+ vector<string> toVectorString(const ::casac::variant& v, const String& varName);
+
+ // Allow variant types INT or INTVEC. An empty string or a BOOLVEC
+ // will return a 0 element vector. Any other type will cause an exception to be thrown.
+ vector<int> toVectorInt(const ::casac::variant& v, const String& varName);
+
+
+
 }

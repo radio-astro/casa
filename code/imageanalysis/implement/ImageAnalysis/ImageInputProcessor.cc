@@ -97,7 +97,7 @@ void ImageInputProcessor::process(
 
 void ImageInputProcessor::_process(
     Record& regionRecord,
-    String& diagnostics, std::vector<OutputStruct> * const outputStruct,
+    String& diagnostics, vector<OutputStruct> * const outputStruct,
     String& stokes, const ImageInterface<Float> *const &image,
     const Record *const &regionPtr,
     const String& regionName, const String& box,

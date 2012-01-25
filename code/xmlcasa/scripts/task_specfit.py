@@ -71,8 +71,12 @@ def specfit(
 	poly=None, estimates=None, minpts=None, multifit=None,
 	model=None, residual=None, amp=None, amperr=None,
 	center=None, centererr=None, fwhm=None, fwhmerr=None,
-	integral=None, integralerr=None,
-	wantreturn=None, stretch=None, logresults=None
+	integral=None, integralerr=None, wantreturn=None,
+	stretch=None, logresults=None, gampest=None,
+	gcenterest=None, gfwhmest=None, gfix=None,
+	gmncomps=None, gmampcon=None, gmcentercon=None,
+    gmfwhmcon=None, gmampest=None, gmcenterest=None,
+    gmfwhmest=None, gmfix=None
 ):
     casalog.origin('specfit')
     retval = None
@@ -84,14 +88,19 @@ def specfit(
 			box=box, region=region, chans=chans,
 			stokes=stokes, axis=axis, mask=mask,
 			ngauss=ngauss, poly=poly,
-			estimates=estimates,
-			minpts=minpts, multifit=multifit,
-			model=model, residual=residual,
-			amp=amp, amperr=amperr, center=center,
-			centererr=centererr, fwhm=fwhm,
-			fwhmerr=fwhmerr, integral=integral,
-			integralerr=integralerr, stretch=stretch,
-			logresults=logresults
+			estimates=estimates, minpts=minpts,
+			multifit=multifit, model=model,
+			residual=residual, amp=amp, amperr=amperr,
+			center=center, centererr=centererr,
+			fwhm=fwhm, fwhmerr=fwhmerr,
+			integral=integral, integralerr=integralerr,
+			stretch=stretch, logresults=logresults,
+			gampest=gampest, gcenterest=gcenterest,
+			gfwhmest=gfwhmest, gfix=gfix,
+			gmncomps=gmncomps, gmampcon=gmampcon,
+			gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
+			gmampest=gmampest, gmcenterest=gmcenterest,
+			gmfwhmest=gmfwhmest, gmfix=gmfix
 		)
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
