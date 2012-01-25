@@ -510,7 +510,7 @@ def getLinePars(cmdline):
             if xval == '':
                 continue
             else:
-                newstr = newstr+' '+xkey+'='+xval+' '
+                newstr = newstr+xkey+'='+xval+' '
             
     else:
         casalog.post('String of parameters is empty','WARN')   
