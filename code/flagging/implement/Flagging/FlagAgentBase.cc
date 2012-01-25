@@ -1177,11 +1177,11 @@ FlagAgentBase::chunkSummary()
 		msFlags_p +=  chunkFlags_p;
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 
 	}
@@ -1191,7 +1191,7 @@ FlagAgentBase::chunkSummary()
 	if (chunkNaNs_p > 0)
 	{
 		msNaNs_p += chunkNaNs_p;
-		*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> "  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
 	}
 
 	chunkFlags_p = 0;
@@ -1209,17 +1209,17 @@ FlagAgentBase::msSummary()
 	{
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 	}
 
 	if (msNaNs_p > 0)
 	{
-		*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> "  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
 	}
 
 	msFlags_p = 0;
