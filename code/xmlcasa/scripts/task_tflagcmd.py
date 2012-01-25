@@ -309,11 +309,12 @@ def tflagcmd(
                     writeFlagCmd(vis, myflagd, valid_rows)
             else:
                 # Save to ascii file
-                try:
-                    ffout = open(outfile, 'w')
-                except:
-                    raise Exception, 'Error opening output file ' \
-                        + outfile
+                if os.path.exists(outfile):
+                    raise Exception, 'Output file already exists, ' \
+                                    + outfile
+                                            
+                ffout = open(outfile, 'w')
+
                 try:
                     for cmd in mycmdl:
                         print >> ffout, '%s' % cmd
@@ -359,10 +360,9 @@ def tflagcmd(
             return myflagcmd
         
     except Exception, instance:
+        casalog.post('%s'%instance,'ERROR')
+        raise
 
-                # tflocal.done()
-        print '*** Error ***', instance
-                # raise
 
     # write history
     try:
