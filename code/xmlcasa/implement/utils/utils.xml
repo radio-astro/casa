@@ -223,6 +223,48 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 </method>
 
+<method type="function" name="c_exception">
+
+	<shortdescription>Returns detailed information about last C-level exception</shortdescription>
+
+  <description>Returns detailed information from the last CASA C++ exception (i.e., AipsError).  The
+               exception message and the stack trace (mangled; use the shell's c++filt to demangle)
+               from the last CASA C++ exception.  The information is from the last one generated
+               and may not represent an exception from the last action; c_exception_clear can be
+               used to remove stale information.  The information's exception might also
+               have been caught in the C++ code and not have been translated into a Python-level
+               exception.
+  </description>
+
+  <input/>
+
+  <returns type="string">
+            <description>Error message and stack trace</description>
+  </returns>
+
+  <example></example>
+
+</method>
+
+<method type="function" name="c_exception_clear">
+
+	<shortdescription>Clears information about last C-level exception</shortdescription>
+
+  <description>Clears the CASA C++ exception information.  This allows the user to be sure that
+               information retrieved using c_exception is not from an exception in the
+               distant past.
+  </description>
+
+  <input/>
+
+  <returns/>
+
+  <example></example>
+
+</method>
+
+
+
 </tool>
 
 </casaxml>

@@ -24,7 +24,6 @@
 #include <casa/System/Aipsrc.h>
 #include <casa/OS/HostInfo.h>
 
-
 using namespace std;
 using namespace casa;
 
@@ -306,6 +305,24 @@ typedef int SIZETCAST;
     
     return result;
 }
+
+std::string
+utils::c_exception ()
+{
+  String lastMessage, lastStackTrace;
+  AipsError::getLastInfo (lastMessage, lastStackTrace);
+
+  String result = lastMessage + "\n" + lastStackTrace;
+
+  return result;
+}
+
+void
+utils::c_exception_clear ()
+{
+  AipsError::clearLastInfo ();
+}
+
 
 } // casac namespace
 
