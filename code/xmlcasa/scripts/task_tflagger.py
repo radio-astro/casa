@@ -257,7 +257,7 @@ def tflagger(vis,
 
             expr = delspace(expression, '_')
             
-            sel_pars = sel_pars+' ntime='+ntime+' combinescans='+str(combinescans)+' expression=\"'+\
+            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+' expression=\"'+\
                        str(expr)+'\" datacolumn='+datacolumn+\
                       ' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
                       ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
@@ -276,7 +276,7 @@ def tflagger(vis,
             agent_pars['flagnearfreq'] = flagnearfreq
             casalog.post('Extend mode is active')
             
-            sel_pars = sel_pars+' ntime='+ntime+' combinescans='+str(combinescans)+' extendpols='+\
+            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+' extendpols='+\
                        str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
                        str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
                        ' flagnearfreq='+str(flagnearfreq)
