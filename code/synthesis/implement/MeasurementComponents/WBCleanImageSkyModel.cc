@@ -44,6 +44,9 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCBox.h>
 
+#include <measures/Measures/Quality.h>
+#include <coordinates/Coordinates/QualityCoordinate.h>
+#include <images/Images/ImageUtilities.h>
 
 #include <scimath/Mathematics/MatrixMathLA.h>
 
@@ -480,7 +483,7 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
                                                                            const Vector<String> &residualNames)
 {
   Int index=0;
-  Bool writeerror=False;
+  Bool writeerror=True;
   
   for(Int field=0;field<nfields_p;field++)
     {
@@ -556,6 +559,9 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
 	  ierr.open(alphaerrorname);
 	  ierr.calcmask(scalcmask, regions, String("mask_error"), True);
 	  os << "Written Spectral Index Error Image : " << alphaerrorname << LogIO::POST;
+
+	  //          mergeDataError( imalpha, imalphaerror, alphaerrorname+".new" );
+
 	}
 
       ////// Calculate beta
@@ -1127,7 +1133,98 @@ void WBCleanImageSkyModel::restoreOverlappingModels(){
     }// for taylor
 }
 
+Bool WBCleanImageSkyModel::mergeDataError(ImageInterface<Float> &data, ImageInterface<Float> &error, const String &outImg)
+///Bool WBCleanImageSkyModel::mergeDataError(const String &dataImg, const String &errorImg, const String &outImg)
+{
+  LogIO os(LogOrigin("WBImageSkyModel",__FUNCTION__));
 
+       // open the data and the error image
+  //       ImageInterface<Float>  *data  = new PagedImage<Float>(dataImg, TableLock::AutoNoReadLocking);
+  //       ImageInterface<Float>  *error = new PagedImage<Float>(errorImg, TableLock::AutoNoReadLocking);
+
+       // create the tiled shape for the output image
+       IPosition newShape=IPosition(data.shape());
+       newShape.append(IPosition(1, 2));
+       TiledShape tiledShape(newShape);
+
+       // create the coordinate system for the output image
+       CoordinateSystem newCSys = data.coordinates();
+       Vector<Int> quality(2);
+       quality(0) = Quality::DATA;
+       quality(1) = Quality::ERROR;
+       QualityCoordinate qualAxis(quality);
+       newCSys.addCoordinate(qualAxis);
+
+       Array<Float> outData=Array<Float>(newShape, 0.0);
+       Array<Bool>  outMask;
+
+       // get all the data values
+       Array<Float> inData;
+       Slicer inSlicer(IPosition((data.shape()).size(), 0), IPosition(data.shape()));
+       data.doGetSlice(inData, inSlicer);
+
+       // define in the output array
+       // the slicers for data and error
+       Int qualCooPos, qualIndex;
+       qualCooPos = newCSys.findCoordinate(Coordinate::QUALITY);
+       (newCSys.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::DATA);
+       IPosition outStart(newShape.size(), 0);
+       outStart(newShape.size()-1)=qualIndex;
+       IPosition outLength(newShape);
+       outLength(newShape.size()-1)=1;
+       Slicer outDataSlice(outStart, outLength);
+       (newCSys.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::ERROR);
+       outStart(newShape.size()-1)=qualIndex;
+       Slicer outErrorSlice(outStart, outLength);
+
+       // add the data values to the output array
+       outData(outDataSlice) = inData.addDegenerate(1);
+
+       // get all the error values
+       error.doGetSlice(inData, inSlicer);
+
+
+       // add the error values to the output array
+       outData(outErrorSlice) = inData.addDegenerate(1);
+
+       // check whether a mask is necessary
+       if (data.hasPixelMask() || error.hasPixelMask()){
+               Array<Bool> inMask;
+
+               outMask=Array<Bool>(newShape, True);
+
+               // make the mask for the data values
+               if (data.hasPixelMask()){
+                       inMask  = (data.pixelMask()).get();
+               }
+               else{
+                       inMask = Array<Bool>(data.shape(), True);
+               }
+
+               // add the data mask to the output
+               outMask(outDataSlice)  = inMask.addDegenerate(1);
+
+               // make the mask for the error values
+               if (error.hasPixelMask()){
+                       inMask  = (error.pixelMask()).get();
+               }
+               else{
+                       inMask = Array<Bool>(error.shape(), True);
+               }
+
+               // add the data mask to the output
+               outMask(outErrorSlice) = inMask.addDegenerate(1);
+       }
+
+
+  // write out the combined image
+       ImageUtilities::writeImage(tiledShape, newCSys, outImg, outData, os, outMask);
+
+       //       delete data;
+       //   delete error;
+
+       return True;
+}
 
 } //# NAMESPACE CASA - END
 
