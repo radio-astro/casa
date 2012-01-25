@@ -183,7 +183,7 @@ def tflagger(vis,
         agent_pars = {}
         agent_pars['name'] = agent_name
         agent_pars['mode'] = mode
-        agent_pars['sequential'] = sequential
+#        agent_pars['sequential'] = sequential
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -348,7 +348,7 @@ def tflagger(vis,
         
         # Run the tool
         casalog.post('Running the tflagger tool')
-        summary_stats = tflocal.run(writeflags)
+        summary_stats = tflocal.run(writeflags, sequential)
 
 
         # Write the current parameters as flag commands to output
