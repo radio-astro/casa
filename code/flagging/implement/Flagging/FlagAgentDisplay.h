@@ -75,6 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool skipBaseline(std::pair<Int,Int> antennaPair);
  
     void getUserInput();
+    void getReportUserInput();
     
     void DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame);
     void DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);

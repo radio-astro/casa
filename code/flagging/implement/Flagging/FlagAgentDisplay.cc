@@ -484,8 +484,7 @@ FlagReport
 			reportplotter_p->raster(dbus::af(flatdata), data.shape()[0] ,data.shape()[1], "Hot Metal 1", report_panels_p[0].getInt());
 			reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
 
-			cout << "Press ENTER to continue...." << endl;
-			getchar();
+			getReportUserInput();
 
 		      }
 		    else if( type == "plotline" || type == "plotscatter") 
@@ -511,8 +510,7 @@ FlagReport
 
 			reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
 
-			cout << "Press ENTER to continue...." << endl;
-			getchar();
+			getReportUserInput();
 
 		      }// end of plotline or plotscatter
 		    else 
@@ -681,6 +679,34 @@ FlagReport
     
     return;
   }
+
+
+
+  void FlagAgentDisplay :: getReportUserInput()
+  {
+    userChoice_p = "Continue";
+    String returnvalue;
+    
+    Bool exitEventLoop=False;
+    
+    while( ! exitEventLoop)
+      {
+	
+	returnvalue = reportplotter_p->eventloop();
+	if(returnvalue == "Next" || returnvalue == "Prev" || returnvalue == "Quit")
+	  {
+	    userChoice_p = returnvalue; 
+	    exitEventLoop=True;
+	  }
+	else cout << "Unknown GUI choice" << endl;
+	
+	cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p  << endl;
+	
+      }
+    
+    
+    return;
+  }
   
   void FlagAgentDisplay::DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame)
   {
@@ -839,9 +865,78 @@ FlagReport
   {
     
     report_dock_xml_p = "\ 
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>	\
-<ui version=\"4.0\">	\
-</ui>			\					
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+<ui version=\"4.0\">\
+ <class>dock01</class>\
+ <widget class=\"QDockWidget\" name=\"dock01\">\
+  <property name=\"geometry\">\
+   <rect>\
+    <x>0</x>\
+    <y>0</y>\
+    <width>320</width>\
+    <height>80</height>\
+   </rect>\
+  </property>\
+  <property name=\"sizePolicy\">\
+   <sizepolicy hsizetype=\"Preferred\" vsizetype=\"Preferred\">\
+    <horstretch>0</horstretch>\
+    <verstretch>0</verstretch>\
+   </sizepolicy>\
+  </property>\
+  <property name=\"minimumSize\">\
+   <size>\
+    <width>320</width>\
+    <height>80</height>\
+   </size>\
+  </property>\
+  <property name=\"windowTitle\">\
+   <string/>\
+  </property>\
+  <widget class=\"QWidget\" name=\"dockWidgetContents\">\
+   <widget class=\"QPushButton\" name=\"Prev\">\
+    <property name=\"geometry\">\
+     <rect>\
+      <x>14</x>\
+      <y>20</y>\
+      <width>91</width>\
+      <height>26</height>\
+     </rect>\
+    </property>\
+    <property name=\"text\">\
+     <string>Prev</string>\
+    </property>\
+   </widget>\
+   <widget class=\"QPushButton\" name=\"Next\">\
+    <property name=\"geometry\">\
+     <rect>\
+      <x>111</x>\
+      <y>20</y>\
+      <width>92</width>\
+      <height>26</height>\
+     </rect>\
+    </property>\
+    <property name=\"text\">\
+     <string>Next</string>\
+    </property>\
+   </widget>\
+   <widget class=\"QPushButton\" name=\"Quit\">\
+    <property name=\"geometry\">\
+     <rect>\
+      <x>210</x>\
+      <y>20</y>\
+      <width>80</width>\
+      <height>26</height>\
+     </rect>\
+    </property>\
+    <property name=\"text\">\
+     <string>Quit</string>\
+    </property>\
+   </widget>\
+  </widget>\
+ </widget>\
+ <resources/>\
+ <connections/>\
+</ui>\					
 ";
 
   }
