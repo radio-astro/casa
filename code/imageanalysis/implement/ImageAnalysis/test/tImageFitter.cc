@@ -47,7 +47,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
 }
@@ -626,7 +625,7 @@ int main() {
         	{
         		ImageFitter fitter(
         			noisyImage, "", 0, "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
-        			"", "", "", "", True, "", compTable.absoluteName(), ImageFitter::WRITE_NO_REPLACE
+        			"", "", "", "", compTable.absoluteName(), ImageFitter::WRITE_NO_REPLACE
         		);
         		fitter.fit();
         		ComponentList c1(compTable);
@@ -635,7 +634,7 @@ int main() {
         	{
         		ImageFitter fitter(
         			twoGauss, "", 0, "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
-        			"", "", datadir + "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
+        			"", "", datadir + "estimates_2gauss.txt", "", compTable.absoluteName(),
         			ImageFitter::WRITE_NO_REPLACE
 				);
         		fitter.fit();
@@ -645,7 +644,7 @@ int main() {
         	{
         		ImageFitter fitter(
         			twoGauss, "", 0, "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
-        			"", "", datadir + "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
+        			"", "", datadir + "estimates_2gauss.txt", "", compTable.absoluteName(),
         			ImageFitter::OVERWRITE
         		);
         		fitter.fit();
@@ -662,7 +661,7 @@ int main() {
         		ImageFitter fitter(
         			multiplane.get(), "", 0, "", "0~3", "I", mask, Vector<Float>(0), Vector<Float>(0),
         			residImage, modelImage, datadir + "estimates_2gauss_multiplane.txt",
-        			"", True, "", compTable.absoluteName(), ImageFitter::OVERWRITE
+        			"", compTable.absoluteName(), ImageFitter::OVERWRITE
         		);
         		fitter.fit();
         		ComponentList c1(compTable);

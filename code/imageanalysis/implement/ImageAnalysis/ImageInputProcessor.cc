@@ -260,6 +260,47 @@ String ImageInputProcessor::_pairsToString(const std::vector<uInt>& pairs) const
 	return os.str();
 }
 
+void ImageInputProcessor::checkOutput(OutputStruct& output, LogIO& log) {
+	String label = output.label;
+	String name = *(output.outputFile);
+	Bool required = output.required;
+	Bool replaceable = output.replaceable;
+	if (name.empty()) {
+		if (required) {
+			log << label << " cannot be blank" << LogIO::EXCEPTION;
+		}
+		return;
+	}
+	LogIO::Command logLevel = required ? LogIO::SEVERE : LogIO::WARN;
+	LogIO::Command logAction = required ? LogIO::EXCEPTION : LogIO::POST;
+	File f(name);
+	switch (f.getWriteStatus()) {
+	case File::NOT_CREATABLE:
+		log << logLevel << "Requested " << label << " " << name
+			<< " cannot be created so will not be written" << logAction;
+		*(output.outputFile) = "";
+		break;
+	case File::NOT_OVERWRITABLE:
+		log << logLevel << "There is already a file or directory named "
+			<< name << " which cannot be overwritten so the " << label
+			<< " will not be written" << logAction;
+		*(output.outputFile) = "";
+		break;
+	case File::OVERWRITABLE:
+		if (! replaceable) {
+			log << logLevel << "Replaceable flag is false and there is "
+				<< "already a file or directory named " << name
+				<< " so the " << label << " will not be written"
+				<< logAction;
+			*(output.outputFile) = "";
+		}
+		break;
+	default:
+		return;
+	}
+}
+
+
 void ImageInputProcessor::checkOutputs(
 	std::vector<OutputStruct> * const output, LogIO& log
 ) {
@@ -268,6 +309,8 @@ void ImageInputProcessor::checkOutputs(
 		iter != output->end();
 		iter++
 	) {
+		checkOutput(*iter, log);
+		/*
 		String label = iter->label;
 		String name = *(iter->outputFile);
 		Bool required = iter->required;
@@ -307,6 +350,7 @@ void ImageInputProcessor::checkOutputs(
 		default:
 			continue;
 		}
+		*/
 	}
 }
 }

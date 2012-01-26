@@ -123,6 +123,8 @@ public:
 
     static void checkOutputs(std::vector<OutputStruct> *const output, LogIO& log);
 
+    static void checkOutput(OutputStruct& output, LogIO& log);
+
     // Get the number of channels that have been selected. The process() method must
     // be called prior to calling this method or an exception is thrown.
     uInt nSelectedChannels() const;

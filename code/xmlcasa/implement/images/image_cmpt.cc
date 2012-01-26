@@ -1162,7 +1162,7 @@ record* image::fitprofile(const string& box, const variant& region,
 		vector<double> mygmampcon = toVectorDouble(gmampcon, "gmampcon");
 		vector<double> mygmcentercon = toVectorDouble(gmcentercon, "gmcentercon");
 		vector<double> mygmfwhmcon = toVectorDouble(gmfwhmcon, "gmfwhmcon");
-		vector<string> mygmfix = toVectorString(gfix, "gfix");
+		vector<string> mygmfix = toVectorString(gmfix, "gmfix");
 
 		Bool makeSpectralList = (
 			mygmncomps.size() > 0
@@ -1466,11 +1466,14 @@ image* image::transpose(
 			new ImageFitter(
 				image, regionString, regionRecord.get(), box, sChans,
 				stokes, mask, includepix, excludepix, residual, model,
-				estimates, logfile, append, newestimates, complist,
-				writeControl
+				estimates, newestimates, complist, writeControl
 			)
 		);
 		fitter->setStretch(stretch);
+		if (! logfile.empty()) {
+			fitter->setLogfile(logfile);
+			fitter->setLogfileAppend(append);
+		}
 		if (dooff) {
 			fitter->setZeroLevelEstimate(offset, offsetisfixed);
 		}

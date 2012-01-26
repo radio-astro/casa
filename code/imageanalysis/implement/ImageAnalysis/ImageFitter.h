@@ -108,9 +108,8 @@ public:
 		const Vector<Float>& includepix = Vector<Float>(0),
 		const Vector<Float>& excludepix = Vector<Float>(0),
 		const String& residualInp="", const String& modelInp="",
-		const String& estiamtesFilename="", const String& logfile="",
-		const Bool& append=True, const String& newEstimatesInp="",
-		const String& compListName="",
+		const String& estiamtesFilename="",
+		const String& newEstimatesInp="", const String& compListName="",
 		const CompListWriteControl writeControl=NO_WRITE
 	);
 
@@ -146,12 +145,12 @@ public:
 	void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
 
 private:
-	String _regionString, _residual, _model, _logfileName,
+	String _regionString, _residual, _model,
 		estimatesString, _newEstimatesFileName, _compListName;
 	Vector<Float> _includePixelRange, _excludePixelRange;
 	ComponentList estimates, _curResults;
 	Vector<String> _fixed;
-	Bool logfileAppend, _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
+	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
 	Vector<Bool> _fitConverged;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
@@ -190,7 +189,7 @@ private:
 	String _spectrumToString(uInt compNumber) const;
 
 	// write output to log file
-	void _writeLogfile(const String& output) const;
+	// void _writeLogfile(const String& output) const;
 
 	// Write the estimates file using this fit.
 	void _writeNewEstimatesFile() const;
