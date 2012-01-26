@@ -561,7 +561,9 @@ ms::summary(::casac::record& header, const bool verbose, const std::string& list
   try {
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
-       MSSummary mss(itsMS);
+       // pass the original MS name to the constructor
+       // so that it is correctly printed in the output
+       MSSummary mss(itsMS, itsOriginalMS->tableName());
        casa::Record outRec;
        if (listfile != ""){
     	   File diskfile(listfile);
@@ -603,7 +605,6 @@ ms::summary(::casac::record& header, const bool verbose, const std::string& list
     	   // Remove the extra fields (time, severity) from the output string
     	   String str(ostr.str());
     	   str.gsub (Regex(".*\tINFO\t[+]?\t"), "");
-//    	   cout << str;
 
     	   // Write output string to a file
     	   ofstream file;
