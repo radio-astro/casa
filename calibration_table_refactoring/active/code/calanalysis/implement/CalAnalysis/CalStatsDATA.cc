@@ -92,9 +92,9 @@ CalStats::DATA::DATA( void ) {
 
   // Initialize the public variables and return
 
-  oAbs = Vector<Float>();
-  oData = Vector<Float>();
-  oDataErr = Vector<Float>();
+  oAbs = Vector<Double>();
+  oData = Vector<Double>();
+  oDataErr = Vector<Double>();
   oFlag = Vector<Bool>();
 
   return;
@@ -113,7 +113,8 @@ This construtor copies the input instance to the present instance.
 
 Inputs:
 -------
-oDataIn - This CalStats::DATA instance contains the data information.
+oDataIn - This reference to a CalStats::DATA instance contains the data
+          information.
 
 Outputs:
 --------
@@ -133,9 +134,9 @@ CalStats::DATA::DATA( const CalStats::DATA& oDataIn ) {
   // Copy the public variables from the input instance to this instance and
   // return
 
-  oAbs = Vector<Float>( oDataIn.oAbs.copy() );
-  oData = Vector<Float>( oDataIn.oData.copy() );
-  oDataErr = Vector<Float>( oDataIn.oDataErr.copy() );
+  oAbs = Vector<Double>( oDataIn.oAbs.copy() );
+  oData = Vector<Double>( oDataIn.oData.copy() );
+  oDataErr = Vector<Double>( oDataIn.oDataErr.copy() );
   oFlag = Vector<Bool>( oDataIn.oFlag.copy() );
 
   return;
@@ -183,7 +184,8 @@ This function sets one instance to another.
 
 Inputs:
 -------
-oDataIn - This CalStats::DATA instance contains the data information.
+oDataIn - This reference to a CalStats::DATA instance contains the data
+          information.
 
 Outputs:
 --------
@@ -204,9 +206,9 @@ CalStats::DATA& CalStats::DATA::operator=( const CalStats::DATA& oDataIn ) {
   // variables to this one and return
 
   if ( this != &oDataIn ) {
-    oAbs = Vector<Float>( oDataIn.oAbs.copy() );
-    oData = Vector<Float>( oDataIn.oData.copy() );
-    oDataErr = Vector<Float>( oDataIn.oDataErr.copy() );
+    oAbs = Vector<Double>( oDataIn.oAbs.copy() );
+    oData = Vector<Double>( oDataIn.oData.copy() );
+    oDataErr = Vector<Double>( oDataIn.oDataErr.copy() );
     oFlag = Vector<Bool>( oDataIn.oFlag.copy() );
   }
 
