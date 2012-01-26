@@ -1765,7 +1765,7 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
     srcInx=new ColumnsIndex(*sourceTable, "SOURCE_ID");
     srcInxFld= new RecordFieldPtr<Int>(srcInx->accessKey(), "SOURCE_ID");
   }
-  
+
   MSSpectralWindow spectralTable(ms.spectralWindow());
 
   const uInt nrow = fieldTable.nrow();
@@ -1908,13 +1908,16 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
       	if (rownrs.nelements() > 0) {
       	  uInt rownr = rownrs(0);
 	  // Name in SOURCE table overides name in FIELD table
-      	  *source = sourceColumns->name()(rownr) + "                ";;
-	  if(sourceColumns->sysvel().isDefined(rownr)) {
+      	  *source = sourceColumns->name()(rownr) + "                ";
+          //cout << "sysvel is Null: " 
+          //     << sourceColumns->sysvel().isNull() << endl; 
+	  if (!sourceColumns->sysvel().isNull() &&
+              sourceColumns->sysvel().isDefined(rownr)) {
 	    Vector<Double> sv (sourceColumns->sysvel()(rownr));
 	    if (sv.nelements() > 0) {
 	      *lsrvel = sv(0);
 	    }
-	  }
+          }
 	  if(sourceColumns->restFrequency().isDefined(rownr)) {
 	    Vector<Double> rf (sourceColumns->restFrequency()(rownr));
 	    if (rf.nelements() > 0) {
