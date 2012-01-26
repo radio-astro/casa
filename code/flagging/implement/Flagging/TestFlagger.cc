@@ -47,8 +47,6 @@ namespace casa {
 const bool TestFlagger::dbg = false;
 
 
-// TODO: add wrapping functions to existing fg.setdata(), fg.setclearflags(), etc?!
-
 
 // -----------------------------------------------------------------------
 // Default Constructor
@@ -352,7 +350,8 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 		combinescans_p = combinescans_p || combine;
 
-		os << LogIO::DEBUGGING << "max ntime="<<max_p<<" and combinescans="<< combinescans_p << LogIO::POST;
+		os << LogIO::DEBUGGING << "max ntime="<<max_p<<" and combinescans="<<
+				combinescans_p << LogIO::POST;
 
 	}
 
@@ -484,7 +483,8 @@ TestFlagger::initAgents()
 	}
 
 
-	os<< LogIO::NORMAL<< "There are "<< agents_config_list_p.size()<< " agents in the list"<<LogIO::POST;
+	os<< LogIO::DEBUGGING<< "There are "<< agents_config_list_p.size()<<
+			" agents in the list"<<LogIO::POST;
 
 	// Check if list has a mixed state of apply and unapply parameters
 	Bool mixed, apply0;
@@ -499,7 +499,7 @@ TestFlagger::initAgents()
 			agent_rec.get("apply", apply);
 			if (apply0 != apply){
 				mixed = true;
-				if (dbg) cout << "List has a mixed state"<<endl;
+				os << LogIO::DEBUGGING << "List has a mixed state"<<LogIO::POST;
 				break;
 			}
 			else {
@@ -529,7 +529,6 @@ TestFlagger::initAgents()
 
 		}
 
-		// TODO: should I check for fdh_p existence here?
 		// Should it call initFlagDataHandler in case it doesn't exist?
 		// call the factory method for each of the agent's records
 		if(not fdh_p){
@@ -571,6 +570,12 @@ TestFlagger::initAgents()
 		// TODO: Catch error, print a warning and continue to next agent.
 		// Create this agent
 		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
+		if (fa == NULL){
+			String name;
+			agent_rec.get("name",name);
+			os << LogIO::WARN << "Agent "<< name<< " is NULL. Skipping it."<<LogIO::POST;
+			continue;
+		}
 
 		// Get the summary agent to list the results later
 		if (mode.compare("summary") == 0) {
@@ -613,7 +618,7 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	fdh_p->generateIterator();
 
 	agents_list_p.start();
-	if (dbg) cout << "size=" << agents_list_p.size()<<endl;
+	os << LogIO::DEBUGGING << "Size of agent's list is " << agents_list_p.size()<< LogIO::POST;
 
 	// iterate over chunks
 	while (fdh_p->nextChunk())
@@ -644,13 +649,6 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	if (summaryAgent_p){
 		summary_stats = summaryAgent_p->getResult();
 
-/*		if(dbg){
-			os << LogIO::NORMAL << "Get the summary results" << LogIO::POST;
-			ostringstream os;
-			summary_stats.print(os);
-			String str(os.str());
-			cout << str << endl;
-		}*/
 	}
 
 	agents_list_p.clear();
