@@ -1266,7 +1266,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const String& antnames,
 			  const String& spwstring,
                           const String& uvdist, const String& scan,
-                          const String& obs, const Bool useModelCol)
+                          const String& obs, const Bool useModelCol, const Bool /*readonly*/)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
