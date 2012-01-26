@@ -18,6 +18,8 @@ Modification history:
 ---------------------
 2011 Dec 08 - Nick Elias, NRAO
               Initial version created.
+2012 Jan 25 - Nick Elias, NRAO
+              Error checking added.
 
 */
 
@@ -33,6 +35,8 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 #include <casa/aips.h>
+
+#include <casa/Exceptions/Error.h>
 
 #include <casa/Arrays/Vector.h>
 
@@ -63,28 +67,30 @@ Description:
 ------------
 This class contains the fit statistics static enums and functions.
 
+NB: At present, this class acts as a namespace for static functions.
+
 Classes:
 --------
 CalStatsFitter - This class contains the fit statistics enums and functions.
 
-Public static member functions:
--------------------------------
+Class public static member functions:
+-------------------------------------
 init - This member function initializes a CalStatsFitter::FIT structure.
 
-Private static member functions (least-squares fitting):
---------------------------------------------------------
+Class private static member functions (least-squares fitting):
+--------------------------------------------------------------
 lsqFit - This member function calculates polynomial least-squares fits.
 
-Private static member functions (robust fitting):
--------------------------------------------------
-robustFit     - This member function calculates polynomial robust fits.
-numDataWeight - This member function creates a new vector with multiple copies
-                of elements from the original vector.
-slope         - This member function calculates the robust slope.
-brackFunc     - This member function is root-finding bracketing function used to
-                determine the slope.
-signum        - This member function calculates the signum function (scalar).
-signum        - This member function calculates the signum function (vector).
+Class private static member functions (robust fitting):
+-------------------------------------------------------
+robustFit - This member function calculates polynomial robust fits.
+slope     - This member function calculates the robust slope.
+brackFunc - This member function is root-finding bracketing function used to
+            determine the slope.
+signum    - This member function calculates the signum function (scalar).
+signum    - This member function calculates the signum function (vector).
+theil     - This member function estimates the slope and slope error using
+            Theil's method.
 
 Modification history:
 ---------------------
@@ -101,6 +107,11 @@ Modification history:
               Public static member functions init() and dealloc() removed because
               all of their duties are subsumed by the nested class FIT (it used
               used to be a structure).
+2012 Jan 24 - Nick Elias, NRAO
+              Private static member function theil() added.  Private static
+              member function numDataWeight() removed because initial robust
+              estimates of fit parameters (before final "trimmed" least squares)
+              no longer employ weighting.
 
 */
 
@@ -132,11 +143,11 @@ class CalStatsFitter {
         TYPE eType;             // Fit type
         WEIGHT eWeight;         // Fit weight
         Bool bValid;            // Fit validity boolean
-        Vector<Float> oPars;    // Fit parameters
+        Vector<Double> oPars;   // Fit parameters
         Matrix<Double> oCovars; // Fit parameter covariances
-        Vector<Float> oModel;   // Fit model
-        Vector<Float> oRes;     // Fit residuals
-        Float fRedChi2;         // Fit reduced chi^2
+        Vector<Double> oModel;  // Fit model
+        Vector<Double> oRes;    // Fit residuals
+        Double dRedChi2;        // Fit reduced chi^2
         FIT( void );
         FIT( const FIT& oFit );
         ~FIT( void );
@@ -144,35 +155,40 @@ class CalStatsFitter {
     };
 
     // User interface to all fitting capabilities
-    static FIT& fit( const Vector<Float>& oAbs, const Vector<Float>& oData,
-        const Vector<Float>& oDataErr, Vector<Bool>& oFlag, const ORDER& eOrder,
-        const TYPE& eType, const WEIGHT& eWeight );
+    static FIT& fit( const Vector<Double>& oAbs, const Vector<Double>& oData,
+        const Vector<Double>& oDataErr, Vector<Bool>& oFlag,
+        const ORDER& eOrder, const TYPE& eType, const WEIGHT& eWeight );
 
   private:
 
     // Least-squares fitting function
-    static FIT& lsqFit( const Vector<Float>& oAbs, const Vector<Float>& oData,
-        const Vector<Float>& oDataErr, Vector<Bool>& oFlag, const ORDER& eOrder,
-        const WEIGHT& eWeight );
+    static FIT& lsqFit( const Vector<Double>& oAbs, const Vector<Double>& oData,
+        const Vector<Double>& oDataErr, Vector<Bool>& oFlag,
+        const ORDER& eOrder, const WEIGHT& eWeight );
 
     // Robust fitting function
-    static FIT& robustFit( const Vector<Float>& oAbs,
-        const Vector<Float>& oData, const Vector<Float>& oDataErr,
+    static FIT& robustFit( const Vector<Double>& oAbs,
+        const Vector<Double>& oData, const Vector<Double>& oDataErr,
         Vector<Bool>& oFlag, const ORDER& eOrder, const WEIGHT& eWeight,
-        const Float& fTrim );
+        const Double& dTrim );
 
     // Functions required to calculate a robust linear fit
-    static Vector<Float>& numDataWeight( const Vector<Float>& oVector,
-        const Vector<Float>& oDataErr );
-    static Float& slope( const Vector<Float>& oAbs, const Vector<Float>& oData,
-        const Float& fSlope, const Float& fSlopeErr, const Float& fFudge,
-        const uInt& uiNumSlope, const uInt& uiNumIter );
-    static Float& brackFunc( const Vector<Float>& oAbs,
-        const Vector<Float>& oData, const Float& fSlope );
+    static Vector<Double>& numDataWeight( const Vector<Double>& oVector,
+        const Vector<Double>& oDataErr );
+    static Double& slope( const Vector<Double>& oAbs,
+        const Vector<Double>& oData, const Double& dSlope,
+        const Double& dSlopeErr, const Double& dFudge, const uInt& uiNumSlope,
+        const uInt& uiNumIter );
+    static Double& brackFunc( const Vector<Double>& oAbs,
+        const Vector<Double>& oData, const Double& dSlope );
 
     // Signum functions (also required to calculate a robust linear fit)
-    static Float& signum( const Float& fValue );
-    static Vector<Float>& signum( const Vector<Float>& oValue );
+    static Double& signum( const Double& dValue );
+    static Vector<Double>& signum( const Vector<Double>& oValue );
+
+    // Function for calculating slope estimate using Theil's method
+    static void theil( const Vector<Double>& oAbs, const Vector<Double>& oData,
+        Double& dSlope, Double& dSlopeErr );
 
 };
 
