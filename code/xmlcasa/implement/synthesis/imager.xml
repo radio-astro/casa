@@ -3154,6 +3154,11 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      <value>false</value>
      </param>
 
+     <param type="bool" name="writeaccess">
+       <description>If False: imager will open the ms in readmode; useful for multiple process  access to the MS</description>
+       <value>true</value>
+     </param>
+
 </input>
 <example>
 

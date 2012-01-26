@@ -68,7 +68,7 @@ class imagecont():
               numfail=0
               for k  in range(numms):
                   try:
-                      im.selectvis(vis=msnames[k], field=field[k], spw=spw[k], nchan=numchan[k], start=start[k], step=1, datainmemory=self.visInMem)
+                      im.selectvis(vis=msnames[k], field=field[k], spw=spw[k], nchan=numchan[k], start=start[k], step=1, datainmemory=self.visInMem, writeaccess=False)
                   except:
                       numfail+=1
               if(numfail==numms):
@@ -114,7 +114,7 @@ class imagecont():
         if(not self.imageparamset):
             self.origms=msname
             try:
-                im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
+                im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem, writeaccess=False)
             except Exception, instance:
                 ###failed to selectdata
                 self.novaliddata[msname]=True
@@ -138,7 +138,7 @@ class imagecont():
         if(not self.imageparamset):
             if(totchan==0):
                 ###make blanks
-                self.im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1)
+                self.im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, writeaccess=False)
                 self.im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
                 self.im.make(imname+'.image')
                 self.im.make(imname+'.residual')
@@ -180,7 +180,7 @@ class imagecont():
             if(not self.novaliddata[k]):
                 msname=origname
                 if(not self.imageparamset):
-                    self.im[k].selectvis(vis=msname, field=field, spw=selkey[k]['spw'], nchan=1, start=selkey[k]['start'], step=1, datainmemory=self.visInMem)
+                    self.im[k].selectvis(vis=msname, field=field, spw=selkey[k]['spw'], nchan=1, start=selkey[k]['start'], step=1, datainmemory=self.visInMem, writeaccess=False)
                     self.im[k].defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
                     self.im[k].weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                               robust=self.robust)
@@ -254,7 +254,7 @@ class imagecont():
             if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk)):
                 maskname=''
  #       a.getchanimage(cubeimage=imroot+'.model', outim=imname+'.model', chan=imchan)
-        im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
+        im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem, writeaccess=False)
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=fstart, step=width)
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
@@ -299,7 +299,7 @@ class imagecont():
             if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk)):
                 maskname=''
  #       a.getchanimage(cubeimage=imroot+'.model', outim=imname+'.model', chan=imchan)
-        im.selectvis(vis=msname, field=field, spw=spw[0], nchan=nchan[0], start=start[0], step=1, datainmemory=self.visInMem)
+        im.selectvis(vis=msname, field=field, spw=spw[0], nchan=nchan[0], start=start[0], step=1, datainmemory=self.visInMem, writeaccess=False)
         print 'fstart bef def', fstart
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=str(fstart)+'Hz', step=str(fstep)+'Hz', outframe='LSRK')
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
@@ -335,7 +335,7 @@ class imagecont():
             if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk)):
                 maskname=''
         self.getchanimage(inimage=cubeim+'.model', outimage=imname+'.model', chan=imchan*chanchunk, nchan=chanchunk)
-        im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
+        im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem, writeaccess=False)
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
