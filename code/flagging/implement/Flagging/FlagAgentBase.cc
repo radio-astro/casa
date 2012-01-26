@@ -31,6 +31,7 @@
 #include <flagging/Flagging/FlagAgentQuack.h>
 #include <flagging/Flagging/FlagAgentShadow.h>
 #include <flagging/Flagging/FlagAgentExtension.h>
+#include <flagging/Flagging/FlagAgentRFlag.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -280,6 +281,13 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	if (mode.compare("extend")==0)
 	{
 		FlagAgentExtension* agent = new FlagAgentExtension(dh,config);
+		return agent;
+	}
+
+	// Extension
+	if (mode.compare("rflag")==0)
+	{
+		FlagAgentRFlag* agent = new FlagAgentRFlag(dh,config);
 		return agent;
 	}
 
