@@ -76,7 +76,12 @@ MSSummary::MSSummary (const MeasurementSet* ms)
   dashlin2(replicate("=",80))
 {}
 
-
+MSSummary::MSSummary (const MeasurementSet* ms, const String msname)
+: pMS(ms),
+  msname_p(msname),
+  dashlin1(replicate("-",80)),
+  dashlin2(replicate("=",80))
+{}
 //
 // Destructor does nothing
 //
@@ -98,6 +103,9 @@ Int MSSummary::nrow () const
 //
 String MSSummary::name () const
 {
+	if (! msname_p.empty())
+		return msname_p;
+
 	return pMS->tableName();
 }
 
@@ -1893,6 +1901,7 @@ void MSSummary::clearFlags(LogIO& os) const
 	os.output().unsetf(ios::fixed);
 
 }
+
 
 
 } //# NAMESPACE CASA - END
