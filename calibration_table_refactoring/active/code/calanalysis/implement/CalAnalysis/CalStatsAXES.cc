@@ -96,7 +96,7 @@ CalStats::AXES::AXES( void ) {
   eAxisIterUserID = INIT;
   eAxisNonIterID = INIT;
   sFeed = String();
-  fAxisIterUser = 0.0;
+  dAxisIterUser = 0.0;
 
   return;
 
@@ -114,7 +114,8 @@ This construtor copies the input instance to the present instance.
 
 Inputs:
 -------
-oAxes - This CalStats::AXES instance contains the axes information.
+oAxes - This reference to a CalStats::AXES instance contains the axes
+        information.
 
 Outputs:
 --------
@@ -138,7 +139,7 @@ CalStats::AXES::AXES( const CalStats::AXES& oAxes ) {
   eAxisIterUserID = oAxes.eAxisIterUserID;
   eAxisNonIterID = oAxes.eAxisNonIterID;
   sFeed = String( oAxes.sFeed );
-  fAxisIterUser = oAxes.fAxisIterUser;
+  dAxisIterUser = oAxes.dAxisIterUser;
 
   return;
 
@@ -185,7 +186,8 @@ This function sets one instance to another.
 
 Inputs:
 -------
-oAxes - This CalStats::AXES instance contains the axes information.
+oAxes - This reference to a CalStats::AXES instance contains the axes
+        information.
 
 Outputs:
 --------
@@ -210,7 +212,7 @@ CalStats::AXES& CalStats::AXES::operator=( const CalStats::AXES& oAxes ) {
     eAxisIterUserID = oAxes.eAxisIterUserID;
     eAxisNonIterID = oAxes.eAxisNonIterID;
     sFeed = String( oAxes.sFeed );
-    fAxisIterUser = oAxes.fAxisIterUser;
+    dAxisIterUser = oAxes.dAxisIterUser;
   }
   
   return( *this );
