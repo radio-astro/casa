@@ -351,6 +351,14 @@ ViReadImplAsync::getDefaultNBuffers ()
 //{
 //    return prefetchColumns_p;
 //}
+const MeasurementSet &
+ViReadImplAsync::getMs() const
+{
+    Assert (visBufferAsync_p != 0);
+
+    return visBufferAsync_p->getMs ();
+}
+
 
 VisBuffer *
 ViReadImplAsync::getVisBuffer ()
@@ -448,7 +456,6 @@ ViReadImplAsync::originChunks ()
     interface_p->requestViReset ();
 }
 
-
 void
 ViReadImplAsync::readComplete()
 {
@@ -536,6 +543,12 @@ ViReadImplAsync::selectChannel(const Block< Vector<Int> >& blockNGroup,
 
     interface_p->addModifier (scm);
     // ownership is transferred by this call
+
+    msChannels_p.nGroups_p = blockNGroup;
+    msChannels_p.start_p = blockStart;
+    msChannels_p.width_p = blockWidth;
+    msChannels_p.inc_p = blockIncr;
+    msChannels_p.spw_p = blockSpw;
 
     return * this;
 }
@@ -652,6 +665,33 @@ ViReadImplAsync *
 ViWriteImplAsync::getReadImpl()
 {
     return dynamic_cast <ViReadImplAsync *> (VisibilityIteratorWriteImpl::getReadImpl());
+}
+
+void
+ViWriteImplAsync::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental)
+{
+//visBufferAsync_p;
+    //Throw ("ViWriteImplAsync::putModel not implemented!!!");
+
+  Vector<Int> fields = getReadImpl()->msColumns().fieldId().getColumn();
+  const Int option = Sort::HeapSort | Sort::NoDuplicates;
+  const Sort::Order order = Sort::Ascending;
+
+  Int nfields = GenSort<Int>::sort (fields, order, option);
+
+  // Make sure  we have the right size
+
+  fields.resize(nfields, True);
+  Int msid = getReadImpl()->msId();
+
+  Vector<Int> spws =  getReadImpl()->msChannels_p.spw_p[msid];
+  Vector<Int> starts = getReadImpl()->msChannels_p.start_p[msid];
+  Vector<Int> nchan = getReadImpl()->msChannels_p.width_p[msid];
+  Vector<Int> incr = getReadImpl()->msChannels_p.inc_p[msid];
+
+  VisModelData::putModel(getReadImpl()->getMs (), rec, fields, spws, starts, nchan, incr,
+                         iscomponentlist, incremental);
+
 }
 
 void

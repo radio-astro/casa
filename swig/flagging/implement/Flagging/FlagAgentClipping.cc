@@ -124,16 +124,19 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 				nAverage += 1;
 			}
 		}
-		visExpression /= nAverage;
 
 		// If visExpression is out of range we flag the entire row
-		if ((*this.*checkVis_p)(visExpression))
+		if (nAverage > 0)
 		{
-			for (chan_i=0;chan_i<nChannels;chan_i++)
+			visExpression /= nAverage;
+			if ((*this.*checkVis_p)(visExpression))
 			{
-				flags.applyFlag(chan_i,row);
+				for (chan_i=0;chan_i<nChannels;chan_i++)
+				{
+					flags.applyFlag(chan_i,row);
+				}
+				visBufferFlags_p += flags.flagsPerRow();
 			}
-			visBufferFlags_p += flags.flagsPerRow();
 		}
 	}
 	else

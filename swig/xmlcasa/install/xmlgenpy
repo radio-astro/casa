@@ -3,9 +3,9 @@ CASAROOT=`echo $CASAPATH | awk '{print $1}'`
 CASAARCH=`echo $CASAPATH | awk '{printf "%s/%s", $1, $2}'`
 
 SAXONJAR="$CASAARCH/lib/saxon8.jar"
-if [[ ! -e ${SAXONJAR} ]]; then
+if [ ! -e ${SAXONJAR} ]; then
    SAXONJAR=${CASAROOT}/java/saxon8.jar
-   if [[ ! -e ${SAXONJAR} ]] ; then
+   if [ ! -e ${SAXONJAR} ] ; then
       SAXONJAR=${CASAROOT}/lib/saxon8.jar
    fi
 fi

@@ -56,12 +56,15 @@ class ImageTask {
 
 public:
 
-    // destructor
     virtual ~ImageTask();
 
     virtual String getClass() const = 0;
 
     inline void setStretch(const Bool stretch) { _stretch = stretch;}
+
+    void setLogfile(const String& lf);
+
+    void setLogfileAppend(const Bool a);
 
 protected:
 
@@ -104,19 +107,26 @@ protected:
 
     String _summaryHeader() const;
 
-    inline const std::auto_ptr<LogIO>& _getLog() const {
-    	return _log;
-    }
+    inline const std::auto_ptr<LogIO>& _getLog() const {return _log;}
+
+    inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
+
+    Bool _hasLogfileSupport() const {return _logfileSupport;}
 
     inline Bool _getStretch() const {return _stretch;}
+
+    const String& _getLogfile() const;
+
+    void _writeLogfile(const String& output) const;
+
 
 private:
     const ImageInterface<Float> *const _image;
     std::auto_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;
-    String _region, _box, _chan, _stokesString, _mask, _outname;
-    Bool _overwrite, _stretch;
+    String _region, _box, _chan, _stokesString, _mask, _outname, _logfile;
+    Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
 
 
 

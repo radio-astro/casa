@@ -33,9 +33,10 @@
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
 using namespace std;
-using namespace casac;
+//using namespace casac;
 
 typedef  std::vector&lt;std::string&gt; StringVec;
+typedef  std::vector&lt;casac::record&gt; RecordVec;
 typedef  std::vector&lt;double&gt; DoubleVec;
 typedef  std::vector&lt;int&gt; IntVec;
 typedef  std::vector&lt;bool&gt; BoolVec;
@@ -106,6 +107,7 @@ namespace casac {
                  </xsl:when><xsl:otherwise>
                   double <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
                  <xsl:when test="lower-case(@xsi:type)='stringarray'"> StringVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='recordarray'"> RecordVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='intarray'"> IntVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='boolarray'"> BoolVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='floatarray'"> FloatVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
@@ -129,6 +131,7 @@ namespace casac {
                  <xsl:when test="lower-case(@xsi:type)='float'">float </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='double'">double </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='stringarray'">StringVec </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='recordarray'">RecordVec </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='intarray'">IntVec </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='boolarray'">BoolVec </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='floatarray'">FloatVec </xsl:when>

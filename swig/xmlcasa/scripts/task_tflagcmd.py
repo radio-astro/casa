@@ -22,11 +22,10 @@ def tflagcmd(
     rowlist=None,
     setcol=None,
     setval=None,
-    ntime=None,
-    combinescans=None,
     display=None,
     format=None,
     writeflags=None,
+    sequential=None,
     async=None
     ):
     #
@@ -38,8 +37,6 @@ def tflagcmd(
     # add reason selection in all input types
     # what to do with the TIME column?
     # implement backup for the whole input file
-    # decide about actions: unapply, set, extract
-    # remove correlation from data selection and move it to agent's parameters
     # add support for ASDM.xml ????
 
 
@@ -60,40 +57,13 @@ def tflagcmd(
     mslocal.open(vis, nomodify=False)
 
     try:
-        # Verify the ntime value
-        newtime = 0.0
-        if type(ntime) == float or type(ntime) == int:
-            if ntime == 0:
-                raise Exception, 'Parameter ntime cannot be 0.0'
-            else:
-                # units are seconds
-                newtime = float(ntime)
-        
-        elif type(ntime) == str:
-            if ntime == 'scan':
-                # iteration time step is a scan
-                newtime = 0.0
-            else:
-                # read the units from the string
-                qtime = qa.quantity(ntime)
-                
-                if qtime['unit'] == 'min':
-                    # convert to seconds
-                    qtime = qa.convert(qtime, 's')
-                elif qtime['unit'] == '':
-                    qtime['unit'] = 's'
-                    
-                # check units
-                if qtime['unit'] == 's':
-                    newtime = qtime['value']
-                else:
-                    casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
-        
-        casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime),'DEBUG')
+        # Use a default ntime to open the MS. The user-set ntime will be
+        # used in the tool later
+        ntime = 0.0
         
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, newtime)
+            tflocal.open(vis, ntime)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -137,10 +107,14 @@ def tflagcmd(
             else:
                 msfile = inputfile
 
-            # Read only the selected rows for action=apply
+            # Read only the selected rows for action = apply and 
+            # always read APPLIED=True for action = unapply
             if action == 'apply':
                 myflagcmd = readFromTable(msfile, myflagrows=tablerows, useapplied=useapplied,
                                           myreason=reason)
+            elif action == 'unapply':
+                myflagcmd = readFromTable(msfile, useapplied=True, myreason=reason)
+                # Check if selected rows are in read dictionary               
             else:
                 myflagcmd = readFromTable(msfile, useapplied=useapplied, myreason=reason)
                                     
@@ -216,9 +190,15 @@ def tflagcmd(
 
             listmode = ''
 
+
         # Specific for some actions
         # Get the commands as a list of strings with reason back in
         if action == 'apply' or action == 'unapply'  or action == 'save':               
+            # If there are no flag commands, exit
+            if myflagcmd.__len__() == 0:
+                casalog.post("There are no flag commands in input","ERROR")
+                return
+            
             # Turn into command string list (add reason back in)
             mycmdlist = []
             keylist = myflagcmd.keys()
@@ -250,10 +230,9 @@ def tflagcmd(
             apply = True
 
             # Get the list of parameters
-            if myflagcmd.__len__() > 0:
-                for key in myflagcmd.keys():
-                    cmdline = myflagcmd[key]['cmd']
-                    cmdlist.append(cmdline)
+            for key in myflagcmd.keys():
+                cmdline = myflagcmd[key]['cmd']
+                cmdlist.append(cmdline)
                     
             # Get the union of all selection parameters
             unionpars = getUnion(cmdlist)
@@ -278,19 +257,11 @@ def tflagcmd(
                 backupCmd(tflocal, list2save)
                 
             # Run the tool
-            stats = tflocal.run(writeflags)
+            stats = tflocal.run(writeflags, sequential)
                         
             tflocal.done()
                         
-            # Save the valid command lines to the output file or FLAG_CMD
-            # First, add the global parameters to the list
-            global_pars = ' ntime='+str(ntime)
-            if combinescans:
-                global_pars = global_pars+' combinescans='+str(combinescans)
-                
-            for k in list2save.keys():
-                list2save[k]['cmd'] = list2save[k]['cmd']+global_pars
-                
+            # Save the valid command lines to the output file or FLAG_CMD                                
             valid_rows = list2save.keys()
 
             if valid_rows.__len__() > 0:
@@ -347,11 +318,12 @@ def tflagcmd(
                     writeFlagCmd(vis, myflagd, valid_rows)
             else:
                 # Save to ascii file
-                try:
-                    ffout = open(outfile, 'w')
-                except:
-                    raise Exception, 'Error opening output file ' \
-                        + outfile
+                if os.path.exists(outfile):
+                    raise Exception, 'Output file already exists, ' \
+                                    + outfile
+                                            
+                ffout = open(outfile, 'w')
+
                 try:
                     for cmd in mycmdl:
                         print >> ffout, '%s' % cmd
@@ -397,10 +369,9 @@ def tflagcmd(
             return myflagcmd
         
     except Exception, instance:
+        casalog.post('%s'%instance,'ERROR')
+        raise
 
-                # tflocal.done()
-        print '*** Error ***', instance
-                # raise
 
     # write history
     try:
@@ -733,18 +704,20 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     
     # Parameters for each mode
     manualpars = []
-    clippars = ['clipminmax', 'expression', 'clipsoutside','datacolumn', 'clipchanavg']
+    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg']
     quackpars = ['quackinterval','quackmode','quackincrement']
     shadowpars = ['diameter']
     elevationpars = ['lowerlimit','upperlimit'] 
-    tfcroppars = ['expression','datacolumn','timecutoff','freqcutoff','timefit','freqfit',
-                  'maxnpieces','flagdimension','usewindowstats','halfwin']
-    extendpars = ['extendpols','growtime','growfreq','growaround','flagneartime','flagnearfreq']
-
+    tfcroppars = ['ntime','combinescans','expression','datacolumn','timecutoff','freqcutoff',
+                  'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
+    extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
+                  'flagneartime','flagnearfreq']
+    
+        
     # dictionary of successful command lines to save to outfile
     savelist = {}
-            
-    # Setup the agent for each input line
+
+    # Setup the agent for each input line    
     for key in myflagcmd.keys():
         cmdline = myflagcmd[key]['cmd']
         casalog.post('cmdline for key%s'%key, 'DEBUG')
@@ -798,6 +771,10 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             cmdline = cmdline+' mode=manualflag'
             modepars = getLinePars(cmdline,manualpars)   
                 
+                
+        # Read ntime
+        readNtime(modepars)
+        
         # Cast the correct type to some parameters
         fixType(modepars)
         
@@ -819,7 +796,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         agent_name = mode.capitalize()+'_'+str(key)
         modepars['name'] = agent_name
         
-        # remove the data selection parameters if there is only one agent
+        # remove the data selection parameters if there is only one agent,s
         # for performance reasons
         if myflagcmd.__len__() == 1:
             sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
@@ -922,6 +899,7 @@ def getLinePars(cmdline, mlist=[]):
                 for m in mlist:
                     if xkey == m:
                         dicpars[m] = xval
+                        
             
     return dicpars
 
@@ -930,12 +908,19 @@ def fixType(params):
     # Give correct types to parameters because they
     # are written as string in the dictionary
 
+    # quack parameters
     if params.has_key('quackmode') and not params['quackmode'] in ['beg'
             , 'endb', 'end', 'tail']:
         raise Exception, \
             "Illegal value '%s' of parameter quackmode, must be either 'beg', 'endb', 'end' or 'tail'" \
             % params['quackmode']
+    if params.has_key('quackinterval'):
+        params['quackinterval'] = float(params['quackinterval'])        
+    if params.has_key('quackincrement'):
+        if type(params['quackincrement']) == str:
+            params['quackincrement'] = eval(params['quackincrement'].capitalize())
 
+    # clip parameters
     if params.has_key('clipminmax'):
         value01 = params['clipminmax']
         # turn string into [min,max] range
@@ -944,45 +929,93 @@ def fixType(params):
         r = value.split(',')
         rmin = float(r[0])
         rmax = float(r[1])
-        params['clipminmax'] = [rmin, rmax]
-        
+        params['clipminmax'] = [rmin, rmax]        
     if params.has_key('clipoutside'):
         if type(params['clipoutside']) == str:
-            params['clipoutside'] = eval(params['clipoutside'])
+            params['clipoutside'] = eval(params['clipoutside'].capitalize())
         else:
             params['clipoutside'] = params['clipoutside']
-#    if params.has_key('expression'):
-#        # Unpack using underscore, e.g. 'ABS_RR' => 'ABS RR'
-#        if params['expression'].count('_') == 1:
-#            v = params['expression'].split('_')
-#            params['expression'] = v[0] + ' ' + v[1]
-#        elif params['expression'] == 'all':
-#            print " expression='all' not implemented, using ABS RR"
-#            params['expression'] = 'ABS RR'
-
-    if params.has_key('clipchanavg'):
-        if type(params['clipchanavg']) == str:
-            params['clipchanavg'] = eval(params['clipchanavg'])
+    if params.has_key('channelavg'):
+        params['channelavg'] = eval(params['channelavg'].capitalize())
             
-    if params.has_key('quackinterval'):
-        params['quackinterval'] = float(params['quackinterval'])
-        
-    if params.has_key('quackincrement'):
-        if type(params['quackincrement']) == str:
-            params['quackincrement'] = eval(params['quackincrement'])
             
+    # shadow parameter
     if params.has_key('diameter'):
         params['diameter'] = float(params['diameter'])
         
+    # elevation parameters
     if params.has_key('lowerlimit'):
-        params['lowerlimit'] = float(params['lowerlimit'])
-        
+        params['lowerlimit'] = float(params['lowerlimit'])        
     if params.has_key('upperlimit'):
         params['upperlimit'] = float(params['upperlimit'])
         
-    if params.has_key('extendpols'):
-        params['extendpols'] = eval(params['extendpols'])
+    # extend parameters
+    if params.has_key('extendpols'):        
+        params['extendpols'] = eval(params['extendpols'].capitalize())
+    if params.has_key('growtime'):
+        params['growtime'] = float(params['growtime'])
+    if params.has_key('growfreq'):
+        params['growfreq'] = float(params['growfreq'])
+    if params.has_key('growaround'):
+        params['growaround'] = eval(params['growaround'].capitalize())
+    if params.has_key('flagneartime'):
+        params['flagneartime'] = eval(params['flagneartime'].capitalize())
+    if params.has_key('flagnearfreq'):
+        params['flagnearfreq'] = eval(params['flagnearfreq'].capitalize())
 
+    # tfcrop parameters
+    if params.has_key('combinescans'):
+        params['combinescans'] = eval(params['combinescans'].capitalize())        
+    if params.has_key('timecutoff'):
+        params['timecutoff'] = float(params['timecutoff'])       
+    if params.has_key('freqcutoff'):
+        params['freqcutoff'] = float(params['freqcutoff'])        
+    if params.has_key('maxnpieces'):
+        params['maxnpieces'] = int(params['maxnpieces'])        
+    if params.has_key('halfwin'):
+        params['halfwin'] = int(params['halfwin'])
+        
+
+def readNtime(params):
+    '''Check the value and units of ntime
+       params --> dictionary of agent's parameters '''
+
+    newtime = 0.0
+    
+    if params.has_key('ntime'):
+        ntime = params['ntime']
+
+        # Verify the ntime value
+        if type(ntime) == float or type(ntime) == int:
+            if ntime <= 0:
+                raise Exception, 'Parameter ntime cannot be < = 0'
+            else:
+                # units are seconds
+                newtime = float(ntime)
+        
+        elif type(ntime) == str:
+            if ntime == 'scan':
+                # iteration time step is a scan
+                newtime = 0.0
+            else:
+                # read the units from the string
+                qtime = qa.quantity(ntime)
+                
+                if qtime['unit'] == 'min':
+                    # convert to seconds
+                    qtime = qa.convert(qtime, 's')
+                elif qtime['unit'] == '':
+                    qtime['unit'] = 's'
+                    
+                # check units
+                if qtime['unit'] == 's':
+                    newtime = qtime['value']
+                else:
+                    casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
+          
+    params['ntime'] = float(newtime)
+        
+     
 def isUnflag(cmdline):
         
     # split by white space
@@ -2154,5 +2187,14 @@ def plotflags(
         pl.savefig(plotname, dpi=150)
     return
 
+
+#def validateRow(cmds, row):
+#    '''Check if list of selected rows exist in inputfile'''
+#
+#    for k in cmds.keys():
+        
     
+    
+    
+        
     

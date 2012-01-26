@@ -1247,7 +1247,7 @@ protected:
     //Set iscomponentlist to True if the record represent a componentlist
     //if False then it is a FTMachine Record that holds the model image
     // a [-1] vector in validfields mean the model applies to all fields of the active ms 
-    void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
+    virtual void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
 
 
 

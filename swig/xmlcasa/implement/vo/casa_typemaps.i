@@ -51,6 +51,15 @@ using casac::variant;
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
 }
 
+%typemap(out) RecordVec {
+   $result = PyList_New($1.size());
+   for(int i=0;i<$1.size();i++){
+      const record &val = $1[i];
+      PyObject *r = record2pydict(val);
+      PyList_SetItem($result, i, r);
+   }
+}
+
 %typemap(out) record {
    $result = PyDict_New();
    for(record::const_iterator iter = $1.begin(); iter != $1.end(); ++iter){

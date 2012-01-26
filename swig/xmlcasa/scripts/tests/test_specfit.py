@@ -76,10 +76,10 @@ import numpy
 
 twogauss = "specfit_multipix_2gauss.fits"
 polyim = "specfit_multipix_poly_2gauss.fits"
+gauss_triplet = "gauss_triplet.fits"
 solims = [
-    "amp_0", "ampErr_0", "amp_1", "ampErr_1",
-    "center_0", "centerErr_0", "center_1", "centerErr_1",
-    "fwhm_0", "fwhmErr_0", "fwhm_1", "fwhmErr_1"
+    "amp", "ampErr", "center", "centerErr",
+    "fwhm", "fwhmErr", "integral", "integralErr"
 ]
 
 nanvalue = 4.53345345
@@ -88,9 +88,13 @@ datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/specfi
 
 def run_fitprofile (
     imagename, box, region, chans, stokes,
-    axis, mask, ngauss, poly, multifit, model,
-    residual, amp="", amperr="", center="", centererr="",
-    fwhm="", fwhmerr="", estimates=""
+    axis, mask, ngauss, poly, multifit, model="",
+    residual="", amp="", amperr="", center="", centererr="",
+    fwhm="", fwhmerr="", integral="", integralerr="",
+    estimates="",gampest="", gcenterest="", gfwhmest="",
+    gfix="", gmncomps=0, gmampcon="", gmcentercon="",
+    gmfwhmcon="", gmampest=[0], gmcenterest=[0],
+    gmfwhmest=[0], gmfix=[0]
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -104,7 +108,13 @@ def run_fitprofile (
         multifit=multifit,
         model=model, residual=residual, amp=amp,
         amperr=amperr, center=center, centererr=centererr,
-        fwhm=fwhm, fwhmerr=fwhmerr
+        fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
+        integralerr=integralerr, gampest=gampest,
+        gcenterest=gcenterest, gfwhmest=gfwhmest, gfix=gfix,
+        gmncomps=gmncomps, gmampcon=gmampcon,
+        gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
+        gmampest=gmampest, gmcenterest=gmcenterest,
+        gmfwhmest=gmfwhmest, gmfix=gmfix
     )
     myia.close()
     myia.done()
@@ -112,9 +122,14 @@ def run_fitprofile (
 
 def run_specfit(
     imagename, box, region, chans, stokes,
-    axis, mask, ngauss, poly, multifit, model,
-    residual, amp="", amperr="", center="", centererr="",
-    fwhm="", fwhmerr="", wantreturn=True, estimates=""
+    axis, mask, ngauss, poly, multifit, model="",
+    residual="", amp="", amperr="", center="", centererr="",
+    fwhm="", fwhmerr="", integral="", integralerr="",
+    wantreturn=True, estimates="",
+    gampest="", gcenterest="", gfwhmest="", gfix="",
+    gmncomps=0, gmampcon="", gmcentercon="",
+    gmfwhmcon="", gmampest=[0], gmcenterest=[0],
+    gmfwhmest=[0], gmfix=[0]
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
@@ -123,8 +138,14 @@ def run_specfit(
         multifit=multifit,
         model=model, residual=residual, amp=amp,
         amperr=amperr, center=center, centererr=centererr,
-        fwhm=fwhm, fwhmerr=fwhmerr,
-        wantreturn=wantreturn
+        fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
+        integralerr=integralerr,
+        wantreturn=wantreturn, gampest=gampest,
+        gcenterest=gcenterest, gfwhmest=gfwhmest, gfix=gfix,
+        gmncomps=gmncomps, gmampcon=gmampcon,
+        gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
+        gmampest=gmampest, gmcenterest=gmcenterest,
+        gmfwhmest=gmfwhmest, gmfix=gmfix
     )
 
 class specfit_test(unittest.TestCase):
@@ -138,7 +159,6 @@ class specfit_test(unittest.TestCase):
         os.remove(polyim)
 
     def checkImage(self, gotImage, expectedName):
-        print "*** expected name " + expectedName
         expected = iatool.create()                                
         expected.open(expectedName)
         got = iatool.create()
@@ -171,10 +191,9 @@ class specfit_test(unittest.TestCase):
         diffPixels = gotCsys.referencepixel()['numeric'] - expectedCsys.referencepixel()['numeric']
         self.assertTrue(abs(diffPixels).max() == 0)
         
-        fracDiffRef = (
-            gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
-        )/expectedCsys.referencevalue()['numeric'];
-        self.assertTrue(abs(fracDiffRef).max() <= 3e-13)
+        diffRef = gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
+        # fracDiffRef = (diffRef)/expectedCsys.referencevalue()['numeric'];
+        self.assertTrue(abs(diffRef).max() == 0)
         got.close()
         got.done()
         expected.close()
@@ -269,13 +288,14 @@ class specfit_test(unittest.TestCase):
             # even though two components given, only one is fit
             self.assertTrue(res["ncomps"][0,0,0,0] == 1)
             # the fit component is a gaussian
-            self.assertTrue(res["type0"][0,0,0,0] == "GAUSSIAN")
-            self.assertAlmostEqual(res["amp0"][0,0,0,0], 49.7, 1, "amplitude determination failure")
-            self.assertAlmostEqual(res["ampErr0"][0,0,0,0], 4.0, 1, "amplitude error determination failure")
-            self.assertAlmostEqual(res["center0"][0,0,0,0], -237.7, 1, "center determination failure")
-            self.assertAlmostEqual(res["centerErr0"][0,0,0,0], 1.7, 1, "center error determination failure")
-            self.assertAlmostEqual(res["fwhm0"][0,0,0,0], 42.4, 1, "fwhm determination failure")
-            self.assertAlmostEqual(res["fwhmErr0"][0,0,0,0], 4.0, 1, "fwhm error determination failure")
+            self.assertTrue(res["type"][0,0,0,0,0] == "GAUSSIAN")
+            gs = res["gs"]
+            self.assertAlmostEqual(gs["amp"][0,0,0,0,0], 49.7, 1, "amplitude determination failure")
+            self.assertAlmostEqual(gs["ampErr"][0,0,0,0,0], 4.0, 1, "amplitude error determination failure")
+            self.assertAlmostEqual(gs["center"][0,0,0,0,0], -237.7, 1, "center determination failure")
+            self.assertAlmostEqual(gs["centerErr"][0,0,0,0,0], 1.7, 1, "center error determination failure")
+            self.assertAlmostEqual(gs["fwhm"][0,0,0,0,0], 42.4, 1, "fwhm determination failure")
+            self.assertAlmostEqual(gs["fwhmErr"][0,0,0,0,0], 4.0, 1, "fwhm error determination failure")
 
             self.assertTrue(res["xUnit"] == "km/s")
             self.assertTrue(res["yUnit"] == "Jy")
@@ -305,10 +325,10 @@ class specfit_test(unittest.TestCase):
             self.assertTrue(res["ncomps"][0, 0, 0, 0] == 1)
             self.assertTrue((res["ncomps"][:, 1:, 0, 0] == 2).all())
             self.assertTrue((res["ncomps"][1:, 0, 0, 0] == 2).all())
-            self.assertTrue((res["type0"] == "GAUSSIAN").all())
-            self.assertTrue(res["type1"][0, 0, 0, 0] == "UNDEF")
-            self.assertTrue((res["type1"][:, 1:, 0, 0] == "GAUSSIAN").all())
-            self.assertTrue((res["type1"][1:, 0, 0, 0] == "GAUSSIAN").all())
+            self.assertTrue((res["type"][:,:,:,:,0] == "GAUSSIAN").all())
+            self.assertTrue(res["type"][0, 0, 0, 0, 1] == "UNDEF")
+            self.assertTrue((res["type"][:, 1:, 0, 0, 1] == "GAUSSIAN").all())
+            self.assertTrue((res["type"][1:, 0, 0, 0, 1] == "GAUSSIAN").all())
 
             self.assertTrue(res["xUnit"] == "km/s")
             self.assertTrue(res["yUnit"] == "Jy")
@@ -333,14 +353,14 @@ class specfit_test(unittest.TestCase):
                 stokes, axis, mask, ngauss, poly,
                 multifit, model, residual
             )
-        self.assertTrue(len(res["converged"].ravel()) == 81)
-        # fit #72 did not converge
-        self.assertTrue(res["converged"][:, :7, 0, 0].all())
-        self.assertTrue(res["converged"][1:,8,0,0].all())
-        self.assertFalse(res["converged"][0, 8, 0, 0])
+            self.assertTrue(len(res["converged"].ravel()) == 81)
+            # fit #72 did not converge
+            self.assertTrue(res["converged"][:, :7, 0, 0].all())
+            self.assertTrue(res["converged"][1:,8,0,0].all())
+            self.assertFalse(res["converged"][0, 8, 0, 0])
 
-        self.assertTrue(res["xUnit"] == "km/s")
-        self.assertTrue(res["yUnit"] == "Jy")
+            self.assertTrue(res["xUnit"] == "km/s")
+            self.assertTrue(res["yUnit"] == "Jy")
 
     def test_4(self):
         """writing solution images for multipixel, two gaussian fit"""
@@ -356,24 +376,21 @@ class specfit_test(unittest.TestCase):
         multifit = True
         model = ""
         residual = ""
-        amp = "amp"
-        amperr = "ampErr"
-        center = "center"
-        centererr = "centerErr"
-        fwhm = "fwhm"
-        fwhmerr = "fwhmErr"
+        [
+            amp, amperr, center, centererr,
+            fwhm, fwhmerr, integral, integralerr
+        ] = solims
         for code in [run_fitprofile, run_specfit]:
             res = code(
                 imagename, box, region, chans,
                 stokes, axis, mask, ngauss, poly,
                 multifit, model, residual, amp,
-                amperr, center, centererr, fwhm, fwhmerr
+                amperr, center, centererr, fwhm, fwhmerr,
+                integral, integralerr
             )
             for im in solims:
                 self.checkImage(im, datapath + im)
-                
-        for im in solims:
-            shutil.rmtree(im)
+                shutil.rmtree(im)
             
     def test_5(self):
         """test results of multi-pixel one gaussian fit with estimates file"""
@@ -424,14 +441,14 @@ class specfit_test(unittest.TestCase):
             self.assertTrue(res['converged'] == 1)
             self.assertTrue(res['converged'][0][0][0][0])
             self.assertTrue(res['ncomps'][0][0][0][0] == 1)
-            self.assertTrue(res['type0'][0][0][0][0] == "GAUSSIAN")
-            self.assertTrue(res["type0"][0,0,0,0] == "GAUSSIAN")
-            self.assertAlmostEqual(res["amp0"][0,0,0,0], 49.7, 1, "amplitude determination failure")
-            self.assertAlmostEqual(res["ampErr0"][0,0,0,0], 4.0, 1, "amplitude error determination failure")
-            self.assertAlmostEqual(res["center0"][0,0,0,0], -237.7, 1, "center determination failure")
-            self.assertAlmostEqual(res["centerErr0"][0,0,0,0], 1.7, 1, "center error determination failure")
-            self.assertAlmostEqual(res["fwhm0"][0,0,0,0], 42.4, 1, "fwhm determination failure")
-            self.assertAlmostEqual(res["fwhmErr0"][0,0,0,0], 4.0, 1, "fwhm error determination failure")
+            self.assertTrue(res["type"][0,0,0,0,0] == "GAUSSIAN")
+            gs = res["gs"]
+            self.assertAlmostEqual(gs["amp"][0,0,0,0,0], 49.7, 1, "amplitude determination failure")
+            self.assertAlmostEqual(gs["ampErr"][0,0,0,0,0], 4.0, 1, "amplitude error determination failure")
+            self.assertAlmostEqual(gs["center"][0,0,0,0,0], -237.7, 1, "center determination failure")
+            self.assertAlmostEqual(gs["centerErr"][0,0,0,0,0], 1.7, 1, "center error determination failure")
+            self.assertAlmostEqual(gs["fwhm"][0,0,0,0,0], 42.4, 1, "fwhm determination failure")
+            self.assertAlmostEqual(gs["fwhmErr"][0,0,0,0,0], 4.0, 1, "fwhm error determination failure")
             self.assertTrue(res["xUnit"] == "km/s")
             self.assertTrue(res["yUnit"] == "Jy")
 
@@ -460,14 +477,13 @@ class specfit_test(unittest.TestCase):
             self.assertTrue(res['converged'] == 1)
             self.assertTrue(res['converged'][0][0][0][0])
             self.assertTrue(res['ncomps'][0][0][0][0] == 1)
-            self.assertTrue(res['type0'][0][0][0][0] == "GAUSSIAN")
-            self.assertTrue(res["type0"][0,0,0,0] == "GAUSSIAN")
-            self.assertAlmostEqual(res["amp0"][0,0,0,0], 45, 1, "amplitude determination failure")
-            self.assertAlmostEqual(res["ampErr0"][0,0,0,0], 0, 1, "amplitude error determination failure")
-            self.assertAlmostEqual(res["center0"][0,0,0,0], -237.7, 1, "center determination failure")
-            self.assertAlmostEqual(res["centerErr0"][0,0,0,0], 1.9, 1, "center error determination failure")
-            self.assertAlmostEqual(res["fwhm0"][0,0,0,0], 45.6, 1, "fwhm determination failure")
-            self.assertAlmostEqual(res["fwhmErr0"][0,0,0,0], 3.8, 1, "fwhm error determination failure")
+            self.assertTrue(res["type"][0,0,0,0,0] == "GAUSSIAN")
+            self.assertAlmostEqual(res["gs"]["amp"][0,0,0,0,0], 45, 1, "amplitude determination failure")
+            self.assertAlmostEqual(res["gs"]["ampErr"][0,0,0,0,0], 0, 1, "amplitude error determination failure")
+            self.assertAlmostEqual(res["gs"]["center"][0,0,0,0,0], -237.7, 1, "center determination failure")
+            self.assertAlmostEqual(res["gs"]["centerErr"][0,0,0,0,0], 1.9, 1, "center error determination failure")
+            self.assertAlmostEqual(res["gs"]["fwhm"][0,0,0,0,0], 45.6, 1, "fwhm determination failure")
+            self.assertAlmostEqual(res["gs"]["fwhmErr"][0,0,0,0,0], 3.8, 1, "fwhm error determination failure")
             self.assertTrue(res["xUnit"] == "km/s")
             self.assertTrue(res["yUnit"] == "Jy")
 
@@ -495,7 +511,6 @@ class specfit_test(unittest.TestCase):
             stretch=False
         )
         self.assertTrue(zz == None)
-        print "*** here 4"
         zz = yy.fitprofile(
             ngauss=2, mask=mymask + ">-100",
             stretch=True
@@ -508,6 +523,177 @@ class specfit_test(unittest.TestCase):
         )
         self.assertTrue(len(zz.keys()) > 0)
 
+    def test_8(self):
+        """ Test two gaussian + one polynomial image with estimates"""
+
+        estimates = datapath + "poly+2gauss_estimates.txt"
+        
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename=polyim, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=3,
+                multifit=True, model="", residual="", estimates=estimates
+            )
+            self.assertTrue(len(res["converged"].ravel()) == 81)
+            # fit #0 did not converge
+            self.assertTrue(res["converged"][1:, :, 0, 0].all())
+            self.assertTrue(res["converged"][0,1:,0,0].all())
+            self.assertFalse(res["converged"][0, 0, 0, 0])
+
+            self.assertTrue(res["xUnit"] == "km/s")
+            self.assertTrue(res["yUnit"] == "Jy")
+        gs = res["gs"]
+        center = gs["center"]
+        center[0,0,0,0,0] = nanvalue
+        center[0,0,0,0,1] = nanvalue
+
+        amp = gs["amp"]
+        amp[0,0,0,0,0] = nanvalue
+        amp[0,0,0,0,1] = nanvalue
+
+        fwhm = gs["fwhm"]
+        fwhm[0,0,0,0,0] = nanvalue
+        fwhm[0,0,0,0,1] = nanvalue
+
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename=polyim, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=3,
+                multifit=True, model="", residual="", estimates="",
+                gampest=[50, 10], gcenterest=[90, 30], gfwhmest=[10, 7]
+            )
+            self.assertTrue(len(res["converged"].ravel()) == 81)
+            # fit #0 did not converge
+            self.assertTrue(res["converged"][1:, :, 0, 0].all())
+            self.assertTrue(res["converged"][0,1:,0,0].all())
+            self.assertFalse(res["converged"][0, 0, 0, 0])
+
+            self.assertTrue(res["xUnit"] == "km/s")
+            self.assertTrue(res["yUnit"] == "Jy")
+            gs = res["gs"]
+            gs["center"][0,0,0,0,0] = nanvalue
+            gs["center"][0,0,0,0,1] = nanvalue
+            self.assertTrue((gs["center"] == center).all())
+            
+            gs["amp"][0,0,0,0,0] = nanvalue
+            gs["amp"][0,0,0,0,1] = nanvalue
+            self.assertTrue((abs(gs["amp"] - amp) < 1e-13).all())
+            
+            gs["fwhm"][0,0,0,0,0] = nanvalue
+            gs["fwhm"][0,0,0,0,1] = nanvalue
+            self.assertTrue((abs(gs["fwhm"] - fwhm) < 1e-13).all())
+
+    def test_9(self):
+        """Polynomial fitting, moved from imagetest_regression.py"""
+        shape = [16,16,128]
+        imname = 'ia.fromshape.image'
+        myim = ia.newimagefromshape(shape=shape)
+        myim.set(pixels='1.0')        #
+        residname = 'ia.fromshape.resid'
+        fitname = 'ia.fromshape.fit'
+        res = myim.fitprofile (multifit=True, residual=residname, model=fitname, poly=0, ngauss=0, axis=2)
+        myim.done()
+        myim.open(residname)
+        pixels = myim.getchunk()
+        self.assertTrue(pixels.shape == tuple(shape))
+        self.assertTrue((pixels == 0).all())
+        myim.done()
+        
+    def test_10(self):
+        """test results of non-multi-fit gaussian triplet"""
+        imagename=datapath+gauss_triplet
+        gmampcon = [0.7, 0.55]
+        gmcentercon = [52, 0]
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename=imagename, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=-1,
+                multifit=False, model="", residual="", estimates="",
+                gmncomps=3, gmampest=[1.2, 0.8, 0.6], 
+                gmcenterest=[20, 72, 100], gmfwhmest=[4, 4, 4],
+                gmampcon=gmampcon, gmcentercon=gmcentercon
+            )
+            self.assertTrue(res["type"].ravel() == "GAUSSIAN MULTIPLET")
+            gm0 = res["gm0"]
+            exp = [4.15849, 2.91095, 2.28717]
+            got = gm0["amp"].ravel()
+            for i in [0, 1, 2]:
+                self.assertAlmostEqual(got[i], exp[i], 5)
+            exp = [1149.73, 1138.76, 1133.66]
+            got = gm0["center"].ravel()
+            for i in [0, 1, 2]:
+                self.assertAlmostEqual(got[i], exp[i], 2)
+            exp = [5.75308, 4.09405, 3.93497]
+            got = gm0["fwhm"].ravel()
+            for i in [0, 1, 2]:
+                self.assertAlmostEqual(got[i], exp[i], 5)
+            exp = [0.0301945, 0.0211362, 0.016607]
+            got = gm0["ampErr"].ravel()
+            for i in [0, 1, 2]:
+                self.assertAlmostEqual(got[i], exp[i], 7)
+            exp = [0.0221435, 0.0221435, 0.0475916]
+            got = gm0["centerErr"].ravel()
+            for i in [0, 1, 2]:
+                self.assertAlmostEqual(got[i], exp[i], 7)
+            exp = [0.0556099, 0.085414, 0.0987483]
+            got = gm0["fwhmErr"].ravel()
+            for i in [0, 1, 2]:
+                self.assertAlmostEqual(got[i], exp[i], 7)
+            self.assertAlmostEqual(
+                gm0["amp"].ravel()[0]*gmampcon[0],
+                gm0["amp"].ravel()[1], 7
+            )
+            self.assertAlmostEqual(
+                gm0["ampErr"].ravel()[0]*gmampcon[0],
+                gm0["ampErr"].ravel()[1], 7
+            )
+            self.assertAlmostEqual(
+                gm0["amp"].ravel()[0]*gmampcon[1],
+                gm0["amp"].ravel()[2], 7
+            )
+            self.assertAlmostEqual(
+                gm0["ampErr"].ravel()[0]*gmampcon[1],
+                gm0["ampErr"].ravel()[2], 7
+            )
+            ia.open(imagename)
+            mc = ia.coordsys()
+            ia.done()
+            restfreq = mc.restfrequency()["value"][0]
+            dv = mc.increment()["numeric"][2]
+            increment = -dv/restfreq*299797
+            self.assertAlmostEqual(
+                gm0["center"].ravel()[0] + gmcentercon[0]*increment,
+                gm0["center"].ravel()[1], 3
+            )
+            self.assertAlmostEqual(
+                gm0["centerErr"].ravel()[0],
+                gm0["centerErr"].ravel()[1], 7
+            )
+
+    def test_11(self):
+        """test results of multi-fit gaussian triplet"""
+        imagename=datapath+gauss_triplet
+        gmampcon = [0.7, 0.55]
+        gmcentercon = [52, 0]
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename=imagename, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=-1,
+                multifit=True, center="center",
+                centererr="centerErr", fwhm="fwhm",
+                fwhmerr="fwhmErr", amp="amp", amperr="ampErr",
+                integral="integral", integralerr="integralErr",
+                gmncomps=3, gmampest=[1.2, 0.1, 0.1], 
+                gmcenterest=[20, 0, 100], gmfwhmest=[4, 4, 4],
+                gmampcon=gmampcon, gmcentercon=gmcentercon
+            )
+            for image in (
+                "center", "centerErr", "fwhm", "fwhmErr", "amp",
+                "ampErr", "integral", "integralErr"
+            ):
+                self.checkImage(
+                    image + "_gm", datapath + image + "_gm"
+                )
 
 def suite():
     return [specfit_test]

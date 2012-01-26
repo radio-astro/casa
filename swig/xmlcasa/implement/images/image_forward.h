@@ -2,7 +2,6 @@
 #include <xmlcasa/StdCasa/CasacSupport.h>
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
-
 #include <memory>
 
 namespace casa 

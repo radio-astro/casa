@@ -6047,49 +6047,6 @@ def imagetest(which=None, size=[32,32,8]):
         ###
         return cleanup(testdir)
 
-    def test35():
-        info('')
-        info('')
-        info('')
-        info('Test 35 - fitprofile polynomial fitting')
-        # Make the directory
-        testdir = 'imagetest_temp'
-        if not cleanup(testdir):
-            return False
-        try:
-            os.mkdir(testdir)
-        except IOError, e:
-            note(e, "SEVERE")
-            raise RuntimeError, "mkdir " + testdir + " fails!"
-        #
-        info('Testing fitprofile polynomial fitting')
-        info('')
-        shape = [32,32,128]
-        #
-        imname = testdir+'/'+'ia.fromshape.image'
-        myim = ia.newimagefromshape(shape=shape)
-        if not myim: fail()
-        ok = myim.set(pixels='1.0')
-        if not ok: fail()
-        #
-        residname = testdir+'/'+'ia.fromshape.resid'
-        fitname = testdir+'/'+'ia.fromshape.fit'
-        #
-        res = myim.fitprofile (multifit=True, residual=residname, model=fitname, poly=0, ngauss=0, axis=2)
-        if not ok: fail()
-        myim.done()
-        myim.open(residname)
-        #
-        pixels = myim.getchunk()
-        if len(pixels)==0: fail()
-        #
-        if not alleqnum(pixels,0,tolerance=0.00001):
-            stop('fitprofile got the wrong results')
-        #
-        if not myim.done(): fail()
-        ###
-        return cleanup(testdir)
-
     def test36():
         #
         # Test methods
@@ -6470,7 +6427,6 @@ def imagetest(which=None, size=[32,32,8]):
     test32()  # original has commented out bits. Why?
     test33()
     test34()
-    test35()
     test36()
     test37()
     test38()

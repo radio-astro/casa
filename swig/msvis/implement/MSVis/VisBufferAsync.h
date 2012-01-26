@@ -97,6 +97,7 @@ protected:
     Vector<MDirection>& fillDirection2();
     void fillFrom (const VisBufferAsync & other);
     MDirection & fillPhaseCenter();
+    const MeasurementSet & getMs () const;
     void setDataDescriptionId (Int id);
     void setFilling (Bool isFilling);
     void setLsrInfo (const Block <Int> & channelGroupNumber,
@@ -130,11 +131,15 @@ protected:
 
 private:
 
+    mutable Vector<MDirection>     azelCached_p;      // mutable because it is a cached value
+    mutable Double                 azelCachedTime_p;  // mutable because it is a cached value
     Block<Int>                     channelGroupNumber_p;
     Block<Int>                     channelIncrement_p;
     Block<Int>                     channelStart_p;
     Block<Int>                     channelWidth_p;
     Int                            dataDescriptionId_p;
+    mutable Vector<Float>          feedpaCached_p;      // mutable because it is a cached value
+    mutable Double                 feedpaCachedTime_p;  // mutable because it is a cached value
     Bool                           isFilling_p;
     Vector<Double>                 lsrFrequency_p; // calculated by getTopoFreqs if velSelection_p
     MEpoch                         mEpoch_p;
@@ -149,6 +154,8 @@ private:
     Int                            nRowChunk_p;
     //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;
+    mutable Vector<Float>          parangCached_p;      // mutable because it is a cached value
+    mutable Double                 parangCachedTime_p;  // mutable because it is a cached value
     Int                            polarizationId_p;
     Vector<Float>                  receptor0Angle_p;
     Vector<Double>                 selFreq_p;

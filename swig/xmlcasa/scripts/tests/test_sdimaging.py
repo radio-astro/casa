@@ -597,7 +597,5 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
         self._checkstats(self.outfile,refstats)
 
 def suite():
-#     return [sdimaging_test0,sdimaging_test1,
-#             sdimaging_test2,sdimaging_test3]
-    return [sdimaging_test1,
-            sdimaging_test2,sdimaging_test3,sdimaging_test0]
+    return [sdimaging_test0,sdimaging_test1,
+            sdimaging_test2,sdimaging_test3]

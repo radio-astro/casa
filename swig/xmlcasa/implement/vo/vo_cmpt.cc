@@ -74,10 +74,12 @@ vo::data(std::vector<std::string> resources,
 //
 //
 
-casac::record
+//casac::record
+std::vector<casac::record>
 vo::registry(string keywords,
 	     string service){
-	casac::record rstat;
+	//casac::record rstat;
+  std::vector<casac::record> rstat;
   stringstream sql;
   if(service == string("CONE")){
 	  sql << "cone" << ends;
@@ -122,7 +124,11 @@ vo::registry(string keywords,
 	  if(clev)subrec.insert("clev", string(clev));
 	  ostringstream oss;
 	  oss << i << ends;
-	  rstat.insert(oss.str(), subrec);
+	  //rstat.insert(oss.str(), subrec);
+	  //vector<casac::record>::iterator it;
+	  //it = rstat.begin();
+	  //rstat.insert(it, subrec);
+	  rstat.push_back(subrec);
 	  if(title)delete title;
 	  if(surl)delete surl;
 	  if(rtype)delete rtype;

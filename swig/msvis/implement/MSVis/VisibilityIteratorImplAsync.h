@@ -256,7 +256,9 @@ protected:
                    Double timeInterval,
                    Bool writable);
 
+
     void fillVisBuffer();
+    const MeasurementSet & getMs() const;
     void readComplete ();
     void saveMss (const Block<MeasurementSet> & mss);
     void saveMss (const MeasurementSet & ms);
@@ -296,6 +298,9 @@ public:
     ~ViWriteImplAsync ();
 
     VisibilityIteratorWriteImpl * clone () const;
+
+    void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
+
 
     // Set/modify the flags in the data.
     // This will flag all channels in the original data that contributed to

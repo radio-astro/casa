@@ -485,16 +485,60 @@ namespace casa {
 	os << LogIO::WARN << "Scan Number is 0. Note that by convention scan numbers in ASDMs should start at 1." << LogIO::POST;
 	warned = True;
       }
-      
+
+      // find the first occurence of the timestamp which has the most baselines
+      uInt theSampleStartRow = 0;
+      {
+	uInt maxNRows = 0;
+	
+	uInt mainTabRowX=startRow; 
+
+	while(mainTabRowX <= endRow){
+	
+	  DDId = dataDescId()(mainTabRowX);
+	  if(DDId != theDDId){ // skip all other Data Description Ids
+	    mainTabRowX++;
+	    continue;
+	  }
+	  FId = fieldId()(mainTabRowX);
+	  if(FId != theFieldId){ // skip all other Field Ids
+	    mainTabRowX++;
+	    continue;
+	  }
+	  
+	  Double theTStamp = time()(mainTabRowX);
+	  uInt sRow = mainTabRowX;
+	  uInt nRows = 0;
+	  while(mainTabRowX < nMainTabRows 
+		&& time()(mainTabRowX)==theTStamp){
+	    DDId = dataDescId()(mainTabRowX);
+	    if(DDId != theDDId){ // skip all other Data Description Ids
+	      mainTabRowX++;
+	      continue;
+	    }
+	    FId = fieldId()(mainTabRowX);
+	    if(FId != theFieldId){ // skip all other Field Ids
+	      mainTabRowX++;
+	      continue;
+	    }
+	    nRows++;
+	    mainTabRowX++;
+	  }
+	  if(nRows>maxNRows){
+	    maxNRows = nRows;
+	    theSampleStartRow = sRow;
+	  }
+	} // end while
+      }
+
       // determine actual number of baselines and antennas
-      // assume that the first timestamp has complete information
       // (at the same time also fill the stateId vector)
       unsigned int numAutoCorrs = 0;
       unsigned int numBaselines = 0;
       unsigned int numAntennas = 0;
       vector<Int> ant;
       {
-	uInt i = startRow;
+	uInt i = theSampleStartRow;
 	Double thisTStamp = time()(i); 
 	while(i<nMainTabRows && time()(i)== thisTStamp){
 	  
@@ -850,6 +894,60 @@ namespace casa {
 	  //	    actualDurations.push_back((int64_t)floor(interval()(iRow))*1000.);
 	}// end loop over rows in this timestamp sorted by baseline
 	
+
+	// fill with flagged entries in case there are missing baselines in the MS
+	uInt nToAdd1 = 0;
+	uInt nToAdd2 = 0;
+	uInt nToAdd3 = 0;
+	uInt nToAdd4 = 0;
+	uInt nToAdd5 = 0;
+	uInt nToAdd6 = 0;
+
+	if(flags.size()<bpFlagsSize){
+	  nToAdd1 = bpFlagsSize - flags.size();
+	  for(uInt i=0; i<nToAdd1; i++){
+	    flags.push_back(1);
+	  }
+	}	
+	if(actualTimes.size()<bpTimesSize){
+	  nToAdd2 = bpTimesSize-actualTimes.size();
+	  for(uInt i=0; i<nToAdd2; i++){
+	    actualTimes.push_back(0);
+	  }
+	}
+	if(actualDurations.size()<bpDurSize){
+	  nToAdd3 = bpDurSize-actualDurations.size();
+	  for(uInt i=0; i<nToAdd3; i++){
+	    actualDurations.push_back(0);
+	  }
+	}
+	if(zeroLags.size()<bpLagsSize){
+	  nToAdd4 = bpLagsSize-zeroLags.size();
+	  for(uInt i=0; i<nToAdd4; i++){
+	    zeroLags.push_back(0.);
+	  }
+	}
+	if(crossData.size()<bpCrossSize){
+	  nToAdd5 = bpCrossSize-crossData.size();
+	  for(uInt i=0; i<nToAdd5; i++){
+	    crossData.push_back(0.);
+	  }
+	}
+	if(autoData.size()<bpAutoSize){
+	  nToAdd6 = bpAutoSize-autoData.size();
+	  for(uInt i=0; i<nToAdd6; i++){
+	    autoData.push_back(0.);
+	  }
+	}
+
+	if(nToAdd1+nToAdd2+nToAdd3+nToAdd4+nToAdd5+nToAdd6>0){
+	  os << LogIO::WARN << "Encountered missing integrations for some baselines in MS."
+	     << " Will fill with flagged entries (" << nToAdd1 << ", " << nToAdd2 << ", " << nToAdd3 
+	     << ", "<< nToAdd4 << ", "<< nToAdd5 << ", "<< nToAdd6 << ")" << LogIO::POST; 
+	}
+	
+	// finally write the integration
+	  
 	if(verbosity_p>1){
 	  cout << "Sizes: " << endl;
 	  cout << "   flags " << flags.size() << endl;
@@ -860,25 +958,33 @@ namespace casa {
 	  cout << "   autoData " << autoData.size() << endl;
 	}
 
-	sdmdow.addIntegration(integrationNum,    // integration's index.
-			      timev,             // midpoint
-			      intervalv,         // time interval
-			      flags,             // flags binary data 
-			      actualTimes,       // actual times binary data      
-			      actualDurations,   // actual durations binary data          
-			      zeroLags,          // zero lags binary data                 
-			      crossData,    // cross data (can be short or int)  
-			      autoData);         // single dish data.  
+	try{
 
-	integrationNum++;
-	datasize += flags.size() * sizeof(unsigned int)
-	  + actualTimes.size() * sizeof( int64_t )
-	  + actualDurations.size() * sizeof( int64_t )
-	  + zeroLags.size() * sizeof( float )
-	  + crossData.size() * sizeof( float )
-	  + autoData.size() * sizeof( float );
-	numIntegrations++;
-	
+	  sdmdow.addIntegration(integrationNum,    // integration's index.
+				timev,             // midpoint
+				intervalv,         // time interval
+				flags,             // flags binary data 
+				actualTimes,       // actual times binary data      
+				actualDurations,   // actual durations binary data          
+				zeroLags,          // zero lags binary data                 
+				crossData,    // cross data (can be short or int)  
+				autoData);         // single dish data.  
+
+	  integrationNum++;
+	  datasize += flags.size() * sizeof(unsigned int)
+	    + actualTimes.size() * sizeof( int64_t )
+	    + actualDurations.size() * sizeof( int64_t )
+	    + zeroLags.size() * sizeof( float )
+	    + crossData.size() * sizeof( float )
+	    + autoData.size() * sizeof( float );
+	  numIntegrations++;
+
+	}
+	catch(asdmbinaries::SDMDataObjectWriterException x){
+	  os << LogIO::WARN << "Error writing ASDM:" << x.getMessage() << endl
+	     << "Will try to continue ..."
+	     << LogIO::POST; 
+	}
 	// (Note: subintegrations are used only for channel averaging to gain time res. by sacrificing spec. res.)
 	
       } // end while 

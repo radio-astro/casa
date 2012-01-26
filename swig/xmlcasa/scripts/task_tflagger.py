@@ -31,7 +31,9 @@ def tflagger(vis,
              diameter,      # mode shadow parameter
              lowerlimit,    # mode elevation parameters
              upperlimit,
-             timecutoff,    # mode tfcrop parameters
+             ntime,         # mode tfcrop
+             combinescans,
+             timecutoff,    
              freqcutoff,
              timefit,
              freqfit,
@@ -51,8 +53,6 @@ def tflagger(vis,
              maxabs,
              spwchan,
              spwcorr,
-             ntime,         # taken only once per session
-             combinescans,
              display,
              format,
              writeflags,
@@ -62,7 +62,7 @@ def tflagger(vis,
              flagbackup):
 
     # Global parameters
-    # vis, ntime, savepars, flagbackup, display, writeflags, sequential
+    # vis, savepars, flagbackup, display, writeflags, sequential
 
     # 
     # Schema
@@ -102,8 +102,8 @@ def tflagger(vis,
         # Verify the ntime value
         newtime = 0.0
         if type(ntime) == float or type(ntime) == int:
-            if ntime == 0:
-                raise Exception, 'Parameter ntime cannot be 0.0'
+            if ntime <= 0:
+                raise Exception, 'Parameter ntime cannot be < = 0'
             else:
                 # units are seconds
                 newtime = float(ntime)
@@ -141,9 +141,10 @@ def tflagger(vis,
 
         # Select the data 
         if (debug):
-            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
+            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
                         type(feed),type(scan),type(antenna),type(uvrange),
-                        type(timerange),type(correlation),type(intent),type(observation))
+                        type(timerange),type(correlation),type(intent),type(observation),
+                        type(ntime), type(combinescans))
 
         casalog.post('selection is: field=%s spw=%s array=%s feed=%s scan=%s antenna=%s uvrange=%s' \
                      'timerange=%s correlation=%s intent=%s observation=%s'%(field,spw,array, \
@@ -176,17 +177,13 @@ def tflagger(vis,
         sel_pars = ''
         sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
-                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
-                    ' ntime='+str(ntime)
+                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
                     
-        if combinescans:
-            sel_pars = sel_pars+' combinescans='+str(combinescans)
-            
         # Setup global parameters in the agent's dictionary
         agent_pars = {}
         agent_pars['name'] = agent_name
         agent_pars['mode'] = mode
-        agent_pars['sequential'] = sequential
+#        agent_pars['sequential'] = sequential
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -242,6 +239,10 @@ def tflagger(vis,
             sel_pars = sel_pars+' lowerlimit='+str(lowerlimit)+' upperlimit='+str(upperlimit)
 
         elif mode == 'tfcrop':
+            agent_pars['ntime'] = newtime
+            if combinescans:
+                agent_pars['combinescans'] = combinescans            
+
             agent_pars['expression'] = expression
             agent_pars['datacolumn'] = datacolumn
             agent_pars['timecutoff'] = timecutoff
@@ -256,13 +257,17 @@ def tflagger(vis,
 
             expr = delspace(expression, '_')
             
-            sel_pars = sel_pars+' expression=\"'+str(expr)+'\" datacolumn='+datacolumn+\
+            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+' expression=\"'+\
+                       str(expr)+'\" datacolumn='+datacolumn+\
                       ' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
                       ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
                       ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
                       ' halfwin='+str(halfwin)
 
         elif mode == 'extend':
+            agent_pars['ntime'] = newtime
+            if combinescans:
+                agent_pars['combinescans'] = combinescans            
             agent_pars['extendpols'] = extendpols
             agent_pars['growtime'] = growtime
             agent_pars['growfreq'] = growfreq
@@ -271,7 +276,8 @@ def tflagger(vis,
             agent_pars['flagnearfreq'] = flagnearfreq
             casalog.post('Extend mode is active')
             
-            sel_pars = sel_pars+' extendpols='+str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
+            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+' extendpols='+\
+                       str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
                        str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
                        ' flagnearfreq='+str(flagnearfreq)
             
@@ -342,7 +348,7 @@ def tflagger(vis,
         
         # Run the tool
         casalog.post('Running the tflagger tool')
-        summary_stats = tflocal.run(writeflags)
+        summary_stats = tflocal.run(writeflags, sequential)
 
 
         # Write the current parameters as flag commands to output
@@ -420,11 +426,12 @@ def writeCMD(msfile, flagcmd, outfile):
 
     # Save to a text file
     if outfile != '':
-        try:
-            ffout = open(outfile, 'w')
-        except:
-            raise Exception, 'Error opening output file ' \
-                + outfile
+        if os.path.exists(outfile):
+            raise Exception, 'Output file already exists, ' \
+                            + outfile
+            
+        ffout = open(outfile, 'w')
+
         try:
             casalog.post('Will save the current parameters to '+outfile)
             print >> ffout, '%s' % flagcmd
@@ -504,7 +511,7 @@ def getLinePars(cmdline):
             if xval == '':
                 continue
             else:
-                newstr = newstr+' '+xkey+'='+xval+' '
+                newstr = newstr+xkey+'='+xval+' '
             
     else:
         casalog.post('String of parameters is empty','WARN')   

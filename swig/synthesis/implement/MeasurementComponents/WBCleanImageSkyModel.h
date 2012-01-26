@@ -165,6 +165,8 @@ private:
   //Int storeTLAsImg(String fileName, TempLattice<Float> &TL, ImageInterface<Float>& theImg);
   //Int storeTLAsImg(String fileName, TempLattice<Complex> &TL, ImageInterface<Float>& theImg);
 
+  Bool mergeDataError(ImageInterface<Float> &data, ImageInterface<Float> &error, const String &outImg);
+
   Bool resizeWorkArrays(Int length);
   
   Int makeSpectralPSFs(SkyEquation& se);

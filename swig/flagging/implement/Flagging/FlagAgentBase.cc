@@ -31,6 +31,7 @@
 #include <flagging/Flagging/FlagAgentQuack.h>
 #include <flagging/Flagging/FlagAgentShadow.h>
 #include <flagging/Flagging/FlagAgentExtension.h>
+#include <flagging/Flagging/FlagAgentRFlag.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -219,68 +220,69 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	{
 		writePrivateFlags = true;
 	}
-
 	// Manual mode
-	if (mode.compare("manualflag")==0)
+	else if (mode.compare("manualflag")==0)
 	{
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Unflag mode
-	if (mode.compare("unflag")==0)
+	else if (mode.compare("unflag")==0)
 	{
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,false);
 		return agent;
 	}
-
 	// TimeFreqCrop
-	if (mode.compare("tfcrop")==0)
+	else if (mode.compare("tfcrop")==0)
 	{
 		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Clip
-	if (mode.compare("clip")==0)
+	else if (mode.compare("clip")==0)
 	{
 		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Summary
-	if (mode.compare("summary")==0)
+	else if (mode.compare("summary")==0)
 	{
 		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
 		return agent;
 	}
-
 	// Elevation
-	if (mode.compare("elevation")==0)
+	else if (mode.compare("elevation")==0)
 	{
 		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Quack
-	if (mode.compare("quack")==0)
+	else if (mode.compare("quack")==0)
 	{
 		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Shadow
-	if (mode.compare("shadow")==0)
+	else if (mode.compare("shadow")==0)
 	{
 		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Extension
-	if (mode.compare("extend")==0)
+	else if (mode.compare("extend")==0)
 	{
 		FlagAgentExtension* agent = new FlagAgentExtension(dh,config);
 		return agent;
+	}
+	// Extension
+	else if (mode.compare("rflag")==0)
+	{
+		FlagAgentRFlag* agent = new FlagAgentRFlag(dh,config);
+		return agent;
+	}
+	else
+	{
+		cerr << "FlagAgentFactory::" << __FUNCTION__ << " Mode " << mode << " not supported" << endl;
 	}
 
 	return ret;
@@ -1177,11 +1179,11 @@ FlagAgentBase::chunkSummary()
 		msFlags_p +=  chunkFlags_p;
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 
 	}
@@ -1191,7 +1193,7 @@ FlagAgentBase::chunkSummary()
 	if (chunkNaNs_p > 0)
 	{
 		msNaNs_p += chunkNaNs_p;
-		*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> "  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
 	}
 
 	chunkFlags_p = 0;
@@ -1209,17 +1211,17 @@ FlagAgentBase::msSummary()
 	{
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 	}
 
 	if (msNaNs_p > 0)
 	{
-		*logger_p << logLevel_p << "=> " << agentName_p.c_str()  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> "  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
 	}
 
 	msFlags_p = 0;
@@ -1891,6 +1893,13 @@ FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &vi
 	return false;
 }
 
+FlagReport
+FlagAgentBase::getReport()
+{
+	// TODO: This class must be re-implemented in the derived classes
+        return FlagReport(String("none"),agentName_p);
+}
+
 
 ////////////////////////////////////
 /// FlagAgentList implementation ///
@@ -2044,6 +2053,18 @@ void FlagAgentList::setCheckMode(bool enable)
 	}
 
 	return;
+}
+
+FlagReport FlagAgentList::gatherReports()
+{
+        FlagReport combinedReport("list");
+
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+                combinedReport.addReport( (*iterator_p)->getReport() );
+	}
+
+	return combinedReport;
 }
 
 

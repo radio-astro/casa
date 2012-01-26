@@ -1422,6 +1422,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     }
     catch(...){
       nullSelect_p = true;
+      this->unlock();
       // A "bad selection" warning message could be sent to the logger here,
       // but it should be left to the calling function to do that.  For
       // example, this function is called by setjy, and it would be a mistake
@@ -1485,7 +1486,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     Int maxnchan = 0;
     for (uInt i=0;i<nchanvec.nelements();i++) {
       maxnchan=max(nchanvec[i],maxnchan);
-    }	  
+    }
     
     spwchansels_p.resize(nms,nspw,maxnchan);
     spwchansels_p.set(0);

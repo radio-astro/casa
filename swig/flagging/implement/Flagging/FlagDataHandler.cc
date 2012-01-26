@@ -32,12 +32,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Default constructor
 // -----------------------------------------------------------------------
 FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double timeInterval):
-		msname_p(msname), iterationApproach_p(iterationApproach), timeInterval_p(timeInterval)
+		msname_p(msname), iterationApproach_p(iterationApproach)
 {
 	// Initialize logger
 	logger_p = new LogIO(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
 
-	// Default verbosity
+	// Set time interval
+	setTimeInterval(timeInterval);
+
+	// Deactivate profiling by default
 	profiling_p = false;
 
 	// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
@@ -722,6 +725,25 @@ FlagDataHandler::setDataSelection(Record record)
 	return true;
 }
 
+// -----------------------------------------------------------------------
+// Set time interval
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::setTimeInterval(Double timeInterval)
+{
+	logger_p->origin(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
+	if (timeInterval >= 0)
+	{
+		timeInterval_p = timeInterval;
+		*logger_p << LogIO::NORMAL << "Set time interval to " << timeInterval_p << "s"<<LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::WARN << "Provided time interval is negative: " <<  timeInterval << LogIO::POST;
+	}
+
+	return;
+}
 
 // -----------------------------------------------------------------------
 // Generate selected Measurement Set

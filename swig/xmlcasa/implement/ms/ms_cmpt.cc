@@ -313,9 +313,9 @@ ms::reset()
       // Set itsMS to the original MS, and re-make the various objects
       // that hold the pointer to working MS
       *itsMS = MeasurementSet(*itsOriginalMS);
-      if(itsSel)  {delete itsSel;  itsSel = new MSSelector();}
-      if(itsFlag) {delete itsFlag; itsFlag = new MSFlagger();}
-      if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();itsMSS->resetMS(*itsMS);}
+      if(itsSel)  {delete itsSel;}  itsSel = new MSSelector();
+      if(itsFlag) {delete itsFlag;} itsFlag = new MSFlagger();
+      if (itsMSS) {delete itsMSS;}  itsMSS = new MSSelection();itsMSS->resetMS(*itsMS);
       itsSel->setMS(*itsMS);
       itsFlag->setMSSelector(*itsSel);
     }
@@ -415,6 +415,7 @@ ms::close()
       delete itsOriginalMS;  itsOriginalMS = new MeasurementSet();
       itsSel->setMS(*itsMS);
       itsFlag->setMSSelector(*itsSel);
+      if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();};
       rstat = True;
     }
   } catch (AipsError x) {
@@ -432,7 +433,7 @@ ms::name()
    std::string rstat("none");
    try {
       if(!detached()){
-         rstat = itsMS->tableName();
+         rstat = itsOriginalMS->tableName();
       }
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -560,7 +561,9 @@ ms::summary(::casac::record& header, const bool verbose, const std::string& list
   try {
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
-       MSSummary mss(itsMS);
+       // pass the original MS name to the constructor
+       // so that it is correctly printed in the output
+       MSSummary mss(itsMS, itsOriginalMS->tableName());
        casa::Record outRec;
        if (listfile != ""){
     	   File diskfile(listfile);
@@ -602,7 +605,6 @@ ms::summary(::casac::record& header, const bool verbose, const std::string& list
     	   // Remove the extra fields (time, severity) from the output string
     	   String str(ostr.str());
     	   str.gsub (Regex(".*\tINFO\t[+]?\t"), "");
-//    	   cout << str;
 
     	   // Write output string to a file
     	   ofstream file;
@@ -3206,9 +3208,9 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
     }
   catch (AipsError x)
     {
-      Table::relinquishAutoLocks(True);
       RETHROW(x);
     }
+  Table::relinquishAutoLocks(True);
   return retVal;
 }
 
