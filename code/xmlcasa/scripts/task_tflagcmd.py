@@ -107,10 +107,14 @@ def tflagcmd(
             else:
                 msfile = inputfile
 
-            # Read only the selected rows for action=apply
+            # Read only the selected rows for action = apply and 
+            # always read APPLIED=True for action = unapply
             if action == 'apply':
                 myflagcmd = readFromTable(msfile, myflagrows=tablerows, useapplied=useapplied,
                                           myreason=reason)
+            elif action == 'unapply':
+                myflagcmd = readFromTable(msfile, useapplied=True, myreason=reason)
+                # Check if selected rows are in read dictionary               
             else:
                 myflagcmd = readFromTable(msfile, useapplied=useapplied, myreason=reason)
                                     
@@ -186,9 +190,15 @@ def tflagcmd(
 
             listmode = ''
 
+
         # Specific for some actions
         # Get the commands as a list of strings with reason back in
         if action == 'apply' or action == 'unapply'  or action == 'save':               
+            # If there are no flag commands, exit
+            if myflagcmd.__len__() == 0:
+                casalog.post("There are no flag commands in input","ERROR")
+                return
+            
             # Turn into command string list (add reason back in)
             mycmdlist = []
             keylist = myflagcmd.keys()
@@ -220,10 +230,9 @@ def tflagcmd(
             apply = True
 
             # Get the list of parameters
-            if myflagcmd.__len__() > 0:
-                for key in myflagcmd.keys():
-                    cmdline = myflagcmd[key]['cmd']
-                    cmdlist.append(cmdline)
+            for key in myflagcmd.keys():
+                cmdline = myflagcmd[key]['cmd']
+                cmdlist.append(cmdline)
                     
             # Get the union of all selection parameters
             unionpars = getUnion(cmdlist)
@@ -695,7 +704,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     
     # Parameters for each mode
     manualpars = []
-    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'clipchanavg']
+    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg']
     quackpars = ['quackinterval','quackmode','quackincrement']
     shadowpars = ['diameter']
     elevationpars = ['lowerlimit','upperlimit'] 
@@ -704,13 +713,11 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
                   'flagneartime','flagnearfreq']
     
-#    allpars = []
-#    allpars = allpars+clippars+quackpars+shadowpars+elevationpars+tfcroppars+extendpars
-
+        
     # dictionary of successful command lines to save to outfile
     savelist = {}
-            
-    # Setup the agent for each input line
+
+    # Setup the agent for each input line    
     for key in myflagcmd.keys():
         cmdline = myflagcmd[key]['cmd']
         casalog.post('cmdline for key%s'%key, 'DEBUG')
@@ -901,12 +908,19 @@ def fixType(params):
     # Give correct types to parameters because they
     # are written as string in the dictionary
 
+    # quack parameters
     if params.has_key('quackmode') and not params['quackmode'] in ['beg'
             , 'endb', 'end', 'tail']:
         raise Exception, \
             "Illegal value '%s' of parameter quackmode, must be either 'beg', 'endb', 'end' or 'tail'" \
             % params['quackmode']
+    if params.has_key('quackinterval'):
+        params['quackinterval'] = float(params['quackinterval'])        
+    if params.has_key('quackincrement'):
+        if type(params['quackincrement']) == str:
+            params['quackincrement'] = eval(params['quackincrement'].capitalize())
 
+    # clip parameters
     if params.has_key('clipminmax'):
         value01 = params['clipminmax']
         # turn string into [min,max] range
@@ -915,47 +929,51 @@ def fixType(params):
         r = value.split(',')
         rmin = float(r[0])
         rmax = float(r[1])
-        params['clipminmax'] = [rmin, rmax]
-        
+        params['clipminmax'] = [rmin, rmax]        
     if params.has_key('clipoutside'):
         if type(params['clipoutside']) == str:
             params['clipoutside'] = eval(params['clipoutside'].capitalize())
         else:
             params['clipoutside'] = params['clipoutside']
-#    if params.has_key('expression'):
-#        # Unpack using underscore, e.g. 'ABS_RR' => 'ABS RR'
-#        if params['expression'].count('_') == 1:
-#            v = params['expression'].split('_')
-#            params['expression'] = v[0] + ' ' + v[1]
-#        elif params['expression'] == 'all':
-#            print " expression='all' not implemented, using ABS RR"
-#            params['expression'] = 'ABS RR'
-
-    if params.has_key('clipchanavg'):
-        if type(params['clipchanavg']) == str:
-            params['clipchanavg'] = eval(params['clipchanavg'].capitalize())
+    if params.has_key('channelavg'):
+        params['channelavg'] = eval(params['channelavg'].capitalize())
             
-    if params.has_key('quackinterval'):
-        params['quackinterval'] = float(params['quackinterval'])
-        
-    if params.has_key('quackincrement'):
-        if type(params['quackincrement']) == str:
-            params['quackincrement'] = eval(params['quackincrement'].capitalize())
             
+    # shadow parameter
     if params.has_key('diameter'):
         params['diameter'] = float(params['diameter'])
         
+    # elevation parameters
     if params.has_key('lowerlimit'):
-        params['lowerlimit'] = float(params['lowerlimit'])
-        
+        params['lowerlimit'] = float(params['lowerlimit'])        
     if params.has_key('upperlimit'):
         params['upperlimit'] = float(params['upperlimit'])
         
+    # extend parameters
     if params.has_key('extendpols'):        
         params['extendpols'] = eval(params['extendpols'].capitalize())
+    if params.has_key('growtime'):
+        params['growtime'] = float(params['growtime'])
+    if params.has_key('growfreq'):
+        params['growfreq'] = float(params['growfreq'])
+    if params.has_key('growaround'):
+        params['growaround'] = eval(params['growaround'].capitalize())
+    if params.has_key('flagneartime'):
+        params['flagneartime'] = eval(params['flagneartime'].capitalize())
+    if params.has_key('flagnearfreq'):
+        params['flagnearfreq'] = eval(params['flagnearfreq'].capitalize())
 
+    # tfcrop parameters
     if params.has_key('combinescans'):
-        params['combinescans'] = eval(params['combinescans'].capitalize())
+        params['combinescans'] = eval(params['combinescans'].capitalize())        
+    if params.has_key('timecutoff'):
+        params['timecutoff'] = float(params['timecutoff'])       
+    if params.has_key('freqcutoff'):
+        params['freqcutoff'] = float(params['freqcutoff'])        
+    if params.has_key('maxnpieces'):
+        params['maxnpieces'] = int(params['maxnpieces'])        
+    if params.has_key('halfwin'):
+        params['halfwin'] = int(params['halfwin'])
         
 
 def readNtime(params):
@@ -2169,5 +2187,14 @@ def plotflags(
         pl.savefig(plotname, dpi=150)
     return
 
+
+#def validateRow(cmds, row):
+#    '''Check if list of selected rows exist in inputfile'''
+#
+#    for k in cmds.keys():
+        
     
+    
+    
+        
     

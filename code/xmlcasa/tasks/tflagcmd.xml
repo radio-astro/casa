@@ -334,7 +334,8 @@
 
               This operation will unapply the flags chosen by inputmode.
               If inputmode='table' from the MS FLAG_CMD, it will set
-              these flags to APPLIED=False.
+              these flags to APPLIED=False. It reads also the rows set
+              to APPLIED=True, even if useapplied is set to False.
               
               In order to guarantee that only the data selected in the command
               is unapplied, the framework will first unapply the selected rows
