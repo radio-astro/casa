@@ -7,7 +7,6 @@
 double rgauss( void );
 
 #include <calanalysis/CalAnalysis/CalStats.h>
-#include <calanalysis/CalAnalysis/CalStatsDerived.h>
 
 using namespace casa;
 
@@ -24,32 +23,10 @@ int main( void ) {
   IPosition oShape( 3, uiNumPol, uiNumFreq, uiNumTime );
 
 
-  // Initialize the input data cube (constant across frequency axis)
+  // Initialize the frequency abscissa
 
-  Cube<DComplex> oData( oShape );
-
-  for ( uInt p=0; p<uiNumPol; p++ ) {
-    for ( uInt t=0; t<uiNumTime; t++ ) {
-      Double dData = 1.0 + 0.1*((Double) rand())/((Double) RAND_MAX);
-      for ( uInt f=0; f<uiNumFreq; f++ ) {
-        oData.operator()(p,f,t) = DComplex( dData+0.1*rgauss(), 0.1*rgauss() );
-      }
-    }
-  }
-
-
-  // Initialize the input data error cube
-
-  Cube<DComplex> oDataErr( oShape );
-
-  for ( uInt p=0; p<uiNumPol; p++ ) {
-    for ( uInt t=0; t<uiNumTime; t++ ) {
-      Double dDataErr = 0.1;
-      for ( uInt f=0; f<uiNumFreq; f++ ) {
-        oDataErr.operator()(p,f,t) = DComplex( dDataErr, dDataErr );
-      }
-    }
-  }
+  Vector<Double> oFreq( uiNumFreq );
+  for ( uInt f=0; f<uiNumFreq; f++ ) oFreq[f] = f*2.0E+06 + 10.0E+09;
 
 
   // Initialize the input flag cube
@@ -57,17 +34,34 @@ int main( void ) {
   Cube<Bool> oFlag( oShape, False );
 
 
+  // Initialize the input data and data error cubes (constant across frequency
+  // axis)
+
+  Cube<Double> oData( oShape );
+  Cube<Double> oDataErr( oShape );
+
+  for ( uInt p=0; p<uiNumPol; p++ ) {
+    for ( uInt t=0; t<uiNumTime; t++ ) {
+      Double dData = 10.0 * ( ((Double) rand())/((Double) RAND_MAX) - 0.5 );
+      for ( uInt f=0; f<uiNumFreq; f++ ) {
+        Double dDataErr = 0.10 * ( ((Double) rand())/((Double) RAND_MAX)+0.5 );
+        oDataErr(p,f,t) = dDataErr;
+        Double df = (oFreq[f]-10.0E+09) / 5.0E+08;
+        oData(p,f,t) = dData + df + oDataErr(p,f,t)*rgauss();
+      }
+      oData(p,5,t) = 200.0;
+      oData(p,27,t) = -120.0;
+      oFlag(p,5,t) = True;
+      oFlag(p,27,t) = True;
+    }
+  }
+
+
   // Initialize the polarization (feed) abscissa
 
   Vector<String> oFeed( uiNumPol );
   oFeed[0] = "R";
   oFeed[1] = "L";
-
-
-  // Initialize the frequency abscissa
-
-  Vector<Double> oFreq( uiNumFreq );
-  for ( uInt f=0; f<uiNumFreq; f++ ) oFreq[f] = f*2.0E+06 + 10.0E+09;
 
 
   // Initialize the time abscissa
@@ -85,11 +79,17 @@ int main( void ) {
   // Create a CalStatsReal object and get the data iterated along the
   // polarization and time axes
 
-  CalStatsAmp oCSA( oData, oDataErr, oFlag, oFeed, oFreq, oTime, eAxis, True );
+  CalStats oCS( oData, oDataErr, oFlag, oFeed, oFreq, oTime, eAxis );
 
-  CalStats::ARG<CalStats::NONE> oArg;
-  Matrix<CalStats::OUT<CalStats::NONE> >
-      oMatrix( oCSA.stats<CalStats::NONE>( oArg ) );
+
+  // Calculate the unweighted least-squares average for each iteration
+
+  CalStats::ARG<CalStatsFitter::FIT> oArg;
+  oArg.eOrder = CalStatsFitter::LINEAR;
+  oArg.eType = CalStatsFitter::ROBUST;
+  oArg.eWeight = CalStatsFitter::YES;
+  Matrix<CalStats::OUT<CalStatsFitter::FIT> >
+      oMatrix( oCS.stats<CalStatsFitter::FIT>( oArg ) );
 
 
   // Write the data for each polarization and time axis
@@ -108,15 +108,15 @@ int main( void ) {
       cout << oMatrix(p,t).oData.oData << endl << flush;
       cout << oMatrix(p,t).oData.oDataErr << endl << flush;
       cout << oMatrix(p,t).oData.oFlag << endl << flush;
-//      cout << oMatrix(p,t).oFit.bValid << ' '
-//           << oMatrix(p,t).oFit.eOrder << ' '
-//           << oMatrix(p,t).oFit.eType << ' '
-//           << oMatrix(p,t).oFit.eWeight << ' '
-//           << oMatrix(p,t).oFit.fRedChi2 << endl << flush;
-//      cout << oMatrix(p,t).oFit.oPars << endl << flush;
-//      cout << oMatrix(p,t).oFit.oCovars << endl << flush;
-//      cout << oMatrix(p,t).oFit.oModel << endl << flush;
-//      cout << oMatrix(p,t).oFit.oRes << endl << flush;
+      cout << oMatrix(p,t).oT.bValid << ' '
+           << oMatrix(p,t).oT.eOrder << ' '
+           << oMatrix(p,t).oT.eType << ' '
+           << oMatrix(p,t).oT.eWeight << ' '
+           << oMatrix(p,t).oT.dRedChi2 << endl << flush;
+      cout << oMatrix(p,t).oT.oPars << endl << flush;
+      cout << oMatrix(p,t).oT.oCovars << flush;
+      cout << oMatrix(p,t).oT.oModel << endl << flush;
+      cout << oMatrix(p,t).oT.oRes << endl << flush;
     }
   }
 
