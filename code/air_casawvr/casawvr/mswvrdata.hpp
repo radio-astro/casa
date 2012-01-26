@@ -16,7 +16,7 @@
 #include <set>
 #include <vector>
 
-#include "../src/apps/antennautils.hpp"
+#include "almawvr/antennautils.hpp"
 #include "msfwds.hpp"
 
 namespace LibAIR {

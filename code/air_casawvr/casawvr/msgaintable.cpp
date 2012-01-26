@@ -18,7 +18,7 @@
 #include <calibration/CalTables/CalHistRecord.h>
 
 #include "almawvr/libair_main.hpp"
-#include "../src/apps/arraygains.hpp"
+#include "almawvr/arraygains.hpp"
 #include "msspec.hpp"
 #include "../src/dispersion.hpp"
 

@@ -15,7 +15,7 @@
 #include <string>
 #include <boost/bimap.hpp>
 
-#include "../src/apps/antennautils.hpp"
+#include "almawvr/antennautils.hpp"
 #include "msfwds.hpp"
 
 namespace LibAIR {

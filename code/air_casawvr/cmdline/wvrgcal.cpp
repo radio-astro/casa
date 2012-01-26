@@ -31,12 +31,12 @@
 #include "../casawvr/msutils.hpp"
 #include "../casawvr/msspec.hpp"
 #include "../casawvr/msantdata.hpp"
-#include "../src/apps/arraydata.hpp"
-#include "../src/apps/arraygains.hpp"
+#include "almawvr/arraydata.hpp"
+#include "almawvr/arraygains.hpp"
 #include "almawvr/almaabs.hpp"
-#include "../src/apps/dtdlcoeffs.hpp"
+#include "almawvr/dtdlcoeffs.hpp"
 #include "almawvr/almaresults.hpp"
-#include "../src/apps/segmentation.hpp"
+#include "almawvr/segmentation.hpp"
 #include "almawvr/libair_main.hpp"
 
 #ifdef BUILD_HD5

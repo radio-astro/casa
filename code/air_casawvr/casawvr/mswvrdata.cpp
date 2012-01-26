@@ -21,7 +21,7 @@
 #include <casacore/ms/MeasurementSets/MSProcessor.h>
 #include <casacore/ms/MeasurementSets/MSColumns.h>
 
-#include "../src/apps/arraydata.hpp"
+#include "almawvr/arraydata.hpp"
 #include "casawvr_errs.hpp"
 
 
