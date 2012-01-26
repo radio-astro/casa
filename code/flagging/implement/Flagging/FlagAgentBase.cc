@@ -220,75 +220,69 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	{
 		writePrivateFlags = true;
 	}
-
 	// Manual mode
-	if (mode.compare("manualflag")==0)
+	else if (mode.compare("manualflag")==0)
 	{
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Unflag mode
-	if (mode.compare("unflag")==0)
+	else if (mode.compare("unflag")==0)
 	{
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,false);
 		return agent;
 	}
-
 	// TimeFreqCrop
-	if (mode.compare("tfcrop")==0)
+	else if (mode.compare("tfcrop")==0)
 	{
 		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Clip
-	if (mode.compare("clip")==0)
+	else if (mode.compare("clip")==0)
 	{
 		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Summary
-	if (mode.compare("summary")==0)
+	else if (mode.compare("summary")==0)
 	{
 		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
 		return agent;
 	}
-
 	// Elevation
-	if (mode.compare("elevation")==0)
+	else if (mode.compare("elevation")==0)
 	{
 		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Quack
-	if (mode.compare("quack")==0)
+	else if (mode.compare("quack")==0)
 	{
 		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Shadow
-	if (mode.compare("shadow")==0)
+	else if (mode.compare("shadow")==0)
 	{
 		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags,true);
 		return agent;
 	}
-
 	// Extension
-	if (mode.compare("extend")==0)
+	else if (mode.compare("extend")==0)
 	{
 		FlagAgentExtension* agent = new FlagAgentExtension(dh,config);
 		return agent;
 	}
-
 	// Extension
-	if (mode.compare("rflag")==0)
+	else if (mode.compare("rflag")==0)
 	{
 		FlagAgentRFlag* agent = new FlagAgentRFlag(dh,config);
 		return agent;
+	}
+	else
+	{
+		cerr << "FlagAgentFactory::" << __FUNCTION__ << " Mode " << mode << " not supported" << endl;
 	}
 
 	return ret;
