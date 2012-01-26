@@ -28,6 +28,8 @@ Modification history:
               CalStatsPhase.
 2011 Dec 11 - Nick Elias, NRAO
               Class CalStatsReal added.
+2012 Jan 25 - Nick Elias, NRAO
+              Logging capability added.  Error checking added.
 
 */
 
@@ -93,14 +95,18 @@ and CalStatsPhase classes, anyway.
 
 Inputs:
 -------
-oData           - This Cube<Float> object contains the data.
-oDataErr        - This Cube<Float> object contains the data errors.
-oFlag           - This Cube<Bool> object contains the flags.
-oFeed           - This Vector<String> object is the feed abscissae.
-oFrequency      - This Vector<Float> object is the frequency abscissae.
-oTime           - This Vector<Float> object is the time abscissae.
-eAxisIterUserID - This CalStats::AXIS enum contains either the FREQUENCY or TIME
-                  iteration axes (user defined).
+oData           - This reference to a Cube<Double> instance contains the data.
+oDataErr        - This reference to a Cube<Double> instance contains the data
+                  errors.
+oFlag           - This reference to a Cube<Bool> instance contains the flags.
+oFeed           - This reference to a Vector<String> instance is the feed
+                  abscissae.
+oFrequency      - This reference to a Vector<Double> instance is the frequency
+                  abscissae.
+oTime           - This reference to a Vector<Double> instance is the time
+                  abscissae.
+eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
+                  FREQUENCY or TIME iteration axes (user defined).
 
 Outputs:
 --------
@@ -110,44 +116,55 @@ Modification history:
 ---------------------
 2011 Dec 11 - Nick Elias, NRAO
               Initial version.
+2012 Jan 25 - Nick Elias, NRAO
+              Error checking added.
 
 */
 
 // -----------------------------------------------------------------------------
 
-CalStatsReal::CalStatsReal( const Cube<Float>& oData,
-    const Cube<Float>& oDataErr, const Cube<Bool>& oFlag,
-    const Vector<String>& oFeed, const Vector<Float>& oFrequency,
-    const Vector<Float>& oTime, const CalStats::AXIS& eAxisIterUser )
+CalStatsReal::CalStatsReal( const Cube<Double>& oData,
+    const Cube<Double>& oDataErr, const Cube<Bool>& oFlag,
+    const Vector<String>& oFeed, const Vector<Double>& oFrequency,
+    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser )
     : CalStats() {
 
   // Create an instance of the CalStats base class constructor and copy its
   // state to this CalStatsReal instance
 
-  CalStats oCS( oData, oDataErr, oFlag, oFeed, oFrequency, oTime,
-      eAxisIterUser );
+  CalStats* poCS;
 
-  oAxisIterID = IPosition( oCS.axisIterID() );
-  eAxisNonIterID = oCS.axisNonIterID();
+  try {
+    poCS = new CalStats( oData, oDataErr, oFlag, oFeed, oFrequency, oTime,
+        eAxisIterUser );
+  }
+  catch ( AipsError oAE ) {
+    throw( oAE );
+  }
 
-  oAxisIterFeed = Vector<String>( oCS.axisIterFeed() );
-  oAxisIterUser = Vector<Float>( oCS.axisIterUser() );
-  oAxisNonIter = Vector<Float>( oCS.axisNonIter() );
+  oAxisIterID = IPosition( poCS->axisIterID() );
+  eAxisNonIterID = poCS->axisNonIterID();
 
-  oStatsShape = IPosition( oCS.statsShape() );
+  oAxisIterFeed = Vector<String>( poCS->axisIterFeed() );
+  oAxisIterUser = Vector<Double>( poCS->axisIterUser() );
+  oAxisNonIter = Vector<Double>( poCS->axisNonIter() );
 
-  poData = new Cube<Float>( oCS.data() );
-  poDataErr = new Cube<Float>( oCS.dataErr() );
-  poFlag = new Cube<Bool>( oCS.flag() );
+  oStatsShape = IPosition( poCS->statsShape() );
 
-  poDataIter = new ArrayIterator<Float>( *poData, oAxisIterID, False );
+  poData = new Cube<Double>( poCS->data() );
+  poDataErr = new Cube<Double>( poCS->dataErr() );
+  poFlag = new Cube<Bool>( poCS->flag() );
+
+  poDataIter = new ArrayIterator<Double>( *poData, oAxisIterID, False );
   poDataIter->reset();
 
-  poDataErrIter = new ArrayIterator<Float>( *poDataErr, oAxisIterID, False );
+  poDataErrIter = new ArrayIterator<Double>( *poDataErr, oAxisIterID, False );
   poDataErrIter->reset();
 
   poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
+
+  delete poCS;
 
 
   // Return
@@ -254,16 +271,20 @@ amplitude errors do not include them.
 
 Inputs:
 -------
-oData           - This Cube<Float> object contains the data.
-oDataErr        - This Cube<Float> object contains the data errors.
-oFlag           - This Cube<Bool> object contains the flags.
-oFeed           - This Vector<String> object is the feed abscissae.
-oFrequency      - This Vector<Float> object is the frequency abscissae.
-oTime           - This Vector<Float> object is the time abscissae.
-eAxisIterUserID - This CalStats::AXIS enum contains either the FREQUENCY or TIME
-                  iteration axes (user defined).
-bNorm           - This Bool contains the normalization flag (True = normalize,
-                  False = don't normalize).
+oData           - This reference to a Cube<Double> instance contains the data.
+oDataErr        - This reference to a Cube<Double> instance contains the data
+                  errors.
+oFlag           - This reference to a Cube<Bool> instance contains the flags.
+oFeed           - This reference to a Vector<String> instance is the feed
+                  abscissae.
+oFrequency      - This reference to a Vector<Double> instance is the frequency
+                  abscissae.
+oTime           - This reference to a Vector<Double> instance is the time
+                  abscissae.
+eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
+                  FREQUENCY or TIME iteration axes (user defined).
+bNorm           - This reference to a Bool variable contains the normalization
+                  flag (True = normalize, False = don't normalize).
 
 Outputs:
 --------
@@ -273,41 +294,43 @@ Modification history:
 ---------------------
 2011 Nov 15 - Nick Elias, NRAO
               Initial version.
+2012 Jan 25 - Nick Elias, NRAO
+              Error checking added.
 
 */
 
 // -----------------------------------------------------------------------------
 
-CalStatsAmp::CalStatsAmp( const Cube<Complex>& oData,
-    const Cube<Complex>& oDataErr, const Cube<Bool>& oFlag,
-    const Vector<String>& oFeed, const Vector<Float>& oFrequency,
-    const Vector<Float>& oTime, const CalStats::AXIS& eAxisIterUser,
+CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oData,
+    const Cube<DComplex>& oDataErr, const Cube<Bool>& oFlag,
+    const Vector<String>& oFeed, const Vector<Double>& oFrequency,
+    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser,
     const Bool& bNorm ) : CalStats() {
 
   // Calculate the amplitudes
 
-  Cube<Float> oAmp( amplitude( oData ) );
+  Cube<Double> oAmp( amplitude( oData ) );
 
 
   // Calculate the amplitude errors
 
-  Cube<Float> oR( real( oData ) );
-  Cube<Float> oErrR( real( oDataErr ) );
+  Cube<Double> oR( real( oData ) );
+  Cube<Double> oErrR( real( oDataErr ) );
 
-  Cube<Float> oI( imag( oData ) );
-  Cube<Float> oErrI( imag( oDataErr ) );
+  Cube<Double> oI( imag( oData ) );
+  Cube<Double> oErrI( imag( oDataErr ) );
 
-  Cube<Float> oPhase( phase( oData ) );
-  Cube<Float> oCos( cos( oPhase ) );
-  Cube<Float> oSin( sin( oPhase ) );
+  Cube<Double> oPhase( phase( oData ) );
+  Cube<Double> oCos( cos( oPhase ) );
+  Cube<Double> oSin( sin( oPhase ) );
 
-  Cube<Float> oAmpErr( sqrt( square(oCos*oErrR) + square(oSin*oErrI) ) );
+  Cube<Double> oAmpErr( sqrt( square(oCos*oErrR) + square(oSin*oErrI) ) );
 
 
   // Normalize the amplitudes and their errors, if selected.  The input flag
   // cube cannot be modified, so make a local copy.
 
-  Cube<Bool> oFlagCopy( oFlag );
+  Cube<Bool> oFlagCopy( oFlag.copy() );
 
   if ( bNorm ) norm( oAmp, oAmpErr, oFlagCopy );
 
@@ -315,30 +338,39 @@ CalStatsAmp::CalStatsAmp( const Cube<Complex>& oData,
   // Create an instance of the CalStats base class constructor and copy its
   // state to this CalStatsAmp instance
 
-  CalStats oCS( oAmp, oAmpErr, oFlagCopy, oFeed, oFrequency, oTime,
-      eAxisIterUser );
+  CalStats* poCS;
 
-  oAxisIterID = IPosition( oCS.axisIterID() );
-  eAxisNonIterID = oCS.axisNonIterID();
+  try {
+    poCS = new CalStats( oAmp, oAmpErr, oFlagCopy, oFeed, oFrequency, oTime,
+        eAxisIterUser );
+  }
+  catch ( AipsError oAE ) {
+    throw( oAE );
+  }
 
-  oAxisIterFeed = Vector<String>( oCS.axisIterFeed() );
-  oAxisIterUser = Vector<Float>( oCS.axisIterUser() );
-  oAxisNonIter = Vector<Float>( oCS.axisNonIter() );
+  oAxisIterID = IPosition( poCS->axisIterID() );
+  eAxisNonIterID = poCS->axisNonIterID();
 
-  oStatsShape = IPosition( oCS.statsShape() );
+  oAxisIterFeed = Vector<String>( poCS->axisIterFeed() );
+  oAxisIterUser = Vector<Double>( poCS->axisIterUser() );
+  oAxisNonIter = Vector<Double>( poCS->axisNonIter() );
 
-  poData = new Cube<Float>( oCS.data() );
-  poDataErr = new Cube<Float>( oCS.dataErr() );
-  poFlag = new Cube<Bool>( oCS.flag() );
+  oStatsShape = IPosition( poCS->statsShape() );
 
-  poDataIter = new ArrayIterator<Float>( *poData, oAxisIterID, False );
+  poData = new Cube<Double>( poCS->data() );
+  poDataErr = new Cube<Double>( poCS->dataErr() );
+  poFlag = new Cube<Bool>( poCS->flag() );
+
+  poDataIter = new ArrayIterator<Double>( *poData, oAxisIterID, False );
   poDataIter->reset();
 
-  poDataErrIter = new ArrayIterator<Float>( *poDataErr, oAxisIterID, False );
+  poDataErrIter = new ArrayIterator<Double>( *poDataErr, oAxisIterID, False );
   poDataErrIter->reset();
 
   poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
+
+  delete poCS;
 
 
   // Return
@@ -400,44 +432,54 @@ than 1.
 NB: The normalization is applied only when the number of unflagged frequencies
 is greater than 1.
 
+NB: All flags corresponding to amplitudes less then 1.0E-08 times the peak
+amplitude (along the FREQUENCY axis) are updated to True.
+
 Inputs:
 -------
-oAmp    - This reference to a Cube<Float> obtain contains the amplitudes.
-oAmpErr - This reference to a Cube<Float> obtain contains the amplitude errors.
-oFlag   - This Cube<Bool> object contains the flags.
+oAmp    - This reference to a Cube<Double> instance contains the amplitudes.
+oAmpErr - This reference to a Cube<Double> instance contains the amplitude
+          errors.
+oFlag   - This reference to a Cube<Bool> instance contains the flags.
 
 Outputs:
 --------
-oAmp    - This reference to a Cube<Float> obtain contains the amplitudes.
-oAmpErr - This reference to a Cube<Float> obtain contains the amplitude errors.
-oFlag   - This Cube<Bool> object contains the flags.
+oAmp    - This reference to a Cube<Double> instance contains the amplitudes.
+oAmpErr - This reference to a Cube<Double> instance contains the amplitude
+          errors.
+oFlag   - This reference to a Cube<Bool> instance contains the flags.
 
 Modification history:
 ---------------------
 2011 Dec 11 - Nick Elias, NRAO
               Initial version.
+2012 Jan 25 - Nick Elias, NRAO
+              Logging capability added.
 
 */
 
 // -----------------------------------------------------------------------------
 
-void CalStatsAmp::norm( Cube<Float>& oAmp, Cube<Float>& oAmpErr,
+void CalStatsAmp::norm( Cube<Double>& oAmp, Cube<Double>& oAmpErr,
     Cube<Bool>& oFlag ) {
 
-  // Return if the length of the FREQUENCY axis is unity or if all of the
-  // amplitudes are flagged
+  // Return if the length of the FREQUENCY axis is unity
 
-  if ( oAmp.shape()[CalStats::FREQUENCY] <= 1 ) return;
-
-  if ( allEQ( oFlag, True ) ) return;
+  if ( oAmp.shape()[CalStats::FREQUENCY] <= 1 ) {
+    LogIO log( LogOrigin( "CalStatsAmp", "norm", WHERE ) );
+    log << LogIO::WARN
+        << "Frequency axis has a dimension of 1, no normalization"
+        << LogIO::POST;
+    return;
+  }
 
 
   // Create iterators for the amplitude, amplitude error, and flag cubes
 
   IPosition oIterShape( 2, (ssize_t) CalStats::FEED, (ssize_t) CalStats::TIME );
 
-  ArrayIterator<Float> oAmpIter( oAmp, oIterShape, False );
-  ArrayIterator<Float> oAmpErrIter( oAmpErr, oIterShape, False );
+  ArrayIterator<Double> oAmpIter( oAmp, oIterShape, False );
+  ArrayIterator<Double> oAmpErrIter( oAmpErr, oIterShape, False );
   ArrayIterator<Bool> oFlagIter( oFlag, oIterShape, False );
 
 
@@ -448,22 +490,22 @@ void CalStatsAmp::norm( Cube<Float>& oAmp, Cube<Float>& oAmpErr,
     uInt uiNumFrequency = oAmpIter.array().nelements();
     IPosition oShape( 1, uiNumFrequency );
 
-    MaskedArray<Float> oAmpM( oAmpIter.array(), !oFlagIter.array() );
-    Float fAmpMax = max( oAmpM.getCompressedArray() );
+    MaskedArray<Double> oAmpM( oAmpIter.array(), !oFlagIter.array() );
+    Double dAmpMax = max( oAmpM.getCompressedArray() );
 
     Vector<Bool> oFlagV( oFlagIter.array().copy().reform(oShape) );
-    Vector<Bool> oFlagLow( oAmpIter.array() <= (Float) 1.0E-08*fAmpMax );
+    Vector<Bool> oFlagLow( oAmpIter.array() <= (Double) 1.0E-08*dAmpMax );
 
     oFlagV = oFlagV || oFlagLow;
     oFlagIter.array() = oFlagV;
 
-    Vector<Float> oAmpTemp( oAmpIter.array().copy().reform(oShape) );
-    Vector<Float> oAmpErrTemp( oAmpErrIter.array().copy().reform(oShape) );
+    Vector<Double> oAmpTemp( oAmpIter.array().copy().reform(oShape) );
+    Vector<Double> oAmpErrTemp( oAmpErrIter.array().copy().reform(oShape) );
 
     for ( uInt f=0; f<uiNumFrequency; f++ ) {
       if ( !oFlagV[f] ) {
-        oAmpTemp[f] /= fAmpMax;
-	oAmpErrTemp[f] /= fAmpMax;
+        oAmpTemp[f] /= dAmpMax;
+	oAmpErrTemp[f] /= dAmpMax;
       }
     }
 
@@ -553,16 +595,20 @@ amplitude errors do not include them.
 
 Inputs:
 -------
-oData           - This Cube<Float> object contains the data.
-oDataErr        - This Cube<Float> object contains the data errors.
-oFlag           - This Cube<Bool> object contains the flags.
-oFeed           - This Vector<String> object is the feed abscissae.
-oFrequency      - This Vector<Float> object is the frequency abscissae.
-oTime           - This Vector<Float> object is the time abscissae.
-eAxisIterUserID - This CalStats::AXIS enum contains either the FREQUENCY or TIME
-                  iteration axes (user defined).
-bUnwrap         - This Bool contains the unwrapping flag (True = unwrap, False =
-                  don't unwrap).
+oData           - This reference to a Cube<Double> instance contains the data.
+oDataErr        - This reference to a Cube<Double> instance contains the data
+                  errors.
+oFlag           - This reference to a Cube<Bool> instance contains the flags.
+oFeed           - This reference to a Vector<String> instance is the feed
+                  abscissae.
+oFrequency      - This reference to a Vector<Double> instance is the frequency
+                  abscissae.
+oTime           - This reference to a Vector<Double> instance is the time
+                  abscissae.
+eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
+                  FREQUENCY or TIME iteration axes (user defined).
+bUnwrap         - This reference to a Bool variable contains the unwrapping flag
+                  (True = unwrap, False = don't unwrap).
 
 Outputs:
 --------
@@ -574,38 +620,40 @@ Modification history:
               Initial version. 
 2011 Dec 11 - Nick Elias, NRAO
               Flag updates according to low amplitude was added.
+2012 Jan 25 - Nick Elias, NRAO
+              Error checking added.
 
 */
 
 // -----------------------------------------------------------------------------
 
-CalStatsPhase::CalStatsPhase( const Cube<Complex>& oData,
-    const Cube<Complex>& oDataErr, const Cube<Bool>& oFlag,
-    const Vector<String>& oFeed, const Vector<Float>& oFrequency,
-    const Vector<Float>& oTime, const CalStats::AXIS& eAxisIterUser,
+CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oData,
+    const Cube<DComplex>& oDataErr, const Cube<Bool>& oFlag,
+    const Vector<String>& oFeed, const Vector<Double>& oFrequency,
+    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser,
     const Bool& bUnwrap ) : CalStats() {
 
   // Calculate the phases and create its iterator
 
   IPosition oIterShape( 2, (ssize_t) CalStats::FEED, (ssize_t) CalStats::TIME );
 
-  Cube<Float> oPhase( phase(oData) );
-  ArrayIterator<Float> oPhaseIter( oPhase, oIterShape, False );
+  Cube<Double> oPhase( phase(oData) );
+  ArrayIterator<Double> oPhaseIter( oPhase, oIterShape, False );
 
 
   // Create iterators for the input data, data error, flag , and phase error
   // cubes.  The input cubes cannot be modified, so copies are made.  Create the
   // phase error cube (initialized to M_PI) and its iterator.
 
-  ReadOnlyArrayIterator<Complex> oDataIter( oData, oIterShape, False );
+  ReadOnlyArrayIterator<DComplex> oDataIter( oData, oIterShape, False );
 
-  ReadOnlyArrayIterator<Complex> oDataErrIter( oDataErr, oIterShape, False );
+  ReadOnlyArrayIterator<DComplex> oDataErrIter( oDataErr, oIterShape, False );
 
-  Cube<Bool> oFlagCopy( oFlag );
+  Cube<Bool> oFlagCopy( oFlag.copy() );
   ArrayIterator<Bool> oFlagIter( oFlagCopy, oIterShape, False );
 
-  Cube<Float> oPhaseErr( oPhase.shape(), (Float) M_PI );
-  ArrayIterator<Float> oPhaseErrIter( oPhaseErr, oIterShape, False );
+  Cube<Double> oPhaseErr( oPhase.shape(), (Double) M_PI );
+  ArrayIterator<Double> oPhaseErrIter( oPhaseErr, oIterShape, False );
 
 
   // Calculate the phase errors.  They require dividing by amplitude.  Update
@@ -619,29 +667,29 @@ CalStatsPhase::CalStatsPhase( const Cube<Complex>& oData,
     uInt uiNumFrequency = oDataIter.array().nelements();
     IPosition oShape( 1, uiNumFrequency );
 
-    Vector<Complex> oDataV( oDataIter.array().copy().reform(oShape) );
-    Vector<Complex> oDataErrV( oDataErrIter.array().copy().reform(oShape) );
+    Vector<DComplex> oDataV( oDataIter.array().copy().reform(oShape) );
+    Vector<DComplex> oDataErrV( oDataErrIter.array().copy().reform(oShape) );
 
-    Vector<Float> oR( real(oDataV) );
-    Vector<Float> oRErr( real(oDataErrV) );
+    Vector<Double> oR( real(oDataV) );
+    Vector<Double> oRErr( real(oDataErrV) );
 
-    Vector<Float> oI( imag(oDataV) );
-    Vector<Float> oIErr( imag(oDataErrV) );
+    Vector<Double> oI( imag(oDataV) );
+    Vector<Double> oIErr( imag(oDataErrV) );
 
-    Vector<Float> oPhaseV( oPhaseIter.array().copy().reform(oShape) );
-    Vector<Float> oPhaseErrV( oPhaseErrIter.array().copy().reform(oShape) );
+    Vector<Double> oPhaseV( oPhaseIter.array().copy().reform(oShape) );
+    Vector<Double> oPhaseErrV( oPhaseErrIter.array().copy().reform(oShape) );
 
-    Vector<Float> oCos( cos(oPhaseV) );
-    Vector<Float> oSin( sin(oPhaseV) );
+    Vector<Double> oCos( cos(oPhaseV) );
+    Vector<Double> oSin( sin(oPhaseV) );
 
-    Vector<Float> oAmp( sqrt(square(oR)+square(oI)) );
+    Vector<Double> oAmp( sqrt(square(oR)+square(oI)) );
 
-    Vector<Float> oMetricR = pow( oSin*oRErr, 2 );
-    Vector<Float> oMetricI = pow( oCos*oIErr, 2 );
-    Vector<Float> oMetric = sqrt( oMetricR+oMetricI );
+    Vector<Double> oMetricR = pow( oSin*oRErr, 2 );
+    Vector<Double> oMetricI = pow( oCos*oIErr, 2 );
+    Vector<Double> oMetric = sqrt( oMetricR+oMetricI );
 
     Vector<Bool> oFlagV( oFlagIter.array().copy().reform(oShape) );
-    Vector<Bool> oFlagLow( oAmp <= oMetric/((Float) M_PI) );
+    Vector<Bool> oFlagLow( oAmp <= oMetric/((Double) M_PI) );
 
     oFlagV = oFlagV || oFlagLow;
     oFlagIter.array() = oFlagV;
@@ -666,30 +714,39 @@ CalStatsPhase::CalStatsPhase( const Cube<Complex>& oData,
   // Create an instance of the CalStats base class constructor and copy its
   // state to this CalStatsPhase instance
 
-  CalStats oCS( oPhase, oPhaseErr, oFlagCopy, oFeed, oFrequency, oTime,
-      eAxisIterUser );
+  CalStats* poCS;
 
-  oAxisIterID = IPosition( oCS.axisIterID() );
-  eAxisNonIterID = oCS.axisNonIterID();
+  try {
+    poCS = new CalStats( oPhase, oPhaseErr, oFlagCopy, oFeed, oFrequency, oTime,
+        eAxisIterUser );
+  }
+  catch ( AipsError oAE ) {
+    throw( oAE );
+  }
 
-  oAxisIterFeed = Vector<String>( oCS.axisIterFeed() );
-  oAxisIterUser = Vector<Float>( oCS.axisIterUser() );
-  oAxisNonIter = Vector<Float>( oCS.axisNonIter() );
+  oAxisIterID = IPosition( poCS->axisIterID() );
+  eAxisNonIterID = poCS->axisNonIterID();
 
-  oStatsShape = IPosition( oCS.statsShape() );
+  oAxisIterFeed = Vector<String>( poCS->axisIterFeed() );
+  oAxisIterUser = Vector<Double>( poCS->axisIterUser() );
+  oAxisNonIter = Vector<Double>( poCS->axisNonIter() );
 
-  poData = new Cube<Float>( oCS.data() );
-  poDataErr = new Cube<Float>( oCS.dataErr() );
-  poFlag = new Cube<Bool>( oCS.flag() );
+  oStatsShape = IPosition( poCS->statsShape() );
 
-  poDataIter = new ArrayIterator<Float>( *poData, oAxisIterID, False );
+  poData = new Cube<Double>( poCS->data() );
+  poDataErr = new Cube<Double>( poCS->dataErr() );
+  poFlag = new Cube<Bool>( poCS->flag() );
+
+  poDataIter = new ArrayIterator<Double>( *poData, oAxisIterID, False );
   poDataIter->reset();
 
-  poDataErrIter = new ArrayIterator<Float>( *poDataErr, oAxisIterID, False );
+  poDataErrIter = new ArrayIterator<Double>( *poDataErr, oAxisIterID, False );
   poDataErrIter->reset();
 
   poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
+
+  delete poCS;
 
 
   // Return
@@ -753,32 +810,38 @@ is greater than 1.
 
 Inputs:
 -------
-oPhase     - This reference to an Cube<Float> obtain contains the phases.
-oFrequency - This Vector<Float> object is the frequency abscissa.
-oFlag      - This Cube<Bool> object contains the flags.
+oPhase     - This reference to an Cube<Double> instance contains the phases.
+oFrequency - This reference to a Vector<Double> instance is the frequency
+             abscissa.
+oFlag      - This reference to a Cube<Bool> instance contains the flags.
 
 Outputs:
 --------
-oPhase - This reference to an Cube<Float> obtain contains the phases.
+oPhase - This reference to an Cube<Double> instance contains the phases.
 
 Modification history:
 ---------------------
 2011 Nov 15 - Nick Elias, NRAO
               Initial stub version.
+2012 Jan 25 - Nick Elias, NRAO
+              Logging capability added.
 
 */
 
 // -----------------------------------------------------------------------------
 
-void CalStatsPhase::unwrap( Cube<Float>& oPhase,
-    const Vector<Float>& oFrequency, const Cube<Bool>& oFlag ) {
+void CalStatsPhase::unwrap( Cube<Double>& oPhase,
+    const Vector<Double>& oFrequency, const Cube<Bool>& oFlag ) {
 
-  // Return if the length of the FREQUENCY axis is unity or if all of the phases
-  // are flagged
+  // Return if the length of the FREQUENCY axis is unity
 
-  if ( oPhase.shape()[CalStats::FREQUENCY] <= 1 ) return;
-
-  if ( allEQ( oFlag, True ) ) return;
+  if ( oPhase.shape()[CalStats::FREQUENCY] <= 1 ) {
+    LogIO log( LogOrigin( "CalStatsPhase", "unwrap", WHERE ) );
+    log << LogIO::WARN
+        << "Frequency axis has a dimension of 1, no unwrapping"
+        << LogIO::POST;
+    return;
+  }
 
 
   // Unwrap the phases along the frequency axis
