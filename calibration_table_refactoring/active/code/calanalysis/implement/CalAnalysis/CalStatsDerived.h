@@ -25,6 +25,8 @@ Modification history:
 ---------------------
 2011 Nov 15 - Nick Elias, NRAO
               Initial version.
+2012 Jan 25 - Nick Elias, NRAO
+              Logging capability added.  Error checking added.
 
 */
 
@@ -85,9 +87,9 @@ class CalStatsReal : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsReal( const Cube<Float>& oData, const Cube<Float>& oDataErr,
+    CalStatsReal( const Cube<Double>& oData, const Cube<Double>& oDataErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
-        const Vector<Float>& oFrequency, const Vector<Float>& oTime,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const CalStats::AXIS& eAxisIterUser );
 
     // Destructor
@@ -139,16 +141,16 @@ class CalStatsAmp : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsAmp( const Cube<Complex>& oData, const Cube<Complex>& oDataErr,
+    CalStatsAmp( const Cube<DComplex>& oData, const Cube<DComplex>& oDataErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
-        const Vector<Float>& oFrequency, const Vector<Float>& oTime,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const CalStats::AXIS& eAxisIterUser, const Bool& bNorm );
 
     // Destructor
     ~CalStatsAmp( void );
 
     // Normalize member function
-    static void norm( Cube<Float>& oAmp, Cube<Float>& oAmpErr,
+    static void norm( Cube<Double>& oAmp, Cube<Double>& oAmpErr,
         Cube<Bool>& oFlag );
 
 };
@@ -197,16 +199,16 @@ class CalStatsPhase : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsPhase( const Cube<Complex>& oData, const Cube<Complex>& oDataErr,
+    CalStatsPhase( const Cube<DComplex>& oData, const Cube<DComplex>& oDataErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
-        const Vector<Float>& oFrequency, const Vector<Float>& oTime,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const CalStats::AXIS& eAxisIterUser, const Bool& bUnwrap );
 
     // Destructor
     ~CalStatsPhase( void );
 
     // Unwrap member function
-    static void unwrap( Cube<Float>& oPhase, const Vector<Float>& oFrequency,
+    static void unwrap( Cube<Double>& oPhase, const Vector<Double>& oFrequency,
         const Cube<Bool>& oFlag );
 
 };
