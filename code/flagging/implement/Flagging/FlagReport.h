@@ -53,7 +53,7 @@ class FlagReport : public Record
 
                 // Add and query data to plot, for FlagReports of type "plotraster","plotline","plotscatter"
                 Bool addData(Array<Float> data);
-                Bool addData(Vector<Float> xdata,Vector<Float> ydata);
+                Bool addData(Vector<Float> xdata,Vector<Float> ydata, String label);
                 Int nData();
 
 
