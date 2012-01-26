@@ -101,7 +101,7 @@ void ArrayColumnData<T>::initialize (uInt, uInt)
 template<class T>
 uInt ArrayColumnData<T>::ndimColumn() const
 {
-    Int ndim = columnDesc().ndim();
+    uInt ndim = columnDesc().ndim();
     return (ndim > 0  ?  ndim : shapeCol_p.nelements());
 }
 template<class T>
