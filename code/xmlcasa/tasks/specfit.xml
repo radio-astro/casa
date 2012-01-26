@@ -185,6 +185,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
             <value type="string"/>
         </param>
+        <param type="string" direction="in" name="logfile">
+            <description>File in which to log results. Default is not to write a logfile.</description>
+            <value/>
+        </param>
+        <param type="bool" direction="in" name="append" subparam="true">
+            <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
+            <value>True</value>
+        </param>
         <constraints>
             <when param="mask">
                 <notequals type="string" value="">
@@ -264,6 +272,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
                 </notequals>
             </when>
+            <when param="logfile">
+                <notequals type="string" value="">
+                    <default param="append">
+                        <value>True</value>
+                    </default>
+                </notequals>
+            </when>
     </constraints>
 </input>
 
@@ -315,6 +330,8 @@ gmampest     Initial estimate of individual gaussian amplitudes in gaussian mult
 gmcenterest  Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.
 gmfwhmest    Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.
 gmfix        Parameters of individual gaussians in gaussian multiplets to fix during fit.
+logfile      File in which to log results. Default is not to write a logfile.
+append       Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.
 
 This task simultaneously fits one or more gaussian singlets, one or more gaussian multiplets, and/or a polynomial to one dimensional profiles.
 A gaussian singlet is a gaussian whose parameters (amplitude, center position, and width) are all independent from any other

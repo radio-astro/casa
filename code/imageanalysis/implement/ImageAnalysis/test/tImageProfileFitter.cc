@@ -27,12 +27,12 @@
 
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 
+#include <casa/IO/FiledesIO.h>
+#include <casa/OS/Directory.h>
+#include <casa/OS/EnvVar.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/ImageUtilities.h>
 #include <lattices/Lattices/LatticeUtilities.h>
-
-#include <casa/OS/Directory.h>
-#include <casa/OS/EnvVar.h>
 
 #include <casa/namespace.h>
 
@@ -135,7 +135,8 @@ void testException(
 		    chans, stokes,
 		    mask, axis,
 		    ngauss,
-		    estimatesFilename
+		    estimatesFilename,
+		    SpectralList()
 		);
 		// should not get here, fail if we do.
 		exceptionThrown = false;
@@ -192,19 +193,13 @@ int main() {
     		"Exception if bogus stokes string given #2", goodImage, "",
     		"", "", "v", "", 2, 1
     	);
-    	/*
-    	testException(
-    		"Exception if no gaussians and no polynomial specified", goodImage, "",
-    		"", "", "", "", 2, 0
-    	);
-    	*/
     	{
 			writeTestString("Exception if no gaussians and no polynomial specified");
 			Bool exceptionThrown = true;
     		try {
     			ImageProfileFitter fitter(
     				&goodImage, "", 0, "", "", "", "", 2,
-    				0, ""
+    				0, "", SpectralList()
     			);
     			fitter.fit();
     			exceptionThrown = False;
@@ -227,7 +222,7 @@ int main() {
             LogIO log;
             fitter =  new ImageProfileFitter(
             	&goodImage, "", 0, "", "", "", "", 2,
-            	2, ""
+            	2, "", SpectralList()
             );
 
     		Record results = fitter->fit();
@@ -267,7 +262,7 @@ int main() {
     		writeTestString("test results of multi-pixel two gaussian fit");
     		ImageProfileFitter fitter(
     				&goodImage, "", 0, "", "", "", "", 2,
-    				2, ""
+    				2, "", SpectralList()
     		);
     		fitter.setDoMultiFit(True);
     		Record results = fitter.fit();
@@ -312,7 +307,7 @@ int main() {
 
     		ImageProfileFitter fitter(
     			&goodImage, "", 0, "", "", "", "", 2,
-    			2, ""
+    			2, "", SpectralList()
     		);
     		fitter.setDoMultiFit(True);
     		fitter.setAmpName(amp);
@@ -344,7 +339,7 @@ int main() {
     		writeTestString("test results of multi-pixel two gaussian, order 3 polynomial fit");
     		ImageProfileFitter fitter(
     			&goodPolyImage, "", 0, "", "", "", "", 2,
-    			2, ""
+    			2, "", SpectralList()
     		);
     		fitter.setPolyOrder(3);
     		fitter.setDoMultiFit(True);
@@ -380,7 +375,7 @@ int main() {
     		writeTestString("test results of multi-pixel two gaussian, order 3 polynomial fit with estimates file");
     		ImageProfileFitter fitter(
     			&goodPolyImage, "", 0, "", "", "", "", 2,
-    			2, datadir + "poly+2gauss_estimates.txt"
+    			2, datadir + "poly+2gauss_estimates.txt", SpectralList()
     		);
     		fitter.setPolyOrder(3);
     		fitter.setDoMultiFit(True);
@@ -456,7 +451,7 @@ int main() {
             LogIO log;
             fitter =  new ImageProfileFitter(
             	&goodImage, "", 0, "", "", "", "", 2,
-            	1, datadir + "goodProfileEstimatesFormat_2.txt"
+            	1, datadir + "goodProfileEstimatesFormat_2.txt", SpectralList()
             );
 
     		Record results = fitter->fit();
@@ -492,7 +487,7 @@ int main() {
             ImageProfileFitter *fitter;
             fitter =  new ImageProfileFitter(
             	&goodImage, "", 0, "", "", "", "", 2,
-            	1, datadir + "goodProfileEstimatesFormat_3.txt"
+            	1, datadir + "goodProfileEstimatesFormat_3.txt", SpectralList()
             );
 
     		Record results = fitter->fit();
@@ -679,6 +674,8 @@ int main() {
     		fitter.setAmpErrName(s + names[5]);
     		fitter.setIntegralName(s + names[6]);
     		fitter.setIntegralErrName(s + names[7]);
+    		String logfile = "mylog.txt";
+    		fitter.setLogfile(logfile);
 
     	    Record results = fitter.fit();
     	    writeTestString("test solution image results");
@@ -688,6 +685,10 @@ int main() {
                     datadir + names[i] + "_gm"
                 );
     		}
+    		Int fd = open(logfile.c_str(), O_RDWR | O_APPEND);
+    		FiledesIO fio(fd);
+    		// check that there's something in the log file
+    		AlwaysAssert(fio.length() > 1e4, AipsError);
     	}
 
         cout << endl << "All " << testNumber << " tests succeeded" << endl;

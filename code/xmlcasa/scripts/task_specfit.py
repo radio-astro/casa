@@ -76,7 +76,7 @@ def specfit(
 	gcenterest=None, gfwhmest=None, gfix=None,
 	gmncomps=None, gmampcon=None, gmcentercon=None,
     gmfwhmcon=None, gmampest=None, gmcenterest=None,
-    gmfwhmest=None, gmfix=None
+    gmfwhmest=None, gmfix=None, logfile=None, append=None
 ):
     casalog.origin('specfit')
     retval = None
@@ -100,7 +100,8 @@ def specfit(
 			gmncomps=gmncomps, gmampcon=gmampcon,
 			gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
 			gmampest=gmampest, gmcenterest=gmcenterest,
-			gmfwhmest=gmfwhmest, gmfix=gmfix
+			gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
+			append=append
 		)
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')

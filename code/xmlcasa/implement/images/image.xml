@@ -4023,6 +4023,16 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
             <value type="string"/>
         </param>
+        <param type="string" direction="in" name="logfile">
+            <description>File in which to log results. Default is not to write a logfile.</description>
+            <value/>
+        </param>
+        <param type="bool" direction="in" name="append">
+            <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
+            <value>true</value>
+        </param>
+        
+        
     </input>
 <returns type="any"><any type="record"/></returns>
 

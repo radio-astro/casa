@@ -124,6 +124,8 @@ ImageProfileFitter::ImageProfileFitter(
 ImageProfileFitter::~ImageProfileFitter() {}
 
 Record ImageProfileFitter::fit() {
+	// do this check here rather than at construction because _polyOrder can be set
+	// after construction but before fit() is called
     _checkNGaussAndPolyOrder();
     LogOrigin logOrigin(_class, __FUNCTION__);
     *_getLog() << logOrigin;
@@ -172,9 +174,16 @@ Record ImageProfileFitter::fit() {
 	}
 	_setResults();
     *_getLog() << logOrigin;
-    if (_logResults) {
-    	_resultsToLog();
+    if (_logResults || ! _getLogfile().empty()) {
+    	String resultsString = _getResultsString();
+    	if (_logResults) {
+    		*_getLog() << LogIO::NORMAL << resultsString << endl << LogIO::POST;
+    	}
+    	if (! _getLogfile().empty()) {
+    		_writeLogfile(resultsString);
+    	}
     }
+
 	return _results;
 }
 
@@ -214,6 +223,8 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 }
 
 void ImageProfileFitter::_finishConstruction() {
+    LogOrigin logOrigin(_class, __FUNCTION__);
+
     if (_fitAxis >= (Int)_getImage()->ndim()) {
     	*_getLog() << "Specified fit axis " << _fitAxis
     		<< " must be less than the number of image axes ("
@@ -231,6 +242,7 @@ void ImageProfileFitter::_finishConstruction() {
 				<< ") as fit axis" << LogIO::POST;
 		}
 	}
+    this->_setSupportsLogfile(True);
 }
 
 void ImageProfileFitter::_setResults() {
@@ -567,7 +579,7 @@ String ImageProfileFitter::_radToRa(Float ras) const {
 	return raStr;
 }
 
-void ImageProfileFitter::_resultsToLog() const {
+String ImageProfileFitter::_getResultsString() const {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << _summaryHeader();
@@ -635,7 +647,6 @@ void ImageProfileFitter::_resultsToLog() const {
 		! inIter.atEnd() && fitter != _fitters.end();
 		inIter++, fitter++
 	) {
-		summary.str("");
 		subimPos = inIter.position();
 		if (csysSub.toWorld(world, subimPos)) {
 			summary << "Fit   :" << endl;
@@ -720,8 +731,8 @@ void ImageProfileFitter::_resultsToLog() const {
 				}
 			}
 		}
-		*_getLog() << LogIO::NORMAL << summary.str() << endl << LogIO::POST;
 	}
+	return summary.str();
 }
 
 String ImageProfileFitter::_elementToString(
