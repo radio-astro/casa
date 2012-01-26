@@ -97,11 +97,11 @@ CalStatsFitter::FIT::FIT( void ) {
   eType = CalStatsFitter::TYPE_INIT;
   eWeight = CalStatsFitter::WEIGHT_INIT;
   bValid = False;
-  oPars = Vector<Float>();
+  oPars = Vector<Double>();
   oCovars = Matrix<Double>();
-  oModel = Vector<Float>();
-  oRes = Vector<Float>();
-  fRedChi2 = 0.0;
+  oModel = Vector<Double>();
+  oRes = Vector<Double>();
+  dRedChi2 = 0.0;
 
   return;
 
@@ -119,7 +119,8 @@ This construtor copies the input instance to the present instance.
 
 Inputs:
 -------
-oFit - This CalStatsFitter::FIT instance contains the fit information.
+oFit - This reference to a CalStatsFitter::FIT instance contains the fit
+       information.
 
 Outputs:
 --------
@@ -143,11 +144,11 @@ CalStatsFitter::FIT::FIT( const CalStatsFitter::FIT& oFit ) {
   eType = oFit.eType;
   eWeight = oFit.eWeight;
   bValid = oFit.bValid;
-  oPars = Vector<Float>( oFit.oPars );
-  oCovars = Matrix<Double>( oFit.oCovars );
-  oModel = Vector<Float>( oFit.oModel );
-  oRes = Vector<Float>( oFit.oRes );
-  fRedChi2 = oFit.fRedChi2;
+  oPars = Vector<Double>( oFit.oPars.copy() );
+  oCovars = Matrix<Double>( oFit.oCovars.copy() );
+  oModel = Vector<Double>( oFit.oModel.copy() );
+  oRes = Vector<Double>( oFit.oRes.copy() );
+  dRedChi2 = oFit.dRedChi2;
 
   return;
 
@@ -194,7 +195,8 @@ This function sets one instance to another.
 
 Inputs:
 -------
-oFit - This CalStatsFitter::FIT instance contains the fit information.
+oFit - This reference to a CalStatsFitter::FIT instance contains the fit
+       information.
 
 Outputs:
 --------
@@ -220,11 +222,11 @@ CalStatsFitter::FIT& CalStatsFitter::FIT::operator=(
     eType = oFit.eType;
     eWeight = oFit.eWeight;
     bValid = oFit.bValid;
-    oPars = Vector<Float>( oFit.oPars );
-    oCovars = Matrix<Double>( oFit.oCovars );
-    oModel = Vector<Float>( oFit.oModel );
-    oRes = Vector<Float>( oFit.oRes );
-    fRedChi2 = oFit.fRedChi2;
+    oPars = Vector<Double>( oFit.oPars.copy() );
+    oCovars = Matrix<Double>( oFit.oCovars.copy() );
+    oModel = Vector<Double>( oFit.oModel.copy() );
+    oRes = Vector<Double>( oFit.oRes.copy() );
+    dRedChi2 = oFit.dRedChi2;
   }
   
   return( *this );
