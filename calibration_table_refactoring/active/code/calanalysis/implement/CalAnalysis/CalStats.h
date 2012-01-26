@@ -11,12 +11,14 @@ This header file contains definitions for the CalStats class.
 
 Classes:
 --------
-CalStats - This class calculates statistics on CASA caltables.
+CalStats - This class calculates statistics of new CASA caltables.
 
 Modification history:
 ---------------------
 2011 Nov 11 - Nick Elias, NRAO
               Initial version.
+2012 Jan 25 - Nick Elias, NRAO
+              Logging capability added.  Error checking added.
 
 */
 
@@ -37,9 +39,11 @@ Modification history:
 #include <cmath>
 
 #include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
 
 #include <casa/aips.h>
+
+#include <casa/Exceptions/Error.h>
+#include <casa/Logging/LogIO.h>
 
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Array.h>
@@ -48,8 +52,6 @@ Modification history:
 #include <casa/Arrays/ArrayIter.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
-
-#include <calibration/CalTables/NewCalTable.h>
 
 #include <calanalysis/CalAnalysis/CalStatsFitter.h>
 
@@ -82,8 +84,9 @@ In a nutshell:
   future.
 * This class employs internal iterators to move uniformly through the data
   cubes.  This process is invisible to the user.
-* The input data are cubes whose axes are feed, frequency, and time.  There are
-  two iteration axes and one non-iteration axis, which means that this class
+* The input data are cubes whose axes are feed, frequency, and time.  The other
+  axes, such as antenna 1, antenna 2, etc. are handled in another class.  There
+  are two iteration axes and one non-iteration axis, which means that this class
   returns ONE-dimensional quantities (data, fits, or histograms) for each
   iteration.  This class does not deal with multi-dimensional fits and
   histograms.
@@ -101,8 +104,8 @@ In a nutshell:
 
 Nested classes:
 ---------------
-AXES - This nested class contains the axes for the CalStats class.
-DATA - This nested class contains the data for the CalStats class.
+AXES   - This nested class contains the axes for the CalStats class.
+DATA   - This nested class contains the data for the CalStats class.
 ARG<T> - This nested template class contains the arguments for the
          CalStats::stats<T>() template member function.
 OUT<T> - This nested template class contains the outputs for the
@@ -112,6 +115,10 @@ Class public member functions:
 ------------------------------
 CalStats  - This constructor saves input abscissae and data cubes to internal
             copies so that statistics can be calculated.
+CalStats  - This copy constructor is unused by this class and unavailable when
+            an instance is created.
+operator= - This operator= function is unused by this class and unavailable when
+            an instance is created.
 ~CalStats - This destructor deallocates the internal memory of an instance.
 
 Class public state member functions:
@@ -147,10 +154,6 @@ Class protected member functions:
 ---------------------------------
 CalStats  - This default constructor is unused by this class and unavailable
             when an instance is created.
-CalStats  - This copy constructor is unused by this class and unavailable when
-            an instance is created.
-operator= - This operator= function is unused by this class and unavailable when
-            an instance is created.
 next      - This member function simultaneously iterates all of the internal
             copies of the input data cubes.
 reset     - This member function simultaneously resets all of the internal
@@ -200,6 +203,9 @@ Modification history:
               removed because all of their duties are subsumed by the nested
               classes AXES, DATA, ARG, and OUT (they were previously
               structures).
+2012 Jan 25 - Nick Elias, NRAO
+              Created working versions of CalStats() (copy) and operator=() and
+              turned them into public member functions.
 
 */
 
@@ -224,7 +230,7 @@ class CalStats {
         CalStats::AXIS eAxisIterUserID; // User-defined iteration axis ID
         CalStats::AXIS eAxisNonIterID;  // Non-iteration axis ID
         String sFeed;                   // FEED axis value
-        Float fAxisIterUser;            // User-defined iteration axis value
+        Double dAxisIterUser;           // User-defined iteration axis value
         AXES( void );
         AXES( const AXES& oAxes );
         ~AXES( void );
@@ -234,10 +240,10 @@ class CalStats {
     // DATA nested class
     class DATA {
       public:
-        Vector<Float> oAbs;     // The abscissae (non-iteration axis values) 
-        Vector<Float> oData;    // The data
-        Vector<Float> oDataErr; // The data errors
-        Vector<Bool> oFlag;     // The flags
+        Vector<Double> oAbs;     // The abscissae (non-iteration axis values) 
+        Vector<Double> oData;    // The data
+        Vector<Double> oDataErr; // The data errors
+        Vector<Bool> oFlag;      // The flags
         DATA( void );
         DATA( const DATA& oDataIn );
         ~DATA( void );
@@ -269,10 +275,14 @@ class CalStats {
     };
 
     // Generic constructor
-    CalStats( const Cube<Float>& oData, const Cube<Float>& oDataErr,
+    CalStats( const Cube<Double>& oData, const Cube<Double>& oDataErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
-        const Vector<Float>& oFrequency, const Vector<Float>& oTime,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const AXIS& eAxisIterUser );
+
+    // Copy constructor and operator=() function
+    CalStats( const CalStats& oCalStats );
+    CalStats& operator=( const CalStats& oCalStats );
 
     // Destructor
     virtual ~CalStats( void );
@@ -283,15 +293,15 @@ class CalStats {
 
     // Axis value states
     Vector<String>& axisIterFeed( void ) const;
-    Vector<Float>& axisIterUser( void ) const;
-    Vector<Float>& axisNonIter( void ) const;
+    Vector<Double>& axisIterUser( void ) const;
+    Vector<Double>& axisNonIter( void ) const;
 
     // Output statistics cube shape state
     IPosition& statsShape( void ) const;
 
     // Input data states
-    Cube<Float>& data( void ) const;
-    Cube<Float>& dataErr( void ) const;
+    Cube<Double>& data( void ) const;
+    Cube<Double>& dataErr( void ) const;
     Cube<Bool>& flag( void ) const;
 
     // Calculate statistics (allowed T: CalStats::NONE gets data without
@@ -300,8 +310,8 @@ class CalStats {
     // stats() is the main user interface and statsWrap() is the supporting
     // wrapper.
     template <typename T> Matrix<OUT<T> >& stats( const ARG<T>& oArg );
-    template <typename T> T& statsWrap( const Vector<Float>& oAbs,
-        const Vector<Float>& oData, const Vector<Float>& oDataErr,
+    template <typename T> T& statsWrap( const Vector<Double>& oAbs,
+        const Vector<Double>& oData, const Vector<Double>& oDataErr,
         Vector<Bool>& oFlag, const ARG<T>& oArg );
 
   protected:
@@ -314,28 +324,24 @@ class CalStats {
 
     // Internal copies of the iteration and non-iteration axis values
     Vector<String> oAxisIterFeed; // Feed axis iteration axis values
-    Vector<Float> oAxisIterUser;  // User-defined iteration axis values
-    Vector<Float> oAxisNonIter;   // Non-iteration axis values
+    Vector<Double> oAxisIterUser; // User-defined iteration axis values
+    Vector<Double> oAxisNonIter;  // Non-iteration axis values
 
     // Shape of the output statistics cubes
     IPosition oStatsShape;
 
     // Internal copies of input parameter cubes
-    Cube<Float>* poData;
-    Cube<Float>* poDataErr;
+    Cube<Double>* poData;
+    Cube<Double>* poDataErr;
     Cube<Bool>* poFlag;
 
     // Input parameter cube iterators
-    ArrayIterator<Float>* poDataIter;
-    ArrayIterator<Float>* poDataErrIter;
+    ArrayIterator<Double>* poDataIter;
+    ArrayIterator<Double>* poDataErrIter;
     ArrayIterator<Bool>* poFlagIter;
 
-    // Unused constructors
+    // Unused constructor
     CalStats( void );
-    CalStats( const CalStats& oCalStats );
-
-    // Unused operator= function
-    CalStats& operator=( const CalStats& oCalStats );
 
     // Simultaneously increment and reset all input parameter cube iterators
     void next( void );
@@ -412,7 +418,7 @@ CalStats::OUT<T>& CalStats::OUT<T>::operator=( const CalStats::OUT<T>& oOut ) {
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// Start of CalStats::stats<T> template public fit member function
+// Start of CalStats::stats<T> template public statistics member function
 // -----------------------------------------------------------------------------
 
 /*
@@ -427,7 +433,8 @@ are CalStats::NONE (no statistics, just the input data), CalStatsFitter::FIT
 
 Inputs:
 -------
-oArg - This CalStats::ARG<T> instance contains the extra input parameters.
+oArg - This reference to a CalStats::ARG<T> instance contains the extra input
+       parameters.
 
 Outputs:
 --------
@@ -439,6 +446,8 @@ Modification history:
 2011 Nov 11 - Nick Elias, NRAO
               Initial version.  This template member function replaces the
               getData() and calcFit() member functions.
+2012 Jan 25 - Nick Elias, NRAO
+              Logging capability added.
 
 */
 
@@ -464,9 +473,9 @@ Matrix<CalStats::OUT<T> >& CalStats::stats( const CalStats::ARG<T>& oArg ) {
     uInt uiLength = poDataIter->array().nelements();
     IPosition oShape( 1, uiLength );
 
-    Vector<Float> oAbs( oAxisNonIter );
-    Vector<Float> oData( poDataIter->array().copy().reform(oShape) );
-    Vector<Float> oDataErr( poDataErrIter->array().copy().reform(oShape) );
+    Vector<Double> oAbs( oAxisNonIter.copy() );
+    Vector<Double> oData( poDataIter->array().copy().reform(oShape) );
+    Vector<Double> oDataErr( poDataErrIter->array().copy().reform(oShape) );
     Vector<Bool> oFlag( poFlagIter->array().copy().reform(oShape) );
 
     CalStats::OUT<T> oOut;
@@ -475,14 +484,22 @@ Matrix<CalStats::OUT<T> >& CalStats::stats( const CalStats::ARG<T>& oArg ) {
     oOut.oAxes.eAxisIterUserID = (CalStats::AXIS) oAxisIterID[1];
     oOut.oAxes.eAxisNonIterID = eAxisNonIterID;
     oOut.oAxes.sFeed = String( oAxisIterFeed[oPos[0]] );
-    oOut.oAxes.fAxisIterUser = oAxisIterUser[oPos[oAxisIterID[1]]];
+    oOut.oAxes.dAxisIterUser = oAxisIterUser[oPos[oAxisIterID[1]]];
 
-    oOut.oData.oAbs = Vector<Float>( oAbs );
-    oOut.oData.oData = Vector<Float>( oData );
-    oOut.oData.oDataErr = Vector<Float>( oDataErr );
+    oOut.oData.oAbs = Vector<Double>( oAbs );
+    oOut.oData.oData = Vector<Double>( oData );
+    oOut.oData.oDataErr = Vector<Double>( oDataErr );
     oOut.oData.oFlag = Vector<Bool>( oFlag );
 
-    oOut.oT = statsWrap<T>( oAbs, oData, oDataErr, oFlag, oArg );
+    try {
+      oOut.oT = statsWrap<T>( oAbs, oData, oDataErr, oFlag, oArg );
+    }
+    catch ( AipsError oAE ) {
+      LogIO log( LogOrigin( "CalStats", "stats<T>()", WHERE ) );
+      log << LogIO::WARN << oAE.getMesg() << ", iteration: "
+          << oPos.asVector() << ", continuing ..." << LogIO::POST;
+      oOut.oT = T();
+    }
 
     oOutIter.array() = Vector<CalStats::OUT<T> >( 1, oOut );
 
@@ -496,7 +513,7 @@ Matrix<CalStats::OUT<T> >& CalStats::stats( const CalStats::ARG<T>& oArg ) {
   reset();
 
 
-  // Return the reference to the Matrix<CalStats::OUT > instance
+  // Return the reference to the Matrix<CalStats::OUT<T> > instance
 
   poOut->removeDegenerate();
   Matrix<CalStats::OUT<T> >* poMatrix = (Matrix<CalStats::OUT<T> >*) poOut;
@@ -506,7 +523,7 @@ Matrix<CalStats::OUT<T> >& CalStats::stats( const CalStats::ARG<T>& oArg ) {
 }
 
 // -----------------------------------------------------------------------------
-// End of CalStats::stats<T> template public fit member function
+// End of CalStats::stats<T> template public statistics member function
 // -----------------------------------------------------------------------------
 
 };
