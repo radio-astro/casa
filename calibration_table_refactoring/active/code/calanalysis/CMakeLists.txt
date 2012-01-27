@@ -19,6 +19,7 @@
 #
 
 casa_add_library( calanalysis
+  implement/CalAnalysis/CalAnalysis.cc
   implement/CalAnalysis/CalStats.cc
   implement/CalAnalysis/CalStatsAXES.cc
   implement/CalAnalysis/CalStatsDATA.cc
@@ -33,3 +34,6 @@ casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats2.cc )
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats3.cc )
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats4.cc )
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats5.cc )
+casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats6.cc )
+casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats7.cc )
+casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStatsTab.cc )
