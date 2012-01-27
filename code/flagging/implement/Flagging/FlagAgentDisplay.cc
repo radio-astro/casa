@@ -593,10 +593,6 @@ FlagReport
 				reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
 				
 			      }// end of plotline or plotscatter
-			    else 
-			      {
-				*logger_p << "NO Display for : " << reportid << " : " << agentName << LogIO::POST;
-			      }
 				
 			    getReportUserInput();
 
@@ -611,7 +607,7 @@ FlagReport
 			      }
 			    else if(userChoice_p=="Prev")
 			      {
-				cout << "Prev Plot" << endl;
+				//cout << "Prev Plot" << endl;
 				if( reportid==0 )
 				  cout << "Already on first plot..." << endl;
                                 else
@@ -620,7 +616,7 @@ FlagReport
 			      }
 			    else if(userChoice_p=="Continue")
 			      {
-				cout << "Next Plot " << endl; 
+				//cout << "Next Plot " << endl; 
 				//if( reportid==nReports-1 )
 				//  cout << "Already on last plot..." << endl;
                                 //else
@@ -628,6 +624,10 @@ FlagReport
 			      }
 
 		      }// if valid plot type
+		    else
+		      {
+			*logger_p << LogIO::WARN <<  "No plot for Report : " << reportid << LogIO::POST;
+		      }
 		  }// if valid plot record.
 		else
 		  {
@@ -802,16 +802,15 @@ FlagReport
     
     while( ! exitEventLoop)
       {
-	
 	returnvalue = reportplotter_p->eventloop();
 	if(returnvalue == "Next" || returnvalue == "Prev" || returnvalue == "Quit")
 	  {
 	    userChoice_p = returnvalue; 
 	    exitEventLoop=True;
 	  }
-	else cout << "Unknown GUI choice" << endl;
+	else cout << "Unknown GUI choice (Not sure why eventloop is exiting without user-click... re-entering... )" << returnvalue << endl;
 	
-	cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p  << endl;
+	//cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p  << endl;
 	
       }
     
