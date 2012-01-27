@@ -257,37 +257,6 @@ TestFlagger::selectData(String field, String spw, String array,
 
 }
 
-// ---------------------------------------------------------------------
-// DEPRECATED: TestFlagger::parseDataSelection
-// Parse union of parameters to the FlagDataHandler
-// ---------------------------------------------------------------------
-bool
-TestFlagger::parseDataSelection(Record selrec)
-{
-
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
-
-	if(selrec.empty()) {
-		return false;
-	}
-
-	dataselection_p = selrec;
-
-	// Get the selection parameters
-	dataselection_p.get("spw", spw_p);
-	dataselection_p.get("scan", scan_p);
-	dataselection_p.get("field", field_p);
-	dataselection_p.get("antenna", antenna_p);
-	dataselection_p.get("timerange", timerange_p);
-	dataselection_p.get("correlation", correlation_p);
-	dataselection_p.get("intent", intent_p);
-	dataselection_p.get("feed", feed_p);
-	dataselection_p.get("array", array_p);
-	dataselection_p.get("uvrange", uvrange_p);
-	dataselection_p.get("observation", observation_p);
-
-	return true;
-}
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseAgentParameters
@@ -417,57 +386,6 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 
 // ---------------------------------------------------------------------
-// DEPRECATED TestFlagger::initFlagDataHandler
-// Initialize the FlagDataHandler
-// ---------------------------------------------------------------------
-bool
-TestFlagger::initFlagDataHandler()
-{
-
-	bool ret_status = true;
-
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
-
-	if (msname_p.empty()) {
-		os << LogIO::SEVERE << "No Measurement Set has been parsed"
-				<< LogIO::POST;
-		return False;
-	}
-
-	if(fdh_p) delete fdh_p;
-
-	// create a FlagDataHandler object
-	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
-
-	// Open the MS
-	fdh_p->open();
-
-	if (dataselection_p.empty()) {
-		return false;
-	}
-
-	// Set the data selection
-	ret_status = fdh_p->setDataSelection(dataselection_p);
-	if (!ret_status) {
-		os << LogIO::SEVERE << "Failed to set the data selection."
-				<< LogIO::POST;
-		return false;
-	}
-
-	// Select the data
-	ret_status = fdh_p->selectData();
-	if (!ret_status) {
-		os << LogIO::SEVERE << "Failed to select the data."
-				<< LogIO::POST;
-		return false;
-	}
-
-
-	return true;
-}
-
-
-// ---------------------------------------------------------------------
 // TestFlagger::initAgents
 // Initialize the Agents
 // Call parseAgentParameters and selectData first
@@ -577,7 +495,7 @@ TestFlagger::initAgents()
 			continue;
 		}
 
-		// Get the summary agent to list the results later
+		// Get the last summary agent to list the results back to the task
 		if (mode.compare("summary") == 0) {
 			summaryAgent_p = (FlagAgentSummary *) fa;
 		}

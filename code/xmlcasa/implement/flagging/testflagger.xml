@@ -93,63 +93,62 @@ All data selection parameters follow the ms-selection syntax.
      <any type="record"/>
      <description>The record (dictionary) config may be given or not. If it is not given, 
      \n the whole MS will be selected. The record may contain any data selection parameters 
-     \n supported by MSSelection such as:
-     \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange,observation
+     \n supported by MSSelection such as\n:
      </description>     
      </param>
 
      <param type="string" name="field">
-     <description>Field indices or source names : example : '2,3C48' </description>
+     <description>\tField indices or source names : example : '2,3C48' </description>
      <value>""</value>
      </param>
      
      <param type="string" name="spw">
-     <description>Spectral Window Indices or names : example : '1,2' </description>
+     <description>\tSpectral Window Indices or names : example : '1,2' </description>
      <value>""</value>
      </param>
     
      <param type="string" name="array">
-     <description>Array Indices or names : example : 'VLAA' </description>
+     <description>\tArray Indices or names : example : 'VLAA' </description>
      <value>""</value>
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name : example : '1,2' </description>
+     <description>\tFeed index or name : example : '1,2' (not supported yet) </description>
      <value>""</value>
      </param>
     
      <param type="string" name="scan">
-     <description>Scan number : example : '1,2,3' </description>
+     <description>\tScan number : example : '1,2,3' </description>
      <value>""</value>
      </param>   
 
      <param type="string" name="baseline">
-     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <description>\tBaseline number : example : '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
     
      <param type="string" name="uvrange">
-     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'</description>
+     <description>\tUV-distance range, with a unit : example : '2.0-3000.0 m'</description>
      <value>""</value>
      </param>
     
      <param type="string" name="time">
-     <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>\tTime range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value>""</value>
      </param>
 
      <param type="string" name="correlation">
-     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <description>\tCorrelations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
      <value>""</value>
      </param>
 
      <param type="string" name="intent">
-     <description>Observing intent : example : '*CAL*, *BAND*' </description>
+     <description>\tScan intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
      
      <param type="string" name="observation">
-     <description>Observation Id : example : '2~4' </description>
+     <description>\tObservation Id : example : '2~4' </description>
      <value>""</value>
      </param>
 
@@ -176,38 +175,6 @@ tf.selectdata(scan='3~5', spw='0')
 
 <!-- ********************************************************************** -->
 
-   <method type="function" name="parseDataSelection">
-   <shortdescription>Parses the union of all input data selections.
-</shortdescription>
-   
-<description>If possible, a union of all input data selections will be done and
-passed to the tool. Only the union of data will be selected from the MS to
-avoid reading unnecessary data. See the example below.
-</description>
-
-<input>
-
-     <param type="any" name="config">
-         <any type="record"/>
-     </param>
-     <description>Parse the data selection parameters. The record may contain
-     any data selection parameter supported by MSSelection such as:
-     \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange
-     \n (2) mode for flagging: manualflag,clip,quack,shadow,elevation,rfi,autoflag
-     </description>
-</input>
-<example>
-myrecord={}
-myrecord['mode']='clip'
-myrecord['scan']='1~3'
-myrecord['clipminmax']=[0.02,0.3]
-tf:=parseDataSelection(myrecord)
-</example>
-<returns type="bool"/> 
-</method>
-
-<!-- ********************************************************************** -->
-
    <method type="function" name="parseAgentParameters">
    <shortdescription>Parses the parameters for the agent (flagging mode).</shortdescription>
    
@@ -222,11 +189,20 @@ See the example below:
          <any type="record"/>
      <description>It takes a record (dictionary) with the specific parameters for the flagging mode. 
      \n The record may contain any data selection parameters supported by MSSelection, as well as 
-     \n mode-specific parameters such as:
+     \n mode-specific parameters such as:\n
      \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange,observation
      \n (2) mode (which can be: manualflag,clip,quack,shadow,elevation,tfcrop,extendflags,unflag or summary)
-     \n (2) For flagging mode=clip, the parameters are: expression, datacolumns, clipminmax, etc.
-     \n See the documentation of the task tflagger for all the available parameters for each mode.
+     \n     For flagging mode=clip, the parameters are: expression, datacolumns, clipminmax, etc.
+     \n     See the documentation of the task tflagger for all the available parameters for each mode.\n
+     \n (3) apply (which can be true for flagging and false for unflagging)
+     \n Example:\n\n
+myrecord={}\n
+myrecord['mode']='clip'\n
+myrecord['scan']='1~3'\n
+myrecord['clipminmax']=[0.02,0.3]\n
+myrecord['apply']=True\n
+tf.parseAgentParameters(myrecord)\n
+     
      </description>
      </param>
      
@@ -236,6 +212,7 @@ myrecord={}
 myrecord['mode']='clip'
 myrecord['scan']='1~3'
 myrecord['clipminmax']=[0.02,0.3]
+myrecord['apply']=True
 tf.parseAgentParameters(myrecord)
 </example>
 <returns type="bool"/> 
@@ -245,10 +222,10 @@ tf.parseAgentParameters(myrecord)
 <!-- ********************************************************************** -->
 
    <method type="function" name="init">
-   <shortdescription>Initialize the FlagDataHandler and FlagAgentBase.</shortdescription>
+   <shortdescription>Initialize the agents</shortdescription>
    
-<description>This method will initialize the FlagDataHandler by opening the MS
-and selecting the data according to what was parsed previously by parseDataSelection.
+<description>This method will initialize the agents and create a list of agents.
+with their parameters. It takes no parameters.
 </description>
 
 <input>

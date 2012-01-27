@@ -53,11 +53,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> implement/Flagger
+//   <li> implement/TestFlagger
 // </prerequisite>
 //
 // <etymology>
-// MSFlagger and plain flagger were already taken.
+//
 // </etymology>
 //
 // <synopsis>
@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 // <example>
-//        // construct MS and flagger
+//        // open testflagger and attaches the MS
 //        MeasurementSet ms("test.MS2",Table::Update);
 //        TestFlagger testflagger(ms);
 //        // build record of global flagging options
@@ -96,13 +96,13 @@ protected:
 
 	static LogIO os;
 
-	// variables to parse to FlagDataHandler
+	// variables used to initialize the FlagDataHandler
 	String msname_p;
 	uShort iterationApproach_p;
 	Double timeInterval_p;
 
 
-	// members to parse to parseDataSelection
+	// members to parse to selectData
 	String spw_p;
 	String scan_p;
 	String field_p;
@@ -141,11 +141,8 @@ public:
 	// reset everything
 	void done();
 
-	// configure the tool
+	// configure the tool, open the MS
 	bool open(String msname, Double ntime);
-
-	// DEPRECATED
-	bool parseDataSelection(Record selrec);
 
 	// parse the data selection
 	bool selectData(Record selrec);
@@ -158,12 +155,10 @@ public:
 	String getExpressionFunction(String expression);
 	bool isExpressionPolarizationAll(String expression);
 
-
-	// DEPRECATED
-	bool initFlagDataHandler();
-
+	// initialize the agents list
 	bool initAgents();
 
+	// Run the tool and write the flags to the MS
 	Record run(Bool writeflags, Bool sequential);
 
 	// Flag backup methods
@@ -180,6 +175,7 @@ private:
 
 	TestFlagger& operator=(const TestFlagger &)  {return *this;};
 
+	// Maximum between two number
 	void getMax(Double value);
 
 	// Sink used to store history
