@@ -247,19 +247,29 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 	// either pointer may be null on exit
 	std::auto_ptr<ImageRegion> outMaskMgr(0);
     if (! mask.empty()) {
-        try {
-		    outMaskMgr.reset(ImageRegion::fromLatticeExpression(mask));
-	    } catch (AipsError x) {
-		    LogIO *myos = os;
-		    std::auto_ptr<LogIO> localLogMgr(0);
-		    if (! myos) {
-			    myos = new LogIO();
-			    localLogMgr.reset(myos);
-		    }
-		    *myos << LogOrigin("SubImage", __FUNCTION__);
-		    *myos << "Input mask specification is incorrect: "
-			    << x.getMesg() << LogIO::EXCEPTION;
-        }
+    	String mymask = mask;
+    	for (uInt i=0; i<2; i++) {
+    		try {
+    			outMaskMgr.reset(ImageRegion::fromLatticeExpression(mymask));
+    			break;
+    		}
+    		catch (AipsError x) {
+    			if (i == 0) {
+    				// not an LEL expression, perhaps it's a clean mask image name
+    				mymask += ">=0.5";
+    				continue;
+    			}
+    			LogIO *myos = os;
+    			std::auto_ptr<LogIO> localLogMgr(0);
+    			if (! myos) {
+    				myos = new LogIO();
+    				localLogMgr.reset(myos);
+    			}
+    			*myos << LogOrigin("SubImage", __FUNCTION__);
+    			*myos << "Input mask specification is incorrect: "
+    				<< x.getMesg() << LogIO::EXCEPTION;
+    		}
+    	}
 	}
     if (
 		extendMask && outMaskMgr.get() != 0
