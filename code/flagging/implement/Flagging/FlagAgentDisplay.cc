@@ -24,8 +24,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, 
-				                        Bool dataDisplay, Bool reportDisplay):
+  FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
         FlagAgentBase(dh,config,ANTENNA_PAIRS_INTERACTIVE,writePrivateFlagCube), 
 	dataplotter_p(NULL),reportplotter_p(NULL),
 	userChoice_p("Continue"), userFixA1_p(""), userFixA2_p(""),
@@ -33,7 +32,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	fieldId_p(-1), fieldName_p(""), scanStart_p(-1), scanEnd_p(-1), spwId_p(-1),
 	nPolarizations_p(1), freqList_p(Vector<Double>()),
 	antenna1_p(""),antenna2_p(""),
-        dataDisplay_p(dataDisplay), reportDisplay_p(reportDisplay),showPlots_p(dataDisplay),
+        dataDisplay_p(False), reportDisplay_p(False),showPlots_p(False),reportFormat_p("screen"),
 	stopAndExit_p(False),reportReturn_p(False)
   {
     // Parse parameters and set base variables.
@@ -67,6 +66,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     *logger_p << LogIO::NORMAL << " pause is " << pause_p << LogIO::POST;
+    
+    exists = config.fieldNumber ("datadisplay");
+    if (exists >= 0)
+      {
+	dataDisplay_p = config.asBool("datadisplay");
+      }
+    else
+      {
+	dataDisplay_p = False;
+      }
+    
+    *logger_p << LogIO::NORMAL << " datadisplay is " << dataDisplay_p << LogIO::POST;
+    showPlots_p = dataDisplay_p; // TODO : get rid of showPlots_p
+    
+    exists = config.fieldNumber ("reportdisplay");
+    if (exists >= 0)
+      {
+	reportDisplay_p = config.asBool("reportdisplay");
+      }
+    else
+      {
+	reportDisplay_p = False;
+      }
+    
+    *logger_p << LogIO::NORMAL << " reportdisplay is " << reportDisplay_p << LogIO::POST;
+    
+
+    exists = config.fieldNumber ("format");
+    if (exists >= 0)
+      {
+	reportFormat_p = config.asString("format");
+        if( reportFormat_p != "screen" && reportFormat_p != "file")
+	  {
+	    *logger_p << LogIO::WARN
+		      << "Unsupported report format : " << reportFormat_p << ", setting to 'screen' by default. Supported formats are 'screen' and 'file'" << LogIO::POST;
+            reportFormat_p = "screen";
+	  }
+      }
+    else
+      {
+	reportFormat_p = String("screen");
+      }
+    
+    *logger_p << LogIO::NORMAL << " format is " << reportFormat_p << LogIO::POST;
     
     
   }
