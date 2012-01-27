@@ -60,6 +60,7 @@ namespace casa {
 //        }
 //    }
 // }
+// </example>
 
 class RegionTextList {
 
