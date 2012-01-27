@@ -85,9 +85,12 @@ message( STATUS "CMAKE_SYSTEM = " ${CMAKE_SYSTEM} )
 message( STATUS "CMAKE_SYSTEM_PROCESSOR = " ${CMAKE_SYSTEM_PROCESSOR} )
 if( APPLE )
    set( SO dylib )
-   if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
+   if( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
+		CMAKE_SYSTEM MATCHES ^Darwin-11 )
       if( NOT archflag )
-         if( EXISTS /opt/casa/darwin10-64b )
+         if( EXISTS /opt/casa/darwin11 )
+            set( archflag x86_64 )
+	 elseif( EXISTS /opt/casa/darwin10-64b )
             set( archflag x86_64 )
          elseif( EXISTS /opt/casa/core2-apple-darwin10 )
             set( archflag i386 )
@@ -263,9 +266,12 @@ if( STANDALONE )
       -DPYTHONVER=\"${PYTHONV}\"
       -DPYVERSION=${PV} )
 else()
+   # with CASA
    if( NOT PYTHON_FOUND )
       if ( NOT PYTHON_LIBNAME )
-         set( _names 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+         #set( _names 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+         set( _names 2.6 2.5.2 2.5 )
+	 # OSX 10.7 has Python2.7 by default. CASA has't yet supported python > 2.6 anyway.
          # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
       else()
          set( _names ${PYTHON_LIBNAME} )
@@ -275,7 +281,8 @@ else()
       foreach( _v ${_names} )
 
          casa_find( 
-            PYTHON${_v} 
+            PYTHON${_v}
+	    #PREFIX_HINTS ${PYTHON_ROOT_DIR}
             LIBS python${_v} 
             NO_REQUIRE 
          )
@@ -311,6 +318,13 @@ else()
    else()
       # Python library was not in a lib(64) directory!
       message( WARNING "Python library path \"${PYTHON${PYTHON_LIBNAME}_LIBRARIES}\" does not contain \"/lib(64)/lib${python_library}\"" )
+      set( python_prefix ${casa_packages} )
+   endif()
+
+   #
+   # For some unknown reason cmake sets the /usr for Lion
+   #
+   if( APPLE )
       set( python_prefix ${casa_packages} )
    endif()
 

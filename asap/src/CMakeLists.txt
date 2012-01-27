@@ -104,6 +104,6 @@ install( TARGETS ${ASAPLIB}
          LIBRARY DESTINATION ${PYTHON_INSTALL_DIR} )
 if( NOT STANDALONE )
   execute_process(
-    COMMAND ln -Fs ../${PYTHON_INSTALL_DIR}/_asap.so ${CMAKE_INSTALL_PREFIX}/lib/_asap.so
+    COMMAND ln -Fs ../${PYTHON_INSTALL_DIR}/_${ASAPLIB}.so ${CMAKE_INSTALL_PREFIX}/lib/_${ASAPLIB}.so
     OUTPUT_VARIABLE stuff)
 endif()
