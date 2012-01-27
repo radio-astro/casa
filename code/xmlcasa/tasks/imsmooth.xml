@@ -88,11 +88,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mask">
-	    <description>Mask used for selecting the area of the image</description>
-	    <any type="variant"/>
-	    <value type="stringArray"></value>
-            <example>mask='my_file.image:no_noise'</example>
-            <example>mask='some.image&gt;0.15'</example>
+	    <description>Mask to use. See help par.mask. Default is none.</description>
+	    <value/>
     </param>
 
 
@@ -165,12 +162,7 @@ an image.
              pa are the resolution of the output image. If false, a gaussian
              with these parameters is convolved with the input image to produce
              the output image.
-    mask --  Mask applied to the image before doing the smoothing
-             Default '' means no mask;  
-             Example: mask='orion.mask'.  
-
-             Full description of the syntax can be found at
-             http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series
+    mask --  Mask to use. See help par.mask. Default is none.
     region -- region file or name.
               Use the viewer, then region manager to select regions of
               the image to process.  Similar to box, but graphical

@@ -1297,8 +1297,8 @@ in this case.  It is evaluated each time it is needed.
             <value></value>
         </param>
         <param type="string" direction="in" name="mask">
-            <description>Mask to use. Default is none.</description>
-            <value></value>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
         </param>
         <param type="bool" direction="in" name="overwrite">
             <description>Overwrite (unprompted) pre-existing output file? Ignored if outfile is blank.</description>
@@ -1843,8 +1843,8 @@ the example we list the names of the fields in this record.
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>    
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
     </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -2287,8 +2287,8 @@ from a normal distribution added.
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -2562,8 +2562,8 @@ This shows a mixed type expression.  The real part of the complex image
 <input>
   
      <param type="string" direction="in" name="mask">
-     <description>Boolean LEL expression or mask region.  Must be specified.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="name">
@@ -2930,8 +2930,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -3297,8 +3297,8 @@ at a particular location at a particular time.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>Boolean LEL expression or mask region.  Default is unset.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="simple">
@@ -3705,8 +3705,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
      <param type="bool" direction="in" name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
@@ -3795,8 +3795,8 @@ images only are written out.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="point">
@@ -3895,7 +3895,7 @@ We use the Componentlist GUI to look at the strongest component.
         </param>
         <param type="any" direction="in" name="mask">
             <any type="variant"/>
-            <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
+            <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
         <param type="int" direction="in" name="ngauss">
@@ -4281,8 +4281,8 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
         
         <param type="any" direction="in" name="mask">
             <any type="variant"/>
-            <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-            <value></value>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
         </param>
     
         <param type="doubleArray" direction="in" name="includepix">
@@ -4691,8 +4691,8 @@ ia.close()
 
      <param type="any" direction="in" name="mask">
              <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
 
      <param type="bool" direction="in" name="list">
@@ -4880,8 +4880,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="int" direction="in" name="axis">
@@ -5034,8 +5034,8 @@ and acquires just a read lock.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="int" direction="in" name="nbins">
@@ -5710,9 +5710,9 @@ ia.close()
      </param>
   
      <param type="any" direction="in" name="mask">
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
+     <description>Mask to use. See help par.mask. Default is none.</description>
 	     <any type="variant"/>
-     <value></value>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="subtract">
@@ -5869,8 +5869,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="stringArray" direction="in" name="method">
@@ -6748,8 +6748,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -6849,9 +6849,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-	     <description>OTF mask, Boolean LEL expression or mask region.
-      Default is none.</description>
-     <value></value>
+	     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="method">
@@ -7248,8 +7247,8 @@ ia.done()
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="method">
@@ -7437,8 +7436,8 @@ print ia.name(strippath=T)
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="update">
@@ -7710,9 +7709,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-	     <description>OTF mask, Boolean LEL expression or mask region.
-       Default is none.</description>
-     <value></value>
+	     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -8258,9 +8256,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="stringArray" direction="in" name="plotstats">
@@ -8556,9 +8553,8 @@ the the record containing the statistics arrays.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="intArray" direction="in" name="axes">
@@ -8647,9 +8643,8 @@ ia.twopointcorrelation()   # Output image is virtual
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -8900,9 +8895,8 @@ listed in square brackets.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -9043,9 +9037,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="sep">
@@ -9521,8 +9514,8 @@ the example we list the names of the fields in this record.
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>    
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
     </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -9727,8 +9720,8 @@ used to create a 2D temporary image.
         </param>
         <param type="string" direction="in" name="mask">
             <any type="variant"/>
-            <description>Boolean LEL expression or mask region.  Default is none.</description>
-            <value></value>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
         </param>
         <param type="string" direction="in" name="mode">
             <description>Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"</description>

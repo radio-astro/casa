@@ -48,9 +48,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
    <param type="string" name="mask">
-        <description>Mask to be applied to the image</description>
-        <value></value>
-        <example>'"ngc5921.im" > 0.5'</example>
+        <description>Mask to use. See help par.mask. Default is none.</description>
+        <value/>
     </param>
 
    <param type="intArray" name="includepix">
@@ -169,8 +168,7 @@ box              One or more box regions to use for fitting,
                  parameters are specified, box is used.
 region           Region of interest. See help par.region for specification options.
 stokes           Stokes parameter to fit. If blank, first polarization plane is used.
-mask             Mask to be applied to the image. Can be a mask associated with the
-                 image or an LEL expression. 
+mask             Mask to use. See help par.mask. Default is none.
 includepix       Range of pixel values to include for fitting. Array of two numeric
                  values assumed to have same units as image pixel values. Only one
                  of includepix or excludepix can be specified.

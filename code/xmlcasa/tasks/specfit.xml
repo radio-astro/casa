@@ -48,7 +48,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <example>axis=3</example>
         </param>
         <param type="string" direction="in" name="mask">
-            <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
+            <description>Mask to use. See help par.mask. Default is none..</description>
             <value></value>
         </param>
         <param type="int" direction="in" name="ngauss" subparam="true">
@@ -301,7 +301,7 @@ stokes       Contiguous stokes planes specification. Not used if region is speci
              Default is all stokes.     
 axis         Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
              zeroth axis if a spectral axis is not present.
-mask         Optional mask specification.
+mask         Mask to use. See help par.mask. Default is none.
 stretch      Stretch the input mask if necessary and possible? Only used if a mask is specified.
              See help par.stretch.
 ngauss       Maximum number of gaussians to fit.
