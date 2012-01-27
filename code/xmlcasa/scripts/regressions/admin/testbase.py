@@ -11,11 +11,14 @@ import re
 #from tasks import *  # execfile
 #from taskinit import casalog
 
-image = casac.homefinder.find_home_by_name('imageHome')
-ia=image.create()
+from taskinit import gentools
+ia,ms,tb=gentools(['ia', 'ms', 'tb'])
+#image = casac.homefinder.find_home_by_name('imageHome')
+#ia=image.create()
 
-meas = casac.homefinder.find_home_by_name('msHome')
-ms=meas.create()
+#meas = casac.homefinder.find_home_by_name('msHome')
+#ms=meas.create()
+
 
 class testbase :
     def __init__(self, workdir=None):
@@ -223,15 +226,15 @@ class testbase :
                 # previous developer said:
                 # Good chance its an image for now till i know whether its a caltable or ms
                 # actually check for ms, if not assume image
-                # a more robust check for !ms than catching an exception 
-                # would be preferable here
-                try:
-                    ms.open(theResult[k])
+                tb.open(theResult[k])
+                tabkwords=tb.keywordnames()
+                tb.done()
+                if('MS_VERSION' in tabkwords):
+                    ###table is a MS
                     self.testList[theResult[k]]=[]
                     self.testList[theResult[k]].append('ms')
-                    ms.done()
-                except:
-                    
+                elif('coords' in tabkwords):
+                    ## table is an image
                     self.testList[theResult[k]]=[]
                     self.testList[theResult[k]].append('simple')
                     ia.open(theResult[k])
