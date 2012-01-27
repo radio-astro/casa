@@ -22,13 +22,15 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
         if datacol == 'junk':
             raise ValueError(vis + " does not have a data column")        
 
-        if datacol != datacolumn: # no CORRECTED_DATA case (fall back to DATA)
+        if datacolumn.lower()=='corrected' and datacol.split('_')[0].lower() != datacolumn: # no CORRECTED_DATA case (fall back to DATA)
            casalog.post("No %s column found, using %s column" % (datacolumn.upper()+'_DATA', datacol),'WARN')
            datacolumn = datacol
 
         if ':' in spw:
             casalog.post('The channel selection part of spw will be ignored.', 'WARN')
         
+        # for debugging 
+        casalog.post('data column used:'+datacolumn,'INFO2')
         myms.open(vis, nomodify=False)
         retval = myms.statwt(dorms, byantenna, sepacs, fitspw, fitcorr, combine,
                              timebin, minsamp, field, spw, antenna, timerange, scan, intent,
