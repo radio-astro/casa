@@ -78,8 +78,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
 
         <param type="string" name="mask">
-        	<description>Mask to be applied to the images</description>
-        	<value></value>
+        	<description>Mask to use. See help par.mask. Default is none.</description>
+        	<value/>
     	</param>
     	<param type="string" name="region">
         	<description>File path which contains an Image Region</description>
@@ -213,7 +213,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           the names in this array to represent the input images.
     outfile    The output image. Overwriting an existing outfile is not permitted.
 	           Default: immath_results.im;  Example: outfile='results.im'
-    mask       Mask to apply. Also see polithresh.
+    mask       Mask to use. See help par.mask. Default is none. Also see polithresh.
     stretch    Stretch the input mask if necessary and possible. See below.
     region     Name of region file, region text description, or region dictionary.
     box        A rectangular region on the directional plane expressed in pixels.

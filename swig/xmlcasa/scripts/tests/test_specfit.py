@@ -94,7 +94,7 @@ def run_fitprofile (
     estimates="",gampest="", gcenterest="", gfwhmest="",
     gfix="", gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix=[0]
+    gmfwhmest=[0], gmfix="", logfile=""
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -114,7 +114,7 @@ def run_fitprofile (
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
-        gmfwhmest=gmfwhmest, gmfix=gmfix
+        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile
     )
     myia.close()
     myia.done()
@@ -129,7 +129,7 @@ def run_specfit(
     gampest="", gcenterest="", gfwhmest="", gfix="",
     gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix=[0]
+    gmfwhmest=[0], gmfix="", logfile=""
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
@@ -145,7 +145,7 @@ def run_specfit(
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
-        gmfwhmest=gmfwhmest, gmfix=gmfix
+        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile
     )
 
 class specfit_test(unittest.TestCase):
@@ -675,6 +675,8 @@ class specfit_test(unittest.TestCase):
         imagename=datapath+gauss_triplet
         gmampcon = [0.7, 0.55]
         gmcentercon = [52, 0]
+        logfile = "mylog.txt"
+        i = 1
         for code in [run_fitprofile, run_specfit]:
             res = code(
                 imagename=imagename, box="", region="", chans="",
@@ -685,7 +687,8 @@ class specfit_test(unittest.TestCase):
                 integral="integral", integralerr="integralErr",
                 gmncomps=3, gmampest=[1.2, 0.1, 0.1], 
                 gmcenterest=[20, 0, 100], gmfwhmest=[4, 4, 4],
-                gmampcon=gmampcon, gmcentercon=gmcentercon
+                gmampcon=gmampcon, gmcentercon=gmcentercon,
+                logfile=logfile
             )
             for image in (
                 "center", "centerErr", "fwhm", "fwhmErr", "amp",
@@ -694,6 +697,9 @@ class specfit_test(unittest.TestCase):
                 self.checkImage(
                     image + "_gm", datapath + image + "_gm"
                 )
+            # appending, second time through size should double
+            self.assertTrue(os.path.getsize(logfile) > 3e4*i)
+            i = i+1
 
 def suite():
     return [specfit_test]

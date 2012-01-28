@@ -185,7 +185,8 @@ private:
     void _setResults();
 
     String _radToRa(const Float ras) const;
-    void _resultsToLog() const;
+
+    String _getResultsString() const;
 
     String _elementToString(
     	const Double value, const Double error,

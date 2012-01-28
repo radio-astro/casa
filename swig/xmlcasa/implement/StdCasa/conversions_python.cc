@@ -734,7 +734,7 @@ FWD_DECL_map_array_pylist(std::string)
 //static int unmap_array_numpy( PyObject *array, std::vector<int> &shape, casac::variant &vnt ) {
 
 #define MAP_ARRAY_NUMPY(TYPE,NPYTYPE,NUMPY_TYPE,ASSIGN)						\
-static PyObject *map_vector_numpy(const std::vector<TYPE> &vec) {				\
+PyObject *map_vector_numpy(const std::vector<TYPE> &vec) {				\
     initialize_numpy( );									\
     PyArray_Descr *type = PyArray_DescrFromType(NUMPY_TYPE);					\
     npy_intp dim[1];										\
@@ -755,7 +755,7 @@ static PyObject *map_vector_numpy(const std::vector<TYPE> &vec) {				\
     return ary;											\
 }												\
 												\
-static PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> &shape ) { \
+PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> &shape ) { \
     initialize_numpy( );									\
     PyArray_Descr *type = PyArray_DescrFromType(NUMPY_TYPE);					\
     npy_intp *dim = new npy_intp[shape.size()];							\
@@ -811,7 +811,7 @@ static PyObject *map_vector_numpy( const std::vector<std::string> &vec ) {
     return ary;
 }
 
-static PyObject *map_array_numpy( const std::vector<std::string> &vec, const std::vector<int> &shape ) {
+PyObject *map_array_numpy( const std::vector<std::string> &vec, const std::vector<int> &shape ) {
     initialize_numpy( );
     unsigned int size = 0;
     for ( std::vector<std::string>::const_iterator iter = vec.begin(); iter != vec.end(); ++iter ) {

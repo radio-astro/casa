@@ -1135,7 +1135,7 @@ record* image::fitprofile(const string& box, const variant& region,
     const variant& gmampcon, const variant& gmcentercon,
     const variant& gmfwhmcon, const vector<double>& gmampest,
     const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-    const variant& gmfix
+    const variant& gmfix, const string& logfile, const bool append
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
@@ -1330,6 +1330,10 @@ record* image::fitprofile(const string& box, const variant& region,
 		fitter.setMinGoodPoints(minpts > 0 ? minpts : 0);
 		fitter.setStretch(stretch);
 		fitter.setLogResults(logResults);
+		if (! logfile.empty()) {
+			fitter.setLogfile(logfile);
+			fitter.setLogfileAppend(append);
+		}
 		return fromRecord(fitter.fit());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()

@@ -186,6 +186,31 @@ class test_unapply(test_base):
         self.assertEqual(result['flagged'], 44226, 'Expected 44226 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
         
+
+    def test_uscans(self):
+        '''tflagcmd: Unapply only APPLIED=True'''
+        # Remove any cmd from table
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        # Flag several scans and save them to FLAG_CMD with APPLIED=True
+        tflagger(vis=self.vis, scan='7')
+        tflagger(vis=self.vis, scan='1')
+        tflagger(vis=self.vis, scan='2')
+        tflagger(vis=self.vis, scan='3')
+        tflagger(vis=self.vis, scan='4')
+        
+        # There should be 5 cmds in FLAG_CMD. Unapply row=1 and set APPLIED to False
+        tflagcmd(vis=self.vis, action='unapply', tablerows=1)
+        
+        # Unapply scans 2 and 3 only. It should not re-apply scan=1 (row 1)
+        tflagcmd(vis=self.vis, action='unapply', tablerows=[2,3])
+        
+        # We should have left only scans 4 and 7 flagged.
+        res = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 0, "It should not re-apply tablerows=1")
+        self.assertEqual(res['scan']['4']['flagged'], 95256, "It should not unapply tablerows=4")
+        self.assertEqual(res['scan']['7']['flagged'], 190512, "It should not unapply tablerows=7")
+        self.assertEqual(res['flagged'], 285768)
         
         
 # Dummy class which cleans up created files

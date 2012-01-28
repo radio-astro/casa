@@ -31,43 +31,48 @@ vo::~vo()
   vao::dal::closeVOClient(0);
 }
 
-std::vector<std::string>
-vo::sesame(std::vector<std::string> targets)
+StringVec
+vo::sesame(StringVec targets)
 {
   std::vector<std::string> rstat(0);
-  for(int i=0; i<targets.size(); i++){
-    Sesame sr = vao::sesame::nameResolver(const_cast<char *>(targets[i].c_str()));
+  
+  for(int i=0; i<targets.value.size(); i++){
+    Sesame sr = vao::sesame::nameResolver(const_cast<char *>(targets.value[i].c_str()));
     rstat.push_back(vao::sesame::resolverPos(sr));
     cerr << "Arg " << i << " " << rstat[i] << endl;
   }
-  return rstat;
+  std::vector<int>myshape(1);
+  myshape[0] = rstat.size();
+  return (StringVec(rstat,myshape)) ;
 }
 //
 //
-std::vector<std::string>
-vo::data(std::vector<std::string> resources,
-	 std::vector<std::string> object,
-	 std::vector<std::string> position,
+StringVec
+vo::data(StringVec resources,
+	 StringVec object,
+	 StringVec position,
 	 std::string searchradius,
-	 std::vector<std::string> serviceURL)
+	 StringVec serviceURL)
 {
   std::vector<std::string> rstat(0);
   char *opts(NULL);
   vao::dal::initVOClient(opts);
-  if(object.size() > 0){
-     for(int j=0;j<object.size();j++){
-	Sesame srch = vao::sesame::nameResolver(const_cast<char *>(object[j].c_str()));
+  if(object.value.size() > 0){
+     for(int j=0;j<object.value.size();j++){
+	Sesame srch = vao::sesame::nameResolver(const_cast<char *>(object.value[j].c_str()));
 	double ra = vao::sesame::resolverRA(srch);
 	double dec = vao::sesame::resolverDEC(srch);
 	double sr = 0.5;
-        for(int i=0;i<serviceURL.size(); i++){
-           vao::dal::openConeConnection(const_cast<char *>(serviceURL[i].c_str()));
-	   rstat.push_back(vao::dal::coneCaller(const_cast<char *>(serviceURL[i].c_str()), ra, dec, sr, VOC_VOTABLE));
+        for(int i=0;i<serviceURL.value.size(); i++){
+           vao::dal::openConeConnection(const_cast<char *>(serviceURL.value[i].c_str()));
+	   rstat.push_back(vao::dal::coneCaller(const_cast<char *>(serviceURL.value[i].c_str()), ra, dec, sr, VOC_VOTABLE));
         }
      }
   }
   cerr << "Your search result here" << endl;
-  return rstat;
+  std::vector<int>myshape(1);
+  myshape[0] = rstat.size();
+  return (StringVec(rstat,myshape)) ;
 }
 
 //

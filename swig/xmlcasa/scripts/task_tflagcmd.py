@@ -720,9 +720,11 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     # Setup the agent for each input line    
     for key in myflagcmd.keys():
         cmdline = myflagcmd[key]['cmd']
+        applied = myflagcmd[key]['applied']
         casalog.post('cmdline for key%s'%key, 'DEBUG')
         casalog.post('%s'%cmdline, 'DEBUG')
-
+        casalog.post('applied is %s'%applied, 'DEBUG')
+        
         if cmdline.startswith('#'):
             continue
     
@@ -785,7 +787,10 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         if not apply and myrows.__len__() > 0:
             if key in myrows:
                 modepars['apply'] = False
-            else:
+            elif not applied:
+                casalog.post("Skipping this %s"%modepars,"DEBUG")
+                continue
+            elif applied:
                 modepars['apply'] = True
                 valid = False
         

@@ -141,23 +141,6 @@ testflagger::selectdata(
 	}
 }
 
-bool
-testflagger::parseDataSelection(const ::casac::record& selconfig)
-{
-	try
-	{
-		Record config = *toRecord(selconfig);
-		if (testflagger_p) {
-			return testflagger_p->parseDataSelection(config);
-		}
-
-		return false;
-	} catch(AipsError x) {
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		RETHROW(x);
-	}
-}
-
 
 bool
 testflagger::parseAgentParameters(const ::casac::record& aparams)

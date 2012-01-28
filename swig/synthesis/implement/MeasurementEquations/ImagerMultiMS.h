@@ -72,7 +72,8 @@ namespace casa {
 				 const String& uvdist="",
                                  const String& scan="",
                                  const String& obs="",
-                                 const Bool useModel=False);
+                                 const Bool useModel=False,
+				 const Bool msreadonly=False);
 
 
        // Set image construction parameters

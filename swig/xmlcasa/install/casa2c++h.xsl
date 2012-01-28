@@ -20,6 +20,7 @@
 #include &lt;string&gt;
 #include &lt;complex&gt;
 #include &lt;xmlcasa/record.h&gt;
+#include &lt;xmlcasa/casaswig_types.h&gt;
 </xsl:text>
 <xsl:for-each select="aps:needs">
 	<xsl:text disable-output-escaping="yes">#include &lt;casa</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">.idl&gt;
@@ -34,21 +35,6 @@
 <xsl:text disable-output-escaping="yes">
 using namespace std;
 //using namespace casac;
-
-typedef  std::vector&lt;std::string&gt; StringVec;
-typedef  std::vector&lt;casac::record&gt; RecordVec;
-typedef  std::vector&lt;double&gt; DoubleVec;
-typedef  std::vector&lt;int&gt; IntVec;
-typedef  std::vector&lt;bool&gt; BoolVec;
-typedef  std::vector&lt;complex&lt;double&gt; &gt; ComplexVec;
-struct Quantity {
-   DoubleVec value;
-   string units;
-};
-typedef string MDirection;
-typedef string MRadialVelocity;
-typedef string MPosition;
-typedef string Region;
 
 namespace casac {
 </xsl:text>           

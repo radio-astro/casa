@@ -13,8 +13,8 @@ vo_module = Extension('_vo', sources=['vo_wrap.cxx',
 				    '/opt/casa/darwin11/Library/Frameworks/Python.framework/Headers',
 				    '.',
 				    '/iraf/iraf/vendor/voclient/include'],
-		      library_dirs=['/iraf/iraf/vendor/voclient/lib'],
-		      libraries=['VOClient']
+		      library_dirs=['/iraf/iraf/vendor/voclient/lib', '/opt/casa/active/darwinllvm/lib'],
+		      libraries=['VOClient', 'xmlcasa']
 		      )
 
 setup (name = 'vo',

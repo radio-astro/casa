@@ -41,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   public:
     
-    FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool dataDisplay = true, Bool reportDisplay = false);
+    FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
     ~FlagAgentDisplay();
 
     // Make plots and either display or write to a file
@@ -92,6 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool pause_p;
     Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
     Bool reportReturn_p;
+    String reportFormat_p;
     
     // visBuffer state variables
     Int fieldId_p;

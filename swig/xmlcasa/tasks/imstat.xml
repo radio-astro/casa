@@ -58,8 +58,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>True</value>
     </param>
     <param type="string" direction="in" name="mask">
-        <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
-        <value></value>
+        <description>Mask to use. See help par.mask. Default is none.</description>
+        <value/>
     </param>
     <param type="bool" direction="in" name="stretch" subparam="true">
         <description>Stretch the mask if necessary and possible? See help par.stretch </description>
@@ -111,7 +111,7 @@ stokes       Stokes parameters to analyze.
              Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
 listit       Print stats and bounding box to logger? 
 verbose      Print additional messages to logger?
-mask         Optional mask specification.
+mask         Mask to use. See help par.mask. Default is none.
 stretch      Stretch the mask if necessary and possible? See help par.stretch 
 
 

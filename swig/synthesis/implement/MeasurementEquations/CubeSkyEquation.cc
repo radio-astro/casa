@@ -818,7 +818,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 //saving the model for self-cal most probably
                 //	Timers tSetModel=Timers::getTime();
                 //		Timers tsetModel=Timers::getTime();
-                if(commitModel){
+                if(commitModel && wvi_p != NULL){
 		  ///Bow commit model to disk or to the record keyword
 		  if(!noModelCol_p)
                     wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);

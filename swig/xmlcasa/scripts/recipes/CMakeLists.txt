@@ -25,12 +25,14 @@ casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   cl2skycat.py
   cluster.py
   cmpmses.py
+  drawmaskinimage.py
   field2skycat.py
   find_autocorr.py
   gaincal_unflag_nearest.py
   __init__.py
   lsms.py
   make_labelled_ms.py
+  pixelmask2cleanmask.py
   psplit.py
   taskutil.py
   listshapes.py

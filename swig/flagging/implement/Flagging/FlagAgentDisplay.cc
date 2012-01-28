@@ -24,8 +24,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, 
-				                        Bool dataDisplay, Bool reportDisplay):
+  FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
         FlagAgentBase(dh,config,ANTENNA_PAIRS_INTERACTIVE,writePrivateFlagCube), 
 	dataplotter_p(NULL),reportplotter_p(NULL),
 	userChoice_p("Continue"), userFixA1_p(""), userFixA2_p(""),
@@ -33,7 +32,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	fieldId_p(-1), fieldName_p(""), scanStart_p(-1), scanEnd_p(-1), spwId_p(-1),
 	nPolarizations_p(1), freqList_p(Vector<Double>()),
 	antenna1_p(""),antenna2_p(""),
-        dataDisplay_p(dataDisplay), reportDisplay_p(reportDisplay),showPlots_p(dataDisplay),
+        dataDisplay_p(False), reportDisplay_p(False),showPlots_p(False),reportFormat_p("screen"),
 	stopAndExit_p(False),reportReturn_p(False)
   {
     // Parse parameters and set base variables.
@@ -67,6 +66,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     *logger_p << LogIO::NORMAL << " pause is " << pause_p << LogIO::POST;
+    
+    exists = config.fieldNumber ("datadisplay");
+    if (exists >= 0)
+      {
+	dataDisplay_p = config.asBool("datadisplay");
+      }
+    else
+      {
+	dataDisplay_p = False;
+      }
+    
+    *logger_p << LogIO::NORMAL << " datadisplay is " << dataDisplay_p << LogIO::POST;
+    showPlots_p = dataDisplay_p; // TODO : get rid of showPlots_p
+    
+    exists = config.fieldNumber ("reportdisplay");
+    if (exists >= 0)
+      {
+	reportDisplay_p = config.asBool("reportdisplay");
+      }
+    else
+      {
+	reportDisplay_p = False;
+      }
+    
+    *logger_p << LogIO::NORMAL << " reportdisplay is " << reportDisplay_p << LogIO::POST;
+    
+
+    exists = config.fieldNumber ("format");
+    if (exists >= 0)
+      {
+	reportFormat_p = config.asString("format");
+        if( reportFormat_p != "screen" && reportFormat_p != "file")
+	  {
+	    *logger_p << LogIO::WARN
+		      << "Unsupported report format : " << reportFormat_p << ", setting to 'screen' by default. Supported formats are 'screen' and 'file'" << LogIO::POST;
+            reportFormat_p = "screen";
+	  }
+      }
+    else
+      {
+	reportFormat_p = String("screen");
+      }
+    
+    *logger_p << LogIO::NORMAL << " format is " << reportFormat_p << LogIO::POST;
     
     
   }
@@ -412,27 +455,35 @@ FlagReport
        Int N=10;
        Array<Float> sample( IPosition(2, N, N) );
        sample = 0.0;
-       sample( IPosition(N/2,N/2)) = 1.0;
+       sample( IPosition(2,N/2,N/2)) = 1.0;
        Vector<Float> xdata( N ), ydata( N );
        for(Int i=0;i<N;i++) xdata[i]=i;
        ydata = 1.0;
 
-       // Make a raster plot. Only one set of data is allowed here.
+       // (1) Make a raster plot. Only one set of data is allowed here.
        FlagReport subRep0 = FlagReport("plotraster",agentName_p,"example raster", "xaxis", "yaxis");
        subRep0.addData(sample); // add 2D data
 
        // Add this raster FlagReport to the list.
        dispRep.addReport( subRep0 ); 
 
-       // Make a line plot. Can give multiple lines to overlay on the same panel.
+       // (2) Make a line plot. Can give multiple lines to overlay on the same panel.
        FlagReport subRep1 = FlagReport("plotline",agentName_p,"example line", "xaxis", "yaxis");
-       subRep1.addData(xdata,ydata); // add first set of line data
+       subRep1.addData(xdata,ydata,"line 1"); // add first set of line data
        ydata[N/2]=2.0;
-       subRep1.addData(xdata,ydata); // add second set of line data to overlay
+       subRep1.addData(xdata,ydata,"line 2"); // add second set of line data to overlay
 
        // Add this line FlagReport to the list
        dispRep.addReport( subRep1 ); 
        
+       // (3) Make another raster plot. Only one set of data is allowed here.
+       FlagReport subRep2 = FlagReport("plotraster",agentName_p,"example raster", "xaxis", "yaxis");
+       sample( IPosition(2,N/4,N/2)) = 5.0;
+       subRep2.addData(sample); // add 2D data
+
+       // Add this raster FlagReport to the list.
+       dispRep.addReport( subRep2 ); 
+
 
        if( ! dispRep.verifyFields() )
 	 cout << "Problem ! " << endl;
@@ -454,83 +505,143 @@ FlagReport
 	    if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
             if(nReports>0 && reportplotter_p==NULL) buildReportPlotWindow();
 
+	    Bool stepback=False;
+
 	    for (Int reportid=0; reportid<nReports; reportid++)
 	      {
 		String agentName, title, xlabel, ylabel; 
 		FlagReport oneRep;
+
+		if(stepback==True)
+		  {
+                    // Go back until a valid one is found.                    
+                    Int previd=-1;
+                    for( Int rep=reportid-1; rep>=0; --rep)
+		      {
+			Bool valid = combinedReport.accessReport(rep,oneRep);
+                        if(valid)
+			  {
+			    String type = oneRep.reportType();
+			    if( type=="plotraster" || type=="plotline" || type=="plotscatter" )
+			      {
+				previd=rep; break;
+			      }
+			  }
+		      }
+                    
+		    if(previd==-1)
+		      {
+			cout << "Already on first plot" << endl;
+			reportid=0;
+		      }
+		    else
+		      {
+			reportid = previd;
+		      }
+
+		    stepback=False;
+		  }
+
+
                 Bool valid = combinedReport.accessReport(reportid,oneRep);
-
-
 		if(valid)
 		  {
 		    oneRep.get( RecordFieldId("name") , agentName );
 		    String type = oneRep.reportType();
 		    
-		    if( type == "plotraster" ) 
+		    if( type=="plotraster" || type=="plotline" || type=="plotscatter" )
 		      {
-			oneRep.get( RecordFieldId("title") , title );
-			oneRep.get( RecordFieldId("xlabel") , xlabel );
-			oneRep.get( RecordFieldId("ylabel") , ylabel );
 			
-			*logger_p << "Make a Display of type :  " << type << " for " << reportid  << " : " 
-                                       << agentName << " with " << oneRep.nData() << " layers " << LogIO::POST;
+                            *logger_p << reportid << " : Report of type " << type << " with " << oneRep.nData() << " layer(s) " << " from " << agentName << LogIO::POST;
+				
+			    if( type == "plotraster" ) 
+			      {
+				oneRep.get( RecordFieldId("title") , title );
+				oneRep.get( RecordFieldId("xlabel") , xlabel );
+				oneRep.get( RecordFieldId("ylabel") , ylabel );
+				
+				Array<Float> data;
+				oneRep.get( RecordFieldId("data"+String::toString(0)) , data );
+				
+				Vector<Float> flatdata(data.reform(IPosition(1,data.shape()[0]*data.shape()[1])));
+				
+				reportplotter_p->erase(report_panels_p[0].getInt() );
+				reportplotter_p->raster(dbus::af(flatdata), data.shape()[0] ,data.shape()[1], "Hot Metal 1", report_panels_p[0].getInt());
+				reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
+				
+			      }
+			    else if( type == "plotline" || type == "plotscatter") 
+			      {
+				oneRep.get( RecordFieldId("title") , title );
+				oneRep.get( RecordFieldId("xlabel") , xlabel );
+				oneRep.get( RecordFieldId("ylabel") , ylabel );
+				
+				reportplotter_p->erase(report_panels_p[0].getInt() );
+				
+				Int ndata = oneRep.nData();
+				for(Int datid=0;datid<ndata;datid++)
+				  {
+				    Vector<Float> xdata,ydata;
+				    String legendlabel;
+				    oneRep.get( RecordFieldId("xdata"+String::toString(datid)) , xdata );
+				    oneRep.get( RecordFieldId("ydata"+String::toString(datid)) , ydata );
+				    oneRep.get( RecordFieldId("label"+String::toString(datid)) , legendlabel );
+				    
+				    reportplotter_p->line(dbus::af(xdata), dbus::af(ydata),(datid%2)?String("red"):String("blue"),legendlabel, report_panels_p[0].getInt());
+				  }// end of for datid
+				
+				reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
+				
+			      }// end of plotline or plotscatter
+			    else 
+			      {
+				*logger_p << "NO Display for : " << reportid << " : " << agentName << LogIO::POST;
+			      }
+				
+			    getReportUserInput();
 
-			Array<Float> data;
-			oneRep.get( RecordFieldId("data"+String::toString(0)) , data );
+			    // React to user-input
+			    if(userChoice_p=="Quit")
+			      {
+				showPlots_p = False; 
+				stopAndExit_p = True;
+				cout << "Exiting flagger" << endl;
+				if(reportplotter_p!=NULL) { reportplotter_p->done(); reportplotter_p=NULL; }
+				return True;
+			      }
+			    else if(userChoice_p=="Prev")
+			      {
+				cout << "Prev Plot" << endl;
+				if( reportid==0 )
+				  cout << "Already on first plot..." << endl;
+                                else
+				  --reportid;
+				stepback=True;
+			      }
+			    else if(userChoice_p=="Continue")
+			      {
+				cout << "Next Plot " << endl; 
+				//if( reportid==nReports-1 )
+				//  cout << "Already on last plot..." << endl;
+                                //else
+				//  --reportid;
+			      }
 
-                        Vector<Float> flatdata(data.reform(IPosition(1,data.shape()[0]*data.shape()[1])));
-                        
-			reportplotter_p->erase(report_panels_p[0].getInt() );
-			reportplotter_p->raster(dbus::af(flatdata), data.shape()[0] ,data.shape()[1], "Hot Metal 1", report_panels_p[0].getInt());
-			reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
-
-			getReportUserInput();
-
-		      }
-		    else if( type == "plotline" || type == "plotscatter") 
-		      {
-			oneRep.get( RecordFieldId("title") , title );
-			oneRep.get( RecordFieldId("xlabel") , xlabel );
-			oneRep.get( RecordFieldId("ylabel") , ylabel );
-			
-			*logger_p << "Make a Display of type :  " << type << " for " << reportid  << " : " 
-                                      << agentName << " with " << oneRep.nData() << " layers " << LogIO::POST;
-
-			reportplotter_p->erase(report_panels_p[0].getInt() );
-                        
-			Int ndata = oneRep.nData();
-                        for(Int datid=0;datid<ndata;datid++)
-			  {
-			    Vector<Float> xdata,ydata;
-			    oneRep.get( RecordFieldId("xdata"+String::toString(datid)) , xdata );
-			    oneRep.get( RecordFieldId("ydata"+String::toString(datid)) , ydata );
-			    
-			    reportplotter_p->line(dbus::af(xdata), dbus::af(ydata),(datid%2)?String("red"):String("blue"),xlabel, report_panels_p[0].getInt());
-			  }// end of for datid
-
-			reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
-
-			getReportUserInput();
-
-		      }// end of plotline or plotscatter
-		    else 
-		      {
-			*logger_p << "NO Display for : " << reportid << " : " << agentName << LogIO::POST;
-		      }
-		  }
+		      }// if valid plot type
+		  }// if valid plot record.
 		else
 		  {
 		    *logger_p << LogIO::WARN <<  "Invalid Plot Record for : " << reportid << LogIO::POST;
 		  }
 
-	      }// end of for-report-in-list
+	      }// end of for-report-in-combinedReport
 	
 	  }// end of reportDisplay_p==True
 	else
 	  {
 	    *logger_p << "Report Displays are turned OFF " << LogIO::POST;
 	  }
-
+	return True;
  } // end of displayReports()
   
   /***********************************************************************/  
