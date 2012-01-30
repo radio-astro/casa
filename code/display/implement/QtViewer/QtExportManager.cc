@@ -501,11 +501,18 @@ void QtExportManager::expImageInterfaceToFITS(ImageInterface<Float>* img, String
 	Bool opticalVelocity(True); Int BITPIX(-32); Float minPix(1.0); Float maxPix(-1.0);
 	Bool allowOverwrite(False); Bool degenerateLast(False); Bool verbose(True);
 	Bool stokesLast(False); Bool preferWavelength(False); Bool preferAirWavelength(False);
-	String origin("QtExportmanager");
+	String origin("CASA Viewer / FITS export");
 
 	// overwrite was confirmed
 	allowOverwrite = True;
 	getSectralCoordFlags(img, preferVelocity, opticalVelocity, preferWavelength, preferAirWavelength);
+
+	// overwrite the default "origin" if already
+	// in the metadata
+	const TableRecord miscInfo=img->miscInfo();
+	if (miscInfo.isDefined("origin") && miscInfo.dataType("origin")==TpString){
+		origin = miscInfo.asString(String("origin"));
+	}
 
 	// export the image to FITS
 	ImageFITSConverter::ImageToFITS(
