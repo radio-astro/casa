@@ -309,32 +309,26 @@ def tflagger(vis,
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
         # Do display if requested
-        # TODO: uncomment when FlagAgentDisplay is implemented!
         if display != '':
             
             agent_pars = {}
             casalog.post('Parsing the display parameters')
                 
+            agent_pars['mode'] = 'display'
             # need to create different parameters for both, data and report.
             if display == 'both':
-                agent_pars['mode'] = 'display'
                 agent_pars['datadisplay'] = True
-                tflocal.parseAgentParameters(agent_pars)
                 agent_pars['reportdisplay'] = True
                 agent_pars['format'] = format
-                tflocal.parseAgentParameters(agent_pars)
             
             elif display == 'data':
-                agent_pars['mode'] = 'display'
                 agent_pars['datadisplay'] = True
-                tflocal.parseAgentParameters(agent_pars)
             
             elif display == 'report':
-                agent_pars['mode'] = 'display'
                 agent_pars['reportdisplay'] = True
                 agent_pars['format'] = format
-                tflocal.parseAgentParameters(agent_pars)
                 
+            tflocal.parseAgentParameters(agent_pars)
 
         # Initialize the agent
         casalog.post('Initializing the agent')

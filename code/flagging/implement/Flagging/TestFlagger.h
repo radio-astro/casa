@@ -127,8 +127,7 @@ protected:
 	Bool mixed_p;
 
 	// Display agent parameters
-	FlagAgentDisplay *dataDisplayAgent_p;
-	FlagAgentDisplay *reportDisplayAgent_p;
+	FlagAgentDisplay *displayAgent_p;
 
 	// variables for initFlagDataHandler and initAgents
 	FlagDataHandler *fdh_p;

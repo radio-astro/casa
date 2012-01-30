@@ -52,8 +52,7 @@ TestFlagger::TestFlagger ()
 {
 	fdh_p = NULL;
 	summaryAgent_p = NULL;
-	dataDisplayAgent_p = NULL;
-	reportDisplayAgent_p = NULL;
+	displayAgent_p = NULL;
 	done();
 }
 
@@ -106,12 +105,8 @@ TestFlagger::done()
 		summaryAgent_p = NULL;
 	}
 
-	if(dataDisplayAgent_p){
-		dataDisplayAgent_p = NULL;
-	}
-
-	if(reportDisplayAgent_p){
-		reportDisplayAgent_p = NULL;
+	if(displayAgent_p){
+		displayAgent_p = NULL;
 	}
 
 	mode_p = "";
@@ -517,20 +512,7 @@ TestFlagger::initAgents()
 
 		// Get the display agent. There can be two display agents!
 		if (mode.compare("display") == 0){
-			if (agent_rec.fieldNumber("datadisplay") >= 0){
-				Bool dd;
-				agent_rec.get("datadisplay", dd);
-				if (dd)
-					dataDisplayAgent_p = (FlagAgentDisplay *) fa;
-			}
-			if (agent_rec.fieldNumber("reportdisplay") >= 0){
-				Bool rd;
-				agent_rec.get("reportdisplay", rd);
-				if (rd){
-					reportDisplayAgent_p = (FlagAgentDisplay *) fa;
-					// TODO: get format too?
-				}
-			}
+			displayAgent_p = (FlagAgentDisplay *) fa;
 		}
 
 		// add the agent to the FlagAgentList
@@ -602,10 +584,8 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	FlagReport combinedReport = agents_list_p.gatherReports();
 
 	// Send reports to display agent
-//	if (dataDisplayAgent_p)
-//		dataDisplayAgent_p.displayReports(combinedReport);
-	if (reportDisplayAgent_p)
-		reportDisplayAgent_p->displayReports(combinedReport);
+	if (displayAgent_p)
+		displayAgent_p->displayReports(combinedReport);
 
 	// Get the record with the summary if there was any summary agent in the list
 	Record summary_stats = Record();
