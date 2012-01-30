@@ -140,8 +140,8 @@ public slots:
 	void redraw( );
 	void changePlotType(const QString &text);
 	void changeErrorType(const QString &text);
-	void changeCollapseType(const QString &text);
-	void changeCollapseError(const QString &text);
+	void changeCollapseType(QString text=QString(""));
+	void changeCollapseError(QString text=QString(""));
 
 	void changeAxisOld(String xa, String ya, String za, std::vector<int>);
 	void changeAxis(String xa, String ya, String za, std::vector<int>);

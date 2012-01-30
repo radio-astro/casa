@@ -37,7 +37,6 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 
-
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/QtPlotter/QtProfile.qo.h>
 #include <display/QtPlotter/QtProfilePrefs.qo.h>
@@ -69,6 +68,7 @@
 #include <graphics/X11/X_exit.h>
 #include <QMessageBox>
 
+//#include <xmlcasa/version.h>
 
 namespace casa { 
 
@@ -107,8 +107,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
             this, SLOT(changeCollapseType(const QString &)));
     connect(collapseError, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeCollapseError(const QString &)));
-    changeCollapseType(collapseType->currentText());
-    changeCollapseError(collapseError->currentText());
+    //changeCollapseType(collapseType->currentText());
+    //changeCollapseError(collapseError->currentText());
+    changeCollapseType();
+    changeCollapseError();
 
     QPalette pal = pixelCanvas->palette();
     pal.setColor(QPalette::Background, Qt::white);
@@ -487,6 +489,9 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 
 	// adjust the error box
 	fillPlotTypes();
+
+	// adjust the collapse type
+	changeCollapseType();
 
 	// read the preferred ctype from casarc
 	QString pref_ctype = QString(rc.get("viewer." + rcid() + ".freqcoord.type").c_str());
@@ -1046,46 +1051,86 @@ void QtProfile::changeErrorType(const QString &text) {
 	redraw();
 }
 
-void QtProfile::changeCollapseType(const QString &text) {
+void QtProfile::changeCollapseType(QString text) {
+	bool switchError(false);
 
-	// store the plot type and set the class data
-	//rc.put( "viewer." + rcid() + ".plot.type", text.toStdString());
+	// if no type given means
+	// initialization
+	if (text.size()<1){
+		switchError=true;
+
+		// read and set a type from the rc-file
+		text = QString(rc.get("viewer." + rcid() + ".collapse.type").c_str());
+		if (text.size()>0){
+			int index = collapseType->findText(text);
+			if (index > -1)
+				collapseType->setCurrentIndex(index);
+		}
+		else{
+			// just use what's there
+			text=collapseType->currentText();
+		}
+	}
+
+	//set the class data
 	SpectralCollapser::stringToCollapseType(String(text.toStdString ()), itsCollapseType);
 
-	/*
 	// get the coo-sys
 	CoordinateSystem cSys = image->coordinates();
 
-	switch (itsPlotType)
+	// depending on the collapse type,
+	// insert the allowed error types
+	switch (itsCollapseType)
 	{
-	case QtProfile::PMEAN:
-		if (npoints !=1 && errorMode->findText("rmse") < 0)
-			errorMode->insertItem(1, "rmse");
-		if (npoints ==1 && errorMode->findText("rmse") > -1)
-			errorMode->removeItem(errorMode->findText("rmse"));
-		if (cSys.qualityAxisNumber() > -1 && errorMode->findText("propagated") < 0)
-			errorMode->insertItem(2, "propagated");
+	case SpectralCollapser::PMEAN:
+		if (collapseError->findText("rmse") < 0)
+			collapseError->insertItem(1, "rmse");
+		if (cSys.qualityAxisNumber() > -1 && collapseError->findText("propagated") < 0)
+			collapseError->insertItem(1, "propagated");
+		if (cSys.qualityAxisNumber() < 0 && collapseError->findText("propagated") > -1)
+			collapseError->removeItem(collapseError->findText("propagated"));
 		break;
-	case QtProfile::PMEDIAN:
-		if (npoints !=1 && errorMode->findText("rmse") < 0)
-			errorMode->insertItem(1, "rmse");
-		if (npoints ==1 && errorMode->findText("rmse") > -1)
-			errorMode->removeItem(errorMode->findText("rmse"));
-		if (errorMode->findText("propagated") > -1)
-			errorMode->removeItem(errorMode->findText("propagated"));
+	case SpectralCollapser::PMEDIAN:
+		if (collapseError->findText("rmse") < 0)
+			collapseError->insertItem(1, "rmse");
+		if (collapseError->findText("propagated") > -1)
+			collapseError->removeItem(collapseError->findText("propagated"));
 		break;
-	case QtProfile::PSUM:
-		if (errorMode->findText("rmse") > -1)
-			errorMode->removeItem(errorMode->findText("rmse"));
-		if (cSys.qualityAxisNumber() > -1 && errorMode->findText("propagated") < 0)
-			errorMode->insertItem(1, "propagated");
+	case SpectralCollapser::PSUM:
+		if (collapseError->findText("rmse") > -1)
+			collapseError->removeItem(collapseError->findText("rmse"));
+		if (cSys.qualityAxisNumber() > -1 && collapseError->findText("propagated") < 0)
+			collapseError->insertItem(1, "propagated");
+		if (cSys.qualityAxisNumber() < 0 && collapseError->findText("propagated") > -1)
+			collapseError->removeItem(collapseError->findText("propagated"));
 		break;
 	}
-	*/
+
+	// store the collapse type in the rc-file
+	rc.put( "viewer." + rcid() + ".collapse.type", text.toStdString());
+
+	// if initialization
+	if (switchError){
+
+		// read the error type from the rc-file
+		QString error(rc.get("viewer." + rcid() + ".collerror.type").c_str());
+		if (error.size()>0){
+
+			// if the error type does exist, which means
+			// if it is allowed, set it
+			int index = collapseError->findText(error);
+			if (index > -1){
+				collapseError->setCurrentIndex(index);
+				SpectralCollapser::stringToCollapseError(String(error.toStdString ()), itsCollapseError);
+			}
+		}
+	}
 }
 
-void QtProfile::changeCollapseError(const QString &text) {
-	//rc.put( "viewer." + rcid() + ".error.type", text.toStdString());
+void QtProfile::changeCollapseError(QString text) {
+	if (text.size()<1)
+		text=collapseError->currentText();
+	rc.put( "viewer." + rcid() + ".collerror.type", text.toStdString());
 	SpectralCollapser::stringToCollapseError(String(text.toStdString ()), itsCollapseError);
 }
 
@@ -2345,7 +2390,6 @@ bool QtProfile::exportFITSSpectrum(QString &fn)
    	miscInfo.setComment("errtype", "the error type");
    }
 	profile.setMiscInfo(miscInfo);
-	//cout << "Temp-image miscInfo: " <<profile.miscInfo()<<endl;
 
    // thats the default values for the call "ImageFITSConverter::ImageToFITS"
 	String error; uInt memoryInMB(64); Bool preferVelocity(True);
