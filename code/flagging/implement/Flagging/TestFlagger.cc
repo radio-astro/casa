@@ -269,9 +269,11 @@ TestFlagger::parseAgentParameters(Record agent_params)
 {
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
+	// Default values for some parameters
 	String mode = "";
 	String expression = "ABS ALL";
 	String agent_name = "";
+	Bool apply = true;
 
 	// create a temporary vector of agents
 	std::vector<Record> listOfAgents;
@@ -301,6 +303,11 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 
 	agentParams_p.get("name", agent_name);
+
+	// Enforce a defaut value for the apply parameter
+	if (! agentParams_p.isDefined("apply"))
+		agentParams_p.define("apply", apply);
+
 
 	// If there is a tfcrop or extend agent in the list,
 	// get the maximum value of ntime and the combinescans parameter
@@ -552,12 +559,14 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 			if (writeflags)
 				fdh_p->flushFlags();
 		}
-		if (writeflags)
-			agents_list_p.chunkSummary();
+//		if (writeflags)
+		agents_list_p.chunkSummary();
 	}
 
+//	if (writeflags)
+	agents_list_p.msSummary();
 	if (writeflags)
-		agents_list_p.msSummary();
+		os << LogIO::NORMAL <<  "=> " << "Writing flags to the MS" << LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
