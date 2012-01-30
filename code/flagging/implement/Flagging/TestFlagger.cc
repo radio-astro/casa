@@ -31,9 +31,6 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/HostInfo.h>
 #include <flagging/Flagging/TestFlagger.h>
-#include <flagging/Flagging/FlagDataHandler.h>
-#include <flagging/Flagging/FlagAgentBase.h>
-#include <flagging/Flagging/FlagAgentSummary.h>
 #include <tableplot/TablePlot/FlagVersion.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
@@ -55,6 +52,8 @@ TestFlagger::TestFlagger ()
 {
 	fdh_p = NULL;
 	summaryAgent_p = NULL;
+	dataDisplayAgent_p = NULL;
+	reportDisplayAgent_p = NULL;
 	done();
 }
 
@@ -105,6 +104,14 @@ TestFlagger::done()
 
 	if(summaryAgent_p){
 		summaryAgent_p = NULL;
+	}
+
+	if(dataDisplayAgent_p){
+		dataDisplayAgent_p = NULL;
+	}
+
+	if(reportDisplayAgent_p){
+		reportDisplayAgent_p = NULL;
 	}
 
 	mode_p = "";
@@ -483,7 +490,8 @@ TestFlagger::initAgents()
 		}
 
 		// Change the new iteration approach only once
-		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0)) {
+		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
+			or mode.compare("display") == 0)) {
 			if (combinescans_p)
 				fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
 			else
@@ -505,6 +513,24 @@ TestFlagger::initAgents()
 		// Get the last summary agent to list the results back to the task
 		if (mode.compare("summary") == 0) {
 			summaryAgent_p = (FlagAgentSummary *) fa;
+		}
+
+		// Get the display agent. There can be two display agents!
+		if (mode.compare("display") == 0){
+			if (agent_rec.fieldNumber("datadisplay") >= 0){
+				Bool dd;
+				agent_rec.get("datadisplay", dd);
+				if (dd)
+					dataDisplayAgent_p = (FlagAgentDisplay *) fa;
+			}
+			if (agent_rec.fieldNumber("reportdisplay") >= 0){
+				Bool rd;
+				agent_rec.get("reportdisplay", rd);
+				if (rd){
+					reportDisplayAgent_p = (FlagAgentDisplay *) fa;
+					// TODO: get format too?
+				}
+			}
 		}
 
 		// add the agent to the FlagAgentList
@@ -559,17 +585,27 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 			if (writeflags)
 				fdh_p->flushFlags();
 		}
-//		if (writeflags)
+
+		// Print the chunk summary stats
 		agents_list_p.chunkSummary();
 	}
 
-//	if (writeflags)
+	// Print the MS summary stats
 	agents_list_p.msSummary();
 	if (writeflags)
 		os << LogIO::NORMAL <<  "=> " << "Writing flags to the MS" << LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
+
+	// Gather the display reports from all agents
+	FlagReport combinedReport = agents_list_p.gatherReports();
+
+	// Send reports to display agent
+//	if (dataDisplayAgent_p)
+//		dataDisplayAgent_p.displayReports(combinedReport);
+	if (reportDisplayAgent_p)
+		reportDisplayAgent_p->displayReports(combinedReport);
 
 	// Get the record with the summary if there was any summary agent in the list
 	Record summary_stats = Record();
