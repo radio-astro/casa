@@ -316,21 +316,24 @@ def tflagger(vis,
             casalog.post('Parsing the display parameters')
                 
             # need to create different parameters for both, data and report.
-#            if display == 'both':
-#                agent_pars['mode'] = 'datadisplay'
-#                tflocal.parseAgentParameters(agent_pars)
-#                agent_pars['mode'] = 'reportdisplay'
-#                agent_pars['format'] = format
-#                tflocal.parseAgentParameters(agent_pars)
-#            
-#            elif display == 'data':
-#                agent_pars['mode'] = 'datadisplay'
-#                tflocal.parseAgentParameters(agent_pars)
-#            
-#            elif display == 'report':
-#                agent_pars['mode'] = 'reportdisplay'
-#                agent_pars['format'] = format
-#                tflocal.parseAgentParameters(agent_pars)
+            if display == 'both':
+                agent_pars['mode'] = 'display'
+                agent_pars['datadisplay'] = True
+                tflocal.parseAgentParameters(agent_pars)
+                agent_pars['reportdisplay'] = True
+                agent_pars['format'] = format
+                tflocal.parseAgentParameters(agent_pars)
+            
+            elif display == 'data':
+                agent_pars['mode'] = 'display'
+                agent_pars['datadisplay'] = True
+                tflocal.parseAgentParameters(agent_pars)
+            
+            elif display == 'report':
+                agent_pars['mode'] = 'display'
+                agent_pars['reportdisplay'] = True
+                agent_pars['format'] = format
+                tflocal.parseAgentParameters(agent_pars)
                 
 
         # Initialize the agent
