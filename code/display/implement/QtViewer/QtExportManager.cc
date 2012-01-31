@@ -41,7 +41,7 @@
 #include <casa/Exceptions/Error.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/FITSImage.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -597,7 +597,7 @@ void QtExportManager::getSectralCoordFlags(const ImageInterface<Float>* img, Boo
 
 void QtExportManager::expImageInterfaceToCASA(ImageInterface<Float> *img, String outFile){
    try{
-		// from: msvis/SynthesisUtils/Utils.h
+		// from: synthesis/TransformMachines/Utils.h
    	// still to be copied over:
    	// miscinfo, imageinfo, regions, history, mask??
    	PagedImage<Float> newPagedImage(img->shape(), img->coordinates(), outFile);

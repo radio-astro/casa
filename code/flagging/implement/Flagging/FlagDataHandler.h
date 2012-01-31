@@ -31,8 +31,8 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 
 // Async I/O infrastructure
-#include <msvis/MSVis/AsynchronousTools.h>
-#include <msvis/MSVis/VisBufferAsync.h>
+#include <synthesis/MSVis/AsynchronousTools.h>
+#include <synthesis/MSVis/VisBufferAsync.h>
 
 // .casarc interface
 #include <casa/System/AipsrcValue.h>

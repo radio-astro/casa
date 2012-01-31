@@ -34,9 +34,9 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h> 	 
 #include <ms/MeasurementSets/MSFieldColumns.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBufferUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBufferUtil.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>

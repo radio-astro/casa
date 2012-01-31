@@ -33,16 +33,16 @@
 #include <measures/Measures/Stokes.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/HostInfo.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
 #include <stdarg.h>
 
 #include <tables/Tables/ExprNode.h>
-//#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+//#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 
 #include <measures/Measures/Stokes.h>
 #include <casa/Quanta/UnitMap.h>

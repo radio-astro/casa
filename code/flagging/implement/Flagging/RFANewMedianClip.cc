@@ -27,7 +27,7 @@
 
 #include <flagging/Flagging/RFANewMedianClip.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/System/PGPlotterInterface.h>
 
 #include <casa/stdio.h>    
