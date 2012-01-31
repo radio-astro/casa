@@ -29,11 +29,11 @@
 #ifndef SYNTHESIS_SDGRID_H
 #define SYNTHESIS_SDGRID_H
 
-#include <msvis/SynthesisUtils/FTMachine.h>
-#include <msvis/SynthesisUtils/SkyJones.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/SkyJones.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>

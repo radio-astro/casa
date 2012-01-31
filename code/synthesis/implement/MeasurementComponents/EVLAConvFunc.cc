@@ -27,7 +27,7 @@
 //# $Id$
 //
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
-#include <msvis/SynthesisUtils/SynthesisError.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 #include <synthesis/MeasurementComponents/WTerm.h>
 //

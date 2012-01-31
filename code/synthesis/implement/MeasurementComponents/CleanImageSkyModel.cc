@@ -31,7 +31,7 @@
 #include <components/ComponentModels/ComponentList.h>
 #include <casa/OS/File.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>

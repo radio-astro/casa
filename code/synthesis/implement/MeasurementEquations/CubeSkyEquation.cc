@@ -43,32 +43,32 @@
 
 #include <synthesis/MeasurementComponents/SkyModel.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
-#include <msvis/SynthesisUtils/SkyJones.h>
-#include <msvis/SynthesisUtils/FTMachine.h>
+#include <synthesis/TransformMachines/SkyJones.h>
+#include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
-#include <msvis/SynthesisUtils/GridFT.h>
-#include <msvis/SynthesisUtils/MosaicFT.h>
-#include <msvis/SynthesisUtils/MultiTermFT.h>
+#include <synthesis/TransformMachines/GridFT.h>
+#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <msvis/SynthesisUtils/WProjectFT.h>
+#include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <msvis/SynthesisUtils/WPConvFunc.h>
-#include <msvis/SynthesisUtils/SimplePBConvFunc.h>
-#include <msvis/SynthesisUtils/ComponentFTMachine.h>
-#include <msvis/SynthesisUtils/SynthesisError.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/WPConvFunc.h>
+#include <synthesis/TransformMachines/SimplePBConvFunc.h>
+#include <synthesis/TransformMachines/ComponentFTMachine.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/MSVis/VisBufferUtil.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBufferUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

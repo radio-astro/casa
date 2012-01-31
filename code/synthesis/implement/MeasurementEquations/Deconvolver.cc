@@ -60,7 +60,7 @@
 #include <casa/Quanta/MVEpoch.h>
 #include <measures/Measures/MEpoch.h>
 
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeExpr.h> 
 #include <lattices/Lattices/LatticeFFT.h> 
 #include <lattices/Lattices/LatticeCleaner.h> 

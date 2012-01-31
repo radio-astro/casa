@@ -40,10 +40,10 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/SimpleSubMS.h>
-#include <msvis/MSVis/SubMS.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/SimpleSubMS.h>
+#include <synthesis/MSVis/SubMS.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 

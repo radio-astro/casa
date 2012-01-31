@@ -34,8 +34,8 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
-#include <msvis/SynthesisUtils/FTMachine.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

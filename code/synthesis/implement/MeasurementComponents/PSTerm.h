@@ -31,12 +31,12 @@
 
 
 #include <casa/Arrays/Vector.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
-#include <msvis/SynthesisUtils/CFStore.h>
+#include <synthesis/TransformMachines/CFStore.h>
 
 namespace casa{
   // <summary>  A class to apply the W-Term to the given image </summary>

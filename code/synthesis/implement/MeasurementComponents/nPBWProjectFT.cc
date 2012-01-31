@@ -26,7 +26,7 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/UnitVal.h>
@@ -42,10 +42,10 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/PagedImage.h>
@@ -80,8 +80,8 @@
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
-#include <msvis/SynthesisUtils/Utils.h>
-#include <msvis/SynthesisUtils/SynthesisError.h>
+#include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/MathFunc.h>

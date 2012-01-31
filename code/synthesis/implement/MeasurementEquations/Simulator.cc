@@ -54,8 +54,8 @@
 
 #include <casa/Arrays/ArrayMath.h>
 
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/VisCalGlobals.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
@@ -78,17 +78,17 @@
 #include <synthesis/MeasurementComponents/SimACohCalc.h>
 #include <synthesis/MeasurementComponents/SimACoh.h>
 //#include <synthesis/MeasurementComponents/SimVisJones.h>
-#include <msvis/SynthesisUtils/VPSkyJones.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeExpr.h> 
 
 #include <synthesis/MeasurementEquations/Simulator.h>
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <msvis/SynthesisUtils/WProjectFT.h>
+#include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <msvis/SynthesisUtils/MosaicFT.h>
-#include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
+#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
 #include <casa/OS/HostInfo.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/Cube.h>

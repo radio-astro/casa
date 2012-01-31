@@ -25,7 +25,7 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <casa/Quanta/MVTime.h>
@@ -39,11 +39,11 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/MeasurementComponents/SDGrid.h>
-#include <msvis/SynthesisUtils/SkyJones.h>
+#include <synthesis/TransformMachines/SkyJones.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/PointShape.h>

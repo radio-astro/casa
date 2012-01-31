@@ -41,12 +41,12 @@
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 
-#include <msvis/SynthesisUtils/FTMachine.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/EVLAAperture.h>
-#include <msvis/SynthesisUtils/BeamSquint.h>
+#include <synthesis/TransformMachines/BeamSquint.h>
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>

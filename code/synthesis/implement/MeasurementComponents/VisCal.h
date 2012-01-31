@@ -35,11 +35,11 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
-#include <calibration/CalTables/VisCalEnum.h>
+#include <synthesis/CalTables/VisCalEnum.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSet.h>
 
-#include <msvis/MSVis/VisBuffGroupAcc.h>
+#include <synthesis/MSVis/VisBuffGroupAcc.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
