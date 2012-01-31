@@ -249,6 +249,30 @@ def tflagcmd(
                 
             list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
             
+            # If the display is requested, add it to list of agents
+            if display != '':
+                
+                agent_pars = {}
+                casalog.post('Parsing the display parameters')
+                    
+                agent_pars['mode'] = 'display'
+                # need to create different parameters for both, data and report.
+                if display == 'both':
+                    agent_pars['datadisplay'] = True
+                    agent_pars['reportdisplay'] = True
+                    agent_pars['format'] = format
+                
+                elif display == 'data':
+                    agent_pars['datadisplay'] = True
+                
+                elif display == 'report':
+                    agent_pars['reportdisplay'] = True
+                    agent_pars['format'] = format
+                    
+                tflocal.parseAgentParameters(agent_pars)
+    
+                 
+
             # Initialize the Agents
             tflocal.init()
      
@@ -801,7 +825,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         agent_name = mode.capitalize()+'_'+str(key)
         modepars['name'] = agent_name
         
-        # remove the data selection parameters if there is only one agent,s
+        # remove the data selection parameters if there is only one agent,
         # for performance reasons
         if myflagcmd.__len__() == 1:
             sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
@@ -810,11 +834,11 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 if modepars.has_key(k):
                     modepars.pop(k)
 
-        casalog.post('Parameters of mode %s'%mode, 'DEBUG')
+        casalog.post('Parsing parameters of mode %s in cmd %s'%(mode,key), 'DEBUG')
         casalog.post('%s'%modepars, 'DEBUG')
 
         if (not tflocal.parseAgentParameters(modepars)):
-            casalog.post('Failed to parse parameters to agent %s' %mode, 'WARN')
+            casalog.post('Failed to parse parameters of agent %s' %mode, 'WARN')
                             
         # Parse the dictionary of valid agents
         if valid:               
@@ -826,7 +850,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         # FIXME: Backup the flags
 #        if (flagbackup):
 #            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
-
+    
     casalog.post('Dictionary of valid commands to save','DEBUG')
     casalog.post('%s'%savelist, 'DEBUG')
     
