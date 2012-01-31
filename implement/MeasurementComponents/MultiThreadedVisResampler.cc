@@ -26,10 +26,10 @@
 //#
 //# $Id$
 
-#include <msvis/SynthesisUtils/SynthesisError.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
-//#include <msvis/MSVis/UtilJ.h>
-#include <msvis/SynthesisUtils/Utils.h>
+//#include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>

@@ -31,7 +31,7 @@
 
 #include <casa/aips.h>
 #include <synthesis/MeasurementEquations/Iterate.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <casa/BasicSL/String.h>

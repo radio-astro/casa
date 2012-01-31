@@ -38,8 +38,8 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/ImageInterface.h>
 
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
-#include <msvis/SynthesisUtils/SynthesisError.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>

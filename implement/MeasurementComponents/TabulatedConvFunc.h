@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_TABULATEDCONVFUNC_H
 #define SYNTHESIS_TABULATEDCONVFUNC_H
 
-#include <msvis/SynthesisUtils/ConvolutionFunction.h>
+#include <synthesis/TransformMachines/ConvolutionFunction.h>
 
 namespace casa{
 

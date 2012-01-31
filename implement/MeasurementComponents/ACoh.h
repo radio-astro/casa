@@ -32,7 +32,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementEquations/Iterate.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSet.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

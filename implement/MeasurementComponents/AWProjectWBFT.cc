@@ -27,13 +27,13 @@
 //# $Id$
 
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>

@@ -30,13 +30,13 @@
 #define SYNTHESIS_EVLACONVFUNC_H
 
 #include <images/Images/ImageInterface.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
-#include <msvis/SynthesisUtils/CFStore.h>
+#include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 //#include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
 //#include <synthesis/MeasurementComponents/PixelatedConvFunc.h>
-#include <msvis/SynthesisUtils/ConvolutionFunction.h>
+#include <synthesis/TransformMachines/ConvolutionFunction.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
