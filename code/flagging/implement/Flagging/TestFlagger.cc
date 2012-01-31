@@ -300,15 +300,19 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	agentParams_p.get("mode", mode);
 
 	// Name for the logging output
-	if (! agentParams_p.isDefined("name"))
-			agentParams_p.define("name", mode);
+	if (! agentParams_p.isDefined("name")){
+		agent_name = mode;
+		agent_name.capitalize();
+		agentParams_p.define("name", agent_name);
 
+	}
 
 	agentParams_p.get("name", agent_name);
 
 	// Enforce a defaut value for the apply parameter
-	if (! agentParams_p.isDefined("apply"))
+	if (! agentParams_p.isDefined("apply")){
 		agentParams_p.define("apply", apply);
+	}
 
 
 	// If there is a tfcrop or extend agent in the list,
