@@ -32,8 +32,8 @@
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 #include <casa/BasicMath/Math.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
