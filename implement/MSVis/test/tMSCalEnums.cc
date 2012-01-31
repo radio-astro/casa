@@ -31,7 +31,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/Assert.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 
 #include <casa/namespace.h>
 // <summary>

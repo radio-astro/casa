@@ -17,8 +17,8 @@
 #include <cppunit/ui/text/TestRunner.h>
 #include <stdarg.h>
 #include <iterator>
-#include <msvis/MSVis/UtilJ.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 
 using namespace std;
 using namespace casa;

@@ -32,11 +32,11 @@
 #include <tables/Tables/ExprNode.h>
 #include <measures/Measures/MeasTable.h>
 
-#include <msvis/SynthesisUtils/VisModelData.h>
-#include <msvis/SynthesisUtils/FTMachine.h>
-#include <msvis/SynthesisUtils/GridFT.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/TransformMachines/VisModelData.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/GridFT.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/OS/Timer.h>
 #include <casa/namespace.h>
 

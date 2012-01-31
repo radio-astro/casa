@@ -31,10 +31,10 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Utilities/Assert.h>
-#include <calibration/CalTables/CalIntpMatch.h>
-#include <msvis/MSVis/MSCalEnums.h>
-#include <calibration/CalTables/CalMainBuffer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/CalTables/CalIntpMatch.h>
+#include <synthesis/MSVis/MSCalEnums.h>
+#include <synthesis/CalTables/CalMainBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 #include <casa/namespace.h>
 // <summary>
