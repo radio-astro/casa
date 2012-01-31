@@ -29,9 +29,9 @@
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/OS/Timer.h>
 #include <casa/iomanip.h>
 #include <casa/namespace.h>

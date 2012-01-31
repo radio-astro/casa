@@ -25,9 +25,9 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBufferAsync.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBufferAsync.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <tables/Tables.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
