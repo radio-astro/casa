@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -72,6 +73,11 @@ namespace ACAPolarizationMod
   typedef ACAPolarization &ACAPolarization_out;
 } 
 #endif
+
+namespace ACAPolarizationMod {
+	std::ostream & operator << ( std::ostream & out, const ACAPolarization& value);
+	std::istream & operator >> ( std::istream & in , ACAPolarization& value );
+}
 
 /** 
   * A helper class for the enumeration ACAPolarization.

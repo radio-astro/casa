@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CTimeScale::version() {
 	return TimeScaleMod::version;
 	}
@@ -119,5 +118,25 @@ string CTimeScale::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'TimeScale'.";
 	return oss.str();
+}
+
+namespace TimeScaleMod {
+	std::ostream & operator << ( std::ostream & out, const TimeScale& value) {
+		out << CTimeScale::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , TimeScale& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CTimeScale::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

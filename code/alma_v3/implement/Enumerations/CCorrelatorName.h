@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -84,6 +85,11 @@ namespace CorrelatorNameMod
   typedef CorrelatorName &CorrelatorName_out;
 } 
 #endif
+
+namespace CorrelatorNameMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelatorName& value);
+	std::istream & operator >> ( std::istream & in , CorrelatorName& value );
+}
 
 /** 
   * A helper class for the enumeration CorrelatorName.

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace SBTypeMod
   typedef SBType &SBType_out;
 } 
 #endif
+
+namespace SBTypeMod {
+	std::ostream & operator << ( std::ostream & out, const SBType& value);
+	std::istream & operator >> ( std::istream & in , SBType& value );
+}
 
 /** 
   * A helper class for the enumeration SBType.

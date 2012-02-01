@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -74,6 +75,11 @@ namespace SidebandProcessingModeMod
   typedef SidebandProcessingMode &SidebandProcessingMode_out;
 } 
 #endif
+
+namespace SidebandProcessingModeMod {
+	std::ostream & operator << ( std::ostream & out, const SidebandProcessingMode& value);
+	std::istream & operator >> ( std::istream & in , SidebandProcessingMode& value );
+}
 
 /** 
   * A helper class for the enumeration SidebandProcessingMode.

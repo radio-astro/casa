@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -106,6 +107,11 @@ namespace ScanIntentMod
   typedef ScanIntent &ScanIntent_out;
 } 
 #endif
+
+namespace ScanIntentMod {
+	std::ostream & operator << ( std::ostream & out, const ScanIntent& value);
+	std::istream & operator >> ( std::istream & in , ScanIntent& value );
+}
 
 /** 
   * A helper class for the enumeration ScanIntent.

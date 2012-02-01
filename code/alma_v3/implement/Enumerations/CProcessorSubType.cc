@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CProcessorSubType::version() {
 	return ProcessorSubTypeMod::version;
 	}
@@ -149,5 +148,25 @@ string CProcessorSubType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'ProcessorSubType'.";
 	return oss.str();
+}
+
+namespace ProcessorSubTypeMod {
+	std::ostream & operator << ( std::ostream & out, const ProcessorSubType& value) {
+		out << CProcessorSubType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , ProcessorSubType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CProcessorSubType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

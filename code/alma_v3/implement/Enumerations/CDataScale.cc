@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CDataScale::version() {
 	return DataScaleMod::version;
 	}
@@ -149,5 +148,25 @@ string CDataScale::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'DataScale'.";
 	return oss.str();
+}
+
+namespace DataScaleMod {
+	std::ostream & operator << ( std::ostream & out, const DataScale& value) {
+		out << CDataScale::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , DataScale& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CDataScale::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

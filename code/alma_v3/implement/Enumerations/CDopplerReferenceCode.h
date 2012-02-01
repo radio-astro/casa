@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -80,6 +81,11 @@ namespace DopplerReferenceCodeMod
   typedef DopplerReferenceCode &DopplerReferenceCode_out;
 } 
 #endif
+
+namespace DopplerReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const DopplerReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , DopplerReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration DopplerReferenceCode.

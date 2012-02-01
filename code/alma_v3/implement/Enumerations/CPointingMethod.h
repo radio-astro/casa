@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -74,6 +75,11 @@ namespace PointingMethodMod
   typedef PointingMethod &PointingMethod_out;
 } 
 #endif
+
+namespace PointingMethodMod {
+	std::ostream & operator << ( std::ostream & out, const PointingMethod& value);
+	std::istream & operator >> ( std::istream & in , PointingMethod& value );
+}
 
 /** 
   * A helper class for the enumeration PointingMethod.

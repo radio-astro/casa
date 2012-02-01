@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CInvalidatingCondition::version() {
 	return InvalidatingConditionMod::version;
 	}
@@ -164,5 +163,25 @@ string CInvalidatingCondition::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'InvalidatingCondition'.";
 	return oss.str();
+}
+
+namespace InvalidatingConditionMod {
+	std::ostream & operator << ( std::ostream & out, const InvalidatingCondition& value) {
+		out << CInvalidatingCondition::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , InvalidatingCondition& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CInvalidatingCondition::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

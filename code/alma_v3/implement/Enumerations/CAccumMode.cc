@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CAccumMode::version() {
 	return AccumModeMod::version;
 	}
@@ -134,5 +133,25 @@ string CAccumMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'AccumMode'.";
 	return oss.str();
+}
+
+namespace AccumModeMod {
+	std::ostream & operator << ( std::ostream & out, const AccumMode& value) {
+		out << CAccumMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , AccumMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CAccumMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

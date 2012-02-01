@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -128,6 +129,11 @@ namespace StokesParameterMod
   typedef StokesParameter &StokesParameter_out;
 } 
 #endif
+
+namespace StokesParameterMod {
+	std::ostream & operator << ( std::ostream & out, const StokesParameter& value);
+	std::istream & operator >> ( std::istream & in , StokesParameter& value );
+}
 
 /** 
   * A helper class for the enumeration StokesParameter.

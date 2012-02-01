@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -78,6 +79,11 @@ namespace WindowFunctionMod
   typedef WindowFunction &WindowFunction_out;
 } 
 #endif
+
+namespace WindowFunctionMod {
+	std::ostream & operator << ( std::ostream & out, const WindowFunction& value);
+	std::istream & operator >> ( std::istream & in , WindowFunction& value );
+}
 
 /** 
   * A helper class for the enumeration WindowFunction.

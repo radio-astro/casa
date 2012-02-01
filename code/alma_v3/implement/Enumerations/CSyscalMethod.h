@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace SyscalMethodMod
   typedef SyscalMethod &SyscalMethod_out;
 } 
 #endif
+
+namespace SyscalMethodMod {
+	std::ostream & operator << ( std::ostream & out, const SyscalMethod& value);
+	std::istream & operator >> ( std::istream & in , SyscalMethod& value );
+}
 
 /** 
   * A helper class for the enumeration SyscalMethod.

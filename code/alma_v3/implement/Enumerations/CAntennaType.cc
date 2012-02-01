@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CAntennaType::version() {
 	return AntennaTypeMod::version;
 	}
@@ -134,5 +133,25 @@ string CAntennaType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'AntennaType'.";
 	return oss.str();
+}
+
+namespace AntennaTypeMod {
+	std::ostream & operator << ( std::ostream & out, const AntennaType& value) {
+		out << CAntennaType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , AntennaType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CAntennaType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

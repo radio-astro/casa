@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSchedulerMode::version() {
 	return SchedulerModeMod::version;
 	}
@@ -149,5 +148,25 @@ string CSchedulerMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SchedulerMode'.";
 	return oss.str();
+}
+
+namespace SchedulerModeMod {
+	std::ostream & operator << ( std::ostream & out, const SchedulerMode& value) {
+		out << CSchedulerMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SchedulerMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSchedulerMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

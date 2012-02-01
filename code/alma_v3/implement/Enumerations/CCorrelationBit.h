@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace CorrelationBitMod
   typedef CorrelationBit &CorrelationBit_out;
 } 
 #endif
+
+namespace CorrelationBitMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelationBit& value);
+	std::istream & operator >> ( std::istream & in , CorrelationBit& value );
+}
 
 /** 
   * A helper class for the enumeration CorrelationBit.

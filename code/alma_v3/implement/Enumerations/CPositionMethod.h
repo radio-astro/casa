@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -68,6 +69,11 @@ namespace PositionMethodMod
   typedef PositionMethod &PositionMethod_out;
 } 
 #endif
+
+namespace PositionMethodMod {
+	std::ostream & operator << ( std::ostream & out, const PositionMethod& value);
+	std::istream & operator >> ( std::istream & in , PositionMethod& value );
+}
 
 /** 
   * A helper class for the enumeration PositionMethod.

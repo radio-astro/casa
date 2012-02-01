@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CAssociatedCalNature::version() {
 	return AssociatedCalNatureMod::version;
 	}
@@ -104,5 +103,25 @@ string CAssociatedCalNature::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'AssociatedCalNature'.";
 	return oss.str();
+}
+
+namespace AssociatedCalNatureMod {
+	std::ostream & operator << ( std::ostream & out, const AssociatedCalNature& value) {
+		out << CAssociatedCalNature::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , AssociatedCalNature& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CAssociatedCalNature::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

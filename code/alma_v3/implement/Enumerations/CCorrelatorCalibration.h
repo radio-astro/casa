@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace CorrelatorCalibrationMod
   typedef CorrelatorCalibration &CorrelatorCalibration_out;
 } 
 #endif
+
+namespace CorrelatorCalibrationMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelatorCalibration& value);
+	std::istream & operator >> ( std::istream & in , CorrelatorCalibration& value );
+}
 
 /** 
   * A helper class for the enumeration CorrelatorCalibration.

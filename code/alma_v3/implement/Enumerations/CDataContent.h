@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -78,6 +79,11 @@ namespace DataContentMod
   typedef DataContent &DataContent_out;
 } 
 #endif
+
+namespace DataContentMod {
+	std::ostream & operator << ( std::ostream & out, const DataContent& value);
+	std::istream & operator >> ( std::istream & in , DataContent& value );
+}
 
 /** 
   * A helper class for the enumeration DataContent.

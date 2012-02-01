@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -68,6 +69,11 @@ namespace WVRMethodMod
   typedef WVRMethod &WVRMethod_out;
 } 
 #endif
+
+namespace WVRMethodMod {
+	std::ostream & operator << ( std::ostream & out, const WVRMethod& value);
+	std::istream & operator >> ( std::istream & in , WVRMethod& value );
+}
 
 /** 
   * A helper class for the enumeration WVRMethod.

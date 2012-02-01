@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -96,6 +97,11 @@ namespace BasebandNameMod
   typedef BasebandName &BasebandName_out;
 } 
 #endif
+
+namespace BasebandNameMod {
+	std::ostream & operator << ( std::ostream & out, const BasebandName& value);
+	std::istream & operator >> ( std::istream & in , BasebandName& value );
+}
 
 /** 
   * A helper class for the enumeration BasebandName.

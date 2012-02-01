@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CDopplerTrackingMode::version() {
 	return DopplerTrackingModeMod::version;
 	}
@@ -149,5 +148,25 @@ string CDopplerTrackingMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'DopplerTrackingMode'.";
 	return oss.str();
+}
+
+namespace DopplerTrackingModeMod {
+	std::ostream & operator << ( std::ostream & out, const DopplerTrackingMode& value) {
+		out << CDopplerTrackingMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , DopplerTrackingMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CDopplerTrackingMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

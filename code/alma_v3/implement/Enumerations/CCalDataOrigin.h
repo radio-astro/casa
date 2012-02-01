@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -82,6 +83,11 @@ namespace CalDataOriginMod
   typedef CalDataOrigin &CalDataOrigin_out;
 } 
 #endif
+
+namespace CalDataOriginMod {
+	std::ostream & operator << ( std::ostream & out, const CalDataOrigin& value);
+	std::istream & operator >> ( std::istream & in , CalDataOrigin& value );
+}
 
 /** 
   * A helper class for the enumeration CalDataOrigin.
