@@ -55,6 +55,8 @@ using namespace boost::algorithm;
 
 extern int xmlLoadExtDtdDefaultValue;
 
+#include "ASDMValuesParser.h"
+
 namespace asdm {
   bool directoryExists(const char* dir) {
     DIR* dhandle = opendir(dir);
@@ -565,6 +567,48 @@ namespace asdm {
     output << "Origin=" << s << ",Version=" << p.version_ << ",LoadTablesOnDemand=" << p.loadTablesOnDemand_ << ",CheckRowUniqueness=" << p.checkRowUniqueness_;
     return output;  // for multiple << operators.
   }
+
+  CharComparator::CharComparator(std::ifstream * is_p, off_t limit):is_p(is_p), limit(limit){asdmDebug_p = getenv("ASDM_DEBUG");}
+
+  bool CharComparator::operator() (char cl, char cr) {
+    if (asdmDebug_p) cout << "Entering CharComparator::operator()" << endl;
+    if (is_p && is_p->tellg() > limit) 
+      return true;
+    else 
+      return toupper(cl) == cr;
+    if (asdmDebug_p) cout << "Exiting CharComparator::operator()" << endl;
+  }
+
+  CharCompAccumulator::CharCompAccumulator(std::string* accumulator_p, std::ifstream * is_p, off_t limit): accumulator_p(accumulator_p),
+													 is_p(is_p),
+													   limit(limit) {nEqualChars = 0; asdmDebug_p = getenv("ASDM_DEBUG");}
+  bool CharCompAccumulator::operator()(char cl, char cr) {
+    if (asdmDebug_p) cout << "Entering CharCompAccumulator::operator()" << endl;
+    bool result = false;
+    // Are we beyond the limit ?
+    if (is_p && is_p->tellg() > limit) 
+      result = true;      // Yes
+    else {                // No
+      if (toupper(cl) == toupper(cr)) {
+	result = true;
+	nEqualChars++;
+      }
+      else {
+	if (nEqualChars > 0) {
+	  accumulator_p->erase(accumulator_p->end() - nEqualChars + 1, accumulator_p->end());
+	  nEqualChars = 0;
+	}
+	result = false;
+      }
+      accumulator_p->push_back(cl);
+    }
+    if (asdmDebug_p) cout << "Exiting CharCompAccumulator::operator()" << endl;
+    return result;
+  }  
+  
+  istringstream ASDMValuesParser::iss;
+  ostringstream ASDMValuesParser::oss;
+
 } // end namespace asdm
  
  
