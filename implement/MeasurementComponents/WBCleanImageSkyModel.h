@@ -167,6 +167,8 @@ private:
 
   Bool mergeDataError(ImageInterface<Float> &data, ImageInterface<Float> &error, const String &outImg);
 
+  Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
+
   Bool resizeWorkArrays(Int length);
   
   Int makeSpectralPSFs(SkyEquation& se);
