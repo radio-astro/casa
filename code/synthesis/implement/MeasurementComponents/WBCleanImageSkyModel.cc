@@ -42,6 +42,8 @@
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
+#include <images/Regions/RegionManager.h>
+
 #include <images/Regions/WCBox.h>
 
 #include <measures/Measures/Quality.h>
@@ -539,13 +541,9 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
       imalpha.table().unmarkForDelete();
 
       // Make a mask for the alpha image
-      ImageAnalysis iman;
-      iman.open(alphaname);
-      Record regions;
-      String scalcmask( restoredNames[getModelIndex(field,0)] 
-			+ String(">") + String::toString(specthreshold)  );
-      iman.calcmask(scalcmask, regions, String("mask_alpha"), True);
+      LatticeExpr<Bool> lemask(iif((imtaylor0 > specthreshold) , True, False));
 
+      createMask(lemask, imalpha);
       os << "Written Spectral Index Image : " << alphaname << LogIO::POST;
 
 
@@ -559,10 +557,8 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
 	  LatticeExpr<Float> alphacalcerror( abs(alphacalc) * sqrt( ( (residual0*mask1)/(imtaylor0+mask0) )*( (residual0*mask1)/(imtaylor0+mask0) ) + ( (residual1*mask1)/(imtaylor1+mask0) )*( (residual1*mask1)/(imtaylor1+mask0) )  ) );
 	  imalphaerror.copyData(alphacalcerror);
 	  imalphaerror.setImageInfo(ii);
+          createMask(lemask, imalphaerror);
 	  imalphaerror.table().unmarkForDelete();      
-	  ImageAnalysis ierr;
-	  ierr.open(alphaerrorname);
-	  ierr.calcmask(scalcmask, regions, String("mask_error"), True);
 	  os << "Written Spectral Index Error Image : " << alphaerrorname << LogIO::POST;
 
 	  //          mergeDataError( imalpha, imalphaerror, alphaerrorname+".new" );
@@ -580,10 +576,9 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
 	  imbeta.copyData(betacalc);
 	  imbeta.setImageInfo(ii);
 	  //imbeta.setUnits(Unit("Spectral Curvature"));
+          createMask(lemask, imbeta);
 	  imbeta.table().unmarkForDelete();
-	  ImageAnalysis iman2;
-	  iman2.open(betaname);
-	  iman2.calcmask(scalcmask, regions, String("mask_beta"), True);
+
 	  os << "Written Spectral Curvature Image : " << betaname << LogIO::POST;
 	}
       
@@ -592,6 +587,18 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
   return 0;
 
 }
+/***********************************************************************/
+
+Bool WBCleanImageSkyModel::createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage)
+{
+      ImageRegion outreg = outimage.makeMask("mask0",False,True);
+      LCRegion& outmask=outreg.asMask();
+      outmask.copyData(lemask);
+      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, True);
+      outimage.setDefaultMask("mask0");
+      return True;
+}
+
 
 /***********************************************************************/
 Bool WBCleanImageSkyModel::calculateCoeffResiduals()
