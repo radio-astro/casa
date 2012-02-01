@@ -181,6 +181,9 @@ private:
 	// Maximum between two number
 	void getMax(Double value);
 
+	// Check if mode is valid agains a list of known modes
+	bool isModeValid(String mode);
+
 	// Sink used to store history
 	LogSink logSink_p;
 

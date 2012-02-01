@@ -291,13 +291,21 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	agentParams_p = agent_params;
 
 	if (! agentParams_p.isDefined("mode")) {
-		os << LogIO::SEVERE << "No mode has been provided for the agent"
+		os << LogIO::WARN << "No mode has been provided"
 				<< LogIO::POST;
 		return false;
 	}
 
 	// Get mode
 	agentParams_p.get("mode", mode);
+
+	// Validate mode against known modes
+	if (! isModeValid(mode)){
+		os << LogIO::WARN << "Mode "<< mode << "is not valid or doesn't exist"
+				<< LogIO::POST;
+		return false;
+	}
+
 
 	// Name for the logging output
 	if (! agentParams_p.isDefined("name")){
@@ -414,7 +422,7 @@ TestFlagger::initAgents()
 	}
 
 
-	os<< LogIO::DEBUGGING<< "There are "<< agents_config_list_p.size()<<
+	os<< LogIO::DEBUGGING<< "There are initially "<< agents_config_list_p.size()<<
 			" agents in the list"<<LogIO::POST;
 
 	// Check if list has a mixed state of apply and unapply parameters
@@ -523,6 +531,9 @@ TestFlagger::initAgents()
 		agents_list_p.push_back(fa);
 
 	}
+
+	os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
+			LogIO::POST;
 
 	return true;
 }
@@ -750,6 +761,31 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 
 	return true;
 }
+
+// ---------------------------------------------------------------------
+// TestFlagger::isModeValid
+// Check if mode is valid
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::isModeValid(String mode)
+{
+	bool ret;
+
+	if (mode.compare("manualflag") == 0 or mode.compare("clip") == 0 or
+			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
+			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
+			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
+			mode.compare("unflag") == 0 or mode.compare("summary") == 0) {
+
+		ret = true;
+	}
+	else
+		ret = false;
+
+	return ret;
+}
+
 
 
 } //#end casa namespace
