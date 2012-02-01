@@ -194,7 +194,7 @@ See the example below:
      \n (2) mode (which can be: manualflag,clip,quack,shadow,elevation,tfcrop,extendflags,unflag or summary)
      \n     For flagging mode=clip, the parameters are: expression, datacolumns, clipminmax, etc.
      \n     See the documentation of the task tflagger for all the available parameters for each mode.\n
-     \n (3) apply (which can be true for flagging and false for unflagging)
+     \n (3) apply: default is true (true for flagging and false for unflagging)
      \n Example:\n\n
 myrecord={}\n
 myrecord['mode']='clip'\n

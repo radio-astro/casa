@@ -18,7 +18,7 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
-#include <calibration/CalTables/PlotCal.h>
+#include <synthesis/CalTables/PlotCal.h>
 
 #include <casa/Logging/LogIO.h>
 

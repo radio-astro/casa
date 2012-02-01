@@ -33,15 +33,15 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 //#include <synthesis/MeasurementComponents/nPBWProjectFT.h>
-#include <msvis/SynthesisUtils/GridFT.h>
+#include <synthesis/TransformMachines/GridFT.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInfo.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <casa/OS/Timer.h>
-#include <msvis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisBuffAccumulator.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declaration

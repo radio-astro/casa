@@ -34,7 +34,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="segsource">
           <description>Do a new coefficient calculation for each source</description>
-          <value>False</value>
+          <value>True</value>
     </param>
 
     <param type="string" name="reversespw">
@@ -72,7 +72,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <value></value>
     </param>
 
-    <param type="stringArray" name="tiesource">
+    <param type="stringArray" name="tie">
           <description>Prioritise tieing the phase of these sources as well as possible</description>
           <value></value>
     </param>
@@ -129,7 +129,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   statsource -- Compute the statistics (Phase RMS, Disc) on this source only
                default: '' (all)             
 
-  tiesource -- Prioritise tieing the phase of these sources as well as possible
+  tie -- Prioritise tieing the phase of these sources as well as possible
                 default: [] example: ['3C273']
 
   smooth -- Smooth WVR data by this many samples before applying the correction

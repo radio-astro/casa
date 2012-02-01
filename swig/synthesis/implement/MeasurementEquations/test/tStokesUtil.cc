@@ -34,7 +34,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/BasicSL/Complex.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/StokesUtil.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/iostream.h>

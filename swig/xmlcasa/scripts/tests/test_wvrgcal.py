@@ -39,7 +39,7 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = wvrgcal(vis="myinput.ms",caltable="xy.wvr",toffset=2.3,nsol=2,segsource=False,
                             reversespw="0~3",disperse=True,cont=False,wvrflag=['DV02', 'DV03'],
-                            sourceflag=['0', '1'],statfield="0",statsource="1",tiesource=[0, 1],
+                            sourceflag=['0', '1'],statfield="0",statsource="1",tie=[0, 1],
                             smooth=3,scale=3.5)
         print "Expected error ..."
         self.assertFalse(self.rval)

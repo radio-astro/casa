@@ -3,7 +3,7 @@ from taskinit import *
 
 def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 	    reversespw=None, disperse=False, cont=False, wvrflag=[], sourceflag=[],
-	    statfield=None, statsource=None, tiesource=[], smooth=None, scale=None):
+	    statfield=None, statsource=None, tie=[], smooth=None, scale=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data
 
@@ -20,7 +20,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
              default: 1
 
         segsource -- Do a new coefficient calculation for each source
-             default: False
+             default: True
 
         reversespw -- Reverse the sign of the correction for the listed SPWs
              default: '' (none), example: reversespw='0~2,4'; spectral windows 0,1,2,4
@@ -43,7 +43,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
         statsource -- Compute the statistics (Phase RMS, Disc) on this source only
                default: '' (all)             
 
-        tiesource -- Prioritise tieing the phase of these sources as well as possible
+        tie -- Prioritise tieing the phase of these sources as well as possible
                 default: [] example: ['3C273']
 
         smooth -- Smooth WVR data by this many samples before applying the correction
@@ -69,7 +69,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 		casalog.post(parsummary)
 		parsummary = 'sourceflag=\"'+str(sourceflag)+'\", statfield='+str(statfield)+', statsource=\"'+str(statsource)+'\",'
 		casalog.post(parsummary)
-		parsummary = 'tiesource=\"'+str(tiesource)+'\", smooth='+str(smooth)+', scale='+str(scale)
+		parsummary = 'tie=\"'+str(tie)+'\", smooth='+str(smooth)+', scale='+str(scale)
 		casalog.post(parsummary)
 
 		if not (type(vis)==str) or not (os.path.exists(vis)):
@@ -122,12 +122,16 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 		if not (statsource==None or statsource=="") and type(statsource)==str:
 			execute_string += ' --statsource '+ statsource
 
-		if (len(tiesource)>0):
-			for src in tiesource:
+		if (len(tie)>0):
+			execute_string += ' --tie '
+			for i in xrange(0,len(tie)):
+				src = tie[i]
 				if not (type(src)==int or type(src)==str):
-					raise Exception, "List elements of parameter tiesource must be int or string."
+					raise Exception, "List elements of parameter tie must be int or string."
 				if (src != ''):
-					execute_string += ' --tie '+str(src)
+					execute_string += '\''+str(src)+'\''
+					if not (i==len(tie)-1):
+						execute_string += ','
 
 		if (smooth > 1):
 			execute_string+= ' --smooth ' + str(smooth)
@@ -148,8 +152,11 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 		if(rval == 0):
 			return True
 		else:
-			casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
-			return False
+			if(rval < 32512):
+				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
+				return False
+			else:
+				raise Exception, "wvrgcal executable not available."
 	
 	except Exception, instance:
 		casalog.post("Error ...", 'SEVERE')

@@ -25,8 +25,8 @@
 //#
 //# $Id$
 #include <flagging/Flagging/RFADiffBase.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayLogical.h>

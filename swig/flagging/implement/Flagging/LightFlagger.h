@@ -37,7 +37,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
 #include <casa/Quanta/Quantum.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Fitting.h>
 #include <scimath/Fitting/LinearFit.h>

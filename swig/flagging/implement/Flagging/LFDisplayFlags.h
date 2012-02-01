@@ -34,8 +34,8 @@
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
 
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 
 #include <flagging/Flagging/LFPlotServerProxy.h>

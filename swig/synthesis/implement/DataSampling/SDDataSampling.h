@@ -30,7 +30,7 @@
 #define SYNTHESIS_SDDATASAMPLING_H
 
 #include <synthesis/DataSampling/DataSampling.h>
-#include <msvis/SynthesisUtils/SkyJones.h>
+#include <synthesis/TransformMachines/SkyJones.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>

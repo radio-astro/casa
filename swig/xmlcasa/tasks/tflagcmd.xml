@@ -71,23 +71,16 @@
                 </param>
 
                 <param type="string" name="action">
-                        <description>Action to perform in inputfile (apply/unapply/save/list/plot/clear/set/extract)</description>
+                        <description>Action to perform in MS and/or in inputfile (apply/unapply/list/plot/clear/extract)</description>
                         <value>apply</value>
                         <allowed kind="enum">
                         <value>apply</value>
                         <value>unapply</value>
                         <value>list</value>
-                        <value>save</value>
                         <value>plot</value>
                         <value>clear</value>
-                        <value>set</value>
                         <value>extract</value>
                         </allowed>
-                </param>
-
-                <param type="string" name="outfile" subparam="true">
-                        <description>Name of output flag or list file</description>
-                        <value></value>
                 </param>
 
                 <param type="bool" name="flagbackup" subparam="true">
@@ -105,26 +98,10 @@
                         <value type="vector"></value>
                 </param>
 
-                <param type="string" name="setcol" subparam="true">
-                        <description>Name of FLAG_CMD column to set</description>
-                        <value></value>
-                        <allowed kind="enum">
-                        <value>APPLIED</value>
-                        <value>COMMAND</value>
-                        <value>INTERVAL</value>
-                        <value>LEVEL</value>
-                        <value>REASON</value>
-                        <value>SEVERITY</value>
-                        <value>TIME</value>
-                        <value>TYPE</value>
-                        <value></value>
-                        </allowed>
-                </param>
-
-                <param type="any" name="setval" subparam="true">
-                        <description>value to set column to</description>
-                        <value type="string"></value>
-                </param>
+            <param type="string" name="plotfile" subparam="true">
+                    <description>Name of output file to save plot</description>
+                    <value></value>
+            </param>
 
             <param type="string" name="display">
                 <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
@@ -136,14 +113,23 @@
                 <value type="string">screen</value>
             </param>
 
-                <param type="bool" name="writeflags">
-                    <description>Write Flags to the MS</description>
-                    <value>True</value>
-                </param>
+            <param type="bool" name="writeflags">
+                <description>Write flags to the MS</description>
+                <value>True</value>
+             </param>
 
             <param type="bool" name="sequential">
                 <description>Run the task in sequential or in parallel.</description>
                 <value>False</value>
+            </param>
+
+            <param type="bool" name="savepars">
+                <description>Save flag commands to the MS or to a file</description>
+                <value>True</value>
+            </param>
+            <param type="string" name="outfile" subparam="true">
+                    <description>Name of output file to save commands</description>
+                    <value></value>
             </param>
 
 
@@ -170,43 +156,38 @@
 
                     <when param="action">
                             <equals value="apply">
-                                    <default param="outfile"><value type="string"></value></default>
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="unapply">
                                     <default param="sort"><value type="string">antenna</value></default>
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
-                            <equals value="list">
-                                    <default param="outfile"><value type="string"></value></default>
-                            </equals>
-                            <equals value="save">
-                                    <default param="outfile"><value type="string"></value></default>
-                            </equals>
                             <equals value="plot">
-                                    <default param="outfile"><value type="string"></value></default>
+                                    <default param="plotfile"><value type="string"></value></default>
                             </equals>
                             <equals value="clear">
                                     <default param="clearall"><value>False</value></default>
                                     <default param="rowlist"><value type="vector"></value></default>
                             </equals>
-                            <equals value="set">
-                                    <default param="rowlist"><value type="vector"></value></default>
-                                    <default param="setcol"><value type="string"></value></default>
-                                    <default param="setval"><value type="string"></value></default>
-                            </equals>
+                    </when>
+                                        
+                    <when param="display">
+                        <equals type="string" value="" />
+                        <equals type="string" value="data" />
+                        <equals type="string" value="report">
+                            <default param="format"><value type="string">screen</value></default>
+                        </equals>                    
+                        <equals type="string" value="both">
+                            <default param="format"><value type="string">screen</value></default>
+                        </equals>                    
                     </when>
 
-               <when param="display">
-                <equals type="string" value="" />
-                <equals type="string" value="data" />
-                <equals type="string" value="report">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-                <equals type="string" value="both">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-               </when>
+                    <when param="savepars">
+                        <equals type="bool" value="True">
+                            <default param="outfile"><value type="string"></value></default>
+                        </equals>
+                        <equals type="bool" value="False" />
+                    </when>
                     
                 </constraints>
         </input>
@@ -311,20 +292,15 @@
                    and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
                    matches this compound reason string only
 
-        action -- operation to perform using flags
-                options: 'apply','clear','list','plot','save','set','unapply'
+        action -- operation to perform on MS and/or in flag commands from inputfile
+                options: 'apply','clear','list','plot','unapply','extract'
                 default: 'apply'
 
            action "apply" --  apply flags to MS
        
-              This operation will apply the flags chosen by inputmode.       
-              If inputmode='table' from the MS FLAG_CMD, it will set
-              these flags to APPLIED=True.
-       
-              outfile -- save flags to output file after application
-                   default: '' (save flags/state to FLAG_CMD in vis,
-                                and will set APPLIED=True)
-       
+              This operation will apply the commands chosen by inputmode.       
+              If inputmode='table' it will set the APPLIED column to True.
+              
               flagbackup -- Automatically backup MS FLAG column before applying?
                    options: True,False
                    default: True
@@ -332,40 +308,30 @@
        
            action "unapply" --  unapply flags in MS
 
-              This operation will unapply the flags chosen by inputmode.
-              If inputmode='table' from the MS FLAG_CMD, it will set
-              these flags to APPLIED=False. It reads also the rows set
-              to APPLIED=True, even if useapplied is set to False.
+              This operation will unapply the commands chosen by inputmode.
+              If inputmode='table' it will set the APPLIED column to False. 
+              It reads also the rows set to APPLIED=True, even if useapplied is 
+              set to False.
               
-              In order to guarantee that only the data selected in the command
-              is unapplied, the framework will first unapply the selected rows
-              and then re-apply the overlapping data that got unapplied in the
-              first pass. This is a true unapply action!
+              IMPORTANT: In order to guarantee that only the data selected in 
+              the command is unapplied, the framework will first unapply the selected
+              rows and then re-apply the overlapping data that got unapplied in the
+              first pass. This is a true unapply action, but it will take longer to
+              process because it will re-apply all the remaining commands that have
+              APPLIED = True!
        
               flagbackup -- Automatically backup MS FLAG column before unapplying?
                    options: True,False
                    default: True
 
 
-           action "list" --  list flag commands
+           action "list" --  list and/or save flag commands
 
-              This operation will list the commands chosen by inputmode and
-              print to a file, screen and/or logger.
+              This operation will list the commands chosen by inputmode on the screen
+              and save them to the MS or to a file without applying. It will save the commands
+              to outfile if the parameter savepars is set to True. If outfile is None, it
+              will save the commands to the MS given in vis.
 
-              outfile -- output listing file
-                   default: '' (to screen/logger)
-       
-           action "save" --  save flags to file/table without applying
-
-              This operation will save the flags read in by inputmode and
-              save to an ASCII file or the FLAG_CMD table, without
-              applying (to apply use action='apply' instead).
-
-              outfile -- output flag command file
-                   default: '' (save flags to FLAG_CMD in vis, unless inputmode='table' 
-                                and inputfile='', then list to logger as these flags 
-                                already came from the table)
-       
 
            action "plot" --  plot flags (ant vs time)
 
@@ -408,43 +374,6 @@
               to (useful for when you import from xml or file, and decide to 
               redo it). This action will NOT unapply the commands.
 
-           action "set" --  set values for keys in FLAG_CMD table
-
-              This operation will set values for selected columns in
-              rows in the internal FLAG_CMD table of the MS.
-
-              NOTE: choosing this option will disregard anything you
-              set in inputmode, will always work on the FLAG_CMD table
-              in vis
-
-              This is a rudimentary way to set values in
-              FLAG_CMD, you are better off to make a flag table and 
-              read that in.
-
-              setcol -- FLAG_CMD column name to set
-                   options: 'APPLIED', 'COMMAND', 'INTERVAL', 'LEVEL', 'REASON', 
-                            'SEVERITY', 'TIME', 'TYPE'
-                   default: '' (none)
-                   example: 'REASON'
-
-              setval -- value to set this COLUMN to for selected rows
-                   default: '' (not a useful default!!!)
-
-                   NOTE: there is no checking of the typing of the
-                   value you give until it trys to write it into the
-                   table, so beware!
-
-              rowlist -- list of FLAG_CMD rows to clear
-                   default: [] (all flags in table)
-                   example: [0,1,2,10]
-
-                   NOTE: currently only takes integer lists, not
-                   parseable strings with ranges.  Use the Python
-                   range function to generate ranges, e.g.
-                      rowlist = range(0,30) + range(50,55)
-                   instead of '0~29,50~54' for now.
-       
-              WARNING: this can be dangerous, use with care.
 
            action "extract" -- extract internal flag dictionary
 
@@ -487,20 +416,29 @@
                 default: False
                 option: False/True
 
+        savepars -- Save the flag commands to the FLAG_CMD table of the MS or to an output text file.
+                default: True
+                options: True/False
+                
+                outfile -- Name of output file to save the flag commands.
+                    default: ' '; it will save the commands in the FLAG_CMD table of the MS.
+                    example: outfile='flags.txt' will save the parameters in a text file.
+
      ===========================================================================
 
      -- Internal FLAG_CMD input inputmode useage --
 
         (For mode='table')
 
-        It is a good idea to use optype='list' first to see whats there
+        It is a good idea to use optype='list' first to see what is there
         before doing anything else, e.g.
         
           inputmode = 'table'
           action = 'list'
+          useapplied = True
 
         To apply the flags stored in the FLAG_CMD table in the MS,
-        simply set inputmode='table' and optype='apply', e.g.
+        simply set inputmode='table' and action='apply', e.g.
 
           inputmode = 'table'
           action = 'apply'
@@ -510,7 +448,14 @@
         To merely save to FLAG_CMD but not apply, then
         
           inputmode = 'table'
-          action = 'save'
+          inputfile = 'other.ms'
+          action = 'list'
+          
+        To save commands from a file into the MS without applying
+        
+          inputmode = 'file'
+          inputfile = 'flags.txt'
+          action = 'list'
 
         If you need to select only certain rows from the FLAG_CMD table,
         use the tablerows parameter to control this.  Currently this must
@@ -538,11 +483,13 @@
 
           inputmode = 'xml'
           action = 'list'
+          savepars = False
 
         It is then straightforward to save these to FLAG_CMD
 
           inputmode = 'xml'
-          action = 'save'
+          action = 'list'
+          savepars = True
 
         To directly apply the online flags stored in the Flag.xml file in the
         MS, set inputmode='xml' and desired buffer, e.g.
@@ -550,6 +497,7 @@
           inputmode = 'xml'
           tbuff = 1.0    # pad flag times by 1 sec
           action = 'apply'
+          set savepars to save or not the commands in the MS
 
         You can also specify a set of reasons (a comma separated list)
         for flags to apply, e.g.
@@ -628,36 +576,17 @@
 
           This will effectively unapply any commands on the selected data.
 
-        * action = 'save'
-
-          This will save the commands to the location specified by outfile, with
-          the default being the internal FLAG_CMD table for outfile=''.
-
         * action = 'list'
 
-          List what is selected. It is wise to do this first before doing any
-          other action. It will send the output to the logger or to a file if outfile 
-          is non-blank.
+          List what is selected and or save in the MS or in a file. It is wise to do 
+          this first before doing any other action. It will list the output in the logger 
+          and save them to the FLAG_CMD table of the MS or to a file if outfile is non-blank.
 
         * action = 'plot'
 
           Will pop up a little matplotlib GUI (if outfile='') or plot to a
           file.  Currently only gives an antenna vs time plot, mostly useful
           for looking at the online flags.
-
-        * action = 'set'
-
-          DANGER! This can be used to reset values of flags in the FLAG_CMD
-          table.  It ignores what inputmode is pointing to and always works
-          on FLAG_CMD.  Its pretty basic, e.g.
-
-            vis = msfile
-            optype = 'set'
-            rowlist = []          # all rows
-            setcol = 'REASON'
-            setval = 'myFlags1'
-
-          will give all these flags a new REASON name.
 
         * action = 'clear'
           

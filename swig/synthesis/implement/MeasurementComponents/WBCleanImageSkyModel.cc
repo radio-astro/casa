@@ -31,7 +31,7 @@
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <casa/OS/File.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/MeasurementEquations/LatticeModel.h>
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 #include <casa/Exceptions/Error.h>
@@ -50,8 +50,8 @@
 
 #include <scimath/Mathematics/MatrixMathLA.h>
 
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 
 #include <ms/MeasurementSets/MSColumns.h>
 

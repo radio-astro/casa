@@ -127,8 +127,9 @@ def imstats(image):
         mylist = []
         for i in range(len(ia.shape())):
             mylist.append(0)
+        mylist.append(0)
         t = tuple(mylist)
-        center = ia.fitprofile(ngauss=1,poly=1)['center0'].item(t)
+        center = ia.fitprofile(ngauss=1,poly=1)['gs']['center'].item(t)
         csys = ia.coordsys()
         fit = csys.velocitytofrequency(center)/1e3
     except:

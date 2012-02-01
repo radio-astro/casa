@@ -26,11 +26,11 @@
 //#
 //# $Id$
 #include <synthesis/MeasurementComponents/ConvFuncDiskCache.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <casa/Exceptions/Error.h>
 #include <lattices/Lattices/LatticeExpr.h>
-#include <msvis/SynthesisUtils/SynthesisError.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Directory.h>
 #include <fstream>
 

@@ -32,6 +32,7 @@
 #include <flagging/Flagging/FlagAgentShadow.h>
 #include <flagging/Flagging/FlagAgentExtension.h>
 #include <flagging/Flagging/FlagAgentRFlag.h>
+#include <flagging/Flagging/FlagAgentDisplay.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -278,6 +279,12 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	else if (mode.compare("rflag")==0)
 	{
 		FlagAgentRFlag* agent = new FlagAgentRFlag(dh,config);
+		return agent;
+	}
+	// Display
+	else if (mode.compare("display")==0)
+	{
+		FlagAgentDisplay* agent = new FlagAgentDisplay(dh,config,writePrivateFlags);
 		return agent;
 	}
 	else
@@ -1179,11 +1186,11 @@ FlagAgentBase::chunkSummary()
 		msFlags_p +=  chunkFlags_p;
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> "  << " Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << "Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> "  << " Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << "Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
 		}
 
 	}
@@ -1193,7 +1200,7 @@ FlagAgentBase::chunkSummary()
 	if (chunkNaNs_p > 0)
 	{
 		msNaNs_p += chunkNaNs_p;
-		*logger_p << logLevel_p << "=> "  << " Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> "  << "Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
 	}
 
 	chunkFlags_p = 0;
@@ -1211,17 +1218,17 @@ FlagAgentBase::msSummary()
 	{
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> "  << " Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << "Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> "  << " Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << "Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 	}
 
 	if (msNaNs_p > 0)
 	{
-		*logger_p << logLevel_p << "=> "  << " Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> "  << "Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
 	}
 
 	msFlags_p = 0;

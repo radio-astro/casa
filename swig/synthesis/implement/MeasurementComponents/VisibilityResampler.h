@@ -29,14 +29,14 @@
 #ifndef SYNTHESIS_VISIBILITYRESAMPLER_H
 #define SYNTHESIS_VISIBILITYRESAMPLER_H
 
-#include <msvis/SynthesisUtils/CFStore.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/CFStore.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
-#include <msvis/MSVis/AsynchronousTools.h>
+#include <synthesis/MSVis/AsynchronousTools.h>
 
 #include <casa/aips.h>
 #include <casa/Logging/LogIO.h>

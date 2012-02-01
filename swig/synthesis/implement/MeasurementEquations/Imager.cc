@@ -71,11 +71,11 @@
 #include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
-#include <msvis/MSVis/MSUtil.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisImagingWeight.h>
-/////////#include <msvis/MSVis/VisBufferAsync.h>
+#include <synthesis/MSVis/MSUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisImagingWeight.h>
+/////////#include <synthesis/MSVis/VisBufferAsync.h>
 
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
@@ -112,15 +112,15 @@
 #include <synthesis/MeasurementComponents/NNLSImageSkyModel.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <msvis/SynthesisUtils/MosaicFT.h>
-#include <msvis/SynthesisUtils/WProjectFT.h>
+#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <msvis/SynthesisUtils/PBMath.h>
-#include <msvis/SynthesisUtils/SimpleComponentFTMachine.h>
-#include <msvis/SynthesisUtils/VPSkyJones.h>
-#include <msvis/SynthesisUtils/SynthesisError.h>
-#include <msvis/SynthesisUtils/HetArrayConvFunc.h>
+#include <synthesis/TransformMachines/PBMath.h>
+#include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/HetArrayConvFunc.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
 #include <synthesis/DataSampling/SDDataSampling.h>
@@ -145,7 +145,7 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCIntersection.h>
-#include <msvis/SynthesisUtils/PBMath.h>
+#include <synthesis/TransformMachines/PBMath.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>

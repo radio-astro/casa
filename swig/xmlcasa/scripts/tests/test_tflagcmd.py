@@ -111,6 +111,27 @@ class test_selections_alma(test_base):
         # flag POINTING CALIBRATION scans 
         tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply')
         test_eq(tflagger(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+        
+    def test_extract(self):
+        '''tflagcmd: action = extract and apply clip on WVR'''
+        # Remove any cmd from table
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        # Save cmd to FLAG_CMD
+        cmd = "mode=clip clipminmax=[0,50] expression=ABS_WVR"
+        tflagcmd(vis=self.vis, inputmode='cmd', command=[cmd], action='list')
+        
+        # Extract it
+        res = tflagcmd(vis=self.vis, action='extract')
+        
+        # Apply to clip only WVR
+        tflagcmd(vis=self.vis, inputmode='cmd', command=[res[0]['cmd']], savepars=False)
+        ret = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(ret['flagged'], 22752)
+        self.assertEqual(ret['correlation']['I']['flagged'], 22752)
+        self.assertEqual(ret['correlation']['XX']['flagged'], 0)
+        self.assertEqual(ret['correlation']['YY']['flagged'], 0)
+                
                 
 class test_unapply(test_base):
     # Action unapply
@@ -211,6 +232,66 @@ class test_unapply(test_base):
         self.assertEqual(res['scan']['4']['flagged'], 95256, "It should not unapply tablerows=4")
         self.assertEqual(res['scan']['7']['flagged'], 190512, "It should not unapply tablerows=7")
         self.assertEqual(res['flagged'], 285768)
+
+class test_savepars(test_base):
+    # Action unapply
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_list1(self):
+        '''tflagcmd: list and savepars=True/False'''
+        # Remove any cmd from table
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        ########## TEST 1 
+        # create text file called tflagcmd.txt
+        input = " scan=4 mode=clip expression=ABS_RR clipminmax=[0,4]\n"
+        filename = create_input(input)
+        filename1 = 'filename1.txt'
+        os.system('cp '+filename+' '+filename1)
+
+        # save command to MS
+        tflagcmd(vis=self.vis, action='list', inputmode='cmd', command=[input])
+        
+        # list/save to a file
+        tflagcmd(vis=self.vis, action='list', outfile='myflags.txt')
+        
+        # compare saved file with original input file
+        import filecmp
+        self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
+        
+        ########## TEST 2 
+        # create another input
+        input = " scan=1~3 mode=manualflag\n"
+        filename = create_input(input)
+        
+        # apply and don't save to MS
+        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=False)
+        
+        # list and check that parameters were not saved to MS
+        os.system('rm -rf myflags.txt')
+        tflagcmd(vis=self.vis, action='list', outfile='myflags.txt')
+        self.assertFalse(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should not be equal')
+        
+        ########### TEST 3 
+        # apply cmd from TEST 1 and update APPLIED column
+        tflagcmd(vis=self.vis)
+        
+        # scans=1~3 should be fully flagged
+        res = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['1']['total'], 568134)
+        self.assertEqual(res['scan']['2']['flagged'], 238140)
+        self.assertEqual(res['scan']['2']['total'], 238140)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['3']['total'], 762048)
+        self.assertEqual(res['scan']['4']['flagged'], 3348)
+        
+        # Only cmd form TEST 1 should be in MS
+        os.system('rm -rf myflags.txt')
+        tflagcmd(vis=self.vis, action='list', outfile='myflags.txt', useapplied=True)
+        self.assertTrue(filecmp.cmp(filename1, 'myflags.txt', 1), 'Files should be equal')
+        
         
         
 # Dummy class which cleans up created files
@@ -231,6 +312,7 @@ def suite():
     return [test_manualflag,
             test_selections_alma,
             test_unapply,
+            test_savepars,
             cleanup]
         
         

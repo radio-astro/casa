@@ -31,9 +31,6 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/HostInfo.h>
 #include <flagging/Flagging/TestFlagger.h>
-#include <flagging/Flagging/FlagDataHandler.h>
-#include <flagging/Flagging/FlagAgentBase.h>
-#include <flagging/Flagging/FlagAgentSummary.h>
 #include <tableplot/TablePlot/FlagVersion.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
@@ -55,6 +52,7 @@ TestFlagger::TestFlagger ()
 {
 	fdh_p = NULL;
 	summaryAgent_p = NULL;
+	displayAgent_p = NULL;
 	done();
 }
 
@@ -105,6 +103,10 @@ TestFlagger::done()
 
 	if(summaryAgent_p){
 		summaryAgent_p = NULL;
+	}
+
+	if(displayAgent_p){
+		displayAgent_p = NULL;
 	}
 
 	mode_p = "";
@@ -269,9 +271,11 @@ TestFlagger::parseAgentParameters(Record agent_params)
 {
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
+	// Default values for some parameters
 	String mode = "";
 	String expression = "ABS ALL";
 	String agent_name = "";
+	Bool apply = true;
 
 	// create a temporary vector of agents
 	std::vector<Record> listOfAgents;
@@ -287,7 +291,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	agentParams_p = agent_params;
 
 	if (! agentParams_p.isDefined("mode")) {
-		os << LogIO::SEVERE << "No mode has been provided for the agent"
+		os << LogIO::WARN << "No mode has been provided"
 				<< LogIO::POST;
 		return false;
 	}
@@ -295,12 +299,29 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	// Get mode
 	agentParams_p.get("mode", mode);
 
-	// Name for the logging output
-	if (! agentParams_p.isDefined("name"))
-			agentParams_p.define("name", mode);
+	// Validate mode against known modes
+	if (! isModeValid(mode)){
+		os << LogIO::WARN << "Mode "<< mode << "is not valid or doesn't exist"
+				<< LogIO::POST;
+		return false;
+	}
 
+
+	// Name for the logging output
+	if (! agentParams_p.isDefined("name")){
+		agent_name = mode;
+		agent_name.capitalize();
+		agentParams_p.define("name", agent_name);
+
+	}
 
 	agentParams_p.get("name", agent_name);
+
+	// Enforce a defaut value for the apply parameter
+	if (! agentParams_p.isDefined("apply")){
+		agentParams_p.define("apply", apply);
+	}
+
 
 	// If there is a tfcrop or extend agent in the list,
 	// get the maximum value of ntime and the combinescans parameter
@@ -401,7 +422,7 @@ TestFlagger::initAgents()
 	}
 
 
-	os<< LogIO::DEBUGGING<< "There are "<< agents_config_list_p.size()<<
+	os<< LogIO::DEBUGGING<< "There are initially "<< agents_config_list_p.size()<<
 			" agents in the list"<<LogIO::POST;
 
 	// Check if list has a mixed state of apply and unapply parameters
@@ -476,7 +497,8 @@ TestFlagger::initAgents()
 		}
 
 		// Change the new iteration approach only once
-		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0)) {
+		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
+			or mode.compare("display") == 0)) {
 			if (combinescans_p)
 				fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
 			else
@@ -500,10 +522,18 @@ TestFlagger::initAgents()
 			summaryAgent_p = (FlagAgentSummary *) fa;
 		}
 
+		// Get the display agent. There can be two display agents!
+		if (mode.compare("display") == 0){
+			displayAgent_p = (FlagAgentDisplay *) fa;
+		}
+
 		// add the agent to the FlagAgentList
 		agents_list_p.push_back(fa);
 
 	}
+
+	os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
+			LogIO::POST;
 
 	return true;
 }
@@ -552,15 +582,25 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 			if (writeflags)
 				fdh_p->flushFlags();
 		}
-		if (writeflags)
-			agents_list_p.chunkSummary();
+
+		// Print the chunk summary stats
+		agents_list_p.chunkSummary();
 	}
 
+	// Print the MS summary stats
+	agents_list_p.msSummary();
 	if (writeflags)
-		agents_list_p.msSummary();
+		os << LogIO::NORMAL <<  "=> " << "Writing flags to the MS" << LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
+
+	// Gather the display reports from all agents
+	FlagReport combinedReport = agents_list_p.gatherReports();
+
+	// Send reports to display agent
+	if (displayAgent_p)
+		displayAgent_p->displayReports(combinedReport);
 
 	// Get the record with the summary if there was any summary agent in the list
 	Record summary_stats = Record();
@@ -721,6 +761,31 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 
 	return true;
 }
+
+// ---------------------------------------------------------------------
+// TestFlagger::isModeValid
+// Check if mode is valid
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::isModeValid(String mode)
+{
+	bool ret;
+
+	if (mode.compare("manualflag") == 0 or mode.compare("clip") == 0 or
+			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
+			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
+			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
+			mode.compare("unflag") == 0 or mode.compare("summary") == 0) {
+
+		ret = true;
+	}
+	else
+		ret = false;
+
+	return ret;
+}
+
 
 
 } //#end casa namespace

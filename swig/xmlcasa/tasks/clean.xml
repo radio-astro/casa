@@ -929,8 +929,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        imagermode -- Advanced imaging e.g. mosaic or Cotton-Schwab clean
                default: imagermode='': Options: '', 'csclean', 'mosaic'
                default ''  =&gt; psfmode cleaning algorithm used
-	       NOTE: imagermode 'mosaic' and/or any gridmode not blank will
-               always use CS style clean. 
+	       NOTE: imagermode 'mosaic' (and/or) any gridmode not blank 
+                         (and/or) nterms>1 : will always use CS style clean. 
 
   &gt;&gt;&gt; gridmode='' expandable parameters
                The default value of '' has no effect.

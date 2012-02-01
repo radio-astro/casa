@@ -12,10 +12,10 @@
 
 #include "msgaintable.hpp"
 
-#include <calibration/CalTables/CalTable.h>
-#include <calibration/CalTables/SolvableVJTable.h>
-#include <calibration/CalTables/CalSet.h>
-#include <calibration/CalTables/CalHistRecord.h>
+#include <synthesis/CalTables/CalTable.h>
+#include <synthesis/CalTables/SolvableVJTable.h>
+#include <synthesis/CalTables/CalSet.h>
+#include <synthesis/CalTables/CalHistRecord.h>
 
 #include "almawvr/libair_main.hpp"
 #include "almawvr/arraygains.hpp"

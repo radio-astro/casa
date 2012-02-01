@@ -220,9 +220,9 @@ arrays containing the the fitted zero level offset value and its error, respecti
 for each channel. Both sets of values are in image brightness units.
 In cases where the fit did not converge, these values are set to NaN.
 
-The region can either be specified by a box(es)
-(blc1, trc1, blc2, trc2, ...) or a region (if both
-are given, the value of box is used). Ranges of pixel values can be
+The region can either be specified by a box(es) or a region (there is no
+garauntee which will be used if both are specified, so be certain only one is).
+Ranges of pixel values can be
 included or excluded from the fit via includepix and excludepix.
 
 If specified, the task will write the residual and/or model images for
@@ -321,9 +321,9 @@ and (position andle +/- position angle error).
 CAUTIONARY NOTES ON ERRORS
 imfit makes the following implicit assumptions:
 
-1. The noise associated with the pixels it is given to fit is perfectly random and gaussian
-2. There is no offset (constant, gradient, or more complex function) in pixel values.
-3. The things that are trying to be fit are gaussians.
+1. The noise associated with the pixels it is given to fit is truly random and gaussian
+2. There is no offset (constant (unless one is fit), gradient, or more complex function) in pixel values.
+3. The things that are trying to be fit are bona-fide gaussians.
 
 If any of these assumptions is not true, the errors reported will in general be lower limits. These
 assumptions do not hold if for example, there is structure in the noise of the image (eg the residual map produced

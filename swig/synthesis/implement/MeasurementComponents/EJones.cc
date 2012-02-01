@@ -26,8 +26,8 @@
 
 #include <synthesis/MeasurementComponents/EJones.h>
 
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffAccumulator.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 

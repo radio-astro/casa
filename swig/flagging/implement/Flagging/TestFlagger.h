@@ -38,6 +38,7 @@
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <flagging/Flagging/FlagAgentBase.h>
 #include <flagging/Flagging/FlagAgentSummary.h>
+#include <flagging/Flagging/FlagAgentDisplay.h>
 
 #include <boost/smart_ptr.hpp>
 
@@ -125,6 +126,8 @@ protected:
 	// True if there are apply and unapply parameters in the list
 	Bool mixed_p;
 
+	// Display agent parameters
+	FlagAgentDisplay *displayAgent_p;
 
 	// variables for initFlagDataHandler and initAgents
 	FlagDataHandler *fdh_p;
@@ -177,6 +180,9 @@ private:
 
 	// Maximum between two number
 	void getMax(Double value);
+
+	// Check if mode is valid agains a list of known modes
+	bool isModeValid(String mode);
 
 	// Sink used to store history
 	LogSink logSink_p;
