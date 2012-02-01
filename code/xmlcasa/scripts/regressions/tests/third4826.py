@@ -37,4 +37,4 @@ def run(fetch=False):
         raise Exception, 'regstate = False'
 
 ###return the images that will be templated and compared in future runs
-    return ['ngc4826.tutorial.16apr98.src.clean.image']
+    return ['ngc4826.tutorial.16apr98.src.clean.image', 'ngc4826.tutorial.16apr98.moments.mom1']
