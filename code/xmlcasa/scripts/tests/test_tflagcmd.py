@@ -111,6 +111,27 @@ class test_selections_alma(test_base):
         # flag POINTING CALIBRATION scans 
         tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply')
         test_eq(tflagger(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+        
+    def test_extract(self):
+        '''tflagcmd: action = extract and apply clip on WVR'''
+        # Remove any cmd from table
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        # Save cmd to FLAG_CMD
+        cmd = "mode=clip clipminmax=[0,50] expression=ABS_WVR"
+        tflagcmd(vis=self.vis, inputmode='cmd', command=[cmd], action='list')
+        
+        # Extract it
+        res = tflagcmd(vis=self.vis, action='extract')
+        
+        # Apply to clip only WVR
+        tflagcmd(vis=self.vis, inputmode='cmd', command=[res[0]['cmd']], savepars=False)
+        ret = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(ret['flagged'], 22752)
+        self.assertEqual(ret['correlation']['I']['flagged'], 22752)
+        self.assertEqual(ret['correlation']['XX']['flagged'], 0)
+        self.assertEqual(ret['correlation']['YY']['flagged'], 0)
+                
                 
 class test_unapply(test_base):
     # Action unapply
