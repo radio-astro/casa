@@ -71,23 +71,17 @@
                 </param>
 
                 <param type="string" name="action">
-                        <description>Action to perform in inputfile (apply/unapply/save/list/plot/clear/set/extract)</description>
+                        <description>Action to perform in inputfile (apply/unapply/list/plot/clear/set/extract)</description>
                         <value>apply</value>
                         <allowed kind="enum">
                         <value>apply</value>
                         <value>unapply</value>
                         <value>list</value>
-                        <value>save</value>
                         <value>plot</value>
                         <value>clear</value>
                         <value>set</value>
                         <value>extract</value>
                         </allowed>
-                </param>
-
-                <param type="string" name="outfile" subparam="true">
-                        <description>Name of output flag or list file</description>
-                        <value></value>
                 </param>
 
                 <param type="bool" name="flagbackup" subparam="true">
@@ -104,6 +98,11 @@
                         <description>FLAG_CMD rows to clear</description>
                         <value type="vector"></value>
                 </param>
+
+            <param type="string" name="plotfile" subparam="true">
+                    <description>Name of output file to save plot</description>
+                    <value></value>
+            </param>
 
                 <param type="string" name="setcol" subparam="true">
                         <description>Name of FLAG_CMD column to set</description>
@@ -136,14 +135,23 @@
                 <value type="string">screen</value>
             </param>
 
-                <param type="bool" name="writeflags">
-                    <description>Write Flags to the MS</description>
-                    <value>True</value>
-                </param>
+            <param type="bool" name="writeflags">
+                <description>Write flags to the MS</description>
+                <value>True</value>
+             </param>
 
             <param type="bool" name="sequential">
                 <description>Run the task in sequential or in parallel.</description>
                 <value>False</value>
+            </param>
+
+            <param type="bool" name="savepars">
+                <description>Save flag commands to the MS or to a file</description>
+                <value>True</value>
+            </param>
+            <param type="string" name="outfile" subparam="true">
+                    <description>Name of output file to save commands</description>
+                    <value></value>
             </param>
 
 
@@ -170,21 +178,14 @@
 
                     <when param="action">
                             <equals value="apply">
-                                    <default param="outfile"><value type="string"></value></default>
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="unapply">
                                     <default param="sort"><value type="string">antenna</value></default>
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
-                            <equals value="list">
-                                    <default param="outfile"><value type="string"></value></default>
-                            </equals>
-                            <equals value="save">
-                                    <default param="outfile"><value type="string"></value></default>
-                            </equals>
                             <equals value="plot">
-                                    <default param="outfile"><value type="string"></value></default>
+                                    <default param="plotfile"><value type="string"></value></default>
                             </equals>
                             <equals value="clear">
                                     <default param="clearall"><value>False</value></default>
@@ -196,17 +197,24 @@
                                     <default param="setval"><value type="string"></value></default>
                             </equals>
                     </when>
+                                        
+                    <when param="display">
+                        <equals type="string" value="" />
+                        <equals type="string" value="data" />
+                        <equals type="string" value="report">
+                            <default param="format"><value type="string">screen</value></default>
+                        </equals>                    
+                        <equals type="string" value="both">
+                            <default param="format"><value type="string">screen</value></default>
+                        </equals>                    
+                    </when>
 
-               <when param="display">
-                <equals type="string" value="" />
-                <equals type="string" value="data" />
-                <equals type="string" value="report">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-                <equals type="string" value="both">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-               </when>
+                    <when param="savepars">
+                        <equals type="bool" value="True">
+                            <default param="outfile"><value type="string"></value></default>
+                        </equals>
+                        <equals type="bool" value="False" />
+                    </when>
                     
                 </constraints>
         </input>
