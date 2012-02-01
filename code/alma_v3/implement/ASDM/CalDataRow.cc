@@ -51,6 +51,7 @@ using asdm::CalDataTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1015,83 +1016,83 @@ namespace asdm {
 
 	}
 	
-void CalDataRow::calDataIdFromBin(EndianISStream& eiss) {
+void CalDataRow::calDataIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalDataRow::startTimeObservedFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startTimeObserved =  ArrayTime::fromBin(eiss);
+		calDataId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalDataRow::endTimeObservedFromBin(EndianISStream& eiss) {
+void CalDataRow::startTimeObservedFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		endTimeObserved =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalDataRow::execBlockUIDFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		execBlockUID =  EntityRef::fromBin(eiss);
+		startTimeObserved =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void CalDataRow::calDataTypeFromBin(EndianISStream& eiss) {
+void CalDataRow::endTimeObservedFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endTimeObserved =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalDataRow::execBlockUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		execBlockUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void CalDataRow::calDataTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		calDataType = CCalDataOrigin::literal(eiss.readString());
+		calDataType = CCalDataOrigin::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalDataRow::calTypeFromBin(EndianISStream& eiss) {
+void CalDataRow::calTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		calType = CCalType::literal(eiss.readString());
-			
-		
-	
-	
-}
-void CalDataRow::numScanFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numScan =  eiss.readInt();
+		calType = CCalType::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalDataRow::scanSetFromBin(EndianISStream& eiss) {
+void CalDataRow::numScanFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numScan =  eis.readInt();
+			
+		
+	
+	
+}
+void CalDataRow::scanSetFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1100,10 +1101,10 @@ void CalDataRow::scanSetFromBin(EndianISStream& eiss) {
 	
 		scanSet.clear();
 		
-		unsigned int scanSetDim1 = eiss.readInt();
+		unsigned int scanSetDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < scanSetDim1; i++)
 			
-			scanSet.push_back(eiss.readInt());
+			scanSet.push_back(eis.readInt());
 			
 	
 
@@ -1112,31 +1113,31 @@ void CalDataRow::scanSetFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalDataRow::assocCalDataIdFromBin(EndianISStream& eiss) {
+void CalDataRow::assocCalDataIdFromBin(EndianIStream& eis) {
 		
-	assocCalDataIdExists = eiss.readBoolean();
+	assocCalDataIdExists = eis.readBoolean();
 	if (assocCalDataIdExists) {
 		
 	
 		
 		
-		assocCalDataId =  Tag::fromBin(eiss);
+		assocCalDataId =  Tag::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void CalDataRow::assocCalNatureFromBin(EndianISStream& eiss) {
+void CalDataRow::assocCalNatureFromBin(EndianIStream& eis) {
 		
-	assocCalNatureExists = eiss.readBoolean();
+	assocCalNatureExists = eis.readBoolean();
 	if (assocCalNatureExists) {
 		
 	
 	
 		
 			
-		assocCalNature = CAssociatedCalNature::literal(eiss.readString());
+		assocCalNature = CAssociatedCalNature::literal(eis.readString());
 			
 		
 	
@@ -1144,9 +1145,9 @@ void CalDataRow::assocCalNatureFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDataRow::fieldNameFromBin(EndianISStream& eiss) {
+void CalDataRow::fieldNameFromBin(EndianIStream& eis) {
 		
-	fieldNameExists = eiss.readBoolean();
+	fieldNameExists = eis.readBoolean();
 	if (fieldNameExists) {
 		
 	
@@ -1156,10 +1157,10 @@ void CalDataRow::fieldNameFromBin(EndianISStream& eiss) {
 	
 		fieldName.clear();
 		
-		unsigned int fieldNameDim1 = eiss.readInt();
+		unsigned int fieldNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < fieldNameDim1; i++)
 			
-			fieldName.push_back(eiss.readString());
+			fieldName.push_back(eis.readString());
 			
 	
 
@@ -1169,9 +1170,9 @@ void CalDataRow::fieldNameFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDataRow::sourceNameFromBin(EndianISStream& eiss) {
+void CalDataRow::sourceNameFromBin(EndianIStream& eis) {
 		
-	sourceNameExists = eiss.readBoolean();
+	sourceNameExists = eis.readBoolean();
 	if (sourceNameExists) {
 		
 	
@@ -1181,10 +1182,10 @@ void CalDataRow::sourceNameFromBin(EndianISStream& eiss) {
 	
 		sourceName.clear();
 		
-		unsigned int sourceNameDim1 = eiss.readInt();
+		unsigned int sourceNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < sourceNameDim1; i++)
 			
-			sourceName.push_back(eiss.readString());
+			sourceName.push_back(eis.readString());
 			
 	
 
@@ -1194,9 +1195,9 @@ void CalDataRow::sourceNameFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDataRow::sourceCodeFromBin(EndianISStream& eiss) {
+void CalDataRow::sourceCodeFromBin(EndianIStream& eis) {
 		
-	sourceCodeExists = eiss.readBoolean();
+	sourceCodeExists = eis.readBoolean();
 	if (sourceCodeExists) {
 		
 	
@@ -1206,10 +1207,10 @@ void CalDataRow::sourceCodeFromBin(EndianISStream& eiss) {
 	
 		sourceCode.clear();
 		
-		unsigned int sourceCodeDim1 = eiss.readInt();
+		unsigned int sourceCodeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < sourceCodeDim1; i++)
 			
-			sourceCode.push_back(eiss.readString());
+			sourceCode.push_back(eis.readString());
 			
 	
 
@@ -1219,9 +1220,9 @@ void CalDataRow::sourceCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDataRow::scanIntentFromBin(EndianISStream& eiss) {
+void CalDataRow::scanIntentFromBin(EndianIStream& eis) {
 		
-	scanIntentExists = eiss.readBoolean();
+	scanIntentExists = eis.readBoolean();
 	if (scanIntentExists) {
 		
 	
@@ -1231,10 +1232,10 @@ void CalDataRow::scanIntentFromBin(EndianISStream& eiss) {
 	
 		scanIntent.clear();
 		
-		unsigned int scanIntentDim1 = eiss.readInt();
+		unsigned int scanIntentDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < scanIntentDim1; i++)
 			
-			scanIntent.push_back(CScanIntent::literal(eiss.readString()));
+			scanIntent.push_back(CScanIntent::literal(eis.readString()));
 			
 	
 
@@ -1246,19 +1247,19 @@ void CalDataRow::scanIntentFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalDataRow* CalDataRow::fromBin(EndianISStream& eiss, CalDataTable& table, const vector<string>& attributesSeq) {
+	CalDataRow* CalDataRow::fromBin(EndianIStream& eis, CalDataTable& table, const vector<string>& attributesSeq) {
 		CalDataRow* row = new  CalDataRow(table);
 		
 		map<string, CalDataAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalDataTable");
 			}
@@ -1266,10 +1267,135 @@ void CalDataRow::scanIntentFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void CalDataRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalDataRow::startTimeObservedFromText(const string & s) {
+		 
+		startTimeObserved = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalDataRow::endTimeObservedFromText(const string & s) {
+		 
+		endTimeObserved = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an CalDataOrigin 
+	void CalDataRow::calDataTypeFromText(const string & s) {
+		 
+		calDataType = ASDMValuesParser::parse<CalDataOrigin>(s);
+		
+	}
+	
+	
+	// Convert a string into an CalType 
+	void CalDataRow::calTypeFromText(const string & s) {
+		 
+		calType = ASDMValuesParser::parse<CalType>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalDataRow::numScanFromText(const string & s) {
+		 
+		numScan = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalDataRow::scanSetFromText(const string & s) {
+		 
+		scanSet = ASDMValuesParser::parse1D<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Tag 
+	void CalDataRow::assocCalDataIdFromText(const string & s) {
+		assocCalDataIdExists = true;
+		 
+		assocCalDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an AssociatedCalNature 
+	void CalDataRow::assocCalNatureFromText(const string & s) {
+		assocCalNatureExists = true;
+		 
+		assocCalNature = ASDMValuesParser::parse<AssociatedCalNature>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalDataRow::fieldNameFromText(const string & s) {
+		fieldNameExists = true;
+		 
+		fieldName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalDataRow::sourceNameFromText(const string & s) {
+		sourceNameExists = true;
+		 
+		sourceName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalDataRow::sourceCodeFromText(const string & s) {
+		sourceCodeExists = true;
+		 
+		sourceCode = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an ScanIntent 
+	void CalDataRow::scanIntentFromText(const string & s) {
+		scanIntentExists = true;
+		 
+		scanIntent = ASDMValuesParser::parse1D<ScanIntent>(s);
+		
+	}
+	
+	
+	
+	void CalDataRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalDataAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalDataTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1814,13 +1940,14 @@ void CalDataRow::scanIntentFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -1935,6 +2062,65 @@ assocCalNature = CAssociatedCalNature::from_int(0);
 	 fromBinMethods["sourceCode"] = &CalDataRow::sourceCodeFromBin; 
 	 fromBinMethods["scanIntent"] = &CalDataRow::scanIntentFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["calDataId"] = &CalDataRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["startTimeObserved"] = &CalDataRow::startTimeObservedFromText;
+		 
+	
+				 
+	fromTextMethods["endTimeObserved"] = &CalDataRow::endTimeObservedFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["calDataType"] = &CalDataRow::calDataTypeFromText;
+		 
+	
+				 
+	fromTextMethods["calType"] = &CalDataRow::calTypeFromText;
+		 
+	
+				 
+	fromTextMethods["numScan"] = &CalDataRow::numScanFromText;
+		 
+	
+				 
+	fromTextMethods["scanSet"] = &CalDataRow::scanSetFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["assocCalDataId"] = &CalDataRow::assocCalDataIdFromText;
+		 	
+	 
+				
+	fromTextMethods["assocCalNature"] = &CalDataRow::assocCalNatureFromText;
+		 	
+	 
+				
+	fromTextMethods["fieldName"] = &CalDataRow::fieldNameFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceName"] = &CalDataRow::sourceNameFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceCode"] = &CalDataRow::sourceCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["scanIntent"] = &CalDataRow::scanIntentFromText;
+		 	
+		
 	}
 	
 	CalDataRow::CalDataRow (CalDataTable &t, CalDataRow &row) : table(t) {

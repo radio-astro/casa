@@ -77,9 +77,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Holography.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -89,17 +90,19 @@ namespace asdm {
 	
 
 class HolographyRow;
-typedef void (HolographyRow::*HolographyAttributeFromBin) (EndianISStream& eiss);
+typedef void (HolographyRow::*HolographyAttributeFromBin) (EndianIStream& eis);
+typedef void (HolographyRow::*HolographyAttributeFromText) (const string& s);
 
 /**
  * The HolographyRow class is a row of a HolographyTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class HolographyRow {
 friend class asdm::HolographyTable;
 friend class asdm::RowTransformer<HolographyRow>;
+//friend class asdm::TableStreamReader<HolographyTable, HolographyRow>;
 
 public:
 
@@ -344,7 +347,31 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, HolographyAttributeFromBin> fromBinMethods;
+void holographyIdFromBin( EndianIStream& eis);
+void distanceFromBin( EndianIStream& eis);
+void focusFromBin( EndianIStream& eis);
+void numCorrFromBin( EndianIStream& eis);
+void typeFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the HolographyTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static HolographyRow* fromBin(EndianIStream& eis, HolographyTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -469,17 +496,43 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, HolographyAttributeFromBin> fromBinMethods;
-void holographyIdFromBin( EndianISStream& eiss);
-void distanceFromBin( EndianISStream& eiss);
-void focusFromBin( EndianISStream& eiss);
-void numCorrFromBin( EndianISStream& eiss);
-void typeFromBin( EndianISStream& eiss);
+void holographyIdFromBin( EndianIStream& eis);
+void distanceFromBin( EndianIStream& eis);
+void focusFromBin( EndianIStream& eis);
+void numCorrFromBin( EndianIStream& eis);
+void typeFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, HolographyAttributeFromText> fromTextMethods;
+	
+void holographyIdFromText (const string & s);
+	
+	
+void distanceFromText (const string & s);
+	
+	
+void focusFromText (const string & s);
+	
+	
+void numCorrFromText (const string & s);
+	
+	
+void typeFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -488,14 +541,14 @@ void typeFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the HolographyTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static HolographyRow* fromBin(EndianISStream& eiss, HolographyTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static HolographyRow* fromBin(EndianIStream& eis, HolographyTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

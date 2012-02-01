@@ -74,48 +74,48 @@ namespace asdm {
   }
 
 
-  ArrayTimeInterval ArrayTimeInterval::fromBin(EndianISStream & eiss) {
+  ArrayTimeInterval ArrayTimeInterval::fromBin(EndianIStream & eis) {
     int64_t start, duration;
     if (readStartTimeDurationInBin_) {
-      start = eiss.readLongLong();
-      duration = eiss.readLongLong();
+      start = eis.readLongLong();
+      duration = eis.readLongLong();
     }
     else {
-      int64_t  midpoint = eiss.readLongLong();
-      duration = eiss.readLongLong();
+      int64_t  midpoint = eis.readLongLong();
+      duration = eis.readLongLong();
       start = midpoint - duration / 2;
     }      
     return ArrayTimeInterval(start, duration);
   }
 
-  vector<ArrayTimeInterval> ArrayTimeInterval::from1DBin(EndianISStream & eiss) {
-    int dim1 = eiss.readInt();
+  vector<ArrayTimeInterval> ArrayTimeInterval::from1DBin(EndianIStream & eis) {
+    int dim1 = eis.readInt();
     vector<ArrayTimeInterval> result;
     for (int i = 0; i < dim1; i++) {
-      result.push_back(fromBin(eiss));
+      result.push_back(fromBin(eis));
     }
     return result;	
   }
 
-  vector<vector<ArrayTimeInterval > > ArrayTimeInterval::from2DBin(EndianISStream & eiss) {
-    int dim1 = eiss.readInt();
-    int dim2 = eiss.readInt();
+  vector<vector<ArrayTimeInterval > > ArrayTimeInterval::from2DBin(EndianIStream & eis) {
+    int dim1 = eis.readInt();
+    int dim2 = eis.readInt();
     vector< vector<ArrayTimeInterval> >result;
     vector <ArrayTimeInterval> aux;
     for (int i = 0; i < dim1; i++) {
       aux.clear();
       for (int j = 0; j < dim2; j++) {
-	aux.push_back(fromBin(eiss));
+	aux.push_back(fromBin(eis));
       }
       result.push_back(aux);
     }
     return result;	
   }
 
-  vector<vector<vector<ArrayTimeInterval > > > ArrayTimeInterval::from3DBin(EndianISStream & eiss) {
-    int dim1 = eiss.readInt();
-    int dim2 = eiss.readInt();
-    int dim3 = eiss.readInt();
+  vector<vector<vector<ArrayTimeInterval > > > ArrayTimeInterval::from3DBin(EndianIStream & eis) {
+    int dim1 = eis.readInt();
+    int dim2 = eis.readInt();
+    int dim3 = eis.readInt();
     vector<vector< vector<ArrayTimeInterval> > >result;
     vector < vector<ArrayTimeInterval> >aux1;
     vector <ArrayTimeInterval> aux2;
@@ -124,7 +124,7 @@ namespace asdm {
       for (int j = 0; j < dim2; j++) {
 	aux2.clear();
 	for (int k = 0; k < dim3; k++) {
-	  aux2.push_back(fromBin(eiss));
+	  aux2.push_back(fromBin(eis));
 	}
 	aux1.push_back(aux2);
       }

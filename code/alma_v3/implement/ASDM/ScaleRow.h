@@ -79,9 +79,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Scale.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -91,17 +92,19 @@ namespace asdm {
 	
 
 class ScaleRow;
-typedef void (ScaleRow::*ScaleAttributeFromBin) (EndianISStream& eiss);
+typedef void (ScaleRow::*ScaleAttributeFromBin) (EndianIStream& eis);
+typedef void (ScaleRow::*ScaleAttributeFromText) (const string& s);
 
 /**
  * The ScaleRow class is a row of a ScaleTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class ScaleRow {
 friend class asdm::ScaleTable;
 friend class asdm::RowTransformer<ScaleRow>;
+//friend class asdm::TableStreamReader<ScaleTable, ScaleRow>;
 
 public:
 
@@ -346,7 +349,31 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, ScaleAttributeFromBin> fromBinMethods;
+void scaleIdFromBin( EndianIStream& eis);
+void timeScaleFromBin( EndianIStream& eis);
+void crossDataScaleFromBin( EndianIStream& eis);
+void autoDataScaleFromBin( EndianIStream& eis);
+void weightTypeFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the ScaleTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ScaleRow* fromBin(EndianIStream& eis, ScaleTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -471,17 +498,43 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, ScaleAttributeFromBin> fromBinMethods;
-void scaleIdFromBin( EndianISStream& eiss);
-void timeScaleFromBin( EndianISStream& eiss);
-void crossDataScaleFromBin( EndianISStream& eiss);
-void autoDataScaleFromBin( EndianISStream& eiss);
-void weightTypeFromBin( EndianISStream& eiss);
+void scaleIdFromBin( EndianIStream& eis);
+void timeScaleFromBin( EndianIStream& eis);
+void crossDataScaleFromBin( EndianIStream& eis);
+void autoDataScaleFromBin( EndianIStream& eis);
+void weightTypeFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, ScaleAttributeFromText> fromTextMethods;
+	
+void scaleIdFromText (const string & s);
+	
+	
+void timeScaleFromText (const string & s);
+	
+	
+void crossDataScaleFromText (const string & s);
+	
+	
+void autoDataScaleFromText (const string & s);
+	
+	
+void weightTypeFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -490,14 +543,14 @@ void weightTypeFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the ScaleTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static ScaleRow* fromBin(EndianISStream& eiss, ScaleTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static ScaleRow* fromBin(EndianIStream& eis, ScaleTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -93,9 +93,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Field.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -114,17 +115,19 @@ class FieldRow;
 	
 
 class FieldRow;
-typedef void (FieldRow::*FieldAttributeFromBin) (EndianISStream& eiss);
+typedef void (FieldRow::*FieldAttributeFromBin) (EndianIStream& eis);
+typedef void (FieldRow::*FieldAttributeFromText) (const string& s);
 
 /**
  * The FieldRow class is a row of a FieldTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class FieldRow {
 friend class asdm::FieldTable;
 friend class asdm::RowTransformer<FieldRow>;
+//friend class asdm::TableStreamReader<FieldTable, FieldRow>;
 
 public:
 
@@ -782,7 +785,40 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, FieldAttributeFromBin> fromBinMethods;
+void fieldIdFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void delayDirFromBin( EndianIStream& eis);
+void phaseDirFromBin( EndianIStream& eis);
+void referenceDirFromBin( EndianIStream& eis);
+
+void timeFromBin( EndianIStream& eis);
+void codeFromBin( EndianIStream& eis);
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void ephemerisIdFromBin( EndianIStream& eis);
+void sourceIdFromBin( EndianIStream& eis);
+void assocFieldIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the FieldTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static FieldRow* fromBin(EndianIStream& eis, FieldTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1042,26 +1078,79 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, FieldAttributeFromBin> fromBinMethods;
-void fieldIdFromBin( EndianISStream& eiss);
-void fieldNameFromBin( EndianISStream& eiss);
-void numPolyFromBin( EndianISStream& eiss);
-void delayDirFromBin( EndianISStream& eiss);
-void phaseDirFromBin( EndianISStream& eiss);
-void referenceDirFromBin( EndianISStream& eiss);
+void fieldIdFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void delayDirFromBin( EndianIStream& eis);
+void phaseDirFromBin( EndianIStream& eis);
+void referenceDirFromBin( EndianIStream& eis);
 
-void timeFromBin( EndianISStream& eiss);
-void codeFromBin( EndianISStream& eiss);
-void directionCodeFromBin( EndianISStream& eiss);
-void directionEquinoxFromBin( EndianISStream& eiss);
-void assocNatureFromBin( EndianISStream& eiss);
-void ephemerisIdFromBin( EndianISStream& eiss);
-void sourceIdFromBin( EndianISStream& eiss);
-void assocFieldIdFromBin( EndianISStream& eiss);
+void timeFromBin( EndianIStream& eis);
+void codeFromBin( EndianIStream& eis);
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void ephemerisIdFromBin( EndianIStream& eis);
+void sourceIdFromBin( EndianIStream& eis);
+void assocFieldIdFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, FieldAttributeFromText> fromTextMethods;
+	
+void fieldIdFromText (const string & s);
+	
+	
+void fieldNameFromText (const string & s);
+	
+	
+void numPolyFromText (const string & s);
+	
+	
+void delayDirFromText (const string & s);
+	
+	
+void phaseDirFromText (const string & s);
+	
+	
+void referenceDirFromText (const string & s);
+	
+
+	
+void timeFromText (const string & s);
+	
+	
+void codeFromText (const string & s);
+	
+	
+void directionCodeFromText (const string & s);
+	
+	
+void directionEquinoxFromText (const string & s);
+	
+	
+void assocNatureFromText (const string & s);
+	
+	
+void ephemerisIdFromText (const string & s);
+	
+	
+void sourceIdFromText (const string & s);
+	
+	
+void assocFieldIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1070,14 +1159,14 @@ void assocFieldIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the FieldTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static FieldRow* fromBin(EndianISStream& eiss, FieldTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static FieldRow* fromBin(EndianIStream& eis, FieldTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -101,7 +101,7 @@ namespace asdm {
 		eoss.writeString(id);
 	}
 	
-	EntityId EntityId::fromBin(EndianISStream& eiss) {
-		return EntityId(eiss.readString());		
+	EntityId EntityId::fromBin(EndianIStream& eis) {
+		return EntityId(eis.readString());		
 	}
 } // End namespace asdm

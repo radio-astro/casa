@@ -69,6 +69,7 @@ using asdm::ScaleRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1668,117 +1669,117 @@ namespace asdm {
 
 	}
 	
-void ExecBlockRow::execBlockIdFromBin(EndianISStream& eiss) {
+void ExecBlockRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::startTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startTime =  ArrayTime::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::endTimeFromBin(EndianISStream& eiss) {
+void ExecBlockRow::startTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		endTime =  ArrayTime::fromBin(eiss);
+		startTime =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::execBlockNumFromBin(EndianISStream& eiss) {
+void ExecBlockRow::endTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::execBlockNumFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		execBlockNum =  eiss.readInt();
+		execBlockNum =  eis.readInt();
 			
 		
 	
 	
 }
-void ExecBlockRow::execBlockUIDFromBin(EndianISStream& eiss) {
+void ExecBlockRow::execBlockUIDFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockUID =  EntityRef::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::projectUIDFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		projectUID =  EntityRef::fromBin(eiss);
+		execBlockUID =  EntityRef::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::configNameFromBin(EndianISStream& eiss) {
+void ExecBlockRow::projectUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		projectUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::configNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		configName =  eiss.readString();
-			
-		
-	
-	
-}
-void ExecBlockRow::telescopeNameFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		telescopeName =  eiss.readString();
+		configName =  eis.readString();
 			
 		
 	
 	
 }
-void ExecBlockRow::observerNameFromBin(EndianISStream& eiss) {
+void ExecBlockRow::telescopeNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		observerName =  eiss.readString();
-			
-		
-	
-	
-}
-void ExecBlockRow::numObservingLogFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numObservingLog =  eiss.readInt();
+		telescopeName =  eis.readString();
 			
 		
 	
 	
 }
-void ExecBlockRow::observingLogFromBin(EndianISStream& eiss) {
+void ExecBlockRow::observerNameFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		observerName =  eis.readString();
+			
+		
+	
+	
+}
+void ExecBlockRow::numObservingLogFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numObservingLog =  eis.readInt();
+			
+		
+	
+	
+}
+void ExecBlockRow::observingLogFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1787,10 +1788,10 @@ void ExecBlockRow::observingLogFromBin(EndianISStream& eiss) {
 	
 		observingLog.clear();
 		
-		unsigned int observingLogDim1 = eiss.readInt();
+		unsigned int observingLogDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < observingLogDim1; i++)
 			
-			observingLog.push_back(eiss.readString());
+			observingLog.push_back(eis.readString());
 			
 	
 
@@ -1798,140 +1799,140 @@ void ExecBlockRow::observingLogFromBin(EndianISStream& eiss) {
 	
 	
 }
-void ExecBlockRow::sessionReferenceFromBin(EndianISStream& eiss) {
+void ExecBlockRow::sessionReferenceFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		sessionReference =  EntityRef::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::baseRangeMinFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		baseRangeMin =  Length::fromBin(eiss);
+		sessionReference =  EntityRef::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::baseRangeMaxFromBin(EndianISStream& eiss) {
+void ExecBlockRow::baseRangeMinFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		baseRangeMax =  Length::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::baseRmsMinorFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		baseRmsMinor =  Length::fromBin(eiss);
+		baseRangeMin =  Length::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::baseRmsMajorFromBin(EndianISStream& eiss) {
+void ExecBlockRow::baseRangeMaxFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		baseRmsMajor =  Length::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::basePaFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		basePa =  Angle::fromBin(eiss);
+		baseRangeMax =  Length::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::abortedFromBin(EndianISStream& eiss) {
+void ExecBlockRow::baseRmsMinorFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		baseRmsMinor =  Length::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::baseRmsMajorFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		baseRmsMajor =  Length::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::basePaFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		basePa =  Angle::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::abortedFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		aborted =  eiss.readBoolean();
+		aborted =  eis.readBoolean();
 			
 		
 	
 	
 }
-void ExecBlockRow::numAntennaFromBin(EndianISStream& eiss) {
+void ExecBlockRow::numAntennaFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numAntenna =  eiss.readInt();
+		numAntenna =  eis.readInt();
 			
 		
 	
 	
 }
-void ExecBlockRow::antennaIdFromBin(EndianISStream& eiss) {
+void ExecBlockRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	antennaId = Tag::from1DBin(eiss);	
+	antennaId = Tag::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void ExecBlockRow::sBSummaryIdFromBin(EndianISStream& eiss) {
+void ExecBlockRow::sBSummaryIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		sBSummaryId =  Tag::fromBin(eiss);
+		sBSummaryId =  Tag::fromBin(eis);
 		
 	
 	
 }
 
-void ExecBlockRow::releaseDateFromBin(EndianISStream& eiss) {
+void ExecBlockRow::releaseDateFromBin(EndianIStream& eis) {
 		
-	releaseDateExists = eiss.readBoolean();
+	releaseDateExists = eis.readBoolean();
 	if (releaseDateExists) {
 		
 	
 		
 		
-		releaseDate =  ArrayTime::fromBin(eiss);
+		releaseDate =  ArrayTime::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void ExecBlockRow::schedulerModeFromBin(EndianISStream& eiss) {
+void ExecBlockRow::schedulerModeFromBin(EndianIStream& eis) {
 		
-	schedulerModeExists = eiss.readBoolean();
+	schedulerModeExists = eis.readBoolean();
 	if (schedulerModeExists) {
 		
 	
 	
 		
 			
-		schedulerMode =  eiss.readString();
+		schedulerMode =  eis.readString();
 			
 		
 	
@@ -1939,61 +1940,61 @@ void ExecBlockRow::schedulerModeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void ExecBlockRow::siteAltitudeFromBin(EndianISStream& eiss) {
+void ExecBlockRow::siteAltitudeFromBin(EndianIStream& eis) {
 		
-	siteAltitudeExists = eiss.readBoolean();
+	siteAltitudeExists = eis.readBoolean();
 	if (siteAltitudeExists) {
 		
 	
 		
 		
-		siteAltitude =  Length::fromBin(eiss);
+		siteAltitude =  Length::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void ExecBlockRow::siteLongitudeFromBin(EndianISStream& eiss) {
+void ExecBlockRow::siteLongitudeFromBin(EndianIStream& eis) {
 		
-	siteLongitudeExists = eiss.readBoolean();
+	siteLongitudeExists = eis.readBoolean();
 	if (siteLongitudeExists) {
 		
 	
 		
 		
-		siteLongitude =  Angle::fromBin(eiss);
+		siteLongitude =  Angle::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void ExecBlockRow::siteLatitudeFromBin(EndianISStream& eiss) {
+void ExecBlockRow::siteLatitudeFromBin(EndianIStream& eis) {
 		
-	siteLatitudeExists = eiss.readBoolean();
+	siteLatitudeExists = eis.readBoolean();
 	if (siteLatitudeExists) {
 		
 	
 		
 		
-		siteLatitude =  Angle::fromBin(eiss);
+		siteLatitude =  Angle::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void ExecBlockRow::observingScriptFromBin(EndianISStream& eiss) {
+void ExecBlockRow::observingScriptFromBin(EndianIStream& eis) {
 		
-	observingScriptExists = eiss.readBoolean();
+	observingScriptExists = eis.readBoolean();
 	if (observingScriptExists) {
 		
 	
 	
 		
 			
-		observingScript =  eiss.readString();
+		observingScript =  eis.readString();
 			
 		
 	
@@ -2001,30 +2002,30 @@ void ExecBlockRow::observingScriptFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void ExecBlockRow::observingScriptUIDFromBin(EndianISStream& eiss) {
+void ExecBlockRow::observingScriptUIDFromBin(EndianIStream& eis) {
 		
-	observingScriptUIDExists = eiss.readBoolean();
+	observingScriptUIDExists = eis.readBoolean();
 	if (observingScriptUIDExists) {
 		
 	
 		
 		
-		observingScriptUID =  EntityRef::fromBin(eiss);
+		observingScriptUID =  EntityRef::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void ExecBlockRow::scaleIdFromBin(EndianISStream& eiss) {
+void ExecBlockRow::scaleIdFromBin(EndianIStream& eis) {
 		
-	scaleIdExists = eiss.readBoolean();
+	scaleIdExists = eis.readBoolean();
 	if (scaleIdExists) {
 		
 	
 		
 		
-		scaleId =  Tag::fromBin(eiss);
+		scaleId =  Tag::fromBin(eis);
 		
 	
 
@@ -2033,19 +2034,19 @@ void ExecBlockRow::scaleIdFromBin(EndianISStream& eiss) {
 }
 	
 	
-	ExecBlockRow* ExecBlockRow::fromBin(EndianISStream& eiss, ExecBlockTable& table, const vector<string>& attributesSeq) {
+	ExecBlockRow* ExecBlockRow::fromBin(EndianIStream& eis, ExecBlockTable& table, const vector<string>& attributesSeq) {
 		ExecBlockRow* row = new  ExecBlockRow(table);
 		
 		map<string, ExecBlockAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ExecBlockTable");
 			}
@@ -2053,10 +2054,235 @@ void ExecBlockRow::scaleIdFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void ExecBlockRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void ExecBlockRow::startTimeFromText(const string & s) {
+		 
+		startTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void ExecBlockRow::endTimeFromText(const string & s) {
+		 
+		endTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ExecBlockRow::execBlockNumFromText(const string & s) {
+		 
+		execBlockNum = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::configNameFromText(const string & s) {
+		 
+		configName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::telescopeNameFromText(const string & s) {
+		 
+		telescopeName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::observerNameFromText(const string & s) {
+		 
+		observerName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ExecBlockRow::numObservingLogFromText(const string & s) {
+		 
+		numObservingLog = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::observingLogFromText(const string & s) {
+		 
+		observingLog = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRangeMinFromText(const string & s) {
+		 
+		baseRangeMin = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRangeMaxFromText(const string & s) {
+		 
+		baseRangeMax = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRmsMinorFromText(const string & s) {
+		 
+		baseRmsMinor = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRmsMajorFromText(const string & s) {
+		 
+		baseRmsMajor = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void ExecBlockRow::basePaFromText(const string & s) {
+		 
+		basePa = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void ExecBlockRow::abortedFromText(const string & s) {
+		 
+		aborted = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ExecBlockRow::numAntennaFromText(const string & s) {
+		 
+		numAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void ExecBlockRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void ExecBlockRow::sBSummaryIdFromText(const string & s) {
+		 
+		sBSummaryId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an ArrayTime 
+	void ExecBlockRow::releaseDateFromText(const string & s) {
+		releaseDateExists = true;
+		 
+		releaseDate = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::schedulerModeFromText(const string & s) {
+		schedulerModeExists = true;
+		 
+		schedulerMode = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::siteAltitudeFromText(const string & s) {
+		siteAltitudeExists = true;
+		 
+		siteAltitude = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void ExecBlockRow::siteLongitudeFromText(const string & s) {
+		siteLongitudeExists = true;
+		 
+		siteLongitude = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void ExecBlockRow::siteLatitudeFromText(const string & s) {
+		siteLatitudeExists = true;
+		 
+		siteLatitude = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::observingScriptFromText(const string & s) {
+		observingScriptExists = true;
+		 
+		observingScript = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Tag 
+	void ExecBlockRow::scaleIdFromText(const string & s) {
+		scaleIdExists = true;
+		 
+		scaleId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	
+	void ExecBlockRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, ExecBlockAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "ExecBlockTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -3000,9 +3226,9 @@ void ExecBlockRow::scaleIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -3115,9 +3341,10 @@ void ExecBlockRow::scaleIdFromBin(EndianISStream& eiss) {
 	}
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
  		
@@ -3415,6 +3642,119 @@ void ExecBlockRow::scaleIdFromBin(EndianISStream& eiss) {
 	 fromBinMethods["observingScriptUID"] = &ExecBlockRow::observingScriptUIDFromBin; 
 	 fromBinMethods["scaleId"] = &ExecBlockRow::scaleIdFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["execBlockId"] = &ExecBlockRow::execBlockIdFromText;
+		 
+	
+				 
+	fromTextMethods["startTime"] = &ExecBlockRow::startTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endTime"] = &ExecBlockRow::endTimeFromText;
+		 
+	
+				 
+	fromTextMethods["execBlockNum"] = &ExecBlockRow::execBlockNumFromText;
+		 
+	
+		 
+	
+		 
+	
+				 
+	fromTextMethods["configName"] = &ExecBlockRow::configNameFromText;
+		 
+	
+				 
+	fromTextMethods["telescopeName"] = &ExecBlockRow::telescopeNameFromText;
+		 
+	
+				 
+	fromTextMethods["observerName"] = &ExecBlockRow::observerNameFromText;
+		 
+	
+				 
+	fromTextMethods["numObservingLog"] = &ExecBlockRow::numObservingLogFromText;
+		 
+	
+				 
+	fromTextMethods["observingLog"] = &ExecBlockRow::observingLogFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromText;
+		 
+	
+				 
+	fromTextMethods["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromText;
+		 
+	
+				 
+	fromTextMethods["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromText;
+		 
+	
+				 
+	fromTextMethods["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromText;
+		 
+	
+				 
+	fromTextMethods["basePa"] = &ExecBlockRow::basePaFromText;
+		 
+	
+				 
+	fromTextMethods["aborted"] = &ExecBlockRow::abortedFromText;
+		 
+	
+				 
+	fromTextMethods["numAntenna"] = &ExecBlockRow::numAntennaFromText;
+		 
+	
+				 
+	fromTextMethods["antennaId"] = &ExecBlockRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["sBSummaryId"] = &ExecBlockRow::sBSummaryIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["releaseDate"] = &ExecBlockRow::releaseDateFromText;
+		 	
+	 
+				
+	fromTextMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromText;
+		 	
+	 
+				
+	fromTextMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromText;
+		 	
+	 
+				
+	fromTextMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromText;
+		 	
+	 
+				
+	fromTextMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromText;
+		 	
+	 
+				
+	fromTextMethods["observingScript"] = &ExecBlockRow::observingScriptFromText;
+		 	
+	 
+		 	
+	 
+				
+	fromTextMethods["scaleId"] = &ExecBlockRow::scaleIdFromText;
+		 	
+		
 	}
 	
 	ExecBlockRow::ExecBlockRow (ExecBlockTable &t, ExecBlockRow &row) : table(t) {

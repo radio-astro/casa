@@ -40,7 +40,7 @@ using asdm::StringTokenizer;
 using asdm::NumberFormatException;
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 namespace asdm {
 class Humidity;
 Humidity operator * ( double , const Humidity & );
@@ -154,36 +154,36 @@ public:
 	 */
 	static void toBin(const vector<vector<vector<Humidity> > >& angle,  EndianOSStream& eoss);
 	/**
-	 * Read the binary representation of an Humidity from a EndianISStream
+	 * Read the binary representation of an Humidity from a EndianIStream
 	 * and use the read value to set an  Humidity.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an Humidity
 	 */
-	static Humidity fromBin(EndianISStream& eiss);
+	static Humidity fromBin(EndianIStream& eis);
 	
 	/**
-	 * Read the binary representation of  a vector of  Humidity from an EndianISStream
+	 * Read the binary representation of  a vector of  Humidity from an EndianIStream
 	 * and use the read value to set a vector of  Humidity.
-	 * @param eiss a reference to the EndianISStream to be read
+	 * @param eis a reference to the EndianIStream to be read
 	 * @return a vector of Humidity
 	 */	 
-	 static vector<Humidity> from1DBin(EndianISStream & eiss);
+	 static vector<Humidity> from1DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of Humidity from an EndianISStream
+	 * Read the binary representation of  a vector of vector of Humidity from an EndianIStream
 	 * and use the read value to set a vector of  vector of Humidity.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of Humidity
 	 */	 
-	 static vector<vector<Humidity> > from2DBin(EndianISStream & eiss);
+	 static vector<vector<Humidity> > from2DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of vector of Humidity from an EndianISStream
+	 * Read the binary representation of  a vector of vector of vector of Humidity from an EndianIStream
 	 * and use the read value to set a vector of  vector of vector of Humidity.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of vector of Humidity
 	 */	 
-	 static vector<vector<vector<Humidity> > > from3DBin(EndianISStream & eiss);	 
+	 static vector<vector<vector<Humidity> > > from3DBin(EndianIStream & eis);	 
 	 
 	 /**
 	  * An assignment operator Humidity = Humidity.

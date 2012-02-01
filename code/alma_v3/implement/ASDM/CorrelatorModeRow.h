@@ -91,9 +91,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CorrelatorMode.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -103,17 +104,19 @@ namespace asdm {
 	
 
 class CorrelatorModeRow;
-typedef void (CorrelatorModeRow::*CorrelatorModeAttributeFromBin) (EndianISStream& eiss);
+typedef void (CorrelatorModeRow::*CorrelatorModeAttributeFromBin) (EndianIStream& eis);
+typedef void (CorrelatorModeRow::*CorrelatorModeAttributeFromText) (const string& s);
 
 /**
  * The CorrelatorModeRow class is a row of a CorrelatorModeTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CorrelatorModeRow {
 friend class asdm::CorrelatorModeTable;
 friend class asdm::RowTransformer<CorrelatorModeRow>;
+//friend class asdm::TableStreamReader<CorrelatorModeTable, CorrelatorModeRow>;
 
 public:
 
@@ -528,7 +531,36 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CorrelatorModeAttributeFromBin> fromBinMethods;
+void correlatorModeIdFromBin( EndianIStream& eis);
+void numBasebandFromBin( EndianIStream& eis);
+void basebandNamesFromBin( EndianIStream& eis);
+void basebandConfigFromBin( EndianIStream& eis);
+void accumModeFromBin( EndianIStream& eis);
+void binModeFromBin( EndianIStream& eis);
+void numAxesFromBin( EndianIStream& eis);
+void axesOrderArrayFromBin( EndianIStream& eis);
+void filterModeFromBin( EndianIStream& eis);
+void correlatorNameFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CorrelatorModeTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CorrelatorModeRow* fromBin(EndianIStream& eis, CorrelatorModeTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -708,22 +740,63 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CorrelatorModeAttributeFromBin> fromBinMethods;
-void correlatorModeIdFromBin( EndianISStream& eiss);
-void numBasebandFromBin( EndianISStream& eiss);
-void basebandNamesFromBin( EndianISStream& eiss);
-void basebandConfigFromBin( EndianISStream& eiss);
-void accumModeFromBin( EndianISStream& eiss);
-void binModeFromBin( EndianISStream& eiss);
-void numAxesFromBin( EndianISStream& eiss);
-void axesOrderArrayFromBin( EndianISStream& eiss);
-void filterModeFromBin( EndianISStream& eiss);
-void correlatorNameFromBin( EndianISStream& eiss);
+void correlatorModeIdFromBin( EndianIStream& eis);
+void numBasebandFromBin( EndianIStream& eis);
+void basebandNamesFromBin( EndianIStream& eis);
+void basebandConfigFromBin( EndianIStream& eis);
+void accumModeFromBin( EndianIStream& eis);
+void binModeFromBin( EndianIStream& eis);
+void numAxesFromBin( EndianIStream& eis);
+void axesOrderArrayFromBin( EndianIStream& eis);
+void filterModeFromBin( EndianIStream& eis);
+void correlatorNameFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CorrelatorModeAttributeFromText> fromTextMethods;
+	
+void correlatorModeIdFromText (const string & s);
+	
+	
+void numBasebandFromText (const string & s);
+	
+	
+void basebandNamesFromText (const string & s);
+	
+	
+void basebandConfigFromText (const string & s);
+	
+	
+void accumModeFromText (const string & s);
+	
+	
+void binModeFromText (const string & s);
+	
+	
+void numAxesFromText (const string & s);
+	
+	
+void axesOrderArrayFromText (const string & s);
+	
+	
+void filterModeFromText (const string & s);
+	
+	
+void correlatorNameFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -732,14 +805,14 @@ void correlatorNameFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CorrelatorModeTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CorrelatorModeRow* fromBin(EndianISStream& eiss, CorrelatorModeTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CorrelatorModeRow* fromBin(EndianIStream& eis, CorrelatorModeTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

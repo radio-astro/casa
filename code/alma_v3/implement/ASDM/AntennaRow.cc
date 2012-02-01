@@ -63,6 +63,7 @@ using asdm::StationRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -692,120 +693,120 @@ namespace asdm {
 
 	}
 	
-void AntennaRow::antennaIdFromBin(EndianISStream& eiss) {
+void AntennaRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void AntennaRow::nameFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		name =  eiss.readString();
-			
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void AntennaRow::antennaMakeFromBin(EndianISStream& eiss) {
+void AntennaRow::nameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaMake = CAntennaMake::literal(eiss.readString());
+		name =  eis.readString();
 			
 		
 	
 	
 }
-void AntennaRow::antennaTypeFromBin(EndianISStream& eiss) {
+void AntennaRow::antennaMakeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaType = CAntennaType::literal(eiss.readString());
+		antennaMake = CAntennaMake::literal(eis.readString());
 			
 		
 	
 	
 }
-void AntennaRow::dishDiameterFromBin(EndianISStream& eiss) {
+void AntennaRow::antennaTypeFromBin(EndianIStream& eis) {
 		
 	
+	
 		
-		
-		dishDiameter =  Length::fromBin(eiss);
+			
+		antennaType = CAntennaType::literal(eis.readString());
+			
 		
 	
 	
 }
-void AntennaRow::positionFromBin(EndianISStream& eiss) {
+void AntennaRow::dishDiameterFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		dishDiameter =  Length::fromBin(eis);
+		
+	
+	
+}
+void AntennaRow::positionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	position = Length::from1DBin(eiss);	
+	position = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void AntennaRow::offsetFromBin(EndianISStream& eiss) {
+void AntennaRow::offsetFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	offset = Length::from1DBin(eiss);	
+	offset = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void AntennaRow::timeFromBin(EndianISStream& eiss) {
+void AntennaRow::timeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		time =  ArrayTime::fromBin(eiss);
+		time =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void AntennaRow::stationIdFromBin(EndianISStream& eiss) {
+void AntennaRow::stationIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		stationId =  Tag::fromBin(eiss);
+		stationId =  Tag::fromBin(eis);
 		
 	
 	
 }
 
-void AntennaRow::assocAntennaIdFromBin(EndianISStream& eiss) {
+void AntennaRow::assocAntennaIdFromBin(EndianIStream& eis) {
 		
-	assocAntennaIdExists = eiss.readBoolean();
+	assocAntennaIdExists = eis.readBoolean();
 	if (assocAntennaIdExists) {
 		
 	
 		
 		
-		assocAntennaId =  Tag::fromBin(eiss);
+		assocAntennaId =  Tag::fromBin(eis);
 		
 	
 
@@ -814,19 +815,19 @@ void AntennaRow::assocAntennaIdFromBin(EndianISStream& eiss) {
 }
 	
 	
-	AntennaRow* AntennaRow::fromBin(EndianISStream& eiss, AntennaTable& table, const vector<string>& attributesSeq) {
+	AntennaRow* AntennaRow::fromBin(EndianIStream& eis, AntennaTable& table, const vector<string>& attributesSeq) {
 		AntennaRow* row = new  AntennaRow(table);
 		
 		map<string, AntennaAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "AntennaTable");
 			}
@@ -834,10 +835,105 @@ void AntennaRow::assocAntennaIdFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void AntennaRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void AntennaRow::nameFromText(const string & s) {
+		 
+		name = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaMake 
+	void AntennaRow::antennaMakeFromText(const string & s) {
+		 
+		antennaMake = ASDMValuesParser::parse<AntennaMake>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaType 
+	void AntennaRow::antennaTypeFromText(const string & s) {
+		 
+		antennaType = ASDMValuesParser::parse<AntennaType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void AntennaRow::dishDiameterFromText(const string & s) {
+		 
+		dishDiameter = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void AntennaRow::positionFromText(const string & s) {
+		 
+		position = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void AntennaRow::offsetFromText(const string & s) {
+		 
+		offset = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void AntennaRow::timeFromText(const string & s) {
+		 
+		time = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void AntennaRow::stationIdFromText(const string & s) {
+		 
+		stationId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Tag 
+	void AntennaRow::assocAntennaIdFromText(const string & s) {
+		assocAntennaIdExists = true;
+		 
+		assocAntennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	
+	void AntennaRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, AntennaAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "AntennaTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1100,9 +1196,9 @@ void AntennaRow::assocAntennaIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 	/**
@@ -1183,9 +1279,10 @@ void AntennaRow::assocAntennaIdFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1328,6 +1425,51 @@ antennaType = CAntennaType::from_int(0);
 	
 	 fromBinMethods["assocAntennaId"] = &AntennaRow::assocAntennaIdFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &AntennaRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["name"] = &AntennaRow::nameFromText;
+		 
+	
+				 
+	fromTextMethods["antennaMake"] = &AntennaRow::antennaMakeFromText;
+		 
+	
+				 
+	fromTextMethods["antennaType"] = &AntennaRow::antennaTypeFromText;
+		 
+	
+				 
+	fromTextMethods["dishDiameter"] = &AntennaRow::dishDiameterFromText;
+		 
+	
+				 
+	fromTextMethods["position"] = &AntennaRow::positionFromText;
+		 
+	
+				 
+	fromTextMethods["offset"] = &AntennaRow::offsetFromText;
+		 
+	
+				 
+	fromTextMethods["time"] = &AntennaRow::timeFromText;
+		 
+	
+				 
+	fromTextMethods["stationId"] = &AntennaRow::stationIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["assocAntennaId"] = &AntennaRow::assocAntennaIdFromText;
+		 	
+		
 	}
 	
 	AntennaRow::AntennaRow (AntennaTable &t, AntennaRow &row) : table(t) {

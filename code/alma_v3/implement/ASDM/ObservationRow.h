@@ -63,9 +63,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Observation.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -75,17 +76,19 @@ namespace asdm {
 	
 
 class ObservationRow;
-typedef void (ObservationRow::*ObservationAttributeFromBin) (EndianISStream& eiss);
+typedef void (ObservationRow::*ObservationAttributeFromBin) (EndianIStream& eis);
+typedef void (ObservationRow::*ObservationAttributeFromText) (const string& s);
 
 /**
  * The ObservationRow class is a row of a ObservationTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class ObservationRow {
 friend class asdm::ObservationTable;
 friend class asdm::RowTransformer<ObservationRow>;
+//friend class asdm::TableStreamReader<ObservationTable, ObservationRow>;
 
 public:
 
@@ -179,7 +182,27 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, ObservationAttributeFromBin> fromBinMethods;
+void observationIdFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the ObservationTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ObservationRow* fromBin(EndianIStream& eis, ObservationTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -260,13 +283,27 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, ObservationAttributeFromBin> fromBinMethods;
-void observationIdFromBin( EndianISStream& eiss);
+void observationIdFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, ObservationAttributeFromText> fromTextMethods;
+	
+void observationIdFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -275,14 +312,14 @@ void observationIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the ObservationTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static ObservationRow* fromBin(EndianISStream& eiss, ObservationTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static ObservationRow* fromBin(EndianIStream& eis, ObservationTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

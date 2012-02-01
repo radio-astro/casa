@@ -69,6 +69,7 @@ using asdm::ReceiverRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1033,61 +1034,61 @@ namespace asdm {
 
 	}
 	
-void FeedRow::antennaIdFromBin(EndianISStream& eiss) {
+void FeedRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FeedRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FeedRow::timeIntervalFromBin(EndianISStream& eiss) {
+void FeedRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FeedRow::feedIdFromBin(EndianISStream& eiss) {
+void FeedRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void FeedRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void FeedRow::numReceptorFromBin(EndianISStream& eiss) {
+void FeedRow::numReceptorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
 	
 }
-void FeedRow::beamOffsetFromBin(EndianISStream& eiss) {
+void FeedRow::beamOffsetFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1096,14 +1097,14 @@ void FeedRow::beamOffsetFromBin(EndianISStream& eiss) {
 	
 		beamOffset.clear();
 		
-		unsigned int beamOffsetDim1 = eiss.readInt();
-		unsigned int beamOffsetDim2 = eiss.readInt();
+		unsigned int beamOffsetDim1 = eis.readInt();
+		unsigned int beamOffsetDim2 = eis.readInt();
 		vector <double> beamOffsetAux1;
 		for (unsigned int i = 0; i < beamOffsetDim1; i++) {
 			beamOffsetAux1.clear();
 			for (unsigned int j = 0; j < beamOffsetDim2 ; j++)			
 			
-			beamOffsetAux1.push_back(eiss.readDouble());
+			beamOffsetAux1.push_back(eis.readDouble());
 			
 			beamOffset.push_back(beamOffsetAux1);
 		}
@@ -1114,21 +1115,21 @@ void FeedRow::beamOffsetFromBin(EndianISStream& eiss) {
 	
 	
 }
-void FeedRow::focusReferenceFromBin(EndianISStream& eiss) {
+void FeedRow::focusReferenceFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	focusReference = Length::from2DBin(eiss);		
+	focusReference = Length::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void FeedRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void FeedRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1137,10 +1138,10 @@ void FeedRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::literal(eiss.readString()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1148,35 +1149,35 @@ void FeedRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void FeedRow::polResponseFromBin(EndianISStream& eiss) {
+void FeedRow::polResponseFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	polResponse = Complex::from2DBin(eiss);		
+	polResponse = Complex::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void FeedRow::receptorAngleFromBin(EndianISStream& eiss) {
+void FeedRow::receptorAngleFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	receptorAngle = Angle::from1DBin(eiss);	
+	receptorAngle = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void FeedRow::receiverIdFromBin(EndianISStream& eiss) {
+void FeedRow::receiverIdFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1185,10 +1186,10 @@ void FeedRow::receiverIdFromBin(EndianISStream& eiss) {
 	
 		receiverId.clear();
 		
-		unsigned int receiverIdDim1 = eiss.readInt();
+		unsigned int receiverIdDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < receiverIdDim1; i++)
 			
-			receiverId.push_back(eiss.readInt());
+			receiverId.push_back(eis.readInt());
 			
 	
 
@@ -1197,16 +1198,16 @@ void FeedRow::receiverIdFromBin(EndianISStream& eiss) {
 	
 }
 
-void FeedRow::feedNumFromBin(EndianISStream& eiss) {
+void FeedRow::feedNumFromBin(EndianIStream& eis) {
 		
-	feedNumExists = eiss.readBoolean();
+	feedNumExists = eis.readBoolean();
 	if (feedNumExists) {
 		
 	
 	
 		
 			
-		feedNum =  eiss.readInt();
+		feedNum =  eis.readInt();
 			
 		
 	
@@ -1214,9 +1215,9 @@ void FeedRow::feedNumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FeedRow::illumOffsetFromBin(EndianISStream& eiss) {
+void FeedRow::illumOffsetFromBin(EndianIStream& eis) {
 		
-	illumOffsetExists = eiss.readBoolean();
+	illumOffsetExists = eis.readBoolean();
 	if (illumOffsetExists) {
 		
 	
@@ -1224,7 +1225,7 @@ void FeedRow::illumOffsetFromBin(EndianISStream& eiss) {
 		
 			
 	
-	illumOffset = Length::from1DBin(eiss);	
+	illumOffset = Length::from1DBin(eis);	
 	
 
 		
@@ -1233,9 +1234,9 @@ void FeedRow::illumOffsetFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FeedRow::positionFromBin(EndianISStream& eiss) {
+void FeedRow::positionFromBin(EndianIStream& eis) {
 		
-	positionExists = eiss.readBoolean();
+	positionExists = eis.readBoolean();
 	if (positionExists) {
 		
 	
@@ -1243,7 +1244,7 @@ void FeedRow::positionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	position = Length::from1DBin(eiss);	
+	position = Length::from1DBin(eis);	
 	
 
 		
@@ -1254,19 +1255,19 @@ void FeedRow::positionFromBin(EndianISStream& eiss) {
 }
 	
 	
-	FeedRow* FeedRow::fromBin(EndianISStream& eiss, FeedTable& table, const vector<string>& attributesSeq) {
+	FeedRow* FeedRow::fromBin(EndianIStream& eis, FeedTable& table, const vector<string>& attributesSeq) {
 		FeedRow* row = new  FeedRow(table);
 		
 		map<string, FeedAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FeedTable");
 			}
@@ -1274,10 +1275,139 @@ void FeedRow::positionFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FeedRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FeedRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void FeedRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FeedRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FeedRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void FeedRow::beamOffsetFromText(const string & s) {
+		 
+		beamOffset = ASDMValuesParser::parse2D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FeedRow::focusReferenceFromText(const string & s) {
+		 
+		focusReference = ASDMValuesParser::parse2D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void FeedRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Complex 
+	void FeedRow::polResponseFromText(const string & s) {
+		 
+		polResponse = ASDMValuesParser::parse2D<Complex>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FeedRow::receptorAngleFromText(const string & s) {
+		 
+		receptorAngle = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FeedRow::receiverIdFromText(const string & s) {
+		 
+		receiverId = ASDMValuesParser::parse1D<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void FeedRow::feedNumFromText(const string & s) {
+		feedNumExists = true;
+		 
+		feedNum = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FeedRow::illumOffsetFromText(const string & s) {
+		illumOffsetExists = true;
+		 
+		illumOffset = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FeedRow::positionFromText(const string & s) {
+		positionExists = true;
+		 
+		position = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	
+	void FeedRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FeedAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FeedTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1685,9 +1815,9 @@ void FeedRow::positionFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1793,9 +1923,10 @@ void FeedRow::positionFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1999,6 +2130,67 @@ void FeedRow::positionFromBin(EndianISStream& eiss) {
 	 fromBinMethods["illumOffset"] = &FeedRow::illumOffsetFromBin; 
 	 fromBinMethods["position"] = &FeedRow::positionFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &FeedRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &FeedRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &FeedRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &FeedRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &FeedRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["beamOffset"] = &FeedRow::beamOffsetFromText;
+		 
+	
+				 
+	fromTextMethods["focusReference"] = &FeedRow::focusReferenceFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &FeedRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["polResponse"] = &FeedRow::polResponseFromText;
+		 
+	
+				 
+	fromTextMethods["receptorAngle"] = &FeedRow::receptorAngleFromText;
+		 
+	
+				 
+	fromTextMethods["receiverId"] = &FeedRow::receiverIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["feedNum"] = &FeedRow::feedNumFromText;
+		 	
+	 
+				
+	fromTextMethods["illumOffset"] = &FeedRow::illumOffsetFromText;
+		 	
+	 
+				
+	fromTextMethods["position"] = &FeedRow::positionFromText;
+		 	
+		
 	}
 	
 	FeedRow::FeedRow (FeedTable &t, FeedRow &row) : table(t) {

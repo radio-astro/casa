@@ -57,6 +57,7 @@ using asdm::ExecBlockRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1127,73 +1128,73 @@ namespace asdm {
 
 	}
 	
-void ScanRow::execBlockIdFromBin(EndianISStream& eiss) {
+void ScanRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void ScanRow::scanNumberFromBin(EndianISStream& eiss) {
+void ScanRow::scanNumberFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		scanNumber =  eiss.readInt();
+		scanNumber =  eis.readInt();
 			
 		
 	
 	
 }
-void ScanRow::startTimeFromBin(EndianISStream& eiss) {
+void ScanRow::startTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		startTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void ScanRow::endTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endTime =  ArrayTime::fromBin(eiss);
+		startTime =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void ScanRow::numIntentFromBin(EndianISStream& eiss) {
+void ScanRow::endTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void ScanRow::numIntentFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numIntent =  eiss.readInt();
+		numIntent =  eis.readInt();
 			
 		
 	
 	
 }
-void ScanRow::numSubscanFromBin(EndianISStream& eiss) {
+void ScanRow::numSubscanFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numSubscan =  eiss.readInt();
+		numSubscan =  eis.readInt();
 			
 		
 	
 	
 }
-void ScanRow::scanIntentFromBin(EndianISStream& eiss) {
+void ScanRow::scanIntentFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1202,10 +1203,10 @@ void ScanRow::scanIntentFromBin(EndianISStream& eiss) {
 	
 		scanIntent.clear();
 		
-		unsigned int scanIntentDim1 = eiss.readInt();
+		unsigned int scanIntentDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < scanIntentDim1; i++)
 			
-			scanIntent.push_back(CScanIntent::literal(eiss.readString()));
+			scanIntent.push_back(CScanIntent::literal(eis.readString()));
 			
 	
 
@@ -1213,7 +1214,7 @@ void ScanRow::scanIntentFromBin(EndianISStream& eiss) {
 	
 	
 }
-void ScanRow::calDataTypeFromBin(EndianISStream& eiss) {
+void ScanRow::calDataTypeFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1222,10 +1223,10 @@ void ScanRow::calDataTypeFromBin(EndianISStream& eiss) {
 	
 		calDataType.clear();
 		
-		unsigned int calDataTypeDim1 = eiss.readInt();
+		unsigned int calDataTypeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < calDataTypeDim1; i++)
 			
-			calDataType.push_back(CCalDataOrigin::literal(eiss.readString()));
+			calDataType.push_back(CCalDataOrigin::literal(eis.readString()));
 			
 	
 
@@ -1233,7 +1234,7 @@ void ScanRow::calDataTypeFromBin(EndianISStream& eiss) {
 	
 	
 }
-void ScanRow::calibrationOnLineFromBin(EndianISStream& eiss) {
+void ScanRow::calibrationOnLineFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1242,10 +1243,10 @@ void ScanRow::calibrationOnLineFromBin(EndianISStream& eiss) {
 	
 		calibrationOnLine.clear();
 		
-		unsigned int calibrationOnLineDim1 = eiss.readInt();
+		unsigned int calibrationOnLineDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < calibrationOnLineDim1; i++)
 			
-			calibrationOnLine.push_back(eiss.readBoolean());
+			calibrationOnLine.push_back(eis.readBoolean());
 			
 	
 
@@ -1254,9 +1255,9 @@ void ScanRow::calibrationOnLineFromBin(EndianISStream& eiss) {
 	
 }
 
-void ScanRow::calibrationFunctionFromBin(EndianISStream& eiss) {
+void ScanRow::calibrationFunctionFromBin(EndianIStream& eis) {
 		
-	calibrationFunctionExists = eiss.readBoolean();
+	calibrationFunctionExists = eis.readBoolean();
 	if (calibrationFunctionExists) {
 		
 	
@@ -1266,10 +1267,10 @@ void ScanRow::calibrationFunctionFromBin(EndianISStream& eiss) {
 	
 		calibrationFunction.clear();
 		
-		unsigned int calibrationFunctionDim1 = eiss.readInt();
+		unsigned int calibrationFunctionDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < calibrationFunctionDim1; i++)
 			
-			calibrationFunction.push_back(CCalibrationFunction::literal(eiss.readString()));
+			calibrationFunction.push_back(CCalibrationFunction::literal(eis.readString()));
 			
 	
 
@@ -1279,9 +1280,9 @@ void ScanRow::calibrationFunctionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void ScanRow::calibrationSetFromBin(EndianISStream& eiss) {
+void ScanRow::calibrationSetFromBin(EndianIStream& eis) {
 		
-	calibrationSetExists = eiss.readBoolean();
+	calibrationSetExists = eis.readBoolean();
 	if (calibrationSetExists) {
 		
 	
@@ -1291,10 +1292,10 @@ void ScanRow::calibrationSetFromBin(EndianISStream& eiss) {
 	
 		calibrationSet.clear();
 		
-		unsigned int calibrationSetDim1 = eiss.readInt();
+		unsigned int calibrationSetDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < calibrationSetDim1; i++)
 			
-			calibrationSet.push_back(CCalibrationSet::literal(eiss.readString()));
+			calibrationSet.push_back(CCalibrationSet::literal(eis.readString()));
 			
 	
 
@@ -1304,9 +1305,9 @@ void ScanRow::calibrationSetFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void ScanRow::calPatternFromBin(EndianISStream& eiss) {
+void ScanRow::calPatternFromBin(EndianIStream& eis) {
 		
-	calPatternExists = eiss.readBoolean();
+	calPatternExists = eis.readBoolean();
 	if (calPatternExists) {
 		
 	
@@ -1316,10 +1317,10 @@ void ScanRow::calPatternFromBin(EndianISStream& eiss) {
 	
 		calPattern.clear();
 		
-		unsigned int calPatternDim1 = eiss.readInt();
+		unsigned int calPatternDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < calPatternDim1; i++)
 			
-			calPattern.push_back(CAntennaMotionPattern::literal(eiss.readString()));
+			calPattern.push_back(CAntennaMotionPattern::literal(eis.readString()));
 			
 	
 
@@ -1329,16 +1330,16 @@ void ScanRow::calPatternFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void ScanRow::numFieldFromBin(EndianISStream& eiss) {
+void ScanRow::numFieldFromBin(EndianIStream& eis) {
 		
-	numFieldExists = eiss.readBoolean();
+	numFieldExists = eis.readBoolean();
 	if (numFieldExists) {
 		
 	
 	
 		
 			
-		numField =  eiss.readInt();
+		numField =  eis.readInt();
 			
 		
 	
@@ -1346,9 +1347,9 @@ void ScanRow::numFieldFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void ScanRow::fieldNameFromBin(EndianISStream& eiss) {
+void ScanRow::fieldNameFromBin(EndianIStream& eis) {
 		
-	fieldNameExists = eiss.readBoolean();
+	fieldNameExists = eis.readBoolean();
 	if (fieldNameExists) {
 		
 	
@@ -1358,10 +1359,10 @@ void ScanRow::fieldNameFromBin(EndianISStream& eiss) {
 	
 		fieldName.clear();
 		
-		unsigned int fieldNameDim1 = eiss.readInt();
+		unsigned int fieldNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < fieldNameDim1; i++)
 			
-			fieldName.push_back(eiss.readString());
+			fieldName.push_back(eis.readString());
 			
 	
 
@@ -1371,16 +1372,16 @@ void ScanRow::fieldNameFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void ScanRow::sourceNameFromBin(EndianISStream& eiss) {
+void ScanRow::sourceNameFromBin(EndianIStream& eis) {
 		
-	sourceNameExists = eiss.readBoolean();
+	sourceNameExists = eis.readBoolean();
 	if (sourceNameExists) {
 		
 	
 	
 		
 			
-		sourceName =  eiss.readString();
+		sourceName =  eis.readString();
 			
 		
 	
@@ -1390,19 +1391,19 @@ void ScanRow::sourceNameFromBin(EndianISStream& eiss) {
 }
 	
 	
-	ScanRow* ScanRow::fromBin(EndianISStream& eiss, ScanTable& table, const vector<string>& attributesSeq) {
+	ScanRow* ScanRow::fromBin(EndianIStream& eis, ScanTable& table, const vector<string>& attributesSeq) {
 		ScanRow* row = new  ScanRow(table);
 		
 		map<string, ScanAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ScanTable");
 			}
@@ -1410,10 +1411,150 @@ void ScanRow::sourceNameFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void ScanRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ScanRow::scanNumberFromText(const string & s) {
+		 
+		scanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void ScanRow::startTimeFromText(const string & s) {
+		 
+		startTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void ScanRow::endTimeFromText(const string & s) {
+		 
+		endTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ScanRow::numIntentFromText(const string & s) {
+		 
+		numIntent = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ScanRow::numSubscanFromText(const string & s) {
+		 
+		numSubscan = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an ScanIntent 
+	void ScanRow::scanIntentFromText(const string & s) {
+		 
+		scanIntent = ASDMValuesParser::parse1D<ScanIntent>(s);
+		
+	}
+	
+	
+	// Convert a string into an CalDataOrigin 
+	void ScanRow::calDataTypeFromText(const string & s) {
+		 
+		calDataType = ASDMValuesParser::parse1D<CalDataOrigin>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void ScanRow::calibrationOnLineFromText(const string & s) {
+		 
+		calibrationOnLine = ASDMValuesParser::parse1D<bool>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an CalibrationFunction 
+	void ScanRow::calibrationFunctionFromText(const string & s) {
+		calibrationFunctionExists = true;
+		 
+		calibrationFunction = ASDMValuesParser::parse1D<CalibrationFunction>(s);
+		
+	}
+	
+	
+	// Convert a string into an CalibrationSet 
+	void ScanRow::calibrationSetFromText(const string & s) {
+		calibrationSetExists = true;
+		 
+		calibrationSet = ASDMValuesParser::parse1D<CalibrationSet>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaMotionPattern 
+	void ScanRow::calPatternFromText(const string & s) {
+		calPatternExists = true;
+		 
+		calPattern = ASDMValuesParser::parse1D<AntennaMotionPattern>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ScanRow::numFieldFromText(const string & s) {
+		numFieldExists = true;
+		 
+		numField = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ScanRow::fieldNameFromText(const string & s) {
+		fieldNameExists = true;
+		 
+		fieldName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ScanRow::sourceNameFromText(const string & s) {
+		sourceNameExists = true;
+		 
+		sourceName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	
+	void ScanRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, ScanAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "ScanTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1958,9 +2099,9 @@ void ScanRow::sourceNameFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1998,9 +2139,10 @@ void ScanRow::sourceNameFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2128,6 +2270,71 @@ void ScanRow::sourceNameFromBin(EndianISStream& eiss) {
 	 fromBinMethods["fieldName"] = &ScanRow::fieldNameFromBin; 
 	 fromBinMethods["sourceName"] = &ScanRow::sourceNameFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["execBlockId"] = &ScanRow::execBlockIdFromText;
+		 
+	
+				 
+	fromTextMethods["scanNumber"] = &ScanRow::scanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["startTime"] = &ScanRow::startTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endTime"] = &ScanRow::endTimeFromText;
+		 
+	
+				 
+	fromTextMethods["numIntent"] = &ScanRow::numIntentFromText;
+		 
+	
+				 
+	fromTextMethods["numSubscan"] = &ScanRow::numSubscanFromText;
+		 
+	
+				 
+	fromTextMethods["scanIntent"] = &ScanRow::scanIntentFromText;
+		 
+	
+				 
+	fromTextMethods["calDataType"] = &ScanRow::calDataTypeFromText;
+		 
+	
+				 
+	fromTextMethods["calibrationOnLine"] = &ScanRow::calibrationOnLineFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["calibrationFunction"] = &ScanRow::calibrationFunctionFromText;
+		 	
+	 
+				
+	fromTextMethods["calibrationSet"] = &ScanRow::calibrationSetFromText;
+		 	
+	 
+				
+	fromTextMethods["calPattern"] = &ScanRow::calPatternFromText;
+		 	
+	 
+				
+	fromTextMethods["numField"] = &ScanRow::numFieldFromText;
+		 	
+	 
+				
+	fromTextMethods["fieldName"] = &ScanRow::fieldNameFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceName"] = &ScanRow::sourceNameFromText;
+		 	
+		
 	}
 	
 	ScanRow::ScanRow (ScanTable &t, ScanRow &row) : table(t) {

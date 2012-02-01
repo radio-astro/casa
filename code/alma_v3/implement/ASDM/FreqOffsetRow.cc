@@ -69,6 +69,7 @@ using asdm::FeedRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -435,54 +436,54 @@ namespace asdm {
 	
 	}
 	
-void FreqOffsetRow::antennaIdFromBin(EndianISStream& eiss) {
+void FreqOffsetRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FreqOffsetRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FreqOffsetRow::timeIntervalFromBin(EndianISStream& eiss) {
+void FreqOffsetRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FreqOffsetRow::feedIdFromBin(EndianISStream& eiss) {
+void FreqOffsetRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void FreqOffsetRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void FreqOffsetRow::offsetFromBin(EndianISStream& eiss) {
+void FreqOffsetRow::offsetFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		offset =  Frequency::fromBin(eiss);
+		offset =  Frequency::fromBin(eis);
 		
 	
 	
@@ -490,19 +491,19 @@ void FreqOffsetRow::offsetFromBin(EndianISStream& eiss) {
 
 		
 	
-	FreqOffsetRow* FreqOffsetRow::fromBin(EndianISStream& eiss, FreqOffsetTable& table, const vector<string>& attributesSeq) {
+	FreqOffsetRow* FreqOffsetRow::fromBin(EndianIStream& eis, FreqOffsetTable& table, const vector<string>& attributesSeq) {
 		FreqOffsetRow* row = new  FreqOffsetRow(table);
 		
 		map<string, FreqOffsetAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FreqOffsetTable");
 			}
@@ -510,10 +511,64 @@ void FreqOffsetRow::offsetFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FreqOffsetRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FreqOffsetRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void FreqOffsetRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FreqOffsetRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void FreqOffsetRow::offsetFromText(const string & s) {
+		 
+		offset = ASDMValuesParser::parse<Frequency>(s);
+		
+	}
+	
+
+		
+	
+	void FreqOffsetRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FreqOffsetAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FreqOffsetTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -584,9 +639,9 @@ void FreqOffsetRow::offsetFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -696,9 +751,10 @@ void FreqOffsetRow::offsetFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -798,6 +854,31 @@ void FreqOffsetRow::offsetFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &FreqOffsetRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &FreqOffsetRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &FreqOffsetRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &FreqOffsetRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["offset"] = &FreqOffsetRow::offsetFromText;
+		 
+	
+
+		
 	}
 	
 	FreqOffsetRow::FreqOffsetRow (FreqOffsetTable &t, FreqOffsetRow &row) : table(t) {

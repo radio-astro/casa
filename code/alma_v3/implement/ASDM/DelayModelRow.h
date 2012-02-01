@@ -131,9 +131,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file DelayModel.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -152,17 +153,19 @@ class FieldRow;
 	
 
 class DelayModelRow;
-typedef void (DelayModelRow::*DelayModelAttributeFromBin) (EndianISStream& eiss);
+typedef void (DelayModelRow::*DelayModelAttributeFromBin) (EndianIStream& eis);
+typedef void (DelayModelRow::*DelayModelAttributeFromText) (const string& s);
 
 /**
  * The DelayModelRow class is a row of a DelayModelTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class DelayModelRow {
 friend class asdm::DelayModelTable;
 friend class asdm::RowTransformer<DelayModelRow>;
+//friend class asdm::TableStreamReader<DelayModelTable, DelayModelRow>;
 
 public:
 
@@ -1504,7 +1507,57 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, DelayModelAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void phaseDelayFromBin( EndianIStream& eis);
+void phaseDelayRateFromBin( EndianIStream& eis);
+void groupDelayFromBin( EndianIStream& eis);
+void groupDelayRateFromBin( EndianIStream& eis);
+void fieldIdFromBin( EndianIStream& eis);
+
+void timeOriginFromBin( EndianIStream& eis);
+void atmosphericGroupDelayFromBin( EndianIStream& eis);
+void atmosphericGroupDelayRateFromBin( EndianIStream& eis);
+void geometricDelayFromBin( EndianIStream& eis);
+void geometricDelayRateFromBin( EndianIStream& eis);
+void numLOFromBin( EndianIStream& eis);
+void LOOffsetFromBin( EndianIStream& eis);
+void LOOffsetRateFromBin( EndianIStream& eis);
+void dispersiveDelayFromBin( EndianIStream& eis);
+void dispersiveDelayRateFromBin( EndianIStream& eis);
+void atmosphericDryDelayFromBin( EndianIStream& eis);
+void atmosphericWetDelayFromBin( EndianIStream& eis);
+void padDelayFromBin( EndianIStream& eis);
+void antennaDelayFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void electronicDelayFromBin( EndianIStream& eis);
+void electronicDelayRateFromBin( EndianIStream& eis);
+void receiverDelayFromBin( EndianIStream& eis);
+void IFDelayFromBin( EndianIStream& eis);
+void LODelayFromBin( EndianIStream& eis);
+void crossPolarizationDelayFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the DelayModelTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static DelayModelRow* fromBin(EndianIStream& eis, DelayModelTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1968,43 +2021,147 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, DelayModelAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void numPolyFromBin( EndianISStream& eiss);
-void phaseDelayFromBin( EndianISStream& eiss);
-void phaseDelayRateFromBin( EndianISStream& eiss);
-void groupDelayFromBin( EndianISStream& eiss);
-void groupDelayRateFromBin( EndianISStream& eiss);
-void fieldIdFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void phaseDelayFromBin( EndianIStream& eis);
+void phaseDelayRateFromBin( EndianIStream& eis);
+void groupDelayFromBin( EndianIStream& eis);
+void groupDelayRateFromBin( EndianIStream& eis);
+void fieldIdFromBin( EndianIStream& eis);
 
-void timeOriginFromBin( EndianISStream& eiss);
-void atmosphericGroupDelayFromBin( EndianISStream& eiss);
-void atmosphericGroupDelayRateFromBin( EndianISStream& eiss);
-void geometricDelayFromBin( EndianISStream& eiss);
-void geometricDelayRateFromBin( EndianISStream& eiss);
-void numLOFromBin( EndianISStream& eiss);
-void LOOffsetFromBin( EndianISStream& eiss);
-void LOOffsetRateFromBin( EndianISStream& eiss);
-void dispersiveDelayFromBin( EndianISStream& eiss);
-void dispersiveDelayRateFromBin( EndianISStream& eiss);
-void atmosphericDryDelayFromBin( EndianISStream& eiss);
-void atmosphericWetDelayFromBin( EndianISStream& eiss);
-void padDelayFromBin( EndianISStream& eiss);
-void antennaDelayFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void polarizationTypeFromBin( EndianISStream& eiss);
-void electronicDelayFromBin( EndianISStream& eiss);
-void electronicDelayRateFromBin( EndianISStream& eiss);
-void receiverDelayFromBin( EndianISStream& eiss);
-void IFDelayFromBin( EndianISStream& eiss);
-void LODelayFromBin( EndianISStream& eiss);
-void crossPolarizationDelayFromBin( EndianISStream& eiss);
+void timeOriginFromBin( EndianIStream& eis);
+void atmosphericGroupDelayFromBin( EndianIStream& eis);
+void atmosphericGroupDelayRateFromBin( EndianIStream& eis);
+void geometricDelayFromBin( EndianIStream& eis);
+void geometricDelayRateFromBin( EndianIStream& eis);
+void numLOFromBin( EndianIStream& eis);
+void LOOffsetFromBin( EndianIStream& eis);
+void LOOffsetRateFromBin( EndianIStream& eis);
+void dispersiveDelayFromBin( EndianIStream& eis);
+void dispersiveDelayRateFromBin( EndianIStream& eis);
+void atmosphericDryDelayFromBin( EndianIStream& eis);
+void atmosphericWetDelayFromBin( EndianIStream& eis);
+void padDelayFromBin( EndianIStream& eis);
+void antennaDelayFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void electronicDelayFromBin( EndianIStream& eis);
+void electronicDelayRateFromBin( EndianIStream& eis);
+void receiverDelayFromBin( EndianIStream& eis);
+void IFDelayFromBin( EndianIStream& eis);
+void LODelayFromBin( EndianIStream& eis);
+void crossPolarizationDelayFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, DelayModelAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void numPolyFromText (const string & s);
+	
+	
+void phaseDelayFromText (const string & s);
+	
+	
+void phaseDelayRateFromText (const string & s);
+	
+	
+void groupDelayFromText (const string & s);
+	
+	
+void groupDelayRateFromText (const string & s);
+	
+	
+void fieldIdFromText (const string & s);
+	
+
+	
+void timeOriginFromText (const string & s);
+	
+	
+void atmosphericGroupDelayFromText (const string & s);
+	
+	
+void atmosphericGroupDelayRateFromText (const string & s);
+	
+	
+void geometricDelayFromText (const string & s);
+	
+	
+void geometricDelayRateFromText (const string & s);
+	
+	
+void numLOFromText (const string & s);
+	
+	
+void LOOffsetFromText (const string & s);
+	
+	
+void LOOffsetRateFromText (const string & s);
+	
+	
+void dispersiveDelayFromText (const string & s);
+	
+	
+void dispersiveDelayRateFromText (const string & s);
+	
+	
+void atmosphericDryDelayFromText (const string & s);
+	
+	
+void atmosphericWetDelayFromText (const string & s);
+	
+	
+void padDelayFromText (const string & s);
+	
+	
+void antennaDelayFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+	
+void electronicDelayFromText (const string & s);
+	
+	
+void electronicDelayRateFromText (const string & s);
+	
+	
+void receiverDelayFromText (const string & s);
+	
+	
+void IFDelayFromText (const string & s);
+	
+	
+void LODelayFromText (const string & s);
+	
+	
+void crossPolarizationDelayFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -2013,14 +2170,14 @@ void crossPolarizationDelayFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the DelayModelTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static DelayModelRow* fromBin(EndianISStream& eiss, DelayModelTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static DelayModelRow* fromBin(EndianIStream& eis, DelayModelTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

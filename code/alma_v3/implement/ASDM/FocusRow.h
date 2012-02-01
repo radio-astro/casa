@@ -85,9 +85,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Focus.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -103,17 +104,19 @@ class FocusModelRow;
 	
 
 class FocusRow;
-typedef void (FocusRow::*FocusAttributeFromBin) (EndianISStream& eiss);
+typedef void (FocusRow::*FocusAttributeFromBin) (EndianIStream& eis);
+typedef void (FocusRow::*FocusAttributeFromText) (const string& s);
 
 /**
  * The FocusRow class is a row of a FocusTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class FocusRow {
 friend class asdm::FocusTable;
 friend class asdm::RowTransformer<FocusRow>;
+//friend class asdm::TableStreamReader<FocusTable, FocusRow>;
 
 public:
 
@@ -520,7 +523,34 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, FocusAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void focusTrackingFromBin( EndianIStream& eis);
+void focusOffsetFromBin( EndianIStream& eis);
+void focusRotationOffsetFromBin( EndianIStream& eis);
+void focusModelIdFromBin( EndianIStream& eis);
+
+void measuredFocusPositionFromBin( EndianIStream& eis);
+void measuredFocusRotationFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the FocusTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static FocusRow* fromBin(EndianIStream& eis, FocusTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -683,20 +713,55 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, FocusAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void focusTrackingFromBin( EndianISStream& eiss);
-void focusOffsetFromBin( EndianISStream& eiss);
-void focusRotationOffsetFromBin( EndianISStream& eiss);
-void focusModelIdFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void focusTrackingFromBin( EndianIStream& eis);
+void focusOffsetFromBin( EndianIStream& eis);
+void focusRotationOffsetFromBin( EndianIStream& eis);
+void focusModelIdFromBin( EndianIStream& eis);
 
-void measuredFocusPositionFromBin( EndianISStream& eiss);
-void measuredFocusRotationFromBin( EndianISStream& eiss);
+void measuredFocusPositionFromBin( EndianIStream& eis);
+void measuredFocusRotationFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, FocusAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void focusTrackingFromText (const string & s);
+	
+	
+void focusOffsetFromText (const string & s);
+	
+	
+void focusRotationOffsetFromText (const string & s);
+	
+	
+void focusModelIdFromText (const string & s);
+	
+
+	
+void measuredFocusPositionFromText (const string & s);
+	
+	
+void measuredFocusRotationFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -705,14 +770,14 @@ void measuredFocusRotationFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the FocusTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static FocusRow* fromBin(EndianISStream& eiss, FocusTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static FocusRow* fromBin(EndianIStream& eis, FocusTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

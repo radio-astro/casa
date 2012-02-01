@@ -91,9 +91,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Receiver.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -106,17 +107,19 @@ class SpectralWindowRow;
 	
 
 class ReceiverRow;
-typedef void (ReceiverRow::*ReceiverAttributeFromBin) (EndianISStream& eiss);
+typedef void (ReceiverRow::*ReceiverAttributeFromBin) (EndianIStream& eis);
+typedef void (ReceiverRow::*ReceiverAttributeFromText) (const string& s);
 
 /**
  * The ReceiverRow class is a row of a ReceiverTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class ReceiverRow {
 friend class asdm::ReceiverTable;
 friend class asdm::RowTransformer<ReceiverRow>;
+//friend class asdm::TableStreamReader<ReceiverTable, ReceiverRow>;
 
 public:
 
@@ -512,7 +515,35 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, ReceiverAttributeFromBin> fromBinMethods;
+void receiverIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void numLOFromBin( EndianIStream& eis);
+void frequencyBandFromBin( EndianIStream& eis);
+void freqLOFromBin( EndianIStream& eis);
+void receiverSidebandFromBin( EndianIStream& eis);
+void sidebandLOFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the ReceiverTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ReceiverRow* fromBin(EndianIStream& eis, ReceiverTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -688,21 +719,59 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, ReceiverAttributeFromBin> fromBinMethods;
-void receiverIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void nameFromBin( EndianISStream& eiss);
-void numLOFromBin( EndianISStream& eiss);
-void frequencyBandFromBin( EndianISStream& eiss);
-void freqLOFromBin( EndianISStream& eiss);
-void receiverSidebandFromBin( EndianISStream& eiss);
-void sidebandLOFromBin( EndianISStream& eiss);
+void receiverIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void numLOFromBin( EndianIStream& eis);
+void frequencyBandFromBin( EndianIStream& eis);
+void freqLOFromBin( EndianIStream& eis);
+void receiverSidebandFromBin( EndianIStream& eis);
+void sidebandLOFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, ReceiverAttributeFromText> fromTextMethods;
+	
+void receiverIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void nameFromText (const string & s);
+	
+	
+void numLOFromText (const string & s);
+	
+	
+void frequencyBandFromText (const string & s);
+	
+	
+void freqLOFromText (const string & s);
+	
+	
+void receiverSidebandFromText (const string & s);
+	
+	
+void sidebandLOFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -711,14 +780,14 @@ void sidebandLOFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the ReceiverTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static ReceiverRow* fromBin(EndianISStream& eiss, ReceiverTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static ReceiverRow* fromBin(EndianIStream& eis, ReceiverTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

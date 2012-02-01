@@ -83,9 +83,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalGain.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -101,17 +102,19 @@ class CalDataRow;
 	
 
 class CalGainRow;
-typedef void (CalGainRow::*CalGainAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalGainRow::*CalGainAttributeFromBin) (EndianIStream& eis);
+typedef void (CalGainRow::*CalGainAttributeFromText) (const string& s);
 
 /**
  * The CalGainRow class is a row of a CalGainTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalGainRow {
 friend class asdm::CalGainTable;
 friend class asdm::RowTransformer<CalGainRow>;
+//friend class asdm::TableStreamReader<CalGainTable, CalGainRow>;
 
 public:
 
@@ -604,7 +607,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalGainAttributeFromBin> fromBinMethods;
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void gainFromBin( EndianIStream& eis);
+void gainValidFromBin( EndianIStream& eis);
+void fitFromBin( EndianIStream& eis);
+void fitWeightFromBin( EndianIStream& eis);
+void totalGainValidFromBin( EndianIStream& eis);
+void totalFitFromBin( EndianIStream& eis);
+void totalFitWeightFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalGainTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalGainRow* fromBin(EndianIStream& eis, CalGainTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -797,23 +830,67 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalGainAttributeFromBin> fromBinMethods;
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void gainFromBin( EndianISStream& eiss);
-void gainValidFromBin( EndianISStream& eiss);
-void fitFromBin( EndianISStream& eiss);
-void fitWeightFromBin( EndianISStream& eiss);
-void totalGainValidFromBin( EndianISStream& eiss);
-void totalFitFromBin( EndianISStream& eiss);
-void totalFitWeightFromBin( EndianISStream& eiss);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void gainFromBin( EndianIStream& eis);
+void gainValidFromBin( EndianIStream& eis);
+void fitFromBin( EndianIStream& eis);
+void fitWeightFromBin( EndianIStream& eis);
+void totalGainValidFromBin( EndianIStream& eis);
+void totalFitFromBin( EndianIStream& eis);
+void totalFitWeightFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalGainAttributeFromText> fromTextMethods;
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void gainFromText (const string & s);
+	
+	
+void gainValidFromText (const string & s);
+	
+	
+void fitFromText (const string & s);
+	
+	
+void fitWeightFromText (const string & s);
+	
+	
+void totalGainValidFromText (const string & s);
+	
+	
+void totalFitFromText (const string & s);
+	
+	
+void totalFitWeightFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -822,14 +899,14 @@ void totalFitWeightFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalGainTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalGainRow* fromBin(EndianISStream& eiss, CalGainTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalGainRow* fromBin(EndianIStream& eis, CalGainTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

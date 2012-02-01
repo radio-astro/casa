@@ -49,8 +49,11 @@ using asdm::WVMCalRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string WVMCalTable::tableName = "WVMCal";
-	const vector<string> WVMCalTable::attributesNames = initAttributesNames();
-		
+	string WVMCalTable::itsName = "WVMCal";
+	vector<string> WVMCalTable::attributesNames; 
+	vector<string> WVMCalTable::attributesNamesInBin; 
+	bool WVMCalTable::initAttributesNamesDone = WVMCalTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -143,14 +149,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string WVMCalTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string WVMCalTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> WVMCalTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool WVMCalTable::initAttributesNames() {
 
 		attributesNames.push_back("antennaId");
 
@@ -172,13 +184,36 @@ namespace asdm {
 		attributesNames.push_back("refTemp");
 
 
-		return attributesNames;
+
+    
+    	 
+    	attributesNamesInBin.push_back("antennaId") ; 
+    	 
+    	attributesNamesInBin.push_back("spectralWindowId") ; 
+    	 
+    	attributesNamesInBin.push_back("timeInterval") ; 
+    	 
+    	attributesNamesInBin.push_back("wvrMethod") ; 
+    	 
+    	attributesNamesInBin.push_back("polyFreqLimits") ; 
+    	 
+    	attributesNamesInBin.push_back("numChan") ; 
+    	 
+    	attributesNamesInBin.push_back("numPoly") ; 
+    	 
+    	attributesNamesInBin.push_back("pathCoeff") ; 
+    	 
+    	attributesNamesInBin.push_back("refTemp") ; 
+    	
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& WVMCalTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& WVMCalTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -513,7 +548,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n");
+		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -635,7 +670,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n";
+		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='WVMCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -764,26 +799,29 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("antennaId") ; 
-     
-    attributesSeq.push_back("spectralWindowId") ; 
-     
-    attributesSeq.push_back("timeInterval") ; 
-     
-    attributesSeq.push_back("wvrMethod") ; 
-     
-    attributesSeq.push_back("polyFreqLimits") ; 
-     
-    attributesSeq.push_back("numChan") ; 
-     
-    attributesSeq.push_back("numPoly") ; 
-     
-    attributesSeq.push_back("pathCoeff") ; 
-     
-    attributesSeq.push_back("refTemp") ; 
     
+    	 
+    attributesSeq.push_back("antennaId") ; 
+    	 
+    attributesSeq.push_back("spectralWindowId") ; 
+    	 
+    attributesSeq.push_back("timeInterval") ; 
+    	 
+    attributesSeq.push_back("wvrMethod") ; 
+    	 
+    attributesSeq.push_back("polyFreqLimits") ; 
+    	 
+    attributesSeq.push_back("numChan") ; 
+    	 
+    attributesSeq.push_back("numPoly") ; 
+    	 
+    attributesSeq.push_back("pathCoeff") ; 
+    	 
+    attributesSeq.push_back("refTemp") ; 
+    	
+    	
      
+    
     
     // And decide that it has version == "2"
     version = "2";         
@@ -840,13 +878,13 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -861,7 +899,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 	if (getContainer().checkRowUniqueness()) {
     	try {
       		for (uint32_t i = 0; i < this->declaredSize; i++) {
-				WVMCalRow* aRow = WVMCalRow::fromBin(eiss, *this, attributesSeq);
+				WVMCalRow* aRow = WVMCalRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 				checkAndAdd(aRow);
       		}
     	}
@@ -876,7 +914,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
     }
     else {
  		for (uint32_t i = 0; i < this->declaredSize; i++) {
-			WVMCalRow* aRow = WVMCalRow::fromBin(eiss, *this, attributesSeq);
+			WVMCalRow* aRow = WVMCalRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 			append(aRow);
       	}   	
     }
@@ -967,6 +1005,132 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
     
     setFromMIME(ss.str());
   }	
+/* 
+  void WVMCalTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/WVMCal.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "WVMCal");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "WVMCal");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "WVMCal");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "WVMCal");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "WVMCal");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("WVMCalTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/WVMCalTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "WVMCal");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/WVMCalTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "WVMCal");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/WVMCalTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "WVMCal");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/WVMCalTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "WVMCal");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void WVMCalTable::setFromXMLFile(const string& directory) {

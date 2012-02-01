@@ -75,9 +75,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file State.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -87,17 +88,19 @@ namespace asdm {
 	
 
 class StateRow;
-typedef void (StateRow::*StateAttributeFromBin) (EndianISStream& eiss);
+typedef void (StateRow::*StateAttributeFromBin) (EndianIStream& eis);
+typedef void (StateRow::*StateAttributeFromText) (const string& s);
 
 /**
  * The StateRow class is a row of a StateTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class StateRow {
 friend class asdm::StateTable;
 friend class asdm::RowTransformer<StateRow>;
+//friend class asdm::TableStreamReader<StateTable, StateRow>;
 
 public:
 
@@ -383,7 +386,32 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, StateAttributeFromBin> fromBinMethods;
+void stateIdFromBin( EndianIStream& eis);
+void calDeviceNameFromBin( EndianIStream& eis);
+void sigFromBin( EndianIStream& eis);
+void refFromBin( EndianIStream& eis);
+void onSkyFromBin( EndianIStream& eis);
+
+void weightFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the StateTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static StateRow* fromBin(EndianIStream& eis, StateTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -521,18 +549,47 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, StateAttributeFromBin> fromBinMethods;
-void stateIdFromBin( EndianISStream& eiss);
-void calDeviceNameFromBin( EndianISStream& eiss);
-void sigFromBin( EndianISStream& eiss);
-void refFromBin( EndianISStream& eiss);
-void onSkyFromBin( EndianISStream& eiss);
+void stateIdFromBin( EndianIStream& eis);
+void calDeviceNameFromBin( EndianIStream& eis);
+void sigFromBin( EndianIStream& eis);
+void refFromBin( EndianIStream& eis);
+void onSkyFromBin( EndianIStream& eis);
 
-void weightFromBin( EndianISStream& eiss);
+void weightFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, StateAttributeFromText> fromTextMethods;
+	
+void stateIdFromText (const string & s);
+	
+	
+void calDeviceNameFromText (const string & s);
+	
+	
+void sigFromText (const string & s);
+	
+	
+void refFromText (const string & s);
+	
+	
+void onSkyFromText (const string & s);
+	
+
+	
+void weightFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -541,14 +598,14 @@ void weightFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the StateTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static StateRow* fromBin(EndianISStream& eiss, StateTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static StateRow* fromBin(EndianIStream& eis, StateTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

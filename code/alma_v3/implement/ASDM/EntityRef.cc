@@ -173,15 +173,15 @@ namespace asdm {
 			entityRef.at(i).toBin(eoss);
 	}
 
-	EntityRef EntityRef::fromBin(EndianISStream& eiss) {
-		return EntityRef(eiss.readString(), eiss.readString(), eiss.readString(), eiss.readString());
+	EntityRef EntityRef::fromBin(EndianIStream& eis) {
+		return EntityRef(eis.readString(), eis.readString(), eis.readString(), eis.readString());
 	}
 
-	vector<EntityRef> EntityRef::from1DBin(EndianISStream & eiss) {
-		int dim1 = eiss.readInt();
+	vector<EntityRef> EntityRef::from1DBin(EndianIStream & eis) {
+		int dim1 = eis.readInt();
 		vector<EntityRef> result;
 		for (int i = 0; i < dim1; i++)
-			result.push_back(EntityRef(eiss.readString(), eiss.readString(), eiss.readString(), eiss.readString()));
+			result.push_back(EntityRef(eis.readString(), eis.readString(), eis.readString(), eis.readString()));
 		return result;
 	}
 

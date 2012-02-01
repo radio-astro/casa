@@ -228,7 +228,7 @@
 
 
 /*\file "Merger.h"
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 using namespace std;
 

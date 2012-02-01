@@ -49,8 +49,11 @@ using asdm::CalAtmosphereRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string CalAtmosphereTable::tableName = "CalAtmosphere";
-	const vector<string> CalAtmosphereTable::attributesNames = initAttributesNames();
-		
+	string CalAtmosphereTable::itsName = "CalAtmosphere";
+	vector<string> CalAtmosphereTable::attributesNames; 
+	vector<string> CalAtmosphereTable::attributesNamesInBin; 
+	bool CalAtmosphereTable::initAttributesNamesDone = CalAtmosphereTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -147,14 +153,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalAtmosphereTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string CalAtmosphereTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> CalAtmosphereTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool CalAtmosphereTable::initAttributesNames() {
 
 		attributesNames.push_back("antennaName");
 
@@ -230,13 +242,90 @@ namespace asdm {
 
 		attributesNames.push_back("sbGainSpectrum");
 
-		return attributesNames;
+
+    
+    	 
+    	attributesNamesInBin.push_back("antennaName") ; 
+    	 
+    	attributesNamesInBin.push_back("receiverBand") ; 
+    	 
+    	attributesNamesInBin.push_back("basebandName") ; 
+    	 
+    	attributesNamesInBin.push_back("calDataId") ; 
+    	 
+    	attributesNamesInBin.push_back("calReductionId") ; 
+    	 
+    	attributesNamesInBin.push_back("startValidTime") ; 
+    	 
+    	attributesNamesInBin.push_back("endValidTime") ; 
+    	 
+    	attributesNamesInBin.push_back("numFreq") ; 
+    	 
+    	attributesNamesInBin.push_back("numLoad") ; 
+    	 
+    	attributesNamesInBin.push_back("numReceptor") ; 
+    	 
+    	attributesNamesInBin.push_back("forwardEffSpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("frequencyRange") ; 
+    	 
+    	attributesNamesInBin.push_back("groundPressure") ; 
+    	 
+    	attributesNamesInBin.push_back("groundRelHumidity") ; 
+    	 
+    	attributesNamesInBin.push_back("frequencySpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("groundTemperature") ; 
+    	 
+    	attributesNamesInBin.push_back("polarizationTypes") ; 
+    	 
+    	attributesNamesInBin.push_back("powerSkySpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("powerLoadSpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("syscalType") ; 
+    	 
+    	attributesNamesInBin.push_back("tAtmSpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("tRecSpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("tSysSpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("tauSpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("tAtm") ; 
+    	 
+    	attributesNamesInBin.push_back("tRec") ; 
+    	 
+    	attributesNamesInBin.push_back("tSys") ; 
+    	 
+    	attributesNamesInBin.push_back("tau") ; 
+    	 
+    	attributesNamesInBin.push_back("water") ; 
+    	 
+    	attributesNamesInBin.push_back("waterError") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("alphaSpectrum") ; 
+    	 
+    	attributesNamesInBin.push_back("forwardEfficiency") ; 
+    	 
+    	attributesNamesInBin.push_back("forwardEfficiencyError") ; 
+    	 
+    	attributesNamesInBin.push_back("sbGain") ; 
+    	 
+    	attributesNamesInBin.push_back("sbGainError") ; 
+    	 
+    	attributesNamesInBin.push_back("sbGainSpectrum") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& CalAtmosphereTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& CalAtmosphereTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -685,7 +774,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n");
+		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -807,7 +896,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n";
+		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAtmosphereTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -963,80 +1052,83 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("antennaName") ; 
-     
-    attributesSeq.push_back("receiverBand") ; 
-     
-    attributesSeq.push_back("basebandName") ; 
-     
-    attributesSeq.push_back("calDataId") ; 
-     
-    attributesSeq.push_back("calReductionId") ; 
-     
-    attributesSeq.push_back("startValidTime") ; 
-     
-    attributesSeq.push_back("endValidTime") ; 
-     
-    attributesSeq.push_back("numFreq") ; 
-     
-    attributesSeq.push_back("numLoad") ; 
-     
-    attributesSeq.push_back("numReceptor") ; 
-     
-    attributesSeq.push_back("forwardEffSpectrum") ; 
-     
-    attributesSeq.push_back("frequencyRange") ; 
-     
-    attributesSeq.push_back("groundPressure") ; 
-     
-    attributesSeq.push_back("groundRelHumidity") ; 
-     
-    attributesSeq.push_back("frequencySpectrum") ; 
-     
-    attributesSeq.push_back("groundTemperature") ; 
-     
-    attributesSeq.push_back("polarizationTypes") ; 
-     
-    attributesSeq.push_back("powerSkySpectrum") ; 
-     
-    attributesSeq.push_back("powerLoadSpectrum") ; 
-     
-    attributesSeq.push_back("syscalType") ; 
-     
-    attributesSeq.push_back("tAtmSpectrum") ; 
-     
-    attributesSeq.push_back("tRecSpectrum") ; 
-     
-    attributesSeq.push_back("tSysSpectrum") ; 
-     
-    attributesSeq.push_back("tauSpectrum") ; 
-     
-    attributesSeq.push_back("tAtm") ; 
-     
-    attributesSeq.push_back("tRec") ; 
-     
-    attributesSeq.push_back("tSys") ; 
-     
-    attributesSeq.push_back("tau") ; 
-     
-    attributesSeq.push_back("water") ; 
-     
-    attributesSeq.push_back("waterError") ; 
     
-     
+    	 
+    attributesSeq.push_back("antennaName") ; 
+    	 
+    attributesSeq.push_back("receiverBand") ; 
+    	 
+    attributesSeq.push_back("basebandName") ; 
+    	 
+    attributesSeq.push_back("calDataId") ; 
+    	 
+    attributesSeq.push_back("calReductionId") ; 
+    	 
+    attributesSeq.push_back("startValidTime") ; 
+    	 
+    attributesSeq.push_back("endValidTime") ; 
+    	 
+    attributesSeq.push_back("numFreq") ; 
+    	 
+    attributesSeq.push_back("numLoad") ; 
+    	 
+    attributesSeq.push_back("numReceptor") ; 
+    	 
+    attributesSeq.push_back("forwardEffSpectrum") ; 
+    	 
+    attributesSeq.push_back("frequencyRange") ; 
+    	 
+    attributesSeq.push_back("groundPressure") ; 
+    	 
+    attributesSeq.push_back("groundRelHumidity") ; 
+    	 
+    attributesSeq.push_back("frequencySpectrum") ; 
+    	 
+    attributesSeq.push_back("groundTemperature") ; 
+    	 
+    attributesSeq.push_back("polarizationTypes") ; 
+    	 
+    attributesSeq.push_back("powerSkySpectrum") ; 
+    	 
+    attributesSeq.push_back("powerLoadSpectrum") ; 
+    	 
+    attributesSeq.push_back("syscalType") ; 
+    	 
+    attributesSeq.push_back("tAtmSpectrum") ; 
+    	 
+    attributesSeq.push_back("tRecSpectrum") ; 
+    	 
+    attributesSeq.push_back("tSysSpectrum") ; 
+    	 
+    attributesSeq.push_back("tauSpectrum") ; 
+    	 
+    attributesSeq.push_back("tAtm") ; 
+    	 
+    attributesSeq.push_back("tRec") ; 
+    	 
+    attributesSeq.push_back("tSys") ; 
+    	 
+    attributesSeq.push_back("tau") ; 
+    	 
+    attributesSeq.push_back("water") ; 
+    	 
+    attributesSeq.push_back("waterError") ; 
+    	
+    	 
     attributesSeq.push_back("alphaSpectrum") ; 
-     
+    	 
     attributesSeq.push_back("forwardEfficiency") ; 
-     
+    	 
     attributesSeq.push_back("forwardEfficiencyError") ; 
-     
+    	 
     attributesSeq.push_back("sbGain") ; 
-     
+    	 
     attributesSeq.push_back("sbGainError") ; 
-     
+    	 
     attributesSeq.push_back("sbGainSpectrum") ; 
+    	
      
+    
     
     // And decide that it has version == "2"
     version = "2";         
@@ -1093,13 +1185,13 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -1114,7 +1206,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 	if (getContainer().checkRowUniqueness()) {
     	try {
       		for (uint32_t i = 0; i < this->declaredSize; i++) {
-				CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this, attributesSeq);
+				CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 				checkAndAdd(aRow);
       		}
     	}
@@ -1129,7 +1221,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
     }
     else {
  		for (uint32_t i = 0; i < this->declaredSize; i++) {
-			CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this, attributesSeq);
+			CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 			append(aRow);
       	}   	
     }
@@ -1220,6 +1312,132 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
     
     setFromMIME(ss.str());
   }	
+/* 
+  void CalAtmosphereTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/CalAtmosphere.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "CalAtmosphere");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "CalAtmosphere");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "CalAtmosphere");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalAtmosphere");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalAtmosphere");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("CalAtmosphereTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/CalAtmosphereTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "CalAtmosphere");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/CalAtmosphereTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "CalAtmosphere");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/CalAtmosphereTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "CalAtmosphere");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/CalAtmosphereTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "CalAtmosphere");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void CalAtmosphereTable::setFromXMLFile(const string& directory) {

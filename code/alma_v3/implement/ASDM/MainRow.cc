@@ -75,6 +75,7 @@ using asdm::ExecBlockRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -819,148 +820,148 @@ namespace asdm {
 	
 	}
 	
-void MainRow::timeFromBin(EndianISStream& eiss) {
+void MainRow::timeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		time =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void MainRow::configDescriptionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		configDescriptionId =  Tag::fromBin(eiss);
+		time =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void MainRow::fieldIdFromBin(EndianISStream& eiss) {
+void MainRow::configDescriptionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		fieldId =  Tag::fromBin(eiss);
+		configDescriptionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void MainRow::numAntennaFromBin(EndianISStream& eiss) {
+void MainRow::fieldIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		fieldId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void MainRow::numAntennaFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numAntenna =  eiss.readInt();
-			
-		
-	
-	
-}
-void MainRow::timeSamplingFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		timeSampling = CTimeSampling::literal(eiss.readString());
+		numAntenna =  eis.readInt();
 			
 		
 	
 	
 }
-void MainRow::intervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		interval =  Interval::fromBin(eiss);
-		
-	
-	
-}
-void MainRow::numIntegrationFromBin(EndianISStream& eiss) {
+void MainRow::timeSamplingFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numIntegration =  eiss.readInt();
+		timeSampling = CTimeSampling::literal(eis.readString());
 			
 		
 	
 	
 }
-void MainRow::scanNumberFromBin(EndianISStream& eiss) {
+void MainRow::intervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		interval =  Interval::fromBin(eis);
+		
+	
+	
+}
+void MainRow::numIntegrationFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		scanNumber =  eiss.readInt();
+		numIntegration =  eis.readInt();
 			
 		
 	
 	
 }
-void MainRow::subscanNumberFromBin(EndianISStream& eiss) {
+void MainRow::scanNumberFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		subscanNumber =  eiss.readInt();
-			
-		
-	
-	
-}
-void MainRow::dataSizeFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		dataSize =  eiss.readLong();
+		scanNumber =  eis.readInt();
 			
 		
 	
 	
 }
-void MainRow::dataUIDFromBin(EndianISStream& eiss) {
+void MainRow::subscanNumberFromBin(EndianIStream& eis) {
 		
 	
+	
 		
-		
-		dataUID =  EntityRef::fromBin(eiss);
+			
+		subscanNumber =  eis.readInt();
+			
 		
 	
 	
 }
-void MainRow::stateIdFromBin(EndianISStream& eiss) {
+void MainRow::dataSizeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		dataSize =  eis.readLong();
+			
+		
+	
+	
+}
+void MainRow::dataUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		dataUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void MainRow::stateIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	stateId = Tag::from1DBin(eiss);	
+	stateId = Tag::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void MainRow::execBlockIdFromBin(EndianISStream& eiss) {
+void MainRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
@@ -968,19 +969,19 @@ void MainRow::execBlockIdFromBin(EndianISStream& eiss) {
 
 		
 	
-	MainRow* MainRow::fromBin(EndianISStream& eiss, MainTable& table, const vector<string>& attributesSeq) {
+	MainRow* MainRow::fromBin(EndianIStream& eis, MainTable& table, const vector<string>& attributesSeq) {
 		MainRow* row = new  MainRow(table);
 		
 		map<string, MainAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "MainTable");
 			}
@@ -988,10 +989,121 @@ void MainRow::execBlockIdFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an ArrayTime 
+	void MainRow::timeFromText(const string & s) {
+		 
+		time = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::configDescriptionIdFromText(const string & s) {
+		 
+		configDescriptionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::fieldIdFromText(const string & s) {
+		 
+		fieldId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::numAntennaFromText(const string & s) {
+		 
+		numAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an TimeSampling 
+	void MainRow::timeSamplingFromText(const string & s) {
+		 
+		timeSampling = ASDMValuesParser::parse<TimeSampling>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void MainRow::intervalFromText(const string & s) {
+		 
+		interval = ASDMValuesParser::parse<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::numIntegrationFromText(const string & s) {
+		 
+		numIntegration = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::scanNumberFromText(const string & s) {
+		 
+		scanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::subscanNumberFromText(const string & s) {
+		 
+		subscanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an long 
+	void MainRow::dataSizeFromText(const string & s) {
+		 
+		dataSize = ASDMValuesParser::parse<int64_t>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::stateIdFromText(const string & s) {
+		 
+		stateId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+		
+	
+	void MainRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, MainAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "MainTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1286,9 +1398,9 @@ void MainRow::execBlockIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1426,9 +1538,10 @@ void MainRow::execBlockIdFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1645,6 +1758,61 @@ timeSampling = CTimeSampling::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["time"] = &MainRow::timeFromText;
+		 
+	
+				 
+	fromTextMethods["configDescriptionId"] = &MainRow::configDescriptionIdFromText;
+		 
+	
+				 
+	fromTextMethods["fieldId"] = &MainRow::fieldIdFromText;
+		 
+	
+				 
+	fromTextMethods["numAntenna"] = &MainRow::numAntennaFromText;
+		 
+	
+				 
+	fromTextMethods["timeSampling"] = &MainRow::timeSamplingFromText;
+		 
+	
+				 
+	fromTextMethods["interval"] = &MainRow::intervalFromText;
+		 
+	
+				 
+	fromTextMethods["numIntegration"] = &MainRow::numIntegrationFromText;
+		 
+	
+				 
+	fromTextMethods["scanNumber"] = &MainRow::scanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["subscanNumber"] = &MainRow::subscanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["dataSize"] = &MainRow::dataSizeFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["stateId"] = &MainRow::stateIdFromText;
+		 
+	
+				 
+	fromTextMethods["execBlockId"] = &MainRow::execBlockIdFromText;
+		 
+	
+
+		
 	}
 	
 	MainRow::MainRow (MainTable &t, MainRow &row) : table(t) {

@@ -98,6 +98,8 @@
 
 	
 
+	
+
 
 
 #include <ConversionException.h>
@@ -105,9 +107,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Pointing.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -123,17 +126,19 @@ class AntennaRow;
 	
 
 class PointingRow;
-typedef void (PointingRow::*PointingAttributeFromBin) (EndianISStream& eiss);
+typedef void (PointingRow::*PointingAttributeFromBin) (EndianIStream& eis);
+typedef void (PointingRow::*PointingAttributeFromText) (const string& s);
 
 /**
  * The PointingRow class is a row of a PointingTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class PointingRow {
 friend class asdm::PointingTable;
 friend class asdm::RowTransformer<PointingRow>;
+//friend class asdm::TableStreamReader<PointingTable, PointingRow>;
 
 public:
 
@@ -661,6 +666,47 @@ public:
 	
 
 
+	
+	// ===> Attribute atmosphericCorrection, which is optional
+	
+	
+	
+	/**
+	 * The attribute atmosphericCorrection is optional. Return true if this attribute exists.
+	 * @return true if and only if the atmosphericCorrection attribute exists. 
+	 */
+	bool isAtmosphericCorrectionExists() const;
+	
+
+	
+ 	/**
+ 	 * Get atmosphericCorrection, which is optional.
+ 	 * @return atmosphericCorrection as vector<vector<Angle > >
+ 	 * @throws IllegalAccessException If atmosphericCorrection does not exist.
+ 	 */
+ 	vector<vector<Angle > > getAtmosphericCorrection() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set atmosphericCorrection with the specified vector<vector<Angle > >.
+ 	 * @param atmosphericCorrection The vector<vector<Angle > > value to which atmosphericCorrection is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setAtmosphericCorrection (vector<vector<Angle > > atmosphericCorrection);
+		
+	
+	
+	
+	/**
+	 * Mark atmosphericCorrection, which is an optional field, as non-existent.
+	 */
+	void clearAtmosphericCorrection ();
+	
+
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -867,7 +913,44 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, PointingAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void numSampleFromBin( EndianIStream& eis);
+void encoderFromBin( EndianIStream& eis);
+void pointingTrackingFromBin( EndianIStream& eis);
+void usePolynomialsFromBin( EndianIStream& eis);
+void timeOriginFromBin( EndianIStream& eis);
+void numTermFromBin( EndianIStream& eis);
+void pointingDirectionFromBin( EndianIStream& eis);
+void targetFromBin( EndianIStream& eis);
+void offsetFromBin( EndianIStream& eis);
+void pointingModelIdFromBin( EndianIStream& eis);
+
+void overTheTopFromBin( EndianIStream& eis);
+void sourceOffsetFromBin( EndianIStream& eis);
+void sourceOffsetReferenceCodeFromBin( EndianIStream& eis);
+void sourceOffsetEquinoxFromBin( EndianIStream& eis);
+void sampledTimeIntervalFromBin( EndianIStream& eis);
+void atmosphericCorrectionFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the PointingTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static PointingRow* fromBin(EndianIStream& eis, PointingTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1091,6 +1174,19 @@ private:
 	
  	
 
+	
+	// ===> Attribute atmosphericCorrection, which is optional
+	
+	
+	bool atmosphericCorrectionExists;
+	
+
+	vector<vector<Angle > > atmosphericCorrection;
+
+	
+	
+ 	
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1135,29 +1231,95 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, PointingAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void numSampleFromBin( EndianISStream& eiss);
-void encoderFromBin( EndianISStream& eiss);
-void pointingTrackingFromBin( EndianISStream& eiss);
-void usePolynomialsFromBin( EndianISStream& eiss);
-void timeOriginFromBin( EndianISStream& eiss);
-void numTermFromBin( EndianISStream& eiss);
-void pointingDirectionFromBin( EndianISStream& eiss);
-void targetFromBin( EndianISStream& eiss);
-void offsetFromBin( EndianISStream& eiss);
-void pointingModelIdFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void numSampleFromBin( EndianIStream& eis);
+void encoderFromBin( EndianIStream& eis);
+void pointingTrackingFromBin( EndianIStream& eis);
+void usePolynomialsFromBin( EndianIStream& eis);
+void timeOriginFromBin( EndianIStream& eis);
+void numTermFromBin( EndianIStream& eis);
+void pointingDirectionFromBin( EndianIStream& eis);
+void targetFromBin( EndianIStream& eis);
+void offsetFromBin( EndianIStream& eis);
+void pointingModelIdFromBin( EndianIStream& eis);
 
-void overTheTopFromBin( EndianISStream& eiss);
-void sourceOffsetFromBin( EndianISStream& eiss);
-void sourceOffsetReferenceCodeFromBin( EndianISStream& eiss);
-void sourceOffsetEquinoxFromBin( EndianISStream& eiss);
-void sampledTimeIntervalFromBin( EndianISStream& eiss);
+void overTheTopFromBin( EndianIStream& eis);
+void sourceOffsetFromBin( EndianIStream& eis);
+void sourceOffsetReferenceCodeFromBin( EndianIStream& eis);
+void sourceOffsetEquinoxFromBin( EndianIStream& eis);
+void sampledTimeIntervalFromBin( EndianIStream& eis);
+void atmosphericCorrectionFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, PointingAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void numSampleFromText (const string & s);
+	
+	
+void encoderFromText (const string & s);
+	
+	
+void pointingTrackingFromText (const string & s);
+	
+	
+void usePolynomialsFromText (const string & s);
+	
+	
+void timeOriginFromText (const string & s);
+	
+	
+void numTermFromText (const string & s);
+	
+	
+void pointingDirectionFromText (const string & s);
+	
+	
+void targetFromText (const string & s);
+	
+	
+void offsetFromText (const string & s);
+	
+	
+void pointingModelIdFromText (const string & s);
+	
+
+	
+void overTheTopFromText (const string & s);
+	
+	
+void sourceOffsetFromText (const string & s);
+	
+	
+void sourceOffsetReferenceCodeFromText (const string & s);
+	
+	
+void sourceOffsetEquinoxFromText (const string & s);
+	
+	
+void sampledTimeIntervalFromText (const string & s);
+	
+	
+void atmosphericCorrectionFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1166,14 +1328,14 @@ void sampledTimeIntervalFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the PointingTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static PointingRow* fromBin(EndianISStream& eiss, PointingTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static PointingRow* fromBin(EndianIStream& eis, PointingTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm
