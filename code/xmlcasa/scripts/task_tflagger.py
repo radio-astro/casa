@@ -56,9 +56,9 @@ def tflagger(vis,
              display,
              format,
              writeflags,
+             sequential,    # run in sequential or in parallel
              savepars,      # save the current parameters to FLAG_CMD 
              outfile,       # output file to save flag commands
-             sequential,    # run in sequential or in parallel
              flagbackup):
 
     # Global parameters
