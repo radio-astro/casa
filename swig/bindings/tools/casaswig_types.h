@@ -1,8 +1,10 @@
 #ifndef CASASWIG_TYPES_H
+#define CASASWIG_TYPES_H 1
 
 #include <stdarg.h>
 #include <string>
 #include <vector>
+#include <stdcasa/Quantity.h>
 #define USING_NUMPY_ARRAYS 1
 
 namespace casac {
@@ -60,15 +62,6 @@ struct IntAry
   IntAry(std::vector<int> arg0, std::vector<int> arg1) : value(arg0), shape(arg1) { }
   std::vector<int> value;
   std::vector<int> shape;
-
-};
-
-struct Quantity
-{
-  Quantity( ) { }
-  Quantity(std::vector<double> arg0, std::string arg1) : value(arg0), units(arg1) { }
-  std::vector<double> value;
-  std::string units;
 
 };
 
