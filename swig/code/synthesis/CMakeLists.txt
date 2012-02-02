@@ -137,7 +137,6 @@ casa_add_library( synthesis
   implement/CalTables/GJonesTable.cc
   implement/CalTables/MJonesDesc.cc
   implement/CalTables/MJonesMRec.cc
-  implement/CalTables/PlotCal.cc
   implement/CalTables/SolvableMJDesc.cc
   implement/CalTables/SolvableMJMRec.cc
   implement/CalTables/SolvableVJDesc.cc

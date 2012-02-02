@@ -29,7 +29,7 @@
 
 #include <flagging/Flagging/RFCommon.h>
 #include <flagging/Flagging/RFABase.h>
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <flagging/Flagging/FlagVersion.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>

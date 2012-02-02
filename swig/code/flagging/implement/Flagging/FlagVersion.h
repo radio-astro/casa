@@ -52,7 +52,7 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableColumn.h>
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 
 //# FlagVersion Change Log
 //# =======================

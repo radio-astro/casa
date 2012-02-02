@@ -28,7 +28,7 @@
 //# -------------------------------------------------------------------------
 
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
     
 #define LOGLEVEL 3
 //debuglevel{DEBUGGING, DEBUG2, DEBUG1, NORMAL5, ..., WARN, SEVERE}

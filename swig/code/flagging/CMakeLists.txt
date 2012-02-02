@@ -45,7 +45,6 @@ casa_add_library( flagging
   implement/Flagging/RFFlagCube.cc
   implement/Flagging/RFRowClipper.cc
   implement/Flagging/RFFloatLattice.cc
-  implement/MSPlot/MsPlot.cc
   implement/Flagging/LightFlagger.cc
   implement/Flagging/LFTimeFreqCrop.cc
   implement/Flagging/LFExamineFlags.cc
@@ -64,6 +63,8 @@ casa_add_library( flagging
   implement/Flagging/FlagAgentShadow.cc
   implement/Flagging/FlagAgentExtension.cc
   implement/Flagging/FlagAgentRFlag.cc
+  implement/Flagging/FlagVersion.cc
+  implement/Flagging/SLog.cc
    )
 
 casa_add_test( flagging implement/Flagging/test/tFlagAgentRFlag.cc )

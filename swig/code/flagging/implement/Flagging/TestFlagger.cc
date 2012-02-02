@@ -31,7 +31,7 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/HostInfo.h>
 #include <flagging/Flagging/TestFlagger.h>
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <flagging/Flagging/FlagVersion.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
 #include <stdarg.h>

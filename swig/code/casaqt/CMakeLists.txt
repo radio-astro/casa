@@ -51,9 +51,6 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtLogger/logmodel.qo.h
   implement/QtLogger/logviewer.qo.h
   implement/QtLogger/logwatcher.qo.h
-  implement/QtParamGui/ParamPanel.qo.h
-  implement/QtParamGui/QtParamGUI.qo.h
-  implement/QtParamGui/ValuePanel.qo.h
   implement/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h
   implement/QtPlotServer/QtPlotFrame.qo.h
   implement/QtPlotServer/QtPlotServer.qo.h
@@ -105,9 +102,6 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtBrowser/TBTypes.ui
   implement/QtBrowser/TBValidityChecker.ui
   implement/QtBrowser/TBViewArray.ui
-  implement/QtParamGui/ParamPanel.ui
-  implement/QtParamGui/QtParamGUI.ui
-  implement/QtParamGui/ValuePanel.ui
   implement/QtUtilities/PlotColorWidget.ui
   implement/QtUtilities/PlotFileWidget.ui
   implement/QtUtilities/PlotFillWidget.ui
@@ -172,10 +166,6 @@ casa_add_library( casaqt
   implement/QtLogger/logitem.cc
   implement/QtLogger/logmodel.cc
   implement/QtLogger/logviewer.cc
-  implement/QtParamGui/ParamPanel.cc
-  implement/QtParamGui/PythonInterpreter.cc
-  implement/QtParamGui/QtParamGUI.cc
-  implement/QtParamGui/ValuePanel.cc
   implement/QtPlotServer/QtDBusPlotSvrAdaptor.cc
   implement/QtPlotServer/QtPlotFrame.cc
   implement/QtPlotServer/QtPlotServer.cc

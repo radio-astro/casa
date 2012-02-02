@@ -67,7 +67,7 @@
 #include <casa/OS/Directory.h>
 #include <casa/OS/SymLink.h>
 
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <flagging/Flagging/FlagVersion.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

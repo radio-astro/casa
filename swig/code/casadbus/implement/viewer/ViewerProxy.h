@@ -33,7 +33,7 @@
 #include <casadbus/viewer/ViewerProxy.dbusproxy.h>
 #include <casadbus/utilities/Conversion.h>
 #include <casa/Containers/Record.h>
-#include <xmlcasa/variant.h>
+#include <stdcasa/variant.h>
 
 namespace casa {
     class ViewerProxy :

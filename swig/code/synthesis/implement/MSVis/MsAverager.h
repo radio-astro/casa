@@ -50,7 +50,6 @@
 //#include <synthesis/MSVis/SubMS.h>
 #include <synthesis/MSVis/SelectAverageSpw.h>
 
-//#include <tableplot/TablePlot/SLog.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////
