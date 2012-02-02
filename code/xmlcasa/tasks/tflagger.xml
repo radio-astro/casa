@@ -283,7 +283,7 @@ tfcrop, extend, unflag, summary)</description>
 
             <param type="bool" name="savepars">
                 <description>Save the current parameters to the MS or to a file</description>
-                <value>True</value>
+                <value>False</value>
             </param>
             <param type="string" name="outfile" subparam="true">
                     <description>Name of output file to save current parameters</description>
@@ -380,10 +380,10 @@ tfcrop, extend, unflag, summary)</description>
                </when>
                 
                <when param="savepars">
+                <equals type="bool" value="False" />
                  <equals type="bool" value="True">
                     <default param="outfile"><value type="string"></value></default>
                 </equals>
-                <equals type="bool" value="False" />
                </when>
 
              </constraints>
@@ -732,7 +732,7 @@ tfcrop, extend, unflag, summary)</description>
                     Note: this parameter is disabled when mode='summary'.
                     
         savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
-                default: True
+                default: False
                 options: True/False
                 
                 outfile -- Name of output file to save the current parameters.
