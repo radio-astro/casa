@@ -143,7 +143,7 @@ testflagger::selectdata(
 
 
 bool
-testflagger::parseAgentParameters(const ::casac::record& aparams)
+testflagger::parseagentparameters(const ::casac::record& aparams)
 {
 	try
 	{
@@ -257,6 +257,7 @@ testflagger::saveflagversion(const std::string& versionname, const std::string& 
 		RETHROW(x);
 	}
 }
+
 
 
 } // casac namespace

@@ -175,7 +175,7 @@ tf.selectdata(scan='3~5', spw='0')
 
 <!-- ********************************************************************** -->
 
-   <method type="function" name="parseAgentParameters">
+   <method type="function" name="parseagentparameters">
    <shortdescription>Parses the parameters for the agent (flagging mode).</shortdescription>
    
 <description>The specific data selection parameters for the agent (flagging mode)
