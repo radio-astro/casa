@@ -48,6 +48,11 @@ using namespace casac;
 }
 
 %typemap(in) complex {
+   if(PyComplex_Check($input)){
+      Py_complex c = PyComplex_AsCComplex($input);
+      $1 = std::complex<double>(c.real, c.imag);
+      //$1 = casac::complex(c.real, c.imag);
+   }
 }
 
 %typemap(in) variant {
@@ -99,6 +104,8 @@ using namespace casac;
 }
 
 %typemap(out) complex {
+   $result = PyComple_FromDouble($1.real(), $1.imag());
+   //$result = PyComple_FromDouble($1.re, $1.im);
 }
 
 %typemap(out) variant {
