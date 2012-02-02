@@ -305,7 +305,7 @@ def tflagger(vis,
         casalog.post('%s'%agent_pars, 'DEBUG')
             
         # Parse the parameters to the agent
-        if (not tflocal.parseAgentParameters(agent_pars)):
+        if (not tflocal.parseagentparameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
         # Do display if requested
@@ -328,7 +328,7 @@ def tflagger(vis,
                 agent_pars['reportdisplay'] = True
                 agent_pars['format'] = format
                 
-            tflocal.parseAgentParameters(agent_pars)
+            tflocal.parseagentparameters(agent_pars)
 
         # Initialize the agent
         casalog.post('Initializing the agent')

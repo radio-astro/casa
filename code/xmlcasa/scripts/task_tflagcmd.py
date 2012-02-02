@@ -309,7 +309,7 @@ def tflagcmd(
                     agent_pars['reportdisplay'] = True
                     agent_pars['format'] = format
                     
-                tflocal.parseAgentParameters(agent_pars)                
+                tflocal.parseagentparameters(agent_pars)                
 
             # Initialize the Agents
             tflocal.init()
@@ -833,7 +833,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         casalog.post('%s'%modepars, 'DEBUG')
 
         # Parse the dictionary of parameters to the tool
-        if (not tflocal.parseAgentParameters(modepars)):
+        if (not tflocal.parseagentparameters(modepars)):
             casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,key), 'WARN')
             continue
                             
