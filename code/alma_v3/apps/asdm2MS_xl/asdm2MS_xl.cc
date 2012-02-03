@@ -1431,7 +1431,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
     tsrSysPower.open(asdmDirectory);
 
     while (tsrSysPower.hasRows()) {
-      const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.nextNRows(100000);
+      const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.untilNBytes(50000000);
       vector<int>			antennaId;
       vector<int>			spectralWindowId;
       vector<int>			feedId;
