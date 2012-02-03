@@ -39,7 +39,7 @@ const Double GaussianSpectralElement::SigmaToFWHM = sqrt(8.0*C::ln2);
 
 //# Constructors
 GaussianSpectralElement::GaussianSpectralElement()
-: SpectralElement() {
+: PCFSpectralElement() {
 	Vector<Double> param(3);
 	param(0) = 1.0;
 	param(1) = 0.0;
@@ -50,7 +50,7 @@ GaussianSpectralElement::GaussianSpectralElement()
 GaussianSpectralElement::GaussianSpectralElement(
 	const Double ampl,
 	const Double center, const Double sigma
-) : SpectralElement() {
+) : PCFSpectralElement() {
 	if (ampl == 0) {
 		throw AipsError("Gaussian amplitude cannot equal 0");
 	}
@@ -63,7 +63,7 @@ GaussianSpectralElement::GaussianSpectralElement(
 
 GaussianSpectralElement::GaussianSpectralElement(
 	const Vector<Double> &param
-) : SpectralElement() {
+) : PCFSpectralElement() {
     if (param.nelements() != 3) {
     	throw AipsError(
     		"GaussianSpectralElement: GAUSSIAN must have "
@@ -82,7 +82,7 @@ GaussianSpectralElement::GaussianSpectralElement(
 
 GaussianSpectralElement::GaussianSpectralElement(
 	const GaussianSpectralElement &other
-) : SpectralElement(other) {}
+) : PCFSpectralElement(other) {}
 
 GaussianSpectralElement::~GaussianSpectralElement() {}
 
@@ -105,14 +105,6 @@ Double GaussianSpectralElement::operator()(const Double x) const {
     return p(0)*exp(-0.5 * (x-p(1))*(x-p(1)) / p(2)/p(2));
 }
 
-Double GaussianSpectralElement::getAmpl() const {
-  return get()[0];
-}
-
-Double GaussianSpectralElement::getCenter() const {
-  return get()[1];
-}
-
 Double GaussianSpectralElement::getSigma() const {
 	return get()[2];
 }
@@ -121,41 +113,12 @@ Double GaussianSpectralElement::getFWHM() const {
 	return sigmaToFWHM(get()[2]);
 }
 
-Double GaussianSpectralElement::getAmplErr() const {
-	return getError()[0];
-}
-
-Double GaussianSpectralElement::getCenterErr() const {
-	return getError()[1];
-}
-
 Double GaussianSpectralElement::getSigmaErr() const {
 	return getError()[2];
 }
 
 Double GaussianSpectralElement::getFWHMErr() const {
 	return sigmaToFWHM(getError()[2]);
-}
-
-void GaussianSpectralElement::setAmpl(Double ampl) {
-	if (ampl == 0) {
-		throw AipsError("Gaussian amplitude cannot equal 0");
-	}
-	Vector<Double> p = get();
-	p(0) = ampl;
-	_set(p);
-	Vector<Double> err = getError();
-	err[0] = 0;
-	setError(err);
-} 
-
-void GaussianSpectralElement::setCenter(Double center) {
-	Vector<Double> p = get();
-	p[1] = center;
-	_set(p);
-	Vector<Double> err = getError();
-	err[1] = 0;
-	setError(err);
 }
 
 void GaussianSpectralElement::setSigma(Double sigma) {
@@ -174,74 +137,18 @@ void GaussianSpectralElement::setFWHM(Double fwhm) {
 	setSigma(sigmaFromFWHM(fwhm));
 }
 
-void GaussianSpectralElement::fixAmpl(const Bool isFixed) {
-	Vector<Bool> myFixed = fixed();
-	myFixed[0] = isFixed;
-	fix(myFixed);
-}
-
-void GaussianSpectralElement::fixCenter(const Bool isFixed) {
-	Vector<Bool> myFixed = fixed();
-	myFixed[1] = isFixed;
-	fix(myFixed);
-}
-
 void GaussianSpectralElement::fixSigma(const Bool isFixed) {
 	Vector<Bool> myFixed = fixed();
 	myFixed[2] = isFixed;
 	fix(myFixed);
 }
 
-void GaussianSpectralElement::fixByString(const String& s) {
-	String fix(s);
-	fix.downcase();
-	if (fix.contains("p")) {
-		fixAmpl(True);
-	}
-	if (fix.contains("c")) {
-		fixCenter(True);
-	}
-	if (fix.contains("f")) {
-		fixFWHM(True);
-	}
-}
-
-
-void GaussianSpectralElement::fixFWHM(const Bool fix) {
-	fixSigma(fix);
-}
-
-Bool GaussianSpectralElement::fixedAmpl() const {
-	return fixed()[0];
-}
-
-Bool GaussianSpectralElement::fixedCenter() const {
-	return fixed()[1];
-}
-
 Bool GaussianSpectralElement::fixedSigma() const {
 	return fixed()[2];
 }
 
-Bool GaussianSpectralElement::fixedFWHM() const {
-	return fixed()[2];
-}
-
-void GaussianSpectralElement::set(const Vector<Double>& params) {
-	if (params.nelements() != 3) {
-		throw AipsError(
-			"GaussianSpectralElement: GAUSSIAN must have "
-			"3 parameters"
-		);
-	}
-	if (params[0] == 0) {
-		throw AipsError("Gaussian amplitude cannot equal 0");
-	}
-	Vector<Double> p = params.copy();
-	if (p[2] < 0) {
-		p[2] = -p[2];
-	}
- 	_set(p);
+Double GaussianSpectralElement::getIntegral() const {
+	return sqrt(C::pi_4/C::ln2) * getAmpl() * getFWHM();
 }
 
 Bool GaussianSpectralElement::toRecord(

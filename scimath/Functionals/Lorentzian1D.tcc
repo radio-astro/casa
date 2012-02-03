@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Lorentzian1D.cc: A one-dimensional Lorentzian class
+//# Copyright (C) 1994,1995,1996,1999,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Lorentzian1D.tcc 19879 2010-02-15 12:52:50Z Wataru.Kawasaki $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.146"
+//# Includes
+#include <scimath/Functionals/Lorentzian1D.h>
+#include <casa/BasicMath/Math.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+//# Constructors
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+//# Operators
+template<class T>
+T Lorentzian1D<T>::eval(typename Function1D<T>::FunctionArg x) const {
+  T value = (x[0] - param_p[CENTER])/param_p[WIDTH]/fwhm2int;
+  return param_p[HEIGHT] / (T(1.0) + value*value);
+}
+
+//# Member functions
 
 } //# NAMESPACE CASA - END
 
-#endif

@@ -243,7 +243,7 @@ Int SpectralList::compar(
 
 ostream &operator<<(ostream &os, const SpectralList &lst) {
   os << lst.nelements() << " in SpectralList:" << endl;
-  for (uInt i=0; i<lst.nelements(); i++) os << lst[i];
+  for (uInt i=0; i<lst.nelements(); i++) os << *lst[i];
 
   return os;
 }
