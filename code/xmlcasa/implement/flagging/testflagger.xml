@@ -314,7 +314,194 @@ Print out a list of current manual and auto flag selections.
 <returns type="bool"/>
 </method>
 
- 
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parsemanualparameters">
+   <shortdescription>Parses data selection parameters and specific parameters
+for the manualflag mode.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>\tScan number. Example: '1,2,3' </description>
+     <value>""</value>
+     </param>   
+
+     <param type="string" name="baseline">
+     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id. Example: '2~4' </description>
+     <value>""</value>
+     </param>
+
+     <param type="bool" name="apply">
+     <description>\tParameter to flag or unflag the data. Default: </description>
+     <value>true</value>
+     </param>
+
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+</example>
+
+<returns type="bool"/> 
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parseclipparameters">
+   <shortdescription>Parses data selection parameters and specific parameters
+   for the clip mode.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>\tScan number. Example: '1,2,3' </description>
+     <value>""</value>
+     </param>   
+
+     <param type="string" name="baseline">
+     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id. Example: '2~4' </description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="expression">
+     <description>\tExpression to flag on. Example: 'ABS I'. Default: 
+     </description>
+     <value>ABS ALL</value>
+     </param>
+    
+     <param type="string" name="datacolumn">
+     <description>\tData column to use for clipping. Example: 'DATA'. Default:
+     </description>
+     <value>DATA</value>
+     </param>
+
+     <param type="doubleArray" name="clipminmax">
+     <description>\tRange to use for clipping. Example: [100.0,200.0] 
+     </description>
+     <value type="vector"> </value>
+     </param>
+     
+     <param type="bool" name="clipoutside">
+     <description>Clip points outside this range? [True/False]. Default:
+     </description>
+     <value>true</value>
+     </param>
+    
+     <param type="bool" name="channelavg">
+     <description>\tAverage data over channels before clipping? [True/False]. Default:
+     </description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="apply">
+     <description>\tParameter to flag or unflag data. Default: </description>
+     <value>true</value>
+     </param>
+
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+</example>
+
+<returns type="bool"/> 
+</method>
+
 </tool>
 </casaxml>
 

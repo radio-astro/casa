@@ -41,9 +41,9 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = false;
+const bool TestFlagger::dbg = true;
 
-
+// TODO: add convenient functions to other agents, to pase parameters
 
 // -----------------------------------------------------------------------
 // Default Constructor
@@ -53,6 +53,7 @@ TestFlagger::TestFlagger ()
 	fdh_p = NULL;
 	summaryAgent_p = NULL;
 	displayAgent_p = NULL;
+
 	done();
 }
 
@@ -91,10 +92,14 @@ TestFlagger::done()
 	timeset_p = false;
 	iterset_p = false;
 
+	dataselection_p = Record();
+
+/*
 	if (! dataselection_p.empty()) {
 		Record temp;
 		dataselection_p = temp;
 	}
+*/
 
 	if (! agentParams_p.empty()) {
 		Record temp;
@@ -431,6 +436,11 @@ TestFlagger::initAgents()
 		return false;
 	}
 
+	if (dataselection_p.empty()){
+		os << LogIO::SEVERE << "There is no MS Selection available." << LogIO::POST;
+		return false;
+	}
+
 	if (agents_config_list_p.empty()){
 		return false;
 	}
@@ -479,14 +489,6 @@ TestFlagger::initAgents()
 			String str(os.str());
 			cout << str << endl;
 
-		}
-
-		// Should it call initFlagDataHandler in case it doesn't exist?
-		// call the factory method for each of the agent's records
-		if(not fdh_p){
-			os << LogIO::SEVERE << "FlagDataHandler has not been initialized."
-					<< LogIO::POST;
-			return false;
 		}
 
 		// Change the log level if apply=True in a mixed state
@@ -865,7 +867,7 @@ bool
 TestFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange,String correlation,
    	    String intent, String observation, String expression, String datacolumn,
-   	    String clipminmax, Bool clipoutside, Bool channelavg, Bool apply)
+   	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply)
 {
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));

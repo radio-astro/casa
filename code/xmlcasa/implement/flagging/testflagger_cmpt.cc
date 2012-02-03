@@ -258,7 +258,84 @@ testflagger::saveflagversion(const std::string& versionname, const std::string& 
 	}
 }
 
+bool
+testflagger::parsemanualparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const bool apply)
+{
 
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the manualflag parameters
+			return testflagger_p->parseManualParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+bool
+testflagger::parseclipparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const std::string& expression,
+		const std::string& datacolumn,
+		const std::vector<double>& clipminmax,
+		const bool clipoutside,
+		const bool channelavg,
+		const bool apply)
+{
+
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the manualflag parameters
+			return testflagger_p->parseClipParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), String(expression),
+					String(datacolumn), clipminmax, Bool(clipoutside),
+					Bool(channelavg), Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
 
 } // casac namespace
 
