@@ -66,9 +66,9 @@ def tflagger(vis,
 
     # 
     # Schema
+    #
     # Open the MS with the TestFlagger tool -> ::open()
-    # Parse the union to the data selection -> ::selectdata()
-    # Read the mode and specific parameters.
+    # Parse the data selection -> ::selectdata()
     # Parse the agent's parameters -> ::parseAgentParameters()
     # Parse the display parameters if requested -> ::parsetAgentParameters()
     # Initialize the agents -> ::init()
@@ -76,12 +76,13 @@ def tflagger(vis,
     # Delete the tool
     # Print the summary dictionary, if any
                         
-    # TODO:
-    # implement MS history
     
     #
     # Task tflagger
     #    Flags data based on data selection in various ways
+    #    
+    # This is a replacement task to flagdata. It takes different parameters and
+    # different default values. This task uses a new tool and framework underneath.
 
     if pCASA.is_mms(vis):
         pCASA.execute("tflagger", locals())
@@ -132,7 +133,6 @@ def tflagger(vis,
         
         
         # Open the MS and attach it to the tool
-        # TODO: pass combinescans to tflocal.open()
         if ((type(vis) == str) & (os.path.exists(vis))):
             tflocal.open(vis, newtime)
         else:
@@ -151,7 +151,7 @@ def tflagger(vis,
                       feed,scan,antenna,uvrange,timerange,correlation,intent,observation), 'DEBUG')
 
 
-        # Correlation should not go in here            
+        # Correlation does not go in here            
         tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
                            baseline=antenna, uvrange=uvrange, time=timerange, \
                            intent=intent, observation=str(observation))   
@@ -169,11 +169,10 @@ def tflagger(vis,
 
         # Disable writing the flags for summary mode
         if (writeflags == True and mode == 'summary'):
-            # It was probably a mistake of the user, reset writeflags
             casalog.post('Parameter writeflags will be reset to False to run together with mode=%s'%mode, 'WARN')
             writeflags = False
                         
-        # Create a list of the selection parameters to save later
+        # Create a list of the selection parameters to save to outfile
         sel_pars = ''
         sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
@@ -183,7 +182,6 @@ def tflagger(vis,
         agent_pars = {}
         agent_pars['name'] = agent_name
         agent_pars['mode'] = mode
-#        agent_pars['sequential'] = sequential
         
         # Set up agent's parameters based on mode
         if mode == 'manualflag':
@@ -196,7 +194,7 @@ def tflagger(vis,
             agent_pars['channelavg'] = channelavg
             
             # If clipminmax = [], do not write it in the dictionary.
-            # It will be handled by the framework
+            # It will be handled by the framework to flag NaNs only
             if clipminmax != []:      
                 # Cast to float to avoid the missing decimal point                 
                 clipmin = float(clipminmax[0])
@@ -267,7 +265,8 @@ def tflagger(vis,
         elif mode == 'extend':
             agent_pars['ntime'] = newtime
             if combinescans:
-                agent_pars['combinescans'] = combinescans            
+                agent_pars['combinescans'] = combinescans       
+                     
             agent_pars['extendpols'] = extendpols
             agent_pars['growtime'] = growtime
             agent_pars['growfreq'] = growfreq
@@ -289,15 +288,15 @@ def tflagger(vis,
             agent_pars['spwcorr'] = spwcorr
             casalog.post('Summary mode is active')
             
-            # Do not save flag command for this mode
+            # Do not save flag command for the summary mode
             savepars = False
             
 
         # Now Parse the agent's parameters
         casalog.post('Parsing the parameters for the %s agent'%mode)
-        # Due to the way the MS Selection works, the correlation
-        # selection needs to be done in here instead of in the
-        # selectdata()
+        
+        # Due to the way the MS Selection works, the correlation selection needs 
+        # to be done in here instead of in selectdata()
         agent_pars['correlation'] = correlation
         
         # Add the apply parameter to be consistent with the tool
@@ -305,7 +304,8 @@ def tflagger(vis,
 
         casalog.post('%s'%agent_pars, 'DEBUG')
             
-        if (not tflocal.parseAgentParameters(agent_pars)):
+        # Parse the parameters to the agent
+        if (not tflocal.parseagentparameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
         # Do display if requested
@@ -328,14 +328,14 @@ def tflagger(vis,
                 agent_pars['reportdisplay'] = True
                 agent_pars['format'] = format
                 
-            tflocal.parseAgentParameters(agent_pars)
+            tflocal.parseagentparameters(agent_pars)
 
         # Initialize the agent
         casalog.post('Initializing the agent')
         tflocal.init()
 
         # Purge the empty parameters from the selection string
-        flagcmd = getLinePars(sel_pars) 
+        flagcmd = purgePars(sel_pars) 
 
         # Backup the existing flags before applying new ones
         if flagbackup and writeflags:
@@ -357,8 +357,8 @@ def tflagger(vis,
         tflocal.done()
 
         if mode == 'summary':
-            #filter out baselines/antennas/fields/spws/...
-            #which do not fall within limits
+            # Filter out baselines/antennas/fields/spws/...
+            # which do not fall within limits
             if type(summary_stats) is dict:
                 for x in summary_stats.keys():
                     if type(summary_stats[x]) is dict:
@@ -379,7 +379,7 @@ def tflagger(vis,
         casalog.post('%s'%instance,'ERROR')
         raise
         
-    # write history to the MS
+    # Write history to the MS
     try:
             param_names = tflagger.func_code.co_varnames[:tflagger.func_code.co_argcount]
             param_vals = [eval(p) for p in param_names]
@@ -393,10 +393,9 @@ def tflagger(vis,
 
 
 def writeCMD(msfile, flagcmd, outfile):
-    # Reads a list of parameters and save it on the FLAG_CMD table or on a text file    
-    # When saving in the FLAG_CMD table it will also update the APPLIED column to True
-    # Returns the number of flag commands written (it's always one!!!)
-    #
+    ''' Reads a list of parameters and save it to the FLAG_CMD table or to a text file.
+        When saving in the FLAG_CMD table, it will also update the APPLIED column to True.
+        Returns the number of flag commands written (it's always one!!!)'''
     
     
     nadd = 0
@@ -451,12 +450,13 @@ def writeCMD(msfile, flagcmd, outfile):
     nrows = int(tb.nrows())
     casalog.post('There are ' + str(nrows) + ' rows already in the FLAG_CMD table')
     
-    # add blank rows
+    # Add blank rows
     if (debug):
         print pl.array(cmdline)
         
     tb.addrows(nadd)
-    # now fill them in
+    
+    # Now fill them in
     tb.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
     tb.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
               nrow=nadd)
@@ -464,6 +464,7 @@ def writeCMD(msfile, flagcmd, outfile):
               nrow=nadd)
     tb.putcol('COMMAND', pl.array(cmdline), startrow=nrows,
               nrow=nadd)
+    
     # Other columns
     tb.putcol('TYPE', pl.array(typ_list), startrow=nrows, nrow=nadd)
     tb.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
@@ -473,22 +474,21 @@ def writeCMD(msfile, flagcmd, outfile):
     tb.putcol('APPLIED', pl.array(app_list), startrow=nrows,
               nrow=nadd)
     tb.close()
-#
+
     casalog.post('Wrote ' + str(nadd) + ' rows to FLAG_CMD')
 
     return nadd
 
 
-def getLinePars(cmdline):
+def purgePars(cmdline):
     '''Remove empty parameters from a string:
        -> cmdline is a string with parameters
        returns a string containing only parameters with values
-    '''
-            
+    '''            
    
     newstr = ''
     
-    # split by white space
+    # Split by white space
     keyvlist = cmdline.split()
     if keyvlist.__len__() > 0:  
         
@@ -514,6 +514,7 @@ def getLinePars(cmdline):
         casalog.post('String of parameters is empty','WARN')   
          
     return newstr
+
 
 def backupFlags(tflocal, mode, flagcmd):
     ''' Backup the flags before applying new ones'''
@@ -574,18 +575,9 @@ def backupFlags(tflocal, mode, flagcmd):
 
     return
 
-def createstr(selpars):
-    '''Get a string par=value. If value is empty, return
-       accumulated string with only par that has non-empty value'''
-    
-    
-    # walk through string and get the value after =
-    # if value is empty, get next
-    
-    return strpar
 
 def delspace(word, replace):
-    '''Replace the white space of a string'''
+    '''Replace the white space of a string with another character'''
     
     newword = word
     if word.count(' ') > 0:
