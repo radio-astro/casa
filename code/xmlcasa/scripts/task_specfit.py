@@ -72,11 +72,12 @@ def specfit(
 	model=None, residual=None, amp=None, amperr=None,
 	center=None, centererr=None, fwhm=None, fwhmerr=None,
 	integral=None, integralerr=None, wantreturn=None,
-	stretch=None, logresults=None, gampest=None,
-	gcenterest=None, gfwhmest=None, gfix=None,
+	stretch=None, logresults=None, pampest=None,
+	pcenterest=None, pfwhmest=None, pfix=None,
 	gmncomps=None, gmampcon=None, gmcentercon=None,
     gmfwhmcon=None, gmampest=None, gmcenterest=None,
-    gmfwhmest=None, gmfix=None, logfile=None, append=None
+    gmfwhmest=None, gmfix=None, logfile=None, append=None,
+    pfunc=None
 ):
     casalog.origin('specfit')
     retval = None
@@ -95,13 +96,13 @@ def specfit(
 			fwhm=fwhm, fwhmerr=fwhmerr,
 			integral=integral, integralerr=integralerr,
 			stretch=stretch, logresults=logresults,
-			gampest=gampest, gcenterest=gcenterest,
-			gfwhmest=gfwhmest, gfix=gfix,
+			pampest=pampest, pcenterest=pcenterest,
+			pfwhmest=pfwhmest, pfix=pfix,
 			gmncomps=gmncomps, gmampcon=gmampcon,
 			gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
 			gmampest=gmampest, gmcenterest=gmcenterest,
 			gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
-			append=append
+			append=append, pfunc=pfunc
 		)
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')

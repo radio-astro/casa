@@ -77,6 +77,7 @@ import numpy
 twogauss = "specfit_multipix_2gauss.fits"
 polyim = "specfit_multipix_poly_2gauss.fits"
 gauss_triplet = "gauss_triplet.fits"
+two_lorentzians = "two_lorentzians.fits"
 solims = [
     "amp", "ampErr", "center", "centerErr",
     "fwhm", "fwhmErr", "integral", "integralErr"
@@ -91,10 +92,10 @@ def run_fitprofile (
     axis, mask, ngauss, poly, multifit, model="",
     residual="", amp="", amperr="", center="", centererr="",
     fwhm="", fwhmerr="", integral="", integralerr="",
-    estimates="",gampest="", gcenterest="", gfwhmest="",
-    gfix="", gmncomps=0, gmampcon="", gmcentercon="",
+    estimates="",pampest="", pcenterest="", pfwhmest="",
+    pfix="", gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix="", logfile=""
+    gmfwhmest=[0], gmfix="", logfile="", pfunc=""
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -109,12 +110,13 @@ def run_fitprofile (
         model=model, residual=residual, amp=amp,
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
-        integralerr=integralerr, gampest=gampest,
-        gcenterest=gcenterest, gfwhmest=gfwhmest, gfix=gfix,
+        integralerr=integralerr, pampest=pampest,
+        pcenterest=pcenterest, pfwhmest=pfwhmest, pfix=pfix,
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
-        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile
+        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
+        pfunc=pfunc
     )
     myia.close()
     myia.done()
@@ -126,10 +128,10 @@ def run_specfit(
     residual="", amp="", amperr="", center="", centererr="",
     fwhm="", fwhmerr="", integral="", integralerr="",
     wantreturn=True, estimates="",
-    gampest="", gcenterest="", gfwhmest="", gfix="",
+    pampest="", pcenterest="", pfwhmest="", pfix="",
     gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix="", logfile=""
+    gmfwhmest=[0], gmfix="", logfile="", pfunc=""
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
@@ -140,12 +142,13 @@ def run_specfit(
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
         integralerr=integralerr,
-        wantreturn=wantreturn, gampest=gampest,
-        gcenterest=gcenterest, gfwhmest=gfwhmest, gfix=gfix,
+        wantreturn=wantreturn, pampest=pampest,
+        pcenterest=pcenterest, pfwhmest=pfwhmest, pfix=pfix,
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
-        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile
+        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
+        pfunc=pfunc
     )
 
 class specfit_test(unittest.TestCase):
@@ -560,7 +563,7 @@ class specfit_test(unittest.TestCase):
                 imagename=polyim, box="", region="", chans="",
                 stokes="", axis=2, mask="", ngauss=0, poly=3,
                 multifit=True, model="", residual="", estimates="",
-                gampest=[50, 10], gcenterest=[90, 30], gfwhmest=[10, 7]
+                pampest=[50, 10], pcenterest=[90, 30], pfwhmest=[10, 7]
             )
             self.assertTrue(len(res["converged"].ravel()) == 81)
             # fit #0 did not converge
@@ -700,6 +703,39 @@ class specfit_test(unittest.TestCase):
             # appending, second time through size should double
             self.assertTrue(os.path.getsize(logfile) > 3e4*i)
             i = i+1
+
+    def test_12(self):
+        """test results of lorentzian fitting"""
+        imagename=datapath+two_lorentzians
+        pamp = [1, 7]
+        pcen = [30, 111]
+        pfwhm = [4, 4]
+        pfunc = ["l", "l"]
+        
+        logfile = "two_lorentzian_fit.log"
+        i = 1
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename=imagename, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=-1,
+                multifit=True, center="center",
+                centererr="centerErr", fwhm="fwhm",
+                fwhmerr="fwhmErr", amp="amp", amperr="ampErr",
+                integral="integral", integralerr="integralErr",
+                pampest=pamp, pcenterest=pcen, pfwhmest=pfwhm,
+                logfile=logfile, pfunc=pfunc
+            )
+            for image in (
+                "center", "centerErr", "fwhm", "fwhmErr", "amp",
+                "ampErr", "integral", "integralErr"
+            ):
+                self.checkImage(
+                    image + "_ls", datapath + image + "_ls"
+                )
+            # appending, second time through size should double
+            self.assertTrue(os.path.getsize(logfile) > 2e4*i)
+            i = i+1
+
 
 def suite():
     return [specfit_test]

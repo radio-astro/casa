@@ -1129,13 +1129,14 @@ record* image::fitprofile(const string& box, const variant& region,
 	const string& amperr, const string& center, const string& centererr,
 	const string& fwhm, const string& fwhmerr,
 	const string& integral, const string& integralerr, const bool stretch,
-	const bool logResults, const variant& gampest,
-	const variant& gcenterest, const variant& gfwhmest,
-	const variant& gfix, const variant& gmncomps,
+	const bool logResults, const variant& pampest,
+	const variant& pcenterest, const variant& pfwhmest,
+	const variant& pfix, const variant& gmncomps,
     const variant& gmampcon, const variant& gmcentercon,
     const variant& gmfwhmcon, const vector<double>& gmampest,
     const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-    const variant& gmfix, const string& logfile, const bool append
+    const variant& gmfix, const string& logfile, const bool append,
+    const variant& pfunc
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
@@ -1151,10 +1152,12 @@ record* image::fitprofile(const string& box, const variant& region,
 		ngauss = 0;
 	}
 	try {
-		vector<double> myampest = toVectorDouble(gampest, "myampest");
-		vector<double> mycenterest = toVectorDouble(gcenterest, "gcenterest");
-		vector<double> myfwhmest = toVectorDouble(gfwhmest, "gfwhmest");
-		vector<string> myfix = toVectorString(gfix, "gfix");
+		vector<double> myampest = toVectorDouble(pampest, "pampest");
+		vector<double> mycenterest = toVectorDouble(pcenterest, "pcenterest");
+		vector<double> myfwhmest = toVectorDouble(pfwhmest, "pfwhmest");
+		vector<string> myfix = toVectorString(pfix, "pfix");
+		vector<string> myfunc = toVectorString(pfunc, "pfunc");
+
 		vector<int> mygmncomps = gmncomps.type() == variant::INT
 			&& gmncomps.toInt() == 0
 				? vector<int>(0)
@@ -1183,13 +1186,19 @@ record* image::fitprofile(const string& box, const variant& region,
 					<< "case you must specify ngauss and/or poly)"
 					<< LogIO::EXCEPTION;
 			}
-			uInt myngauss = myampest.size();
-			if (mycenterest.size() != myngauss || myfwhmest.size() != myngauss) {
-				*_log << "ampest, centerest, and fwhmest arrays "
-					<< "must all be the same length"
-					<< LogIO::EXCEPTION;
+			uInt mynpcf = myampest.size();
+			if (myfunc.size() == 0) {
+				myfunc.resize(myampest.size(), "G");
 			}
-			if (gfixSpecified && myfix.size() != myngauss) {
+			if (
+				mycenterest.size() != mynpcf
+				|| myfwhmest.size() != mynpcf
+				|| myfunc.size() != mynpcf
+			) {
+				*_log << "pampest, pcenterest, pfwhmest, and pfunc arrays "
+					<< "must all be the same length" << LogIO::EXCEPTION;
+			}
+			if (gfixSpecified && myfix.size() != mynpcf) {
 				*_log << "If the gfix array is specified the number of "
 					<< "elements it has must be the same as the number of elements "
 					<< "in the ampest array even if some elements are empty strings"
@@ -1255,15 +1264,35 @@ record* image::fitprofile(const string& box, const variant& region,
 						<< LogIO::EXCEPTION;
 				}
 			}
-			for (uInt i=0; i<myngauss; i++) {
-				GaussianSpectralElement gse(
-					myampest[i], mycenterest[i],
-					GaussianSpectralElement::sigmaFromFWHM(myfwhmest[i])
+			for (uInt i=0; i<mynpcf; i++) {
+				String func(myfunc[i]);
+				func.upcase();
+				Bool doGauss = func.startsWith("G");
+				Bool doLorentz = func.startsWith("L");
+				if (! doGauss && ! doLorentz) {
+					*_log << myfunc[i] << " does not minimally match 'gaussian' or 'lorentzian'"
+						<< LogIO::EXCEPTION;
+				}
+				std::auto_ptr<PCFSpectralElement> pcf(
+					doGauss
+					? dynamic_cast<PCFSpectralElement*>(
+						new GaussianSpectralElement(
+						myampest[i], mycenterest[i],
+						GaussianSpectralElement::sigmaFromFWHM(myfwhmest[i])
+						)
+					)
+					: doLorentz
+					  ? dynamic_cast<PCFSpectralElement*>(
+							  new LorentzianSpectralElement(
+								myampest[i], mycenterest[i], myfwhmest[i]
+						)
+					  )
+					  : 0
 				);
 				if (gfixSpecified) {
-					gse.fixByString(myfix[i]);
+					pcf->fixByString(myfix[i]);
 				}
-				if (! spectralList.add(gse)) {
+				if (! spectralList.add(*pcf)) {
 					*_log << "Unable to add element to spectral list"
 						<< LogIO::EXCEPTION;
 				}

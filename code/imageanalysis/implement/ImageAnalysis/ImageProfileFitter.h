@@ -65,10 +65,6 @@ class ImageProfileFitter : public ImageTask {
 	// </example>
 
 public:
-
-	static const Double integralConst;
-
-
 	// constructor appropriate for API calls.
 	// Parameters:
 	// <src>image</src> - the input image in which to fit the models
@@ -159,19 +155,25 @@ private:
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
 		_deleteImageOnDestruct, _logResults;
 	Int _polyOrder, _fitAxis;
-	uInt _nGaussSinglets, _nGaussMultiplets, _minGoodPoints;
+	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
+		_minGoodPoints;
 	Array<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
 	SubImage<Float> _subImage;
 	Record _results;
-	SpectralList _gaussEstimates;
+	SpectralList _nonPolyEstimates;
 
 	const static String _class;
 
+	const static uInt _nOthers;
+	const static uInt _gsPlane;
+	const static uInt _lsPlane;
+
+
 	enum gaussSols {
 	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
-	    FWHMERR, INTEGRALERR, NGSOLS
+	    FWHMERR, INTEGRALERR, NGSOLMATRICES
 	};
 
     void _getOutputStruct(
@@ -188,13 +190,15 @@ private:
 
     String _getResultsString() const;
 
+    String _getTag(const uInt i) const;
+
     String _elementToString(
     	const Double value, const Double error,
     	const String& unit
     ) const;
 
-    String _gaussianToString(
-    	const GaussianSpectralElement& gauss, const CoordinateSystem& csys,
+    String _pcfToString(
+    	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
     	const Vector<Double> world, const IPosition imPos, const Bool showTypeString=True,
     	const String& indent=""
     ) const;
@@ -216,9 +220,9 @@ private:
     	const Array<Bool>& mask
     );
 
-    void _insertGaussian(
-    	vector<vector<Matrix<Double> > >& gMatrices, const uInt idx,
-    	const GaussianSpectralElement& g,
+    void _insertPCF(
+    	vector<vector<Matrix<Double> > >& pcfMatrices, const uInt idx,
+    	const PCFSpectralElement& pcf,
     	const uInt row, const uInt col, const IPosition& pos,
     	const Double increment
     ) const;
@@ -264,7 +268,7 @@ private:
     Double _fitAxisIncrement() const;
 
     Double _centerWorld(
-    	const GaussianSpectralElement& solution, const IPosition& imPos
+    	const PCFSpectralElement& solution, const IPosition& imPos
     ) const;
 
     Bool _inVelocitySpace() const;
