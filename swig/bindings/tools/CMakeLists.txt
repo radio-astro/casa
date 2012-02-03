@@ -1,0 +1,134 @@
+#
+# CASA - Common Astronomy Software Applications
+# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+#
+# This file is part of CASA.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+
+# This target is executed unconditionally and before any other target that
+# depends on the definitions file
+add_custom_target( tools_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
+
+
+# This is delegated to the cmake script code/install/casadef.cmake in
+# order to allow setting environment variables portably.
+add_custom_command( OUTPUT definitions
+	  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions_tmp
+	    COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
+	    )
+
+
+# Make sure that compile time definitions (build time, svn revision number)
+# are recomputed in every build.
+
+# set SVNREVISION and BUILDTIME
+set( casadef_quiet TRUE )
+set( casadef_perl ${PERL_EXECUTABLE} )
+set( casadef_source_dir ${CMAKE_SOURCE_DIR} )
+include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
+
+casa_add_library( tools
+ atmosphere/atmosphere_cmpt.cc
+ calibrater/calplot_cmpt.cc
+ casa/logsink_cmpt.cc
+ casa/quanta_cmpt.cc
+ casa/TSLogSink.cc
+ components/componentlist_cmpt.cc
+ flagging/flagger_cmpt.cc
+ flagging/lightflagger_cmpt.cc
+ flagging/testflagger_cmpt.cc
+ images/coordsys_cmpt.cc
+ images/image_cmpt.cc
+ images/imagepol_cmpt.cc
+ images/regionmanager_cmpt.cc
+ measures/measures_cmpt.cc
+ ms/ms_cmpt.cc
+ ms/msplot_cmpt.cc
+ nrao/vlafillertask_cmpt.cc
+ plotms/plotms_cmpt.cc
+ scimath/functional_cmpt.cc
+ StdCasa/conversions_python.cc
+ StdCasa/interrupt.cc
+ spectralline/spectralline_cmpt.cc
+ synthesis/calibrater_cmpt.cc
+ synthesis/deconvolver_cmpt.cc
+ synthesis/imager_cmpt.cc
+ synthesis/imagertask_cmpt.cc
+ synthesis/simulator_cmpt.cc
+ synthesis/vpmanager_cmpt.cc
+ tables/table_cmpt.cc
+ tables/tableindex_cmpt.cc
+ tables/tableiterator_cmpt.cc
+ tables/tableplot_cmpt.cc
+ tables/tablerow_cmpt.cc
+ utils/BaseInterface.cc
+ utils/CasapyWatcher.cc
+ utils/dbus_cmpt.cc
+ utils/stdBaseInterface.cc
+ utils/utils_cmpt.cc
+ xerces/asdmCasaSaxHandler.cc
+ xerces/asdmCasaXMLUtil.cc
+ xerces/stdcasaXMLUtil.cc
+  )
+add_dependencies( libtools_fast tools_definitions )
+add_dependencies( libtools      tools_definitions )
+
+#casa_add_assay( bindingxerces/test/tXMLToRecord.cc )
+
+casa_add_tools( tools_swig tools_sources 
+ atmosphere/atmosphere.xml
+ calibrater/calplot.xml
+ casa/logsink.xml
+ casa/quanta.xml
+ components/componentlist.xml
+ flagging/flagger.xml
+ flagging/lightflagger.xml
+ flagging/testflagger.xml
+ images/coordsys.xml
+ images/imagepol.xml
+ images/image.xml
+ images/regionmanager.xml
+ measures/measures.xml
+ ms/msplot.xml
+ ms/ms.xml
+ nrao/vlafillertask.xml
+ plotms/plotms.xml
+ scimath/functional.xml
+ spectralline/spectralline.xml
+ synthesis/calibrater.xml
+ synthesis/deconvolver.xml
+ synthesis/imagertask.xml
+ synthesis/imager.xml
+ synthesis/simulator.xml
+ synthesis/vpmanager.xml
+ tables/tableindex.xml
+ tables/tableiterator.xml
+ tables/tableplot.xml
+ tables/tablerow.xml
+ tables/table.xml
+ utils/dbus.xml
+ utils/utils.xml )
+
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
+# for generated C++ bindings
+
+add_definitions( -pthread -fno-strict-aliasing -DNDEBUG ) # may or may not be necessary for compiling python modules
+
+add_custom_target( generated_sources SOURCES ${tools_sources} ${outputs_swig} )
+#add_dependencies( generated_sources )
+add_dependencies( libtools generated_sources )
+
