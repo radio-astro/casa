@@ -28,12 +28,14 @@
 #include <casa/aips.h>
 #include <components/SpectralComponents/ProfileFit1D.h>
 
+#include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/Assert.h>
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
+#include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 
 #include <casa/iostream.h>
@@ -53,6 +55,12 @@ GaussianMultipletSpectralElement makeMultiplet (
 	const Vector<Double>& sigma
 );
 
+Vector<LorentzianSpectralElement> makeLorentzians (
+	Vector<Double>& x, Vector<Double>& y,
+	const Vector<Double>& amp, const Vector<Double>& cen,
+	const Vector<Double>& fwhm
+);
+
 int main() {
 
 	try {
@@ -69,10 +77,13 @@ int main() {
 			// Make fitter, set data and fit
 			ProfileFit1D<Double> fitter;
 			fitter.setData (x,y,m);
+			cout << __FILE__ << " " << __LINE__ << endl;
 			fitter.setGaussianElements (1);
+			cout << __FILE__ << " " << __LINE__ << endl;
+
 			const SpectralElement *firstEl = fitter.getList(False)[0];
 			AlwaysAssert(
-					firstEl->getType() == SpectralElement::GAUSSIAN, AipsError
+				firstEl->getType() == SpectralElement::GAUSSIAN, AipsError
 			);
 			PolynomialSpectralElement p(1);
 			fitter.addElement(p);
@@ -126,7 +137,6 @@ int main() {
 		}
 
 		{
-			cout << __LINE__ << " " << __FILE__ << endl;
 			Vector<Double> x, y, amp(2), cen(2), sigma(2);
 			amp[0] = 1;
 			amp[1] = 1;
@@ -229,6 +239,54 @@ int main() {
 					fitter.getList(True)[0]
 				)
 				<< endl;
+			cout << "niter " << fitter.getNumberIterations() << endl;
+			cout << endl;
+		}
+		{
+			Vector<Double> x, y, amp(2), cen(2), fwhm(2);
+			amp[0] = 1.5;
+			amp[1] = 4;
+			cen[0] = 10;
+			cen[1] = 60;
+			fwhm[0] = 6;
+			fwhm[1] = 6.5;
+			Vector<LorentzianSpectralElement> lse = makeLorentzians (x, y, amp, cen, fwhm);
+
+			ProfileFit1D<Double> fitter;
+			Vector<Bool> m (x.size(), True);
+			fitter.setData (x,y,m);
+			for (uInt i=0; i<lse.size(); i++) {
+				// perturb the initial estimates
+				LorentzianSpectralElement z = lse[i];
+				z.setAmpl(amp[i] + (i*0.25));
+				z.setCenter(cen[i] + 3 + 0.5*i);
+				z.setFWHM(fwhm[i] + i*2);
+				fitter.addElement(z);
+			}
+			AlwaysAssert(
+				fitter.getList(False).nelements() == lse.size(), AipsError
+			);
+			const SpectralElement *firstEl = fitter.getList(False)[0];
+			AlwaysAssert(
+				firstEl->getType() == SpectralElement::LORENTZIAN, AipsError
+			);
+			AlwaysAssert(fitter.fit(), AipsError);
+			// Check ok
+			AlwaysAssert(fitter.getDataMask().nelements() == x.size(), AipsError);
+			AlwaysAssert(allEQ(fitter.getDataMask(), True), AipsError);
+			AlwaysAssert(fitter.getRangeMask().nelements() == 0, AipsError);
+			AlwaysAssert(fitter.getTotalMask().nelements() == x.size(), AipsError);
+			AlwaysAssert(allEQ(fitter.getTotalMask(), True), AipsError);
+			for (uInt i=0; i<lse.size(); i++) {
+				const LorentzianSpectralElement *got = dynamic_cast<
+					const LorentzianSpectralElement*
+				>(
+					fitter.getList(True)[i]
+				);
+				LorentzianSpectralElement exp = lse[i];
+				AlwaysAssert(nearAbs(*got, exp, 1e-15), AipsError);
+			}
+
 			cout << "niter " << fitter.getNumberIterations() << endl;
 			cout << endl;
 		}
@@ -352,5 +410,35 @@ GaussianMultipletSpectralElement makeMultiplet (
 		y[i] = gm(x[i]);
 	}
 	return gm;
+}
+
+Vector<LorentzianSpectralElement> makeLorentzians (
+	Vector<Double>& x, Vector<Double>& y,
+	const Vector<Double>& amp, const Vector<Double>& cen,
+	const Vector<Double>& fwhm
+) {
+	Double minx = cen[0] - 5*fwhm[0];
+	Double maxx = cen[0] + 5*fwhm[0];
+	for (uInt i=1; i<amp.size(); i++) {
+		minx = min(minx, cen[i] - 5*fwhm[i]);
+		maxx = max(maxx, cen[i] + 5*fwhm[i]);
+	}
+	minx = (int)minx;
+	maxx = (int)maxx + 1;
+	x.resize((Int)(maxx-minx+1));
+	indgen(x);
+	x += minx;
+	y.resize(x.size());
+	Vector<LorentzianSpectralElement> lse(amp.size());
+	for (uInt i=0; i<amp.size(); i++) {
+		lse[i] = LorentzianSpectralElement(amp[i], cen[i], fwhm[i]);
+	}
+	for (uInt i=0; i<x.size(); i++) {
+		y[i] = 0;
+		for (uInt j=0; j<lse.size(); j++) {
+			y[i] += lse[j](x[i]);
+		}
+	}
+	return lse;
 }
 

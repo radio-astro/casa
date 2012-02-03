@@ -28,7 +28,7 @@
 #ifndef COMPONENTS_GAUSSIANSPECTRALELEMENT_H
 #define COMPONENTS_GAUSSIANSPECTRALELEMENT_H
 
-#include <components/SpectralComponents/SpectralElement.h>
+#include <components/SpectralComponents/PCFSpectralElement.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // To have a container for data descrbing a Gaussian spectral profile for fitting to an observed spectrum
 // </motivation>
 
-class GaussianSpectralElement : public SpectralElement {
+class GaussianSpectralElement : public PCFSpectralElement {
 public:
 
 	//# Constants
@@ -109,75 +109,21 @@ public:
 	// Evaluate the value of the element at x
 	Double operator()(const Double x) const;
 
-	// Get amplitude
-	Double getAmpl() const;
-	// Get center value
-	Double getCenter() const;
-	// Get the width
-	// <group>
 	Double getSigma() const;
 	Double getFWHM() const;
-	// </group>
-	// Get amplitude error estimate
-	Double getAmplErr() const;
-	// Get center value error estimate
-	Double getCenterErr() const;
-	// Get the width error estimate
-	// <group>
+
 	Double getSigmaErr() const;
 	Double getFWHMErr() const;
-	// </group>
-	// Get error estimates of parameters
 
 
-	void set(const Vector<Double>& param);
-
-	// Set amplitude
-	// <thrown>
-	//   <li> AipsError if non GAUSSIAN
-	// </thrown>
-	void setAmpl(Double ampl);
-	// Set center
-	// <thrown>
-	//   <li> AipsError if non GAUSSIAN
-	// </thrown>
-	void setCenter(Double center);
-	// Set width
-	// <thrown>
-	//   <li> AipsError if non GAUSSIAN
-	//   <li> AipsError if sigma == 0.0
-	// </thrown>
-	// <group>
 	void setSigma(Double sigma);
 	void setFWHM(Double fwhm);
-	// </group>
-	// </group>
 
-	// Set fixed parameters (True) or unset them (False)
-	// <thrown>
-	//   <li> AipsError if incorrect number of parameters (e.g. not 3 for GAUSSIAN)
-	// </thrown>
-	// <group>
-	void fixAmpl(const Bool fix=True);
-	void fixCenter(const Bool fix=True);
 	void fixSigma(const Bool fix=True);
-	void fixFWHM(const Bool fix=True);
-	// fix parameters via encoded string. If s contains a, fix amplitude. If s contains f, fix fwhm.
-	// If s contains c, fix center.
-	void fixByString(const String& s);
-	// </group>
 
-	// Get the fix state[s]
-	// <thrown>
-	//   <li> AipsError if incorrect number of parameters (e.g. not 3 for GAUSSIAN)
-	// </thrown>
-	// <group>
-	Bool fixedAmpl() const;
-	Bool fixedCenter() const;
 	Bool fixedSigma() const;
-	Bool fixedFWHM() const;
-	// </group>
 
+	Double getIntegral() const;
 
 	// Save to a record.   For Gaussian elements,
 	// the width is defined as a FWHM in the record interface.
@@ -190,6 +136,7 @@ public:
 
 	static Double sigmaToFWHM (const Double sigma);
 	// </group>
+
 };
 
 ostream &operator<<(ostream& os, const GaussianSpectralElement& elem);

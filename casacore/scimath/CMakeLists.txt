@@ -150,6 +150,11 @@ Functionals/KaiserBFunction.h
 Functionals/KaiserBFunction.tcc
 Functionals/KaiserBParam.h
 Functionals/KaiserBParam.tcc
+Functionals/Lorentzian1D2.tcc
+Functionals/Lorentzian1D.h
+Functionals/Lorentzian1DParam.h
+Functionals/Lorentzian1DParam.tcc
+Functionals/Lorentzian1D.tcc
 Functionals/MarshButterworthBandpass.h
 Functionals/MarshButterworthBandpass.tcc
 Functionals/MarshallableChebyshev.h

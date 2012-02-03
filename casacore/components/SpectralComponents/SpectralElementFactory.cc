@@ -31,6 +31,7 @@
 #include <components/SpectralComponents/CompiledSpectralElement.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
+#include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 #include <components/SpectralComponents/SpectralElementFactory.h>
 
@@ -136,6 +137,20 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		param(2) = GaussianSpectralElement::sigmaFromFWHM (param(2));
 		errs(2) = GaussianSpectralElement::sigmaFromFWHM (errs(2));
 		specEl.reset(new GaussianSpectralElement(param(0), param(1), param(2)));
+		specEl->setError(errs);
+		break;
+	case SpectralElement::LORENTZIAN:
+		if (param.nelements() != 3) {
+			throw AipsError(
+				"Illegal number of parameters for Lorentzian element"
+			);
+		}
+		if (param(2) <= 0.0) {
+			throw AipsError(
+					"The width of a Lorentzian element must be positive"
+			);
+		}
+		specEl.reset(new LorentzianSpectralElement(param(0), param(1), param(2)));
 		specEl->setError(errs);
 		break;
 	case SpectralElement::POLYNOMIAL:

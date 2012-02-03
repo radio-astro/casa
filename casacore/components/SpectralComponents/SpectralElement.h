@@ -87,6 +87,8 @@ public:
 		COMPILED,
 		// Gaussian multiplet
 		GMULTIPLET,
+		// Lorentzian
+		LORENTZIAN,
 		N_Types
 	};
 
@@ -144,7 +146,7 @@ public:
 	// </thrown>
 
 	// Fix/unfix all in one go
-	virtual void fix(const Vector<Bool> &fix);
+	virtual void fix(const Vector<Bool>& fix);
 
 	// Get the fix state[s]
 	const Vector<Bool> &fixed() const;
@@ -158,13 +160,13 @@ public:
 protected:
 	SpectralElement() {}
 
-	SpectralElement(const SpectralElement &other);
+	SpectralElement(const SpectralElement& other);
 
-	SpectralElement &operator=(const SpectralElement &other);
+	SpectralElement &operator=(const SpectralElement& other);
 
 	void _construct(const Types type, const Vector<Double>& params);
 
-	void _set(const Vector<Double> &params);
+	void _set(const Vector<Double>& params);
 
 	void _setType(const Types type);
 
@@ -183,7 +185,13 @@ private:
 	Vector<Bool> fix_p;
 
 };
+
 ostream &operator<<(ostream& os, const SpectralElement& elem);
+
+Bool near(const SpectralElement& s1, const SpectralElement& s2, const Double tol);
+
+Bool nearAbs(const SpectralElement& s1, const SpectralElement& s2, const Double tol);
+
 
 } //# NAMESPACE CASA - END
 

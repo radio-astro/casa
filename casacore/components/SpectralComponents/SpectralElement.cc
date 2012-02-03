@@ -87,14 +87,17 @@ const String* SpectralElement::allTypes(
 		String("GAUSSIAN"),
 		String("POLYNOMIAL"),
 		String("COMPILED"),
-		String("GAUSSIAN MULTIPLET")
+		String("GAUSSIAN MULTIPLET"),
+		String("LORENTZIAN")
+
 	};
 
 	static const SpectralElement::Types oname[SpectralElement::N_Types] = {
 		SpectralElement::GAUSSIAN,
 		SpectralElement::POLYNOMIAL,
 		SpectralElement::COMPILED,
-		SpectralElement::GMULTIPLET
+		SpectralElement::GMULTIPLET,
+		SpectralElement::LORENTZIAN
 	};
 
 	nall = SpectralElement::N_Types;
