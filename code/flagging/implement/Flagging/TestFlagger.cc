@@ -41,7 +41,7 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = true;
+const bool TestFlagger::dbg = false;
 
 // TODO: add convenient functions to other agents, to pase parameters
 
