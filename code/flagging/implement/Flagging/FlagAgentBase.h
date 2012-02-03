@@ -49,11 +49,12 @@ public:
 	enum iteration {
 
 		ROWS=0,
-		IN_ROWS,
-		ANTENNA_PAIRS,
-		ANTENNA_PAIRS_INTERACTIVE,
 		ROWS_PREPROCESS_BUFFER,
+		IN_ROWS,
 		IN_ROWS_PREPROCESS_BUFFER,
+		ANTENNA_PAIRS,
+		ANTENNA_PAIRS_FLAGS,
+		ANTENNA_PAIRS_INTERACTIVE,
 		ANTENNA_PAIRS_PREPROCESS_BUFFER
 	};
 
@@ -139,6 +140,9 @@ protected:
 	// Iterate trough list of antenna pairs
 	void iterateAntennaPairs();
 
+	// Iterate trough list of antenna pairs w/o loading visibilities
+	void iterateAntennaPairsFlags();
+
 	// Methods to interactively iterate trough list of antenna pairs
 	void processAntennaPair(Int antenna1,Int antenna2);
 	virtual void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
@@ -156,6 +160,9 @@ protected:
 
 	// Compute flags for a given (time,freq) antenna pair map
 	virtual bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+
+	// Compute flags for a given (time,freq) antenna pair map w/o using visibilities
+	virtual bool computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;
