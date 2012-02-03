@@ -19,6 +19,7 @@ libcasa_fits_la_SOURCES = \
         FITS/FITSTable3.cc \
         FITS/FITSTimedTable.cc \
         FITS/hdu2.cc \
+        FITS/FITSReader.cc \
         FITS/SDFITSTable.cc 
 
 # Dependencies for libcasa_fits
@@ -62,6 +63,7 @@ check_PROGRAMS = \
         FITS/test/tfitsskip \
         FITS/test/tfitsskip_all \
         FITS/test/tfitsskip_hdu \
+        FITS/test/tfitsreader \
         FITS/test/tFITSSpectralUtil 
 
 TESTS = $(check_PROGRAMS)
