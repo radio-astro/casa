@@ -57,6 +57,7 @@ using asdm::ExecBlockRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -760,97 +761,97 @@ namespace asdm {
 
 	}
 	
-void SubscanRow::execBlockIdFromBin(EndianISStream& eiss) {
+void SubscanRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void SubscanRow::scanNumberFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		scanNumber =  eiss.readInt();
-			
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SubscanRow::subscanNumberFromBin(EndianISStream& eiss) {
+void SubscanRow::scanNumberFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		subscanNumber =  eiss.readInt();
+		scanNumber =  eis.readInt();
 			
 		
 	
 	
 }
-void SubscanRow::startTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void SubscanRow::endTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void SubscanRow::fieldNameFromBin(EndianISStream& eiss) {
+void SubscanRow::subscanNumberFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		fieldName =  eiss.readString();
+		subscanNumber =  eis.readInt();
 			
 		
 	
 	
 }
-void SubscanRow::subscanIntentFromBin(EndianISStream& eiss) {
+void SubscanRow::startTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void SubscanRow::endTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void SubscanRow::fieldNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		subscanIntent = CSubscanIntent::literal(eiss.readString());
+		fieldName =  eis.readString();
 			
 		
 	
 	
 }
-void SubscanRow::numIntegrationFromBin(EndianISStream& eiss) {
+void SubscanRow::subscanIntentFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numIntegration =  eiss.readInt();
+		subscanIntent = CSubscanIntent::literal(eis.readString());
 			
 		
 	
 	
 }
-void SubscanRow::numSubintegrationFromBin(EndianISStream& eiss) {
+void SubscanRow::numIntegrationFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numIntegration =  eis.readInt();
+			
+		
+	
+	
+}
+void SubscanRow::numSubintegrationFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -859,10 +860,10 @@ void SubscanRow::numSubintegrationFromBin(EndianISStream& eiss) {
 	
 		numSubintegration.clear();
 		
-		unsigned int numSubintegrationDim1 = eiss.readInt();
+		unsigned int numSubintegrationDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < numSubintegrationDim1; i++)
 			
-			numSubintegration.push_back(eiss.readInt());
+			numSubintegration.push_back(eis.readInt());
 			
 	
 
@@ -871,16 +872,16 @@ void SubscanRow::numSubintegrationFromBin(EndianISStream& eiss) {
 	
 }
 
-void SubscanRow::subscanModeFromBin(EndianISStream& eiss) {
+void SubscanRow::subscanModeFromBin(EndianIStream& eis) {
 		
-	subscanModeExists = eiss.readBoolean();
+	subscanModeExists = eis.readBoolean();
 	if (subscanModeExists) {
 		
 	
 	
 		
 			
-		subscanMode = CSwitchingMode::literal(eiss.readString());
+		subscanMode = CSwitchingMode::literal(eis.readString());
 			
 		
 	
@@ -888,16 +889,16 @@ void SubscanRow::subscanModeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SubscanRow::correlatorCalibrationFromBin(EndianISStream& eiss) {
+void SubscanRow::correlatorCalibrationFromBin(EndianIStream& eis) {
 		
-	correlatorCalibrationExists = eiss.readBoolean();
+	correlatorCalibrationExists = eis.readBoolean();
 	if (correlatorCalibrationExists) {
 		
 	
 	
 		
 			
-		correlatorCalibration = CCorrelatorCalibration::literal(eiss.readString());
+		correlatorCalibration = CCorrelatorCalibration::literal(eis.readString());
 			
 		
 	
@@ -907,19 +908,19 @@ void SubscanRow::correlatorCalibrationFromBin(EndianISStream& eiss) {
 }
 	
 	
-	SubscanRow* SubscanRow::fromBin(EndianISStream& eiss, SubscanTable& table, const vector<string>& attributesSeq) {
+	SubscanRow* SubscanRow::fromBin(EndianIStream& eis, SubscanTable& table, const vector<string>& attributesSeq) {
 		SubscanRow* row = new  SubscanRow(table);
 		
 		map<string, SubscanAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SubscanTable");
 			}
@@ -927,10 +928,114 @@ void SubscanRow::correlatorCalibrationFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void SubscanRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SubscanRow::scanNumberFromText(const string & s) {
+		 
+		scanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SubscanRow::subscanNumberFromText(const string & s) {
+		 
+		subscanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void SubscanRow::startTimeFromText(const string & s) {
+		 
+		startTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void SubscanRow::endTimeFromText(const string & s) {
+		 
+		endTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SubscanRow::fieldNameFromText(const string & s) {
+		 
+		fieldName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an SubscanIntent 
+	void SubscanRow::subscanIntentFromText(const string & s) {
+		 
+		subscanIntent = ASDMValuesParser::parse<SubscanIntent>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SubscanRow::numIntegrationFromText(const string & s) {
+		 
+		numIntegration = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SubscanRow::numSubintegrationFromText(const string & s) {
+		 
+		numSubintegration = ASDMValuesParser::parse1D<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an SwitchingMode 
+	void SubscanRow::subscanModeFromText(const string & s) {
+		subscanModeExists = true;
+		 
+		subscanMode = ASDMValuesParser::parse<SwitchingMode>(s);
+		
+	}
+	
+	
+	// Convert a string into an CorrelatorCalibration 
+	void SubscanRow::correlatorCalibrationFromText(const string & s) {
+		correlatorCalibrationExists = true;
+		 
+		correlatorCalibration = ASDMValuesParser::parse<CorrelatorCalibration>(s);
+		
+	}
+	
+	
+	
+	void SubscanRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SubscanAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SubscanTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1291,9 +1396,9 @@ void SubscanRow::correlatorCalibrationFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1331,9 +1436,10 @@ void SubscanRow::correlatorCalibrationFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1442,6 +1548,55 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 	 fromBinMethods["subscanMode"] = &SubscanRow::subscanModeFromBin; 
 	 fromBinMethods["correlatorCalibration"] = &SubscanRow::correlatorCalibrationFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["execBlockId"] = &SubscanRow::execBlockIdFromText;
+		 
+	
+				 
+	fromTextMethods["scanNumber"] = &SubscanRow::scanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["subscanNumber"] = &SubscanRow::subscanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["startTime"] = &SubscanRow::startTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endTime"] = &SubscanRow::endTimeFromText;
+		 
+	
+				 
+	fromTextMethods["fieldName"] = &SubscanRow::fieldNameFromText;
+		 
+	
+				 
+	fromTextMethods["subscanIntent"] = &SubscanRow::subscanIntentFromText;
+		 
+	
+				 
+	fromTextMethods["numIntegration"] = &SubscanRow::numIntegrationFromText;
+		 
+	
+				 
+	fromTextMethods["numSubintegration"] = &SubscanRow::numSubintegrationFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["subscanMode"] = &SubscanRow::subscanModeFromText;
+		 	
+	 
+				
+	fromTextMethods["correlatorCalibration"] = &SubscanRow::correlatorCalibrationFromText;
+		 	
+		
 	}
 	
 	SubscanRow::SubscanRow (SubscanTable &t, SubscanRow &row) : table(t) {

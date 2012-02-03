@@ -27,12 +27,16 @@
 #include <Tag.h>
 #include <OutOfBoundsException.h>
 #include <InvalidArgumentException.h>
+#include <boost/algorithm/string/trim.hpp>
+
 using asdm::OutOfBoundsException;
 using asdm::InvalidArgumentException;
 
 using namespace std;
 
 namespace asdm {	
+  
+  regex Tag::tagSyntax = regex("([A-Z][a-zA-Z]+)_([0-9]+)");
 
   Tag::Tag() : tag(""), type(0) { }
   Tag::Tag(unsigned int i) {
@@ -107,12 +111,41 @@ namespace asdm {
     return tag;
   }
 
-  unsigned int Tag::getTagValue() const {
+  unsigned int Tag::getTagValue() const { 
     return (isNull() ? 0 : Integer::parseInt(tag));
   } 
 
   TagType* Tag::getTagType() {
     return type;
+  }
+
+  ostream & operator << (ostream & os, const Tag & x) {
+    os <<  x.type->toString() << "_" << x.tag;
+    return os;
+  }
+
+  istream & operator >> ( istream &is, Tag& x) {
+    string s;
+    is.clear();
+    is >> s;
+    trim(s);
+    cmatch what ;
+    if (!regex_match(s.c_str(), what, Tag::tagSyntax)) {
+      is.setstate(ios::failbit);
+      return is;
+    }
+	
+    string stype; stype.assign(what[1].first, what[1].second);
+    const TagType* tagType = TagType::getTagType(stype);
+    if (tagType == (TagType *) 0) { 
+      is.setstate(ios::failbit);
+      return is;
+    }
+
+    x.type = const_cast<TagType*>(tagType);
+    x.tag.assign(what[2].first, what[2].second);
+
+    return is;
   }
 
   Tag Tag::parseTag (string s) {
@@ -159,17 +192,17 @@ namespace asdm {
     }
   }
 	
-  Tag Tag::fromBin(EndianISStream& eiss) {
-    string s = eiss.readString();
+  Tag Tag::fromBin(EndianIStream& eis) {
+    string s = eis.readString();
     return Tag::parseTag(s);		
   }
 	
-  vector<Tag> Tag::from1DBin(EndianISStream& eiss) {
-    int dim1 = eiss.readInt();
+  vector<Tag> Tag::from1DBin(EndianIStream& eis) {
+    int dim1 = eis.readInt();
 		
     vector<Tag> tag;
     for (int i = 0;  i < dim1; i++)
-      tag.push_back(Tag::fromBin(eiss));
+      tag.push_back(Tag::fromBin(eis));
 			
     return tag;
   }

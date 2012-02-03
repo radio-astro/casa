@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CTimeSampling::version() {
 	return TimeSamplingMod::version;
 	}
@@ -119,5 +118,25 @@ string CTimeSampling::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'TimeSampling'.";
 	return oss.str();
+}
+
+namespace TimeSamplingMod {
+	std::ostream & operator << ( std::ostream & out, const TimeSampling& value) {
+		out << CTimeSampling::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , TimeSampling& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CTimeSampling::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

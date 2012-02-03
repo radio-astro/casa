@@ -63,6 +63,7 @@ using asdm::FocusModelRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -637,82 +638,82 @@ namespace asdm {
 
 	}
 	
-void FocusRow::antennaIdFromBin(EndianISStream& eiss) {
+void FocusRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FocusRow::timeIntervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FocusRow::focusTrackingFromBin(EndianISStream& eiss) {
+void FocusRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void FocusRow::focusTrackingFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		focusTracking =  eiss.readBoolean();
+		focusTracking =  eis.readBoolean();
 			
 		
 	
 	
 }
-void FocusRow::focusOffsetFromBin(EndianISStream& eiss) {
+void FocusRow::focusOffsetFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	focusOffset = Length::from1DBin(eiss);	
+	focusOffset = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void FocusRow::focusRotationOffsetFromBin(EndianISStream& eiss) {
+void FocusRow::focusRotationOffsetFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	focusRotationOffset = Angle::from1DBin(eiss);	
+	focusRotationOffset = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void FocusRow::focusModelIdFromBin(EndianISStream& eiss) {
+void FocusRow::focusModelIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		focusModelId =  eiss.readInt();
+		focusModelId =  eis.readInt();
 			
 		
 	
 	
 }
 
-void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
+void FocusRow::measuredFocusPositionFromBin(EndianIStream& eis) {
 		
-	measuredFocusPositionExists = eiss.readBoolean();
+	measuredFocusPositionExists = eis.readBoolean();
 	if (measuredFocusPositionExists) {
 		
 	
@@ -720,7 +721,7 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	measuredFocusPosition = Length::from1DBin(eiss);	
+	measuredFocusPosition = Length::from1DBin(eis);	
 	
 
 		
@@ -729,9 +730,9 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FocusRow::measuredFocusRotationFromBin(EndianISStream& eiss) {
+void FocusRow::measuredFocusRotationFromBin(EndianIStream& eis) {
 		
-	measuredFocusRotationExists = eiss.readBoolean();
+	measuredFocusRotationExists = eis.readBoolean();
 	if (measuredFocusRotationExists) {
 		
 	
@@ -739,7 +740,7 @@ void FocusRow::measuredFocusRotationFromBin(EndianISStream& eiss) {
 		
 			
 	
-	measuredFocusRotation = Angle::from1DBin(eiss);	
+	measuredFocusRotation = Angle::from1DBin(eis);	
 	
 
 		
@@ -750,19 +751,19 @@ void FocusRow::measuredFocusRotationFromBin(EndianISStream& eiss) {
 }
 	
 	
-	FocusRow* FocusRow::fromBin(EndianISStream& eiss, FocusTable& table, const vector<string>& attributesSeq) {
+	FocusRow* FocusRow::fromBin(EndianIStream& eis, FocusTable& table, const vector<string>& attributesSeq) {
 		FocusRow* row = new  FocusRow(table);
 		
 		map<string, FocusAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FocusTable");
 			}
@@ -770,10 +771,90 @@ void FocusRow::measuredFocusRotationFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FocusRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void FocusRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void FocusRow::focusTrackingFromText(const string & s) {
+		 
+		focusTracking = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FocusRow::focusOffsetFromText(const string & s) {
+		 
+		focusOffset = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FocusRow::focusRotationOffsetFromText(const string & s) {
+		 
+		focusRotationOffset = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FocusRow::focusModelIdFromText(const string & s) {
+		 
+		focusModelId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Length 
+	void FocusRow::measuredFocusPositionFromText(const string & s) {
+		measuredFocusPositionExists = true;
+		 
+		measuredFocusPosition = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FocusRow::measuredFocusRotationFromText(const string & s) {
+		measuredFocusRotationExists = true;
+		 
+		measuredFocusRotation = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	
+	void FocusRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FocusAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FocusTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1002,9 +1083,9 @@ void FocusRow::measuredFocusRotationFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1074,9 +1155,10 @@ void FocusRow::measuredFocusRotationFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1178,6 +1260,43 @@ void FocusRow::measuredFocusRotationFromBin(EndianISStream& eiss) {
 	 fromBinMethods["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromBin; 
 	 fromBinMethods["measuredFocusRotation"] = &FocusRow::measuredFocusRotationFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &FocusRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &FocusRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["focusTracking"] = &FocusRow::focusTrackingFromText;
+		 
+	
+				 
+	fromTextMethods["focusOffset"] = &FocusRow::focusOffsetFromText;
+		 
+	
+				 
+	fromTextMethods["focusRotationOffset"] = &FocusRow::focusRotationOffsetFromText;
+		 
+	
+				 
+	fromTextMethods["focusModelId"] = &FocusRow::focusModelIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromText;
+		 	
+	 
+				
+	fromTextMethods["measuredFocusRotation"] = &FocusRow::measuredFocusRotationFromText;
+		 	
+		
 	}
 	
 	FocusRow::FocusRow (FocusTable &t, FocusRow &row) : table(t) {

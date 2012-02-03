@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CWVRMethod::version() {
 	return WVRMethodMod::version;
 	}
@@ -119,5 +118,25 @@ string CWVRMethod::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'WVRMethod'.";
 	return oss.str();
+}
+
+namespace WVRMethodMod {
+	std::ostream & operator << ( std::ostream & out, const WVRMethod& value) {
+		out << CWVRMethod::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , WVRMethod& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CWVRMethod::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

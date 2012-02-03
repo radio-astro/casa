@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace CalCurveTypeMod
   typedef CalCurveType &CalCurveType_out;
 } 
 #endif
+
+namespace CalCurveTypeMod {
+	std::ostream & operator << ( std::ostream & out, const CalCurveType& value);
+	std::istream & operator >> ( std::istream & in , CalCurveType& value );
+}
 
 /** 
   * A helper class for the enumeration CalCurveType.

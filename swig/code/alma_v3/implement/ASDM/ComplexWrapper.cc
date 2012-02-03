@@ -86,36 +86,36 @@ void Complex::toBin(const vector< vector<vector<Complex> > >& cmplx,  EndianOSSt
 				}
 }
 
-Complex Complex::fromBin(EndianISStream & eiss) {
-	return Complex(eiss.readDouble(), eiss.readDouble());
+Complex Complex::fromBin(EndianIStream & eis) {
+	return Complex(eis.readDouble(), eis.readDouble());
 }
 
-vector<Complex> Complex::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Complex> Complex::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Complex> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Complex(eiss.readDouble(),  eiss.readDouble()));
+		result.push_back(Complex(eis.readDouble(),  eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Complex > > Complex::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Complex > > Complex::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<Complex> >result;
 	vector <Complex> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Complex(eiss.readDouble(), eiss.readDouble()));
+			aux.push_back(Complex(eis.readDouble(), eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Complex > > > Complex::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Complex > > > Complex::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Complex> > >result;
 	vector < vector<Complex> >aux1;
 	vector <Complex> aux2;
@@ -124,7 +124,7 @@ vector<vector<vector<Complex > > > Complex::from3DBin(EndianISStream & eiss) {
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Complex(eiss.readDouble(), eiss.readDouble()));
+				aux2.push_back(Complex(eis.readDouble(), eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

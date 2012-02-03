@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CPolarizationType::version() {
 	return PolarizationTypeMod::version;
 	}
@@ -164,5 +163,25 @@ string CPolarizationType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'PolarizationType'.";
 	return oss.str();
+}
+
+namespace PolarizationTypeMod {
+	std::ostream & operator << ( std::ostream & out, const PolarizationType& value) {
+		out << CPolarizationType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , PolarizationType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CPolarizationType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

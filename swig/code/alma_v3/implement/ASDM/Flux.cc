@@ -77,36 +77,36 @@ void Flux::toBin(const vector< vector<vector<Flux> > >& flux,  EndianOSStream& e
 					eoss.writeDouble(flux.at(i).at(j).at(k).value);
 }
 
-Flux Flux::fromBin(EndianISStream & eiss) {
-	return Flux(eiss.readDouble());
+Flux Flux::fromBin(EndianIStream & eis) {
+	return Flux(eis.readDouble());
 }
 
-vector<Flux> Flux::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Flux> Flux::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Flux> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Flux(eiss.readDouble()));
+		result.push_back(Flux(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Flux > > Flux::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Flux > > Flux::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<Flux> >result;
 	vector <Flux> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Flux(eiss.readDouble()));
+			aux.push_back(Flux(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Flux > > > Flux::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Flux > > > Flux::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Flux> > >result;
 	vector < vector<Flux> >aux1;
 	vector <Flux> aux2;
@@ -115,7 +115,7 @@ vector<vector<vector<Flux > > > Flux::from3DBin(EndianISStream & eiss) {
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Flux(eiss.readDouble()));
+				aux2.push_back(Flux(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

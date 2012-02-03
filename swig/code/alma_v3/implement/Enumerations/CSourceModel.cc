@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSourceModel::version() {
 	return SourceModelMod::version;
 	}
@@ -134,5 +133,25 @@ string CSourceModel::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SourceModel'.";
 	return oss.str();
+}
+
+namespace SourceModelMod {
+	std::ostream & operator << ( std::ostream & out, const SourceModel& value) {
+		out << CSourceModel::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SourceModel& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSourceModel::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

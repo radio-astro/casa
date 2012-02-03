@@ -89,9 +89,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file WVMCal.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -107,17 +108,19 @@ class AntennaRow;
 	
 
 class WVMCalRow;
-typedef void (WVMCalRow::*WVMCalAttributeFromBin) (EndianISStream& eiss);
+typedef void (WVMCalRow::*WVMCalAttributeFromBin) (EndianIStream& eis);
+typedef void (WVMCalRow::*WVMCalAttributeFromText) (const string& s);
 
 /**
  * The WVMCalRow class is a row of a WVMCalTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class WVMCalRow {
 friend class asdm::WVMCalTable;
 friend class asdm::RowTransformer<WVMCalRow>;
+//friend class asdm::TableStreamReader<WVMCalTable, WVMCalRow>;
 
 public:
 
@@ -542,7 +545,35 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, WVMCalAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void wvrMethodFromBin( EndianIStream& eis);
+void polyFreqLimitsFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void pathCoeffFromBin( EndianIStream& eis);
+void refTempFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the WVMCalTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static WVMCalRow* fromBin(EndianIStream& eis, WVMCalTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -713,21 +744,59 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, WVMCalAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void wvrMethodFromBin( EndianISStream& eiss);
-void polyFreqLimitsFromBin( EndianISStream& eiss);
-void numChanFromBin( EndianISStream& eiss);
-void numPolyFromBin( EndianISStream& eiss);
-void pathCoeffFromBin( EndianISStream& eiss);
-void refTempFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void wvrMethodFromBin( EndianIStream& eis);
+void polyFreqLimitsFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void pathCoeffFromBin( EndianIStream& eis);
+void refTempFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, WVMCalAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void wvrMethodFromText (const string & s);
+	
+	
+void polyFreqLimitsFromText (const string & s);
+	
+	
+void numChanFromText (const string & s);
+	
+	
+void numPolyFromText (const string & s);
+	
+	
+void pathCoeffFromText (const string & s);
+	
+	
+void refTempFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -736,14 +805,14 @@ void refTempFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the WVMCalTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static WVMCalRow* fromBin(EndianISStream& eiss, WVMCalTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static WVMCalRow* fromBin(EndianIStream& eis, WVMCalTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

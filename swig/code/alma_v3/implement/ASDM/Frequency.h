@@ -40,7 +40,7 @@ using asdm::StringTokenizer;
 using asdm::NumberFormatException;
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 namespace asdm {
 class Frequency;
 Frequency operator * ( double , const Frequency & );
@@ -154,36 +154,36 @@ public:
 	 */
 	static void toBin(const vector<vector<vector<Frequency> > >& angle,  EndianOSStream& eoss);
 	/**
-	 * Read the binary representation of an Frequency from a EndianISStream
+	 * Read the binary representation of an Frequency from a EndianIStream
 	 * and use the read value to set an  Frequency.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an Frequency
 	 */
-	static Frequency fromBin(EndianISStream& eiss);
+	static Frequency fromBin(EndianIStream& eis);
 	
 	/**
-	 * Read the binary representation of  a vector of  Frequency from an EndianISStream
+	 * Read the binary representation of  a vector of  Frequency from an EndianIStream
 	 * and use the read value to set a vector of  Frequency.
-	 * @param eiss a reference to the EndianISStream to be read
+	 * @param eis a reference to the EndianIStream to be read
 	 * @return a vector of Frequency
 	 */	 
-	 static vector<Frequency> from1DBin(EndianISStream & eiss);
+	 static vector<Frequency> from1DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of Frequency from an EndianISStream
+	 * Read the binary representation of  a vector of vector of Frequency from an EndianIStream
 	 * and use the read value to set a vector of  vector of Frequency.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of Frequency
 	 */	 
-	 static vector<vector<Frequency> > from2DBin(EndianISStream & eiss);
+	 static vector<vector<Frequency> > from2DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of vector of Frequency from an EndianISStream
+	 * Read the binary representation of  a vector of vector of vector of Frequency from an EndianIStream
 	 * and use the read value to set a vector of  vector of vector of Frequency.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of vector of Frequency
 	 */	 
-	 static vector<vector<vector<Frequency> > > from3DBin(EndianISStream & eiss);	 
+	 static vector<vector<vector<Frequency> > > from3DBin(EndianIStream & eis);	 
 	 
 	 /**
 	  * An assignment operator Frequency = Frequency.

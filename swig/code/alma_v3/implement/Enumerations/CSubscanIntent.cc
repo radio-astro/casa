@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSubscanIntent::version() {
 	return SubscanIntentMod::version;
 	}
@@ -254,5 +253,25 @@ string CSubscanIntent::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SubscanIntent'.";
 	return oss.str();
+}
+
+namespace SubscanIntentMod {
+	std::ostream & operator << ( std::ostream & out, const SubscanIntent& value) {
+		out << CSubscanIntent::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SubscanIntent& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSubscanIntent::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

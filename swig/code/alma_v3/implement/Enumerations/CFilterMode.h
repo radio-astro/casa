@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -72,6 +73,11 @@ namespace FilterModeMod
   typedef FilterMode &FilterMode_out;
 } 
 #endif
+
+namespace FilterModeMod {
+	std::ostream & operator << ( std::ostream & out, const FilterMode& value);
+	std::istream & operator >> ( std::istream & in , FilterMode& value );
+}
 
 /** 
   * A helper class for the enumeration FilterMode.

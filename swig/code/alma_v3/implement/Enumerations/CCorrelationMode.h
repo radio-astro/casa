@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace CorrelationModeMod
   typedef CorrelationMode &CorrelationMode_out;
 } 
 #endif
+
+namespace CorrelationModeMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelationMode& value);
+	std::istream & operator >> ( std::istream & in , CorrelationMode& value );
+}
 
 /** 
   * A helper class for the enumeration CorrelationMode.

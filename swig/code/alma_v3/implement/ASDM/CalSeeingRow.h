@@ -109,9 +109,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalSeeing.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -127,17 +128,19 @@ class CalReductionRow;
 	
 
 class CalSeeingRow;
-typedef void (CalSeeingRow::*CalSeeingAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalSeeingRow::*CalSeeingAttributeFromBin) (EndianIStream& eis);
+typedef void (CalSeeingRow::*CalSeeingAttributeFromText) (const string& s);
 
 /**
  * The CalSeeingRow class is a row of a CalSeeingTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalSeeingRow {
 friend class asdm::CalSeeingTable;
 friend class asdm::RowTransformer<CalSeeingRow>;
+//friend class asdm::TableStreamReader<CalSeeingTable, CalSeeingRow>;
 
 public:
 
@@ -787,7 +790,41 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalSeeingAttributeFromBin> fromBinMethods;
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void integrationTimeFromBin( EndianIStream& eis);
+void numBaseLengthsFromBin( EndianIStream& eis);
+void baselineLengthsFromBin( EndianIStream& eis);
+void phaseRMSFromBin( EndianIStream& eis);
+void seeingFromBin( EndianIStream& eis);
+void seeingErrorFromBin( EndianIStream& eis);
+
+void exponentFromBin( EndianIStream& eis);
+void outerScaleFromBin( EndianIStream& eis);
+void outerScaleRMSFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalSeeingTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalSeeingRow* fromBin(EndianIStream& eis, CalSeeingTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1030,27 +1067,83 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalSeeingAttributeFromBin> fromBinMethods;
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void integrationTimeFromBin( EndianISStream& eiss);
-void numBaseLengthsFromBin( EndianISStream& eiss);
-void baselineLengthsFromBin( EndianISStream& eiss);
-void phaseRMSFromBin( EndianISStream& eiss);
-void seeingFromBin( EndianISStream& eiss);
-void seeingErrorFromBin( EndianISStream& eiss);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void integrationTimeFromBin( EndianIStream& eis);
+void numBaseLengthsFromBin( EndianIStream& eis);
+void baselineLengthsFromBin( EndianIStream& eis);
+void phaseRMSFromBin( EndianIStream& eis);
+void seeingFromBin( EndianIStream& eis);
+void seeingErrorFromBin( EndianIStream& eis);
 
-void exponentFromBin( EndianISStream& eiss);
-void outerScaleFromBin( EndianISStream& eiss);
-void outerScaleRMSFromBin( EndianISStream& eiss);
+void exponentFromBin( EndianIStream& eis);
+void outerScaleFromBin( EndianIStream& eis);
+void outerScaleRMSFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalSeeingAttributeFromText> fromTextMethods;
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void integrationTimeFromText (const string & s);
+	
+	
+void numBaseLengthsFromText (const string & s);
+	
+	
+void baselineLengthsFromText (const string & s);
+	
+	
+void phaseRMSFromText (const string & s);
+	
+	
+void seeingFromText (const string & s);
+	
+	
+void seeingErrorFromText (const string & s);
+	
+
+	
+void exponentFromText (const string & s);
+	
+	
+void outerScaleFromText (const string & s);
+	
+	
+void outerScaleRMSFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1059,14 +1152,14 @@ void outerScaleRMSFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalSeeingTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalSeeingRow* fromBin(EndianISStream& eiss, CalSeeingTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalSeeingRow* fromBin(EndianIStream& eis, CalSeeingTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

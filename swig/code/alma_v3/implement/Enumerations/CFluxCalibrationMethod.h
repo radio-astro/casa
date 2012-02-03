@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace FluxCalibrationMethodMod
   typedef FluxCalibrationMethod &FluxCalibrationMethod_out;
 } 
 #endif
+
+namespace FluxCalibrationMethodMod {
+	std::ostream & operator << ( std::ostream & out, const FluxCalibrationMethod& value);
+	std::istream & operator >> ( std::istream & in , FluxCalibrationMethod& value );
+}
 
 /** 
   * A helper class for the enumeration FluxCalibrationMethod.

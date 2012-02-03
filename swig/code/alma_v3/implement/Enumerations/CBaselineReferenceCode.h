@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -120,6 +121,11 @@ namespace BaselineReferenceCodeMod
   typedef BaselineReferenceCode &BaselineReferenceCode_out;
 } 
 #endif
+
+namespace BaselineReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const BaselineReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , BaselineReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration BaselineReferenceCode.

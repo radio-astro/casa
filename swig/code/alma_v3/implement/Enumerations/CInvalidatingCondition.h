@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -74,6 +75,11 @@ namespace InvalidatingConditionMod
   typedef InvalidatingCondition &InvalidatingCondition_out;
 } 
 #endif
+
+namespace InvalidatingConditionMod {
+	std::ostream & operator << ( std::ostream & out, const InvalidatingCondition& value);
+	std::istream & operator >> ( std::istream & in , InvalidatingCondition& value );
+}
 
 /** 
   * A helper class for the enumeration InvalidatingCondition.

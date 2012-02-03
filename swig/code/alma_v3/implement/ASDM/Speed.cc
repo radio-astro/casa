@@ -77,36 +77,36 @@ void Speed::toBin(const vector< vector<vector<Speed> > >& speed,  EndianOSStream
 					eoss.writeDouble(speed.at(i).at(j).at(k).value);
 }
 
-Speed Speed::fromBin(EndianISStream & eiss) {
-	return Speed(eiss.readDouble());
+Speed Speed::fromBin(EndianIStream & eis) {
+	return Speed(eis.readDouble());
 }
 
-vector<Speed> Speed::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Speed> Speed::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Speed> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Speed(eiss.readDouble()));
+		result.push_back(Speed(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Speed > > Speed::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Speed > > Speed::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<Speed> >result;
 	vector <Speed> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Speed(eiss.readDouble()));
+			aux.push_back(Speed(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Speed > > > Speed::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Speed > > > Speed::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Speed> > >result;
 	vector < vector<Speed> >aux1;
 	vector <Speed> aux2;
@@ -115,7 +115,7 @@ vector<vector<vector<Speed > > > Speed::from3DBin(EndianISStream & eiss) {
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Speed(eiss.readDouble()));
+				aux2.push_back(Speed(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

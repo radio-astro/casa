@@ -89,9 +89,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalReduction.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -101,17 +102,19 @@ namespace asdm {
 	
 
 class CalReductionRow;
-typedef void (CalReductionRow::*CalReductionAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalReductionRow::*CalReductionAttributeFromBin) (EndianIStream& eis);
+typedef void (CalReductionRow::*CalReductionAttributeFromText) (const string& s);
 
 /**
  * The CalReductionRow class is a row of a CalReductionTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalReductionRow {
 friend class asdm::CalReductionTable;
 friend class asdm::RowTransformer<CalReductionRow>;
+//friend class asdm::TableStreamReader<CalReductionTable, CalReductionRow>;
 
 public:
 
@@ -560,7 +563,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalReductionAttributeFromBin> fromBinMethods;
+void calReductionIdFromBin( EndianIStream& eis);
+void numAppliedFromBin( EndianIStream& eis);
+void appliedCalibrationsFromBin( EndianIStream& eis);
+void numParamFromBin( EndianIStream& eis);
+void paramSetFromBin( EndianIStream& eis);
+void numInvalidConditionsFromBin( EndianIStream& eis);
+void invalidConditionsFromBin( EndianIStream& eis);
+void timeReducedFromBin( EndianIStream& eis);
+void messagesFromBin( EndianIStream& eis);
+void softwareFromBin( EndianIStream& eis);
+void softwareVersionFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalReductionTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalReductionRow* fromBin(EndianIStream& eis, CalReductionTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -751,23 +784,67 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalReductionAttributeFromBin> fromBinMethods;
-void calReductionIdFromBin( EndianISStream& eiss);
-void numAppliedFromBin( EndianISStream& eiss);
-void appliedCalibrationsFromBin( EndianISStream& eiss);
-void numParamFromBin( EndianISStream& eiss);
-void paramSetFromBin( EndianISStream& eiss);
-void numInvalidConditionsFromBin( EndianISStream& eiss);
-void invalidConditionsFromBin( EndianISStream& eiss);
-void timeReducedFromBin( EndianISStream& eiss);
-void messagesFromBin( EndianISStream& eiss);
-void softwareFromBin( EndianISStream& eiss);
-void softwareVersionFromBin( EndianISStream& eiss);
+void calReductionIdFromBin( EndianIStream& eis);
+void numAppliedFromBin( EndianIStream& eis);
+void appliedCalibrationsFromBin( EndianIStream& eis);
+void numParamFromBin( EndianIStream& eis);
+void paramSetFromBin( EndianIStream& eis);
+void numInvalidConditionsFromBin( EndianIStream& eis);
+void invalidConditionsFromBin( EndianIStream& eis);
+void timeReducedFromBin( EndianIStream& eis);
+void messagesFromBin( EndianIStream& eis);
+void softwareFromBin( EndianIStream& eis);
+void softwareVersionFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalReductionAttributeFromText> fromTextMethods;
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void numAppliedFromText (const string & s);
+	
+	
+void appliedCalibrationsFromText (const string & s);
+	
+	
+void numParamFromText (const string & s);
+	
+	
+void paramSetFromText (const string & s);
+	
+	
+void numInvalidConditionsFromText (const string & s);
+	
+	
+void invalidConditionsFromText (const string & s);
+	
+	
+void timeReducedFromText (const string & s);
+	
+	
+void messagesFromText (const string & s);
+	
+	
+void softwareFromText (const string & s);
+	
+	
+void softwareVersionFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -776,14 +853,14 @@ void softwareVersionFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalReductionTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalReductionRow* fromBin(EndianISStream& eiss, CalReductionTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalReductionRow* fromBin(EndianIStream& eis, CalReductionTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

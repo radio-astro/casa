@@ -51,6 +51,7 @@ using asdm::FlagCmdTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -488,83 +489,83 @@ namespace asdm {
 	
 	}
 	
-void FlagCmdRow::timeIntervalFromBin(EndianISStream& eiss) {
+void FlagCmdRow::timeIntervalFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-	
-}
-void FlagCmdRow::typeFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		type =  eiss.readString();
-			
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
 		
 	
 	
 }
-void FlagCmdRow::reasonFromBin(EndianISStream& eiss) {
+void FlagCmdRow::typeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		reason =  eiss.readString();
+		type =  eis.readString();
 			
 		
 	
 	
 }
-void FlagCmdRow::levelFromBin(EndianISStream& eiss) {
+void FlagCmdRow::reasonFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		level =  eiss.readInt();
-			
-		
-	
-	
-}
-void FlagCmdRow::severityFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		severity =  eiss.readInt();
+		reason =  eis.readString();
 			
 		
 	
 	
 }
-void FlagCmdRow::appliedFromBin(EndianISStream& eiss) {
+void FlagCmdRow::levelFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		applied =  eiss.readBoolean();
+		level =  eis.readInt();
 			
 		
 	
 	
 }
-void FlagCmdRow::commandFromBin(EndianISStream& eiss) {
+void FlagCmdRow::severityFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		command =  eiss.readString();
+		severity =  eis.readInt();
+			
+		
+	
+	
+}
+void FlagCmdRow::appliedFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		applied =  eis.readBoolean();
+			
+		
+	
+	
+}
+void FlagCmdRow::commandFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		command =  eis.readString();
 			
 		
 	
@@ -573,19 +574,19 @@ void FlagCmdRow::commandFromBin(EndianISStream& eiss) {
 
 		
 	
-	FlagCmdRow* FlagCmdRow::fromBin(EndianISStream& eiss, FlagCmdTable& table, const vector<string>& attributesSeq) {
+	FlagCmdRow* FlagCmdRow::fromBin(EndianIStream& eis, FlagCmdTable& table, const vector<string>& attributesSeq) {
 		FlagCmdRow* row = new  FlagCmdRow(table);
 		
 		map<string, FlagCmdAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FlagCmdTable");
 			}
@@ -593,10 +594,80 @@ void FlagCmdRow::commandFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an ArrayTimeInterval 
+	void FlagCmdRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FlagCmdRow::typeFromText(const string & s) {
+		 
+		type = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FlagCmdRow::reasonFromText(const string & s) {
+		 
+		reason = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FlagCmdRow::levelFromText(const string & s) {
+		 
+		level = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FlagCmdRow::severityFromText(const string & s) {
+		 
+		severity = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void FlagCmdRow::appliedFromText(const string & s) {
+		 
+		applied = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FlagCmdRow::commandFromText(const string & s) {
+		 
+		command = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+
+		
+	
+	void FlagCmdRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FlagCmdAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FlagCmdTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -827,13 +898,14 @@ void FlagCmdRow::commandFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -892,6 +964,39 @@ void FlagCmdRow::commandFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["timeInterval"] = &FlagCmdRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["type"] = &FlagCmdRow::typeFromText;
+		 
+	
+				 
+	fromTextMethods["reason"] = &FlagCmdRow::reasonFromText;
+		 
+	
+				 
+	fromTextMethods["level"] = &FlagCmdRow::levelFromText;
+		 
+	
+				 
+	fromTextMethods["severity"] = &FlagCmdRow::severityFromText;
+		 
+	
+				 
+	fromTextMethods["applied"] = &FlagCmdRow::appliedFromText;
+		 
+	
+				 
+	fromTextMethods["command"] = &FlagCmdRow::commandFromText;
+		 
+	
+
+		
 	}
 	
 	FlagCmdRow::FlagCmdRow (FlagCmdTable &t, FlagCmdRow &row) : table(t) {

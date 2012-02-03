@@ -47,7 +47,7 @@ using asdm::InvalidDataException;
 
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 
 namespace asdm {
 
@@ -65,7 +65,7 @@ ostream & operator << ( ostream &, const Entity & );
  */
 class Entity {
     friend ostream & operator << ( ostream &, const Entity & );
-	friend istream & operator >> ( istream &, Entity&);
+    friend istream & operator >> ( istream &, Entity & );
 
 public:
 	static Entity getEntity(StringTokenizer &t);
@@ -97,12 +97,13 @@ public:
 	void toBin(EndianOSStream& eoss) const ;
 	
 	/**
-	 * Read the binary representation of an Enity from a EndianISStream
+	 * Read the binary representation of an Enity from a EndianIStream
 	 * and use the read value to set an  Entity.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an Entity
 	 */
-	static Entity fromBin(EndianISStream& eiss);
+	static Entity fromBin(EndianIStream& eis);
+
 	
 	EntityId getEntityId() const;
 	string getEntityIdEncrypted() const;

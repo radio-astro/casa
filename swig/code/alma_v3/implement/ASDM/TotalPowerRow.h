@@ -97,9 +97,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file TotalPower.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -121,17 +122,19 @@ class ExecBlockRow;
 	
 
 class TotalPowerRow;
-typedef void (TotalPowerRow::*TotalPowerAttributeFromBin) (EndianISStream& eiss);
+typedef void (TotalPowerRow::*TotalPowerAttributeFromBin) (EndianIStream& eis);
+typedef void (TotalPowerRow::*TotalPowerAttributeFromText) (const string& s);
 
 /**
  * The TotalPowerRow class is a row of a TotalPowerTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class TotalPowerRow {
 friend class asdm::TotalPowerTable;
 friend class asdm::RowTransformer<TotalPowerRow>;
+//friend class asdm::TableStreamReader<TotalPowerTable, TotalPowerRow>;
 
 public:
 
@@ -869,7 +872,42 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, TotalPowerAttributeFromBin> fromBinMethods;
+void timeFromBin( EndianIStream& eis);
+void configDescriptionIdFromBin( EndianIStream& eis);
+void fieldIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void integrationNumberFromBin( EndianIStream& eis);
+void uvwFromBin( EndianIStream& eis);
+void exposureFromBin( EndianIStream& eis);
+void timeCentroidFromBin( EndianIStream& eis);
+void floatDataFromBin( EndianIStream& eis);
+void flagAntFromBin( EndianIStream& eis);
+void flagPolFromBin( EndianIStream& eis);
+void intervalFromBin( EndianIStream& eis);
+void stateIdFromBin( EndianIStream& eis);
+void execBlockIdFromBin( EndianIStream& eis);
+
+void subintegrationNumberFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the TotalPowerTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static TotalPowerRow* fromBin(EndianIStream& eis, TotalPowerTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1132,28 +1170,87 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, TotalPowerAttributeFromBin> fromBinMethods;
-void timeFromBin( EndianISStream& eiss);
-void configDescriptionIdFromBin( EndianISStream& eiss);
-void fieldIdFromBin( EndianISStream& eiss);
-void scanNumberFromBin( EndianISStream& eiss);
-void subscanNumberFromBin( EndianISStream& eiss);
-void integrationNumberFromBin( EndianISStream& eiss);
-void uvwFromBin( EndianISStream& eiss);
-void exposureFromBin( EndianISStream& eiss);
-void timeCentroidFromBin( EndianISStream& eiss);
-void floatDataFromBin( EndianISStream& eiss);
-void flagAntFromBin( EndianISStream& eiss);
-void flagPolFromBin( EndianISStream& eiss);
-void intervalFromBin( EndianISStream& eiss);
-void stateIdFromBin( EndianISStream& eiss);
-void execBlockIdFromBin( EndianISStream& eiss);
+void timeFromBin( EndianIStream& eis);
+void configDescriptionIdFromBin( EndianIStream& eis);
+void fieldIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void integrationNumberFromBin( EndianIStream& eis);
+void uvwFromBin( EndianIStream& eis);
+void exposureFromBin( EndianIStream& eis);
+void timeCentroidFromBin( EndianIStream& eis);
+void floatDataFromBin( EndianIStream& eis);
+void flagAntFromBin( EndianIStream& eis);
+void flagPolFromBin( EndianIStream& eis);
+void intervalFromBin( EndianIStream& eis);
+void stateIdFromBin( EndianIStream& eis);
+void execBlockIdFromBin( EndianIStream& eis);
 
-void subintegrationNumberFromBin( EndianISStream& eiss);
+void subintegrationNumberFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, TotalPowerAttributeFromText> fromTextMethods;
+	
+void timeFromText (const string & s);
+	
+	
+void configDescriptionIdFromText (const string & s);
+	
+	
+void fieldIdFromText (const string & s);
+	
+	
+void scanNumberFromText (const string & s);
+	
+	
+void subscanNumberFromText (const string & s);
+	
+	
+void integrationNumberFromText (const string & s);
+	
+	
+void uvwFromText (const string & s);
+	
+	
+void exposureFromText (const string & s);
+	
+	
+void timeCentroidFromText (const string & s);
+	
+	
+void floatDataFromText (const string & s);
+	
+	
+void flagAntFromText (const string & s);
+	
+	
+void flagPolFromText (const string & s);
+	
+	
+void intervalFromText (const string & s);
+	
+	
+void stateIdFromText (const string & s);
+	
+	
+void execBlockIdFromText (const string & s);
+	
+
+	
+void subintegrationNumberFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1162,14 +1259,14 @@ void subintegrationNumberFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the TotalPowerTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static TotalPowerRow* fromBin(EndianISStream& eiss, TotalPowerTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static TotalPowerRow* fromBin(EndianIStream& eis, TotalPowerTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

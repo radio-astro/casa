@@ -69,8 +69,8 @@ namespace asdm {
 		eoss.writeString(id);	
 	}
 	
-	PartId PartId::fromBin(EndianISStream& eiss) {
-		return PartId(eiss.readString());	
+	PartId PartId::fromBin(EndianIStream& eis) {
+		return PartId(eis.readString());	
 	}
 
 } // End namespace asdm

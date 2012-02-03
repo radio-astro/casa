@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -74,6 +75,11 @@ namespace PrimitiveDataTypeMod
   typedef PrimitiveDataType &PrimitiveDataType_out;
 } 
 #endif
+
+namespace PrimitiveDataTypeMod {
+	std::ostream & operator << ( std::ostream & out, const PrimitiveDataType& value);
+	std::istream & operator >> ( std::istream & in , PrimitiveDataType& value );
+}
 
 /** 
   * A helper class for the enumeration PrimitiveDataType.

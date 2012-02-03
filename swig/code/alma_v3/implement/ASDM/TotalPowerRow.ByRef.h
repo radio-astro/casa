@@ -157,11 +157,11 @@ public:
 	 void toBin(EndianOSStream& eoss);
 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a TotalPowerRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a TotalPowerRow.
+	  * @param eis the EndianIStream to be read.
 	  * @table the TotalPowerTable to which the row built by deserialization will be parented.
 	  */
-	 static TotalPowerRow* fromBin(EndianISStream& eiss, TotalPowerTable& table);
+	 static TotalPowerRow* fromBin(EndianIStream& eis, TotalPowerTable& table);
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //

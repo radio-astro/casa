@@ -91,9 +91,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Subscan.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -106,17 +107,19 @@ class ExecBlockRow;
 	
 
 class SubscanRow;
-typedef void (SubscanRow::*SubscanAttributeFromBin) (EndianISStream& eiss);
+typedef void (SubscanRow::*SubscanAttributeFromBin) (EndianIStream& eis);
+typedef void (SubscanRow::*SubscanAttributeFromText) (const string& s);
 
 /**
  * The SubscanRow class is a row of a SubscanTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SubscanRow {
 friend class asdm::SubscanTable;
 friend class asdm::RowTransformer<SubscanRow>;
+//friend class asdm::TableStreamReader<SubscanTable, SubscanRow>;
 
 public:
 
@@ -608,7 +611,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SubscanAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void subscanIntentFromBin( EndianIStream& eis);
+void numIntegrationFromBin( EndianIStream& eis);
+void numSubintegrationFromBin( EndianIStream& eis);
+
+void subscanModeFromBin( EndianIStream& eis);
+void correlatorCalibrationFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SubscanTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SubscanRow* fromBin(EndianIStream& eis, SubscanTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -798,23 +831,67 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, SubscanAttributeFromBin> fromBinMethods;
-void execBlockIdFromBin( EndianISStream& eiss);
-void scanNumberFromBin( EndianISStream& eiss);
-void subscanNumberFromBin( EndianISStream& eiss);
-void startTimeFromBin( EndianISStream& eiss);
-void endTimeFromBin( EndianISStream& eiss);
-void fieldNameFromBin( EndianISStream& eiss);
-void subscanIntentFromBin( EndianISStream& eiss);
-void numIntegrationFromBin( EndianISStream& eiss);
-void numSubintegrationFromBin( EndianISStream& eiss);
+void execBlockIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void subscanIntentFromBin( EndianIStream& eis);
+void numIntegrationFromBin( EndianIStream& eis);
+void numSubintegrationFromBin( EndianIStream& eis);
 
-void subscanModeFromBin( EndianISStream& eiss);
-void correlatorCalibrationFromBin( EndianISStream& eiss);
+void subscanModeFromBin( EndianIStream& eis);
+void correlatorCalibrationFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SubscanAttributeFromText> fromTextMethods;
+	
+void execBlockIdFromText (const string & s);
+	
+	
+void scanNumberFromText (const string & s);
+	
+	
+void subscanNumberFromText (const string & s);
+	
+	
+void startTimeFromText (const string & s);
+	
+	
+void endTimeFromText (const string & s);
+	
+	
+void fieldNameFromText (const string & s);
+	
+	
+void subscanIntentFromText (const string & s);
+	
+	
+void numIntegrationFromText (const string & s);
+	
+	
+void numSubintegrationFromText (const string & s);
+	
+
+	
+void subscanModeFromText (const string & s);
+	
+	
+void correlatorCalibrationFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -823,14 +900,14 @@ void correlatorCalibrationFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SubscanTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SubscanRow* fromBin(EndianISStream& eiss, SubscanTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static SubscanRow* fromBin(EndianIStream& eis, SubscanTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

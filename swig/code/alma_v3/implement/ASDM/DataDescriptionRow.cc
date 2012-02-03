@@ -270,31 +270,31 @@ namespace asdm {
     spectralWindowId.toBin(eoss);
   }
 
-  void DataDescriptionRow::dataDescriptionIdFromBin(EndianISStream& eiss) {
-    dataDescriptionId = Tag::fromBin(eiss);
+  void DataDescriptionRow::dataDescriptionIdFromBin(EndianIStream& eis) {
+    dataDescriptionId = Tag::fromBin(eis);
   }
 
-  void DataDescriptionRow::polOrHoloIdFromBin(EndianISStream& eiss) {
-    polOrHoloId = Tag::fromBin(eiss);
+  void DataDescriptionRow::polOrHoloIdFromBin(EndianIStream& eis) {
+    polOrHoloId = Tag::fromBin(eis);
   }
 
-  void DataDescriptionRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-    spectralWindowId = Tag::fromBin(eiss);
+  void DataDescriptionRow::spectralWindowIdFromBin(EndianIStream& eis) {
+    spectralWindowId = Tag::fromBin(eis);
   }
 
-  DataDescriptionRow* DataDescriptionRow::fromBin(EndianISStream& eiss, DataDescriptionTable& table, const vector<string>& attributesSeq) {
+  DataDescriptionRow* DataDescriptionRow::fromBin(EndianIStream& eis, DataDescriptionTable& table, const vector<string>& attributesSeq) {
     DataDescriptionRow* row = new  DataDescriptionRow(table);
     
     map<string, DataDescriptionAttributeFromBin>::iterator iter ;
     for (unsigned int i = 0; i < attributesSeq.size(); i++) {
       iter = row->fromBinMethods.find(attributesSeq.at(i));
       if (iter != row->fromBinMethods.end()) {
-	(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+	(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
       }
       else {
 	BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 	if (functorP)
-	  (*functorP)(eiss);
+	  (*functorP)(eis);
 	else
 	  throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DataDescriptionTable");
       }

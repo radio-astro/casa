@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CFilterMode::version() {
 	return FilterModeMod::version;
 	}
@@ -149,5 +148,25 @@ string CFilterMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'FilterMode'.";
 	return oss.str();
+}
+
+namespace FilterModeMod {
+	std::ostream & operator << ( std::ostream & out, const FilterMode& value) {
+		out << CFilterMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , FilterMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CFilterMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -66,6 +67,11 @@ namespace FieldCodeMod
   typedef FieldCode &FieldCode_out;
 } 
 #endif
+
+namespace FieldCodeMod {
+	std::ostream & operator << ( std::ostream & out, const FieldCode& value);
+	std::istream & operator >> ( std::istream & in , FieldCode& value );
+}
 
 /** 
   * A helper class for the enumeration FieldCode.

@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CAntennaMotionPattern::version() {
 	return AntennaMotionPatternMod::version;
 	}
@@ -224,5 +223,25 @@ string CAntennaMotionPattern::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'AntennaMotionPattern'.";
 	return oss.str();
+}
+
+namespace AntennaMotionPatternMod {
+	std::ostream & operator << ( std::ostream & out, const AntennaMotionPattern& value) {
+		out << CAntennaMotionPattern::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , AntennaMotionPattern& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CAntennaMotionPattern::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

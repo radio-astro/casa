@@ -171,6 +171,15 @@ public:
 	bool deleteFlagVersion(Vector<String> versionname);
 	bool getFlagVersionList( Vector<String> &verlist);
 
+	// Agent's specific parsing methods (for convenience only)
+	bool parseManualParameters(String field, String spw, String array, String feed, String scan,
+       	    String antenna, String uvrange, String timerange,String correlation,
+       	    String intent, String observation, Bool apply);
+
+	bool parseClipParameters(String field, String spw, String array, String feed, String scan,
+       	    String antenna, String uvrange, String timerange,String correlation,
+       	    String intent, String observation, String expression, String datacolumn,
+       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply);
 
 private:
 

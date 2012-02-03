@@ -57,6 +57,7 @@ using asdm::ExecBlockRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -601,105 +602,105 @@ namespace asdm {
 	
 	}
 	
-void HistoryRow::execBlockIdFromBin(EndianISStream& eiss) {
+void HistoryRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void HistoryRow::timeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		time =  ArrayTime::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void HistoryRow::messageFromBin(EndianISStream& eiss) {
+void HistoryRow::timeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		time =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void HistoryRow::messageFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		message =  eiss.readString();
-			
-		
-	
-	
-}
-void HistoryRow::priorityFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		priority =  eiss.readString();
+		message =  eis.readString();
 			
 		
 	
 	
 }
-void HistoryRow::originFromBin(EndianISStream& eiss) {
+void HistoryRow::priorityFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		origin =  eiss.readString();
-			
-		
-	
-	
-}
-void HistoryRow::objectIdFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		objectId =  eiss.readString();
+		priority =  eis.readString();
 			
 		
 	
 	
 }
-void HistoryRow::applicationFromBin(EndianISStream& eiss) {
+void HistoryRow::originFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		application =  eiss.readString();
-			
-		
-	
-	
-}
-void HistoryRow::cliCommandFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		cliCommand =  eiss.readString();
+		origin =  eis.readString();
 			
 		
 	
 	
 }
-void HistoryRow::appParmsFromBin(EndianISStream& eiss) {
+void HistoryRow::objectIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		appParms =  eiss.readString();
+		objectId =  eis.readString();
+			
+		
+	
+	
+}
+void HistoryRow::applicationFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		application =  eis.readString();
+			
+		
+	
+	
+}
+void HistoryRow::cliCommandFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		cliCommand =  eis.readString();
+			
+		
+	
+	
+}
+void HistoryRow::appParmsFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		appParms =  eis.readString();
 			
 		
 	
@@ -708,19 +709,19 @@ void HistoryRow::appParmsFromBin(EndianISStream& eiss) {
 
 		
 	
-	HistoryRow* HistoryRow::fromBin(EndianISStream& eiss, HistoryTable& table, const vector<string>& attributesSeq) {
+	HistoryRow* HistoryRow::fromBin(EndianIStream& eis, HistoryTable& table, const vector<string>& attributesSeq) {
 		HistoryRow* row = new  HistoryRow(table);
 		
 		map<string, HistoryAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "HistoryTable");
 			}
@@ -728,10 +729,96 @@ void HistoryRow::appParmsFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void HistoryRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void HistoryRow::timeFromText(const string & s) {
+		 
+		time = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void HistoryRow::messageFromText(const string & s) {
+		 
+		message = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void HistoryRow::priorityFromText(const string & s) {
+		 
+		priority = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void HistoryRow::originFromText(const string & s) {
+		 
+		origin = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void HistoryRow::objectIdFromText(const string & s) {
+		 
+		objectId = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void HistoryRow::applicationFromText(const string & s) {
+		 
+		application = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void HistoryRow::cliCommandFromText(const string & s) {
+		 
+		cliCommand = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void HistoryRow::appParmsFromText(const string & s) {
+		 
+		appParms = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+
+		
+	
+	void HistoryRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, HistoryAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "HistoryTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -994,9 +1081,9 @@ void HistoryRow::appParmsFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1034,9 +1121,10 @@ void HistoryRow::appParmsFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1122,6 +1210,47 @@ void HistoryRow::appParmsFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["execBlockId"] = &HistoryRow::execBlockIdFromText;
+		 
+	
+				 
+	fromTextMethods["time"] = &HistoryRow::timeFromText;
+		 
+	
+				 
+	fromTextMethods["message"] = &HistoryRow::messageFromText;
+		 
+	
+				 
+	fromTextMethods["priority"] = &HistoryRow::priorityFromText;
+		 
+	
+				 
+	fromTextMethods["origin"] = &HistoryRow::originFromText;
+		 
+	
+				 
+	fromTextMethods["objectId"] = &HistoryRow::objectIdFromText;
+		 
+	
+				 
+	fromTextMethods["application"] = &HistoryRow::applicationFromText;
+		 
+	
+				 
+	fromTextMethods["cliCommand"] = &HistoryRow::cliCommandFromText;
+		 
+	
+				 
+	fromTextMethods["appParms"] = &HistoryRow::appParmsFromText;
+		 
+	
+
+		
 	}
 	
 	HistoryRow::HistoryRow (HistoryTable &t, HistoryRow &row) : table(t) {

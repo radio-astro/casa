@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -72,6 +73,11 @@ namespace ProcessorSubTypeMod
   typedef ProcessorSubType &ProcessorSubType_out;
 } 
 #endif
+
+namespace ProcessorSubTypeMod {
+	std::ostream & operator << ( std::ostream & out, const ProcessorSubType& value);
+	std::istream & operator >> ( std::istream & in , ProcessorSubType& value );
+}
 
 /** 
   * A helper class for the enumeration ProcessorSubType.

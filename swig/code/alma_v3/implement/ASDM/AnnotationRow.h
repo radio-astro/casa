@@ -101,9 +101,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Annotation.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -116,17 +117,19 @@ class AntennaRow;
 	
 
 class AnnotationRow;
-typedef void (AnnotationRow::*AnnotationAttributeFromBin) (EndianISStream& eiss);
+typedef void (AnnotationRow::*AnnotationAttributeFromBin) (EndianIStream& eis);
+typedef void (AnnotationRow::*AnnotationAttributeFromText) (const string& s);
 
 /**
  * The AnnotationRow class is a row of a AnnotationTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class AnnotationRow {
 friend class asdm::AnnotationTable;
 friend class asdm::RowTransformer<AnnotationRow>;
+//friend class asdm::TableStreamReader<AnnotationTable, AnnotationRow>;
 
 public:
 
@@ -840,7 +843,41 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, AnnotationAttributeFromBin> fromBinMethods;
+void annotationIdFromBin( EndianIStream& eis);
+void timeFromBin( EndianIStream& eis);
+void issueFromBin( EndianIStream& eis);
+void detailsFromBin( EndianIStream& eis);
+
+void numAntennaFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void numBasebandFromBin( EndianIStream& eis);
+void intervalFromBin( EndianIStream& eis);
+void dValueFromBin( EndianIStream& eis);
+void vdValueFromBin( EndianIStream& eis);
+void vvdValuesFromBin( EndianIStream& eis);
+void llValueFromBin( EndianIStream& eis);
+void vllValueFromBin( EndianIStream& eis);
+void vvllValueFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the AnnotationTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static AnnotationRow* fromBin(EndianIStream& eis, AnnotationTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1103,27 +1140,83 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, AnnotationAttributeFromBin> fromBinMethods;
-void annotationIdFromBin( EndianISStream& eiss);
-void timeFromBin( EndianISStream& eiss);
-void issueFromBin( EndianISStream& eiss);
-void detailsFromBin( EndianISStream& eiss);
+void annotationIdFromBin( EndianIStream& eis);
+void timeFromBin( EndianIStream& eis);
+void issueFromBin( EndianIStream& eis);
+void detailsFromBin( EndianIStream& eis);
 
-void numAntennaFromBin( EndianISStream& eiss);
-void basebandNameFromBin( EndianISStream& eiss);
-void numBasebandFromBin( EndianISStream& eiss);
-void intervalFromBin( EndianISStream& eiss);
-void dValueFromBin( EndianISStream& eiss);
-void vdValueFromBin( EndianISStream& eiss);
-void vvdValuesFromBin( EndianISStream& eiss);
-void llValueFromBin( EndianISStream& eiss);
-void vllValueFromBin( EndianISStream& eiss);
-void vvllValueFromBin( EndianISStream& eiss);
-void antennaIdFromBin( EndianISStream& eiss);
+void numAntennaFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void numBasebandFromBin( EndianIStream& eis);
+void intervalFromBin( EndianIStream& eis);
+void dValueFromBin( EndianIStream& eis);
+void vdValueFromBin( EndianIStream& eis);
+void vvdValuesFromBin( EndianIStream& eis);
+void llValueFromBin( EndianIStream& eis);
+void vllValueFromBin( EndianIStream& eis);
+void vvllValueFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, AnnotationAttributeFromText> fromTextMethods;
+	
+void annotationIdFromText (const string & s);
+	
+	
+void timeFromText (const string & s);
+	
+	
+void issueFromText (const string & s);
+	
+	
+void detailsFromText (const string & s);
+	
+
+	
+void numAntennaFromText (const string & s);
+	
+	
+void basebandNameFromText (const string & s);
+	
+	
+void numBasebandFromText (const string & s);
+	
+	
+void intervalFromText (const string & s);
+	
+	
+void dValueFromText (const string & s);
+	
+	
+void vdValueFromText (const string & s);
+	
+	
+void vvdValuesFromText (const string & s);
+	
+	
+void llValueFromText (const string & s);
+	
+	
+void vllValueFromText (const string & s);
+	
+	
+void vvllValueFromText (const string & s);
+	
+	
+void antennaIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1132,14 +1225,14 @@ void antennaIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the AnnotationTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static AnnotationRow* fromBin(EndianISStream& eiss, AnnotationTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static AnnotationRow* fromBin(EndianIStream& eis, AnnotationTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

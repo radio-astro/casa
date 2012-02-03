@@ -63,6 +63,7 @@ using asdm::CalDataRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1677,133 +1678,133 @@ namespace asdm {
 
 	}
 	
-void CalHolographyRow::antennaNameFromBin(EndianISStream& eiss) {
+void CalHolographyRow::antennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaName =  eiss.readString();
+		antennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalHolographyRow::calDataIdFromBin(EndianISStream& eiss) {
+void CalHolographyRow::calDataIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalHolographyRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalHolographyRow::antennaMakeFromBin(EndianISStream& eiss) {
+void CalHolographyRow::calReductionIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalHolographyRow::antennaMakeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaMake = CAntennaMake::literal(eiss.readString());
+		antennaMake = CAntennaMake::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalHolographyRow::startValidTimeFromBin(EndianISStream& eiss) {
+void CalHolographyRow::startValidTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalHolographyRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
+		startValidTime =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void CalHolographyRow::ambientTemperatureFromBin(EndianISStream& eiss) {
+void CalHolographyRow::endValidTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		ambientTemperature =  Temperature::fromBin(eiss);
+		endValidTime =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void CalHolographyRow::focusPositionFromBin(EndianISStream& eiss) {
+void CalHolographyRow::ambientTemperatureFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		ambientTemperature =  Temperature::fromBin(eis);
+		
+	
+	
+}
+void CalHolographyRow::focusPositionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	focusPosition = Length::from1DBin(eiss);	
+	focusPosition = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalHolographyRow::frequencyRangeFromBin(EndianISStream& eiss) {
+void CalHolographyRow::frequencyRangeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	frequencyRange = Frequency::from1DBin(eiss);	
+	frequencyRange = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalHolographyRow::illuminationTaperFromBin(EndianISStream& eiss) {
+void CalHolographyRow::illuminationTaperFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		illuminationTaper =  eiss.readDouble();
-			
-		
-	
-	
-}
-void CalHolographyRow::numReceptorFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numReceptor =  eiss.readInt();
+		illuminationTaper =  eis.readDouble();
 			
 		
 	
 	
 }
-void CalHolographyRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void CalHolographyRow::numReceptorFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numReceptor =  eis.readInt();
+			
+		
+	
+	
+}
+void CalHolographyRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1812,10 +1813,10 @@ void CalHolographyRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::literal(eiss.readString()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1823,78 +1824,78 @@ void CalHolographyRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalHolographyRow::numPanelModesFromBin(EndianISStream& eiss) {
+void CalHolographyRow::numPanelModesFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numPanelModes =  eiss.readInt();
+		numPanelModes =  eis.readInt();
 			
 		
 	
 	
 }
-void CalHolographyRow::receiverBandFromBin(EndianISStream& eiss) {
+void CalHolographyRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverBand = CReceiverBand::literal(eiss.readString());
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalHolographyRow::beamMapUIDFromBin(EndianISStream& eiss) {
+void CalHolographyRow::beamMapUIDFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		beamMapUID =  EntityRef::fromBin(eiss);
-		
-	
-	
-}
-void CalHolographyRow::rawRMSFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		rawRMS =  Length::fromBin(eiss);
+		beamMapUID =  EntityRef::fromBin(eis);
 		
 	
 	
 }
-void CalHolographyRow::weightedRMSFromBin(EndianISStream& eiss) {
+void CalHolographyRow::rawRMSFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		weightedRMS =  Length::fromBin(eiss);
-		
-	
-	
-}
-void CalHolographyRow::surfaceMapUIDFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		surfaceMapUID =  EntityRef::fromBin(eiss);
+		rawRMS =  Length::fromBin(eis);
 		
 	
 	
 }
-void CalHolographyRow::directionFromBin(EndianISStream& eiss) {
+void CalHolographyRow::weightedRMSFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		weightedRMS =  Length::fromBin(eis);
+		
+	
+	
+}
+void CalHolographyRow::surfaceMapUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		surfaceMapUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void CalHolographyRow::directionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	direction = Angle::from1DBin(eiss);	
+	direction = Angle::from1DBin(eis);	
 	
 
 		
@@ -1902,16 +1903,16 @@ void CalHolographyRow::directionFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalHolographyRow::numScrewFromBin(EndianISStream& eiss) {
+void CalHolographyRow::numScrewFromBin(EndianIStream& eis) {
 		
-	numScrewExists = eiss.readBoolean();
+	numScrewExists = eis.readBoolean();
 	if (numScrewExists) {
 		
 	
 	
 		
 			
-		numScrew =  eiss.readInt();
+		numScrew =  eis.readInt();
 			
 		
 	
@@ -1919,9 +1920,9 @@ void CalHolographyRow::numScrewFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalHolographyRow::screwNameFromBin(EndianISStream& eiss) {
+void CalHolographyRow::screwNameFromBin(EndianIStream& eis) {
 		
-	screwNameExists = eiss.readBoolean();
+	screwNameExists = eis.readBoolean();
 	if (screwNameExists) {
 		
 	
@@ -1931,10 +1932,10 @@ void CalHolographyRow::screwNameFromBin(EndianISStream& eiss) {
 	
 		screwName.clear();
 		
-		unsigned int screwNameDim1 = eiss.readInt();
+		unsigned int screwNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < screwNameDim1; i++)
 			
-			screwName.push_back(eiss.readString());
+			screwName.push_back(eis.readString());
 			
 	
 
@@ -1944,9 +1945,9 @@ void CalHolographyRow::screwNameFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalHolographyRow::screwMotionFromBin(EndianISStream& eiss) {
+void CalHolographyRow::screwMotionFromBin(EndianIStream& eis) {
 		
-	screwMotionExists = eiss.readBoolean();
+	screwMotionExists = eis.readBoolean();
 	if (screwMotionExists) {
 		
 	
@@ -1954,7 +1955,7 @@ void CalHolographyRow::screwMotionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	screwMotion = Length::from1DBin(eiss);	
+	screwMotion = Length::from1DBin(eis);	
 	
 
 		
@@ -1963,9 +1964,9 @@ void CalHolographyRow::screwMotionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalHolographyRow::screwMotionErrorFromBin(EndianISStream& eiss) {
+void CalHolographyRow::screwMotionErrorFromBin(EndianIStream& eis) {
 		
-	screwMotionErrorExists = eiss.readBoolean();
+	screwMotionErrorExists = eis.readBoolean();
 	if (screwMotionErrorExists) {
 		
 	
@@ -1973,7 +1974,7 @@ void CalHolographyRow::screwMotionErrorFromBin(EndianISStream& eiss) {
 		
 			
 	
-	screwMotionError = Length::from1DBin(eiss);	
+	screwMotionError = Length::from1DBin(eis);	
 	
 
 		
@@ -1982,16 +1983,16 @@ void CalHolographyRow::screwMotionErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalHolographyRow::gravCorrectionFromBin(EndianISStream& eiss) {
+void CalHolographyRow::gravCorrectionFromBin(EndianIStream& eis) {
 		
-	gravCorrectionExists = eiss.readBoolean();
+	gravCorrectionExists = eis.readBoolean();
 	if (gravCorrectionExists) {
 		
 	
 	
 		
 			
-		gravCorrection =  eiss.readBoolean();
+		gravCorrection =  eis.readBoolean();
 			
 		
 	
@@ -1999,9 +2000,9 @@ void CalHolographyRow::gravCorrectionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalHolographyRow::gravOptRangeFromBin(EndianISStream& eiss) {
+void CalHolographyRow::gravOptRangeFromBin(EndianIStream& eis) {
 		
-	gravOptRangeExists = eiss.readBoolean();
+	gravOptRangeExists = eis.readBoolean();
 	if (gravOptRangeExists) {
 		
 	
@@ -2009,7 +2010,7 @@ void CalHolographyRow::gravOptRangeFromBin(EndianISStream& eiss) {
 		
 			
 	
-	gravOptRange = Angle::from1DBin(eiss);	
+	gravOptRange = Angle::from1DBin(eis);	
 	
 
 		
@@ -2018,16 +2019,16 @@ void CalHolographyRow::gravOptRangeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalHolographyRow::tempCorrectionFromBin(EndianISStream& eiss) {
+void CalHolographyRow::tempCorrectionFromBin(EndianIStream& eis) {
 		
-	tempCorrectionExists = eiss.readBoolean();
+	tempCorrectionExists = eis.readBoolean();
 	if (tempCorrectionExists) {
 		
 	
 	
 		
 			
-		tempCorrection =  eiss.readBoolean();
+		tempCorrection =  eis.readBoolean();
 			
 		
 	
@@ -2035,9 +2036,9 @@ void CalHolographyRow::tempCorrectionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalHolographyRow::tempOptRangeFromBin(EndianISStream& eiss) {
+void CalHolographyRow::tempOptRangeFromBin(EndianIStream& eis) {
 		
-	tempOptRangeExists = eiss.readBoolean();
+	tempOptRangeExists = eis.readBoolean();
 	if (tempOptRangeExists) {
 		
 	
@@ -2045,7 +2046,7 @@ void CalHolographyRow::tempOptRangeFromBin(EndianISStream& eiss) {
 		
 			
 	
-	tempOptRange = Temperature::from1DBin(eiss);	
+	tempOptRange = Temperature::from1DBin(eis);	
 	
 
 		
@@ -2056,19 +2057,19 @@ void CalHolographyRow::tempOptRangeFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalHolographyRow* CalHolographyRow::fromBin(EndianISStream& eiss, CalHolographyTable& table, const vector<string>& attributesSeq) {
+	CalHolographyRow* CalHolographyRow::fromBin(EndianIStream& eis, CalHolographyTable& table, const vector<string>& attributesSeq) {
 		CalHolographyRow* row = new  CalHolographyRow(table);
 		
 		map<string, CalHolographyAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalHolographyTable");
 			}
@@ -2076,10 +2077,234 @@ void CalHolographyRow::tempOptRangeFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an String 
+	void CalHolographyRow::antennaNameFromText(const string & s) {
+		 
+		antennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalHolographyRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalHolographyRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaMake 
+	void CalHolographyRow::antennaMakeFromText(const string & s) {
+		 
+		antennaMake = ASDMValuesParser::parse<AntennaMake>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalHolographyRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalHolographyRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalHolographyRow::ambientTemperatureFromText(const string & s) {
+		 
+		ambientTemperature = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalHolographyRow::focusPositionFromText(const string & s) {
+		 
+		focusPosition = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalHolographyRow::frequencyRangeFromText(const string & s) {
+		 
+		frequencyRange = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalHolographyRow::illuminationTaperFromText(const string & s) {
+		 
+		illuminationTaper = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalHolographyRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalHolographyRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalHolographyRow::numPanelModesFromText(const string & s) {
+		 
+		numPanelModes = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalHolographyRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Length 
+	void CalHolographyRow::rawRMSFromText(const string & s) {
+		 
+		rawRMS = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalHolographyRow::weightedRMSFromText(const string & s) {
+		 
+		weightedRMS = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Angle 
+	void CalHolographyRow::directionFromText(const string & s) {
+		 
+		direction = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void CalHolographyRow::numScrewFromText(const string & s) {
+		numScrewExists = true;
+		 
+		numScrew = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalHolographyRow::screwNameFromText(const string & s) {
+		screwNameExists = true;
+		 
+		screwName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalHolographyRow::screwMotionFromText(const string & s) {
+		screwMotionExists = true;
+		 
+		screwMotion = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalHolographyRow::screwMotionErrorFromText(const string & s) {
+		screwMotionErrorExists = true;
+		 
+		screwMotionError = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalHolographyRow::gravCorrectionFromText(const string & s) {
+		gravCorrectionExists = true;
+		 
+		gravCorrection = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalHolographyRow::gravOptRangeFromText(const string & s) {
+		gravOptRangeExists = true;
+		 
+		gravOptRange = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalHolographyRow::tempCorrectionFromText(const string & s) {
+		tempCorrectionExists = true;
+		 
+		tempCorrection = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalHolographyRow::tempOptRangeFromText(const string & s) {
+		tempOptRangeExists = true;
+		 
+		tempOptRange = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	
+	void CalHolographyRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalHolographyAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalHolographyTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -3006,9 +3231,9 @@ void CalHolographyRow::tempOptRangeFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -3082,9 +3307,10 @@ void CalHolographyRow::tempOptRangeFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -3299,6 +3525,115 @@ receiverBand = CReceiverBand::from_int(0);
 	 fromBinMethods["tempCorrection"] = &CalHolographyRow::tempCorrectionFromBin; 
 	 fromBinMethods["tempOptRange"] = &CalHolographyRow::tempOptRangeFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaName"] = &CalHolographyRow::antennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalHolographyRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalHolographyRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["antennaMake"] = &CalHolographyRow::antennaMakeFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalHolographyRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalHolographyRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["ambientTemperature"] = &CalHolographyRow::ambientTemperatureFromText;
+		 
+	
+				 
+	fromTextMethods["focusPosition"] = &CalHolographyRow::focusPositionFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyRange"] = &CalHolographyRow::frequencyRangeFromText;
+		 
+	
+				 
+	fromTextMethods["illuminationTaper"] = &CalHolographyRow::illuminationTaperFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &CalHolographyRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &CalHolographyRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["numPanelModes"] = &CalHolographyRow::numPanelModesFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalHolographyRow::receiverBandFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["rawRMS"] = &CalHolographyRow::rawRMSFromText;
+		 
+	
+				 
+	fromTextMethods["weightedRMS"] = &CalHolographyRow::weightedRMSFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["direction"] = &CalHolographyRow::directionFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["numScrew"] = &CalHolographyRow::numScrewFromText;
+		 	
+	 
+				
+	fromTextMethods["screwName"] = &CalHolographyRow::screwNameFromText;
+		 	
+	 
+				
+	fromTextMethods["screwMotion"] = &CalHolographyRow::screwMotionFromText;
+		 	
+	 
+				
+	fromTextMethods["screwMotionError"] = &CalHolographyRow::screwMotionErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["gravCorrection"] = &CalHolographyRow::gravCorrectionFromText;
+		 	
+	 
+				
+	fromTextMethods["gravOptRange"] = &CalHolographyRow::gravOptRangeFromText;
+		 	
+	 
+				
+	fromTextMethods["tempCorrection"] = &CalHolographyRow::tempCorrectionFromText;
+		 	
+	 
+				
+	fromTextMethods["tempOptRange"] = &CalHolographyRow::tempOptRangeFromText;
+		 	
+		
 	}
 	
 	CalHolographyRow::CalHolographyRow (CalHolographyTable &t, CalHolographyRow &row) : table(t) {

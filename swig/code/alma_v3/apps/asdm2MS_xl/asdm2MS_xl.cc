@@ -55,6 +55,8 @@ using namespace SubscanIntentMod;
 #include "SDMDataObjectReader.h"
 #include "SDMDataObject.h"
 
+#include "TableStreamReader.h"
+
 #include	"time.h"			/* <time.h> */
 #if	defined(__sysv__)
 #include	<sys/time.h>
@@ -1180,8 +1182,8 @@ map<MainRow*, int>     stateIdx2Idx;
  *
  */
 
-void processState(MainRow* r_p) {
- if (debug) cout << "processState : entering" << endl;
+void fillState(MainRow* r_p) {
+ if (debug) cout << "fillState : entering" << endl;
 
  ASDM&			ds	   = r_p -> getTable() . getContainer();
  ScanRow*		scanR_p	   = ds.getScan().getRowByKey(r_p -> getExecBlockId(),	r_p -> getScanNumber());
@@ -1229,7 +1231,7 @@ void processState(MainRow* r_p) {
       }
     }	    
  }
- if (debug) cout << "processState : exiting" << endl;
+ if (debug) cout << "fillState : exiting" << endl;
 }
 
 /**
@@ -1243,10 +1245,10 @@ void processState(MainRow* r_p) {
  * @parameter complexData a bool which says if the DATA is going to be filled (true) or if it will be the FLOAT_DATA (false).
  * @parameter mute if the value of this parameter is false then nothing is written in the MS .
  *
- * !!!!! One must be carefull to the fact that processState must have been called before processMain. During the execution of processState , the global vector<int> msStateID
- * is filled and will be used by processMain.
+ * !!!!! One must be carefull to the fact that fillState must have been called before fillMain. During the execution of fillState , the global vector<int> msStateID
+ * is filled and will be used by fillMain.
  */ 
-void processMain(int		rowNum,
+void fillMain(int		rowNum,
 		 MainRow*	r_p,
 		 SDMBinData&	sdmBinData,
 		 const VMSData* vmsData_p,
@@ -1254,7 +1256,7 @@ void processMain(int		rowNum,
 		 bool		complexData,
 		 bool           mute) {
   
-  if (debug) cout << "processMain : entering" << endl;
+  if (debug) cout << "fillMain : entering" << endl;
 
   ASDM & ds = r_p -> getTable() . getContainer();
 
@@ -1401,10 +1403,183 @@ void processMain(int		rowNum,
 				       correctedFlag);
     }
   }
-  if (debug) cout << "processMain : exiting" << endl;
+  if (debug) cout << "fillMain : exiting" << endl;
 }
 
+/**
+ * This function fills the MS SysPower table from an ASDM SysPower table.
+ *
+ * @param ds the ASDM dataset the ASDM SysPower table belongs to.
+ * @param ignoreTime a boolean value to indicate if the selected scans are taken into account or if all the table is going to be processed.
+ * @param selectedScanRow_v a vector of pointers on ScanRow used to determine which rows of SysPower are going to be processed.
+ *
+ */
+void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const vector<ScanRow *>& selectedScanRow_v) {
 
+  if (debug) cout << "fillSysPower : entering" << endl;
+
+  try {
+
+    const SysPowerTable& sysPowerT = ds_p->getSysPower();
+    infostream.str("");
+    infostream << "The dataset has " << sysPowerT.size() << " syspower(s).";
+    info(infostream.str()); 
+
+    if (sysPowerT.size() == 0) return;
+    
+    TableStreamReader<SysPowerTable, SysPowerRow> tsrSysPower;
+    tsrSysPower.open(asdmDirectory);
+
+    while (tsrSysPower.hasRows()) {
+      const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.untilNBytes(50000000);
+      vector<int>			antennaId;
+      vector<int>			spectralWindowId;
+      vector<int>			feedId;
+      vector<double>			time;
+      vector<double>			interval;
+      vector<int>			numReceptor;
+      vector<float>			switchedPowerDifference;
+      vector<float>			switchedPowerSum;
+      vector<float>			requantizerGain;
+    
+      unsigned int        numReceptor0;
+      {
+	infostream.str("");
+	infostream << "(considering the next " << sysPowerRows.size() << " rows of the SysPower table. ";
+	rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
+      
+	
+	const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
+      
+	if (!ignoreTime) 
+	  infostream << sysPowers.size() << " of them are in the selected exec blocks / scans";
+
+	infostream << ")";	     
+	info(infostream.str());
+      
+	infostream.str("");
+	errstream.str("");
+      
+	antennaId.resize(sysPowers.size());
+	spectralWindowId.resize(sysPowers.size());
+	feedId.resize(sysPowers.size());
+	time.resize(sysPowers.size());
+	interval.resize(sysPowers.size());
+      
+	/*
+	 * Prepare the mandatory attributes.
+	 */
+	transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
+	transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
+	transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
+	transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
+	transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
+      
+	/*
+	 * Prepare the optional attributes.
+	 */
+	numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
+	//
+	// Do we have a constant numReceptor all over the array numReceptor.
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
+	  errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
+	  error(errstream.str());
+	}
+	else 
+	  ; // infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
+            
+	bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end()) {
+	  /*
+	  if (switchedPowerDifferenceExists0) {
+	    infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
+	    switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
+	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+	  }
+	  else
+	    infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
+	  */
+	  ;
+	}
+	else {
+	  errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
+	  error(errstream.str());
+	}
+      
+	bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end()) {
+	  /*
+	  if (switchedPowerSumExists0) {
+	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	    switchedPowerSum.resize(numReceptor0 * sysPowers.size());
+	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+	  }
+	  else
+	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	  */
+	  ;
+	}
+	else {
+	  errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
+	  error(errstream.str());
+	}
+      
+	bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end()) {
+	  /*
+	  if (requantizerGainExists0) {
+	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	    requantizerGain.resize(numReceptor0 * sysPowers.size());
+	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+	  }
+	  else
+	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	  */
+	  ;
+	}
+	else {
+	  errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
+	  error(errstream.str());
+	}
+      }
+        
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+	   msIter != msFillers.end();
+	   ++msIter) {
+	msIter->second->addSysPowerSlice(antennaId.size(),
+					 antennaId,
+					 spectralWindowId,
+					 feedId,
+					 time,
+					 interval,
+					 (unsigned int) numReceptor0,
+					 switchedPowerDifference,
+					 switchedPowerSum,
+					 requantizerGain);
+      }      
+      
+    } // end of filling SysPower by slice.
+
+    unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+    if (numMSSysPowers > 0) {
+      infostream.str("");
+      infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
+      info(infostream.str());
+    }
+    tsrSysPower.close();
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+  if (debug) cout << "fillSysPower : exiting" << endl;
+}
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1664,9 +1839,11 @@ int main(int argc, char *argv[]) {
     
     // Do we want an MS Main table to be filled or not ?
     mute = vm.count("dry-run") != 0;
-    infostream.str("");
-    infostream << "option dry-run is used, the MS Main table will not be filled" << endl;
-    info(infostream.str());
+    if (mute) {
+      infostream.str("");
+      infostream << "option dry-run is used, the MS Main table will not be filled" << endl;
+      info(infostream.str());
+    }
 
     // What is the amount of memory allocated to the BDF slices.
     infostream.str("");
@@ -3656,10 +3833,11 @@ int main(int argc, char *argv[]) {
     error(errstream.str());      
   }
  
-  
-
   //
   // Process the SysPower table.
+#if 1 
+  fillSysPower(dsName, ds, ignoreTime, selectedScanRow_v);
+#else
   if ( processSysPower ) 
     try {
       const SysPowerTable& sysPowerT = ds->getSysPower();
@@ -3797,6 +3975,7 @@ int main(int argc, char *argv[]) {
       errstream << e.what();
       error(errstream.str());      
     }
+#endif
 
   //
   // Load the weather table
@@ -3916,7 +4095,7 @@ int main(int argc, char *argv[]) {
       for (int32_t i = 0; i < nMain; i++) {
 
 	// Populate the State table.
-	processState(v[i]);
+	fillState(v[i]);
 
 	// What's the processor for this Main row ?
 	Tag cdId = v[i]->getConfigDescriptionId();
@@ -3942,7 +4121,7 @@ int main(int argc, char *argv[]) {
 	    continue;
 	  }
 	  vmsDataPtr = sdmBinData.getDataCols();
-	  processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	  fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << i << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
 	  info(infostream.str());
@@ -3968,7 +4147,7 @@ int main(int argc, char *argv[]) {
 	    numberOfReadIntegrations += numberOfIntegrations;
 	    numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
 	    
-	    processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	    
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	    info(infostream.str());
@@ -3979,7 +4158,7 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
-	    processMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	    
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	    info(infostream.str());

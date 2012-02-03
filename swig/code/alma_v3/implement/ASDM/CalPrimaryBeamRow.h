@@ -121,9 +121,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalPrimaryBeam.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -139,17 +140,19 @@ class CalDataRow;
 	
 
 class CalPrimaryBeamRow;
-typedef void (CalPrimaryBeamRow::*CalPrimaryBeamAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalPrimaryBeamRow::*CalPrimaryBeamAttributeFromBin) (EndianIStream& eis);
+typedef void (CalPrimaryBeamRow::*CalPrimaryBeamAttributeFromText) (const string& s);
 
 /**
  * The CalPrimaryBeamRow class is a row of a CalPrimaryBeamTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalPrimaryBeamRow {
 friend class asdm::CalPrimaryBeamTable;
 friend class asdm::RowTransformer<CalPrimaryBeamRow>;
+//friend class asdm::TableStreamReader<CalPrimaryBeamTable, CalPrimaryBeamRow>;
 
 public:
 
@@ -948,7 +951,46 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalPrimaryBeamAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void numSubbandFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void mainBeamEfficiencyFromBin( EndianIStream& eis);
+void beamDescriptionUIDFromBin( EndianIStream& eis);
+void relativeAmplitudeRmsFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void minValidDirectionFromBin( EndianIStream& eis);
+void maxValidDirectionFromBin( EndianIStream& eis);
+void descriptionTypeFromBin( EndianIStream& eis);
+void imageChannelNumberFromBin( EndianIStream& eis);
+void imageNominalFrequencyFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalPrimaryBeamTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalPrimaryBeamRow* fromBin(EndianIStream& eis, CalPrimaryBeamTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1240,32 +1282,101 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalPrimaryBeamAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void antennaMakeFromBin( EndianISStream& eiss);
-void numSubbandFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void mainBeamEfficiencyFromBin( EndianISStream& eiss);
-void beamDescriptionUIDFromBin( EndianISStream& eiss);
-void relativeAmplitudeRmsFromBin( EndianISStream& eiss);
-void directionFromBin( EndianISStream& eiss);
-void minValidDirectionFromBin( EndianISStream& eiss);
-void maxValidDirectionFromBin( EndianISStream& eiss);
-void descriptionTypeFromBin( EndianISStream& eiss);
-void imageChannelNumberFromBin( EndianISStream& eiss);
-void imageNominalFrequencyFromBin( EndianISStream& eiss);
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void numSubbandFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void mainBeamEfficiencyFromBin( EndianIStream& eis);
+void beamDescriptionUIDFromBin( EndianIStream& eis);
+void relativeAmplitudeRmsFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void minValidDirectionFromBin( EndianIStream& eis);
+void maxValidDirectionFromBin( EndianIStream& eis);
+void descriptionTypeFromBin( EndianIStream& eis);
+void imageChannelNumberFromBin( EndianIStream& eis);
+void imageNominalFrequencyFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalPrimaryBeamAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void antennaMakeFromText (const string & s);
+	
+	
+void numSubbandFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void mainBeamEfficiencyFromText (const string & s);
+	
+	
+	
+void relativeAmplitudeRmsFromText (const string & s);
+	
+	
+void directionFromText (const string & s);
+	
+	
+void minValidDirectionFromText (const string & s);
+	
+	
+void maxValidDirectionFromText (const string & s);
+	
+	
+void descriptionTypeFromText (const string & s);
+	
+	
+void imageChannelNumberFromText (const string & s);
+	
+	
+void imageNominalFrequencyFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1274,14 +1385,14 @@ void imageNominalFrequencyFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalPrimaryBeamTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalPrimaryBeamRow* fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalPrimaryBeamRow* fromBin(EndianIStream& eis, CalPrimaryBeamTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -78,6 +79,11 @@ namespace CalibrationDeviceMod
   typedef CalibrationDevice &CalibrationDevice_out;
 } 
 #endif
+
+namespace CalibrationDeviceMod {
+	std::ostream & operator << ( std::ostream & out, const CalibrationDevice& value);
+	std::istream & operator >> ( std::istream & in , CalibrationDevice& value );
+}
 
 /** 
   * A helper class for the enumeration CalibrationDevice.

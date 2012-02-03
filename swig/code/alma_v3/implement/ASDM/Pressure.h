@@ -40,7 +40,7 @@ using asdm::StringTokenizer;
 using asdm::NumberFormatException;
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 namespace asdm {
 class Pressure;
 Pressure operator * ( double , const Pressure & );
@@ -154,36 +154,36 @@ public:
 	 */
 	static void toBin(const vector<vector<vector<Pressure> > >& angle,  EndianOSStream& eoss);
 	/**
-	 * Read the binary representation of an Pressure from a EndianISStream
+	 * Read the binary representation of an Pressure from a EndianIStream
 	 * and use the read value to set an  Pressure.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an Pressure
 	 */
-	static Pressure fromBin(EndianISStream& eiss);
+	static Pressure fromBin(EndianIStream& eis);
 	
 	/**
-	 * Read the binary representation of  a vector of  Pressure from an EndianISStream
+	 * Read the binary representation of  a vector of  Pressure from an EndianIStream
 	 * and use the read value to set a vector of  Pressure.
-	 * @param eiss a reference to the EndianISStream to be read
+	 * @param eis a reference to the EndianIStream to be read
 	 * @return a vector of Pressure
 	 */	 
-	 static vector<Pressure> from1DBin(EndianISStream & eiss);
+	 static vector<Pressure> from1DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of Pressure from an EndianISStream
+	 * Read the binary representation of  a vector of vector of Pressure from an EndianIStream
 	 * and use the read value to set a vector of  vector of Pressure.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of Pressure
 	 */	 
-	 static vector<vector<Pressure> > from2DBin(EndianISStream & eiss);
+	 static vector<vector<Pressure> > from2DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of vector of Pressure from an EndianISStream
+	 * Read the binary representation of  a vector of vector of vector of Pressure from an EndianIStream
 	 * and use the read value to set a vector of  vector of vector of Pressure.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of vector of Pressure
 	 */	 
-	 static vector<vector<vector<Pressure> > > from3DBin(EndianISStream & eiss);	 
+	 static vector<vector<vector<Pressure> > > from3DBin(EndianIStream & eis);	 
 	 
 	 /**
 	  * An assignment operator Pressure = Pressure.

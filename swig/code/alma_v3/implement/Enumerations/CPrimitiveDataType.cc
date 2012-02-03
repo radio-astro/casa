@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CPrimitiveDataType::version() {
 	return PrimitiveDataTypeMod::version;
 	}
@@ -164,5 +163,25 @@ string CPrimitiveDataType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'PrimitiveDataType'.";
 	return oss.str();
+}
+
+namespace PrimitiveDataTypeMod {
+	std::ostream & operator << ( std::ostream & out, const PrimitiveDataType& value) {
+		out << CPrimitiveDataType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , PrimitiveDataType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CPrimitiveDataType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

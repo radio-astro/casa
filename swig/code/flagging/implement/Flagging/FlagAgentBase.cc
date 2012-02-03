@@ -416,24 +416,44 @@ FlagAgentBase::runCore()
 
 		switch (iterationApproach_p)
 		{
-			// Iterate trough (time,freq) maps per antenna pair
-			case ANTENNA_PAIRS:
-			{
-				iterateAntennaPairs();
-				break;
-			}
-			// Iterate trough rows (i.e. baselines)
-			case ROWS:
-			{
-				iterateRows();
-				break;
-			}
 			// Iterate inside every row (i.e. channels) applying a mapping expression
+			// clipping
 			case IN_ROWS:
 			{
 				iterateInRows();
 				break;
 			}
+			// Iterate trough rows (i.e. baselines)
+			// manual,quack
+			case ROWS:
+			{
+				iterateRows();
+				break;
+			}
+			// Iterate trough rows (i.e. baselines) doing a common pre-processing before
+			// elevation, shadow, summary
+			case ROWS_PREPROCESS_BUFFER:
+			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				iterateRows();
+				break;
+			}
+			// Iterate trough (time,freq) maps per antenna pair
+			// tfcrop,rflag
+			case ANTENNA_PAIRS:
+			{
+				iterateAntennaPairs();
+				break;
+			}
+			// Iterate trough (time,freq) maps per antenna pair
+			// extension
+			case ANTENNA_PAIRS_FLAGS:
+			{
+				iterateAntennaPairsFlags();
+				break;
+			}
+			// Navigate trough (time,freq) maps per antenna pair
+			// display
 			case ANTENNA_PAIRS_INTERACTIVE:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
@@ -441,20 +461,15 @@ FlagAgentBase::runCore()
 				break;
 			}
 			// Iterate trough (time,freq) maps per antenna pair doing a common pre-processing before
+			// Not used by any of the available agents at the moment
 			case ANTENNA_PAIRS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateAntennaPairs();
 				break;
 			}
-			// Iterate trough rows (i.e. baselines) doing a common pre-processing before
-			case ROWS_PREPROCESS_BUFFER:
-			{
-				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
-				iterateRows();
-				break;
-			}
 			// Iterate inside every row (i.e. channels) applying a mapping expression doing a common pre-processing before
+			// Not used by any of the available agents at the moment
 			case IN_ROWS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
@@ -463,8 +478,7 @@ FlagAgentBase::runCore()
 			}
 			default:
 			{
-				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
-				iterateRows();
+				throw AipsError("Unknown iteration approach requested");
 				break;
 			}
 		}
@@ -489,6 +503,7 @@ void
 FlagAgentBase::setDataSelection(Record config)
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	int exists;
 	MSSelection parser;
 
@@ -1180,6 +1195,7 @@ void
 FlagAgentBase::chunkSummary()
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	// With this check we skip cases like summary or display
 	if (chunkFlags_p > 0)
 	{
@@ -1213,6 +1229,7 @@ void
 FlagAgentBase::msSummary()
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	// With this check we skip cases like summary or display
 	if (msFlags_p > 0)
 	{
@@ -1286,6 +1303,7 @@ void
 FlagAgentBase::iterateRows()
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	// Create FlagMapper objects and parse the correlation selection
 	FlagMapper flagsMap = FlagMapper(flag_p,polarizationIndex_p);
 
@@ -1351,6 +1369,7 @@ void
 FlagAgentBase::iterateInRows()
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	// Check if the visibility expression is suitable for this spw
 	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
@@ -1412,6 +1431,7 @@ void
 FlagAgentBase::iterateAntennaPairs()
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	// Check if the visibility expression is suitable for this spw
 	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
@@ -1500,6 +1520,91 @@ FlagAgentBase::iterateAntennaPairs()
 }
 
 void
+FlagAgentBase::iterateAntennaPairsFlags()
+{
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+	antennaPairMapIterator myAntennaPairMapIterator;
+	std::pair<Int,Int> antennaPair;
+	std::vector<uInt> *antennaRows = NULL;
+	IPosition cubeShape;
+
+	// Create VisMapper and FlagMapper objects and parse the polarization expression
+	FlagMapper flagsMap = FlagMapper(flag_p,polarizationIndex_p);
+
+	// Activate check mode
+	if (checkFlags_p) flagsMap.activateCheckMode();
+
+	// Some log info
+	if (multiThreading_p)
+	{
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
+				<<  " Thread Id " << threadId_p << ":" << nThreads_p
+				<< " Will process every " << nThreads_p << " baselines starting with baseline " << threadId_p
+				<< " from a total of " << flagDataHandler_p->getAntennaPairMap()->size() << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
+	}
+
+
+	uShort antennaPairdIdx = 0;
+	for (myAntennaPairMapIterator=flagDataHandler_p->getAntennaPairMap()->begin(); myAntennaPairMapIterator != flagDataHandler_p->getAntennaPairMap()->end(); ++myAntennaPairMapIterator)
+	{
+		if (multiThreading_p and (antennaPairdIdx % nThreads_p != threadId_p))
+		{
+			// Increment antenna pair index
+			antennaPairdIdx++;
+
+			// Continue with next antenna pair
+			continue;
+		}
+
+		// Get antenna pair from map
+		antennaPair = myAntennaPairMapIterator->first;
+
+		// Check if antenna pair is in the baselines list of this agent
+		if (baselineList_p.size()>0)
+		{
+			if (!find(baselineList_p,antennaPair.first,antennaPair.second)) continue;
+		}
+
+		// Get rows corresponding to this antenna pair
+		antennaRows = generateAntennaPairRowsIndex(antennaPair.first,antennaPair.second);
+
+		// If none of the antenna pair rows were eligible then go to next pair
+		if (antennaRows->empty())
+		{
+			*logger_p << LogIO::WARN <<  " Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") does not have any rows in this chunk" << LogIO::POST;
+
+			// Increment antenna pair index
+			antennaPairdIdx++;
+
+			// Delete antenna pair rows
+			delete antennaRows;
+
+			// Continue with next antenna pair
+			continue;
+		}
+
+		// Set CubeViews in FlagMapper
+		setFlagsMap(antennaRows,&flagsMap);
+
+		// Flag map
+		computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
+
+		// Increment antenna pair index
+		antennaPairdIdx++;
+
+		// Delete antenna pair rows
+		delete antennaRows;
+	}
+
+	return;
+}
+
+void
 FlagAgentBase::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
 {
 	// Check if the visibility expression is suitable for this spw
@@ -1524,6 +1629,7 @@ void
 FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	std::pair<Int,Int> antennaPair = std::make_pair(antenna1,antenna2);
 	antennaPairMapIterator index = flagDataHandler_p->getAntennaPairMap()->find(antennaPair);
 	if (index != flagDataHandler_p->getAntennaPairMap()->end())
@@ -1658,6 +1764,7 @@ Bool
 FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	// If we find I directly in the polarization map we assume is ALMA Water Vapor Radiometer data
 	// And we only process it if the user requested WVR
 	if (expression_p.find("WVR") != string::npos)
@@ -1895,6 +2002,13 @@ FlagAgentBase::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibili
 
 bool
 FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+{
+	// TODO: This class must be re-implemented in the derived classes
+	return false;
+}
+
+bool
+FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return false;

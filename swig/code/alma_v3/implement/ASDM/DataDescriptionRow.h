@@ -103,7 +103,7 @@ namespace asdm {
   class SpectralWindowRow;
   
   class DataDescriptionRow;
-  typedef void (DataDescriptionRow::*DataDescriptionAttributeFromBin) (EndianISStream& eiss);  
+  typedef void (DataDescriptionRow::*DataDescriptionAttributeFromBin) (EndianIStream& eis);  
   
 
 /**
@@ -243,9 +243,9 @@ public:
 	// binary-deserialization material//
 	///////////////////////////////	
 	std::map<std::string, DataDescriptionAttributeFromBin> fromBinMethods;
-	void dataDescriptionIdFromBin(EndianISStream& eiss);
-	void polOrHoloIdFromBin(EndianISStream& eiss);
-	void spectralWindowIdFromBin(EndianISStream& eiss);
+	void dataDescriptionIdFromBin(EndianIStream& eis);
+	void polOrHoloIdFromBin(EndianIStream& eis);
+	void spectralWindowIdFromBin(EndianIStream& eis);
 
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -254,13 +254,13 @@ public:
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eis the EndianIStream to be read.
 	  * @param table the DataDescriptionTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static DataDescriptionRow* fromBin(EndianISStream& eiss, DataDescriptionTable& table, const std::vector<std::string>& attributesSeq);	
+	 static DataDescriptionRow* fromBin(EndianIStream& eis, DataDescriptionTable& table, const std::vector<std::string>& attributesSeq);	
 		
 	/**
 	 * Returns pointer to the row in the Polarization table having Polarization.polarizationId == polOrHoloId

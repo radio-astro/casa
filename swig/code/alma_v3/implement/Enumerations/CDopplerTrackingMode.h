@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -72,6 +73,11 @@ namespace DopplerTrackingModeMod
   typedef DopplerTrackingMode &DopplerTrackingMode_out;
 } 
 #endif
+
+namespace DopplerTrackingModeMod {
+	std::ostream & operator << ( std::ostream & out, const DopplerTrackingMode& value);
+	std::istream & operator >> ( std::istream & in , DopplerTrackingMode& value );
+}
 
 /** 
   * A helper class for the enumeration DopplerTrackingMode.

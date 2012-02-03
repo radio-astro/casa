@@ -69,9 +69,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file SquareLawDetector.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -81,17 +82,19 @@ namespace asdm {
 	
 
 class SquareLawDetectorRow;
-typedef void (SquareLawDetectorRow::*SquareLawDetectorAttributeFromBin) (EndianISStream& eiss);
+typedef void (SquareLawDetectorRow::*SquareLawDetectorAttributeFromBin) (EndianIStream& eis);
+typedef void (SquareLawDetectorRow::*SquareLawDetectorAttributeFromText) (const string& s);
 
 /**
  * The SquareLawDetectorRow class is a row of a SquareLawDetectorTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SquareLawDetectorRow {
 friend class asdm::SquareLawDetectorTable;
 friend class asdm::RowTransformer<SquareLawDetectorRow>;
+//friend class asdm::TableStreamReader<SquareLawDetectorTable, SquareLawDetectorRow>;
 
 public:
 
@@ -268,7 +271,29 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SquareLawDetectorAttributeFromBin> fromBinMethods;
+void squareLawDetectorIdFromBin( EndianIStream& eis);
+void numBandFromBin( EndianIStream& eis);
+void bandTypeFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SquareLawDetectorTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SquareLawDetectorRow* fromBin(EndianIStream& eis, SquareLawDetectorTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -371,15 +396,35 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, SquareLawDetectorAttributeFromBin> fromBinMethods;
-void squareLawDetectorIdFromBin( EndianISStream& eiss);
-void numBandFromBin( EndianISStream& eiss);
-void bandTypeFromBin( EndianISStream& eiss);
+void squareLawDetectorIdFromBin( EndianIStream& eis);
+void numBandFromBin( EndianIStream& eis);
+void bandTypeFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SquareLawDetectorAttributeFromText> fromTextMethods;
+	
+void squareLawDetectorIdFromText (const string & s);
+	
+	
+void numBandFromText (const string & s);
+	
+	
+void bandTypeFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -388,14 +433,14 @@ void bandTypeFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SquareLawDetectorTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SquareLawDetectorRow* fromBin(EndianISStream& eiss, SquareLawDetectorTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static SquareLawDetectorRow* fromBin(EndianIStream& eis, SquareLawDetectorTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

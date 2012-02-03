@@ -48,7 +48,7 @@ using asdm::NumberFormatException;
 
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 
 namespace asdm {
 
@@ -116,36 +116,36 @@ public:
 	static void toBin(const vector<vector<vector<Complex> > >& cmplx,  EndianOSStream& eoss);
 
 	/**
-	 * Read the binary representation of an Complex from a EndianISStream
+	 * Read the binary representation of an Complex from a EndianIStream
 	 * and use the read value to set an  Complex.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an Complex
 	 */
-	static Complex fromBin(EndianISStream& eiss);
+	static Complex fromBin(EndianIStream& eis);
 	
 	/**
-	 * Read the binary representation of  a vector of  Complex from an EndianISStream
+	 * Read the binary representation of  a vector of  Complex from an EndianIStream
 	 * and use the read value to set a vector of  Complex.
-	 * @param dis the EndianISStream to be read
+	 * @param dis the EndianIStream to be read
 	 * @return a vector of Complex
 	 */	 
-	 static vector<Complex> from1DBin(EndianISStream & eiss);
+	 static vector<Complex> from1DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of Complex from an EndianISStream
+	 * Read the binary representation of  a vector of vector of Complex from an EndianIStream
 	 * and use the read value to set a vector of  vector of Complex.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiis the EndianIStream to be read
 	 * @return a vector of vector of Complex
 	 */	 
-	 static vector<vector<Complex> > from2DBin(EndianISStream & eiss);
+	 static vector<vector<Complex> > from2DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of vector of Complex from an EndianISStream
+	 * Read the binary representation of  a vector of vector of vector of Complex from an EndianIStream
 	 * and use the read value to set a vector of  vector of vector of Complex.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of vector of Complex
 	 */	 
-	 static vector<vector<vector<Complex> > > from3DBin(EndianISStream & eiss);	 
+	 static vector<vector<vector<Complex> > > from3DBin(EndianIStream & eis);	 
 
 };
 

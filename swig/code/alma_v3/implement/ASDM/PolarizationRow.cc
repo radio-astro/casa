@@ -51,6 +51,7 @@ using asdm::PolarizationTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -397,29 +398,29 @@ namespace asdm {
 	
 	}
 	
-void PolarizationRow::polarizationIdFromBin(EndianISStream& eiss) {
+void PolarizationRow::polarizationIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		polarizationId =  Tag::fromBin(eiss);
+		polarizationId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void PolarizationRow::numCorrFromBin(EndianISStream& eiss) {
+void PolarizationRow::numCorrFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numCorr =  eiss.readInt();
+		numCorr =  eis.readInt();
 			
 		
 	
 	
 }
-void PolarizationRow::corrTypeFromBin(EndianISStream& eiss) {
+void PolarizationRow::corrTypeFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -428,10 +429,10 @@ void PolarizationRow::corrTypeFromBin(EndianISStream& eiss) {
 	
 		corrType.clear();
 		
-		unsigned int corrTypeDim1 = eiss.readInt();
+		unsigned int corrTypeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < corrTypeDim1; i++)
 			
-			corrType.push_back(CStokesParameter::literal(eiss.readString()));
+			corrType.push_back(CStokesParameter::literal(eis.readString()));
 			
 	
 
@@ -439,7 +440,7 @@ void PolarizationRow::corrTypeFromBin(EndianISStream& eiss) {
 	
 	
 }
-void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
+void PolarizationRow::corrProductFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -448,14 +449,14 @@ void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
 	
 		corrProduct.clear();
 		
-		unsigned int corrProductDim1 = eiss.readInt();
-		unsigned int corrProductDim2 = eiss.readInt();
+		unsigned int corrProductDim1 = eis.readInt();
+		unsigned int corrProductDim2 = eis.readInt();
 		vector <PolarizationType> corrProductAux1;
 		for (unsigned int i = 0; i < corrProductDim1; i++) {
 			corrProductAux1.clear();
 			for (unsigned int j = 0; j < corrProductDim2 ; j++)			
 			
-			corrProductAux1.push_back(CPolarizationType::literal(eiss.readString()));
+			corrProductAux1.push_back(CPolarizationType::literal(eis.readString()));
 			
 			corrProduct.push_back(corrProductAux1);
 		}
@@ -469,19 +470,19 @@ void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
 
 		
 	
-	PolarizationRow* PolarizationRow::fromBin(EndianISStream& eiss, PolarizationTable& table, const vector<string>& attributesSeq) {
+	PolarizationRow* PolarizationRow::fromBin(EndianIStream& eis, PolarizationTable& table, const vector<string>& attributesSeq) {
 		PolarizationRow* row = new  PolarizationRow(table);
 		
 		map<string, PolarizationAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PolarizationTable");
 			}
@@ -489,10 +490,56 @@ void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void PolarizationRow::polarizationIdFromText(const string & s) {
+		 
+		polarizationId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PolarizationRow::numCorrFromText(const string & s) {
+		 
+		numCorr = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an StokesParameter 
+	void PolarizationRow::corrTypeFromText(const string & s) {
+		 
+		corrType = ASDMValuesParser::parse1D<StokesParameter>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void PolarizationRow::corrProductFromText(const string & s) {
+		 
+		corrProduct = ASDMValuesParser::parse2D<PolarizationType>(s);
+		
+	}
+	
+
+		
+	
+	void PolarizationRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, PolarizationAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "PolarizationTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -627,13 +674,14 @@ void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -677,6 +725,27 @@ void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["polarizationId"] = &PolarizationRow::polarizationIdFromText;
+		 
+	
+				 
+	fromTextMethods["numCorr"] = &PolarizationRow::numCorrFromText;
+		 
+	
+				 
+	fromTextMethods["corrType"] = &PolarizationRow::corrTypeFromText;
+		 
+	
+				 
+	fromTextMethods["corrProduct"] = &PolarizationRow::corrProductFromText;
+		 
+	
+
+		
 	}
 	
 	PolarizationRow::PolarizationRow (PolarizationTable &t, PolarizationRow &row) : table(t) {

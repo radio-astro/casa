@@ -40,7 +40,7 @@ using asdm::StringTokenizer;
 using asdm::NumberFormatException;
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 namespace asdm {
 class Angle;
 Angle operator * ( double , const Angle & );
@@ -154,36 +154,36 @@ public:
 	 */
 	static void toBin(const vector<vector<vector<Angle> > >& angle,  EndianOSStream& eoss);
 	/**
-	 * Read the binary representation of an Angle from a EndianISStream
+	 * Read the binary representation of an Angle from a EndianIStream
 	 * and use the read value to set an  Angle.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an Angle
 	 */
-	static Angle fromBin(EndianISStream& eiss);
+	static Angle fromBin(EndianIStream& eis);
 	
 	/**
-	 * Read the binary representation of  a vector of  Angle from an EndianISStream
+	 * Read the binary representation of  a vector of  Angle from an EndianIStream
 	 * and use the read value to set a vector of  Angle.
-	 * @param eiss a reference to the EndianISStream to be read
+	 * @param eis a reference to the EndianIStream to be read
 	 * @return a vector of Angle
 	 */	 
-	 static vector<Angle> from1DBin(EndianISStream & eiss);
+	 static vector<Angle> from1DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of Angle from an EndianISStream
+	 * Read the binary representation of  a vector of vector of Angle from an EndianIStream
 	 * and use the read value to set a vector of  vector of Angle.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of Angle
 	 */	 
-	 static vector<vector<Angle> > from2DBin(EndianISStream & eiss);
+	 static vector<vector<Angle> > from2DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of vector of Angle from an EndianISStream
+	 * Read the binary representation of  a vector of vector of vector of Angle from an EndianIStream
 	 * and use the read value to set a vector of  vector of vector of Angle.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of vector of Angle
 	 */	 
-	 static vector<vector<vector<Angle> > > from3DBin(EndianISStream & eiss);	 
+	 static vector<vector<vector<Angle> > > from3DBin(EndianIStream & eis);	 
 	 
 	 /**
 	  * An assignment operator Angle = Angle.

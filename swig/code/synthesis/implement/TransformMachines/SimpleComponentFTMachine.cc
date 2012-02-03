@@ -148,7 +148,8 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
     }
     uvw(2, n) = uvwValue(2);
   }
-
+  uvw0=uvw.copy();
+  
   uInt ncomponents=compList.nelements();
   const uInt npol=vb.modelVisCube().shape()(0);
   const uInt nChan=vb.modelVisCube().shape()(1);
@@ -180,7 +181,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
       corrType = corrTypeC;
     }
     
-    uvw = uvw0.copy();
+    uvw=uvw0.copy();
     rotateUVW(uvw, dphase, vb, component.shape().refDirection());
     dphase *= -C::_2pi;
 

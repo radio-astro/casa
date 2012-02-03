@@ -49,8 +49,11 @@ using asdm::SpectralWindowRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string SpectralWindowTable::tableName = "SpectralWindow";
-	const vector<string> SpectralWindowTable::attributesNames = initAttributesNames();
-		
+	string SpectralWindowTable::itsName = "SpectralWindow";
+	vector<string> SpectralWindowTable::attributesNames; 
+	vector<string> SpectralWindowTable::attributesNamesInBin; 
+	bool SpectralWindowTable::initAttributesNamesDone = SpectralWindowTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -139,14 +145,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SpectralWindowTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string SpectralWindowTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> SpectralWindowTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool SpectralWindowTable::initAttributesNames() {
 
 		attributesNames.push_back("spectralWindowId");
 
@@ -212,13 +224,80 @@ namespace asdm {
 
 		attributesNames.push_back("dopplerId");
 
-		return attributesNames;
+
+    
+    	 
+    	attributesNamesInBin.push_back("spectralWindowId") ; 
+    	 
+    	attributesNamesInBin.push_back("basebandName") ; 
+    	 
+    	attributesNamesInBin.push_back("netSideband") ; 
+    	 
+    	attributesNamesInBin.push_back("numChan") ; 
+    	 
+    	attributesNamesInBin.push_back("refFreq") ; 
+    	 
+    	attributesNamesInBin.push_back("sidebandProcessingMode") ; 
+    	 
+    	attributesNamesInBin.push_back("totBandwidth") ; 
+    	 
+    	attributesNamesInBin.push_back("windowFunction") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("chanFreqStart") ; 
+    	 
+    	attributesNamesInBin.push_back("chanFreqStep") ; 
+    	 
+    	attributesNamesInBin.push_back("chanFreqArray") ; 
+    	 
+    	attributesNamesInBin.push_back("chanWidth") ; 
+    	 
+    	attributesNamesInBin.push_back("chanWidthArray") ; 
+    	 
+    	attributesNamesInBin.push_back("correlationBit") ; 
+    	 
+    	attributesNamesInBin.push_back("effectiveBw") ; 
+    	 
+    	attributesNamesInBin.push_back("effectiveBwArray") ; 
+    	 
+    	attributesNamesInBin.push_back("freqGroup") ; 
+    	 
+    	attributesNamesInBin.push_back("freqGroupName") ; 
+    	 
+    	attributesNamesInBin.push_back("lineArray") ; 
+    	 
+    	attributesNamesInBin.push_back("measFreqRef") ; 
+    	 
+    	attributesNamesInBin.push_back("name") ; 
+    	 
+    	attributesNamesInBin.push_back("oversampling") ; 
+    	 
+    	attributesNamesInBin.push_back("quantization") ; 
+    	 
+    	attributesNamesInBin.push_back("refChan") ; 
+    	 
+    	attributesNamesInBin.push_back("resolution") ; 
+    	 
+    	attributesNamesInBin.push_back("resolutionArray") ; 
+    	 
+    	attributesNamesInBin.push_back("numAssocValues") ; 
+    	 
+    	attributesNamesInBin.push_back("assocNature") ; 
+    	 
+    	attributesNamesInBin.push_back("assocSpectralWindowId") ; 
+    	 
+    	attributesNamesInBin.push_back("imageSpectralWindowId") ; 
+    	 
+    	attributesNamesInBin.push_back("dopplerId") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& SpectralWindowTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& SpectralWindowTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -534,7 +613,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n");
+		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -656,7 +735,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n";
+		oss << "<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SpectralWindowTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -807,70 +886,73 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("spectralWindowId") ; 
-     
-    attributesSeq.push_back("basebandName") ; 
-     
-    attributesSeq.push_back("netSideband") ; 
-     
-    attributesSeq.push_back("numChan") ; 
-     
-    attributesSeq.push_back("refFreq") ; 
-     
-    attributesSeq.push_back("sidebandProcessingMode") ; 
-     
-    attributesSeq.push_back("totBandwidth") ; 
-     
-    attributesSeq.push_back("windowFunction") ; 
     
-     
+    	 
+    attributesSeq.push_back("spectralWindowId") ; 
+    	 
+    attributesSeq.push_back("basebandName") ; 
+    	 
+    attributesSeq.push_back("netSideband") ; 
+    	 
+    attributesSeq.push_back("numChan") ; 
+    	 
+    attributesSeq.push_back("refFreq") ; 
+    	 
+    attributesSeq.push_back("sidebandProcessingMode") ; 
+    	 
+    attributesSeq.push_back("totBandwidth") ; 
+    	 
+    attributesSeq.push_back("windowFunction") ; 
+    	
+    	 
     attributesSeq.push_back("chanFreqStart") ; 
-     
+    	 
     attributesSeq.push_back("chanFreqStep") ; 
-     
+    	 
     attributesSeq.push_back("chanFreqArray") ; 
-     
+    	 
     attributesSeq.push_back("chanWidth") ; 
-     
+    	 
     attributesSeq.push_back("chanWidthArray") ; 
-     
+    	 
     attributesSeq.push_back("correlationBit") ; 
-     
+    	 
     attributesSeq.push_back("effectiveBw") ; 
-     
+    	 
     attributesSeq.push_back("effectiveBwArray") ; 
-     
+    	 
     attributesSeq.push_back("freqGroup") ; 
-     
+    	 
     attributesSeq.push_back("freqGroupName") ; 
-     
+    	 
     attributesSeq.push_back("lineArray") ; 
-     
+    	 
     attributesSeq.push_back("measFreqRef") ; 
-     
+    	 
     attributesSeq.push_back("name") ; 
-     
+    	 
     attributesSeq.push_back("oversampling") ; 
-     
+    	 
     attributesSeq.push_back("quantization") ; 
-     
+    	 
     attributesSeq.push_back("refChan") ; 
-     
+    	 
     attributesSeq.push_back("resolution") ; 
-     
+    	 
     attributesSeq.push_back("resolutionArray") ; 
-     
+    	 
     attributesSeq.push_back("numAssocValues") ; 
-     
+    	 
     attributesSeq.push_back("assocNature") ; 
-     
+    	 
     attributesSeq.push_back("assocSpectralWindowId") ; 
-     
+    	 
     attributesSeq.push_back("imageSpectralWindowId") ; 
-     
+    	 
     attributesSeq.push_back("dopplerId") ; 
+    	
      
+    
     
     // And decide that it has version == "2"
     version = "2";         
@@ -927,13 +1009,13 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -948,7 +1030,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 	if (getContainer().checkRowUniqueness()) {
     	try {
       		for (uint32_t i = 0; i < this->declaredSize; i++) {
-				SpectralWindowRow* aRow = SpectralWindowRow::fromBin(eiss, *this, attributesSeq);
+				SpectralWindowRow* aRow = SpectralWindowRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 				checkAndAdd(aRow);
       		}
     	}
@@ -963,7 +1045,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
     }
     else {
  		for (uint32_t i = 0; i < this->declaredSize; i++) {
-			SpectralWindowRow* aRow = SpectralWindowRow::fromBin(eiss, *this, attributesSeq);
+			SpectralWindowRow* aRow = SpectralWindowRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 			append(aRow);
       	}   	
     }
@@ -1054,6 +1136,132 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
     
     setFromMIME(ss.str());
   }	
+/* 
+  void SpectralWindowTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/SpectralWindow.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "SpectralWindow");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "SpectralWindow");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "SpectralWindow");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SpectralWindow");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SpectralWindow");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("SpectralWindowTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/SpectralWindowTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "SpectralWindow");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/SpectralWindowTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "SpectralWindow");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/SpectralWindowTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "SpectralWindow");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/SpectralWindowTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "SpectralWindow");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void SpectralWindowTable::setFromXMLFile(const string& directory) {

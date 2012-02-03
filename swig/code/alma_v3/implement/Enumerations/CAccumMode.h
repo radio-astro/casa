@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace AccumModeMod
   typedef AccumMode &AccumMode_out;
 } 
 #endif
+
+namespace AccumModeMod {
+	std::ostream & operator << ( std::ostream & out, const AccumMode& value);
+	std::istream & operator >> ( std::istream & in , AccumMode& value );
+}
 
 /** 
   * A helper class for the enumeration AccumMode.

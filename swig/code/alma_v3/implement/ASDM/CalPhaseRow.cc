@@ -63,6 +63,7 @@ using asdm::CalReductionRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1436,107 +1437,107 @@ namespace asdm {
 
 	}
 	
-void CalPhaseRow::basebandNameFromBin(EndianISStream& eiss) {
+void CalPhaseRow::basebandNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		basebandName = CBasebandName::literal(eiss.readString());
-			
-		
-	
-	
-}
-void CalPhaseRow::receiverBandFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		receiverBand = CReceiverBand::literal(eiss.readString());
+		basebandName = CBasebandName::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPhaseRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+void CalPhaseRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		atmPhaseCorrection = CAtmPhaseCorrection::literal(eiss.readString());
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPhaseRow::calDataIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalPhaseRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalPhaseRow::startValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalPhaseRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalPhaseRow::numBaselineFromBin(EndianISStream& eiss) {
+void CalPhaseRow::atmPhaseCorrectionFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numBaseline =  eiss.readInt();
+		atmPhaseCorrection = CAtmPhaseCorrection::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPhaseRow::numReceptorFromBin(EndianISStream& eiss) {
+void CalPhaseRow::calDataIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalPhaseRow::calReductionIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalPhaseRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalPhaseRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalPhaseRow::numBaselineFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numBaseline =  eis.readInt();
 			
 		
 	
 	
 }
-void CalPhaseRow::ampliFromBin(EndianISStream& eiss) {
+void CalPhaseRow::numReceptorFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numReceptor =  eis.readInt();
+			
+		
+	
+	
+}
+void CalPhaseRow::ampliFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1545,14 +1546,14 @@ void CalPhaseRow::ampliFromBin(EndianISStream& eiss) {
 	
 		ampli.clear();
 		
-		unsigned int ampliDim1 = eiss.readInt();
-		unsigned int ampliDim2 = eiss.readInt();
+		unsigned int ampliDim1 = eis.readInt();
+		unsigned int ampliDim2 = eis.readInt();
 		vector <float> ampliAux1;
 		for (unsigned int i = 0; i < ampliDim1; i++) {
 			ampliAux1.clear();
 			for (unsigned int j = 0; j < ampliDim2 ; j++)			
 			
-			ampliAux1.push_back(eiss.readFloat());
+			ampliAux1.push_back(eis.readFloat());
 			
 			ampli.push_back(ampliAux1);
 		}
@@ -1563,7 +1564,7 @@ void CalPhaseRow::ampliFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPhaseRow::antennaNamesFromBin(EndianISStream& eiss) {
+void CalPhaseRow::antennaNamesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1572,14 +1573,14 @@ void CalPhaseRow::antennaNamesFromBin(EndianISStream& eiss) {
 	
 		antennaNames.clear();
 		
-		unsigned int antennaNamesDim1 = eiss.readInt();
-		unsigned int antennaNamesDim2 = eiss.readInt();
+		unsigned int antennaNamesDim1 = eis.readInt();
+		unsigned int antennaNamesDim2 = eis.readInt();
 		vector <string> antennaNamesAux1;
 		for (unsigned int i = 0; i < antennaNamesDim1; i++) {
 			antennaNamesAux1.clear();
 			for (unsigned int j = 0; j < antennaNamesDim2 ; j++)			
 			
-			antennaNamesAux1.push_back(eiss.readString());
+			antennaNamesAux1.push_back(eis.readString());
 			
 			antennaNames.push_back(antennaNamesAux1);
 		}
@@ -1590,21 +1591,21 @@ void CalPhaseRow::antennaNamesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPhaseRow::baselineLengthsFromBin(EndianISStream& eiss) {
+void CalPhaseRow::baselineLengthsFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	baselineLengths = Length::from1DBin(eiss);	
+	baselineLengths = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalPhaseRow::decorrelationFactorFromBin(EndianISStream& eiss) {
+void CalPhaseRow::decorrelationFactorFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1613,14 +1614,14 @@ void CalPhaseRow::decorrelationFactorFromBin(EndianISStream& eiss) {
 	
 		decorrelationFactor.clear();
 		
-		unsigned int decorrelationFactorDim1 = eiss.readInt();
-		unsigned int decorrelationFactorDim2 = eiss.readInt();
+		unsigned int decorrelationFactorDim1 = eis.readInt();
+		unsigned int decorrelationFactorDim2 = eis.readInt();
 		vector <float> decorrelationFactorAux1;
 		for (unsigned int i = 0; i < decorrelationFactorDim1; i++) {
 			decorrelationFactorAux1.clear();
 			for (unsigned int j = 0; j < decorrelationFactorDim2 ; j++)			
 			
-			decorrelationFactorAux1.push_back(eiss.readFloat());
+			decorrelationFactorAux1.push_back(eis.readFloat());
 			
 			decorrelationFactor.push_back(decorrelationFactorAux1);
 		}
@@ -1631,45 +1632,45 @@ void CalPhaseRow::decorrelationFactorFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPhaseRow::directionFromBin(EndianISStream& eiss) {
+void CalPhaseRow::directionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	direction = Angle::from1DBin(eiss);	
+	direction = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalPhaseRow::frequencyRangeFromBin(EndianISStream& eiss) {
+void CalPhaseRow::frequencyRangeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	frequencyRange = Frequency::from1DBin(eiss);	
+	frequencyRange = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalPhaseRow::integrationTimeFromBin(EndianISStream& eiss) {
+void CalPhaseRow::integrationTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		integrationTime =  Interval::fromBin(eiss);
+		integrationTime =  Interval::fromBin(eis);
 		
 	
 	
 }
-void CalPhaseRow::phaseFromBin(EndianISStream& eiss) {
+void CalPhaseRow::phaseFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1678,14 +1679,14 @@ void CalPhaseRow::phaseFromBin(EndianISStream& eiss) {
 	
 		phase.clear();
 		
-		unsigned int phaseDim1 = eiss.readInt();
-		unsigned int phaseDim2 = eiss.readInt();
+		unsigned int phaseDim1 = eis.readInt();
+		unsigned int phaseDim2 = eis.readInt();
 		vector <float> phaseAux1;
 		for (unsigned int i = 0; i < phaseDim1; i++) {
 			phaseAux1.clear();
 			for (unsigned int j = 0; j < phaseDim2 ; j++)			
 			
-			phaseAux1.push_back(eiss.readFloat());
+			phaseAux1.push_back(eis.readFloat());
 			
 			phase.push_back(phaseAux1);
 		}
@@ -1696,7 +1697,7 @@ void CalPhaseRow::phaseFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPhaseRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void CalPhaseRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1705,10 +1706,10 @@ void CalPhaseRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::literal(eiss.readString()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1716,7 +1717,7 @@ void CalPhaseRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPhaseRow::phaseRMSFromBin(EndianISStream& eiss) {
+void CalPhaseRow::phaseRMSFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1725,14 +1726,14 @@ void CalPhaseRow::phaseRMSFromBin(EndianISStream& eiss) {
 	
 		phaseRMS.clear();
 		
-		unsigned int phaseRMSDim1 = eiss.readInt();
-		unsigned int phaseRMSDim2 = eiss.readInt();
+		unsigned int phaseRMSDim1 = eis.readInt();
+		unsigned int phaseRMSDim2 = eis.readInt();
 		vector <float> phaseRMSAux1;
 		for (unsigned int i = 0; i < phaseRMSDim1; i++) {
 			phaseRMSAux1.clear();
 			for (unsigned int j = 0; j < phaseRMSDim2 ; j++)			
 			
-			phaseRMSAux1.push_back(eiss.readFloat());
+			phaseRMSAux1.push_back(eis.readFloat());
 			
 			phaseRMS.push_back(phaseRMSAux1);
 		}
@@ -1743,7 +1744,7 @@ void CalPhaseRow::phaseRMSFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPhaseRow::statPhaseRMSFromBin(EndianISStream& eiss) {
+void CalPhaseRow::statPhaseRMSFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1752,14 +1753,14 @@ void CalPhaseRow::statPhaseRMSFromBin(EndianISStream& eiss) {
 	
 		statPhaseRMS.clear();
 		
-		unsigned int statPhaseRMSDim1 = eiss.readInt();
-		unsigned int statPhaseRMSDim2 = eiss.readInt();
+		unsigned int statPhaseRMSDim1 = eis.readInt();
+		unsigned int statPhaseRMSDim2 = eis.readInt();
 		vector <float> statPhaseRMSAux1;
 		for (unsigned int i = 0; i < statPhaseRMSDim1; i++) {
 			statPhaseRMSAux1.clear();
 			for (unsigned int j = 0; j < statPhaseRMSDim2 ; j++)			
 			
-			statPhaseRMSAux1.push_back(eiss.readFloat());
+			statPhaseRMSAux1.push_back(eis.readFloat());
 			
 			statPhaseRMS.push_back(statPhaseRMSAux1);
 		}
@@ -1771,9 +1772,9 @@ void CalPhaseRow::statPhaseRMSFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalPhaseRow::correctionValidityFromBin(EndianISStream& eiss) {
+void CalPhaseRow::correctionValidityFromBin(EndianIStream& eis) {
 		
-	correctionValidityExists = eiss.readBoolean();
+	correctionValidityExists = eis.readBoolean();
 	if (correctionValidityExists) {
 		
 	
@@ -1783,10 +1784,10 @@ void CalPhaseRow::correctionValidityFromBin(EndianISStream& eiss) {
 	
 		correctionValidity.clear();
 		
-		unsigned int correctionValidityDim1 = eiss.readInt();
+		unsigned int correctionValidityDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < correctionValidityDim1; i++)
 			
-			correctionValidity.push_back(eiss.readBoolean());
+			correctionValidity.push_back(eis.readBoolean());
 			
 	
 
@@ -1798,19 +1799,19 @@ void CalPhaseRow::correctionValidityFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalPhaseRow* CalPhaseRow::fromBin(EndianISStream& eiss, CalPhaseTable& table, const vector<string>& attributesSeq) {
+	CalPhaseRow* CalPhaseRow::fromBin(EndianIStream& eis, CalPhaseTable& table, const vector<string>& attributesSeq) {
 		CalPhaseRow* row = new  CalPhaseRow(table);
 		
 		map<string, CalPhaseAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPhaseTable");
 			}
@@ -1818,10 +1819,193 @@ void CalPhaseRow::correctionValidityFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an BasebandName 
+	void CalPhaseRow::basebandNameFromText(const string & s) {
+		 
+		basebandName = ASDMValuesParser::parse<BasebandName>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalPhaseRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an AtmPhaseCorrection 
+	void CalPhaseRow::atmPhaseCorrectionFromText(const string & s) {
+		 
+		atmPhaseCorrection = ASDMValuesParser::parse<AtmPhaseCorrection>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPhaseRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPhaseRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPhaseRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPhaseRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalPhaseRow::numBaselineFromText(const string & s) {
+		 
+		numBaseline = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalPhaseRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalPhaseRow::ampliFromText(const string & s) {
+		 
+		ampli = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalPhaseRow::antennaNamesFromText(const string & s) {
+		 
+		antennaNames = ASDMValuesParser::parse2D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalPhaseRow::baselineLengthsFromText(const string & s) {
+		 
+		baselineLengths = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalPhaseRow::decorrelationFactorFromText(const string & s) {
+		 
+		decorrelationFactor = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPhaseRow::directionFromText(const string & s) {
+		 
+		direction = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalPhaseRow::frequencyRangeFromText(const string & s) {
+		 
+		frequencyRange = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void CalPhaseRow::integrationTimeFromText(const string & s) {
+		 
+		integrationTime = ASDMValuesParser::parse<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalPhaseRow::phaseFromText(const string & s) {
+		 
+		phase = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalPhaseRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalPhaseRow::phaseRMSFromText(const string & s) {
+		 
+		phaseRMS = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalPhaseRow::statPhaseRMSFromText(const string & s) {
+		 
+		statPhaseRMS = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an boolean 
+	void CalPhaseRow::correctionValidityFromText(const string & s) {
+		correctionValidityExists = true;
+		 
+		correctionValidity = ASDMValuesParser::parse1D<bool>(s);
+		
+	}
+	
+	
+	
+	void CalPhaseRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalPhaseAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalPhaseTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2459,9 +2643,9 @@ void CalPhaseRow::correctionValidityFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2535,9 +2719,10 @@ void CalPhaseRow::correctionValidityFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2711,6 +2896,95 @@ atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 	
 	 fromBinMethods["correctionValidity"] = &CalPhaseRow::correctionValidityFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["basebandName"] = &CalPhaseRow::basebandNameFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalPhaseRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["atmPhaseCorrection"] = &CalPhaseRow::atmPhaseCorrectionFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalPhaseRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalPhaseRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalPhaseRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalPhaseRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["numBaseline"] = &CalPhaseRow::numBaselineFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &CalPhaseRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["ampli"] = &CalPhaseRow::ampliFromText;
+		 
+	
+				 
+	fromTextMethods["antennaNames"] = &CalPhaseRow::antennaNamesFromText;
+		 
+	
+				 
+	fromTextMethods["baselineLengths"] = &CalPhaseRow::baselineLengthsFromText;
+		 
+	
+				 
+	fromTextMethods["decorrelationFactor"] = &CalPhaseRow::decorrelationFactorFromText;
+		 
+	
+				 
+	fromTextMethods["direction"] = &CalPhaseRow::directionFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyRange"] = &CalPhaseRow::frequencyRangeFromText;
+		 
+	
+				 
+	fromTextMethods["integrationTime"] = &CalPhaseRow::integrationTimeFromText;
+		 
+	
+				 
+	fromTextMethods["phase"] = &CalPhaseRow::phaseFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &CalPhaseRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["phaseRMS"] = &CalPhaseRow::phaseRMSFromText;
+		 
+	
+				 
+	fromTextMethods["statPhaseRMS"] = &CalPhaseRow::statPhaseRMSFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["correctionValidity"] = &CalPhaseRow::correctionValidityFromText;
+		 	
+		
 	}
 	
 	CalPhaseRow::CalPhaseRow (CalPhaseTable &t, CalPhaseRow &row) : table(t) {

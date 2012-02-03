@@ -129,9 +129,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file ExecBlock.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -150,17 +151,19 @@ class ScaleRow;
 	
 
 class ExecBlockRow;
-typedef void (ExecBlockRow::*ExecBlockAttributeFromBin) (EndianISStream& eiss);
+typedef void (ExecBlockRow::*ExecBlockAttributeFromBin) (EndianIStream& eis);
+typedef void (ExecBlockRow::*ExecBlockAttributeFromText) (const string& s);
 
 /**
  * The ExecBlockRow class is a row of a ExecBlockTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class ExecBlockRow {
 friend class asdm::ExecBlockTable;
 friend class asdm::RowTransformer<ExecBlockRow>;
+//friend class asdm::TableStreamReader<ExecBlockTable, ExecBlockRow>;
 
 public:
 
@@ -1362,7 +1365,55 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, ExecBlockAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void execBlockNumFromBin( EndianIStream& eis);
+void execBlockUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void configNameFromBin( EndianIStream& eis);
+void telescopeNameFromBin( EndianIStream& eis);
+void observerNameFromBin( EndianIStream& eis);
+void numObservingLogFromBin( EndianIStream& eis);
+void observingLogFromBin( EndianIStream& eis);
+void sessionReferenceFromBin( EndianIStream& eis);
+void baseRangeMinFromBin( EndianIStream& eis);
+void baseRangeMaxFromBin( EndianIStream& eis);
+void baseRmsMinorFromBin( EndianIStream& eis);
+void baseRmsMajorFromBin( EndianIStream& eis);
+void basePaFromBin( EndianIStream& eis);
+void abortedFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
+void sBSummaryIdFromBin( EndianIStream& eis);
+
+void releaseDateFromBin( EndianIStream& eis);
+void schedulerModeFromBin( EndianIStream& eis);
+void siteAltitudeFromBin( EndianIStream& eis);
+void siteLongitudeFromBin( EndianIStream& eis);
+void siteLatitudeFromBin( EndianIStream& eis);
+void observingScriptFromBin( EndianIStream& eis);
+void observingScriptUIDFromBin( EndianIStream& eis);
+void scaleIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the ExecBlockTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ExecBlockRow* fromBin(EndianIStream& eis, ExecBlockTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1787,41 +1838,131 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, ExecBlockAttributeFromBin> fromBinMethods;
-void execBlockIdFromBin( EndianISStream& eiss);
-void startTimeFromBin( EndianISStream& eiss);
-void endTimeFromBin( EndianISStream& eiss);
-void execBlockNumFromBin( EndianISStream& eiss);
-void execBlockUIDFromBin( EndianISStream& eiss);
-void projectUIDFromBin( EndianISStream& eiss);
-void configNameFromBin( EndianISStream& eiss);
-void telescopeNameFromBin( EndianISStream& eiss);
-void observerNameFromBin( EndianISStream& eiss);
-void numObservingLogFromBin( EndianISStream& eiss);
-void observingLogFromBin( EndianISStream& eiss);
-void sessionReferenceFromBin( EndianISStream& eiss);
-void baseRangeMinFromBin( EndianISStream& eiss);
-void baseRangeMaxFromBin( EndianISStream& eiss);
-void baseRmsMinorFromBin( EndianISStream& eiss);
-void baseRmsMajorFromBin( EndianISStream& eiss);
-void basePaFromBin( EndianISStream& eiss);
-void abortedFromBin( EndianISStream& eiss);
-void numAntennaFromBin( EndianISStream& eiss);
-void antennaIdFromBin( EndianISStream& eiss);
-void sBSummaryIdFromBin( EndianISStream& eiss);
+void execBlockIdFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void execBlockNumFromBin( EndianIStream& eis);
+void execBlockUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void configNameFromBin( EndianIStream& eis);
+void telescopeNameFromBin( EndianIStream& eis);
+void observerNameFromBin( EndianIStream& eis);
+void numObservingLogFromBin( EndianIStream& eis);
+void observingLogFromBin( EndianIStream& eis);
+void sessionReferenceFromBin( EndianIStream& eis);
+void baseRangeMinFromBin( EndianIStream& eis);
+void baseRangeMaxFromBin( EndianIStream& eis);
+void baseRmsMinorFromBin( EndianIStream& eis);
+void baseRmsMajorFromBin( EndianIStream& eis);
+void basePaFromBin( EndianIStream& eis);
+void abortedFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
+void sBSummaryIdFromBin( EndianIStream& eis);
 
-void releaseDateFromBin( EndianISStream& eiss);
-void schedulerModeFromBin( EndianISStream& eiss);
-void siteAltitudeFromBin( EndianISStream& eiss);
-void siteLongitudeFromBin( EndianISStream& eiss);
-void siteLatitudeFromBin( EndianISStream& eiss);
-void observingScriptFromBin( EndianISStream& eiss);
-void observingScriptUIDFromBin( EndianISStream& eiss);
-void scaleIdFromBin( EndianISStream& eiss);
+void releaseDateFromBin( EndianIStream& eis);
+void schedulerModeFromBin( EndianIStream& eis);
+void siteAltitudeFromBin( EndianIStream& eis);
+void siteLongitudeFromBin( EndianIStream& eis);
+void siteLatitudeFromBin( EndianIStream& eis);
+void observingScriptFromBin( EndianIStream& eis);
+void observingScriptUIDFromBin( EndianIStream& eis);
+void scaleIdFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, ExecBlockAttributeFromText> fromTextMethods;
+	
+void execBlockIdFromText (const string & s);
+	
+	
+void startTimeFromText (const string & s);
+	
+	
+void endTimeFromText (const string & s);
+	
+	
+void execBlockNumFromText (const string & s);
+	
+	
+	
+	
+void configNameFromText (const string & s);
+	
+	
+void telescopeNameFromText (const string & s);
+	
+	
+void observerNameFromText (const string & s);
+	
+	
+void numObservingLogFromText (const string & s);
+	
+	
+void observingLogFromText (const string & s);
+	
+	
+	
+void baseRangeMinFromText (const string & s);
+	
+	
+void baseRangeMaxFromText (const string & s);
+	
+	
+void baseRmsMinorFromText (const string & s);
+	
+	
+void baseRmsMajorFromText (const string & s);
+	
+	
+void basePaFromText (const string & s);
+	
+	
+void abortedFromText (const string & s);
+	
+	
+void numAntennaFromText (const string & s);
+	
+	
+void antennaIdFromText (const string & s);
+	
+	
+void sBSummaryIdFromText (const string & s);
+	
+
+	
+void releaseDateFromText (const string & s);
+	
+	
+void schedulerModeFromText (const string & s);
+	
+	
+void siteAltitudeFromText (const string & s);
+	
+	
+void siteLongitudeFromText (const string & s);
+	
+	
+void siteLatitudeFromText (const string & s);
+	
+	
+void observingScriptFromText (const string & s);
+	
+	
+	
+void scaleIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1830,14 +1971,14 @@ void scaleIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the ExecBlockTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static ExecBlockRow* fromBin(EndianISStream& eiss, ExecBlockTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static ExecBlockRow* fromBin(EndianIStream& eis, ExecBlockTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSyscalMethod::version() {
 	return SyscalMethodMod::version;
 	}
@@ -134,5 +133,25 @@ string CSyscalMethod::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SyscalMethod'.";
 	return oss.str();
+}
+
+namespace SyscalMethodMod {
+	std::ostream & operator << ( std::ostream & out, const SyscalMethod& value) {
+		out << CSyscalMethod::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SyscalMethod& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSyscalMethod::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

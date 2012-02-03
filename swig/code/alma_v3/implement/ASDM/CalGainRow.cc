@@ -63,6 +63,7 @@ using asdm::CalDataRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -702,125 +703,125 @@ namespace asdm {
 	
 	}
 	
-void CalGainRow::calDataIdFromBin(EndianISStream& eiss) {
+void CalGainRow::calDataIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalGainRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalGainRow::startValidTimeFromBin(EndianISStream& eiss) {
+void CalGainRow::calReductionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalGainRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalGainRow::gainFromBin(EndianISStream& eiss) {
+void CalGainRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalGainRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalGainRow::gainFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		gain =  eiss.readFloat();
-			
-		
-	
-	
-}
-void CalGainRow::gainValidFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		gainValid =  eiss.readBoolean();
+		gain =  eis.readFloat();
 			
 		
 	
 	
 }
-void CalGainRow::fitFromBin(EndianISStream& eiss) {
+void CalGainRow::gainValidFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		fit =  eiss.readFloat();
-			
-		
-	
-	
-}
-void CalGainRow::fitWeightFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		fitWeight =  eiss.readFloat();
+		gainValid =  eis.readBoolean();
 			
 		
 	
 	
 }
-void CalGainRow::totalGainValidFromBin(EndianISStream& eiss) {
+void CalGainRow::fitFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		totalGainValid =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void CalGainRow::totalFitFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		totalFit =  eiss.readFloat();
+		fit =  eis.readFloat();
 			
 		
 	
 	
 }
-void CalGainRow::totalFitWeightFromBin(EndianISStream& eiss) {
+void CalGainRow::fitWeightFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		totalFitWeight =  eiss.readFloat();
+		fitWeight =  eis.readFloat();
+			
+		
+	
+	
+}
+void CalGainRow::totalGainValidFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		totalGainValid =  eis.readBoolean();
+			
+		
+	
+	
+}
+void CalGainRow::totalFitFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		totalFit =  eis.readFloat();
+			
+		
+	
+	
+}
+void CalGainRow::totalFitWeightFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		totalFitWeight =  eis.readFloat();
 			
 		
 	
@@ -829,19 +830,19 @@ void CalGainRow::totalFitWeightFromBin(EndianISStream& eiss) {
 
 		
 	
-	CalGainRow* CalGainRow::fromBin(EndianISStream& eiss, CalGainTable& table, const vector<string>& attributesSeq) {
+	CalGainRow* CalGainRow::fromBin(EndianIStream& eis, CalGainTable& table, const vector<string>& attributesSeq) {
 		CalGainRow* row = new  CalGainRow(table);
 		
 		map<string, CalGainAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalGainTable");
 			}
@@ -849,10 +850,112 @@ void CalGainRow::totalFitWeightFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void CalGainRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalGainRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalGainRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalGainRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalGainRow::gainFromText(const string & s) {
+		 
+		gain = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalGainRow::gainValidFromText(const string & s) {
+		 
+		gainValid = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalGainRow::fitFromText(const string & s) {
+		 
+		fit = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalGainRow::fitWeightFromText(const string & s) {
+		 
+		fitWeight = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalGainRow::totalGainValidFromText(const string & s) {
+		 
+		totalGainValid = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalGainRow::totalFitFromText(const string & s) {
+		 
+		totalFit = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalGainRow::totalFitWeightFromText(const string & s) {
+		 
+		totalFitWeight = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+
+		
+	
+	void CalGainRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalGainAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalGainTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1143,9 +1246,9 @@ void CalGainRow::totalFitWeightFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1219,9 +1322,10 @@ void CalGainRow::totalFitWeightFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1334,6 +1438,55 @@ void CalGainRow::totalFitWeightFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["calDataId"] = &CalGainRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalGainRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalGainRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalGainRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["gain"] = &CalGainRow::gainFromText;
+		 
+	
+				 
+	fromTextMethods["gainValid"] = &CalGainRow::gainValidFromText;
+		 
+	
+				 
+	fromTextMethods["fit"] = &CalGainRow::fitFromText;
+		 
+	
+				 
+	fromTextMethods["fitWeight"] = &CalGainRow::fitWeightFromText;
+		 
+	
+				 
+	fromTextMethods["totalGainValid"] = &CalGainRow::totalGainValidFromText;
+		 
+	
+				 
+	fromTextMethods["totalFit"] = &CalGainRow::totalFitFromText;
+		 
+	
+				 
+	fromTextMethods["totalFitWeight"] = &CalGainRow::totalFitWeightFromText;
+		 
+	
+
+		
 	}
 	
 	CalGainRow::CalGainRow (CalGainTable &t, CalGainRow &row) : table(t) {

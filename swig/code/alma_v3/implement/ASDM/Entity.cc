@@ -244,14 +244,13 @@ namespace asdm {
     eoss.writeString(instanceVersion);
   }
 	
-  Entity Entity::fromBin(EndianISStream& eiss) {
+  Entity Entity::fromBin(EndianIStream& eis) {
     Entity entity;
-    entity.setEntityId(EntityId(eiss.readString()));
-    entity.setEntityIdEncrypted(eiss.readString());
-    entity.setEntityTypeName(eiss.readString());
-    entity.setEntityVersion(eiss.readString());
-    entity.setInstanceVersion(eiss.readString());
+    entity.setEntityId(EntityId(eis.readString()));
+    entity.setEntityIdEncrypted(eis.readString());
+    entity.setEntityTypeName(eis.readString());
+    entity.setEntityVersion(eis.readString());
+    entity.setInstanceVersion(eis.readString());
     return entity;
   }
-
 } // End namespace asdm

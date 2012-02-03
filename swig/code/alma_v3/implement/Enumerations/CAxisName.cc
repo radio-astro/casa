@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CAxisName::version() {
 	return AxisNameMod::version;
 	}
@@ -284,5 +283,25 @@ string CAxisName::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'AxisName'.";
 	return oss.str();
+}
+
+namespace AxisNameMod {
+	std::ostream & operator << ( std::ostream & out, const AxisName& value) {
+		out << CAxisName::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , AxisName& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CAxisName::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

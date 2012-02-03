@@ -87,9 +87,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalDevice.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -108,17 +109,19 @@ class FeedRow;
 	
 
 class CalDeviceRow;
-typedef void (CalDeviceRow::*CalDeviceAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalDeviceRow::*CalDeviceAttributeFromBin) (EndianIStream& eis);
+typedef void (CalDeviceRow::*CalDeviceAttributeFromText) (const string& s);
 
 /**
  * The CalDeviceRow class is a row of a CalDeviceTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalDeviceRow {
 friend class asdm::CalDeviceTable;
 friend class asdm::RowTransformer<CalDeviceRow>;
+//friend class asdm::TableStreamReader<CalDeviceTable, CalDeviceRow>;
 
 public:
 
@@ -663,7 +666,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalDeviceAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numCalloadFromBin( EndianIStream& eis);
+void calLoadNamesFromBin( EndianIStream& eis);
+
+void numReceptorFromBin( EndianIStream& eis);
+void calEffFromBin( EndianIStream& eis);
+void noiseCalFromBin( EndianIStream& eis);
+void coupledNoiseCalFromBin( EndianIStream& eis);
+void temperatureLoadFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalDeviceTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalDeviceRow* fromBin(EndianIStream& eis, CalDeviceTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -872,23 +905,67 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalDeviceAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void feedIdFromBin( EndianISStream& eiss);
-void numCalloadFromBin( EndianISStream& eiss);
-void calLoadNamesFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numCalloadFromBin( EndianIStream& eis);
+void calLoadNamesFromBin( EndianIStream& eis);
 
-void numReceptorFromBin( EndianISStream& eiss);
-void calEffFromBin( EndianISStream& eiss);
-void noiseCalFromBin( EndianISStream& eiss);
-void coupledNoiseCalFromBin( EndianISStream& eiss);
-void temperatureLoadFromBin( EndianISStream& eiss);
+void numReceptorFromBin( EndianIStream& eis);
+void calEffFromBin( EndianIStream& eis);
+void noiseCalFromBin( EndianIStream& eis);
+void coupledNoiseCalFromBin( EndianIStream& eis);
+void temperatureLoadFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalDeviceAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void feedIdFromText (const string & s);
+	
+	
+void numCalloadFromText (const string & s);
+	
+	
+void calLoadNamesFromText (const string & s);
+	
+
+	
+void numReceptorFromText (const string & s);
+	
+	
+void calEffFromText (const string & s);
+	
+	
+void noiseCalFromText (const string & s);
+	
+	
+void coupledNoiseCalFromText (const string & s);
+	
+	
+void temperatureLoadFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -897,14 +974,14 @@ void temperatureLoadFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalDeviceTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalDeviceRow* fromBin(EndianISStream& eiss, CalDeviceTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalDeviceRow* fromBin(EndianIStream& eis, CalDeviceTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

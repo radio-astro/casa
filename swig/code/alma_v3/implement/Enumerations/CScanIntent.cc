@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CScanIntent::version() {
 	return ScanIntentMod::version;
 	}
@@ -404,5 +403,25 @@ string CScanIntent::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'ScanIntent'.";
 	return oss.str();
+}
+
+namespace ScanIntentMod {
+	std::ostream & operator << ( std::ostream & out, const ScanIntent& value) {
+		out << CScanIntent::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , ScanIntent& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CScanIntent::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

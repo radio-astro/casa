@@ -8,6 +8,11 @@
 #include "EndianStream.h"
 #include "ConversionException.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#define READBUFFERSIZE ( 50 * 1024 * 1024 )
 namespace asdm {
   /**
    * A generic class to read a file containing an ASDM table as a stream.
@@ -30,12 +35,13 @@ namespace asdm {
    * @param T The parameter T must be the type of one of the tables which can be found in an ASDM (e.g. AntennaTable)
    * @param R The parameter R must be the type of the rows which make the content of a table of type T (e.g. AntennaRow is T is AntennaTable).
    */
+  
   template<class T, class R> class TableStreamReader {
   public:
     /**
      * An empty constructor.
      */
-    TableStreamReader(){currentState = S_CLOSED;}
+    TableStreamReader(){currentState = S_CLOSED; readBuffer = (char *) malloc (READBUFFERSIZE);}
 
     /**
      * The destructor.
@@ -54,12 +60,14 @@ namespace asdm {
       tableFile.open(tablePath.c_str(), ios::in|ios::binary);
       if (!tableFile.is_open())
 	throw asdm::ConversionException("Could not open file " + tablePath, T::name());
-      
+
+      //streambuf * sb_p = tableFile.rdbuf()->pubsetbuf(readBuffer, READBUFFERSIZE);
+      //cout << (unsigned long long) sb_p << endl;
+
       // Determine the size of the file.
       struct stat filestatus;
       stat( tablePath.c_str(), &filestatus);
       fileSizeInBytes = filestatus.st_size;
-      cout << "fileSizeInBytes=" << fileSizeInBytes << endl;
 
       // Locate the xmlPartMIMEHeader.
       std::string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
@@ -67,12 +75,12 @@ namespace asdm {
       std::istreambuf_iterator<char> BEGIN(tableFile.rdbuf());
       std::istreambuf_iterator<char> END;
       std::istreambuf_iterator<char> it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
-      if (tableFile.tellg() > 10000) { 
+      if ((it == END) || (tableFile.tellg() > 10000)) { 
 	tableFile.seekg(0);
 	xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\r\n\r\n";
 	it = BEGIN;
 	it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
-	if (tableFile.tellg() > 10000) 
+	if ((it == END) || (tableFile.tellg() > 10000)) 
 	  throw asdm::ConversionException("failed to detect the beginning of the XML header.", T::name());
       }
       // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
@@ -80,25 +88,25 @@ namespace asdm {
       std::string xmlHeader;
       CharCompAccumulator compaccumulator(&xmlHeader, &tableFile, 100000);
       ++it;
-       it = std::search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
-      if (it == END) 
+      it = std::search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+      if ((it == END) || (tableFile.tellg() > 100000)) 
 	throw asdm::ConversionException("failed to detect the beginning of the binary part", T::name());
       ++it;
-      cout << xmlHeader << endl;
+      xmlHeader.erase(xmlHeader.end() - (binPartMIMEHeader.size() + 1), xmlHeader.end());
+
       //
       // We have the xmlHeader , let's parse it.
       //
       xmlDoc *doc;
       doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
-      cout << "xml header parsed in memory" << endl;
       if ( doc == NULL ) 
-	throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Main");
+	throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", T::name());
           
       xmlNode* root_element = xmlDocGetRootElement(doc);
       if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
 	throw asdm::ConversionException("Failed to parse the xmlHeader into a DOM structure.", T::name());
     
-      const ByteOrder* byteOrder;
+      const ByteOrder* byteOrder = NULL;
       if ( std::string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
 	// Then it's an "old fashioned" MIME file for tables.
 	// Just try to deserialize it with Big_Endian for the bytes ordering.
@@ -151,16 +159,13 @@ namespace asdm {
       // Create an EndianIFStream from the substring containing the binary part.
       eifs = asdm::EndianIFStream (&tableFile, byteOrder);
     
-      cout << "About to read entity" << endl;
       asdm::Entity entity = Entity::fromBin((EndianIStream &)eifs);
     
       // We do nothing with that but we have to read it.
-      cout << "About to read containerEntity" << endl;
       asdm::Entity containerEntity = Entity::fromBin((EndianIStream &)eifs);
 
       // Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
       int numRows = ((EndianIStream &)eifs).readInt();
-      cout << "numRows =" << numRows << endl;
       
       // Memorize the starting point of rows.
       whereRowsStart = tableFile.tellg();
@@ -189,8 +194,9 @@ namespace asdm {
       checkState(T_READ, "TableStreamReader::nextNRows"); 
       clear();
       unsigned int nread = 0;
+      T& tableRef =  (T&) asdm.getTable(T::name());
       while ( hasRows() && nread < nRows ) {
-	rows.push_back(R::fromBin((EndianIStream&) eifs, (T&) asdm.getTable(T::name()), attributesSeq));
+	rows.push_back(R::fromBin((EndianIStream&) eifs, tableRef, attributesSeq));
 	nread++;
       }
       return rows;
@@ -210,8 +216,9 @@ namespace asdm {
       off_t whereAmI  = tableFile.tellg();
       if (!hasRows()) return rows;
 
+      T& tableRef = (T&) asdm.getTable(T::name());
       do {
-	rows.push_back(R::fromBin((EndianIStream&) eifs, (T&) asdm.getTable(T::name()), attributesSeq));
+	rows.push_back(R::fromBin((EndianIStream&) eifs, tableRef , attributesSeq));
       }
       while (((tableFile.tellg() - whereAmI) < nBytes) && hasRows());
       return rows;
@@ -232,7 +239,7 @@ namespace asdm {
       checkState(T_CLOSE, "TableStreamReader::close"); 
       clear();
       if (tableFile.is_open()) tableFile.close();
-
+      free(readBuffer);
       // Update the state.
       currentState = S_CLOSED;
     }
@@ -244,7 +251,9 @@ namespace asdm {
     asdm::EndianIFStream	eifs;
     std::vector<std::string>	attributesSeq;
     asdm::ASDM                  asdm;
-    std::vector<R*>		rows;    
+    std::vector<R*>		rows;
+
+    char*                       readBuffer;
 
     streampos whereRowsStart;
 

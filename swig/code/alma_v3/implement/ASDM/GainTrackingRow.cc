@@ -69,6 +69,7 @@ using asdm::FeedRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -856,61 +857,61 @@ namespace asdm {
 
 	}
 	
-void GainTrackingRow::antennaIdFromBin(EndianISStream& eiss) {
+void GainTrackingRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void GainTrackingRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void GainTrackingRow::timeIntervalFromBin(EndianISStream& eiss) {
+void GainTrackingRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void GainTrackingRow::feedIdFromBin(EndianISStream& eiss) {
+void GainTrackingRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void GainTrackingRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void GainTrackingRow::numReceptorFromBin(EndianISStream& eiss) {
+void GainTrackingRow::numReceptorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
 	
 }
-void GainTrackingRow::attenuatorFromBin(EndianISStream& eiss) {
+void GainTrackingRow::attenuatorFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -919,10 +920,10 @@ void GainTrackingRow::attenuatorFromBin(EndianISStream& eiss) {
 	
 		attenuator.clear();
 		
-		unsigned int attenuatorDim1 = eiss.readInt();
+		unsigned int attenuatorDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < attenuatorDim1; i++)
 			
-			attenuator.push_back(eiss.readFloat());
+			attenuator.push_back(eis.readFloat());
 			
 	
 
@@ -930,7 +931,7 @@ void GainTrackingRow::attenuatorFromBin(EndianISStream& eiss) {
 	
 	
 }
-void GainTrackingRow::polarizationTypeFromBin(EndianISStream& eiss) {
+void GainTrackingRow::polarizationTypeFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -939,10 +940,10 @@ void GainTrackingRow::polarizationTypeFromBin(EndianISStream& eiss) {
 	
 		polarizationType.clear();
 		
-		unsigned int polarizationTypeDim1 = eiss.readInt();
+		unsigned int polarizationTypeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypeDim1; i++)
 			
-			polarizationType.push_back(CPolarizationType::literal(eiss.readString()));
+			polarizationType.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -951,16 +952,16 @@ void GainTrackingRow::polarizationTypeFromBin(EndianISStream& eiss) {
 	
 }
 
-void GainTrackingRow::samplingLevelFromBin(EndianISStream& eiss) {
+void GainTrackingRow::samplingLevelFromBin(EndianIStream& eis) {
 		
-	samplingLevelExists = eiss.readBoolean();
+	samplingLevelExists = eis.readBoolean();
 	if (samplingLevelExists) {
 		
 	
 	
 		
 			
-		samplingLevel =  eiss.readFloat();
+		samplingLevel =  eis.readFloat();
 			
 		
 	
@@ -968,16 +969,16 @@ void GainTrackingRow::samplingLevelFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void GainTrackingRow::numAttFreqFromBin(EndianISStream& eiss) {
+void GainTrackingRow::numAttFreqFromBin(EndianIStream& eis) {
 		
-	numAttFreqExists = eiss.readBoolean();
+	numAttFreqExists = eis.readBoolean();
 	if (numAttFreqExists) {
 		
 	
 	
 		
 			
-		numAttFreq =  eiss.readInt();
+		numAttFreq =  eis.readInt();
 			
 		
 	
@@ -985,9 +986,9 @@ void GainTrackingRow::numAttFreqFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void GainTrackingRow::attFreqFromBin(EndianISStream& eiss) {
+void GainTrackingRow::attFreqFromBin(EndianIStream& eis) {
 		
-	attFreqExists = eiss.readBoolean();
+	attFreqExists = eis.readBoolean();
 	if (attFreqExists) {
 		
 	
@@ -997,10 +998,10 @@ void GainTrackingRow::attFreqFromBin(EndianISStream& eiss) {
 	
 		attFreq.clear();
 		
-		unsigned int attFreqDim1 = eiss.readInt();
+		unsigned int attFreqDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < attFreqDim1; i++)
 			
-			attFreq.push_back(eiss.readDouble());
+			attFreq.push_back(eis.readDouble());
 			
 	
 
@@ -1010,9 +1011,9 @@ void GainTrackingRow::attFreqFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
+void GainTrackingRow::attSpectrumFromBin(EndianIStream& eis) {
 		
-	attSpectrumExists = eiss.readBoolean();
+	attSpectrumExists = eis.readBoolean();
 	if (attSpectrumExists) {
 		
 	
@@ -1020,7 +1021,7 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 		
 			
 	
-	attSpectrum = Complex::from1DBin(eiss);	
+	attSpectrum = Complex::from1DBin(eis);	
 	
 
 		
@@ -1031,19 +1032,19 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 }
 	
 	
-	GainTrackingRow* GainTrackingRow::fromBin(EndianISStream& eiss, GainTrackingTable& table, const vector<string>& attributesSeq) {
+	GainTrackingRow* GainTrackingRow::fromBin(EndianIStream& eis, GainTrackingTable& table, const vector<string>& attributesSeq) {
 		GainTrackingRow* row = new  GainTrackingRow(table);
 		
 		map<string, GainTrackingAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "GainTrackingTable");
 			}
@@ -1051,10 +1052,116 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void GainTrackingRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void GainTrackingRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void GainTrackingRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void GainTrackingRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void GainTrackingRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void GainTrackingRow::attenuatorFromText(const string & s) {
+		 
+		attenuator = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void GainTrackingRow::polarizationTypeFromText(const string & s) {
+		 
+		polarizationType = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an float 
+	void GainTrackingRow::samplingLevelFromText(const string & s) {
+		samplingLevelExists = true;
+		 
+		samplingLevel = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void GainTrackingRow::numAttFreqFromText(const string & s) {
+		numAttFreqExists = true;
+		 
+		numAttFreq = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void GainTrackingRow::attFreqFromText(const string & s) {
+		attFreqExists = true;
+		 
+		attFreq = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an Complex 
+	void GainTrackingRow::attSpectrumFromText(const string & s) {
+		attSpectrumExists = true;
+		 
+		attSpectrum = ASDMValuesParser::parse1D<Complex>(s);
+		
+	}
+	
+	
+	
+	void GainTrackingRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, GainTrackingAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "GainTrackingTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1377,9 +1484,9 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1489,9 +1596,10 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1629,6 +1737,55 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	 fromBinMethods["attFreq"] = &GainTrackingRow::attFreqFromBin; 
 	 fromBinMethods["attSpectrum"] = &GainTrackingRow::attSpectrumFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &GainTrackingRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &GainTrackingRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &GainTrackingRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &GainTrackingRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &GainTrackingRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["attenuator"] = &GainTrackingRow::attenuatorFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationType"] = &GainTrackingRow::polarizationTypeFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["samplingLevel"] = &GainTrackingRow::samplingLevelFromText;
+		 	
+	 
+				
+	fromTextMethods["numAttFreq"] = &GainTrackingRow::numAttFreqFromText;
+		 	
+	 
+				
+	fromTextMethods["attFreq"] = &GainTrackingRow::attFreqFromText;
+		 	
+	 
+				
+	fromTextMethods["attSpectrum"] = &GainTrackingRow::attSpectrumFromText;
+		 	
+		
 	}
 	
 	GainTrackingRow::GainTrackingRow (GainTrackingTable &t, GainTrackingRow &row) : table(t) {

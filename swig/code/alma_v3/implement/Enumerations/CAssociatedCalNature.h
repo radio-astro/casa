@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -66,6 +67,11 @@ namespace AssociatedCalNatureMod
   typedef AssociatedCalNature &AssociatedCalNature_out;
 } 
 #endif
+
+namespace AssociatedCalNatureMod {
+	std::ostream & operator << ( std::ostream & out, const AssociatedCalNature& value);
+	std::istream & operator >> ( std::istream & in , AssociatedCalNature& value );
+}
 
 /** 
   * A helper class for the enumeration AssociatedCalNature.

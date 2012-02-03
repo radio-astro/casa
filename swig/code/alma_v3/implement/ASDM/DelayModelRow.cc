@@ -69,6 +69,7 @@ using asdm::FieldRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -2249,49 +2250,49 @@ namespace asdm {
 
 	}
 	
-void DelayModelRow::antennaIdFromBin(EndianISStream& eiss) {
+void DelayModelRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void DelayModelRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void DelayModelRow::timeIntervalFromBin(EndianISStream& eiss) {
+void DelayModelRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void DelayModelRow::numPolyFromBin(EndianISStream& eiss) {
+void DelayModelRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void DelayModelRow::numPolyFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numPoly =  eiss.readInt();
+		numPoly =  eis.readInt();
 			
 		
 	
 	
 }
-void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::phaseDelayFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -2300,10 +2301,10 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 		phaseDelay.clear();
 		
-		unsigned int phaseDelayDim1 = eiss.readInt();
+		unsigned int phaseDelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < phaseDelayDim1; i++)
 			
-			phaseDelay.push_back(eiss.readDouble());
+			phaseDelay.push_back(eis.readDouble());
 			
 	
 
@@ -2311,7 +2312,7 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 	
 }
-void DelayModelRow::phaseDelayRateFromBin(EndianISStream& eiss) {
+void DelayModelRow::phaseDelayRateFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -2320,10 +2321,10 @@ void DelayModelRow::phaseDelayRateFromBin(EndianISStream& eiss) {
 	
 		phaseDelayRate.clear();
 		
-		unsigned int phaseDelayRateDim1 = eiss.readInt();
+		unsigned int phaseDelayRateDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < phaseDelayRateDim1; i++)
 			
-			phaseDelayRate.push_back(eiss.readDouble());
+			phaseDelayRate.push_back(eis.readDouble());
 			
 	
 
@@ -2331,7 +2332,7 @@ void DelayModelRow::phaseDelayRateFromBin(EndianISStream& eiss) {
 	
 	
 }
-void DelayModelRow::groupDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::groupDelayFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -2340,10 +2341,10 @@ void DelayModelRow::groupDelayFromBin(EndianISStream& eiss) {
 	
 		groupDelay.clear();
 		
-		unsigned int groupDelayDim1 = eiss.readInt();
+		unsigned int groupDelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < groupDelayDim1; i++)
 			
-			groupDelay.push_back(eiss.readDouble());
+			groupDelay.push_back(eis.readDouble());
 			
 	
 
@@ -2351,7 +2352,7 @@ void DelayModelRow::groupDelayFromBin(EndianISStream& eiss) {
 	
 	
 }
-void DelayModelRow::groupDelayRateFromBin(EndianISStream& eiss) {
+void DelayModelRow::groupDelayRateFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -2360,10 +2361,10 @@ void DelayModelRow::groupDelayRateFromBin(EndianISStream& eiss) {
 	
 		groupDelayRate.clear();
 		
-		unsigned int groupDelayRateDim1 = eiss.readInt();
+		unsigned int groupDelayRateDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < groupDelayRateDim1; i++)
 			
-			groupDelayRate.push_back(eiss.readDouble());
+			groupDelayRate.push_back(eis.readDouble());
 			
 	
 
@@ -2371,42 +2372,42 @@ void DelayModelRow::groupDelayRateFromBin(EndianISStream& eiss) {
 	
 	
 }
-void DelayModelRow::fieldIdFromBin(EndianISStream& eiss) {
+void DelayModelRow::fieldIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		fieldId =  Tag::fromBin(eiss);
+		fieldId =  Tag::fromBin(eis);
 		
 	
 	
 }
 
-void DelayModelRow::timeOriginFromBin(EndianISStream& eiss) {
+void DelayModelRow::timeOriginFromBin(EndianIStream& eis) {
 		
-	timeOriginExists = eiss.readBoolean();
+	timeOriginExists = eis.readBoolean();
 	if (timeOriginExists) {
 		
 	
 		
 		
-		timeOrigin =  ArrayTime::fromBin(eiss);
+		timeOrigin =  ArrayTime::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void DelayModelRow::atmosphericGroupDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::atmosphericGroupDelayFromBin(EndianIStream& eis) {
 		
-	atmosphericGroupDelayExists = eiss.readBoolean();
+	atmosphericGroupDelayExists = eis.readBoolean();
 	if (atmosphericGroupDelayExists) {
 		
 	
 	
 		
 			
-		atmosphericGroupDelay =  eiss.readDouble();
+		atmosphericGroupDelay =  eis.readDouble();
 			
 		
 	
@@ -2414,16 +2415,16 @@ void DelayModelRow::atmosphericGroupDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::atmosphericGroupDelayRateFromBin(EndianISStream& eiss) {
+void DelayModelRow::atmosphericGroupDelayRateFromBin(EndianIStream& eis) {
 		
-	atmosphericGroupDelayRateExists = eiss.readBoolean();
+	atmosphericGroupDelayRateExists = eis.readBoolean();
 	if (atmosphericGroupDelayRateExists) {
 		
 	
 	
 		
 			
-		atmosphericGroupDelayRate =  eiss.readDouble();
+		atmosphericGroupDelayRate =  eis.readDouble();
 			
 		
 	
@@ -2431,16 +2432,16 @@ void DelayModelRow::atmosphericGroupDelayRateFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::geometricDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::geometricDelayFromBin(EndianIStream& eis) {
 		
-	geometricDelayExists = eiss.readBoolean();
+	geometricDelayExists = eis.readBoolean();
 	if (geometricDelayExists) {
 		
 	
 	
 		
 			
-		geometricDelay =  eiss.readDouble();
+		geometricDelay =  eis.readDouble();
 			
 		
 	
@@ -2448,16 +2449,16 @@ void DelayModelRow::geometricDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::geometricDelayRateFromBin(EndianISStream& eiss) {
+void DelayModelRow::geometricDelayRateFromBin(EndianIStream& eis) {
 		
-	geometricDelayRateExists = eiss.readBoolean();
+	geometricDelayRateExists = eis.readBoolean();
 	if (geometricDelayRateExists) {
 		
 	
 	
 		
 			
-		geometricDelayRate =  eiss.readDouble();
+		geometricDelayRate =  eis.readDouble();
 			
 		
 	
@@ -2465,16 +2466,16 @@ void DelayModelRow::geometricDelayRateFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::numLOFromBin(EndianISStream& eiss) {
+void DelayModelRow::numLOFromBin(EndianIStream& eis) {
 		
-	numLOExists = eiss.readBoolean();
+	numLOExists = eis.readBoolean();
 	if (numLOExists) {
 		
 	
 	
 		
 			
-		numLO =  eiss.readInt();
+		numLO =  eis.readInt();
 			
 		
 	
@@ -2482,9 +2483,9 @@ void DelayModelRow::numLOFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::LOOffsetFromBin(EndianISStream& eiss) {
+void DelayModelRow::LOOffsetFromBin(EndianIStream& eis) {
 		
-	LOOffsetExists = eiss.readBoolean();
+	LOOffsetExists = eis.readBoolean();
 	if (LOOffsetExists) {
 		
 	
@@ -2492,7 +2493,7 @@ void DelayModelRow::LOOffsetFromBin(EndianISStream& eiss) {
 		
 			
 	
-	LOOffset = Frequency::from1DBin(eiss);	
+	LOOffset = Frequency::from1DBin(eis);	
 	
 
 		
@@ -2501,9 +2502,9 @@ void DelayModelRow::LOOffsetFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::LOOffsetRateFromBin(EndianISStream& eiss) {
+void DelayModelRow::LOOffsetRateFromBin(EndianIStream& eis) {
 		
-	LOOffsetRateExists = eiss.readBoolean();
+	LOOffsetRateExists = eis.readBoolean();
 	if (LOOffsetRateExists) {
 		
 	
@@ -2511,7 +2512,7 @@ void DelayModelRow::LOOffsetRateFromBin(EndianISStream& eiss) {
 		
 			
 	
-	LOOffsetRate = Frequency::from1DBin(eiss);	
+	LOOffsetRate = Frequency::from1DBin(eis);	
 	
 
 		
@@ -2520,16 +2521,16 @@ void DelayModelRow::LOOffsetRateFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::dispersiveDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::dispersiveDelayFromBin(EndianIStream& eis) {
 		
-	dispersiveDelayExists = eiss.readBoolean();
+	dispersiveDelayExists = eis.readBoolean();
 	if (dispersiveDelayExists) {
 		
 	
 	
 		
 			
-		dispersiveDelay =  eiss.readDouble();
+		dispersiveDelay =  eis.readDouble();
 			
 		
 	
@@ -2537,16 +2538,16 @@ void DelayModelRow::dispersiveDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::dispersiveDelayRateFromBin(EndianISStream& eiss) {
+void DelayModelRow::dispersiveDelayRateFromBin(EndianIStream& eis) {
 		
-	dispersiveDelayRateExists = eiss.readBoolean();
+	dispersiveDelayRateExists = eis.readBoolean();
 	if (dispersiveDelayRateExists) {
 		
 	
 	
 		
 			
-		dispersiveDelayRate =  eiss.readDouble();
+		dispersiveDelayRate =  eis.readDouble();
 			
 		
 	
@@ -2554,16 +2555,16 @@ void DelayModelRow::dispersiveDelayRateFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::atmosphericDryDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::atmosphericDryDelayFromBin(EndianIStream& eis) {
 		
-	atmosphericDryDelayExists = eiss.readBoolean();
+	atmosphericDryDelayExists = eis.readBoolean();
 	if (atmosphericDryDelayExists) {
 		
 	
 	
 		
 			
-		atmosphericDryDelay =  eiss.readDouble();
+		atmosphericDryDelay =  eis.readDouble();
 			
 		
 	
@@ -2571,16 +2572,16 @@ void DelayModelRow::atmosphericDryDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::atmosphericWetDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::atmosphericWetDelayFromBin(EndianIStream& eis) {
 		
-	atmosphericWetDelayExists = eiss.readBoolean();
+	atmosphericWetDelayExists = eis.readBoolean();
 	if (atmosphericWetDelayExists) {
 		
 	
 	
 		
 			
-		atmosphericWetDelay =  eiss.readDouble();
+		atmosphericWetDelay =  eis.readDouble();
 			
 		
 	
@@ -2588,16 +2589,16 @@ void DelayModelRow::atmosphericWetDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::padDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::padDelayFromBin(EndianIStream& eis) {
 		
-	padDelayExists = eiss.readBoolean();
+	padDelayExists = eis.readBoolean();
 	if (padDelayExists) {
 		
 	
 	
 		
 			
-		padDelay =  eiss.readDouble();
+		padDelay =  eis.readDouble();
 			
 		
 	
@@ -2605,16 +2606,16 @@ void DelayModelRow::padDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::antennaDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::antennaDelayFromBin(EndianIStream& eis) {
 		
-	antennaDelayExists = eiss.readBoolean();
+	antennaDelayExists = eis.readBoolean();
 	if (antennaDelayExists) {
 		
 	
 	
 		
 			
-		antennaDelay =  eiss.readDouble();
+		antennaDelay =  eis.readDouble();
 			
 		
 	
@@ -2622,16 +2623,16 @@ void DelayModelRow::antennaDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::numReceptorFromBin(EndianISStream& eiss) {
+void DelayModelRow::numReceptorFromBin(EndianIStream& eis) {
 		
-	numReceptorExists = eiss.readBoolean();
+	numReceptorExists = eis.readBoolean();
 	if (numReceptorExists) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
@@ -2639,9 +2640,9 @@ void DelayModelRow::numReceptorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
+void DelayModelRow::polarizationTypeFromBin(EndianIStream& eis) {
 		
-	polarizationTypeExists = eiss.readBoolean();
+	polarizationTypeExists = eis.readBoolean();
 	if (polarizationTypeExists) {
 		
 	
@@ -2651,10 +2652,10 @@ void DelayModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
 	
 		polarizationType.clear();
 		
-		unsigned int polarizationTypeDim1 = eiss.readInt();
+		unsigned int polarizationTypeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypeDim1; i++)
 			
-			polarizationType.push_back(CPolarizationType::literal(eiss.readString()));
+			polarizationType.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -2664,9 +2665,9 @@ void DelayModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::electronicDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::electronicDelayFromBin(EndianIStream& eis) {
 		
-	electronicDelayExists = eiss.readBoolean();
+	electronicDelayExists = eis.readBoolean();
 	if (electronicDelayExists) {
 		
 	
@@ -2676,10 +2677,10 @@ void DelayModelRow::electronicDelayFromBin(EndianISStream& eiss) {
 	
 		electronicDelay.clear();
 		
-		unsigned int electronicDelayDim1 = eiss.readInt();
+		unsigned int electronicDelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < electronicDelayDim1; i++)
 			
-			electronicDelay.push_back(eiss.readDouble());
+			electronicDelay.push_back(eis.readDouble());
 			
 	
 
@@ -2689,9 +2690,9 @@ void DelayModelRow::electronicDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::electronicDelayRateFromBin(EndianISStream& eiss) {
+void DelayModelRow::electronicDelayRateFromBin(EndianIStream& eis) {
 		
-	electronicDelayRateExists = eiss.readBoolean();
+	electronicDelayRateExists = eis.readBoolean();
 	if (electronicDelayRateExists) {
 		
 	
@@ -2701,10 +2702,10 @@ void DelayModelRow::electronicDelayRateFromBin(EndianISStream& eiss) {
 	
 		electronicDelayRate.clear();
 		
-		unsigned int electronicDelayRateDim1 = eiss.readInt();
+		unsigned int electronicDelayRateDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < electronicDelayRateDim1; i++)
 			
-			electronicDelayRate.push_back(eiss.readDouble());
+			electronicDelayRate.push_back(eis.readDouble());
 			
 	
 
@@ -2714,9 +2715,9 @@ void DelayModelRow::electronicDelayRateFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::receiverDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::receiverDelayFromBin(EndianIStream& eis) {
 		
-	receiverDelayExists = eiss.readBoolean();
+	receiverDelayExists = eis.readBoolean();
 	if (receiverDelayExists) {
 		
 	
@@ -2726,10 +2727,10 @@ void DelayModelRow::receiverDelayFromBin(EndianISStream& eiss) {
 	
 		receiverDelay.clear();
 		
-		unsigned int receiverDelayDim1 = eiss.readInt();
+		unsigned int receiverDelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < receiverDelayDim1; i++)
 			
-			receiverDelay.push_back(eiss.readDouble());
+			receiverDelay.push_back(eis.readDouble());
 			
 	
 
@@ -2739,9 +2740,9 @@ void DelayModelRow::receiverDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::IFDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::IFDelayFromBin(EndianIStream& eis) {
 		
-	IFDelayExists = eiss.readBoolean();
+	IFDelayExists = eis.readBoolean();
 	if (IFDelayExists) {
 		
 	
@@ -2751,10 +2752,10 @@ void DelayModelRow::IFDelayFromBin(EndianISStream& eiss) {
 	
 		IFDelay.clear();
 		
-		unsigned int IFDelayDim1 = eiss.readInt();
+		unsigned int IFDelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < IFDelayDim1; i++)
 			
-			IFDelay.push_back(eiss.readDouble());
+			IFDelay.push_back(eis.readDouble());
 			
 	
 
@@ -2764,9 +2765,9 @@ void DelayModelRow::IFDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::LODelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::LODelayFromBin(EndianIStream& eis) {
 		
-	LODelayExists = eiss.readBoolean();
+	LODelayExists = eis.readBoolean();
 	if (LODelayExists) {
 		
 	
@@ -2776,10 +2777,10 @@ void DelayModelRow::LODelayFromBin(EndianISStream& eiss) {
 	
 		LODelay.clear();
 		
-		unsigned int LODelayDim1 = eiss.readInt();
+		unsigned int LODelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < LODelayDim1; i++)
 			
-			LODelay.push_back(eiss.readDouble());
+			LODelay.push_back(eis.readDouble());
 			
 	
 
@@ -2789,16 +2790,16 @@ void DelayModelRow::LODelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void DelayModelRow::crossPolarizationDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::crossPolarizationDelayFromBin(EndianIStream& eis) {
 		
-	crossPolarizationDelayExists = eiss.readBoolean();
+	crossPolarizationDelayExists = eis.readBoolean();
 	if (crossPolarizationDelayExists) {
 		
 	
 	
 		
 			
-		crossPolarizationDelay =  eiss.readDouble();
+		crossPolarizationDelay =  eis.readDouble();
 			
 		
 	
@@ -2808,19 +2809,19 @@ void DelayModelRow::crossPolarizationDelayFromBin(EndianISStream& eiss) {
 }
 	
 	
-	DelayModelRow* DelayModelRow::fromBin(EndianISStream& eiss, DelayModelTable& table, const vector<string>& attributesSeq) {
+	DelayModelRow* DelayModelRow::fromBin(EndianIStream& eis, DelayModelTable& table, const vector<string>& attributesSeq) {
 		DelayModelRow* row = new  DelayModelRow(table);
 		
 		map<string, DelayModelAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DelayModelTable");
 			}
@@ -2828,10 +2829,294 @@ void DelayModelRow::crossPolarizationDelayFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void DelayModelRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void DelayModelRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void DelayModelRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DelayModelRow::numPolyFromText(const string & s) {
+		 
+		numPoly = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::phaseDelayFromText(const string & s) {
+		 
+		phaseDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::phaseDelayRateFromText(const string & s) {
+		 
+		phaseDelayRate = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::groupDelayFromText(const string & s) {
+		 
+		groupDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::groupDelayRateFromText(const string & s) {
+		 
+		groupDelayRate = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void DelayModelRow::fieldIdFromText(const string & s) {
+		 
+		fieldId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an ArrayTime 
+	void DelayModelRow::timeOriginFromText(const string & s) {
+		timeOriginExists = true;
+		 
+		timeOrigin = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericGroupDelayFromText(const string & s) {
+		atmosphericGroupDelayExists = true;
+		 
+		atmosphericGroupDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericGroupDelayRateFromText(const string & s) {
+		atmosphericGroupDelayRateExists = true;
+		 
+		atmosphericGroupDelayRate = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::geometricDelayFromText(const string & s) {
+		geometricDelayExists = true;
+		 
+		geometricDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::geometricDelayRateFromText(const string & s) {
+		geometricDelayRateExists = true;
+		 
+		geometricDelayRate = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DelayModelRow::numLOFromText(const string & s) {
+		numLOExists = true;
+		 
+		numLO = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void DelayModelRow::LOOffsetFromText(const string & s) {
+		LOOffsetExists = true;
+		 
+		LOOffset = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void DelayModelRow::LOOffsetRateFromText(const string & s) {
+		LOOffsetRateExists = true;
+		 
+		LOOffsetRate = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::dispersiveDelayFromText(const string & s) {
+		dispersiveDelayExists = true;
+		 
+		dispersiveDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::dispersiveDelayRateFromText(const string & s) {
+		dispersiveDelayRateExists = true;
+		 
+		dispersiveDelayRate = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericDryDelayFromText(const string & s) {
+		atmosphericDryDelayExists = true;
+		 
+		atmosphericDryDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericWetDelayFromText(const string & s) {
+		atmosphericWetDelayExists = true;
+		 
+		atmosphericWetDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::padDelayFromText(const string & s) {
+		padDelayExists = true;
+		 
+		padDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::antennaDelayFromText(const string & s) {
+		antennaDelayExists = true;
+		 
+		antennaDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DelayModelRow::numReceptorFromText(const string & s) {
+		numReceptorExists = true;
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void DelayModelRow::polarizationTypeFromText(const string & s) {
+		polarizationTypeExists = true;
+		 
+		polarizationType = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::electronicDelayFromText(const string & s) {
+		electronicDelayExists = true;
+		 
+		electronicDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::electronicDelayRateFromText(const string & s) {
+		electronicDelayRateExists = true;
+		 
+		electronicDelayRate = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::receiverDelayFromText(const string & s) {
+		receiverDelayExists = true;
+		 
+		receiverDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::IFDelayFromText(const string & s) {
+		IFDelayExists = true;
+		 
+		IFDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::LODelayFromText(const string & s) {
+		LODelayExists = true;
+		 
+		LODelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::crossPolarizationDelayFromText(const string & s) {
+		crossPolarizationDelayExists = true;
+		 
+		crossPolarizationDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	
+	void DelayModelRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, DelayModelAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "DelayModelTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -4064,9 +4349,9 @@ void DelayModelRow::crossPolarizationDelayFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -4172,9 +4457,10 @@ void DelayModelRow::crossPolarizationDelayFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -4448,6 +4734,135 @@ void DelayModelRow::crossPolarizationDelayFromBin(EndianISStream& eiss) {
 	 fromBinMethods["LODelay"] = &DelayModelRow::LODelayFromBin; 
 	 fromBinMethods["crossPolarizationDelay"] = &DelayModelRow::crossPolarizationDelayFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &DelayModelRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &DelayModelRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &DelayModelRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["numPoly"] = &DelayModelRow::numPolyFromText;
+		 
+	
+				 
+	fromTextMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromText;
+		 
+	
+				 
+	fromTextMethods["phaseDelayRate"] = &DelayModelRow::phaseDelayRateFromText;
+		 
+	
+				 
+	fromTextMethods["groupDelay"] = &DelayModelRow::groupDelayFromText;
+		 
+	
+				 
+	fromTextMethods["groupDelayRate"] = &DelayModelRow::groupDelayRateFromText;
+		 
+	
+				 
+	fromTextMethods["fieldId"] = &DelayModelRow::fieldIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["timeOrigin"] = &DelayModelRow::timeOriginFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericGroupDelay"] = &DelayModelRow::atmosphericGroupDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericGroupDelayRate"] = &DelayModelRow::atmosphericGroupDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["geometricDelay"] = &DelayModelRow::geometricDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["geometricDelayRate"] = &DelayModelRow::geometricDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["numLO"] = &DelayModelRow::numLOFromText;
+		 	
+	 
+				
+	fromTextMethods["LOOffset"] = &DelayModelRow::LOOffsetFromText;
+		 	
+	 
+				
+	fromTextMethods["LOOffsetRate"] = &DelayModelRow::LOOffsetRateFromText;
+		 	
+	 
+				
+	fromTextMethods["dispersiveDelay"] = &DelayModelRow::dispersiveDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["dispersiveDelayRate"] = &DelayModelRow::dispersiveDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericDryDelay"] = &DelayModelRow::atmosphericDryDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericWetDelay"] = &DelayModelRow::atmosphericWetDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["padDelay"] = &DelayModelRow::padDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["antennaDelay"] = &DelayModelRow::antennaDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["numReceptor"] = &DelayModelRow::numReceptorFromText;
+		 	
+	 
+				
+	fromTextMethods["polarizationType"] = &DelayModelRow::polarizationTypeFromText;
+		 	
+	 
+				
+	fromTextMethods["electronicDelay"] = &DelayModelRow::electronicDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["electronicDelayRate"] = &DelayModelRow::electronicDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["receiverDelay"] = &DelayModelRow::receiverDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["IFDelay"] = &DelayModelRow::IFDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["LODelay"] = &DelayModelRow::LODelayFromText;
+		 	
+	 
+				
+	fromTextMethods["crossPolarizationDelay"] = &DelayModelRow::crossPolarizationDelayFromText;
+		 	
+		
 	}
 	
 	DelayModelRow::DelayModelRow (DelayModelTable &t, DelayModelRow &row) : table(t) {

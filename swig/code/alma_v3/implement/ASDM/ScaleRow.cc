@@ -51,6 +51,7 @@ using asdm::ScaleTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -406,59 +407,59 @@ namespace asdm {
 	
 	}
 	
-void ScaleRow::scaleIdFromBin(EndianISStream& eiss) {
+void ScaleRow::scaleIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		scaleId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void ScaleRow::timeScaleFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		timeScale = CTimeScale::literal(eiss.readString());
-			
+		scaleId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void ScaleRow::crossDataScaleFromBin(EndianISStream& eiss) {
+void ScaleRow::timeScaleFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		crossDataScale = CDataScale::literal(eiss.readString());
+		timeScale = CTimeScale::literal(eis.readString());
 			
 		
 	
 	
 }
-void ScaleRow::autoDataScaleFromBin(EndianISStream& eiss) {
+void ScaleRow::crossDataScaleFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		autoDataScale = CDataScale::literal(eiss.readString());
+		crossDataScale = CDataScale::literal(eis.readString());
 			
 		
 	
 	
 }
-void ScaleRow::weightTypeFromBin(EndianISStream& eiss) {
+void ScaleRow::autoDataScaleFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		weightType = CWeightType::literal(eiss.readString());
+		autoDataScale = CDataScale::literal(eis.readString());
+			
+		
+	
+	
+}
+void ScaleRow::weightTypeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		weightType = CWeightType::literal(eis.readString());
 			
 		
 	
@@ -467,19 +468,19 @@ void ScaleRow::weightTypeFromBin(EndianISStream& eiss) {
 
 		
 	
-	ScaleRow* ScaleRow::fromBin(EndianISStream& eiss, ScaleTable& table, const vector<string>& attributesSeq) {
+	ScaleRow* ScaleRow::fromBin(EndianIStream& eis, ScaleTable& table, const vector<string>& attributesSeq) {
 		ScaleRow* row = new  ScaleRow(table);
 		
 		map<string, ScaleAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ScaleTable");
 			}
@@ -487,10 +488,64 @@ void ScaleRow::weightTypeFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void ScaleRow::scaleIdFromText(const string & s) {
+		 
+		scaleId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an TimeScale 
+	void ScaleRow::timeScaleFromText(const string & s) {
+		 
+		timeScale = ASDMValuesParser::parse<TimeScale>(s);
+		
+	}
+	
+	
+	// Convert a string into an DataScale 
+	void ScaleRow::crossDataScaleFromText(const string & s) {
+		 
+		crossDataScale = ASDMValuesParser::parse<DataScale>(s);
+		
+	}
+	
+	
+	// Convert a string into an DataScale 
+	void ScaleRow::autoDataScaleFromText(const string & s) {
+		 
+		autoDataScale = ASDMValuesParser::parse<DataScale>(s);
+		
+	}
+	
+	
+	// Convert a string into an WeightType 
+	void ScaleRow::weightTypeFromText(const string & s) {
+		 
+		weightType = ASDMValuesParser::parse<WeightType>(s);
+		
+	}
+	
+
+		
+	
+	void ScaleRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, ScaleAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "ScaleTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -657,13 +712,14 @@ void ScaleRow::weightTypeFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -724,6 +780,31 @@ weightType = CWeightType::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["scaleId"] = &ScaleRow::scaleIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeScale"] = &ScaleRow::timeScaleFromText;
+		 
+	
+				 
+	fromTextMethods["crossDataScale"] = &ScaleRow::crossDataScaleFromText;
+		 
+	
+				 
+	fromTextMethods["autoDataScale"] = &ScaleRow::autoDataScaleFromText;
+		 
+	
+				 
+	fromTextMethods["weightType"] = &ScaleRow::weightTypeFromText;
+		 
+	
+
+		
 	}
 	
 	ScaleRow::ScaleRow (ScaleTable &t, ScaleRow &row) : table(t) {

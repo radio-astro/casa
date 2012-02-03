@@ -63,6 +63,7 @@ using asdm::CalDataRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1138,119 +1139,119 @@ namespace asdm {
 	
 	}
 	
-void CalFocusModelRow::antennaNameFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::antennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaName =  eiss.readString();
-			
-		
-	
-	
-}
-void CalFocusModelRow::receiverBandFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		receiverBand = CReceiverBand::literal(eiss.readString());
+		antennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalFocusModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		polarizationType = CPolarizationType::literal(eiss.readString());
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalFocusModelRow::calDataIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalFocusModelRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalFocusModelRow::startValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalFocusModelRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalFocusModelRow::antennaMakeFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::polarizationTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaMake = CAntennaMake::literal(eiss.readString());
+		polarizationType = CPolarizationType::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalFocusModelRow::numCoeffFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::calDataIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalFocusModelRow::calReductionIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalFocusModelRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalFocusModelRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalFocusModelRow::antennaMakeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numCoeff =  eiss.readInt();
+		antennaMake = CAntennaMake::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalFocusModelRow::numSourceObsFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::numCoeffFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numSourceObs =  eiss.readInt();
+		numCoeff =  eis.readInt();
 			
 		
 	
 	
 }
-void CalFocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::numSourceObsFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numSourceObs =  eis.readInt();
+			
+		
+	
+	
+}
+void CalFocusModelRow::coeffNameFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1259,10 +1260,10 @@ void CalFocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 		coeffName.clear();
 		
-		unsigned int coeffNameDim1 = eiss.readInt();
+		unsigned int coeffNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
 			
-			coeffName.push_back(eiss.readString());
+			coeffName.push_back(eis.readString());
 			
 	
 
@@ -1270,7 +1271,7 @@ void CalFocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalFocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::coeffFormulaFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1279,10 +1280,10 @@ void CalFocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 		coeffFormula.clear();
 		
-		unsigned int coeffFormulaDim1 = eiss.readInt();
+		unsigned int coeffFormulaDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
 			
-			coeffFormula.push_back(eiss.readString());
+			coeffFormula.push_back(eis.readString());
 			
 	
 
@@ -1290,7 +1291,7 @@ void CalFocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalFocusModelRow::coeffValueFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::coeffValueFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1299,10 +1300,10 @@ void CalFocusModelRow::coeffValueFromBin(EndianISStream& eiss) {
 	
 		coeffValue.clear();
 		
-		unsigned int coeffValueDim1 = eiss.readInt();
+		unsigned int coeffValueDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffValueDim1; i++)
 			
-			coeffValue.push_back(eiss.readFloat());
+			coeffValue.push_back(eis.readFloat());
 			
 	
 
@@ -1310,7 +1311,7 @@ void CalFocusModelRow::coeffValueFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalFocusModelRow::coeffErrorFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::coeffErrorFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1319,10 +1320,10 @@ void CalFocusModelRow::coeffErrorFromBin(EndianISStream& eiss) {
 	
 		coeffError.clear();
 		
-		unsigned int coeffErrorDim1 = eiss.readInt();
+		unsigned int coeffErrorDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffErrorDim1; i++)
 			
-			coeffError.push_back(eiss.readFloat());
+			coeffError.push_back(eis.readFloat());
 			
 	
 
@@ -1330,7 +1331,7 @@ void CalFocusModelRow::coeffErrorFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalFocusModelRow::coeffFixedFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::coeffFixedFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1339,10 +1340,10 @@ void CalFocusModelRow::coeffFixedFromBin(EndianISStream& eiss) {
 	
 		coeffFixed.clear();
 		
-		unsigned int coeffFixedDim1 = eiss.readInt();
+		unsigned int coeffFixedDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffFixedDim1; i++)
 			
-			coeffFixed.push_back(eiss.readBoolean());
+			coeffFixed.push_back(eis.readBoolean());
 			
 	
 
@@ -1350,39 +1351,39 @@ void CalFocusModelRow::coeffFixedFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalFocusModelRow::focusModelFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::focusModelFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		focusModel =  eiss.readString();
+		focusModel =  eis.readString();
 			
 		
 	
 	
 }
-void CalFocusModelRow::focusRMSFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::focusRMSFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	focusRMS = Length::from1DBin(eiss);	
+	focusRMS = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalFocusModelRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+void CalFocusModelRow::reducedChiSquaredFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		reducedChiSquared =  eiss.readDouble();
+		reducedChiSquared =  eis.readDouble();
 			
 		
 	
@@ -1391,19 +1392,19 @@ void CalFocusModelRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 
 		
 	
-	CalFocusModelRow* CalFocusModelRow::fromBin(EndianISStream& eiss, CalFocusModelTable& table, const vector<string>& attributesSeq) {
+	CalFocusModelRow* CalFocusModelRow::fromBin(EndianIStream& eis, CalFocusModelTable& table, const vector<string>& attributesSeq) {
 		CalFocusModelRow* row = new  CalFocusModelRow(table);
 		
 		map<string, CalFocusModelAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalFocusModelTable");
 			}
@@ -1411,10 +1412,168 @@ void CalFocusModelRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an String 
+	void CalFocusModelRow::antennaNameFromText(const string & s) {
+		 
+		antennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalFocusModelRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalFocusModelRow::polarizationTypeFromText(const string & s) {
+		 
+		polarizationType = ASDMValuesParser::parse<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalFocusModelRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalFocusModelRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalFocusModelRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalFocusModelRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaMake 
+	void CalFocusModelRow::antennaMakeFromText(const string & s) {
+		 
+		antennaMake = ASDMValuesParser::parse<AntennaMake>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalFocusModelRow::numCoeffFromText(const string & s) {
+		 
+		numCoeff = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalFocusModelRow::numSourceObsFromText(const string & s) {
+		 
+		numSourceObs = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalFocusModelRow::coeffNameFromText(const string & s) {
+		 
+		coeffName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalFocusModelRow::coeffFormulaFromText(const string & s) {
+		 
+		coeffFormula = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalFocusModelRow::coeffValueFromText(const string & s) {
+		 
+		coeffValue = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalFocusModelRow::coeffErrorFromText(const string & s) {
+		 
+		coeffError = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalFocusModelRow::coeffFixedFromText(const string & s) {
+		 
+		coeffFixed = ASDMValuesParser::parse1D<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalFocusModelRow::focusModelFromText(const string & s) {
+		 
+		focusModel = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalFocusModelRow::focusRMSFromText(const string & s) {
+		 
+		focusRMS = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalFocusModelRow::reducedChiSquaredFromText(const string & s) {
+		 
+		reducedChiSquared = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+
+		
+	
+	void CalFocusModelRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalFocusModelAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalFocusModelTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1941,9 +2100,9 @@ void CalFocusModelRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2017,9 +2176,10 @@ void CalFocusModelRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2176,6 +2336,83 @@ antennaMake = CAntennaMake::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaName"] = &CalFocusModelRow::antennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalFocusModelRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationType"] = &CalFocusModelRow::polarizationTypeFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalFocusModelRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalFocusModelRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalFocusModelRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalFocusModelRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["antennaMake"] = &CalFocusModelRow::antennaMakeFromText;
+		 
+	
+				 
+	fromTextMethods["numCoeff"] = &CalFocusModelRow::numCoeffFromText;
+		 
+	
+				 
+	fromTextMethods["numSourceObs"] = &CalFocusModelRow::numSourceObsFromText;
+		 
+	
+				 
+	fromTextMethods["coeffName"] = &CalFocusModelRow::coeffNameFromText;
+		 
+	
+				 
+	fromTextMethods["coeffFormula"] = &CalFocusModelRow::coeffFormulaFromText;
+		 
+	
+				 
+	fromTextMethods["coeffValue"] = &CalFocusModelRow::coeffValueFromText;
+		 
+	
+				 
+	fromTextMethods["coeffError"] = &CalFocusModelRow::coeffErrorFromText;
+		 
+	
+				 
+	fromTextMethods["coeffFixed"] = &CalFocusModelRow::coeffFixedFromText;
+		 
+	
+				 
+	fromTextMethods["focusModel"] = &CalFocusModelRow::focusModelFromText;
+		 
+	
+				 
+	fromTextMethods["focusRMS"] = &CalFocusModelRow::focusRMSFromText;
+		 
+	
+				 
+	fromTextMethods["reducedChiSquared"] = &CalFocusModelRow::reducedChiSquaredFromText;
+		 
+	
+
+		
 	}
 	
 	CalFocusModelRow::CalFocusModelRow (CalFocusModelTable &t, CalFocusModelRow &row) : table(t) {

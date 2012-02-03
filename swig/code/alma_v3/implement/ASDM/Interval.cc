@@ -67,27 +67,27 @@ void Interval::toBin(vector<vector<Interval> >interval, EndianOSStream& eoss) {
 			eoss.writeLongLong(interval.at(i).at(j).value);
 }
 
- Interval Interval::fromBin(EndianISStream& eiss) {
- 	return (Interval(eiss.readLongLong()));
+ Interval Interval::fromBin(EndianIStream& eis) {
+ 	return (Interval(eis.readLongLong()));
  }
  
- vector<Interval> Interval::from1DBin(EndianISStream& eiss) {
+ vector<Interval> Interval::from1DBin(EndianIStream& eis) {
  	vector<Interval> result;
- 	int dim = eiss.readInt();
+ 	int dim = eis.readInt();
  	for (int i = 0; i < dim; i++)
- 		result.push_back(eiss.readLongLong());
+ 		result.push_back(eis.readLongLong());
  	return result;	
  }
 
-vector< vector<Interval> >Interval::from2DBin(EndianISStream& eiss) {
+vector< vector<Interval> >Interval::from2DBin(EndianIStream& eis) {
  	vector<vector<Interval> >result;
- 	int dim1 = eiss.readInt(); 
-	int dim2 = eiss.readInt(); 
+ 	int dim1 = eis.readInt(); 
+	int dim2 = eis.readInt(); 
 	vector<Interval> aux;	
  	for (int i = 0; i < dim1; i++) {
  		aux.clear();
  		for (int j = 0; j < dim2; j++)
- 			aux.push_back(eiss.readLongLong());
+ 			aux.push_back(eis.readLongLong());
  		result.push_back(aux);		
  	}
  	return result;	

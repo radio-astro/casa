@@ -141,9 +141,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalHolography.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -159,17 +160,19 @@ class CalDataRow;
 	
 
 class CalHolographyRow;
-typedef void (CalHolographyRow::*CalHolographyAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalHolographyRow::*CalHolographyAttributeFromBin) (EndianIStream& eis);
+typedef void (CalHolographyRow::*CalHolographyAttributeFromText) (const string& s);
 
 /**
  * The CalHolographyRow class is a row of a CalHolographyTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalHolographyRow {
 friend class asdm::CalHolographyTable;
 friend class asdm::RowTransformer<CalHolographyRow>;
+//friend class asdm::TableStreamReader<CalHolographyTable, CalHolographyRow>;
 
 public:
 
@@ -1262,7 +1265,53 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalHolographyAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void ambientTemperatureFromBin( EndianIStream& eis);
+void focusPositionFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void illuminationTaperFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void numPanelModesFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void beamMapUIDFromBin( EndianIStream& eis);
+void rawRMSFromBin( EndianIStream& eis);
+void weightedRMSFromBin( EndianIStream& eis);
+void surfaceMapUIDFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+
+void numScrewFromBin( EndianIStream& eis);
+void screwNameFromBin( EndianIStream& eis);
+void screwMotionFromBin( EndianIStream& eis);
+void screwMotionErrorFromBin( EndianIStream& eis);
+void gravCorrectionFromBin( EndianIStream& eis);
+void gravOptRangeFromBin( EndianIStream& eis);
+void tempCorrectionFromBin( EndianIStream& eis);
+void tempOptRangeFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalHolographyTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalHolographyRow* fromBin(EndianIStream& eis, CalHolographyTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1647,39 +1696,127 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalHolographyAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void antennaMakeFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void ambientTemperatureFromBin( EndianISStream& eiss);
-void focusPositionFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void illuminationTaperFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void numPanelModesFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void beamMapUIDFromBin( EndianISStream& eiss);
-void rawRMSFromBin( EndianISStream& eiss);
-void weightedRMSFromBin( EndianISStream& eiss);
-void surfaceMapUIDFromBin( EndianISStream& eiss);
-void directionFromBin( EndianISStream& eiss);
+void antennaNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void ambientTemperatureFromBin( EndianIStream& eis);
+void focusPositionFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void illuminationTaperFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void numPanelModesFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void beamMapUIDFromBin( EndianIStream& eis);
+void rawRMSFromBin( EndianIStream& eis);
+void weightedRMSFromBin( EndianIStream& eis);
+void surfaceMapUIDFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
 
-void numScrewFromBin( EndianISStream& eiss);
-void screwNameFromBin( EndianISStream& eiss);
-void screwMotionFromBin( EndianISStream& eiss);
-void screwMotionErrorFromBin( EndianISStream& eiss);
-void gravCorrectionFromBin( EndianISStream& eiss);
-void gravOptRangeFromBin( EndianISStream& eiss);
-void tempCorrectionFromBin( EndianISStream& eiss);
-void tempOptRangeFromBin( EndianISStream& eiss);
+void numScrewFromBin( EndianIStream& eis);
+void screwNameFromBin( EndianIStream& eis);
+void screwMotionFromBin( EndianIStream& eis);
+void screwMotionErrorFromBin( EndianIStream& eis);
+void gravCorrectionFromBin( EndianIStream& eis);
+void gravOptRangeFromBin( EndianIStream& eis);
+void tempCorrectionFromBin( EndianIStream& eis);
+void tempOptRangeFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalHolographyAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void antennaMakeFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void ambientTemperatureFromText (const string & s);
+	
+	
+void focusPositionFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void illuminationTaperFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void numPanelModesFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+	
+void rawRMSFromText (const string & s);
+	
+	
+void weightedRMSFromText (const string & s);
+	
+	
+	
+void directionFromText (const string & s);
+	
+
+	
+void numScrewFromText (const string & s);
+	
+	
+void screwNameFromText (const string & s);
+	
+	
+void screwMotionFromText (const string & s);
+	
+	
+void screwMotionErrorFromText (const string & s);
+	
+	
+void gravCorrectionFromText (const string & s);
+	
+	
+void gravOptRangeFromText (const string & s);
+	
+	
+void tempCorrectionFromText (const string & s);
+	
+	
+void tempOptRangeFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1688,14 +1825,14 @@ void tempOptRangeFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalHolographyTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalHolographyRow* fromBin(EndianISStream& eiss, CalHolographyTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalHolographyRow* fromBin(EndianIStream& eis, CalHolographyTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

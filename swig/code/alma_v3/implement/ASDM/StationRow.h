@@ -81,9 +81,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Station.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -93,17 +94,19 @@ namespace asdm {
 	
 
 class StationRow;
-typedef void (StationRow::*StationAttributeFromBin) (EndianISStream& eiss);
+typedef void (StationRow::*StationAttributeFromBin) (EndianIStream& eis);
+typedef void (StationRow::*StationAttributeFromText) (const string& s);
 
 /**
  * The StationRow class is a row of a StationTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class StationRow {
 friend class asdm::StationTable;
 friend class asdm::RowTransformer<StationRow>;
+//friend class asdm::TableStreamReader<StationTable, StationRow>;
 
 public:
 
@@ -355,7 +358,31 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, StationAttributeFromBin> fromBinMethods;
+void stationIdFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void typeFromBin( EndianIStream& eis);
+
+void timeFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the StationTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static StationRow* fromBin(EndianIStream& eis, StationTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -482,17 +509,43 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, StationAttributeFromBin> fromBinMethods;
-void stationIdFromBin( EndianISStream& eiss);
-void nameFromBin( EndianISStream& eiss);
-void positionFromBin( EndianISStream& eiss);
-void typeFromBin( EndianISStream& eiss);
+void stationIdFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void typeFromBin( EndianIStream& eis);
 
-void timeFromBin( EndianISStream& eiss);
+void timeFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, StationAttributeFromText> fromTextMethods;
+	
+void stationIdFromText (const string & s);
+	
+	
+void nameFromText (const string & s);
+	
+	
+void positionFromText (const string & s);
+	
+	
+void typeFromText (const string & s);
+	
+
+	
+void timeFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -501,14 +554,14 @@ void timeFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the StationTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static StationRow* fromBin(EndianISStream& eiss, StationTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static StationRow* fromBin(EndianIStream& eis, StationTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm
