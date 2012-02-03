@@ -29,6 +29,18 @@ casa_add_library( dish
   implement/SDIterators/SDTabRecCopier.cc
    )
 
+install(FILES
+	implement/SDIterators/SDFITSDataIterator.h
+	implement/SDIterators/SDIterAxes.h
+	implement/SDIterators/SDIterFieldCopier.h
+	implement/SDIterators/SDIterator.h
+	implement/SDIterators/SDMSIterator.h
+	implement/SDIterators/SDRecord.h
+	implement/SDIterators/SDTabRecCopier.h
+	implement/SDIterators/SDTableIterator.h
+	DESTINATION include/casacode/dish/SDIterators
+	)
+
 casa_add_assay( dish implement/SDIterators/test/tSDMSIterator.cc )
 casa_add_assay( dish implement/SDIterators/test/tSDRecord.cc )
 casa_add_assay( dish implement/SDIterators/test/tSDTableIterator.cc )

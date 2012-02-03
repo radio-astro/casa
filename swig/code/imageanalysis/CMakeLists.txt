@@ -51,6 +51,46 @@ implement/IO/ProfileFitterEstimatesFileParser.cc
 implement/Regions/CasacRegionManager.cc
 )
 
+install (FILES
+	implement/Annotations/AnnAnnulus.h
+	implement/Annotations/AnnCenterBox.h
+	implement/Annotations/AnnCircle.h
+	implement/Annotations/AnnEllipse.h
+	implement/Annotations/AnnLine.h
+	implement/Annotations/AnnPolygon.h
+	implement/Annotations/AnnRectBox.h
+	implement/Annotations/AnnRegion.h
+	implement/Annotations/AnnRotBox.h
+	implement/Annotations/AnnSymbol.h
+	implement/Annotations/AnnText.h
+	implement/Annotations/AnnVector.h
+	implement/Annotations/AnnotationBase.h
+	implement/Annotations/RegionTextList.h
+	DESTINATION include/casacode/imageanalysis/Annotations
+	)
+install (FILES
+	implement/IO/AsciiAnnotationFileLine.h
+	implement/IO/FitterEstimatesFileParser.h
+	implement/IO/ProfileFitterEstimatesFileParser.h
+	implement/IO/RegionTextParser.h
+	DESTINATION include/casacode/imageanalysis/IO
+	)
+install (FILES
+	implement/ImageAnalysis/ImageCollapser.h
+	implement/ImageAnalysis/ImageFitter.h
+	implement/ImageAnalysis/ImageInputProcessor.h
+	implement/ImageAnalysis/ImagePrimaryBeamCorrector.h
+	implement/ImageAnalysis/ImageProfileFitter.h
+	implement/ImageAnalysis/ImageTask.h
+	implement/ImageAnalysis/ImageTransposer.h
+	implement/ImageAnalysis/SpectralCollapser.h
+	DESTINATION include/casacode/imageanalysis/ImageAnalysis
+	)
+install (FILES
+	implement/Regions/CasacRegionManager.h
+	DESTINATION include/casacode/imageanalysis/Regions
+	)
+
 casa_add_executable(imageanalysis imfit apps/imfit.cc )
 casa_add_executable(imageanalysis imcollapse apps/imcollapse.cc )
 

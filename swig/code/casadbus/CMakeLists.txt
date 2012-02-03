@@ -37,3 +37,29 @@ plotserver/PlotServerProxy.dbusproxy.h
 session/DBusSession.dbusproxy.h
 viewer/ViewerProxy.dbusproxy.h  )
 
+install (FILES
+	implement/plotserver/PlotServerProxy.h
+	DESTINATION include/casacode/casadbus/plotserver
+	)
+install (FILES
+	implement/session/DBusSession.h
+	implement/session/Dispatcher.h
+	DESTINATION include/casacode/casadbus/session
+	)
+install (FILES
+	implement/types/functor.h
+	implement/types/nullptr.h
+	implement/types/ptr.h
+	implement/types/record.h
+	implement/types/variant.h
+	DESTINATION include/casacode/casadbus/types
+	)
+install (FILES
+	implement/utilities/BusAccess.h
+	implement/utilities/Conversion.h
+	DESTINATION include/casacode/casadbus/utilities
+	)
+install (FILES
+	implement/viewer/ViewerProxy.h
+	DESTINATION include/casacode/casadbus/viewer
+	)

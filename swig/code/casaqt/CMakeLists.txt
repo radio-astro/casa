@@ -206,6 +206,115 @@ casa_add_library( casaqt
   implement/QwtPlotter/QPShape.cc
   implement/QwtPlotter/QPTool.cc
   )
+install (FILES
+	implement/PlotterImplementations/PlotterImplementations.h
+	DESTINATION include/casacode/casaqt/QwtPlotter
+	)
+install (FILES
+	implement/QtBrowser/QCloseableWidget.qo.h
+	implement/QtBrowser/QProgressPanel.qo.h
+	implement/QtBrowser/TBAction.h
+	implement/QtBrowser/TBArray.h
+	implement/QtBrowser/TBBrowser.qo.h
+	implement/QtBrowser/TBConnection.qo.h
+	implement/QtBrowser/TBConstants.h
+	implement/QtBrowser/TBData.h
+	implement/QtBrowser/TBDataTab.qo.h
+	implement/QtBrowser/TBExportThread.h
+	implement/QtBrowser/TBField.h
+	implement/QtBrowser/TBFilterRules.qo.h
+	implement/QtBrowser/TBFormat.qo.h
+	implement/QtBrowser/TBHelp.qo.h
+	implement/QtBrowser/TBKeyword.h
+	implement/QtBrowser/TBKeywordsTab.qo.h
+	implement/QtBrowser/TBMain.qo.h
+	implement/QtBrowser/TBOptions.qo.h
+	implement/QtBrowser/TBParser.h
+	implement/QtBrowser/TBPlotCanvas.qo.h
+	implement/QtBrowser/TBPlotter.qo.h
+	implement/QtBrowser/TBRowLocate.qo.h
+	implement/QtBrowser/TBSlicer.qo.h
+	implement/QtBrowser/TBSorter.qo.h
+	implement/QtBrowser/TBTaQL.qo.h
+	implement/QtBrowser/TBTable.h
+	implement/QtBrowser/TBTableDriver.h
+	implement/QtBrowser/TBTableInfo.qo.h
+	implement/QtBrowser/TBTableTabs.qo.h
+	implement/QtBrowser/TBTest.h
+	implement/QtBrowser/TBTypes.qo.h
+	implement/QtBrowser/TBValidityChecker.qo.h
+	implement/QtBrowser/TBView.h
+	implement/QtBrowser/TBViewArray.qo.h
+	implement/QtBrowser/TBXMLDriver.h
+	implement/QtBrowser/XMLtoken.h
+	DESTINATION include/casacode/casaqt/QtBrowser
+	)
+install (FILES
+	implement/QtFileCatalog/diritem.h
+	implement/QtFileCatalog/dirmodel.qo.h
+	implement/QtFileCatalog/filecatalog.qo.h
+	implement/QtFileCatalog/pictureviewer.qo.h
+	implement/QtFileCatalog/texteditor.qo.h
+	DESTINATION include/casacode/casaqt/QtFileCatalog
+	)
+install (FILES
+	implement/QtLogger/logitem.h
+	implement/QtLogger/logmodel.qo.h
+	implement/QtLogger/logviewer.qo.h
+	implement/QtLogger/logwatcher.qo.h
+	DESTINATION include/casacode/casaqt/QtLogger
+	)
+install (FILES
+	implement/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h
+	implement/QtPlotServer/QtPlotFrame.qo.h
+	implement/QtPlotServer/QtPlotHistogram.h
+	implement/QtPlotServer/QtPlotServer.qo.h
+	implement/QtPlotServer/QtPlotSvrPanel.qo.h
+	implement/QtPlotServer/QtRasterData.h
+	DESTINATION include/casacode/casaqt/QtPlotServer
+	)
+install (FILES
+	implement/QtProgressMeter/progress.qo.h
+	implement/QtProgressMeter/progresstimer.qo.h
+	DESTINATION include/casacode/casaqt/QtProgressMeter
+	)
+install (FILES
+	implement/QtUtilities/QtActionGroup.qo.h
+	implement/QtUtilities/QtButtonGroup.qo.h
+	implement/QtUtilities/QtComboCheckBox.qo.h
+	implement/QtUtilities/QtDBusApp.h
+	implement/QtUtilities/QtDBusXML.h
+	implement/QtUtilities/QtDBusXmlApp.qo.h
+	implement/QtUtilities/QtEditingWidget.qo.h
+	implement/QtUtilities/QtFileDialog.qo.h
+	implement/QtUtilities/QtId.h
+	implement/QtUtilities/QtIndexChooser.qo.h
+	implement/QtUtilities/QtLayeredLayout.h
+	implement/QtUtilities/QtPanelBase.qo.h
+	implement/QtUtilities/QtPlotWidget.qo.h
+	implement/QtUtilities/QtProgressWidget.qo.h
+	implement/QtUtilities/QtUtilities.h
+	DESTINATION include/casacode/casaqt/QtUtilities
+	)
+install (FILES
+	implement/QwtPlotter/QPAnnotation.h
+	implement/QwtPlotter/QPBarPlot.h
+	implement/QwtPlotter/QPCanvas.qo.h
+	implement/QwtPlotter/QPCanvasHelpers.qo.h
+	implement/QwtPlotter/QPData.h
+	implement/QwtPlotter/QPFactory.h
+	implement/QwtPlotter/QPImageCache.h
+	implement/QwtPlotter/QPLayeredCanvas.qo.h
+	implement/QwtPlotter/QPOptions.h
+	implement/QwtPlotter/QPPanel.qo.h
+	implement/QwtPlotter/QPPlotItem.qo.h
+	implement/QwtPlotter/QPPlotter.qo.h
+	implement/QwtPlotter/QPRasterPlot.h
+	implement/QwtPlotter/QPScatterPlot.h
+	implement/QwtPlotter/QPShape.h
+	implement/QwtPlotter/QPTool.qo.h
+	DESTINATION include/casacode/casaqt/QwtPlotter
+	)
 
 casa_add_executable( casaqt casafilecatalog apps/casafilecatalog/casafilecatalog.cc )
 casa_add_executable( casaqt casalogger apps/casalogger/casalogger.cc )

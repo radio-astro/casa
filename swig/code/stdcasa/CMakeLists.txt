@@ -70,3 +70,16 @@ casa_add_library( stdcasa
 	)
 add_dependencies( libstdcasa_fast stdcasa_definitions )
 add_dependencies( libstdcasa      stdcasa_definitions )
+install (FILES
+	implement/Quantity.h
+	implement/array.h
+	implement/interrupt.h
+	implement/record.h
+	implement/variant.h
+	implement/version.h
+	DESTINATION include/casacode/stdcasa
+	)
+install (FILES
+	implement/StdCasa/CasacSupport.h
+	DESTINATION include/casacode/stdcasa/StdCasa
+	)
