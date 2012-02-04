@@ -684,7 +684,6 @@ else()
   set( casacode_libs
        alma 
        calibration
-       atnf 
        casadbus
        casaqt
        dish
