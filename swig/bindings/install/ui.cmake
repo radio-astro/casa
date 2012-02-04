@@ -279,15 +279,15 @@ endmacro()
 #
 #  Rules for handling tool XML
 #
-#        casa_add_tools( out_idl out_sources
+#        casa_add_tools( out_swig out_sources
 #                        tool1.xml [tool2.xml ...]
 #                      )
 #
-#  out_idl: generated IDL
+#  out_swig: generated IDL
 #  out_sources: generated .cc and .h files
 #
 
-macro( casa_add_tools out_idl out_sources )
+macro( casa_add_tools out_swig out_sources )
 
   set( _xmls ${ARGN} )
 
@@ -298,7 +298,7 @@ macro( casa_add_tools out_idl out_sources )
 
     # Generate .xml from .xml
     set( _out_xml casa${_base}.xml )
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2toolxml.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2swigxml.xsl )
     add_custom_command(
       OUTPUT ${_out_xml}
       COMMAND ${SAXON} ${_xml} ${_xsl} > ${_out_xml}_tmp1
@@ -306,35 +306,32 @@ macro( casa_add_tools out_idl out_sources )
       DEPENDS ${_xml} ${_xsl} 
       )
 
-    # Then xml -> idl
-    set( _idl ${CMAKE_CURRENT_BINARY_DIR}/casa${_base}.idl )
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2idl3.xsl )
+    # Then xml -> swig
+    set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h )
+    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2c++h.xsl )
     add_custom_command(
-      OUTPUT ${_idl}
+      OUTPUT ${_swig}
       COMMAND ${SAXON} ${_out_xml} ${_xsl} > ${_out_xml}_tmp2
-      COMMAND sed -e \"s/<?xml version=.*//\" ${_out_xml}_tmp2 > ${_idl}
+      COMMAND sed -e \"s/<?xml version=.*//\" ${_out_xml}_tmp2 > ${_swig}
       DEPENDS ${_out_xml} ${_xsl} 
       )
 
+    # Then generate the swig interface file
+    set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.i )
+    add_custom_command(
+      OUTPUT ${_swig}
+      COMMAND echo "%module " $(_base) > $(_swig)
+      COMMAND echo "%include <tools/casa_typemaps.i> " >> ${_swig}
+      COMMAND echo "%include \"${MYPACK}_cmpt.h\"" >> ${_swig}
+      COMMAND echo "%{" >> ${_swig}
+      COMMAND echo "#include <${MYPACK}_cmpt.h>" >> ${_swig}
+      COMMAND echo "%}" >> ${_swig}
+      DEPENDS ${_out_xml} ${_xsl} 
+      )
+
+
     # CCMTools create C++ bindings from IDL
     set( _outputs 
-      Python_Converter/casa${_base}_python.cc
-      Python_Converter/CCM_Local/casac/CCM_Session_${_base}/${_base}Home_python.cc
-      Python_Converter/CCM_Local/casac/CCM_Session_${_base}/${_base}_python.cc
-      Python_Converter/CCM_Local/casac/CCM_Session_${_base}/${_base}_python.h
-      Python_Converter/CCM_Local/casac/CCM_Session_${_base}/${_base}Home_python.h
-      CCM_Local/casac/CCM_Session_${_base}/${_base}_gen.cc
-      CCM_Local/casac/CCM_Session_${_base}/${_base}Home_gen.cc
-      CCM_Local/casac/CCM_Session_${_base}/${_base}Home_share.h
-      CCM_Local/casac/CCM_Session_${_base}/${_base}_gen.h
-      CCM_Local/casac/CCM_Session_${_base}/${_base}Home_gen.h
-      CCM_Local/casac/CCM_Session_${_base}/${_base}_share.h
-      impl/${_base}_impl.cc
-      impl/${_base}Home_impl.cc
-      impl/${_base}_impl.h
-      impl/${_base}Home_impl.h
-      impl/${_base}_cmpt.h
-      impl/${_base}Home_entry.h
       )
 
     casa_ccmtools(
@@ -349,7 +346,7 @@ macro( casa_add_tools out_idl out_sources )
     set( ${out_sources} ${${out_sources}} ${_outputs} )
 
     install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
-             DESTINATION include/casa/xmlcasa/${_base} )
+             DESTINATION include/casa/tools/${_base} )
 
     install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
              DESTINATION include/casa/impl )
@@ -365,59 +362,6 @@ endmacro( casa_add_tools )
 
 
 #
-#  Rules for handling source IDL
-#
-#       casa_idl( outfiles input
-#                 prefix1 [prefix2 ...] )
-#
-#  outfiles: list of generated C++ sources
-#  input   : source IDL
-#  prefix* : basename of output C++ sources
-#
-
-macro( casa_idl outfiles input )
-
-    set( _types ${ARGN} )  # Created output files
-
-    get_filename_component( _idl ${input} ABSOLUTE )
-
-    set( _outputs "" )
-
-    foreach( _t ${_types} )     
-      list( APPEND _outputs
-        Python_Converter/${_t}_python.h
-        Python_Converter/${_t}_python.cc
-        )
-
-      if( NOT ${_t} MATCHES "(^shape_type|Vec)$" )
-          # This condition matches which files ccmtools outputs
-
-          list( APPEND _outputs
-                impl/casac/${_t}.h )
-          install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/casac/${_t}.h
-                   DESTINATION include/casa/impl/casac )
-          install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/casac/${_t}.h
-                   DESTINATION include/casa/casac )
-      endif()
-
-      list( APPEND _outputs
-            CCM_Local/casac/${_t}.h )
-      install( FILES ${CMAKE_CURRENT_BINARY_DIR}/CCM_Local/casac/${_t}.h
-               DESTINATION include/casa/CCM_Local/casac )
-
-    endforeach()
-
-    casa_ccmtools(
-      INPUT ${_idl}
-      OUTPUT ${_outputs}
-      OPTIONS c++local c++python
-      DEPENDS ${_idl}
-      )
-    
-    set( ${outfiles} ${${outfiles}} ${_outputs} )
-    
-endmacro()
-
 
 #
 #  casa_pybinding( outfiles
