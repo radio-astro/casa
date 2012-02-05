@@ -1485,21 +1485,23 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 	  errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
 	  error(errstream.str());
 	}
+	/*
 	else 
-	  ; // infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
+	  infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
+	*/
             
 	bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
 	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end()) {
-	  /*
+	  
 	  if (switchedPowerDifferenceExists0) {
-	    infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
+	    //  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
 	    switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
 	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
 	  }
+	  /*
 	  else
 	    infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
 	  */
-	  ;
 	}
 	else {
 	  errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
@@ -1508,16 +1510,16 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       
 	bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
 	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end()) {
-	  /*
+
 	  if (switchedPowerSumExists0) {
-	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	    //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
 	    switchedPowerSum.resize(numReceptor0 * sysPowers.size());
 	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
 	  }
+	  /*
 	  else
-	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	     infostream << "In SysPower table no switchedPowerSum recorded." << endl;
 	  */
-	  ;
 	}
 	else {
 	  errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
@@ -1526,16 +1528,15 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       
 	bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
 	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end()) {
-	  /*
 	  if (requantizerGainExists0) {
-	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	    //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
 	    requantizerGain.resize(numReceptor0 * sysPowers.size());
 	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
 	  }
+	  /*
 	  else
 	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
 	  */
-	  ;
 	}
 	else {
 	  errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
