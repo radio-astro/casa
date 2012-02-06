@@ -103,10 +103,9 @@ void checkImage(
 	CoordinateSystem expectedCsys = expectedImage.coordinates();
 	Array<Double> diffPixels = gotCsys.referencePixel() - expectedCsys.referencePixel();
 	AlwaysAssert(max(abs(diffPixels)) == 0, AipsError);
-	Array<Double> fracDiffRef = (
-			gotCsys.referenceValue() - expectedCsys.referenceValue()
-		)/expectedCsys.referenceValue();
-	AlwaysAssert(max(abs(fracDiffRef)) <= ftol, AipsError);
+	// don't use fraction because sometimes denominator is zero
+	Array<Double> diffRef = gotCsys.referenceValue() - expectedCsys.referenceValue();
+	AlwaysAssert(max(abs(diffRef)) <= ftol, AipsError);
 	AlwaysAssert(allTrue(gotCsys.worldAxisNames() == expectedCsys.worldAxisNames()), AipsError);
 	AlwaysAssert(allTrue(gotCsys.worldAxisUnits() == expectedCsys.worldAxisUnits()), AipsError);
 }
@@ -157,6 +156,7 @@ int main() {
     FITSImage goodImage(datadir + "specfit_multipix_2gauss.fits");
     FITSImage goodPolyImage(datadir + "specfit_multipix_poly_2gauss.fits");
     FITSImage gaussTripletImage(datadir + "gauss_triplet.fits");
+    FITSImage twoLorentziansImage(datadir + "two_lorentzians.fits");
 
 	workdir.create();
 	uInt retVal = 0;
@@ -241,7 +241,15 @@ int main() {
     		writeTestString("  -- It is a gaussian and not something else");
     		cout << results << endl;
     		AlwaysAssert(((Vector<String>)results.asArrayString("type"))[0] == "GAUSSIAN", AipsError);
-
+    		IPosition expShape(goodImage.ndim() + 1, 1);
+    		expShape[expShape.nelements() - 1] = 2;
+    		cout << "*** exp " << expShape << endl;
+    		cout << "*** got " << results.asRecord("gs").asArrayDouble("amp").shape() << endl;
+    		AlwaysAssert(
+    		    results.asRecord("gs").asArrayDouble("amp").shape().isEqual(
+    		    	expShape
+    		    ), AipsError
+    		);
     		writeTestString("  -- Various tests of the fit values");
     		AlwaysAssert(
     			(
@@ -681,7 +689,7 @@ int main() {
     	    writeTestString("test solution image results");
     		for (uInt i=0; i<names.size(); i++) {
     			checkImage(
-                    dirName + "/" + names[i] + "_gm",
+                    s + names[i] + "_gm",
                     datadir + names[i] + "_gm"
                 );
     		}
@@ -689,6 +697,48 @@ int main() {
     		FiledesIO fio(fd);
     		// check that there's something in the log file
     		AlwaysAssert(fio.length() > 1e4, AipsError);
+    	}
+    	{
+    		writeTestString("Test fitting of Lorentzians");
+    		SpectralList myList;
+    		myList.add(LorentzianSpectralElement(1, 30, 4));
+    		myList.add(LorentzianSpectralElement(7, 111, 4));
+    		ImageProfileFitter fitter(
+    			&twoLorentziansImage, "", 0, "", "", "", "", 2,
+    			1, "", myList
+    		);
+			fitter.setDoMultiFit(True);
+			Vector<String> names(8);
+			String s = dirName + "/";
+			names[0] = "center";
+			names[1] = "centerErr";
+			names[2] = "fwhm";
+			names[3] = "fwhmErr";
+			names[4] = "amp";
+			names[5] = "ampErr";
+			names[6] = "integral";
+			names[7] = "integralErr";
+
+			fitter.setDoMultiFit(True);
+			fitter.setCenterName(s + names[0]);
+			fitter.setCenterErrName(s + names[1]);
+			fitter.setFWHMName(s + names[2]);
+			fitter.setFWHMErrName(s + names[3]);
+			fitter.setAmpName(s + names[4]);
+			fitter.setAmpErrName(s + names[5]);
+			fitter.setIntegralName(s + names[6]);
+			fitter.setIntegralErrName(s + names[7]);
+			String logfile = "lorentzians_fit.log";
+			fitter.setLogfile(logfile);
+
+			Record results = fitter.fit();
+			writeTestString("test solution image results");
+			for (uInt i=0; i<names.size(); i++) {
+				checkImage(
+					s + names[i] + "_ls",
+					datadir + names[i] + "_ls"
+				);
+			}
     	}
 
         cout << endl << "All " << testNumber << " tests succeeded" << endl;

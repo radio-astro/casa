@@ -44,9 +44,10 @@
 
 namespace casa {
 
-const Double ImageProfileFitter::integralConst = casa::sqrt(C::pi/4/casa::log(2));
-
 const String ImageProfileFitter::_class = "ImageProfileFitter";
+const uInt ImageProfileFitter::_nOthers = 2;
+const uInt ImageProfileFitter::_gsPlane = 0;
+const uInt ImageProfileFitter::_lsPlane = 1;
 
 ImageProfileFitter::ImageProfileFitter(
 	const ImageInterface<Float> *const &image, const String& region,
@@ -66,10 +67,9 @@ ImageProfileFitter::ImageProfileFitter(
 	_integralName(""), _integralErrName(""),
 	_multiFit(False), _deleteImageOnDestruct(False), _logResults(True),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(ngauss),
-	_nGaussMultiplets(0), _minGoodPoints(0), _results(Record()),
-	_gaussEstimates(SpectralList()) {
+	_nGaussMultiplets(0), _nLorentzSinglets(0), _minGoodPoints(0),
+	_results(Record()), _nonPolyEstimates(SpectralList()) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-
     if (! estimatesFilename.empty()) {
     	if (spectralList.nelements() > 0) {
     		*_getLog() << "Logic error: both a non-empty estimatesFilename "
@@ -78,41 +78,46 @@ ImageProfileFitter::ImageProfileFitter(
     	}
 
     	ProfileFitterEstimatesFileParser parser(estimatesFilename);
-    	_gaussEstimates = parser.getEstimates();
-    	_nGaussSinglets = _gaussEstimates.nelements();
+    	_nonPolyEstimates = parser.getEstimates();
+    	_nGaussSinglets = _nonPolyEstimates.nelements();
     	*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
     		<< _nGaussSinglets << " in estimates file " << estimatesFilename
     		<< LogIO::POST;
     }
     else if (spectralList.nelements() > 0) {
-    	_gaussEstimates = spectralList;
+    	_nonPolyEstimates = spectralList;
     	_nGaussSinglets = 0;
     	_nGaussMultiplets = 0;
-    	for (uInt i=0; i<_gaussEstimates.nelements(); i++) {
-    		SpectralElement::Types myType = _gaussEstimates[i]->getType();
-    		if (
-    			myType != SpectralElement::GAUSSIAN
-    			&& myType != SpectralElement::GMULTIPLET
-    		) {
-    			*_getLog() << "Logic error: Non-gaussian elements are not "
-    				<< "permitted in the spectralList input parameter"
-    				<< LogIO::EXCEPTION;
-    		}
-    		else if (_gaussEstimates[i]->getType() == SpectralElement::GAUSSIAN) {
+    	for (uInt i=0; i<_nonPolyEstimates.nelements(); i++) {
+    		SpectralElement::Types myType = _nonPolyEstimates[i]->getType();
+			switch(myType) {
+			case SpectralElement::GAUSSIAN:
     			_nGaussSinglets++;
-    		}
-    		else if (_gaussEstimates[i]->getType() == SpectralElement::GMULTIPLET) {
+    			break;
+			case SpectralElement::GMULTIPLET:
     			_nGaussMultiplets++;
-    		}
+    			break;
+			case SpectralElement::LORENTZIAN:
+				_nLorentzSinglets++;
+				break;
+			default:
+				*_getLog() << "Logic error: Only gaussian singlets, "
+					<< "gaussian multiplets, and lorentzian singlets are "
+				    << "permitted in the spectralList input parameter"
+				    << LogIO::EXCEPTION;
+			}
     	}
     	*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
     	    << _nGaussSinglets << " from provided spectral element list"
     	    << LogIO::POST;
     	*_getLog() << LogIO::NORMAL << "Number of gaussian multiplets to fit found to be "
-    	    	    << _nGaussMultiplets << " from provided spectral element list"
-    	    	    << LogIO::POST;
+    		<< _nGaussMultiplets << " from provided spectral element list"
+    		<< LogIO::POST;
+    	*_getLog() << LogIO::NORMAL << "Number of lorentzian singlets to fit found to be "
+			<< _nLorentzSinglets << " from provided spectral element list"
+			<< LogIO::POST;
     }
-    if (_gaussEstimates.nelements() > 0 && ngauss > 0) {
+    if (_nonPolyEstimates.nelements() > 0 && ngauss > 0) {
     	*_getLog() << LogIO::WARN
     		<< "Estimates specified so ignoring input value of ngauss"
     		<< LogIO::POST;
@@ -183,7 +188,6 @@ Record ImageProfileFitter::fit() {
     		_writeLogfile(resultsString);
     	}
     }
-
 	return _results;
 }
 
@@ -215,7 +219,13 @@ void ImageProfileFitter::_getOutputStruct(
 
 void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 	LogOrigin logOrigin(_class, __FUNCTION__);
-	if (_nGaussSinglets == 0 && _nGaussMultiplets == 0 && _polyOrder < 0) {
+	if (
+		_polyOrder < 0
+		&& (
+			_nGaussSinglets + _nGaussMultiplets
+			+ _nLorentzSinglets
+		) == 0
+	) {
 		*_getLog() << "Number of gaussians is 0 and polynomial order is less than zero. "
 			<< "According to these inputs there is nothing to fit."
 			<< LogIO::EXCEPTION;
@@ -246,39 +256,47 @@ void ImageProfileFitter::_finishConstruction() {
 }
 
 void ImageProfileFitter::_setResults() {
+    LogOrigin logOrigin(_class, __FUNCTION__);
     Double fNAN = casa::doubleNaN();
-    uInt nComps = _nGaussSinglets + _nGaussMultiplets;
+    uInt nComps = _nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets;
     if (_polyOrder >= 0) {
     	nComps++;
     }
 	Array<Bool> attemptedArr(IPosition(1, _fitters.size()), False);
 	Array<Bool> convergedArr(IPosition(1, _fitters.size()), False);
 	Array<Int> niterArr(IPosition(1, _fitters.size()), -1);
-	vector<vector<Matrix<Double> > > gMatrices(
-		NGSOLS, vector<Matrix<Double> >(_nGaussMultiplets+1)
+	vector<vector<Matrix<Double> > > pcfMatrices(
+		NGSOLMATRICES, vector<Matrix<Double> >(_nGaussMultiplets+_nOthers)
 	);
 	uInt compCount = 0;
 	Matrix<Double> blank;
-	uInt j = 0;
-	for (uInt i=0; i<_nGaussMultiplets + 1; i++) {
-		if (i == 0) {
-			j = _nGaussSinglets;
+	uInt nSubcomps = 0;
+
+	for (uInt i=0; i<_nGaussMultiplets + _nOthers; i++) {
+		if (i == _gsPlane) {
+			// gaussian singlets go in position 0
+			nSubcomps = _nGaussSinglets;
+		}
+		else if (i == _lsPlane) {
+			// lorentzian singlets go in position 1
+			nSubcomps = _nLorentzSinglets;
 		}
 		else {
+			// gaussian multiplets go in positions 2 to 1 + _nGaussianMultiplets
 			while (
-				_gaussEstimates[compCount]->getType() != SpectralElement::GMULTIPLET
+				_nonPolyEstimates[compCount]->getType() != SpectralElement::GMULTIPLET
 			) {
 				compCount++;
 			}
-			j = dynamic_cast<GaussianMultipletSpectralElement*>(
-					_gaussEstimates[compCount]
+			nSubcomps = dynamic_cast<GaussianMultipletSpectralElement*>(
+					_nonPolyEstimates[compCount]
 				)->getGaussians().size();
 			compCount++;
 		}
-		blank.resize(_fitters.size(), j, False);
+		blank.resize(_fitters.size(), nSubcomps, False);
 		blank = fNAN;
-		for (uInt k=0; k<NGSOLS; k++) {
-			gMatrices[k][i] = blank;
+		for (uInt k=0; k<NGSOLMATRICES; k++) {
+			pcfMatrices[k][i] = blank;
 		}
 	}
 	Matrix<String> typeMat(_fitters.size(), nComps, "UNDEF");
@@ -308,30 +326,55 @@ void ImageProfileFitter::_setResults() {
 			SpectralList solutions = fitter->getList();
 			uInt gCount = 0;
 			uInt gmCount = 0;
+			uInt lseCount = 0;
 			for (uInt i=0; i<solutions.nelements(); i++) {
 				SpectralElement::Types type = solutions[i]->getType();
 				typeMat(count, i) = SpectralElement::fromType(type);
-				if (type == SpectralElement::GAUSSIAN) {
-					const GaussianSpectralElement *g = dynamic_cast<
-							const GaussianSpectralElement*
+				switch (type) {
+				case SpectralElement::POLYNOMIAL:
+					break;
+				case SpectralElement::GAUSSIAN:
+					// allow fall through because gaussians and lorentzians use common code
+				case SpectralElement::LORENTZIAN:
+					{
+						const PCFSpectralElement *pcf = dynamic_cast<
+							const PCFSpectralElement*
 						>(solutions[i]);
-					_insertGaussian(
-						gMatrices, 0, *g, count, gCount, subimPos, increment
-					);
-					gCount++;
-				}
-				else if (type == SpectralElement::GMULTIPLET) {
-					const GaussianMultipletSpectralElement *gm = dynamic_cast<
-							const GaussianMultipletSpectralElement*
-						>(solutions[i]);
-					const Vector<GaussianSpectralElement> g = gm->getGaussians();
-					for (uInt k=0; k<g.size(); k++) {
-						_insertGaussian(
-							gMatrices, gmCount + 1, g[k], count,
-							k, subimPos, increment
+						uInt plane = _lsPlane;
+						uInt col = lseCount;
+						// if block because we allow case fall through
+						if (type == SpectralElement::LORENTZIAN) {
+							lseCount++;
+						}
+						else {
+							plane = _gsPlane;
+							col = gCount;
+							gCount++;
+						}
+						_insertPCF(
+							pcfMatrices, plane, *pcf, count, col, subimPos, increment
 						);
 					}
-					gmCount++;
+					break;
+				case SpectralElement::GMULTIPLET:
+					{
+						const GaussianMultipletSpectralElement *gm = dynamic_cast<
+							const GaussianMultipletSpectralElement*
+						>(solutions[i]);
+						const Vector<GaussianSpectralElement> g = gm->getGaussians();
+						for (uInt k=0; k<g.size(); k++) {
+							_insertPCF(
+								pcfMatrices, gmCount + 2, g[k], count,
+								k, subimPos, increment
+							);
+						}
+						gmCount++;
+					}
+					break;
+
+				default:
+					*_getLog() << "Logic Error: Unhandled Spectral Element type"
+						<< LogIO::EXCEPTION;
 				}
 			}
 		}
@@ -357,30 +400,32 @@ void ImageProfileFitter::_setResults() {
 	typeShape.resize(shape.size() + 1, True);
 	typeShape[typeShape.size() - 1] = nComps;
 	_results.define("type", typeMat.reform(typeShape));
-	for (uInt i=0; i<_nGaussMultiplets+1; i++) {
-		if (i == 0 && _nGaussSinglets == 0) {
+	for (uInt i=0; i<_nGaussMultiplets+_nOthers; i++) {
+		if (i == _gsPlane && _nGaussSinglets == 0) {
+			continue;
+		}
+		else if (i == _lsPlane && _nLorentzSinglets == 0) {
 			continue;
 		}
 		Record rec;
 		IPosition solArrShape = shape;
 		solArrShape.resize(shape.size()+1, True);
-		solArrShape[solArrShape.size()-1] = gMatrices[AMP][i].shape()[gMatrices[AMP][i].shape().size()-1];
-		rec.define("center", gMatrices[CENTER][i].reform(solArrShape));
-		rec.define("fwhm", gMatrices[FWHM][i].reform(solArrShape));
-		rec.define("amp", gMatrices[AMP][i].reform(solArrShape));
-		rec.define("integral", gMatrices[INTEGRAL][i].reform(solArrShape));
-		rec.define("centerErr", gMatrices[CENTERERR][i].reform(solArrShape));
-		rec.define("fwhmErr", gMatrices[FWHMERR][i].reform(solArrShape));
-		rec.define("ampErr", gMatrices[AMPERR][i].reform(solArrShape));
-		rec.define("integralErr", gMatrices[INTEGRALERR][i].reform(solArrShape));
-		String description = i == 0
+		solArrShape[solArrShape.size()-1] = pcfMatrices[AMP][i].shape()[pcfMatrices[AMP][i].shape().size()-1];
+		rec.define("center", pcfMatrices[CENTER][i].reform(solArrShape));
+		rec.define("fwhm", pcfMatrices[FWHM][i].reform(solArrShape));
+		rec.define("amp", pcfMatrices[AMP][i].reform(solArrShape));
+		rec.define("integral", pcfMatrices[INTEGRAL][i].reform(solArrShape));
+		rec.define("centerErr", pcfMatrices[CENTERERR][i].reform(solArrShape));
+		rec.define("fwhmErr", pcfMatrices[FWHMERR][i].reform(solArrShape));
+		rec.define("ampErr", pcfMatrices[AMPERR][i].reform(solArrShape));
+		rec.define("integralErr", pcfMatrices[INTEGRALERR][i].reform(solArrShape));
+		String description = i == _gsPlane
 			? "Gaussian singlets results"
-			: "Gaussian multiplet number " + String::toString(i-1) + " results";
+			: i == _lsPlane
+			  ? "Lorentzian singlets"
+			  : "Gaussian multiplet number " + String::toString(i-1) + " results";
 		rec.define("description", description);
-		String id = i == 0
-			? "gs"
-			: "gm" + String::toString(i-1);
-		_results.defineRecord(id, rec);
+		_results.defineRecord(_getTag(i), rec);
 	}
 	Bool writeSolutionImages = (
 		! _centerName.empty() || ! _centerErrName.empty()
@@ -397,9 +442,11 @@ void ImageProfileFitter::_setResults() {
 	if (
 		_multiFit && writeSolutionImages
 	) {
-		if (_nGaussSinglets == 0 && _nGaussMultiplets == 0) {
-			*_getLog() << LogIO::WARN << "No gaussians were fit so no solution images will be written"
-				<< LogIO::POST;
+		if (
+			_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets == 0
+		) {
+			*_getLog() << LogIO::WARN << "No gaussians or lorentzians were fit "
+				<< "so no solution images will be written" << LogIO::POST;
 		}
 		else {
 			if (someConverged) {
@@ -413,28 +460,28 @@ void ImageProfileFitter::_setResults() {
 	}
 }
 
-void ImageProfileFitter::_insertGaussian(
-	vector<vector<Matrix<Double> > >& gMatrices, const uInt idx,
-	const GaussianSpectralElement& g,
+String ImageProfileFitter::_getTag(const uInt i) const {
+	return i == _gsPlane
+			? "gs"
+			: i == _lsPlane
+			  ? "ls"
+			  : "gm" + String::toString(i-2);
+}
+
+void ImageProfileFitter::_insertPCF(
+	vector<vector<Matrix<Double> > >& pcfMatrices, const uInt idx,
+	const PCFSpectralElement& pcf,
 	const uInt row, const uInt col, const IPosition& pos,
 	const Double increment
 ) const {
-	gMatrices[CENTER][idx](row, col) = _centerWorld(g, pos);
-	Double fwhm = g.getFWHM() * increment;
-	gMatrices[FWHM][idx](row, col) = fwhm;
-	Double amp = g.getAmpl();
-	gMatrices[AMP][idx](row, col) = amp;
-	gMatrices[CENTERERR][idx](row, col) = g.getCenterErr() * increment;
-	Double fwhmErr = g.getFWHMErr() * increment;
-	gMatrices[FWHMERR][idx](row, col) = fwhmErr;
-	Double ampErr = g.getAmplErr();
-	gMatrices[AMPERR][idx](row, col) = ampErr;
-	Double integral = integralConst * amp * fwhm;
-	gMatrices[INTEGRAL][idx](row, col) = integral;
-	Double ampFErr = ampErr/amp;
-	Double fwhmFErr = fwhmErr/fwhm;
-	gMatrices[INTEGRALERR][idx](row, col) = integral
-		* sqrt(ampFErr*ampFErr + fwhmFErr*fwhmFErr);
+	pcfMatrices[CENTER][idx](row, col) = _centerWorld(pcf, pos);
+	pcfMatrices[FWHM][idx](row, col) = pcf.getFWHM() * increment;
+	pcfMatrices[AMP][idx](row, col) = pcf.getAmpl();
+	pcfMatrices[CENTERERR][idx](row, col) = pcf.getCenterErr() * increment;
+	pcfMatrices[FWHMERR][idx](row, col) = pcf.getFWHMErr() * increment;
+	pcfMatrices[AMPERR][idx](row, col) = pcf.getAmplErr();
+	pcfMatrices[INTEGRAL][idx](row, col) = pcf.getIntegral() * increment;
+	pcfMatrices[INTEGRALERR][idx](row, col) = pcf.getIntegralErr() * increment;
 }
 
 void ImageProfileFitter::_writeImages(
@@ -474,13 +521,14 @@ void ImageProfileFitter::_writeImages(
 	unitmap["ampErr"] = yUnit;
 	unitmap["integral"] = _xUnit + "." + yUnit;
 	unitmap["integralErr"] = _xUnit + "." + yUnit;
-	for (uInt i=0; i<_nGaussMultiplets+1; i++) {
-		if (i == 0 && _nGaussSinglets == 0) {
+	for (uInt i=0; i<_nGaussMultiplets+_nOthers; i++) {
+		if (i == _gsPlane && _nGaussSinglets == 0) {
 			continue;
 		}
-		String id = i == 0
-			? "gs"
-			: "gm" + String::toString(i-1);
+		else if (i == _lsPlane && _nLorentzSinglets == 0) {
+			continue;
+		}
+		String id = _getTag(i);
 		IPosition maskShape = _results.asRecord(id).asArrayDouble("amp").shape();
 		Array<Bool> fMask(maskShape);
 		uInt n = maskShape[maskShape.size()-1];
@@ -502,12 +550,14 @@ void ImageProfileFitter::_writeImages(
 			iter!=mymap.end(); iter++
 		) {
 			String imagename = iter->second;
-			if (i > 0) {
-				imagename += "_gm";
-			}
-			if (_nGaussMultiplets > 1) {
-				imagename += String::toString(i-1);
-			}
+			String suffix = i == _gsPlane
+				? ""
+				: i == _lsPlane
+				  ? "_ls"
+				  : _nGaussMultiplets <= 1
+				    ? "_gm"
+				    : "_gm" + String::toString(i-_nOthers);
+			imagename += suffix;
 			if (! iter->second.empty()) {
 				_makeSolutionImage(
 					imagename, mycsys,
@@ -542,7 +592,7 @@ Double ImageProfileFitter::_fitAxisIncrement() const {
 }
 
 Double ImageProfileFitter::_centerWorld(
-    const GaussianSpectralElement& solution, const IPosition& imPos
+    const PCFSpectralElement& solution, const IPosition& imPos
 ) const {
 	Vector<Double> pixel(imPos.size());
 	for (uInt i=0; i<pixel.size(); i++) {
@@ -709,24 +759,37 @@ String ImageProfileFitter::_getResultsString() const {
 				for (uInt i=0; i<solutions.nelements(); i++) {
 					SpectralElement::Types type = solutions[i]->getType();
 					summary << "    Results for component " << i << ":" << endl;
-					if (type == SpectralElement::GAUSSIAN) {
-						const GaussianSpectralElement *g
-							= dynamic_cast<const GaussianSpectralElement*>(solutions[i]);
-						summary << _gaussianToString(
-							*g, csys, world.copy(), subimPos
-						);
-					}
-					if (type == SpectralElement::GMULTIPLET) {
-						const GaussianMultipletSpectralElement *gm
-							= dynamic_cast<const GaussianMultipletSpectralElement*>(solutions[i]);
-						summary << _gaussianMultipletToString(
-							*gm, csys, world.copy(), subimPos
-						);
-					}
-					else if (type == SpectralElement::POLYNOMIAL) {
+					switch(type) {
+					case SpectralElement::GAUSSIAN:
+						// allow fall through; gaussians and lorentzians use the same
+						// method for output
+					case SpectralElement::LORENTZIAN:
+						{
+							const PCFSpectralElement *pcf
+								= dynamic_cast<const PCFSpectralElement*>(solutions[i]);
+							summary << _pcfToString(
+								pcf, csys, world.copy(), subimPos
+							);
+						}
+						break;
+					case SpectralElement::GMULTIPLET:
+						{
+							const GaussianMultipletSpectralElement *gm
+								= dynamic_cast<const GaussianMultipletSpectralElement*>(solutions[i]);
+							summary << _gaussianMultipletToString(
+								*gm, csys, world.copy(), subimPos
+							);
+							break;
+						}
+					case SpectralElement::POLYNOMIAL: {
 						const PolynomialSpectralElement *p
 							= dynamic_cast<const PolynomialSpectralElement*>(solutions[i]);
 						summary << _polynomialToString(*p, csys, imPix, world);
+						}
+					break;
+					default:
+						*_getLog() << "Logic Error: Unhandled spectral element type"
+							<< LogIO::EXCEPTION;
 					}
 				}
 			}
@@ -798,8 +861,8 @@ String ImageProfileFitter::_elementToString(
     return out.str();
 }
 
-String ImageProfileFitter::_gaussianToString(
-	const GaussianSpectralElement& gauss, const CoordinateSystem& csys,
+String ImageProfileFitter::_pcfToString(
+	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
 	const Vector<Double> world, const IPosition imPos,
 	const Bool showTypeString, const String& indent
 ) const {
@@ -807,22 +870,22 @@ String ImageProfileFitter::_gaussianToString(
     String yUnit = _getImage()->units().getName();
 	ostringstream summary;
 	if (showTypeString) {
-		summary << indent
-			<< "        Type     : GAUSSIAN" << endl;
+		summary << indent << "        Type     : "
+			<< SpectralElement::fromType(pcf->getType()) << endl;
 	}
 	summary << indent << "        Peak     : "
 		<< _elementToString(
-			gauss.getAmpl(), gauss.getAmplErr(), yUnit
+			pcf->getAmpl(), pcf->getAmplErr(), yUnit
 		)
 		<< endl;
 	Double center = _centerWorld(
-	    gauss, imPos
+	    *pcf, imPos
 	);
 	Double increment = fabs(_fitAxisIncrement());
 
-	Double centerErr = gauss.getCenterErr() * increment;
-	Double fwhm = gauss.getFWHM() * increment;
-	Double fwhmErr = gauss.getFWHMErr() * increment;
+	Double centerErr = pcf->getCenterErr() * increment;
+	Double fwhm = pcf->getFWHM() * increment;
+	Double fwhmErr = pcf->getFWHMErr() * increment;
 
 	Double pCenter = 0;
 	Double pCenterErr = 0;
@@ -867,14 +930,12 @@ String ImageProfileFitter::_gaussianToString(
 	summary << indent << "        Center   : "
 		<< _elementToString(
 			center, centerErr, _xUnit
-		)
-		<< endl;
+		) << endl;
 	if (convertedCenterToPix) {
 		summary << indent << "                   "
 			<< _elementToString(
 				pCenter, pCenterErr, "pixel"
-			)
-			<< endl;
+			) << endl;
 	}
 	else {
 		summary << indent << "                  Could not convert world to pixel for center" << endl;
@@ -892,10 +953,8 @@ String ImageProfileFitter::_gaussianToString(
 	else {
 		summary << indent << "                  Could not convert FWHM to pixel" << endl;
 	}
-	Double integral = integralConst * gauss.getAmpl() * fwhm;
-	Double ampFErr = gauss.getAmplErr()/gauss.getAmpl();
-	Double fwhmFErr = fwhmErr/fwhm;
-	Double integralErr = integral * sqrt(ampFErr*ampFErr + fwhmFErr*fwhmFErr);
+	Double integral = pcf->getIntegral()*increment;
+	Double integralErr = pcf->getIntegralErr()*increment;
 	String integUnit = (Quantity(1.0 ,yUnit)*Quantity(1.0, _xUnit)).getUnit();
 	summary << indent << "        Integral : "
 		<< _elementToString(integral, integralErr, integUnit)
@@ -915,7 +974,7 @@ String ImageProfileFitter::_gaussianMultipletToString(
 		summary << "        Results for subcomponent "
 			<< i << ":" << endl;
 		summary
-			<< _gaussianToString(g[i], csys, world, imPos, False, "    ")
+			<< _pcfToString(&g[i], csys, world, imPos, False, "    ")
 			<< endl;
 	}
 	return summary.str();
@@ -1103,8 +1162,8 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	Vector<Float> model(0), residual(0);
 
 	if (fitIt) {
-		if (_gaussEstimates.nelements() > 0) {
-			fitter.setElements(_gaussEstimates);
+		if (_nonPolyEstimates.nelements() > 0) {
+			fitter.setElements(_nonPolyEstimates);
 		} else {
 			// Set auto estimate
 			if (! fitter.setGaussianElements(_nGaussSinglets)) {
@@ -1149,8 +1208,8 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 		}
 	}
 	else {
-		if (_gaussEstimates.nelements() > 0) {
-			fitter.setElements(_gaussEstimates); // Set list
+		if (_nonPolyEstimates.nelements() > 0) {
+			fitter.setElements(_nonPolyEstimates); // Set list
 			model = fitter.getEstimate(); // Evaluate list
 			residual = fitter.getResidual(-1, False);
 		}
@@ -1225,7 +1284,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	// Do fits
 	// FIXME give users the option to show a progress bar
 	Bool showProgress = False;
-	if (_gaussEstimates.nelements() > 0) {
+	if (_nonPolyEstimates.nelements() > 0) {
 		String doppler = "";
 		ImageUtilities::getUnitAndDoppler(
 			_xUnit, doppler, _fitAxis, cSys
@@ -1342,7 +1401,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 	vector<IPosition> goodPos(0);
 	goodFits.set(0);
 	Bool checkMinPts = _minGoodPoints > 0 && _subImage.isMasked();
-	SpectralList newEstimates = _gaussEstimates;
+	SpectralList newEstimates = _nonPolyEstimates;
 	std::auto_ptr<PolynomialSpectralElement> polyEl(0);
 	if (_polyOrder >= 0) {
 		polyEl.reset(new PolynomialSpectralElement(_polyOrder));
@@ -1383,7 +1442,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 			*_getLog() << "Unable to set gaussian elements"
 				<< LogIO::EXCEPTION;
 		}
-		if (_gaussEstimates.nelements() > 0) {
+		if (_nonPolyEstimates.nelements() > 0) {
 			// user supplied initial estimates
 			if (goodPos.size() > 0) {
 				IPosition nearest;
@@ -1434,7 +1493,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 		Bool ok = False;
 		try {
 			if (ok = fitter.fit()) {               // ok == False means no convergence
-				if (_gaussEstimates.nelements() > 0) {
+				if (_nonPolyEstimates.nelements() > 0) {
 					goodFits(curPos) = &fitter;
 					goodPos.push_back(curPos);
 				}
@@ -1492,4 +1551,3 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 }
 
 } //# NAMESPACE CASA - END
-
