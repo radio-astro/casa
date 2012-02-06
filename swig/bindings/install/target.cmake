@@ -225,7 +225,8 @@ macro( casa_add_module module )
 
     # Generated code need build dir in include path
     if( ${_dep} STREQUAL "DBUS" OR
-        ${_dep} STREQUAL "QT4" )
+		    ${_dep} STREQUAL "QT4" OR
+		    ${_dep} STREQUAL "TOOLS" )
       
       set( ${module}_INCLUDE_DIRS 
         ${${module}_INCLUDE_DIRS}

@@ -57,28 +57,28 @@ macro( casa_add_tasks module _target )
     set( _py  ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py )
 
     # Create _cli.py
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2pycli.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pycli.xsl )
     add_custom_command(
       OUTPUT ${_cli}
       COMMAND ${SAXON} -o ${_cli} ${_xml} ${_xsl} 
       DEPENDS ${_xml} ${_xsl} )
 
     # Create _pg.py
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2pypg.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pypg.xsl )
     add_custom_command(
       OUTPUT ${_pg}
       COMMAND ${SAXON} -o ${_pg} ${_xml} ${_xsl} 
       DEPENDS ${_xml} ${_xsl} )
 
     # Create .py
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2pyimp.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pyimp.xsl )
     add_custom_command(
       OUTPUT ${_py}
       COMMAND ${SAXON} -o ${_py} ${_xml} ${_xsl}
       DEPENDS ${_xml} ${_xsl} )
 
     # Create intermediate file for the generation of tasks.py and tasksinfo.py
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2tsum2.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2tsum2.xsl )
     set( _out ${_base}_tasksinfo.py )
     add_custom_command( 
       OUTPUT ${_out}
@@ -136,7 +136,7 @@ macro( casa_add_tasks module _target )
     COMMAND echo "taskvis = odict\\(\\)" >> ${_tasksinfo}
 
     COMMAND for x in ${_out_taskinfo} \; do grep -Ev "\"(^#?from|^\$\$)\"" $$x >> ${_tasksinfo} \; done
-    COMMAND cat ${CMAKE_SOURCE_DIR}/xmlcasa/install/tasksinfo.pytxt >> ${_tasksinfo}
+    COMMAND cat ${CMAKE_SOURCE_DIR}/install/tasksinfo.pytxt >> ${_tasksinfo}
     DEPENDS ${_out_taskinfo}
     )
 
@@ -163,119 +163,6 @@ macro( casa_add_tasks module _target )
     )
 endmacro()
 
-
-#
-#   casa_ccmtools( INPUT input1 [input2 ...]
-#                  OUTPUT output1 [output2 ...]
-#                  OPTIONS option1 [option2 ...] 
-#                  DEPENDS depend1 [depend2 ...] )
-#
-#  There are a few issues involved with invoking ccmtools.
-#  The solution to these are factored out in this macro.
-#
-#  - ccmtools sometimes skips writing an output file. 
-#    This has the consequence that if the file was considered
-#    out of date, it will still be considered out of date.
-#    This is resolved by removing all expected output files
-#    before invoking ccmtools
-#  - ccmtools always returns zero, even in case of error. In
-#    order for the build system to check if the invocation was
-#    successful, it is checked that all output files exist after
-#    running ccmtools
-#  - implicit dependencies from the generated C++ to IDL files
-#    (which include each other).
-#    The option IMPLICIT_DEPENDS traces the dependencies
-#    from the output C++ to indirect IDL files included by
-#    the direct dependency. Note, in CMake 2.8 this works only
-#    for the Makefile backend.
-
-macro( casa_ccmtools )
-  # Careful!: variable names have global scope.
-  # The names must not conflict with 'temporary' 
-  # variables used in the caller macro. This is
-  # the responsibility of the calling code.
-
-  # Parse options
-  set( _opt false )
-  set( _in false )
-  set( _out false )
-  set( _dep false )
-  set( _input "" )
-  set( _output "" )
-  set( _options "" )
-  set( _depends "" )
-  foreach( _arg ${ARGN} )
-    if( _arg STREQUAL OPTIONS)
-      set( _opt true )
-      set( _in false )
-      set( _out false )
-      set( _dep false )
-    elseif( _arg STREQUAL INPUT)
-      set( _opt false )
-      set( _in true )
-      set( _out false )
-      set( _dep false )
-    elseif( _arg STREQUAL OUTPUT)
-      set( _opt false )
-      set( _in false )
-      set( _out true )
-      set( _dep false )
-    elseif( _arg STREQUAL DEPENDS)
-      set( _opt false )
-      set( _in false )
-      set( _out false )
-      set( _dep true )
-    elseif( _opt )
-      set( _options ${_options} ${_arg} )
-    elseif( _in )
-      set( _input ${_input} ${_arg} )
-    elseif( _out )
-      set( _output ${_output} ${_arg} )
-    elseif( _dep )
-      set( _depends ${_depends} ${_arg} )
-    else(
-        message( FATAL_ERROR "Illegal options: ${ARGN}" )
-        )
-    endif()
-  endforeach()
-  # Done parsing
-
-  #message(" OPTIONS = ${_options} ")
-  #message(" INPUT = ${_input} ")
-  #message(" OUTPUT = ${_output} ")
-
-  set( _conversions ${CMAKE_SOURCE_DIR}/xmlcasa/xml/conversions.xml )
-
-  add_custom_command(
-    OUTPUT ${_output}
-
-    COMMAND rm -f ${_output}  # otherwise CCMTOOLS sometimes skips writing
-
-    COMMAND ${CCMTOOLS_ccmtools_EXECUTABLE} ${CCMTOOLS_ccmtools_FLAGS} ${_options}
-    --overwrite 
-    --coda=${_conversions}
-    -I${CMAKE_SOURCE_DIR}/xmlcasa/idl
-    -I${CMAKE_CURRENT_BINARY_DIR}
-    ${_input}
-
-    # Now check if the outputs were created and return an error if not
-    COMMAND ${PERL_EXECUTABLE} -le 'for (@ARGV) { ( -e ) or die \"$$_ missing!\"\; }' --
-    ARGS ${_output}
-
-    DEPENDS ${_conversions} ${_depends} ${CCMTOOLS_ccmtools_EXECUTABLE}
-
-    # Indirect dependencies to included IDL files
-    IMPLICIT_DEPENDS C ${_depends}  # Use the C preprocessor because
-                                    # that is what ccmtools uses
-    )
-  
-  if( NOT CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    message( WARNING "Dependency tracking of generated IDL files may not work when CMAKE_GENERATOR is ${CMAKE_GENERATOR}" )
-  endif()
-
-endmacro()
-
-
 #
 #  Rules for handling tool XML
 #
@@ -283,12 +170,12 @@ endmacro()
 #                        tool1.xml [tool2.xml ...]
 #                      )
 #
-#  out_swig: generated IDL
 #  out_sources: generated .cc and .h files
 #
 
 macro( casa_add_tools out_swig out_sources )
 
+  INCLUDE(${SWIG_USE_FILE})
   set( _xmls ${ARGN} )
 
   foreach( _x ${_xmls} )
@@ -298,7 +185,7 @@ macro( casa_add_tools out_swig out_sources )
 
     # Generate .xml from .xml
     set( _out_xml casa${_base}.xml )
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2swigxml.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2swigxml.xsl )
     add_custom_command(
       OUTPUT ${_out_xml}
       COMMAND ${SAXON} ${_xml} ${_xsl} > ${_out_xml}_tmp1
@@ -307,12 +194,12 @@ macro( casa_add_tools out_swig out_sources )
       )
 
     # Then xml -> swig
-    set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h )
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2c++h.xsl )
+    set( _swigh ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h )
+    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2c++h.xsl )
     add_custom_command(
-      OUTPUT ${_swig}
+      OUTPUT ${_swigh}
       COMMAND ${SAXON} ${_out_xml} ${_xsl} > ${_out_xml}_tmp2
-      COMMAND sed -e \"s/<?xml version=.*//\" ${_out_xml}_tmp2 > ${_swig}
+      COMMAND sed -e \"s/<?xml version=.*//\" ${_out_xml}_tmp2 > ${_swigh}
       DEPENDS ${_out_xml} ${_xsl} 
       )
 
@@ -320,36 +207,31 @@ macro( casa_add_tools out_swig out_sources )
     set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.i )
     add_custom_command(
       OUTPUT ${_swig}
-      COMMAND echo "%module " $(_base) > $(_swig)
+      COMMAND echo "%module " ${_base} > $(_swig)
       COMMAND echo "%include <tools/casa_typemaps.i> " >> ${_swig}
-      COMMAND echo "%include \"${MYPACK}_cmpt.h\"" >> ${_swig}
+      COMMAND echo "%include \"${base}_cmpt.h\"" >> ${_swig}
       COMMAND echo "%{" >> ${_swig}
-      COMMAND echo "#include <${MYPACK}_cmpt.h>" >> ${_swig}
+      COMMAND echo "#include <${base}_cmpt.h>" >> ${_swig}
       COMMAND echo "%}" >> ${_swig}
       DEPENDS ${_out_xml} ${_xsl} 
       )
 
 
-    # CCMTools create C++ bindings from IDL
-    set( _outputs 
-      )
+    set( _outputs
+	    ${_base}_cmpt.h
+	    ${_base}_wrap.cxx
+	    )
 
-    casa_ccmtools(
-      INPUT ${_idl}
-      OUTPUT ${_outputs}
-      OPTIONS c++local c++python
-      DEPENDS ${_idl}
-      )
+    SET_SOURCE_FILES_PROPERTIES(_swig PROPERTIES CPLUSPLUS ON )
+    SET_SOURCE_FILES_PROPERTIES(_swig PROPERTES SWIG_FLAGS ${CMAKE_SOURCE_DIR}/tools) 
+    SWIG_ADD_MODULE(${_base} python ${_swig} ${_base}_wrap.cxx)
 
-    set( ${out_idl} ${${out_idl}} ${_idl} )
+    set( ${out_swig) ${${out_swig}} ${_swig} )
 
-    set( ${out_sources} ${${out_sources}} ${_outputs} )
+    set( ${out_sources) ${${out_sources}} ${_outputs} )
 
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h
              DESTINATION include/casa/tools/${_base} )
-
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
-             DESTINATION include/casa/impl )
 
     # Create tool documentation
     if ( NOT ${_base} STREQUAL plotms )    # because there is already a plotms task, and there would be a name conflict!
@@ -363,45 +245,6 @@ endmacro( casa_add_tools )
 
 #
 
-#
-#  casa_pybinding( outfiles
-#                  source1.idl [source2.idl] )
-#
-#  outfiles: generated casac_python.* C++ files
-#  source* : input IDLs
-#
-
-macro( casa_pybinding outfiles )
-
-  set( _idls ${ARGN} )
-
-  # Avoid name clashing between the casac_python.*
-  # created here and elsewhere (by other ccmtools invocations) by 
-  # using a different output directory
-  set( ${outfiles} 
-    pybinding/Python_Converter/casac_python.cc
-    pybinding/Python_Converter/casac_python.h
-    pybinding/impl/casac/casac.h
-    )
-
-  casa_ccmtools(
-    INPUT ${_idls}
-    OUTPUT ${${outfiles}}
-    OPTIONS c++local c++python
-    --output=${CMAKE_CURRENT_BINARY_DIR}/pybinding
-    )
-    # You would think that here is missing a DEPENDS ${_idls},
-    # but in fact the output does not depend on the content of the
-    # input files, and therefore does *not* need to be regenerated 
-    # whenever an input file changes (which takes much time). The
-    # output only depends on the input filenames.
-
-  install( FILES ${CMAKE_CURRENT_BINARY_DIR}/pybinding/impl/casac/casac.h
-           DESTINATION include/casa/impl/casac )
-
-endmacro()
-
-
 
 # casa_add_doc( XML prefix type )
 #
@@ -414,7 +257,7 @@ macro( casa_add_doc xml prefix type )
 
     # Create htex
     set( _htex  ${prefix}/helpfiles/${_base}.htex )
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2tlatex.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2tlatex.xsl )
 
     add_custom_command(
       OUTPUT ${_htex}

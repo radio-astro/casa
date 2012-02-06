@@ -39,7 +39,8 @@ add_custom_command( OUTPUT definitions
 set( casadef_quiet TRUE )
 set( casadef_perl ${PERL_EXECUTABLE} )
 set( casadef_source_dir ${CMAKE_SOURCE_DIR} )
-include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
+#include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
+#include( ${CMAKE_SOURCE_DIR}/install/ui.cmake )
 
 casa_add_library( tools
  atmosphere/atmosphere_cmpt.cc

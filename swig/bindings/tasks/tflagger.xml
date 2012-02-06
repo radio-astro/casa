@@ -211,20 +211,20 @@ tfcrop, extend, unflag, summary)</description>
 
             <param type="any" name="extendpols" subparam="true">
                 <description>If any correlation is flagged, flag all correlations</description>
-                <value type="bool">False</value>
+                <value type="bool">True</value>
             </param>
 
            <param type="double" name="growtime" subparam="true">
                 <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
-                <value>50.0</value>
+                <value>0.0</value>
             </param>
             <param type="double" name="growfreq" subparam="true">
                 <description>Flag all selected channels if more than X% of the frequency range is flagged(0-100)</description>
-                <value>50.0</value>
+                <value>0.0</value>
             </param>
             <param type="bool" name="growaround" subparam="true">
                 <description>Flag data based on surrounding flags</description>
-                <value type="bool">True</value>
+                <value type="bool">False</value>
             </param>
             <param type="bool" name="flagneartime" subparam="true">
                 <description>Flag one timestep before and after a flagged one (True/False)</description>
@@ -350,10 +350,10 @@ tfcrop, extend, unflag, summary)</description>
                     <equals value="extend">
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>
-                        <default param="extendpols"><value type="bool">False</value></default>
-                        <default param="growtime"><value type="double">50.0</value></default>
-                        <default param="growfreq"><value type="double">50.0</value></default>
-                        <default param="growaround"><value type="bool">True</value></default>
+                        <default param="extendpols"><value type="bool">True</value></default>
+                        <default param="growtime"><value type="double">0.0</value></default>
+                        <default param="growfreq"><value type="double">0.0</value></default>
+                        <default param="growaround"><value type="bool">False</value></default>
                         <default param="flagneartime"><value type="bool">False</value></default>
                         <default param="flagnearfreq"><value type="bool">False</value></default>                    
                     </equals>
@@ -641,22 +641,22 @@ tfcrop, extend, unflag, summary)</description>
                           It only makes sense when ntime not equal 'scan'.                
 
                 extendpols -- Extend flags to all correlations
-                      default: False
+                      default: True
                       options: True/False
                 growtime -- For any channel, flag the entire timerange in the current 2D chunk (set by 'ntime')
                              if more than X% of the timerange is already flagged.
-                      default: 50.0
+                      default: 0.0
                       options: 0.0 - 100.0
                          This option catches the low-intensity parts of time-persistent RFI.
 
                 growfreq -- For any timestep, flag all channels in the current 2D chunk (set by data-selection)
                             if more than X% of the channels are already flagged.
-                      default: 50.0
+                      default: 0.0
                       options: 0.0 - 100.0
                          This option catches broad-band RFI that is partially identified by earlier steps.
 
                 growaround -- Extend flags to immediately surrounding points in the time-freq plane.
-                      default: True
+                      default: False
                       options: True/False
                             For every un-flagged point on the 2D time/freq plane, if more than four
                             surrounding points are already flagged, flag that point. 
