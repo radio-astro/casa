@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -68,6 +69,11 @@ namespace AtmPhaseCorrectionMod
   typedef AtmPhaseCorrection &AtmPhaseCorrection_out;
 } 
 #endif
+
+namespace AtmPhaseCorrectionMod {
+	std::ostream & operator << ( std::ostream & out, const AtmPhaseCorrection& value);
+	std::istream & operator >> ( std::istream & in , AtmPhaseCorrection& value );
+}
 
 /** 
   * A helper class for the enumeration AtmPhaseCorrection.

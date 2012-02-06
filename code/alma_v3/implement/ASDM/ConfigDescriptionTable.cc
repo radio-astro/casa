@@ -49,8 +49,11 @@ using asdm::ConfigDescriptionRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string ConfigDescriptionTable::tableName = "ConfigDescription";
-	const vector<string> ConfigDescriptionTable::attributesNames = initAttributesNames();
-		
+	string ConfigDescriptionTable::itsName = "ConfigDescription";
+	vector<string> ConfigDescriptionTable::attributesNames; 
+	vector<string> ConfigDescriptionTable::attributesNamesInBin; 
+	bool ConfigDescriptionTable::initAttributesNamesDone = ConfigDescriptionTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -139,14 +145,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ConfigDescriptionTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string ConfigDescriptionTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> ConfigDescriptionTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool ConfigDescriptionTable::initAttributesNames() {
 
 		attributesNames.push_back("configDescriptionId");
 
@@ -186,13 +198,54 @@ namespace asdm {
 
 		attributesNames.push_back("assocConfigDescriptionId");
 
-		return attributesNames;
+
+    
+    	 
+    	attributesNamesInBin.push_back("configDescriptionId") ; 
+    	 
+    	attributesNamesInBin.push_back("numAntenna") ; 
+    	 
+    	attributesNamesInBin.push_back("numDataDescription") ; 
+    	 
+    	attributesNamesInBin.push_back("numFeed") ; 
+    	 
+    	attributesNamesInBin.push_back("correlationMode") ; 
+    	 
+    	attributesNamesInBin.push_back("numAtmPhaseCorrection") ; 
+    	 
+    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
+    	 
+    	attributesNamesInBin.push_back("processorType") ; 
+    	 
+    	attributesNamesInBin.push_back("spectralType") ; 
+    	 
+    	attributesNamesInBin.push_back("antennaId") ; 
+    	 
+    	attributesNamesInBin.push_back("feedId") ; 
+    	 
+    	attributesNamesInBin.push_back("switchCycleId") ; 
+    	 
+    	attributesNamesInBin.push_back("dataDescriptionId") ; 
+    	 
+    	attributesNamesInBin.push_back("processorId") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("phasedArrayList") ; 
+    	 
+    	attributesNamesInBin.push_back("numAssocValues") ; 
+    	 
+    	attributesNamesInBin.push_back("assocNature") ; 
+    	 
+    	attributesNamesInBin.push_back("assocConfigDescriptionId") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& ConfigDescriptionTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& ConfigDescriptionTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -568,7 +621,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n");
+		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -690,7 +743,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n";
+		oss << "<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ConfigDescriptionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -828,44 +881,47 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("configDescriptionId") ; 
-     
-    attributesSeq.push_back("numAntenna") ; 
-     
-    attributesSeq.push_back("numDataDescription") ; 
-     
-    attributesSeq.push_back("numFeed") ; 
-     
-    attributesSeq.push_back("correlationMode") ; 
-     
-    attributesSeq.push_back("numAtmPhaseCorrection") ; 
-     
-    attributesSeq.push_back("atmPhaseCorrection") ; 
-     
-    attributesSeq.push_back("processorType") ; 
-     
-    attributesSeq.push_back("spectralType") ; 
-     
-    attributesSeq.push_back("antennaId") ; 
-     
-    attributesSeq.push_back("feedId") ; 
-     
-    attributesSeq.push_back("switchCycleId") ; 
-     
-    attributesSeq.push_back("dataDescriptionId") ; 
-     
-    attributesSeq.push_back("processorId") ; 
     
-     
+    	 
+    attributesSeq.push_back("configDescriptionId") ; 
+    	 
+    attributesSeq.push_back("numAntenna") ; 
+    	 
+    attributesSeq.push_back("numDataDescription") ; 
+    	 
+    attributesSeq.push_back("numFeed") ; 
+    	 
+    attributesSeq.push_back("correlationMode") ; 
+    	 
+    attributesSeq.push_back("numAtmPhaseCorrection") ; 
+    	 
+    attributesSeq.push_back("atmPhaseCorrection") ; 
+    	 
+    attributesSeq.push_back("processorType") ; 
+    	 
+    attributesSeq.push_back("spectralType") ; 
+    	 
+    attributesSeq.push_back("antennaId") ; 
+    	 
+    attributesSeq.push_back("feedId") ; 
+    	 
+    attributesSeq.push_back("switchCycleId") ; 
+    	 
+    attributesSeq.push_back("dataDescriptionId") ; 
+    	 
+    attributesSeq.push_back("processorId") ; 
+    	
+    	 
     attributesSeq.push_back("phasedArrayList") ; 
-     
+    	 
     attributesSeq.push_back("numAssocValues") ; 
-     
+    	 
     attributesSeq.push_back("assocNature") ; 
-     
+    	 
     attributesSeq.push_back("assocConfigDescriptionId") ; 
+    	
      
+    
     
     // And decide that it has version == "2"
     version = "2";         
@@ -922,13 +978,13 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -943,7 +999,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 	if (getContainer().checkRowUniqueness()) {
     	try {
       		for (uint32_t i = 0; i < this->declaredSize; i++) {
-				ConfigDescriptionRow* aRow = ConfigDescriptionRow::fromBin(eiss, *this, attributesSeq);
+				ConfigDescriptionRow* aRow = ConfigDescriptionRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 				checkAndAdd(aRow);
       		}
     	}
@@ -958,7 +1014,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
     }
     else {
  		for (uint32_t i = 0; i < this->declaredSize; i++) {
-			ConfigDescriptionRow* aRow = ConfigDescriptionRow::fromBin(eiss, *this, attributesSeq);
+			ConfigDescriptionRow* aRow = ConfigDescriptionRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 			append(aRow);
       	}   	
     }
@@ -1049,6 +1105,132 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
     
     setFromMIME(ss.str());
   }	
+/* 
+  void ConfigDescriptionTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/ConfigDescription.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "ConfigDescription");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "ConfigDescription");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "ConfigDescription");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "ConfigDescription");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "ConfigDescription");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("ConfigDescriptionTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/ConfigDescriptionTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "ConfigDescription");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/ConfigDescriptionTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "ConfigDescription");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/ConfigDescriptionTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "ConfigDescription");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/ConfigDescriptionTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "ConfigDescription");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void ConfigDescriptionTable::setFromXMLFile(const string& directory) {

@@ -43,7 +43,7 @@ using asdm::InvalidArgumentException;
 
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 
 namespace asdm {
 
@@ -93,13 +93,13 @@ public:
 	void toBin(EndianOSStream& eoss) const;
 	
 	/**
-	 * Read the binary representation of an EntityId from a EndianISStream
+	 * Read the binary representation of an EntityId from a EndianIStream
 	 * and use the read value to set an  EntityId.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an EntityId
 	 * @throw InvalidArgumentException
 	 */
-	static EntityId fromBin(EndianISStream& eiss);
+	static EntityId fromBin(EndianIStream& eis);
 	
 	bool isNull() const;
 

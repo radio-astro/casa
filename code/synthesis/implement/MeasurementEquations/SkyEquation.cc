@@ -31,8 +31,8 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
-#include <msvis/SynthesisUtils/SkyJones.h>
-#include <msvis/SynthesisUtils/FTMachine.h>
+#include <synthesis/TransformMachines/SkyJones.h>
+#include <synthesis/TransformMachines/FTMachine.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -41,13 +41,13 @@
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
 
-#include <msvis/SynthesisUtils/ComponentFTMachine.h>
+#include <synthesis/TransformMachines/ComponentFTMachine.h>
 #include <synthesis/MeasurementComponents/SkyModel.h>
 
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/MSVis/VisBufferUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBufferUtil.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>
@@ -65,9 +65,9 @@
 #include <casa/Containers/Block.h>
 
 #include <casa/Exceptions/Error.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
-///////////////#include <msvis/MSVis/VisBufferAsync.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
+///////////////#include <synthesis/MSVis/VisBufferAsync.h>
 #include <casa/iostream.h>
 
 #include <casa/System/ProgressMeter.h>

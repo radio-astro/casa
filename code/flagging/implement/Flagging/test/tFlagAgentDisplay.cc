@@ -288,7 +288,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		stringstream agentName;
 		agentName << agentNumber;
 		iter->define("name","FlagAgentDisplay_" + agentName.str());
-		flaggingAgent = new FlagAgentDisplay(dh,*iter,False/*writePrivFlagCube*/, True/*dataDisplay*/, True/*reportDisplay*/);
+		flaggingAgent = new FlagAgentDisplay(dh,*iter,False/*writePrivFlagCube*/);
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
 	}
@@ -691,6 +691,26 @@ int main(int argc, char **argv)
                         if(value.compare("False")==0) pause=False;
 			agentParameters.define ("pause", pause);
 			cout << "pause is: " << pause << endl;
+		}
+		else if (parameter == string("-datadisplay"))
+		{
+                        Bool datadisplay=True;
+                        if(value.compare("False")==0) datadisplay=False;
+			agentParameters.define ("datadisplay", datadisplay);
+			cout << "datadisplay is: " << datadisplay << endl;
+		}
+		else if (parameter == string("-reportdisplay"))
+		{
+                        Bool reportdisplay=True;
+                        if(value.compare("False")==0) reportdisplay=False;
+			agentParameters.define ("reportdisplay", reportdisplay);
+			cout << "reportdisplay is: " << reportdisplay << endl;
+		}
+		else if (parameter == string("-format"))
+		{
+		        String format = casa::String(value);
+			agentParameters.define ("format", format);
+			cout << "format is: " << format << endl;
 		}
 		else if (parameter == string("-flagspw"))
 		{

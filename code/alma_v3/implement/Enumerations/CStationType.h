@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace StationTypeMod
   typedef StationType &StationType_out;
 } 
 #endif
+
+namespace StationTypeMod {
+	std::ostream & operator << ( std::ostream & out, const StationType& value);
+	std::istream & operator >> ( std::istream & in , StationType& value );
+}
 
 /** 
   * A helper class for the enumeration StationType.

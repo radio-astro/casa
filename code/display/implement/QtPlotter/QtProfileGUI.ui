@@ -325,6 +325,16 @@
              <string>no error</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>rmse</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>propagated</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item>

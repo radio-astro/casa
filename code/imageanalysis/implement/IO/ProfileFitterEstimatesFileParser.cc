@@ -159,17 +159,10 @@ void ProfileFitterEstimatesFileParser::_createSpectralList() {
 		GaussianSpectralElement se(
 			_peakValues[i],
 			_centerValues[i],
-			_fwhmValues[i]/GaussianSpectralElement::SigmaToFWHM
+			GaussianSpectralElement::sigmaFromFWHM(_fwhmValues[i])
 		);
-		if (_fixedValues[i].contains("c")) {
-			se.fixCenter();
-		}
-
-		if (_fixedValues[i].contains("f")) {
-			se.fixFWHM();
-		}
-		if (_fixedValues[i].contains("p")) {
-			se.fixAmpl();
+		if (! _fixedValues[i].empty()) {
+			se.fixByString(_fixedValues[i]);
 		}
 		_spectralList.add(se);
 	}

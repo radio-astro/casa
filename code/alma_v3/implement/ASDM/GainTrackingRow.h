@@ -87,9 +87,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file GainTracking.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -108,17 +109,19 @@ class FeedRow;
 	
 
 class GainTrackingRow;
-typedef void (GainTrackingRow::*GainTrackingAttributeFromBin) (EndianISStream& eiss);
+typedef void (GainTrackingRow::*GainTrackingAttributeFromBin) (EndianIStream& eis);
+typedef void (GainTrackingRow::*GainTrackingAttributeFromText) (const string& s);
 
 /**
  * The GainTrackingRow class is a row of a GainTrackingTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class GainTrackingRow {
 friend class asdm::GainTrackingTable;
 friend class asdm::RowTransformer<GainTrackingRow>;
+//friend class asdm::TableStreamReader<GainTrackingTable, GainTrackingRow>;
 
 public:
 
@@ -656,7 +659,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, GainTrackingAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void attenuatorFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+
+void samplingLevelFromBin( EndianIStream& eis);
+void numAttFreqFromBin( EndianIStream& eis);
+void attFreqFromBin( EndianIStream& eis);
+void attSpectrumFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the GainTrackingTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static GainTrackingRow* fromBin(EndianIStream& eis, GainTrackingTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -863,23 +896,67 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, GainTrackingAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void feedIdFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void attenuatorFromBin( EndianISStream& eiss);
-void polarizationTypeFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void attenuatorFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
 
-void samplingLevelFromBin( EndianISStream& eiss);
-void numAttFreqFromBin( EndianISStream& eiss);
-void attFreqFromBin( EndianISStream& eiss);
-void attSpectrumFromBin( EndianISStream& eiss);
+void samplingLevelFromBin( EndianIStream& eis);
+void numAttFreqFromBin( EndianIStream& eis);
+void attFreqFromBin( EndianIStream& eis);
+void attSpectrumFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, GainTrackingAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void feedIdFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void attenuatorFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+
+	
+void samplingLevelFromText (const string & s);
+	
+	
+void numAttFreqFromText (const string & s);
+	
+	
+void attFreqFromText (const string & s);
+	
+	
+void attSpectrumFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -888,14 +965,14 @@ void attSpectrumFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the GainTrackingTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static GainTrackingRow* fromBin(EndianISStream& eiss, GainTrackingTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static GainTrackingRow* fromBin(EndianIStream& eis, GainTrackingTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

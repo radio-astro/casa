@@ -1117,37 +1117,228 @@ image::findsources(const int nMax, const double cutoff,
 	return rstat;
 }
 
-// FIXME need to support region records as input
-record* image::fitprofile(const string& box, const string& region,
+record* image::fitprofile(const string& box, const variant& region,
 	const string& chans, const string& stokes, const int axis,
-	const variant& vmask, int ngauss, const int poly, const string& estimates,
-	const int minpts, const bool multifit,	const string& model,
-	const string& residual, const string& amp,
+	const variant& vmask, int ngauss, const int poly,
+	const string& estimates, const int minpts, const bool multifit,
+	const string& model, const string& residual, const string& amp,
 	const string& amperr, const string& center, const string& centererr,
 	const string& fwhm, const string& fwhmerr,
 	const string& integral, const string& integralerr, const bool stretch,
-	const bool logResults
+	const bool logResults, const variant& pampest,
+	const variant& pcenterest, const variant& pfwhmest,
+	const variant& pfix, const variant& gmncomps,
+    const variant& gmampcon, const variant& gmcentercon,
+    const variant& gmfwhmcon, const vector<double>& gmampest,
+    const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
+    const variant& gmfix, const string& logfile, const bool append,
+    const variant& pfunc
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
 		return 0;
 	}
+	String regionName;
+	std::auto_ptr<Record> regionPtr(0);
+	_getRegion(regionName, regionPtr, region);
 	if (ngauss < 0) {
 		*_log << LogIO::WARN
 			<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
 			<< LogIO::POST;
 		ngauss = 0;
 	}
-	record *rstat = 0;
 	try {
+		vector<double> myampest = toVectorDouble(pampest, "pampest");
+		vector<double> mycenterest = toVectorDouble(pcenterest, "pcenterest");
+		vector<double> myfwhmest = toVectorDouble(pfwhmest, "pfwhmest");
+		vector<string> myfix = toVectorString(pfix, "pfix");
+		vector<string> myfunc = toVectorString(pfunc, "pfunc");
+
+		vector<int> mygmncomps = gmncomps.type() == variant::INT
+			&& gmncomps.toInt() == 0
+				? vector<int>(0)
+				: toVectorInt(gmncomps, "gmncomps");
+		vector<double> mygmampcon = toVectorDouble(gmampcon, "gmampcon");
+		vector<double> mygmcentercon = toVectorDouble(gmcentercon, "gmcentercon");
+		vector<double> mygmfwhmcon = toVectorDouble(gmfwhmcon, "gmfwhmcon");
+		vector<string> mygmfix = toVectorString(gmfix, "gmfix");
+
+		Bool makeSpectralList = (
+			mygmncomps.size() > 0
+			|| ! (
+				myampest.size() == 0
+				&& mycenterest.size() == 0
+				&& myfwhmest.size() == 0
+			)
+		);
+		SpectralList spectralList;
+		Bool gfixSpecified = (myfix.size() > 0);
+		if (makeSpectralList) {
+			if (! estimates.empty()) {
+				*_log << "You cannot specify both an "
+					<< "estimates file and set estimates "
+					<< "directly. You may only do one or "
+					<< "the either (or neither in which "
+					<< "case you must specify ngauss and/or poly)"
+					<< LogIO::EXCEPTION;
+			}
+			uInt mynpcf = myampest.size();
+			if (myfunc.size() == 0) {
+				myfunc.resize(myampest.size(), "G");
+			}
+			if (
+				mycenterest.size() != mynpcf
+				|| myfwhmest.size() != mynpcf
+				|| myfunc.size() != mynpcf
+			) {
+				*_log << "pampest, pcenterest, pfwhmest, and pfunc arrays "
+					<< "must all be the same length" << LogIO::EXCEPTION;
+			}
+			if (gfixSpecified && myfix.size() != mynpcf) {
+				*_log << "If the gfix array is specified the number of "
+					<< "elements it has must be the same as the number of elements "
+					<< "in the ampest array even if some elements are empty strings"
+					<< LogIO::EXCEPTION;
+			}
+			if (mygmncomps.size() > 0) {
+				uInt sum = 0;
+				for (uInt i=0; i<mygmncomps.size(); i++) {
+					if (mygmncomps <= 0) {
+						*_log << "All elements of gmncomps must be greater than 0" << LogIO::EXCEPTION;
+					}
+					sum += mygmncomps[i];
+				}
+				if (gmampest.size() != sum) {
+					*_log << "gmampest must have exactly "
+						<< sum << " elements" << LogIO::EXCEPTION;
+				}
+				if (gmcenterest.size() != sum) {
+					*_log << "gmcenterest must have exactly "
+						<< sum << " elements" << LogIO::EXCEPTION;
+				}
+				if (gmfwhmest.size() != sum) {
+					*_log << "gmfwhmest must have exactly "
+						<< sum << " elements" << LogIO::EXCEPTION;
+				}
+				if (mygmfix.size() > 0 && mygmfix.size() != sum) {
+					*_log << "gmfwhmest must have either zero or " << sum
+						<< " elements, even if some are empty strings."
+						<< LogIO::EXCEPTION;
+				}
+				uInt nConstraints = sum - mygmncomps.size();
+				if (mygmampcon.size() == 0) {
+					mygmampcon = vector<double>(nConstraints, 0);
+				}
+				else if (
+					mygmampcon.size() > 0
+					&& mygmampcon.size() != nConstraints
+				) {
+					*_log << "If specified, gmampcon must have exactly "
+						<< nConstraints << " elements, even if some are zero"
+						<< LogIO::EXCEPTION;
+				}
+				if (mygmcentercon.size() == 0) {
+					mygmcentercon = vector<double>(nConstraints, 0);
+				}
+				else if (
+					mygmcentercon.size() > 0
+					&& mygmcentercon.size() != nConstraints
+				) {
+					*_log << "If specified, gmcentercon must have exactly "
+						<< nConstraints << " elements, even if some are zero"
+						<< LogIO::EXCEPTION;
+				}
+				if (mygmfwhmcon.size() == 0) {
+					mygmfwhmcon = vector<double>(nConstraints, 0);
+				}
+				else if (
+					mygmfwhmcon.size() > 0
+					&& mygmfwhmcon.size() != nConstraints
+				) {
+					*_log << "If specified, gmfwhmcon must have exactly "
+						<< nConstraints << " elements, even if some are zero"
+						<< LogIO::EXCEPTION;
+				}
+			}
+			for (uInt i=0; i<mynpcf; i++) {
+				String func(myfunc[i]);
+				func.upcase();
+				Bool doGauss = func.startsWith("G");
+				Bool doLorentz = func.startsWith("L");
+				if (! doGauss && ! doLorentz) {
+					*_log << myfunc[i] << " does not minimally match 'gaussian' or 'lorentzian'"
+						<< LogIO::EXCEPTION;
+				}
+				std::auto_ptr<PCFSpectralElement> pcf(
+					doGauss
+					? dynamic_cast<PCFSpectralElement*>(
+						new GaussianSpectralElement(
+						myampest[i], mycenterest[i],
+						GaussianSpectralElement::sigmaFromFWHM(myfwhmest[i])
+						)
+					)
+					: doLorentz
+					  ? dynamic_cast<PCFSpectralElement*>(
+							  new LorentzianSpectralElement(
+								myampest[i], mycenterest[i], myfwhmest[i]
+						)
+					  )
+					  : 0
+				);
+				if (gfixSpecified) {
+					pcf->fixByString(myfix[i]);
+				}
+				if (! spectralList.add(*pcf)) {
+					*_log << "Unable to add element to spectral list"
+						<< LogIO::EXCEPTION;
+				}
+			}
+			uInt compNumber = 0;
+			for (uInt i=0; i<mygmncomps.size(); i++) {
+				if (mygmncomps[i] < 0) {
+					*_log << "All elements of gmncomps must be positive"
+						<< LogIO::EXCEPTION;
+				}
+				Vector<GaussianSpectralElement> g(mygmncomps[i]);
+				Matrix<Double> constraints(mygmncomps[i] - 1, 3);
+				for (uInt j=0; j<(uInt)mygmncomps[i]; j++) {
+					g[j] = GaussianSpectralElement(
+						gmampest[compNumber], gmcenterest[compNumber],
+						GaussianSpectralElement::sigmaFromFWHM(gmfwhmest[compNumber])
+					);
+					if (mygmfix.size() > 0) {
+						g[j].fixByString(mygmfix[compNumber]);
+					}
+					if (j > 0) {
+						constraints(j-1, 0) = mygmampcon[compNumber - (i+1)];
+						constraints(j-1, 1) = mygmcentercon[compNumber - (i+1)];
+						constraints(j-1, 2) = mygmfwhmcon[compNumber - (i+1)];
+					}
+					compNumber++;
+				}
+				if (
+					! spectralList.add(
+						GaussianMultipletSpectralElement(g, constraints)
+					)
+				) {
+					*_log << "Unable to add gaussian multiplet to spectral list"
+						<< LogIO::EXCEPTION;
+				}
+			}
+		}
+		else if (gfixSpecified) {
+			*_log << "The fix array is specified but no corresponding estimates are "
+				<< "set via ampest, centerest, and fwhmest. The fix array will be ignored."
+				<< LogIO::WARN;
+		}
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
 		ImageProfileFitter fitter(
-			_image->getImage(), region, 0,
+			_image->getImage(), regionName, regionPtr.get(),
 			box, chans, stokes, mask, axis,
-			ngauss, estimates
+			ngauss, estimates, spectralList
 		);
 		fitter.setDoMultiFit(multifit);
 		fitter.setPolyOrder(poly);
@@ -1164,13 +1355,16 @@ record* image::fitprofile(const string& box, const string& region,
 		fitter.setMinGoodPoints(minpts > 0 ? minpts : 0);
 		fitter.setStretch(stretch);
 		fitter.setLogResults(logResults);
-		rstat = fromRecord(fitter.fit());
+		if (! logfile.empty()) {
+			fitter.setLogfile(logfile);
+			fitter.setLogfileAppend(append);
+		}
+		return fromRecord(fitter.fit());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 image* image::reorder(
@@ -1294,36 +1488,21 @@ image* image::transpose(
 				<< "Unsupported type for chans. chans must be either an integer or a string"
 				<< LogIO::EXCEPTION;
 		}
-		if (
-			region.type() != variant::BOOLVEC
-			&& region.type() != variant::STRING
-			&& region.type() != variant::RECORD
-		) {
-			*_log << "Unsupported type for region " << region.type()
-				<< LogIO::EXCEPTION;
-		}
 		std::auto_ptr<Record> regionRecord(0);
-		String regionString = (
-			region.type() == variant::STRING || region.size() == 0
-		) ? region.size() == 0
-			? ""
-				: region.toString()
-			: "";
-		if (region.type() == variant::RECORD) {
-			variant regionCopy = region;
-			regionRecord.reset(
-				toRecord(regionCopy.asRecord())
-			);
-		}
+		String regionString;
+		_getRegion(regionString, regionRecord, region);
 		fitter.reset(
 			new ImageFitter(
 				image, regionString, regionRecord.get(), box, sChans,
 				stokes, mask, includepix, excludepix, residual, model,
-				estimates, logfile, append, newestimates, complist,
-				writeControl
+				estimates, newestimates, complist, writeControl
 			)
 		);
 		fitter->setStretch(stretch);
+		if (! logfile.empty()) {
+			fitter->setLogfile(logfile);
+			fitter->setLogfileAppend(append);
+		}
 		if (dooff) {
 			fitter->setZeroLevelEstimate(offset, offsetisfixed);
 		}
@@ -3346,5 +3525,35 @@ bool image::isconform(const string& other) {
 		RETHROW(x);
 	}
 }
+void image::_getRegion(
+	String& regionName, std::auto_ptr<Record>& regionRecord,
+	const variant& region
+) const {
+
+	if (
+		region.type() != variant::BOOLVEC
+		&& region.type() != variant::STRING
+		&& region.type() != variant::RECORD
+	) {
+		*_log << "Unsupported type for region " << region.type()
+			<< LogIO::EXCEPTION;
+	}
+
+	regionRecord.reset(0);
+	regionName = (
+		region.type() == variant::STRING || region.size() == 0
+	)
+		? region.size() == 0
+			? ""
+			: region.toString()
+		: "";
+	if (region.type() == variant::RECORD) {
+		variant regionCopy = region;
+		regionRecord.reset(
+			toRecord(regionCopy.asRecord())
+		);
+	}
+}
+
 
 } // casac namespace

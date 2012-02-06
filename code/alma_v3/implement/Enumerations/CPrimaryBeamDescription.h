@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -68,6 +69,11 @@ namespace PrimaryBeamDescriptionMod
   typedef PrimaryBeamDescription &PrimaryBeamDescription_out;
 } 
 #endif
+
+namespace PrimaryBeamDescriptionMod {
+	std::ostream & operator << ( std::ostream & out, const PrimaryBeamDescription& value);
+	std::istream & operator >> ( std::istream & in , PrimaryBeamDescription& value );
+}
 
 /** 
   * A helper class for the enumeration PrimaryBeamDescription.

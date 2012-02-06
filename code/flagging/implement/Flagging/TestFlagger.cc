@@ -31,9 +31,6 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/HostInfo.h>
 #include <flagging/Flagging/TestFlagger.h>
-#include <flagging/Flagging/FlagDataHandler.h>
-#include <flagging/Flagging/FlagAgentBase.h>
-#include <flagging/Flagging/FlagAgentSummary.h>
 #include <tableplot/TablePlot/FlagVersion.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
@@ -46,9 +43,7 @@ namespace casa {
 
 const bool TestFlagger::dbg = false;
 
-
-// TODO: add wrapping functions to existing fg.setdata(), fg.setclearflags(), etc?!
-
+// TODO: add convenient functions to other agents, to pase parameters
 
 // -----------------------------------------------------------------------
 // Default Constructor
@@ -57,6 +52,8 @@ TestFlagger::TestFlagger ()
 {
 	fdh_p = NULL;
 	summaryAgent_p = NULL;
+	displayAgent_p = NULL;
+
 	done();
 }
 
@@ -95,10 +92,14 @@ TestFlagger::done()
 	timeset_p = false;
 	iterset_p = false;
 
+	dataselection_p = Record();
+
+/*
 	if (! dataselection_p.empty()) {
 		Record temp;
 		dataselection_p = temp;
 	}
+*/
 
 	if (! agentParams_p.empty()) {
 		Record temp;
@@ -107,6 +108,10 @@ TestFlagger::done()
 
 	if(summaryAgent_p){
 		summaryAgent_p = NULL;
+	}
+
+	if(displayAgent_p){
+		displayAgent_p = NULL;
 	}
 
 	mode_p = "";
@@ -166,6 +171,10 @@ TestFlagger::selectData(Record selrec)
 	if (dbg)
 		os << LogIO::NORMAL << "Called from selectData(Record)" << LogIO::POST;
 
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
 
 	if (! selrec.empty()) {
 
@@ -259,37 +268,6 @@ TestFlagger::selectData(String field, String spw, String array,
 
 }
 
-// ---------------------------------------------------------------------
-// DEPRECATED: TestFlagger::parseDataSelection
-// Parse union of parameters to the FlagDataHandler
-// ---------------------------------------------------------------------
-bool
-TestFlagger::parseDataSelection(Record selrec)
-{
-
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
-
-	if(selrec.empty()) {
-		return false;
-	}
-
-	dataselection_p = selrec;
-
-	// Get the selection parameters
-	dataselection_p.get("spw", spw_p);
-	dataselection_p.get("scan", scan_p);
-	dataselection_p.get("field", field_p);
-	dataselection_p.get("antenna", antenna_p);
-	dataselection_p.get("timerange", timerange_p);
-	dataselection_p.get("correlation", correlation_p);
-	dataselection_p.get("intent", intent_p);
-	dataselection_p.get("feed", feed_p);
-	dataselection_p.get("array", array_p);
-	dataselection_p.get("uvrange", uvrange_p);
-	dataselection_p.get("observation", observation_p);
-
-	return true;
-}
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseAgentParameters
@@ -302,9 +280,16 @@ TestFlagger::parseAgentParameters(Record agent_params)
 {
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
+	// Default values for some parameters
 	String mode = "";
 	String expression = "ABS ALL";
 	String agent_name = "";
+	Bool apply = true;
 
 	// create a temporary vector of agents
 	std::vector<Record> listOfAgents;
@@ -320,7 +305,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	agentParams_p = agent_params;
 
 	if (! agentParams_p.isDefined("mode")) {
-		os << LogIO::SEVERE << "No mode has been provided for the agent"
+		os << LogIO::WARN << "No mode has been provided"
 				<< LogIO::POST;
 		return false;
 	}
@@ -328,12 +313,29 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	// Get mode
 	agentParams_p.get("mode", mode);
 
-	// Name for the logging output
-	if (! agentParams_p.isDefined("name"))
-			agentParams_p.define("name", mode);
+	// Validate mode against known modes
+	if (! isModeValid(mode)){
+		os << LogIO::WARN << "Mode "<< mode << "is not valid or doesn't exist"
+				<< LogIO::POST;
+		return false;
+	}
 
+
+	// Name for the logging output
+	if (! agentParams_p.isDefined("name")){
+		agent_name = mode;
+		agent_name.capitalize();
+		agentParams_p.define("name", agent_name);
+
+	}
 
 	agentParams_p.get("name", agent_name);
+
+	// Enforce a defaut value for the apply parameter
+	if (! agentParams_p.isDefined("apply")){
+		agentParams_p.define("apply", apply);
+	}
+
 
 	// If there is a tfcrop or extend agent in the list,
 	// get the maximum value of ntime and the combinescans parameter
@@ -352,7 +354,8 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 		combinescans_p = combinescans_p || combine;
 
-		os << LogIO::DEBUGGING << "max ntime="<<max_p<<" and combinescans="<< combinescans_p << LogIO::POST;
+		os << LogIO::DEBUGGING << "max ntime="<<max_p<<" and combinescans="<<
+				combinescans_p << LogIO::POST;
 
 	}
 
@@ -418,57 +421,6 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 
 // ---------------------------------------------------------------------
-// DEPRECATED TestFlagger::initFlagDataHandler
-// Initialize the FlagDataHandler
-// ---------------------------------------------------------------------
-bool
-TestFlagger::initFlagDataHandler()
-{
-
-	bool ret_status = true;
-
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
-
-	if (msname_p.empty()) {
-		os << LogIO::SEVERE << "No Measurement Set has been parsed"
-				<< LogIO::POST;
-		return False;
-	}
-
-	if(fdh_p) delete fdh_p;
-
-	// create a FlagDataHandler object
-	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
-
-	// Open the MS
-	fdh_p->open();
-
-	if (dataselection_p.empty()) {
-		return false;
-	}
-
-	// Set the data selection
-	ret_status = fdh_p->setDataSelection(dataselection_p);
-	if (!ret_status) {
-		os << LogIO::SEVERE << "Failed to set the data selection."
-				<< LogIO::POST;
-		return false;
-	}
-
-	// Select the data
-	ret_status = fdh_p->selectData();
-	if (!ret_status) {
-		os << LogIO::SEVERE << "Failed to select the data."
-				<< LogIO::POST;
-		return false;
-	}
-
-
-	return true;
-}
-
-
-// ---------------------------------------------------------------------
 // TestFlagger::initAgents
 // Initialize the Agents
 // Call parseAgentParameters and selectData first
@@ -479,12 +431,22 @@ TestFlagger::initAgents()
 
     LogIO os(LogOrigin("TestFlagger",__FUNCTION__));
 
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
+	if (dataselection_p.empty()){
+		os << LogIO::SEVERE << "There is no MS Selection available." << LogIO::POST;
+		return false;
+	}
+
 	if (agents_config_list_p.empty()){
 		return false;
 	}
 
-
-	os<< LogIO::NORMAL<< "There are "<< agents_config_list_p.size()<< " agents in the list"<<LogIO::POST;
+	os<< LogIO::DEBUGGING<< "There are initially "<< agents_config_list_p.size()<<
+			" agents in the list"<<LogIO::POST;
 
 	// Check if list has a mixed state of apply and unapply parameters
 	Bool mixed, apply0;
@@ -499,7 +461,7 @@ TestFlagger::initAgents()
 			agent_rec.get("apply", apply);
 			if (apply0 != apply){
 				mixed = true;
-				if (dbg) cout << "List has a mixed state"<<endl;
+				os << LogIO::DEBUGGING << "List has a mixed state"<<LogIO::POST;
 				break;
 			}
 			else {
@@ -529,18 +491,12 @@ TestFlagger::initAgents()
 
 		}
 
-		// TODO: should I check for fdh_p existence here?
-		// Should it call initFlagDataHandler in case it doesn't exist?
-		// call the factory method for each of the agent's records
-		if(not fdh_p){
-			os << LogIO::SEVERE << "FlagDataHandler has not been initialized."
-					<< LogIO::POST;
-			return false;
+		// Change the log level if apply=True in a mixed state
+		Bool apply = true;;
+		if (agent_rec.isDefined("apply")) {
+			agent_rec.get("apply", apply);
 		}
 
-		// Change the log level if apply=True in a mixed state
-		Bool apply;
-		agent_rec.get("apply", apply);
 		if (mixed and apply){
 			agent_rec.define("loglevel", loglevel);
 		}
@@ -556,7 +512,8 @@ TestFlagger::initAgents()
 		}
 
 		// Change the new iteration approach only once
-		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0)) {
+		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
+			or mode.compare("display") == 0)) {
 			if (combinescans_p)
 				fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
 			else
@@ -565,19 +522,32 @@ TestFlagger::initAgents()
 			iterset_p = true;
 		}
 
-		// TODO: Catch error, print a warning and continue to next agent.
 		// Create this agent
 		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
+		if (fa == NULL){
+			String name;
+			agent_rec.get("name",name);
+			os << LogIO::WARN << "Agent "<< name<< " is NULL. Skipping it."<<LogIO::POST;
+			continue;
+		}
 
-		// Get the summary agent to list the results later
+		// Get the last summary agent to list the results back to the task
 		if (mode.compare("summary") == 0) {
 			summaryAgent_p = (FlagAgentSummary *) fa;
+		}
+
+		// Get the display agent. There can be two display agents!
+		if (mode.compare("display") == 0){
+			displayAgent_p = (FlagAgentDisplay *) fa;
 		}
 
 		// add the agent to the FlagAgentList
 		agents_list_p.push_back(fa);
 
 	}
+
+	os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
+			LogIO::POST;
 
 	return true;
 }
@@ -589,10 +559,15 @@ TestFlagger::initAgents()
 // It assumes that initAgents has been called first
 // ---------------------------------------------------------------------
 Record
-TestFlagger::run(Bool writeflags)
+TestFlagger::run(Bool writeflags, Bool sequential)
 {
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return Record();
+	}
 
 	if (agents_list_p.empty()) {
 		os << LogIO::SEVERE << "There is no agent to run in list"<< LogIO::POST;
@@ -601,8 +576,8 @@ TestFlagger::run(Bool writeflags)
 
 
 	// Use the maximum ntime of the list
-	os << LogIO::NORMAL3 << "ntime for all agents will be "<< max_p << LogIO::POST;
-	os << LogIO::NORMAL3 << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
+	os << LogIO::DEBUGGING << "ntime for all agents will be "<< max_p << LogIO::POST;
+	os << LogIO::DEBUGGING << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
 
 	// Generate the iterators
 	// It will iterate through the data to evaluate the necessary memory
@@ -610,7 +585,7 @@ TestFlagger::run(Bool writeflags)
 	fdh_p->generateIterator();
 
 	agents_list_p.start();
-	if (dbg) cout << "size=" << agents_list_p.size()<<endl;
+	os << LogIO::DEBUGGING << "Size of agent's list is " << agents_list_p.size()<< LogIO::POST;
 
 	// iterate over chunks
 	while (fdh_p->nextChunk())
@@ -619,35 +594,38 @@ TestFlagger::run(Bool writeflags)
 		while (fdh_p->nextBuffer())
 		{
 
-			// Apply or unapply the flags
-			agents_list_p.apply();
+			// Apply or unapply the flags, in sequential or in parallel
+			agents_list_p.apply(sequential);
 
 			// Flush flags to MS
 			if (writeflags)
 				fdh_p->flushFlags();
 		}
-		if (writeflags)
-			agents_list_p.chunkSummary();
+
+		// Print the chunk summary stats
+		agents_list_p.chunkSummary();
 	}
 
+	// Print the MS summary stats
+	agents_list_p.msSummary();
 	if (writeflags)
-		agents_list_p.msSummary();
+		os << LogIO::NORMAL <<  "=> " << "Writing flags to the MS" << LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
+
+	// Gather the display reports from all agents
+	FlagReport combinedReport = agents_list_p.gatherReports();
+
+	// Send reports to display agent
+	if (displayAgent_p)
+		displayAgent_p->displayReports(combinedReport);
 
 	// Get the record with the summary if there was any summary agent in the list
 	Record summary_stats = Record();
 	if (summaryAgent_p){
 		summary_stats = summaryAgent_p->getResult();
 
-/*		if(dbg){
-			os << LogIO::NORMAL << "Get the summary results" << LogIO::POST;
-			ostringstream os;
-			summary_stats.print(os);
-			String str(os.str());
-			cout << str << endl;
-		}*/
 	}
 
 	agents_list_p.clear();
@@ -735,6 +713,11 @@ TestFlagger::getFlagVersionList(Vector<String> &verlist)
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
 	verlist.resize(0);
 	Int num;
 
@@ -797,11 +780,132 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 {
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
 	FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
 	fv.saveFlagVersion(versionname, comment, merge);
 
 	return true;
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::isModeValid
+// Check if mode is valid
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::isModeValid(String mode)
+{
+	bool ret;
+
+	if (mode.compare("manualflag") == 0 or mode.compare("clip") == 0 or
+			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
+			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
+			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
+			mode.compare("unflag") == 0 or mode.compare("summary") == 0) {
+
+		ret = true;
+	}
+	else
+		ret = false;
+
+	return ret;
+}
+
+// ---------------------------------------------------------------------
+// TestFlagger::parseManualParameters
+// Parse data selection parameters and specific manualflag parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseManualParameters(String field, String spw, String array,
+								   String feed, String scan, String antenna,
+								   String uvrange,  String timerange, String correlation,
+								   String intent, String observation, Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "manualflag";
+	String agent_name = "Manualflag";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+}
+
+
+// ---------------------------------------------------------------------
+// TestFlagger::parseClipParameters
+// Parse data selection parameters and specific clip parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String intent, String observation, String expression, String datacolumn,
+   	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "clip";
+	String agent_name = "Clip";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("expression", expression);
+	agent_record.define("datacolumn", datacolumn);
+	agent_record.define("clipminmax", clipminmax);
+	agent_record.define("clipoutside", clipoutside);
+	agent_record.define("channelavg", channelavg);
+
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
 
 } //#end casa namespace

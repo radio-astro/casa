@@ -28,6 +28,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <string> 
 #include <vector>
 #include <set>
@@ -410,11 +411,71 @@ namespace asdm {
     std::string operator()(const std::string& xmlPath);
     
   private:
+    
     xsltStylesheetPtr cur;
 
     XSLTransformer& operator=(const XSLTransformer & rhs);
     XSLTransformer(const XSLTransformer & rsh);    
   }; // end class XSLTransformer.
+
+
+  /**
+   * Functor class of for a comparison between a "given" character and a characted assumed to be read from a file.
+   * 
+   * Instances of this class are meant to  be used as binary bool functor comparing the uppercase version of the first (char) operand
+   * with the second (char) operand and returning the boolan result of the comparison as long as the read head position in 
+   * the file passed as a parameter to the constructor is smaller than a limit also passed a parameter to the constructor. Once this 
+   * limit is passed , the () operator which returns the result of the comparison will return systematically true.
+   *
+   */
+  class CharComparator {
+  public:
+    CharComparator(std::ifstream * is_p = NULL, off_t limit = 0);
+    bool operator() (char cl, char cr);
+
+  private:
+    std::ifstream* is_p;
+    off_t limit;
+    char* asdmDebug_p; 
+  };
+
+  /**
+   * Functor class of for a comparison between a "given" character and a characted assumed to be read in a file with a an accumulation
+   * of the characters read in the file into a accumulating string.
+   * 
+   * Instances of this class are meant to  be used as binary bool functor comparing the uppercase version of the first (char) operand
+   * with the second (char) operand and returning the boolan result of the comparison as long as the read head position in 
+   * the file passed as a parameter to the constructor is smaller than a limit also passed a parameter to the constructor. Once this 
+   * limit is passed , the () operator which returns the result of the comparison will return systematically true. When the comparison
+   * returns false, the character read from the file is appended to one string whose pointer is passed as a parameter to the constructor.
+   *
+   */
+
+  class CharCompAccumulator {
+  private:
+    std::string*    accumulator_p;
+    std::ifstream*  is_p;
+    off_t	    limit;
+    int             nEqualChars;
+    char*           asdmDebug_p; 
+  public:
+    /**
+     * The constructor.
+     *
+     * @param accumulator_p a pointer to a string where the characters will be accumulated as a side effect of the call to the operator ().
+     * @param is_p a pointer to the file where the characters are assumed to be read.
+     * @param limit the position in the file beyond which the comparison will return systematically true.
+     */
+    CharCompAccumulator(std::string* accumulator_p = NULL, std::ifstream * is_p = NULL , off_t limit = 0);
+
+    /**
+     * Returns true when tpupper(cl) is equal to cr or when the read head position in is_p is >= limit. 
+     * @return a boolean
+     *
+     * Side effect : append cl to *accumulator when the result of the comparison is false.
+     */
+    bool operator()(char cl, char cr);
+  };
 } // end namespace asdm
 #endif  // MISC_H
 

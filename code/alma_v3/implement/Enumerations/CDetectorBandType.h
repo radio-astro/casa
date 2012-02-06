@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -72,6 +73,11 @@ namespace DetectorBandTypeMod
   typedef DetectorBandType &DetectorBandType_out;
 } 
 #endif
+
+namespace DetectorBandTypeMod {
+	std::ostream & operator << ( std::ostream & out, const DetectorBandType& value);
+	std::istream & operator >> ( std::istream & in , DetectorBandType& value );
+}
 
 /** 
   * A helper class for the enumeration DetectorBandType.

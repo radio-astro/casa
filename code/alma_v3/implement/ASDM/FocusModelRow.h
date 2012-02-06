@@ -81,9 +81,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file FocusModel.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -99,17 +100,19 @@ class FocusModelRow;
 	
 
 class FocusModelRow;
-typedef void (FocusModelRow::*FocusModelAttributeFromBin) (EndianISStream& eiss);
+typedef void (FocusModelRow::*FocusModelAttributeFromBin) (EndianIStream& eis);
+typedef void (FocusModelRow::*FocusModelAttributeFromText) (const string& s);
 
 /**
  * The FocusModelRow class is a row of a FocusModelTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class FocusModelRow {
 friend class asdm::FocusModelTable;
 friend class asdm::RowTransformer<FocusModelRow>;
+//friend class asdm::TableStreamReader<FocusModelTable, FocusModelRow>;
 
 public:
 
@@ -556,7 +559,36 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, FocusModelAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void focusModelIdFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffFormulaFromBin( EndianIStream& eis);
+void coeffValFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void assocFocusModelIdFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the FocusModelTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static FocusModelRow* fromBin(EndianIStream& eis, FocusModelTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -749,22 +781,63 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, FocusModelAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void focusModelIdFromBin( EndianISStream& eiss);
-void polarizationTypeFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void numCoeffFromBin( EndianISStream& eiss);
-void coeffNameFromBin( EndianISStream& eiss);
-void coeffFormulaFromBin( EndianISStream& eiss);
-void coeffValFromBin( EndianISStream& eiss);
-void assocNatureFromBin( EndianISStream& eiss);
-void assocFocusModelIdFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void focusModelIdFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffFormulaFromBin( EndianIStream& eis);
+void coeffValFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void assocFocusModelIdFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, FocusModelAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void focusModelIdFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void numCoeffFromText (const string & s);
+	
+	
+void coeffNameFromText (const string & s);
+	
+	
+void coeffFormulaFromText (const string & s);
+	
+	
+void coeffValFromText (const string & s);
+	
+	
+void assocNatureFromText (const string & s);
+	
+	
+void assocFocusModelIdFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -773,14 +846,14 @@ void assocFocusModelIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the FocusModelTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static FocusModelRow* fromBin(EndianISStream& eiss, FocusModelTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static FocusModelRow* fromBin(EndianIStream& eis, FocusModelTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

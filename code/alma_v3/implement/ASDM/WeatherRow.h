@@ -119,9 +119,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Weather.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -134,17 +135,19 @@ class StationRow;
 	
 
 class WeatherRow;
-typedef void (WeatherRow::*WeatherAttributeFromBin) (EndianISStream& eiss);
+typedef void (WeatherRow::*WeatherAttributeFromBin) (EndianIStream& eis);
+typedef void (WeatherRow::*WeatherAttributeFromText) (const string& s);
 
 /**
  * The WeatherRow class is a row of a WeatherTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class WeatherRow {
 friend class asdm::WeatherTable;
 friend class asdm::RowTransformer<WeatherRow>;
+//friend class asdm::TableStreamReader<WeatherTable, WeatherRow>;
 
 public:
 
@@ -883,7 +886,42 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, WeatherAttributeFromBin> fromBinMethods;
+void stationIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+
+void pressureFromBin( EndianIStream& eis);
+void relHumidityFromBin( EndianIStream& eis);
+void temperatureFromBin( EndianIStream& eis);
+void windDirectionFromBin( EndianIStream& eis);
+void windSpeedFromBin( EndianIStream& eis);
+void windMaxFromBin( EndianIStream& eis);
+void dewPointFromBin( EndianIStream& eis);
+void numLayerFromBin( EndianIStream& eis);
+void layerHeightFromBin( EndianIStream& eis);
+void temperatureProfileFromBin( EndianIStream& eis);
+void cloudMonitorFromBin( EndianIStream& eis);
+void numWVRFromBin( EndianIStream& eis);
+void wvrTempFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the WeatherTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static WeatherRow* fromBin(EndianIStream& eis, WeatherTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1152,28 +1190,87 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, WeatherAttributeFromBin> fromBinMethods;
-void stationIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
+void stationIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
 
-void pressureFromBin( EndianISStream& eiss);
-void relHumidityFromBin( EndianISStream& eiss);
-void temperatureFromBin( EndianISStream& eiss);
-void windDirectionFromBin( EndianISStream& eiss);
-void windSpeedFromBin( EndianISStream& eiss);
-void windMaxFromBin( EndianISStream& eiss);
-void dewPointFromBin( EndianISStream& eiss);
-void numLayerFromBin( EndianISStream& eiss);
-void layerHeightFromBin( EndianISStream& eiss);
-void temperatureProfileFromBin( EndianISStream& eiss);
-void cloudMonitorFromBin( EndianISStream& eiss);
-void numWVRFromBin( EndianISStream& eiss);
-void wvrTempFromBin( EndianISStream& eiss);
-void waterFromBin( EndianISStream& eiss);
+void pressureFromBin( EndianIStream& eis);
+void relHumidityFromBin( EndianIStream& eis);
+void temperatureFromBin( EndianIStream& eis);
+void windDirectionFromBin( EndianIStream& eis);
+void windSpeedFromBin( EndianIStream& eis);
+void windMaxFromBin( EndianIStream& eis);
+void dewPointFromBin( EndianIStream& eis);
+void numLayerFromBin( EndianIStream& eis);
+void layerHeightFromBin( EndianIStream& eis);
+void temperatureProfileFromBin( EndianIStream& eis);
+void cloudMonitorFromBin( EndianIStream& eis);
+void numWVRFromBin( EndianIStream& eis);
+void wvrTempFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, WeatherAttributeFromText> fromTextMethods;
+	
+void stationIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+
+	
+void pressureFromText (const string & s);
+	
+	
+void relHumidityFromText (const string & s);
+	
+	
+void temperatureFromText (const string & s);
+	
+	
+void windDirectionFromText (const string & s);
+	
+	
+void windSpeedFromText (const string & s);
+	
+	
+void windMaxFromText (const string & s);
+	
+	
+void dewPointFromText (const string & s);
+	
+	
+void numLayerFromText (const string & s);
+	
+	
+void layerHeightFromText (const string & s);
+	
+	
+void temperatureProfileFromText (const string & s);
+	
+	
+void cloudMonitorFromText (const string & s);
+	
+	
+void numWVRFromText (const string & s);
+	
+	
+void wvrTempFromText (const string & s);
+	
+	
+void waterFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1182,14 +1279,14 @@ void waterFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the WeatherTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static WeatherRow* fromBin(EndianISStream& eiss, WeatherTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static WeatherRow* fromBin(EndianIStream& eis, WeatherTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

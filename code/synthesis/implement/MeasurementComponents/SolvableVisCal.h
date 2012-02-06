@@ -37,14 +37,14 @@
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
-#include <msvis/SynthesisUtils/SynthesisError.h>
-#include <calibration/CalTables/CalSet.h>
-#include <calibration/CalTables/CalSetMetaInfo.h>
-#include <calibration/CalTables/CalInterp.h>
-#include <calibration/CalTables/VisCalEnum.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/CalVisBuffer.h>
-#include <msvis/MSVis/VisBuffGroupAcc.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/CalTables/CalSet.h>
+#include <synthesis/CalTables/CalSetMetaInfo.h>
+#include <synthesis/CalTables/CalInterp.h>
+#include <synthesis/CalTables/VisCalEnum.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/CalVisBuffer.h>
+#include <synthesis/MSVis/VisBuffGroupAcc.h>
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>

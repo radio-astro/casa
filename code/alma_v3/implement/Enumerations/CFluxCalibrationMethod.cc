@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CFluxCalibrationMethod::version() {
 	return FluxCalibrationMethodMod::version;
 	}
@@ -134,5 +133,25 @@ string CFluxCalibrationMethod::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'FluxCalibrationMethod'.";
 	return oss.str();
+}
+
+namespace FluxCalibrationMethodMod {
+	std::ostream & operator << ( std::ostream & out, const FluxCalibrationMethod& value) {
+		out << CFluxCalibrationMethod::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , FluxCalibrationMethod& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CFluxCalibrationMethod::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

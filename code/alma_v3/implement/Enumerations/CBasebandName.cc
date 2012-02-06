@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CBasebandName::version() {
 	return BasebandNameMod::version;
 	}
@@ -329,5 +328,25 @@ string CBasebandName::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'BasebandName'.";
 	return oss.str();
+}
+
+namespace BasebandNameMod {
+	std::ostream & operator << ( std::ostream & out, const BasebandName& value) {
+		out << CBasebandName::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , BasebandName& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CBasebandName::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

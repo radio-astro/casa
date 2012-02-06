@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -76,6 +77,11 @@ namespace RadialVelocityReferenceCodeMod
   typedef RadialVelocityReferenceCode &RadialVelocityReferenceCode_out;
 } 
 #endif
+
+namespace RadialVelocityReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const RadialVelocityReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , RadialVelocityReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration RadialVelocityReferenceCode.

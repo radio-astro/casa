@@ -433,6 +433,7 @@ class CasaRegression:
             ### footer are formatted on the same line... (at least with OSX's mail app)...
             ###
             txt2 = MIMEText( "\n\n\n", 'plain' )
+            txt2.add_header('Content-Disposition', 'inline')
             mime.attach(txt2)
 
             mime['To'] = summary_email_list.replace(';;',', ')

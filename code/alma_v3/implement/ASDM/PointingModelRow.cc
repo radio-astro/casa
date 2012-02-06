@@ -63,6 +63,7 @@ using asdm::AntennaRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -745,41 +746,41 @@ namespace asdm {
 
 	}
 	
-void PointingModelRow::antennaIdFromBin(EndianISStream& eiss) {
+void PointingModelRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void PointingModelRow::pointingModelIdFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		pointingModelId =  eiss.readInt();
-			
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void PointingModelRow::numCoeffFromBin(EndianISStream& eiss) {
+void PointingModelRow::pointingModelIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numCoeff =  eiss.readInt();
+		pointingModelId =  eis.readInt();
 			
 		
 	
 	
 }
-void PointingModelRow::coeffNameFromBin(EndianISStream& eiss) {
+void PointingModelRow::numCoeffFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numCoeff =  eis.readInt();
+			
+		
+	
+	
+}
+void PointingModelRow::coeffNameFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -788,10 +789,10 @@ void PointingModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 		coeffName.clear();
 		
-		unsigned int coeffNameDim1 = eiss.readInt();
+		unsigned int coeffNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
 			
-			coeffName.push_back(eiss.readString());
+			coeffName.push_back(eis.readString());
 			
 	
 
@@ -799,7 +800,7 @@ void PointingModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 	
 }
-void PointingModelRow::coeffValFromBin(EndianISStream& eiss) {
+void PointingModelRow::coeffValFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -808,10 +809,10 @@ void PointingModelRow::coeffValFromBin(EndianISStream& eiss) {
 	
 		coeffVal.clear();
 		
-		unsigned int coeffValDim1 = eiss.readInt();
+		unsigned int coeffValDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffValDim1; i++)
 			
-			coeffVal.push_back(eiss.readFloat());
+			coeffVal.push_back(eis.readFloat());
 			
 	
 
@@ -819,58 +820,58 @@ void PointingModelRow::coeffValFromBin(EndianISStream& eiss) {
 	
 	
 }
-void PointingModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
+void PointingModelRow::polarizationTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		polarizationType = CPolarizationType::literal(eiss.readString());
-			
-		
-	
-	
-}
-void PointingModelRow::receiverBandFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		receiverBand = CReceiverBand::literal(eiss.readString());
+		polarizationType = CPolarizationType::literal(eis.readString());
 			
 		
 	
 	
 }
-void PointingModelRow::assocNatureFromBin(EndianISStream& eiss) {
+void PointingModelRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		assocNature =  eiss.readString();
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void PointingModelRow::assocPointingModelIdFromBin(EndianISStream& eiss) {
+void PointingModelRow::assocNatureFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		assocPointingModelId =  eiss.readInt();
+		assocNature =  eis.readString();
+			
+		
+	
+	
+}
+void PointingModelRow::assocPointingModelIdFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		assocPointingModelId =  eis.readInt();
 			
 		
 	
 	
 }
 
-void PointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
+void PointingModelRow::coeffFormulaFromBin(EndianIStream& eis) {
 		
-	coeffFormulaExists = eiss.readBoolean();
+	coeffFormulaExists = eis.readBoolean();
 	if (coeffFormulaExists) {
 		
 	
@@ -880,10 +881,10 @@ void PointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 		coeffFormula.clear();
 		
-		unsigned int coeffFormulaDim1 = eiss.readInt();
+		unsigned int coeffFormulaDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
 			
-			coeffFormula.push_back(eiss.readString());
+			coeffFormula.push_back(eis.readString());
 			
 	
 
@@ -895,19 +896,19 @@ void PointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 }
 	
 	
-	PointingModelRow* PointingModelRow::fromBin(EndianISStream& eiss, PointingModelTable& table, const vector<string>& attributesSeq) {
+	PointingModelRow* PointingModelRow::fromBin(EndianIStream& eis, PointingModelTable& table, const vector<string>& attributesSeq) {
 		PointingModelRow* row = new  PointingModelRow(table);
 		
 		map<string, PointingModelAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PointingModelTable");
 			}
@@ -915,10 +916,105 @@ void PointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void PointingModelRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PointingModelRow::pointingModelIdFromText(const string & s) {
+		 
+		pointingModelId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PointingModelRow::numCoeffFromText(const string & s) {
+		 
+		numCoeff = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void PointingModelRow::coeffNameFromText(const string & s) {
+		 
+		coeffName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void PointingModelRow::coeffValFromText(const string & s) {
+		 
+		coeffVal = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void PointingModelRow::polarizationTypeFromText(const string & s) {
+		 
+		polarizationType = ASDMValuesParser::parse<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void PointingModelRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void PointingModelRow::assocNatureFromText(const string & s) {
+		 
+		assocNature = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PointingModelRow::assocPointingModelIdFromText(const string & s) {
+		 
+		assocPointingModelId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an String 
+	void PointingModelRow::coeffFormulaFromText(const string & s) {
+		coeffFormulaExists = true;
+		 
+		coeffFormula = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	
+	void PointingModelRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, PointingModelAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "PointingModelTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1196,9 +1292,9 @@ void PointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1268,9 +1364,10 @@ void PointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1386,6 +1483,51 @@ receiverBand = CReceiverBand::from_int(0);
 	
 	 fromBinMethods["coeffFormula"] = &PointingModelRow::coeffFormulaFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &PointingModelRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["pointingModelId"] = &PointingModelRow::pointingModelIdFromText;
+		 
+	
+				 
+	fromTextMethods["numCoeff"] = &PointingModelRow::numCoeffFromText;
+		 
+	
+				 
+	fromTextMethods["coeffName"] = &PointingModelRow::coeffNameFromText;
+		 
+	
+				 
+	fromTextMethods["coeffVal"] = &PointingModelRow::coeffValFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationType"] = &PointingModelRow::polarizationTypeFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &PointingModelRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["assocNature"] = &PointingModelRow::assocNatureFromText;
+		 
+	
+				 
+	fromTextMethods["assocPointingModelId"] = &PointingModelRow::assocPointingModelIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["coeffFormula"] = &PointingModelRow::coeffFormulaFromText;
+		 	
+		
 	}
 	
 	PointingModelRow::PointingModelRow (PointingModelTable &t, PointingModelRow &row) : table(t) {

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -68,6 +69,11 @@ namespace PointingModelModeMod
   typedef PointingModelMode &PointingModelMode_out;
 } 
 #endif
+
+namespace PointingModelModeMod {
+	std::ostream & operator << ( std::ostream & out, const PointingModelMode& value);
+	std::istream & operator >> ( std::istream & in , PointingModelMode& value );
+}
 
 /** 
   * A helper class for the enumeration PointingModelMode.

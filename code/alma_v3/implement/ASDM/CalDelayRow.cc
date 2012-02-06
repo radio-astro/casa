@@ -63,6 +63,7 @@ using asdm::CalReductionRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1418,119 +1419,119 @@ namespace asdm {
 
 	}
 	
-void CalDelayRow::antennaNameFromBin(EndianISStream& eiss) {
+void CalDelayRow::antennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaName =  eiss.readString();
-			
-		
-	
-	
-}
-void CalDelayRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		atmPhaseCorrection = CAtmPhaseCorrection::literal(eiss.readString());
+		antennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalDelayRow::basebandNameFromBin(EndianISStream& eiss) {
+void CalDelayRow::atmPhaseCorrectionFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		basebandName = CBasebandName::literal(eiss.readString());
+		atmPhaseCorrection = CAtmPhaseCorrection::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalDelayRow::receiverBandFromBin(EndianISStream& eiss) {
+void CalDelayRow::basebandNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverBand = CReceiverBand::literal(eiss.readString());
+		basebandName = CBasebandName::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalDelayRow::calDataIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalDelayRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalDelayRow::startValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalDelayRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalDelayRow::refAntennaNameFromBin(EndianISStream& eiss) {
+void CalDelayRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		refAntennaName =  eiss.readString();
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalDelayRow::numReceptorFromBin(EndianISStream& eiss) {
+void CalDelayRow::calDataIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalDelayRow::calReductionIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalDelayRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalDelayRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalDelayRow::refAntennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		refAntennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalDelayRow::delayErrorFromBin(EndianISStream& eiss) {
+void CalDelayRow::numReceptorFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numReceptor =  eis.readInt();
+			
+		
+	
+	
+}
+void CalDelayRow::delayErrorFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1539,10 +1540,10 @@ void CalDelayRow::delayErrorFromBin(EndianISStream& eiss) {
 	
 		delayError.clear();
 		
-		unsigned int delayErrorDim1 = eiss.readInt();
+		unsigned int delayErrorDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < delayErrorDim1; i++)
 			
-			delayError.push_back(eiss.readDouble());
+			delayError.push_back(eis.readDouble());
 			
 	
 
@@ -1550,7 +1551,7 @@ void CalDelayRow::delayErrorFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalDelayRow::delayOffsetFromBin(EndianISStream& eiss) {
+void CalDelayRow::delayOffsetFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1559,10 +1560,10 @@ void CalDelayRow::delayOffsetFromBin(EndianISStream& eiss) {
 	
 		delayOffset.clear();
 		
-		unsigned int delayOffsetDim1 = eiss.readInt();
+		unsigned int delayOffsetDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < delayOffsetDim1; i++)
 			
-			delayOffset.push_back(eiss.readDouble());
+			delayOffset.push_back(eis.readDouble());
 			
 	
 
@@ -1570,7 +1571,7 @@ void CalDelayRow::delayOffsetFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalDelayRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void CalDelayRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1579,10 +1580,10 @@ void CalDelayRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::literal(eiss.readString()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1590,7 +1591,7 @@ void CalDelayRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalDelayRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+void CalDelayRow::reducedChiSquaredFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1599,10 +1600,10 @@ void CalDelayRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 		reducedChiSquared.clear();
 		
-		unsigned int reducedChiSquaredDim1 = eiss.readInt();
+		unsigned int reducedChiSquaredDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
 			
-			reducedChiSquared.push_back(eiss.readDouble());
+			reducedChiSquared.push_back(eis.readDouble());
 			
 	
 
@@ -1610,7 +1611,7 @@ void CalDelayRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalDelayRow::appliedDelayFromBin(EndianISStream& eiss) {
+void CalDelayRow::appliedDelayFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1619,10 +1620,10 @@ void CalDelayRow::appliedDelayFromBin(EndianISStream& eiss) {
 	
 		appliedDelay.clear();
 		
-		unsigned int appliedDelayDim1 = eiss.readInt();
+		unsigned int appliedDelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < appliedDelayDim1; i++)
 			
-			appliedDelay.push_back(eiss.readDouble());
+			appliedDelay.push_back(eis.readDouble());
 			
 	
 
@@ -1631,16 +1632,16 @@ void CalDelayRow::appliedDelayFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalDelayRow::crossDelayOffsetFromBin(EndianISStream& eiss) {
+void CalDelayRow::crossDelayOffsetFromBin(EndianIStream& eis) {
 		
-	crossDelayOffsetExists = eiss.readBoolean();
+	crossDelayOffsetExists = eis.readBoolean();
 	if (crossDelayOffsetExists) {
 		
 	
 	
 		
 			
-		crossDelayOffset =  eiss.readDouble();
+		crossDelayOffset =  eis.readDouble();
 			
 		
 	
@@ -1648,16 +1649,16 @@ void CalDelayRow::crossDelayOffsetFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDelayRow::crossDelayOffsetErrorFromBin(EndianISStream& eiss) {
+void CalDelayRow::crossDelayOffsetErrorFromBin(EndianIStream& eis) {
 		
-	crossDelayOffsetErrorExists = eiss.readBoolean();
+	crossDelayOffsetErrorExists = eis.readBoolean();
 	if (crossDelayOffsetErrorExists) {
 		
 	
 	
 		
 			
-		crossDelayOffsetError =  eiss.readDouble();
+		crossDelayOffsetError =  eis.readDouble();
 			
 		
 	
@@ -1665,16 +1666,16 @@ void CalDelayRow::crossDelayOffsetErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDelayRow::numSidebandFromBin(EndianISStream& eiss) {
+void CalDelayRow::numSidebandFromBin(EndianIStream& eis) {
 		
-	numSidebandExists = eiss.readBoolean();
+	numSidebandExists = eis.readBoolean();
 	if (numSidebandExists) {
 		
 	
 	
 		
 			
-		numSideband =  eiss.readInt();
+		numSideband =  eis.readInt();
 			
 		
 	
@@ -1682,9 +1683,9 @@ void CalDelayRow::numSidebandFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDelayRow::refFreqFromBin(EndianISStream& eiss) {
+void CalDelayRow::refFreqFromBin(EndianIStream& eis) {
 		
-	refFreqExists = eiss.readBoolean();
+	refFreqExists = eis.readBoolean();
 	if (refFreqExists) {
 		
 	
@@ -1692,7 +1693,7 @@ void CalDelayRow::refFreqFromBin(EndianISStream& eiss) {
 		
 			
 	
-	refFreq = Frequency::from1DBin(eiss);	
+	refFreq = Frequency::from1DBin(eis);	
 	
 
 		
@@ -1701,9 +1702,9 @@ void CalDelayRow::refFreqFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDelayRow::refFreqPhaseFromBin(EndianISStream& eiss) {
+void CalDelayRow::refFreqPhaseFromBin(EndianIStream& eis) {
 		
-	refFreqPhaseExists = eiss.readBoolean();
+	refFreqPhaseExists = eis.readBoolean();
 	if (refFreqPhaseExists) {
 		
 	
@@ -1711,7 +1712,7 @@ void CalDelayRow::refFreqPhaseFromBin(EndianISStream& eiss) {
 		
 			
 	
-	refFreqPhase = Angle::from1DBin(eiss);	
+	refFreqPhase = Angle::from1DBin(eis);	
 	
 
 		
@@ -1720,9 +1721,9 @@ void CalDelayRow::refFreqPhaseFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDelayRow::sidebandsFromBin(EndianISStream& eiss) {
+void CalDelayRow::sidebandsFromBin(EndianIStream& eis) {
 		
-	sidebandsExists = eiss.readBoolean();
+	sidebandsExists = eis.readBoolean();
 	if (sidebandsExists) {
 		
 	
@@ -1732,10 +1733,10 @@ void CalDelayRow::sidebandsFromBin(EndianISStream& eiss) {
 	
 		sidebands.clear();
 		
-		unsigned int sidebandsDim1 = eiss.readInt();
+		unsigned int sidebandsDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < sidebandsDim1; i++)
 			
-			sidebands.push_back(CReceiverSideband::literal(eiss.readString()));
+			sidebands.push_back(CReceiverSideband::literal(eis.readString()));
 			
 	
 
@@ -1747,19 +1748,19 @@ void CalDelayRow::sidebandsFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalDelayRow* CalDelayRow::fromBin(EndianISStream& eiss, CalDelayTable& table, const vector<string>& attributesSeq) {
+	CalDelayRow* CalDelayRow::fromBin(EndianIStream& eis, CalDelayTable& table, const vector<string>& attributesSeq) {
 		CalDelayRow* row = new  CalDelayRow(table);
 		
 		map<string, CalDelayAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalDelayTable");
 			}
@@ -1767,10 +1768,198 @@ void CalDelayRow::sidebandsFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an String 
+	void CalDelayRow::antennaNameFromText(const string & s) {
+		 
+		antennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an AtmPhaseCorrection 
+	void CalDelayRow::atmPhaseCorrectionFromText(const string & s) {
+		 
+		atmPhaseCorrection = ASDMValuesParser::parse<AtmPhaseCorrection>(s);
+		
+	}
+	
+	
+	// Convert a string into an BasebandName 
+	void CalDelayRow::basebandNameFromText(const string & s) {
+		 
+		basebandName = ASDMValuesParser::parse<BasebandName>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalDelayRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalDelayRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalDelayRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalDelayRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalDelayRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalDelayRow::refAntennaNameFromText(const string & s) {
+		 
+		refAntennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalDelayRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalDelayRow::delayErrorFromText(const string & s) {
+		 
+		delayError = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalDelayRow::delayOffsetFromText(const string & s) {
+		 
+		delayOffset = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalDelayRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalDelayRow::reducedChiSquaredFromText(const string & s) {
+		 
+		reducedChiSquared = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalDelayRow::appliedDelayFromText(const string & s) {
+		 
+		appliedDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an double 
+	void CalDelayRow::crossDelayOffsetFromText(const string & s) {
+		crossDelayOffsetExists = true;
+		 
+		crossDelayOffset = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalDelayRow::crossDelayOffsetErrorFromText(const string & s) {
+		crossDelayOffsetErrorExists = true;
+		 
+		crossDelayOffsetError = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalDelayRow::numSidebandFromText(const string & s) {
+		numSidebandExists = true;
+		 
+		numSideband = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalDelayRow::refFreqFromText(const string & s) {
+		refFreqExists = true;
+		 
+		refFreq = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalDelayRow::refFreqPhaseFromText(const string & s) {
+		refFreqPhaseExists = true;
+		 
+		refFreqPhase = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverSideband 
+	void CalDelayRow::sidebandsFromText(const string & s) {
+		sidebandsExists = true;
+		 
+		sidebands = ASDMValuesParser::parse1D<ReceiverSideband>(s);
+		
+	}
+	
+	
+	
+	void CalDelayRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalDelayAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalDelayTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2487,9 +2676,9 @@ void CalDelayRow::sidebandsFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2563,9 +2752,10 @@ void CalDelayRow::sidebandsFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2749,6 +2939,95 @@ receiverBand = CReceiverBand::from_int(0);
 	 fromBinMethods["refFreqPhase"] = &CalDelayRow::refFreqPhaseFromBin; 
 	 fromBinMethods["sidebands"] = &CalDelayRow::sidebandsFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaName"] = &CalDelayRow::antennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["atmPhaseCorrection"] = &CalDelayRow::atmPhaseCorrectionFromText;
+		 
+	
+				 
+	fromTextMethods["basebandName"] = &CalDelayRow::basebandNameFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalDelayRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalDelayRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalDelayRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalDelayRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalDelayRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["refAntennaName"] = &CalDelayRow::refAntennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &CalDelayRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["delayError"] = &CalDelayRow::delayErrorFromText;
+		 
+	
+				 
+	fromTextMethods["delayOffset"] = &CalDelayRow::delayOffsetFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &CalDelayRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["reducedChiSquared"] = &CalDelayRow::reducedChiSquaredFromText;
+		 
+	
+				 
+	fromTextMethods["appliedDelay"] = &CalDelayRow::appliedDelayFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["crossDelayOffset"] = &CalDelayRow::crossDelayOffsetFromText;
+		 	
+	 
+				
+	fromTextMethods["crossDelayOffsetError"] = &CalDelayRow::crossDelayOffsetErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["numSideband"] = &CalDelayRow::numSidebandFromText;
+		 	
+	 
+				
+	fromTextMethods["refFreq"] = &CalDelayRow::refFreqFromText;
+		 	
+	 
+				
+	fromTextMethods["refFreqPhase"] = &CalDelayRow::refFreqPhaseFromText;
+		 	
+	 
+				
+	fromTextMethods["sidebands"] = &CalDelayRow::sidebandsFromText;
+		 	
+		
 	}
 	
 	CalDelayRow::CalDelayRow (CalDelayTable &t, CalDelayRow &row) : table(t) {

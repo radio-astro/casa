@@ -109,9 +109,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalCurve.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -127,17 +128,19 @@ class CalReductionRow;
 	
 
 class CalCurveRow;
-typedef void (CalCurveRow::*CalCurveAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalCurveRow::*CalCurveAttributeFromBin) (EndianIStream& eis);
+typedef void (CalCurveRow::*CalCurveAttributeFromText) (const string& s);
 
 /**
  * The CalCurveRow class is a row of a CalCurveTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalCurveRow {
 friend class asdm::CalCurveTable;
 friend class asdm::RowTransformer<CalCurveRow>;
+//friend class asdm::TableStreamReader<CalCurveTable, CalCurveRow>;
 
 public:
 
@@ -882,7 +885,44 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalCurveAttributeFromBin> fromBinMethods;
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void typeCurveFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void antennaNamesFromBin( EndianIStream& eis);
+void refAntennaNameFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void curveFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+
+void numBaselineFromBin( EndianIStream& eis);
+void rmsFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalCurveTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalCurveRow* fromBin(EndianIStream& eis, CalCurveTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1156,30 +1196,95 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalCurveAttributeFromBin> fromBinMethods;
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void typeCurveFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void numAntennaFromBin( EndianISStream& eiss);
-void numPolyFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void antennaNamesFromBin( EndianISStream& eiss);
-void refAntennaNameFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void curveFromBin( EndianISStream& eiss);
-void reducedChiSquaredFromBin( EndianISStream& eiss);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void typeCurveFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void antennaNamesFromBin( EndianIStream& eis);
+void refAntennaNameFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void curveFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
 
-void numBaselineFromBin( EndianISStream& eiss);
-void rmsFromBin( EndianISStream& eiss);
+void numBaselineFromBin( EndianIStream& eis);
+void rmsFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalCurveAttributeFromText> fromTextMethods;
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void typeCurveFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void numAntennaFromText (const string & s);
+	
+	
+void numPolyFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void antennaNamesFromText (const string & s);
+	
+	
+void refAntennaNameFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void curveFromText (const string & s);
+	
+	
+void reducedChiSquaredFromText (const string & s);
+	
+
+	
+void numBaselineFromText (const string & s);
+	
+	
+void rmsFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1188,14 +1293,14 @@ void rmsFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalCurveTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalCurveRow* fromBin(EndianISStream& eiss, CalCurveTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalCurveRow* fromBin(EndianIStream& eis, CalCurveTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

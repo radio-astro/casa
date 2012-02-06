@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CRadialVelocityReferenceCode::version() {
 	return RadialVelocityReferenceCodeMod::version;
 	}
@@ -179,5 +178,25 @@ string CRadialVelocityReferenceCode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'RadialVelocityReferenceCode'.";
 	return oss.str();
+}
+
+namespace RadialVelocityReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const RadialVelocityReferenceCode& value) {
+		out << CRadialVelocityReferenceCode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , RadialVelocityReferenceCode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CRadialVelocityReferenceCode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

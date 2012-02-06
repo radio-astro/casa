@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CFocusMethod::version() {
 	return FocusMethodMod::version;
 	}
@@ -119,5 +118,25 @@ string CFocusMethod::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'FocusMethod'.";
 	return oss.str();
+}
+
+namespace FocusMethodMod {
+	std::ostream & operator << ( std::ostream & out, const FocusMethod& value) {
+		out << CFocusMethod::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , FocusMethod& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CFocusMethod::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

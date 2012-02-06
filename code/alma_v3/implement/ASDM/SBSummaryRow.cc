@@ -51,6 +51,7 @@ using asdm::SBSummaryTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1113,105 +1114,105 @@ namespace asdm {
 
 	}
 	
-void SBSummaryRow::sBSummaryIdFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sBSummaryIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		sBSummaryId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void SBSummaryRow::sbSummaryUIDFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		sbSummaryUID =  EntityRef::fromBin(eiss);
+		sBSummaryId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SBSummaryRow::projectUIDFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sbSummaryUIDFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		projectUID =  EntityRef::fromBin(eiss);
-		
-	
-	
-}
-void SBSummaryRow::obsUnitSetUIDFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		obsUnitSetUID =  EntityRef::fromBin(eiss);
+		sbSummaryUID =  EntityRef::fromBin(eis);
 		
 	
 	
 }
-void SBSummaryRow::frequencyFromBin(EndianISStream& eiss) {
+void SBSummaryRow::projectUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		projectUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void SBSummaryRow::obsUnitSetUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		obsUnitSetUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void SBSummaryRow::frequencyFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		frequency =  eiss.readDouble();
+		frequency =  eis.readDouble();
 			
 		
 	
 	
 }
-void SBSummaryRow::frequencyBandFromBin(EndianISStream& eiss) {
+void SBSummaryRow::frequencyBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		frequencyBand = CReceiverBand::literal(eiss.readString());
-			
-		
-	
-	
-}
-void SBSummaryRow::sbTypeFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		sbType = CSBType::literal(eiss.readString());
+		frequencyBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void SBSummaryRow::sbDurationFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		sbDuration =  Interval::fromBin(eiss);
-		
-	
-	
-}
-void SBSummaryRow::numObservingModeFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sbTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numObservingMode =  eiss.readInt();
+		sbType = CSBType::literal(eis.readString());
 			
 		
 	
 	
 }
-void SBSummaryRow::observingModeFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sbDurationFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		sbDuration =  Interval::fromBin(eis);
+		
+	
+	
+}
+void SBSummaryRow::numObservingModeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numObservingMode =  eis.readInt();
+			
+		
+	
+	
+}
+void SBSummaryRow::observingModeFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1220,10 +1221,10 @@ void SBSummaryRow::observingModeFromBin(EndianISStream& eiss) {
 	
 		observingMode.clear();
 		
-		unsigned int observingModeDim1 = eiss.readInt();
+		unsigned int observingModeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < observingModeDim1; i++)
 			
-			observingMode.push_back(eiss.readString());
+			observingMode.push_back(eis.readString());
 			
 	
 
@@ -1231,31 +1232,31 @@ void SBSummaryRow::observingModeFromBin(EndianISStream& eiss) {
 	
 	
 }
-void SBSummaryRow::numberRepeatsFromBin(EndianISStream& eiss) {
+void SBSummaryRow::numberRepeatsFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numberRepeats =  eiss.readInt();
-			
-		
-	
-	
-}
-void SBSummaryRow::numScienceGoalFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numScienceGoal =  eiss.readInt();
+		numberRepeats =  eis.readInt();
 			
 		
 	
 	
 }
-void SBSummaryRow::scienceGoalFromBin(EndianISStream& eiss) {
+void SBSummaryRow::numScienceGoalFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numScienceGoal =  eis.readInt();
+			
+		
+	
+	
+}
+void SBSummaryRow::scienceGoalFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1264,10 +1265,10 @@ void SBSummaryRow::scienceGoalFromBin(EndianISStream& eiss) {
 	
 		scienceGoal.clear();
 		
-		unsigned int scienceGoalDim1 = eiss.readInt();
+		unsigned int scienceGoalDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < scienceGoalDim1; i++)
 			
-			scienceGoal.push_back(eiss.readString());
+			scienceGoal.push_back(eis.readString());
 			
 	
 
@@ -1275,19 +1276,19 @@ void SBSummaryRow::scienceGoalFromBin(EndianISStream& eiss) {
 	
 	
 }
-void SBSummaryRow::numWeatherConstraintFromBin(EndianISStream& eiss) {
+void SBSummaryRow::numWeatherConstraintFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numWeatherConstraint =  eiss.readInt();
+		numWeatherConstraint =  eis.readInt();
 			
 		
 	
 	
 }
-void SBSummaryRow::weatherConstraintFromBin(EndianISStream& eiss) {
+void SBSummaryRow::weatherConstraintFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1296,10 +1297,10 @@ void SBSummaryRow::weatherConstraintFromBin(EndianISStream& eiss) {
 	
 		weatherConstraint.clear();
 		
-		unsigned int weatherConstraintDim1 = eiss.readInt();
+		unsigned int weatherConstraintDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < weatherConstraintDim1; i++)
 			
-			weatherConstraint.push_back(eiss.readString());
+			weatherConstraint.push_back(eis.readString());
 			
 	
 
@@ -1308,9 +1309,9 @@ void SBSummaryRow::weatherConstraintFromBin(EndianISStream& eiss) {
 	
 }
 
-void SBSummaryRow::centerDirectionFromBin(EndianISStream& eiss) {
+void SBSummaryRow::centerDirectionFromBin(EndianIStream& eis) {
 		
-	centerDirectionExists = eiss.readBoolean();
+	centerDirectionExists = eis.readBoolean();
 	if (centerDirectionExists) {
 		
 	
@@ -1318,7 +1319,7 @@ void SBSummaryRow::centerDirectionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	centerDirection = Angle::from1DBin(eiss);	
+	centerDirection = Angle::from1DBin(eis);	
 	
 
 		
@@ -1327,16 +1328,16 @@ void SBSummaryRow::centerDirectionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SBSummaryRow::centerDirectionCodeFromBin(EndianISStream& eiss) {
+void SBSummaryRow::centerDirectionCodeFromBin(EndianIStream& eis) {
 		
-	centerDirectionCodeExists = eiss.readBoolean();
+	centerDirectionCodeExists = eis.readBoolean();
 	if (centerDirectionCodeExists) {
 		
 	
 	
 		
 			
-		centerDirectionCode = CDirectionReferenceCode::literal(eiss.readString());
+		centerDirectionCode = CDirectionReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -1344,15 +1345,15 @@ void SBSummaryRow::centerDirectionCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
+void SBSummaryRow::centerDirectionEquinoxFromBin(EndianIStream& eis) {
 		
-	centerDirectionEquinoxExists = eiss.readBoolean();
+	centerDirectionEquinoxExists = eis.readBoolean();
 	if (centerDirectionEquinoxExists) {
 		
 	
 		
 		
-		centerDirectionEquinox =  ArrayTime::fromBin(eiss);
+		centerDirectionEquinox =  ArrayTime::fromBin(eis);
 		
 	
 
@@ -1361,19 +1362,19 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 }
 	
 	
-	SBSummaryRow* SBSummaryRow::fromBin(EndianISStream& eiss, SBSummaryTable& table, const vector<string>& attributesSeq) {
+	SBSummaryRow* SBSummaryRow::fromBin(EndianIStream& eis, SBSummaryTable& table, const vector<string>& attributesSeq) {
 		SBSummaryRow* row = new  SBSummaryRow(table);
 		
 		map<string, SBSummaryAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SBSummaryTable");
 			}
@@ -1381,10 +1382,150 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void SBSummaryRow::sBSummaryIdFromText(const string & s) {
+		 
+		sBSummaryId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	
+	
+	
+	// Convert a string into an double 
+	void SBSummaryRow::frequencyFromText(const string & s) {
+		 
+		frequency = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void SBSummaryRow::frequencyBandFromText(const string & s) {
+		 
+		frequencyBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an SBType 
+	void SBSummaryRow::sbTypeFromText(const string & s) {
+		 
+		sbType = ASDMValuesParser::parse<SBType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void SBSummaryRow::sbDurationFromText(const string & s) {
+		 
+		sbDuration = ASDMValuesParser::parse<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numObservingModeFromText(const string & s) {
+		 
+		numObservingMode = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SBSummaryRow::observingModeFromText(const string & s) {
+		 
+		observingMode = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numberRepeatsFromText(const string & s) {
+		 
+		numberRepeats = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numScienceGoalFromText(const string & s) {
+		 
+		numScienceGoal = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SBSummaryRow::scienceGoalFromText(const string & s) {
+		 
+		scienceGoal = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numWeatherConstraintFromText(const string & s) {
+		 
+		numWeatherConstraint = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SBSummaryRow::weatherConstraintFromText(const string & s) {
+		 
+		weatherConstraint = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Angle 
+	void SBSummaryRow::centerDirectionFromText(const string & s) {
+		centerDirectionExists = true;
+		 
+		centerDirection = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an DirectionReferenceCode 
+	void SBSummaryRow::centerDirectionCodeFromText(const string & s) {
+		centerDirectionCodeExists = true;
+		 
+		centerDirectionCode = ASDMValuesParser::parse<DirectionReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void SBSummaryRow::centerDirectionEquinoxFromText(const string & s) {
+		centerDirectionEquinoxExists = true;
+		 
+		centerDirectionEquinox = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	
+	void SBSummaryRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SBSummaryAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SBSummaryTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2012,13 +2153,14 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -2147,6 +2289,77 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	 fromBinMethods["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromBin; 
 	 fromBinMethods["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromText;
+		 
+	
+		 
+	
+		 
+	
+		 
+	
+				 
+	fromTextMethods["frequency"] = &SBSummaryRow::frequencyFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyBand"] = &SBSummaryRow::frequencyBandFromText;
+		 
+	
+				 
+	fromTextMethods["sbType"] = &SBSummaryRow::sbTypeFromText;
+		 
+	
+				 
+	fromTextMethods["sbDuration"] = &SBSummaryRow::sbDurationFromText;
+		 
+	
+				 
+	fromTextMethods["numObservingMode"] = &SBSummaryRow::numObservingModeFromText;
+		 
+	
+				 
+	fromTextMethods["observingMode"] = &SBSummaryRow::observingModeFromText;
+		 
+	
+				 
+	fromTextMethods["numberRepeats"] = &SBSummaryRow::numberRepeatsFromText;
+		 
+	
+				 
+	fromTextMethods["numScienceGoal"] = &SBSummaryRow::numScienceGoalFromText;
+		 
+	
+				 
+	fromTextMethods["scienceGoal"] = &SBSummaryRow::scienceGoalFromText;
+		 
+	
+				 
+	fromTextMethods["numWeatherConstraint"] = &SBSummaryRow::numWeatherConstraintFromText;
+		 
+	
+				 
+	fromTextMethods["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromText;
+		 	
+	 
+				
+	fromTextMethods["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromText;
+		 	
+		
 	}
 	
 	SBSummaryRow::SBSummaryRow (SBSummaryTable &t, SBSummaryRow &row) : table(t) {

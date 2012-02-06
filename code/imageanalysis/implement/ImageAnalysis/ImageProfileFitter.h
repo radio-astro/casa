@@ -30,7 +30,9 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
+#include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <images/Images/ImageFit1D.h>
+
 
 #include <casa/namespace.h>
 
@@ -63,10 +65,6 @@ class ImageProfileFitter : public ImageTask {
 	// </example>
 
 public:
-
-	static const Double integralConst;
-
-
 	// constructor appropriate for API calls.
 	// Parameters:
 	// <src>image</src> - the input image in which to fit the models
@@ -79,18 +77,19 @@ public:
 	// <src>mask</src> - Mask (as LEL) to use as a way to specify which pixels to use </src>
 	// <src>axis</src> - axis along which to do the fits. If <0, use spectral axis, and if no spectral
 	// axis, use zeroth axis.
-	// <src>multiFit</src> True means do fit on each pixel in the specified region or box. False means
-	// average together the pixels in the specified box or region and do a single fit to that average profile.
-	// <src>residual</src> - Name of residual image to save. Blank means do not save residual image.
-	// <src>model</src> - Name of the model image to save. Blank means do not save model image.
-	// The output solution images are only written if multiFit is true.
+	// <src>ngauss</src> number of single gaussians to fit. Not used if <src>estimatesFile</src> or
+	// <src>spectralList</src> is specified.
+	// <src>estimatesFilename</src> file containing initial estimates for single gaussians.
+	// <src>spectralList</src> spectral list containing initial estimates of single gaussians. Do
+	// not put a polynomial in here; set that with setPolyOrder(). Only one of a non-empty <src>estimatesFilename</src>
+	// or a non-empty <src>spectralList</src> can be specified.
 
 	ImageProfileFitter(
 		const ImageInterface<Float> *const &image, const String& region,
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const uInt ngauss,
-		const String& estimatesFilename
+		const Int axis, const uInt ngauss, const String& estimatesFilename,
+		const SpectralList& spectralList
 	);
 
 	// destructor
@@ -112,34 +111,41 @@ public:
     	return vector<Coordinate::Type>(0);
     }
 
+    // set the order of a polynomial to be simultaneously fit.
     inline void setPolyOrder(const Int p) { _polyOrder = p;}
 
+    // set whether to do a pixel by pixel fit.
     inline void setDoMultiFit(const Bool m) { _multiFit = m; }
 
+    // set if results should be written to the logger
     inline void setLogResults(const Bool logResults) { _logResults = logResults; }
 
+    // set minimum number of good points required to attempt a fit
     inline void setMinGoodPoints(const uInt mgp) { _minGoodPoints = mgp; }
 
+    // <group>
+    // Solution images. Only written if _multifit is True
+    // model image name
     inline void setModel(const String& model) { _model = model; }
-
+    // residual image name
     inline void setResidual(const String& residual) { _residual = residual; }
-
+    // gaussian amplitude image name
     inline void setAmpName(const String& s) { _ampName = s; }
-
+    // gaussian amplitude error image name
     inline void setAmpErrName(const String& s) { _ampErrName = s; }
-
+    // gaussian center image name
     inline void setCenterName(const String& s) { _centerName = s; }
-
+    // gaussian center error image name
     inline void setCenterErrName(const String& s) { _centerErrName = s; }
-
+    // gaussian fwhm image name
     inline void setFWHMName(const String& s) { _fwhmName = s; }
-
+    // gaussian fwhm error image name
     inline void setFWHMErrName(const String& s) { _fwhmErrName = s; }
-
+    // gaussian integral image name
     inline void setIntegralName(const String& s) { _integralName = s; }
-
+    // gaussian integral error image name
     inline void setIntegralErrName(const String& s) { _integralErrName = s; }
-
+    // </group>
 private:
 
 	String _residual, _model, _regionString, _xUnit,
@@ -149,15 +155,26 @@ private:
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
 		_deleteImageOnDestruct, _logResults;
 	Int _polyOrder, _fitAxis;
-	uInt _ngauss, _minGoodPoints;
+	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
+		_minGoodPoints;
 	Array<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
 	SubImage<Float> _subImage;
 	Record _results;
-	SpectralList _gaussEstimates;
+	SpectralList _nonPolyEstimates;
 
 	const static String _class;
+
+	const static uInt _nOthers;
+	const static uInt _gsPlane;
+	const static uInt _lsPlane;
+
+
+	enum gaussSols {
+	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
+	    FWHMERR, INTEGRALERR, NGSOLMATRICES
+	};
 
     void _getOutputStruct(
         vector<ImageInputProcessor::OutputStruct>& outputs
@@ -170,16 +187,26 @@ private:
     void _setResults();
 
     String _radToRa(const Float ras) const;
-    void _resultsToLog() const;
+
+    String _getResultsString() const;
+
+    String _getTag(const uInt i) const;
 
     String _elementToString(
     	const Double value, const Double error,
     	const String& unit
     ) const;
 
-    String _gaussianToString(
-    	const GaussianSpectralElement& gauss, const CoordinateSystem& csys,
-    	const Vector<Double> world, const IPosition imPos
+    String _pcfToString(
+    	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
+    	const Vector<Double> world, const IPosition imPos, const Bool showTypeString=True,
+    	const String& indent=""
+    ) const;
+
+    String _gaussianMultipletToString(
+    	const GaussianMultipletSpectralElement& gm,
+    	const CoordinateSystem& csys, const Vector<Double> world,
+    	const IPosition imPos
     ) const;
 
     String _polynomialToString(
@@ -193,6 +220,18 @@ private:
     	const Array<Bool>& mask
     );
 
+    void _insertPCF(
+    	vector<vector<Matrix<Double> > >& pcfMatrices, const uInt idx,
+    	const PCFSpectralElement& pcf,
+    	const uInt row, const uInt col, const IPosition& pos,
+    	const Double increment
+    ) const;
+
+    void _writeImages(
+    	const CoordinateSystem& csys,
+    	const Array<Bool>& mask, const String& yUnit
+    ) const;
+
     // moved from ImageAnalysis
     ImageFit1D<Float> _fitProfile(
         const Bool fitIt=True,
@@ -203,8 +242,6 @@ private:
     Array<ImageFit1D<Float> > _fitallprofiles(
         const String& weightsImageName = ""
     );
-
-   // void _convertEstimates();
 
     // Fit all profiles in image.  The output images must be already
     // created; if the pointer is 0, that image won't be filled.
@@ -231,7 +268,7 @@ private:
     Double _fitAxisIncrement() const;
 
     Double _centerWorld(
-    	const GaussianSpectralElement& solution, const IPosition& imPos
+    	const PCFSpectralElement& solution, const IPosition& imPos
     ) const;
 
     Bool _inVelocitySpace() const;

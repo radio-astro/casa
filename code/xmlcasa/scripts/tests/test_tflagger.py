@@ -33,7 +33,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_ngc5921(self):
         self.vis = "ngc5921.ms"
@@ -46,7 +46,7 @@ class test_base(unittest.TestCase):
                          '/data/regression/ngc5921/ngc5921.fits', \
                          self.vis)
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_flagdatatest_alma(self):
         self.vis = "flagdatatest-alma.ms"
@@ -60,7 +60,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_data4tfcrop(self):
         self.vis = "Four_ants_3C286.ms"
@@ -74,7 +74,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
         
     def setUp_multi(self):
         self.vis = "multiobs.ms"
@@ -88,7 +88,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
 
 
 class test_tfcrop(test_base):
@@ -99,14 +99,14 @@ class test_tfcrop(test_base):
         
     def test1(self):
         '''tflagger:: Test1 of mode = tfcrop'''
-        tflagger(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9')
+        tflagger(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 4399104, 4489)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='ea19'), 2199552, 2294)
         test_eq(tflagger(vis=self.vis, mode='summary', spw='7'), 274944, 0)
         
     def test2(self):
         '''tflagger:: Test2 of mode = tfcrop ABS ALL'''
-        tflagger(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9')
+        tflagger(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 4399104, 18696)
         test_eq(tflagger(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4258)
         test_eq(tflagger(vis=self.vis, mode='summary', correlation='RL'), 1099776, 4999)
@@ -120,17 +120,17 @@ class test_shadow(test_base):
 
     def test1(self):
         '''tflagger:: Test1 of mode = shadow'''
-        tflagger(vis=self.vis, mode='shadow', diameter=40)
+        tflagger(vis=self.vis, mode='shadow', diameter=40, savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 70902, 5252)
 
     def test2(self):
         """tflagger:: Test2 of mode = shadow"""
-        tflagger(vis=self.vis, mode='shadow')
+        tflagger(vis=self.vis, mode='shadow', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 70902, 2912)
 
     def test3(self):
         """tflagger:: Test3 of mode = shadow"""
-        tflagger(vis=self.vis, mode='shadow', correlation='LL')
+        tflagger(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 70902, 1456)
 
 
@@ -395,7 +395,7 @@ class test_statistics_queries(test_base):
     def test_CAS2021(self):
         '''tflagger: test antenna negation selection'''
         
-        tflagger(vis=self.vis, antenna='!5') 
+        tflagger(vis=self.vis, antenna='!5', savepars=False) 
         s = tflagger(vis = self.vis, mode="summary")['baseline']
         assert s['1&&5']['flagged'] == 0 
         assert s['2&&5']['flagged'] == 0
@@ -429,7 +429,7 @@ class test_statistics_queries(test_base):
     def test_CAS2212(self):
         '''tflagger: Clipping scan selection, CAS-2212, CAS-3496'''
         # By default expression='ABS ALL'
-        tflagger(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3]) 
+        tflagger(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3], savepars=False) 
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 85404)
         s = tflagger(vis=self.vis, mode='summary')['scan']
         
@@ -445,11 +445,11 @@ class test_statistics_queries(test_base):
     def test021(self):
         '''tflagger: Test of flagging statistics and queries'''
         
-        tflagger(vis=self.vis, correlation='LL')
-        tflagger(vis=self.vis, spw='0:17~19')
-        tflagger(vis=self.vis, antenna='5&&9')
-        tflagger(vis=self.vis, antenna='14')
-        tflagger(vis=self.vis, field='1')
+        tflagger(vis=self.vis, correlation='LL', savepars=False)
+        tflagger(vis=self.vis, spw='0:17~19', savepars=False)
+        tflagger(vis=self.vis, antenna='5&&9', savepars=False)
+        tflagger(vis=self.vis, antenna='14', savepars=False)
+        tflagger(vis=self.vis, field='1', savepars=False)
         s = tflagger(vis=self.vis, mode='summary', minrel=0.9, spwchan=True)
         assert s['antenna'].keys() == ['14']
         assert '5&&9' in s['baseline'].keys()
@@ -464,23 +464,25 @@ class test_statistics_queries(test_base):
         s = tflagger(vis=self.vis, mode='summary', minabs=400000, maxabs=450000)
         assert s['scan'].keys() == ['3']
 
-    def test4(self):
+    def test_chanavg0(self):
         print "Test of channel average"
-        tflagger(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], expression='ABS RR')
+        tflagger(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], expression='ABS RR',
+                 savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 1414186)
 
-    def test5(self):
-        tflagger(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], expression='ABS RR')
+    def test_chanavg1(self):
+        tflagger(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], expression='ABS RR',
+                 savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 1347822)
 
-    def test6(self):
+    def test_chanavg2(self):
         tflagger(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
-                 expression='ABS RR')
+                 expression='ABS RR', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 242053)
 
-    def test7(self):
+    def test_chanavg3(self):
         tflagger(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], spw='0:0~10',
-                 expression='ABS RR')
+                 expression='ABS RR', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 231374)
                
 
@@ -492,38 +494,42 @@ class test_statistics_queries(test_base):
 #
     def test9(self):
         '''tflagger: quack mode'''
-        tflagger(vis=self.vis, mode='quack', quackmode='beg', quackinterval=1)
+        tflagger(vis=self.vis, mode='quack', quackmode='beg', quackinterval=1, savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 329994)
 
     def test10(self):
         '''tflagger: quack mode'''
-        tflagger(vis=self.vis, mode='quack', quackmode='endb', quackinterval=1)
+        tflagger(vis=self.vis, mode='quack', quackmode='endb', quackinterval=1, savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 333396)
 
     def test11(self):
         '''tflagger: quack mode'''
-        tflagger(vis=self.vis, mode='quack', quackmode='end', quackinterval=1)
+        tflagger(vis=self.vis, mode='quack', quackmode='end', quackinterval=1, savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 2520882)
 
     def test12(self):
         '''tflagger: quack mode'''
-        tflagger(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1)
+        tflagger(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 2524284)
 
     def test13(self):
         '''tflagger: quack mode, quackincrement'''
-        tflagger(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True)
+        tflagger(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True,
+                 savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 571536)
 
-        tflagger(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=True)
+        tflagger(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=True,
+                 savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 857304)
         
-        tflagger(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=True)
+        tflagger(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=True,
+                 savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 1571724)
         
-        tflagger(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True)
+        tflagger(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True,
+                 savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2854278, 1762236)
-        tflagger(vis=self.vis, mode='unflag')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
 
 
 
@@ -535,7 +541,7 @@ class test_selections(test_base):
 
     def test_scan(self):
         '''tflagger: scan selection'''
-        tflagger(vis=self.vis, scan='3')
+        tflagger(vis=self.vis, scan='3', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 52416)
         
         # feed not implemented flagdata(vis=vis, feed='27')
@@ -543,20 +549,20 @@ class test_selections(test_base):
 
     def test_antenna(self):
         '''tflagger: antenna selection'''
-        tflagger(vis=self.vis, antenna='2')
+        tflagger(vis=self.vis, antenna='2', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 
     def test_spw(self):
         '''tflagger: spw selection'''
-        tflagger(vis=self.vis, spw='0')
+        tflagger(vis=self.vis, spw='0', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 
     def test_correlation(self):
-        tflagger(vis=self.vis, correlation='LL')
+        tflagger(vis=self.vis, correlation='LL', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
         test_eq(tflagger(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
-        tflagger(vis=self.vis, mode='unflag')
-        tflagger(vis=self.vis, correlation='LL,RR')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagger(vis=self.vis, correlation='LL,RR', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 #        flagdata(vis=self.vis, correlation='LL RR')
 #        flagdata(vis=self.vis, correlation='LL ,, ,  ,RR')
@@ -564,27 +570,27 @@ class test_selections(test_base):
 
     def test_field(self):
         '''tflagger: field selection'''
-        tflagger(vis=self.vis, field='0')
+        tflagger(vis=self.vis, field='0', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 39186)
 
     def test_uvrange(self):
         '''tflagger: uvrange selection'''
-        tflagger(vis=self.vis, uvrange='200~400m')
+        tflagger(vis=self.vis, uvrange='200~400m', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 55944)
 
     def test_timerange(self):
         '''tflagger: timerange selection'''
-        tflagger(vis=self.vis, timerange='09:50:00~10:20:00')
+        tflagger(vis=self.vis, timerange='09:50:00~10:20:00', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 6552)
 
     def test_array(self):
         '''tflagger: array selection'''
-        tflagger(vis=self.vis, array='0')
+        tflagger(vis=self.vis, array='0', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
     def test_ntime1(self):
         '''tflagger: ntime = 0'''
-        ret = tflagger(vis=self.vis, ntime = 0)
+        ret = tflagger(vis=self.vis, ntime = 0, savepars=False)
         self.assertNotEqual(type(ret), dict, 'Return type of task should be None')
 
 class test_selections_alma(test_base):
@@ -597,27 +603,27 @@ class test_selections_alma(test_base):
         '''tflagger: scanintent selection'''
         # flag POINTING CALIBRATION scans 
         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
-        tflagger(vis=self.vis, intent='CAL*POINT*')
+        tflagger(vis=self.vis, intent='CAL*POINT*', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
         
     def test_wvr(self):
         '''tflagger: flag WVR correlation'''
-        tflagger(vis=self.vis, correlation='I')
+        tflagger(vis=self.vis, correlation='I', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 22752)
 
     def test_abs_wvr(self):
         '''tflagger: clip ABS WVR'''
-        tflagger(vis=self.vis, mode='clip',clipminmax=[0,50], expression='ABS WVR')
+        tflagger(vis=self.vis, mode='clip',clipminmax=[0,50], expression='ABS WVR', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 22752)
         
     def test_abs_i(self):
         '''tflagger: clip ABS I. Do not flag WVR'''
-        tflagger(vis=self.vis, mode='clip', clipminmax=[0,50], expression='ABS I')
+        tflagger(vis=self.vis, mode='clip', clipminmax=[0,50], expression='ABS I', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 0)
 
     def test_abs_all(self):
         '''tflagger: clip ABS ALL. Do not flag WVR'''
-        tflagger(vis=self.vis, mode='clip', clipminmax=[0,1], expression='ABS ALL')
+        tflagger(vis=self.vis, mode='clip', clipminmax=[0,1], expression='ABS ALL', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagger(vis=self.vis, mode='summary', correlation='I'),22752, 0)
         
@@ -631,17 +637,17 @@ class test_selections2(test_base):
     def test_observation(self):
         '''tflagger: observation ID selections'''
         # string
-        tflagger(vis=self.vis, observation='1')
+        tflagger(vis=self.vis, observation='1', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2882778, 28500)
 
         # integer
-        tflagger(vis=self.vis, mode='unflag')
-        tflagger(vis=self.vis, observation=1)
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagger(vis=self.vis, observation=1, savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2882778, 28500)
         
         # non-existing ID
-        tflagger(vis=self.vis, mode='unflag')
-        tflagger(vis=self.vis, observation='10')
+        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagger(vis=self.vis, observation='10', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 2882778, 0)
                 
 class test_elevation(test_base):
@@ -654,28 +660,28 @@ class test_elevation(test_base):
         self.all = 2854278
 
     def test_lower(self):
-        tflagger(vis = self.vis, mode = 'elevation')
+        tflagger(vis = self.vis, mode = 'elevation', savepars=False)
         
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, 0)
 
-        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 50)
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 50, savepars=False)
 
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, 0)
 
-        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 55)
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 55, savepars=False)
 
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x55)
 
-        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 60)
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 60, savepars=False)
 
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x60)
 
-        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 65)
+        tflagger(vis = self.vis, mode = 'elevation', lowerlimit = 65, savepars=False)
 
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.x65)
 
     def test_upper(self):
-        tflagger(vis = self.vis, mode = 'elevation', upperlimit = 60)
+        tflagger(vis = self.vis, mode = 'elevation', upperlimit = 60, savepars=False)
 
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.all - self.x60)
 
@@ -684,7 +690,8 @@ class test_elevation(test_base):
         tflagger(vis = self.vis,
                   mode = 'elevation',
                   lowerlimit = 55,
-                  upperlimit = 60)
+                  upperlimit = 60,
+                  savepars=False)
 
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.all - (self.x60 - self.x55))
 

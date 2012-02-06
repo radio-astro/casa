@@ -63,6 +63,7 @@ using asdm::CalReductionRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -951,153 +952,153 @@ namespace asdm {
 
 	}
 	
-void CalSeeingRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+void CalSeeingRow::atmPhaseCorrectionFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		atmPhaseCorrection = CAtmPhaseCorrection::literal(eiss.readString());
+		atmPhaseCorrection = CAtmPhaseCorrection::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalSeeingRow::calDataIdFromBin(EndianISStream& eiss) {
+void CalSeeingRow::calDataIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalSeeingRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalSeeingRow::startValidTimeFromBin(EndianISStream& eiss) {
+void CalSeeingRow::calReductionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalSeeingRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalSeeingRow::frequencyRangeFromBin(EndianISStream& eiss) {
+void CalSeeingRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalSeeingRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalSeeingRow::frequencyRangeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	frequencyRange = Frequency::from1DBin(eiss);	
+	frequencyRange = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalSeeingRow::integrationTimeFromBin(EndianISStream& eiss) {
+void CalSeeingRow::integrationTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		integrationTime =  Interval::fromBin(eiss);
-		
-	
-	
-}
-void CalSeeingRow::numBaseLengthsFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numBaseLengths =  eiss.readInt();
-			
+		integrationTime =  Interval::fromBin(eis);
 		
 	
 	
 }
-void CalSeeingRow::baselineLengthsFromBin(EndianISStream& eiss) {
+void CalSeeingRow::numBaseLengthsFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numBaseLengths =  eis.readInt();
+			
+		
+	
+	
+}
+void CalSeeingRow::baselineLengthsFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	baselineLengths = Length::from1DBin(eiss);	
+	baselineLengths = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalSeeingRow::phaseRMSFromBin(EndianISStream& eiss) {
+void CalSeeingRow::phaseRMSFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	phaseRMS = Angle::from1DBin(eiss);	
+	phaseRMS = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalSeeingRow::seeingFromBin(EndianISStream& eiss) {
+void CalSeeingRow::seeingFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		seeing =  Angle::fromBin(eiss);
+		seeing =  Angle::fromBin(eis);
 		
 	
 	
 }
-void CalSeeingRow::seeingErrorFromBin(EndianISStream& eiss) {
+void CalSeeingRow::seeingErrorFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		seeingError =  Angle::fromBin(eiss);
+		seeingError =  Angle::fromBin(eis);
 		
 	
 	
 }
 
-void CalSeeingRow::exponentFromBin(EndianISStream& eiss) {
+void CalSeeingRow::exponentFromBin(EndianIStream& eis) {
 		
-	exponentExists = eiss.readBoolean();
+	exponentExists = eis.readBoolean();
 	if (exponentExists) {
 		
 	
 	
 		
 			
-		exponent =  eiss.readFloat();
+		exponent =  eis.readFloat();
 			
 		
 	
@@ -1105,30 +1106,30 @@ void CalSeeingRow::exponentFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalSeeingRow::outerScaleFromBin(EndianISStream& eiss) {
+void CalSeeingRow::outerScaleFromBin(EndianIStream& eis) {
 		
-	outerScaleExists = eiss.readBoolean();
+	outerScaleExists = eis.readBoolean();
 	if (outerScaleExists) {
 		
 	
 		
 		
-		outerScale =  Length::fromBin(eiss);
+		outerScale =  Length::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void CalSeeingRow::outerScaleRMSFromBin(EndianISStream& eiss) {
+void CalSeeingRow::outerScaleRMSFromBin(EndianIStream& eis) {
 		
-	outerScaleRMSExists = eiss.readBoolean();
+	outerScaleRMSExists = eis.readBoolean();
 	if (outerScaleRMSExists) {
 		
 	
 		
 		
-		outerScaleRMS =  Angle::fromBin(eiss);
+		outerScaleRMS =  Angle::fromBin(eis);
 		
 	
 
@@ -1137,19 +1138,19 @@ void CalSeeingRow::outerScaleRMSFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalSeeingRow* CalSeeingRow::fromBin(EndianISStream& eiss, CalSeeingTable& table, const vector<string>& attributesSeq) {
+	CalSeeingRow* CalSeeingRow::fromBin(EndianIStream& eis, CalSeeingTable& table, const vector<string>& attributesSeq) {
 		CalSeeingRow* row = new  CalSeeingRow(table);
 		
 		map<string, CalSeeingAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalSeeingTable");
 			}
@@ -1157,10 +1158,147 @@ void CalSeeingRow::outerScaleRMSFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an AtmPhaseCorrection 
+	void CalSeeingRow::atmPhaseCorrectionFromText(const string & s) {
+		 
+		atmPhaseCorrection = ASDMValuesParser::parse<AtmPhaseCorrection>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalSeeingRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalSeeingRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalSeeingRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalSeeingRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalSeeingRow::frequencyRangeFromText(const string & s) {
+		 
+		frequencyRange = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void CalSeeingRow::integrationTimeFromText(const string & s) {
+		 
+		integrationTime = ASDMValuesParser::parse<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalSeeingRow::numBaseLengthsFromText(const string & s) {
+		 
+		numBaseLengths = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalSeeingRow::baselineLengthsFromText(const string & s) {
+		 
+		baselineLengths = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalSeeingRow::phaseRMSFromText(const string & s) {
+		 
+		phaseRMS = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalSeeingRow::seeingFromText(const string & s) {
+		 
+		seeing = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalSeeingRow::seeingErrorFromText(const string & s) {
+		 
+		seeingError = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an float 
+	void CalSeeingRow::exponentFromText(const string & s) {
+		exponentExists = true;
+		 
+		exponent = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void CalSeeingRow::outerScaleFromText(const string & s) {
+		outerScaleExists = true;
+		 
+		outerScale = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalSeeingRow::outerScaleRMSFromText(const string & s) {
+		outerScaleRMSExists = true;
+		 
+		outerScaleRMS = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	
+	void CalSeeingRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalSeeingAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalSeeingTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1628,9 +1766,9 @@ void CalSeeingRow::outerScaleRMSFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1704,9 +1842,10 @@ void CalSeeingRow::outerScaleRMSFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1848,6 +1987,71 @@ atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 	 fromBinMethods["outerScale"] = &CalSeeingRow::outerScaleFromBin; 
 	 fromBinMethods["outerScaleRMS"] = &CalSeeingRow::outerScaleRMSFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["atmPhaseCorrection"] = &CalSeeingRow::atmPhaseCorrectionFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalSeeingRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalSeeingRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalSeeingRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalSeeingRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyRange"] = &CalSeeingRow::frequencyRangeFromText;
+		 
+	
+				 
+	fromTextMethods["integrationTime"] = &CalSeeingRow::integrationTimeFromText;
+		 
+	
+				 
+	fromTextMethods["numBaseLengths"] = &CalSeeingRow::numBaseLengthsFromText;
+		 
+	
+				 
+	fromTextMethods["baselineLengths"] = &CalSeeingRow::baselineLengthsFromText;
+		 
+	
+				 
+	fromTextMethods["phaseRMS"] = &CalSeeingRow::phaseRMSFromText;
+		 
+	
+				 
+	fromTextMethods["seeing"] = &CalSeeingRow::seeingFromText;
+		 
+	
+				 
+	fromTextMethods["seeingError"] = &CalSeeingRow::seeingErrorFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["exponent"] = &CalSeeingRow::exponentFromText;
+		 	
+	 
+				
+	fromTextMethods["outerScale"] = &CalSeeingRow::outerScaleFromText;
+		 	
+	 
+				
+	fromTextMethods["outerScaleRMS"] = &CalSeeingRow::outerScaleRMSFromText;
+		 	
+		
 	}
 	
 	CalSeeingRow::CalSeeingRow (CalSeeingTable &t, CalSeeingRow &row) : table(t) {

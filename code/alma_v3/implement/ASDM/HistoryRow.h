@@ -81,9 +81,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file History.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -96,17 +97,19 @@ class ExecBlockRow;
 	
 
 class HistoryRow;
-typedef void (HistoryRow::*HistoryAttributeFromBin) (EndianISStream& eiss);
+typedef void (HistoryRow::*HistoryAttributeFromBin) (EndianIStream& eis);
+typedef void (HistoryRow::*HistoryAttributeFromText) (const string& s);
 
 /**
  * The HistoryRow class is a row of a HistoryTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class HistoryRow {
 friend class asdm::HistoryTable;
 friend class asdm::RowTransformer<HistoryRow>;
+//friend class asdm::TableStreamReader<HistoryTable, HistoryRow>;
 
 public:
 
@@ -516,7 +519,35 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, HistoryAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void timeFromBin( EndianIStream& eis);
+void messageFromBin( EndianIStream& eis);
+void priorityFromBin( EndianIStream& eis);
+void originFromBin( EndianIStream& eis);
+void objectIdFromBin( EndianIStream& eis);
+void applicationFromBin( EndianIStream& eis);
+void cliCommandFromBin( EndianIStream& eis);
+void appParmsFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the HistoryTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static HistoryRow* fromBin(EndianIStream& eis, HistoryTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -680,21 +711,59 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, HistoryAttributeFromBin> fromBinMethods;
-void execBlockIdFromBin( EndianISStream& eiss);
-void timeFromBin( EndianISStream& eiss);
-void messageFromBin( EndianISStream& eiss);
-void priorityFromBin( EndianISStream& eiss);
-void originFromBin( EndianISStream& eiss);
-void objectIdFromBin( EndianISStream& eiss);
-void applicationFromBin( EndianISStream& eiss);
-void cliCommandFromBin( EndianISStream& eiss);
-void appParmsFromBin( EndianISStream& eiss);
+void execBlockIdFromBin( EndianIStream& eis);
+void timeFromBin( EndianIStream& eis);
+void messageFromBin( EndianIStream& eis);
+void priorityFromBin( EndianIStream& eis);
+void originFromBin( EndianIStream& eis);
+void objectIdFromBin( EndianIStream& eis);
+void applicationFromBin( EndianIStream& eis);
+void cliCommandFromBin( EndianIStream& eis);
+void appParmsFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, HistoryAttributeFromText> fromTextMethods;
+	
+void execBlockIdFromText (const string & s);
+	
+	
+void timeFromText (const string & s);
+	
+	
+void messageFromText (const string & s);
+	
+	
+void priorityFromText (const string & s);
+	
+	
+void originFromText (const string & s);
+	
+	
+void objectIdFromText (const string & s);
+	
+	
+void applicationFromText (const string & s);
+	
+	
+void cliCommandFromText (const string & s);
+	
+	
+void appParmsFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -703,14 +772,14 @@ void appParmsFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the HistoryTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static HistoryRow* fromBin(EndianISStream& eiss, HistoryTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static HistoryRow* fromBin(EndianIStream& eis, HistoryTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -78,6 +79,11 @@ namespace SwitchingModeMod
   typedef SwitchingMode &SwitchingMode_out;
 } 
 #endif
+
+namespace SwitchingModeMod {
+	std::ostream & operator << ( std::ostream & out, const SwitchingMode& value);
+	std::istream & operator >> ( std::istream & in , SwitchingMode& value );
+}
 
 /** 
   * A helper class for the enumeration SwitchingMode.

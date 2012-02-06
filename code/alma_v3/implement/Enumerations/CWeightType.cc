@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CWeightType::version() {
 	return WeightTypeMod::version;
 	}
@@ -134,5 +133,25 @@ string CWeightType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'WeightType'.";
 	return oss.str();
+}
+
+namespace WeightTypeMod {
+	std::ostream & operator << ( std::ostream & out, const WeightType& value) {
+		out << CWeightType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , WeightType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CWeightType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

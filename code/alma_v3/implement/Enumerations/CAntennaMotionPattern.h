@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -82,6 +83,11 @@ namespace AntennaMotionPatternMod
   typedef AntennaMotionPattern &AntennaMotionPattern_out;
 } 
 #endif
+
+namespace AntennaMotionPatternMod {
+	std::ostream & operator << ( std::ostream & out, const AntennaMotionPattern& value);
+	std::istream & operator >> ( std::istream & in , AntennaMotionPattern& value );
+}
 
 /** 
   * A helper class for the enumeration AntennaMotionPattern.

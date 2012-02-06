@@ -117,9 +117,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalFlux.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -135,17 +136,19 @@ class CalReductionRow;
 	
 
 class CalFluxRow;
-typedef void (CalFluxRow::*CalFluxAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalFluxRow::*CalFluxAttributeFromBin) (EndianIStream& eis);
+typedef void (CalFluxRow::*CalFluxAttributeFromText) (const string& s);
 
 /**
  * The CalFluxRow class is a row of a CalFluxTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalFluxRow {
 friend class asdm::CalFluxTable;
 friend class asdm::RowTransformer<CalFluxRow>;
+//friend class asdm::TableStreamReader<CalFluxTable, CalFluxRow>;
 
 public:
 
@@ -1000,7 +1003,46 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalFluxAttributeFromBin> fromBinMethods;
+void sourceNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void numFrequencyRangesFromBin( EndianIStream& eis);
+void numStokesFromBin( EndianIStream& eis);
+void frequencyRangesFromBin( EndianIStream& eis);
+void fluxMethodFromBin( EndianIStream& eis);
+void fluxFromBin( EndianIStream& eis);
+void fluxErrorFromBin( EndianIStream& eis);
+void stokesFromBin( EndianIStream& eis);
+
+void directionFromBin( EndianIStream& eis);
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+void PAFromBin( EndianIStream& eis);
+void PAErrorFromBin( EndianIStream& eis);
+void sizeFromBin( EndianIStream& eis);
+void sizeErrorFromBin( EndianIStream& eis);
+void sourceModelFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalFluxTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalFluxRow* fromBin(EndianIStream& eis, CalFluxTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1308,32 +1350,103 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalFluxAttributeFromBin> fromBinMethods;
-void sourceNameFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void numFrequencyRangesFromBin( EndianISStream& eiss);
-void numStokesFromBin( EndianISStream& eiss);
-void frequencyRangesFromBin( EndianISStream& eiss);
-void fluxMethodFromBin( EndianISStream& eiss);
-void fluxFromBin( EndianISStream& eiss);
-void fluxErrorFromBin( EndianISStream& eiss);
-void stokesFromBin( EndianISStream& eiss);
+void sourceNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void numFrequencyRangesFromBin( EndianIStream& eis);
+void numStokesFromBin( EndianIStream& eis);
+void frequencyRangesFromBin( EndianIStream& eis);
+void fluxMethodFromBin( EndianIStream& eis);
+void fluxFromBin( EndianIStream& eis);
+void fluxErrorFromBin( EndianIStream& eis);
+void stokesFromBin( EndianIStream& eis);
 
-void directionFromBin( EndianISStream& eiss);
-void directionCodeFromBin( EndianISStream& eiss);
-void directionEquinoxFromBin( EndianISStream& eiss);
-void PAFromBin( EndianISStream& eiss);
-void PAErrorFromBin( EndianISStream& eiss);
-void sizeFromBin( EndianISStream& eiss);
-void sizeErrorFromBin( EndianISStream& eiss);
-void sourceModelFromBin( EndianISStream& eiss);
+void directionFromBin( EndianIStream& eis);
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+void PAFromBin( EndianIStream& eis);
+void PAErrorFromBin( EndianIStream& eis);
+void sizeFromBin( EndianIStream& eis);
+void sizeErrorFromBin( EndianIStream& eis);
+void sourceModelFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalFluxAttributeFromText> fromTextMethods;
+	
+void sourceNameFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void numFrequencyRangesFromText (const string & s);
+	
+	
+void numStokesFromText (const string & s);
+	
+	
+void frequencyRangesFromText (const string & s);
+	
+	
+void fluxMethodFromText (const string & s);
+	
+	
+void fluxFromText (const string & s);
+	
+	
+void fluxErrorFromText (const string & s);
+	
+	
+void stokesFromText (const string & s);
+	
+
+	
+void directionFromText (const string & s);
+	
+	
+void directionCodeFromText (const string & s);
+	
+	
+void directionEquinoxFromText (const string & s);
+	
+	
+void PAFromText (const string & s);
+	
+	
+void PAErrorFromText (const string & s);
+	
+	
+void sizeFromText (const string & s);
+	
+	
+void sizeErrorFromText (const string & s);
+	
+	
+void sourceModelFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1342,14 +1455,14 @@ void sourceModelFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalFluxTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalFluxRow* fromBin(EndianISStream& eiss, CalFluxTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalFluxRow* fromBin(EndianIStream& eis, CalFluxTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

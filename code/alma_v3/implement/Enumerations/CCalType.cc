@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CCalType::version() {
 	return CalTypeMod::version;
 	}
@@ -344,5 +343,25 @@ string CCalType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'CalType'.";
 	return oss.str();
+}
+
+namespace CalTypeMod {
+	std::ostream & operator << ( std::ostream & out, const CalType& value) {
+		out << CCalType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , CalType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CCalType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

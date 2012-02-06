@@ -34,10 +34,10 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Containers/Block.h>
 #include <synthesis/MeasurementComponents/CFTerms.h>
-#include <msvis/SynthesisUtils/CFStore.h>
+#include <synthesis/TransformMachines/CFStore.h>
 
 namespace casa{
   // <summary>  

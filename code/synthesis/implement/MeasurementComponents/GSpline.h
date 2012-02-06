@@ -31,7 +31,7 @@
 
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
-#include <calibration/CalTables/GJonesMBuf.h>
+#include <synthesis/CalTables/GJonesMBuf.h>
 #include <casa/Containers/SimOrdMap.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

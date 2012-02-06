@@ -350,7 +350,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 			sortOrder_p = Block<int>(5);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
-			sortOrder_p[2] = MS::SCAN_NUMBER;
+			sortOrder_p[2] = MS::FIELD_ID;
 			sortOrder_p[3] = MS::DATA_DESC_ID;
 			sortOrder_p[4] = MS::TIME;
 

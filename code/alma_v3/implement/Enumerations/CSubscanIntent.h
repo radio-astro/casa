@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -86,6 +87,11 @@ namespace SubscanIntentMod
   typedef SubscanIntent &SubscanIntent_out;
 } 
 #endif
+
+namespace SubscanIntentMod {
+	std::ostream & operator << ( std::ostream & out, const SubscanIntent& value);
+	std::istream & operator >> ( std::istream & in , SubscanIntent& value );
+}
 
 /** 
   * A helper class for the enumeration SubscanIntent.

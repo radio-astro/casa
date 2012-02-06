@@ -41,10 +41,10 @@
 
 #include <casa/System/PGPlotter.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/VisBuffAccumulator.h>
-#include <calibration/CalTables/GJonesMBuf.h>
-#include <calibration/CalTables/GJonesTable.h>
-#include <calibration/CalTables/CalIter.h>
+#include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/CalTables/GJonesMBuf.h>
+#include <synthesis/CalTables/GJonesTable.h>
+#include <synthesis/CalTables/CalIter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

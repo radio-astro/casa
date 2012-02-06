@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace SpectralResolutionTypeMod
   typedef SpectralResolutionType &SpectralResolutionType_out;
 } 
 #endif
+
+namespace SpectralResolutionTypeMod {
+	std::ostream & operator << ( std::ostream & out, const SpectralResolutionType& value);
+	std::istream & operator >> ( std::istream & in , SpectralResolutionType& value );
+}
 
 /** 
   * A helper class for the enumeration SpectralResolutionType.

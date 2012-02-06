@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace WeightTypeMod
   typedef WeightType &WeightType_out;
 } 
 #endif
+
+namespace WeightTypeMod {
+	std::ostream & operator << ( std::ostream & out, const WeightType& value);
+	std::istream & operator >> ( std::istream & in , WeightType& value );
+}
 
 /** 
   * A helper class for the enumeration WeightType.

@@ -40,7 +40,7 @@ using asdm::StringTokenizer;
 using asdm::NumberFormatException;
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
 namespace asdm {
 class Speed;
 Speed operator * ( double , const Speed & );
@@ -154,36 +154,36 @@ public:
 	 */
 	static void toBin(const vector<vector<vector<Speed> > >& angle,  EndianOSStream& eoss);
 	/**
-	 * Read the binary representation of an Speed from a EndianISStream
+	 * Read the binary representation of an Speed from a EndianIStream
 	 * and use the read value to set an  Speed.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an Speed
 	 */
-	static Speed fromBin(EndianISStream& eiss);
+	static Speed fromBin(EndianIStream& eis);
 	
 	/**
-	 * Read the binary representation of  a vector of  Speed from an EndianISStream
+	 * Read the binary representation of  a vector of  Speed from an EndianIStream
 	 * and use the read value to set a vector of  Speed.
-	 * @param eiss a reference to the EndianISStream to be read
+	 * @param eis a reference to the EndianIStream to be read
 	 * @return a vector of Speed
 	 */	 
-	 static vector<Speed> from1DBin(EndianISStream & eiss);
+	 static vector<Speed> from1DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of Speed from an EndianISStream
+	 * Read the binary representation of  a vector of vector of Speed from an EndianIStream
 	 * and use the read value to set a vector of  vector of Speed.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of Speed
 	 */	 
-	 static vector<vector<Speed> > from2DBin(EndianISStream & eiss);
+	 static vector<vector<Speed> > from2DBin(EndianIStream & eis);
 	 
 	/**
-	 * Read the binary representation of  a vector of vector of vector of Speed from an EndianISStream
+	 * Read the binary representation of  a vector of vector of vector of Speed from an EndianIStream
 	 * and use the read value to set a vector of  vector of vector of Speed.
-	 * @param eiss the EndianISStream to be read
+	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of vector of Speed
 	 */	 
-	 static vector<vector<vector<Speed> > > from3DBin(EndianISStream & eiss);	 
+	 static vector<vector<vector<Speed> > > from3DBin(EndianIStream & eis);	 
 	 
 	 /**
 	  * An assignment operator Speed = Speed.

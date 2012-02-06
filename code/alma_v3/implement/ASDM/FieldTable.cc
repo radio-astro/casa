@@ -49,8 +49,11 @@ using asdm::FieldRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string FieldTable::tableName = "Field";
-	const vector<string> FieldTable::attributesNames = initAttributesNames();
-		
+	string FieldTable::itsName = "Field";
+	vector<string> FieldTable::attributesNames; 
+	vector<string> FieldTable::attributesNamesInBin; 
+	bool FieldTable::initAttributesNamesDone = FieldTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -139,14 +145,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FieldTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string FieldTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> FieldTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool FieldTable::initAttributesNames() {
 
 		attributesNames.push_back("fieldId");
 
@@ -178,13 +190,46 @@ namespace asdm {
 
 		attributesNames.push_back("assocFieldId");
 
-		return attributesNames;
+
+    
+    	 
+    	attributesNamesInBin.push_back("fieldId") ; 
+    	 
+    	attributesNamesInBin.push_back("fieldName") ; 
+    	 
+    	attributesNamesInBin.push_back("numPoly") ; 
+    	 
+    	attributesNamesInBin.push_back("delayDir") ; 
+    	 
+    	attributesNamesInBin.push_back("phaseDir") ; 
+    	 
+    	attributesNamesInBin.push_back("referenceDir") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("time") ; 
+    	 
+    	attributesNamesInBin.push_back("code") ; 
+    	 
+    	attributesNamesInBin.push_back("directionCode") ; 
+    	 
+    	attributesNamesInBin.push_back("directionEquinox") ; 
+    	 
+    	attributesNamesInBin.push_back("assocNature") ; 
+    	 
+    	attributesNamesInBin.push_back("ephemerisId") ; 
+    	 
+    	attributesNamesInBin.push_back("sourceId") ; 
+    	 
+    	attributesNamesInBin.push_back("assocFieldId") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& FieldTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& FieldTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -480,7 +525,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n");
+		buf.append("<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -602,7 +647,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.60\">\n";
+		oss << "<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FieldTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -736,36 +781,39 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("fieldId") ; 
-     
-    attributesSeq.push_back("fieldName") ; 
-     
-    attributesSeq.push_back("numPoly") ; 
-     
-    attributesSeq.push_back("delayDir") ; 
-     
-    attributesSeq.push_back("phaseDir") ; 
-     
-    attributesSeq.push_back("referenceDir") ; 
     
-     
+    	 
+    attributesSeq.push_back("fieldId") ; 
+    	 
+    attributesSeq.push_back("fieldName") ; 
+    	 
+    attributesSeq.push_back("numPoly") ; 
+    	 
+    attributesSeq.push_back("delayDir") ; 
+    	 
+    attributesSeq.push_back("phaseDir") ; 
+    	 
+    attributesSeq.push_back("referenceDir") ; 
+    	
+    	 
     attributesSeq.push_back("time") ; 
-     
+    	 
     attributesSeq.push_back("code") ; 
-     
+    	 
     attributesSeq.push_back("directionCode") ; 
-     
+    	 
     attributesSeq.push_back("directionEquinox") ; 
-     
+    	 
     attributesSeq.push_back("assocNature") ; 
-     
+    	 
     attributesSeq.push_back("ephemerisId") ; 
-     
+    	 
     attributesSeq.push_back("sourceId") ; 
-     
+    	 
     attributesSeq.push_back("assocFieldId") ; 
+    	
      
+    
     
     // And decide that it has version == "2"
     version = "2";         
@@ -822,13 +870,13 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -843,7 +891,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 	if (getContainer().checkRowUniqueness()) {
     	try {
       		for (uint32_t i = 0; i < this->declaredSize; i++) {
-				FieldRow* aRow = FieldRow::fromBin(eiss, *this, attributesSeq);
+				FieldRow* aRow = FieldRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 				checkAndAdd(aRow);
       		}
     	}
@@ -858,7 +906,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
     }
     else {
  		for (uint32_t i = 0; i < this->declaredSize; i++) {
-			FieldRow* aRow = FieldRow::fromBin(eiss, *this, attributesSeq);
+			FieldRow* aRow = FieldRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
 			append(aRow);
       	}   	
     }
@@ -949,6 +997,132 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
     
     setFromMIME(ss.str());
   }	
+/* 
+  void FieldTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/Field.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "Field");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "Field");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "Field");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Field");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Field");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("FieldTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/FieldTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "Field");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/FieldTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "Field");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/FieldTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "Field");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/FieldTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "Field");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void FieldTable::setFromXMLFile(const string& directory) {

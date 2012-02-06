@@ -1,13 +1,13 @@
 /***
-* Framework independent implementation file for flag...
-*
-* Implement the flag component here.
-*
-* // TODO: WRITE YOUR DESCRIPTION HERE!
-*
-* @author
-* @version
-***/
+ * Framework independent implementation file for flag...
+ *
+ * Implement the flag component here.
+ *
+ * // TODO: WRITE YOUR DESCRIPTION HERE!
+ *
+ * @author
+ * @version
+ ***/
 
 #include <iostream>
 #include <testflagger_cmpt.h>
@@ -83,7 +83,7 @@ testflagger::open(const std::string& msname, const double ntime)
 	try
 	{
 		if ( !testflagger_p ) {
-		    testflagger_p = new TestFlagger();
+			testflagger_p = new TestFlagger();
 		}
 		if (testflagger_p) {
 			return testflagger_p->open(msname, ntime);
@@ -100,59 +100,42 @@ testflagger::open(const std::string& msname, const double ntime)
 
 bool
 testflagger::selectdata(
-	const ::casac::record& selconfig,
-    const std::string& field,
-    const std::string& spw,
-    const std::string& array,
-    const std::string& feed,
-    const std::string& scan,
-    const std::string& antenna,
-    const std::string& uvrange,
-    const std::string& timerange,
-    const std::string& correlation,
-    const std::string& intent,
-    const std::string& observation)
+		const ::casac::record& selconfig,
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation)
 {
 
 	try {
 
-	if (testflagger_p) {
-
-		if (! selconfig.empty()) {
-			Record config = *toRecord(selconfig);
-			// Select based on the record
-			return testflagger_p->selectData(config);
-		}
-		else {
-
-			// Select based on the parameters
-		    return testflagger_p->selectData(
-			String(field),String(spw),String(array),
-			String(feed),String(scan),String(antenna),
-			String(uvrange),String(timerange),String(correlation),
-	        String(intent), String(observation));
-		}
-    }
-
-	return false;
-    } catch (AipsError x) {
-    	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    	RETHROW(x);
-    }
-}
-
-bool
-testflagger::parseDataSelection(const ::casac::record& selconfig)
-{
-	try
-	{
-		Record config = *toRecord(selconfig);
 		if (testflagger_p) {
-			return testflagger_p->parseDataSelection(config);
+
+			if (! selconfig.empty()) {
+				Record config = *toRecord(selconfig);
+				// Select based on the record
+				return testflagger_p->selectData(config);
+			}
+			else {
+
+				// Select based on the parameters
+				return testflagger_p->selectData(
+						String(field),String(spw),String(array),
+						String(feed),String(scan),String(antenna),
+						String(uvrange),String(timerange),String(correlation),
+						String(intent), String(observation));
+			}
 		}
 
 		return false;
-	} catch(AipsError x) {
+	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
@@ -160,7 +143,7 @@ testflagger::parseDataSelection(const ::casac::record& selconfig)
 
 
 bool
-testflagger::parseAgentParameters(const ::casac::record& aparams)
+testflagger::parseagentparameters(const ::casac::record& aparams)
 {
 	try
 	{
@@ -184,8 +167,7 @@ testflagger::init()
 	try
 	{
 		if(testflagger_p){
-				return testflagger_p->initAgents();
-//			}
+			return testflagger_p->initAgents();
 		}
 
 		return false;
@@ -196,13 +178,13 @@ testflagger::init()
 }
 
 ::casac::record*
-testflagger::run(bool writeflags)
+ testflagger::run(bool writeflags, bool sequential)
 {
-    casac::record *rstat(0);
+	casac::record *rstat(0);
 	try
 	{
 		if(testflagger_p){
-			rstat =  fromRecord(testflagger_p->run(writeflags));
+			rstat =  fromRecord(testflagger_p->run(writeflags, sequential));
 		}
 		else{
 			rstat = fromRecord(Record());
@@ -222,25 +204,25 @@ testflagger::run(bool writeflags)
 std::vector<std::string>
 testflagger::getflagversionlist(const bool printflags)
 {
-    try
-    {
-        std::vector<std::string> result;
+	try
+	{
+		std::vector<std::string> result;
 
-        if(testflagger_p)
-        {
-        	Vector<String> versionlist(0);
-        	testflagger_p->getFlagVersionList(versionlist);
-        	for(uInt i = 0; i < versionlist.nelements(); i++) {
-        		if (printflags) *logger_p << versionlist[i] << LogIO::POST;
-        			result.push_back(versionlist[i]);
-        	}
+		if(testflagger_p)
+		{
+			Vector<String> versionlist(0);
+			testflagger_p->getFlagVersionList(versionlist);
+			for(uInt i = 0; i < versionlist.nelements(); i++) {
+				if (printflags) *logger_p << versionlist[i] << LogIO::POST;
+				result.push_back(versionlist[i]);
+			}
 
-        }
-        return result;
-    } catch (AipsError x) {
-    	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-        RETHROW(x);
-    }
+		}
+		return result;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
 }
 
 bool
@@ -261,7 +243,7 @@ testflagger::printflagselection()
 
 bool
 testflagger::saveflagversion(const std::string& versionname, const std::string& comment,
-							 const std::string& merge)
+		const std::string& merge)
 {
 	try
 	{
@@ -276,6 +258,84 @@ testflagger::saveflagversion(const std::string& versionname, const std::string& 
 	}
 }
 
+bool
+testflagger::parsemanualparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const bool apply)
+{
+
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the manualflag parameters
+			return testflagger_p->parseManualParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+bool
+testflagger::parseclipparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const std::string& expression,
+		const std::string& datacolumn,
+		const std::vector<double>& clipminmax,
+		const bool clipoutside,
+		const bool channelavg,
+		const bool apply)
+{
+
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the manualflag parameters
+			return testflagger_p->parseClipParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), String(expression),
+					String(datacolumn), clipminmax, Bool(clipoutside),
+					Bool(channelavg), Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
 
 } // casac namespace
 

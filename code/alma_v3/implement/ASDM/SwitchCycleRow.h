@@ -95,9 +95,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file SwitchCycle.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -107,17 +108,19 @@ namespace asdm {
 	
 
 class SwitchCycleRow;
-typedef void (SwitchCycleRow::*SwitchCycleAttributeFromBin) (EndianISStream& eiss);
+typedef void (SwitchCycleRow::*SwitchCycleAttributeFromBin) (EndianIStream& eis);
+typedef void (SwitchCycleRow::*SwitchCycleAttributeFromText) (const string& s);
 
 /**
  * The SwitchCycleRow class is a row of a SwitchCycleTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SwitchCycleRow {
 friend class asdm::SwitchCycleTable;
 friend class asdm::RowTransformer<SwitchCycleRow>;
+//friend class asdm::TableStreamReader<SwitchCycleTable, SwitchCycleRow>;
 
 public:
 
@@ -478,7 +481,34 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SwitchCycleAttributeFromBin> fromBinMethods;
+void switchCycleIdFromBin( EndianIStream& eis);
+void numStepFromBin( EndianIStream& eis);
+void weightArrayFromBin( EndianIStream& eis);
+void dirOffsetArrayFromBin( EndianIStream& eis);
+void freqOffsetArrayFromBin( EndianIStream& eis);
+void stepDurationArrayFromBin( EndianIStream& eis);
+
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SwitchCycleTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SwitchCycleRow* fromBin(EndianIStream& eis, SwitchCycleTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -640,20 +670,55 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, SwitchCycleAttributeFromBin> fromBinMethods;
-void switchCycleIdFromBin( EndianISStream& eiss);
-void numStepFromBin( EndianISStream& eiss);
-void weightArrayFromBin( EndianISStream& eiss);
-void dirOffsetArrayFromBin( EndianISStream& eiss);
-void freqOffsetArrayFromBin( EndianISStream& eiss);
-void stepDurationArrayFromBin( EndianISStream& eiss);
+void switchCycleIdFromBin( EndianIStream& eis);
+void numStepFromBin( EndianIStream& eis);
+void weightArrayFromBin( EndianIStream& eis);
+void dirOffsetArrayFromBin( EndianIStream& eis);
+void freqOffsetArrayFromBin( EndianIStream& eis);
+void stepDurationArrayFromBin( EndianIStream& eis);
 
-void directionCodeFromBin( EndianISStream& eiss);
-void directionEquinoxFromBin( EndianISStream& eiss);
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SwitchCycleAttributeFromText> fromTextMethods;
+	
+void switchCycleIdFromText (const string & s);
+	
+	
+void numStepFromText (const string & s);
+	
+	
+void weightArrayFromText (const string & s);
+	
+	
+void dirOffsetArrayFromText (const string & s);
+	
+	
+void freqOffsetArrayFromText (const string & s);
+	
+	
+void stepDurationArrayFromText (const string & s);
+	
+
+	
+void directionCodeFromText (const string & s);
+	
+	
+void directionEquinoxFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -662,14 +727,14 @@ void directionEquinoxFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SwitchCycleTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SwitchCycleRow* fromBin(EndianISStream& eiss, SwitchCycleTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static SwitchCycleRow* fromBin(EndianIStream& eis, SwitchCycleTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

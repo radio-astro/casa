@@ -58,9 +58,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>stokes="iq"</example>
     </param>
     <param type="string" name="mask">
-        <description>Optional mask to use.</description>
-        <value/>
-        <example>mask="mymask"</example>
+        <description>Mask to use. See help par.mask. Default is none.</description>
+        <value type="string"/>
     </param>
     <param type="bool" name="wantreturn">
         <description>Should an image analysis tool referencing the collapsed image be returned?</description>
@@ -114,7 +113,7 @@ chans            Optional contiguous frequency channel number specification. Not
                  region is specified. Default is all channels.
 stokes           Contiguous stokes planes specification. Not used if region is specified.
                  Default is all stokes.
-mask             Optional mask specification.
+mask             Mask to use. See help par.mask. Default is none.
 wantreturn       If true, return an image analysis tool referencing the collapsed image, if
                  false, return false.
 

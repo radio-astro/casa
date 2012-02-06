@@ -57,6 +57,7 @@ using asdm::SpectralWindowRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -358,27 +359,27 @@ namespace asdm {
 
 	}
 	
-void AlmaRadiometerRow::almaRadiometerIdFromBin(EndianISStream& eiss) {
+void AlmaRadiometerRow::almaRadiometerIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		almaRadiometerId =  Tag::fromBin(eiss);
+		almaRadiometerId =  Tag::fromBin(eis);
 		
 	
 	
 }
 
-void AlmaRadiometerRow::numAntennaFromBin(EndianISStream& eiss) {
+void AlmaRadiometerRow::numAntennaFromBin(EndianIStream& eis) {
 		
-	numAntennaExists = eiss.readBoolean();
+	numAntennaExists = eis.readBoolean();
 	if (numAntennaExists) {
 		
 	
 	
 		
 			
-		numAntenna =  eiss.readInt();
+		numAntenna =  eis.readInt();
 			
 		
 	
@@ -386,9 +387,9 @@ void AlmaRadiometerRow::numAntennaFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
+void AlmaRadiometerRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
-	spectralWindowIdExists = eiss.readBoolean();
+	spectralWindowIdExists = eis.readBoolean();
 	if (spectralWindowIdExists) {
 		
 	
@@ -396,7 +397,7 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
 			
 	
-	spectralWindowId = Tag::from1DBin(eiss);	
+	spectralWindowId = Tag::from1DBin(eis);	
 	
 
 		
@@ -407,19 +408,19 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 }
 	
 	
-	AlmaRadiometerRow* AlmaRadiometerRow::fromBin(EndianISStream& eiss, AlmaRadiometerTable& table, const vector<string>& attributesSeq) {
+	AlmaRadiometerRow* AlmaRadiometerRow::fromBin(EndianIStream& eis, AlmaRadiometerTable& table, const vector<string>& attributesSeq) {
 		AlmaRadiometerRow* row = new  AlmaRadiometerRow(table);
 		
 		map<string, AlmaRadiometerAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "AlmaRadiometerTable");
 			}
@@ -427,10 +428,50 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void AlmaRadiometerRow::almaRadiometerIdFromText(const string & s) {
+		 
+		almaRadiometerId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void AlmaRadiometerRow::numAntennaFromText(const string & s) {
+		numAntennaExists = true;
+		 
+		numAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void AlmaRadiometerRow::spectralWindowIdFromText(const string & s) {
+		spectralWindowIdExists = true;
+		 
+		spectralWindowId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	
+	void AlmaRadiometerRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, AlmaRadiometerAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "AlmaRadiometerTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -516,9 +557,9 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 	/**
@@ -567,9 +608,10 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 	}
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
  		
@@ -682,6 +724,23 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 	 fromBinMethods["numAntenna"] = &AlmaRadiometerRow::numAntennaFromBin; 
 	 fromBinMethods["spectralWindowId"] = &AlmaRadiometerRow::spectralWindowIdFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["almaRadiometerId"] = &AlmaRadiometerRow::almaRadiometerIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["numAntenna"] = &AlmaRadiometerRow::numAntennaFromText;
+		 	
+	 
+				
+	fromTextMethods["spectralWindowId"] = &AlmaRadiometerRow::spectralWindowIdFromText;
+		 	
+		
 	}
 	
 	AlmaRadiometerRow::AlmaRadiometerRow (AlmaRadiometerTable &t, AlmaRadiometerRow &row) : table(t) {

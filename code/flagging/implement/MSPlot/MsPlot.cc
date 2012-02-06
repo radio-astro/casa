@@ -59,7 +59,7 @@
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MFrequency.h>
 
-#include <msvis/MSVis/MsAverager.h>
+#include <synthesis/MSVis/MsAverager.h>
 
 //# General CASA includes
 #include <casa/Exceptions.h>

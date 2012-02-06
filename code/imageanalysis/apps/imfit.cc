@@ -82,9 +82,13 @@ Int main(Int argc, char *argv[]) {
 
 	ImageFitter imFitter(
 		image, region, 0, box, chans, stokes, mask, includePixelRange,
-		excludePixelRange, residual, model, estimatesFilename, logfile,
-		append, newEstimatesFileName
+		excludePixelRange, residual, model, estimatesFilename,
+		newEstimatesFileName
 	);
+    if(! logfile.empty()) {
+    	imFitter.setLogfile(logfile);
+    	imFitter.setLogfileAppend(append);
+    }
     imFitter.fit();
 
     return 0;

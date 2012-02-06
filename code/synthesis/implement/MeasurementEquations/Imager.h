@@ -41,12 +41,12 @@
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 
-#include <msvis/SynthesisUtils/FTMachine.h>
-#include <msvis/SynthesisUtils/StokesImageUtil.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/EVLAAperture.h>
-#include <msvis/SynthesisUtils/BeamSquint.h>
+#include <synthesis/TransformMachines/BeamSquint.h>
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
@@ -195,6 +195,8 @@ class Imager
 					       Quantity(90.0, "deg")));
   // Set the data selection parameters
  
+  // The parameters useModelcol and readonly is dummy here
+  //as they are useful for the ImagerMultiMS version only
   virtual  Bool setDataPerMS(const String& msname, const String& mode, 
 			     const Vector<Int>& nchan, 
 			     const Vector<Int>& start,
@@ -210,7 +212,8 @@ class Imager
 			     const String& uvdist="",
                              const String& scan="",
                              const String& obs="",
-                             const Bool useModelCol=False);
+                             const Bool useModelCol=False,
+			     const Bool readonly=False);
 
   // Select some data.
   // Sets nullSelect_p and returns !nullSelect_p.

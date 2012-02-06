@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -70,6 +71,11 @@ namespace AntennaTypeMod
   typedef AntennaType &AntennaType_out;
 } 
 #endif
+
+namespace AntennaTypeMod {
+	std::ostream & operator << ( std::ostream & out, const AntennaType& value);
+	std::istream & operator >> ( std::istream & in , AntennaType& value );
+}
 
 /** 
   * A helper class for the enumeration AntennaType.

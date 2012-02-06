@@ -48,11 +48,11 @@
 
 #include <measures/Measures/MeasTable.h>
 
-#include <msvis/MSVis/MSAnalysis.h>
-#include <msvis/MSVis/MSContinuumSubtractor.h>
-#include <msvis/MSVis/Partition.h>
-#include <msvis/MSVis/Reweighter.h>
-#include <msvis/MSVis/SubMS.h>
+#include <synthesis/MSVis/MSAnalysis.h>
+#include <synthesis/MSVis/MSContinuumSubtractor.h>
+#include <synthesis/MSVis/Partition.h>
+#include <synthesis/MSVis/Reweighter.h>
+#include <synthesis/MSVis/SubMS.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Logging/LogOrigin.h>
@@ -64,10 +64,10 @@
 #include <tables/Tables/TableCopy.h>
 #include <casa/System/ObjectID.h>
 #include <casa/Utilities/Assert.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisIterator.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisIterator.h>
 
 #include <lattices/Lattices/LatticeStatistics.h>
 #include <lattices/Lattices/SubLattice.h>
@@ -561,7 +561,9 @@ ms::summary(::casac::record& header, const bool verbose, const std::string& list
   try {
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
-       MSSummary mss(itsMS);
+       // pass the original MS name to the constructor
+       // so that it is correctly printed in the output
+       MSSummary mss(itsMS, itsOriginalMS->tableName());
        casa::Record outRec;
        if (listfile != ""){
     	   File diskfile(listfile);
@@ -603,7 +605,6 @@ ms::summary(::casac::record& header, const bool verbose, const std::string& list
     	   // Remove the extra fields (time, severity) from the output string
     	   String str(ostr.str());
     	   str.gsub (Regex(".*\tINFO\t[+]?\t"), "");
-//    	   cout << str;
 
     	   // Write output string to a file
     	   ofstream file;

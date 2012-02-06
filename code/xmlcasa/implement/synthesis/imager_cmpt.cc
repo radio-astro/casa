@@ -1261,9 +1261,11 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 		  const ::casac::variant& time, const ::casac::variant& scan,
                   const ::casac::variant& observation,
                   const ::casac::variant& uvrange, const std::string& taql,
-                  const bool useScratch, const bool datainmemory)
+                  const bool useScratch, const bool datainmemory, const bool writeaccess)
 {
     Bool rstat(False);
+    //Damn the xml does not allow "readonly" to be a parameter
+    //so used writeaccess
     if(itsMS || (vis != "")){
        try {
 	 String mode="channel";
@@ -1317,7 +1319,7 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 					   fieldIndex, 
 					   String(taql), String(timerange),
 					   fieldnames, antIndex, antennanames, 
-					   spwstring, uvdist, scanrange, obsrange, useScratch);
+					   spwstring, uvdist, scanrange, obsrange, useScratch, !writeaccess);
 	 hasValidMS_p=rstat;
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

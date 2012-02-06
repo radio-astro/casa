@@ -63,8 +63,10 @@ casa_add_library( flagging
   implement/Flagging/FlagAgentQuack.cc
   implement/Flagging/FlagAgentShadow.cc
   implement/Flagging/FlagAgentExtension.cc
+  implement/Flagging/FlagAgentRFlag.cc
    )
 
+casa_add_test( flagging implement/Flagging/test/tFlagAgentRFlag.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagAgentExtension.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagAgentShadow.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagAgentQuack.cc )

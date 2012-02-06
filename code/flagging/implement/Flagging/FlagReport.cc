@@ -149,7 +149,7 @@ FlagReport::addData(Array<Float> data)
 
 //----------------------------------------------------------------------------------------------
 Bool
-FlagReport::addData(Vector<Float> xdata, Vector<Float> ydata)
+FlagReport::addData(Vector<Float> xdata, Vector<Float> ydata, String label)
 {
         logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
 
@@ -164,6 +164,7 @@ FlagReport::addData(Vector<Float> xdata, Vector<Float> ydata)
                 Int numData = nData();
 		define( RecordFieldId(String("xdata")+String::toString(numData)) , xdata );
 		define( RecordFieldId(String("ydata")+String::toString(numData)) , ydata );
+		define( RecordFieldId(String("label")+String::toString(numData)) , label );
 		define( RecordFieldId("ndata") , (Int)(numData+1) );
 	}
 }

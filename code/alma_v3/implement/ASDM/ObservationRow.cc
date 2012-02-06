@@ -51,6 +51,7 @@ using asdm::ObservationTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -206,12 +207,12 @@ namespace asdm {
 	
 	}
 	
-void ObservationRow::observationIdFromBin(EndianISStream& eiss) {
+void ObservationRow::observationIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		observationId =  Tag::fromBin(eiss);
+		observationId =  Tag::fromBin(eis);
 		
 	
 	
@@ -219,19 +220,19 @@ void ObservationRow::observationIdFromBin(EndianISStream& eiss) {
 
 		
 	
-	ObservationRow* ObservationRow::fromBin(EndianISStream& eiss, ObservationTable& table, const vector<string>& attributesSeq) {
+	ObservationRow* ObservationRow::fromBin(EndianIStream& eis, ObservationTable& table, const vector<string>& attributesSeq) {
 		ObservationRow* row = new  ObservationRow(table);
 		
 		map<string, ObservationAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ObservationTable");
 			}
@@ -239,10 +240,32 @@ void ObservationRow::observationIdFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void ObservationRow::observationIdFromText(const string & s) {
+		 
+		observationId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+		
+	
+	void ObservationRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, ObservationAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "ObservationTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -281,13 +304,14 @@ void ObservationRow::observationIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -316,6 +340,15 @@ void ObservationRow::observationIdFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["observationId"] = &ObservationRow::observationIdFromText;
+		 
+	
+
+		
 	}
 	
 	ObservationRow::ObservationRow (ObservationTable &t, ObservationRow &row) : table(t) {

@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#include <msvis/SynthesisUtils/SynthesisError.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>

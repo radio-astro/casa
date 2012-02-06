@@ -576,7 +576,6 @@ else()
     DEFINITIONS -DSIGNBIT )
 endif()
 
-
 # FFTW
 # Does not provide its version number in a header nor
 # in the library, which is a pity because CASACore needs
@@ -636,7 +635,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.142
+           VERSION 1.0.146
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -664,7 +663,14 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux )
     )
 endif()
 
-
+# ALMAWVR
+if( USE_ALMAWVR )
+  casa_find( ALMAWVR
+             VERSION 0.23.2
+             PREFIX_HINTS ${ALMWVR_ROOT_DIR}
+             LIBS almawvr
+           )
+endif()
 
 # Python
 
@@ -1068,24 +1074,26 @@ else()
 endif()
 casa_add_module( casadbus CASACORE DBUS )
 casa_add_module( tableplot CASACORE PYTHON )
-casa_add_module( msvis CASACORE graphics Boost )
 casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
-casa_add_module( plotms CASACORE QT4 casaqt msvis Boost )
 casa_add_module( imageanalysis CASACORE Boost)
-casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis imageanalysis Boost casadbus )
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( flagging CASACORE Boost casadbus tableplot msvis casaqt QT4)
-casa_add_module( calibration CASACORE tableplot msvis Boost )
-casa_add_module( calanalysis CASACORE calibration )
-casa_add_module( synthesis CASACORE ATM casadbus msvis Boost calibration )
+casa_add_module( synthesis CASACORE ATM casadbus tableplot Boost )
+casa_add_module( flagging CASACORE Boost casadbus tableplot synthesis casaqt QT4)
+casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost casadbus )
+casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
+casa_add_module( calanalysis CASACORE synthesis )
 casa_add_module( alma CASACORE LIBXML2 Boost )
-casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost msvis)
+casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
 casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( spectrallines CASACORE imageanalysis )
-casa_add_module( miriad CASACORE msvis )
-
+casa_add_module( miriad CASACORE )
+if( USE_ALMAWVR )
+  casa_add_module( air_casawvr CASACORE ALMAWVR Boost tableplot synthesis WCSLIB CFITSIO LAPACK )
+else()
+  message( WARNING "Will not build wvrgcal." )
+endif()
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis miriad )
 
 #

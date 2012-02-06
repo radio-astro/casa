@@ -276,19 +276,18 @@ tfcrop, extend, unflag, summary)</description>
                 <value>True</value>
             </param>
 
-            <param type="bool" name="savepars">
-                <description>Save the current parameters to the MS or to an output</description>
-                <value>False</value>
-            </param>
-
-            <param type="string" name="outfile" subparam="true">
-                    <description>Name of output file to save current parameters</description>
-                    <value></value>
-            </param>
-
             <param type="bool" name="sequential">
                 <description>Run the task in sequential or in parallel.</description>
                 <value>False</value>
+            </param>
+
+            <param type="bool" name="savepars">
+                <description>Save the current parameters to the MS or to a file</description>
+                <value>False</value>
+            </param>
+            <param type="string" name="outfile" subparam="true">
+                    <description>Name of output file to save current parameters</description>
+                    <value></value>
             </param>
 
             <param type="bool" name="flagbackup">
@@ -733,7 +732,7 @@ tfcrop, extend, unflag, summary)</description>
                     Note: this parameter is disabled when mode='summary'.
                     
         savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
-                default: True
+                default: False
                 options: True/False
                 
                 outfile -- Name of output file to save the current parameters.

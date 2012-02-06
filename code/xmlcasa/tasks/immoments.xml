@@ -60,11 +60,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mask">
-	    <description>mask used for selecting the area of the image to calculate the moments on</description>
+	    <description>Mask to use. See help par.mask. Default is none.</description>
 	    <any type="variant"/>
 	    <value type="stringArray"></value>
-            <example>mask=&quot;my_file.image:no_noise&quot;</example>
-            <example>mask=&quot;some.image&gt;0.15&quot;</example>
     </param>
 
     <param type="any" name="includepix">
@@ -132,11 +130,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    axis         The moment axis
                 default: (spectral axis); example: axis=spec
                 options: ra, dec, lattitude, longitude, spectral, stokes
-   mask         Mask applied to the image before calculating the moments.
-                Default &quot;&quot; means no mask;  
-                Example: mask=&quot;orion.mask&quot;. 
-                Full description of the syntax can be found at
-                http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series   
+   mask         Mask to use. See help par.mask. Default is none.  
    stretch      Stretch the input mask if necessary and possible. See below.
    region       File path to an ImageRegion file or the name of
                 a region stored within the image..

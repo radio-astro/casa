@@ -32,16 +32,16 @@
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/AWVisResampler.h>
-//#include <msvis/SynthesisUtils/ConvolutionFunction.h>
+//#include <synthesis/TransformMachines/ConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
-#include <msvis/SynthesisUtils/VPSkyJones.h>
-#include <msvis/SynthesisUtils/FTMachine.h>
-#include <msvis/SynthesisUtils/CFCache.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/CFCache.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>

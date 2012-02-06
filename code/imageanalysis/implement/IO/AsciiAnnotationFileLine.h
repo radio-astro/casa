@@ -57,10 +57,13 @@ namespace casa {
 class AsciiAnnotationFileLine {
 
 public:
-
+	// type type of line
 	enum Type {
+		// region/annotation description
 		ANNOTATION,
+		// comment line
 		COMMENT,
+		// line containing a set of parameters to be applied to all regions/annotations following it
 		GLOBAL,
 		UNKNOWN_TYPE
 	};
@@ -75,12 +78,16 @@ public:
 
 	AsciiAnnotationFileLine& operator= (const AsciiAnnotationFileLine& other);
 
+	// get the associated comment, if the line is of Type COMMENT
 	String getComment() const;
 
+	// get the associated global parameters, if the line is of type GLOBAL
 	map<AnnotationBase::Keyword, String> getGloabalParams() const;
 
+	// get the aossicated region/annotation, if the line is of type ANNOTATION
 	const AnnotationBase* getAnnotationBase() const;
 
+	// get the type of line this object corresponds to.
 	Type getType() const;
 
 	ostream& print(ostream& os) const;

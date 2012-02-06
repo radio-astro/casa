@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -76,6 +77,11 @@ namespace HolographyChannelTypeMod
   typedef HolographyChannelType &HolographyChannelType_out;
 } 
 #endif
+
+namespace HolographyChannelTypeMod {
+	std::ostream & operator << ( std::ostream & out, const HolographyChannelType& value);
+	std::istream & operator >> ( std::istream & in , HolographyChannelType& value );
+}
 
 /** 
   * A helper class for the enumeration HolographyChannelType.

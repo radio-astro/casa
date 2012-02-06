@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CDopplerReferenceCode::version() {
 	return DopplerReferenceCodeMod::version;
 	}
@@ -194,5 +193,25 @@ string CDopplerReferenceCode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'DopplerReferenceCode'.";
 	return oss.str();
+}
+
+namespace DopplerReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const DopplerReferenceCode& value) {
+		out << CDopplerReferenceCode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , DopplerReferenceCode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CDopplerReferenceCode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

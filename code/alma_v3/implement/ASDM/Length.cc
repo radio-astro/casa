@@ -77,36 +77,36 @@ void Length::toBin(const vector< vector<vector<Length> > >& len,  EndianOSStream
 					eoss.writeDouble(len.at(i).at(j).at(k).value);
 }
 
-Length Length::fromBin(EndianISStream & eiss) {
-	return Length(eiss.readDouble());
+Length Length::fromBin(EndianIStream & eis) {
+	return Length(eis.readDouble());
 }
 
-vector<Length> Length::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Length> Length::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Length> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Length(eiss.readDouble()));
+		result.push_back(Length(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Length > > Length::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Length > > Length::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<Length> >result;
 	vector <Length> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Length(eiss.readDouble()));
+			aux.push_back(Length(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Length > > > Length::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Length > > > Length::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Length> > >result;
 	vector < vector<Length> >aux1;
 	vector <Length> aux2;
@@ -115,7 +115,7 @@ vector<vector<vector<Length > > > Length::from3DBin(EndianISStream & eiss) {
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Length(eiss.readDouble()));
+				aux2.push_back(Length(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

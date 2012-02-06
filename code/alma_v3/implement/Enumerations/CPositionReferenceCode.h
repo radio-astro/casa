@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -77,6 +78,11 @@ namespace PositionReferenceCodeMod
   typedef PositionReferenceCode &PositionReferenceCode_out;
 } 
 #endif
+
+namespace PositionReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const PositionReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , PositionReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration PositionReferenceCode.

@@ -51,6 +51,7 @@ using asdm::SquareLawDetectorTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -303,35 +304,35 @@ namespace asdm {
 	
 	}
 	
-void SquareLawDetectorRow::squareLawDetectorIdFromBin(EndianISStream& eiss) {
+void SquareLawDetectorRow::squareLawDetectorIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		squareLawDetectorId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void SquareLawDetectorRow::numBandFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numBand =  eiss.readInt();
-			
+		squareLawDetectorId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SquareLawDetectorRow::bandTypeFromBin(EndianISStream& eiss) {
+void SquareLawDetectorRow::numBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		bandType = CDetectorBandType::literal(eiss.readString());
+		numBand =  eis.readInt();
+			
+		
+	
+	
+}
+void SquareLawDetectorRow::bandTypeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		bandType = CDetectorBandType::literal(eis.readString());
 			
 		
 	
@@ -340,19 +341,19 @@ void SquareLawDetectorRow::bandTypeFromBin(EndianISStream& eiss) {
 
 		
 	
-	SquareLawDetectorRow* SquareLawDetectorRow::fromBin(EndianISStream& eiss, SquareLawDetectorTable& table, const vector<string>& attributesSeq) {
+	SquareLawDetectorRow* SquareLawDetectorRow::fromBin(EndianIStream& eis, SquareLawDetectorTable& table, const vector<string>& attributesSeq) {
 		SquareLawDetectorRow* row = new  SquareLawDetectorRow(table);
 		
 		map<string, SquareLawDetectorAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SquareLawDetectorTable");
 			}
@@ -360,10 +361,48 @@ void SquareLawDetectorRow::bandTypeFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void SquareLawDetectorRow::squareLawDetectorIdFromText(const string & s) {
+		 
+		squareLawDetectorId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SquareLawDetectorRow::numBandFromText(const string & s) {
+		 
+		numBand = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an DetectorBandType 
+	void SquareLawDetectorRow::bandTypeFromText(const string & s) {
+		 
+		bandType = ASDMValuesParser::parse<DetectorBandType>(s);
+		
+	}
+	
+
+		
+	
+	void SquareLawDetectorRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SquareLawDetectorAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SquareLawDetectorTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -466,13 +505,14 @@ void SquareLawDetectorRow::bandTypeFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -514,6 +554,23 @@ bandType = CDetectorBandType::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["squareLawDetectorId"] = &SquareLawDetectorRow::squareLawDetectorIdFromText;
+		 
+	
+				 
+	fromTextMethods["numBand"] = &SquareLawDetectorRow::numBandFromText;
+		 
+	
+				 
+	fromTextMethods["bandType"] = &SquareLawDetectorRow::bandTypeFromText;
+		 
+	
+
+		
 	}
 	
 	SquareLawDetectorRow::SquareLawDetectorRow (SquareLawDetectorTable &t, SquareLawDetectorRow &row) : table(t) {

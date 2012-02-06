@@ -41,7 +41,7 @@
 #include <casa/Exceptions/Error.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/FITSImage.h>
-#include <msvis/SynthesisUtils/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -501,11 +501,18 @@ void QtExportManager::expImageInterfaceToFITS(ImageInterface<Float>* img, String
 	Bool opticalVelocity(True); Int BITPIX(-32); Float minPix(1.0); Float maxPix(-1.0);
 	Bool allowOverwrite(False); Bool degenerateLast(False); Bool verbose(True);
 	Bool stokesLast(False); Bool preferWavelength(False); Bool preferAirWavelength(False);
-	String origin("QtExportmanager");
+	String origin("CASA Viewer / FITS export");
 
 	// overwrite was confirmed
 	allowOverwrite = True;
 	getSectralCoordFlags(img, preferVelocity, opticalVelocity, preferWavelength, preferAirWavelength);
+
+	// overwrite the default "origin" if already
+	// in the metadata
+	const TableRecord miscInfo=img->miscInfo();
+	if (miscInfo.isDefined("origin") && miscInfo.dataType("origin")==TpString){
+		origin = miscInfo.asString(String("origin"));
+	}
 
 	// export the image to FITS
 	ImageFITSConverter::ImageToFITS(
@@ -590,7 +597,7 @@ void QtExportManager::getSectralCoordFlags(const ImageInterface<Float>* img, Boo
 
 void QtExportManager::expImageInterfaceToCASA(ImageInterface<Float> *img, String outFile){
    try{
-		// from: msvis/SynthesisUtils/Utils.h
+		// from: synthesis/TransformMachines/Utils.h
    	// still to be copied over:
    	// miscinfo, imageinfo, regions, history, mask??
    	PagedImage<Float> newPagedImage(img->shape(), img->coordinates(), outFile);

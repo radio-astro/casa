@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -118,6 +119,11 @@ namespace ReceiverBandMod
   typedef ReceiverBand &ReceiverBand_out;
 } 
 #endif
+
+namespace ReceiverBandMod {
+	std::ostream & operator << ( std::ostream & out, const ReceiverBand& value);
+	std::istream & operator >> ( std::istream & in , ReceiverBand& value );
+}
 
 /** 
   * A helper class for the enumeration ReceiverBand.

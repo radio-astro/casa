@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CWindowFunction::version() {
 	return WindowFunctionMod::version;
 	}
@@ -194,5 +193,25 @@ string CWindowFunction::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'WindowFunction'.";
 	return oss.str();
+}
+
+namespace WindowFunctionMod {
+	std::ostream & operator << ( std::ostream & out, const WindowFunction& value) {
+		out << CWindowFunction::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , WindowFunction& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CWindowFunction::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

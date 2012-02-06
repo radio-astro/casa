@@ -29,8 +29,8 @@
 #define PLOTMSVBAVERAGER_H
 
 #include <casa/aips.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/CalVisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/CalVisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

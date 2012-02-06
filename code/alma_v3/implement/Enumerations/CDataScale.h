@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -72,6 +73,11 @@ namespace DataScaleMod
   typedef DataScale &DataScale_out;
 } 
 #endif
+
+namespace DataScaleMod {
+	std::ostream & operator << ( std::ostream & out, const DataScale& value);
+	std::istream & operator >> ( std::istream & in , DataScale& value );
+}
 
 /** 
   * A helper class for the enumeration DataScale.

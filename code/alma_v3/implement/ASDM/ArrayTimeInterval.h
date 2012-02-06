@@ -54,10 +54,10 @@ namespace asdm {
    */
   class ArrayTimeInterval {
     friend ostream & operator << ( ostream &, ArrayTimeInterval& );
-  
+    friend istream & operator >> ( istream &, ArrayTimeInterval& );
   private:
     
-ArrayTime start;
+    ArrayTime start;
     Interval duration;
   
     static bool readStartTimeDurationInBin_;
@@ -181,36 +181,36 @@ ArrayTime start;
     static void toBin(const vector<vector<vector<ArrayTimeInterval> > >& arrayTimeInterval,  EndianOSStream& eoss);
 
     /**
-     * Read the binary representation of an ArrayTimeInterval from a EndianISStream
+     * Read the binary representation of an ArrayTimeInterval from a EndianIStream
      * and use the read value to set an  ArrayTimeInterval.
-     * @param eiss the EndianStream to be read
+     * @param eis the EndianStream to be read
      * @return an ArrayTimeInterval
      */
-    static ArrayTimeInterval fromBin(EndianISStream& eiss);
+    static ArrayTimeInterval fromBin(EndianIStream& eis);
 	
     /**
-     * Read the binary representation of  a vector of  ArrayTimeInterval from an EndianISStream
+     * Read the binary representation of  a vector of  ArrayTimeInterval from an EndianIStream
      * and use the read value to set a vector of  ArrayTimeInterval.
-     * @param dis the EndianISStream to be read
+     * @param dis the EndianIStream to be read
      * @return a vector of ArrayTimeInterval
      */	 
-    static vector<ArrayTimeInterval> from1DBin(EndianISStream & eiss);
+    static vector<ArrayTimeInterval> from1DBin(EndianIStream & eis);
 	 
     /**
-     * Read the binary representation of  a vector of vector of ArrayTimeInterval from an EndianISStream
+     * Read the binary representation of  a vector of vector of ArrayTimeInterval from an EndianIStream
      * and use the read value to set a vector of  vector of ArrayTimeInterval.
-     * @param eiis the EndianISStream to be read
+     * @param eiis the EndianIStream to be read
      * @return a vector of vector of ArrayTimeInterval
      */	 
-    static vector<vector<ArrayTimeInterval> > from2DBin(EndianISStream & eiss);
+    static vector<vector<ArrayTimeInterval> > from2DBin(EndianIStream & eis);
 	 
     /**
-     * Read the binary representation of  a vector of vector of vector of ArrayTimeInterval from an EndianISStream
+     * Read the binary representation of  a vector of vector of vector of ArrayTimeInterval from an EndianIStream
      * and use the read value to set a vector of  vector of vector of ArrayTimeInterval.
-     * @param eiss the EndianISStream to be read
+     * @param eis the EndianIStream to be read
      * @return a vector of vector of vector of ArrayTimeInterval
      */	 
-    static vector<vector<vector<ArrayTimeInterval> > > from3DBin(EndianISStream & eiss);
+    static vector<vector<vector<ArrayTimeInterval> > > from3DBin(EndianIStream & eis);
 
     /**
      * Returns a string representation of this.
@@ -353,8 +353,13 @@ ArrayTime start;
  
   inline ostream & operator << ( ostream &o, ArrayTimeInterval &ati ) {
     o << "(start=" << ati.getStart().get() << ",duration=" << ati.getDuration().get() << ")";
-    return o;
-	
-  } // End namespace asdm
-} // ArrayTimeInterval_CLASS
-#endif
+    return o;	
+  } 
+
+  inline istream & operator >> ( istream &i, ArrayTimeInterval &ati) {
+    i >> ati.start;
+    i >> ati.duration;
+    return i;
+  }
+} // End namespace asdm
+#endif // ArrayTimeInterval_CLASS

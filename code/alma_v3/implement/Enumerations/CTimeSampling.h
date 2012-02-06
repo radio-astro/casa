@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -68,6 +69,11 @@ namespace TimeSamplingMod
   typedef TimeSampling &TimeSampling_out;
 } 
 #endif
+
+namespace TimeSamplingMod {
+	std::ostream & operator << ( std::ostream & out, const TimeSampling& value);
+	std::istream & operator >> ( std::istream & in , TimeSampling& value );
+}
 
 /** 
   * A helper class for the enumeration TimeSampling.

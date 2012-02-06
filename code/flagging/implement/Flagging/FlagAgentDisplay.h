@@ -41,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   public:
     
-    FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool dataDisplay = true, Bool reportDisplay = false);
+    FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
     ~FlagAgentDisplay();
 
     // Make plots and either display or write to a file
@@ -75,6 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool skipBaseline(std::pair<Int,Int> antennaPair);
  
     void getUserInput();
+    void getReportUserInput();
     
     void DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame);
     void DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
@@ -91,6 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool pause_p;
     Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
     Bool reportReturn_p;
+    String reportFormat_p;
     
     // visBuffer state variables
     Int fieldId_p;

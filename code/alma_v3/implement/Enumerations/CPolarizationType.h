@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -75,6 +76,11 @@ namespace PolarizationTypeMod
   typedef PolarizationType &PolarizationType_out;
 } 
 #endif
+
+namespace PolarizationTypeMod {
+	std::ostream & operator << ( std::ostream & out, const PolarizationType& value);
+	std::istream & operator >> ( std::istream & in , PolarizationType& value );
+}
 
 /** 
   * A helper class for the enumeration PolarizationType.

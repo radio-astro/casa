@@ -105,9 +105,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalData.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -117,17 +118,19 @@ namespace asdm {
 	
 
 class CalDataRow;
-typedef void (CalDataRow::*CalDataAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalDataRow::*CalDataAttributeFromBin) (EndianIStream& eis);
+typedef void (CalDataRow::*CalDataAttributeFromText) (const string& s);
 
 /**
  * The CalDataRow class is a row of a CalDataTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalDataRow {
 friend class asdm::CalDataTable;
 friend class asdm::RowTransformer<CalDataRow>;
+//friend class asdm::TableStreamReader<CalDataTable, CalDataRow>;
 
 public:
 
@@ -720,7 +723,40 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalDataAttributeFromBin> fromBinMethods;
+void calDataIdFromBin( EndianIStream& eis);
+void startTimeObservedFromBin( EndianIStream& eis);
+void endTimeObservedFromBin( EndianIStream& eis);
+void execBlockUIDFromBin( EndianIStream& eis);
+void calDataTypeFromBin( EndianIStream& eis);
+void calTypeFromBin( EndianIStream& eis);
+void numScanFromBin( EndianIStream& eis);
+void scanSetFromBin( EndianIStream& eis);
+
+void assocCalDataIdFromBin( EndianIStream& eis);
+void assocCalNatureFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void sourceNameFromBin( EndianIStream& eis);
+void sourceCodeFromBin( EndianIStream& eis);
+void scanIntentFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalDataTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalDataRow* fromBin(EndianIStream& eis, CalDataTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -956,26 +992,77 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, CalDataAttributeFromBin> fromBinMethods;
-void calDataIdFromBin( EndianISStream& eiss);
-void startTimeObservedFromBin( EndianISStream& eiss);
-void endTimeObservedFromBin( EndianISStream& eiss);
-void execBlockUIDFromBin( EndianISStream& eiss);
-void calDataTypeFromBin( EndianISStream& eiss);
-void calTypeFromBin( EndianISStream& eiss);
-void numScanFromBin( EndianISStream& eiss);
-void scanSetFromBin( EndianISStream& eiss);
+void calDataIdFromBin( EndianIStream& eis);
+void startTimeObservedFromBin( EndianIStream& eis);
+void endTimeObservedFromBin( EndianIStream& eis);
+void execBlockUIDFromBin( EndianIStream& eis);
+void calDataTypeFromBin( EndianIStream& eis);
+void calTypeFromBin( EndianIStream& eis);
+void numScanFromBin( EndianIStream& eis);
+void scanSetFromBin( EndianIStream& eis);
 
-void assocCalDataIdFromBin( EndianISStream& eiss);
-void assocCalNatureFromBin( EndianISStream& eiss);
-void fieldNameFromBin( EndianISStream& eiss);
-void sourceNameFromBin( EndianISStream& eiss);
-void sourceCodeFromBin( EndianISStream& eiss);
-void scanIntentFromBin( EndianISStream& eiss);
+void assocCalDataIdFromBin( EndianIStream& eis);
+void assocCalNatureFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void sourceNameFromBin( EndianIStream& eis);
+void sourceCodeFromBin( EndianIStream& eis);
+void scanIntentFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalDataAttributeFromText> fromTextMethods;
+	
+void calDataIdFromText (const string & s);
+	
+	
+void startTimeObservedFromText (const string & s);
+	
+	
+void endTimeObservedFromText (const string & s);
+	
+	
+	
+void calDataTypeFromText (const string & s);
+	
+	
+void calTypeFromText (const string & s);
+	
+	
+void numScanFromText (const string & s);
+	
+	
+void scanSetFromText (const string & s);
+	
+
+	
+void assocCalDataIdFromText (const string & s);
+	
+	
+void assocCalNatureFromText (const string & s);
+	
+	
+void fieldNameFromText (const string & s);
+	
+	
+void sourceNameFromText (const string & s);
+	
+	
+void sourceCodeFromText (const string & s);
+	
+	
+void scanIntentFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -984,14 +1071,14 @@ void scanIntentFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalDataTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalDataRow* fromBin(EndianISStream& eiss, CalDataTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static CalDataRow* fromBin(EndianIStream& eis, CalDataTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

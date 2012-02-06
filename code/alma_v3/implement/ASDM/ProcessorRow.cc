@@ -51,6 +51,7 @@ using asdm::ProcessorTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -349,45 +350,45 @@ namespace asdm {
 	
 	}
 	
-void ProcessorRow::processorIdFromBin(EndianISStream& eiss) {
+void ProcessorRow::processorIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		processorId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void ProcessorRow::modeIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		modeId =  Tag::fromBin(eiss);
+		processorId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void ProcessorRow::processorTypeFromBin(EndianISStream& eiss) {
+void ProcessorRow::modeIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		modeId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void ProcessorRow::processorTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		processorType = CProcessorType::literal(eiss.readString());
+		processorType = CProcessorType::literal(eis.readString());
 			
 		
 	
 	
 }
-void ProcessorRow::processorSubTypeFromBin(EndianISStream& eiss) {
+void ProcessorRow::processorSubTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		processorSubType = CProcessorSubType::literal(eiss.readString());
+		processorSubType = CProcessorSubType::literal(eis.readString());
 			
 		
 	
@@ -396,19 +397,19 @@ void ProcessorRow::processorSubTypeFromBin(EndianISStream& eiss) {
 
 		
 	
-	ProcessorRow* ProcessorRow::fromBin(EndianISStream& eiss, ProcessorTable& table, const vector<string>& attributesSeq) {
+	ProcessorRow* ProcessorRow::fromBin(EndianIStream& eis, ProcessorTable& table, const vector<string>& attributesSeq) {
 		ProcessorRow* row = new  ProcessorRow(table);
 		
 		map<string, ProcessorAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ProcessorTable");
 			}
@@ -416,10 +417,56 @@ void ProcessorRow::processorSubTypeFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void ProcessorRow::processorIdFromText(const string & s) {
+		 
+		processorId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void ProcessorRow::modeIdFromText(const string & s) {
+		 
+		modeId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ProcessorType 
+	void ProcessorRow::processorTypeFromText(const string & s) {
+		 
+		processorType = ASDMValuesParser::parse<ProcessorType>(s);
+		
+	}
+	
+	
+	// Convert a string into an ProcessorSubType 
+	void ProcessorRow::processorSubTypeFromText(const string & s) {
+		 
+		processorSubType = ASDMValuesParser::parse<ProcessorSubType>(s);
+		
+	}
+	
+
+		
+	
+	void ProcessorRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, ProcessorAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "ProcessorTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -554,13 +601,14 @@ void ProcessorRow::processorSubTypeFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -610,6 +658,27 @@ processorSubType = CProcessorSubType::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["processorId"] = &ProcessorRow::processorIdFromText;
+		 
+	
+				 
+	fromTextMethods["modeId"] = &ProcessorRow::modeIdFromText;
+		 
+	
+				 
+	fromTextMethods["processorType"] = &ProcessorRow::processorTypeFromText;
+		 
+	
+				 
+	fromTextMethods["processorSubType"] = &ProcessorRow::processorSubTypeFromText;
+		 
+	
+
+		
 	}
 	
 	ProcessorRow::ProcessorRow (ProcessorTable &t, ProcessorRow &row) : table(t) {

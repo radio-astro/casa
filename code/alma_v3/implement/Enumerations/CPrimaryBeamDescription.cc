@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CPrimaryBeamDescription::version() {
 	return PrimaryBeamDescriptionMod::version;
 	}
@@ -119,5 +118,25 @@ string CPrimaryBeamDescription::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'PrimaryBeamDescription'.";
 	return oss.str();
+}
+
+namespace PrimaryBeamDescriptionMod {
+	std::ostream & operator << ( std::ostream & out, const PrimaryBeamDescription& value) {
+		out << CPrimaryBeamDescription::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , PrimaryBeamDescription& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CPrimaryBeamDescription::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

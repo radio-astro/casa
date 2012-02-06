@@ -65,9 +65,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file AlmaRadiometer.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -80,17 +81,19 @@ class SpectralWindowRow;
 	
 
 class AlmaRadiometerRow;
-typedef void (AlmaRadiometerRow::*AlmaRadiometerAttributeFromBin) (EndianISStream& eiss);
+typedef void (AlmaRadiometerRow::*AlmaRadiometerAttributeFromBin) (EndianIStream& eis);
+typedef void (AlmaRadiometerRow::*AlmaRadiometerAttributeFromText) (const string& s);
 
 /**
  * The AlmaRadiometerRow class is a row of a AlmaRadiometerTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class AlmaRadiometerRow {
 friend class asdm::AlmaRadiometerTable;
 friend class asdm::RowTransformer<AlmaRadiometerRow>;
+//friend class asdm::TableStreamReader<AlmaRadiometerTable, AlmaRadiometerRow>;
 
 public:
 
@@ -318,7 +321,29 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, AlmaRadiometerAttributeFromBin> fromBinMethods;
+void almaRadiometerIdFromBin( EndianIStream& eis);
+
+void numAntennaFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the AlmaRadiometerTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static AlmaRadiometerRow* fromBin(EndianIStream& eis, AlmaRadiometerTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -431,15 +456,35 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, AlmaRadiometerAttributeFromBin> fromBinMethods;
-void almaRadiometerIdFromBin( EndianISStream& eiss);
+void almaRadiometerIdFromBin( EndianIStream& eis);
 
-void numAntennaFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
+void numAntennaFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, AlmaRadiometerAttributeFromText> fromTextMethods;
+	
+void almaRadiometerIdFromText (const string & s);
+	
+
+	
+void numAntennaFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -448,14 +493,14 @@ void spectralWindowIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the AlmaRadiometerTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static AlmaRadiometerRow* fromBin(EndianISStream& eiss, AlmaRadiometerTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static AlmaRadiometerRow* fromBin(EndianIStream& eis, AlmaRadiometerTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -77,7 +77,7 @@ namespace asdm {
 	
 
 class BeamRow;
-typedef void (BeamRow::*BeamAttributeFromBin) (EndianISStream& eiss);
+typedef void (BeamRow::*BeamAttributeFromBin) (EndianIStream& eis);
 
 /**
  * The BeamRow class is a row of a BeamTable.
@@ -265,7 +265,7 @@ private:
 	// binary-deserialization material//
 	///////////////////////////////
 	map<string, BeamAttributeFromBin> fromBinMethods;
-void beamIdFromBin( EndianISStream& eiss);
+void beamIdFromBin( EndianIStream& eis);
 
 		
 	
@@ -276,13 +276,13 @@ void beamIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eis the EndianIStream to be read.
 	  * @param table the BeamTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static BeamRow* fromBin(EndianISStream& eiss, BeamTable& table, const vector<string>& attributesSeq);	 
+	 static BeamRow* fromBin(EndianIStream& eis, BeamTable& table, const vector<string>& attributesSeq);	 
 
 };
 

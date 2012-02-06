@@ -63,6 +63,7 @@ using asdm::CalDataRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1309,143 +1310,143 @@ namespace asdm {
 
 	}
 	
-void CalBandpassRow::basebandNameFromBin(EndianISStream& eiss) {
+void CalBandpassRow::basebandNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		basebandName = CBasebandName::literal(eiss.readString());
-			
-		
-	
-	
-}
-void CalBandpassRow::sidebandFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		sideband = CNetSideband::literal(eiss.readString());
+		basebandName = CBasebandName::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalBandpassRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+void CalBandpassRow::sidebandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		atmPhaseCorrection = CAtmPhaseCorrection::literal(eiss.readString());
-			
-		
-	
-	
-}
-void CalBandpassRow::typeCurveFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		typeCurve = CCalCurveType::literal(eiss.readString());
+		sideband = CNetSideband::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalBandpassRow::receiverBandFromBin(EndianISStream& eiss) {
+void CalBandpassRow::atmPhaseCorrectionFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverBand = CReceiverBand::literal(eiss.readString());
+		atmPhaseCorrection = CAtmPhaseCorrection::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalBandpassRow::calDataIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalBandpassRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalBandpassRow::startValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalBandpassRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalBandpassRow::numAntennaFromBin(EndianISStream& eiss) {
+void CalBandpassRow::typeCurveFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numAntenna =  eiss.readInt();
+		typeCurve = CCalCurveType::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalBandpassRow::numPolyFromBin(EndianISStream& eiss) {
+void CalBandpassRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numPoly =  eiss.readInt();
-			
-		
-	
-	
-}
-void CalBandpassRow::numReceptorFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numReceptor =  eiss.readInt();
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalBandpassRow::antennaNamesFromBin(EndianISStream& eiss) {
+void CalBandpassRow::calDataIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalBandpassRow::calReductionIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalBandpassRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalBandpassRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalBandpassRow::numAntennaFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numAntenna =  eis.readInt();
+			
+		
+	
+	
+}
+void CalBandpassRow::numPolyFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numPoly =  eis.readInt();
+			
+		
+	
+	
+}
+void CalBandpassRow::numReceptorFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numReceptor =  eis.readInt();
+			
+		
+	
+	
+}
+void CalBandpassRow::antennaNamesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1454,10 +1455,10 @@ void CalBandpassRow::antennaNamesFromBin(EndianISStream& eiss) {
 	
 		antennaNames.clear();
 		
-		unsigned int antennaNamesDim1 = eiss.readInt();
+		unsigned int antennaNamesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < antennaNamesDim1; i++)
 			
-			antennaNames.push_back(eiss.readString());
+			antennaNames.push_back(eis.readString());
 			
 	
 
@@ -1465,33 +1466,33 @@ void CalBandpassRow::antennaNamesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalBandpassRow::refAntennaNameFromBin(EndianISStream& eiss) {
+void CalBandpassRow::refAntennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		refAntennaName =  eiss.readString();
+		refAntennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalBandpassRow::freqLimitsFromBin(EndianISStream& eiss) {
+void CalBandpassRow::freqLimitsFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	freqLimits = Frequency::from1DBin(eiss);	
+	freqLimits = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalBandpassRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void CalBandpassRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1500,10 +1501,10 @@ void CalBandpassRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::literal(eiss.readString()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1511,7 +1512,7 @@ void CalBandpassRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalBandpassRow::curveFromBin(EndianISStream& eiss) {
+void CalBandpassRow::curveFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1520,9 +1521,9 @@ void CalBandpassRow::curveFromBin(EndianISStream& eiss) {
 	
 		curve.clear();
 			
-		unsigned int curveDim1 = eiss.readInt();
-		unsigned int curveDim2 = eiss.readInt();
-		unsigned int curveDim3 = eiss.readInt();
+		unsigned int curveDim1 = eis.readInt();
+		unsigned int curveDim2 = eis.readInt();
+		unsigned int curveDim3 = eis.readInt();
 		vector <vector<float> > curveAux2;
 		vector <float> curveAux1;
 		for (unsigned int i = 0; i < curveDim1; i++) {
@@ -1531,7 +1532,7 @@ void CalBandpassRow::curveFromBin(EndianISStream& eiss) {
 				curveAux1.clear();
 				for (unsigned int k = 0; k < curveDim3; k++) {
 			
-					curveAux1.push_back(eiss.readFloat());
+					curveAux1.push_back(eis.readFloat());
 			
 				}
 				curveAux2.push_back(curveAux1);
@@ -1544,7 +1545,7 @@ void CalBandpassRow::curveFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalBandpassRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+void CalBandpassRow::reducedChiSquaredFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1553,10 +1554,10 @@ void CalBandpassRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 		reducedChiSquared.clear();
 		
-		unsigned int reducedChiSquaredDim1 = eiss.readInt();
+		unsigned int reducedChiSquaredDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
 			
-			reducedChiSquared.push_back(eiss.readDouble());
+			reducedChiSquared.push_back(eis.readDouble());
 			
 	
 
@@ -1565,16 +1566,16 @@ void CalBandpassRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalBandpassRow::numBaselineFromBin(EndianISStream& eiss) {
+void CalBandpassRow::numBaselineFromBin(EndianIStream& eis) {
 		
-	numBaselineExists = eiss.readBoolean();
+	numBaselineExists = eis.readBoolean();
 	if (numBaselineExists) {
 		
 	
 	
 		
 			
-		numBaseline =  eiss.readInt();
+		numBaseline =  eis.readInt();
 			
 		
 	
@@ -1582,9 +1583,9 @@ void CalBandpassRow::numBaselineFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalBandpassRow::rmsFromBin(EndianISStream& eiss) {
+void CalBandpassRow::rmsFromBin(EndianIStream& eis) {
 		
-	rmsExists = eiss.readBoolean();
+	rmsExists = eis.readBoolean();
 	if (rmsExists) {
 		
 	
@@ -1594,14 +1595,14 @@ void CalBandpassRow::rmsFromBin(EndianISStream& eiss) {
 	
 		rms.clear();
 		
-		unsigned int rmsDim1 = eiss.readInt();
-		unsigned int rmsDim2 = eiss.readInt();
+		unsigned int rmsDim1 = eis.readInt();
+		unsigned int rmsDim2 = eis.readInt();
 		vector <float> rmsAux1;
 		for (unsigned int i = 0; i < rmsDim1; i++) {
 			rmsAux1.clear();
 			for (unsigned int j = 0; j < rmsDim2 ; j++)			
 			
-			rmsAux1.push_back(eiss.readFloat());
+			rmsAux1.push_back(eis.readFloat());
 			
 			rms.push_back(rmsAux1);
 		}
@@ -1616,19 +1617,19 @@ void CalBandpassRow::rmsFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalBandpassRow* CalBandpassRow::fromBin(EndianISStream& eiss, CalBandpassTable& table, const vector<string>& attributesSeq) {
+	CalBandpassRow* CalBandpassRow::fromBin(EndianIStream& eis, CalBandpassTable& table, const vector<string>& attributesSeq) {
 		CalBandpassRow* row = new  CalBandpassRow(table);
 		
 		map<string, CalBandpassAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalBandpassTable");
 			}
@@ -1636,10 +1637,186 @@ void CalBandpassRow::rmsFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an BasebandName 
+	void CalBandpassRow::basebandNameFromText(const string & s) {
+		 
+		basebandName = ASDMValuesParser::parse<BasebandName>(s);
+		
+	}
+	
+	
+	// Convert a string into an NetSideband 
+	void CalBandpassRow::sidebandFromText(const string & s) {
+		 
+		sideband = ASDMValuesParser::parse<NetSideband>(s);
+		
+	}
+	
+	
+	// Convert a string into an AtmPhaseCorrection 
+	void CalBandpassRow::atmPhaseCorrectionFromText(const string & s) {
+		 
+		atmPhaseCorrection = ASDMValuesParser::parse<AtmPhaseCorrection>(s);
+		
+	}
+	
+	
+	// Convert a string into an CalCurveType 
+	void CalBandpassRow::typeCurveFromText(const string & s) {
+		 
+		typeCurve = ASDMValuesParser::parse<CalCurveType>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalBandpassRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalBandpassRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalBandpassRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalBandpassRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalBandpassRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalBandpassRow::numAntennaFromText(const string & s) {
+		 
+		numAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalBandpassRow::numPolyFromText(const string & s) {
+		 
+		numPoly = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalBandpassRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalBandpassRow::antennaNamesFromText(const string & s) {
+		 
+		antennaNames = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalBandpassRow::refAntennaNameFromText(const string & s) {
+		 
+		refAntennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalBandpassRow::freqLimitsFromText(const string & s) {
+		 
+		freqLimits = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalBandpassRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalBandpassRow::curveFromText(const string & s) {
+		 
+		curve = ASDMValuesParser::parse3D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalBandpassRow::reducedChiSquaredFromText(const string & s) {
+		 
+		reducedChiSquared = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void CalBandpassRow::numBaselineFromText(const string & s) {
+		numBaselineExists = true;
+		 
+		numBaseline = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalBandpassRow::rmsFromText(const string & s) {
+		rmsExists = true;
+		 
+		rms = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	
+	void CalBandpassRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalBandpassAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalBandpassTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2268,9 +2445,9 @@ void CalBandpassRow::rmsFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2344,9 +2521,10 @@ void CalBandpassRow::rmsFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2523,6 +2701,91 @@ receiverBand = CReceiverBand::from_int(0);
 	 fromBinMethods["numBaseline"] = &CalBandpassRow::numBaselineFromBin; 
 	 fromBinMethods["rms"] = &CalBandpassRow::rmsFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["basebandName"] = &CalBandpassRow::basebandNameFromText;
+		 
+	
+				 
+	fromTextMethods["sideband"] = &CalBandpassRow::sidebandFromText;
+		 
+	
+				 
+	fromTextMethods["atmPhaseCorrection"] = &CalBandpassRow::atmPhaseCorrectionFromText;
+		 
+	
+				 
+	fromTextMethods["typeCurve"] = &CalBandpassRow::typeCurveFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalBandpassRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalBandpassRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalBandpassRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalBandpassRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalBandpassRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["numAntenna"] = &CalBandpassRow::numAntennaFromText;
+		 
+	
+				 
+	fromTextMethods["numPoly"] = &CalBandpassRow::numPolyFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &CalBandpassRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["antennaNames"] = &CalBandpassRow::antennaNamesFromText;
+		 
+	
+				 
+	fromTextMethods["refAntennaName"] = &CalBandpassRow::refAntennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["freqLimits"] = &CalBandpassRow::freqLimitsFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &CalBandpassRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["curve"] = &CalBandpassRow::curveFromText;
+		 
+	
+				 
+	fromTextMethods["reducedChiSquared"] = &CalBandpassRow::reducedChiSquaredFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["numBaseline"] = &CalBandpassRow::numBaselineFromText;
+		 	
+	 
+				
+	fromTextMethods["rms"] = &CalBandpassRow::rmsFromText;
+		 	
+		
 	}
 	
 	CalBandpassRow::CalBandpassRow (CalBandpassTable &t, CalBandpassRow &row) : table(t) {

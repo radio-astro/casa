@@ -1408,12 +1408,23 @@ class par(str):
 
 	@staticmethod
 	def mask():
-		""" Name(s) of mask image(s) used for CLEANing:
-		    In the image analysys tasks (immath, imfit, and imstat)
-		    either a Lattice Expression, which may be mask filename.
-		    default:
-		    example: mask='mask(myimage.mask)'
-	                     mask='"myimage">0.5'
+		""" In clean, name(s) of mask image(s) used for CLEANing.
+		    In the image analysis tasks tool methods and tasks, a
+		    mask can be specified two ways: 1. as a Lattice
+		    Expression, which may be mask filename. The full
+		    description of the syntax can be found at
+            http://www.astron.nl/aips++/docs/notes/223/node11.html,
+            eg
+		        mask='mask(myimage.mask)"
+		        mask="mask(otherimage:othermask)"
+		        mask="myimage>0.5"
+		    or 2. an image containing numerical valued pixels,
+		    in which case pixels values >= 0.5 are masked True
+		    (good) and < 0.5 are masked False (bad). This
+		    functionality is primarily meant to support clean mask
+		    images, but will work for any image with numerical
+		    valued pixels. eg,'
+	            mask="mycleanmask.im"
 		"""
 
 	@staticmethod

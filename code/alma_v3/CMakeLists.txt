@@ -375,3 +375,4 @@ casa_add_executable( alma_v3 MS2asdm_v3
 
 casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadBigBDF.cc)
 casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadAllBDFs.cc)
+casa_add_assay(alma_v3 implement/ASDM/test/tTableStreamReader.cc)

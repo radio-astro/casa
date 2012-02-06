@@ -40,10 +40,10 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/SimpleSubMS.h>
-#include <msvis/MSVis/SubMS.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/SimpleSubMS.h>
+#include <synthesis/MSVis/SubMS.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 
@@ -94,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      const String& scan,
                                       const String& obs){
     useModelCol_p=False;
-    LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
+    LogIO os(LogOrigin("imager", "setDataToMemory()"), logSink_p);
     if(!Table::isReadable(msname)){
       os << LogIO::SEVERE << "MeasurementSet " 
 	 << msname << " does not exist  " 
@@ -134,9 +134,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& uvdist,
                                    const String& scan,
                                    const String& obs,
-                                   const Bool useModel){
+                                   const Bool useModel, 
+				   const Bool readonly){
     useModelCol_p=useModel;
+    Bool rd=readonly;
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
+    if(useModel) 
+      rd=True;
     if(!Table::isReadable(msname)){
       os << LogIO::SEVERE << "MeasurementSet " 
 	 << msname << " does not exist  " 
@@ -145,14 +149,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else{
       MeasurementSet thisms;
-      if(Table::isWritable(msname))
+      if(!readonly)
 	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Update);
       else
-	//thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
-	//		      Table::Old);
-	thisms=MeasurementSet(msname, TableLock(), 
+       thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Old);
+      //thisms=MeasurementSet(msname, TableLock(), 
+      //			      Table::Old);
       
       thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 

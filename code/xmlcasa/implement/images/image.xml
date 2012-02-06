@@ -13,8 +13,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 include "image.g"
 
-
-
 <keyword>image</keyword>
 <keyword>calculator</keyword>
 <keyword>FITS</keyword>
@@ -1299,8 +1297,8 @@ in this case.  It is evaluated each time it is needed.
             <value></value>
         </param>
         <param type="string" direction="in" name="mask">
-            <description>Mask to use. Default is none.</description>
-            <value></value>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
         </param>
         <param type="bool" direction="in" name="overwrite">
             <description>Overwrite (unprompted) pre-existing output file? Ignored if outfile is blank.</description>
@@ -1841,8 +1839,8 @@ the example we list the names of the fields in this record.
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>    
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
     </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -2285,8 +2283,8 @@ from a normal distribution added.
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -2560,8 +2558,8 @@ This shows a mixed type expression.  The real part of the complex image
 <input>
   
      <param type="string" direction="in" name="mask">
-     <description>Boolean LEL expression or mask region.  Must be specified.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="name">
@@ -2928,8 +2926,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -3295,8 +3293,8 @@ at a particular location at a particular time.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>Boolean LEL expression or mask region.  Default is unset.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="simple">
@@ -3703,8 +3701,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
      <param type="bool" direction="in" name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
@@ -3793,8 +3791,8 @@ images only are written out.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="point">
@@ -3867,7 +3865,6 @@ We use the Componentlist GUI to look at the strongest component.
 
 </example>
 </method>
-
 <method type="function" name="fitprofile">
     <shortdescription>Fit gaussians and/or polynomials to a 1-dimensional profile.</shortdescription>
     <input>
@@ -3875,9 +3872,10 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="region">
+        <param type="any" direction="in" name="region">
+            <any type="variant"/>
             <description>Region name, Default: no region ("").</description>
-            <value></value>
+            <value type="string"/>
         </param>
         <param type="string" direction="in" name="chans">
             <description>Channels to use. Channels must be contigous. Default: all channels ("").</description>
@@ -3893,8 +3891,8 @@ We use the Componentlist GUI to look at the strongest component.
         </param>
         <param type="any" direction="in" name="mask">
             <any type="variant"/>
-            <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
-            <value></value>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
         </param>
         <param type="int" direction="in" name="ngauss">
             <description>Number of Gaussian elements.  Default: 1.</description>
@@ -3964,68 +3962,164 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Output results to logger?</description>
             <value>true</value>
         </param>
+        <param type="any" direction="in" name="pampest">
+            <any type="variant"/>
+            <description>Initial estimate PCF profile amplitudes.</description>
+            <value type="string"/>
+        </param>
+        <param type="any" direction="in" name="pcenterest">
+            <any type="variant"/>
+            <description>Initial estimate PCF profile centers, in pixels.</description>
+            <value type="string"/>
+        </param>
+        <param type="any" direction="in" name="pfwhmest">
+            <any type="variant"/>
+            <description>Initial estimate PCF profile FWHMs, in pixels.</description>
+            <value type="string"/>
+        </param>
+        <param type="any" direction="in" name="pfix">
+            <any type="variant"/>
+            <description>PCF parameters to fix during fit. Any combination of "p", "c", or "f".</description>
+            <value type="string"/>
+        </param>
+        <param type="any" direction="in" name="gmncomps">
+            <any type="variant"/>
+            <description>Number of components in each gaussian multiplet to fit</description>
+            <value type="int">0</value>
+        </param>
+        <param type="any" direction="in" name="gmampcon">
+            <any type="variant"/>
+            <description>The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
+            <value type="string"/>
+        </param>
+        <param type="any" direction="in" name="gmcentercon">
+            <any type="variant"/>
+            <description>The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.</description>
+            <value type="string"/>
+        </param>
+        <param type="any" direction="in" name="gmfwhmcon">
+            <any type="variant"/>
+            <description>The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
+            <value type="string"/>
+        </param>
+        <param type="doubleArray" direction="in" name="gmampest">
+            <description>Initial estimate of individual gaussian amplitudes in gaussian multiplets.</description>
+            <value>0.0</value>
+        </param>
+        <param type="doubleArray" direction="in" name="gmcenterest">
+            <description>Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.</description>
+            <value>0.0</value>
+        </param>
+        <param type="doubleArray" direction="in" name="gmfwhmest">
+            <description>Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.</description>
+            <value>0.0</value>
+        </param>
+        <param type="any" direction="in" name="gmfix">
+            <any type="variant"/>
+            <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
+            <value type="string"/>
+        </param>
+        <param type="string" direction="in" name="logfile">
+            <description>File in which to log results. Default is not to write a logfile.</description>
+            <value/>
+        </param>
+        <param type="bool" direction="in" name="append">
+            <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
+            <value>true</value>
+        </param>
+        <param type="any" direction="in" name="pfunc">
+            <any type="variant"/>
+            <description>PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.</description>
+            <value type="string"/>
+        </param>
+        
     </input>
 <returns type="any"><any type="record"/></returns>
 
 <description>
-This method simultaneously fits one or more gaussians and/or a polynomial to one dimensional profiles.
+This method simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
+and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
+center position, and width) are all independent from any other feature that may be simultaneously fit. A gaussian multiplet is a set of two or
+more gaussian lines in which at least one (and possibly two or three) parameter of each line is dependent on the parameter of another,
+single (reference) profile in the multiplet. For example, one can specify a doublet in which the amplitude of the first line is 0.6 times the
+amplitude of the zeroth line and/or the center of the first line is 20 pixels from the center of the zeroth line, and/or the fwhm of the first
+line is identical (in pixels) to that of the zeroth line. There is no limit to the number of components one can specify in a multiplet
+(except of course that the number of parameters to be fit should be significantly less than the number of data points), but there can be only
+a single reference profile in a multiplet to which to tie constraints of parameters of the other profiles in the set.
 
+AXIS
 The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
 that the zeroth axis should be used.
 
-The ngauss parameter indicates the maximum number of gaussians that should be fit. If appropriate the fitter will fit fewer than this number.
-In the case where an estimates file is supplied, ngauss is ignored (see below). The poly parameter indicates the order of the polynomial to
-fit; a value &lt;0 indicates that no polynomial should be fit. An error will occur if ngauss=0 and poly&lt;0, as this indicates there
-is nothing to fit. 
+MINIMUM NUMBER OF PIXELS
+The minpts parameter indicates the minimum number of unmasked pixels that must be present in order for a fit
+to be attempted. When multifit=T, positions with too few good points will be masked in any output images.
 
-The minpts parameter indicates the minimum number of unmasked points that must be present in order for a fit
-to be attempted. When multifit=T, positions with too few good points will have 
-
+ONE FIT OF REGION AVERAGE OR PIXEL BY PIXEL FIT
 The multifit parameter indicates if profiles should be fit at each pixel in the selected region (true), or if the profiles in that region should be
 averaged and the fit done to that average profile (false).
 
-The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
-should not be written.
+POLYNOMIAL FITTING
+The order of the polynomial to fit is specified only via the poly parameter. If poly&lt;0, no polynomial will be fit. No initial estimates of
+coefficients can be specified; these are determined automatically.
 
-The return value is a dictionary containing the following keys and values. Arrays have the shape of the specified region
-collapsed along the fit axis with the fit axis having dimension of 1.
-attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
-converged: a boolean array indicating which fits converged. False if the fit was not attempted.
-niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
-ncomps: the number of components (gaussians + polynomial) fit for the profile, &lt;0 if the fit did not converge
-xUnit: the abscissa unit
-yUnit: the ordinate unit
+GAUSSIAN SINGLET FITTING
+In the absence of an estimates file and no estimates being specified by the p*est parameters, and gmncomps=0 or is empty, the ngauss parameter
+indicates the maximum number of gaussian singlets that should be fit. The initial estimates of the parameters for these gaussians will be attempted
+automatically in this case. If it deems appropriate, the fitter will fit fewer than this number. In the case where an estimates file is supplied,
+ngauss is ignored (see below). ngauss is also ignored if the p*est parameters are specified or if gmncomps is not an empty array or, if an integer,
+is greater than zero. If estimates is not specified or the p*est parameters are not specified and ngauss=0, gmncomps is empty or 0, and poly&lt;0,
+an error will occur as this indicates there is nothing to fit.
 
-In addition, the following keys are appended by the component number to indicate which component they correspond to, eg, fwhm0, fwhm1, etc.
-At pixels where fits were not attempted or did not converge, numerical arrays will have values of NaN.
-type[0,1,...] The type of component (GAUSSIAN or POLYNOMIAL)
-center[0,1,...] The fitted center value for the nth component which is a gaussian.
-fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
-amp[0,1,...] The fitted amplitude value for the nth component which is a gaussian.
-integral[0,1,...] The integral value for the nth component which is a gaussian.
-centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] integralErr[0,1,...] The associated errors for the nth component which is a gaussian.
+One can specify initial estimates of gaussian singlet parameters via an estimates file or the pampest, pcenterest, pfwhmest, and optionally, the
+pfix parameters. The latter is the recommended way to specify these estimates as support for estimates files may be deprecated in the future. No matter
+which option is used, an amplitude initial estimate must always be nonzero.  A negative fwhm estimate will be silently changed to positve.
 
-One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
-fwhm, fwhmerr, integral, and integralerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
-component number. Writing analogous images for polynomial coefficients is not yet supported. Pixels for which fits were not attempted
-or did not converge will be masked as bad.
+SPECIFYING INITIAL ESTIMATES FOR GAUSSIAN AND LORENTZIAN SINGLETS (RECOMMENDED METHOD)
+One may specify initial estimates via the pampest, pcenterest, and pfwhmest parameters. In the case of a single gaussian or lorentzian singlet,
+these parameters can be numbers. pampest must be specified in image brightness units, pcenterest must be given in the number of pixels from the
+zeroth pixel, and pfwhmest must be given in pixels. Optionally pfix can be specified and in the case of a single gaussian or lorentzian singlet
+can be a string. In it is coded which parameters should be held constant during the fix. Any combination of "p" (amplitude), "c" (center), or "f"
+(fwhm) is allowed; eg pfix="pc" means fix both the amplitude and center during the fit. In the case of more than one gaussian and/or lorentzian
+singlets, these parameters must be specified as arrays of numbers. The length of the arrays indicates the number of singlets to fit and must be
+the same for all the p*est parameters.
 
-Currently, the polynomial coefficients and their errors are not returned, although they are logged.
+If no parameters are to be fixed for any of the singlets, pfix can be set to the empty string. However, if at least one parameter of one singlet
+is to be fixed, pfix must be an array of strings and have a length equal to the p*est arrays. Singlets which are not to have any parameters fixed
+should be represented as an empty string in the pfix array. So, for example, if one desires to fit three singlets and fix the fwhm of the middle
+one, one must specify pfix=["", "f", ""], the empty strings indicating no parameters of the zeroth and second singlet should be held constant.
 
-INITIAL ESTIMATES
-Initial estimates for gaussian models can be specified in an estimates file. Polynomial coefficient initial estimates cannot
-be supplied. If given, the estimates file must contain initial estimates for all gaussian models to be fit. The value
-of the number of gaussians to fit is gotten from the number of estimates in the file. The file can contain comments. These
-are indicated by a "#" at the beginning of a line. All non-comment lines will be interpreted as initial estimates. The
+In the case of multifit=True, the initial estimates, whether from the p*est parameters or from a file (see below), will be applied to the location
+of the first fit. This is normally the bottom left corner of the region selected. If masked, not enough good points to perform a fit, or the
+attempted fit fails, the fitting proceeds to the next pixel with the pixel value of the lowest numbered axis changing the fastest. Once a
+successful fit has been performed, subsequent fits will use the results of a fit for a nearest pixel for which a previous fit was successful as the
+initial estimate for the parameters at the current location. The fixed parameter string will be honored for every fit performed when multifit=True.
+
+One specifies what type of PCF profile to fit via the pfunc parameter. A PCF function is one that can be parameterized by a peak, center, and FWHM,
+as both gaussian and lorentzian singlets can. If all singlets to be fit are gaussians, one can set pfunc equal to the empty string and all snglets
+will be assumed to be gaussians. If at least one lorentzian is to be fit, pfunc must be specified as a string (in the case of a single singlet) or
+an array of strings (in the case of multiple singlets). The position of each string corresponds to the positions of the initial estimates in the
+p*est and pfix arrays. Minimal match ("g", "G", "l", or "L") is supported. So, if one wanted to simultaneously fit two gaussian and two lorentzian
+singlets, the zeroth and last of which were lorentzians, one would specify pfunc=["L", "G", "G", "L"].
+
+ESTIMATES FILE FOR GAUSSIAN SINGLETS (NONRECOMMENDED METHOD)
+Initial estimates for gaussian singlets can be specified in an estimates file. Estimates files may be deprecated in the future in favor of the
+p*est parameters, so it is recommended users use those parameters instead. If an estimates file is desired to be used, the p*est parameters
+must be 0 or empty and mgncomps must be 0 or empty. Only gaussian singlets can be specified in an estimates file. If one desires to fit one or
+more gaussian multiplets and/or one or more lorentzian singlets simultaneously, the p*est parameters must be used to specify the initial parameters
+of all gaussian singlets to fit; one cannot use an estimates file in this case. If an estimates file is specified, a polynomial
+can be fit simultaneously by specifying the poly parameter. The estimates file must contain initial estimates of parameters
+for all gaussian singlets to be fit. The number of gaussian singlets to fit is gotten from the number of estimates in the file. The file can contain
+comments which are indicated by a "#" at the beginning of a line. All non-comment lines will be interpreted as initial estimates. The
 format of such a line is
 
 [peak intensity], [center], [fwhm], [optional fixed parameter string]
 
-The first three values are required and must be numerical values. The peak intensity must be expressed in map units, while the
-center and fwhm must be specified in pixels. The fourth value is optional and if present, represents the parameter(s)
-that should be held constant during the fit. Any combination of the characters 'p' (peak), 'c' (center), and 'f' (fwhm) are
-permitted, eg "fc" means hold the fwhm and the center constant during the fit. Fixed parameters will have no error associated
-with them. Here is an example file:
+The first three values are required and must be numerical values. The peak intensity must be expressed in image brightness units, while the
+center must be specified in pixels offset from the zeroth pixel, and fwhm must be specified in pixels. The fourth value is optional and if present,
+represents the parameter(s) that should be held constant during the fit. Any combination of the characters 'p' (peak), 'c' (center), and 'f' (fwhm) are
+permitted, eg "fc" means hold the fwhm and the center constant during the fit. Fixed parameters will have no error associated with them. Here is an
+example file:
 
 \begin{verbatim}
 # estimates file indicating that two gaussians should be fit
@@ -4037,12 +4131,133 @@ with them. Here is an example file:
 # end file
 \end{verbatim}
 
-In the case of multifit=True, the initial estimates from the file will be applied to the location of the
-first fit. This is normally the bottom left corner of the region selected. If masked or not enough good
-points to perform a fit, the fitting proceeds to the next pixel with the pixel value of the lowest numbered
-axis changing the fastest. Once a successful fit has been performed at a location, subsequent fits will
-use the results of a fit for a nearest pixel for which a previous fit was successful as the initial estimate.
-The fixed parameter string will be honored for every fit performed when multifit=True.
+GAUSSIAN MULTIPLET FITTING
+Any number of gaussian multiplets, each containing any number of two or more components, can be simultaneously fit, optionally with a
+polynomial and/or any number of gaussian and/or lorentzian singlets, the only caveat being that the number of parameters to be fit should be
+significantly less than the number of data points. The gmncomps parameter indicates the number of multiplets to fit and the number of
+components in each multiplet. In the case of a single multiplet, an integer (>1) can be specified. For example, mgncomps=4 means fit a
+single quadruplet of gaussians. In the case of 2 or more multiplets, and array of integers (all >1) must be specified. For example,
+gmncomps=[2, 4, 3] means 3 seperate multiples are to be fit, the zeroth being a doublet, the first being a quadruplet, and the second
+being a triplet.
+
+Initial estimates of all gaussians in all multiplets are specified via the gm*est parameters which must be arrays of numbers. The order
+starts with the zeroth component of the zeroth multiplet to the last component of the zeroth multiplet, then the zeroth component of
+the first multiplet to the last compoenent of the first multiplet, etc to the zeroth component of the last multiplet to the last 
+element of the last multiplet. The zeroth element of a multiplet is defined as the reference component of that multiplet and has the special
+significance that it is the profile to which all constraints of all other profiles in that multiplet are referenced (see below). So,
+in our example of gmncomps=[2, 4, 3], gmampest, gmcenterest, and gmfwhmest must each be nine (the total number of individual gaussian
+profiles summed over all multiplets) element arrays. The zeroth, second, and sixth elements represent parameters of the reference profiles
+in the zeroth, first, and second multiplet, respectively.
+
+The fixed relationships between the non-reference profile(s) and the reference profile of a multiplet are specified via the gmampcon,
+gmcentercon, and gmfwhmcon parameters. At least one, and any combination, of constraints can be specified for any non-reference
+component of a multiplet. The amplitude ratio of a non-reference line to that of the reference line is set in gmampcon. The ratio of
+the fwhm of a non-reference line to that of the reference line is set in gmfwhmcon. The offset in pixels of the center position of
+a non-reference line to that of the reference line is set in gmcentercon. In the case where a parameter is not constrained for any
+non-reference line of any multiplet, the value of the associated parameter must be 0. In the case of
+a single doublet, a constraint may be specified as a number or an array of a single number. For example, mgncomps=2 and gmampcon=0.65
+and gmcentercon=[32.4] means there is a single doublet to fit where the amplitude ratio of the first to the zeroth line is constained
+to be 0.65 and the center of the first line is constrained to be offset by 32.4 pixels from the center of the zeroth line. In cases
+of a total of three or more gaussians, the constraints parameters must be specified as arrays with lengths equal to the total number
+of gaussians summed over all multiplets minus the number of reference lines (one per multiplet, or just number of multiplets, since
+reference lines cannot be constrained by themselves). In the cases where an array must be specified but a component in that array
+does not have that constraint, 0 should be specified. Here's an example
+
+gmncomps=[2, 4, 3]
+gmampcon=  [ 0  ,  0.2,  0  , 0.1,   4.5,   0  ]
+gcentercon=[24.2, 45.6, 92.7, 0  , -22.8, -33.5]
+gfwhmcon=""
+
+In this case we have our previous example of one doublet, one quadruplet, and one triplet. The first component of the doublet has the constraint
+that its center is offset by 24.2 pixels from the zeroth (reference) component. The first component of the quadruplet is constrained to have
+an amplitude of 0.2 times that of the quadruplet's zeroth component and its center is constrained to be offset by 45.6 pixels from the
+reference component. The second component of the quadruplet is constained to have its center offset by 92.7 pixels from the associated 
+reference component and the third component is constrained to have an amplitude of 0.1 times that of the associated reference component.
+The first component of the triplet is constrained to have an amplitude of 4.5 times that of its associated reference component and its center
+is constrained to be offset by -22.8 pixels from the reference component's center. The second component of the triplet is constrained to have
+its center offset by -33.5 pixels from the center of the reference component. No lines have FWHM constraints, so the empty string can be given
+for that parameter. Note that using 0 to indicate no constraint for line center means that one cannot specify a line centered at the same
+position as the reference component but having a different FWHM from the reference component. If you must specify this very unusual case,
+try using a very small positive (or even negative) value for the center constraint.
+
+Note that when a parameter for a line is constrained, the corresponding value for that component in the corresponding gm*est array is
+ignored and the value of the constrained parameter is automatically used instead. So let's say, for our example above, we had specified
+the following estimates:
+
+gmampest =     [ 1,   .2,  2,   .1,    .1,   .5,  3,    2, 5]
+gmcenterest =  [20, 10  , 30, 45.2, 609  , -233, 30, -859, 1]
+
+Before any fitting is done, the constraints would be taken into account and these arrays would be implicitly rewritten as:
+
+gmampest =     [ 1,   .2,  2,   .4,    .1,   .2,  3, 13.5,  5  ]
+gmcenterest =  [20, 44.2, 30, 75.6, 127.7, -233, 30,  7.2, -3.5]
+
+The value of gmfwhmest would be unchanged since there are no FWHM constraints in this example.
+
+In addition to be constrained by values of the reference component, parameters of individual components can be fixed. Fixed parameters
+are specified via the gmfix parameter. If no parameters are to be fixed, gmfix can be specified as the empty string or a zero element
+array. In the case where any parameter is to be fixed, gmfix must be specified as an array of strings with length equal to the total number of
+components summed over all multiplets. These strings encode which parameters to be fixed for the corresponding components. If
+a component is to have no parameters fixed, an empty string is used. In other cases one or more of any combination of parameters can
+be fixed using "p", "c", and/or "f" described above for fixing singlet parameters. There are a couople of special cases
+to be aware of. In the case where a non-reference component parameter is constrained and the corresponding reference component parameter is
+set as fixed, that parameter in the non-reference parameter will automatically be fixed even if it was specified not to be fixed in
+the gmfix array. This is the only way the constraint can be honored afterall. In the converse case of when a constrained parameter of a
+non-reference component is specified as fixed, but the corresponding parameter in the reference component is not specified to be fixed,
+an error will occur. Fixing an unconstrained parameter in a non-reference component is always legal as is fixing any combination of
+parameters in a reference component (with the above caveat that corresponding constrained parameters in non-reference components will
+be silently held fixed as well).
+
+The same rules that apply to singlets when multifit=True apply to multiplets.
+
+RETURNED DICTIONARY STRUCTURE
+The returned dictionary has a (necessarily) complex structure. First, there are keys "xUnit" and "yUnit" whose values are
+the abscissa unit and the ordinate unit described by simple strings. Next there are arrays giving a broad overview of the
+fit quality. These arrays have the shape of the specified region collapsed along the fit axis with the axis corresponding to the fit
+axis having length of 1:
+
+attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
+converged: a boolean array indicating which fits converged. False if the fit was not attempted.
+niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
+        &lt;0 if the fit did not converge
+
+There is a "type" array having number of dimensions equal to the number of dimensions in the above arrays plus one. The shape of
+the first n-1 dimensions is the same as the shape of the above arrays. The length of the last dimension is equal to the number of
+components fit. The values of this array are strings describing the components that were fit at each possition ("POLYNOMIAL",
+"GAUSSIAN" in the case of gaussian singlets, "LORENTZIAN" in the case of lorentzian singlets, and ""GAUSSIAN MULTPLET").
+
+If any gaussian singlets were fit, there will be a subdictionary accessible via the "gs" key which will have subkeys "amp", "ampErr", "center",
+"centerErr", "fwhm", "fwhmErr, "integral", and "integralErr". Each of these arrays will have one more dimension than the overview arrays described
+above. The shape of the first n-1 dimensions will be the same as the shape of the arrays described above, while the final dimension will
+have length equal to the maximum number of gaussian singlets that were fit. Along this axis will be the
+corresponding fit result or associated error (depending on the array's associated key) of the fit for that singlet component number. In cases where
+the fit did not converge, or that particular component was excluded from the fit, a value of NAN will be present.
+
+If any lorentzian singlets were fit, their solutions will be accessible via the "ls" key. These arrays follow the same rules
+as the "gs" arrays described above.
+
+If any gaussian multiplets were fit, there will be subdictionaries accessible by keys "gm0", "gm1", ..., "gm{n-1}" where n is the number of gaussian
+muliplets that were fit. Each of these dictionaries will have the same arrays described above for gaussian singlets. The last dimension
+will have length equal to the number of components in that particular multiplet. Each pixel along the last axis will be the parameter solution
+value or error for that component number in the multiplet, eg the zeroth pixel along that axis contains
+the parameter solution or error for the reference component of the multiplet.
+
+The polynomial coefficient solutions and errors are not returned, although they are logged.
+
+OUTPUT IMAGES
+In addition to the returned dictionary, optionally one or more of any combination of output images can be written.
+The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
+should not be written.
+
+One can also write none, any or all of the solution and error images for gaussian singlet, lorentzian singlet,  and gaussian multiplet fits
+via the parameters amp, amperr, center, centererr, fwhm, fwhmerr, integral, and integralerr when doing multi-pixel fits. These images simply
+contain the arrays described for the associated parameter solutions or errors described in previous sections. In the case of lorentzian
+singlets, "_ls" is appended to the image names, in the case of gaussian multiplets, "_gm0", "_gm1", etc are appended to the image names to
+distinguish each multiplet. Pixels for which fits were not attempted or did not converge will be masked as bad. The last axis of these images
+is a linear axis and repesents component number (and is named accordingly).
+
+Writing analogous images for polynomial coefficients is not supported.
 
 </description>
 
@@ -4050,14 +4265,10 @@ The fixed parameter string will be honored for every fit performed when multifit
 """
 ia.open("myspectrum.im")
 res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
-# reshape fit parameters to correspond to input pixels
-mycenter0 = res["center0"].reshape([2,3], order="F")
 """
 </example>
 
 </method>
-
- 
 
  
 <method type="function" name="fitcomponents">
@@ -4087,8 +4298,8 @@ mycenter0 = res["center0"].reshape([2,3], order="F")
         
         <param type="any" direction="in" name="mask">
             <any type="variant"/>
-            <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-            <value></value>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
         </param>
     
         <param type="doubleArray" direction="in" name="includepix">
@@ -4187,9 +4398,9 @@ arrays containing the the fitted zero level offset value and its error, respecti
 for each channel. Both sets of values are in image brightness units.
 In cases where the fit did not converge, these values are set to NaN.
 
-The region can either be specified by a box (blc,trc) or a region (if both
-are given, the box is used). Ranges of pixel values can be included or
-excluded from the fit.
+The region can either be specified by a box(es) or a region (there is no
+garauntee which will be used if both are specified, so be certain that only one is).
+Ranges of pixel values can be included or excluded from the fit.
 
 If specified, the residual and/or model images for
 successful fits will be written.
@@ -4290,9 +4501,9 @@ and (position andle +/- position angle error).
 CAUTIONARY NOTES ON ERRORS
 fitcomponents() makes the following implicit assumptions:
 
-1. The noise associated with the pixels it is given to fit is perfectly random and gaussian
-2. There is no offset (constant, gradient, or more complex function) in pixel values.
-3. The things that are trying to be fit are gaussians.
+1. The noise associated with the pixels it is given to fit is truly random and gaussian
+2. There is no offset (constant (unless one is fit), gradient, or more complex function) in pixel values.
+3. The things that are trying to be fit are bona-fide gaussians.
 
 If any of these assumptions is not true, the errors reported will in general be lower limits. These
 assumptions do not hold if for example, there is structure in the noise of the image (eg the residual map produced
@@ -4497,8 +4708,8 @@ ia.close()
 
      <param type="any" direction="in" name="mask">
              <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
 
      <param type="bool" direction="in" name="list">
@@ -4686,8 +4897,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="int" direction="in" name="axis">
@@ -4840,8 +5051,8 @@ and acquires just a read lock.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="int" direction="in" name="nbins">
@@ -5516,9 +5727,9 @@ ia.close()
      </param>
   
      <param type="any" direction="in" name="mask">
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
+     <description>Mask to use. See help par.mask. Default is none.</description>
 	     <any type="variant"/>
-     <value></value>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="subtract">
@@ -5675,8 +5886,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="stringArray" direction="in" name="method">
@@ -6557,8 +6768,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -6658,9 +6869,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-	     <description>OTF mask, Boolean LEL expression or mask region.
-      Default is none.</description>
-     <value></value>
+	     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="method">
@@ -7057,8 +7267,8 @@ ia.done()
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="method">
@@ -7246,8 +7456,8 @@ print ia.name(strippath=T)
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="update">
@@ -7519,9 +7729,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-	     <description>OTF mask, Boolean LEL expression or mask region.
-       Default is none.</description>
-     <value></value>
+	     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -8067,9 +8276,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="stringArray" direction="in" name="plotstats">
@@ -8365,9 +8573,8 @@ the the record containing the statistics arrays.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="intArray" direction="in" name="axes">
@@ -8456,9 +8663,8 @@ ia.twopointcorrelation()   # Output image is virtual
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -8709,9 +8915,8 @@ listed in square brackets.
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="bool" direction="in" name="overwrite">
@@ -8852,9 +9057,8 @@ ia.close()
   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.
-     Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
      </param>
   
      <param type="string" direction="in" name="sep">
@@ -9330,8 +9534,8 @@ the example we list the names of the fields in this record.
   
      <param type="any" direction="in" name="mask">
      <any type="variant"/>    
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
+     <description>Mask to use. See help par.mask. Default is none.</description>
+     <value type="string"/>
     </param>
   
      <param type="bool" direction="in" name="dropdeg">
@@ -9536,8 +9740,8 @@ used to create a 2D temporary image.
         </param>
         <param type="string" direction="in" name="mask">
             <any type="variant"/>
-            <description>Boolean LEL expression or mask region.  Default is none.</description>
-            <value></value>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
         </param>
         <param type="string" direction="in" name="mode">
             <description>Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"</description>

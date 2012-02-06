@@ -78,17 +78,16 @@ ImageFitter::ImageFitter(
 	const String& maskInp, const Vector<Float>& includepix,
 	const Vector<Float>& excludepix, const String& residualInp,
 	const String& modelInp, const String& estimatesFilename,
-	const String& logfile, const Bool& append,
 	const String& newEstimatesInp, const String& compListName,
 	const CompListWriteControl writeControl
 ) : ImageTask(
 		image, region, regionRec, box, chanInp, stokes,
 		maskInp, "", False
-	), _regionString(region), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+	), _regionString(region), _residual(residualInp),_model(modelInp),
 	estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 	_compListName(compListName), _includePixelRange(includepix),
 	_excludePixelRange(excludepix), estimates(), _fixed(0),
-	logfileAppend(append), _fitDone(False), _noBeam(False),
+	_fitDone(False), _noBeam(False),
 	_doZeroLevel(False), _zeroLevelIsFixed(False),
 	_fitConverged(Vector<Bool>(0)), _peakIntensities(),
 	_writeControl(writeControl), _zeroLevelOffsetEstimate(0),
@@ -291,9 +290,7 @@ ComponentList ImageFitter::fit() {
 	if (converged && ! _newEstimatesFileName.empty()) {
 		_writeNewEstimatesFile();
 	}
-	if (! _logfileName.empty()) {
-		_writeLogfile(resultsString);
-	}
+	_writeLogfile(resultsString);
 	return compList;
 }
 
@@ -417,17 +414,19 @@ vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	newEstFile.outputFile = &_newEstimatesFileName;
 	newEstFile.required = False;
 	newEstFile.replaceable = True;
+	/*
 	ImageInputProcessor::OutputStruct logFile;
 	logFile.label = "log file";
 	logFile.outputFile = &_logfileName;
 	logFile.required = False;
 	logFile.replaceable = True;
+	*/
 
-	vector<ImageInputProcessor::OutputStruct> outputs(4);
+	vector<ImageInputProcessor::OutputStruct> outputs(3);
 	outputs[0] = residualIm;
 	outputs[1] = modelIm;
 	outputs[2] = newEstFile;
-	outputs[3] = logFile;
+	// outputs[3] = logFile;
 
 	return outputs;
 }
@@ -443,8 +442,8 @@ CasacRegionManager::StokesControl ImageFitter::_getStokesControl() const {
 }
 
 void ImageFitter::_finishConstruction(const String& estimatesFilename) {
-	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
-	*_getLog() << logOrigin;
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	_setSupportsLogfile(True);
 	// <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
 	String iquv = "IQUV";
@@ -999,24 +998,26 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 	return spec.str();
 }
 
+/*
 void ImageFitter::_writeLogfile(const String& output) const {
-	File log(_logfileName);
+	String logfile = _getLogfile();
+	File log(logfile);
 	switch (File::FileWriteStatus status = log.getWriteStatus()) {
 	case File::OVERWRITABLE:
 		if (logfileAppend) {
-			Int fd = open(_logfileName.c_str(), O_RDWR | O_APPEND);
-			FiledesIO fio(fd, _logfileName.c_str());
+			Int fd = open(logfile.c_str(), O_RDWR | O_APPEND);
+			FiledesIO fio(fd, logfile.c_str());
 			fio.write(output.length(), output.c_str());
 			FiledesIO::close(fd);
 			*_getLog() << LogIO::NORMAL << "Appended results to file "
-					<< _logfileName << LogIO::POST;
+					<< logfile << LogIO::POST;
 		}
 		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
 	case File::CREATABLE:
 		if (status == File::CREATABLE || ! logfileAppend) {
 			// can fall throw from previous case block so status can be File::OVERWRITABLE
 			String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
-			Int fd = FiledesIO::create(_logfileName.c_str());
+			Int fd = FiledesIO::create(logfile.c_str());
 			FiledesIO fio (fd, _logfileName.c_str());
 			fio.write(output.length(), output.c_str());
 			FiledesIO::close(fd);
@@ -1032,6 +1033,7 @@ void ImageFitter::_writeLogfile(const String& output) const {
 		*_getLog() << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
 	}
 }
+*/
 
 SubImage<Float> ImageFitter::_createImageTemplate() const {
 	IPosition imShape = _getImage()->shape();
@@ -1088,12 +1090,12 @@ void ImageFitter::_writeNewEstimatesFile() const {
 	File estimates(_newEstimatesFileName);
 	String action = (estimates.getWriteStatus() == File::OVERWRITABLE) ? "Overwrote" : "Created";
 	Int fd = FiledesIO::create(_newEstimatesFileName.c_str());
-	FiledesIO fio(fd, _logfileName.c_str());
+	FiledesIO fio(fd, _getLogfile().c_str());
 	fio.write(output.length(), output.c_str());
 	FiledesIO::close(fd);
 	*_getLog() << LogIO::NORMAL << action << " file "
-			<< _newEstimatesFileName << " with new estimates file"
-			<< LogIO::POST;
+		<< _newEstimatesFileName << " with new estimates file"
+		<< LogIO::POST;
 }
 
 void ImageFitter::_writeCompList(ComponentList& list) const {

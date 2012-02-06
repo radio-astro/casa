@@ -119,9 +119,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file SBSummary.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -131,17 +132,19 @@ namespace asdm {
 	
 
 class SBSummaryRow;
-typedef void (SBSummaryRow::*SBSummaryAttributeFromBin) (EndianISStream& eiss);
+typedef void (SBSummaryRow::*SBSummaryAttributeFromBin) (EndianIStream& eis);
+typedef void (SBSummaryRow::*SBSummaryAttributeFromText) (const string& s);
 
 /**
  * The SBSummaryRow class is a row of a SBSummaryTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SBSummaryRow {
 friend class asdm::SBSummaryTable;
 friend class asdm::RowTransformer<SBSummaryRow>;
+//friend class asdm::TableStreamReader<SBSummaryTable, SBSummaryRow>;
 
 public:
 
@@ -849,7 +852,44 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SBSummaryAttributeFromBin> fromBinMethods;
+void sBSummaryIdFromBin( EndianIStream& eis);
+void sbSummaryUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void obsUnitSetUIDFromBin( EndianIStream& eis);
+void frequencyFromBin( EndianIStream& eis);
+void frequencyBandFromBin( EndianIStream& eis);
+void sbTypeFromBin( EndianIStream& eis);
+void sbDurationFromBin( EndianIStream& eis);
+void numObservingModeFromBin( EndianIStream& eis);
+void observingModeFromBin( EndianIStream& eis);
+void numberRepeatsFromBin( EndianIStream& eis);
+void numScienceGoalFromBin( EndianIStream& eis);
+void scienceGoalFromBin( EndianIStream& eis);
+void numWeatherConstraintFromBin( EndianIStream& eis);
+void weatherConstraintFromBin( EndianIStream& eis);
+
+void centerDirectionFromBin( EndianIStream& eis);
+void centerDirectionCodeFromBin( EndianIStream& eis);
+void centerDirectionEquinoxFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SBSummaryTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SBSummaryRow* fromBin(EndianIStream& eis, SBSummaryTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1123,30 +1163,89 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, SBSummaryAttributeFromBin> fromBinMethods;
-void sBSummaryIdFromBin( EndianISStream& eiss);
-void sbSummaryUIDFromBin( EndianISStream& eiss);
-void projectUIDFromBin( EndianISStream& eiss);
-void obsUnitSetUIDFromBin( EndianISStream& eiss);
-void frequencyFromBin( EndianISStream& eiss);
-void frequencyBandFromBin( EndianISStream& eiss);
-void sbTypeFromBin( EndianISStream& eiss);
-void sbDurationFromBin( EndianISStream& eiss);
-void numObservingModeFromBin( EndianISStream& eiss);
-void observingModeFromBin( EndianISStream& eiss);
-void numberRepeatsFromBin( EndianISStream& eiss);
-void numScienceGoalFromBin( EndianISStream& eiss);
-void scienceGoalFromBin( EndianISStream& eiss);
-void numWeatherConstraintFromBin( EndianISStream& eiss);
-void weatherConstraintFromBin( EndianISStream& eiss);
+void sBSummaryIdFromBin( EndianIStream& eis);
+void sbSummaryUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void obsUnitSetUIDFromBin( EndianIStream& eis);
+void frequencyFromBin( EndianIStream& eis);
+void frequencyBandFromBin( EndianIStream& eis);
+void sbTypeFromBin( EndianIStream& eis);
+void sbDurationFromBin( EndianIStream& eis);
+void numObservingModeFromBin( EndianIStream& eis);
+void observingModeFromBin( EndianIStream& eis);
+void numberRepeatsFromBin( EndianIStream& eis);
+void numScienceGoalFromBin( EndianIStream& eis);
+void scienceGoalFromBin( EndianIStream& eis);
+void numWeatherConstraintFromBin( EndianIStream& eis);
+void weatherConstraintFromBin( EndianIStream& eis);
 
-void centerDirectionFromBin( EndianISStream& eiss);
-void centerDirectionCodeFromBin( EndianISStream& eiss);
-void centerDirectionEquinoxFromBin( EndianISStream& eiss);
+void centerDirectionFromBin( EndianIStream& eis);
+void centerDirectionCodeFromBin( EndianIStream& eis);
+void centerDirectionEquinoxFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SBSummaryAttributeFromText> fromTextMethods;
+	
+void sBSummaryIdFromText (const string & s);
+	
+	
+	
+	
+	
+void frequencyFromText (const string & s);
+	
+	
+void frequencyBandFromText (const string & s);
+	
+	
+void sbTypeFromText (const string & s);
+	
+	
+void sbDurationFromText (const string & s);
+	
+	
+void numObservingModeFromText (const string & s);
+	
+	
+void observingModeFromText (const string & s);
+	
+	
+void numberRepeatsFromText (const string & s);
+	
+	
+void numScienceGoalFromText (const string & s);
+	
+	
+void scienceGoalFromText (const string & s);
+	
+	
+void numWeatherConstraintFromText (const string & s);
+	
+	
+void weatherConstraintFromText (const string & s);
+	
+
+	
+void centerDirectionFromText (const string & s);
+	
+	
+void centerDirectionCodeFromText (const string & s);
+	
+	
+void centerDirectionEquinoxFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1155,14 +1254,14 @@ void centerDirectionEquinoxFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SBSummaryTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SBSummaryRow* fromBin(EndianISStream& eiss, SBSummaryTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static SBSummaryRow* fromBin(EndianIStream& eis, SBSummaryTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

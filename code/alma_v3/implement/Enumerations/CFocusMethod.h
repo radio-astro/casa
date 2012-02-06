@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -68,6 +69,11 @@ namespace FocusMethodMod
   typedef FocusMethod &FocusMethod_out;
 } 
 #endif
+
+namespace FocusMethodMod {
+	std::ostream & operator << ( std::ostream & out, const FocusMethod& value);
+	std::istream & operator >> ( std::istream & in , FocusMethod& value );
+}
 
 /** 
   * A helper class for the enumeration FocusMethod.

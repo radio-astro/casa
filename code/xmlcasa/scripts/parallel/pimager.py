@@ -763,7 +763,7 @@ class pimager():
             shutil.rmtree(model, True)
             shutil.rmtree(imagename+'.image', True)
             ##create the cube
-            im.selectvis(vis=msname, spw=spw, field=field)
+            im.selectvis(vis=msname, spw=spw, field=field, writeaccess=False)
             im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
                            phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start, restfreq=restfreq)
             im.setoptions(imagetilevol=imagetilevol) 
@@ -986,7 +986,7 @@ class pimager():
             shutil.rmtree(model, True)
             shutil.rmtree(imagename+'.image', True)
             ##create the cube
-            im.selectvis(vis=msname, spw=spw, field=field)
+            im.selectvis(vis=msname, spw=spw, field=field, writeaccess=False)
             im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
                            phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start, restfreq=restfreq)
             im.setoptions(imagetilevol=imagetilevol) 
@@ -1223,7 +1223,7 @@ class pimager():
             shutil.rmtree(model, True)
             shutil.rmtree(imagename+'.image', True)
             ##create the cube
-            im.selectvis(vis=msname, spw=spw, field=field)
+            im.selectvis(vis=msname, spw=spw, field=field, writeaccess=False)
             im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
                            phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start, restfreq=restfreq)
             im.setoptions(imagetilevol=imagetilevol) 

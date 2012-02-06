@@ -81,9 +81,10 @@
 #include <IllegalAccessException.h>
 
 #include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file PointingModel.h
-    \brief Generated from model's revision "1.60", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -99,17 +100,19 @@ class AntennaRow;
 	
 
 class PointingModelRow;
-typedef void (PointingModelRow::*PointingModelAttributeFromBin) (EndianISStream& eiss);
+typedef void (PointingModelRow::*PointingModelAttributeFromBin) (EndianIStream& eis);
+typedef void (PointingModelRow::*PointingModelAttributeFromText) (const string& s);
 
 /**
  * The PointingModelRow class is a row of a PointingModelTable.
  * 
- * Generated from model's revision "1.60", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class PointingModelRow {
 friend class asdm::PointingModelTable;
 friend class asdm::RowTransformer<PointingModelRow>;
+//friend class asdm::TableStreamReader<PointingModelTable, PointingModelRow>;
 
 public:
 
@@ -563,7 +566,36 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (std::string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, PointingModelAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void pointingModelIdFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffValFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void assocPointingModelIdFromBin( EndianIStream& eis);
+
+void coeffFormulaFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the PointingModelTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static PointingModelRow* fromBin(EndianIStream& eis, PointingModelTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -758,22 +790,63 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
 	std::map<std::string, PointingModelAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void pointingModelIdFromBin( EndianISStream& eiss);
-void numCoeffFromBin( EndianISStream& eiss);
-void coeffNameFromBin( EndianISStream& eiss);
-void coeffValFromBin( EndianISStream& eiss);
-void polarizationTypeFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void assocNatureFromBin( EndianISStream& eiss);
-void assocPointingModelIdFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianIStream& eis);
+void pointingModelIdFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffValFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void assocPointingModelIdFromBin( EndianIStream& eis);
 
-void coeffFormulaFromBin( EndianISStream& eiss);
+void coeffFormulaFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, PointingModelAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void pointingModelIdFromText (const string & s);
+	
+	
+void numCoeffFromText (const string & s);
+	
+	
+void coeffNameFromText (const string & s);
+	
+	
+void coeffValFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void assocNatureFromText (const string & s);
+	
+	
+void assocPointingModelIdFromText (const string & s);
+	
+
+	
+void coeffFormulaFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -782,14 +855,14 @@ void coeffFormulaFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the PointingModelTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static PointingModelRow* fromBin(EndianISStream& eiss, PointingModelTable& table, const std::vector<std::string>& attributesSeq);	 
 
+	 static PointingModelRow* fromBin(EndianIStream& eis, PointingModelTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

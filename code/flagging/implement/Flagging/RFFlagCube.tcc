@@ -27,7 +27,7 @@
 //# $Id$
 #include <flagging/Flagging/RFFlagCube.h>
 #include <casa/Exceptions/Error.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/LogiVector.h>

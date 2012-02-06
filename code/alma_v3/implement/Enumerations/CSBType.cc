@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSBType::version() {
 	return SBTypeMod::version;
 	}
@@ -134,5 +133,25 @@ string CSBType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SBType'.";
 	return oss.str();
+}
+
+namespace SBTypeMod {
+	std::ostream & operator << ( std::ostream & out, const SBType& value) {
+		out << CSBType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SBType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSBType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

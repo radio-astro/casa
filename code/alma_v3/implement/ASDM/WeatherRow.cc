@@ -57,6 +57,7 @@ using asdm::StationRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -1174,142 +1175,142 @@ namespace asdm {
 
 	}
 	
-void WeatherRow::stationIdFromBin(EndianISStream& eiss) {
+void WeatherRow::stationIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		stationId =  Tag::fromBin(eiss);
+		stationId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void WeatherRow::timeIntervalFromBin(EndianISStream& eiss) {
+void WeatherRow::timeIntervalFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
 		
 	
 	
 }
 
-void WeatherRow::pressureFromBin(EndianISStream& eiss) {
+void WeatherRow::pressureFromBin(EndianIStream& eis) {
 		
-	pressureExists = eiss.readBoolean();
+	pressureExists = eis.readBoolean();
 	if (pressureExists) {
 		
 	
 		
 		
-		pressure =  Pressure::fromBin(eiss);
+		pressure =  Pressure::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::relHumidityFromBin(EndianISStream& eiss) {
+void WeatherRow::relHumidityFromBin(EndianIStream& eis) {
 		
-	relHumidityExists = eiss.readBoolean();
+	relHumidityExists = eis.readBoolean();
 	if (relHumidityExists) {
 		
 	
 		
 		
-		relHumidity =  Humidity::fromBin(eiss);
+		relHumidity =  Humidity::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::temperatureFromBin(EndianISStream& eiss) {
+void WeatherRow::temperatureFromBin(EndianIStream& eis) {
 		
-	temperatureExists = eiss.readBoolean();
+	temperatureExists = eis.readBoolean();
 	if (temperatureExists) {
 		
 	
 		
 		
-		temperature =  Temperature::fromBin(eiss);
+		temperature =  Temperature::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::windDirectionFromBin(EndianISStream& eiss) {
+void WeatherRow::windDirectionFromBin(EndianIStream& eis) {
 		
-	windDirectionExists = eiss.readBoolean();
+	windDirectionExists = eis.readBoolean();
 	if (windDirectionExists) {
 		
 	
 		
 		
-		windDirection =  Angle::fromBin(eiss);
+		windDirection =  Angle::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::windSpeedFromBin(EndianISStream& eiss) {
+void WeatherRow::windSpeedFromBin(EndianIStream& eis) {
 		
-	windSpeedExists = eiss.readBoolean();
+	windSpeedExists = eis.readBoolean();
 	if (windSpeedExists) {
 		
 	
 		
 		
-		windSpeed =  Speed::fromBin(eiss);
+		windSpeed =  Speed::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::windMaxFromBin(EndianISStream& eiss) {
+void WeatherRow::windMaxFromBin(EndianIStream& eis) {
 		
-	windMaxExists = eiss.readBoolean();
+	windMaxExists = eis.readBoolean();
 	if (windMaxExists) {
 		
 	
 		
 		
-		windMax =  Speed::fromBin(eiss);
+		windMax =  Speed::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::dewPointFromBin(EndianISStream& eiss) {
+void WeatherRow::dewPointFromBin(EndianIStream& eis) {
 		
-	dewPointExists = eiss.readBoolean();
+	dewPointExists = eis.readBoolean();
 	if (dewPointExists) {
 		
 	
 		
 		
-		dewPoint =  Temperature::fromBin(eiss);
+		dewPoint =  Temperature::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::numLayerFromBin(EndianISStream& eiss) {
+void WeatherRow::numLayerFromBin(EndianIStream& eis) {
 		
-	numLayerExists = eiss.readBoolean();
+	numLayerExists = eis.readBoolean();
 	if (numLayerExists) {
 		
 	
 	
 		
 			
-		numLayer =  eiss.readInt();
+		numLayer =  eis.readInt();
 			
 		
 	
@@ -1317,9 +1318,9 @@ void WeatherRow::numLayerFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void WeatherRow::layerHeightFromBin(EndianISStream& eiss) {
+void WeatherRow::layerHeightFromBin(EndianIStream& eis) {
 		
-	layerHeightExists = eiss.readBoolean();
+	layerHeightExists = eis.readBoolean();
 	if (layerHeightExists) {
 		
 	
@@ -1327,7 +1328,7 @@ void WeatherRow::layerHeightFromBin(EndianISStream& eiss) {
 		
 			
 	
-	layerHeight = Length::from1DBin(eiss);	
+	layerHeight = Length::from1DBin(eis);	
 	
 
 		
@@ -1336,9 +1337,9 @@ void WeatherRow::layerHeightFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void WeatherRow::temperatureProfileFromBin(EndianISStream& eiss) {
+void WeatherRow::temperatureProfileFromBin(EndianIStream& eis) {
 		
-	temperatureProfileExists = eiss.readBoolean();
+	temperatureProfileExists = eis.readBoolean();
 	if (temperatureProfileExists) {
 		
 	
@@ -1346,7 +1347,7 @@ void WeatherRow::temperatureProfileFromBin(EndianISStream& eiss) {
 		
 			
 	
-	temperatureProfile = Temperature::from1DBin(eiss);	
+	temperatureProfile = Temperature::from1DBin(eis);	
 	
 
 		
@@ -1355,31 +1356,31 @@ void WeatherRow::temperatureProfileFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void WeatherRow::cloudMonitorFromBin(EndianISStream& eiss) {
+void WeatherRow::cloudMonitorFromBin(EndianIStream& eis) {
 		
-	cloudMonitorExists = eiss.readBoolean();
+	cloudMonitorExists = eis.readBoolean();
 	if (cloudMonitorExists) {
 		
 	
 		
 		
-		cloudMonitor =  Temperature::fromBin(eiss);
+		cloudMonitor =  Temperature::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::numWVRFromBin(EndianISStream& eiss) {
+void WeatherRow::numWVRFromBin(EndianIStream& eis) {
 		
-	numWVRExists = eiss.readBoolean();
+	numWVRExists = eis.readBoolean();
 	if (numWVRExists) {
 		
 	
 	
 		
 			
-		numWVR =  eiss.readInt();
+		numWVR =  eis.readInt();
 			
 		
 	
@@ -1387,9 +1388,9 @@ void WeatherRow::numWVRFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void WeatherRow::wvrTempFromBin(EndianISStream& eiss) {
+void WeatherRow::wvrTempFromBin(EndianIStream& eis) {
 		
-	wvrTempExists = eiss.readBoolean();
+	wvrTempExists = eis.readBoolean();
 	if (wvrTempExists) {
 		
 	
@@ -1397,7 +1398,7 @@ void WeatherRow::wvrTempFromBin(EndianISStream& eiss) {
 		
 			
 	
-	wvrTemp = Temperature::from1DBin(eiss);	
+	wvrTemp = Temperature::from1DBin(eis);	
 	
 
 		
@@ -1406,16 +1407,16 @@ void WeatherRow::wvrTempFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void WeatherRow::waterFromBin(EndianISStream& eiss) {
+void WeatherRow::waterFromBin(EndianIStream& eis) {
 		
-	waterExists = eiss.readBoolean();
+	waterExists = eis.readBoolean();
 	if (waterExists) {
 		
 	
 	
 		
 			
-		water =  eiss.readDouble();
+		water =  eis.readDouble();
 			
 		
 	
@@ -1425,19 +1426,19 @@ void WeatherRow::waterFromBin(EndianISStream& eiss) {
 }
 	
 	
-	WeatherRow* WeatherRow::fromBin(EndianISStream& eiss, WeatherTable& table, const vector<string>& attributesSeq) {
+	WeatherRow* WeatherRow::fromBin(EndianIStream& eis, WeatherTable& table, const vector<string>& attributesSeq) {
 		WeatherRow* row = new  WeatherRow(table);
 		
 		map<string, WeatherAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
 			if (iter != row->fromBinMethods.end()) {
-				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);			
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
 			else {
 				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
 				if (functorP)
-					(*functorP)(eiss);
+					(*functorP)(eis);
 				else
 					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "WeatherTable");
 			}
@@ -1445,10 +1446,166 @@ void WeatherRow::waterFromBin(EndianISStream& eiss) {
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void WeatherRow::stationIdFromText(const string & s) {
+		 
+		stationId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void WeatherRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Pressure 
+	void WeatherRow::pressureFromText(const string & s) {
+		pressureExists = true;
+		 
+		pressure = ASDMValuesParser::parse<Pressure>(s);
+		
+	}
+	
+	
+	// Convert a string into an Humidity 
+	void WeatherRow::relHumidityFromText(const string & s) {
+		relHumidityExists = true;
+		 
+		relHumidity = ASDMValuesParser::parse<Humidity>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::temperatureFromText(const string & s) {
+		temperatureExists = true;
+		 
+		temperature = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void WeatherRow::windDirectionFromText(const string & s) {
+		windDirectionExists = true;
+		 
+		windDirection = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Speed 
+	void WeatherRow::windSpeedFromText(const string & s) {
+		windSpeedExists = true;
+		 
+		windSpeed = ASDMValuesParser::parse<Speed>(s);
+		
+	}
+	
+	
+	// Convert a string into an Speed 
+	void WeatherRow::windMaxFromText(const string & s) {
+		windMaxExists = true;
+		 
+		windMax = ASDMValuesParser::parse<Speed>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::dewPointFromText(const string & s) {
+		dewPointExists = true;
+		 
+		dewPoint = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void WeatherRow::numLayerFromText(const string & s) {
+		numLayerExists = true;
+		 
+		numLayer = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void WeatherRow::layerHeightFromText(const string & s) {
+		layerHeightExists = true;
+		 
+		layerHeight = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::temperatureProfileFromText(const string & s) {
+		temperatureProfileExists = true;
+		 
+		temperatureProfile = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::cloudMonitorFromText(const string & s) {
+		cloudMonitorExists = true;
+		 
+		cloudMonitor = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void WeatherRow::numWVRFromText(const string & s) {
+		numWVRExists = true;
+		 
+		numWVR = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::wvrTempFromText(const string & s) {
+		wvrTempExists = true;
+		 
+		wvrTemp = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void WeatherRow::waterFromText(const string & s) {
+		waterExists = true;
+		 
+		water = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	
+	void WeatherRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, WeatherAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "WeatherTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2145,9 +2302,9 @@ void WeatherRow::waterFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2185,9 +2342,10 @@ void WeatherRow::waterFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2336,6 +2494,75 @@ void WeatherRow::waterFromBin(EndianISStream& eiss) {
 	 fromBinMethods["wvrTemp"] = &WeatherRow::wvrTempFromBin; 
 	 fromBinMethods["water"] = &WeatherRow::waterFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["stationId"] = &WeatherRow::stationIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &WeatherRow::timeIntervalFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["pressure"] = &WeatherRow::pressureFromText;
+		 	
+	 
+				
+	fromTextMethods["relHumidity"] = &WeatherRow::relHumidityFromText;
+		 	
+	 
+				
+	fromTextMethods["temperature"] = &WeatherRow::temperatureFromText;
+		 	
+	 
+				
+	fromTextMethods["windDirection"] = &WeatherRow::windDirectionFromText;
+		 	
+	 
+				
+	fromTextMethods["windSpeed"] = &WeatherRow::windSpeedFromText;
+		 	
+	 
+				
+	fromTextMethods["windMax"] = &WeatherRow::windMaxFromText;
+		 	
+	 
+				
+	fromTextMethods["dewPoint"] = &WeatherRow::dewPointFromText;
+		 	
+	 
+				
+	fromTextMethods["numLayer"] = &WeatherRow::numLayerFromText;
+		 	
+	 
+				
+	fromTextMethods["layerHeight"] = &WeatherRow::layerHeightFromText;
+		 	
+	 
+				
+	fromTextMethods["temperatureProfile"] = &WeatherRow::temperatureProfileFromText;
+		 	
+	 
+				
+	fromTextMethods["cloudMonitor"] = &WeatherRow::cloudMonitorFromText;
+		 	
+	 
+				
+	fromTextMethods["numWVR"] = &WeatherRow::numWVRFromText;
+		 	
+	 
+				
+	fromTextMethods["wvrTemp"] = &WeatherRow::wvrTempFromText;
+		 	
+	 
+				
+	fromTextMethods["water"] = &WeatherRow::waterFromText;
+		 	
+		
 	}
 	
 	WeatherRow::WeatherRow (WeatherTable &t, WeatherRow &row) : table(t) {

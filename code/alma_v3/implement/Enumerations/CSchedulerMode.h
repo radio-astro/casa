@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -72,6 +73,11 @@ namespace SchedulerModeMod
   typedef SchedulerMode &SchedulerMode_out;
 } 
 #endif
+
+namespace SchedulerModeMod {
+	std::ostream & operator << ( std::ostream & out, const SchedulerMode& value);
+	std::istream & operator >> ( std::istream & in , SchedulerMode& value );
+}
 
 /** 
   * A helper class for the enumeration SchedulerMode.

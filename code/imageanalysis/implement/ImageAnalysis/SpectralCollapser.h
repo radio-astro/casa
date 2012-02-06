@@ -70,23 +70,26 @@ public:
 	};
 
 	// constructor
-	SpectralCollapser(ImageInterface<Float> * &image);
+	SpectralCollapser(ImageInterface<Float> * image);
 
 	// constructor
-	SpectralCollapser(ImageInterface<Float> * &image, const String storePath);
+	SpectralCollapser(ImageInterface<Float> * image, const String storePath);
 
 	// destructor
 	virtual ~SpectralCollapser();
 
 	virtual Bool collapse(const Vector<Float> &specVals, const Float startVal, const Float endVal,
-			const String &unit, const SpectralCollapser::CollapseType &collType, SpectralCollapser::CollapseError &collError, String &outname, String &msg);
+			const String &unit, const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError, String &outname, String &msg);
 
 	String summaryHeader() const;
 
-    void collapseTypeToString(const SpectralCollapser::CollapseType &collType, String &colType);
+   void collapseTypeToVector(const SpectralCollapser::CollapseType &collType, Vector<Int> &momentVec);
 
 	static void stringToCollapseType(const String &text,  SpectralCollapser::CollapseType &collType);
-    static void stringToCollapseError(const String &text, SpectralCollapser::CollapseError &collError);
+   static void stringToCollapseError(const String &text, SpectralCollapser::CollapseError &collError);
+
+   static void collapseTypeToString(const SpectralCollapser::CollapseType &collType, String &strCollType);
+   static void collapseErrorToString(const SpectralCollapser::CollapseError &collError, String &strCollError);
 
 private:
    ImageInterface<Float> * _image;
@@ -101,15 +104,22 @@ private:
    SpectralCollapser();
 
    void _setUp();
-
+   Bool _cleanTmpData(const String &tmpFileName) const;
+   Bool _cleanTmpData(const String &tmpData, const String &tmpError) const;
    Bool _getQualitySubImg(const ImageInterface<Float>* image, const Bool &data, SubImage<Float> &qualitySub);
-
-   Bool _getQualitySubImgs(ImageInterface<Float>* image, SubImage<Float> &subData, SubImage<Float> &subError);
-
-   String _getOutputName(const String &wcsInp, const Bool &data);
-
+   Bool _getQualitySubImgs(ImageInterface<Float>* image, SubImage<Float> &subData, SubImage<Float> &subError) const;
+   Bool _getOutputName(const String &wcsInp, String &outImg, String &outImgData, String &outImgError) const;
    Bool _collapse(const ImageInterface<Float> *image, const String &aggString,
-   		const String& chanInp, const String& outname);
+   		const String& chanInp, const String& outname) const;
+   Bool _moments(const ImageInterface<Float> *image, const Vector<Int> &momentVec,
+   		const Int & startIndex, const Int &endIndex, const String& outname);
+   Bool _mergeDataError(const String &outImg, const String &dataImg, const String &errorImg, const Float &normError=1.0) const;
+   Bool mergeDataErrorOLD(const String &dataImg, const String &errorImg, const String &outImg);
+	void _addMiscInfo(const String &outName, const String &wcsInput, const String &chanInput,
+			const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError) const;
+	void _collTypeToImCollString(const SpectralCollapser::CollapseType &collType, String &colType) const;
+	void _collErrorToImCollString(const SpectralCollapser::CollapseError &collError, String &colError) const ;
+
 };
 }
 

@@ -734,8 +734,8 @@ class ImageTest:
                 myia.open(x)
                 myia.remove()
                 myia.close()        
-        result.append([retval['amp0'][0], retval['center0'][0], retval['fwhm0'][0]])
-        result.append([retval['ampErr0'][0], retval['centerErr0'][0], retval['fwhmErr0'][0]])
+        result.append([retval['gs']['amp'].flatten()[0], retval['gs']['center'].flatten()[0], retval['gs']['fwhm'].flatten()[0]])
+        result.append([retval['gs']['ampErr'].flatten()[0], retval['gs']['centerErr'].flatten()[0], retval['gs']['fwhmErr'].flatten()[0]])
         s='fit at [%d,%d]\n\tFWHM: %f \n\peak: %f \t with errors: %f, %f '%(x0,y0, result[0][2], result[0][0], result[1][2], result[1][0]) 
         print s
         if self.write: self.body2.append('<pre>%s</pre>'%s)
