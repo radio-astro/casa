@@ -457,8 +457,8 @@ if deploylogger:
     if (thelogfile != 'null' and thelogfile.strip() != '') :
         casalogger(thelogfile)
     else:
-        thelogfile = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
-        print '----thelogfile:', thelogfile
+        thelogfile = 'casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+        #print '----thelogfile:', thelogfile
         try:
            open(thelogfile, 'a').close()
         except:
