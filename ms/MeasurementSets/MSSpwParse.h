@@ -102,6 +102,7 @@ public:
 
   void selectChannelsFromDefaultList(Vector<Int>& spwIds,
                                      Vector<Int>& chanDefaultList);
+  void endOfCeremonyMessage(const TableExprNode& ten);
 
   //    const TableExprNode *selectSpwOrSource(const String& fieldName);
 
