@@ -94,6 +94,7 @@ public:
 // Constructor
    MSSummary (const MeasurementSet&);
    MSSummary (const MeasurementSet*);
+   MSSummary (const MeasurementSet* ms, const String msname);
 
 // Destructor
   ~MSSummary();
@@ -153,6 +154,7 @@ public:
 // List table size summary
    void listTables (LogIO& os, Bool verbose=False) const;
 
+
 private:
 // Pointer to MS
    const MeasurementSet* pMS;
@@ -165,6 +167,9 @@ private:
 
 // For keeping track of the number of vis per field
    mutable Vector<Int> nVisPerField_;
+
+   // Name of the MS used in the constructor
+   String msname_p;
 
 
 };

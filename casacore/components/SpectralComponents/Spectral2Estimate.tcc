@@ -81,7 +81,7 @@ const SpectralList& SpectralEstimate::estimate(const Vector<MT>& x,
   // Convert
   for (uInt i=0; i<slist_p.nelements(); i++) {
 	  if (slist_p[i]->getType() != SpectralElement::GAUSSIAN) {
-		  throw AipsError("Non-gaussian spectral types cannot be estimate");
+		  throw AipsError("Non-gaussian spectral types cannot be estimated");
 	  }
 	  const GaussianSpectralElement elIn = *dynamic_cast<const GaussianSpectralElement *>(slist_p[i]);
 	  GaussianSpectralElement elOut = convertElement (x, elIn);

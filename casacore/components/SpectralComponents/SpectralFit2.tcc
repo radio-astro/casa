@@ -30,12 +30,14 @@
 
 #include <components/SpectralComponents/CompiledSpectralElement.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
+#include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <scimath/Functionals/CompiledFunction.h>
 #include <scimath/Functionals/CompoundFunction.h>
 #include <scimath/Functionals/CompoundParam.h>
 #include <scimath/Functionals/Gaussian1D.h>
+#include <scimath/Functionals/Lorentzian1D.h>
 #include <scimath/Functionals/Polynomial.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -60,15 +62,13 @@ Bool SpectralFit::fit(const Vector<MT> &sigma,
 	NonLinearFitLM<MT> fitter;
 	iter_p = 0;
 	// The functions to fit
-	Gaussian1D<AutoDiff<MT> > gauss;
-	Polynomial<AutoDiff<MT> > poly;
-	CompiledFunction<AutoDiff<MT> > comp;
 	CompoundFunction<AutoDiff<MT> > func;
 	// Initial guess
 	uInt npar(0);
 	for (uInt i=0; i<slist_p.nelements(); i++) {
 		switch(slist_p[i]->getType()) {
 		case SpectralElement::GAUSSIAN: {
+			Gaussian1D<AutoDiff<MT> > gauss;
 			GaussianSpectralElement *x = dynamic_cast<GaussianSpectralElement *>(slist_p[i]);
 			gauss[0] = AutoDiff<MT>(x->getAmpl(), gauss.nparameters(), 0);
 			gauss[1] = AutoDiff<MT>(x->getCenter(), gauss.nparameters(), 1);
@@ -107,6 +107,19 @@ Bool SpectralFit::fit(const Vector<MT> &sigma,
 			func.addFunction(comp);
 		}
 		break;
+		case SpectralElement::LORENTZIAN: {
+			LorentzianSpectralElement *x = dynamic_cast<LorentzianSpectralElement *>(slist_p[i]);
+			Lorentzian1D<AutoDiff<MT> > lor;
+			lor[0] = AutoDiff<MT>(x->getAmpl(), lor.nparameters(), 0);
+			lor[1] = AutoDiff<MT>(x->getCenter(), lor.nparameters(), 1);
+			lor[2] = AutoDiff<MT>(x->getFWHM(), lor.nparameters(), 2);
+			lor.mask(0) = ! x->fixedAmpl();
+			lor.mask(1) = ! x->fixedCenter();
+			lor.mask(2) = ! x->fixedFWHM();
+			func.addFunction(lor);
+			npar += lor.nparameters();
+		}
+		break;
 		default:
 			throw AipsError("Unhandled SpectralElement type");
 		}
@@ -140,7 +153,7 @@ Bool SpectralFit::fit(const Vector<MT> &sigma,
 		};
 		slist_p[i]->set(tmp);
 		slist_p[i]->setError(terr);
-	};
+	}
 	return fitter.converged();
 }
 

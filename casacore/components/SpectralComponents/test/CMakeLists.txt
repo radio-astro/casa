@@ -1,5 +1,6 @@
 set (tests
 tGaussianMultipletSpectralElement
+tLorentzianSpectralElement
 tProfileFit1D
 tSpectralFit
 )
