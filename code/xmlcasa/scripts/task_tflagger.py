@@ -350,7 +350,7 @@ def tflagger(vis,
 
         # Write the current parameters as flag commands to output
         if savepars:         
-            ncmd = writeCMD(vis, flagcmd, outfile)
+            ncmd = writeCMD(vis, flagcmd, writeflags, outfile)
             
             
         # Destroy the tool
@@ -392,7 +392,7 @@ def tflagger(vis,
     return
 
 
-def writeCMD(msfile, flagcmd, outfile):
+def writeCMD(msfile, flagcmd, writeflags, outfile):
     ''' Reads a list of parameters and save it to the FLAG_CMD table or to a text file.
         When saving in the FLAG_CMD table, it will also update the APPLIED column to True.
         Returns the number of flag commands written (it's always one!!!)'''
@@ -413,7 +413,7 @@ def writeCMD(msfile, flagcmd, outfile):
     typ_list = ['FLAG']
     sev_list = [0]
     lev_list = [0]
-    app_list = [True]
+    app_list = [writeflags]
        
     
     if debug:

@@ -600,6 +600,13 @@ class test_selections(test_base):
         '''tflagger: ntime = 0'''
         ret = tflagger(vis=self.vis, ntime = 0, savepars=False)
         self.assertNotEqual(type(ret), dict, 'Return type of task should be None')
+        
+    def test_writeflags(self):
+        '''tflagger: writeflags = False'''
+        tflagger(vis=self.vis, antenna='2,3,4', writeflags=False)
+        res = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 0, 'Nothing should be flagged when writeflags=False')
+        
 
 class test_selections_alma(test_base):
     # Test various selections for alma data 
