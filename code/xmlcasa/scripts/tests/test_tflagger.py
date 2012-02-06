@@ -97,14 +97,14 @@ class test_tfcrop(test_base):
     def setUp(self):
         self.setUp_data4tfcrop()
         
-    def test1(self):
+    def test_tfcrop1(self):
         '''tflagger:: Test1 of mode = tfcrop'''
         tflagger(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 4399104, 4489)
         test_eq(tflagger(vis=self.vis, mode='summary', antenna='ea19'), 2199552, 2294)
         test_eq(tflagger(vis=self.vis, mode='summary', spw='7'), 274944, 0)
         
-    def test2(self):
+    def test_tfcrop2(self):
         '''tflagger:: Test2 of mode = tfcrop ABS ALL'''
         tflagger(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
         test_eq(tflagger(vis=self.vis, mode='summary'), 4399104, 18696)
@@ -113,6 +113,14 @@ class test_tfcrop(test_base):
         test_eq(tflagger(vis=self.vis, mode='summary', correlation='LR'), 1099776, 4950)
         test_eq(tflagger(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
 
+    def test_extend1(self):
+        '''tflagger:: Extend the flags created by tfcrop'''
+        tflagger(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9', savepars=False)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='LL'), 1099776, 0)
+        tflagger(vis=self.vis, mode='extend', extendpols=True, savepars=False)
+        test_eq(tflagger(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4489)
+        
 
 class test_shadow(test_base):
     def setUp(self):
