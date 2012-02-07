@@ -1128,6 +1128,7 @@ Bool WProjectFT::fromRecord(String& error,
   inRec.get("convsizes", convSizes_p);
   inRec.get("wconvsize", wConvSize);
   inRec.get("lastindex", lastIndex_p);
+  gridder=0;
     ///setup some of the parameters
   init();
   if(inRec.isDefined("image")){
