@@ -292,6 +292,18 @@ class test_savepars(test_base):
         tflagcmd(vis=self.vis, action='list', outfile='myflags.txt', useapplied=True, savepars=True)
         self.assertTrue(filecmp.cmp(filename1, 'myflags.txt', 1), 'Files should be equal')
         
+    def test_writeflags(self):
+        '''tflagcmd: writeflags = False'''
+        # Remove any cmd from table
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        # Save the parameters to FLAG_CMD but do not write the flags
+        input = " scan=4 mode=clip expression=ABS_ALL clipminmax=[0,4]\n"
+        tflagcmd(vis=self.vis, inputmode='cmd', command=[input], writeflags=False, savepars=True)
+        
+        # No flags should be in the MS
+        res = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 0, 'Should not write flags when writeflags=False')
         
         
 # Dummy class which cleans up created files
