@@ -84,7 +84,7 @@ class test_base(unittest.TestCase):
 
         
 class test_manualflag(test_base):
-    '''Test manualflag selections'''
+    '''Test manual selections'''
     
     def setUp(self):
         self.setUp_multi()
@@ -143,7 +143,7 @@ class test_unapply(test_base):
         # Remove any cmd from table
         tflagcmd(vis=self.vis, action='clear', clearall=True)
 
-        # Flag using manualflag agent
+        # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
@@ -166,7 +166,7 @@ class test_unapply(test_base):
         # Remove any cmd from table
         tflagcmd(vis=self.vis, action='clear', clearall=True)
 
-        # Flag using manualflag agent
+        # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
@@ -180,16 +180,16 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=True)
         result = tflagger(vis=self.vis,mode='summary',scan='1')
         
-        # Only the manualflag flags should be there
+        # Only the manual flags should be there
         self.assertEqual(result['flagged'], 568134, 'Expected 568134 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
         
     def test_umanualflag(self):
-        '''tflagcmd: unapply manualflag agent'''
+        '''tflagcmd: unapply manual agent'''
         # Remove any cmd from table
         tflagcmd(vis=self.vis, action='clear', clearall=True)
 
-        # Flag using manualflag agent
+        # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
@@ -199,7 +199,7 @@ class test_unapply(test_base):
         filename = create_input(input)
         tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
         
-        # Unapply only the manualflag line
+        # Unapply only the manual line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
         result = tflagger(vis=self.vis,mode='summary',scan='1')
         
@@ -262,7 +262,7 @@ class test_savepars(test_base):
         
         ########## TEST 2 
         # create another input
-        input = " scan=1~3 mode=manualflag\n"
+        input = " scan=1~3 mode=manual\n"
         filename = create_input(input)
         
         # apply and don't save to MS

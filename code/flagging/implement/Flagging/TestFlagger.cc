@@ -804,7 +804,7 @@ TestFlagger::isModeValid(String mode)
 {
 	bool ret;
 
-	if (mode.compare("manualflag") == 0 or mode.compare("clip") == 0 or
+	if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
 			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
 			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
 			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
@@ -821,7 +821,7 @@ TestFlagger::isModeValid(String mode)
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseManualParameters
-// Parse data selection parameters and specific manualflag parameters
+// Parse data selection parameters and specific manual parameters
 //
 // ---------------------------------------------------------------------
 bool
@@ -834,8 +834,8 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	// Default values for some parameters
-	String mode = "manualflag";
-	String agent_name = "Manualflag";
+	String mode = "manual";
+	String agent_name = "Manual";
 
 	// Create a record with the parameters
 	Record agent_record = Record();

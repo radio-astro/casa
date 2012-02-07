@@ -162,7 +162,7 @@ def tflagger(vis,
         
         # Default mode
         if mode == '':
-            mode = 'manualflag'
+            mode = 'manual'
             
         # Hold the name of the agent
         agent_name = mode.capitalize()
@@ -184,8 +184,8 @@ def tflagger(vis,
         agent_pars['mode'] = mode
         
         # Set up agent's parameters based on mode
-        if mode == 'manualflag':
-            casalog.post('Manualflag mode is active')
+        if mode == 'manual':
+            casalog.post('Manual mode is active')
             
         elif mode == 'clip':
             agent_pars['expression'] = expression
@@ -520,9 +520,9 @@ def backupFlags(tflocal, mode, flagcmd):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
-    # before_manualflag_1,
-    # before_manualflag_2,
-    # before_manualflag_3,
+    # before_manual_1,
+    # before_manual_2,
+    # before_manual_3,
     # etc
     #
     # Generally  before_<mode>_<i>, where i is the smallest
