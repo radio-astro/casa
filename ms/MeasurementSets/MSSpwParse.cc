@@ -87,12 +87,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      (!msSpwSubTable.flagRow()(SpwIds(n)))
 	      )
 	    {
-	      TableExprNode tmp=((ms()->col(DATA_DESC_ID)==i));
-	      addCondition(condition, tmp);
-	      // if (condition.isNull())
-	      // 	condition = ((ms()->col(DATA_DESC_ID)==i));
-	      // else
-	      // 	condition = condition || ((ms()->col(DATA_DESC_ID)==i));
+	      if (condition.isNull())
+		condition = ((ms()->col(DATA_DESC_ID)==i));
+	      else
+		condition = condition || ((ms()->col(DATA_DESC_ID)==i));
 	      Found = True;
 	      idList.resize(idList.nelements()+1,True);
 	      idList(idList.nelements()-1) = mapDDID2SpwID(i);
@@ -109,7 +107,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    addCondition(*node_p, condition);
+    if (condition.isNull()) 
+      {
+	ostringstream Mesg;
+	Mesg << "No Spw ID(s) matched specifications ";
+	throw(MSSelectionSpwError(Mesg.str()));
+      }
+    if(node_p->isNull())
+      *node_p = condition;
+    else
+      *node_p = *node_p || condition;
+    
     return node_p;
   }
   //
@@ -159,12 +167,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for(Int ddid=0;ddid<nDDIDRows;ddid++)
 	      if (mapDDID2SpwID(ddid) == spw)
 		{
-		  TableExprNode tmp=((ms()->col(DATA_DESC_ID)==ddid));
-		  addCondition(condition, tmp);
-		  // if (condition.isNull())
-		  //   condition = ((ms()->col(DATA_DESC_ID)==ddid));
-		  // else
-		  //   condition = condition || ((ms()->col(DATA_DESC_ID)==ddid));
+		  if (condition.isNull())
+		    condition = ((ms()->col(DATA_DESC_ID)==ddid));
+		  else
+		    condition = condition || ((ms()->col(DATA_DESC_ID)==ddid));
 		  break;
 		}
 	  }
@@ -176,7 +182,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    addCondition(*node_p, condition);
+    if(node_p->isNull())
+      *node_p = condition;
+    else
+      *node_p = *node_p || condition;
+    
     return node_p;
   }
 
@@ -186,48 +196,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Int n=chanList.shape()(0),
       nSpw = spwIds.nelements(),
-      loc=n,k=0;
+      m=nSpw*nFSpec,loc=n,k=0;
 
-    for (Int i=0;i<nSpw;i++)
+    chanList.resize(n+m,4,True);
+    for(Int i=0;i<nSpw;i++)
       {
-	if ((chanIDList[k] != -1) && (chanIDList[k+1] != -1))
+	for(Int j=0;j<nFSpec;j++)
 	  {
-	    chanList.resize(chanList.shape()(0)+1,4,True);
-	    for(Int j=0;j<nFSpec;j++)
-	      {
-		chanList(loc,0) = spwIds(i);
-		chanList(loc,1) = chanIDList(k++);
-		chanList(loc,2) = chanIDList(k++);
-		chanList(loc,3) = chanIDList(k++);
-		loc++;
-	      }
+	    chanList(loc,0) = spwIds(i);
+	    chanList(loc,1) = chanIDList(k++);
+	    chanList(loc,2) = chanIDList(k++);
+	    chanList(loc,3) = chanIDList(k++);
+	    loc++;
 	  }
-	else k+=3;
       }
-    nSpw=chanList.shape()[0];
-    spwIds.resize(nSpw);
-    for (Int i=0;i<nSpw;i++)
-      spwIds[i] = chanList(i,0);
-
-    // Int n=chanList.shape()(0),
-    //   nSpw = spwIds.nelements(),
-    //   m=nSpw*nFSpec,loc=n,k=0;
-
-    // if ((chanIDList[k] != -1) && (chanIDList[k+1] != -1))
-    //   {
-    // 	chanList.resize(n+m,4,True);
-    // 	for(Int i=0;i<nSpw;i++)
-    // 	  {
-    // 	    for(Int j=0;j<nFSpec;j++)
-    // 	      {
-    // 		chanList(loc,0) = spwIds(i);
-    // 		chanList(loc,1) = chanIDList(k++);
-    // 		chanList(loc,2) = chanIDList(k++);
-    // 		chanList(loc,3) = chanIDList(k++);
-    // 		loc++;
-    // 	      }
-    // 	  }
-    //   }
   }
 
   
@@ -256,15 +238,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     return node_p;
   }
-
-  void MSSpwParse::endOfCeremonyMessage(const TableExprNode& ten)
-  {
-    if (ten.isNull())
-      {
-	ostringstream Mesg;
-	Mesg << "No Spw ID(s) matched specifications ";
-	throw(MSSelectionSpwError(Mesg.str()));
-      }
-  }
-
 } //# NAMESPACE CASA - END
