@@ -315,7 +315,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	// Validate mode against known modes
 	if (! isModeValid(mode)){
-		os << LogIO::WARN << "Mode "<< mode << "is not valid or doesn't exist"
+		os << LogIO::WARN << "Mode "<< mode << " is not valid or doesn't exist"
 				<< LogIO::POST;
 		return false;
 	}
@@ -611,7 +611,8 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	if (writeflags)
 		os << LogIO::NORMAL << "=> " << "Writing flags to the MS" << LogIO::POST;
 	else
-		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)" << LogIO::POST;
+		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)"
+			<< LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
@@ -807,7 +808,8 @@ TestFlagger::isModeValid(String mode)
 			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
 			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
 			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
-			mode.compare("unflag") == 0 or mode.compare("summary") == 0) {
+			mode.compare("unflag") == 0 or mode.compare("summary") == 0
+			or mode.compare("display") == 0) {
 
 		ret = true;
 	}
