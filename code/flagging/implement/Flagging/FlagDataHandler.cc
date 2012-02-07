@@ -2978,9 +2978,17 @@ FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *origi
 	reducedLength_p = IPosition(2);
 	reducedLength_p(0) = commonFlagCubeSize(1); // chan
 	reducedLength_p(1) = commonFlagCubeSize(2); // row
-	reducedLength_p(2) = commonFlagCubeSize(0); // pol
 
-	flagsPerRow_p = nSelectedCorrelations_p*reducedLength_p(0);
+	if (nSelectedCorrelations_p>0)
+	{
+		reducedLength_p(2) = nSelectedCorrelations_p; // pol
+	}
+	else
+	{
+		reducedLength_p(2) = reducedLength_p(0);// pol
+	}
+
+	flagsPerRow_p = reducedLength_p(2)*reducedLength_p(0);
 }
 
 void
