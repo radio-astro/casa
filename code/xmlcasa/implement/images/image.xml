@@ -4404,7 +4404,10 @@ In cases where the fit did not converge, these values are set to NaN.
 
 The region can either be specified by a box(es) or a region (there is no
 garauntee which will be used if both are specified, so be certain that only one is).
-Ranges of pixel values can be included or excluded from the fit.
+Ranges of pixel values can be included or excluded from the fit. If specified using
+the box parameter, multiple boxes can be given using the format
+box="blcx1, blcy1, trcx1, trcy1, blcx2, blcy2, trcx2, trcy2, ... , blcxN, blcyN, trcxN, trcyN"
+where N is the number of boxes. In this case, the union of the specified boxes will be used.
 
 If specified, the residual and/or model images for
 successful fits will be written.
