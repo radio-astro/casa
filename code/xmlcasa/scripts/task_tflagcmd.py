@@ -331,10 +331,15 @@ def tflagcmd(
                 savepars = False
                 myrowlist = myflagcmd.keys()
                 if myrowlist.__len__() > 0:     
-                    if apply:       
-                        updateTable(vis, mycol='APPLIED', myval=True, myrowlist=valid_rows)
-                    else:
+                    if not writeflags:
+                        # APPLIED is set to False for any action
                         updateTable(vis, mycol='APPLIED', myval=False, myrowlist=valid_rows)
+                    else:
+                        # update APPLIED according to requested action
+                        if apply:       
+                            updateTable(vis, mycol='APPLIED', myval=True, myrowlist=valid_rows)
+                        else:
+                            updateTable(vis, mycol='APPLIED', myval=False, myrowlist=valid_rows)
                     
                                            
             # Save the valid command lines to the output file or FLAG_CMD
@@ -342,11 +347,15 @@ def tflagcmd(
                 if valid_rows.__len__() > 0:                   
                     # save to MS
                     if outfile == '':
-                        # Add the flag commands to the MS and update APPLIED
-                        if apply:
-                            writeFlagCmd(vis, myflagcmd, valid_rows, tag='applied')
-                        else:
+                        if not writeflags:
+                            # APPLIED is set to False for any action
                             writeFlagCmd(vis, myflagcmd, valid_rows, tag='unapplied')
+                        else:
+                            # Add the flag commands to the MS and update APPLIED
+                            if apply:
+                                writeFlagCmd(vis, myflagcmd, valid_rows, tag='applied')
+                            else:
+                                writeFlagCmd(vis, myflagcmd, valid_rows, tag='unapplied')
                            
                     # save to a file 
                     else:
