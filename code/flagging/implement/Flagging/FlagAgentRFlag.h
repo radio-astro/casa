@@ -62,12 +62,14 @@ private:
 	Array<Double> noise_p;
 	map<Int,Double> spw_noise_map_p;
 	map< Int,vector<Double> > spw_noise_histogram_sum_p;
+	map< Int,vector<Double> > spw_noise_histogram_sum_squares_p;
 	map< Int,vector<Double> > spw_noise_histogram_counts_p;
 
 	// Spectral analysis
 	Array<Double> scutof_p;
 	map<Int,Double> spw_scutof_map_p;
 	map< Int,vector<Double> > spw_scutof_histogram_sum_p;
+	map< Int,vector<Double> > spw_scutof_histogram_sum_squares_p;
 	map< Int,vector<Double> > spw_scutof_histogram_counts_p;
 };
 
