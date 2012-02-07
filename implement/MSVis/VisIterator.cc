@@ -74,7 +74,7 @@ public:
   ROVisIteratorImpl(const ROVisIteratorImpl & other);
 
   // Destructor
-  ~ROVisIteratorImpl();
+  virtual ~ROVisIteratorImpl();
 
   // Assignment. Any attached VisBuffers are lost in the assign.
   ROVisIteratorImpl & operator=(const ROVisIteratorImpl &other);
@@ -139,7 +139,7 @@ protected:
 
   void setSelTable();
 
-  const Table attachTable() const;
+  virtual const Table attachTable() const;
 
   // update the DATA slicer
   void updateSlicer();
@@ -186,6 +186,190 @@ protected:
 
 };
 
+class VisIteratorImpl : public ROVisIteratorImpl {
+
+    friend class ROVisIterator;
+    friend class VisIterator;
+
+public:
+
+  // Default constructor - useful only to assign another iterator later
+  VisIteratorImpl();
+
+  // Construct from MS and a Block of MS column enums specifying the iteration
+  // order, if none are specified, time iteration is implicit.  An optional
+  // timeInterval can be given to iterate through chunks of time.  The default
+  // interval of 0 groups all times together.  Every 'chunk' of data contains
+  // all data within a certain time interval (in seconds) and with identical
+  // values of the other iteration columns (e.g.  DATA_DESC_ID and FIELD_ID).
+  // Using selectChannel(), a number of groups of channels can be requested.
+  // At present the channel group iteration will always occur before the
+  // interval iteration.
+  VisIteratorImpl(ROVisIterator * rovi,
+                    const MeasurementSet& ms,
+                    const Block<Int>& sortColumns,
+                    Double timeInterval=0);
+
+  // Copy construct. This calls the assignment operator.
+  VisIteratorImpl(const ROVisIteratorImpl & other);
+
+  // Destructor
+  ~VisIteratorImpl();
+
+  // Assignment. Any attached VisBuffers are lost in the assign.
+  VisIteratorImpl & operator=(const VisIteratorImpl &other);
+
+  // Members
+
+  // Advance iterator through data
+  VisIteratorImpl & operator++(int);
+  VisIteratorImpl & operator++();
+
+  // Return channel numbers in selected VisSet spectrum
+  // (i.e. disregarding possible selection on the iterator, but
+  //  including the selection set when creating the VisSet)
+  //Vector<Int>& channel(Vector<Int>& chan) const;
+  //Vector<Int>& chanIds(Vector<Int>& chanids) const;
+  //Vector<Int>& chanIds(Vector<Int>& chanids,Int spw) const;
+
+  // Return selected correlation indices
+  //Vector<Int>& corrIds(Vector<Int>& corrids) const;
+
+  // Return flag for each polarization, channel and row
+  //Cube<Bool>& flag(Cube<Bool>& flags) const;
+
+  // Return current frequencies
+  //Vector<Double>& frequency(Vector<Double>& freq) const;
+
+  // Return the correlation type (returns Stokes enums)
+  //Vector<Int>& corrType(Vector<Int>& corrTypes) const;
+
+  // Return sigma matrix (pol-dep)
+  //Matrix<Float>& sigmaMat(Matrix<Float>& sigmat) const;
+
+  // Return the visibilities as found in the MS, Cube(npol,nchan,nrow).
+  //Cube<Complex>& visibility(Cube<Complex>& vis,
+			    //DataColumn whichOne) const;
+  // Return weight matrix
+  //Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
+
+  // Return weightspectrum (a weight for each corr & channel)
+  //Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
+
+  // Set up new chan/corr selection via Vector<Slice>
+  //void selectChannel(const Vector<Vector<Slice> >& chansel);
+  //void selectCorrelation(const Vector<Vector<Slice> >& corrsel);
+
+  // Set up/return channel averaging bounds
+  //Vector<Matrix<Int> >& setChanAveBounds(Float factor, Vector<Matrix<Int> >& bounds);
+
+  // Return number of chans/corrs per spw/pol
+  //Int numberChan(Int spw) const;
+  //Int numberCorr(Int pol) const;
+
+  // Return the row ids as from the original root table. This is useful
+  // to find correspondance between a given row in this iteration to the
+  // original ms row
+  //Vector<uInt>& rowIds(Vector<uInt>& rowids) const;
+
+  // Need to override this and not use getColArray
+  //Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
+
+  // Set/modify the flag row column; dimension Vector(nrow)
+  void setFlagRow(const Vector<Bool>& rowflags);
+
+  // Set/modify the flags in the data.
+  // This sets the flags as found in the MS, Cube(npol,nchan,nrow),
+  // where nrow is the number of rows in the current iteration (given by
+  // nRow()).
+  void setFlag(const Cube<Bool>& flag);
+
+  // Set/modify the visibilities
+  // This sets the data as found in the MS, Cube(npol,nchan,nrow).
+  void setVis(const Cube<Complex>& vis, DataColumn whichOne);
+
+  // Set the visibility and flags, and interpolate from velocities if needed
+  void setVisAndFlag(const Cube<Complex>& vis, const Cube<Bool>& flag,
+		     DataColumn whichOne);
+
+  // Set/modify the weightMat
+  void setWeightMat(const Matrix<Float>& wtmat);
+
+  // Set/modify the weightSpectrum
+  void setWeightSpectrum(const Cube<Float>& wtsp);
+
+protected:
+
+  //void setSelTable();
+
+  void attachColumns (const Table & t);
+
+  // update the DATA slicer
+  //void updateSlicer();
+  // attach the column objects to the currently selected table
+
+  // The ROVisibilityIterator version of this function sets the tile cache to 1
+  // because of a feature in sliced data access that grows memory dramatically in
+  // some cases.  However, ROVisibilityIterator, because it uses
+  // ROArrayColumn::getColumn(Vector<Vector<Slice> >&), is (1/28/2011) incredibly
+  // slow if the tile cache does not span all the selected channels, and it will
+  // read orders of magnitude more data than it needs to.  This sets the tile
+  // cache to the minimum number of tiles required to span the selected channels.
+  // Unlike ROVisibilityIterator, it does it for each hypercube, not just the
+  // first one, and it does its work when the DDID has changed.
+
+  void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices,
+			     Cube<Complex>& data) const;
+
+  // Column access functions
+//  void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
+//  void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
+//  void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
+//
+//  void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
+//  void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;
+//  void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = False) const;
+//  void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = False) const;
+//
+//  void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = False) const;
+//  void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
+//  void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
+
+  void putDataColumn(DataColumn whichOne,
+                     const Cube<Complex>& data);
+
+  void putDataColumn(DataColumn whichOne,
+                     const Vector<Vector<Slice> >& slices,
+                     const Cube<Complex>& data);
+
+  // New slicer supports multiple Slices in channel and correlation
+
+//  Vector<Matrix<Int> >   chanAveBounds_p;
+//  Vector<Vector<Slice> > chanSlices_p;
+//  Vector<Vector<Slice> > corrSlices_p;
+//  Vector<Vector<Slice> > newSlicer_p;
+//  Vector<Vector<Slice> > newWtSlicer_p;
+//  Table                  selTable_p;
+//  Bool                   useNewSlicer_p;
+
+  ArrayColumn<Complex> rwColVis_p;
+  ArrayColumn<Float> rwColFloatVis_p;
+  ArrayColumn<Complex> rwColModelVis_p;
+  ArrayColumn<Complex> rwColCorrVis_p;
+  ArrayColumn<Float> rwColWeight_p;
+  ArrayColumn<Float> rwColWeightSpectrum_p;
+  ArrayColumn<Float> rwColSigma_p;
+  ArrayColumn<Bool> rwColFlag_p;
+  ScalarColumn<Bool> rwColFlagRow_p;
+};
+
+//     ********************
+//     ********************
+//     **                **
+//     **  ROVisIterator **
+//     **                **
+//     ********************
+//     ********************
 
 ROVisIterator::ROVisIterator()
 {
@@ -194,6 +378,12 @@ ROVisIterator::ROVisIterator()
 ROVisIterator::ROVisIterator(const MeasurementSet & ms, const Block<Int>& sortColumns, Double timeInterval)
 : ROVisibilityIterator (ms, sortColumns, timeInterval, Factory (this))
 {}
+
+ROVisIterator::ROVisIterator(const MeasurementSet & ms, const Block<Int>& sortColumns,
+                             Double timeInterval, const ROVisibilityIterator::Factory & factory)
+: ROVisibilityIterator (ms, sortColumns, timeInterval, factory)
+{}
+
 
 ROVisIterator::ROVisIterator(const ROVisIterator & other)
 : ROVisibilityIterator (other)
@@ -276,6 +466,125 @@ ROVisIterator::setChanAveBounds(Float factor, Vector<Matrix<Int> >& bounds)
 {
     return getReadImpl()->setChanAveBounds(factor, bounds);
 }
+
+void
+ROVisIteratorImpl::setTileCache()
+{
+  // Set the cache size when the DDID changes (as opposed to MS) to avoid
+  // overreading in a case like:
+  // hcubes: [2, 256], [4, 64]
+  // tileshape: [4, 64]
+  // spws (ddids): [4,64], [2, 256], [2, 256], [4,64], [2, 256], [4,64]
+  // and spw = '0:1~7,1:1~7,2:100~200,3:20~40,4:200~230,5:40~50'
+  //
+  // For hypercube 0, spw 2 needs 3 tiles, but spw 4 only needs 1, AND the last
+  // tile at that.  So if hypercube 0 used a cache of 3 tiles throughout, every
+  // read of 4:200~230 would likely also read the unwanted channels 0~127 of
+  // the next row.
+  //
+  if (curStartRow_p != 0 && ! msIter_p.newDataDescriptionId()){
+    return;
+  }
+
+  const MeasurementSet& thems = msIter_p.ms();
+
+  if(thems.tableType() == Table::Memory){
+    return;
+  }
+
+  const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
+
+  // Get the first row number for this DDID.
+  Vector<uInt> rownums;
+  rowIds(rownums);
+  uInt startrow = rownums[0];
+
+  Vector<String> columns(8);
+  // complex
+  columns(0)=MS::columnName(MS::DATA);
+  columns(1)=MS::columnName(MS::CORRECTED_DATA);
+  columns(2)=MS::columnName(MS::MODEL_DATA);
+  // boolean
+  columns(3)=MS::columnName(MS::FLAG);
+  // float
+  columns(4)=MS::columnName(MS::WEIGHT_SPECTRUM);
+  columns(5)=MS::columnName(MS::WEIGHT);
+  columns(6)=MS::columnName(MS::SIGMA);
+  // double
+  columns(7)=MS::columnName(MS::UVW);
+  //
+  for(uInt k = 0; k < columns.nelements(); ++k){
+    if(cds.isDefined(columns(k))){
+      const ColumnDesc& cdesc = cds[columns(k)];
+      String dataManType="";
+
+      dataManType = cdesc.dataManagerType();
+      // We have to check WEIGHT_SPECTRUM as it tends to exist but not have
+      // valid data.
+      if(columns[k] == MS::columnName(MS::WEIGHT_SPECTRUM) &&
+         !existsWeightSpectrum())
+        dataManType="";
+
+      // Sometimes columns may not contain anything yet
+      if((columns[k]==MS::columnName(MS::DATA) && (columns_p.vis_p.isNull() ||
+                                                   !columns_p.vis_p.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::MODEL_DATA) && (columns_p.modelVis_p.isNull() ||
+                                                         !columns_p.modelVis_p.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::CORRECTED_DATA) && (columns_p.corrVis_p.isNull() ||
+                                                             !columns_p.corrVis_p.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::FLAG) && (columns_p.flag_p.isNull() ||
+                                                   !columns_p.flag_p.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::WEIGHT) && (columns_p.weight_p.isNull() ||
+                                                     !columns_p.weight_p.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::SIGMA) && (columns_p.sigma_p.isNull() ||
+                                                    !columns_p.sigma_p.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::UVW) && (columns_p.uvw_p.isNull() ||
+                                                  !columns_p.uvw_p.isDefined(0))) ){
+        dataManType="";
+      }
+
+      if(dataManType.contains("Tiled") &&
+         !String(cdesc.dataManagerGroup()).empty()){
+        try {
+          ROTiledStManAccessor tacc=ROTiledStManAccessor(thems,
+                                                         cdesc.dataManagerGroup());
+
+          // This is for the data columns, WEIGHT_SPECTRUM and FLAG only.
+          if((columns[k] != MS::columnName(MS::WEIGHT)) &&
+             (columns[k] != MS::columnName(MS::UVW))){
+            // Figure out how many tiles are needed to span the selected channels.
+            const IPosition tileShape(tacc.tileShape(startrow));
+            Vector<Int> ids;
+            chanIds(ids);
+            uInt startTile = ids[0] / tileShape[1];
+            uInt endTile = ids[ids.nelements() - 1] / tileShape[1];
+            uInt cachesize = endTile - startTile + 1;
+
+            // and the selected correlations.
+            corrIds(ids);
+            startTile = ids[0] / tileShape[0];
+            endTile = ids[ids.nelements() - 1] / tileShape[0];
+            cachesize *= endTile - startTile + 1;
+
+            // Safer until I know which of correlations and channels varies faster on
+            // disk.
+            const IPosition hShape(tacc.hypercubeShape(startrow));
+            cachesize = hShape[0] * hShape[1] / (tileShape[0] * tileShape[1]);
+
+            tacc.setCacheSize(startrow, cachesize);
+          }
+          else
+            tacc.setCacheSize(startrow, 1);
+        }
+        catch (AipsError x) {
+          //It failed so leave the caching as is.
+          continue;
+        }
+      }
+    }
+  }
+}
+
 
 Int
 ROVisIterator::numberChan(Int spw) const
@@ -427,7 +736,6 @@ Vector<Int>& ROVisIteratorImpl::chanIds(Vector<Int>& chanids, Int spw) const
       for (Int ich=0;ich<nchan;++ich,++ich0) 
 	chanids(ich0)=start+ich;
     }
-    
   }
   else {
     // all channels selected...
@@ -469,7 +777,6 @@ Vector<Int>& ROVisIteratorImpl::corrIds(Vector<Int>& corrids) const
 
   corrids.resize(this->numberCorr(pol));
 
-  
   Vector<Slice> slices(corrSlices_p(pol));
   Int nslices=slices.nelements();
   
@@ -483,7 +790,6 @@ Vector<Int>& ROVisIteratorImpl::corrIds(Vector<Int>& corrids) const
       for (Int icor=0;icor<ncorr;++icor,++icor0) 
 	corrids(icor0)=start+icor;
     }
-    
   }
   else {
     // all corrs selected...
@@ -520,7 +826,6 @@ ROVisIteratorImpl::corrType(Vector<Int>& corrTypes) const
   //    cout << "corrTypes = " << corrTypes << endl;
 	
   return corrTypes;
-
 }
 
 Cube<Bool>& ROVisIteratorImpl::flag(Cube<Bool>& flags) const
@@ -932,12 +1237,21 @@ ROVisIteratorImpl::attachTable() const
     return selTable_p;
 }
 
+//     ******************
+//     ******************
+//     **              **
+//     **  VisIterator **
+//     **              **
+//     ******************
+//     ******************
+
+
 VisIterator::VisIterator() {}
 
 VisIterator::VisIterator(MeasurementSet &MS, 
 			 const Block<Int>& sortColumns, 
 			 Double timeInterval)
-  : ROVisIterator(MS, sortColumns, timeInterval)
+  : ROVisIterator (MS, sortColumns, timeInterval, Factory (this))
 {}
 
 VisIterator::VisIterator(const VisIterator & other)
@@ -953,174 +1267,87 @@ VisIterator::operator=(const VisIterator& other)
 {
     if (this!=&other) {
 
-        ROVisIterator::operator=(other);
-
-        rwColFlag_p.reference(other.rwColFlag_p);
-        rwColFlagRow_p.reference(other.rwColFlagRow_p);
-        rwColVis_p.reference(other.rwColVis_p);
-        rwColFloatVis_p.reference(other.rwColFloatVis_p);
-        rwColModelVis_p.reference(other.rwColModelVis_p);
-        rwColCorrVis_p.reference(other.rwColCorrVis_p);
-        rwColWeight_p.reference(other.rwColWeight_p);
-        rwColWeightSpectrum_p.reference(other.rwColWeightSpectrum_p);
-        rwColSigma_p.reference(other.rwColSigma_p);
-
+        ROVisIterator::operator= (other);
     }
-    return *this;
+
+        return * this;
 }
 
 VisIterator &
 VisIterator::operator++(int)
 {
-  if (more ()){
-      advance();
-  }
+  advance();
+
   return *this;
 }
 
 VisIterator &
 VisIterator::operator++()
 {
-  if (more ()){
-      advance();
-  }
+  advance();
+
   return *this;
 }
 
-void VisIterator::attachColumns(const Table &t)
+void
+VisIterator::attachColumns(const Table &table)
 {
-  ROVisIterator::attachColumns(t);
+    getImpl() -> attachColumns (table);
+}
 
-  //todo: should cache this (update once per ms)
-  const ColumnDescSet& cds=t.tableDesc().columnDescSet();
-  if (cds.isDefined(MS::columnName(MS::DATA))) {
-      getReadImpl()->columns_p.vis_p.attach(t,MS::columnName(MS::DATA));
-  };
-  if (cds.isDefined(MS::columnName(MS::FLOAT_DATA))) {
-    getReadImpl()->floatDataFound_p=True;
-    getReadImpl()->columns_p.floatVis_p.attach(t,MS::columnName(MS::FLOAT_DATA));
-  } else {
-    getReadImpl()->floatDataFound_p=False;
-  };
-  if (cds.isDefined("MODEL_DATA")) 
-    getReadImpl()->columns_p.modelVis_p.attach(t,"MODEL_DATA");
-  if (cds.isDefined("CORRECTED_DATA")) 
-    getReadImpl()->columns_p.corrVis_p.attach(t,"CORRECTED_DATA");
-  getReadImpl()->columns_p.weight_p.attach(t,MS::columnName(MS::WEIGHT));
-  if (cds.isDefined("WEIGHT_SPECTRUM"))
-    getReadImpl()->columns_p.weightSpectrum_p.attach(t,"WEIGHT_SPECTRUM");
-  getReadImpl()->columns_p.sigma_p.attach(t,MS::columnName(MS::SIGMA));
-  getReadImpl()->columns_p.flag_p.attach(t,MS::columnName(MS::FLAG));
-  getReadImpl()->columns_p.flagRow_p.attach(t,MS::columnName(MS::FLAG_ROW));
+VisIteratorImpl *
+VisIterator::getImpl () const
+{
+    VisIteratorImpl * impl = dynamic_cast<VisIteratorImpl *> (ROVisibilityIterator::getReadImpl ());
+
+    Assert (impl != NULL);
+
+    return impl;
 }
 
 void VisIterator::setFlagRow(const Vector<Bool>& rowflags)
 {
-  rwColFlagRow_p.putColumn(rowflags);
+    getImpl() -> setFlagRow (rowflags);
 };
 
 void VisIterator::setVis(const Cube<Complex>& vis, DataColumn whichOne)
 {
-  
-  if (getReadImpl()->useNewSlicer_p){
-      putDataColumn (whichOne, getReadImpl()->newSlicer_p, vis);
-  }
-  else {
-      putDataColumn (whichOne, vis);
-  }
-
+    getImpl () -> setVis (vis, whichOne);
 }
 
 void VisIterator::setFlag(const Cube<Bool>& flags)
 {
-  if (getReadImpl()->useNewSlicer_p){
-      rwColFlag_p.putColumn (getReadImpl()->newSlicer_p, flags);
-  }
-  else{
-      rwColFlag_p.putColumn(flags);
-  }
+    getImpl () -> setFlag (flags);
 }
 
 void VisIterator::setVisAndFlag(const Cube<Complex>& vis,
 				       const Cube<Bool>& flag,
 				       DataColumn whichOne)
 {
-  this->setFlag(flag);
-  this->setVis(vis,whichOne);
+    getImpl () -> setVisAndFlag (vis, flag, whichOne);
 }
 
 void VisIterator::setWeightMat(const Matrix<Float>& weightMat)
 {
-  if (getReadImpl()->useNewSlicer_p){
-      rwColWeight_p.putColumn (getReadImpl()->newWtSlicer_p, weightMat);
-  }
-  else{
-      rwColWeight_p.putColumn (weightMat);
-  }
+    getImpl () -> setWeightMat (weightMat);
 }
 
 void VisIterator::setWeightSpectrum(const Cube<Float>& weightSpectrum)
 {
-  if (getReadImpl()->existsWeightSpectrum()) {
-    if (getReadImpl()->useNewSlicer_p){
-        rwColWeightSpectrum_p.putColumn(getReadImpl()->newSlicer_p,weightSpectrum);
-    }
-    else{
-        rwColWeightSpectrum_p.putColumn(weightSpectrum);
-    }
-  }
-  else {
-    throw(AipsError("Can't set WEIGHT_SPECTRUM -- it doesn't exist!"));
-  }
+    getImpl () -> setWeightSpectrum (weightSpectrum);
 }
-
-
 
 void VisIterator::putDataColumn(DataColumn whichOne,
 				const Vector<Vector<Slice> >& slices,
 				const Cube<Complex>& data)
 {
-  // Set the visibility (observed, model or corrected);
-  // deal with DATA and FLOAT_DATA seamlessly for observed data.
-  switch (whichOne) {
-  case Observed:
-    if (getReadImpl()->floatDataFound_p) {
-      Cube<Float> dataFloat=real(data);
-      rwColFloatVis_p.putColumn(slices,dataFloat);
-    } else {
-      rwColVis_p.putColumn(slices,data);
-    };
-    break;
-  case Corrected:
-    rwColCorrVis_p.putColumn(slices,data);
-    break;
-  case Model:
-    rwColModelVis_p.putColumn(slices,data);
-    break;
-  };
+    getImpl () -> putDataColumn (whichOne, slices, data);
 };  
 
 void VisIterator::putDataColumn(DataColumn whichOne,
 				const Cube<Complex>& data)
 {
-  // Set the visibility (observed, model or corrected);
-  // deal with DATA and FLOAT_DATA seamlessly for observed data.
-  switch (whichOne) {
-  case Observed:
-    if (getReadImpl()->floatDataFound_p) {
-      Cube<Float> dataFloat=real(data);
-      rwColFloatVis_p.putColumn(dataFloat);
-    } else {
-      rwColVis_p.putColumn(data);
-    };
-    break;
-  case Corrected:
-    rwColCorrVis_p.putColumn(data);
-    break;
-  case Model:
-    rwColModelVis_p.putColumn(data);
-    break;
-  };
+    getImpl () -> putDataColumn (whichOne, data);
 };  
 
 Vector<uInt>& ROVisIteratorImpl::rowIds(Vector<uInt>& rowids) const
@@ -1130,122 +1357,6 @@ Vector<uInt>& ROVisIteratorImpl::rowIds(Vector<uInt>& rowids) const
   return rowids;
 }
 
-void ROVisIteratorImpl::setTileCache()
-{
-  // Set the cache size when the DDID changes (as opposed to MS) to avoid 
-  // overreading in a case like:
-  // hcubes: [2, 256], [4, 64]
-  // tileshape: [4, 64]
-  // spws (ddids): [4,64], [2, 256], [2, 256], [4,64], [2, 256], [4,64]
-  // and spw = '0:1~7,1:1~7,2:100~200,3:20~40,4:200~230,5:40~50'
-  //
-  // For hypercube 0, spw 2 needs 3 tiles, but spw 4 only needs 1, AND the last
-  // tile at that.  So if hypercube 0 used a cache of 3 tiles throughout, every
-  // read of 4:200~230 would likely also read the unwanted channels 0~127 of
-  // the next row.
-  //
-  if (curStartRow_p != 0 && ! msIter_p.newDataDescriptionId()){
-    return;
-  }
-
-  const MeasurementSet& thems = msIter_p.ms();
-
-  if(thems.tableType() == Table::Memory){
-    return;
-  }
-
-  const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
-
-  // Get the first row number for this DDID.
-  Vector<uInt> rownums;
-  rowIds(rownums);
-  uInt startrow = rownums[0];
-  
-  Vector<String> columns(8);
-  // complex
-  columns(0)=MS::columnName(MS::DATA);
-  columns(1)=MS::columnName(MS::CORRECTED_DATA);
-  columns(2)=MS::columnName(MS::MODEL_DATA);
-  // boolean
-  columns(3)=MS::columnName(MS::FLAG);
-  // float
-  columns(4)=MS::columnName(MS::WEIGHT_SPECTRUM);
-  columns(5)=MS::columnName(MS::WEIGHT);
-  columns(6)=MS::columnName(MS::SIGMA);
-  // double
-  columns(7)=MS::columnName(MS::UVW);
-  //
-  for(uInt k = 0; k < columns.nelements(); ++k){
-    if(cds.isDefined(columns(k))){
-      const ColumnDesc& cdesc = cds[columns(k)];
-      String dataManType="";
-      
-      dataManType = cdesc.dataManagerType();
-      // We have to check WEIGHT_SPECTRUM as it tends to exist but not have
-      // valid data.
-      if(columns[k] == MS::columnName(MS::WEIGHT_SPECTRUM) &&
-         !existsWeightSpectrum())
-        dataManType="";
-
-      // Sometimes columns may not contain anything yet
-      if((columns[k]==MS::columnName(MS::DATA) && (columns_p.vis_p.isNull() ||
-                                                   !columns_p.vis_p.isDefined(0))) ||
-         (columns[k]==MS::columnName(MS::MODEL_DATA) && (columns_p.modelVis_p.isNull() ||
-                                                         !columns_p.modelVis_p.isDefined(0))) ||
-         (columns[k]==MS::columnName(MS::CORRECTED_DATA) && (columns_p.corrVis_p.isNull() ||
-                                                             !columns_p.corrVis_p.isDefined(0))) ||
-         (columns[k]==MS::columnName(MS::FLAG) && (columns_p.flag_p.isNull() ||
-                                                   !columns_p.flag_p.isDefined(0))) ||
-         (columns[k]==MS::columnName(MS::WEIGHT) && (columns_p.weight_p.isNull() ||
-                                                     !columns_p.weight_p.isDefined(0))) ||
-         (columns[k]==MS::columnName(MS::SIGMA) && (columns_p.sigma_p.isNull() ||
-                                                    !columns_p.sigma_p.isDefined(0))) ||
-         (columns[k]==MS::columnName(MS::UVW) && (columns_p.uvw_p.isNull() ||
-                                                  !columns_p.uvw_p.isDefined(0))) ){
-        dataManType="";
-      }
-          
-      if(dataManType.contains("Tiled") &&
-         !String(cdesc.dataManagerGroup()).empty()){
-        try {      
-          ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
-                                                         cdesc.dataManagerGroup());
-
-          // This is for the data columns, WEIGHT_SPECTRUM and FLAG only.
-          if((columns[k] != MS::columnName(MS::WEIGHT)) && 
-             (columns[k] != MS::columnName(MS::UVW))){
-            // Figure out how many tiles are needed to span the selected channels.
-            const IPosition tileShape(tacc.tileShape(startrow));
-            Vector<Int> ids;
-            chanIds(ids);
-            uInt startTile = ids[0] / tileShape[1];
-            uInt endTile = ids[ids.nelements() - 1] / tileShape[1];
-            uInt cachesize = endTile - startTile + 1;
-
-            // and the selected correlations.
-            corrIds(ids);
-            startTile = ids[0] / tileShape[0];
-            endTile = ids[ids.nelements() - 1] / tileShape[0];
-            cachesize *= endTile - startTile + 1;
-
-            // Safer until I know which of correlations and channels varies faster on
-            // disk.
-            const IPosition hShape(tacc.hypercubeShape(startrow));
-            cachesize = hShape[0] * hShape[1] / (tileShape[0] * tileShape[1]);
-
-            tacc.setCacheSize(startrow, cachesize);
-          }
-          else
-            tacc.setCacheSize(startrow, 1);
-        }
-        catch (AipsError x) {
-          //It failed so leave the caching as is.
-          continue;
-        }
-      }
-    }
-  }
-}
 
 void VisIterator::putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array)
 {
@@ -1282,6 +1393,228 @@ void VisIterator::putCol(ArrayColumn<Complex> &column, const Slicer &slicer, con
     column.putColumn(slicer, array);
 }
 
+VisibilityIteratorReadImpl *
+VisIterator::Factory::operator() (const asyncio::PrefetchColumns * /*prefetchColumns*/,
+                                  const Block<MeasurementSet>& mss,
+                                  const Block<Int>& sortColumns,
+                                  const Bool /*addDefaultSortCols*/,
+                                  Double timeInterval) const
+{
+    return new VisIteratorImpl (vi_p, mss[0], sortColumns, timeInterval);
+}
+
+//     ***********************
+//     ***********************
+//     **                   **
+//     **  VisIteratorImpl  **
+//     **                   **
+//     ***********************
+//     ***********************
+
+VisIteratorImpl::VisIteratorImpl(ROVisIterator * rovi,
+                                 const MeasurementSet& ms,
+                                 const Block<Int>& sortColumns,
+                                 Double timeInterval)
+: ROVisIteratorImpl (rovi, ms, sortColumns, timeInterval)
+{
+}
+
+VisIteratorImpl::~VisIteratorImpl()
+{}
+
+VisIteratorImpl &
+VisIteratorImpl::operator=(const VisIteratorImpl &other){
+
+    if (this != & other){
+
+        ROVisIteratorImpl::operator=(other);
+
+        rwColFlag_p.reference(other.rwColFlag_p);
+        rwColFlagRow_p.reference(other.rwColFlagRow_p);
+        rwColVis_p.reference(other.rwColVis_p);
+        rwColFloatVis_p.reference(other.rwColFloatVis_p);
+        rwColModelVis_p.reference(other.rwColModelVis_p);
+        rwColCorrVis_p.reference(other.rwColCorrVis_p);
+        rwColWeight_p.reference(other.rwColWeight_p);
+        rwColWeightSpectrum_p.reference(other.rwColWeightSpectrum_p);
+        rwColSigma_p.reference(other.rwColSigma_p);
+
+    }
+
+    return * this;
+}
+
+
+void
+VisIteratorImpl::attachColumns(const Table &table)
+{
+
+    ROVisIteratorImpl::attachColumns(table);
+
+    const ColumnDescSet& cds = table.tableDesc().columnDescSet();
+
+    if (cds.isDefined("CORRECTED_DATA")){
+        rwColCorrVis_p.attach(table,"CORRECTED_DATA");
+    }
+
+    if (cds.isDefined(MS::columnName(MS::DATA))) {
+        rwColVis_p.attach(table,MS::columnName(MS::DATA));
+    }
+
+    rwColFlag_p.attach(table,MS::columnName(MS::FLAG));
+
+    rwColFlagRow_p.attach(table,MS::columnName(MS::FLAG_ROW));
+
+    if (cds.isDefined(MS::columnName(MS::FLOAT_DATA))) {
+        floatDataFound_p=True;
+        rwColFloatVis_p.attach(table,MS::columnName(MS::FLOAT_DATA));
+    }
+    else {
+        floatDataFound_p=False;
+    }
+
+    if (cds.isDefined("MODEL_DATA")){
+        rwColModelVis_p.attach(table,"MODEL_DATA");
+    }
+
+    rwColSigma_p.attach(table,MS::columnName(MS::SIGMA));
+
+    rwColWeight_p.attach(table,MS::columnName(MS::WEIGHT));
+
+    if (cds.isDefined("WEIGHT_SPECTRUM")){
+        rwColWeightSpectrum_p.attach(table,"WEIGHT_SPECTRUM");
+    }
+}
+void
+VisIteratorImpl::putDataColumn(DataColumn whichOne,
+                               const Vector<Vector<Slice> >& slices,
+                               const Cube<Complex>& data)
+{
+    // Set the visibility (observed, model or corrected);
+    // deal with DATA and FLOAT_DATA seamlessly for observed data.
+
+    switch (whichOne) {
+
+    case VisibilityIterator::Observed:
+
+        if (floatDataFound_p) {
+            Cube<Float> dataFloat=real(data);
+            rwColFloatVis_p.putColumn(slices,dataFloat);
+        } else {
+            rwColVis_p.putColumn(slices,data);
+        };
+        break;
+
+    case VisibilityIterator::Corrected:
+
+        rwColCorrVis_p.putColumn(slices,data);
+        break;
+
+    case VisibilityIterator::Model:
+
+        rwColModelVis_p.putColumn(slices,data);
+        break;
+    };
+};
+
+void
+VisIteratorImpl::putDataColumn(DataColumn whichOne,
+                               const Cube<Complex>& data)
+{
+    // Set the visibility (observed, model or corrected);
+    // deal with DATA and FLOAT_DATA seamlessly for observed data.
+
+    switch (whichOne) {
+
+    case VisibilityIterator::Observed:
+
+        if (floatDataFound_p) {
+            Cube<Float> dataFloat=real(data);
+            rwColFloatVis_p.putColumn(dataFloat);
+        } else {
+            rwColVis_p.putColumn(data);
+        };
+        break;
+
+    case VisibilityIterator::Corrected:
+
+        rwColCorrVis_p.putColumn(data);
+        break;
+
+    case VisibilityIterator::Model:
+
+        rwColModelVis_p.putColumn(data);
+        break;
+    };
+};
+
+
+void
+VisIteratorImpl::setFlag(const Cube<Bool>& flags)
+{
+    if (useNewSlicer_p){
+        rwColFlag_p.putColumn (newSlicer_p, flags);
+    }
+    else{
+        rwColFlag_p.putColumn(flags);
+    }
+}
+
+void
+VisIteratorImpl::setFlagRow(const Vector<Bool>& rowflags)
+{
+    rwColFlagRow_p.putColumn(rowflags);
+};
+
+void
+VisIteratorImpl::setVis(const Cube<Complex>& vis, DataColumn whichOne)
+{
+
+    if (useNewSlicer_p){
+        putDataColumn (whichOne, newSlicer_p, vis);
+    }
+    else {
+        putDataColumn (whichOne, vis);
+    }
+
+}
+
+void
+VisIteratorImpl::setVisAndFlag(const Cube<Complex>& vis,
+                               const Cube<Bool>& flag,
+                               DataColumn whichOne)
+{
+    this->setFlag(flag);
+    this->setVis(vis,whichOne);
+}
+
+void
+VisIteratorImpl::setWeightMat(const Matrix<Float>& weightMat)
+{
+    if (useNewSlicer_p){
+        rwColWeight_p.putColumn (newWtSlicer_p, weightMat);
+    }
+    else{
+        rwColWeight_p.putColumn (weightMat);
+    }
+}
+
+void
+VisIteratorImpl::setWeightSpectrum(const Cube<Float>& weightSpectrum)
+{
+    if (existsWeightSpectrum()) {
+
+        if (useNewSlicer_p){
+            rwColWeightSpectrum_p.putColumn(newSlicer_p,weightSpectrum);
+        }
+        else{
+            rwColWeightSpectrum_p.putColumn(weightSpectrum);
+        }
+    }
+    else {
+        throw(AipsError("Can't set WEIGHT_SPECTRUM -- it doesn't exist!"));
+    }
+}
 
 } //# NAMESPACE CASA - END
 

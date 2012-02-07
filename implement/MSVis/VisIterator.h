@@ -133,6 +133,10 @@ class ROVisIterator : public ROVisibilityIterator
 		const Block<Int>& sortColumns, 
 		Double timeInterval=0);
 
+  ROVisIterator(const MeasurementSet & ms, const Block<Int>& sortColumns,
+                Double timeInterval, const ROVisibilityIterator::Factory & factory);
+
+
   // Copy construct. This calls the assignment operator.
   ROVisIterator(const ROVisIterator & other);
 
@@ -191,7 +195,7 @@ protected:
   };
 
   void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, Cube<Complex>& data) const;
-  ROVisIteratorImpl * getReadImpl () const;
+  virtual ROVisIteratorImpl * getReadImpl () const;
 };
 
 // <summary>
@@ -247,6 +251,8 @@ protected:
 //   <li> Handle the multi-MS case like VisibilityIterator does.
 // </todo>
 
+class VisIteratorImpl;
+
 class VisIterator : public ROVisIterator
 {
 public:
@@ -295,6 +301,23 @@ public:
   void setWeightSpectrum(const Cube<Float>& wtsp);
 
 protected:
+
+  class Factory : public ROVisibilityIterator::Factory {
+  public:
+
+      Factory (VisIterator * vi) : vi_p (vi) {}
+      VisibilityIteratorReadImpl *
+      operator() (const asyncio::PrefetchColumns * prefetchColumns,
+                  const Block<MeasurementSet>& mss,
+                  const Block<Int>& sortColumns,
+                  const Bool addDefaultSortCols,
+                  Double timeInterval) const;
+  private:
+
+      VisIterator * vi_p;
+
+  };
+
   virtual void attachColumns(const Table &t);
 
   // deals with Float or Complex observed data (DATA and FLOAT_DATA).
@@ -313,17 +336,7 @@ protected:
   virtual void putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array);
   virtual void putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array);
 
-  ArrayColumn<Complex> rwColVis_p;
-  ArrayColumn<Float> rwColFloatVis_p;
-  ArrayColumn<Complex> rwColModelVis_p;
-  ArrayColumn<Complex> rwColCorrVis_p;
-  ArrayColumn<Float> rwColWeight_p;
-  ArrayColumn<Float> rwColWeightSpectrum_p;
-  ArrayColumn<Float> rwColSigma_p;
-  ArrayColumn<Bool> rwColFlag_p;
-  ScalarColumn<Bool> rwColFlagRow_p;
-
-
+  VisIteratorImpl * getImpl () const;
 };
 
 
