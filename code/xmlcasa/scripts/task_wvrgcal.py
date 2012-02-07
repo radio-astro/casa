@@ -2,7 +2,7 @@ import os
 from taskinit import *
 
 def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
-	    reversespw=None, disperse=False, cont=False, wvrflag=[], sourceflag=[],
+	    reversespw='', disperse=False, cont=False, wvrflag=[], sourceflag=[],
 	    statfield=None, statsource=None, tie=[], smooth=None, scale=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data
@@ -123,12 +123,13 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 			execute_string += ' --statsource '+ statsource
 
 		if (len(tie)>0):
-			execute_string += ' --tie '
 			for i in xrange(0,len(tie)):
 				src = tie[i]
 				if not (type(src)==int or type(src)==str):
 					raise Exception, "List elements of parameter tie must be int or string."
 				if (src != ''):
+					if(i==0):
+						execute_string += ' --tie '
 					execute_string += '\''+str(src)+'\''
 					if not (i==len(tie)-1):
 						execute_string += ','
