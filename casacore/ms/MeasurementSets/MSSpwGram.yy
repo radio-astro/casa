@@ -99,7 +99,6 @@
 %%
 SpwStatement: FullExpr
                   {
-		    MSSpwParse::thisMSSParser->endOfCeremonyMessage(*($1));
                     $$ = $1;
                   }
                  | LPAREN FullExpr RPAREN //Parenthesis are not
@@ -192,7 +191,7 @@ IndexRange: PhyVal DASH PhyVal
 	       $$[0] = (Int)$1;
 	       $$[1] = (Int)$3;
 	       //	       $$[2] = 1;  // The Step
-	       $$[2] = -1;       // The Step
+	     $$[2] = -1;       // The Step
 	       $$[3] = MSSpwIndex::MSSPW_INDEX;
 	     }
           | IndexRange CARET PhyVal
@@ -327,36 +326,26 @@ Spw: IDENTIFIER
       {
 	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
-	ostringstream m; m << "No spw ID found > ";
 	if ($2[1] == MSSpwIndex::MSSPW_INDEX)
-	  {
-	    $$ = new Vector<Int>(myMSSI.matchGT((Int)$2[0]));
-	    m << (Int)$2[0];
-	  }
+	  $$ = new Vector<Int>(myMSSI.matchIDGT((Int)$2[0]));
 	else
-	  {
-	    $$ = new Vector<Int>(myMSSI.matchGT($2));
-	    m << (Double)$2[0] << "Hz";
-	  }
+	  throw(MSSelectionSpwParseError(String(">NUMBER UNIT not yet implemented")));
+	  
 	
+	ostringstream m; m << "No spw ID found >= " << (Int)$2[0];
 	checkSpwError(*($$), m);
       }
    | LT OneFreq
       {
 	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
-	ostringstream m; m << "No spw ID found < ";
 	if ($2[1] == MSSpwIndex::MSSPW_INDEX)
-	  {
-	    $$ = new Vector<Int>(myMSSI.matchLT((Int)$2[0]));
-	    m << (Int)$2[0];
-	  }
+	  $$ = new Vector<Int>(myMSSI.matchIDLT((Int)$2[0]));
 	else
-	  {
-	    $$ = new Vector<Int>(myMSSI.matchLT($2));
-	    m << (Double)$2[0] << "Hz";
-	  }
+	  throw(MSSelectionSpwParseError(String("<NUMBER UNIT not yet implemented")));
+	  
 	
+	ostringstream m; m << "No spw ID found >= " << (Int)$2[0];
 	checkSpwError(*($$), m);
       }
    | DASH OneFreq
@@ -364,6 +353,7 @@ Spw: IDENTIFIER
 	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
 	$$ = new Vector<Int>(myMSSI.matchFrequencyRange($2[0],$2[0],True));
+	  
 	
 	ostringstream m; m << "No spw ID found ~= " << (Int)$2[0];
 	checkSpwError(*($$), m);
@@ -385,23 +375,28 @@ Spw: IDENTIFIER
 FullSpec: Spw
             {
 	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	      Vector<Int> varifiedSpwList=myMSSI.matchId(*($1));
-	      //	      $$ = MSSpwParse().selectSpwIdsFromIDList(varifiedSpwList);
-	      Int nFSpec;
-	      Vector<Float> dummy(0);
-	      Vector<Int> chanList = myMSSI.convertToChannelIndex(varifiedSpwList,dummy, nFSpec);
-
-	      MSSpwParse::thisMSSParser->selectChannelsFromIDList(varifiedSpwList, chanList, nFSpec);
 	      //
 	      // Convert Spw to a TEN
 	      //
+	      Vector<Int> varifiedSpwList=myMSSI.matchId(*($1));
+	      //	      $$ = MSSpwParse().selectSpwIdsFromIDList(varifiedSpwList);
 	      $$ = MSSpwParse::thisMSSParser->selectSpwIdsFromIDList(varifiedSpwList);
+	      Int nFSpec;
+	      Vector<Float> dummy(0);
+	      Vector<Int> chanList = myMSSI.convertToChannelIndex(varifiedSpwList,dummy, nFSpec);
+	      //	      MSSpwParse().selectChannelsFromIDList(varifiedSpwList, chanList, nFSpec);
+	      MSSpwParse::thisMSSParser->selectChannelsFromIDList(varifiedSpwList, chanList, nFSpec);
 	      delete $1;
             }
         | Spw COLON FreqList 
             {
 	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
+	      //
+	      // Convert Spw to a TEN and FreqList to a list of channel indexes
+	      //
 	      Vector<Int> varifiedSpwList=myMSSI.matchId(*($1));
+	      //	      $$ = MSSpwParse().selectSpwIdsFromIDList(varifiedSpwList);
+	      $$ = MSSpwParse::thisMSSParser->selectSpwIdsFromIDList(varifiedSpwList);
 	      Int nFSpecs;
 	      Vector<Int> chanList = myMSSI.convertToChannelIndex(varifiedSpwList, (*($3)), nFSpecs);
 	      //
@@ -412,14 +407,9 @@ FullSpec: Spw
 	      // channels in the VisBuffer, this method is where we
 	      // will do it).
 	      //
-	      // This may modify the varifiedSpwList (eliminate SPWs
-	      // that had no channels selected)
-	      //
+	      //	      MSSpwParse::thisMSSParser->selectChannelsFromIDList((*($1)), chanList);
+	      //	      MSSpwParse().selectChannelsFromIDList(varifiedSpwList, chanList, nFSpecs);
 	      MSSpwParse::thisMSSParser->selectChannelsFromIDList(varifiedSpwList, chanList, nFSpecs);
-	      //
-	      // Convert Spw to a TEN and FreqList to a list of channel indexes
-	      //
-	      $$ = MSSpwParse::thisMSSParser->selectSpwIdsFromIDList(varifiedSpwList);
 	      delete $1;
 	    }
 ;
