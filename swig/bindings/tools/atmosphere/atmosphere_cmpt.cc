@@ -240,11 +240,11 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
 }
 
 std::string
-atmosphere::getBasicAtmParms(const Quantity& altitude, const Quantity& temperature,
-			     const Quantity& pressure, const Quantity& maxAltitude,
-			     double& humidity, const Quantity& dTem_dh,
-			     const Quantity& dP, double& dPm, const Quantity& h0,
-			     const std::string& atmType)
+atmosphere::getBasicAtmParms(Quantity& altitude, Quantity& temperature,
+			     Quantity& pressure, Quantity& maxAltitude,
+			     double& humidity, Quantity& dTem_dh,
+			     Quantity& dP, double& dPm, Quantity& h0,
+			     std::string& atmType)
 {
   string rtn("");
   try {
@@ -379,10 +379,10 @@ atmosphere::getGroundWH2O()
 }
 
 std::string
-atmosphere::getProfile(const Quantity& thickness, const Quantity& temperature,
-		       const Quantity& watermassdensity,
-		       const Quantity& water, const Quantity& pressure, const Quantity& O3,
-		       const Quantity& CO, const Quantity& N2O)
+atmosphere::getProfile(Quantity& thickness, Quantity& temperature,
+		       Quantity& watermassdensity,
+		       Quantity& water, Quantity& pressure, Quantity& O3,
+		       Quantity& CO, Quantity& N2O)
 {
   std::string rtn("");
   try {
@@ -1029,7 +1029,7 @@ atmosphere::getH2OContOpacity(int nc, int spwId)
 
 
 int
-atmosphere::getDryOpacitySpec(const std::vector<double>& dryOpacity, int spwId)
+atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, int spwId)
 {
   int nchan(-1);
   try {
@@ -1054,7 +1054,7 @@ atmosphere::getDryOpacitySpec(const std::vector<double>& dryOpacity, int spwId)
 }
 
 int
-atmosphere::getWetOpacitySpec(const Quantity& wetOpacity, int spwId)
+atmosphere::getWetOpacitySpec(Quantity& wetOpacity, int spwId)
 {
   int nchan(-1);
   try {
