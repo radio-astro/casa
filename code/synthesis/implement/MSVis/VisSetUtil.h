@@ -83,6 +83,22 @@ public:
   // Subtract/add model from/to corrected visibility data
   static void UVSub(VisSet &vs, Bool reverse=False);
   static void UVSub(VisibilityIterator &vs, Bool reverse=False);
+
+
+  // Add and (optionally) initialize scratch columns
+  static void addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr, 
+			 Bool init, Bool compress);
+
+  // Initialize scr cols
+  static void initScrCols(MeasurementSet& ms, Bool initModel, Bool initCorr);
+  static void initScrCols(VisibilityIterator& ms, Bool initModel, Bool initCorr);
+
+  // Remove OTF model keywords
+  static void remOTFModel(MeasurementSet& ms);
+
+  // Remove physical scrcols
+  static void remScrCols(MeasurementSet& ms, Bool remModel, Bool remCorr);
+
    // Remove an existing cal set (a CORRECTED_DATA and MODEL_DATA 
   // column set and, optionally, any associated compression columns)
   //if removeModel=True...any model for OTF model vis saved in the header is removed

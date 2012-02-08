@@ -37,6 +37,16 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/Utilities/Assert.h>
 
+#include <tables/Tables/ArrColDesc.h>
+#include <tables/Tables/ScaColDesc.h>
+#include <tables/Tables/TiledDataStMan.h>
+#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/Tables/StandardStMan.h>
+#include <tables/Tables/TiledDataStManAccessor.h>
+#include <tables/Tables/CompressComplex.h>
+#include <tables/Tables/CompressFloat.h>
+
+
 #include <ms/MeasurementSets/MSColumns.h>
 
 #include <synthesis/MSVis/VisSet.h>
@@ -265,33 +275,354 @@ void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& d
   }
 }
 
+void VisSetUtil::addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr, 
+			    Bool alsoinit, Bool compress) {
 
-  void VisSetUtil::removeCalSet(MeasurementSet& ms, Bool removeModel) {
-  // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
-  // and MODEL_DATA columns) from the MeasurementSet.
+  // Add but DO NOT INITIALIZE calibration set (comprising a set of CORRECTED_DATA 
+  // and MODEL_DATA columns) to the MeasurementSet.
 
-  //Remove model in header
-    if(removeModel)
-      VisModelData::clearModel(ms);
-  
+  // Sense if anything is to be done
+  addModel=addModel && !(ms.tableDesc().isColumn("MODEL_DATA"));
+  addCorr=addCorr && !(ms.tableDesc().isColumn("CORRECTED_DATA"));
+
+  // Escape (silently) without doing anything if nothing
+  // to be done
+  if (!addModel && !addCorr) 
+    return;
+  else {
+    // Remove SORTED_TABLE and continue
+    // This is needed because old SORTED_TABLE won't see
+    //   the added column(s)
+    if (ms.keywordSet().isDefined("SORT_COLUMNS")) 
+      ms.rwKeywordSet().removeField("SORT_COLUMNS");
+    if (ms.keywordSet().isDefined("SORTED_TABLE")) 
+      ms.rwKeywordSet().removeField("SORTED_TABLE");
+  }
+
+  // If we are adding the MODEL_DATA column, make it
+  //  the exclusive origin for model visibilities by
+  //  deleting any OTF model keywords
+  if (addModel)
+    VisSetUtil::remOTFModel(ms);
+
+
+  // Form log message
+  String addMessage("Adding ");
+  if (addModel) {
+    addMessage+="MODEL_DATA ";
+    if (addCorr) addMessage+="and ";
+  }
+  if (addCorr) addMessage+="CORRECTED_DATA ";
+  addMessage+="column(s).";
+  LogSink logSink;
+  LogMessage message(addMessage,LogOrigin("VisSetUtil","addScrCols"));
+  logSink.post(message);
+    
+    {
+      // Define a column accessor to the observed data
+      ROTableColumn* data;
+      const bool data_is_float = ms.tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA));
+      if (data_is_float) {
+	data = new ROArrayColumn<Float> (ms, MS::columnName(MS::FLOAT_DATA));
+      } else {
+	data = new ROArrayColumn<Complex> (ms, MS::columnName(MS::DATA));
+      };
+      
+      // Check if the data column is tiled and, if so, the
+      // smallest tile shape used.
+      TableDesc td = ms.actualTableDesc();
+      const ColumnDesc& cdesc = td[data->columnDesc().name()];
+      String dataManType = cdesc.dataManagerType();
+      String dataManGroup = cdesc.dataManagerGroup();
+      
+      IPosition dataTileShape;
+      Bool tiled = (dataManType.contains("Tiled"));
+      Bool simpleTiling = False;
+      
+      
+      if (tiled) {
+	ROTiledStManAccessor tsm(ms, dataManGroup);
+	uInt nHyper = tsm.nhypercubes();
+	// Find smallest tile shape
+	Int lowestProduct=INT_MAX,highestProduct=-INT_MAX;
+	Int lowestId=0, highestId=0;
+	for (uInt id=0; id < nHyper; id++) {
+	  Int product = tsm.getTileShape(id).product();
+	  if (product > 0 && (product < lowestProduct)) {
+	    lowestProduct = product;
+	    lowestId = id;
+	  };
+	  if (product > 0 && (product > highestProduct)) {
+	    highestProduct = product;
+	    highestId = id;
+	  };
+	};
+	
+	// 2010Oct07 (gmoellen) We will try using
+	//  maximum volumne intput tile shape, as this 
+	//  improves things drastically for ALMA data with
+	//  an enormous range of nchan (e.g., 3840+:1), and
+	//  will have no impact on data with a single shape
+	//	    dataTileShape = tsm.getTileShape(lowestId);
+	dataTileShape = tsm.getTileShape(highestId);
+	simpleTiling = (dataTileShape.nelements() == 3);
+	
+      };
+      
+      if (!tiled || !simpleTiling) {
+	// Untiled, or tiled at a higher than expected dimensionality
+	// Use a canonical tile shape of 1 MB size
+
+	MSSpWindowColumns msspwcol(ms.spectralWindow());
+	Int maxNchan = max (msspwcol.numChan().getColumn());
+	Int tileSize = maxNchan/10 + 1;
+	Int nCorr = data->shape(0)(0);
+	dataTileShape = IPosition(3, nCorr, tileSize, 131072/nCorr/tileSize + 1);
+      };
+      
+      delete data;
+
+      if(addModel){
+	// Add the MODEL_DATA column
+	TableDesc tdModel, tdModelComp, tdModelScale;
+	CompressComplex* ccModel=NULL;
+	String colModel=MS::columnName(MS::MODEL_DATA);
+	
+	tdModel.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
+	td.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
+	IPosition modelTileShape = dataTileShape;
+	if (compress) {
+	  tdModelComp.addColumn(ArrayColumnDesc<Int>(colModel+"_COMPRESSED",
+						     "model data compressed",2));
+	  tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_SCALE"));
+	  tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_OFFSET"));
+	  ccModel = new CompressComplex(colModel, colModel+"_COMPRESSED",
+					colModel+"_SCALE", colModel+"_OFFSET", True);
+	
+	  StandardStMan modelScaleStMan("ModelScaleOffset");
+	  ms.addColumn(tdModelScale, modelScaleStMan);
+	
+	
+	  TiledShapeStMan modelCompStMan("ModelCompTiled", modelTileShape);
+	  ms.addColumn(tdModelComp, modelCompStMan);
+	  ms.addColumn(tdModel, *ccModel);
+	
+	} else {
+	  MeasurementSet::addColumnToDesc(tdModel, MeasurementSet::MODEL_DATA, 2);
+	  //MeasurementSet::addColumnToDesc(td, MeasurementSet::MODEL_DATA, 2);
+	  TiledShapeStMan modelStMan("ModelTiled", modelTileShape);
+	  //String hcolName=String("Tiled")+String("MODEL_DATA");
+	  //tdModel.defineHypercolumn(hcolName,3,
+	  //			     stringToVector(colModel));
+	  //td.defineHypercolumn(hcolName,3,
+	  //		     stringToVector(colModel));
+	  ms.addColumn(tdModel, modelStMan);
+	};
+	if (ccModel) delete ccModel;
+      }
+      if (addCorr) {
+	// Add the CORRECTED_DATA column
+	TableDesc tdCorr, tdCorrComp, tdCorrScale;
+	CompressComplex* ccCorr=NULL;
+	String colCorr=MS::columnName(MS::CORRECTED_DATA);
+	
+	tdCorr.addColumn(ArrayColumnDesc<Complex>(colCorr,"corrected data", 2));
+	IPosition corrTileShape = dataTileShape;
+	if (compress) {
+	  tdCorrComp.addColumn(ArrayColumnDesc<Int>(colCorr+"_COMPRESSED",
+						    "corrected data compressed",2));
+	  tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_SCALE"));
+	  tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_OFFSET"));
+	  ccCorr = new CompressComplex(colCorr, colCorr+"_COMPRESSED",
+				       colCorr+"_SCALE", colCorr+"_OFFSET", True);
+	  
+	  StandardStMan corrScaleStMan("CorrScaleOffset");
+	  ms.addColumn(tdCorrScale, corrScaleStMan);
+	  
+	  TiledShapeStMan corrCompStMan("CorrectedCompTiled", corrTileShape);
+	  ms.addColumn(tdCorrComp, corrCompStMan);
+	  ms.addColumn(tdCorr, *ccCorr);
+	  
+	} else {
+	  TiledShapeStMan corrStMan("CorrectedTiled", corrTileShape);
+	  ms.addColumn(tdCorr, corrStMan);
+	};
+	//MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
+	
+	
+	if (ccCorr) delete ccCorr;
+      }
+      ms.flush();
+	
+    }
+    
+    if (alsoinit)
+      // Initialize only what we added
+      VisSetUtil::initScrCols(ms,addModel,addCorr);
+
+  return;
+
+
+}
+
+void VisSetUtil::remScrCols(MeasurementSet& ms, Bool remModel, Bool remCorr) {
+
   Vector<String> colNames(2);
   colNames(0)=MS::columnName(MS::MODEL_DATA);
   colNames(1)=MS::columnName(MS::CORRECTED_DATA);
 
+  Vector<Bool> doCol(2);
+  doCol(0)=remModel;
+  doCol(1)=remCorr;
+
+
   for (uInt j=0; j<colNames.nelements(); j++) {
-    if (ms.tableDesc().isColumn(colNames(j))) {
-      ms.removeColumn(colNames(j));
-    };
-    if (ms.tableDesc().isColumn(colNames(j)+"_COMPRESSED")) {
-      ms.removeColumn(colNames(j)+"_COMPRESSED");
-    };
-    if (ms.tableDesc().isColumn(colNames(j)+"_SCALE")) {
-      ms.removeColumn(colNames(j)+"_SCALE");
-    };
-    if (ms.tableDesc().isColumn(colNames(j)+"_OFFSET")) {
-      ms.removeColumn(colNames(j)+"_OFFSET");
+    if (doCol(j)) {
+      if (ms.tableDesc().isColumn(colNames(j))) {
+	ms.removeColumn(colNames(j));
+      };
+      if (ms.tableDesc().isColumn(colNames(j)+"_COMPRESSED")) {
+	ms.removeColumn(colNames(j)+"_COMPRESSED");
+      };
+      if (ms.tableDesc().isColumn(colNames(j)+"_SCALE")) {
+	ms.removeColumn(colNames(j)+"_SCALE");
+      };
+      if (ms.tableDesc().isColumn(colNames(j)+"_OFFSET")) {
+	ms.removeColumn(colNames(j)+"_OFFSET");
+      };
     };
   };
+
+
+}
+ 
+void VisSetUtil::remOTFModel(MeasurementSet& ms) {
+ VisModelData::clearModel(ms);
+}
+
+void VisSetUtil::initScrCols(MeasurementSet& ms, Bool initModel, Bool initCorr) {
+
+  // Sense if anything is to be done (relevant scr cols must be present)
+  initModel=initModel && ms.tableDesc().isColumn("MODEL_DATA");
+  initCorr=initCorr && ms.tableDesc().isColumn("CORRECTED_DATA");
+  
+  // Do nothing?
+  if (!initModel && !initCorr) 
+    return;
+
+ /* Reconsider this trap?
+  // Trap missing columns:
+  if (initModel && !ms.tableDesc().isColumn("MODEL_DATA"))
+    throw(AipsError("Cannot initialize MODEL_DATA if column is absent."));
+  if (initCorr && !ms.tableDesc().isColumn("CORRECTED_DATA"))
+    throw(AipsError("Cannot initialize CORRECTED_DATA if column is absent."));
+ */
+
+  // Create ordinary (un-row-selected) VisibilityIterator from the MS
+  VisibilityIterator vi(ms,Block<Int>(),0.0);
+  
+  // Pass to VisibilityIterator-oriented method
+  VisSetUtil::initScrCols(vi,initModel,initCorr);
+}
+
+
+void VisSetUtil::initScrCols(VisibilityIterator& vi, Bool initModel, Bool initCorr) {
+
+  // Sense if anything is to be done (relevant scr cols must be present)
+  initModel=initModel && vi.ms().tableDesc().isColumn("MODEL_DATA");
+  initCorr=initCorr && vi.ms().tableDesc().isColumn("CORRECTED_DATA");
+  
+  // Do nothing?
+  if (!initModel && !initCorr) 
+    return;
+
+ /*  Reconsider this trap?
+  // Trap missing columns:
+  if (initModel && !vi.ms().tableDesc().isColumn("MODEL_DATA"))
+    throw(AipsError("Cannot initialize MODEL_DATA if column is absent."));
+  if (initCorr && !vi.ms().tableDesc().isColumn("CORRECTED_DATA"))
+    throw(AipsError("Cannot initialize CORRECTED_DATA if column is absent."));
+ */
+
+  // Form log message
+  String initMessage("Initializing ");
+  if (initModel) {
+    initMessage+="MODEL_DATA to (unity)";
+    if (initCorr) initMessage+=" and ";
+  }
+  if (initCorr) initMessage+="CORRECTED_DATA (to DATA)";
+  initMessage+=".";
+  LogSink logSink;
+  LogMessage message(initMessage,LogOrigin("VisSetUtil","initScrCols"));
+  logSink.post(message);
+
+  Vector<Int> lastCorrType;
+  Vector<Bool> zero;
+  Int nRows(0);
+  vi.setRowBlocking(10000);
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+    Vector<Int> corrType; vi.corrType(corrType);
+    uInt nCorr = corrType.nelements();
+    if (initModel) {
+      // figure out which correlations to set to 1. and 0. for the model.
+      if (nCorr != lastCorrType.nelements() ||
+          !allEQ(corrType, lastCorrType)) {
+	
+        lastCorrType.resize(nCorr); 
+        lastCorrType=corrType;
+        zero.resize(nCorr);
+	
+        for (uInt i=0; i<nCorr; i++) 
+          {
+            zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
+                     corrType[i]==Stokes::XY || corrType[i]==Stokes::YX);
+          }
+      }
+    }
+    for (vi.origin(); vi.more(); vi++) {
+      nRows+=vi.nRow();
+
+      Cube<Complex> data;
+      vi.visibility(data, VisibilityIterator::Observed);
+      if (initCorr) {
+	// Read DATA and set CORRECTED_DATA
+	vi.setVis(data,VisibilityIterator::Corrected);
+      }
+      if (initModel) {
+	// Set MODEL_DATA
+	data.set(1.0);
+	if (ntrue(zero)>0) {
+	  for (uInt i=0; i < nCorr; i++) {
+	    if (zero[i]) data(Slice(i), Slice(), Slice()) = Complex(0.0,0.0);
+	  }
+	}
+	vi.setVis(data,VisibilityIterator::Model);
+      }
+    }
+  }
+  vi.ms().relinquishAutoLocks();
+
+  vi.originChunks();
+  vi.setRowBlocking(0);
+
+  ostringstream os;
+  os << "Initialized " << nRows << " rows."; 
+  message.message(os.str());
+  logSink.post(message);
+
+}  
+
+void VisSetUtil::removeCalSet(MeasurementSet& ms, Bool removeModel) {
+  // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
+  // and MODEL_DATA columns) from the MeasurementSet.
+
+  //Remove model in header
+  if(removeModel)
+    VisSetUtil::remOTFModel(ms);
+
+  VisSetUtil::remScrCols(ms,True,True);
+
 }
 
 
