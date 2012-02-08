@@ -262,6 +262,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/taskinit.py
   scripts/task_listcal.py
   scripts/task_listhistory.py
+  scripts/task_listfits.py
   scripts/task_listobs.py
   scripts/task_listsdm.py
   scripts/task_listvis.py
@@ -390,6 +391,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/imval.xml
   tasks/listcal.xml
   tasks/listhistory.xml
+  tasks/listfits.xml
   tasks/listobs.xml
   tasks/listsdm.xml
   tasks/listvis.xml
