@@ -2458,10 +2458,17 @@ VisMapper::setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis
 
 	leftVis_p = leftVis;
 	IPosition leftVisSize = leftVis->shape(); // pol,chan,row
-	reducedLength_p = IPosition(2);
+	reducedLength_p = IPosition(3);
 	reducedLength_p(0) = leftVisSize(1); // chan
 	reducedLength_p(1) = leftVisSize(2); // row
-	reducedLength_p(2) = leftVisSize(0); // pol
+	if (selectedCorrelations_p.size() > 0)
+	{
+		reducedLength_p(2) = selectedCorrelations_p.size(); //pols
+	}
+	else
+	{
+		reducedLength_p(2) = leftVisSize(1); //pols
+	}
 
 
 	if (rightVis != NULL)
@@ -2760,9 +2767,16 @@ VisMapper::operator()(uInt chan, uInt row)
 Float
 VisMapper::operator()(uInt pol, uInt chan, uInt row)
 {
-	Complex val = (*this.*getVis_p)(pol,chan,row);
+	Complex val = (*this.*getVis_p)(selectedCorrelations_p[pol],chan,row);
 	return (*this.*applyVisExpr_p)(val);
 }
+
+Complex
+VisMapper::correlationProduct(uInt pol, uInt chan, uInt row)
+{
+	return (*this.*getVis_p)(selectedCorrelations_p[pol],chan,row);
+}
+
 
 Complex
 VisMapper::leftVis(uInt pol, uInt chan, uInt row)
@@ -2964,9 +2978,17 @@ FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *origi
 	reducedLength_p = IPosition(2);
 	reducedLength_p(0) = commonFlagCubeSize(1); // chan
 	reducedLength_p(1) = commonFlagCubeSize(2); // row
-	reducedLength_p(2) = commonFlagCubeSize(0); // pol
 
-	flagsPerRow_p = nSelectedCorrelations_p*reducedLength_p(0);
+	if (nSelectedCorrelations_p>0)
+	{
+		reducedLength_p(2) = nSelectedCorrelations_p; // pol
+	}
+	else
+	{
+		reducedLength_p(2) = reducedLength_p(0);// pol
+	}
+
+	flagsPerRow_p = reducedLength_p(2)*reducedLength_p(0);
 }
 
 void
@@ -3051,19 +3073,19 @@ FlagMapper::getPrivateFlags(uInt channel, uInt row)
 Bool
 FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 {
-	return originalFlagsView_p->operator ()(pol,channel,row);
+	return originalFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row);
 }
 
 Bool
 FlagMapper::getModifiedFlags(uInt pol, uInt channel, uInt row)
 {
-	return commonFlagsView_p->operator ()(pol,channel,row);
+	return commonFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row);
 }
 
 Bool
 FlagMapper::getPrivateFlags(uInt pol, uInt channel, uInt row)
 {
-	return privateFlagsView_p->operator ()(pol,channel,row);
+	return privateFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row);
 }
 
 Bool

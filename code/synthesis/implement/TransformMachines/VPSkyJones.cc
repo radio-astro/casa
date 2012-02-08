@@ -76,43 +76,50 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc, Table& tab,
   for (uInt i=0; i < nrow; ++i) {
     // if-operator condition checks that the names are not redundant
     if (indexTelescope(telCol(i))<0) {
-     
+   
+    
+	 
+  
       String name;
       String commonpb;
+      if(recCol(i).isDefined("name") && (recCol(i).asString("name") != "REFERENCE")){
 
-      const Int nameFieldNumber=recCol(i).fieldNumber("name");
-      if (nameFieldNumber!=-1)
+	const Int nameFieldNumber=recCol(i).fieldNumber("name");
+	if (nameFieldNumber!=-1)
           recCol(i).get(nameFieldNumber,name);      
-      
-      if (name == "COMMONPB") {
-        const Int commonPBFieldNumber=recCol(i).fieldNumber("commonpb");
-	AlwaysAssert(commonPBFieldNumber!=-1,AipsError);
-	recCol(i).get(commonPBFieldNumber, commonpb );
-      }      
-      
-      if (commonpb == "DEFAULT") {
-	String band;
-	PBMath::CommonPB whichPB;
-	String commonPBName;
-	ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
-	Quantity freq( msc.spectralWindow().refFrequency()(0), "Hz");	
-	String tele =  telCol(i);
-	if(tele=="") {
-	  os  << "Telescope name for row " << i << " of " << tab.tableName()
-	      << " is blank : cannot find correct primary beam model" << LogIO::EXCEPTION;
-	}
-	else {
-	  PBMath::whichCommonPBtoUse( tele, freq, band, whichPB, commonPBName );
-	}
-
-	PBMath  myPBMath(tele, False, freq );
-	setPBMath (telCol(i), myPBMath);	
-
-      } else {        
-	PBMath  myPBMath( recCol(i));
+	
+	if (name == "COMMONPB") {
+	  const Int commonPBFieldNumber=recCol(i).fieldNumber("commonpb");
+	  AlwaysAssert(commonPBFieldNumber!=-1,AipsError);
+	  recCol(i).get(commonPBFieldNumber, commonpb );
+	}      
+	
+	if (commonpb == "DEFAULT") {
+	  String band;
+	  PBMath::CommonPB whichPB;
+	  String commonPBName;
+	  ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
+	  Quantity freq( msc.spectralWindow().refFrequency()(0), "Hz");	
+	  String tele =  telCol(i);
+	  if(tele=="") {
+	    os  << "Telescope name for row " << i << " of " << tab.tableName()
+		<< " is blank : cannot find correct primary beam model" << LogIO::EXCEPTION;
+	  }
+	  else {
+	    PBMath::whichCommonPBtoUse( tele, freq, band, whichPB, commonPBName );
+	  }
+	  
+	  PBMath  myPBMath(tele, False, freq );
+	  setPBMath (telCol(i), myPBMath);	
+	  
+	} else {        
+	  PBMath  myPBMath( recCol(i));
 	setPBMath (telCol(i), myPBMath);
+	}
       }
+
     }
+
   }
 };
 

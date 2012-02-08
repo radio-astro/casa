@@ -1,8 +1,8 @@
 //# FlagAgentRFlag.cc: This file contains the implementation of the FlagAgentRFlag class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
-//#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
-//#  Copyright (C) European Southern Observatory, 2011, All rights reserved.
+//#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2012, All rights reserved.
+//#  Copyright (C) European Southern Observatory, 2012, All rights reserved.
 //#
 //#  This library is free software; you can redistribute it and/or
 //#  modify it under the terms of the GNU Lesser General Public
@@ -30,8 +30,24 @@ FlagAgentRFlag::FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePri
 {
 	setAgentParameters(config);
 
-	// Request loading polarization map to FlagDataHandler
-	flagDataHandler_p->setMapPolarizations(true);
+	// Request pre-loading spw
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+
+	// Initialize parameters for robust stats (spectral analysis)
+	nIterationsRobust_p = 12;
+	thresholdRobust_p = vector<Double>(nIterationsRobust_p);
+	thresholdRobust_p[0] = 6.0;
+	thresholdRobust_p[1] = 5.0;
+	thresholdRobust_p[2] = 4.0;
+	thresholdRobust_p[3] = 3.6;
+	thresholdRobust_p[4] = 3.2;
+	thresholdRobust_p[5] = 3.0;
+	thresholdRobust_p[6] = 2.7;
+	thresholdRobust_p[7] = 2.6;
+	thresholdRobust_p[8] = 2.5;
+	thresholdRobust_p[9] = 2.5;
+	thresholdRobust_p[10] = 2.5;
+	thresholdRobust_p[11] = 3.5;
 }
 
 FlagAgentRFlag::~FlagAgentRFlag()
@@ -42,33 +58,221 @@ FlagAgentRFlag::~FlagAgentRFlag()
 void FlagAgentRFlag::setAgentParameters(Record config)
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
 	int exists;
 
-	exists = config.fieldNumber ("half_nchan");
+	// AIPS DOPLOT
+	exists = config.fieldNumber ("doplot");
 	if (exists >= 0)
 	{
-		half_nchan_p = atoi(config.asString("half_nchan").c_str());
+		doplot_p = config.asBool("doplot");
 	}
 	else
 	{
-		half_nchan_p = 1;
+		doplot_p = False;
 	}
 
-	*logger_p << logLevel_p << " half_nchan is " << half_nchan_p << LogIO::POST;
-
-	exists = config.fieldNumber ("half_ntime");
+	// AIPS RFlag FPARM(3)/NOISE
+	exists = config.fieldNumber ("noise");
 	if (exists >= 0)
 	{
-		half_ntime_p = atoi(config.asString("half_ntime").c_str());
+		noise_p = config.asArrayDouble("noise");
 	}
 	else
 	{
-		half_ntime_p = 1;
+		IPosition shape(1);
+		shape(0)=1;
+		Array<Double> tmp(shape);
+		tmp[0] = 1E6;
+		noise_p = tmp;
 	}
 
-	*logger_p << logLevel_p << " half_ntime is " << half_ntime_p << LogIO::POST;
+	// AIPS RFlag FPARM(4)/SCUTOF
+	exists = config.fieldNumber ("scutof");
+	if (exists >= 0)
+	{
+		scutof_p = config.asArrayDouble("scutof");
+	}
+	else
+	{
+		IPosition shape(1);
+		shape(0)=1;
+		Array<Double> tmp(shape);
+		tmp[0] = 1E6;
+		scutof_p = tmp;
+	}
+
+	// AIPS RFlag FPARM(6)
+	exists = config.fieldNumber ("spectralmin");
+	if (exists >= 0)
+	{
+		spectralmin_p = config.asDouble("spectralmin");
+	}
+	else
+	{
+		spectralmin_p = 0;
+	}
+
+	// AIPS RFlag FPARM(5)
+	exists = config.fieldNumber ("spectralmax");
+	if (exists >= 0)
+	{
+		spectralmax_p = config.asDouble("spectralmax");
+	}
+	else
+	{
+		spectralmax_p  = 1E6;
+	}
 
 	return;
+}
+
+Double FlagAgentRFlag::average(vector<Double> &data,vector<Double> &counts)
+{
+	Double sumAvg = 0;
+	for (size_t index = 0; index < data.size();index++)
+	{
+		sumAvg += data[index]/counts[index];
+	}
+	return sumAvg/data.size();
+}
+
+FlagReport FlagAgentRFlag::getReport()
+{
+	FlagReport dispRep("list");
+
+    Int current_spw;
+    Double spwAverage = 0;
+    Double avg,sumSquare,variance = 0;
+
+    // Extract time analysis report
+    FlagReport noiseStd = FlagReport("plotline",agentName_p,"Noise (time direction analysis) Std", "xaxis", "yaxis");
+
+    // Extract data from all spws and put them in one single Array
+    vector<Double> total_noise;
+    vector<Double> total_noise_squared;
+    vector<Double> total_noise_counts;
+    vector<Double> current_spw_noise;
+    vector<Double> current_spw_noise_squared;
+    vector<Double> current_spw_noise_counts;
+    vector<Float> total_noise_spw_average;
+    for (	map< Int,vector<Double> >::iterator spw_iter = spw_noise_histogram_sum_p.begin();
+    		spw_iter != spw_noise_histogram_sum_p.end();
+    		spw_iter++)
+    {
+    	current_spw = spw_iter->first;
+
+    	current_spw_noise = spw_noise_histogram_sum_p[current_spw];
+    	current_spw_noise_squared = spw_noise_histogram_sum_squares_p[current_spw];
+    	current_spw_noise_counts = spw_noise_histogram_counts_p[current_spw];
+
+    	total_noise.insert(total_noise.end(),current_spw_noise.begin(),current_spw_noise.end());
+    	total_noise_squared.insert(total_noise_squared.end(),current_spw_noise_squared.begin(),current_spw_noise_squared.end());
+    	total_noise_counts.insert(total_noise_counts.end(),current_spw_noise_counts.begin(),current_spw_noise_counts.end());
+
+    	// Display average (over baseline/channels) std per spw
+    	spwAverage = average(current_spw_noise,current_spw_noise_counts);
+    	*logger_p << LogIO::NORMAL << " Time analysis - Noise std (spw average over baselines and channels)"
+    			<< current_spw << " average: " << spwAverage << LogIO::POST;
+
+    	vector<Float> aux(current_spw_noise.size(),spwAverage);
+    	total_noise_spw_average.insert(total_noise_spw_average.end(),aux.begin(),aux.end());
+    }
+
+    // Copy values from std::vector to casa::Array
+    Vector<Float> noise_index(total_noise_counts.size(),0);
+    Vector<Float> noise(total_noise_counts.size(),0);
+    Vector<Float> noise_counts(total_noise_counts.size(),0);
+    Vector<Float> noise_avg(total_noise_counts.size(),0);
+    Vector<Float> noise_up(total_noise_counts.size(),0);
+    Vector<Float> noise_down(total_noise_counts.size(),0);
+    size_t idx = 0;
+    for (vector<Double>::iterator iter = total_noise.begin();iter != total_noise.end();iter++)
+    {
+    	noise_index(idx) = idx;
+    	noise(idx) = total_noise_counts[idx];
+    	noise_counts(idx) = total_noise_counts[idx];
+    	avg = total_noise[idx]/total_noise_counts[idx];
+    	noise_avg(idx) = avg;
+
+    	sumSquare = total_noise_squared[idx]/total_noise_counts[idx];
+    	variance = sqrt(sumSquare -avg*avg);
+    	noise_up(idx) = avg+variance;
+    	noise_down(idx) = avg-variance;
+    	idx++;
+    }
+
+    noiseStd.addData(noise_index,noise_avg,"Noise std (spw:channel average over baselines)");
+    noiseStd.addData(noise_index,noise_up,"Noise std+var (spw:channel average over baselines)");
+    noiseStd.addData(noise_index,total_noise_spw_average,"Noise std (spw average over baselines and channels)");
+    noiseStd.addData(noise_index,noise_down,"Noise std-var (spw:channel average over baselines)");
+
+    dispRep.addReport(noiseStd);
+
+    // Extract spectral analysis report
+    FlagReport scutofStd = FlagReport("plotline",agentName_p,"Spectral (frequency direction analysis) Deviation", "xaxis", "yaxis");
+
+    // Extract data from all spws and put them in one single Array
+    vector<Double> total_scutof;
+    vector<Double> total_scutof_squared;
+    vector<Double> total_scutof_counts;
+    vector<Double> current_spw_scutof;
+    vector<Double> current_spw_scutof_squared;
+    vector<Double> current_spw_scutof_counts;
+    vector<Float> total_scutof_spw_average;
+    for (	map< Int,vector<Double> >::iterator spw_iter = spw_scutof_histogram_sum_p.begin();
+    		spw_iter != spw_scutof_histogram_sum_p.end();
+    		spw_iter++)
+    {
+    	current_spw = spw_iter->first;
+
+    	current_spw_scutof = spw_scutof_histogram_sum_p[current_spw];
+    	current_spw_scutof_squared = spw_scutof_histogram_sum_squares_p[current_spw];
+    	current_spw_scutof_counts = spw_scutof_histogram_counts_p[current_spw];
+
+    	total_scutof.insert(total_scutof.end(),current_spw_scutof.begin(),current_spw_scutof.end());
+    	total_scutof_squared.insert(total_scutof_squared.end(),current_spw_scutof_squared.begin(),current_spw_scutof_squared.end());
+    	total_scutof_counts.insert(total_scutof_counts.end(),current_spw_scutof_counts.begin(),current_spw_scutof_counts.end());
+
+    	// Display average (over baeline/channels) std per spw
+    	spwAverage = average(current_spw_scutof,current_spw_scutof_counts);
+    	*logger_p << LogIO::NORMAL << " Spectral analysis - Spw " << current_spw <<
+    			" average (over baselines/timesteps) avg: " << spwAverage << LogIO::POST;
+
+    	vector<Float> aux(current_spw_scutof.size(),spwAverage);
+    	total_scutof_spw_average.insert(total_scutof_spw_average.end(),aux.begin(),aux.end());
+    }
+
+    // Copy values from std::vector to casa::Array
+    Vector<Float> scutof_index(total_scutof_counts.size(),0);
+    Vector<Float> scutof(total_scutof_counts.size(),0);
+    Vector<Float> scutof_counts(total_scutof_counts.size(),0);
+    Vector<Float> scutof_avg(total_scutof_counts.size(),0);
+    Vector<Float> scutof_up(total_scutof_counts.size(),0);
+    Vector<Float> scutof_down(total_scutof_counts.size(),0);
+    idx = 0;
+    for (vector<Double>::iterator iter = total_scutof.begin();iter != total_scutof.end();iter++)
+    {
+    	scutof_index(idx) = idx;
+    	scutof(idx) = total_scutof_counts[idx];
+    	scutof_counts(idx) = total_scutof_counts[idx];
+    	avg = total_scutof[idx]/total_scutof_counts[idx];
+    	scutof_avg(idx) = avg;
+
+    	sumSquare = total_scutof_squared[idx]/total_scutof_counts[idx];
+    	variance = sqrt(sumSquare - avg*avg);
+    	scutof_up(idx) = avg+variance;
+    	scutof_down(idx) = avg-variance;
+    	idx++;
+    }
+
+    scutofStd.addData(scutof_index,scutof_avg,"scutof std (spw:timestep average over baselines)");
+    scutofStd.addData(scutof_index,scutof_up,"scutof std+var (spw:timestep average over baselines)");
+    scutofStd.addData(scutof_index,total_scutof_spw_average,"scutof std (spw average over baselines and timesteps)");
+    scutofStd.addData(scutof_index,scutof_down,"scutof std-var  (spw:timestep average over baselines)");
+    dispRep.addReport(scutofStd);
+
+	return dispRep;
 }
 
 bool
@@ -78,32 +282,303 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	// Get flag cube size
-	IPosition flagCubeShape = flags.shape();
 	Int nPols,nChannels,nTimesteps;
-	flags.shape(nPols, nChannels, nTimesteps);
+	visibilities.shape(nPols, nChannels, nTimesteps);
 
-	// Prepare sliding window
-	Matrix<Float> slidingWindow(half_nchan_p*2+1,half_ntime_p*2+1);
-	Int slidingWindow_timestep_idx, slidingWindow_chan_idx;
+	// Get current chunk spw
+	Int spw = visBuffer.spectralWindow();
 
-	// Iterate over flag cube and grow flags
-	for (Int timestep_i=half_ntime_p;timestep_i<nTimesteps-half_ntime_p;timestep_i++)
+	// Get noise level
+	Double noise;
+	// Only one value for all spws
+	if (noise_p.size() == 1)
 	{
-		for (Int chan_j=half_nchan_p;chan_j<nChannels-half_nchan_p;chan_j++)
+		Bool deleteIt = False;
+		noise = noise_p.getStorage(deleteIt)[0];
+	}
+	// One value for each spw
+	else if (noise_p.size() > 1)
+	{
+		// Check if we already have the noise corresponding to this spw
+		if (spw_noise_map_p.find(spw) != spw_noise_map_p.end())
 		{
-			for (Int pol_k=0;pol_k<nPols;pol_k++)
+			noise = spw_noise_map_p.at(spw);
+		}
+		// Otherwise extract next noise value from input noise array
+		else
+		{
+			Bool deleteIt = False;
+			noise = noise_p.getStorage(deleteIt)[spw_noise_map_p.size()];
+			// And add spw-noise par to map
+			spw_noise_map_p[spw] = noise;
+		}
+	}
+
+	// Produce time analysis histogram for each spw
+	if (doplot_p)
+	{
+		if (spw_noise_histogram_sum_p.find(spw) == spw_noise_histogram_sum_p.end())
+		{
+			spw_noise_histogram_sum_p[spw] = vector<Double>(nChannels,0);
+			spw_noise_histogram_counts_p[spw] = vector<Double>(nChannels,0);
+			spw_noise_histogram_sum_squares_p[spw] = vector<Double>(nChannels,0);
+		}
+	}
+
+	// Get cutof level
+	Double scutof;
+	// Only one value for all spws
+	if (scutof_p.size() == 1)
+	{
+		Bool deleteIt = False;
+		scutof = scutof_p.getStorage(deleteIt)[0];
+	}
+	// One value for each spw
+	else if (scutof_p.size() > 1)
+	{
+		// Check if we already have the scutof corresponding to this spw
+		if (spw_scutof_map_p.find(spw) != spw_scutof_map_p.end())
+		{
+			scutof = spw_scutof_map_p.at(spw);
+		}
+		// Otherwise extract next scutof value from input scutof array
+		else
+		{
+			Bool deleteIt = False;
+			scutof = scutof_p.getStorage(deleteIt)[spw_scutof_map_p.size()];
+			// And add spw-scutof par to map
+			spw_scutof_map_p[spw] = scutof;
+		}
+	}
+
+	// Produce spectral analysis histogram for each spw
+	if (doplot_p)
+	{
+		if (spw_scutof_histogram_sum_p.find(spw) == spw_scutof_histogram_sum_p.end())
+		{
+			spw_scutof_histogram_sum_p[spw] = vector<Double>(nTimesteps,0);
+			spw_scutof_histogram_counts_p[spw] = vector<Double>(nTimesteps,0);
+			spw_scutof_histogram_sum_squares_p[spw] = vector<Double>(nTimesteps,0);
+		}
+		else if (spw_scutof_histogram_sum_p[spw].size() < nTimesteps)
+		{
+			vector<Double> aux(nTimesteps-spw_scutof_histogram_sum_p[spw].size(),0);
+			spw_scutof_histogram_sum_p[spw].insert(spw_scutof_histogram_sum_p[spw].end(),aux.begin(),aux.end());
+			spw_scutof_histogram_counts_p[spw].insert(spw_scutof_histogram_counts_p[spw].end(),aux.begin(),aux.end());
+			spw_scutof_histogram_sum_squares_p[spw].insert(spw_scutof_histogram_sum_squares_p[spw].end(),aux.begin(),aux.end());
+		}
+	}
+
+	// Declare variables
+	Complex visibility;
+	Double SumWeight = 0;
+	Double SumWeightReal = 0;
+	Double SumWeightImag = 0;
+	Double StdTotal = 0;
+    Double SumReal = 0;
+	Double SumRealSquare = 0;
+	Double AverageReal = 0;
+	Double StdReal = 0;
+	Double SumImag = 0;
+	Double SumImagSquare = 0;
+	Double AverageImag = 0;
+	Double StdImag = 0;
+	Double deviationReal = 0;
+	Double deviationImag = 0;
+
+	// Time-Direction analysis: Fix channel/polarization and compute stats with all time-steps
+	// NOTE: It is better to operate in channel/polarization sequence for data contiguity
+	for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+	{
+		// Compute variance
+		for (uInt pol_k=0;pol_k<nPols;pol_k++)
+		{
+			SumWeight = 0;
+			StdTotal = 0;
+		    SumReal = 0;
+			SumRealSquare = 0;
+			AverageReal = 0;
+			StdReal = 0;
+			SumImag = 0;
+			SumImagSquare = 0;
+			AverageImag = 0;
+			StdImag = 0;
+
+			for (uInt timestep_i=0;timestep_i<nTimesteps;timestep_i++)
 			{
-				// Inner iteration to fill sliding window
-				for (Int timestep_inner=timestep_i-half_ntime_p;timestep_inner<timestep_i+half_ntime_p;timestep_inner++)
+				// Ignore data point if it is already flagged
+				// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
+				if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+
+				visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+				SumWeight += 1;
+				SumReal += visibility.real();
+				SumRealSquare += visibility.real()*visibility.real();
+				SumImag += visibility.imag();
+				SumImagSquare += visibility.imag()*visibility.imag();
+			}
+
+			// Now flag all timesteps if variance is greater than threshold
+			// NOTE: In our case, SumWeight is zero when all the data is already flagged so we don't need to re-flag it
+			if (SumWeight > 0)
+			{
+	            AverageReal = SumReal / SumWeight;
+	            SumRealSquare = SumRealSquare / SumWeight;
+	            StdReal = SumRealSquare - AverageReal * AverageReal;
+
+	            AverageImag = SumImag / SumWeight;
+	            SumImagSquare = SumImagSquare / SumWeight;
+	            StdImag = SumImagSquare - AverageImag * AverageImag;
+
+	            // NOTE: It it not necessary to extract the square root if then we are going to pow2
+	            // StdReal = sqrt (StdReal > 0?  StdReal:0);
+	            // StdImag = sqrt (StdImag > 0?  StdImag:0);
+	            // StdTotal = sqrt (StdReal*StdReal + StdImag*StdImag);
+	            StdReal = StdReal > 0?  StdReal:0;
+	            StdImag = StdImag > 0?  StdImag:0;
+	            StdTotal = sqrt(StdReal + StdImag);
+
+	            // Apply flags or generate histogram?
+	            // NOTE: AIPS RFlag has the previous code duplicated in two separated
+	            // routines, but I don't see a reason to do this, performance-wise
+	            if (doplot_p)
+	            {
+	            	spw_noise_histogram_counts_p[spw][chan_j] += 1;
+	            	spw_noise_histogram_sum_p[spw][chan_j] += StdTotal;
+	            	spw_noise_histogram_sum_squares_p[spw][chan_j] += StdTotal*StdTotal;
+	            }
+	            else
+	            {
+	            	if (StdTotal > noise)
+	            	{
+	            		for (uInt timestep_i=0;timestep_i<nTimesteps;timestep_i++)
+	            		{
+	            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+	            			visBufferFlags_p += 1;
+	            		}
+	            	}
+	            }
+			}
+		}
+	}
+
+	// Spectral analysis: Fix timestep/polarization and compute stats with all channels
+	for (uInt timestep_i=0;timestep_i<nTimesteps;timestep_i++)
+	{
+		for (uInt pol_k=0;pol_k<nPols;pol_k++)
+		{
+			// NOTE: To apply the robust coefficients we need some initial values of avg/std
+			//       In AIPS they simply use Std=1000 for the first iteration
+			//       I'm not very convinced with this but if we have to cross-validate...
+			AverageReal = 0;
+			AverageImag = 0;
+			StdReal = 1000.0;
+			StdImag = 1000.0;
+
+			for (uInt robustIter=0;robustIter<nIterationsRobust_p;robustIter++)
+			{
+				SumWeightReal = 0;
+				SumWeightImag = 0;
+			    SumReal = 0;
+				SumRealSquare = 0;
+				SumImag = 0;
+				SumImagSquare = 0;
+
+				for (uInt chan_j=0;chan_j<nChannels;chan_j++)
 				{
-					slidingWindow_timestep_idx = timestep_inner - (timestep_i-half_ntime_p);
-					for (Int chan_inner=chan_j-half_nchan_p;chan_inner<chan_j+half_nchan_p;chan_inner++)
+					// Ignore data point if it is already flagged or weight is <= 0
+					// NOTE: In our case visibilities come w/o weights, so we check only vs flags
+					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+
+					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+					if (abs(visibility.real()-AverageReal)<thresholdRobust_p[robustIter]*StdReal)
 					{
-						slidingWindow_chan_idx = chan_inner - (chan_j-half_nchan_p);
-						slidingWindow(slidingWindow_chan_idx,slidingWindow_timestep_idx) = visibilities(chan_inner,timestep_inner);
+						SumWeightReal += 1;
+						SumReal += visibility.real();
+						SumRealSquare += visibility.real()*visibility.real();
+					}
+
+					if (abs(visibility.imag()-AverageImag)<thresholdRobust_p[robustIter]*StdImag)
+					{
+						SumWeightImag += 1;
+						SumImag += visibility.imag();
+						SumImagSquare += visibility.imag()*visibility.imag();
 					}
 				}
+
+				if (SumWeightReal > 0)
+				{
+					AverageReal = SumReal / SumWeightReal;
+					SumRealSquare = SumRealSquare / SumWeightReal;
+					StdReal = SumRealSquare - AverageReal * AverageReal;
+		            StdReal = sqrt(StdReal > 0?  StdReal:0);
+				}
+
+				if (SumWeightImag > 0)
+				{
+					AverageImag = SumImag / SumWeightImag;
+	            	SumImagSquare = SumImagSquare / SumWeightImag;
+	            	StdImag = SumImagSquare - AverageImag * AverageImag;
+		            StdImag = sqrt(StdImag > 0?  StdImag:0);
+				}
 			}
+
+            if (doplot_p)
+            {
+        		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+        		{
+					// Ignore data point if it is already flagged
+					// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
+					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+
+					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+
+					if (AverageReal > 0)
+					{
+						deviationReal = abs(visibility.real()-AverageReal);
+						spw_scutof_histogram_counts_p[spw][timestep_i] += 1;
+						spw_scutof_histogram_sum_p[spw][timestep_i] += deviationReal;
+						spw_scutof_histogram_sum_squares_p[spw][timestep_i] += deviationReal*deviationReal;
+					}
+
+					if (AverageImag > 0)
+					{
+						deviationImag = abs(visibility.imag()-AverageImag);
+		            	spw_scutof_histogram_counts_p[spw][timestep_i] += 1;
+		            	spw_scutof_histogram_sum_p[spw][timestep_i] += deviationImag;
+		            	spw_scutof_histogram_sum_squares_p[spw][timestep_i] += deviationImag*deviationImag;
+					}
+        		}
+            }
+            else
+            {
+            	// Flag all channels?
+            	if (	(StdReal > spectralmax_p) or
+            			(StdImag > spectralmax_p) or
+            			(StdReal < spectralmin_p) or
+            			(StdImag < spectralmin_p)		)
+            	{
+            		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+            		{
+            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+            			visBufferFlags_p += 1;
+            		}
+            	}
+            	// Check each channel separately vs the scutof level
+            	else
+            	{
+            		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+            		{
+    					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+    					if (	(abs(visibility.real()-AverageReal)>scutof) or
+    							(abs(visibility.imag()-AverageImag)>scutof)	)
+    					{
+                			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+                			visBufferFlags_p += 1;
+    					}
+            		}
+            	}
+            }
 		}
 	}
 

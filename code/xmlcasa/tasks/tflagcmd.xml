@@ -196,7 +196,7 @@
 <example>
         The task will select a subset of data explicitly for flagging
         using the modes and parameters defined in the task tflagger. 
-        The available modes are: manualflag, clip, shadow, quack, elevation,
+        The available modes are: manual, clip, shadow, quack, elevation,
         tfcrop, extend and unflag.
         
         This task is equivalent to the corresponding parts of
@@ -636,7 +636,7 @@
           Each key should only appear once on a given command line/string
         
           There is an implicit "mode" for each command, with the default
-          being 'manualflag' if not given.
+          being 'manual' if not given.
 
           Comment lines can start with '#' and will be ignored.
           Parts of a command line after a ' # ' token are also ignored.
@@ -657,7 +657,7 @@
           observation=''
         
           Note: a command consisting only of selection key-value pairs is a 
-          basic "manualflag" operation, ie. flag the data meeting the selection
+          basic "manual" operation, ie. flag the data meeting the selection
           
         
         2. Modes specific parameters with default values (for further details, refer to the task tflagger).
@@ -706,7 +706,7 @@
               flagnearfreq=False
               
           2.7 Mode unflag.
-          2.8 Mode manualflag.
+          2.8 Mode manual.
               
               
         3. Basic elaboration options for online and interface use

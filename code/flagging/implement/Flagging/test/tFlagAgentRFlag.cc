@@ -1,8 +1,8 @@
 //# tFlagAgentRFlag.cc This file contains the unit tests of the FlagAgentBase class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
-//#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
-//#  Copyright (C) European Southern Observatory, 2011, All rights reserved.
+//#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2012, All rights reserved.
+//#  Copyright (C) European Southern Observatory, 2012, All rights reserved.
 //#
 //#  This library is free software; you can redistribute it and/or
 //#  modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagAgentRFlag.h>
+#include <flagging/Flagging/FlagAgentDisplay.h>
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
@@ -190,7 +191,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 
 }
 
-void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParameters)
+void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParameters,uShort displayMode)
 {
 	// Some test execution info
 	cout << "STEP 2: WRITE FLAGS ..." << endl;
@@ -239,6 +240,19 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
 	}
+
+	if (displayMode == 2)
+	{
+		Record diplayAgentConfig;
+		diplayAgentConfig.define("name","FlagAgentDisplay");
+		diplayAgentConfig.define("datadisplay",True);
+
+		int exists = agentParameters[0].fieldNumber ("expression");
+		if (exists >= 0) diplayAgentConfig.define("expression",agentParameters[0].asString("expression"));
+		FlagAgentDisplay *dataDisplayAgent = new FlagAgentDisplay(dh,diplayAgentConfig);
+		agentList.push_back(dataDisplayAgent);
+	}
+
 
 	// Generate iterators and vis buffers
 	dh->generateIterator();
@@ -338,6 +352,24 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 
 	// Print total stats from each agent
 	agentList.msSummary();
+
+	// Get reports
+	FlagReport combinedReport = agentList.gatherReports();
+
+	if (displayMode == 1)
+	{
+		// Print the combined Record (for debugging)
+		stringstream replist;
+		combinedReport.print(replist);
+    	cout << " Combined Report : " << endl << replist.str() << endl;
+
+    	// Display report
+    	Record diplayAgentConfig;
+    	diplayAgentConfig.define("name","FlagAgentDisplay");
+    	diplayAgentConfig.define("reportdisplay",True);
+    	FlagAgentDisplay reportDisplayAgent(dh,diplayAgentConfig);
+    	reportDisplayAgent.displayReports(combinedReport);
+	}
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -510,6 +542,13 @@ int main(int argc, char **argv)
 	string expression,datacolumn,nThreadsParam,ntime;
 	Int nThreads = 0;
 
+	Bool doplot;
+	Double spectralmin,spectralmax;
+	vector<Float> noise;
+	vector<Float> scutof;
+	bool display = false;
+	uShort displayMode = 0;
+
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
 	bool checkFlagsActivated=false;
@@ -627,20 +666,77 @@ int main(int argc, char **argv)
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
 		}
-		else if (parameter == string("-half_ntime"))
+		else if (parameter == string("-doplot"))
 		{
-			half_ntime = casa::String(value);
-			agentParameters.define ("half_ntime", half_ntime);
-			cout << "half_ntime is: " << half_ntime << endl;
+			doplot = casa::Bool(atoi(argv[i+1]));
+			agentParameters.define ("doplot", doplot);
 		}
-		else if (parameter == string("-half_nchan"))
+		else if (parameter == string("-noise"))
 		{
-			half_nchan = casa::String(value);
-			agentParameters.define ("half_nchan", half_nchan);
-			cout << "half_nchan is: " << half_nchan << endl;
+			noise.push_back(atof(argv[i+1]));
+		}
+		else if (parameter == string("-scutof"))
+		{
+			scutof.push_back(atof(argv[i+1]));
+		}
+		else if (parameter == string("-spectralmin"))
+		{
+			spectralmin = atof(argv[i+1]);
+			agentParameters.define ("spectralmin", spectralmin);
+		}
+		else if (parameter == string("-spectralmax"))
+		{
+			spectralmax = atof(argv[i+1]);
+			agentParameters.define ("spectralmax", spectralmax);
+		}
+		else if (parameter == string("-display"))
+		{
+			if (value.compare("True") == 0)
+			{
+				display = true;
+			}
 		}
 	}
 
+	if ((noise.size()>0) and !doplot)
+	{
+		casa::IPosition size(1);
+		size[0]=noise.size();
+		Array<Double> noiseArray(size);
+		for (size_t iter = 0;iter<noise.size();iter++)
+		{
+			noiseArray[iter] = noise[iter];
+		}
+		agentParameters.define("noise",noiseArray);
+
+		if (display) displayMode = 2;
+	}
+
+	if ((scutof.size()>0) and !doplot)
+	{
+		casa::IPosition size(1);
+		size[0]=scutof.size();
+		Array<Double> scutofArray(size);
+		for (size_t iter = 0;iter<scutof.size();iter++)
+		{
+			scutofArray[iter] = scutof[iter];
+		}
+		agentParameters.define("scutof",scutofArray);
+
+		if (display) displayMode = 2;
+	}
+
+	if (display)
+	{
+		if (doplot)
+		{
+			displayMode = 1;
+		}
+		else
+		{
+			displayMode = 2;
+		}
+	}
 
 	Record agentParameters_i;
 	vector<Record> agentParamersList;
@@ -665,7 +761,7 @@ int main(int argc, char **argv)
 	}
 
 	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection);
-	writeFlags(targetFile,dataSelection,agentParamersList);
+	writeFlags(targetFile,dataSelection,agentParamersList,displayMode);
 	if (checkFlagsActivated) returnCode = checkFlags(targetFile,referenceFile,dataSelection);
 
 	if (returnCode)

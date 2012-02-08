@@ -181,6 +181,11 @@ public:
        	    String intent, String observation, String expression, String datacolumn,
        	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply);
 
+	bool parseQuackParameters(String field, String spw, String array, String feed, String scan,
+       	    String antenna, String uvrange, String timerange,String correlation,
+       	    String intent, String observation, String quackmode, Double quackinterval,
+       	    Bool quackincrement, Bool apply);
+
 private:
 
 	TestFlagger(const TestFlagger &) {};

@@ -341,6 +341,9 @@ public:
 	Float operator()(uInt chan, uInt row);
 	Float operator()(uInt pol, uInt chan, uInt row);
 
+	// Direct access to the complex correlation product
+	Complex correlationProduct(uInt pol, uInt chan, uInt row);
+
     const IPosition &shape() const
     {
     	return reducedLength_p;

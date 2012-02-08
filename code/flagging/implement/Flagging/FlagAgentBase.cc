@@ -222,7 +222,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 		writePrivateFlags = true;
 	}
 	// Manual mode
-	else if (mode.compare("manualflag")==0)
+	else if (mode.compare("manual")==0)
 	{
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;

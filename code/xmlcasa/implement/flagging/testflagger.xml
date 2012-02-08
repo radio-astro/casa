@@ -191,7 +191,7 @@ See the example below:
      \n The record may contain any data selection parameters supported by MSSelection, as well as 
      \n mode-specific parameters such as:\n
      \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange,observation
-     \n (2) mode (which can be: manualflag,clip,quack,shadow,elevation,tfcrop,extendflags,unflag or summary)
+     \n (2) mode (which can be: manual,clip,quack,shadow,elevation,tfcrop,extendflags,unflag or summary)
      \n     For flagging mode=clip, the parameters are: expression, datacolumns, clipminmax, etc.
      \n     See the documentation of the task tflagger for all the available parameters for each mode.\n
      \n (3) apply: default is true (true for flagging and false for unflagging)
@@ -318,7 +318,7 @@ Print out a list of current manual and auto flag selections.
 
    <method type="function" name="parsemanualparameters">
    <shortdescription>Parses data selection parameters and specific parameters
-for the manualflag mode.
+for the manual mode.
     </shortdescription>
 
 <input>

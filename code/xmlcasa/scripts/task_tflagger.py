@@ -162,7 +162,7 @@ def tflagger(vis,
         
         # Default mode
         if mode == '':
-            mode = 'manualflag'
+            mode = 'manual'
             
         # Hold the name of the agent
         agent_name = mode.capitalize()
@@ -184,8 +184,8 @@ def tflagger(vis,
         agent_pars['mode'] = mode
         
         # Set up agent's parameters based on mode
-        if mode == 'manualflag':
-            casalog.post('Manualflag mode is active')
+        if mode == 'manual':
+            casalog.post('Manual mode is active')
             
         elif mode == 'clip':
             agent_pars['expression'] = expression
@@ -350,7 +350,7 @@ def tflagger(vis,
 
         # Write the current parameters as flag commands to output
         if savepars:         
-            ncmd = writeCMD(vis, flagcmd, outfile)
+            ncmd = writeCMD(vis, flagcmd, writeflags, outfile)
             
             
         # Destroy the tool
@@ -392,7 +392,7 @@ def tflagger(vis,
     return
 
 
-def writeCMD(msfile, flagcmd, outfile):
+def writeCMD(msfile, flagcmd, writeflags, outfile):
     ''' Reads a list of parameters and save it to the FLAG_CMD table or to a text file.
         When saving in the FLAG_CMD table, it will also update the APPLIED column to True.
         Returns the number of flag commands written (it's always one!!!)'''
@@ -413,7 +413,7 @@ def writeCMD(msfile, flagcmd, outfile):
     typ_list = ['FLAG']
     sev_list = [0]
     lev_list = [0]
-    app_list = [True]
+    app_list = [writeflags]
        
     
     if debug:
@@ -520,9 +520,9 @@ def backupFlags(tflocal, mode, flagcmd):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
-    # before_manualflag_1,
-    # before_manualflag_2,
-    # before_manualflag_3,
+    # before_manual_1,
+    # before_manual_2,
+    # before_manual_3,
     # etc
     #
     # Generally  before_<mode>_<i>, where i is the smallest

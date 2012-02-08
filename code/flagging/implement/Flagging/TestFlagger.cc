@@ -315,7 +315,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	// Validate mode against known modes
 	if (! isModeValid(mode)){
-		os << LogIO::WARN << "Mode "<< mode << "is not valid or doesn't exist"
+		os << LogIO::WARN << "Mode "<< mode << " is not valid or doesn't exist"
 				<< LogIO::POST;
 		return false;
 	}
@@ -609,7 +609,10 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	// Print the MS summary stats
 	agents_list_p.msSummary();
 	if (writeflags)
-		os << LogIO::NORMAL <<  "=> " << "Writing flags to the MS" << LogIO::POST;
+		os << LogIO::NORMAL << "=> " << "Writing flags to the MS" << LogIO::POST;
+	else
+		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)"
+			<< LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
@@ -801,11 +804,12 @@ TestFlagger::isModeValid(String mode)
 {
 	bool ret;
 
-	if (mode.compare("manualflag") == 0 or mode.compare("clip") == 0 or
+	if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
 			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
 			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
 			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
-			mode.compare("unflag") == 0 or mode.compare("summary") == 0) {
+			mode.compare("unflag") == 0 or mode.compare("summary") == 0
+			or mode.compare("display") == 0) {
 
 		ret = true;
 	}
@@ -817,7 +821,7 @@ TestFlagger::isModeValid(String mode)
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseManualParameters
-// Parse data selection parameters and specific manualflag parameters
+// Parse data selection parameters and specific manual parameters
 //
 // ---------------------------------------------------------------------
 bool
@@ -830,8 +834,8 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	// Default values for some parameters
-	String mode = "manualflag";
-	String agent_name = "Manualflag";
+	String mode = "manual";
+	String agent_name = "Manual";
 
 	// Create a record with the parameters
 	Record agent_record = Record();
@@ -907,5 +911,50 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 	return true;
 
 }
+
+bool
+TestFlagger::parseQuackParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String intent, String observation, String quackmode, Double quackinterval,
+   	    Bool quackincrement, Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "quack";
+	String agent_name = "Quack";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("quackmode", quackmode);
+	agent_record.define("quackinterval", quackinterval);
+	agent_record.define("quackincrement", quackincrement);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
+
+
+
 
 } //#end casa namespace

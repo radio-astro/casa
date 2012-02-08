@@ -452,8 +452,22 @@ if casa['flags'].has_key('--nologger') :
 if casa['flags'].has_key('--nogui') :
     deploylogger = False
 
-if deploylogger and (thelogfile != 'null') :
-    casalogger( thelogfile)
+#print 'thelogfile:', thelogfile
+if thelogfile == 'null':
+    pass
+else:
+    if thelogfile.strip() != '' :
+        if deploylogger:
+            casalogger(thelogfile)
+    else:
+        thelogfile = 'casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+        try:
+            open(thelogfile, 'a').close()
+        except:
+            pass
+        if deploylogger:
+            casalogger(thelogfile)
+
 
 ###################
 #setup file catalog
@@ -1217,6 +1231,12 @@ if cu.hostinfo( )['memory']['available'] < 524288:
     casalog.post( 'available memory less than 512MB (with casarc settings)\n...some things will not run correctly', 'SEVERE' )
 
 casa['state']['startup'] = False
+
+#print '----thelogfile:', thelogfile
+#print 'casapy.log exists:', os.path.exists('casapy.log')
+
+if (thelogfile == 'null' or thelogfile != 'casapy.log') and os.path.exists('casapy.log'):
+    os.remove('casapy.log')
 
 import shutil
 if ipython:

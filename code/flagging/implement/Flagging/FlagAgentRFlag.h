@@ -1,8 +1,8 @@
 //# FlagAgentRFlag.h: This file contains the interface definition of the FlagAgentRFlag class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
-//#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
-//#  Copyright (C) European Southern Observatory, 2011, All rights reserved.
+//#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2012, All rights reserved.
+//#  Copyright (C) European Southern Observatory, 2012, All rights reserved.
 //#
 //#  This library is free software; you can redistribute it and/or
 //#  modify it under the terms of the GNU Lesser General Public
@@ -42,14 +42,35 @@ protected:
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
 
+	// Function to return histograms
+	FlagReport getReport();
+
+	Double average(vector<Double> &data,vector<Double> &counts);
+
 private:
 
-	/// Input parameters ///
+	// General parameters
+	Bool doplot_p;
 
-	Int half_nchan_p;
-	Int half_ntime_p;
+	// Spectral Robust fit
+	uInt nIterationsRobust_p;
+	vector<Double> thresholdRobust_p;
+	Double spectralmin_p;
+	Double spectralmax_p;
 
+	// Time-direction analysis
+	Array<Double> noise_p;
+	map<Int,Double> spw_noise_map_p;
+	map< Int,vector<Double> > spw_noise_histogram_sum_p;
+	map< Int,vector<Double> > spw_noise_histogram_sum_squares_p;
+	map< Int,vector<Double> > spw_noise_histogram_counts_p;
 
+	// Spectral analysis
+	Array<Double> scutof_p;
+	map<Int,Double> spw_scutof_map_p;
+	map< Int,vector<Double> > spw_scutof_histogram_sum_p;
+	map< Int,vector<Double> > spw_scutof_histogram_sum_squares_p;
+	map< Int,vector<Double> > spw_scutof_histogram_counts_p;
 };
 
 
