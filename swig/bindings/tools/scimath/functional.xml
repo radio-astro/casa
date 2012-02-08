@@ -3,7 +3,7 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
 
 
@@ -12,9 +12,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <shortdescription>Functionals handling</shortdescription>
 
 <code>
-	<include>xmlcasa/scimath/functional_forward.h</include>
+	<include>tools/scimath/functional_forward.h</include>
     <private>
-	    #include &lt;xmlcasa/scimath/functional_private.h&gt;
+	    #include &lt;tools/scimath/functional_private.h&gt;
     </private>
 </code>
 

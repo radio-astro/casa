@@ -182,53 +182,49 @@ macro( casa_add_tools out_swig out_sources )
     
     get_filename_component( _base ${_x} NAME_WE )
     get_filename_component( _xml ${_x} ABSOLUTE )
+    get_filename_component( _path ${_x} PATH )
 
     # Generate .xml from .xml
     set( _out_xml casa${_base}.xml )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2swigxml.xsl )
-    add_custom_command(
-      OUTPUT ${_out_xml}
-      COMMAND ${SAXON} ${_xml} ${_xsl} > ${_out_xml}_tmp1
-      COMMAND sed -e \"s/exmlns/xmlns/\" ${_out_xml}_tmp1 > ${_out_xml}
-      DEPENDS ${_xml} ${_xsl} 
-      )
-
-    # Then xml -> swig
     set( _swigh ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h )
-    set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2c++h.xsl )
+    set( _xsl2 ${CMAKE_SOURCE_DIR}/install/casa2c++h.xsl )
     add_custom_command(
       OUTPUT ${_swigh}
-      COMMAND ${SAXON} ${_out_xml} ${_xsl} > ${_out_xml}_tmp2
-      COMMAND sed -e \"s/<?xml version=.*//\" ${_out_xml}_tmp2 > ${_swigh}
-      DEPENDS ${_out_xml} ${_xsl} 
+      COMMAND ${SAXON} ${_xml} ${_xsl} > ${_out_xml}_tmp1
+      COMMAND sed -e \"s/exmlns/xmlns/\" ${_out_xml}_tmp1 > ${_out_xml}
+      COMMAND ${SAXON} ${_out_xml} ${_xsl2} > ${_swigh}_tmp2
+      COMMAND sed -e \"s/<?xml version=.*//\" ${_swigh}_tmp2 > ${_swigh}
+      DEPENDS ${_xml} ${_xsl} ${_xsl2}
       )
 
     # Then generate the swig interface file
     set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.i )
     add_custom_command(
       OUTPUT ${_swig}
-      COMMAND echo "%module " ${_base} > $(_swig)
-      COMMAND echo "%include <tools/casa_typemaps.i> " >> ${_swig}
-      COMMAND echo "%include \"${base}_cmpt.h\"" >> ${_swig}
+      COMMAND echo "%module " ${_base} > ${_swig}
+      COMMAND echo "%include \\<tools/casa_typemaps.i\\> " >> ${_swig}
+      COMMAND echo "%include \\\"${_base}_cmpt.h\\\"" >> ${_swig}
       COMMAND echo "%{" >> ${_swig}
-      COMMAND echo "#include <${base}_cmpt.h>" >> ${_swig}
+      COMMAND echo "\\#include \\<${_base}_cmpt.h\\> " >> ${_swig}
       COMMAND echo "%}" >> ${_swig}
-      DEPENDS ${_out_xml} ${_xsl} 
+      DEPENDS ${_swigh} ${_xsl} 
       )
 
 
     set( _outputs
 	    ${_base}_cmpt.h
-	    ${_base}_wrap.cxx
+	    #${_base}PYTHON_wrap.c
 	    )
 
+    set(CMAKE_SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}"  "-c++" )
     SET_SOURCE_FILES_PROPERTIES(_swig PROPERTIES CPLUSPLUS ON )
-    SET_SOURCE_FILES_PROPERTIES(_swig PROPERTES SWIG_FLAGS ${CMAKE_SOURCE_DIR}/tools) 
-    SWIG_ADD_MODULE(${_base} python ${_swig} ${_base}_wrap.cxx)
+    SET_SOURCE_FILES_PROPERTIES(_swig PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}") 
+    SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
 
-    set( ${out_swig) ${${out_swig}} ${_swig} )
+    set( ${out_swig} ${${out_swig}} ${_swig} )
 
-    set( ${out_sources) ${${out_sources}} ${_outputs} )
+    set( ${out_sources} ${${out_sources}} ${_outputs} )
 
     install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h
              DESTINATION include/casa/tools/${_base} )

@@ -27,7 +27,7 @@
 #include <dbus_cmpt.h>
 
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 namespace casac {
 

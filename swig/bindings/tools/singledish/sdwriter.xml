@@ -3,16 +3,16 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
  
 	<tool name="sdwriter" module="singledish">
         <shortdescription>tool for exporting to single dish files</shortdescription>
        
 <code>
-	<include>xmlcasa/singledish/sdwriter_forward.h</include>
+	<include>tools/singledish/sdwriter_forward.h</include>
 <private>
-	#include &lt;xmlcasa/singledish/sdwriter_private.h&gt;
+	#include &lt;tools/singledish/sdwriter_private.h&gt;
 </private>
 </code>
 

@@ -26,7 +26,7 @@
 //# $Id: $
 #include <plotms_cmpt.h>
 
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 #include <dbus_cmpt.h>
 
 #include <unistd.h>

@@ -40,7 +40,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 
 using namespace std;

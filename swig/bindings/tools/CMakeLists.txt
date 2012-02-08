@@ -129,7 +129,7 @@ include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
 add_definitions( -pthread -fno-strict-aliasing -DNDEBUG ) # may or may not be necessary for compiling python modules
 
-add_custom_target( generated_sources SOURCES ${tools_sources} ${outputs_swig} )
+add_custom_target( generated_sources SOURCES ${tools_sources} ${tools_swig} )
 #add_dependencies( generated_sources )
 add_dependencies( libtools generated_sources )
 

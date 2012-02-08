@@ -19,8 +19,8 @@
 #include &lt;vector&gt;
 #include &lt;string&gt;
 #include &lt;complex&gt;
-#include &lt;xmlcasa/record.h&gt;
-#include &lt;xmlcasa/casaswig_types.h&gt;
+#include &lt;stdcasa/record.h&gt;
+#include &lt;tools/casaswig_types.h&gt;
 </xsl:text>
 <xsl:for-each select="aps:needs">
 	<xsl:text disable-output-escaping="yes">#include &lt;casa</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">.idl&gt;
@@ -83,28 +83,29 @@ namespace casac {
 <xsl:template name="doargs">
      <xsl:for-each select="aps:param">
               <xsl:choose>           
-                 <xsl:when test="lower-case(@xsi:type)='string'"> string <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='int'"> long <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='bool'"> boolean <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='float'"> float <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='string'"><xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='any'"><xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='int'"> int <xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='bool'"> bool <xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='float'"> float <xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='double'"><xsl:choose>
                  <xsl:when test="@units">
-                  Quantity <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			 <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
                  </xsl:when><xsl:otherwise>
-                  double <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
-                 <xsl:when test="lower-case(@xsi:type)='stringarray'"> StringVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='recordarray'"> RecordVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='intarray'"> IntVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='boolarray'"> BoolVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='floatarray'"> FloatVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='complexarray'"> ComplexVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		 double<xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
+		 <xsl:when test="lower-case(@xsi:type)='stringarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes">std::vector&lt;std::string&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='recordarray'"> RecordVec&amp; <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		 <xsl:when test="lower-case(@xsi:type)='intarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;int&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		 <xsl:when test="lower-case(@xsi:type)='boolarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;bool&gt;&amp;  </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		 <xsl:when test="lower-case(@xsi:type)='floatarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;float&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		 <xsl:when test="lower-case(@xsi:type)='complexarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='doublearray'"><xsl:choose>
                  <xsl:when test="@units">
-                  Quantity <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			 <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
                  </xsl:when><xsl:otherwise>
-                  DoubleVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
+		 <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;double&gt;&amp; </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
                  <xsl:otherwise>
-                 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/><xsl:text> </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/><xsl:if test="@direction='in'"> const</xsl:if><xsl:text> </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
                  </xsl:otherwise>
               </xsl:choose>
      </xsl:for-each>   
@@ -112,17 +113,18 @@ namespace casac {
      <xsl:template match="aps:returns">  
               <xsl:choose>
                 <xsl:when test="lower-case(@xsi:type)='string'">string </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='int'">long </xsl:when>
-                  <xsl:when test="lower-case(@xsi:type)='bool'">boolean </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='int'">int </xsl:when>
+                  <xsl:when test="lower-case(@xsi:type)='bool'">bool </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='float'">float </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='double'">double </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='stringarray'">StringVec </xsl:when>
+
+		 <xsl:when test="lower-case(@xsi:type)='stringarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;std::string&gt; </xsl:text></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='recordarray'">RecordVec </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='intarray'">IntVec </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='boolarray'">BoolVec </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='floatarray'">FloatVec </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='doublearray'">DoubleVec </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='complexarray'">DoubleVec </xsl:when>
+		 <xsl:when test="lower-case(@xsi:type)='intarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;int&gt; </xsl:text></xsl:when>
+			 <xsl:when test="lower-case(@xsi:type)='boolarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;bool&gt; </xsl:text> </xsl:when>
+				 <xsl:when test="lower-case(@xsi:type)='floatarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;float&gt;</xsl:text> </xsl:when>
+					 <xsl:when test="lower-case(@xsi:type)='doublearray'"><xsl:text disable-output-escaping="yes">std::vector&lt;double&gt;</xsl:text> </xsl:when>
+						 <xsl:when test="lower-case(@xsi:type)='complexarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;std::complex&gt;</xsl:text> </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='record'">record </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='void'">void </xsl:when>
                   <xsl:when test="@xsi:type=''">void </xsl:when>

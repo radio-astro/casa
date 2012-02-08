@@ -702,17 +702,18 @@ else()
        )
 endif()
 
+#
 # CASACode
 #
 
 casa_find( CASACODE
            VERSION 1.0.145
            PREFIX_HINTS ${CASACODE_ROOT_DIR}
-           INCLUDES casacore/casa/version.h
+           INCLUDES stdcasa/version.h
            INCLUDES_SUFFIXES casacode
            LIBS ${casacode_libs}
            PREFIX_HINTS ${casacode_prefix}
-           DEPENDS LAPACK CFITSIO WCSLIB FFTW3 DL )
+	   DEPENDS CASACORE LAPACK CFITSIO WCSLIB FFTW3 DL )
 
 
 # ALMAWVR
@@ -838,7 +839,7 @@ casa_find( Java
   PROGRAMS java
   PROG_VERSION "-version")
 
-set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/bindings/install/saxon8.jar )
+set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/install/saxon8.jar )
 
 # C++ DBus
 #
@@ -1174,3 +1175,25 @@ add_subdirectory( doc/casaref )
 add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf )
 #add_custom_target( doc )
 
+
+install( PROGRAMS
+         install/buildmytasks
+         install/xmlgenpy
+         DESTINATION bin )
+
+install( FILES 
+         install/casa2c++h.xsl
+         install/casa2py.xsl
+         install/casa2pyimp.xsl
+         install/casa2summary.xsl
+	 install/casa2swigxml.xsl
+         install/casa2tsum2.xsl
+         install/casa2latex.xsl
+         install/casa2pycli.xsl
+         install/casa2pypg.xsl
+         install/casa2tlatex.xsl
+         install/casa2tsum.xsl
+         install/casatlist.xsl
+         DESTINATION ${CMAKE_INSTALL_PREFIX}/../share/xml )
+
+install( FILES install/saxon8.jar DESTINATION lib )

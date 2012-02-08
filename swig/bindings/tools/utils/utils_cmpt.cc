@@ -12,10 +12,10 @@
 
 #include <iostream>
 #include <fstream>
-#include <xmlcasa/record.h>
+#include <stdcasa/record.h>
 #include <utils_cmpt.h>
-#include <xmlcasa/utils/stdBaseInterface.h>
-#include <xmlcasa/xerces/stdcasaXMLUtil.h>
+#include <stdcasa/utils/stdBaseInterface.h>
+#include <stdcasa/xerces/stdcasaXMLUtil.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicSL/String.h>
 #include <casa/OS/File.h>

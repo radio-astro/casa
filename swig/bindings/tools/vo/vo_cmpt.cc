@@ -13,7 +13,7 @@
 #include <iostream>
 #include <casa/aips.h>
 #include <vo_cmpt.h>
-#include <xmlcasa/record.h>
+#include <stdcasa/record.h>
 #include <vo/VOClient/VOClient.hpp>
 
 using namespace std;

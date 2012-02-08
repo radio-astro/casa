@@ -3,16 +3,16 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
 
 <!-- This is a param set for asdm2ms filler -->
 
 <tool name="asdm2msfillertask" module="asdm2msfillertask">
 <code>
-	<include>xmlcasa/alma/asdm2ms_forward.h</include>
+	<include>tools/alma/asdm2ms_forward.h</include>
 <private>
-	#include &lt;xmlcasa/alma/asdm2ms_private.h&gt;
+	#include &lt;tools/alma/asdm2ms_private.h&gt;
 </private>
 </code>
 

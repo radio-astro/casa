@@ -3,7 +3,7 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
 
  
@@ -18,9 +18,9 @@ be made at any time (provide they are given different names).
 </description>
 
 <code>
-	<include>xmlcasa/synthesis/imager_forward.h</include>
+	<include>tools/synthesis/imager_forward.h</include>
 <private>
-	#include &lt;xmlcasa/synthesis/imager_private.h&gt;
+	#include &lt;tools/synthesis/imager_private.h&gt;
 </private>
 
 </code>

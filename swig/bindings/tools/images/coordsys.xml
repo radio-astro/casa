@@ -3,7 +3,7 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
  
   <tool name="coordsys" module="images">
@@ -17,9 +17,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <keyword>measures</keyword>
 <keyword>quanta</keyword>
 <code>
-	<include>xmlcasa/images/coordsys_forward.h</include>
+	<include>tools/images/coordsys_forward.h</include>
 	<private>
-		#include &lt;xmlcasa/images/coordsys_private.h&gt;
+		#include &lt;tools/images/coordsys_private.h&gt;
 	</private>
 </code>
 

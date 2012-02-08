@@ -23,7 +23,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/sstream.h>
 #include <unistd.h>
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 
 using namespace std;

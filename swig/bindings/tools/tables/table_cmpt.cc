@@ -29,11 +29,11 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
-#include <xmlcasa/utils/stdBaseInterface.h>
-#include <xmlcasa/ms/Statistics.h>
+#include <stdcasa/utils/stdBaseInterface.h>
+#include <stdcasa/ms/Statistics.h>
 //begin modification
 //july 4 2007
-#include <xmlcasa/xerces/asdmCasaXMLUtil.h>
+#include <stdcasa/xerces/asdmCasaXMLUtil.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TableRow.h>

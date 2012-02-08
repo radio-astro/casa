@@ -331,10 +331,15 @@ def tflagcmd(
                 savepars = False
                 myrowlist = myflagcmd.keys()
                 if myrowlist.__len__() > 0:     
-                    if apply:       
-                        updateTable(vis, mycol='APPLIED', myval=True, myrowlist=valid_rows)
-                    else:
+                    if not writeflags:
+                        # APPLIED is set to False for any action
                         updateTable(vis, mycol='APPLIED', myval=False, myrowlist=valid_rows)
+                    else:
+                        # update APPLIED according to requested action
+                        if apply:       
+                            updateTable(vis, mycol='APPLIED', myval=True, myrowlist=valid_rows)
+                        else:
+                            updateTable(vis, mycol='APPLIED', myval=False, myrowlist=valid_rows)
                     
                                            
             # Save the valid command lines to the output file or FLAG_CMD
@@ -342,11 +347,15 @@ def tflagcmd(
                 if valid_rows.__len__() > 0:                   
                     # save to MS
                     if outfile == '':
-                        # Add the flag commands to the MS and update APPLIED
-                        if apply:
-                            writeFlagCmd(vis, myflagcmd, valid_rows, tag='applied')
-                        else:
+                        if not writeflags:
+                            # APPLIED is set to False for any action
                             writeFlagCmd(vis, myflagcmd, valid_rows, tag='unapplied')
+                        else:
+                            # Add the flag commands to the MS and update APPLIED
+                            if apply:
+                                writeFlagCmd(vis, myflagcmd, valid_rows, tag='applied')
+                            else:
+                                writeFlagCmd(vis, myflagcmd, valid_rows, tag='unapplied')
                            
                     # save to a file 
                     else:
@@ -754,8 +763,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 
         # Get the specific parameters for the mode
         if cmdline.__contains__('mode'):                 
-            if cmdline.__contains__('manualflag'): 
-                mode = 'manualflag'
+            if cmdline.__contains__('manual'): 
+                mode = 'manual'
                 modepars = getLinePars(cmdline,manualpars)   
             elif cmdline.__contains__('clip'):
                 mode = 'clip'
@@ -787,9 +796,9 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 valid = False
 
         else:
-            # No mode means manualflag
-            mode = 'manualflag'
-            cmdline = cmdline+' mode=manualflag'
+            # No mode means manual
+            mode = 'manual'
+            cmdline = cmdline+' mode=manual'
             modepars = getLinePars(cmdline,manualpars)   
                 
                 
@@ -1904,7 +1913,7 @@ def writeFlagCmd(msfile, myflags, vrows, tag=''):
     msfile    MS
     myflags   dictionary of commands read from inputfile (from readFromTable, etc.)
     vrows     list of valid rows from myflags dictionary to save
-    tag       tag to updated APPLIED column of FLAG_CMD
+    tag       tag to update APPLIED column of FLAG_CMD
         Returns the number of commands written to output
     '''
     
@@ -1937,7 +1946,7 @@ def writeFlagCmd(msfile, myflags, vrows, tag=''):
             # if no mode, add the default
             command = myflags[key]['cmd']
             if not command.__contains__('mode'):
-                myflags[key]['cmd'] = command+' mode=manualflag'
+                myflags[key]['cmd'] = command+' mode=manual'
             cmd_list.append(myflags[key]['cmd'])
             typ_list.append(myflags[key]['type'])
             sev_list.append(myflags[key]['severity'])

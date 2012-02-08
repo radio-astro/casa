@@ -15,13 +15,13 @@
 #include <logsink_cmpt.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogFilter.h>
-#include <xmlcasa/casa/TSLogSink.h>
+#include <stdcasa/casa/TSLogSink.h>
 #include <casa/Logging/NullLogSink.h>
 #include <casa/Logging/StreamLogSink.h>
-#include <xmlcasa/version.h>
+#include <stdcasa/version.h>
 #include <unistd.h>
 #include <sys/param.h>
-#include <xmlcasa/utils/CasapyWatcher.h>
+#include <stdcasa/utils/CasapyWatcher.h>
 #include <casa/OS/File.h>
 #include <casa/System/Aipsrc.h>
 

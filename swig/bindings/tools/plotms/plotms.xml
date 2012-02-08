@@ -40,9 +40,9 @@
 <keyword>plotter</keyword>
 
 <code>
-  <include>xmlcasa/plotms/plotms_forward.h</include>
+  <include>tools/plotms/plotms_forward.h</include>
   <private>
-    #include &lt;xmlcasa/plotms/plotms_private.h&gt;
+    #include &lt;tools/plotms/plotms_private.h&gt;
   </private>
 </code>
 

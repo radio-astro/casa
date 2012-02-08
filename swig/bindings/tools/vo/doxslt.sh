@@ -2,24 +2,25 @@
 MYPACK=vo
 SWIGFILE=${MYPACK}.i
 CASABUILDROOT="/opt/casa/active/darwinllvm"
-CASAINCLUDE="/opt/casa/active/code/include"
+CASAINCLUDE="/opt/casa/active/bindings/tools"
 EXTRAINCDIRS="\".\", \"/iraf/iraf/vendor/voclient/include\""
 PYINCLUDE="/opt/casa/darwin11/Library/Frameworks/Python.framework/Headers"
 EXTRALIBDIRS="\"/iraf/iraf/vendor/voclient/lib\""
 EXTRALIBS="\"VOCLient\", \"xmlcasa\""
-java -jar /opt/casa/active/code/xmlcasa/install/saxon8.jar ./${MYPACK}.xml /opt/casa/active/code/xmlcasa/install/casa2swigxml.xsl > ./stuff.xml
+java -jar /opt/casa/active/bindings/install/saxon8.jar ./${MYPACK}.xml /opt/casa/active/bindings//install/casa2swigxml.xsl > ./stuff.xml
 sed -e "s/exmlns/xmlns/" ./stuff.xml > ./stuff2.xml
-java -jar /opt/casa/active/code/xmlcasa/install/saxon8.jar ./stuff2.xml /opt/casa/active/code/xmlcasa/install/casa2c++h.xsl > ./stuff.h
+java -jar /opt/casa/active/bindings/install/saxon8.jar ./stuff2.xml /opt/casa/active/bindings/install/casa2c++h.xsl > ./stuff.h
 sed -e "s/<?xml version=.*//" ./stuff.h > ${MYPACK}_cmpt.h
 #
 # Write out the swig interface file
 #
 echo "%module ${MYPACK}" > ${SWIGFILE}
-echo "%include <xmlcasa/casa_typemaps.i> " >> ${SWIGFILE} 
+echo "%include <casa_typemaps.i> " >> ${SWIGFILE} 
 echo "%include \"${MYPACK}_cmpt.h\"" >> ${SWIGFILE} 
 echo "%{" >> ${SWIGFILE} 
 echo "#include <${MYPACK}_cmpt.h>" >> ${SWIGFILE} 
 echo "%}" >> ${SWIGFILE} 
+exit
 #
 # Write out the setup.py file
 #

@@ -3,7 +3,7 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
 
  
@@ -20,9 +20,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <keyword>image</keyword>
 <keyword>polarimetry</keyword>
 <code>
-	<include>xmlcasa/images/imagepol_forward.h</include>
+	<include>tools/images/imagepol_forward.h</include>
 	<private>
-		#include &lt;xmlcasa/images/imagepol_private.h&gt;	</private>
+		#include &lt;tools/images/imagepol_private.h&gt;	</private>
 </code>
 
 <description>

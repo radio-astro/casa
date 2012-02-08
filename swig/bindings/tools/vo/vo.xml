@@ -3,7 +3,7 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
 
 
@@ -11,10 +11,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <tool name="vo" module="vo">
         <shortdescription>Allows access to voclient methods</shortdescription>
 <code>
-	<include>xmlcasa/vo/vo_forward.h</include>
+	<include>tools/vo/vo_forward.h</include>
 <private>
 
-	<include>xmlcasa/vo/vo_private.h</include>
+	<include>tools/vo/vo_private.h</include>
 </private>
 </code>
        

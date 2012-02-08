@@ -22,7 +22,7 @@ using namespace std;
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
 #include <atmosphere_cmpt.h>
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 using namespace atm;
 using namespace std;
@@ -120,7 +120,7 @@ atmosphere::initAtmProfile(const Quantity& altitude,
 			   const Quantity& maxAltitude,
 			   const double humidity, const Quantity& dTem_dh,
 			   const Quantity& dP, const double dPm,
-			   const Quantity& h0, const int atmtype)
+			   const Quantity& h0, int atmtype)
 {
   string rtn;
 
@@ -240,11 +240,11 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
 }
 
 std::string
-atmosphere::getBasicAtmParms(Quantity& altitude, Quantity& temperature,
-			     Quantity& pressure, Quantity& maxAltitude,
-			     double& humidity, Quantity& dTem_dh,
-			     Quantity& dP, double& dPm, Quantity& h0,
-			     std::string& atmType)
+atmosphere::getBasicAtmParms(const Quantity& altitude, const Quantity& temperature,
+			     const Quantity& pressure, const Quantity& maxAltitude,
+			     double& humidity, const Quantity& dTem_dh,
+			     const Quantity& dP, double& dPm, const Quantity& h0,
+			     const std::string& atmType)
 {
   string rtn("");
   try {
@@ -379,10 +379,10 @@ atmosphere::getGroundWH2O()
 }
 
 std::string
-atmosphere::getProfile(Quantity& thickness, Quantity& temperature,
-		       Quantity& watermassdensity,
-		       Quantity& water, Quantity& pressure, Quantity& O3,
-		       Quantity& CO, Quantity& N2O)
+atmosphere::getProfile(const Quantity& thickness, const Quantity& temperature,
+		       const Quantity& watermassdensity,
+		       const Quantity& water, const Quantity& pressure, const Quantity& O3,
+		       const Quantity& CO, const Quantity& N2O)
 {
   std::string rtn("");
   try {
@@ -439,7 +439,7 @@ atmosphere::getProfile(Quantity& thickness, Quantity& temperature,
 }
 
 int
-atmosphere::initSpectralWindow(const int nbands, const Quantity& fCenter,
+atmosphere::initSpectralWindow(int nbands, const Quantity& fCenter,
 		       const Quantity& fWidth, const Quantity& fRes)
 {
   int rstat(-1);
@@ -563,7 +563,7 @@ atmosphere::getNumSpectralWindows()
 }
 
 int
-atmosphere::getNumChan(const int spwId)
+atmosphere::getNumChan(int spwId)
 {
   int rstat(-1);
   try {
@@ -583,7 +583,7 @@ atmosphere::getNumChan(const int spwId)
 }
 
 int
-atmosphere::getRefChan(const int spwId)
+atmosphere::getRefChan(int spwId)
 {
   int rstat(-1);
   try {
@@ -603,7 +603,7 @@ atmosphere::getRefChan(const int spwId)
 }
 
 Quantity
-atmosphere::getRefFreq(const int spwId)
+atmosphere::getRefFreq(int spwId)
 {
   ::casac::Quantity q;
   try {
@@ -627,7 +627,7 @@ atmosphere::getRefFreq(const int spwId)
 }
 
 Quantity
-atmosphere::getChanSep(const int spwId)
+atmosphere::getChanSep(int spwId)
 {
   ::casac::Quantity q;
   try {
@@ -651,7 +651,7 @@ atmosphere::getChanSep(const int spwId)
 }
 
 Quantity
-atmosphere::getChanFreq(const int chanNum, const int spwId)
+atmosphere::getChanFreq(int chanNum, int spwId)
 {
   ::casac::Quantity q;
   try {
@@ -675,7 +675,7 @@ atmosphere::getChanFreq(const int chanNum, const int spwId)
 }
 
 Quantity
-atmosphere::getSpectralWindow(const int spwId)
+atmosphere::getSpectralWindow(int spwId)
 {
   Quantity q;
   try {
@@ -696,7 +696,7 @@ atmosphere::getSpectralWindow(const int spwId)
 }
 
 double
-atmosphere::getChanNum(const Quantity& freq, const int spwId)
+atmosphere::getChanNum(const Quantity& freq, int spwId)
 {
   double rstat(-1.0);
   try {
@@ -717,7 +717,7 @@ atmosphere::getChanNum(const Quantity& freq, const int spwId)
 }
 
 Quantity
-atmosphere::getBandwidth(const int spwId)
+atmosphere::getBandwidth(int spwId)
 {
   ::casac::Quantity q;
   try {
@@ -741,7 +741,7 @@ atmosphere::getBandwidth(const int spwId)
 }
 
 Quantity
-atmosphere::getMinFreq(const int spwId)
+atmosphere::getMinFreq(int spwId)
 {
   ::casac::Quantity q;
   try {
@@ -765,7 +765,7 @@ atmosphere::getMinFreq(const int spwId)
 }
 
 Quantity
-atmosphere::getMaxFreq(const int spwId)
+atmosphere::getMaxFreq(int spwId)
 {
   ::casac::Quantity q;
   try {
@@ -789,7 +789,7 @@ atmosphere::getMaxFreq(const int spwId)
 }
 
 double
-atmosphere::getDryOpacity(const int nc, const int spwId)
+atmosphere::getDryOpacity(int nc, int spwId)
 {
   double dryOpacity(-1.0);
   try {
@@ -814,7 +814,7 @@ atmosphere::getDryOpacity(const int nc, const int spwId)
 }
 
 double
-atmosphere::getDryContOpacity(const int nc, const int spwId)
+atmosphere::getDryContOpacity(int nc, int spwId)
 {
   double dryContOpacity(-1.0);
   try {
@@ -840,7 +840,7 @@ atmosphere::getDryContOpacity(const int nc, const int spwId)
 
 
 double
-atmosphere::getO2LinesOpacity(const int nc, const int spwId)
+atmosphere::getO2LinesOpacity(int nc, int spwId)
 {
   double o2LinesOpacity(-1.0);
   try {
@@ -866,7 +866,7 @@ atmosphere::getO2LinesOpacity(const int nc, const int spwId)
 
 
 double
-atmosphere::getO3LinesOpacity(const int nc, const int spwId)
+atmosphere::getO3LinesOpacity(int nc, int spwId)
 {
   double o3LinesOpacity(-1.0);
   try {
@@ -892,7 +892,7 @@ atmosphere::getO3LinesOpacity(const int nc, const int spwId)
 
 
 double
-atmosphere::getCOLinesOpacity(const int nc, const int spwId)
+atmosphere::getCOLinesOpacity(int nc, int spwId)
 {
   double coLinesOpacity(-1.0);
   try {
@@ -918,7 +918,7 @@ atmosphere::getCOLinesOpacity(const int nc, const int spwId)
 
 
 double
-atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
+atmosphere::getN2OLinesOpacity(int nc, int spwId)
 {
   double n2oLinesOpacity(-1.0);
   try {
@@ -944,7 +944,7 @@ atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
 
 
 Quantity
-atmosphere::getWetOpacity(const int nc, const int spwId)
+atmosphere::getWetOpacity(int nc, int spwId)
 {
   ::casac::Quantity wetOpacity;
   try {
@@ -975,7 +975,7 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 
 
 double
-atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
+atmosphere::getH2OLinesOpacity(int nc, int spwId)
 {
   double h2oLinesOpacity(-1.0);
   try {
@@ -1002,7 +1002,7 @@ atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
 
 
 double
-atmosphere::getH2OContOpacity(const int nc, const int spwId)
+atmosphere::getH2OContOpacity(int nc, int spwId)
 {
   double h2oContOpacity(-1.0);
   try {
@@ -1029,7 +1029,7 @@ atmosphere::getH2OContOpacity(const int nc, const int spwId)
 
 
 int
-atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, const int spwId)
+atmosphere::getDryOpacitySpec(const std::vector<double>& dryOpacity, int spwId)
 {
   int nchan(-1);
   try {
@@ -1054,7 +1054,7 @@ atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, const int spwId)
 }
 
 int
-atmosphere::getWetOpacitySpec(Quantity& wetOpacity, const int spwId)
+atmosphere::getWetOpacitySpec(const Quantity& wetOpacity, int spwId)
 {
   int nchan(-1);
   try {
@@ -1082,7 +1082,7 @@ atmosphere::getWetOpacitySpec(Quantity& wetOpacity, const int spwId)
 }
 
 Quantity
-atmosphere::getDispersivePhaseDelay(const int nc, const int spwId)
+atmosphere::getDispersivePhaseDelay(int nc, int spwId)
 {
   ::casac::Quantity dpd;
   try {
@@ -1110,7 +1110,7 @@ atmosphere::getDispersivePhaseDelay(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
+atmosphere::getDispersiveWetPhaseDelay(int nc, int spwId)
 {
   ::casac::Quantity dwpd;
   try {
@@ -1139,7 +1139,7 @@ atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
+atmosphere::getNonDispersiveWetPhaseDelay(int nc, int spwId)
 {
   ::casac::Quantity ndwpd;
   try {
@@ -1168,7 +1168,7 @@ atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getNonDispersiveDryPhaseDelay(const int nc, const int spwId)
+atmosphere::getNonDispersiveDryPhaseDelay(int nc, int spwId)
 {
   ::casac::Quantity nddpd;
   try {
@@ -1196,7 +1196,7 @@ atmosphere::getNonDispersiveDryPhaseDelay(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getNonDispersivePhaseDelay(const int nc, const int spwId)
+atmosphere::getNonDispersivePhaseDelay(int nc, int spwId)
 {
   ::casac::Quantity ndpd;
   try {
@@ -1225,7 +1225,7 @@ atmosphere::getNonDispersivePhaseDelay(const int nc, const int spwId)
 
 
 Quantity
-atmosphere::getDispersivePathLength(const int nc, const int spwId)
+atmosphere::getDispersivePathLength(int nc, int spwId)
 {
   ::casac::Quantity dpl;
   try {
@@ -1259,7 +1259,7 @@ atmosphere::getDispersivePathLength(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
+atmosphere::getDispersiveWetPathLength(int nc, int spwId)
 {
   ::casac::Quantity dwpl;
   try {
@@ -1288,7 +1288,7 @@ atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
+atmosphere::getNonDispersiveWetPathLength(int nc, int spwId)
 {
   ::casac::Quantity ndwpl;
   try {
@@ -1317,7 +1317,7 @@ atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getNonDispersiveDryPathLength(const int nc, const int spwId)
+atmosphere::getNonDispersiveDryPathLength(int nc, int spwId)
 {
   ::casac::Quantity nddpl;
   try {
@@ -1346,7 +1346,7 @@ atmosphere::getNonDispersiveDryPathLength(const int nc, const int spwId)
 
 
 Quantity
-atmosphere::getO2LinesPathLength(const int nc, const int spwId)
+atmosphere::getO2LinesPathLength(int nc, int spwId)
 {
   ::casac::Quantity o2pl;
   try {
@@ -1374,7 +1374,7 @@ atmosphere::getO2LinesPathLength(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getO3LinesPathLength(const int nc, const int spwId)
+atmosphere::getO3LinesPathLength(int nc, int spwId)
 {
   ::casac::Quantity o3pl;
   try {
@@ -1402,7 +1402,7 @@ atmosphere::getO3LinesPathLength(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getCOLinesPathLength(const int nc, const int spwId)
+atmosphere::getCOLinesPathLength(int nc, int spwId)
 {
   ::casac::Quantity COpl;
   try {
@@ -1430,7 +1430,7 @@ atmosphere::getCOLinesPathLength(const int nc, const int spwId)
 }
 
 Quantity
-atmosphere::getN2OLinesPathLength(const int nc, const int spwId)
+atmosphere::getN2OLinesPathLength(int nc, int spwId)
 {
   ::casac::Quantity N2Opl;
   try {
@@ -1459,7 +1459,7 @@ atmosphere::getN2OLinesPathLength(const int nc, const int spwId)
 
 
 Quantity
-atmosphere::getNonDispersivePathLength(const int nc, const int spwId)
+atmosphere::getNonDispersivePathLength(int nc, int spwId)
 {
   ::casac::Quantity ndpl;
   try {
@@ -1488,7 +1488,7 @@ atmosphere::getNonDispersivePathLength(const int nc, const int spwId)
 
 
 Quantity
-atmosphere::getAbsH2OLines(int nl, int nf, const int spwid)
+atmosphere::getAbsH2OLines(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1510,7 +1510,7 @@ atmosphere::getAbsH2OLines(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsH2OCont(int nl, int nf, const int spwid)
+atmosphere::getAbsH2OCont(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1532,7 +1532,7 @@ atmosphere::getAbsH2OCont(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsO2Lines(int nl, int nf, const int spwid)
+atmosphere::getAbsO2Lines(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1554,7 +1554,7 @@ atmosphere::getAbsO2Lines(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsDryCont(int nl, int nf, const int spwid)
+atmosphere::getAbsDryCont(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1576,7 +1576,7 @@ atmosphere::getAbsDryCont(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsO3Lines(int nl, int nf, const int spwid)
+atmosphere::getAbsO3Lines(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1598,7 +1598,7 @@ atmosphere::getAbsO3Lines(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsCOLines(int nl, int nf, const int spwid)
+atmosphere::getAbsCOLines(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1620,7 +1620,7 @@ atmosphere::getAbsCOLines(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsN2OLines(int nl, int nf, const int spwid)
+atmosphere::getAbsN2OLines(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1642,7 +1642,7 @@ atmosphere::getAbsN2OLines(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsTotalDry(int nl, int nf, const int spwid)
+atmosphere::getAbsTotalDry(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1664,7 +1664,7 @@ atmosphere::getAbsTotalDry(int nl, int nf, const int spwid)
   
 
 Quantity
-atmosphere::getAbsTotalWet(int nl, int nf, const int spwid)
+atmosphere::getAbsTotalWet(int nl, int nf, int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
@@ -1817,7 +1817,7 @@ atmosphere::getSkyBackgroundTemperature()
 }
 
 Quantity
-atmosphere::getAverageTebbSky(const int spwid, const Quantity& wh2o)
+atmosphere::getAverageTebbSky(int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
   try {
@@ -1845,7 +1845,7 @@ atmosphere::getAverageTebbSky(const int spwid, const Quantity& wh2o)
 }
 
 Quantity
-atmosphere::getTebbSky(const int nc, const int spwid, const Quantity& wh2o)
+atmosphere::getTebbSky(int nc, int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
   try {

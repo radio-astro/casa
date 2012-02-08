@@ -101,7 +101,7 @@
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 
-#include <xmlcasa/version.h>
+#include <stdcasa/version.h>
 
 #include <casa/namespace.h>
 

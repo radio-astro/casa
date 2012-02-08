@@ -452,8 +452,19 @@ if casa['flags'].has_key('--nologger') :
 if casa['flags'].has_key('--nogui') :
     deploylogger = False
 
-if deploylogger and (thelogfile != 'null') :
-    casalogger( thelogfile)
+#print 'thelogfile:', thelogfile
+if deploylogger:
+    if (thelogfile != 'null' and thelogfile.strip() != '') :
+        casalogger(thelogfile)
+    else:
+        thelogfile = 'casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+        #print '----thelogfile:', thelogfile
+        try:
+           open(thelogfile, 'a').close()
+        except:
+           pass
+        casalogger(thelogfile)
+
 
 ###################
 #setup file catalog

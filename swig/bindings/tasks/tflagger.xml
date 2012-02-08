@@ -35,11 +35,11 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (manualflag, clip, shadow, quack, elevation, \
+                <description>Flagging mode (manual, clip, shadow, quack, elevation, \
 tfcrop, extend, unflag, summary)</description>
-                <value>manualflag</value>
+                <value>manual</value>
                 <allowed kind="enum">
-                    <value>manualflag</value>
+                    <value>manual</value>
                     <value>clip</value>
                     <value>shadow</value>
                     <value>quack</value>
@@ -313,7 +313,7 @@ tfcrop, extend, unflag, summary)</description>
                 </when>                    
                     
                 <when param="mode">
-                    <equals value="manualflag" />
+                    <equals value="manual" />
                     <equals value="clip">
                         <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
@@ -390,7 +390,7 @@ tfcrop, extend, unflag, summary)</description>
 <returns type="void"/>
 <example>
         The task will flag a subset of data explicitly using any of the modes:
-            manualflag  = flagging based on specific selection parameters
+            manual      = flagging based on specific selection parameters
             clip        = clip data according to values
             quack       = remove/keep specific time range at scan beginning/end
             shadow      = remove antenna-shadowed data
@@ -455,11 +455,11 @@ tfcrop, extend, unflag, summary)</description>
                     default: '' (all); example: observation='1' or observation=1
 
         mode -- Mode of operation.
-                options: 'manualflag','clip','quack','shadow','elevation', 'tfcrop', 'extend',
+                options: 'manual','clip','quack','shadow','elevation', 'tfcrop', 'extend',
                          'unflag', 'summary'
-                default: 'manualflag'
+                default: 'manual'
 
-            manualflag -- Flag according to the data selection specified.
+            manual -- Flag according to the data selection specified.
                   If data is pre-selected using selectdata=True, then flagging
                   will apply only to that subset of the MS.
                   

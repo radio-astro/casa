@@ -3,15 +3,15 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
         <tool name="table" module="table">
         <shortdescription>Access tables from casapy</shortdescription>
        
 <code>
-	<include>xmlcasa/tables/table_forward.h</include>
+	<include>tools/tables/table_forward.h</include>
 <private>
-	#include &lt;xmlcasa/tables/table_private.h&gt;
+	#include &lt;tools/tables/table_private.h&gt;
 </private>
 </code>
 

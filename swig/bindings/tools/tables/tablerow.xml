@@ -3,7 +3,7 @@
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+file:///opt/casa/code/tools/xml/casa.xsd">
 
 
 
@@ -11,9 +11,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <tool name="tablerow" module="table">
         <shortdescription>Allows access to rows of a table tool</shortdescription>
 <code>
-	<include>xmlcasa/tables/tablerow_forward.h</include>
+	<include>tools/tables/tablerow_forward.h</include>
 <private>
-	#include &lt;xmlcasa/tables/tablerow_private.h&gt;
+	#include &lt;tools/tables/tablerow_private.h&gt;
 </private>
 </code>
        

@@ -42,7 +42,7 @@
 #include <casa/Quanta/Quantum.h>
 
 // msplot include files
-//#include <xmlcasa/ms/msplot_private.h>
+//#include <ms/msplot_private.h>
 #include <msplot_cmpt.h>
 
 using namespace std;

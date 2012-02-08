@@ -21,7 +21,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/sstream.h>
 #include <unistd.h>
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 
 using namespace std;
@@ -278,7 +278,7 @@ testflagger::parsemanualparameters(
 
 		if (testflagger_p) {
 
-			// Parse the manualflag parameters
+			// Parse the manual parameters
 			return testflagger_p->parseManualParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
@@ -319,7 +319,7 @@ testflagger::parseclipparameters(
 
 		if (testflagger_p) {
 
-			// Parse the manualflag parameters
+			// Parse the clip parameters
 			return testflagger_p->parseClipParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
