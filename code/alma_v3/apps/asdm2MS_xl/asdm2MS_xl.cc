@@ -4118,6 +4118,14 @@ int main(int argc, char *argv[]) {
 	infostream << "ASDM Main row #" << mainRowIndex[i] << " - BDF file size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
 	info(infostream.str());
 
+        if(v[i]->getNumIntegration()==0 ||v[i]->getDataSize()==0) {
+	  infostream.str("");
+          infostream << "No valid data in this BDF. Skip this."<< endl;
+          info(infostream.str());
+          continue;
+        } 
+
+
 	if (processorType == RADIOMETER) {
 	  if (!sdmBinData.acceptMainRow(v[i])) {
 	    infostream.str("");
