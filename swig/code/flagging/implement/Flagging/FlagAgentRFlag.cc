@@ -35,7 +35,7 @@ FlagAgentRFlag::FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePri
 
 	// Initialize parameters for robust stats (spectral analysis)
 	nIterationsRobust_p = 12;
-	thresholdRobust_p.resize(nIterationsRobust_p);
+	thresholdRobust_p = vector<Double>(nIterationsRobust_p);
 	thresholdRobust_p[0] = 6.0;
 	thresholdRobust_p[1] = 5.0;
 	thresholdRobust_p[2] = 4.0;
@@ -143,29 +143,40 @@ FlagReport FlagAgentRFlag::getReport()
 
     Int current_spw;
     Double spwAverage = 0;
+    Double avg,sumSquare,variance = 0;
 
     // Extract time analysis report
     FlagReport noiseStd = FlagReport("plotline",agentName_p,"Noise (time direction analysis) Std", "xaxis", "yaxis");
 
     // Extract data from all spws and put them in one single Array
     vector<Double> total_noise;
+    vector<Double> total_noise_squared;
     vector<Double> total_noise_counts;
     vector<Double> current_spw_noise;
+    vector<Double> current_spw_noise_squared;
     vector<Double> current_spw_noise_counts;
+    vector<Float> total_noise_spw_average;
     for (	map< Int,vector<Double> >::iterator spw_iter = spw_noise_histogram_sum_p.begin();
     		spw_iter != spw_noise_histogram_sum_p.end();
     		spw_iter++)
     {
     	current_spw = spw_iter->first;
+
     	current_spw_noise = spw_noise_histogram_sum_p[current_spw];
+    	current_spw_noise_squared = spw_noise_histogram_sum_squares_p[current_spw];
     	current_spw_noise_counts = spw_noise_histogram_counts_p[current_spw];
+
     	total_noise.insert(total_noise.end(),current_spw_noise.begin(),current_spw_noise.end());
+    	total_noise_squared.insert(total_noise_squared.end(),current_spw_noise_squared.begin(),current_spw_noise_squared.end());
     	total_noise_counts.insert(total_noise_counts.end(),current_spw_noise_counts.begin(),current_spw_noise_counts.end());
 
-    	// Display average (over baeline/channels) std per spw
+    	// Display average (over baseline/channels) std per spw
     	spwAverage = average(current_spw_noise,current_spw_noise_counts);
-    	*logger_p << LogIO::NORMAL << " Time analysis - Spw " << current_spw <<
-    			" average (over baseline/channels) std: " << spwAverage << LogIO::POST;
+    	*logger_p << LogIO::NORMAL << " Time analysis - Noise std (spw average over baselines and channels)"
+    			<< current_spw << " average: " << spwAverage << LogIO::POST;
+
+    	vector<Float> aux(current_spw_noise.size(),spwAverage);
+    	total_noise_spw_average.insert(total_noise_spw_average.end(),aux.begin(),aux.end());
     }
 
     // Copy values from std::vector to casa::Array
@@ -173,17 +184,29 @@ FlagReport FlagAgentRFlag::getReport()
     Vector<Float> noise(total_noise_counts.size(),0);
     Vector<Float> noise_counts(total_noise_counts.size(),0);
     Vector<Float> noise_avg(total_noise_counts.size(),0);
+    Vector<Float> noise_up(total_noise_counts.size(),0);
+    Vector<Float> noise_down(total_noise_counts.size(),0);
     size_t idx = 0;
     for (vector<Double>::iterator iter = total_noise.begin();iter != total_noise.end();iter++)
     {
     	noise_index(idx) = idx;
     	noise(idx) = total_noise_counts[idx];
     	noise_counts(idx) = total_noise_counts[idx];
-    	noise_avg(idx) = total_noise[idx]/total_noise_counts[idx];
+    	avg = total_noise[idx]/total_noise_counts[idx];
+    	noise_avg(idx) = avg;
+
+    	sumSquare = total_noise_squared[idx]/total_noise_counts[idx];
+    	variance = sqrt(sumSquare -avg*avg);
+    	noise_up(idx) = avg+variance;
+    	noise_down(idx) = avg-variance;
     	idx++;
     }
 
-    noiseStd.addData(noise_index,noise_avg,"Noise std (average over baselines)");
+    noiseStd.addData(noise_index,noise_avg,"Noise std (spw:channel average over baselines)");
+    noiseStd.addData(noise_index,noise_up,"Noise std+var (spw:channel average over baselines)");
+    noiseStd.addData(noise_index,total_noise_spw_average,"Noise std (spw average over baselines and channels)");
+    noiseStd.addData(noise_index,noise_down,"Noise std-var (spw:channel average over baselines)");
+
     dispRep.addReport(noiseStd);
 
     // Extract spectral analysis report
@@ -191,23 +214,33 @@ FlagReport FlagAgentRFlag::getReport()
 
     // Extract data from all spws and put them in one single Array
     vector<Double> total_scutof;
+    vector<Double> total_scutof_squared;
     vector<Double> total_scutof_counts;
     vector<Double> current_spw_scutof;
+    vector<Double> current_spw_scutof_squared;
     vector<Double> current_spw_scutof_counts;
+    vector<Float> total_scutof_spw_average;
     for (	map< Int,vector<Double> >::iterator spw_iter = spw_scutof_histogram_sum_p.begin();
     		spw_iter != spw_scutof_histogram_sum_p.end();
     		spw_iter++)
     {
     	current_spw = spw_iter->first;
+
     	current_spw_scutof = spw_scutof_histogram_sum_p[current_spw];
+    	current_spw_scutof_squared = spw_scutof_histogram_sum_squares_p[current_spw];
     	current_spw_scutof_counts = spw_scutof_histogram_counts_p[current_spw];
+
     	total_scutof.insert(total_scutof.end(),current_spw_scutof.begin(),current_spw_scutof.end());
+    	total_scutof_squared.insert(total_scutof_squared.end(),current_spw_scutof_squared.begin(),current_spw_scutof_squared.end());
     	total_scutof_counts.insert(total_scutof_counts.end(),current_spw_scutof_counts.begin(),current_spw_scutof_counts.end());
 
     	// Display average (over baeline/channels) std per spw
     	spwAverage = average(current_spw_scutof,current_spw_scutof_counts);
     	*logger_p << LogIO::NORMAL << " Spectral analysis - Spw " << current_spw <<
     			" average (over baselines/timesteps) avg: " << spwAverage << LogIO::POST;
+
+    	vector<Float> aux(current_spw_scutof.size(),spwAverage);
+    	total_scutof_spw_average.insert(total_scutof_spw_average.end(),aux.begin(),aux.end());
     }
 
     // Copy values from std::vector to casa::Array
@@ -215,17 +248,28 @@ FlagReport FlagAgentRFlag::getReport()
     Vector<Float> scutof(total_scutof_counts.size(),0);
     Vector<Float> scutof_counts(total_scutof_counts.size(),0);
     Vector<Float> scutof_avg(total_scutof_counts.size(),0);
+    Vector<Float> scutof_up(total_scutof_counts.size(),0);
+    Vector<Float> scutof_down(total_scutof_counts.size(),0);
     idx = 0;
     for (vector<Double>::iterator iter = total_scutof.begin();iter != total_scutof.end();iter++)
     {
     	scutof_index(idx) = idx;
     	scutof(idx) = total_scutof_counts[idx];
     	scutof_counts(idx) = total_scutof_counts[idx];
-    	scutof_avg(idx) = total_scutof[idx]/total_scutof_counts[idx];
+    	avg = total_scutof[idx]/total_scutof_counts[idx];
+    	scutof_avg(idx) = avg;
+
+    	sumSquare = total_scutof_squared[idx]/total_scutof_counts[idx];
+    	variance = sqrt(sumSquare - avg*avg);
+    	scutof_up(idx) = avg+variance;
+    	scutof_down(idx) = avg-variance;
     	idx++;
     }
 
-    scutofStd.addData(scutof_index,scutof_avg,"scutof avg (average over baselines)");
+    scutofStd.addData(scutof_index,scutof_avg,"scutof std (spw:timestep average over baselines)");
+    scutofStd.addData(scutof_index,scutof_up,"scutof std+var (spw:timestep average over baselines)");
+    scutofStd.addData(scutof_index,total_scutof_spw_average,"scutof std (spw average over baselines and timesteps)");
+    scutofStd.addData(scutof_index,scutof_down,"scutof std-var  (spw:timestep average over baselines)");
     dispRep.addReport(scutofStd);
 
 	return dispRep;
@@ -277,6 +321,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		{
 			spw_noise_histogram_sum_p[spw] = vector<Double>(nChannels,0);
 			spw_noise_histogram_counts_p[spw] = vector<Double>(nChannels,0);
+			spw_noise_histogram_sum_squares_p[spw] = vector<Double>(nChannels,0);
 		}
 	}
 
@@ -313,6 +358,14 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		{
 			spw_scutof_histogram_sum_p[spw] = vector<Double>(nTimesteps,0);
 			spw_scutof_histogram_counts_p[spw] = vector<Double>(nTimesteps,0);
+			spw_scutof_histogram_sum_squares_p[spw] = vector<Double>(nTimesteps,0);
+		}
+		else if (spw_scutof_histogram_sum_p[spw].size() < nTimesteps)
+		{
+			vector<Double> aux(nTimesteps-spw_scutof_histogram_sum_p[spw].size(),0);
+			spw_scutof_histogram_sum_p[spw].insert(spw_scutof_histogram_sum_p[spw].end(),aux.begin(),aux.end());
+			spw_scutof_histogram_counts_p[spw].insert(spw_scutof_histogram_counts_p[spw].end(),aux.begin(),aux.end());
+			spw_scutof_histogram_sum_squares_p[spw].insert(spw_scutof_histogram_sum_squares_p[spw].end(),aux.begin(),aux.end());
 		}
 	}
 
@@ -330,6 +383,8 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	Double SumImagSquare = 0;
 	Double AverageImag = 0;
 	Double StdImag = 0;
+	Double deviationReal = 0;
+	Double deviationImag = 0;
 
 	// Time-Direction analysis: Fix channel/polarization and compute stats with all time-steps
 	// NOTE: It is better to operate in channel/polarization sequence for data contiguity
@@ -390,6 +445,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	            {
 	            	spw_noise_histogram_counts_p[spw][chan_j] += 1;
 	            	spw_noise_histogram_sum_p[spw][chan_j] += StdTotal;
+	            	spw_noise_histogram_sum_squares_p[spw][chan_j] += StdTotal*StdTotal;
 	            }
 	            else
 	            {
@@ -479,14 +535,18 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 
 					if (AverageReal > 0)
 					{
-		            	spw_scutof_histogram_counts_p[spw][timestep_i] += 1;
-		            	spw_scutof_histogram_sum_p[spw][timestep_i] += abs(visibility.real()-AverageReal);
+						deviationReal = abs(visibility.real()-AverageReal);
+						spw_scutof_histogram_counts_p[spw][timestep_i] += 1;
+						spw_scutof_histogram_sum_p[spw][timestep_i] += deviationReal;
+						spw_scutof_histogram_sum_squares_p[spw][timestep_i] += deviationReal*deviationReal;
 					}
 
 					if (AverageImag > 0)
 					{
+						deviationImag = abs(visibility.imag()-AverageImag);
 		            	spw_scutof_histogram_counts_p[spw][timestep_i] += 1;
-		            	spw_scutof_histogram_sum_p[spw][timestep_i] += abs(visibility.imag()-AverageImag);
+		            	spw_scutof_histogram_sum_p[spw][timestep_i] += deviationImag;
+		            	spw_scutof_histogram_sum_squares_p[spw][timestep_i] += deviationImag*deviationImag;
 					}
         		}
             }
