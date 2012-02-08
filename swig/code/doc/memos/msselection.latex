@@ -306,7 +306,7 @@ follows the same rules as antenna specification. When antenna or
 station in a {\tt ANT@STATION} syntax is a comma-separated list, the
 list must be enclosed in a left- and right-parenthesis pair to
 distinguish it from a comma-separated list of {\tt ANT@STATION} (i.e.,
-{\tt "A1@S1, A2@S2, A3@S3" versus "(A1,A2,A3)@(S1,S2,S3)"}).  All
+{\tt "A1@S1, A2@S2, A3@S3"} versus {\tt "(A1,A2,A3)@(S1,S2,S3)"}).  All
 antennas in the {\tt ANT} part of the specification on {\it any} of
 the stations in the {\tt STATION} part of the specification will be
 selected.  The {\tt ANT} part of the specification is optional and
@@ -324,7 +324,9 @@ Section~\ref{BASELINE_SPEC}).  The latter will select all members of
 the antenna list that are on any of the stations listed in the station
 list.  E.g. if antenna {\tt A1} appears on stations {\tt S1} and {\tt
   S3}, both will be selected in the second form, but only the antenna
-{\tt A1} on station {\tt S1} will be selected in the first form.
+{\tt A1} on station {\tt S1} will be selected in the first form.  Note
+that the second form of specification can itself be a member of a
+comma-separated list.
 
 
 \subsubsection{Baseline specification}
@@ -495,6 +497,13 @@ Field specifications can be literal field names, regular expressions
 or patterns.  Leading and trailing blanks are stripped from the user
 supplied field specifications as well as from the entries of the NAME
 and field codes before being used for matching.  
+
+Since none of the following characters are used as part of the FIELD
+selection expressions, they can also be used as part of field names:
+";", "\$", "\%", "!", "@", and "\#"\footnote{In case users loose their
+  patience with the NRAO Observataion Prepration Tool (NRAO OPT) and
+  start giving field names like "@\#!\$\%;", to them we can say "...we
+  understand."}.
 
 Fields for which the entry in the NAME column of the the FIELD
 sub-table match the literal field name/regular expression/pattern are

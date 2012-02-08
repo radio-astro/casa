@@ -726,7 +726,17 @@ int main(int argc, char **argv)
 		if (display) displayMode = 2;
 	}
 
-	if (doplot and display) displayMode = 1;
+	if (display)
+	{
+		if (doplot)
+		{
+			displayMode = 1;
+		}
+		else
+		{
+			displayMode = 2;
+		}
+	}
 
 	Record agentParameters_i;
 	vector<Record> agentParamersList;

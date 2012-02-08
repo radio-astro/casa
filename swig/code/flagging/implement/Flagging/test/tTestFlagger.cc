@@ -49,11 +49,11 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 	}
 
 	if (mode == ""){
-		mode == "manualflag";
-		agent_record->define("mode", "manualflag");
+		mode == "manual";
+		agent_record->define("mode", "manual");
 	}
-	else if (mode == "manualflag"){
-		agent_record->define("mode", "manualflag");
+	else if (mode == "manual"){
+		agent_record->define("mode", "manual");
 	}
 	else if (mode == "unflag"){
 		agent_record->define("mode", "unflag");
@@ -294,7 +294,7 @@ int main(int argc, char **argv)
 		cout << "options:"<<endl;
 		cout << "ntime, observation, array, scan, field, antenna, feed, intent, spw, timerange, "
 				"correlation, uvrange" << endl;
-		cout << "mode (manualflag,clip,quack,tfcrop,shadow,elevation,extend,unflag,summary)" << endl;
+		cout << "mode (manual,clip,quack,tfcrop,shadow,elevation,extend,unflag,summary)" << endl;
 
 		exit (0);
 	}
@@ -480,7 +480,7 @@ int main(int argc, char **argv)
 	}
 
 	// Run the tool
-	results = tf->run();
+	results = tf->run(writeflags=true, sequential=true);
 
 	if (logLevel >= 3) cout << "Done with running the tool: "<< endl;
 

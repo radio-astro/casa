@@ -315,7 +315,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	// Validate mode against known modes
 	if (! isModeValid(mode)){
-		os << LogIO::WARN << "Mode "<< mode << "is not valid or doesn't exist"
+		os << LogIO::WARN << "Mode "<< mode << " is not valid or doesn't exist"
 				<< LogIO::POST;
 		return false;
 	}
@@ -611,7 +611,8 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	if (writeflags)
 		os << LogIO::NORMAL << "=> " << "Writing flags to the MS" << LogIO::POST;
 	else
-		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)" << LogIO::POST;
+		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)"
+			<< LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
@@ -803,11 +804,12 @@ TestFlagger::isModeValid(String mode)
 {
 	bool ret;
 
-	if (mode.compare("manualflag") == 0 or mode.compare("clip") == 0 or
+	if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
 			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
 			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
 			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
-			mode.compare("unflag") == 0 or mode.compare("summary") == 0) {
+			mode.compare("unflag") == 0 or mode.compare("summary") == 0
+			or mode.compare("display") == 0) {
 
 		ret = true;
 	}
@@ -819,7 +821,7 @@ TestFlagger::isModeValid(String mode)
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseManualParameters
-// Parse data selection parameters and specific manualflag parameters
+// Parse data selection parameters and specific manual parameters
 //
 // ---------------------------------------------------------------------
 bool
@@ -832,8 +834,8 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
 
 	// Default values for some parameters
-	String mode = "manualflag";
-	String agent_name = "Manualflag";
+	String mode = "manual";
+	String agent_name = "Manual";
 
 	// Create a record with the parameters
 	Record agent_record = Record();
