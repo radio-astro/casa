@@ -1183,36 +1183,36 @@ map<MainRow*, int>     stateIdx2Idx;
  */
 
 void fillState(MainRow* r_p) {
- if (debug) cout << "fillState : entering" << endl;
+  if (debug) cout << "fillState : entering" << endl;
 
- ASDM&			ds	   = r_p -> getTable() . getContainer();
- ScanRow*		scanR_p	   = ds.getScan().getRowByKey(r_p -> getExecBlockId(),	r_p -> getScanNumber());
- vector<ScanIntent>	scanIntent = scanR_p -> getScanIntent();
- SubscanRow*		sscanR_p   = ds.getSubscan().getRowByKey(r_p -> getExecBlockId(),
+  ASDM&			ds	   = r_p -> getTable() . getContainer();
+  ScanRow*		scanR_p	   = ds.getScan().getRowByKey(r_p -> getExecBlockId(),	r_p -> getScanNumber());
+  vector<ScanIntent>	scanIntent = scanR_p -> getScanIntent();
+  SubscanRow*		sscanR_p   = ds.getSubscan().getRowByKey(r_p -> getExecBlockId(),
 								 r_p -> getScanNumber(),
 								 r_p -> getSubscanNumber());
- if (sscanR_p == 0) {
-      errstream.str("");
-      errstream << "Could not find a row in the Subscan table for the following key value (execBlockId=" << r_p->getExecBlockId().toString()
-		<<", scanNumber="<< r_p->getScanNumber()
-		<<", subscanNum=" << r_p->getSubscanNumber() << "). Aborting. "
-		<< endl;
-      error(errstream.str());
- }	  
+  if (sscanR_p == 0) {
+    errstream.str("");
+    errstream << "Could not find a row in the Subscan table for the following key value (execBlockId=" << r_p->getExecBlockId().toString()
+	      <<", scanNumber="<< r_p->getScanNumber()
+	      <<", subscanNum=" << r_p->getSubscanNumber() << "). Aborting. "
+	      << endl;
+    error(errstream.str());
+  }	  
 
- SubscanIntent subscanIntent = sscanR_p->getSubscanIntent();
- string obs_mode;
- if (scanIntent.size() > 0) {
-   obs_mode = CScanIntent::name(scanIntent.at(0))+"#"+CSubscanIntent::name(subscanIntent);
+  SubscanIntent subscanIntent = sscanR_p->getSubscanIntent();
+  string obs_mode;
+  if (scanIntent.size() > 0) {
+    obs_mode = CScanIntent::name(scanIntent.at(0))+"#"+CSubscanIntent::name(subscanIntent);
    
-   for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
-     obs_mode += ",";
-     obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"#"+CSubscanIntent::name(subscanIntent);
-   }
- }
+    for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
+      obs_mode += ",";
+      obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"#"+CSubscanIntent::name(subscanIntent);
+    }
+  }
 
- const vector<StateRow *>& sRs =  ds.getState().get() ;
- for (unsigned int iState = 0; iState < sRs.size(); iState++) {							     	    
+  const vector<StateRow *>& sRs =  ds.getState().get() ;
+  for (unsigned int iState = 0; iState < sRs.size(); iState++) {							     	    
     bool pushed = false;
     
     for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
@@ -1230,8 +1230,8 @@ void fillState(MainRow* r_p) {
 	pushed = true;
       }
     }	    
- }
- if (debug) cout << "fillState : exiting" << endl;
+  }
+  if (debug) cout << "fillState : exiting" << endl;
 }
 
 /**
@@ -1249,12 +1249,12 @@ void fillState(MainRow* r_p) {
  * is filled and will be used by fillMain.
  */ 
 void fillMain(int		rowNum,
-		 MainRow*	r_p,
-		 SDMBinData&	sdmBinData,
-		 const VMSData* vmsData_p,
-		 UvwCoords&	uvwCoords,
-		 bool		complexData,
-		 bool           mute) {
+	      MainRow*	r_p,
+	      SDMBinData&	sdmBinData,
+	      const VMSData* vmsData_p,
+	      UvwCoords&	uvwCoords,
+	      bool		complexData,
+	      bool           mute) {
   
   if (debug) cout << "fillMain : entering" << endl;
 
@@ -1450,7 +1450,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       
 	
 	const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
-      
+
 	if (!ignoreTime) 
 	  infostream << sysPowers.size() << " of them are in the selected exec blocks / scans";
 
@@ -1459,6 +1459,8 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       
 	infostream.str("");
 	errstream.str("");
+
+	if (sysPowers.size() == 0) continue;
       
 	antennaId.resize(sysPowers.size());
 	spectralWindowId.resize(sysPowers.size());
@@ -1486,7 +1488,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 	  error(errstream.str());
 	}
 	/*
-	else 
+	  else 
 	  infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
 	*/
             
@@ -1499,7 +1501,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
 	  }
 	  /*
-	  else
+	    else
 	    infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
 	  */
 	}
@@ -1517,8 +1519,8 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
 	  }
 	  /*
-	  else
-	     infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	    else
+	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
 	  */
 	}
 	else {
@@ -1534,7 +1536,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
 	  }
 	  /*
-	  else
+	    else
 	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
 	  */
 	}
@@ -3837,7 +3839,8 @@ int main(int argc, char *argv[]) {
   //
   // Process the SysPower table.
 #if 1 
-  fillSysPower(dsName, ds, ignoreTime, selectedScanRow_v);
+  if ( processSysPower )
+    fillSysPower(dsName, ds, ignoreTime, selectedScanRow_v);
 #else
   if ( processSysPower ) 
     try {
@@ -4067,6 +4070,7 @@ int main(int argc, char *argv[]) {
     
     MainRow* r = 0;
     vector<MainRow*> v;
+    vector<int32_t> mainRowIndex; 
     //
     //
     // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection.
@@ -4074,8 +4078,10 @@ int main(int argc, char *argv[]) {
     const vector<MainRow *>& temp = mainT.get();
     for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
       map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
-      if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() )	  
+      if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() ) {
+	mainRowIndex.push_back(iter_v - temp.begin());
 	v.push_back(*iter_v);
+      }
     }
       
     infostream.str("");
@@ -4085,16 +4091,14 @@ int main(int argc, char *argv[]) {
     uint32_t nMain = v.size();
 
     const VMSData *vmsDataPtr = 0;
+    // Initialize an UVW coordinates engine.
+    UvwCoords uvwCoords(ds);
+    
+    ostringstream oss;
 
-    try {
-      // Initialize an UVW coordinates engine.
-      UvwCoords uvwCoords(ds);
-
-      ostringstream oss;
-
-      // For each main row.
-      for (int32_t i = 0; i < nMain; i++) {
-
+    // For each selected main row.
+    for (int32_t i = 0; i < nMain; i++) {
+      try {
 	// Populate the State table.
 	fillState(v[i]);
 
@@ -4107,24 +4111,24 @@ int main(int argc, char *argv[]) {
 	ProcessorRow* pR = pT.getRowByKey(pId);
 	ProcessorType processorType = ds->getProcessor().getRowByKey(pId)->getProcessorType();
 	infostream.str("");
-	infostream << "ASDM Main row #" << i << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
+	infostream << "ASDM Main row #" << mainRowIndex[i] << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
 	info(infostream.str());
 
 	infostream.str("");
-	infostream << "ASDM Main row #" << i << " - BDF file size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
+	infostream << "ASDM Main row #" << mainRowIndex[i] << " - BDF file size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
 	info(infostream.str());
 
 	if (processorType == RADIOMETER) {
 	  if (!sdmBinData.acceptMainRow(v[i])) {
 	    infostream.str("");
-	    infostream <<"No data retrieved in the SDM row #" << i+1 << " (" << sdmBinData.reasonToReject(r) <<")" << endl;
+	    infostream <<"No data retrieved in the Main row #" << mainRowIndex[i] << " (" << sdmBinData.reasonToReject(r) <<")" << endl;
 	    info(infostream.str());
 	    continue;
 	  }
 	  vmsDataPtr = sdmBinData.getDataCols();
 	  fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	  infostream.str("");
-	  infostream << "ASDM Main row #" << i << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
+	  infostream << "ASDM Main row #" << mainRowIndex[i] << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
 	  info(infostream.str());
 	}
 	else {
@@ -4143,7 +4147,7 @@ int main(int argc, char *argv[]) {
 	  for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
 	    numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
 	    infostream.str("");
-	    infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
+	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
 	    numberOfReadIntegrations += numberOfIntegrations;
 	    numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
@@ -4157,7 +4161,7 @@ int main(int argc, char *argv[]) {
 	  uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
 	  if (numberOfRemainingIntegrations) {
 	    infostream.str("");
-	    infostream << "ASDM Main row #" << i << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
+	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
 	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
 	    
@@ -4166,40 +4170,41 @@ int main(int argc, char *argv[]) {
 	    numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
 	  }
 	  infostream.str("");
-	  infostream << "ASDM Main row #" << i << "produced a total of " << numberOfMSMainRows << " MS Main rows." << endl;
+	  infostream << "ASDM Main row #" << mainRowIndex[i] << "produced a total of " << numberOfMSMainRows << " MS Main rows." << endl;
 	}
       }
+      catch ( IllegalAccessException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch ( SDMDataObjectStreamReaderException& e ) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch ( SDMDataObjectReaderException& e ) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch (ConversionException e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch ( std::exception & e) {
+	infostream.str("");
+	infostream << e.what();
+	info(infostream.str());      
+      }
+      catch (Error & e) {
+	infostream.str("");
+	infostream << e.getErrorMessage();
+	info(infostream.str());
+      }
     }
-    catch ( IllegalAccessException& e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( SDMDataObjectStreamReaderException& e ) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( SDMDataObjectReaderException& e ) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch (ConversionException e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( std::exception & e) {
-      errstream.str("");
-      errstream << e.what();
-      error(errstream.str());      
-    }
-    catch (Error & e) {
-      errstream.str("");
-      errstream << e.getErrorMessage();
-      error(errstream.str());
-    }
+
     infostream.str("");
     infostream << "The dataset has "  << stateT.size() << " state(s)..." ;
     info(infostream.str());
@@ -4209,7 +4214,6 @@ int main(int argc, char *argv[]) {
       infostream << "converted in " << msFiller->ms()->state().nrow() << " state(s) in the measurement set.";
       info(infostream.str());
     }
-
 
     infostream.str("");
     infostream << "The dataset has " << mainT.size() << " main(s)...";
@@ -4226,8 +4230,7 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-
-  
+ 
   // Do we also want to store the verbatim copies of some tables of the ASDM dataset ?
   if (vm.count("asis")) {
     istringstream iss;
