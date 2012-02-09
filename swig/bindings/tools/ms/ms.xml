@@ -689,6 +689,23 @@ the ms definition itself. -->
   </example>
 </method>
 -->
+   <method type="function" name="listfits">
+        <shortdescription>
+        </shortdescription>
+        <description>
+        </description>
+        <input>
+              <param name="fitsfile" type ="string">
+                <description>list HDU and typical data rows in a fits file</description>
+              </param>
+        </input>
+        <returns type="bool"/>
+        <example>
+            ms.listfits('ngc5921.fits')
+        </example>
+   </method>
+
+
    <method type="function" name="createmultims">
         <shortdescription>
         </shortdescription>
