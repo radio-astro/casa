@@ -152,6 +152,9 @@ SIDENTIFIER  ({NAMES}+"*")
 "^"       { msSpwGramPosition() += yyleng;
             return CARET;
           }
+"<>"      { msSpwGramPosition() += yyleng;
+            return GTNLT;
+          }
   /* Literals */
 
 {IDENTIFIER} { msSpwGramPosition() += yyleng;

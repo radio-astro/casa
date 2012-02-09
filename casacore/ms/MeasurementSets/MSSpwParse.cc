@@ -59,7 +59,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    setMS(ms);
   }
   
-  const TableExprNode *MSSpwParse::selectSpwIdsFromIDList(const Vector<Int>& SpwIds)
+  const TableExprNode *MSSpwParse::selectSpwIdsFromIDList(const Vector<Int>& SpwIds,
+							  const Bool addTen,
+							  const Bool addIDs)
   {
     ROMSSpWindowColumns msSpwSubTable(ms()->spectralWindow());
     ROMSDataDescColumns msDataDescSubTable(ms()->dataDescription());
@@ -87,16 +89,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      (!msSpwSubTable.flagRow()(SpwIds(n)))
 	      )
 	    {
-	      if (condition.isNull())
-		condition = ((ms()->col(DATA_DESC_ID)==i));
-	      else
-		condition = condition || ((ms()->col(DATA_DESC_ID)==i));
+	      if (addTen)
+		{
+		  TableExprNode tmp=((ms()->col(DATA_DESC_ID)==i));
+		  addCondition(condition, tmp);
+		}
+	      // if (condition.isNull())
+	      // 	condition = ((ms()->col(DATA_DESC_ID)==i));
+	      // else
+	      // 	condition = condition || ((ms()->col(DATA_DESC_ID)==i));
 	      Found = True;
-	      idList.resize(idList.nelements()+1,True);
-	      idList(idList.nelements()-1) = mapDDID2SpwID(i);
+	      if (addIDs)
+		{
+		  idList.resize(idList.nelements()+1,True);
+		  idList(idList.nelements()-1) = mapDDID2SpwID(i);
+		}
 	      break;
 	    }
-	if (!Found)
+	if ((!Found) && (addIDs))
 	  {
 	    //
 	    // Darn!  We don't use standard stuff (STL!)
@@ -107,17 +117,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    if (condition.isNull()) 
-      {
-	ostringstream Mesg;
-	Mesg << "No Spw ID(s) matched specifications ";
-	throw(MSSelectionSpwError(Mesg.str()));
-      }
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
-    
+    if (addTen) addCondition(*node_p, condition);
+
     return node_p;
   }
   //
@@ -167,10 +168,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for(Int ddid=0;ddid<nDDIDRows;ddid++)
 	      if (mapDDID2SpwID(ddid) == spw)
 		{
-		  if (condition.isNull())
-		    condition = ((ms()->col(DATA_DESC_ID)==ddid));
-		  else
-		    condition = condition || ((ms()->col(DATA_DESC_ID)==ddid));
+		  TableExprNode tmp=((ms()->col(DATA_DESC_ID)==ddid));
+		  addCondition(condition, tmp);
+		  // if (condition.isNull())
+		  //   condition = ((ms()->col(DATA_DESC_ID)==ddid));
+		  // else
+		  //   condition = condition || ((ms()->col(DATA_DESC_ID)==ddid));
 		  break;
 		}
 	  }
@@ -182,11 +185,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
-    
+    addCondition(*node_p, condition);
     return node_p;
   }
 
@@ -196,20 +195,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Int n=chanList.shape()(0),
       nSpw = spwIds.nelements(),
-      m=nSpw*nFSpec,loc=n,k=0;
-
-    chanList.resize(n+m,4,True);
-    for(Int i=0;i<nSpw;i++)
+      loc=n,k=0;
+    
+    for (Int i=0;i<nSpw;i++)
       {
-	for(Int j=0;j<nFSpec;j++)
+	if ((chanIDList[k] != -1) && (chanIDList[k+1] != -1))
 	  {
-	    chanList(loc,0) = spwIds(i);
-	    chanList(loc,1) = chanIDList(k++);
-	    chanList(loc,2) = chanIDList(k++);
-	    chanList(loc,3) = chanIDList(k++);
-	    loc++;
+	    for(Int j=0;j<nFSpec;j++)
+	      {
+		chanList.resize(chanList.shape()(0)+1,4,True);
+		chanList(loc,0) = spwIds(i);
+		chanList(loc,1) = chanIDList(k++);
+		chanList(loc,2) = chanIDList(k++);
+		chanList(loc,3) = chanIDList(k++);
+		loc++;
+	      }
 	  }
+	else k+=3;
       }
+
+    nSpw=chanList.shape()[0];
+    spwIds.resize(nSpw);
+    for (Int i=0;i<nSpw;i++)
+      spwIds[i] = chanList(i,0);
+
+    // Int n=chanList.shape()(0),
+    //   nSpw = spwIds.nelements(),
+    //   m=nSpw*nFSpec,loc=n,k=0;
+
+    // if ((chanIDList[k] != -1) && (chanIDList[k+1] != -1))
+    //   {
+    // 	chanList.resize(n+m,4,True);
+    // 	for(Int i=0;i<nSpw;i++)
+    // 	  {
+    // 	    for(Int j=0;j<nFSpec;j++)
+    // 	      {
+    // 		chanList(loc,0) = spwIds(i);
+    // 		chanList(loc,1) = chanIDList(k++);
+    // 		chanList(loc,2) = chanIDList(k++);
+    // 		chanList(loc,3) = chanIDList(k++);
+    // 		loc++;
+    // 	      }
+    // 	  }
+    //   }
   }
 
   
@@ -217,7 +245,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                                  Vector<Int>& chanIDList)
   {
     if (spwIds.nelements() != chanIDList.nelements()/3)
-      throw(AipsError("MSSpwParse::selectChannelsFromDefaultList(): SPW and default channel lists should be of the same size"));
+      throw(AipsError("MSSpwParse::selectChannelsFromDefaultList(): SPW and default channel "
+		      "lists should be of the same size"));
     
     Int n=chanList.shape()(0),
       nSpw = spwIds.nelements();
@@ -238,4 +267,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     return node_p;
   }
+
+  const TableExprNode* MSSpwParse::endOfCeremony(const TableExprNode& ten)
+  {
+    (void)ten;
+    //
+    // Make a list of unique IDs from the idList.  (aaaah...should
+    // have just used STL vectors to begin with).
+    //
+    vector<Int> vec(idList.nelements());
+    for (uInt i=0;i<idList.nelements();i++) vec[i]=idList[i];
+    sort( vec.begin(), vec.end() );
+    vec.erase( unique( vec.begin(), vec.end() ), vec.end() );
+    Vector<Int> uniqueIDList(vec);
+
+    const TableExprNode *tten=MSSpwParse::thisMSSParser->selectSpwIdsFromIDList(uniqueIDList,True,False);    
+
+    if (tten->isNull())
+      {
+	ostringstream Mesg;
+	Mesg << "No Spw ID(s) matched specifications ";
+	throw(MSSelectionSpwError(Mesg.str()));
+      }
+
+    return tten;
+  }
+
 } //# NAMESPACE CASA - END

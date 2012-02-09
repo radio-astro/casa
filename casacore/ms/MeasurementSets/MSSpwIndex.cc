@@ -252,22 +252,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    IDs(IDs.nelements()-1) = n;
 	    if (mode==EXACT) break;
 	  }
-	if (IDs.nelements()==0)
-	  {
-	    ostringstream msg;
-	    String rangeStr(" frequency range ");
-	    if (f0==f1) rangeStr=" frequency ";
-	    msg << "No matching SPW found for" << rangeStr << f0;
-	    if (f0!=f1) msg << "~" << f1;
-	    msg << " Hz.";
-	    throw(MSSelectionSpwError(msg.str()));
-	  }
+      }
+    if (IDs.nelements()==0)
+      {
+	ostringstream msg;
+	String rangeStr(" frequency range ");
+	if (f0==f1) rangeStr=" frequency ";
+	msg << "No matching SPW found for" << rangeStr << f0;
+	if (f0!=f1) msg << "~" << f1;
+	msg << " Hz.";
+	throw(MSSelectionSpwError(msg.str()));
       }
     return IDs;
   } 
   
   //-------------------------------------------------------------------------
-  Vector<Int> MSSpwIndex::matchIDLT(const Int n)
+  Vector<Int> MSSpwIndex::matchLT(const Float* phyVal)
+  {
+    Vector<Double> refFreqs= msSpwSubTable_p.refFrequency().getColumn();
+    LogicalArray maskArray = (refFreqs < (Double)phyVal[0]);
+    // cerr << refFreqs << endl << phyVal[0] << " " << phyVal[1] << endl << maskArray << endl;
+    // throw(MSSelectionSpwParseError(String(">NUMBER UNIT not yet implemented")));
+    MaskedArray<Int> maskSpwId(spwIDs,maskArray);
+    return maskSpwId.getCompressedArray();
+  }
+  //-------------------------------------------------------------------------
+  Vector<Int> MSSpwIndex::matchGT(const Float* phyVal)
+  {
+    Vector<Double> refFreqs= msSpwSubTable_p.refFrequency().getColumn();
+    LogicalArray maskArray = (refFreqs > (Double)phyVal[0]);
+    MaskedArray<Int> maskSpwId(spwIDs,maskArray);
+    return maskSpwId.getCompressedArray();
+  }
+  //-------------------------------------------------------------------------
+  Vector<Int> MSSpwIndex::matchGTAndLT(const Float* phyValMin, const Float *phyValMax)
+  {
+    Vector<Double> refFreqs= msSpwSubTable_p.refFrequency().getColumn();
+    LogicalArray maskArray = ((refFreqs > (Double)phyValMin[0]) && (refFreqs < (Double)phyValMax[0]));
+    MaskedArray<Int> maskSpwId(spwIDs,maskArray);
+    return maskSpwId.getCompressedArray();
+  }
+  //-------------------------------------------------------------------------
+  Vector<Int> MSSpwIndex::matchLT(const Int n)
   {
     LogicalArray maskArray = 
       //      ((spwIDs <= n));// && (!msSpwSubTable_p.flagRow().getColumn()));
@@ -275,9 +301,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MaskedArray<Int> maskSpwId(spwIDs, maskArray);
     return maskSpwId.getCompressedArray();
   }
-
   //-------------------------------------------------------------------------
-  Vector<Int> MSSpwIndex::matchIDGT(const Int n)
+  Vector<Int> MSSpwIndex::matchGT(const Int n)
   {
     LogicalArray maskArray = 
       ((spwIDs > n));// && (!msSpwSubTable_p.flagRow().getColumn()));
@@ -286,7 +311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   //-------------------------------------------------------------------------
   
-  Vector<Int> MSSpwIndex::matchIDGTAndLT(const Int n0, const Int n1)
+  Vector<Int> MSSpwIndex::matchGTAndLT(const Int n0, const Int n1)
   {
     LogicalArray maskArray = 
       ((spwIDs > n0) && (spwIDs < n1));// &&(!msSpwSubTable_p.flagRow().getColumn()));
@@ -298,15 +323,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 const String& unit)
   {
     Vector<Float> freqs(2);
-    String units(unit);
+    String units(unit);   units.downcase();
     Float factor=1.0;
-    units.downcase();
+ 
     if (units[0] == 'k') factor *= 1000;
     else if (units[0] == 'm') factor *= 1e6;
     else if (units[0] == 'g') factor *= 1e9;
     else if (units[0] == 't') factor *= 1e12;
     freqs(0) = f0*factor;
     freqs(1) = f1*factor;
+
     return freqs;
   }
   //-------------------------------------------------------------------------
@@ -314,7 +340,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						const Vector<Float>& freqList,
 						Int &nFSpec)
   {
+    LogIO log_l(LogOrigin("MSSpw Expression parser", "MSSpwIndex::convertToChannelIndex", WHERE));
+
     Vector<Int> localFreqList;
+    vector<Int> localFoundSpwList;
     Vector<Int> numChans =  msSpwSubTable_p.numChan().getColumn();
 
     Int nSpw = spw.nelements(), nFList=freqList.nelements();
@@ -323,7 +352,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ROArrayColumn<Double> chanWidth(msSpwSubTable_p.chanWidth());
     ROArrayColumn<Double> chanFreq(msSpwSubTable_p.chanFreq());
 
-    //    cout << "freqList = " << freqList << endl << "Spw = " << spw << endl;
+    Bool someMatchFailed=False;
+    ostringstream Mesg;
+
     if (nFList > 0)
       {
 	localFreqList.resize(nSpw*nFSpec*3);
@@ -343,20 +374,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      start = stop = start < 0? 0 : start;
 		      if (stop >= numChans(spw(i)))
 			{
-			  ostringstream Mesg;
+			  //			  ostringstream Mesg;
 			  Mesg << "Channel " << stop << " out of range for SPW "
-			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")";
-			  throw(MSSelectionSpwError(Mesg.str()));
+			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")"
+			       << endl;
+			  //			  throw(MSSelectionSpwError(Mesg.str()));
+			  //			  logIO << Mesg << LogIO::WARN << LogIO::POST;
+			  someMatchFailed=True;
 			}
 		    }
 		  else
 		    {
 		      if (start >= numChans(spw(i)))
 			{
-			  ostringstream Mesg;
+			  //			  ostringstream Mesg;
 			  Mesg << "Channel " << start << " out of range for SPW "
-			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")";
-			  throw(MSSelectionSpwError(Mesg.str()));
+			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")"
+			       << endl;
+			  //			  throw(MSSelectionSpwError(Mesg.str()));
+			  //			  logIO << Mesg << LogIO::WARN << LogIO::POST;
+			  someMatchFailed=True;
 			}
 		      start = start < 0 ? 0 : start;
 		      stop  = stop >= numChans(spw(i)) ? numChans(spw(i)) - 1 : stop;
@@ -365,24 +402,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  localFreqList(pos++)=stop;
 		  localFreqList(pos++)=step;
 		}
-	      else if (freqList(j+3) == MSSpwIndex::MSSPW_UNITHZ)
+	      else if (freqList(j+3) == MSSpwIndex::MSSPW_UNITHZ)  // If the spec is XXHz
 		{
 		  Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
 		  Vector<Double> cf,cw;
 		  chanFreq.get(spw(i),cf,True);
 		  chanWidth.get(spw(i),cw,True);
-
-		  //		  cout << i << " " << cf << endl << freqList << endl;
 		  //
 		  // Do a brain-dead linear search for the channel
 		  // number (linear search is *probably* OK - unless
 		  // there are channels worth GBytes of RAM!)
 		  //
 		  Int n=cf.nelements(),ii;
-		  ostringstream Mesg;
-		  //		  cout << "start,stop = " << start << " " << stop << endl;
-		  Mesg << "Range for SPW " << spw(i) << ": ["
-		       << cf[0] << "," << cf(n-1) << "] Hz.";
+		  // ostringstream Mesg;
+		  // Mesg << "Range for SPW " << spw(i) << ": ["
+		  //      << cf[0] << "," << cf(n-1) << "] Hz.";
 
 		  Bool found=False;
 		  if (start <= cf(0)) start=0;
@@ -390,61 +424,66 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    {
 		      for(ii=0;ii<n;ii++)
 			if (cf(ii) >= start) {start=ii;found=True;break;}
+		      // if (!found)
+		      // 	{
+		      // 	  ostringstream m;
+		      // 	  m << "Start channel not found for frequency " 
+		      // 	    << start << " Hz." << Mesg.str();
+		      // 	  throw(MSSelectionSpwError(m.str()));
+		      // 	}
 		      if (!found)
-			{
-			  ostringstream m;
-			  m << "Start channel not found for frequency " 
-			    << start << " Hz." << Mesg.str();
-			  throw(MSSelectionSpwError(m.str()));
-			}
+			{someMatchFailed=True;start = -1;}
 		    }
 
 		  found=False;
 		  if (stop >= cf(n-1)) stop = n-1;
+		  //		  if (stop >= cf(n-1)) stop = -1;
 		  else
 		    {
 		      for(ii=n-1;ii>=0;ii--)
 			if (cf(ii) <= stop) {stop=ii;found=True;break;}
+		      // if (!found)
+		      // 	{
+		      // 	  ostringstream m;
+		      // 	  m << "Stop channel not found for frequency " 
+		      // 	    << stop << " Hz. " <<  Mesg.str();
+		      // 	  throw(MSSelectionSpwError(m.str()));
+		      // 	}
 		      if (!found)
-			{
-			  ostringstream m;
-			  m << "Stop channel not found for frequency " 
-			    << stop << " Hz. " <<  Mesg.str();
-			  throw(MSSelectionSpwError(m.str()));
-			}
+			{someMatchFailed=True; stop=-1;}
 		    }
 
 		  Double maxCW=max(cw), minCW=min(cw);
 		  if (minCW != maxCW)
 		    {
-		      LogIO os(LogOrigin("MSSpw Expression parser", "MSSpwIndex::convertToChannelIndex", WHERE));
-		      os << "Channel width across the band is not constant.  Using the maximum of the channel width"
-			 << "range." << LogIO::WARN;
+		      log_l << "Channel width across the band is not constant.  "
+			    << "Using the maximum of the channel width range." 
+			    << LogIO::WARN;
 		    }
 		  step=(freqList(i+2)/maxCW);
-		  //		  cout << "start,stop = " << start << " " << stop << endl;
 
+		  if ((start != -1) && (stop != -1)) localFoundSpwList.push_back(spw(i));
 		  localFreqList(pos++)=(Int)start;
 		  localFreqList(pos++)=(Int)stop;
 		  localFreqList(pos++)=(Int)step;
 		  //		  cout << "LocalFreqList " << localFreqList << endl;
 		}
-	      else
+	      else  // If the spec is XXKm/s
 		{
-		  //Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
 		  //
-		  // Now that I think about this, veloctiy based
+		  // Now that I (SB) think about this, veloctiy based
 		  // selection in MSSelection does not make sense.
 		  //
-// 		  cerr << "Start = " << start << " Stop = " << stop << " Step = " << step << endl;
-// 		  MRadialVelocity vstart(Quantity(start, "km/s"), MRadialVelocity::LSRK);
-// 		  MDoppler mdoppler(vstart.getValue().get(), MDoppler::RADIO);
-// 		  MSDopplerUtil msdoppler(*ms_p);
-// 		  msdoppler.dopplerInfo(restFreq ,spw(i), fieldid);
+		  //Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
+		  //
+ 		  // cerr << "Start = " << start << " Stop = " << stop << " Step = " << step << endl;
+ 		  // MRadialVelocity vstart(Quantity(start, "km/s"), MRadialVelocity::LSRK);
+ 		  // MDoppler mdoppler(vstart.getValue().get(), MDoppler::RADIO);
+ 		  // MSDopplerUtil msdoppler(*ms_p);
+ 		  // msdoppler.dopplerInfo(restFreq ,spw(i), fieldid);
 
-// 		  cout << MFrequency::fromDoppler(mdoppler, 
-// 						  restFreq).getValue().getValue() << endl;
-
+ 		  // cout << MFrequency::fromDoppler(mdoppler, 
+ 		  // 				  restFreq).getValue().getValue() << endl;
 		}
 	    }
       }
@@ -461,6 +500,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  	  }
        }
 
+
+    // if (localFoundSpwList.size() == 0)
+    //   log_l << "No match found for SPW and CHAN combination" << LogIO::WARN << LogIO::POST;
+    // else 
+    if (someMatchFailed && (localFoundSpwList.size() != 0))
+      log_l << "Found match only for SPW(s) "  << Vector<Int>(localFoundSpwList) << " for some sub-expression." 
+	    << LogIO::WARN << LogIO::POST;
+    
     return localFreqList;
   }
   //-------------------------------------------------------------------------
