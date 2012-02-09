@@ -36,21 +36,47 @@ public:
 
 protected:
 
-	// Compute flags for a given (time,freq) map
-	bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
-
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
 
+	// Compute flags for a given (time,freq) map
+	bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+
+	// Convenience function to get simple averages
+	Double mean(vector<Double> &data,vector<Double> &counts);
+
+	// Convenience function to compute median
+	Double median(vector<Double> &data);
+
+	// Convenience function to get simple averages
+	Double compueThreshold(vector<Double> &data, vector<Double> &data2, vector<Double> &counts);
+
+	// Function to be called for each timestep/channel
+	void computeAntennaPairFlagsCore(	Int spw,
+										Double noise,
+										Double scutof,
+										uInt timeStart,
+										uInt timeStop,
+										uInt centralTime,
+										VisMapper &visibilities,
+										FlagMapper &flags);
 	// Function to return histograms
 	FlagReport getReport();
 
-	Double average(vector<Double> &data,vector<Double> &counts);
+	// Function to return histograms
+	FlagReport getReportCore(	map< Int,vector<Double> > &data,
+								map< Int,vector<Double> > &dataSquared,
+								map< Int,vector<Double> > &counts,
+								string label,
+								uInt scale);
 
 private:
 
 	// General parameters
 	Bool doplot_p;
+	uInt nTimeSteps_p;
+	uInt noiseScale_p;
+	uInt scutofScale_p;
 
 	// Spectral Robust fit
 	uInt nIterationsRobust_p;

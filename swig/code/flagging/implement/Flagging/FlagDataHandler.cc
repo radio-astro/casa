@@ -3109,13 +3109,13 @@ FlagMapper::getPrivateFlagRow(uInt row)
 void
 FlagMapper::setModifiedFlags(uInt pol, uInt channel, uInt row)
 {
-	commonFlagsView_p->operator ()(pol,channel,row) = flag_p;
+	commonFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row) = flag_p;
 }
 
 void
 FlagMapper::setPrivateFlags(uInt pol, uInt channel, uInt row)
 {
-	privateFlagsView_p->operator ()(pol,channel,row) = flag_p;
+	privateFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row) = flag_p;
 }
 
 void
