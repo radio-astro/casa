@@ -1678,7 +1678,6 @@ getcol or getcolslice on the original table.
      <param type="any" name="tab">
      <description>Table to which the row numbers refer</description>
      <any type="record"/>
-     <value></value>
      </param>
 
      <param type="int" name="nbytes">

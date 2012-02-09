@@ -324,17 +324,20 @@ have chosen to represent these as actual sizes.
   
      <param type="record" name="direction">
      <description>Direction measure (for relative coordinates)</description>
+     <value/>
      </param>
   
      <param type="record" name="spectrum">
      <description>Default spectrum field, valid spectrum field
      [type="Constant", frequency=[type="frequency" , refer="LSR" , m0=[unit="GHz" , value=1.0]]
      </description>
+     <value/>
      </param>
   
      <param type="record" name="flux">
      <description>Default flux field, valid flux field
      [value=[0.0, 0.0, 0.0, 0.0], unit='Jy', polarization="Stokes"]</description>
+     <value/>
      </param>
   
      <param type="bool" name="log">
@@ -2577,8 +2580,8 @@ specified component</shortdescription>
   <input>
     
      <param type="int" name="which">
-     <description>A vector of indices specifying the components to modify</description>
-     <value>A vector with indices between 0 and one less than the list length, inclusively</value>
+     <description>A vector of indices specifying the components to modify
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      <choice>no default</choice>
      </param>
     

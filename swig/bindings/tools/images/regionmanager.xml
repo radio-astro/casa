@@ -979,6 +979,7 @@ is $(155*178)-126=27464$
      <param type="any" direction="in" name="regions">
      <description>World regions</description>
      <any type="variant" />
+     <value/>
      <choice>Record containing world regions</choice>
      </param>
   

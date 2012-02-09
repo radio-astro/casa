@@ -1526,6 +1526,7 @@ references the input files, it does not copy them.
      <param type="any" direction="in" name="pixels">
 	     <any type="variant"/>
      <description>Numeric array</description>
+     <value/>
      </param>
   
      <param type="any" direction="in" name="csys">
@@ -6754,7 +6755,6 @@ ia.close()
   
      <param type="string" direction="in" name="outfile">
      <description>Output image file name.  Default is unset.</description>
-     <value></value>
      </param>
   
      <param type="intArray" direction="in" name="bin">
@@ -9334,6 +9334,7 @@ other process can gain immediate access to the \imagefile.
      <param type="any" direction="in" name="pixels">
 	     <any type="variant"/>
      <description>A numeric array is required.</description>
+     <value/>
      </param>
   
      <param type="any" direction="in" name="csys">

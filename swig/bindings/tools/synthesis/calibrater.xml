@@ -17,7 +17,7 @@ operations within CASA.
 <code>
 	<include>tools/synthesis/calibrater_forward.h</include>
 <private>
-	#include &lt;tools/synthesis/calibrater_private.h&gt;
+	<include>tools/synthesis/calibrater_private.h</include>
 </private>
 </code>
 
@@ -542,6 +542,7 @@ called 'gcal' to data for a field matching 'N5921*'
 
      <param type="string" direction="in" name="table">
      <description>Output calibration table name</description>
+     <value/>
      </param>
 
      <param type="bool" direction="in" name="append">
@@ -1228,7 +1229,6 @@ referencing</description>
 <output>
      <param type="doubleArray" direction="out" name="fluxd">
      <description>Array of output flux densities</description>
-     <value></value>
      </param>
 </output>
 <returns type="bool"/>
@@ -1756,6 +1756,7 @@ and the result written to 'out.gcal'.
 
      <param type="string" direction="in" name="listfile">
      <description>Send output to file: ''==>send to terminal)</description>
+     <value/>
      </param>
 
      <param type="int" direction="in" name="pagerows">

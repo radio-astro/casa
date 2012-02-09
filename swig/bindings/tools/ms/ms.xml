@@ -1422,8 +1422,8 @@ the ms definition itself. -->
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value></value>
      </description>
+     <value></value>
      </param>
 
      <param type="string" name="time">
@@ -2327,6 +2327,7 @@ Date/Time:                         RR:                      RL:                 
 
      <param type="string" direction="in" name="outframe">
      <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = "" = keep reference frame.</description>
+     <value/>
      </param>
 
      <param type="string" direction="in" name="veltype">

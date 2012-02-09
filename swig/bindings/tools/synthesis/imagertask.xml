@@ -83,6 +83,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     <param type="stringArray" name="model">
     <description>name of model image. No value.</description>
+    <value/>
     </param>
 
     <param type="stringArray" name="mask">
@@ -92,6 +93,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     <param type="string" name="mode">
     <description>Type of processing (channel or velocity)</description>
+    <value/>
     </param>
 
     <param type="intArray" name="nchan">
@@ -382,6 +384,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     <param type="stringArray" name="mask">
     <description>name of mask image. No value.</description>
+    <value/>
     </param>
 
     <param type="string" name="mode">

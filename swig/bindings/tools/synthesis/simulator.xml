@@ -690,8 +690,8 @@
     <param type="stringArray" name="pol">
       <description> Guess its the polarization of  feed arrays...
 	your guess is as good as mine....if you know better let us know please !
-	<value>R</value>
       </description>
+      <value>R</value>
       
     </param>
     

@@ -920,24 +920,24 @@ The information that is displayed includes:
      <description>Indicate spectral window based flagging extension. 
        Valid values are: 
         <I></I> <I>all</I> 
-     <value></value>
      </description>
+     <value></value>
      </param>
 
      <param type="string" name="extendant">
      <description>Indicate antenna (baselines) based flagging extension. 
        Valid values are: 
         <I></I> <I>all</I> 
-     <value></value>
      </description>
+     <value></value>
      </param>
 
      <param type="string" name="extendtime">
      <description>Indicate time based flagging extension. 
        Valid values are: 
         <I></I> <I>all</I> 
-     <value></value>
      </description>
+     <value></value>
      </param>
 
    </input>

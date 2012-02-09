@@ -2410,6 +2410,7 @@ how to set the increment using a string interface.
      <param type="any" direction="in" name="value">
 	<any type="variant"/>
      <description>Linear transform</description>
+     <value/>
      </param>
 </input>
 <returns type="bool"/>
