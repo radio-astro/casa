@@ -352,6 +352,10 @@ install (FILES
 	implement/CalTables/VisJonesMCol.h
 	implement/CalTables/VisJonesMRec.h
 	implement/CalTables/VisJonesTable.h
+	implement/CalTables/CalMainColumns2.tcc
+	implement/CalTables/CalSet.tcc
+	implement/CalTables/ROCalMainColumns2.tcc
+	implement/CalTables/SolvableCalSetMCol.tcc
 	DESTINATION include/casacode/synthesis/CalTables
 	)
 install (FILES
@@ -409,6 +413,9 @@ install (FILES
 	implement/MSVis/VisibilityIteratorImpl.h
 	implement/MSVis/VisibilityIteratorImplAsync.h
 	implement/MSVis/VisibilityProcessing.h
+	implement/MSVis/MSMoments.tcc
+	implement/MSVis/VisBuffer.tcc
+	implement/MSVis/VisibilityIterator.tcc
 	DESTINATION include/casacode/synthesis/MSVis
 	)
 install (FILES
@@ -495,6 +502,7 @@ install (FILES
 	implement/MeasurementComponents/XCorr.h
 	implement/MeasurementComponents/nPBWProjectFT.h
 	implement/MeasurementComponents/rGridFT.h
+	implement/MeasurementComponents/ImageSkyModel.tcc
 	DESTINATION include/casacode/synthesis/MeasurementComponents
 	)
 install (FILES
@@ -531,6 +539,14 @@ install (FILES
 	implement/MeasurementEquations/StokesUtil.h
 	implement/MeasurementEquations/VPManager.h
 	implement/MeasurementEquations/VisEquation.h
+	implement/MeasurementEquations/ArrayModel.tcc
+	implement/MeasurementEquations/HogbomCleanModel.tcc
+	implement/MeasurementEquations/LinearEquation.tcc
+	implement/MeasurementEquations/LinearModel.tcc
+	implement/MeasurementEquations/MaskedArrayModel.tcc
+	implement/MeasurementEquations/MaskedHogbomCleanModel.tcc
+	implement/MeasurementEquations/ResidualEquation.tcc
+	implement/MeasurementEquations/StokesUtil.tcc
 	DESTINATION include/casacode/synthesis/MeasurementEquations
 	)
 install (FILES

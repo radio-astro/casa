@@ -96,17 +96,23 @@ install (FILES
 	implement/Flagging/RFADiffBase.h
 	implement/Flagging/RFAFlagCubeBase.h
 	implement/Flagging/RFAFlagExaminer.h
+	implement/Flagging/RFAFlagExaminer.tcc
 	implement/Flagging/RFAMedianClip.h
 	implement/Flagging/RFANewMedianClip.h
 	implement/Flagging/RFASelector.h
+	implement/Flagging/RFASelector.tcc
 	implement/Flagging/RFASpectralRej.h
 	implement/Flagging/RFATimeFreqCrop.h
+	implement/Flagging/RFATimeFreqCrop.tcc
 	implement/Flagging/RFAUVBinner.h
 	implement/Flagging/RFChunkStats.h
+	implement/Flagging/RFChunkStats.tcc
 	implement/Flagging/RFCommon.h
 	implement/Flagging/RFCubeLattice.h
+	implement/Flagging/RFCubeLattice.tcc
 	implement/Flagging/RFDataMapper.h
 	implement/Flagging/RFFlagCube.h
+	implement/Flagging/RFFlagCube.tcc
 	implement/Flagging/RFFloatLattice.h
 	implement/Flagging/RFRowClipper.h
 	implement/Flagging/SLog.h
