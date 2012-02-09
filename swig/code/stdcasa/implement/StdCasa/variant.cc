@@ -1578,5 +1578,9 @@ void variant::resize( int size ) {
     }
 }
 
+variant initialize_variant( const std::string & ) {
+	    return variant();
+}
+
 }	// casac namespace
 

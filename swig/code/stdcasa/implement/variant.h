@@ -202,6 +202,7 @@ class variant {
 	std::string create_message( const std::string s ) const;
 };
 
+variant initialize_variant( const std::string & );
 }	// casac namespace
 
 #endif

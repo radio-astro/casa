@@ -30,7 +30,7 @@ class record : public  rec_map {
 	record &operator=(const record &r) { rec_map::operator=(r); return *this; }
 	std::pair<rec_map::iterator,bool> insert(const std::string &s,const variant &v);
 };
-
+record initialize_record( const std::string & );
 }	// casac namespace
 
 #endif

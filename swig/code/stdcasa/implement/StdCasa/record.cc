@@ -9,4 +9,8 @@ std::pair<rec_map::iterator,bool> record::insert(const std::string &s,const vari
   return rec_map::insert(rec_map::value_type(s,v));
 }
 
+record initialize_record( const std::string & ) {
+	    return record();
+}
+
 }	// casac namespace
