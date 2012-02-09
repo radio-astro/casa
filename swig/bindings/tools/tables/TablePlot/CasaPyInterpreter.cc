@@ -40,7 +40,7 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/System/ProgressMeter.h>
 
-#include <tableplot/TablePlot/CasaPyInterpreter.h>
+#include <tools/tables/TablePlot/CasaPyInterpreter.h>
 #include <numpy/arrayobject.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

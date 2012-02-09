@@ -9,7 +9,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/calibrater/calplot_forward.h</include>
 <private>
-	#include &lt;tools/calibrater/calplot_private.h&gt;
+	<include>tools/calibrater/calplot_private.h</include>
 </private>
 </code>
        
@@ -93,7 +93,7 @@ Supported calibration types: \n
 Open a calibration table for use.
 </description>
 <input>
-     <param type="string" name="caltable">
+     <param type="string" name="caltable" direction="in">
      <description>Calibration Table name</description>
      <value></value>
      </param>
@@ -114,11 +114,11 @@ specification of the what of the calibration solution to plot is necessary, defa
 Supported solution type (AMP, PHASE, RLPHASE, XYPHASE, DELAY, DELAYRATE)
 </description>
 <input>
-     <param type="string" name="xaxis">
+     <param type="string" name="xaxis" direction="in">
      <description>Value to plot on the X axis ("time","chan","amp","phase","real","imag","snr")</description>
      <value>time</value>
      </param>
-     <param type="string" name="yaxis">
+     <param type="string" name="yaxis" direction="in">
      <description>Value to plot on the Y axis ("amp","phase","real","imag","snr")</description>
      <value>time</value>
      </param>
@@ -153,24 +153,24 @@ Supported solution type (AMP, PHASE, RLPHASE, XYPHASE, DELAY, DELAYRATE)
    </description>
 
    <input>
-     <param type="string" name="filename">
+     <param type="string" name="filename" direction="in">
      <description>Name the plot image is to be saved to. </description>
      <value></value>
      </param>
 
-     <param type="int" name="dpi">
+     <param type="int" name="dpi" direction="in">
      <description>Number of dots per inch (resolution) to save the image at. 
      </description>
      <value>-1</value>
      </param>
 
-     <param type="string" name="orientation">
+     <param type="string" name="orientation" direction="in">
      <description>Either <I>landscape</I> or <I>portrait</I>. Supported
      by the postscript format only.</description>
      <value></value>
      </param>
 
-     <param type="string" name="papertype">
+     <param type="string" name="papertype" direction="in">
      <description>Valid values are: <I>letter</I>, <I>legal</I>, <I>exective</I>,
           <I>ledger</I>, <I>a0</I>-<I>a10</I> and <I>b0</I>-<I>b10</I>.  This 
            option is supported byt the postscript format only.
@@ -178,14 +178,14 @@ Supported solution type (AMP, PHASE, RLPHASE, XYPHASE, DELAY, DELAYRATE)
      <value></value>
      </param>
 
-     <param type="string" name="facecolor">
+     <param type="string" name="facecolor" direction="in">
      <description>Color of space between the plot and the edge of the
         square. Valid values are the same as those
          accepted by the plotcolor option.</description>
      <value></value>
      </param>
 
-     <param type="string" name="edgecolor">
+     <param type="string" name="edgecolor" direction="in">
      <description>Color of the outer edge. Valid values are the same as those
          accepted by the plotcolor option.</description>
      <value></value>
@@ -209,46 +209,46 @@ Specify a list of plot options including number of panels in x and y, iteration 
 and if it is a multiplot.
 </description>
 <input>
-     <param type="int" name="subplot">
+     <param type="int" name="subplot" direction="in">
      <description>matplotlib style panel number, e.g 221 means 4 panels 2x2 and plotting on the first panel</description>
      <value>111</value>
      </param>
-     <param type="bool" name="overplot">
+     <param type="bool" name="overplot" direction="in">
      <description>Overplot the next plot.</description>
      <value>false</value>
      </param>
 
-     <param type="string" name="iteration">
+     <param type="string" name="iteration" direction="in">
      <description>Iterate plots on antenna, spw, field, and/or time</description>
      <value></value>
      </param>
 
-      <param type="doubleArray" name="plotrange">
+      <param type="doubleArray" name="plotrange" direction="in">
      <description> integer for the plot symbol.</description>
      <value>0.0</value>
      </param> 
 
-     <param type="bool" name="showflags">
+     <param type="bool" name="showflags" direction="in">
      <description>Create multiple pages of plots (per antenna).</description>
      <value>false</value>
      </param>
 
-      <param type="string" name="plotsymbol">
+      <param type="string" name="plotsymbol" direction="in">
      <description>The plot symbol to use</description>
      <value>.</value>
      </param> 
 
-      <param type="string" name="plotcolor">
+      <param type="string" name="plotcolor" direction="in">
      <description> integer for the plot symbol.</description>
      <value>green</value>
      </param> 
 
-      <param type="double" name="markersize">
+      <param type="double" name="markersize" direction="in">
      <description> integer for the plot symbol.</description>
      <value>5.0</value>
      </param> 
 
-      <param type="double" name="fontsize">
+      <param type="double" name="fontsize" direction="in">
      <description> integer for the plot symbol.</description>
      <value>10.0</value>
      </param> 
@@ -344,7 +344,7 @@ This method enables plotting of a subset of the caltable.
      <any type="variant"/>
      <value></value>
      </param>
-     <param type="string" name="poln">
+     <param type="string" direction="in" name="poln">
      <description>Polarization to plot ("", "RL", "R", "L", "XY", "X",
 "Y", "/")</description>
      <value>""</value>

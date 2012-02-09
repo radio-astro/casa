@@ -40,8 +40,8 @@
 #include <casa/aipstype.h>
 #include <casa/Arrays/Vector.h>
 
-#include <tableplot/TablePlot/TablePlot.h>
-#include <tableplot/TablePlot/SLog.h>
+#include <tools/tables/TablePlot/TablePlot.h>
+#include <flagging/Flagging/SLog.h>
 
 #define LOG0 0
 

@@ -45,7 +45,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Array.h>
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 #include <Python.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -282,7 +282,7 @@ class CasaPyInterpreter
 } //# NAMESPACE CASA - END 
 
 //#ifndef AIPS_NO_TEMPLATE_SRC
-//#include <tableplot/TablePlot/CasaPyInterpreter.tcc>
+//#include <tools/tables/TablePlot/CasaPyInterpreter.tcc>
 //#endif //# AIPS_NO_TEMPLATE_SRC
 #endif
 

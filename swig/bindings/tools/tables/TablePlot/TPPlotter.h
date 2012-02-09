@@ -58,10 +58,10 @@
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/Vector.h>
 
-#include <tableplot/TablePlot/BasePlot.h>
-#include <tableplot/TablePlot/PanelParams.h>
-#include <tableplot/TablePlot/CasaPyInterpreter.h>
-#include <tableplot/TablePlot/SLog.h>
+#include <tools/tables/TablePlot/BasePlot.h>
+#include <tools/tables/TablePlot/PanelParams.h>
+#include <tools/tables/TablePlot/CasaPyInterpreter.h>
+#include <flagging/Flagging/SLog.h>
 
 //#include <CCM_Python/PySub.h>
 

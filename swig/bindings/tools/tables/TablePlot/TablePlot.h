@@ -48,17 +48,17 @@
 #define TABLEPLOT_H
 
 //# Includes
-#include <tableplot/TablePlot/TPPlotter.h> /* TPPlotter.h includes Python.h which must
+#include <tools/tables/TablePlot/TPPlotter.h> /* TPPlotter.h includes Python.h which must
                                               be included before any system headers */
 #include <casa/aips.h>
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TableError.h>
 
-#include <tableplot/TablePlot/BasePlot.h>
-#include <tableplot/TablePlot/CrossPlot.h>
-#include <tableplot/TablePlot/PanelParams.h>
+#include <tools/tables/TablePlot/BasePlot.h>
+#include <tools/tables/TablePlot/CrossPlot.h>
+#include <tools/tables/TablePlot/PanelParams.h>
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

@@ -55,10 +55,10 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RecordGram.h>
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 
-#include <tableplot/TablePlot/TPCallBackHooks.h>
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <tools/tables/TablePlot/TPCallBackHooks.h>
+#include <flagging/Flagging/FlagVersion.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 
@@ -531,7 +531,7 @@ class BasePlot
 } //# NAMESPACE CASA - END 
 
 //#ifndef AIPS_NO_TEMPLATE_SRC
-//#include <tableplot/TablePlot/BasePlot.cc>
+//#include <tools/tables/TablePlot/BasePlot.cc>
 //#endif //# AIPS_NO_TEMPLATE_SRC
 #endif
 

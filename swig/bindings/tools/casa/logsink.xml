@@ -10,7 +10,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 <include>tools/casa/logsink_forward.h</include>
 <private>
-#include &lt;tools/casa/logsink_private.h&gt;
+	<include>tools/casa/logsink_private.h</include>
 </private>
 </code>
 
@@ -38,7 +38,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 	<shortdescription>Set the origin of the message</shortdescription>
 	<description>Sets the origin of messages to be displayed</description>
 	<input>
-		<param type="string" name="fromwhere">
+		<param type="string" name="fromwhere" direction="in">
 			<description> The origin of a log messages</description>
 		</param>
 	</input>
@@ -51,7 +51,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
         can adjust what gets displayed so you could set INFO5 and then filter in the
         logger everything above INFO1.</description>
 	<input>
-		<param type="string" name="level">
+		<param type="string" direction="in" name="level">
 			<description> Level of messages to display to the console/log file</description>
 		<value>ERROR</value>
 		<value>WARN</value>
@@ -69,18 +69,18 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 	</input>
   <returns type="bool"/>
 </method>
-<method type="function" name="post">
+<method type="function" direction="in" name="post">
   <shortdescription>Post a message</shortdescription>
   <description>If the message passes the filter, write it (same as postLocally)</description>
   <input>
-    <param type="string" name="message">
+    <param type="string" direction="in" name="message">
     <description>Message to be posted</description>
     </param>
-    <param type="string" name="priority">
+    <param type="string" direction="in" name="priority">
     <description>Priority of message to be posted</description>
     <value>INFO</value>
     </param>
-    <param type="string" name="origin">
+    <param type="string" direction="in" name="origin">
     <description>Origin of message to be posted</description>
     <value></value>
     </param>
@@ -95,14 +95,14 @@ file:///opt/casa/code/tools/xml/casa.xsd">
   <description>If the message passes the filter, write it</description>
 
   <input>
-    <param type="string" name="message">
+    <param type="string" direction="in" name="message">
     <description>Message to be posted</description>
     </param>
-    <param type="string" name="priority">
+    <param type="string" direction="in" name="priority">
     <description>Priority of message to be posted</description>
     <value>INFO</value>
     </param>
-    <param type="string" name="origin">
+    <param type="string" direction="in" name="origin">
     <description>Origin of message to be posted</description>
     <value></value>
     </param>
@@ -160,7 +160,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <method type="function" name="setlogfile">
 	<shortdescription>Set the name of file for logger output</shortdescription>
 	<input>
-		<param type="string" name="filename">
+		<param type="string" direction="in" name="filename">
 			<description>filename for logger</description>
 			<value>casapy.log</value>
 	        </param>

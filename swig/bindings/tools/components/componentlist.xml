@@ -10,7 +10,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 		<code>
 			<include>tools/components/componentlist_forward.h</include>
 			<private>
-				#include &lt;tools/components/componentlist_private.h&gt;
+				<include>tools/components/componentlist_private.h</include>
 			</private>
 		</code>
 
@@ -322,20 +322,17 @@ have chosen to represent these as actual sizes.
      <value>ST</value>
      </param>
   
-     <param type="any" name="direction">
-     <any type="record"/>
+     <param type="record" name="direction">
      <description>Direction measure (for relative coordinates)</description>
      </param>
   
-     <param type="any" name="spectrum">
-     <any type="record"/>
+     <param type="record" name="spectrum">
      <description>Default spectrum field, valid spectrum field
      [type="Constant", frequency=[type="frequency" , refer="LSR" , m0=[unit="GHz" , value=1.0]]
      </description>
      </param>
   
-     <param type="any" name="flux">
-     <any type="record"/>
+     <param type="record" name="flux">
      <description>Default flux field, valid flux field
      [value=[0.0, 0.0, 0.0, 0.0], unit='Jy', polarization="Stokes"]</description>
      </param>
@@ -381,7 +378,6 @@ and available in Glish as mycl.
   <input>
     
      <param type="any" name="list">
-	     <any type="variant"/>
      <description>list to copy from. Can be a componentlist record or a componentlist file name from disk </description>
      <value></value>
      </param> 
@@ -443,8 +439,7 @@ and available in Glish as mycl.
   </description>
   <input>
     
-     <param type="any" name="record">
-	     <any type="record"/>
+     <param type="record" name="record">
      <description> a component list record </description>
      <value></value>
      </param> 
@@ -483,7 +478,7 @@ and available in Glish as mycl.
     
      
   </input>
-  <returns type="any"><any type="record"/>Componentlist tool </returns>
+  <returns type="record">Componentlist tool </returns>
   <example>
     
       cl2=cltool.create()
@@ -802,28 +797,24 @@ and available in Glish as mycl.
      <param type="any" name="direction">
      <description>The direction to sample
      any valid direction measure. A valid Direction measure or vector of string or string, e.g me.direction('J2000','19h30m00', '-20d00m00') or ['J2000','19h30m00', '-20d00m00'] or 'J2000 19h30m00 -20d00m00'</description>
-     <any type="variant"/>
      <value>J2000 00h00m00.00 90d00m00.0</value>
      </param>
     
      <param type="any" name="pixellatsize">
      <description>the x-size of the in pixels to use when sampling
      any quantity that has angular units.</description>
-     <any type="variant"/>
      <value>0.0deg</value>
      </param>
     
      <param type="any" name="pixellongsize">
      <description>the y-size of the in pixels to use when sampling
      any quantity that has angular units.</description>
-     <any type="variant"/>
      <value>0.0deg</value>
      </param>
     
      <param type="any" name="frequency">
      <description>The frequency to sample at
      Any frequency measure</description>
-     <any type="variant"/>
      <value>1.4GHz</value>
      </param>
   </input>
@@ -1033,7 +1024,6 @@ and available in Glish as mycl.
 
 -->
 <!-- No temporary default -->
-   <any type="variant"/>
    <value></value>
    </param>
      <param type="string" name="fluxunit">
@@ -1052,7 +1042,6 @@ and available in Glish as mycl.
     
      <param type="any" name="dir">
      <description>The direction measure of the source, it can a be any direction measure from the measures tool or a string of the type 'J2000 10h30m00 -20d00m00.0' or a vector of strings of the type ['J2000', '10:30:00.00', '-20.00.00.0']. Basically the string or strings should have the direction frame and quantities for Ra and Dec</description>
-     <any type="variant"/>
      <value>J2000 00h00m00.0 90d00m00.0</value>
      </param>
 
@@ -1069,14 +1058,12 @@ and available in Glish as mycl.
      <param type="any" name="majoraxis">
      <description>The width of the larger axis.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>2.0arcmin</value>
      </param>
     
      <param type="any" name="minoraxis">
      <description>The width of the smaller axis.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>1.0arcmin</value>
      </param>
     
@@ -1084,14 +1071,12 @@ and available in Glish as mycl.
      <description>The rotation of the axes with respect to
                              the reference frame.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>0.0deg</value>
      </param>
     
      <param type="any" name="freq">
      <description>The reference frequency.
      A quantity with units equivalent to the 'Hz' and frame or a frequency measure, e.g ['TOPO', '1.6GHz'], or simply default frame (LSRK) '1.6GHz' </description>
-     <any type="variant"/>
      <value>LSRK 1.415GHz</value>
      </param>
     
@@ -1556,7 +1541,6 @@ specified component</shortdescription>
      <param type="any" name="value">
      <description>The flux values for the specified components
      A vector with four real or complex numbers</description>
-     <any type="variant"/>
      <value></value>
      </param>
     
@@ -1584,7 +1568,6 @@ specified component</shortdescription>
 	     <value type="struct"><value name="re">0.0</value><value name="im">0.0</value></value>
      </value>
 -->
-     <any type="variant"/>
      <value></value>
      </param>
     
@@ -1709,7 +1692,7 @@ specified component</shortdescription>
      An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
-  <returns type="any"><description>Workaround should return an MDirection</description><any type="record"/></returns>
+  <returns type="record"><description>Workaround should return an MDirection</description></returns>
   <example>
     
       include 'componentlist.g'
@@ -1891,14 +1874,12 @@ specified component</shortdescription>
      </param>
     
      <param type="any" name="ra">
-	     <any type="variant"/>
      <description>The RA of the new direction,
      A formatted string or a number</description>
      <value></value>
      </param>
     
      <param type="any" name="dec">
-	     <any type="variant"/>
      <description>The declination of the new direction.
      A formatted string or a number</description>
      <value></value>
@@ -2094,8 +2075,7 @@ specified component</shortdescription>
      An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
-  <returns type="any">
-	  <any type="record"/>
+  <returns type="record">
 	  <description>A record with fields that contain the parameters of the
 		  component shape.
   </description>
@@ -2159,14 +2139,12 @@ specified component</shortdescription>
      <param type="any" name="majoraxis">
      <description>The width of the larger axis.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>1.0arcmin</value>
      </param>
     
      <param type="any" name="minoraxis">
 	     <description>The width of the smaller axis.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>1.0arcmin</value>
      </param>
     
@@ -2174,21 +2152,18 @@ specified component</shortdescription>
      <description>The rotation of the axes with respect to
                              the reference frame.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>0.0deg</value>
      </param>
     
      <param type="any" name="majoraxiserror">
      <description>Error ~The width of the larger axis.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>0.0arcmin</value>
      </param>
     
      <param type="any" name="minoraxiserror">
 	     <description>Error of the width of the smaller axis.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>0.0arcmin</value>
      </param>
     
@@ -2196,7 +2171,6 @@ specified component</shortdescription>
      <description>Error of the rotation of the axes with respect to
                              the reference frame.
      A quantity with angular units</description>
-     <any type="variant"/>
      <value>0.0deg</value>
      </param>
     
@@ -2364,7 +2338,7 @@ specified component</shortdescription>
      An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
-  <returns type="any"><any type="record"/>
+  <returns type="record">
 	  <description>A record with fields that contain the parameters of the
              spectral type.
 	     </description></returns>
@@ -2470,7 +2444,7 @@ specified component</shortdescription>
      An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
-  <returns type="any"><any type="record"/><description>A frequency measure (a record)</description></returns>
+  <returns type="record"><description>A frequency measure (a record)</description></returns>
   <example>
     
       include 'componentlist.g'
@@ -2776,7 +2750,7 @@ specified component</shortdescription>
      <value>false</value>
      </param>
   </input>
-  <returns type="any"><any type="record"/><description>A record representing a component.</description></returns>
+  <returns type="record"><description>A record representing a component.</description></returns>
 </method>
 
  
@@ -2795,8 +2769,7 @@ specified component</shortdescription>
   </description>
   <input>
     
-     <param type="any" name="thecomponent">
-	     <any type="record"/>
+     <param type="record" name="thecomponent">
      <description>A record that represents a component.
      any record that contains the required fields</description>
      </param>
@@ -2832,8 +2805,7 @@ specified component</shortdescription>
      A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
-     <param type="any" name="list">
-	     <any type="record"/>
+     <param type="record" name="list">
      <description>The list containing the components to copy.
      A componentlist tool</description>
      </param>
@@ -2893,7 +2865,6 @@ list in the second argument</description>
   <input>
     
      <param type="any" name="tool">
-	     <any type="variant"/>
      <description>The variable that you wish to test</description>
      </param>
   </input>

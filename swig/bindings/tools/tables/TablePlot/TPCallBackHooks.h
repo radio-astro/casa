@@ -42,7 +42,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/QC.h>
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

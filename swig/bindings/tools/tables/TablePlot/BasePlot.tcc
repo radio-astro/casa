@@ -63,7 +63,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/System/ProgressMeter.h>
 
-#include <tableplot/TablePlot/BasePlot.h>
+#include <tools/tables/TablePlot/BasePlot.h>
 
 #include <casa/iomanip.h>
 #include <casa/iostream.h> 

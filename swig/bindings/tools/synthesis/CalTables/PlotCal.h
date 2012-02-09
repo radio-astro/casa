@@ -27,7 +27,7 @@
 //# $Id$
 
 #include <casa/aips.h>
-#include <tableplot/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/TablePlot.h>
 
 
 #ifndef CALIBRATION_PLOTCAL_H

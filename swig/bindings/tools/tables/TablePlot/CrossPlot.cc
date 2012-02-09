@@ -59,7 +59,7 @@
 
 #include <casa/Utilities/DataType.h>
 
-#include <tableplot/TablePlot/CrossPlot.h>
+#include <tools/tables/TablePlot/CrossPlot.h>
 
 #include <casa/iomanip.h>
 

@@ -52,7 +52,7 @@
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/RecordGram.h>
 
-#include <tableplot/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/TablePlot.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/QC.h>

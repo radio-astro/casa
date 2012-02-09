@@ -44,7 +44,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/QC.h>
 
-#include <tableplot/TablePlot/TPCallBackHooks.h>
+#include <tools/tables/TablePlot/TPCallBackHooks.h>
 #include <tables/Tables/Table.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

@@ -65,7 +65,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/iomanip.h>
 
-#include <tableplot/TablePlot/TPPlotter.h>
+#include <tools/tables/TablePlot/TPPlotter.h>
 #include <numpy/arrayobject.h>
 #include <casa/Exceptions.h>
 #include <casa/Utilities/DataType.h>

@@ -36,7 +36,7 @@
 #include <casa/iostream.h>
 #include <casa/OS/Timer.h>
 
-#include <tableplot/TablePlot/BasePlot.h>
+#include <tools/tables/TablePlot/BasePlot.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -224,7 +224,7 @@ class CrossPlot : public BasePlot {
 } //# NAMESPACE CASA - END 
 
 //#ifndef AIPS_NO_TEMPLATE_SRC
-//#include <tableplot/TablePlot/CrossPlot.tcc>
+//#include <tools/tables/TablePlot/CrossPlot.tcc>
 //#endif //# AIPS_NO_TEMPLATE_SRC
 #endif
 

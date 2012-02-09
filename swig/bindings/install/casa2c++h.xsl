@@ -23,7 +23,7 @@
 #include &lt;tools/casaswig_types.h&gt;
 </xsl:text>
 <xsl:for-each select="aps:needs">
-	<xsl:text disable-output-escaping="yes">#include &lt;casa</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">.idl&gt;
+	<xsl:text disable-output-escaping="yes">#include &lt;casa</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">.h&gt;
 </xsl:text>
 </xsl:for-each>
 <xsl:for-each select="aps:code">
@@ -34,7 +34,6 @@
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
 using namespace std;
-//using namespace casac;
 
 namespace casac {
 </xsl:text>           
@@ -67,47 +66,281 @@ namespace casac {
   </xsl:template>
   <xsl:template match="aps:input">  
   <xsl:call-template name="doargs">
+	  <xsl:with-param name="defdirection"><xsl:value-of>in</xsl:value-of></xsl:with-param>
    </xsl:call-template>
    </xsl:template>
  
   <xsl:template match="aps:inout">  
   <xsl:call-template name="doargs">
+	  <xsl:with-param name="defdirection"><xsl:value-of>in</xsl:value-of></xsl:with-param>
    </xsl:call-template>
    </xsl:template>
    
   <xsl:template match="aps:output">  
   <xsl:call-template name="doargs">
+	  <xsl:with-param name="defdirection"><xsl:value-of>out</xsl:value-of></xsl:with-param>
    </xsl:call-template>
    </xsl:template>
 
 <xsl:template name="doargs">
+	<xsl:param name="defdirection"/>
      <xsl:for-each select="aps:param">
               <xsl:choose>           
-		      <xsl:when test="lower-case(@xsi:type)='string'"><xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		      <xsl:when test="lower-case(@xsi:type)='any'"><xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		      <xsl:when test="lower-case(@xsi:type)='int'"> int <xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		      <xsl:when test="lower-case(@xsi:type)='bool'"> bool <xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		      <xsl:when test="lower-case(@xsi:type)='float'"> float <xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='double'"><xsl:choose>
+		      <xsl:when test="lower-case(@xsi:type)='string'">
+			  <xsl:choose>
+			      <xsl:when test="@direction">
+			          <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			      </xsl:when>
+			      <xsl:otherwise>
+				   <xsl:choose>
+			           <xsl:when test="$defdirection='in'">
+				      <xsl:text disable-output-escaping="yes">const  string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			           </xsl:when>
+				   <xsl:otherwise>
+					   <xsl:text disable-output-escaping="yes">string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="./value">="<xsl:value-of select="./value"/>"</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+				   </xsl:otherwise>
+			           </xsl:choose>
+			      </xsl:otherwise>
+		          </xsl:choose>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='variant'">
+			  <xsl:choose>
+			      <xsl:when test="@direction">
+			         <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		              </xsl:when>
+			      <xsl:otherwise>
+				   <xsl:choose>
+			           <xsl:when test="$defdirection='in'">
+			         <xsl:text disable-output-escaping="yes"> const variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			           </xsl:when>
+				   <xsl:otherwise>
+			         <xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				   </xsl:otherwise>
+			           </xsl:choose>
+			      </xsl:otherwise>
+		          </xsl:choose>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='any'">
+			  <xsl:choose>
+			      <xsl:when test="@direction">
+			         <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		              </xsl:when>
+			      <xsl:otherwise>
+				   <xsl:choose>
+			           <xsl:when test="$defdirection='in'">
+			         <xsl:text disable-output-escaping="yes"> const variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			           </xsl:when>
+				   <xsl:otherwise>
+			         <xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				   </xsl:otherwise>
+			           </xsl:choose>
+			      </xsl:otherwise>
+		          </xsl:choose>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='record'">
+			  <xsl:choose>
+			      <xsl:when test="@direction">
+			         <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		              </xsl:when>
+			      <xsl:otherwise>
+				   <xsl:choose>
+			           <xsl:when test="$defdirection='in'">
+			         <xsl:text disable-output-escaping="yes"> const record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			           </xsl:when>
+				   <xsl:otherwise>
+			         <xsl:text disable-output-escaping="yes"> record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				   </xsl:otherwise>
+			           </xsl:choose>
+			      </xsl:otherwise>
+		          </xsl:choose>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='int'"> int <xsl:if test="@direction='out' or @directon='inout' "><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="./value">=<xsl:value-of select="./value"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='boolean'"> bool <xsl:if test="@direction='out' or @directon='inout'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="./value">=<xsl:value-of select="./value"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='bool'"> bool <xsl:if test="@direction='out' or @directon='inout'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="./value">=<xsl:value-of select="./value"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='float'"> float <xsl:if test="@direction='out' or @directon='inout'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="./value">=<xsl:value-of select="./value"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='double'">
+			      <xsl:choose>
                  <xsl:when test="@units">
+			  <xsl:choose>
+			      <xsl:when test="@direction">
+				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="./value"><xsl:text disable-output-escaping="yes">=Quantity(std::vector&lt;double&gt;(1, </xsl:text><xsl:value-of select="./value"/><xsl:text>),"</xsl:text><xsl:value-of select="@units"/><xsl:text>")</xsl:text></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+		              </xsl:when>
+			      <xsl:otherwise>
+				   <xsl:choose>
+			           <xsl:when test="$defdirection='in'">
+					   <xsl:text disable-output-escaping="yes"> const Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="./value"><xsl:text disable-output-escaping="yes">=Quantity(std::vector&lt;double&gt;(1, </xsl:text><xsl:value-of select="./value"/>),<xsl:value-of select="@units"/>)</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+			           </xsl:when>
+				   <xsl:otherwise>
+			          <xsl:text disable-output-escaping="yes"> Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				   </xsl:otherwise>
+			           </xsl:choose>
+			      </xsl:otherwise>
+		          </xsl:choose>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  double<xsl:if test="@direction='out' or @direction='inout'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:otherwise>
+  </xsl:choose>
+  </xsl:when>   
+  <xsl:when test="lower-case(@xsi:type)='stringarray'"> 
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+			  <xsl:if test="@direction='in'"> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;std::string&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+			   <xsl:text disable-output-escaping="yes"> const std::vector&lt;std::string&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+			   <xsl:text disable-output-escaping="yes"> std::vector&lt;std::string&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+  </xsl:when>
+  <xsl:when test="lower-case(@xsi:type)='recordarray'">
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+			  <xsl:if test="@direction='in'"> const </xsl:if><xsl:text disable-output-escaping="yes"> RecordVec&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+			  <xsl:text disable-output-escaping="yes"> const RecordVec&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+			  <xsl:text disable-output-escaping="yes"> RecordVec&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+  </xsl:when>
+ <xsl:when test="lower-case(@xsi:type)='intarray'">
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+	            <xsl:if test="@direction='in'"> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;int&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+	            <xsl:text disable-output-escaping="yes"> const std::vector&lt;int&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+	            <xsl:text disable-output-escaping="yes"> std::vector&lt;int&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+  </xsl:when>
+ <xsl:when test="lower-case(@xsi:type)='boolarray'">
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+	<xsl:if test="@direction='in'"> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;bool&gt;&amp;  </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+	<xsl:text disable-output-escaping="yes"> const std::vector&lt;bool&gt;&amp;  </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+	<xsl:text disable-output-escaping="yes"> std::vector&lt;bool&gt;&amp;  </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+  </xsl:when>
+<xsl:when test="lower-case(@xsi:type)='floatarray'">
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+       	<xsl:if test="@direction='in' "> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;float&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+       	<xsl:text disable-output-escaping="yes"> const std::vector&lt;float&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+       	<xsl:text disable-output-escaping="yes"> std::vector&lt;float&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+  </xsl:when>
+<xsl:when test="lower-case(@xsi:type)='complexarray'">
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+       	<xsl:if test="@direction='in' "> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+       	<xsl:text disable-output-escaping="yes"> const std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+       	<xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+  </xsl:when>
+<xsl:when test="lower-case(@xsi:type)='doublearray'">
+	<xsl:choose>
+         <xsl:when test="@units">
+	  <xsl:choose>
+		  <xsl:when test="@direction">
 			 <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
-                 </xsl:when><xsl:otherwise>
-		 double<xsl:if test="@direction!='in'"><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
-		 <xsl:when test="lower-case(@xsi:type)='stringarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes">std::vector&lt;std::string&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='recordarray'"> RecordVec&amp; <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		 <xsl:when test="lower-case(@xsi:type)='intarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;int&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		 <xsl:when test="lower-case(@xsi:type)='boolarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;bool&gt;&amp;  </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		 <xsl:when test="lower-case(@xsi:type)='floatarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;float&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-		 <xsl:when test="lower-case(@xsi:type)='complexarray'"> <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='doublearray'"><xsl:choose>
-                 <xsl:when test="@units">
-			 <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
-                 </xsl:when><xsl:otherwise>
-		 <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;double&gt;&amp; </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
-                 <xsl:otherwise>
-			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/><xsl:if test="@direction='in'"> const</xsl:if><xsl:text> </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
-                 </xsl:otherwise>
-              </xsl:choose>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+			 <xsl:text disable-output-escaping="yes"> const Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+			 <xsl:text disable-output-escaping="yes"> Quantity&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+		<xsl:if test="@direction='in' "> const</xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;double&gt;&amp; </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+		<xsl:text disable-output-escaping="yes"> const std::vector&lt;double&gt;&amp; </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+		<xsl:text disable-output-escaping="yes"> std::vector&lt;double&gt;&amp; </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+      </xsl:otherwise>
+    </xsl:choose>
+</xsl:when>   
+   <xsl:otherwise>
+	  <xsl:choose>
+		  <xsl:when test="@direction">
+			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/><xsl:if test="@direction='in' "> const</xsl:if><xsl:text> </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+		  </xsl:when>
+		  <xsl:otherwise>
+			  <xsl:choose>
+				  <xsl:when test="$defdirection='in'">
+			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/> <xsl:text> const</xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:when>
+				  <xsl:otherwise>
+			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/><xsl:text> </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+				  </xsl:otherwise>
+			  </xsl:choose>
+		  </xsl:otherwise>
+	  </xsl:choose>
+    </xsl:otherwise>
+</xsl:choose>
      </xsl:for-each>   
 </xsl:template>
      <xsl:template match="aps:returns">  
@@ -115,8 +348,10 @@ namespace casac {
                 <xsl:when test="lower-case(@xsi:type)='string'">string </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='int'">int </xsl:when>
                   <xsl:when test="lower-case(@xsi:type)='bool'">bool </xsl:when>
+                  <xsl:when test="lower-case(@xsi:type)='boolean'">bool </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='float'">float </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='double'">double </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='any'">variant </xsl:when>
 
 		 <xsl:when test="lower-case(@xsi:type)='stringarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;std::string&gt; </xsl:text></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='recordarray'">RecordVec </xsl:when>
@@ -125,7 +360,7 @@ namespace casac {
 				 <xsl:when test="lower-case(@xsi:type)='floatarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;float&gt;</xsl:text> </xsl:when>
 					 <xsl:when test="lower-case(@xsi:type)='doublearray'"><xsl:text disable-output-escaping="yes">std::vector&lt;double&gt;</xsl:text> </xsl:when>
 						 <xsl:when test="lower-case(@xsi:type)='complexarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;std::complex&gt;</xsl:text> </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='record'">record </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='record'">record* </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='void'">void </xsl:when>
                   <xsl:when test="@xsi:type=''">void </xsl:when>
                  <xsl:otherwise>

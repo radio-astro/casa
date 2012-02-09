@@ -26,7 +26,7 @@
 //# $Id$
 
 #include <casa/System/Aipsrc.h>
-#include <xmlcasa/casa/TSLogSink.h>
+#include <tools/casa/TSLogSink.h>
 #include <casa/Logging/LogFilter.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>

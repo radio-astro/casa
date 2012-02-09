@@ -17,7 +17,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 <include>tools/casa/quanta_forward.h</include>
 <private>
-#include &lt;tools/casa/quanta_private.h&gt;
+	<include>tools/casa/quanta_private.h</include>
 </private>
 </code>
 
@@ -485,7 +485,7 @@ print qa.map('Constants')			# list known constants
      <value>all</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>returns a list in a record
+<returns type="record">returns a list in a record
 </returns>
 <description>
 maprec returns a record with the known mapping of units and constants. It has a single argument,

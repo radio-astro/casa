@@ -30,7 +30,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <tableplot/TablePlot/PanelParams.h>
+#include <tools/tables/TablePlot/PanelParams.h>
 
 #define LOG0 0
 
