@@ -19,7 +19,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/images/coordsys_forward.h</include>
 	<private>
-		#include &lt;tools/images/coordsys_private.h&gt;
+		<include>tools/images/coordsys_private.h</include>
 	</private>
 </code>
 

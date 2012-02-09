@@ -42,7 +42,7 @@
 <code>
   <include>tools/plotms/plotms_forward.h</include>
   <private>
-    #include &lt;tools/plotms/plotms_private.h&gt;
+	  <include>tools/plotms/plotms_private.h</include>
   </private>
 </code>
 

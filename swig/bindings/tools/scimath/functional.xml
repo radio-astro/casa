@@ -14,7 +14,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/scimath/functional_forward.h</include>
     <private>
-	    #include &lt;tools/scimath/functional_private.h&gt;
+	    <include>tools/scimath/functional_private.h</include>
     </private>
 </code>
 

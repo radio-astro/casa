@@ -100,23 +100,43 @@ namespace casac {
 	<xsl:param name="mytype"/>
 	   <xsl:choose>
 	      <xsl:when test="aps:value/aps:value">
-		      <xsl:text disable-output-escaping="yes">=std::vector&lt;</xsl:text><xsl:value-of select="$mytype"/><xsl:text disable-output-escaping="yes">&gt;(1, </xsl:text>
-	         <xsl:for-each select="aps:value">
+		      <xsl:text disable-output-escaping="yes">=initialize_vector(</xsl:text>
+		      <xsl:for-each select="aps:value/aps:value">
+			 <xsl:if test="position()=1"><xsl:value-of select="last()"/>,</xsl:if>
 			 <xsl:if test="$mytype='string'">"</xsl:if>
-			 <xsl:value-of select="."/>
-			 <xsl:if test="$mytype='string'">"</xsl:if>
-			 <xsl:text>,</xsl:text>
+			 (<xsl:value-of select="$mytype"/>)<xsl:value-of select="."/>
+			 <xsl:if test="$mytype='string'">"</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 	         </xsl:for-each>
                  <xsl:text>)</xsl:text>
               </xsl:when>
               <xsl:otherwise>
-		      <xsl:text disable-output-escaping="yes">=std::vector&lt;</xsl:text><xsl:value-of select="$mytype"/><xsl:text disable-output-escaping="yes">&gt;(1, </xsl:text>
+		      <xsl:text disable-output-escaping="yes">=std::vector&lt;</xsl:text><xsl:value-of select="$mytype"/>
+		      <xsl:choose>
+		      <xsl:when test="aps:value != ''">
+		         <xsl:text disable-output-escaping="yes">&gt;(1, </xsl:text>
 			 <xsl:if test="$mytype='string'">"</xsl:if>
 			 <xsl:value-of select="aps:value"/>
 			 <xsl:if test="$mytype='string'">"</xsl:if>
 			 <xsl:text>)</xsl:text>
+		 </xsl:when>
+		 <xsl:otherwise>
+		         <xsl:text disable-output-escaping="yes">&gt;() </xsl:text>
+		 </xsl:otherwise>
+	 </xsl:choose>
               </xsl:otherwise>
           </xsl:choose>
+   </xsl:template>
+
+   <xsl:template name="setdef">
+	<xsl:param name="mytype"/>
+            <xsl:for-each select="aps:value">
+		<xsl:if test="position()=last()">
+		      <xsl:text disable-output-escaping="yes">=</xsl:text>
+	              <xsl:if test="$mytype='string'">"</xsl:if>
+	              <xsl:value-of select="."/>
+	              <xsl:if test="$mytype='string'">"</xsl:if>
+	        </xsl:if>
+	</xsl:for-each>
    </xsl:template>
 
 <xsl:template name="doargs">
@@ -126,12 +146,12 @@ namespace casac {
 		      <xsl:when test="lower-case(@xsi:type)='string' or lower-case(@xsi:type)='mdirection'">
 			  <xsl:choose>
 			      <xsl:when test="@direction">
-				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">="<xsl:value-of select="aps:value"/>"</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"><xsl:call-template name="setdef"><xsl:with-param name="mytype"><xsl:value-of>string</xsl:value-of></xsl:with-param></xsl:call-template></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 			      </xsl:when>
 			      <xsl:otherwise>
 				   <xsl:choose>
 			           <xsl:when test="$defdirection='in'">
-					   <xsl:text disable-output-escaping="yes">const  string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">="<xsl:value-of select="aps:value"/>"</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+					   <xsl:text disable-output-escaping="yes">const  string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"><xsl:call-template name="setdef"><xsl:with-param name="mytype"><xsl:value-of>string</xsl:value-of></xsl:with-param></xsl:call-template></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 			           </xsl:when>
 				   <xsl:otherwise>
 					   <xsl:text disable-output-escaping="yes">string&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">="<xsl:value-of select="aps:value"/>"</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
@@ -165,7 +185,7 @@ namespace casac {
 			      <xsl:otherwise>
 				   <xsl:choose>
 			           <xsl:when test="$defdirection='in'">
-					   <xsl:text disable-output-escaping="yes"> const variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">= initalize_variant("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+					   <xsl:text disable-output-escaping="yes"> const variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">= initialize_variant("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 			           </xsl:when>
 				   <xsl:otherwise>
 			         <xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>

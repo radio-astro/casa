@@ -12,7 +12,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/alma/asdm2ms_forward.h</include>
 <private>
-	#include &lt;tools/alma/asdm2ms_private.h&gt;
+	<include>tools/alma/asdm2ms_private.h</include>
 </private>
 </code>
 

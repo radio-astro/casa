@@ -17,7 +17,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/measures/measures_forward.h</include>
 <private>
-	#include &lt;tools/measures/measures_private.h&gt;
+	<include>tools/measures/measures_private.h</include>
 </private>
 </code>
 

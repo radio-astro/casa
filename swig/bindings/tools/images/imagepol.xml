@@ -22,7 +22,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/images/imagepol_forward.h</include>
 	<private>
-		#include &lt;tools/images/imagepol_private.h&gt;	</private>
+		<include>tools/images/imagepol_private.h</include>	</private>
 </code>
 
 <description>

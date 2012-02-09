@@ -12,7 +12,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/singledish/sdfitter_forward.h</include>
 <private>
-	#include &lt;tools/singledish/sdfitter_private.h&gt;
+	<include>tools/singledish/sdfitter_private.h</include>
 </private>
 </code>
 

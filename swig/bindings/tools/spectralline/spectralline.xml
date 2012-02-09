@@ -13,7 +13,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
     <code>
         <include>tools/spectralline/spectralline_forward.h</include>
         <private>
-            #include &lt;tools/spectralline/spectralline_private.h&gt;
+		<include>tools/spectralline/spectralline_private.h</include>
         </private>
     </code>
     

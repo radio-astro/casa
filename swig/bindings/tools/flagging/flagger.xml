@@ -10,7 +10,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/flagging/flagger_forward.h</include>
 <private>
-	#include &lt;tools/flagging/flagger_private.h&gt;
+	<include>tools/flagging/flagger_private.h</include>
 </private>
 </code>
 
@@ -340,7 +340,7 @@ Retrieve the current set of input parameters for a specified algorithm.
    </param>
 
 </input>
-<returns type="any"><any type="record"/>record of default parameters</returns>
+<returns type="record">record of default parameters</returns>
 </method>
 
 <!-- return type should be a record -->
@@ -364,8 +364,7 @@ Setup an autoflag algorithm.
    <value>none</value>
    </param>
 
-   <param type="any" name="parameters">
-	     <any type="record"/>
+   <param type="record" name="parameters">
      <description>Parameters for each autoflag algorithm.
      \n The following is a description of currently supported autoflag algorithms.
      \n (1) Time median filtering

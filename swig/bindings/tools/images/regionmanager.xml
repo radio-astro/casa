@@ -18,7 +18,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/images/regionmanager_forward.h</include>
 	<private>
-		#include &lt;tools/images/regionmanager_private.h&gt;	
+		<include>tools/images/regionmanager_private.h</include>	
         </private>
 </code>
 

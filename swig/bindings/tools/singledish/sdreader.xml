@@ -12,7 +12,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/singledish/sdreader_forward.h</include>
 <private>
-	#include &lt;tools/singledish/sdreader_private.h&gt;
+	<include>tools/singledish/sdreader_private.h</include>
 </private>
 </code>
 <needs>sdtable</needs>

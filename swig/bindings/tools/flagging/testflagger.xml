@@ -10,7 +10,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/flagging/testflagger_forward.h</include>
 <private>
-	#include &lt;tools/flagging/testflagger_private.h&gt;
+	<include>tools/flagging/testflagger_private.h</include>
 </private>
 </code>
 

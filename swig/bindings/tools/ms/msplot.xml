@@ -51,7 +51,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 <include>tools/ms/msplot_forward.h</include>
 <private>
-#include &lt;tools/ms/msplot_private.h&gt;
+	<include>tools/ms/msplot_private.h</include>
 </private>
 </code>
        

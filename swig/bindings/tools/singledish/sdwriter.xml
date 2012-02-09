@@ -12,7 +12,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/singledish/sdwriter_forward.h</include>
 <private>
-	#include &lt;tools/singledish/sdwriter_private.h&gt;
+	<include>tools/singledish/sdwriter_private.h</include>
 </private>
 </code>
 

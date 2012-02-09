@@ -11,7 +11,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
         <include>tools/synthesis/vpmanager_forward.h</include>
 <private>
-        #include &lt;tools/synthesis/vpmanager_private.h&gt;
+	<include>tools/synthesis/vpmanager_private.h</include>
 </private>
 
 </code>

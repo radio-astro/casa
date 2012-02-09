@@ -43,7 +43,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 <include>tools/synthesis/deconvolver_forward.h</include>
 <private>
-#include &lt;tools/synthesis/deconvolver_private.h&gt;
+	<include>tools/synthesis/deconvolver_private.h</include>
 </private>
 </code>
  

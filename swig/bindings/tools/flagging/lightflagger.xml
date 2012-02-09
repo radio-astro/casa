@@ -10,7 +10,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/flagging/lightflagger_forward.h</include>
 <private>
-	#include &lt;tools/flagging/lightflagger_private.h&gt;
+	<include>tools/flagging/lightflagger_private.h</include>
 </private>
 </code>
 
@@ -153,7 +153,7 @@ Retrieve the current set of input parameters for a specified algorithm.
    </param>
 
 </input>
-<returns type="any"><any type="record"/>record of default parameters</returns>
+<returns type="record">record of default parameters</returns>
 </method>
 
 <!-- return type should be a record -->
@@ -177,8 +177,7 @@ Setup an autoflag algorithm.
    <value>none</value>
    </param>
 
-   <param type="any" name="parameters">
-	     <any type="record"/>
+   <param type="record" name="parameters">
      <description>Parameters for each autoflag algorithm.
 
      </description>
@@ -202,8 +201,7 @@ Executes a flagging run.
 </description>
 <input>
 
-   <param type="any" name="parameters">
-	     <any type="record"/>
+   <param type="record" name="parameters">
      <description>Generic parameters
 
      </description>
@@ -211,7 +209,7 @@ Executes a flagging run.
      </param>
 
 </input>
-<returns type="any"><any type="record"/>record of flag statistics</returns>
+<returns type="record">record of flag statistics</returns>
 <example>
 </example>
 </method>

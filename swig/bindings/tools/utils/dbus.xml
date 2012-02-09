@@ -41,7 +41,7 @@
 <code>
   <include>tools/utils/dbus_forward.h</include>
   <private>
-    #include &lt;tools/utils/dbus_private.h&gt;
+	  <include>tools/utils/dbus_private.h</include>
   </private>
 </code>
 

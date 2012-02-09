@@ -13,7 +13,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <code>
 	<include>tools/tables/tablerow_forward.h</include>
 <private>
-	#include &lt;tools/tables/tablerow_private.h&gt;
+	<include>tools/tables/tablerow_private.h</include>
 </private>
 </code>
        

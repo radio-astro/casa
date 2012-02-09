@@ -942,7 +942,7 @@ bool componentlist::convertfluxpol(const int which, const std::string& polarizat
   try{
     if(itsList && itsBin){
       const Int c = checkIndex(which, "getrefdir");
-      MDirection refdir = itsList->component(c).shape().refDirection();
+      casa::MDirection refdir = itsList->component(c).shape().refDirection();
       ostringstream oss;
       refdir.print(oss);
       *itsLog << LogIO::NORMAL3 << String(oss) << LogIO::POST;
@@ -1019,7 +1019,7 @@ std::string componentlist::getrefdirframe(const int which)
   try{
     if(itsList && itsBin){
       const Int c = checkIndex(which, "getrefdirframe");
-      MDirection md = itsList->component(c).shape().refDirection();
+      casa::MDirection md = itsList->component(c).shape().refDirection();
       rstat = md.getRefString().c_str();
     } else {
       *itsLog << LogIO::WARN
@@ -1070,8 +1070,8 @@ bool componentlist::setrefdirframe(const int which, const std::string& frame,
   bool rstat(false);
   try{
     if(itsList && itsBin){
-      MDirection::Types newFrame;
-      if (!MDirection::getType(newFrame, frame)) {
+	    casa::MDirection::Types newFrame;
+      if (!casa::MDirection::getType(newFrame, frame)) {
         *itsLog << LogIO::SEVERE
                 << "Could not parse the 'frame' string: Direction frame not changed"
                 << LogIO::POST;
@@ -1099,8 +1099,8 @@ bool componentlist::convertrefdir(const int which, const std::string& frame)
   bool rstat(false);
   try {
     if(itsList && itsBin){
-      MDirection::Types newFrame;
-      if (!MDirection::getType(newFrame, frame)) {
+	    casa::MDirection::Types newFrame;
+      if (!casa::MDirection::getType(newFrame, frame)) {
         *itsLog << LogIO::SEVERE
                 << "Could not parse the 'frame' string: Direction frame not changed"
                 << LogIO::POST;
