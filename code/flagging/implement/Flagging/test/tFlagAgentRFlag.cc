@@ -356,14 +356,14 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	// Get reports
 	FlagReport combinedReport = agentList.gatherReports();
 
+	// Print the combined Record (for debugging)
+	stringstream replist;
+	combinedReport.print(replist);
+	cout << " Combined Report : " << endl << replist.str() << endl;
+
+	// Display report
 	if (displayMode == 1)
 	{
-		// Print the combined Record (for debugging)
-		stringstream replist;
-		combinedReport.print(replist);
-    	cout << " Combined Report : " << endl << replist.str() << endl;
-
-    	// Display report
     	Record diplayAgentConfig;
     	diplayAgentConfig.define("name","FlagAgentDisplay");
     	diplayAgentConfig.define("reportdisplay",True);
@@ -542,7 +542,7 @@ int main(int argc, char **argv)
 	string expression,datacolumn,nThreadsParam,ntime;
 	Int nThreads = 0;
 
-	Bool doplot;
+	Bool doplot = false;
 	Double spectralmin,spectralmax;
 	vector<Float> noise;
 	vector<Float> scutof;
@@ -666,10 +666,22 @@ int main(int argc, char **argv)
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
 		}
+		else if (parameter == string("-ntimesteps"))
+		{
+			agentParameters.define ("ntimesteps", casa::uInt(atoi(argv[i+1])));
+		}
 		else if (parameter == string("-doplot"))
 		{
 			doplot = casa::Bool(atoi(argv[i+1]));
 			agentParameters.define ("doplot", doplot);
+		}
+		else if (parameter == string("-noisescale"))
+		{
+			agentParameters.define ("noisescale", casa::Bool(atoi(argv[i+1])));
+		}
+		else if (parameter == string("-scutofscale"))
+		{
+			agentParameters.define ("scutofscale", casa::Bool(atoi(argv[i+1])));
 		}
 		else if (parameter == string("-noise"))
 		{
@@ -698,7 +710,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if ((noise.size()>0) and !doplot)
+	if (noise.size()>0)
 	{
 		casa::IPosition size(1);
 		size[0]=noise.size();
@@ -709,10 +721,11 @@ int main(int argc, char **argv)
 		}
 		agentParameters.define("noise",noiseArray);
 
-		if (display) displayMode = 2;
+		doplot = false;
+		agentParameters.define ("doplot", doplot);
 	}
 
-	if ((scutof.size()>0) and !doplot)
+	if (scutof.size()>0)
 	{
 		casa::IPosition size(1);
 		size[0]=scutof.size();
@@ -723,7 +736,8 @@ int main(int argc, char **argv)
 		}
 		agentParameters.define("scutof",scutofArray);
 
-		if (display) displayMode = 2;
+		doplot = false;
+		agentParameters.define ("doplot", doplot);
 	}
 
 	if (display)
@@ -737,6 +751,8 @@ int main(int argc, char **argv)
 			displayMode = 2;
 		}
 	}
+
+	cout << "Display mode:" << displayMode << endl;
 
 	Record agentParameters_i;
 	vector<Record> agentParamersList;
