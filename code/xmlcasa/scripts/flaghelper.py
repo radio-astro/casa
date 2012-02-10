@@ -84,20 +84,27 @@ class flaghelper:
             for i in range(nrows):            
                 command = flaglist[i]
                                     
-                if command != '':
-                    flagd = {}
-                    flagd['row'] = str(i)
-                    flagd['applied'] = applied
-                    flagd['command'] = command
-                    flagd['interval'] = interval
-                    flagd['level'] = level
-                    flagd['reason'] = reason
-                    flagd['severity'] = severity
-                    flagd['time'] = time
-                    flagd['type'] = type
-                    # Insert into main dictionary
-                    myflagd[ncmds] = flagd
-                    ncmds += 1
+                if command == '':
+                    self._casalog.post('Ignoring empty command line', 'WARN')
+                    continue
+                if command.__contains__('summary'):
+                    self._casalog.post('Mode summary is not allowed in list operation', 'WARN')
+                    continue
+                    
+                flagd = {}
+                flagd['row'] = str(i)
+                flagd['applied'] = applied
+                flagd['command'] = command
+                flagd['interval'] = interval
+                flagd['level'] = level
+                flagd['reason'] = reason
+                flagd['severity'] = severity
+                flagd['time'] = time
+                flagd['type'] = type
+                # Insert into main dictionary
+                myflagd[ncmds] = flagd
+                ncmds += 1
+                print ncmds
                     
         except:
             raise Exception, 'Cannot create dictionary'
