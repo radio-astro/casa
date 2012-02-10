@@ -1,4 +1,4 @@
-//# NewCalTableDesc.h: Define the format of new calibration tables
+//# CTDesc.h: Define the format of NewCalTable
 //# Copyright (C) 2011 
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef CALIBRATION_CALTABLEDESC_H
-#define CALIBRATION_CALTABLEDESC_H
+#ifndef CALIBRATION_CTDESC_H
+#define CALIBRATION_CTDESC_H
 
 #include <casa/aips.h>
 #include <tables/Tables/Table.h>
@@ -36,7 +36,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
-// NewCalTableDesc: Define the format of calibration tables
+// CTDesc: Define the format of calibration tables
 // </summary>
 
 // <use visibility=export>
@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// NewCalTableDesc defines the format of new calibration tables in terms
+// CTDesc defines the format of NewCalTable in terms
 // of table descriptors <linkto class="TableDesc">TableDesc</linkto>, as
 // defined in the Table system. This is a base class and defines the
 // overall calibration table structure. Specializations for both
@@ -81,15 +81,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Generate the calibration table descriptors from a VisSet or VisBuffer object
 // </todo>
 
-class NewCalTableDesc 
+class CTDesc 
 {
  public:
    // Default null constructor, and destructor
-   NewCalTableDesc();
-   virtual ~NewCalTableDesc() {};
+   CTDesc();
+   virtual ~CTDesc() {};
 
    // Construct from the Jones table type
-   NewCalTableDesc (const String& type);
+   CTDesc (const String& type);
 
    // Return the table descriptors for the main calibration table
    // and the cal_history and cal_desc sub-tables

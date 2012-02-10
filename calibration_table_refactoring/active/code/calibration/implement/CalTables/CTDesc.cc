@@ -1,4 +1,4 @@
-//# NewCalTableDesc.cc: Implementation of NewCalTableDesc.h
+//# CTDesc.cc: Implementation of CTDesc.h
 //# Copyright (C) 2011 
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,9 +26,8 @@
 //# $Id$
 //----------------------------------------------------------------------------
 
-#include <calibration/CalTables/NewCalTableDesc.h>
-#include <calibration/CalTables/VisCalEnum.h>
-#include <calibration/CalTables/NewCalTableEnums.h>
+#include <calibration/CalTables/CTDesc.h>
+#include <calibration/CalTables/CTEnums.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -47,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
-NewCalTableDesc::NewCalTableDesc() : itsCalMainDesc(defaultCalMain(""))
+CTDesc::CTDesc() : itsCalMainDesc(defaultCalMain(""))
 {
 // Default null constructor for new calibration table description (v1.0)
 // Output to private data:
@@ -58,7 +57,7 @@ NewCalTableDesc::NewCalTableDesc() : itsCalMainDesc(defaultCalMain(""))
 
 //----------------------------------------------------------------------------
 
-NewCalTableDesc::NewCalTableDesc (const String& type) : 
+CTDesc::CTDesc (const String& type) : 
   itsCalMainDesc(defaultCalMain(type))
 {
 // Constructor for new calibration table description (v1.0)
@@ -93,7 +92,7 @@ TableDesc CalTableDesc::defaultCalHistory()
 ***/
 //----------------------------------------------------------------------------
 
-TableDesc NewCalTableDesc::defaultCalMain (const String& type)
+TableDesc CTDesc::defaultCalMain (const String& type)
 {
 // Generate the default table descriptor for the Cal Main sub-table
 // Input:
@@ -135,7 +134,7 @@ TableDesc NewCalTableDesc::defaultCalMain (const String& type)
 					ColumnDesc::Direct));
 
   //Parameter columns
-  td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::PARAM)));
+  td.addColumn (ArrayColumnDesc <Complex>  (NCT::fieldName (NCT::PARAM)));
   td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::PARAMERR)));
   td.addColumn (ArrayColumnDesc <Bool>  (NCT::fieldName (NCT::FLAG)));
   td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::SNR)));
@@ -163,7 +162,7 @@ TableDesc NewCalTableDesc::defaultCalMain (const String& type)
 
 //----------------------------------------------------------------------------
 
-TableDesc NewCalTableDesc::calMainDesc()
+TableDesc CTDesc::calMainDesc()
 {
 // Return the main calibration table descriptor
 // Output:
@@ -174,7 +173,7 @@ TableDesc NewCalTableDesc::calMainDesc()
 
 //----------------------------------------------------------------------------
 /***
-TableDesc NewCalTableDesc::calHistoryDesc()
+TableDesc CTDesc::calHistoryDesc()
 {
 // Return the calibration history sub-table descriptor
 // Output:
@@ -185,9 +184,9 @@ TableDesc NewCalTableDesc::calHistoryDesc()
 ***/
 //----------------------------------------------------------------------------
 
-TableDesc NewCalTableDesc::insertDesc (const TableDesc& tableDesc, 
-				    const TableDesc& insert, 
-				    const String& insertAfter)
+TableDesc CTDesc::insertDesc (const TableDesc& tableDesc, 
+			      const TableDesc& insert, 
+			      const String& insertAfter)
 {
 // Insert one table descriptor into another after a specified
 // column name.

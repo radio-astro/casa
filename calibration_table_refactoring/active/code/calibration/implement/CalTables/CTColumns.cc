@@ -1,4 +1,4 @@
-//# NewCalColumns.cc:  provides easy access to MeasurementSet columns
+//# CTColumns.cc:  provides easy access to MeasurementSet columns
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,13 +25,13 @@
 //#
 //# $Id$
 
-#include <calibration/CalTables/NewCalColumns.h>
+#include <calibration/CalTables/CTColumns.h>
 #include <calibration/CalTables/NewCalTable.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-RONewCalColumns::RONewCalColumns(const NewCalTable& caltable):
-  RONewCalMainColumns(caltable),
+ROCTColumns::ROCTColumns(const NewCalTable& caltable):
+  ROCTMainColumns(caltable),
   antenna_p(caltable.antenna()),
   field_p(caltable.field()),
   history_p(caltable.history()),
@@ -39,10 +39,10 @@ RONewCalColumns::RONewCalColumns(const NewCalTable& caltable):
 {
 }
 
-RONewCalColumns::~RONewCalColumns() {}
+ROCTColumns::~ROCTColumns() {}
 
-NewCalColumns::NewCalColumns(NewCalTable& caltable):
-  NewCalMainColumns(caltable),
+CTColumns::CTColumns(NewCalTable& caltable):
+  CTMainColumns(caltable),
   antenna_p( caltable.antenna() ), 
   field_p( caltable.field() ),
   history_p( caltable.history() ),
@@ -51,7 +51,7 @@ NewCalColumns::NewCalColumns(NewCalTable& caltable):
 {
 }
 
-NewCalColumns::~NewCalColumns() {}
+CTColumns::~CTColumns() {}
 
 } //# NAMESPACE CASA - END
 

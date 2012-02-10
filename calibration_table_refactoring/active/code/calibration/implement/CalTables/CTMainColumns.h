@@ -1,4 +1,4 @@
-//# NewCalMainColumns.h: Calibration table cal_main column access
+//# CTMainColumns.h: Calibration table cal_main column access
 //# Copyright (C) 2011 
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -41,20 +41,100 @@
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/TableMeasures/ScalarQuantColumn.h>
 #include <calibration/CalTables/NewCalTable.h>
-#include <calibration/CalTables/NewCalTableEnums.h>
+#include <calibration/CalTables/CTEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class NewCalTable;
 
-class NewCalMainColumns
+class ROCTMainColumns
+{
+ public:
+  // Construct from a calibration table
+  ROCTMainColumns (const NewCalTable& calTable);
+  
+  // Default destructor
+  virtual ~ROCTMainColumns() {};
+  
+  // Read-only column accessors
+  const ROScalarColumn<Double>& time() const {return time_p;};
+  const ROScalarMeasColumn<MEpoch>& timeMeas() const {return timeMeas_p;};
+  const ROScalarColumn<Double>& timeEP() const {return timeEP_p;};
+  const ROScalarQuantColumn<Double>& timeEPQuant() const 
+  {return timeEPQuant_p;};
+  const ROScalarColumn<Double>& interval() const {return interval_p;};
+  const ROScalarQuantColumn<Double>& intervalQuant() const
+  {return intervalQuant_p;};
+  const ROScalarColumn<Int>& antenna1() const {return antenna1_p;};
+  const ROScalarColumn<Int>& antenna2() const {return antenna2_p;};
+  const ROScalarColumn<Int>& fieldId() const {return fieldId_p;};
+  const ROScalarColumn<Int>& spwId() const {return spwId_p;};
+  const ROScalarColumn<Int>& scanNo() const {return scanNo_p;};
+  const ROArrayColumn<Complex>& param() const {return param_p;};
+  const ROArrayColumn<Float>& paramerr() const {return paramerr_p;};
+  const ROArrayColumn<Bool>& flag() const {return flag_p;};
+  const ROArrayColumn<Float>& snr() const {return snr_p;};
+  const ROArrayColumn<Float>& weight() const {return weight_p;};
+  
+ protected:
+  // Prohibit public use of the null constructor, which
+  // does not produce a usable object.
+  ROCTMainColumns() {};
+  
+  // Return a CalTable as a Table reference. Utilizes friendship
+  // relationship with class CalTable.
+  //const Table& asTable(const CalTable2& calTable) 
+  //{return calTable.calMainAsTable();}
+  
+  // Attach a table column accessor
+  void attach (const NewCalTable& calTable, ROTableColumn& tabCol, 
+	       CTEnums::colDef colEnum, const Bool& optional = False);
+  void attach (const NewCalTable& calTable, 
+	       ROArrayMeasColumn<MEpoch>& tabCol, 
+	       CTEnums::colDef colEnum, const Bool& optional = False);
+  void attach (const NewCalTable& calTable, 
+	       ROArrayMeasColumn<MFrequency>& tabCol, 
+	       CTEnums::colDef colEnum, const Bool& optional = False);
+  void attach (const NewCalTable& calTable, 
+	       ROArrayMeasColumn<MDirection>& tabCol, 
+	       CTEnums::colDef colEnum, const Bool& optional = False);
+  void attach (const NewCalTable& calTable, ROScalarMeasColumn<MEpoch>& tabCol, 
+	       CTEnums::colDef colEnum, const Bool& optional = False);
+  void attach (const NewCalTable& calTable, ROScalarQuantColumn<Double>& tabCol, 
+	       CTEnums::colDef colEnum, const Bool& optional = False);
+  
+ private:
+  // Prohibit copy constructor and assignment operator 
+  ROCTMainColumns (const ROCTMainColumns&);
+  ROCTMainColumns& operator= (const ROCTMainColumns&);
+  
+  // Private column accessors
+  ROScalarColumn<Double> time_p;
+  ROScalarMeasColumn<MEpoch> timeMeas_p;
+  ROScalarColumn<Double> timeEP_p;
+  ROScalarQuantColumn<Double> timeEPQuant_p;
+  ROScalarColumn<Double> interval_p;
+  ROScalarQuantColumn<Double> intervalQuant_p;
+  ROScalarColumn<Int> antenna1_p;
+  ROScalarColumn<Int> antenna2_p;
+  ROScalarColumn<Int> fieldId_p;
+  ROScalarColumn<Int> spwId_p;
+  ROScalarColumn<Int> scanNo_p;
+  ROArrayColumn<Complex> param_p;
+  ROArrayColumn<Float> paramerr_p;
+  ROArrayColumn<Bool> flag_p;
+  ROArrayColumn<Float> snr_p;
+  ROArrayColumn<Float> weight_p;
+};
+
+class CTMainColumns
 {
   public:
     // Construct from a calibration table
-    NewCalMainColumns (NewCalTable& calTable);
+    CTMainColumns (NewCalTable& calTable);
     
     // Default destructor
-    virtual ~NewCalMainColumns() {};
+    virtual ~CTMainColumns() {};
     
     // Read-write column accessors
     ScalarColumn<Double>& time() {return time_p;};
@@ -68,7 +148,7 @@ class NewCalMainColumns
     ScalarColumn<Int>& antenna1() {return antenna1_p;};
     ScalarColumn<Int>& antenna2() {return antenna2_p;};
     ScalarColumn<Int>& scanNo() {return scanNo_p;};
-    ArrayColumn<Float>& param() {return param_p;};
+    ArrayColumn<Complex>& param() {return param_p;};
     ArrayColumn<Float>& paramerr() {return paramerr_p;};
     ArrayColumn<Bool>& flag() {return flag_p;};
     ArrayColumn<Float>& snr() {return snr_p;};
@@ -77,7 +157,7 @@ class NewCalMainColumns
   protected:
     // Prohibit public use of the null constructor, which
     // does not produce a usable object.
-    NewCalMainColumns() {};
+    CTMainColumns() {};
     
     // Return a CalTable as a Table reference. Utilizes friendship
     // relationship with class CalTable.
@@ -85,22 +165,22 @@ class NewCalMainColumns
     
     // Attach a table column accessor
     void attach (NewCalTable& calTable, TableColumn& tabCol, 
-		 NewCalTableEnums::colDef colEnum, const Bool& optional = False);
+		 CTEnums::colDef colEnum, const Bool& optional = False);
     void attach (NewCalTable& calTable, ArrayMeasColumn<MEpoch>& tabCol, 
-		 NewCalTableEnums::colDef colEnum, const Bool& optional = False);
+		 CTEnums::colDef colEnum, const Bool& optional = False);
     void attach (NewCalTable& calTable, ArrayMeasColumn<MFrequency>& tabCol, 
-		 NewCalTableEnums::colDef colEnum, const Bool& optional = False);
+		 CTEnums::colDef colEnum, const Bool& optional = False);
     void attach (NewCalTable& calTable, ArrayMeasColumn<MDirection>& tabCol, 
-		 NewCalTableEnums::colDef colEnum, const Bool& optional = False);
+		 CTEnums::colDef colEnum, const Bool& optional = False);
     void attach (NewCalTable& calTable, ScalarMeasColumn<MEpoch>& tabCol, 
-		 NewCalTableEnums::colDef colEnum, const Bool& optional = False);
+		 CTEnums::colDef colEnum, const Bool& optional = False);
     void attach (NewCalTable& calTable, ScalarQuantColumn<Double>& tabCol, 
-		 NewCalTableEnums::colDef colEnum, const Bool& optional = False);
+		 CTEnums::colDef colEnum, const Bool& optional = False);
     
   private:
     // Prohibit copy constructor and assignment operator 
-    NewCalMainColumns (const NewCalMainColumns&);
-    NewCalMainColumns& operator= (const NewCalMainColumns&);
+    CTMainColumns (const CTMainColumns&);
+    CTMainColumns& operator= (const CTMainColumns&);
     
     // Private column accessors
     ScalarColumn<Double> time_p;
@@ -114,7 +194,7 @@ class NewCalMainColumns
     ScalarColumn<Int> antenna1_p;
     ScalarColumn<Int> antenna2_p;
     ScalarColumn<Int> scanNo_p;
-    ArrayColumn<Float> param_p;
+    ArrayColumn<Complex> param_p;
     ArrayColumn<Float> paramerr_p;
     ArrayColumn<Bool> flag_p;
     ArrayColumn<Float> snr_p;

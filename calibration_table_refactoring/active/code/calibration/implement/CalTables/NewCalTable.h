@@ -47,9 +47,9 @@
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <ms/MeasurementSets/MSHistoryColumns.h>
-#include <calibration/CalTables/NewCalTableDesc.h>
-#include <calibration/CalTables/NewCalMainRecord.h>
-#include <calibration/CalTables/NewCalMainColumns.h>
+#include <calibration/CalTables/CTDesc.h>
+#include <calibration/CalTables/CTMainRecord.h>
+#include <calibration/CalTables/CTMainColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -89,6 +89,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="11/06/10">
 // </todo>
 
+
+// Typedefs for subtable objects
+typedef MSField CTField;
+typedef MSAntenna CTAntenna;
+typedef MSSpectralWindow CTSpectralWindow;
+typedef MSHistory CTHistory;
+typedef MSFieldColumns CTFieldColumns;
+typedef MSAntennaColumns CTAntennaColumns;
+typedef MSSpWindowColumns CTSpWindowColumns;
+typedef MSHistoryColumns CTHistoryColumns;
+typedef ROMSFieldColumns ROCTFieldColumns;
+typedef ROMSAntennaColumns ROCTAntennaColumns;
+typedef ROMSSpWindowColumns ROCTSpWindowColumns;
+typedef ROMSHistoryColumns ROCTHistoryColumns;
+
 class NewCalTable : public Table
 {
  public:
@@ -98,16 +113,18 @@ class NewCalTable : public Table
 
    // Construct from a specified table name, calibration table descriptor 
    // and table access option. Used for creating new tables.
-   NewCalTable (const String& tableName, NewCalTableDesc& ctableDesc,
-	     Table::TableOption access = Table::New, Table::TableType ttype = Table::Plain);
+   NewCalTable (const String& tableName, CTDesc& ctableDesc,
+		Table::TableOption access = Table::New, 
+		Table::TableType ttype = Table::Plain);
 
    // Construct from setupNewTable 
    NewCalTable (SetupNewTable& newTab, uInt nrow = 0, Bool initialize = False);
    
    // Construct from a specified table name, and access option. Used
    // for accessing existing tables.
-   NewCalTable (const String& tableName, Table::TableOption access = Table::Old, 
-             Table::TableType ttype = Table::Memory);
+   NewCalTable (const String& tableName, 
+		Table::TableOption access = Table::Old, 
+		Table::TableType ttype = Table::Memory);
 
    // Construct from an existing table object
    NewCalTable (const Table& table);
@@ -115,33 +132,30 @@ class NewCalTable : public Table
    // Copy constructor
    NewCalTable (const NewCalTable& other);
 
+   // Create a vanilla NewCalTable from shapes (for testing purposes)
+   NewCalTable(String tableName,String caltype,Int nFld=1, Int nAnt=1, Int nSpw=1, 
+	       Vector<Int> nChan=Vector<Int>(1,1), Int nTime=1,
+	       Bool disk=False, Bool verbose=False);
+
    // Assignment operator
    NewCalTable& operator= (const NewCalTable& other);
 
    // initialize reference to subtables
-   void initSubtables();
+   void createSubTables();
+   void attachSubTables();
    void clearSubtables();
 
    void copyMemCalSubtables(const NewCalTable& other);
    void copyMemCalSubtable(const Table& otherSubtable, Table& subTable);
-   // get number of rows in cal main table, and subtables  
-   //Int nRowMain() const;
-   //Int nRowHistory() const;
-
-   // Add rows to cal_main, or cal_history
-   //void addRowMain (uInt nrrow = 1, Bool initialize = False)
-   //         {this->addRow(nrrow, initialize);};
-   //void addRowHistory (uInt nrrow = 1, Bool initialize = False)
-   //                         {itsHistoryTable->addRow(nrrow, initialize);};
 
    // Get a row from cal_main
    Record getRowMain (const Int& jrow);
     
-   // Put a row to cal_main, cal_desc or cal_history
-   void putRowMain (const Int& jrow, NewCalMainRecord& tableRec);
+   // Put a row to cal_main
+   void putRowMain (const Int& jrow, CTMainRecord& tableRec);
 
    // Get rows of the data from the main table
-   void fillRowsMain ();
+   //   void fillRowsMain ();
 
    // Set Meta data info from a parent MS 
    void setMetaInfo (const String& msName);
@@ -152,46 +166,33 @@ class NewCalTable : public Table
    // save to disk
    void writeToDisk(const String& tableName); 
 
-   typedef MSField CalField;
-   typedef MSAntenna CalAntenna;
-   typedef MSSpectralWindow CalSpectralWindow;
-   typedef MSHistory CalHistory;
-   typedef MSFieldColumns CalFieldColumns;
-   typedef MSAntennaColumns CalAntennaColumns;
-   typedef MSSpWindowColumns CalSpWindowColumns;
-   typedef MSHistoryColumns CalHistoryColumns;
-   typedef ROMSFieldColumns ROCalFieldColumns;
-   typedef ROMSAntennaColumns ROCalAntennaColumns;
-   typedef ROMSSpWindowColumns ROCalSpWindowColumns;
-   typedef ROMSHistoryColumns ROCalHistoryColumns;
-   
-   CalAntenna& antenna() {return antenna_p;}
-   CalField& field() {return field_p;}
-   CalSpectralWindow& spectralWindow() {return spectralWindow_p;}
-   CalHistory& history() {return history_p;}
-   const CalAntenna& antenna() const {return antenna_p;}
-   const CalField& field() const {return field_p;}
-   const CalSpectralWindow& spectralWindow() const {return spectralWindow_p;}
-   const CalHistory& history() const {return history_p;}
+   CTAntenna& antenna() {return antenna_p;}
+   CTField& field() {return field_p;}
+   CTSpectralWindow& spectralWindow() {return spectralWindow_p;}
+   CTHistory& history() {return history_p;}
+   const CTAntenna& antenna() const {return antenna_p;}
+   const CTField& field() const {return field_p;}
+   const CTSpectralWindow& spectralWindow() const {return spectralWindow_p;}
+   const CTHistory& history() const {return history_p;}
 
-/***
- protected:
-   friend class NewCalColumns;
-   friend class RONewCalColumns;
-   
-***/
- 
  private:
-   //cal_main Table object
-   //Table caltable_;
-   Table::TableType ttype_p;
-   CalAntenna antenna_p;
-   CalField field_p;
-   CalSpectralWindow spectralWindow_p;
-   CalHistory history_p;
+
+   // Services for generic test table ctor
+   void fillGenericContents(Int nFld=1, Int nAnt=1, Int nSpw=1, 
+			    Vector<Int> nChan=Vector<Int>(1,1), Int nTime=1,
+			    Bool verbose=False);
+   void fillGenericField(Int nFld);
+   void fillGenericAntenna(Int nAnt);
+   void fillGenericSpw(Int nSpw,Vector<Int>& nChan);
+     
+
+   // The subtables
+   CTAntenna antenna_p;
+   CTField field_p;
+   CTSpectralWindow spectralWindow_p;
+   CTHistory history_p;
 
  };
-
 
 } //# NAMESPACE CASA - END
 

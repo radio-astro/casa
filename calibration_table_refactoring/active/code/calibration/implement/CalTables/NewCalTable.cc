@@ -27,6 +27,7 @@
 //----------------------------------------------------------------------------
 
 #include <calibration/CalTables/NewCalTable.h>
+#include <calibration/CalTables/CTMainColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -35,7 +36,7 @@
 #include <tables/Tables/TableParse.h>
 #include <casa/Arrays.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <calibration/CalTables/NewCalTableEnums.h>
+#include <calibration/CalTables/CTEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -54,53 +55,34 @@ NewCalTable::~NewCalTable()
 };
 
 //----------------------------------------------------------------------------
-NewCalTable::NewCalTable (const String& tableName, NewCalTableDesc& ctableDesc,
-		    Table::TableOption access, Table::TableType ttype):
+NewCalTable::NewCalTable (const String& tableName, CTDesc& ctableDesc,
+			  Table::TableOption access, Table::TableType ttype):
               Table()
 {
 // Construct from a cal table name, descriptor and access option.
 // Used for creating new tables.
 // Input:
 //    tableName        const String&         Cal table name
-//    ctableDesc       const NewCalTableDesc&   Cal table descriptor
+//    ctableDesc       const CTDesc&   Cal table descriptor
 //    access           Table::TableOption    Access mode
 //    ttype            Table::TableType      Memory or Plain
 //
-  //cerr<<" ctor: new cal table from name, tabledesc"<<endl;
-  ttype_p = ttype;
+
   if (access == Table::New || access == Table::NewNoReplace ||
       access == Table::Scratch) {
-      SetupNewTable calMainTab(tableName,ctableDesc.calMainDesc(),access);
-      //NewCalTable tab(calMainTab, 0);
-      Table tab(calMainTab, 0, False); 
-      *this = tab;
-      
-      // subtables
-      String  calAntennaName=tableName+"/ANTENNA";
-      String  calFieldName=tableName+"/FIELD";
-      String  calSpectralWindowName=tableName+"/SPECTRAL_WINDOW";
-      String  calHistoryName=tableName+"/HISTORY";
 
-      SetupNewTable antennatab(calAntennaName,CalAntenna::requiredTableDesc(),access); 
-      this->rwKeywordSet().defineTable("ANTENNA", Table(antennatab));
-      antenna_p = CalAntenna(this->keywordSet().asTable("ANTENNA"));
+    // Form underlying generic Table according to the supplied desc
+    SetupNewTable calMainTab(tableName,ctableDesc.calMainDesc(),access);
+    Table tab(calMainTab, ttype, 0, False); 
+    *this = tab;
 
-      SetupNewTable fieldtab(calFieldName,CalField::requiredTableDesc(),access); 
-      this->rwKeywordSet().defineTable("FIELD", Table(fieldtab));
-      field_p = CalField(this->keywordSet().asTable("FIELD"));
-
-      SetupNewTable spwtab(calSpectralWindowName,CalSpectralWindow::requiredTableDesc(),access); 
-      this->rwKeywordSet().defineTable("SPECTRAL_WINDOW", Table(spwtab));
-      spectralWindow_p = CalSpectralWindow(this->keywordSet().asTable("SPECTRAL_WINDOW"));
-
-      SetupNewTable histab(calHistoryName,CalHistory::requiredTableDesc(),access); 
-      this->rwKeywordSet().defineTable("HISTORY", Table(histab));
-      history_p = CalHistory(this->keywordSet().asTable("HISTORY"));
+    // Form (empty) subtables
+    this->createSubTables();
   }
-  else {
-      NewCalTable (tableName, access);
-  }
+  else
+    throw(AipsError("Creating NewCalTable from scratch must use access=Table::New or TableNewNoReplace or Table::Scratch"));
 };
+
 
 //----------------------------------------------------------------------------
 NewCalTable::NewCalTable (SetupNewTable& newtab, uInt nrow, Bool initialize):
@@ -117,7 +99,7 @@ NewCalTable::NewCalTable (SetupNewTable& newtab, uInt nrow, Bool initialize):
 
 //----------------------------------------------------------------------------
 NewCalTable::NewCalTable (const String& tableName, Table::TableOption access, 
-                      Table::TableType ttype): Table(tableName,access)
+			  Table::TableType ttype): Table(tableName,access)
 {
 // Construct from an exisiting cal table, and access option.
 // 
@@ -128,15 +110,45 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
 //    ttype            Table::TableType      Memory or Plain
 //
   //cerr<<"ctor: from existing cal table with name, option"<<endl;
-  initSubtables();
 
-  if (ttype==Table::Memory) {
+  if (ttype==Table::Memory) 
     *this = this->copyToMemoryTable("tempcaltable");
-  }
-//  else {
-//    *this = tab;
-//  }
+ 
+  // Attach subtable accessors
+  attachSubTables();
+
+
 };
+
+//----------------------------------------------------------------------------
+NewCalTable::NewCalTable(String tableName, String caltype,
+			 Int nFld, Int nAnt, Int nSpw, 
+			 Vector<Int> nChan, Int nTime,
+			 Bool disk, Bool verbose) :
+  Table()
+{
+
+  CTDesc nctd(caltype);
+
+  // Form underlying generic Table according to the supplied desc
+  SetupNewTable calMainTab(tableName,nctd.calMainDesc(),Table::New);
+  Table tab(calMainTab, Table::Memory, 0, False); 
+  *this = tab;
+  
+  // Add (empty) subtables
+  this->createSubTables();
+
+  // Fill it generically
+  this->fillGenericContents(nFld,nAnt,nSpw,nChan,nTime,verbose);
+
+  if (disk) {
+    // Write it out
+    String diskname("testNCTctor.tab");
+    if (verbose) cout << "Writing out to disk: "+diskname << endl;
+    this->writeToDisk(diskname);
+  }
+
+}
 
 //----------------------------------------------------------------------------
 
@@ -144,7 +156,7 @@ NewCalTable::NewCalTable (const Table& table): Table(table)
 {
 // Construct from an existing table object
   //cerr<<"constructed from an existing newcaltable as table"<<endl;
-  initSubtables();
+  attachSubTables();
 };
 
 //----------------------------------------------------------------------------
@@ -157,7 +169,7 @@ NewCalTable::NewCalTable (const NewCalTable& other): Table(other)
 //
    //cerr<<"copy constructor ...."<<endl;
    copyMemCalSubtables(other);
-   initSubtables();
+   attachSubTables();
 };
 
 //----------------------------------------------------------------------------
@@ -175,34 +187,66 @@ NewCalTable& NewCalTable::operator= (const NewCalTable& other)
     if (!conformant(this->tableDesc()))
         throw (AipsError("NewCalTable( const NewCalTable&) - "
                          "table is not a valid caltable"));
-    initSubtables();
+    attachSubTables();
   }
   return *this;
 };
 
 //----------------------------------------------------------------------------
-void NewCalTable::initSubtables()
+void NewCalTable::createSubTables() {
+      
+  // Names
+  String  calAntennaName=this->tableName()+"/ANTENNA";
+  String  calFieldName=this->tableName()+"/FIELD";
+  String  calSpectralWindowName=this->tableName()+"/SPECTRAL_WINDOW";
+  String  calHistoryName=this->tableName()+"/HISTORY";
+  
+  Table::TableOption access(Table::TableOption(this->tableOption()));
+  Table::TableType type(this->tableType());
+
+  // Assign them to keywords
+  SetupNewTable antennatab(calAntennaName,CTAntenna::requiredTableDesc(),access); 
+  this->rwKeywordSet().defineTable("ANTENNA", Table(antennatab,type));
+  antenna_p = CTAntenna(this->keywordSet().asTable("ANTENNA"));
+  
+  SetupNewTable fieldtab(calFieldName,CTField::requiredTableDesc(),access); 
+  this->rwKeywordSet().defineTable("FIELD", Table(fieldtab,type));
+  field_p = CTField(this->keywordSet().asTable("FIELD"));
+  
+  SetupNewTable spwtab(calSpectralWindowName,CTSpectralWindow::requiredTableDesc(),access); 
+  this->rwKeywordSet().defineTable("SPECTRAL_WINDOW", Table(spwtab,type));
+  spectralWindow_p = CTSpectralWindow(this->keywordSet().asTable("SPECTRAL_WINDOW"));
+  
+  SetupNewTable histab(calHistoryName,CTHistory::requiredTableDesc(),access); 
+  this->rwKeywordSet().defineTable("HISTORY", Table(histab,type));
+  history_p = CTHistory(this->keywordSet().asTable("HISTORY"));
+};
+
+
+//----------------------------------------------------------------------------
+void NewCalTable::attachSubTables()
 {
   if (this->keywordSet().isDefined("ANTENNA")){
-    antenna_p = CalAntenna(this->keywordSet().asTable("ANTENNA"));
+    antenna_p = CTAntenna(this->keywordSet().asTable("ANTENNA"));
   }
   if (this->keywordSet().isDefined("FIELD")){
-    field_p = CalField(this->keywordSet().asTable("FIELD"));
+    field_p = CTField(this->keywordSet().asTable("FIELD"));
   }
-  if (this->keywordSet().isDefined("SPECTRAL_WINOW")){
-    spectralWindow_p = CalSpectralWindow(this->keywordSet().asTable("SPECTRAL_WINOW"));
+  if (this->keywordSet().isDefined("SPECTRAL_WINDOW")){
+    spectralWindow_p = CTSpectralWindow(this->keywordSet().asTable("SPECTRAL_WINDOW"));
   }
   if (this->keywordSet().isDefined("HISTORY")){
-    history_p = CalHistory(this->keywordSet().asTable("HISTORY"));
+    history_p = CTHistory(this->keywordSet().asTable("HISTORY"));
   }
 }
+
 //----------------------------------------------------------------------------
 void NewCalTable::clearSubtables()
 {
-   antenna_p=CalAntenna();
-   field_p=CalField();
-   spectralWindow_p=CalSpectralWindow();
-   history_p = CalHistory();
+   antenna_p=CTAntenna();
+   field_p=CTField();
+   spectralWindow_p=CTSpectralWindow();
+   history_p = CTHistory();
 }
 //----------------------------------------------------------------------------
 void NewCalTable::copyMemCalSubtables(const NewCalTable & other)
@@ -235,7 +279,7 @@ Record NewCalTable::getRowMain (const Int& jrow)
 };
 
 //----------------------------------------------------------------------------
-void NewCalTable::putRowMain (const Int& jrow, NewCalMainRecord& tableRec)
+void NewCalTable::putRowMain (const Int& jrow, CTMainRecord& tableRec)
 {
 // Get a row from cal_main
 // Input:
@@ -269,13 +313,13 @@ void NewCalTable::setMetaInfo(const String& msName)
   // deep copy subtables from an MS to NCT 
   // by TableCopy::copyRows
   //copy antenna table
-  CalAntenna calantab(this->antenna());
+  CTAntenna calantab(this->antenna());
   TableCopy::copyRows(calantab,msantab);
   //copy field table
-  CalField calfldtab(this->field());
+  CTField calfldtab(this->field());
   TableCopy::copyRows(calfldtab,msfldtab);
   //copy spectralWindow table
-  CalSpectralWindow calspwtab(this->spectralWindow());
+  CTSpectralWindow calspwtab(this->spectralWindow());
   TableCopy::copyRows(calspwtab,msspwtab);
 
   this->rwKeywordSet().define(RecordFieldId("MSName"),Path(msName).absoluteName());
@@ -287,7 +331,7 @@ Bool NewCalTable::conformant(const TableDesc& tabDesc)
 // the new caltable format (or should I named this "validate" ...as 
 // in MS case...)
   Bool eqDType=False;
-  NewCalTableDesc calTD = NewCalTableDesc();
+  CTDesc calTD = CTDesc();
   TableDesc requiredCalTD = calTD.calMainDesc();
   Bool isCalTableDesc = tabDesc.columnDescSet().isSuperset(requiredCalTD.columnDescSet(), eqDType);
   if (!isCalTableDesc) {
@@ -330,6 +374,139 @@ void NewCalTable::writeToDisk(const String& outTableName)
   Table sorted = this->sort(sortcols,Sort::Ascending,Sort::HeapSort);
   sorted.deepCopy(outTableName,Table::New);
 };
+
+//----------------------------------------------------------------------------
+void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw, 
+				      Vector<Int> nChan, Int nTime,
+				      Bool verbose) {
+  if (verbose)
+    cout << nFld << " "
+	 << nAnt << " "
+	 << nSpw << " "
+	 << nChan << " "
+	 << nTime << " "
+	 << endl;
+  
+  // fill subtables
+  fillGenericField(nFld);
+  fillGenericAntenna(nAnt);
+  fillGenericSpw(nSpw,nChan);
+
+  // The per-solution antenna indices
+  Vector<Int> antlist(nAnt);
+  indgen(antlist);
+  Int refant=0;  // for ANTENNA2
+
+  // T-like
+  Int nPar(1);
+
+  Double thistime(4832568000.0);  // start at noon on 2012 Jan 6
+  Double interval(60.0);
+  Int thisscan(0);
+
+  CTMainColumns ncmc(*this);
+
+  for (Int itime=0;itime<nTime;++itime) {
+    for (Int ifld=0;ifld<nFld;++ifld) {
+      thistime+=interval; // every minute
+      thisscan+=1;    //  unique scans
+      for (Int ispw=0;ispw<nSpw;++ispw) {
+
+	if (verbose)
+	  cout << itime << " " << ifld << " " << ispw << " " << this->nrow() << endl;
+
+	// add rows
+	Int nAddRows=nAnt;
+	RefRows rows(this->nrow(),this->nrow()+nAddRows-1,1); 
+	this->addRow(nAddRows);
+
+	// fill columns in new rows
+	ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,thistime));
+	ncmc.interval().putColumnCells(rows,Vector<Double>(nAddRows,interval));
+	ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,ifld));
+	ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,ispw));
+	ncmc.antenna1().putColumnCells(rows,antlist);
+	ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant));
+	ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,thisscan));
+
+	Cube<Complex> par(nPar,nChan(ispw),nAddRows);
+	for (Int iant=0;iant<nAnt;++iant) par.xyPlane(iant)=Complex(1.0+Float(iant)/100.0);
+	ncmc.param().putColumnCells(rows,par);
+	Cube<Float> parerr(nPar,nChan(ispw),nAddRows);
+	parerr=0.001;
+	ncmc.paramerr().putColumnCells(rows,parerr);
+	Cube<Float> snr(nPar,nChan(ispw),nAddRows);
+	snr=999.0;
+	ncmc.snr().putColumnCells(rows,snr);
+	Cube<Float> wt(nPar,nChan(ispw),nAddRows);
+	wt=1.0;
+	ncmc.weight().putColumnCells(rows,wt);
+	Cube<Bool> flag(nPar,nChan(ispw),nAddRows);
+	flag=False;
+	ncmc.flag().putColumnCells(rows,flag);
+      }
+    }
+  }
+
+}
+
+//----------------------------------------------------------------------------
+void NewCalTable::fillGenericField(Int nFld) { 
+
+  this->field().addRow(nFld);
+  MSFieldColumns fc(this->field());
+  for (Int ifld=0;ifld<nFld;++ifld) {
+    fc.name().put(ifld,("Field_"+String::toString(ifld)));
+    fc.flagRow().put(ifld,False);
+  }
+}
+
+
+
+//----------------------------------------------------------------------------
+void NewCalTable::fillGenericAntenna(Int nAnt) {
+
+  this->antenna().addRow(nAnt);
+  MSAntennaColumns ac(this->antenna());
+  for (Int iant=0;iant<nAnt;++iant) {
+    ac.name().put(iant,("Antenna_"+String::toString(iant)));
+    ac.station().put(iant,("Station_"+String::toString(iant)));
+    ac.type().put(iant,"GROUND-BASED");
+    ac.mount().put(iant,"ALT-AZ");
+    ac.dishDiameter().put(iant,25.0);
+    ac.offset().put(iant,Vector<Double>(3,0.0));
+    ac.position().put(iant,Vector<Double>(3,0.0));
+    ac.flagRow().put(iant,False);
+  }
+
+}
+
+
+//----------------------------------------------------------------------------
+void NewCalTable::fillGenericSpw(Int nSpw,Vector<Int>& nChan) {
+
+  this->spectralWindow().addRow(nSpw);
+  MSSpWindowColumns sc(this->spectralWindow());
+  for (Int ispw=0;ispw<nSpw;++ispw) {
+    Double refFreq(60.0e9+Double(ispw)*1.0e9);  // Every GHz
+    Double width(1.0e6);  // 1 MHz channels
+    Vector<Double> chanfreq(nChan(ispw),refFreq);
+    for (Int ich=0;ich<nChan(ispw);++ich) chanfreq(ich)+=(Double(ich)+0.5)*width;
+
+    sc.name().put(ispw,("SPW_"+String::toString(ispw)));
+    sc.refFrequency().put(ispw,refFreq);
+    sc.numChan().put(ispw,nChan(ispw));
+    sc.chanFreq().put(ispw,chanfreq);
+    
+    Vector<Double> res(nChan(ispw),width);
+
+    sc.chanWidth().put(ispw,res);
+    sc.effectiveBW().put(ispw,res);
+    sc.resolution().put(ispw,res);
+    sc.totalBandwidth().put(ispw,sum(res));
+    sc.flagRow().put(ispw,False);
+  }
+}
 
 
 } //# NAMESPACE CASA - END

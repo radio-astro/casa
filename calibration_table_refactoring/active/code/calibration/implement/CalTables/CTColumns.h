@@ -1,4 +1,4 @@
-//# NewCalColumns.h: provides easy access to (new) CalTable columns
+//# CTColumns.h: provides easy access to (new) CalTable columns
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -32,8 +32,7 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <calibration/CalTables/NewCalTable.h>
-#include <calibration/CalTables/NewCalMainColumns.h>
-#include <calibration/CalTables/RONewCalMainColumns.h>
+#include <calibration/CalTables/CTMainColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <ms/MeasurementSets/MSHistoryColumns.h>
@@ -58,7 +57,7 @@ class NewCalTable;
 // </prerequisite>
 //
 // <etymology>
-// RONewCalColumns stands for Read-Only NewCalTable Table columns.
+// ROCTColumns stands for Read-Only NewCalTable Table columns.
 // </etymology>
 //
 // <synopsis>
@@ -84,27 +83,27 @@ class NewCalTable;
 // </example>
 //
 // <motivation>
-// See <linkto class=NewCalColumns> NewCalColumns</linkto> for the motivation.
+// See <linkto class=CTColumns> CTColumns</linkto> for the motivation.
 // </motivation>
 //
 // <todo asof="">
 // </todo>
 
-class RONewCalColumns: public RONewCalMainColumns
+class ROCTColumns: public ROCTMainColumns
 {
 public:
   // Create a columns object that accesses the data in the specified MS
-  RONewCalColumns(const NewCalTable& caltable);
+  ROCTColumns(const NewCalTable& caltable);
 
   // The destructor does nothing special
-  ~RONewCalColumns();
+  ~ROCTColumns();
 
   // Access to required subtables
   // <group>
-  const NewCalTable::ROCalAntennaColumns& antenna() const {return antenna_p;}
-  const NewCalTable::ROCalFieldColumns& field() const {return field_p;}
-  const NewCalTable::ROCalHistoryColumns& history() const {return history_p;}
-  const NewCalTable::ROCalSpWindowColumns& spectralWindow() const {
+  const ROCTAntennaColumns& antenna() const {return antenna_p;}
+  const ROCTFieldColumns& field() const {return field_p;}
+  const ROCTHistoryColumns& history() const {return history_p;}
+  const ROCTSpWindowColumns& spectralWindow() const {
     return spectralWindow_p;}
   // </group>
 
@@ -116,10 +115,10 @@ protected:
   friend class NewCalTable; 
 private:
   // Access to subtables
-  NewCalTable::ROCalAntennaColumns antenna_p;
-  NewCalTable::ROCalFieldColumns field_p;
-  NewCalTable::ROCalHistoryColumns history_p;
-  NewCalTable::ROCalSpWindowColumns spectralWindow_p;
+  ROCTAntennaColumns antenna_p;
+  ROCTFieldColumns field_p;
+  ROCTHistoryColumns history_p;
+  ROCTSpWindowColumns spectralWindow_p;
 
 };
 
@@ -139,7 +138,7 @@ private:
 // </prerequisite>
 //
 // <etymology>
-// NewCalColumns stands for  NewCalTable columns.
+// CTColumns stands for  NewCalTable columns.
 // </etymology>
 //
 // <synopsis>
@@ -155,7 +154,7 @@ private:
 // <srcblock>
 // // use as follows
 // NewCalTable newcalt("mynewcalt",Table::Update);
-// NewCalColumns nctc(newcalt);
+// CTColumns nctc(newcalt);
 // // show time from row 5
 // cout << nctc.time()(5);
 // // change name of antenna on row 3 in antenna table
@@ -175,27 +174,21 @@ private:
 // <todo asof="">
 // </todo>
 
-class NewCalColumns: public NewCalMainColumns
+class CTColumns: public CTMainColumns
 {   
 public:
   // Create a columns object that accesses the data in the specified caltable 
-  NewCalColumns(NewCalTable& caltable);
+  CTColumns(NewCalTable& caltable);
 
   // The destructor does nothing special
-  ~NewCalColumns();
+  ~CTColumns();
 
   // Read-write access to required subtables
   // <group>
-  NewCalTable::CalAntennaColumns& antenna() {return antenna_p;}
-  NewCalTable::CalFieldColumns& field() {return field_p;}
-  NewCalTable::CalHistoryColumns& history() {return history_p;}
-  NewCalTable::CalSpWindowColumns& spectralWindow() {return spectralWindow_p;}
-  /***
-  MSAntennaColumns& antenna() {return antenna_p;}
-  MSFieldColumns& field() {return field_p;}
-  MSHistoryColumns& history() {return history_p;}
-  MSSpWindowColumns& spectralWindow() {return spectralWindow_p;}
-  ***/
+  CTAntennaColumns& antenna() {return antenna_p;}
+  CTFieldColumns& field() {return field_p;}
+  CTHistoryColumns& history() {return history_p;}
+  CTSpWindowColumns& spectralWindow() {return spectralWindow_p;}
 
   // </group>
 
@@ -205,26 +198,21 @@ public:
 
   // Read-only access to required subtables
   // <group>
-  const NewCalTable::ROCalAntennaColumns& antenna() const {return antenna_p;}
-  const NewCalTable::ROCalFieldColumns& field() const {return field_p;}
-  const NewCalTable::ROCalHistoryColumns& history() const {return history_p;}
-  const NewCalTable::ROCalSpWindowColumns& spectralWindow() const {
+  const ROCTAntennaColumns& antenna() const {return antenna_p;}
+  const ROCTFieldColumns& field() const {return field_p;}
+  const ROCTHistoryColumns& history() const {return history_p;}
+  const ROCTSpWindowColumns& spectralWindow() const {
     return spectralWindow_p;}
- /**
-  const ROMSAntennaColumns& antenna() const;
-  const ROMSFieldColumns& field() const;
-  const ROMSHistoryColumns& history() const;
-  const ROMSSpWindowColumns& spectralWindow() const;
-***/
+
 //protected:
 //  friend class NewCalTable; 
 
 private:
   // Access to subtables
-  MSAntennaColumns antenna_p;
-  MSFieldColumns field_p;
-  MSHistoryColumns history_p;
-  MSSpWindowColumns spectralWindow_p;
+  CTAntennaColumns antenna_p;
+  CTFieldColumns field_p;
+  CTHistoryColumns history_p;
+  CTSpWindowColumns spectralWindow_p;
 };
 
 

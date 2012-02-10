@@ -1,4 +1,4 @@
-//# NewCalMainRecord.cc: Implementation of NewCalMainRecord.h
+//# CTMainRecord.cc: Implementation of CTMainRecord.h
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,15 +26,15 @@
 //# $Id$
 //----------------------------------------------------------------------------
 
-#include <calibration/CalTables/NewCalMainRecord.h>
-#include <calibration/CalTables/NewCalTableEnums.h>
+#include <calibration/CalTables/CTMainRecord.h>
+#include <calibration/CalTables/CTEnums.h>
 #include <casa/Arrays.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
-NewCalMainRecord::NewCalMainRecord() : itsRecord()
+CTMainRecord::CTMainRecord() : itsRecord()
 {
 // Null constructor
 // Output to private data:
@@ -44,7 +44,7 @@ NewCalMainRecord::NewCalMainRecord() : itsRecord()
 
 //----------------------------------------------------------------------------
 
-NewCalMainRecord::NewCalMainRecord (const Record& inpRec) : itsRecord (inpRec)
+CTMainRecord::CTMainRecord (const Record& inpRec) : itsRecord (inpRec)
 {
 // Construct from an input record
 // Input:
@@ -56,7 +56,7 @@ NewCalMainRecord::NewCalMainRecord (const Record& inpRec) : itsRecord (inpRec)
 
 //----------------------------------------------------------------------------
 
-const Record& NewCalMainRecord::record()
+const Record& CTMainRecord::record()
 {
 // Return as record
 // Output:
@@ -69,7 +69,7 @@ const Record& NewCalMainRecord::record()
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::addRec (const Record& newRec)
+void CTMainRecord::addRec (const Record& newRec)
 {
 // Add to underlying record object
 // Input:
@@ -82,7 +82,7 @@ void NewCalMainRecord::addRec (const Record& newRec)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineTime (const Double& time)
+void CTMainRecord::defineTime (const Double& time)
 {
 // Define the TIME field value (expressed as a Double)
 // Input:
@@ -97,7 +97,7 @@ void NewCalMainRecord::defineTime (const Double& time)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineTime (const MEpoch& time)
+void CTMainRecord::defineTime (const MEpoch& time)
 {
 // Define the TIME field value (expressed as an MEpoch)
 // Input:
@@ -112,7 +112,7 @@ void NewCalMainRecord::defineTime (const MEpoch& time)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineInterval (const Double& interval)
+void CTMainRecord::defineInterval (const Double& interval)
 {
 // Define the INTERVAL field value
 // Input:
@@ -127,7 +127,7 @@ void NewCalMainRecord::defineInterval (const Double& interval)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineAntenna1 (const Int& antenna1)
+void CTMainRecord::defineAntenna1 (const Int& antenna1)
 {
 // Define the ANTENNA1 field value
 // Input:
@@ -142,7 +142,7 @@ void NewCalMainRecord::defineAntenna1 (const Int& antenna1)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineAntenna2 (const Int& antenna2)
+void CTMainRecord::defineAntenna2 (const Int& antenna2)
 {
 // Define the ANTENNA2 field value
 // Input:
@@ -157,7 +157,7 @@ void NewCalMainRecord::defineAntenna2 (const Int& antenna2)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineFieldId (const Int& fieldId)
+void CTMainRecord::defineFieldId (const Int& fieldId)
 {
 // Define the FIELD_ID field value
 // Input:
@@ -172,7 +172,7 @@ void NewCalMainRecord::defineFieldId (const Int& fieldId)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineSpwId (const Int& spwId)
+void CTMainRecord::defineSpwId (const Int& spwId)
 {
 // Define the SPECTRAL_WINDOW_ID field value
 // Input:
@@ -187,7 +187,7 @@ void NewCalMainRecord::defineSpwId (const Int& spwId)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineScanNo (const Int& scanNo)
+void CTMainRecord::defineScanNo (const Int& scanNo)
 {
 // Define the SCAN_NUMBER field value
 // Input:
@@ -202,11 +202,11 @@ void NewCalMainRecord::defineScanNo (const Int& scanNo)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineParam (const Array<Float>& param)
+void CTMainRecord::defineParam (const Array<Complex>& param)
 {
 // Define the PARAM field value
 // Input:
-//    param           const Array<Float>&    cal solution param values
+//    param           const Array<Complex>&    cal solution param values
 // Output to private data:
 //    itsRecord        Record                Underlying record object
 //
@@ -217,7 +217,7 @@ void NewCalMainRecord::defineParam (const Array<Float>& param)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineParamerr (const Array<Float>& paramerr)
+void CTMainRecord::defineParamerr (const Array<Float>& paramerr)
 {
 // Define the PARAMERR field value
 // Input:
@@ -232,11 +232,11 @@ void NewCalMainRecord::defineParamerr (const Array<Float>& paramerr)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineFlag (const Array<Bool>& flag)
+void CTMainRecord::defineFlag (const Array<Bool>& flag)
 {
 // Define the FLAG field value
 // Input:
-//    flag             const Array<Float>&   cal solution param err values
+//    flag             const Array<Bool>&   cal solution param err values
 // Output to private data:
 //    itsRecord        Record                Underlying record object
 //
@@ -247,7 +247,7 @@ void NewCalMainRecord::defineFlag (const Array<Bool>& flag)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineSnr (const Array<Float>& snr)
+void CTMainRecord::defineSnr (const Array<Float>& snr)
 {
 // Define the SNR field value
 // Input:
@@ -262,7 +262,7 @@ void NewCalMainRecord::defineSnr (const Array<Float>& snr)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::defineWeight (const Array<Float>& weight)
+void CTMainRecord::defineWeight (const Array<Float>& weight)
 {
 // Define the Weight field value
 // Input:
@@ -277,7 +277,7 @@ void NewCalMainRecord::defineWeight (const Array<Float>& weight)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getTime (Double& time)
+void CTMainRecord::getTime (Double& time)
 {
 // Get the TIME field value
 // Output:
@@ -290,7 +290,7 @@ void NewCalMainRecord::getTime (Double& time)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getInterval (Double& interval)
+void CTMainRecord::getInterval (Double& interval)
 {
 // Get the INTERVAL field value
 // Output:
@@ -303,7 +303,7 @@ void NewCalMainRecord::getInterval (Double& interval)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getAntenna1 (Int& antenna1)
+void CTMainRecord::getAntenna1 (Int& antenna1)
 {
 // Get the ANTENNA1 field value
 // Output:
@@ -316,7 +316,7 @@ void NewCalMainRecord::getAntenna1 (Int& antenna1)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getAntenna2 (Int& antenna2)
+void CTMainRecord::getAntenna2 (Int& antenna2)
 {
 // Get the ANTENNA2 field value
 // Output:
@@ -329,7 +329,7 @@ void NewCalMainRecord::getAntenna2 (Int& antenna2)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getFieldId (Int& fieldId)
+void CTMainRecord::getFieldId (Int& fieldId)
 {
 // Get the FIELD_ID field value
 // Output:
@@ -342,7 +342,7 @@ void NewCalMainRecord::getFieldId (Int& fieldId)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getSpwId (Int& spwId)
+void CTMainRecord::getSpwId (Int& spwId)
 {
 // Get the SPECTRAL_WINDOW_ID field value
 // Output:
@@ -355,7 +355,7 @@ void NewCalMainRecord::getSpwId (Int& spwId)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getScanNo (Int& scanNo)
+void CTMainRecord::getScanNo (Int& scanNo)
 {
 // Get the SCAN_NUMBER field value
 // Output:
@@ -368,11 +368,11 @@ void NewCalMainRecord::getScanNo (Int& scanNo)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getParam (Array<Float>& param)
+void CTMainRecord::getParam (Array<Complex>& param)
 {
 // Get the PARAM field value
 // Output:
-//    param           Array<Float>&                  PARAM value
+//    param           Array<Complex>&                  PARAM value
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
@@ -381,7 +381,7 @@ void NewCalMainRecord::getParam (Array<Float>& param)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getParamerr (Array<Float>& paramerr)
+void CTMainRecord::getParamerr (Array<Float>& paramerr)
 {
 // Get the PARAMERR field value
 // Output:
@@ -394,7 +394,7 @@ void NewCalMainRecord::getParamerr (Array<Float>& paramerr)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getFlag (Array<Bool>& flag)
+void CTMainRecord::getFlag (Array<Bool>& flag)
 {
 // Get the FLAG field value
 // Output:
@@ -407,7 +407,7 @@ void NewCalMainRecord::getFlag (Array<Bool>& flag)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getSnr (Array<Float>& snr)
+void CTMainRecord::getSnr (Array<Float>& snr)
 {
 // Get the FLAG field value
 // Output:
@@ -420,7 +420,7 @@ void NewCalMainRecord::getSnr (Array<Float>& snr)
 
 //----------------------------------------------------------------------------
 
-void NewCalMainRecord::getWeight (Array<Float>& weight)
+void CTMainRecord::getWeight (Array<Float>& weight)
 {
 // Get the WEIGHT field value
 // Output:

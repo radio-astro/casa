@@ -1,4 +1,4 @@
-//# CalTableEnums.h: Field name dictionary for New CAL tables
+//# CTEnums.h: Field name dictionary for NewCalTable
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -39,7 +39,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
-// NewCalTableEnums: Field name dictionary for new calibration tables
+// CTEnums: Field name dictionary for NewCalTable
 // </summary>
 
 // <use visibility=export>
@@ -55,8 +55,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// NewCalTableEnums defines a global dictionary of field names and properties
-// used by the new calibration table. Field names
+// CTEnums defines a global dictionary of field names and properties
+// used by the NewCalTable. Field names
 // and properties are accessed through enumerated constants, thus
 // ensuring a consistent and uniform interface. Both column names and
 // keywords are included here. All data are stored in static maps.
@@ -78,10 +78,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </todo>
 
 
-class NewCalTableEnums;
-typedef NewCalTableEnums NCT;
+class CTEnums;
+typedef CTEnums NCT;
 
-class NewCalTableEnums
+class CTEnums
 {
  public:
   // Enumerate all relevant data fields (columns and keywords)

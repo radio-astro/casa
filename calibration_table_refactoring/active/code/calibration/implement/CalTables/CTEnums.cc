@@ -1,4 +1,4 @@
-//# NewCalTableEnums.cc: Implementation of NewCalTableEnums.h
+//# CTEnums.cc: Implementation of CTEnums.h
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,19 +26,19 @@
 //# $Id$
 //----------------------------------------------------------------------------
 
-#include <calibration/CalTables/NewCalTableEnums.h>
+#include <calibration/CalTables/CTEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
 // Static data initialization
-SimpleOrderedMap <Int, String> NewCalTableEnums::theirFieldMap ("");
-SimpleOrderedMap <Int, DataType> NewCalTableEnums::theirTypeMap (TpOther);
+SimpleOrderedMap <Int, String> CTEnums::theirFieldMap ("");
+SimpleOrderedMap <Int, DataType> CTEnums::theirTypeMap (TpOther);
 
 //----------------------------------------------------------------------------
 
-void NewCalTableEnums::initMaps ()
+void CTEnums::initMaps ()
 {
 // Initialize the static map containing the field names.
 // Skip this step if already initialized.
@@ -78,7 +78,7 @@ void NewCalTableEnums::initMaps ()
     theirTypeMap.define (OBSERVATION_ID, TpInt);
     theirTypeMap.define (SPECTRAL_WINDOW_ID, TpInt);
 
-    theirTypeMap.define (PARAM, TpFloat);
+    theirTypeMap.define (PARAM, TpComplex);
     theirTypeMap.define (PARAMERR, TpFloat);
     theirTypeMap.define (FLAG, TpBool);
     theirTypeMap.define (SNR, TpFloat);
@@ -90,7 +90,7 @@ void NewCalTableEnums::initMaps ()
 
 //----------------------------------------------------------------------------
 
-String NewCalTableEnums::fieldName (Int enumField)
+String CTEnums::fieldName (Int enumField)
 {
 // Static function to look up the field name:
 // Inputs:
@@ -109,7 +109,7 @@ String NewCalTableEnums::fieldName (Int enumField)
 
 //----------------------------------------------------------------------------
 
-Block<String> NewCalTableEnums::fieldNames (const Vector<Int>& enumFields)
+Block<String> CTEnums::fieldNames (const Vector<Int>& enumFields)
 {
 // Static function to look up a set of field names:
 // Inputs:
@@ -130,7 +130,7 @@ Block<String> NewCalTableEnums::fieldNames (const Vector<Int>& enumFields)
 
 //----------------------------------------------------------------------------
 
-DataType NewCalTableEnums::basicType (Int enumField)
+DataType CTEnums::basicType (Int enumField)
 {
 // Static function to look up the basic field data type:
 // Inputs:

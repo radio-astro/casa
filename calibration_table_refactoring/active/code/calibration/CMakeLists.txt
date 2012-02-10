@@ -59,15 +59,14 @@ casa_add_library( calibration
   implement/CalTables/GJonesTable.cc
   implement/CalTables/MJonesDesc.cc
   implement/CalTables/MJonesMRec.cc
-  implement/CalTables/NewCalColumns.cc
+  implement/CalTables/CTColumns.cc
   implement/CalTables/NewCalTable.cc
-  implement/CalTables/NewCalTableDesc.cc
-  implement/CalTables/NewCalTableEnums.cc
-  implement/CalTables/NewCalTabIter.cc
-  implement/CalTables/NewCalMainColumns.cc
-  implement/CalTables/NewCalMainRecord.cc
+  implement/CalTables/CTDesc.cc
+  implement/CalTables/CTEnums.cc
+  implement/CalTables/CTIter.cc
+  implement/CalTables/CTMainColumns.cc
+  implement/CalTables/CTMainRecord.cc
   implement/CalTables/PlotCal.cc
-  implement/CalTables/RONewCalMainColumns.cc
   implement/CalTables/SolvableMJDesc.cc
   implement/CalTables/SolvableMJMRec.cc
   implement/CalTables/SolvableVJDesc.cc
@@ -96,4 +95,6 @@ casa_add_library( calibration
 casa_add_assay( calibration implement/CalTables/test/tCalInterpolation.cc )
 casa_add_assay( calibration implement/CalTables/test/tCalIntpMatch.cc )
 casa_add_assay( calibration implement/CalTables/test/tNewCalTable.cc )
-casa_add_assay( calibration implement/CalTables/test/tNewCalTableIter.cc )
+casa_add_assay( calibration implement/CalTables/test/tCTIter.cc )
+#casa_add_assay( calibration implement/CalTables/test/tCTInterp.cc )
+#casa_add_assay( calibration implement/CalTables/test/tMultiTempInherit.cc )

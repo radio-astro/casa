@@ -1,4 +1,4 @@
-//# NewCalMainRecord.h: Calibration table record access and creation
+//# CTMainRecord.h: Calibration table record access and creation
 //# Copyright (C) 1996,1997,1998,2001,2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id: 
 
-#ifndef CALIBRATION_CALMAINRECORD_H
-#define CALIBRATION_CALMAINRECORD_H
+#ifndef CALIBRATION_CTMAINRECORD_H
+#define CALIBRATION_CTMAINRECORD_H
 
 #include <casa/aips.h>
 #include <measures/Measures/MEpoch.h>
@@ -36,7 +36,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
-// NewCalMainRecord: Calibration table record access and creation
+// CTMainRecord: Calibration table record access and creation
 // </summary>
 
 // <use visibility=export>
@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// The NewCalMainRecord classes allow access to, and creation of, records
+// The CTMainRecord classes allow access to, and creation of, records
 // in the main calibration table. Specializations for baseline-based,
 // time-variable and solvable VisJones calibration table record types
 // are provided through inheritance.
@@ -71,15 +71,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // (i) Deal with non-standard columns.
 // </todo>
 
-class NewCalMainRecord
+class CTMainRecord
 {
  public:
    // Default null constructor, and destructor
-   NewCalMainRecord();
-   ~NewCalMainRecord() {};
+   CTMainRecord();
+   ~CTMainRecord() {};
 
    // Construct from an existing record
-   NewCalMainRecord (const Record& inpRec);
+   CTMainRecord (const Record& inpRec);
 
    // Return as record
    const Record& record();
@@ -94,7 +94,7 @@ class NewCalMainRecord
    void defineAntenna2 (const Int& antenna2);
    void defineInterval (const Double& interval);
    void defineScanNo (const Int& scanNo);
-   void defineParam (const Array<Float>& param);
+   void defineParam (const Array<Complex>& param);
    void defineParamerr (const Array<Float>& paramerr);
    void defineFlag (const Array<Bool>& flag);
    void defineSnr (const Array<Float>& snr);
@@ -108,7 +108,7 @@ class NewCalMainRecord
    void getAntenna2 (Int& antenna2);
    void getInterval (Double& interval);
    void getScanNo (Int& scanNo);
-   void getParam (Array<Float>& param);
+   void getParam (Array<Complex>& param);
    void getParamerr (Array<Float>& paramerr);
    void getFlag (Array<Bool>& flag);
    void getSnr (Array<Float>& snr);

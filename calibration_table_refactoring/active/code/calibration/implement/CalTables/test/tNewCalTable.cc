@@ -26,10 +26,10 @@
 //# $Id$
 
 #include <calibration/CalTables/NewCalTable.h>
-#include <calibration/CalTables/NewCalTableDesc.h>
-#include <calibration/CalTables/NewCalMainRecord.h>
-#include <calibration/CalTables/NewCalMainColumns.h>
-#include <calibration/CalTables/NewCalColumns.h>
+#include <calibration/CalTables/CTDesc.h>
+#include <calibration/CalTables/CTMainRecord.h>
+#include <calibration/CalTables/CTMainColumns.h>
+#include <calibration/CalTables/CTColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/TableCache.h>
@@ -52,7 +52,7 @@ void doTest1 ()
   cout<<"********************"<<endl;
   cout<<"* Basic ctor test  *"<<endl;
   cout<<"********************"<<endl;
-  NewCalTableDesc caltabdesc;
+  CTDesc caltabdesc;
   cout << "*** Creat a new caltable on disk: testNewCal.tab ***"<<endl;
   NewCalTable caltab("testDiskCal1.tab",caltabdesc,Table::New);
   cout << "setMetaInfo(): attach meta data from a parent MS"<<endl;
@@ -87,9 +87,9 @@ void doTest1 ()
   caltab4.addRow(3); 
   cerr<<"check column access..."<<endl;
   cerr<<"calling CalAntenna"<<endl;
-  NewCalTable::CalAntenna calantab1 = caltab.antenna(); 
+  CTAntenna calantab1 = caltab.antenna(); 
   cerr<<"calling MSAntennaColumns"<<endl;
-  ROMSAntennaColumns antcols1(calantab1);
+  ROCTAntennaColumns antcols1(calantab1);
   ROScalarColumn<String> antnames1=antcols1.name();
   cerr<<"Anatenna name ========>"<<antnames1(0)<<endl;
 
@@ -118,7 +118,7 @@ void doTest2 ()
   memcaltab.writeToDisk("SavedfromMemCal.tab"); 
  
   cout<<"*** Creating a new caltable(memtab2) in memory ***"<<endl;
-  NewCalTableDesc caltabdesc;
+  CTDesc caltabdesc;
   NewCalTable memcaltab2("testTempCal1.tab",caltabdesc, Table::Scratch, Table::Memory);
   cout<<"Adde 3 rows"<<endl;
   memcaltab2.addRow(3);
@@ -134,7 +134,7 @@ void doTest3 ()
   cout<<"* Accessor test *"<<endl;
   cout<<"*****************"<<endl;
   cout<<"Row accessor test : create a memory table of nrow=1 ***"<<endl;
-  NewCalTableDesc caltabdesc;
+  CTDesc caltabdesc;
   NewCalTable memcaltab("testTempCal2.tab",caltabdesc, Table::Scratch, Table::Memory);
   memcaltab.addRow(1);
   cout<<"getRowMain and modify Field_ID to set to 2"<<endl;
@@ -142,8 +142,8 @@ void doTest3 ()
   RecordFieldPtr<Int> savref (rec, "FIELD_ID");  
   *savref=2;
   Int inrow=0;
-  // test NewCalMainRecord accessors
-  NewCalMainRecord calrec(rec);
+  // test CTMainRecord accessors
+  CTMainRecord calrec(rec);
   Int fid;
   calrec.getFieldId(fid);
   cout<<"Field ID="<<fid<<endl;
@@ -160,7 +160,7 @@ void doTest4 ()
   cout<<"* Subtable accessor test *"<<endl;
   cout<<"**************************"<<endl;
   cout<<"*** ANTENNA table access ***"<<endl;
-  NewCalTableDesc caltabdesc;
+  CTDesc caltabdesc;
   NewCalTable caltab("testDiskCal2.tab", caltabdesc);
   caltab.addRow(1);
 
@@ -169,15 +169,15 @@ void doTest4 ()
   String datapath = casapath.substr(0,casapath.find(" "));
   cerr<<"setMetainfo"<<endl;
   caltab.setMetaInfo(datapath+"/data/regression/unittest/clean/point_spw1.ms");
-  NewCalTable::CalAntenna calantab = caltab.antenna(); 
-  ROMSAntennaColumns antcols(calantab);
+  CTAntenna calantab = caltab.antenna(); 
+  ROCTAntennaColumns antcols(calantab);
   ROScalarColumn<String> antnames=antcols.name();
   cout<<"antnames="<<antnames(0)<<endl;
    
   cout<<"Try in another copied caltable obj..."<<endl;
   NewCalTable caltab2(caltab);
-  NewCalTable::CalAntenna calantab2 (caltab.antenna());
-  ROMSAntennaColumns antcols2(calantab2);
+  CTAntenna calantab2 (caltab.antenna());
+  ROCTAntennaColumns antcols2(calantab2);
   ROScalarColumn<String> antnames2=antcols2.name();
   cout<<"antnames(from copied caltable)="<<antnames2(0)<<endl;
   
@@ -188,14 +188,14 @@ void doTest4 ()
   //NewCalTable testcaltab2(tabnew);
 
   // this works ....
-  //NewCalTableDesc caltabdesc2;
+  //CTDesc caltabdesc2;
   //NewCalTable testcaltab2("testDiskCal2.Tab", caltabdesc2);
   //testcaltab2.setMetaInfo(datapath+"/data/regression/unittest/clean/point_spw1.ms");
   //testcaltab2.addRow(2);
   // ---------------------------------------------
   // This works too...
   // create a memory table from scratch 
-  //NewCalTableDesc caltabdesc2;
+  //CTDesc caltabdesc2;
   NewCalTable caltab3("testTempCal2.tab",caltabdesc, Table::Scratch, Table::Memory);
   caltab3.setMetaInfo(datapath+"/data/regression/unittest/clean/point_spw1.ms");
   caltab3.addRow(2);
@@ -206,14 +206,14 @@ void doTest4 ()
   //NewCalTable testcaltab3(testcaltab2);
   cerr <<"now assign nctc to NewCalColumns"<<endl;
 
-  //NewCalColumns nctc(caltab3);
-  NewCalColumns nctc(caltab4);
-  cerr <<"nctc NewCalColumns done"<<endl; 
+  //CTColumns nctc(caltab3);
+  CTColumns nctc(caltab4);
+  cerr <<"nctc CTColumns done"<<endl; 
   //cout<<"antnames2="<<antnames2(0)<<endl;
   cout<<"antnames2="<<nctc.antenna().name()(0)<<endl;
 
   //test main col access
-  //NewCalMainColumns newcalmcals(testcopiedcaltab2);
+  //CTMainColumns newcalmcals(testcopiedcaltab2);
   //ScalarColumn<Double> outtime(newcalmcals.time());
   //cerr<<"outtime(0)="<<outtime(0)<<endl;
   cerr<<"outtime(0)="<<nctc.time()(0)<<endl;
@@ -226,7 +226,7 @@ void doTest5 ()
   cout<<"*****************"<<endl;
   cout<<"* sort/save to disk test *"<<endl;
   cout<<"*****************"<<endl;
-  NewCalTableDesc caltabdesc;
+  CTDesc caltabdesc;
   NewCalTable memcaltab("testTempCal.tab",caltabdesc, Table::Scratch, Table::Memory);
   memcaltab.addRow(10);
   Vector<Int> fldids(10);
@@ -263,7 +263,7 @@ void doTest5 ()
     }
     *fldref = fldids(i);
     *tref=10.0-1.0*i;
-    NewCalMainRecord calrec(rec);
+    CTMainRecord calrec(rec);
     memcaltab.putRowMain(i,calrec);
   }
   cerr<<"write to disk"<<endl;
