@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 
 
-#include <xmlcasa/ms/Statistics.h>
+#include <tools/ms/Statistics.h>
 
 #include <lattices/Lattices/LatticeStatistics.h>
 #include <lattices/Lattices/SubLattice.h>

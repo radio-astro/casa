@@ -34,7 +34,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <ms_cmpt.h>
-#include <ms/Statistics.h>
+#include <tools/ms/Statistics.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <msfits/MSFits/MSFitsIDI.h>
@@ -1894,16 +1894,16 @@ ms::cvelfreqs(const std::vector<int>& spwids,
       }
       
       // determine old reference frame
-      MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
+      casa::MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
       
       // determine observation epoch
-      MEpoch theObsTime;
+      casa::MEpoch theObsTime;
       String t_obstime = toCasaString(obstime);
       if (obstime.length()>0) {
 	Quantum<Double> qt;
 	if (MVTime::read(qt,obstime)) {
-	  MVEpoch mv(qt);
-	  theObsTime = MEpoch(mv, MEpoch::UTC);
+		casa::MVEpoch mv(qt);
+	  theObsTime = casa::MEpoch(mv, MEpoch::UTC);
 	} else {
 	  *itsLog << LogIO::SEVERE << "Invalid time format: " 
 		  << obstime << LogIO::POST;
@@ -1961,25 +1961,25 @@ ms::cvelfreqs(const std::vector<int>& spwids,
       
       // determine observatory position
       // use a tabulated version if available
-      MPosition mObsPos;
+      casa::MPosition mObsPos;
       {
-	MPosition Xpos;
+	      casa::MPosition Xpos;
 	String Xobservatory;
 	ROMSObservationColumns XObsCols(itsMS->observation());
 	if (itsMS->observation().nrow() > 0) {
 	  Xobservatory = XObsCols.telescopeName()(mainCols.observationId()(0));
 	}
 	if (Xobservatory.length() == 0 || 
-	    !MeasTable::Observatory(Xpos,Xobservatory)) {
+	    !casa::MeasTable::Observatory(Xpos,Xobservatory)) {
 	  // unknown observatory
 	  *itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
 		  << "\". Determining observatory position from antenna 0." << LogIO::POST;
-	  Xpos=MPosition::Convert(ANTCols.positionMeas()(0), MPosition::ITRF)();
+	  Xpos=casa::MPosition::Convert(ANTCols.positionMeas()(0), casa::MPosition::ITRF)();
 	}
 	else{
 	  *itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
 		  << LogIO::POST;
-	  Xpos=MPosition::Convert(Xpos, MPosition::ITRF)();
+	  Xpos=casa::MPosition::Convert(Xpos, casa::MPosition::ITRF)();
 	}
 	mObsPos = Xpos;
 	ostringstream oss;

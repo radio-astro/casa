@@ -1,7 +1,7 @@
 // Include file for forward declarations
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 #include <casa/Logging/LogIO.h>
-#include <flagging/MSPlot/MsPlot.h>
+#include <tools/ms/MSPlot/MsPlot.h>
 
 namespace casa
 {

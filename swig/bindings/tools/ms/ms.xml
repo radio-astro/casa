@@ -1228,8 +1228,7 @@ the ms definition itself. -->
   <keyword>summary</keyword>
   <output>
     
-     <param type="any" direction="out" name="header">
-     <any type="record"/>
+     <param type="record" direction="out" name="header">
      <description>Header information (PARAMETER IGNORED..its an output)</description>
      </param>
    </output>
@@ -1278,8 +1277,7 @@ the ms definition itself. -->
 
   <keyword>getscansummary</keyword>
   <output>
-     <param type="any" direction="out" name="summary">
-       <any type="record"/>
+     <param type="record" direction="out" name="summary">
        <description>Return information (PARAMETER IGNORED..its an output)</description>
      </param>
    </output>
@@ -1297,8 +1295,7 @@ the ms definition itself. -->
   <shortdescription>Get a summary of the spectral windows</shortdescription>
   <keyword>getspectralwindowinfo</keyword>
   <output>
-     <param type="any" direction="out" name="spwInfo">
-       <any type="record"/>
+     <param type="record" direction="out" name="spwInfo">
        <description>Return information (PARAMETER IGNORED..its an output)</description>
      </param>
    </output>
@@ -1451,9 +1448,7 @@ the ms definition itself. -->
      <value></value>
      </param>
   </input>
-  <returns type="any">
-    <any type="record"/>
-  </returns>
+  <returns type="record"/>
 
   <description>
     This function computes descriptive statistics on the measurement set.
@@ -1492,9 +1487,7 @@ the ms definition itself. -->
      <value>10</value>
      </param>
   </input>
-  <returns type="any">
-<any type="record"/>
-</returns>
+  <returns type="record"/>
 
   <description>
     This function will return the range of values in the currently
@@ -1795,8 +1788,7 @@ Date/Time:                         RR:                      RL:                 
      <keyword>msselect</keyword>
      <input>
 
-       <param type="any" direction="in" name="items">
-	 <any type="record"/>
+       <param type="record" direction="in" name="items">
 	 <description>
 	   Record with fields contain the selection experessions. Keys
 	   recognized in the record are: "spw", "time", "field",
@@ -1857,7 +1849,7 @@ Date/Time:                         RR:                      RL:                 
      <keyword>msselectedindices</keyword>
      <input>
      </input>
-     <returns type="any"><any type="record"/>record of indices selected</returns>
+     <returns type="record">record of indices selected</returns>
      <description>
        The return indices are the result of parsing the MSSelection
        expressions provided in
@@ -1874,8 +1866,7 @@ Date/Time:                         RR:                      RL:                 
   <keyword>select</keyword>
   <input>
     
-     <param type="any" direction="in" name="items">
-     <any type="record"/>
+     <param type="record" direction="in" name="items">
      <description>record with fields contain ranges and enumerations</description>
      <value></value>
      </param>	
@@ -2481,8 +2472,7 @@ Date/Time:                         RR:                      RL:                 
      <value>false</value>
      </param>
   </input>
-  <returns type="any">
-  <any type="record"/>
+  <returns type="record">
   <shortdescription>record with fields containing arrays of data</shortdescription>
   </returns>
 
@@ -2656,8 +2646,7 @@ for i in range(len(tcoord)):
   <keyword>putdata</keyword>
   <input>
     
-     <param type="any" direction="in" name="items">
-     <any type="record"/>
+     <param type="record" direction="in" name="items">
      <description>Record with items and their new values</description>
      <value></value>
      </param>
@@ -2896,7 +2885,7 @@ for i in range(len(tcoord)):
     
      <param type="variant" direction="in" name="fitspw">
      <description>Line-free spectral windows (and :channels) to fit to</description>
-     <value>"*"</value>
+     <value>*</value>
      </param>
     
      <param type="int" direction="in" name="fitorder">
@@ -3006,7 +2995,7 @@ for i in range(len(tcoord)):
 
      <param type="variant" direction="in" name="fitspw">
      <description>Line-free spectral windows (and :channels) to get the scatter from.  ('' =&gt; all)</description>
-     <value>"*"</value>
+     <value>*</value>
      </param>
     
      <param type="variant" direction="in" name="fitcorr">
@@ -3036,7 +3025,7 @@ for i in range(len(tcoord)):
     
      <param type="variant" direction="in" name="spw">
      <description>Spectral windows to reweight.  ('' =&gt; all)</description>
-     <value>"*"</value>
+     <value>*</value>
      </param>
     
      <param type="any" name="antenna">
@@ -3144,7 +3133,7 @@ for i in range(len(tcoord)):
     
      <param type="variant" direction="in" name="spw">
      <description>Spectral windows (and :channels) to select</description>
-     <value>"*"</value>
+     <value>*</value>
      </param>
     
      <param type="intArray" direction="in" name="step">
@@ -3302,7 +3291,7 @@ from spwid 1 of the input data, starting at channel 4, and every
     
      <param type="variant" direction="in" name="spw">
      <description>Spectral windows (and :channels) to select</description>
-     <value>"*"</value>
+     <value>*</value>
      </param>
     
      <param type="variant" direction="in" name="baseline">
@@ -3780,8 +3769,7 @@ and keep the results around in an internal buffer.
      <value>1</value>
      </param>
 </input>
-<returns type="any">
-  <any type="record"/>
+<returns type="record">
 <shortdescription>Record, with statistics over the buffer if all went well
 </shortdescription></returns>
 
@@ -3825,8 +3813,7 @@ data point.
    <method type="function" name="getbuffer">
    <shortdescription>Return the internal buffer as a Record for access from the intrepreter.</shortdescription>
    
-<returns type="any">
-  <any type="record"/>
+<returns type="record">
 <shortdescription>Record with data if operation successful
 </shortdescription></returns>
 
@@ -3910,8 +3897,7 @@ times this for channels and timeslots.
    <method type="function" name="setbufferflags">
    <shortdescription>Set the flags in the buffer</shortdescription>
    <input>
-     <param type="any" name="flags">
-       <any type="record"/>
+     <param type="record" name="flags">
        <description>record with flag and flag\_row</description>
        <value></value>
      </param>
@@ -4229,7 +4215,7 @@ in spectral window 1.
      </param>
  
   </input>
-  <returns type="any"><any type="record"/>record of indices selected</returns>
+  <returns type="record">record of indices selected</returns>
 
   <description> 
  Utility function that will return the ids of the selection used. 
@@ -4431,7 +4417,7 @@ in spectral window 1.
       <value>false</value>
     </param>
   </input>
-  <returns type="casatable"/>
+  <returns type="table"/>
 
   <description>
      This function generates moments from the MS data. It is only applicable 

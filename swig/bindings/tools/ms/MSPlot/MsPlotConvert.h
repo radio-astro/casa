@@ -50,7 +50,7 @@
 
 #include <measures/Measures/MeasTable.h>
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 
 //# How frequently we display debugging message, we've set it at every
 //# 500 000 points.

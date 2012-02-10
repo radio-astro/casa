@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <xmlcasa/record.h>
+#include <stdcasa/record.h>
 #include <iostream>
 
 using std::vector;

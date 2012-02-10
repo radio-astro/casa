@@ -37,7 +37,7 @@
 //
 
 //# Table and TablePlot includes
-#include <tableplot/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/TablePlot.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/RefRows.h>
 

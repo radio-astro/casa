@@ -4,7 +4,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include <xmlcasa/utils/BaseInterface.h>
+#include <tools/utils/BaseInterface.h>
 #include <casa/Containers/Record.h>
 
 

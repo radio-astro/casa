@@ -103,7 +103,7 @@ class Statistics {
 }
 
 #ifndef AIPS_NO_TEMPLATE_SRC
-#include <xmlcasa/ms/Statistics.tcc>
+#include <tools/ms/Statistics.tcc>
 #endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

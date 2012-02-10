@@ -4,8 +4,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include <xmlcasa/utils/stdBaseInterface.h>
-#include <xmlcasa/record.h>
+#include <tools/utils/stdBaseInterface.h>
+#include <stdcasa/record.h>
 #include <iostream>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/NullLogSink.h>

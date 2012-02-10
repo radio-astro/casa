@@ -47,9 +47,9 @@
 #include <casa/Arrays/Slice.h>
 
 //# Table and TablePlot includes
-#include <tableplot/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/TablePlot.h>
 
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 #include <flagging/Flagging/Flagger.h>
 #include <flagging/Flagging/ExtendFlagger.h>
 

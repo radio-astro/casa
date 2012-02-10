@@ -22,12 +22,10 @@
 #include &lt;stdcasa/record.h&gt;
 #include &lt;tools/casaswig_types.h&gt;
 </xsl:text>
-<!--
 <xsl:for-each select="aps:needs">
-	<xsl:text disable-output-escaping="yes">#include &lt;casa</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">.h&gt;
+	<xsl:text disable-output-escaping="yes">#include &lt;</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">_cmpt.h&gt;
 </xsl:text>
 </xsl:for-each>
--->
 <xsl:for-each select="aps:code">
 <xsl:for-each select="aps:include">
 	<xsl:text disable-output-escaping="yes">#include &lt;</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">&gt;
@@ -213,7 +211,7 @@ namespace casac {
 			      </xsl:otherwise>
 		          </xsl:choose>
 		      </xsl:when>
-		      <xsl:when test="lower-case(@xsi:type)='char'"> int <xsl:if test="@direction='out' or @directon='inout' "><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">=<xsl:value-of select="aps:value"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+		      <xsl:when test="lower-case(@xsi:type)='char'"> char <xsl:if test="@direction='out' or @directon='inout' "><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">=<xsl:value-of select="aps:value"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 		      </xsl:when>
 		      <xsl:when test="lower-case(@xsi:type)='int'"> int <xsl:if test="@direction='out' or @directon='inout' "><xsl:text disable-output-escaping="yes">&amp;</xsl:text></xsl:if><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">=<xsl:value-of select="aps:value"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 		      </xsl:when>

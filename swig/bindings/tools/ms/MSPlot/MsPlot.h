@@ -44,14 +44,14 @@
 
 //
 #include <tables/Tables/Table.h>
-#include <tableplot/TablePlot/TablePlot.h>
-#include <tableplot/TablePlot/PanelParams.h>
+#include <tools/tables/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/PanelParams.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
 
 //# MsPlot includes
 #include <measures/Measures/MPosition.h>
-#include <tableplot/TablePlot/SLog.h>
+#include <flagging/Flagging/SLog.h>
 
 #include <synthesis/MSVis/MsAverager.h>
 

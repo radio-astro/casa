@@ -166,7 +166,7 @@ to use virtual columns as well.
      <value>false</value>
      </param>
 </input>
-<returns type="casatable"/>
+<returns type="table"/>
 
 <example>
 
@@ -260,7 +260,7 @@ Image FITS and UVFITS) are read by other means.
      </param>
 
 </input>
-<returns type="casatable"/>
+<returns type="table"/>
 </method>
 
 
@@ -949,7 +949,7 @@ returned if the copy is made to a memory table.
      <value>false</value>
      </param>
 </input>
-<returns type="casatable"/>
+<returns type="table"/>
 </method>
 
  
@@ -1240,7 +1240,7 @@ with the first two lines containing a format description.
                 <value>TaQL expression</value>
 		</param>
 	</input>
-<returns type="casatable">
+<returns type="table">
 <shortdescription>a table tool with the TaQL results
 </shortdescription>
 </returns>
@@ -1298,7 +1298,7 @@ interactively.-->
      <value></value>
      </param>
 </input>
-<returns type="casatable">
+<returns type="table">
 <shortdescription>a table tool with the query results
 </shortdescription>
 </returns>
@@ -1506,7 +1506,7 @@ able to substitute it in the query command.
 
 </example>
 
-<returns type="casatable">
+<returns type="table">
 <shortdescription>table tool</shortdescription>
 </returns>
 </method>

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <xmlcasa/utils/CasapyWatcher.h>
+#include <tools/utils/CasapyWatcher.h>
 
 namespace casac {
 
