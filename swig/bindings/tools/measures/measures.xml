@@ -59,8 +59,7 @@ Show direction measure as a string.
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>a direction measure value to be converted to string
      </description>
      </param>
@@ -96,8 +95,7 @@ print me.dirshow(me.direction('venus'))
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure value to be converted to string</description>
      </param>
 
@@ -157,16 +155,14 @@ print me.show(me.frequency('lsrk', qa.constants('HI')), refcode=false)
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset epoch measure</description>
      <value></value>
      </param>
 
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>epoch measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 epoch defines an epoch measure from the CLI. It has to specify a
@@ -227,14 +223,12 @@ print me.epoch('utc','today')
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset direction measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
-<any type="record"></any>
+<returns type="record">
 <shortdescription>direction measure</shortdescription>
 </returns>
 <description>
@@ -288,12 +282,11 @@ print me.direction('mars')
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure (array of measures)</description>
      </param>
 </input>
-<returns type="any"><any type="record"></any>
+<returns type="record">
 <shortdescription>array of quantities</shortdescription>
 </returns>
 <description>
@@ -315,8 +308,7 @@ print me.getvalue(b)
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure (array of measures)</description>
      </param>
 </input>
@@ -342,8 +334,7 @@ print me.gettype(b)
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure (array of measures)</description>
      </param>
 </input>
@@ -371,14 +362,12 @@ print me.getref(b)
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure (array of measures)</description>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>measure or boolean</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 getoff gets the actual offset of the measure (as a measure) or F if no offset
@@ -443,8 +432,7 @@ print me.comettype()
   <shortdescription>get the distance of the current comet in the current frame</shortdescription>
   <input>
   </input>
-  <returns type="any">
-    <any type="record"></any>
+  <returns type="record">
     <shortdescription>Distance quantity or -1 AU</shortdescription>
   </returns>
   <description>
@@ -471,8 +459,7 @@ print gandist
   <shortdescription>get the angular diameter of the current comet in the current frame</shortdescription>
   <input>
   </input>
-  <returns type="any">
-    <any type="record"></any>
+  <returns type="record">
     <shortdescription>angle quantity or -1 radian</shortdescription>
   </returns>
   <description>
@@ -500,7 +487,7 @@ print gad
    
 <input>
 </input>
-<returns type="any"><any type="record"></any>
+<returns type="record">
 <shortdescription>position measure or fail</shortdescription>
 </returns>
 <description>
@@ -585,15 +572,13 @@ print me.measure(me.direction('comet'),'app')
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset position measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>position measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 position defines a position measure from the CLI. It has to specify a 
@@ -664,9 +649,8 @@ print ants
      <value>ALMA</value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>position measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 observatory will give you the position of an observatory as given in the
@@ -745,7 +729,7 @@ print me.linelist()
      <value>HI</value>
      </param>
 </input>
-<returns type="any"><any type="record"></any></returns>
+<returns type="record"/>
 <description>
 spectralline will give you the frequency of a spectral line. The known list
 can be obtained by <link anchor="measures:measures.linelist.function">me.linelist()</link>.
@@ -791,9 +775,8 @@ print me.sourcelist()[0:62]
      <value>1934-638</value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>direction measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 source will give you the direction of a source. The known list
@@ -833,15 +816,13 @@ print me.source('1934-638')
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset frequency measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 frequency defines a frequency measure from the CLI. It has to specify a 
@@ -907,15 +888,13 @@ print me.frequency('lsrk','21cm')
      <description>doppler ratio/velocity</description>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset doppler measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>doppler measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 doppler defines a doppler measure from the CLI. It has to specify a 
@@ -974,15 +953,13 @@ print me.doppler('radio',qa.mul(qa.quantity('0.4'),qa.constants('c')))
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset radialvelocity measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>radialvelocity measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 radialvelocity defines a radialvelocity measure from the CLI. It has to
@@ -1050,15 +1027,13 @@ print me.radialvelocity('lsrk','20km/s')
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset uvw measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>uvw measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 uvw defines a uvw measure from the CLI. It has to specify a 
@@ -1115,27 +1090,23 @@ print me.measure(me.uvw('itrf','30deg','40deg','10m'), 'j2000')
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>baseline measure</description>
      </param>
 
 </input>
 <output>
-     <param type="any" direction="out" name="dot">
-     <any type="record"></any>
+     <param type="record" direction="out" name="dot">
      <description>uvw-dot (quantity array)</description>
      </param>
 
-     <param type="any" direction="out" name="xyz">
-     <any type="record"></any>
+     <param type="record" direction="out" name="xyz">
      <description>uvw (quantity array)</description>
      </param>
 
 </output>
-<returns type="any">
+<returns type="record">
 <shortdescription>uvw measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 touvw calculates a uvw measure from a baseline. <!-- The baseline can
@@ -1309,20 +1280,17 @@ print a
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure (baseline, position or uvw measure)</description>
      </param>
 </input>
 <output>
-     <param type="any" direction="out" name="xyz">
-     <any type="record"></any>
+     <param type="record" direction="out" name="xyz">
      <description>uvw (quantity array)</description>
      </param>
 </output>
 
-<returns type="any"><shortdescription>measure</shortdescription>
-<any type="record"></any>
+<returns type="record"><shortdescription>measure</shortdescription>
 </returns>
 <description>
 expand calculates the differences between a series of given measure
@@ -1398,15 +1366,13 @@ print me.expand(sb,x); x
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset earthmagnetic measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>earthmagnetic measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 earthmagnetic defines an earthmagnetic measure from the CLI. It needs
@@ -1476,15 +1442,13 @@ print me.measure(me.earthmagnetic('igrf'), 'j2000')
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional offset baseline measure</description>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>baseline measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 baseline defines a baseline measure from the CLI. It has to specify a 
@@ -1538,14 +1502,12 @@ print me.measure(me.baseline('itrf','30deg','40deg','10m'), 'J2000')
    
 <input>
 
-     <param type="any" direction="in" name="pos">
-     <any type="record"></any>
+     <param type="record" direction="in" name="pos">
      <description>position measure</description>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>baseline measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 asbaseline converts a position measure into a baseline measure. No
@@ -1626,14 +1588,12 @@ print b; print me.asbaseline(b); print sb; print me.asbaseline(sb)
    
 <input>
 
-     <param type="any" direction="in" name="ms">
-     <any type="record"></any>
+     <param type="record" direction="in" name="ms">
      <description>the measure type for which to list</description>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>record with two string vectors</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 listcodes will produce the known reference codes for a specified measure
@@ -1672,8 +1632,7 @@ print me.listcodes(a)
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure to be converted</description>
      </param>
 
@@ -1681,16 +1640,14 @@ print me.listcodes(a)
      <description>output reference code</description>
      </param>
 
-     <param type="any" direction="in" name="off">
-     <any type="record"></any>
+     <param type="record" direction="in" name="off">
      <description>optional output offset measure</description>
      <value></value>
      </param>
 
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 measure converts measures (epoch, direction etc.) from one reference to
@@ -1807,8 +1764,7 @@ print a
    
 <input>
 
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>measure to be set in frame</description>
      </param>
 </input>
@@ -1970,14 +1926,12 @@ radial velocity</shortdescription>
      <description>radial velocity reference type</description>
      </param>
 
-     <param type="any" direction="in" name="v0">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v0">
      <description>doppler value measure</description>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>radialvelocity measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 toradialvelocity will convert a Doppler type value (e.g. in radio mode) to a
@@ -2009,19 +1963,16 @@ print me.toradialvelocity('topo',a)
      <description>frequency reference type</description>
      </param>
 
-     <param type="any" direction="in" name="v0">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v0">
      <description>doppler measure value</description>
      </param>
 
-     <param type="any" direction="in" name="rfq">
-     <any type="record"></any>
+     <param type="record" direction="in" name="rfq">
      <description>rest frequency (frequency measure or freuency quantity)</description>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 tofrequency will convert a Doppler type value (e.g. in radio mode) to a
@@ -2055,8 +2006,7 @@ to a doppler measure</shortdescription>
      <description>doppler reference type</description>
      </param>
 
-     <param type="any" direction="in" name="v0">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v0">
      <description>radial velocity or frequency measure</description>
      </param>
 
@@ -2066,9 +2016,8 @@ to a doppler measure</shortdescription>
      <value></value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 todoppler will convert a radialvelocity measure or a frequency measure to a
@@ -2097,19 +2046,16 @@ to a rest frequency</shortdescription>
    
 <input>
 
-     <param type="any" direction="in" name="v0">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v0">
      <description>frequency reference type</description>
      </param>
 
-     <param type="any" direction="in" name="d0">
-     <any type="record"></any>
+     <param type="record" direction="in" name="d0">
      <description>doppler measure value</description>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 torestfrequency will convert a frequency measure and a doppler measure
@@ -2153,10 +2099,9 @@ print me.torestfrequency(f, dp)                   # the corresponding rest frequ
      <value>0.0deg</value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>record with rise and set siodereal time quantities; or a 2 element 
 string with below or above</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 rise will give the rise/set hour-angles of a source. It needs the position
@@ -2192,9 +2137,8 @@ print qa.form.long(me.rise(me.direction('sun')).rise)
      <value>0.0deg</value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>record with rise and set epoch or strings</shortdescription>
-<any type="record"></any>
 </returns>
 <description>
 rise will give the rise/set times of a source. It needs the position
@@ -2230,17 +2174,15 @@ print qa.form.long(me.riseset(me.direction('sun')).rise.utc.m0)
    
 <input>
 
-     <param type="any" direction="in" name="m1">
-     <any type="record"></any>
+     <param type="record" direction="in" name="m1">
      <description>direction of source (direction measure)</description>
      </param>
 
-     <param type="any" direction="in" name="m2">
-     <any type="record"></any>
+     <param type="record" direction="in" name="m2">
      <description>direction of other source (direction measure)</description>
      </param>
 </input>
-<returns type="any"><any type="record"></any>
+<returns type="record">
 <shortdescription>position angle as angle quantity</shortdescription>
 </returns>
 <description>
@@ -2276,17 +2218,15 @@ print me.posangle(a,b)
    
 <input>
 
-     <param type="any" direction="in" name="m1">
-     <any type="record"></any>
+     <param type="record" direction="in" name="m1">
      <description>direction of source (direction measure)</description>
      </param>
 
-     <param type="any" direction="in" name="m2">
-     <any type="record"></any>
+     <param type="record" direction="in" name="m2">
      <description>direction of other source (direction measure)</description>
      </param>
 </input>
-<returns type="any"><any type="record"></any>
+<returns type="record">
 <shortdescription>position angle as angle quantity</shortdescription>
 </returns>
 <description>
@@ -2319,12 +2259,11 @@ print me.separation(a,c)
    <shortdescription>get some additional measure information</shortdescription>
    
 <input>
-     <param type="any" direction="in" name="a">
-     <any type="record"></any>
+     <param type="record" direction="in" name="a">
      <description>measures for which extra information is to be gotten</description>
      </param>
 </input>
-<returns type="any"><any type="record"></any></returns>
+<returns type="record"/>
 <description>
 addxvalue will give some additional information about some measures as a vector
 of quantities. It is used internally to get the rectangular coordinates of
@@ -2401,8 +2340,7 @@ print me.done()
    <shortdescription>Check if measure</shortdescription>
    
 <input>
-     <param type="any" direction="in" name="v">
-     <any type="record"></any>
+     <param type="record" direction="in" name="v">
      <description>value to be tested</description>
      </param>
 </input>

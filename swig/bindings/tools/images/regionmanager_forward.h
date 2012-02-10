@@ -1,4 +1,4 @@
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 
 namespace casa 

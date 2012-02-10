@@ -722,7 +722,7 @@ Integer     String      Description
      <choice></choice>
      </param>
 </input>
-<returns type="any"><any type="record"/> Region tool or fail</returns>
+<returns type="record">Region tool or fail</returns>
 
 <description>
 
@@ -886,7 +886,7 @@ coordinates plus auto extension to unspecified axes.
        <value>""</value>
      </param>
 </input>
-<returns type="any"><any type="record"/> Region tool or fail</returns>
+<returns type="record">Region tool or fail</returns>
 
 <description>
 
@@ -921,7 +921,7 @@ can be permanent.
      <choice>String</choice>
      </param>
 </input>
-<returns type="any"><any type="record"/>Region tool or fail</returns>
+<returns type="record">>Region tool or fail</returns>
 
 <description>
 This function (short-hand name {\tt comp}) creates the complement of
@@ -989,7 +989,7 @@ is $(155*178)-126=27464$
      <choice>String</choice>
      </param>
 </input>
-<returns type="any"><any type="record"/>Region tool or fail</returns>
+<returns type="record">Region tool or fail</returns>
 
 <description>
 This function (short-hand name {\tt concat}) creates a region which is
@@ -1229,15 +1229,13 @@ In this example, we delete the first region that is reported to be in the Table 
    <shortdescription>Create the difference of two world regions</shortdescription>
    
 <input>  
-     <param type="any" direction="in" name="region1">
+     <param type="record" direction="in" name="region1">
      <description>The first world region</description>
-     <any type="record"/>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region2">
+     <param type="record" direction="in" name="region2">
      <description>The second world region</description>
-     <any type="record"/>
      <value></value>
      <choice>Region tool</choice>
      </param>
@@ -1248,7 +1246,7 @@ In this example, we delete the first region that is reported to be in the Table 
      <choice>String</choice>
      </param>
 </input>
-<returns type="any"><any type="record"/>Region tool or fail</returns>
+<returns type="record">Region tool or fail</returns>
 
 <description>
 This function (short-hand name {\stff diff}) creates
@@ -1478,7 +1476,7 @@ to plot all of the simple regions that made up a compound region.
 
     </input>
 
-    <returns type="any"><any type="record"/>Record or fail</returns>
+    <returns type="record">Record or fail</returns>
 
     <description>
 This function reads a text file containing region descriptions and
@@ -1509,7 +1507,7 @@ converts it to a python dictionary.
 
     </input>
 
-    <returns type="any"><any type="record"/>Record or fail</returns>
+    <returns type="record">Record or fail</returns>
 
     <description>
 This function reads a region region text descriptions and
@@ -1543,7 +1541,7 @@ converts it to a python region dictionary.
      </param>
 </input>
 
-<returns type="any"><any type="record"/>Record or fail</returns>
+<returns type="record">Record or fail</returns>
 
 <description>
 This function reads files containing ImageRegion objects and turns them
@@ -1600,9 +1598,8 @@ of strings (else \glish\ will take the empty string as a region).
      <choice>File name(s)</choice>
      </param>
 
-     <param type="any" direction="in" name="region">
+     <param type="record" direction="in" name="region">
      <description>region record/dict to store in the file</description>
-     <any type="record"/>
      <value></value>
      </param>
 
@@ -1746,9 +1743,8 @@ of strings (else \glish\ will take the empty string as a region).
      <choice>Vector of strings</choice>
      </param>
 
-     <param type="any" direction="in" name="regionrec">
+     <param type="record" direction="in" name="regionrec">
      <description>Region(s) to save</description>
-     <any type="record"/>  
      <value></value>
      <choice>Record of region tool(s)</choice>
      </param>
@@ -1853,7 +1849,7 @@ from one image, and then copy them to another.
      </param>
 -->
 </input>
-<returns type="any"><any type="record"/>Record or fail</returns>
+<returns type="record">Record or fail</returns>
 
 <description>
 
@@ -1908,7 +1904,7 @@ The record fields are numbered, not named.
      <choice>String</choice>
      </param>
 </input>
-<returns type="any"><any type="record"/>Region tool</returns>
+<returns type="record">Region tool</returns>
 
 <description>
 This function (short-hand name {\stff int}) creates a region which is
@@ -1988,9 +1984,8 @@ call sequence.
    
 <input>  
   
-     <param type="any" direction="in" name="region">
+     <param type="record" direction="in" name="region">
      <description>The region</description>
-     <any type="record"/>
      <value></value>
      <choice>Region tool</choice>
      </param>
@@ -2028,9 +2023,8 @@ F
    
 <input>  
   
-     <param type="any" direction="in" name="region">
+     <param type="record" direction="in" name="region">
      <description>The region</description>
-     <any type="record"/>
      <value></value>
      <choice>Region tool</choice>
      </param>
@@ -2202,9 +2196,8 @@ You can see that auto extension to the third axis is occurring.
    
 <input>
   
-     <param type="any" direction="in" name="csys">
+     <param type="record" direction="in" name="csys">
      <description>Default Coordinate System for use in world regions</description>
-     <any type="record"/>
      <choice>Coordinate tool</choice>
      <value></value>
      </param>
@@ -2260,7 +2253,7 @@ Using private CoordinateSystem from image "quiqui"
      <choice></choice>
      </param>
 </input>
-<returns type="any"><any type="record"/>Region tool</returns>
+<returns type="record">Region tool</returns>
 
 <description>
 
@@ -2375,9 +2368,8 @@ call sequence.
      <choice>[0,1,2,...]</choice>
      </param>
   
-     <param type="any" direction="in" name="csys">
+     <param type="record" direction="in" name="csys">
      <description>Coordinate System</description>
-     <any type="record"/>
      <value></value>
      <choice>Private Coordinate System</choice>
      </param>
@@ -2394,7 +2386,7 @@ call sequence.
      <value></value>
      </param>
 </input>
-<returns type="any"><any type="record"/>Region tool</returns>
+<returns type="record">Region tool</returns>
 
 <description>
 
@@ -2580,9 +2572,8 @@ automatically the full image.
      <choice>[1,2]</choice>
      </param>
   
-     <param type="any" direction="in" name="csys">
+     <param type="record" direction="in" name="csys">
      <description>Coordinate System</description>
-     <any type="record"/>
      <value></value>
  
      <choice>Private Coordinate System</choice>
@@ -2600,7 +2591,7 @@ automatically the full image.
      <choice></choice>
      </param>
 </input>
-<returns type="any"><any type="record"/>Region tool</returns>
+<returns type="record">Region tool</returns>
 
 <description>
 

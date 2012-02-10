@@ -279,7 +279,7 @@ anchor="images:imagepol.fourierrotationmeasure.function">fourierrotationmeasure<
      <value></value>
      </param>
 </input>
-<returns type="casaimagepol"/>
+<returns type="imagepol"/>
 <description>
 
 The constructor takes an image as its input.  This can be specified as
@@ -566,7 +566,7 @@ tb.open('cplx2')
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -795,7 +795,7 @@ In this example we give two RM components and recover them.
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> This function <!-- (short-hand name {\stff flp}) -->
 returns the fractional linear polarization; $\sqrt{(Q^2+U^2)}/I$.
@@ -848,7 +848,7 @@ flp.done()
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> This function <!-- (short-hand name {\stff ftp}) -->
 returns the fractional linear polarization; $\sqrt{(Q^2+U^2+V^2)}/I$.
@@ -927,7 +927,7 @@ fundamental identifier of the tool.
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> This function <!-- (short-hand name {\stff lpi}) -->
 returns the linearly polarized intensity; $\sqrt{(Q^2+U^2)}$. 
@@ -964,7 +964,7 @@ lpi.done()
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -1150,7 +1150,7 @@ The {\stff open} function first closes the old \imagefile\ if one exists.
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -1437,7 +1437,7 @@ print "sigma=", sigma
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -1503,7 +1503,7 @@ You can get the depolarization ratio image with function
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -1556,7 +1556,7 @@ sigflp.done()           # free up resources
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -1660,7 +1660,7 @@ print "siglpi=", siglpi
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -1936,7 +1936,7 @@ print "sigtpi=", sigtpi
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -1970,7 +1970,7 @@ q.done()
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 This function returns an on-the-fly image tool containing Stokes I only.
@@ -2001,7 +2001,7 @@ i.done()
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 This function returns an on-the-fly image tool containing Stokes Q only.
@@ -2032,7 +2032,7 @@ q.done()
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 This function returns an on-the-fly image tool containing Stokes U only.
@@ -2063,7 +2063,7 @@ u.done()
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 This function returns an on-the-fly image tool containing Stokes V only.
@@ -2162,7 +2162,7 @@ po.summary()
      <value></value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> This function <!-- (short-hand name {\stff tpi}) -->
 returns the total polarized intensity; $\sqrt{(Q^2+U^2+V^2)}$. 

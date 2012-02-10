@@ -41,9 +41,9 @@ namespace casac {
 measures::measures() : pcomet_p(0)
 {
   itsLog = new LogIO();
-  MEpoch tim;
-  MPosition pos;
-  MDirection dir;
+  casa::MEpoch tim;
+  casa::MPosition pos;
+  casa::MDirection dir;
   frame_p = new MeasFrame(tim,pos,dir);
 }
 
@@ -191,7 +191,7 @@ measures::epoch(const std::string& rf, const ::casac::variant& v0, const ::casac
     if (q0.getValue() == 0 && q0.getUnit() == "") {
       q0 = casa::Quantity(0.0,"d");
     }
-    MEpoch me(q0);
+    casa::MEpoch me(q0);
     me.setRefString(rf);
     MeasureHolder in(me);
     MeasureHolder out;
@@ -236,7 +236,7 @@ measures::direction(const std::string& rf, const ::casac::variant& v0, const ::c
       q0 = casa::Quantity(0.0,"deg");
       q1 = casa::Quantity(90.0,"deg");
     }
-    MDirection d(q0,q1);
+    casa::MDirection d(q0,q1);
     if (!d.setRefString(rf)) {
       *itsLog << LogIO::WARN
 	      << "Illegal reference frame string.  Reference string set to DEFAULT"
@@ -424,7 +424,7 @@ measures::comettype()
   std::string emptyStr("");
   try {
     if (pcomet_p) {
-      if (pcomet_p->getType() == MDirection::TOPO) {
+      if (pcomet_p->getType() == casa::MDirection::TOPO) {
 	return String("TOPO");
       } else {
 	return String("APP");
@@ -448,7 +448,7 @@ measures::comettopo()
 
   try {
     Vector<Double> returnval;
-    if (pcomet_p && pcomet_p->getType() == MDirection::TOPO) {
+    if (pcomet_p && pcomet_p->getType() == casa::MDirection::TOPO) {
       returnval = pcomet_p->getTopo().getValue();
       returnval.tovector(retval);
       unit = "m";
@@ -472,7 +472,7 @@ measures::comettopo()
       MVPosition relpos;
       
       if(pcomet_p->get(relpos,
-		       dynamic_cast<const MEpoch *>(frame_p->epoch())->get("d").getValue())){
+		       dynamic_cast<const casa::MEpoch *>(frame_p->epoch())->get("d").getValue())){
 	retval = relpos.getLength("AU");
       }
       else{
@@ -499,7 +499,7 @@ measures::comettopo()
       MVPosition relpos;
       
       if(pcomet_p->get(relpos,
-		       dynamic_cast<const MEpoch *>(frame_p->epoch())->get("d").getValue())){
+		       dynamic_cast<const casa::MEpoch *>(frame_p->epoch())->get("d").getValue())){
 	double dist = relpos.getLength("AU").getValue();
 	double meanrad = pcomet_p->getMeanRad(true);
 
@@ -631,7 +631,7 @@ measures::observatory(const std::string& name)
   ::casac::record *retval(0);
   try {
     String error;
-    MPosition returnval;
+    casa::MPosition returnval;
 
     if (!MeasTable::Observatory(returnval, String(name))) {
       *itsLog << LogIO::SEVERE << "Unknown observatory asked for\n"
@@ -770,7 +770,7 @@ measures::source(const ::casac::variant& name)
   ::casac::record *retval(0);
   try {
     String error;
-    MDirection returnval;
+    casa::MDirection returnval;
 
     if (!casaMDirection(name, returnval)) {
       *itsLog << LogIO::SEVERE << "Unknown source asked for\n"
@@ -922,7 +922,7 @@ measures::radialvelocity(const std::string& rf, const ::casac::variant& v0, cons
     if (q0.getValue() == 0 && q0.getUnit() == "") {
       q0 = casa::Quantity(0.0,"m/s");
     }
-    MRadialVelocity mq(q0);
+    casa::MRadialVelocity mq(q0);
     if (!mq.setRefString(rf)) {
       *itsLog << LogIO::WARN << "Illegal reference frame string." << LogIO::POST;
     }
@@ -1487,7 +1487,7 @@ measures::asbaseline(const ::casac::record& pos)
     Record outRec;
     pPos->get(RecordFieldId("type"), tp);
     tp.downcase();
-    if ((tp != downcase(MPosition::showMe())) && (tp != downcase(MBaseline::showMe()))) {
+    if ((tp != downcase(casa::MPosition::showMe())) && (tp != downcase(MBaseline::showMe()))) {
       *itsLog << LogIO::WARN << "Non-position type for asbaseline input"
 	      << LogIO::POST;
       delete pPos;
@@ -1603,18 +1603,18 @@ Bool measures::measure(String &error, MeasureHolder &out,
     in.asMeasure().getRefPtr()->set(*frame_p);
 
     if (in.isMEpoch()) {
-      MEpoch::Ref outRef;
-      MEpoch::Types tp;
+      casa::MEpoch::Ref outRef;
+      casa::MEpoch::Types tp;
       String x = outref;
       Bool raze = False;
       if (x.before(2) == "r_" || x.before(2) == "R_") {
 	raze = True;
 	x = x.from(2);
       };
-      if (MEpoch::getType(tp, x)) {
-	if (raze) outRef.setType(tp | MEpoch::RAZE);
+      if (casa::MEpoch::getType(tp, x)) {
+	if (raze) outRef.setType(tp | casa::MEpoch::RAZE);
 	else outRef.setType(tp);
-      } else outRef.setType(MEpoch::DEFAULT);
+      } else outRef.setType(casa::MEpoch::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMEpoch()) outRef.set(mo.asMeasure());
@@ -1623,7 +1623,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	  return False;
 	};
       };
-      MEpoch::Convert mcvt(MEpoch::Convert(in.asMeasure(), outRef));
+      casa::MEpoch::Convert mcvt(casa::MEpoch::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
@@ -1634,10 +1634,10 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	};
       };
     } else if (in.isMPosition()) {
-      MPosition::Ref outRef;
-      MPosition::Types tp;
-      if (MPosition::getType(tp, outref)) outRef.setType(tp);
-      else outRef.setType(MPosition::DEFAULT);
+      casa::MPosition::Ref outRef;
+      casa::MPosition::Types tp;
+      if (casa::MPosition::getType(tp, outref)) outRef.setType(tp);
+      else outRef.setType(casa::MPosition::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMPosition()) outRef.set(mo.asMeasure());
@@ -1646,7 +1646,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	  return False;
 	};
       };
-      MPosition::Convert mcvt(MPosition::Convert(in.asMeasure(), outRef));
+      casa::MPosition::Convert mcvt(casa::MPosition::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
@@ -1657,10 +1657,10 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	};
       };
     } else if (in.isMDirection()) {
-      MDirection::Ref outRef;
-      MDirection::Types tp;
-      if (MDirection::getType(tp, outref)) outRef.setType(tp);
-      else outRef.setType(MDirection::DEFAULT);
+      casa::MDirection::Ref outRef;
+      casa::MDirection::Types tp;
+      if (casa::MDirection::getType(tp, outref)) outRef.setType(tp);
+      else outRef.setType(casa::MDirection::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMDirection()) outRef.set(mo.asMeasure());
@@ -1669,7 +1669,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	  return False;
 	};
       };
-      MDirection::Convert mcvt(MDirection::Convert(in.asMeasure(), outRef));
+      casa::MDirection::Convert mcvt(casa::MDirection::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
@@ -1726,10 +1726,10 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	};
       };
     } else if (in.isMRadialVelocity()) {
-      MRadialVelocity::Ref outRef;
-      MRadialVelocity::Types tp;
-      if (MRadialVelocity::getType(tp, outref)) outRef.setType(tp);
-      else outRef.setType(MRadialVelocity::DEFAULT);
+	    casa::MRadialVelocity::Ref outRef;
+	    casa::MRadialVelocity::Types tp;
+      if (casa::MRadialVelocity::getType(tp, outref)) outRef.setType(tp);
+      else outRef.setType(casa::MRadialVelocity::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMRadialVelocity()) outRef.set(mo.asMeasure());
@@ -1738,8 +1738,8 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	  return False;
 	};
       };
-      MRadialVelocity::Convert
-	mcvt(MRadialVelocity::Convert(in.asMeasure(), outRef));
+      casa::MRadialVelocity::Convert
+	mcvt(casa::MRadialVelocity::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
@@ -1987,7 +1987,7 @@ bool
 measures::framenow()
 {
   try {
-    MEpoch now((casa::Quantity(Time().modifiedJulianDay(), "d")), MEpoch::UTC);
+    casa::MEpoch now((casa::Quantity(Time().modifiedJulianDay(), "d")), casa::MEpoch::UTC);
     measures::doframe(now);
     return true;
   } catch (AipsError(x)) {
@@ -2021,12 +2021,12 @@ measures::doptorv(const casa::String &rf, const casa::MeasureHolder &v)
 {
   MeasureHolder returnval;
   try {
-    MRadialVelocity::Ref outRef;
-    MRadialVelocity tout;
+	  casa::MRadialVelocity::Ref outRef;
+	  casa::MRadialVelocity tout;
     tout.giveMe(outRef, rf);
-    returnval = MeasureHolder(MRadialVelocity::
+    returnval = MeasureHolder(casa::MRadialVelocity::
 			      fromDoppler(v.asMDoppler(), 
-					  static_cast<MRadialVelocity::Types>
+					  static_cast<casa::MRadialVelocity::Types>
 					  (outRef.getType())));
     uInt nel(v.nelements());
     if (nel>0) {
@@ -2034,9 +2034,9 @@ measures::doptorv(const casa::String &rf, const casa::MeasureHolder &v)
       MDoppler::Convert mfcv(v.asMDoppler(),
 			     v.asMDoppler().getRef());
       for (uInt i=0; i<nel; i++) {
-	returnval.setMV(i, MRadialVelocity::
+	returnval.setMV(i, casa::MRadialVelocity::
 			fromDoppler(mfcv(v.getMV(i)),
-				    static_cast<MRadialVelocity::Types>
+				    static_cast<casa::MRadialVelocity::Types>
 				    (outRef.getType())).getValue());
       };
     };
@@ -2195,14 +2195,14 @@ todop(String error, MeasureHolder v0, casa::Quantity rfq) {
   error = "";
 
   if (v0.isMRadialVelocity()) {
-    returnval = MRadialVelocity::toDoppler(v0.asMeasure());
+    returnval = casa::MRadialVelocity::toDoppler(v0.asMeasure());
     uInt nel(v0.nelements());
     if (nel>0) {
       returnval.makeMV(nel);
-      MRadialVelocity::Convert mfcv(v0.asMRadialVelocity(),
+      casa::MRadialVelocity::Convert mfcv(v0.asMRadialVelocity(),
 				    v0.asMRadialVelocity().getRef());
       for (uInt i=0; i<nel; i++) {
-	returnval.setMV(i, MRadialVelocity::
+	returnval.setMV(i, casa::MRadialVelocity::
 			  toDoppler(mfcv(v0.getMV(i))).
 			  getValue());
       };
@@ -2410,15 +2410,15 @@ measures::rise(const ::casac::variant& crd, const ::casac::variant& ev)
     else{
 	elev=casaQuantity(ev);
     }
-    MDirection srcDir;
+    casa::MDirection srcDir;
     if(casaMDirection(crd, srcDir)){
-	MPosition pos=frame_p->position();
+	casa::MPosition pos=frame_p->position();
       
-	MDirection hd(MDirection::Convert(srcDir, 
-					  MDirection::Ref(MDirection::HADEC,
+	casa::MDirection hd(casa::MDirection::Convert(srcDir, 
+					  casa::MDirection::Ref(casa::MDirection::HADEC,
 							  *frame_p))());
-	MDirection c(MDirection::Convert(srcDir, 
-					 MDirection::Ref(MDirection::APP,
+	casa::MDirection c(casa::MDirection::Convert(srcDir, 
+					 casa::MDirection::Ref(casa::MDirection::APP,
 							 *frame_p))());
 	
 	Double longi;
@@ -2523,19 +2523,19 @@ measures::riseset(const ::casac::variant& crd, const ::casac::variant& ev)
       setLAST=MVAngle(qh.asQuantity())().radian();
       if(setLAST < riseLAST)
       	setLAST+=C::circle;
-      MEpoch newEp(frame_p->epoch());
+      casa::MEpoch newEp(frame_p->epoch());
       newEp.setRefString("R_UTC");
       newEp.getRefPtr()->set(*frame_p);
-      MEpoch refepoch=MEpoch::Convert(newEp, MEpoch::Ref(MEpoch::LAST, *frame_p))();
+      casa::MEpoch refepoch=casa::MEpoch::Convert(newEp, casa::MEpoch::Ref(casa::MEpoch::LAST, *frame_p))();
       Double refval=refepoch.get("d").getValue();
       *itsLog << "LAST of rise= " 
 	      << MVAngle(riseLAST).string(MVAngle::TIME, 8) << LogIO::POST;
       refepoch.set(MVEpoch(casa::Quantity(refval+ riseLAST/C::circle, "d")), 
-		   MEpoch::Ref(MEpoch::LAST, *frame_p));
-      MeasureHolder mh(MEpoch::Convert(refepoch, MEpoch::Ref(MEpoch::UTC, *frame_p))());
+		   casa::MEpoch::Ref(casa::MEpoch::LAST, *frame_p));
+      MeasureHolder mh(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))());
       ostringstream os;
       os  << "UTC of rise= " 
-      	      << MVTime(MEpoch::Convert(refepoch, MEpoch::Ref(MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
+      	      << MVTime(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
       Record riseRec;
       Record riseRecUTC;
       mh.toRecord(err, riseRecUTC);
@@ -2550,10 +2550,10 @@ measures::riseset(const ::casac::variant& crd, const ::casac::variant& ev)
       
       Record setRec;
       Record setRecUTC;
-      MeasureHolder(MEpoch::Convert(refepoch, MEpoch::Ref(MEpoch::UTC, *frame_p))()).toRecord(err, setRecUTC);
+      MeasureHolder(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))()).toRecord(err, setRecUTC);
 
       os  << "UTC of  set= " 
-      	      << MVTime(MEpoch::Convert(refepoch, MEpoch::Ref(MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
+      	      << MVTime(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
       *itsLog << os.str() << LogIO::POST;
       setRec.defineRecord("utc", setRecUTC);
       Record setRecLAST;
@@ -2611,15 +2611,15 @@ measures::riseset(const ::casac::variant& crd, const ::casac::variant& ev)
 
 // posangle
 casa::Quantity
-measures::posangle (const MDirection& md1, const MDirection& md2) {
-  MDirection x(md1);
-  MDirection y(md2);
+measures::posangle (const casa::MDirection& md1, const casa::MDirection& md2) {
+  casa::MDirection x(md1);
+  casa::MDirection y(md2);
   x.getRefPtr()->set(*frame_p);
   y.getRefPtr()->set(*frame_p);
-  if (x.isModel()) x = MDirection::Convert(x, MDirection::DEFAULT)();
-  if (y.isModel()) y = MDirection::Convert(y, MDirection::DEFAULT)();
+  if (x.isModel()) x = casa::MDirection::Convert(x, casa::MDirection::DEFAULT)();
+  if (y.isModel()) y = casa::MDirection::Convert(y, casa::MDirection::DEFAULT)();
   if (x.getRefPtr()->getType() != y.getRefPtr()->getType()) {
-    y = MDirection::Convert(y, MDirection::castType
+    y = casa::MDirection::Convert(y, casa::MDirection::castType
 			    (x.getRefPtr()->getType()))();
   };
   return x.getValue().positionAngle(y.getValue(), "deg");
@@ -2649,7 +2649,7 @@ measures::posangle(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    MDirection x = in1.asMDirection();
+    casa::MDirection x = in1.asMDirection();
 
     MeasureHolder in2;
     Record *p_m2 = toRecord(m2);
@@ -2665,14 +2665,14 @@ measures::posangle(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    MDirection y = in2.asMDirection();
+    casa::MDirection y = in2.asMDirection();
     /*
     x.getRefPtr()->set(*frame_p);
     y.getRefPtr()->set(*frame_p);
-    if (x.isModel()) x = MDirection::Convert(x, MDirection::DEFAULT)();
-    if (y.isModel()) y = MDirection::Convert(y, MDirection::DEFAULT)();
+    if (x.isModel()) x = casa::MDirection::Convert(x, casa::MDirection::DEFAULT)();
+    if (y.isModel()) y = casa::MDirection::Convert(y, casa::MDirection::DEFAULT)();
     if (x.getRefPtr()->getType() != y.getRefPtr()->getType()) {
-      y = MDirection::Convert(y, MDirection::castType
+      y = casa::MDirection::Convert(y, casa::MDirection::castType
 			      (x.getRefPtr()->getType()))();
     };
     return recordFromQuantity(casa::Quantity(x.getValue().positionAngle(y.getValue(), "deg")));
@@ -2709,7 +2709,7 @@ measures::separation(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    MDirection x = in1.asMDirection();
+    casa::MDirection x = in1.asMDirection();
 
     MeasureHolder in2;
     Record *p_m2 = toRecord(m2);
@@ -2726,14 +2726,14 @@ measures::separation(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    MDirection y = in2.asMDirection();
+    casa::MDirection y = in2.asMDirection();
 
     x.getRefPtr()->set(*frame_p);
     y.getRefPtr()->set(*frame_p);
-    if (x.isModel()) x = MDirection::Convert(x, MDirection::DEFAULT)();
-    if (y.isModel()) y = MDirection::Convert(y, MDirection::DEFAULT)();
+    if (x.isModel()) x = casa::MDirection::Convert(x, casa::MDirection::DEFAULT)();
+    if (y.isModel()) y = casa::MDirection::Convert(y, casa::MDirection::DEFAULT)();
     if (x.getRefPtr()->getType() != y.getRefPtr()->getType()) {
-      y = MDirection::Convert(y, MDirection::castType
+      y = casa::MDirection::Convert(y, casa::MDirection::castType
 			      (x.getRefPtr()->getType()))();
     };
     return recordFromQuantity(x.getValue().separation(y.getValue(), "deg"));
