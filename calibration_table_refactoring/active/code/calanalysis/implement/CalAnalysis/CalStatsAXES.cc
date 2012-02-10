@@ -38,7 +38,7 @@ namespace casa {
 
 /*
 
-CalStats::AXESs
+CalStats::AXES
 
 Description:
 ------------

@@ -492,6 +492,8 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     try {
       poCS = new CalStats( oParamD, oParamErrD, oFlag, oFeedTemp, oFreqTemp,
           oTimeTemp, eAxisIterUserID );
+      poOutput->operator[](uiNumOutput-1).oOut = poCS->stats<T>( oArg );
+      delete poCS;
     }
     catch ( AipsError oAE ) {
       LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
@@ -501,10 +503,6 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
           << "), continuing ..." << LogIO::POST;
       poOutput->operator[](uiNumOutput-1).oOut = CalStats::OUT<T>();
     }
-
-    poOutput->operator[](uiNumOutput-1).oOut = poCS->stats<T>( oArg );
-
-    delete poCS;
 
     poNCTIter->next();
 
