@@ -114,7 +114,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_statwt.py
   test_testconcat.py
   test_tflagcmd.py
-  test_tflagger.py
+  test_tflagdata.py
   test_uvcontsub.py
   test_uvcontsub3.py
   test_viewer.py

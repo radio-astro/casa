@@ -6,7 +6,7 @@ from tasks import *
 from taskinit import *
 
 #
-# Test of tflagcmd task. It uses tflagger to unflag and summary
+# Test of tflagcmd task. It uses tflagdata to unflag and summary
 #
 
 def test_eq(result, total, flagged):
@@ -53,7 +53,7 @@ class test_base(unittest.TestCase):
                          '/data/regression/ngc5921/ngc5921.fits', \
                          self.vis)
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_multi(self):
         self.vis = "multiobs.ms"
@@ -67,7 +67,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_flagdatatest_alma(self):
         self.vis = "flagdatatest-alma.ms"
@@ -81,7 +81,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
         
 class test_manual(test_base):
@@ -95,7 +95,7 @@ class test_manual(test_base):
         filename = create_input(input)
         
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
-        test_eq(tflagger(vis=self.vis, mode='summary'), 2882778, 28500)
+        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
 
 class test_alma(test_base):
     # Test various selections for alma data 
@@ -111,7 +111,7 @@ class test_alma(test_base):
         
         # flag POINTING CALIBRATION scans 
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
-        test_eq(tflagger(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+        test_eq(tflagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
         
     def test_extract(self):
         '''tflagcmd: action = extract and apply clip on WVR'''
@@ -127,7 +127,7 @@ class test_alma(test_base):
         
         # Apply to clip only WVR
         tflagcmd(vis=self.vis, inpmode='cmd', command=[res[0]['command']], savepars=False, action='apply')
-        ret = tflagger(vis=self.vis, mode='summary')
+        ret = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(ret['flagged'], 22752)
         self.assertEqual(ret['correlation']['I']['flagged'], 22752)
         self.assertEqual(ret['correlation']['XX']['flagged'], 0)
@@ -153,12 +153,12 @@ class test_unapply(test_base):
         input = "scan=3 mode=tfcrop expression='ABS_RR'"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
-        test_eq(tflagger(vis=self.vis,mode='summary',scan='1'), 568134, 568134)
-        test_eq(tflagger(vis=self.vis,mode='summary',scan='3'), 762048, 2829)
+        test_eq(tflagdata(vis=self.vis,mode='summary',scan='1'), 568134, 568134)
+        test_eq(tflagdata(vis=self.vis,mode='summary',scan='3'), 762048, 2829)
         
         # Unapply only the tfcrop line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
-        result = tflagger(vis=self.vis,mode='summary',scan='3')
+        result = tflagdata(vis=self.vis,mode='summary',scan='3')
         self.assertEqual(result['flagged'], 0, 'Expected 0 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 762048,'Expected total 762048, found %s'%result['total'])
 
@@ -179,7 +179,7 @@ class test_unapply(test_base):
         
         # Unapply only the quack line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=True)
-        result = tflagger(vis=self.vis,mode='summary',scan='1')
+        result = tflagdata(vis=self.vis,mode='summary',scan='1')
         
         # Only the manual flags should be there
         self.assertEqual(result['flagged'], 568134, 'Expected 568134 flags, found %s'%result['flagged'])
@@ -202,7 +202,7 @@ class test_unapply(test_base):
         
         # Unapply only the manual line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
-        result = tflagger(vis=self.vis,mode='summary',scan='1')
+        result = tflagdata(vis=self.vis,mode='summary',scan='1')
         
         # Only the quack flags should be left
         self.assertEqual(result['flagged'], 44226, 'Expected 44226 flags, found %s'%result['flagged'])
@@ -215,11 +215,11 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag several scans and save them to FLAG_CMD with APPLIED=True
-        tflagger(vis=self.vis, scan='7', savepars=True)
-        tflagger(vis=self.vis, scan='1', savepars=True)
-        tflagger(vis=self.vis, scan='2', savepars=True)
-        tflagger(vis=self.vis, scan='3', savepars=True)
-        tflagger(vis=self.vis, scan='4', savepars=True)
+        tflagdata(vis=self.vis, scan='7', savepars=True)
+        tflagdata(vis=self.vis, scan='1', savepars=True)
+        tflagdata(vis=self.vis, scan='2', savepars=True)
+        tflagdata(vis=self.vis, scan='3', savepars=True)
+        tflagdata(vis=self.vis, scan='4', savepars=True)
         
         # There should be 5 cmds in FLAG_CMD. Unapply row=1 and set APPLIED to False
         tflagcmd(vis=self.vis, action='unapply', tablerows=1, savepars=False)
@@ -228,7 +228,7 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, action='unapply', tablerows=[2,3], savepars=False)
         
         # We should have left only scans 4 and 7 flagged.
-        res = tflagger(vis=self.vis, mode='summary')
+        res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 0, "It should not re-apply tablerows=1")
         self.assertEqual(res['scan']['4']['flagged'], 95256, "It should not unapply tablerows=4")
         self.assertEqual(res['scan']['7']['flagged'], 190512, "It should not unapply tablerows=7")
@@ -255,6 +255,7 @@ class test_savepars(test_base):
         tflagcmd(vis=self.vis, action='list', inpmode='cmd', command=[input], savepars=True)
         
         # list/save to a file
+        os.system('rm -rf myflags.txt')
         tflagcmd(vis=self.vis, action='list', outfile='myflags.txt', savepars=True)
         
         # compare saved file with original input file
@@ -278,7 +279,7 @@ class test_savepars(test_base):
         tflagcmd(vis=self.vis, action='apply', savepars=False)
         
         # scans=1~3 should be fully flagged
-        res = tflagger(vis=self.vis, mode='summary')
+        res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['1']['total'], 568134)
         self.assertEqual(res['scan']['2']['flagged'], 238140)
@@ -304,7 +305,7 @@ class test_savepars(test_base):
         tflagcmd(vis=self.vis, inpmode='cmd', command=[input], writeflags=False, savepars=True)
         
         # No flags should be in the MS
-        res = tflagger(vis=self.vis, mode='summary')
+        res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'Should not write flags when writeflags=False')
         
         
