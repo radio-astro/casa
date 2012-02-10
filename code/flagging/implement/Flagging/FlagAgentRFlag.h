@@ -49,7 +49,7 @@ protected:
 	Double median(vector<Double> &data);
 
 	// Convenience function to get simple averages
-	Double compueThreshold(vector<Double> &data, vector<Double> &data2, vector<Double> &counts);
+	Double computeThreshold(vector<Double> &data, vector<Double> &dataSquared, vector<Double> &counts);
 
 	// Function to be called for each timestep/channel
 	void computeAntennaPairFlagsCore(	Int spw,
