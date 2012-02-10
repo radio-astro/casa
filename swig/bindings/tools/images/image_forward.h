@@ -1,5 +1,5 @@
 #include <coordsys_cmpt.h>
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <memory>

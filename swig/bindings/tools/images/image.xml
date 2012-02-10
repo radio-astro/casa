@@ -989,7 +989,7 @@ result in a more indirect fashion as follows in the following example.
      <description>Input image file name</description>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 <description>
 
 This is the most commonly used constructor.  It constructs (creates) a 
@@ -1029,7 +1029,7 @@ information on foreign images.
      </param>
   
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 <description>
 This is the most commonly used function to create an on-the-fly image
 tool.  It constructs (creates) a \imagetool\ associated with a disk
@@ -1080,7 +1080,7 @@ ia.close()
      </param>
   
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 <description>
 This is the most commonly used function to create an on-the-fly image
 tool.  It constructs (creates) a \imagetool\ associated with a disk
@@ -1139,7 +1139,7 @@ ia.close()
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -1309,7 +1309,7 @@ in this case.  It is evaluated each time it is needed.
             <value>false</value>
         </param>
     </input>
-    <returns type="casaimage"/>
+    <returns type="image"/>
     <description>
         This method collapses an image along a specified axis or set of axes of N pixels to 1 pixel. It computes
         the specified aggregate function of pixels along that axis and places those values in the
@@ -1391,7 +1391,7 @@ wild cards accepted.  Default is empty string.</description>
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -1529,8 +1529,7 @@ references the input files, it does not copy them.
      <value/>
      </param>
   
-     <param type="any" direction="in" name="csys">
-     <any type="record"/>
+     <param type="record" direction="in" name="csys">
      <description>Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
@@ -1637,8 +1636,7 @@ temporary image.
      <value> </value>
      </param>
   
-     <param type="any" direction="in" name="csys">
-     <any type="record"/>
+     <param type="record" direction="in" name="csys">
      <description>Coordinate System record from coordsys torecord().
   Default is unset.</description>
      <value></value>
@@ -1836,8 +1834,7 @@ the example we list the names of the fields in this record.
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -1927,8 +1924,7 @@ of the image, and all pixels of other axes.
      <value>0</value>
      </param>
   
-     <param type="any" direction="in" name="csys">
-	     <any type="record"/>
+     <param type="record" direction="in" name="csys">
      <description>Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
@@ -2086,7 +2082,7 @@ ia.close()             # close to unlock disk image
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -2164,8 +2160,7 @@ In this example, all the images are virtual (temporary images).
      <value type="vector"><value>0.0</value> <value>1.0</value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -2280,8 +2275,7 @@ from a normal distribution added.
      <value>-1.0</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -2305,7 +2299,7 @@ from a normal distribution added.
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -2373,13 +2367,12 @@ im3.done()
    
 <input>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
 </input>
-<returns type="any"><any type="record"/>Record or fail</returns>
+<returns type="record">Record or fail</returns>
 <description>
 
 This function finds the bounding box of a
@@ -2705,8 +2698,7 @@ ia.close()
      <value>continuumsub.im</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region over which output is desired.  Default is whole image.</description>
      <value></value>
      </param>
@@ -2738,7 +2730,7 @@ ia.close()
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description> 
 
@@ -2847,7 +2839,7 @@ only Stokes I, even if the original image had other stokes planes.
      <value>true</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description> 
 
@@ -2923,8 +2915,7 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -2946,7 +2937,7 @@ ia.close()
      </param>
 
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -3084,7 +3075,7 @@ are unlike.
      </param>
 </input>
 
-<returns type="casacoordsys"/>
+<returns type="coordsys"/>
 <description>
 
 This function stores the Coordinate System of an image in a {\stf
@@ -3134,7 +3125,7 @@ this Coordinate System using the {\cf fromshape} function.
      </param>
 </input>
 
-<returns type="casacoordsys"/>
+<returns type="coordsys"/>
 <description>
 
 This function stores the Coordinate System of an image in a {\stf
@@ -3176,23 +3167,19 @@ constructor.
    <shortdescription>Convert from pixel to world coordinate wrapped as Measures</shortdescription>
 <!--   
 <output>
-     <param type="any" direction="out" name="intensity">
-     <any type="record"/>
+     <param type="record" direction="out" name="intensity">
      <description>Returned intensity quantity for pixel</description>
      </param>
 
-     <param type="any" direction="out" name="direction">
-     <any type="record"/>
+     <param type="record" direction="out" name="direction">
      <description>Returned direction measure for pixel</description>
      </param>
 
-     <param type="any" direction="out" name="frequency">
-     <any type="record"/>
+     <param type="record" direction="out" name="frequency">
      <description>Returned frequency measure for pixel</description>
      </param>
 
-     <param type="any" direction="out" name="velocity">
-     <any type="record"/>
+     <param type="record" direction="out" name="velocity">
      <description>Returned radial velocity measure for pixel</description>
      </param>
 </output>
@@ -3204,7 +3191,7 @@ constructor.
      <value>-1</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -3290,8 +3277,7 @@ at a particular location at a particular time.
    
 <input>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is unset.</description>
      <value></value>
      </param>
@@ -3356,7 +3342,7 @@ at a particular location at a particular time.
         <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>Returns a record that contains component list as a Matrix and blcs and trcs of regions found.</returns>
+<returns type="record">Returns a record that contains component list as a Matrix and blcs and trcs of regions found.</returns>
 
 <description>
 This function is an image decomposition tool that performs several tasks,
@@ -3436,12 +3422,11 @@ ia.close()
    
 <input>
   
-     <param type="any" direction="in" name="complist">
-	     <any type="record"/>
+     <param type="record" direction="in" name="complist">
      <description>Componentlist to deconvolve</description>
      </param>
 </input>
-<returns type="any"><any type="record"/>Componentlist tool or fail</returns>
+<returns type="record">Componentlist tool or fail</returns>
 
 <description>
 
@@ -3484,8 +3469,7 @@ cl.close()
    from a beam Gaussian to return a model Gaussian
    </shortdescription>
     
-<returns type="any">
-  <any type="record"/>
+<returns type="record">
   <description> record containing the model Gaussian parameters</description>
 </returns>
   
@@ -3698,8 +3682,7 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -3788,8 +3771,7 @@ images only are written out.
      <value>0.1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The 2-D region of interest to fit.  Default is whole image.</description>
      <value></value>
      </param>
@@ -3815,7 +3797,7 @@ images only are written out.
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>Componentlist tool or fail</returns>
+<returns type="record">>Componentlist tool or fail</returns>
 
 <description>
 
@@ -4039,7 +4021,7 @@ We use the Componentlist GUI to look at the strongest component.
         </param>
         
     </input>
-<returns type="any"><any type="record"/></returns>
+    <returns type="record"/>
 
 <description>
 This method simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
@@ -4372,7 +4354,7 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
             <value>false</value>
         </param>
     </input>
-    <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
+    <returns type="record">Componentlist tool or fail</returns>
     <description>
     OVERVIEW
 
@@ -4551,8 +4533,7 @@ ia.fitcomponents(region=region, chans=chans, excludepix=excludepix, estimates=es
    
 <input>  
   
-     <param type="any" direction="in" name="record">
-     <any type="record"/>
+     <param type="record" direction="in" name="record">
      <description>Record containing the image</description>
      </param>
      <param type="string" direction="in" name="outfile">
@@ -4700,8 +4681,7 @@ ia.close()
 
 <input>
 
-     <param type="any" direction="in" name="region">
-             <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -4841,7 +4821,7 @@ In this example we recover first the pixels and then the pixel mask.
      </param>
   
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 <description>
 
 This function returns a 1-D slice (the pixels and opionally the pixel mask) from the
@@ -4894,8 +4874,7 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -4931,7 +4910,7 @@ ia.close()
         <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -5035,8 +5014,7 @@ and acquires just a read lock.
    
 
 <output>  
-     <param type="any" direction="out" name="histout">
-	     <any type="record"/>
+     <param type="record" direction="out" name="histout">
      <description>record containing the histograms</description>
      </param>
 </output>  
@@ -5048,8 +5026,7 @@ and acquires just a read lock.
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -5313,8 +5290,7 @@ ia.history(list=T, browse=F)       # List history to logger
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest of the input image.  Default is whole image.</description>
      <value></value>
      </param>
@@ -5324,7 +5300,7 @@ ia.history(list=T, browse=F)       # List history to logger
      <value>-1</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -5509,8 +5485,7 @@ and acquire a readonly lock.
      <description>Imaginary image file name</description>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -5676,7 +5651,7 @@ ia.close()
    <method type="function" name="miscinfo">
    <shortdescription>Get the miscellaneous information record from an image</shortdescription>
    
-   <returns type="any"><any type="record"/>record or fail</returns>
+   <returns type="record">record or fail</returns>
 
 <description>
 
@@ -5720,13 +5695,11 @@ ia.close()
    
 <input>
   
-     <param type="any" direction="in" name="model">
-	     <any type="record"/>
+     <param type="record" direction="in" name="model">
      <description>Record representation of a ComponentList model</description>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The 2-D region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -5804,8 +5777,7 @@ In this example we subtract the model returned by the fitcomponents function.
    
 <input>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The 2-D region of interest to fit.  Default is whole image.</description>
      <value></value>
      </param>
@@ -5830,7 +5802,7 @@ In this example we subtract the model returned by the fitcomponents function.
      <value>true</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>
+<returns type="record">
 Componentlist tool or fail</returns>
 
 <description>
@@ -5883,8 +5855,7 @@ ia.close()
      <value>-10</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region specification. See help par.region. Default is to not use a region.</description>
      <value></value>
      </param>
@@ -6004,7 +5975,7 @@ ia.close()
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -6426,7 +6397,7 @@ The {\stff open} function first closes the old \imagefile.
      <value>-1</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>record, unset, or fail</returns>
+<returns type="record">record, unset, or fail</returns>
 <description>
 
 This function gets the value of the image and the mask at the specified
@@ -6645,8 +6616,7 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -6761,8 +6731,7 @@ ia.close()
      <description>Binning factors for each axis</description>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -6794,7 +6763,7 @@ ia.close()
      </param>
      
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -6851,8 +6820,7 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="csys">
-	     <any type="record"/>
+     <param type="record" direction="in" name="csys">
      <description>Coordinate System for output image.  Default is input image coordinate system.</description>
      <value></value>
      </param>
@@ -6862,8 +6830,7 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is the whole image.</description>
      <value></value>
      </param>
@@ -6924,7 +6891,7 @@ ia.close()
         <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -7178,7 +7145,7 @@ ia.close()
             <value/>
         </param>
     </input>
-    <returns type="casaimage"/>
+    <returns type="image"/>
     <description>
         THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD.
         See help for ia.transpose() for details.
@@ -7198,7 +7165,7 @@ ia.close()
             <value/>
         </param>
     </input>
-    <returns type="casaimage"/>
+    <returns type="image"/>
     <description>
 This method transposes the axes in the input image to the specified
 order. The associated pixel and mask values and coordinate system are transposed.
@@ -7260,8 +7227,7 @@ ia.done()
      <value>0deg</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -7307,7 +7273,7 @@ ia.done()
         <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -7449,8 +7415,7 @@ print ia.name(strippath=T)
      <description>The new value(s), Numeric scalar or LEL expression</description>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -7658,7 +7623,7 @@ we must specify the region in the expression as well.
    <method type="function" name="restoringbeam">
    <shortdescription>Get the restoringbeam</shortdescription>
    
-   <returns type="any"><any type="record"/>record or fail</returns>
+   <returns type="record">record or fail</returns>
 <description>
 
 This function <!-- (short-hand name {\stff rb}) --> gets the restoring beam, if any.
@@ -7722,8 +7687,7 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -7749,7 +7713,7 @@ ia.close()
         <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -7861,8 +7825,7 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -7974,8 +7937,7 @@ print ia.brightnessunit()
    
 <input>
   
-     <param type="any" direction="in" name="csys">
-     <any type="record"/>
+     <param type="record" direction="in" name="csys">
      <description>Record describing new Coordinate System</description>
      </param>
 </input>
@@ -8070,8 +8032,7 @@ ia.close()
    
 <input>
   
-     <param type="any" direction="in" name="info">
-	     <any type="record"/>
+     <param type="record" direction="in" name="info">
      <description>Miscellaneous REPLACEMENT header</description>
      </param>
 </input>
@@ -8176,8 +8137,7 @@ ia.close()
      <value>0deg</value>
      </param>
   
-     <param type="any" direction="in" name="beam">
-		<any type="record"/>
+     <param type="record" direction="in" name="beam">
      <description>The complete restoring beam (output of restoringbeam()).  Default is unset.</description>
      <value></value>
      </param>
@@ -8269,8 +8229,7 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -8354,8 +8313,7 @@ ia.close()
      </param>
 </input>
 
-<returns type="any">
-  <any type="record"/>
+<returns type="record">
   <description> record containing all statistics</description>
 </returns>
 
@@ -8566,8 +8524,7 @@ the the record containing the statistics arrays.
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -8656,8 +8613,7 @@ ia.twopointcorrelation()   # Output image is virtual
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -8687,7 +8643,7 @@ ia.twopointcorrelation()   # Output image is virtual
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -8756,8 +8712,7 @@ ia.close()
    <shortdescription>Summarize basic information about the image</shortdescription>
    
 <output>  
-     <param type="any" direction="out" name="header">
-     <any type="record"/>
+     <param type="record" direction="out" name="header">
      <description>Header information</description>
      </param>
 </output>  
@@ -8908,8 +8863,7 @@ listed in square brackets.
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -9049,8 +9003,7 @@ ia.close()
      Default is input name + '.ascii'.</description>
      </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.
      Default is whole image.</description>
      <value></value>
@@ -9125,8 +9078,7 @@ ia.toASCII('myfile2.ascii',overwrite=true)
    tool
    </shortdescription>
     
-<returns type="any">
-  <any type="record"/>
+<returns type="record">
   <description> record containing all the image data and informations</description>
 </returns>
   
@@ -9184,7 +9136,7 @@ a script to make sure this variable is an Image
       Default is reference value.</description>
      </param>
 </input>
-<returns type="any">Vector of float or fail<any type="record"/></returns>
+<returns type="record">Vector of float or fail</returns>
 
 <description>
 
@@ -9244,7 +9196,7 @@ formatted as measures instead.
      <value>n</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>Vector float, vector quantity, record, string or fail</returns>
+<returns type="record">Vector float, vector quantity, record, string or fail</returns>
 
 <description>
 
@@ -9337,8 +9289,7 @@ other process can gain immediate access to the \imagefile.
      <value/>
      </param>
   
-     <param type="any" direction="in" name="csys">
-     <any type="record"/>
+     <param type="record" direction="in" name="csys">
      <description>Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
@@ -9358,7 +9309,7 @@ other process can gain immediate access to the \imagefile.
      <value>true</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 
 <description>
 
@@ -9457,7 +9408,7 @@ temporary image.
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 <description>
 
 This function is used to convert a FITS disk image file (Float,
@@ -9528,8 +9479,7 @@ the example we list the names of the fields in this record.
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="region">
-     <any type="record"/>
+     <param type="record" direction="in" name="region">
      <description>The region of interest.  Default is the whole image.</description>
      <value></value>
      </param>
@@ -9550,7 +9500,7 @@ the example we list the names of the fields in this record.
      <value>false</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 <description>
 
 This function applies a \region\ to a disk \imagefile, creates a new
@@ -9629,8 +9579,7 @@ of the image, and all pixels of other axes.-->
      <value>0</value>
      </param>
   
-     <param type="any" direction="in" name="csys">
-	     <any type="record"/>
+     <param type="record" direction="in" name="csys">
      <description>Record describing Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
@@ -9650,7 +9599,7 @@ of the image, and all pixels of other axes.-->
      <value>true</value>
      </param>
 </input>
-<returns type="casaimage"/>
+<returns type="image"/>
 <description>
 
 This function creates a \casa\ \imagefile\ with the specified shape.  All
@@ -9758,7 +9707,7 @@ used to create a 2D temporary image.
             <value>false</value>
         </param>
     </input>
-    <returns type="casaimage"/>
+    <returns type="image"/>
     <description>
         Correct an image for primary beam attenuation using an image of the primary beam pattern.
         The primary beam pattern can be provided as an image, in which case 1. it must have the same
@@ -9851,7 +9800,7 @@ cube = ia.makearray(0,[4,4,4])
      </param>
   
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 <description>
 Users should use rg.box() instead. The regionmanager wasn't
 available when this method was created.
@@ -9878,8 +9827,7 @@ ia.close()
    <shortdescription>returns input record</shortdescription>
 
 <input>
-     <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <param type="record" direction="in" name="v">
      <description>a measure value</description>
      </param>
 
@@ -9888,9 +9836,8 @@ ia.close()
      <value>false</value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>input measure</shortdescription>
-<any type="record"/>
 </returns>
 <description>
 echo returns input.  This method is for diagnostic purposes only.
@@ -9947,7 +9894,6 @@ exit() # This is last example so lets exit().
 </input>
 <returns type="bool">
 <shortdescription>input measure</shortdescription>
-<any type="record"/>
 </returns>
 <description>
 Returns True if the shape, coordinate system, and axes order of the specified image

@@ -89,8 +89,7 @@ All data selection parameters follow the ms-selection syntax.
 <input>
 
 <!-- Selection parameters : start -->
-     <param type="any" name="config"> 
-     <any type="record"/>
+     <param type="record" name="config"> 
      <description>The record (dictionary) config may be given or not. If it is not given, 
      \n the whole MS will be selected. The record may contain any data selection parameters 
      \n supported by MSSelection such as\n:
@@ -185,8 +184,7 @@ See the example below:
 
 <input>
 
-     <param type="any" name="aparams">
-         <any type="record"/>
+     <param type="record" name="aparams">
      <description>It takes a record (dictionary) with the specific parameters for the flagging mode. 
      \n The record may contain any data selection parameters supported by MSSelection, as well as 
      \n mode-specific parameters such as:\n

@@ -7,7 +7,9 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
  
   <tool name="coordsys" module="images">
-    <needs>measures</needs>
+	  <!--
+	       <needs>measures</needs>
+	       -->
     <shortdescription>Operations on CoordinateSystems</shortdescription>
        
 <!-- include "coordsys.g" -->
@@ -428,7 +430,7 @@ csys.summary()
      <value>false</value>
      </param>
 </input>    
-<returns type="casacoordsys"/>
+<returns type="coordsys"/>
 
 <description>
 
@@ -825,7 +827,7 @@ print cout
      <value>-1</value>
      </param>
 </input>
-<returns type="any"><any type="variant"/></returns>
+<returns type="variant"/>
 
 <description>
 
@@ -915,7 +917,7 @@ cs.coordinatetype()
    <method type="function" name="copy">
    <shortdescription>Copy this Coordsys tool</shortdescription>
    
-<returns type="casacoordsys"/>
+<returns type="coordsys"/>
 <description>
 
 <!--\glish\ uses copy-on-write semantics.  This sometimes
@@ -984,7 +986,7 @@ print csys.torecord()            # default tool
    <method type="function" name="epoch">
    <shortdescription>Return the epoch</shortdescription>
    
-<returns type="any"><any type="record"/></returns>
+   <returns type="record"/>>
 
 <description>
 
@@ -1316,8 +1318,7 @@ we convert that vector of frequencies to velocity.
    
 <input>  
   
-     <param type="any" direction="in" name="record">
-	     <any type="record"/>
+     <param type="record" direction="in" name="record">
      <description>Record containing Coordinate System</description>
      </param>
 </input>    
@@ -1372,7 +1373,7 @@ print cs2.ncoordinates()
 	     <value></value>
      </param>
 </input>
-<returns type="any"><any type="record"/>
+<returns type="record">
 <description>Vector of doubles, vector of quantities, vector of string, record or fail</description>
 </returns>
 
@@ -1426,7 +1427,7 @@ print csys.increment(format='n', type='spectral')
      <description>Coordinate type: "direction", "stokes", "spectral", "linear", "tabular"</description>
      </param>
 </input>
-<returns type="any"><any type="variant"/></returns>
+<returns type="variant"/>
 
 <description>
 
@@ -1614,7 +1615,7 @@ print csys.observer()
      </param>
 </input>
 
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -1770,7 +1771,7 @@ Coordinate System.
      <value></value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -1821,7 +1822,7 @@ print csys.referencepixel('lin')
      <value></value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -1912,8 +1913,7 @@ print csys.coordinatetype()
    
 <input>
   
-	<param type="any" direction="in" name="csys">
-		<any type="record"/>
+	<param type="record" direction="in" name="csys">
      <description>Coordinate System to replace from. Use
       coordsys' torecord() to generate required record.</description>
      </param>
@@ -1958,7 +1958,7 @@ print cs1.coordinatetype()
    <method type="function" name="restfrequency">
    <shortdescription>Recover the rest frequency</shortdescription>
    
-   <returns type="any"><any type="record"/></returns>
+   <returns type="record"/>
 
 <description>
 
@@ -2192,26 +2192,22 @@ the right in parentheses).
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="refval">
-	     <any type="variant"/>
+     <param type="variant" direction="in" name="refval">
 	     <description>Reference value.  Default is no change.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="incr">
-	     <any type="variant"/>
+     <param type="variant" direction="in" name="incr">
      <description>Increment.  Default is no change.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="xform">
-	     <any type="variant"/>
+     <param type="variant" direction="in" name="xform">
      <description>Linear transform.  Default is no change.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="poles">
-	     <any type="variant"/>
+     <param type="variant" direction="in" name="poles">
      <description>Native poles.  Default is no change.</description>
      <value></value>
      </param>
@@ -2268,8 +2264,7 @@ print csys.referencevalue(format='s')
    
 <input>
   
-     <param type="any" direction="in" name="value">
-     <any type="record"/>
+     <param type="record" direction="in" name="value">
      <description>New epoch measure</description>
      </param>
 </input>
@@ -3491,7 +3486,7 @@ the simple name to a position Measure.
      <value>-1</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -3579,7 +3574,7 @@ This example uses pixel coordinates.
      <value>-1</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -3636,7 +3631,7 @@ This example uses world coordinates.
      <description>Absolute world coordinate</description>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -3739,9 +3734,7 @@ print csys.toworld([0,1,2], 'q')
      <description>Absolute world coordinates</description>
      </param>
 </input>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 
 <description>
 
@@ -3788,7 +3781,7 @@ print pabs[0][99], pabs[1][99], pabs[2][99] # 100th absolute pixel coordinate
    <method type="function" name="torecord">
    <shortdescription>Convert Coordinate System to a record</shortdescription>
    
-   <returns type="any"><any type="record"/></returns>
+   <returns type="record"/>
   
 <description>
 
@@ -3839,7 +3832,7 @@ print csys.ncoordinates(), cs2.ncoordinates()
    </input>
 
    
-   <returns type="any"><any type="record"/></returns>
+   <returns type="record"/>
   
 <description>
 
@@ -3888,7 +3881,7 @@ ia.fromshape(outfile='Eleventh_chan_template.image', shape=imshape, csys=subcoor
      <value>-1</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -3977,7 +3970,7 @@ This example uses pixel coordinates.
      <value>-1</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -4040,7 +4033,7 @@ This example uses world coordinates.
      <value>n</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="record"/>
 
 <description>
 
@@ -4140,7 +4133,7 @@ print cs.toworld([0,1,2], 'q')
      <description>Absolute pixel coordinates</description>
      </param>
 </input>
-<returns type="any"> <any type="record"/> </returns>
+<returns type="record"/>
 
 <description>
 

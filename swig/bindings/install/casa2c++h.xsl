@@ -22,10 +22,12 @@
 #include &lt;stdcasa/record.h&gt;
 #include &lt;tools/casaswig_types.h&gt;
 </xsl:text>
+<!--
 <xsl:for-each select="aps:needs">
 	<xsl:text disable-output-escaping="yes">#include &lt;casa</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">.h&gt;
 </xsl:text>
 </xsl:for-each>
+-->
 <xsl:for-each select="aps:code">
 <xsl:for-each select="aps:include">
 	<xsl:text disable-output-escaping="yes">#include &lt;</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">&gt;
@@ -410,7 +412,9 @@ namespace casac {
                   <xsl:when test="lower-case(@xsi:type)='boolean'">bool </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='float'">float </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='double'">double </xsl:when>
-                 <xsl:when test="lower-case(@xsi:type)='any'">variant </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='quantity'">Quantity </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='any'">variant* </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='variant'">variant* </xsl:when>
 
 		 <xsl:when test="lower-case(@xsi:type)='stringarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;std::string&gt; </xsl:text></xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='recordarray'">RecordVec </xsl:when>
@@ -426,7 +430,7 @@ namespace casac {
                    <xsl:choose>
                     <xsl:when test="string-length(@xsi:type)=0">void </xsl:when>
                     <xsl:otherwise>
-                                      <xsl:value-of select='@xsi:type'/><xsl:text> </xsl:text>
+                                      <xsl:value-of select='@xsi:type'/><xsl:text>* </xsl:text>
                    </xsl:otherwise>
                     </xsl:choose>
                     </xsl:otherwise>

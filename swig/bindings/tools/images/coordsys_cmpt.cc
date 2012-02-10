@@ -388,11 +388,11 @@ coordsys::convert(const std::vector<double>& coordin,
   }
 
   //
-  MDoppler::Types dopIn, dopOut;
-  if (!MDoppler::getType(dopIn, dopplerIn)) {
+  casa::MDoppler::Types dopIn, dopOut;
+  if (!casa::MDoppler::getType(dopIn, dopplerIn)) {
     *itsLog << "Illegal doppler" << LogIO::EXCEPTION;
   }
-  if (!MDoppler::getType(dopOut, dopplerOut)) {
+  if (!casa::MDoppler::getType(dopOut, dopplerOut)) {
     *itsLog << "Illegal doppler" << LogIO::EXCEPTION;
   }
   //
@@ -466,11 +466,11 @@ coordsys::convertmany(const ::casac::variant& coordin,
   }
 
   //
-  MDoppler::Types dopIn, dopOut;
-  if (!MDoppler::getType(dopIn, dopplerIn)) {
+  casa::MDoppler::Types dopIn, dopOut;
+  if (!casa::MDoppler::getType(dopIn, dopplerIn)) {
     *itsLog << "Illegal doppler" << LogIO::EXCEPTION;
   }
-  if (!MDoppler::getType(dopOut, dopplerOut)) {
+  if (!casa::MDoppler::getType(dopOut, dopplerOut)) {
     *itsLog << "Illegal doppler" << LogIO::EXCEPTION;
   }
   //
@@ -694,13 +694,13 @@ coordsys::frequencytofrequency(const std::vector<double>& value,
   Quantum<Double> velocity = casaQuantity(q_velocity);
 
   //
-  MDoppler::Types dopplerType;
-  if (!MDoppler::getType(dopplerType, doppler)) {
+  casa::MDoppler::Types dopplerType;
+  if (!casa::MDoppler::getType(dopplerType, doppler)) {
     *itsLog << LogIO::WARN << "Illegal velocity doppler, using RADIO" << LogIO::POST;
-    dopplerType = MDoppler::RADIO;
+    dopplerType = casa::MDoppler::RADIO;
   }
   //
-  MDoppler dop (velocity, dopplerType);
+  casa::MDoppler dop (velocity, dopplerType);
   Quantum<Vector<Double> > tmp(frequency, Unit(freqUnit));
   (dop.shiftFrequency(tmp).getValue()).tovector(rstat);
 
@@ -744,11 +744,11 @@ coordsys::frequencytovelocity(const std::vector<double>& value,
   }
 
   // Convert velocity type to enum
-  MDoppler::Types dopplerType;
-  if (!MDoppler::getType(dopplerType, doppler)) {
+  casa::MDoppler::Types dopplerType;
+  if (!casa::MDoppler::getType(dopplerType, doppler)) {
     *itsLog << LogIO::WARN << "Illegal velocity doppler, using RADIO"
 	    << LogIO::POST;
-    dopplerType = MDoppler::RADIO;
+    dopplerType = casa::MDoppler::RADIO;
   }
 
   // Convert to velocity
@@ -978,7 +978,7 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
   if ((coordinateType != "") && (list==true)) {
     coordinateType.upcase();
     if (coordinateType.matches(Regex("DI"),-2)) {
-      MDirection md(MDirection::J2000);
+      casa::MDirection md(casa::MDirection::J2000);
       Int nall, nex;
       const uInt *typ;
       const String *tall = md.allTypes(nall, nex, typ);
@@ -1041,8 +1041,8 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
       Coordinate::Type type = itsCoordSys->type(i);
       if (type==Coordinate::DIRECTION) {
 	const DirectionCoordinate& dc = itsCoordSys->directionCoordinate(i);
-	MDirection::Types dt = dc.directionType();
-	codes(j) = MDirection::showType (dt);
+	casa::MDirection::Types dt = dc.directionType();
+	codes(j) = casa::MDirection::showType (dt);
       } else if (type==Coordinate::SPECTRAL) {
 	const SpectralCoordinate& sc = itsCoordSys->spectralCoordinate(i);
 	MFrequency::Types ft = sc.frequencySystem();
@@ -1275,9 +1275,9 @@ coordsys::getconversiontype(const std::string& type,const bool showconversion)
     Int c = itsCoordSys->findCoordinate(Coordinate::DIRECTION, after);
     if (c >= 0) {
       const DirectionCoordinate& dCoord = itsCoordSys->directionCoordinate(c);
-      MDirection::Types type=dCoord.directionType(showconversion);
+      casa::MDirection::Types type=dCoord.directionType(showconversion);
 	//dCoord.getReferenceConversion(type);
-      return MDirection::showType(type);
+      return casa::MDirection::showType(type);
     }
   } else if (cType==Coordinate::SPECTRAL) {
     Int after = -1;
@@ -1286,8 +1286,8 @@ coordsys::getconversiontype(const std::string& type,const bool showconversion)
       const SpectralCoordinate& sCoord = itsCoordSys->spectralCoordinate(c);
       MFrequency::Types type=sCoord.frequencySystem(showconversion);
       //MEpoch epoch;
-      //MDirection direction;
-      //MPosition position;
+      //casa::MDirection direction;
+      //casa::MPosition position;
       //sCoord.getReferenceConversion(type, epoch, position, direction);
       return MFrequency::showType(type);
     }
@@ -1323,8 +1323,8 @@ coordsys::setdirection(const std::string& in_ref,
 
   String ref(in_ref);
   if (ref=="") {
-    MDirection::Types dt = oldDC.directionType();
-    ref = MDirection::showType (dt);
+    casa::MDirection::Types dt = oldDC.directionType();
+    ref = casa::MDirection::showType (dt);
   }
 
   String projName(in_projName);
@@ -1412,12 +1412,12 @@ coordsys::setdirection(const std::string& in_ref,
   // Reference Code
   String ref2 = ref;
   ref2.upcase();
-  MDirection::Types refType;
-  if (!MDirection::getType(refType, ref2)) {
+  casa::MDirection::Types refType;
+  if (!casa::MDirection::getType(refType, ref2)) {
     *itsLog << "Invalid direction code '" << ref
        << "' given. Allowed are : " << endl;
-    for (uInt i=0; i<MDirection::N_Types; i++)
-      *itsLog << "  " << MDirection::showType(i) << endl;
+    for (uInt i=0; i<casa::MDirection::N_Types; i++)
+      *itsLog << "  " << casa::MDirection::showType(i) << endl;
     *itsLog << LogIO::EXCEPTION;
   }
 
@@ -2295,11 +2295,11 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
 		<< LogIO::EXCEPTION;
       }
       //
-      MDoppler::Types dopplerType;
+      casa::MDoppler::Types dopplerType;
       if (doppler.empty()) {
 	*itsLog << "You must specify the doppler type" << LogIO::EXCEPTION;
       }
-      if (!MDoppler::getType(dopplerType, doppler)) {
+      if (!casa::MDoppler::getType(dopplerType, doppler)) {
 	*itsLog << "Invalid doppler '" << doppler << "'" << LogIO::EXCEPTION;
       }
       //
@@ -2468,7 +2468,7 @@ coordsys::settelescope(const std::string& telescope)
   obsInfo.setTelescope(telescope);
   itsCoordSys->setObsInfo(obsInfo);
   //
-  MPosition pos;
+  casa::MPosition pos;
   if (!MeasTable::Observatory(pos, telescope)) {
     *itsLog << LogIO::WARN
 	    << "This telescope is not known to the casapy system" << endl;
@@ -2570,11 +2570,11 @@ coordsys::summary(const std::string& dopplerType, const bool list)
   std::vector<std::string> rstat;
   *itsLog << LogOrigin("coordsys", "summary");
 
-  MDoppler::Types velType;
-  if (!MDoppler::getType(velType, dopplerType)) {
+  casa::MDoppler::Types velType;
+  if (!casa::MDoppler::getType(velType, dopplerType)) {
     *itsLog << LogIO::WARN << "Illegal doppler type, using RADIO"
 	    << LogIO::POST;
-    velType = MDoppler::RADIO;
+    velType = casa::MDoppler::RADIO;
   }
   //
   IPosition latticeShape, tileShape;
@@ -3265,11 +3265,11 @@ coordsys::velocitytofrequency(const std::vector<double>& value,
   }
 
   // Convert velocity type to enum
-  MDoppler::Types velType;
-  if (!MDoppler::getType(velType, dopplerType)) {
+  casa::MDoppler::Types velType;
+  if (!casa::MDoppler::getType(velType, dopplerType)) {
     *itsLog << LogIO::WARN << "Illegal velocity type, using RADIO"
 	    << LogIO::POST;
-    velType = MDoppler::RADIO;
+    velType = casa::MDoppler::RADIO;
   }
 
   // Convert to fequency
@@ -3516,15 +3516,15 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
       if (itsCoordSys->type(i) == Coordinate::LINEAR) linearCount++;       if (itsCoordSys->type(i) == Coordinate::TABULAR) tabularCount++;
     } else if (itsCoordSys->type(i) == Coordinate::DIRECTION) {
       if (!abs) {
-	*itsLog << "It is not possible to have a relative MDirection measure" << LogIO::EXCEPTION;
+	*itsLog << "It is not possible to have a relative casa::MDirection measure" << LogIO::EXCEPTION;
       }
       //AlwaysAssert(worldAxes.nelements()==2,AipsError);
       //
       if (!none) {
-	// Make an MDirection and stick in record
+	// Make an casa::MDirection and stick in record
 	Quantum<Double> t1(world2(0), units(0));
 	Quantum<Double> t2(world2(1), units(1));
-	MDirection direction(t1, t2, itsCoordSys->directionCoordinate(i).directionType());
+	casa::MDirection direction(t1, t2, itsCoordSys->directionCoordinate(i).directionType());
 	//
 	MeasureHolder h(direction);
 	Record dirRec;
@@ -3558,12 +3558,12 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	SpectralCoordinate sc(sc0);
 	// Do velocity conversions and stick in MDOppler
 	// Radio
-	sc.setVelocity (String("km/s"), MDoppler::RADIO);
+	sc.setVelocity (String("km/s"), casa::MDoppler::RADIO);
 	Quantum<Double> velocity;
 	if (!sc.frequencyToVelocity(velocity, frequency)) {
 	  *itsLog << sc.errorMessage() << LogIO::EXCEPTION;
 	} else {
-	  MDoppler v(velocity, MDoppler::RADIO);
+	  casa::MDoppler v(velocity, casa::MDoppler::RADIO);
 	  MeasureHolder h(v);
 	  if (!h.toRecord(error, specRec1)) {
 	    *itsLog << error << LogIO::EXCEPTION;
@@ -3573,11 +3573,11 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	}
 
 	// Optical
-	sc.setVelocity (String("km/s"), MDoppler::OPTICAL);
+	sc.setVelocity (String("km/s"), casa::MDoppler::OPTICAL);
 	if (!sc.frequencyToVelocity(velocity, frequency)) {
 	  *itsLog << sc.errorMessage() << LogIO::EXCEPTION;
 	} else {
-	  MDoppler v(velocity, MDoppler::OPTICAL);
+	  casa::MDoppler v(velocity, casa::MDoppler::OPTICAL);
 	  MeasureHolder h(v);
 	  if (!h.toRecord(error, specRec1)) {
 	    *itsLog << error << LogIO::EXCEPTION;
@@ -3587,11 +3587,11 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	}
 
 	// beta (relativistic/true)
-	sc.setVelocity (String("km/s"), MDoppler::BETA);
+	sc.setVelocity (String("km/s"), casa::MDoppler::BETA);
 	if (!sc.frequencyToVelocity(velocity, frequency)) {
 	  *itsLog << sc.errorMessage() << LogIO::EXCEPTION;
 	} else {
-	  MDoppler v(velocity, MDoppler::BETA);
+	  casa::MDoppler v(velocity, casa::MDoppler::BETA);
 	  MeasureHolder h(v);
 	  if (!h.toRecord(error, specRec1)) {
 	    *itsLog << error << LogIO::EXCEPTION;
@@ -3869,7 +3869,7 @@ coordsys::measuresToWorldVector (const RecordInterface& rec) const
 	*itsLog << error << LogIO::EXCEPTION;
       }
       //
-      MDirection d = h.asMDirection();
+      casa::MDirection d = h.asMDirection();
       const DirectionCoordinate dc = itsCoordSys->directionCoordinate (ic);
       Vector<String> units = dc.worldAxisUnits();
       const MVDirection mvd = d.getValue();
@@ -4074,13 +4074,13 @@ void coordsys::setDirectionCode (const String& code, Bool adjust)
   Int ic = findCoordinate (Coordinate::DIRECTION, True);
   // Convert type
   String code2 = code;
-  MDirection::Types typeTo;
+  casa::MDirection::Types typeTo;
   code2.upcase();
-  if (!MDirection::getType(typeTo, code2)) {
+  if (!casa::MDirection::getType(typeTo, code2)) {
     *itsLog << "Invalid direction code '" << code
 	    << "' given. Allowed are : " << endl;
-    for (uInt i=0; i<MDirection::N_Types; i++)
-      *itsLog << "  " << MDirection::showType(i) << endl;
+    for (uInt i=0; i<casa::MDirection::N_Types; i++)
+      *itsLog << "  " << casa::MDirection::showType(i) << endl;
     *itsLog << LogIO::EXCEPTION;
   }
 
@@ -4108,7 +4108,7 @@ void coordsys::setDirectionCode (const String& code, Bool adjust)
 				  refPixFrom(0), refPixFrom(1));
   //
   if (adjust) {
-    MDirection::Convert machine;
+    casa::MDirection::Convert machine;
     const ObsInfo& obsInfo = itsCoordSys->obsInfo();
     Bool madeMachine =
       CoordinateUtil::makeDirectionMachine(*itsLog, machine, dirCoordTo,
