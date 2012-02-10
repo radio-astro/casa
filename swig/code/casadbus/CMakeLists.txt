@@ -22,6 +22,19 @@ casa_add_dbus_interface( plotserver/PlotServerProxy.dbusproxy.h implement/plotse
 casa_add_dbus_interface( session/DBusSession.dbusproxy.h implement/session/DBusSession.dbusproxy.xml )
 casa_add_dbus_interface( viewer/ViewerProxy.dbusproxy.h implement/viewer/ViewerProxy.dbusproxy.xml )
 
+install( FILES 
+	${CMAKE_CURRENT_BINARY_DIR}/plotserver/PlotServerProxy.dbusproxy.h
+	DESTINATION include/casacode/casadbus/plotserver
+	)
+install( FILES 
+	${CMAKE_CURRENT_BINARY_DIR}/viewer/ViewerProxy.dbusproxy.h
+	DESTINATION include/casacode/casadbus/viewer
+	)
+install( FILES 
+	${CMAKE_CURRENT_BINARY_DIR}/session/DBusSession.dbusproxy.h
+	DESTINATION include/casacode/casadbus/session
+	)
+
 casa_add_library( casadbus
   implement/plotserver/PlotServerProxy.cc
   implement/session/DBusSession.cc
