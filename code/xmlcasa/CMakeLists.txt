@@ -180,6 +180,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/dbusutil.py
   scripts/dict_to_table.py
   scripts/filecatalog.py
+  scripts/flaghelper.py
   scripts/get_user.py
   scripts/importarchive.py
   scripts/listing.py
