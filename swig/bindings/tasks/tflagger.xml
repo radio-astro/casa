@@ -6,26 +6,28 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <task type="function" name="tflagger" category="editing" visibility="experimental">
-        <shortdescription> All purpose flagging task based on selections</shortdescription>
+        <shortdescription> All purpose flagging task based on selections or a list of commands</shortdescription>
         <description>
-            The task will select a subset of data explicitly
-            for flagging, quacking, clipping, autocorrelation flagging,
-            or flagging of shadowed antennas. Unflagging is also
-            available.
+            This task has two main types of operation. One type
+            will read the parameters from the interface and flag
+            using any of the various modes available. Ther other type
+            will read the commands from a list containing data selection
+            parameters and any parameter specific for the mode being 
+            requested in each line. See examples at the end of this
+            help.
+            
+            It is also possible to only save the parameters set in the
+            interface without flagging. The parameters can be saved
+            in the FLAG_CMD sub-table or in the provided ASCII file. Note that
+            when saving to an external file, the parameters will be appended to
+            the given file.
+            
+            The available flagging modes are: manual, clip, shadow, quack,
+            elevation, tfcrop, extend, unflag and summary.
 
-            In a dual polarization data set, each polarization
-            can be flagged separately. However, at present the
-            calibration and imaging will only use data with both parallel
-            hands unflagged.
-
-            There is a vector mode of operation, which
-            executes several flagging
-            options in one go.
-
-            The current flags
-            are automatically backed up before applying new flags.
-            Previous flag versions can be recovered using the
-            flagmanager task.
+            The current flags an be automatically backed up before applying new flags
+            if the parameter flagbackup is set. Previous flag versions can be recovered 
+            using the flagmanager task.
         </description>
 
         <input>
@@ -35,10 +37,11 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (manual, clip, shadow, quack, elevation, \
-tfcrop, extend, unflag, summary)</description>
+                <description>Flagging mode (list,manual,clip,shadow,quack,elevation, \
+tfcrop,extend,unflag,summary)</description>
                 <value>manual</value>
                 <allowed kind="enum">
+                    <value>list</value>
                     <value>manual</value>
                     <value>clip</value>
                     <value>shadow</value>
@@ -51,11 +54,11 @@ tfcrop, extend, unflag, summary)</description>
                 </allowed>
             </param>
 
-            <param type="bool" name="selectdata">
-                <description>Data selection parameters</description>
-                <value>True</value>
+            <param type="string" name="inpfile" subparam="true">
+                <description>Input file with list of commands to run</description>
+                <value></value>
             </param>
-
+            
             <param type="any" name="spw" subparam="true">
                 <description>spectral-window/frequency/channel</description>
                 <any type="variant" limittypes="string stringArray" />
@@ -261,42 +264,44 @@ tfcrop, extend, unflag, summary)</description>
                 <value type="bool">False</value>
             </param>
 
+            <param type="bool" name="run">
+                <description>Run and flag based on the parameters or the list given in inpfile</description>
+                <value>True</value>
+            </param>
+            <param type="bool" name="writeflags" subparam="true">
+                <description>Write Flags to the MS</description>
+                <value>True</value>
+            </param>
+            <param type="bool" name="sequential" subparam="true">
+                <description>Run the task in sequential or in parallel</description>
+                <value>False</value>
+            </param>
+            <param type="bool" name="flagbackup" subparam="true">
+                <description>Back up the state of flags before the run</description>
+                <value>False</value>
+            </param>
+
             <param type="string" name="display">
                 <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
                 <value type="string"></value>
             </param>
-
             <param type="string" name="format" subparam="true">
                 <description>Display plots on the screen or save to a file</description>
                 <value type="string">screen</value>
             </param>
 
-            <param type="bool" name="writeflags">
-                <description>Write Flags to the MS</description>
-                <value>True</value>
-            </param>
-
-            <param type="bool" name="sequential">
-                <description>Run the task in sequential or in parallel.</description>
-                <value>False</value>
-            </param>
             <param type="bool" name="savepars">
                 <description>Save the current parameters to the MS or to a file</description>
                 <value>False</value>
             </param>
             <param type="string" name="outfile" subparam="true">
-                    <description>Name of output file to save current parameters</description>
+                    <description>Name of output file to save current parameters. If empty, save to FLAG_CMD</description>
                     <value></value>
             </param>
 
-            <param type="bool" name="flagbackup">
-                <description>Automatically back up the state of flags before the run</description>
-                <value>False</value>
-            </param>
-
-            <constraints>      
-                <when param="selectdata">
-                    <equals type="bool" value="True">
+            <constraints>                    
+                <when param="mode">
+                    <equals value="manual">
                         <default param="field"><value type="string"></value></default>
                         <default param="spw"><value type="string"></value></default>
                         <default param="antenna"><value type="string"></value></default>
@@ -308,13 +313,22 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
-                        </equals>
-                    <equals type="bool" value="False"/>
-                </when>                    
-                    
-                <when param="mode">
-                    <equals value="manual" />
+                    </equals>
+                    <equals value="list">
+                        <default param="inpfile"><value type="string"></value></default>
+                    </equals>
                     <equals value="clip">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
                         <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
                         <default param="clipminmax"><value type="doubleArray"></value></default>
@@ -322,18 +336,62 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="channelavg"> <value type="bool">False</value></default>
                     </equals>
                     <equals value="quack">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
                         <default param="quackinterval"><value type="double">0.0</value></default>
                         <default param="quackmode"><value type="string">beg</value></default>
                         <default param="quackincrement"><value type="bool">False</value></default>                   
                     </equals>                    
                     <equals value="shadow">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
                         <default param="diameter"><value type="double">-1.0</value></default>
                     </equals>
                     <equals value="elevation">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
                         <default param="lowerlimit"><value type="double">0.0</value></default>
                         <default param="upperlimit"><value type="double">90.0</value></default>                    
                     </equals>
                     <equals value="tfcrop">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>
                         <default param="expression"><value type="string">ABS ALL</value></default>
@@ -348,6 +406,17 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="halfwin"><value type="int">1</value></default>                    
                     </equals>
                     <equals value="extend">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>
                         <default param="extendpols"><value type="bool">True</value></default>
@@ -357,7 +426,31 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="flagneartime"><value type="bool">False</value></default>
                         <default param="flagnearfreq"><value type="bool">False</value></default>                    
                     </equals>
+                    <equals value="unflag">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>                    
+                    </equals>
                     <equals value="summary">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
                         <default param="minrel"><value type="double">0.0</value></default>
                          <default param="maxrel"><value type="double">1.0</value></default>
                         <default param="minabs"><value type="int">0</value></default>
@@ -367,6 +460,14 @@ tfcrop, extend, unflag, summary)</description>
                     </equals>
                 </when>
 
+                <when param="run">
+                    <equals type="bool" value="True">
+                        <default param="writeflags"><value type="bool">True</value></default>
+                        <default param="sequential"><value type="bool">False</value></default>
+                        <default param="flagbackup"><value type="bool">False</value></default>
+                    </equals>
+                </when>
+                
                <when param="display">
                 <equals type="string" value="" />
                 <equals type="string" value="data" />
@@ -377,19 +478,20 @@ tfcrop, extend, unflag, summary)</description>
                         <default param="format"><value type="string">screen</value></default>
                 </equals>                    
                </when>
-                
+               
                <when param="savepars">
                 <equals type="bool" value="False" />
                  <equals type="bool" value="True">
                     <default param="outfile"><value type="string"></value></default>
                 </equals>
                </when>
-
+                
              </constraints>
         </input>
 <returns type="void"/>
 <example>
-        The task will flag a subset of data explicitly using any of the modes:
+        The task will flag a subset of data or a list of commands using any of the modes:
+            list        = list of flagging commands to apply to MS
             manual      = flagging based on specific selection parameters
             clip        = clip data according to values
             quack       = remove/keep specific time range at scan beginning/end
@@ -404,10 +506,7 @@ tfcrop, extend, unflag, summary)</description>
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
 
-        selectdata -- Select a subset of data for flagging?
-                    default: False
-                    options: True,False
-                    Any flagging will only be applied to the specified selection.
+          Any flagging will only be applied to the specified selection.
 
               antenna -- Select data based on baseline
                     default: '' (all); example: antenna='5&amp;6' baseline 5-6
@@ -455,13 +554,37 @@ tfcrop, extend, unflag, summary)</description>
                     default: '' (all); example: observation='1' or observation=1
 
         mode -- Mode of operation.
-                options: 'manual','clip','quack','shadow','elevation', 'tfcrop', 'extend',
+                options: 'list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'extend',
                          'unflag', 'summary'
                 default: 'manual'
 
+            list -- Flag according to the data selection specified in the input list.
+                  Each input line may contain data selection parameters and any parameter
+                  specific to the mode given in the line. Default values will be used for
+                  the parameters that are not present in the line. Each line will be taken 
+                  as a command to the task. If data is pre-selected using any of the selection 
+                  parameters, then flagging will apply only to that subset of the MS.
+                  
+                  The summary mode is not allowed in the input list.
+                  
+                  For optimization, the task will create a union of the data selection parameters
+                  present in the list and select only that portion of the MS.
+                  
+               inpfile -- Input ASCII file containing a list of commands to the task.
+                  default: ''
+                  Example: the following commands can be put in a file and given to the task.
+                  
+                     scan=1~3 mode=manual
+                     mode=clip clipminmax=[0,2] expression=ABS_XX clipoutside=False
+                     spw=9 mode=tfcrop expression=ABS_RR ntime=51.0,spw=9
+                     mode=extend extendpols=True
+                     
+                  See the syntax for writing flag commands at the end of this help.                  
+
+
             manual -- Flag according to the data selection specified.
-                  If data is pre-selected using selectdata=True, then flagging
-                  will apply only to that subset of the MS.
+                   If data is pre-selected using selectdata=True, then flagging
+                   will apply only to that subset of the MS.
                   
             clip -- Clip data according to values of the following subparameters.
 
@@ -700,6 +823,32 @@ tfcrop, extend, unflag, summary)</description>
                     s['total']                  : total number of data
                     s['flagged']                : amount of flagged data
         
+
+        run -- Run the task to produce flags or not. 
+               default: True
+               options: True/False
+                    When set to False, the underlying tool will not be executed and no
+                    flags will be produced. No data selection will be done either. This
+                    is useful when used together with parameter savepars to only save the
+                    current parameters (or list of parameters) to the FLAG_CMD sub-table or
+                    to an external file. 
+
+              writeflags -- Choose whether or not to write flags to the MS 
+                   default: True
+                   options: True/False
+                        The tflagger task can be run in 'writeflags=False' mode just to inspect the data,
+                        or to try different parameters and converge on a set that works for a particular
+                        dataset.
+                    Note: this parameter is disabled when mode='summary'.
+
+              sequential -- Run the task in sequential or in parallel. 
+                   default: False
+                   options: False/True
+                
+              flagbackup -- Automatically backup flags before running the tool.
+                   default: False
+                   options: True/False
+                    
  
         display -- Display data and/or end-of-MS reports at runtime.
         
@@ -722,14 +871,6 @@ tfcrop, extend, unflag, summary)</description>
                   'both' --> displays data per chunk and end-of-MS reports on the screen or saved on a file in disk.
                                  
 
-        writeflags -- Choose whether or not to write flags to the MS 
-                 default: True
-                 options: True/False
-                    The tflagger task can be run in 'writeflags=False' mode just to inspect the data,
-                    or to try different parameters and converge on a set that works for a particular
-                    dataset.
-                    Note: this parameter is disabled when mode='summary'.
-                    
         savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
                 default: False
                 options: True/False
@@ -738,15 +879,66 @@ tfcrop, extend, unflag, summary)</description>
                     default: ' '; it will save the parameters in the FLAG_CMD table of the MS.
                     example: outfile='flags.txt' will save the parameters in a text file.
                     
-        sequential -- Run the task in sequential or in parallel. Very useful for modes that
-                      take an expression parameter such as: tfcrop or clip. The different
-                      expressions can be run in parallel, one agent for each one of them.
-                default: False
-                option: False/True
-                
-        flagbackup -- Automatically backup flags?
-                default: False
-                options: True/False
+    
+   ---- EXAMPLES ----
+        
+        1) Manually flag scans 1~3 and save the parameters to the FLAG_CMD sub-table.
+        
+            tflagger('my.ms', scan='1~3, mode='manual', savepars=True)
+            
+        2) Append the parameters to a file.
+    
+            tflagger('my.ms', scan='1~3, mode='manual', savepars=True, outfile='flags.txt')
+            
+        3) Flag all commands from the list given in flags.txt.
+        
+        cat flags.txt
+        scan=1~3 mode=manual
+        spw=9 mode=tfcrop expression=ABS_RR ntime=51.0,spw=9
+        mode=extend extendpols=True
+        
+            tflagger('my.ms', mode='list')
+
+        4) Display the data and flags per-chunk and do not write flags to the MS
+        
+            tflagger('my.ms', mode='list', writeflags=False, display='data')
+            
+        5) Flag all the antennas except antenna=5
+        
+            tflagger(vis='my.ms', antenna='!5', mode='manual)
+            
+        6) Clip only the NaN in the data. An empty clipminmax will flag only NaN.
+        
+            tflagger(vis=self.vis, mode='clip')
+            
+        7) Clip only the water vapour radiometer data.
+        
+            tflagger(vis='my.ms',mode='clip',clipminmax=[0,50], expression='ABS WVR')
+            
+        8) Flag only auto-correlations.
+           
+            tflagger(vis=self.vis, mode='manual', antenna='*&amp;&amp;&amp;')
+            
+
+   ---- SYNTAX FOR COMMANDS GIVEN IN A FILE ----
+
+        Basic Syntax Rules
+        
+          Commands are strings (which may contain internal "strings") consisting of
+          KEY=VALUE pairs separated by whitespace. 
+
+          NOTE: There should be no whitespace between KEY=VALUE or within each KEY or 
+          VALUE, since the simple parser first breaks command lines on whitespace, 
+          then on "=". 
+        
+          Each key should only appear once on a given command line/string
+        
+          There is an implicit "mode" for each command, with the default
+          being 'manual' if not given.
+
+          Comment lines can start with '#' and will be ignored.
+          Parts of a command line after a '#' token are also ignored.
+
 
     
 </example>

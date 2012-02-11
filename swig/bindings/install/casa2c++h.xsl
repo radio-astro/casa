@@ -87,42 +87,66 @@ namespace casac {
 	   <xsl:for-each select="aps:value/aps:value">
 		   <xsl:choose>
 			   <xsl:when test="@name='value'">
-				   <xsl:value-of select="."/><xsl:text>),"</xsl:text>
+				   <xsl:value-of select="normalize-space(.)"/><xsl:text>),"</xsl:text>
 			   </xsl:when>
 			   <xsl:when test="@name='units'">
-				   <xsl:value-of select="."/><xsl:text>")</xsl:text>
+				   <xsl:value-of select="normalize-space(.)"/><xsl:text>")</xsl:text>
 			   </xsl:when>
 		   </xsl:choose>
 	   </xsl:for-each>
    </xsl:template>
 
+
    <xsl:template name="dovec">
 	<xsl:param name="mytype"/>
 	   <xsl:choose>
-	      <xsl:when test="aps:value/aps:value">
+		   <xsl:when test="aps:value/aps:value">
 		      <xsl:text disable-output-escaping="yes">=initialize_vector(</xsl:text>
 		      <xsl:for-each select="aps:value/aps:value">
 			 <xsl:if test="position()=1"><xsl:value-of select="last()"/>,</xsl:if>
 			 <xsl:if test="$mytype='string'">"</xsl:if>
-			 (<xsl:value-of select="$mytype"/>)<xsl:value-of select="."/>
+			 (<xsl:value-of select="$mytype"/>)<xsl:value-of select="normalize-space(.)"/>
 			 <xsl:if test="$mytype='string'">"</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
-	         </xsl:for-each>
-                 <xsl:text>)</xsl:text>
+	              </xsl:for-each>
+                      <xsl:text>)</xsl:text>
               </xsl:when>
               <xsl:otherwise>
-		      <xsl:text disable-output-escaping="yes">=std::vector&lt;</xsl:text><xsl:value-of select="$mytype"/>
+		      <xsl:text disable-output-escaping="yes">=initialize_vector(</xsl:text>
 		      <xsl:choose>
+			      <xsl:when test="aps:value != ''">
+				  <xsl:text>1, </xsl:text>
+			          <xsl:if test="$mytype='string'">"</xsl:if>
+			          <xsl:value-of select="normalize-space(aps:value)"/>
+			          <xsl:if test="$mytype='string'">"</xsl:if>
+			          <xsl:text>)</xsl:text>
+		              </xsl:when>
+		              <xsl:otherwise>
+				  <xsl:if test="$mytype='string'">1, std::string("")</xsl:if>
+		                  <xsl:text disable-output-escaping="yes">) </xsl:text>
+		              </xsl:otherwise>
+	             </xsl:choose>
+              </xsl:otherwise>
+          </xsl:choose>
+   </xsl:template>
+
+   <xsl:template name="dorec">
+	   <xsl:choose>
+	      <xsl:when test="aps:value/aps:value">
+		      <xsl:text disable-output-escaping="yes">=initialize_record("</xsl:text>
+		      <xsl:for-each select="aps:value/aps:value">
+			      <xsl:value-of select="normalize-space(.)"/> <xsl:if test="position()&lt;last()">, </xsl:if><xsl:if test="position()=last()"><xsl:text>")</xsl:text></xsl:if>
+	              </xsl:for-each>
+              </xsl:when>
+              <xsl:otherwise>
+		  <xsl:text disable-output-escaping="yes">=initialize_record("</xsl:text>
+		  <xsl:choose>
 		      <xsl:when test="aps:value != ''">
-		         <xsl:text disable-output-escaping="yes">&gt;(1, </xsl:text>
-			 <xsl:if test="$mytype='string'">"</xsl:if>
-			 <xsl:value-of select="aps:value"/>
-			 <xsl:if test="$mytype='string'">"</xsl:if>
-			 <xsl:text>)</xsl:text>
-		 </xsl:when>
-		 <xsl:otherwise>
-		         <xsl:text disable-output-escaping="yes">&gt;() </xsl:text>
-		 </xsl:otherwise>
-	 </xsl:choose>
+			 <xsl:value-of select="normalize-space(aps:value)"/> <xsl:text>")</xsl:text>
+		      </xsl:when>
+		      <xsl:otherwise>
+		         <xsl:text disable-output-escaping="yes">") </xsl:text>
+		      </xsl:otherwise>
+	          </xsl:choose>
               </xsl:otherwise>
           </xsl:choose>
    </xsl:template>
@@ -133,7 +157,7 @@ namespace casac {
 		<xsl:if test="position()=last()">
 		      <xsl:text disable-output-escaping="yes">=</xsl:text>
 	              <xsl:if test="$mytype='string'">"</xsl:if>
-	              <xsl:value-of select="."/>
+	              <xsl:value-of select="normalize-space(.)"/>
 	              <xsl:if test="$mytype='string'">"</xsl:if>
 	        </xsl:if>
 	</xsl:for-each>
@@ -197,12 +221,12 @@ namespace casac {
 		      <xsl:when test="lower-case(@xsi:type)='record'">
 			  <xsl:choose>
 			      <xsl:when test="@direction">
-				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = initialize_record("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"><xsl:call-template name="dorec"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 		              </xsl:when>
 			      <xsl:otherwise>
 				   <xsl:choose>
 			           <xsl:when test="$defdirection='in'">
-					   <xsl:text disable-output-escaping="yes"> const record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = initialize_record("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+					   <xsl:text disable-output-escaping="yes"> const record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"><xsl:call-template name="dorec"/></xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 			           </xsl:when>
 				   <xsl:otherwise>
 			         <xsl:text disable-output-escaping="yes"> record&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
@@ -330,15 +354,15 @@ namespace casac {
 <xsl:when test="lower-case(@xsi:type)='complexarray'">
 	  <xsl:choose>
 		  <xsl:when test="@direction">
-       	<xsl:if test="@direction='in' "> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+       	<xsl:if test="@direction='in' "> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&lt;double&gt; &gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 		  </xsl:when>
 		  <xsl:otherwise>
 			  <xsl:choose>
 				  <xsl:when test="$defdirection='in'">
-       	<xsl:text disable-output-escaping="yes"> const std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+       	<xsl:text disable-output-escaping="yes"> const std::vector&lt;std::complex&lt;double&gt; &gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 				  </xsl:when>
 				  <xsl:otherwise>
-       	<xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+       	<xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&lt;double&gt; &gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 				  </xsl:otherwise>
 			  </xsl:choose>
 		  </xsl:otherwise>

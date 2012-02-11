@@ -232,9 +232,7 @@ im.advisechansel(freqstart=2.00682e10, freqend=2.01982e10, freqstep=3.9e3, freqf
 
 
 </example>
-<returns type="any">
-  <any type="record"/>
-</returns>
+<returns type="record"/>
 </method>
 
 
@@ -1324,7 +1322,7 @@ is to perform this calculation and check the value obtained using
      <value>0deg</value>
      </param>
 
-     <param type="bool" direction="out" name="async">
+     <param type="bool" name="async">
      <description>Run asynchronously in the background</description>
      <value>false</value>
      </param>
@@ -2535,9 +2533,8 @@ If both the parameters, {\tt regions} and {\tt boxes} are used the a union is do
      <value></value>
      </param>
 
-     <param type="any" name="region">
+     <param type="record" name="region">
      <description>Region record usually from regionmanager</description>
-     <any type="record"/>
      <value></value>
      <choice>unset</choice>
      </param>
@@ -2653,9 +2650,8 @@ attached ms).
      <value></value>
      </param>
 
-     <param type="any" name="region">
+     <param type="record" name="region">
      <description>Region record usually from regionmanager</description>
-     <any type="record"/>
      <value></value>
      <choice>unset</choice>
      </param>

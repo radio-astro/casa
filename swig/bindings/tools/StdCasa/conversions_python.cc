@@ -1,17 +1,14 @@
-#include <xmlcasa/conversions_python.h>
-#include <xmlcasa/value_record.h>
-#include <xmlcasa/type_record.h>
-#include <xmlcasa/type_variant.h>
-#include <xmlcasa/value_variant.h>
-#include <casac/casac.h>
+#include <tools/swigconvert_python.h>
+#include <tools/casaswig_types.h>
+#include <Python.h>
 #include <string.h>
-#include <CCM_Python/BasicTypes.h>
 #if USING_NUMPY_ARRAYS
 #include <numpy/arrayobject.h>
 #endif
 #include <patchlevel.h>
 
-#include "string_conversions"
+#include <stdcasa/StdCasa/string_conversions>
+
 STRINGTOCOMPLEX_DEFINITION(casac::complex,stringtoccomplex)
 
 #if ( (PY_MAJOR_VERSION <= 1) || (PY_MINOR_VERSION <= 4) )
@@ -567,74 +564,6 @@ PyObject *convert_idl_complex_to_python_complex(const casac::complex &from) {
     return PyComplex_FromDoubles(from.re,from.im);
 }
 
-int convert_record_value_from_python_dict(PyObject *obj, void *s) {
-    ::WX::Utils::Value **to = (::WX::Utils::Value**)s;
-    if ( ! PyDict_Check(obj)) {
-	variant vobj = pyobj2variant(obj);
-	record *rec = new record();
-	(*rec).insert("*field*",vobj);
-	*to = new RecordValue(rec);
-	return 1;
-    }
-
-    MYPYSIZE pos = 0;
-    PyObject *key, *val;
-    record *rec = new record();
-    while ( PyDict_Next(obj, &pos, &key, &val) ) {
-	const char *str = 0;
-	PyObject *strobj = 0;
-	if (PyString_Check(key)) {
-	    str = PyString_AsString(key);
-	} else {
-	    strobj = PyObject_Str(key);
-	    str = PyString_AsString(strobj);
-	}
-	(*rec).insert(str,pyobj2variant(val));
-	Py_XDECREF(strobj);
-    }
-
-    *to = new RecordValue(rec);
-
-    return 1;
-}
-
-int convert_variant_value_from_python_obj(PyObject *obj, void *s) {
-    ::WX::Utils::Value **to = (::WX::Utils::Value**)s;
-    int result = 1;
-    try {
-	variant vobj = pyobj2variant(obj,true);
-	*to = new VariantValue(new variant(vobj));
-    } catch (std::string err) {
-	PyErr_SetString( PyExc_StandardError, err.c_str( ) );
-	result = 0;
-    }
-    return result;
-}
-
-PyObject *convert_variant_value_to_python_obj( WX::Utils::SmartPtr<WX::Utils::Value> ptr ) {
-
-    WX::Utils::Value *val = ptr.ptr();
-
-    if ( ! val || val->type() != VariantType::instance() ) {
-        Py_INCREF( Py_None );
-	return Py_None;
-    }
-
-    VariantValue *vval = dynamic_cast<VariantValue*>( val );
-    if ( ! vval ) {
-        Py_INCREF( Py_None );
-	return Py_None;
-    }
-
-    variant *varptr = vval->value();
-    if ( ! varptr ) {
-        Py_INCREF( Py_None );
-	return Py_None;
-    }
-
-    return variant2pyobj( *varptr );
-}
-
 #define RECORD2PYDICT													\
     for ( record::const_iterator iter = rec.begin(); iter != rec.end(); ++iter ) {					\
 	const std::string &key = (*iter).first;										\
@@ -651,28 +580,6 @@ PyObject *record2pydict(const record &rec) {
     RECORD2PYDICT
 }
 
-
-PyObject *convert_record_value_to_python_dict( WX::Utils::SmartPtr<WX::Utils::Value> ptr ) {
-
-    PyObject *result = PyDict_New();
-
-    WX::Utils::Value *val = ptr.ptr();
-
-    if ( ! val || val->type() != RecordType::instance() )
-	return result;
-
-    RecordValue *rval = dynamic_cast<RecordValue*>( val );
-    if ( ! rval )
-	return result;
-
-    record *recptr = rval->value();
-    if ( ! recptr )
-	return result;
-
-    record &rec = *recptr;
-
-    RECORD2PYDICT
-}
 
 
 #define PLACEIT(VARIANT,INDEX)							\
@@ -775,14 +682,6 @@ PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> 
     }												\
     delete dim;											\
     return ary;											\
-}												\
-												\
-inline PyObject *map_array( const std::vector<TYPE> &vec, const std::vector<int> &shape ) {	\
-    return map_array_numpy(vec, shape);								\
-}												\
-												\
-inline PyObject *map_vector( const std::vector<TYPE> &vec ) {					\
-    return map_vector_numpy( vec );								\
 }
 
 MAP_ARRAY_NUMPY(int, npy_int32, NPY_INT,*to = (npy_int32) *from)
@@ -791,7 +690,7 @@ MAP_ARRAY_NUMPY(std::complex<double>, npy_cdouble, NPY_CDOUBLE,(*to).real = (*fr
 MAP_ARRAY_NUMPY(casac::complex, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).re; (*to).imag = (*from).im)
 MAP_ARRAY_NUMPY(bool, npy_bool, NPY_BOOL,*to = (npy_bool) *from)
 
-static PyObject *map_vector_numpy( const std::vector<std::string> &vec ) {
+PyObject *map_vector_numpy( const std::vector<std::string> &vec ) {
     initialize_numpy( );
     unsigned int size = 0;
     for ( std::vector<std::string>::const_iterator iter = vec.begin(); iter != vec.end(); ++iter ) {
@@ -830,14 +729,6 @@ PyObject *map_array_numpy( const std::vector<std::string> &vec, const std::vecto
     }
     delete dim;
     return ary;
-}
-
-inline PyObject *map_vector( const std::vector<std::string> &vec ) {
-    return map_vector_numpy(vec);
-}
-
-inline PyObject *map_array( const std::vector<std::string> &vec, const std::vector<int> &shape ) {
-    return map_array_numpy(vec, shape);
 }
 
 #define HANDLE_NUMPY_ARRAY_CASE(NPYTYPE,CVTTYPE)				\
@@ -1151,7 +1042,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 	}										\
     }
 
-static void pyobj2variant(PyObject *obj, variant &result) {
+void pyobj2variant(PyObject *obj, variant &result) {
     PYOBJ2VARIANT(result.push,,false)
 }
 
@@ -1318,7 +1209,7 @@ static int python_ ## ARY ## Ary_check_pylist(PyObject *obj) {				\
 	} else if (PyTuple_Check(obj)) {						\
 	    if (! python_ ## ARY ## Ary_check_pytuple(t))				\
 		return 0;								\
-	} else if ( ! is_python_boolean(t)) {						\
+	} else if ( ! PyBool_Check(t)) {						\
 		return 0;								\
 	}										\
     }											\
@@ -1334,7 +1225,7 @@ static int python_ ## ARY ## Ary_check_pytuple(PyObject *obj) {				\
 	} else if (PyTuple_Check(obj)) {						\
 	    if (! python_ ## ARY ## Ary_check_pytuple(t))				\
 		return 0;								\
-	} else if ( ! is_python_boolean(t)) {						\
+	} else if ( ! PyBool_Check(t)) {						\
 		return 0;								\
 	}										\
     }											\
@@ -1381,13 +1272,8 @@ int convert_idl_ ## ARY ## Ary_from_python_ ## ARY ## Ary(PyObject *obj, void *s
 ARYSTRUCT_CONVERT(Bool)
 ARYSTRUCT_CONVERT(Int)
 ARYSTRUCT_CONVERT(Double)
-ARYSTRUCT_CONVERT(Complex)
+//ARYSTRUCT_CONVERT(Complex)
 ARYSTRUCT_CONVERT(String)
-
-WX::Utils::Value *initialize_python_record( ) { return new RecordValue( ); }
-WX::Utils::Value *initialize_python_record( const std::string & ) { return new RecordValue( ); }
-WX::Utils::Value *initialize_python_variant( ) { return new VariantValue( ); }
-WX::Utils::Value *initialize_python_variant( const std::string &) { return new VariantValue( ); }
 
 int is_intvec_compatible_numpy_array( PyObject *obj ) {
     if ( pyarray_check(obj) &&
@@ -1404,7 +1290,7 @@ int is_intvec_compatible_numpy_array( PyObject *obj ) {
 
 int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s ) {
     if ( is_intvec_compatible_numpy_array(obj) ) {
-	std::vector<int> *to = (vector<int>*) s;
+	std::vector<int> *to = (std::vector<int>*) s;
 	std::vector<int> shape;
 	numpy2vector(obj,*to, shape);
 	return 1;

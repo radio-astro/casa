@@ -1,6 +1,7 @@
 import shutil
 import unittest
 import os
+import filecmp
 from tasks import *
 from taskinit import *
 
@@ -17,6 +18,24 @@ def test_eq(result, total, flagged):
     assert result['flagged'] == flagged, \
            "%s flags set; %s expected" % (result['flagged'], flagged)
 
+def create_input(str_text):
+    '''Save the string in a text file'''
+    
+    inp = 'tflagcmd.txt'
+    cmd = str_text
+    
+    # remove file first
+    if os.path.exists(inp):
+        os.system('rm -f '+ inp)
+        
+    # save it in a file    
+    with open(inp, 'w') as f:
+        f.write(cmd)
+        
+    f.close()
+    
+    # return the name of the file
+    return inp
 
 # Base class which defines setUp functions
 # for importing different data sets
@@ -342,6 +361,19 @@ class test_msselection(test_base):
         assert "9&&11" not in baselines
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
+        
+    def test_autocorr(self):
+        '''tflagger: flag only auto-correlations'''
+        tflagger(vis=self.vis, mode='manual', antenna='5&&&')
+        s = tflagger(vis = self.vis, mode="summary")['baseline']
+        assert s['5&&5']['flagged'] == 7560
+        assert s['1&&5']['flagged'] == 0
+        assert s['2&&5']['flagged'] == 0
+        assert s['5&&10']['flagged'] == 0
+        assert s['5&&11']['flagged'] == 0
+
+        s = tflagger(vis = self.vis, mode="summary")
+        self.assertEqual(s['flagged'], 7560)
 
 #class test_autoflag(test_base):
 #
@@ -695,6 +727,72 @@ class test_elevation(test_base):
 
         test_eq(tflagger(vis=self.vis, mode='summary'), self.all, self.all - (self.x60 - self.x55))
 
+
+class test_list(test_base):
+    """Test of mode = 'list'"""
+    
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_list1(self):
+        '''tflagger: apply flags from a list and do not save'''
+        # creat input list
+        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        filename = create_input(input)
+        
+        # apply and don't save to MS
+        tflagger(vis=self.vis, mode='list', inpfile=filename, savepars=False, run=True)
+        res = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['4']['flagged'], 0)
+        self.assertEqual(res['flagged'], 1711206, 'Total flagged does not match')
+        
+    def test_list2(self):
+        '''tflagger: only save parameters without running the tool'''
+        # creat input list
+        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        filename = create_input(input)
+
+        # save to another file
+        if os.path.exists("myflags.txt"):
+            os.system('rm -rf myflags.txt')
+        tflagger(vis=self.vis, mode='list', inpfile=filename, savepars=True, run=False, outfile='myflags.txt')
+        self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
+        
+        res = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 0, 'No flags should have been applied')
+        
+
+    def test_list3(self):
+        '''tflagger: flag and save list to FLAG_CMD'''
+        # creat input list
+        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        filename = create_input(input)
+
+        # Delete any rows from FLAG_CMD
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        # Flag from list and save to FLAG_CMD
+        tflagger(vis=self.vis, mode='list', inpfile=filename, savepars=True)
+        
+        # Verify
+        if os.path.exists("myflags.txt"):
+            os.system('rm -rf myflags.txt')
+        tflagcmd(vis=self.vis, action='list', savepars=True, outfile='myflags.txt', useapplied=True)
+        self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
+        
+    def test_list4(self):
+        '''tflagger: save without running and apply in tflagcmd'''
+        # Delete any rows from FLAG_CMD
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        tflagger(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, run=False, 
+                 savepars=True)
+        
+        tflagcmd(vis=self.vis, action='apply')
+        res = tflagger(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2524284)
+
+
 # Dummy class which cleans up created files
 class cleanup(test_base):
     
@@ -722,4 +820,5 @@ def suite():
             test_statistics_queries,
             test_msselection,
             test_elevation,
+            test_list,
             cleanup]

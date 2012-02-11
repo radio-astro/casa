@@ -471,7 +471,7 @@ for the manual mode.
      <param type="doubleArray" name="clipminmax">
      <description>\tRange to use for clipping. Example: [100.0,200.0] 
      </description>
-     <value type="vector"> </value>
+     <value type="vector"></value>
      </param>
      
      <param type="bool" name="clipoutside">

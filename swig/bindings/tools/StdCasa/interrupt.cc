@@ -1,6 +1,6 @@
 #include <dlfcn.h>
 #include <Python.h>
-#include <xmlcasa/interrupt.h>
+#include <tools/interrupt.h>
 
 static bool interrupt_initialized = false;
 static void (*interrupt_init_p)(bool) = 0;

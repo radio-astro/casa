@@ -286,7 +286,7 @@ We have many vp/pb models ready to go for a variety of telescopes.  If 'DEFAULT'
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
  
@@ -376,7 +376,7 @@ x = \frac{i * maxrad * 7.016 * dishdiam/24.5m}{N_{samples} * 1.566 * 60}.
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
  
@@ -462,7 +462,7 @@ This is a generalization of the WSRT primary beam model.
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
  
@@ -543,7 +543,7 @@ PB(x) =  e^{- (x/(halfwidth*\sqrt{1/\log(2)})) }.
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
  
@@ -624,7 +624,7 @@ as a polynomial of even powers:
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
  
@@ -702,7 +702,7 @@ x=maxrad.  We perform sinc interpolation to fill in the lookup table.
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">>itemcontainer</returns>
 </method>
 
  
@@ -767,7 +767,7 @@ from Az-El to Ra-Dec according to the parallactic angle.
      </param>
 
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
  
@@ -847,7 +847,7 @@ VP(x) = \sum_{i} coeff_{i} * x^{2i}.
      <value>false</value>
      </param>
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
    <method type="function" name="setpbantresptable">
@@ -1063,7 +1063,7 @@ Record is empty if no matching vp/pb could be found.
      </param>
 
 </input>
-<returns type="any"><any type="record"/>itemcontainer</returns>
+<returns type="record">itemcontainer</returns>
 </method>
 
 

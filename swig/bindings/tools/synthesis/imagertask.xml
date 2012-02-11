@@ -118,14 +118,18 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     <param type="intArray" name="imsize">
     <description>The size of the output image (pixels). </description>
+    <value>
     <value>128</value>
     <value>128</value>
+    </value>
     </param>
 
     <param type="intArray" name="cell">
     <description>The image cell size (arcseconds). </description>
+    <value>
     <value>1</value>
     <value>1</value>
+    </value>
     </param>
 
     <param type="string" name="stokes">
@@ -275,14 +279,18 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     <param type="intArray" name="imsize">
     <description>The size of the output image (pixels). </description>
+    <value>
     <value>128</value>
     <value>128</value>
+    </value>
     </param>
 
     <param type="intArray" name="cell">
     <description>The image cell size (arcseconds). </description>
+    <value>
     <value>1</value>
     <value>1</value>
+    </value>
     </param>
 
     <param type="string" name="stokes">
@@ -424,14 +432,18 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     <param type="intArray" name="imsize">
     <description>The size of the output image (pixels). </description>
+    <value>
     <value>128</value>
     <value>128</value>
+    </value>
     </param>
 
     <param type="intArray" name="cell">
     <description>The image cell size (arcseconds). </description>
+    <value>
     <value>1</value>
     <value>1</value>
+    </value>
     </param>
 
     <param type="string" name="stokes">

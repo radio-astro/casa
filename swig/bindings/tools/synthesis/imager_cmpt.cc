@@ -73,7 +73,7 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
    Bool rstat(False);
    if(hasValidMS_p){
       try {
-         MDirection mphaseCenter;
+	      casa::MDirection mphaseCenter;
       // mdFromString(mphaseCenter, phasecenter);
          casa::Quantity qcell;
          casa::Quantity qfieldofview(casaQuantity(fieldofview));
@@ -739,7 +739,7 @@ imager::pb(const std::string& inimage, const std::string& outimage,
   Bool rstat(False);
   if(hasValidMS_p){
     try{
-      MDirection mpointingcenter;
+	    casa::MDirection mpointingcenter;
       mdFromString(mpointingcenter, pointingcenter);
       rstat = itsImager->pb(inimage, outimage, incomps, outcomps, operation,
                             mpointingcenter, casaQuantity(parangle), pborvp);
@@ -1572,7 +1572,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
    Bool rstat(False);
    if(hasValidMS_p){
       try {
-          MPosition mlocation;
+	      casa::MPosition mlocation;
 	  if ((String(location.toString()) != casa::String("")) && 
 	      (String(location.toString()) != casa::String("[]")) ){
 	    casaMPosition(location, mlocation);
@@ -1816,12 +1816,12 @@ bool imager::mdFromString(casa::MDirection &theDir, const casa::String &in)
    casa::Quantity::read(tmpQA, tmpA);
    casa::Quantity::read(tmpQB, tmpB);
    if(tmpC.length() > 0){
-      MDirection::Types theRF;
-      MDirection::getType(theRF, tmpC);
-      theDir = MDirection (tmpQA, tmpQB, theRF);
+	   casa::MDirection::Types theRF;
+	   casa::MDirection::getType(theRF, tmpC);
+      theDir = casa::MDirection (tmpQA, tmpQB, theRF);
       rstat = true;
    } else {
-      theDir = MDirection (tmpQA, tmpQB);
+      theDir = casa::MDirection (tmpQA, tmpQB);
       rstat = true;
    }
    return rstat;
@@ -1839,22 +1839,22 @@ bool imager::mrvFromString(casa::MRadialVelocity &theRadialVelocity,
    if(tmpQ.getUnit().length() == 0){
       tmpQ.setUnit(Unit(tmpB));
       if(tmpC.length() > 0){
-         MRadialVelocity::Types theRF;
-         MRadialVelocity::getType(theRF, String(tmpC));
-         theRadialVelocity = MRadialVelocity(tmpQ, theRF);
+	      casa::MRadialVelocity::Types theRF;
+	      casa::MRadialVelocity::getType(theRF, String(tmpC));
+         theRadialVelocity = casa::MRadialVelocity(tmpQ, theRF);
          rstat = true;
       } else {
-         theRadialVelocity = MRadialVelocity(tmpQ);
+         theRadialVelocity = casa::MRadialVelocity(tmpQ);
          rstat = true;
       }
    }else{
       if(tmpB.length() > 0){
-         MRadialVelocity::Types theRF;
-         MRadialVelocity::getType(theRF, String(tmpB));
-         theRadialVelocity = MRadialVelocity(tmpQ, theRF);
+	      casa::MRadialVelocity::Types theRF;
+	      casa::MRadialVelocity::getType(theRF, String(tmpB));
+         theRadialVelocity = casa::MRadialVelocity(tmpQ, theRF);
          rstat = true;
       } else {
-         theRadialVelocity = MRadialVelocity(tmpQ);
+         theRadialVelocity = casa::MRadialVelocity(tmpQ);
          rstat = true;
       }
    }

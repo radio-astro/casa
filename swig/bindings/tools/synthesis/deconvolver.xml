@@ -347,9 +347,8 @@ If both the parameters, {\tt regions} and {\tt boxes} are used the a union is do
      <value></value>
      </param>
 
-     <param type="any" name="region">
+     <param type="record" name="region">
      <description>Region record usually from regionmanager</description>
-     <any type="record"/>
      <value></value>
      <choice>unset</choice>
      </param>

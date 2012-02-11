@@ -2,7 +2,7 @@
 #define _casac_conversions_python_h__
 #include <Python.h>
 //#include <complexobject.h>
-#include <xmlcasa/record.h>
+#include <stdcasa/record.h>
 //#include <casac/BoolAry.h>
 //#include <casac/IntAry.h>
 //#include <casac/DoubleAry.h>
@@ -55,7 +55,7 @@ int convert_variant_value_from_python_obj(PyObject *obj, void *s);
 int is_intvec_compatible_numpy_array( PyObject *obj );
 int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s );
 
-#define MAP_ARRAY(TYPE) \
+#define AMAP_ARRAY(TYPE) \
 PyObject *map_array_numpy(const std::vector<TYPE> &vec, const std::vector<int> &shape);         \
 PyObject *map_vector_numpy(const std::vector<TYPE> &vec);                                       \
 inline PyObject *map_array( const std::vector<TYPE> &vec, const std::vector<int> &shape ) {     \
@@ -66,11 +66,11 @@ inline PyObject *map_vector( const std::vector<TYPE> &vec ) {                   
                              return map_vector_numpy( vec );                                    \
 }
 
-MAP_ARRAY(std::string)
-MAP_ARRAY(bool)
-MAP_ARRAY(int)
-MAP_ARRAY(double)
-//MAP_ARRAY(casac::complex)
-MAP_ARRAY(std::complex<double>)
+AMAP_ARRAY(std::string)
+AMAP_ARRAY(bool)
+AMAP_ARRAY(int)
+AMAP_ARRAY(double)
+//AMAP_ARRAY(casac::complex)
+AMAP_ARRAY(std::complex<double>)
 	}
 #endif

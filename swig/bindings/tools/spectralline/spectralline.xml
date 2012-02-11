@@ -88,7 +88,7 @@ splattotable does this conversion.
             <value/>
         </param>
     </input>
-    <returns type="casaspectralline"/>
+    <returns type="spectralline"/>
     <description>
     This method reads a spectral line list(s) downloaded from Splatalogue (www.splatalogue.net) and loads it into a CASA table which
     can be queried via eg this tool's search function.
@@ -249,7 +249,7 @@ newsl.search([0,1000])
             <value>false</value>
         </param>
     </input>
-    <returns type="casaspectralline"/>
+    <returns type="spectralline"/>
     <description>
     Search the table associated with this tool. The return value is a spectralline tool with a new table containing the search
     results. This new table can be written to disk by specifying its name in the outfile parameter. If outfile is not specified
@@ -289,9 +289,7 @@ newsl.search([0,1000])
     <description>
         Return data on the spectral lines in the table as a record.
     </description>
-    <returns type="any">
-        <any type="record"/>
-    </returns>
+    <returns type="record"/>
 </method>
 
 
@@ -314,9 +312,7 @@ newsl.search([0,1000])
             <value>false</value>
         </param>
     </input>
-    <returns type="any">
-        <any type="record"/>
-    </returns>
+    <returns type="record"/>
 </method>
 
 <method type="function" name="chemnames">
@@ -338,9 +334,7 @@ newsl.search([0,1000])
             <value>false</value>
         </param>
     </input>
-    <returns type="any">
-        <any type="record"/>
-    </returns>
+    <returns type="record"/>
 </method>
 
 <method type="function" name="nrows">

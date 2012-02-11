@@ -109,7 +109,7 @@ fitted in a least squares fit (see the fitting \tool\ ).
 <description>
 Create a {\tt functional} tool.
 </description>
-<returns type="casafunctional">functional tool or fail</returns>
+<returns type="functional">functional tool or fail</returns>
 <description>
 Create a functionalserver \tool on the specified host (or by default the
 host you are running on). 
@@ -148,7 +148,7 @@ host you are running on).
      </value>
      </param>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Define the named functional. If an order is specified it is used,
@@ -380,7 +380,7 @@ T
    </shortdescription>
 
 <input>
-     <param type="casafunctional" direction="in" name="x">
+     <param type="functional" direction="in" name="x">
      <description>functional to be added</description>
       </param>
 </input>
@@ -516,8 +516,7 @@ Return the order of the functional when relevant (e.g. of polynomial).
    
 <input> 
 </input>   
-<returns type="any">
-  <any type="record"/>
+<returns type="record">
   state record
 </returns>     
 <description>      
@@ -549,7 +548,7 @@ T
    <shortdescription>Copy from the given functional.</shortdescription>
 
 <input>
-     <param type="casafunctional" direction="in" name="funcin">
+     <param type="functional" direction="in" name="funcin">
      <description>The functional to copy from</description>
      </param>
 </input>
@@ -854,8 +853,7 @@ F
    <shortdescription>Create a 1D Gaussian function</shortdescription>
 
 <input>
-     <param type="any" direction="in" name="height">
-     <any type="record"/>
+     <param type="record" direction="in" name="height">
      <value>
            <value name="amp" type="double">1.0</value>
      </value>
@@ -872,7 +870,7 @@ F
      <value>1</value>
      </param>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Create a 1-dimensional Gaussian with the specified height, width and
@@ -911,7 +909,7 @@ value and the derivatives with respect to the parameters.
      <value>-1</value>
      </param>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Create a 2-dimensional Gaussian with the specified height, width and
@@ -952,7 +950,7 @@ value and the derivatives with respect to the parameters.
      <value>-1</value>
      </param>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Create a polynomial of specified degree. The default parameters are
@@ -991,7 +989,7 @@ polynomial
      <value>-1</value>
      </param>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Create an odd polynomial of specified degree. The default parameters are
@@ -1029,7 +1027,7 @@ parameters are all set to zero).
      <value>-1</value>
      </param>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Create an even polynomial of specified degree. The default parameters are
@@ -1099,7 +1097,7 @@ outside of the interval of interest when ooimode='constant'</description>
      <value>0</value>
      </param>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 This function creates a functional representing a Chebyshev series, a
@@ -1272,7 +1270,7 @@ bandpass</shortdescription>
      <value>1.0</value>
      </param> 
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 
 <description>
 This function creates a functional that simulates the (amplitude)
@@ -1343,7 +1341,7 @@ To plot this function...
    
 <input>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Create a function consisting of a combination of one or more
@@ -1386,7 +1384,7 @@ T
    
 <input>
 </input>
-<returns type="casafunctional">Functional</returns>
+<returns type="functional">Functional</returns>
 <description>
 
 Create a function consisting of a combination of one or more
@@ -1444,7 +1442,7 @@ T
      <value>-1</value>
      </param>
 </input>
-<returns type="casafunctional">Functional or fail</returns>
+<returns type="functional">Functional or fail</returns>
 <description>
 
 Create a function based on the programable string. The string should
@@ -1519,8 +1517,7 @@ No closing function paranethesis at:
    
 <input>
 </input>
-<returns type="any">
-<any type="record"/>
+<returns type="record">
 </returns>
 <description>The unique object id for the functional will returned. Its use 
              is meant for the toolmanager.

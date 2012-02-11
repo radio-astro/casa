@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <stdcasa/Quantity.h>
+#include <stdcasa/record.h>
+#include <stdcasa/variant.h>
 #define USING_NUMPY_ARRAYS 1
 
 namespace casac {

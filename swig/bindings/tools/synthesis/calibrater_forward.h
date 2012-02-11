@@ -1,6 +1,6 @@
 // Include file for forward declarations
 
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
 
 namespace casa
