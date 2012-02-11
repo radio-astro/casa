@@ -100,29 +100,33 @@ namespace casac {
    <xsl:template name="dovec">
 	<xsl:param name="mytype"/>
 	   <xsl:choose>
+		   <!-- need to fix this so it will at least assign one element properly -->
+		   <xsl:when test="$mytype='string'">
+		                  <xsl:text disable-output-escaping="yes">=std::vector&lt;string&gt;(1, "")</xsl:text>
+		   </xsl:when>
 		   <xsl:when test="aps:value/aps:value">
 		      <xsl:text disable-output-escaping="yes">=initialize_vector(</xsl:text>
 		      <xsl:for-each select="aps:value/aps:value">
 			 <xsl:if test="position()=1"><xsl:value-of select="last()"/>,</xsl:if>
-			 <xsl:if test="$mytype='string'">"</xsl:if>
-			 (<xsl:value-of select="$mytype"/>)<xsl:value-of select="normalize-space(.)"/>
-			 <xsl:if test="$mytype='string'">"</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+			 <xsl:if test="$mytype!='string'">(<xsl:value-of select="$mytype"/>)</xsl:if><xsl:if test="$mytype='string'">string("</xsl:if>
+                         <xsl:value-of select="normalize-space(.)"/>
+			 <xsl:if test="$mytype='string'">")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 	              </xsl:for-each>
                       <xsl:text>)</xsl:text>
               </xsl:when>
               <xsl:otherwise>
-		      <xsl:text disable-output-escaping="yes">=initialize_vector(</xsl:text>
 		      <xsl:choose>
 			      <xsl:when test="aps:value != ''">
+		                  <xsl:text disable-output-escaping="yes">=initialize_vector(</xsl:text>
 				  <xsl:text>1, </xsl:text>
-			          <xsl:if test="$mytype='string'">"</xsl:if>
-			          <xsl:value-of select="normalize-space(aps:value)"/>
-			          <xsl:if test="$mytype='string'">"</xsl:if>
+			          <xsl:if test="$mytype='string'">string("</xsl:if>(<xsl:value-of select="$mytype"/>)<xsl:value-of select="normalize-space(aps:value)"/>
+			          <xsl:if test="$mytype='string'">")</xsl:if>
 			          <xsl:text>)</xsl:text>
 		              </xsl:when>
 		              <xsl:otherwise>
-				  <xsl:if test="$mytype='string'">1, std::string("")</xsl:if>
-		                  <xsl:text disable-output-escaping="yes">) </xsl:text>
+		                  <xsl:text disable-output-escaping="yes">=std::vector&lt;</xsl:text>
+				  <xsl:value-of select="$mytype"/>
+		                  <xsl:text disable-output-escaping="yes">&gt;() </xsl:text>
 		              </xsl:otherwise>
 	             </xsl:choose>
               </xsl:otherwise>
@@ -354,15 +358,15 @@ namespace casac {
 <xsl:when test="lower-case(@xsi:type)='complexarray'">
 	  <xsl:choose>
 		  <xsl:when test="@direction">
-       	<xsl:if test="@direction='in' "> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&lt;double&gt; &gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+       	<xsl:if test="@direction='in' "> const </xsl:if><xsl:text disable-output-escaping="yes"> std::vector&lt;casac::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 		  </xsl:when>
 		  <xsl:otherwise>
 			  <xsl:choose>
 				  <xsl:when test="$defdirection='in'">
-       	<xsl:text disable-output-escaping="yes"> const std::vector&lt;std::complex&lt;double&gt; &gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+       	<xsl:text disable-output-escaping="yes"> const std::vector&lt;casac::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 				  </xsl:when>
 				  <xsl:otherwise>
-       	<xsl:text disable-output-escaping="yes"> std::vector&lt;std::complex&lt;double&gt; &gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+       	<xsl:text disable-output-escaping="yes"> std::vector&lt;casac::complex&gt;&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 				  </xsl:otherwise>
 			  </xsl:choose>
 		  </xsl:otherwise>
@@ -444,7 +448,7 @@ namespace casac {
 			 <xsl:when test="lower-case(@xsi:type)='boolarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;bool&gt; </xsl:text> </xsl:when>
 				 <xsl:when test="lower-case(@xsi:type)='floatarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;float&gt;</xsl:text> </xsl:when>
 					 <xsl:when test="lower-case(@xsi:type)='doublearray'"><xsl:text disable-output-escaping="yes">std::vector&lt;double&gt;</xsl:text> </xsl:when>
-						 <xsl:when test="lower-case(@xsi:type)='complexarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;std::complex&gt;</xsl:text> </xsl:when>
+						 <xsl:when test="lower-case(@xsi:type)='complexarray'"><xsl:text disable-output-escaping="yes">std::vector&lt;casac::complex&gt;</xsl:text> </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='record'">record* </xsl:when>
                  <xsl:when test="lower-case(@xsi:type)='void'">void </xsl:when>
                   <xsl:when test="@xsi:type=''">void </xsl:when>

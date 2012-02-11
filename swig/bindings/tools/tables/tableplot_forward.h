@@ -4,9 +4,9 @@
 #include <tables/Tables/Table.h>
 #include <Python.h>
 
-#include <tableplot/TablePlot/TablePlot.h>
-#include <tableplot/TablePlot/PanelParams.h>
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <tools/tables/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/PanelParams.h>
+#include <flagging/Flagging/FlagVersion.h>
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
 #include <tables/Tables/Table.h>

@@ -1,5 +1,5 @@
-#include <xmlcasa/xerces/asdmCasaSaxHandler.h>
-#include <xmlcasa/xerces/asdmCasaXMLUtil.h>
+#include <tools/xerces/asdmCasaSaxHandler.h>
+#include <tools/xerces/asdmCasaXMLUtil.h>
 #include <xercesc/sax2/SAX2XMLReader.hpp>
 #include <xercesc/sax2/XMLReaderFactory.hpp>
 #include <xercesc/sax2/DefaultHandler.hpp>

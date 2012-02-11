@@ -70,9 +70,8 @@ specify another sort algorithm. 'n' is no sort, 'q' is quicksort,
 </description>
 <input>
 
-     <param type="any" direction="in" name="tab">
+     <param type="record" direction="in" name="tab">
      <description>table to be iterated, expects table tool</description>
-     <any type="record"/>
      </param>
 
      <param type="stringArray" direction="in" name="columns">
@@ -100,10 +99,9 @@ specify another sort algorithm. 'n' is no sort, 'q' is quicksort,
 Return a \texttt{table} tool for the current subset.
 \\Note that \texttt{next} has to be called to form the first subset.
 </description>
-<returns type="any">
+<returns type="record">
 <shortdescription>table tool|Bool
 </shortdescription>
-<any type="record"/>
 </returns>
 </method>
 

@@ -43,9 +43,8 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
   <input>
 
-    <param type="any" name="input">
+    <param type="record" name="input">
 	    <description>The input record to verify</description>
-	    <any type="record"/>
 	    <value></value>
     </param>
 
@@ -78,10 +77,9 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <method type="function" name="verifyparam">
 	<shortdescription>Verifies an individual parameter against a prespecified constraints record</shortdescription>
 	<input>
-    <param type="any" name="param">
+    <param type="record" name="param">
 	    <description>Parameter name:value pair to verify</description>
 	    <value></value>
-	    <any type="record"/>
     </param>
 	</input>
   <returns type="bool"/>
@@ -116,9 +114,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
   </input>
 
-  <returns type="any">
-	  <any type="record"/>
-  </returns>
+  <returns type="record"/>
 
   <example></example>
 
@@ -132,9 +128,8 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
   <input>
 
-    <param type="any" name="input">
+    <param type="record" name="input">
 	    <description>name of thing to viewe</description>
-	    <any type="record"/>
 	    <value></value>
     </param>
 
@@ -193,9 +188,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
       <value></value>
     </param>
   </input>
-  <returns type="any">
-    <any type="record" />
-  </returns>
+  <returns type="record"/>
   <example></example>
 </method>
 
@@ -216,9 +209,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
   <input></input>
 
-  <returns type="any">
-	  <any type="record"/>
-  </returns>
+  <returns type="record"/>
   <example></example>
 
 </method>

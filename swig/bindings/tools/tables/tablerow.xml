@@ -46,9 +46,8 @@ visrow.close();
    
 <input>
 
-     <param type="any" direction="in" name="tab">
+     <param type="record" direction="in" name="tab">
      <description>table to be accessed, expects table tool</description>
-     <any type="record"/>
      </param>
 
      <param type="stringArray" direction="in" name="columns">
@@ -62,9 +61,7 @@ visrow.close();
      <choice>F</choice>
      </param>
 </input>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 </method>
 
  
@@ -76,9 +73,8 @@ Reset the \texttt{tablerow} tool to use the given table and columns.
 </description>
 <input>
 
-     <param type="any" direction="in" name="tab">
+     <param type="record" direction="in" name="tab">
      <description>table to be accessed, expects a table tool</description>
-     <any type="record"/>
      </param>
 
      <param type="stringArray" direction="in" name="columns">
@@ -109,9 +105,7 @@ Note that rows are numbered starting at 1.
      <description>Row number</description>
      </param>
 </input>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 </method>
 
  
@@ -135,9 +129,8 @@ Note that rows are numbered starting at 1.
      <description>Row number</description>
      </param>
 
-     <param type="any" direction="in" name="value">
+     <param type="record" direction="in" name="value">
      <description>Values to put</description>
-     <any type="record"/>
      </param>
 
      <param type="bool" direction="in" name="matchingfields">

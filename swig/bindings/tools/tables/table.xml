@@ -556,9 +556,8 @@ hardly ever needed.
 	<param type="string" name="tablename">
 	<value></value>
 	</param>
-        <param type="any" name="lockoptions">
+        <param type="record" name="lockoptions">
         <description>locking to be used</description>
-        <any type="record"/>
         <value>default</value>
         </param>
 	<param type="bool" name="nomodify">
@@ -651,14 +650,12 @@ hardly ever needed.
   <param type="string" name="tablename">
     <value></value>
   </param>
-  <param type="any" name="tabledesc">
+  <param type="record" name="tabledesc">
     <description>description of the table's format</description>
-    <any type="record"/>
     <value></value>
   </param>
-  <param type="any" name="lockoptions">
+  <param type="record" name="lockoptions">
     <description>locking to be used</description>
-    <any type="record"/>
     <value>default</value>
   </param>
   <param type="string" name="endianformat">
@@ -670,9 +667,8 @@ hardly ever needed.
   <param type="int" name="nrow">
     <value>0</value>
   </param>
-  <param type="any" name="dminfo">
+  <param type="record" name="dminfo">
     <description>Data Manager information</description>
-    <any type="record"/>
     <value></value>
   </param>
 </input>
@@ -923,9 +919,8 @@ returned if the copy is made to a memory table.
      <value>false</value>
      </param>
 
-     <param type="any" name="dminfo">
+     <param type="record" name="dminfo">
      <description>Data manager info for new table</description>
-     <any type="record"/>
      <value></value>
      </param>
 
@@ -1126,9 +1121,7 @@ Get the lock options used for this table.
 It returns a record with the fields: option, interval and maxwait.
 The record can be used as the lockoptions argument when opening a table.
 </description>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 </method>
 
  
@@ -1519,9 +1512,7 @@ able to substitute it in the query command.
 The info record contains information on the table. 
 
 </description>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 
 <!--
 <example>
@@ -1543,9 +1534,8 @@ information is stored in a table.
 </description>
 <input>
 
-     <param type="any" name="value">
+     <param type="record" name="value">
      <description>Info record</description>
-     <any type="record"/>
      </param>
 </input>
 <returns type="bool"/>
@@ -1675,9 +1665,8 @@ getcol or getcolslice on the original table.
 
 <input>
 
-     <param type="any" name="tab">
+     <param type="record" name="tab">
      <description>Table to which the row numbers refer</description>
-     <any type="record"/>
      </param>
 
      <param type="int" name="nbytes">
@@ -1935,14 +1924,12 @@ columns to be added.
 </description>
 <input>
 
-     <param type="any" name="desc">
+     <param type="record" name="desc">
      <description>Description of one or more columns</description>
-     <any type="record"/>
      </param>
 
-     <param type="any" name="dminfo">
+     <param type="record" name="dminfo">
      <description>Optional description data manager to use</description>
-     <any type="record"/>
      <value></value>
      </param>
 </input>
@@ -2213,9 +2200,7 @@ variable shaped arrays.
      <value>1</value>
      </param>
 </input>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 <example>
 
   tb.open("3C273XC1.MS")
@@ -2412,9 +2397,8 @@ value, no put is done for that row.
      <description>Name of column</description>
      </param>
 
-     <param type="any"  name="value">
+     <param type="record"  name="value">
      <description>Record with values</description>
-     <any type="record"/>
      </param>
 
      <param type="int"  name="startrow">
@@ -2598,9 +2582,7 @@ type, including a record and a table.
 the table name prefixed by 'Table: '. <!-- That prefix is automatically
 removed by table functions like \texttt{open} and \texttt{tableexists}.-->
 </description>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 <example>
 
   tb.open('3C273XC1.MS')
@@ -2762,9 +2744,8 @@ otherwise casapy turns it into a string vector. -->
 </description>
 <input>
 
-     <param type="any"  name="value">
+     <param type="record"  name="value">
      <description>Record of keyword=value pairs</description>
-     <any type="record"/>
      </param>
 </input>
 <returns type="bool"/>
@@ -2851,8 +2832,7 @@ otherwise casapy turns it into a string vector. -->
      <description>Name of column</description>
      </param>
 
-     <param type="any"  name="value">
-	     <any type="record"/>
+     <param type="record"  name="value">
      <description>Record of keyword=value pairs</description>
      </param>
 </input>
@@ -2933,9 +2913,7 @@ The information is returned as a record containing a subrecord for
 each data manager. Each subrecord contains the fields TYPE, NAME and
 COLUMNS.
 </description>
-<returns type="any">
-<any type="record"/>
-</returns>
+<returns type="record"/>
 <example>
 
   tb.open('3C273XC1.MS')
@@ -3047,10 +3025,9 @@ the table description used when creating the table.
      <value>true</value>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>Table description record
 </shortdescription>
-<any type="record"/>
 </returns>
 <example>
 
@@ -3077,10 +3054,9 @@ to construct a table description.
      <description>Name of column</description>
      </param>
 </input>
-<returns type="any">
+<returns type="record">
 <shortdescription>Column description record
 </shortdescription>
-<any type="record"/>
 </returns>
 <example>
 
@@ -3149,9 +3125,7 @@ Failure (returning F) is a sign of a bug.
      </param>
 
   </input>
-  <returns type="any">
-    <any type="record"/>
-  </returns>
+  <returns type="record"/>
 
   <description>
     This function computes descriptive statistics on the table column.

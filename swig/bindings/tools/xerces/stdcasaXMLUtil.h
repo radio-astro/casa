@@ -16,7 +16,7 @@
 
 #include <string>
 #include <xercesc/dom/DOM.hpp>
-#include <xmlcasa/variant.h>
+#include <stdcasa/variant.h>
 #include <xercesc/util/XMLChar.hpp>
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/framework/Wrapper4InputSource.hpp>

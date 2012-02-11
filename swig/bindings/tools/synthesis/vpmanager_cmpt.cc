@@ -163,9 +163,9 @@ vpmanager::setpbairy(const std::string& telescope, const std::string& otherteles
       pai=casa::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    MDirection sdir;
+    casa::MDirection sdir;
     if(toCasaString(squintdir)==casa::String(""))
-      sdir=MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
     casa::Quantity dd;
@@ -213,9 +213,9 @@ vpmanager::setpbcospoly(const std::string& telescope, const std::string& otherte
       rf=casa::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    MDirection sdir;
+    casa::MDirection sdir;
     if(toCasaString(squintdir)==casa::String(""))
-      sdir=MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
     casa::Quantity srf;
@@ -266,9 +266,9 @@ vpmanager::setpbgauss(const std::string& telescope, const std::string& othertele
       pai=casa::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    MDirection sdir;
+    casa::MDirection sdir;
     if(toCasaString(squintdir)==casa::String(""))
-      sdir=MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
     casa::Quantity hw;
@@ -312,9 +312,9 @@ vpmanager::setpbinvpoly(const std::string& telescope, const std::string& otherte
       rf=casa::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    MDirection sdir;
+    casa::MDirection sdir;
     if(toCasaString(squintdir)==casa::String(""))
-      sdir=MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
     casa::Quantity srf;
@@ -358,9 +358,9 @@ vpmanager::setpbnumeric(const std::string& telescope, const std::string& otherte
       rf=casa::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    MDirection sdir;
+    casa::MDirection sdir;
     if(toCasaString(squintdir)==casa::String(""))
-      sdir=MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
     casa::Quantity srf;
@@ -425,9 +425,9 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
       rf=casa::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    MDirection sdir;
+    casa::MDirection sdir;
     if(toCasaString(squintdir)==casa::String(""))
-      sdir=MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
     casa::Quantity srf;
@@ -534,9 +534,9 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
   if(!itsVPM || !itsVPM->acquireLock(itsTimeOut,True)) return rval;
     
   try{    
-    MEpoch mObsTime;
-    MFrequency mFreq;
-    MDirection mObsDir;
+	  casa::MEpoch mObsTime;
+	  casa::MFrequency mFreq;
+	  casa::MDirection mObsDir;
     
     if(!casaMEpoch(obstime, mObsTime)){
       *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
@@ -598,9 +598,9 @@ int vpmanager::numvps(const std::string& telescope,
 
   try{
 
-    MEpoch mObsTime;
-    MFrequency mFreq;
-    MDirection mObsDir;
+	  casa::MEpoch mObsTime;
+	  casa::MFrequency mFreq;
+	  casa::MDirection mObsDir;
     
     if(!casaMEpoch(obstime, mObsTime)){
       *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
@@ -655,9 +655,9 @@ vpmanager::getvp(const std::string& telescope,
 
   try{
       
-    MEpoch mObsTime;
-    MFrequency mFreq;
-    MDirection mObsDir;
+	  casa::MEpoch mObsTime;
+	  casa::MFrequency mFreq;
+    casa::MDirection mObsDir;
     Record rec;
     
     int nRefs = 0;
@@ -754,11 +754,11 @@ vpmanager::createantresp(const std::string& imdir,
     }
       
     String startTime = toCasaString(starttime);
-    MEpoch theStartTime; 
+    casa::MEpoch theStartTime; 
     Quantum<Double> qt;
     if (MVTime::read(qt,startTime)) {
       MVEpoch mv(qt);
-      theStartTime = MEpoch(mv, MEpoch::UTC);
+      theStartTime = casa::MEpoch(mv, casa::MEpoch::UTC);
     } else {
       *itsLog << LogIO::SEVERE << "Invalid time format: " 
 	      << startTime << LogIO::POST;
@@ -860,7 +860,7 @@ vpmanager::createantresp(const std::string& imdir,
       pos = imNamesV(i).find("_", pos);
       obsnameV(i) = imNamesV(i).substr(0, pos); // use pos as length in this case
 
-      MPosition Xpos;
+      casa::MPosition Xpos;
       if (obsnameV(i).length() == 0 || 
 	  !MeasTable::Observatory(Xpos,obsnameV(i))) {
 	// unknown observatory
@@ -1055,15 +1055,15 @@ vpmanager::createantresp(const std::string& imdir,
 		    sortedFuncChannel, sortedNomFreq,
 		    rotAngOffset, // all zero, no sorting necessary
 		    currAntType, theStartTime,
-		    MDirection(casa::Quantity(currAzNom, "deg"),
+		    casa::MDirection(casa::Quantity(currAzNom, "deg"),
 			       casa::Quantity(currElNom, "deg"), 
-			       MDirection::AZEL),
-		    MDirection(casa::Quantity(currAzMin, "deg"), 
+			       casa::MDirection::AZEL),
+		    casa::MDirection(casa::Quantity(currAzMin, "deg"), 
 			       casa::Quantity(currElMin, "deg"), 
-			       MDirection::AZEL),
-		    MDirection(casa::Quantity(currAzMax, "deg"),
+			       casa::MDirection::AZEL),
+		    casa::MDirection(casa::Quantity(currAzMax, "deg"),
 			       casa::Quantity(currElMax, "deg"), 
-			       MDirection::AZEL),
+			       casa::MDirection::AZEL),
 		    currRecType,
 		    currBeamnum
 		    )
@@ -1129,11 +1129,11 @@ vpmanager::getrespimagename(const std::string& telescope,
     MVAngle rotAngOffset;
 
     String startTime = toCasaString(starttime);
-    MEpoch theStartTime; 
+    casa::MEpoch theStartTime; 
     Quantum<Double> qt;
     if (MVTime::read(qt,startTime)) {
       MVEpoch mv(qt);
-      theStartTime = MEpoch(mv, MEpoch::UTC);
+      theStartTime = casa::MEpoch(mv, casa::MEpoch::UTC);
     } else {
       *itsLog << LogIO::SEVERE << "Invalid time format: " 
 	      << startTime << LogIO::POST;
@@ -1161,7 +1161,7 @@ vpmanager::getrespimagename(const std::string& telescope,
       return rval;
     }
 
-    MDirection center = MDirection(az, el, MDirection::AZEL); 
+    casa::MDirection center = casa::MDirection(az, el, casa::MDirection::AZEL); 
     String receiverType = toCasaString(rectype);
 
     if(!aR.getImageName(functionImageName, 

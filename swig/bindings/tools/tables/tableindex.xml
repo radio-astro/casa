@@ -86,9 +86,8 @@ argument \texttt{sort} can be set to F to avoid needless sorting.
 </description>
 <input>
 
-     <param type="any" direction="in" name="tab">
+     <param type="record" direction="in" name="tab">
      <description>table to be indexed, wants a table tool</description>
-     <any type="record"/>
      </param>
 
      <param type="stringArray" direction="in" name="columns">
@@ -113,9 +112,8 @@ columns. It works similar to the tableindex constructor.
 </description>
 <input>
 
-     <param type="any" direction="in" name="tab">
+     <param type="record" direction="in" name="tab">
      <description>table to be indexed, wants a table tool</description>
-     <any type="record"/>
      </param>
 
      <param type="stringArray" direction="in" name="columns">
@@ -181,9 +179,8 @@ correct though.
 </description>
 <input>
 
-     <param type="any" direction="in" name="key">
+     <param type="record" direction="in" name="key">
      <description>search value</description>
-     <any type="record"/>
      </param>
 </input>
 <returns type="int"/>
@@ -204,14 +201,12 @@ record if the index consists of multiple columns.
 </description>
 <input>
 
-     <param type="any" direction="in" name="key">
+     <param type="record" direction="in" name="key">
      <description>search value</description>
-     <any type="record"/>
      </param>
 
-     <param type="any" direction="in" name="upperkey">
+     <param type="record" direction="in" name="upperkey">
      <description>end of search interval</description>
-     <any type="record"/>
      <value>0</value>
      </param>
 

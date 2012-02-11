@@ -301,14 +301,15 @@ Returns true if plotting is successful, false otherwise.
    
 <input>
 
-     <param type="any" name="poption">
+     <param type="record" name="poption">
      <description>Record of plot options</description>
-     <any type="record"/>
+     <value type="record">
      <value name="nxpanels" type="int">1</value>
      <value name="nypanels" type="int">1</value>
      <value name="windowsize" type="int">6</value>
      <value name="aspectratio" type="double">0.8</value>
      <value name="fontsize" type="double">1.0</value>
+     </value>
      </param>
 
      <param type="stringArray" name="labels">
@@ -451,17 +452,18 @@ Only forward step through is allowed.
 </description>
 <input>
 
-     <param type="any" name="poption">
-     <any type="record"/>
+     <param type="record" name="poption">
      <description>Record of plot options
       default is nxpanels=1, nypanels=1, windowsize=6,
       aspectratio=0.8, fontsize=1.0
      </description>
+     <value type="record">
      <value name="nxpanels" type="int">1</value>
      <value name="nypanels" type="int">1</value>
      <value name="windowsize" type="int">6</value>
      <value name="aspectratio" type="double">0.8</value>
      <value name="fontsize" type="double">1.0</value>
+     </value>
      </param>
 
      <param type="stringArray" name="labels">

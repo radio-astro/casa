@@ -16,7 +16,7 @@
 #include <CCM_Python/PySub.h>
 #include <tableplot_cmpt.h>
 #include <casa/aips.h>
-#include <tableplot/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/TablePlot.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>
@@ -36,8 +36,6 @@
 #include <casa/System/ObjectID.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
-
-#include <tableplot/TablePlot/TablePlot.h>
 
 using namespace std;
 using namespace casa;

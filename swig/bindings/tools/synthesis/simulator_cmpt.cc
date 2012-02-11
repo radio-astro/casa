@@ -206,7 +206,7 @@ simulator::settimes(const ::casac::variant& integrationtime, const bool usehoura
   try {
   
     if(itsSim !=0){
-      MEpoch lepoch;
+	    casa::MEpoch lepoch;
       if (!casaMEpoch(referencetime, lepoch)){
 	*itsLog << LogIO::SEVERE 
 		<< "Could not convert referencetime to an Epoch Measures"
@@ -323,7 +323,7 @@ Bool rstat(False);
       casa::Vector<casa::Quantity> qstarttimes(nptg);
       casa::Vector<casa::Quantity> qstoptimes(nptg);
       casa::Vector<casa::MDirection> mdirections(nptg);
-      MDirection mdir,northPole;
+      casa::MDirection mdir,northPole;
       for (uInt i=0; i<nptg; i++) {
 	qstarttimes[i]=casaQuantity(sstarttimes[i]);
 	qstoptimes[i]=casaQuantity(sstoptimes[i]);
@@ -406,7 +406,7 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
   try {
   
     if(itsSim !=0){
-      MPosition mpos;
+	    casa::MPosition mpos;
       if(!casaMPosition(referencelocation, mpos) && referencelocation.toString() != "[]"){
 	*itsLog << LogIO::SEVERE 
 		<< "Could not convert referencelocation "
@@ -492,7 +492,7 @@ simulator::setfield(const std::string& sourcename, const ::casac::variant& sourc
     
     if(itsSim !=0){
     
-      MDirection mdir;
+	    casa::MDirection mdir;
       if (!casaMDirection(sourcedirection, mdir)){
 	*itsLog << LogIO::SEVERE 
 		<< "Could not convert source direction to a Direction Measure."
@@ -530,7 +530,7 @@ Bool rstat(False);
     
    if(itsSim !=0){
      
-     MDirection mdir;
+	   casa::MDirection mdir;
      if (!casaMDirection(fieldcenter, mdir)){
 	*itsLog << LogIO::SEVERE 
 		<< "Could not convert field center to a Direction Measures"
@@ -655,7 +655,7 @@ simulator::setoptions(const std::string& ftmachine, const int cache,
     
     if(itsSim !=0){
       
-      MPosition mpos;
+	    casa::MPosition mpos;
       if (!casaMPosition(location, mpos) && (location.toString()!="[]")){
 	*itsLog << LogIO::SEVERE 
 		<< "Could not convert location "

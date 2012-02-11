@@ -6,10 +6,10 @@
 #include <xercesc/framework/Wrapper4InputSource.hpp>
 #include <iostream>
 #include <fstream>
-#include <xmlcasa/record.h>
-#include <xmlcasa/variant.h>
+#include <stdcasa/record.h>
+#include <stdcasa/variant.h>
 #include <string.h>
-#include <xmlcasa/xerces/stdcasaXMLUtil.h>
+#include <tools/xerces/stdcasaXMLUtil.h>
 //#include <casa/Exceptions/Error.h>
 
 //namespace XERCES_CPP_NAMESPACE {
