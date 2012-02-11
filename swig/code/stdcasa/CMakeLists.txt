@@ -73,13 +73,14 @@ add_dependencies( libstdcasa      stdcasa_definitions )
 install (FILES
 	implement/Quantity.h
 	implement/array.h
-	implement/interrupt.h
 	implement/record.h
 	implement/variant.h
+	implement/casac.h
 	implement/version.h
 	DESTINATION include/casacode/stdcasa
 	)
 install (FILES
 	implement/StdCasa/CasacSupport.h
+	implement/StdCasa/string_conversions
 	DESTINATION include/casacode/stdcasa/StdCasa
 	)

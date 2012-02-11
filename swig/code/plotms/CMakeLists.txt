@@ -139,4 +139,79 @@ casa_add_library( plotms
   implement/Plots/PlotMSIterPlot.cc
   )
 
+INSTALL (FILES
+        implement/Actions/PlotMSAction.h
+        implement/Actions/PlotMSCacheThread.qo.h
+        implement/Actions/PlotMSDrawThread.qo.h
+        implement/Actions/PlotMSExportThread.qo.h
+        implement/Actions/PlotMSThread.qo.h
+	DESTINATION include/plotms/Actions )
+
+INSTALL (FILES
+        implement/Data/PlotCalCache.h
+        implement/Data/PlotMSCache.h
+        implement/Data/PlotMSCache2.h
+        implement/Data/PlotMSCacheIndexer.h
+        implement/Data/PlotMSData.h
+        implement/Data/PlotMSIndexer.h
+        implement/Data/PlotMSVBAverager.h
+	DESTINATION include/plotms/Data )
+
+INSTALL (FILES
+        implement/Gui/PlotMSAnnotator.h
+        implement/Gui/PlotMSAveragingWidget.qo.h
+        implement/Gui/PlotMSAxisWidget.qo.h
+        implement/Gui/PlotMSFlaggingWidget.qo.h
+        implement/Gui/PlotMSLoggerWidget.qo.h
+        implement/Gui/PlotMSPlotter.qo.h
+        implement/Gui/PlotMSSelectionWidget.qo.h
+        implement/Gui/PlotMSTransformationsWidget.qo.h
+        implement/Gui/PlotRangeWidget.qo.h
+	DESTINATION include/plotms/Gui )
+
+INSTALL (FILES
+        implement/GuiTabs/PlotMSAnnotatorTab.qo.h
+        implement/GuiTabs/PlotMSAxesTab.qo.h
+        implement/GuiTabs/PlotMSCacheTab.qo.h
+        implement/GuiTabs/PlotMSCanvasTab.qo.h
+        implement/GuiTabs/PlotMSDataTab.qo.h
+        implement/GuiTabs/PlotMSDisplayTab.qo.h
+        implement/GuiTabs/PlotMSExportTab.qo.h
+        implement/GuiTabs/PlotMSFlaggingTab.qo.h
+        implement/GuiTabs/PlotMSIterateTab.qo.h
+        implement/GuiTabs/PlotMSMultiAxesTab.qo.h
+        implement/GuiTabs/PlotMSOptionsTab.qo.h
+        implement/GuiTabs/PlotMSPlotTab.qo.h
+        implement/GuiTabs/PlotMSTab.qo.h
+        implement/GuiTabs/PlotMSToolsTab.qo.h
+        implement/GuiTabs/PlotMSTransformationsTab.qo.h
+	DESTINATION include/plotms/GuiTabs )
+
+INSTALL (FILES
+        implement/PlotMS/PlotMS.h
+        implement/PlotMS/PlotMSAveraging.h
+        implement/PlotMS/PlotMSConstants.h
+        implement/PlotMS/PlotMSDBusApp.h
+        implement/PlotMS/PlotMSFlagging.h
+        implement/PlotMS/PlotMSIterParam.h
+        implement/PlotMS/PlotMSLabelFormat.h
+        implement/PlotMS/PlotMSParameters.h
+        implement/PlotMS/PlotMSRegions.h
+        implement/PlotMS/PlotMSSelection.h
+        implement/PlotMS/PlotMSTransformations.h
+        implement/PlotMS/PlotMSWatchedParameters.h
+	DESTINATION include/plotms/PlotMS )
+
+INSTALL (FILES
+        implement/Plots/PlotMSIterPlot.h
+        implement/Plots/PlotMSMultiPlot.h
+        implement/Plots/PlotMSPage.h
+        implement/Plots/PlotMSPlot.h
+        implement/Plots/PlotMSPlotManager.h
+        implement/Plots/PlotMSPlotParameterGroups.h
+        implement/Plots/PlotMSPlotParameters.h
+        implement/Plots/PlotMSSinglePlot.h
+	DESTINATION include/plotms/Plots )
+
+
 casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )
