@@ -21,7 +21,7 @@
 #endif
 
 #include <display/ds9/ds9context.h>
-#include <display/ds9/ds9parse.h>
+#include <display/ds9parse.hh>
 
 namespace casa {
     namespace viewer {

@@ -20,8 +20,7 @@
 find_package (BISON REQUIRED)
 find_package (FLEX REQUIRED)
 
-BISON_TARGET( ds9parse implement/ds9/ds9parse.yy ${CMAKE_CURRENT_BINARY_DIR}/ds9parse.cc
-	      COMPILE_FLAGS "--defines=${CMAKE_CURRENT_BINARY_DIR}/libdisplay.dir/ds9parse.h" )
+BISON_TARGET( ds9parse implement/ds9/ds9parse.yy ${CMAKE_CURRENT_BINARY_DIR}/ds9parse.cc)
 FLEX_TARGET(  ds9lex implement/ds9/ds9lex.ll ${CMAKE_CURRENT_BINARY_DIR}/ds9lex.cc
 	      COMPILE_FLAGS "-+" )
 

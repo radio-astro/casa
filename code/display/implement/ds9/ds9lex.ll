@@ -38,7 +38,7 @@
   #include <string.h>
 
   #include "util.h"
-  #include <display/ds9/ds9parse.h>
+  #include <display/ds9parse.hh>
 
   // import the parser's token type into a local typedef
   typedef casa::viewer::ds9parse::token token;
