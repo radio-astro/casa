@@ -218,6 +218,10 @@ macro( casa_add_tools out_swig out_sources )
 	    #${_base}PYTHON_wrap.c
 	    )
 
+    set( ${out_swig} ${${out_swig}} ${_swig} )
+
+    set( ${out_sources} ${${out_sources}} ${_outputs} )
+    
     SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES CPLUSPLUS 1 )
     SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}") 
     SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
@@ -231,12 +235,11 @@ macro( casa_add_tools out_swig out_sources )
 				  ${READLINE_LIBRARIES}
 				  ${XERCES_LIBRARIES})
 
-    set( ${out_swig} ${${out_swig}} ${_swig} )
-
-    set( ${out_sources} ${${out_sources}} ${_outputs} )
-
     install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h
              DESTINATION include/casa/tools/${_base} )
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/_${_base}.so
+	    ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
+	    DESTINATION python/${PYTHONV}/casac/${_base} )
 
     # Create tool documentation
     if ( NOT ${_base} STREQUAL plotms )    # because there is already a plotms task, and there would be a name conflict!
