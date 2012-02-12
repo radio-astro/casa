@@ -42,9 +42,9 @@
 #include <tables/Tables/RefRows.h>
 
 //# Local (MsPlot) includes
-#include <flagging/MSPlot/MsPlot.h>
-#include <flagging/MSPlot/MsPlotConvert.h>
-#include <flagging/MSPlot/MsPlotHooks.h>
+#include <tools/ms/MSPlot/MsPlot.h>
+#include <tools/ms/MSPlot/MsPlotConvert.h>
+#include <tools/ms/MSPlot/MsPlotHooks.h>
 
 //# Measurment and table related includes
 #include <ms/MeasurementSets/MeasurementSet.h>

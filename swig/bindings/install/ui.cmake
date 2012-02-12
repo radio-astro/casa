@@ -176,6 +176,7 @@ endmacro()
 macro( casa_add_tools out_swig out_sources )
 
   INCLUDE(${SWIG_USE_FILE})
+  message (status  ${SWIG_USE_FILE} )
   set( _xmls ${ARGN} )
 
   foreach( _x ${_xmls} )
@@ -217,10 +218,10 @@ macro( casa_add_tools out_swig out_sources )
 	    #${_base}PYTHON_wrap.c
 	    )
 
-    set(CMAKE_SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}"  "-c++" )
-    SET_SOURCE_FILES_PROPERTIES(_swig PROPERTIES CPLUSPLUS ON )
-    SET_SOURCE_FILES_PROPERTIES(_swig PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}") 
+    SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES CPLUSPLUS 1 )
+    SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}") 
     SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
+    SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES} ${PYTHON_LIBRARIES} )
 
     set( ${out_swig} ${${out_swig}} ${_swig} )
 

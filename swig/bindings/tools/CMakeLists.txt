@@ -59,6 +59,7 @@ casa_add_library( tools
  measures/measures_cmpt.cc
  ms/ms_cmpt.cc
  ms/msplot_cmpt.cc
+ ms/MSPlot/MsPlot.cc
  nrao/vlafillertask_cmpt.cc
  plotms/plotms_cmpt.cc
  scimath/functional_cmpt.cc
@@ -76,6 +77,13 @@ casa_add_library( tools
  tables/tableiterator_cmpt.cc
  tables/tableplot_cmpt.cc
  tables/tablerow_cmpt.cc
+ tables/TablePlot/BasePlot.cc
+ tables/TablePlot/CasaPyInterpreter.cc
+ tables/TablePlot/CrossPlot.cc
+ tables/TablePlot/PanelParams.cc
+ tables/TablePlot/PlotterGlobals.cc
+ tables/TablePlot/TablePlot.cc
+ tables/TablePlot/TPPlotter.cc
  utils/BaseInterface.cc
  utils/CasapyWatcher.cc
  utils/dbus_cmpt.cc

@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 #include <complex>
-#include <xmlcasa/record.h>
-#include <xmlcasa/swigconvert_python.h>
+#include <stdcasa/record.h>
+#include <tools/swigconvert_python.h>
 
 using casac::record;
 using casac::variant;
