@@ -200,7 +200,7 @@ macro( casa_add_tools out_swig out_sources )
       )
 
     # Then generate the swig interface file
-    set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.i )
+    set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}.i )
     add_custom_command(
       OUTPUT ${_swig}
       COMMAND echo "%module " ${_base} > ${_swig}
@@ -212,19 +212,13 @@ macro( casa_add_tools out_swig out_sources )
       DEPENDS ${_swigh} ${_xsl} 
       )
 
-
-    set( _outputs
-	    ${_base}_cmpt.h
-	    #${_base}PYTHON_wrap.c
-	    )
-
-    set( ${out_swig} ${${out_swig}} ${_swig} )
-
-    set( ${out_sources} ${${out_sources}} ${_outputs} )
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h
+             DESTINATION include/casa/tools/${_base} )
     
     SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES CPLUSPLUS 1 )
     SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}") 
-    SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
+    #SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
+    SWIG_ADD_MODULE(${_base} python ${_swig} )
     SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES}
 	                          ${PYTHON_LIBRARIES}
 				  ${ATM_LIBRARIES}
@@ -234,12 +228,18 @@ macro( casa_add_tools out_swig out_sources )
 				  ${DL_LIBRARIES}
 				  ${READLINE_LIBRARIES}
 				  ${XERCES_LIBRARIES})
+			  #install( FILES ${CMAKE_CURRENT_BINARY_DIR}/_${_base}.so
+			  #${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
+			  #DESTINATION python/${PYTHONV}/casac/${_base} )
 
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h
-             DESTINATION include/casa/tools/${_base} )
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/_${_base}.so
-	    ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
-	    DESTINATION python/${PYTHONV}/casac/${_base} )
+    set( _outputs
+	    ${_base}_cmpt.h
+	    ${_base}PYTHON_wrap.cxx
+	    )
+    set( ${out_swig} ${${out_swig}} ${_swig} )
+
+    set( ${out_sources} ${${out_sources}} ${_outputs} )
+
 
     # Create tool documentation
     if ( NOT ${_base} STREQUAL plotms )    # because there is already a plotms task, and there would be a name conflict!

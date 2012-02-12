@@ -98,57 +98,57 @@ All data selection parameters follow the ms-selection syntax.
 
      <param type="string" name="field">
      <description>\tField indices or source names : example : '2,3C48' </description>
-     <value>""</value>
+     <value></value>
      </param>
      
      <param type="string" name="spw">
      <description>\tSpectral Window Indices or names : example : '1,2' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="array">
      <description>\tArray Indices or names : example : 'VLAA' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="feed">
      <description>\tFeed index or name : example : '1,2' (not supported yet) </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="scan">
      <description>\tScan number : example : '1,2,3' </description>
-     <value>""</value>
+     <value></value>
      </param>   
 
      <param type="string" name="baseline">
      <description>\tBaseline number : example : '2-3,4-5,132 ????' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="uvrange">
      <description>\tUV-distance range, with a unit : example : '2.0-3000.0 m'</description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="time">
      <description>\tTime range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="correlation">
      <description>\tCorrelations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="intent">
      <description>\tScan intent : example : '*CAL*, *BAND*' </description>
-     <value>""</value>
+     <value></value>
      </param>
      
      <param type="string" name="observation">
      <description>\tObservation Id : example : '2~4' </description>
-     <value>""</value>
+     <value></value>
      </param>
 
 <!-- Selection parameters : end -->
@@ -298,15 +298,15 @@ Print out a list of current manual and auto flag selections.
 <input>
      <param type="string" name="versionname">
      <description>Version name </description>
-     <value>""</value>
+     <value></value>
      </param>
      <param type="string" name="comment">
      <description>Comment for this flag table </description>
-     <value>""</value>
+     <value></value>
      </param>
      <param type="string" name="merge">
      <description>merge type </description>
-     <value>""</value>
+     <value></value>
      </param>
 </input>
 <returns type="bool"/>
@@ -324,57 +324,57 @@ for the manual mode.
 <!-- Selection parameters : start -->
      <param type="string" name="field">
      <description>\tField indices or source names. Example: '2,3C48' </description>
-     <value>""</value>
+     <value></value>
      </param>
      
      <param type="string" name="spw">
      <description>\tSpectral Window Indices or names. Example: '1,2' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="array">
      <description>\tArray Indices or names. Example: 'VLAA' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="feed">
      <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="scan">
      <description>\tScan number. Example: '1,2,3' </description>
-     <value>""</value>
+     <value></value>
      </param>   
 
      <param type="string" name="baseline">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="uvrange">
      <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="time">
      <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="correlation">
      <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="intent">
      <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
-     <value>""</value>
+     <value></value>
      </param>
      
      <param type="string" name="observation">
      <description>Observation Id. Example: '2~4' </description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="bool" name="apply">
@@ -403,57 +403,57 @@ for the manual mode.
 <!-- Selection parameters : start -->
      <param type="string" name="field">
      <description>\tField indices or source names. Example: '2,3C48' </description>
-     <value>""</value>
+     <value></value>
      </param>
      
      <param type="string" name="spw">
      <description>\tSpectral Window Indices or names. Example: '1,2' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="array">
      <description>\tArray Indices or names. Example: 'VLAA' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="feed">
      <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="scan">
      <description>\tScan number. Example: '1,2,3' </description>
-     <value>""</value>
+     <value></value>
      </param>   
 
      <param type="string" name="baseline">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="uvrange">
      <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="time">
      <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="correlation">
      <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="intent">
      <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
-     <value>""</value>
+     <value></value>
      </param>
      
      <param type="string" name="observation">
      <description>Observation Id. Example: '2~4' </description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="expression">

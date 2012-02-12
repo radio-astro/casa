@@ -141,3 +141,9 @@ add_custom_target( generated_sources SOURCES ${tools_sources} ${tools_swig} )
 #add_dependencies( generated_sources )
 add_dependencies( libtools generated_sources )
 
+#foreach(_tool ${tools_swig} )
+#   get_filename_component( _base ${_tool} NAME_WE )
+#   install( FILES ${CMAKE_CURRENT_BINARY_DIR}/_${_base}.so
+#           ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
+#           DESTINATION python/${PYTHONV}/casac/${_base} )
+#endforeach()
