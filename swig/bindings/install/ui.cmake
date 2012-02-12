@@ -221,7 +221,15 @@ macro( casa_add_tools out_swig out_sources )
     SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES CPLUSPLUS 1 )
     SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}") 
     SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
-    SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES} ${PYTHON_LIBRARIES} ${ATM_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/libtools.dylib )
+    SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES}
+	                          ${PYTHON_LIBRARIES}
+				  ${ATM_LIBRARIES}
+				  ${CMAKE_CURRENT_BINARY_DIR}/libtools.dylib
+				  ${QT4_LIBRARIES}
+				  ${DBUS_LIBRARIES}
+				  ${DL_LIBRARIES}
+				  ${READLINE_LIBRARIES}
+				  ${XERCES_LIBRARIES})
 
     set( ${out_swig} ${${out_swig}} ${_swig} )
 
