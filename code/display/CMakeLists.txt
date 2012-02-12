@@ -17,6 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+find_package (BISON REQUIRED)
+find_package (FLEX REQUIRED)
+
+BISON_TARGET( ds9parse implement/ds9/ds9parse.yy ${CMAKE_CURRENT_BINARY_DIR}/ds9parse.cc
+	      COMPILE_FLAGS "--defines=${CMAKE_CURRENT_BINARY_DIR}/libdisplay.dir/ds9parse.h -o ${CMAKE_CURRENT_BINARY_DIR}/ds9parse.cc" )
+FLEX_TARGET(  ds9lex implement/ds9/ds9lex.ll ${CMAKE_CURRENT_BINARY_DIR}/ds9lex.cc
+	      COMPILE_FLAGS "-+ -o ${CMAKE_CURRENT_BINARY_DIR}/ds9lex.cc" )
 
 include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
@@ -366,6 +373,7 @@ casa_add_library( display
   implement/region/QtPolygon.cc
   implement/region/QtEllipse.cc
   implement/region/QtPoint.cc
+  implement/region/RegionCreator.cc
   implement/region/RegionSource.cc
   implement/region/QtRegionSource.cc
   implement/region/QtRegionSourceFactory.cc
@@ -377,6 +385,11 @@ casa_add_library( display
   implement/region/Point.cc
   implement/region/Polygon.cc
   implement/region/Region.cc
+  implement/ds9/ds9context.cc
+  implement/ds9/ds9parser.cc
+  implement/ds9/ds9writer.cc
+  ${BISON_ds9parse_OUTPUTS}
+  ${FLEX_ds9lex_OUTPUTS}
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )

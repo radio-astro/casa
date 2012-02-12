@@ -54,6 +54,7 @@
 #include <images/Regions/RegionManager.h>
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
+#include <display/ds9/ds9parser.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -777,7 +778,7 @@ Bool QtDisplayPanel::isRegistered(QtDisplayData* qdd) {
     if(qdd == qdds.getRight()) return True;  }
   return False;  }
     
-Bool QtDisplayPanel::isRegistered(String ddname) {
+Bool QtDisplayPanel::isRegistered(const std::string &ddname) {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
     if(ddname == qdds.getRight()->name()) return True;  }
   return False;  }
@@ -1936,9 +1937,9 @@ String QtDisplayPanel::dpState(String restorefilename) {
     ddopts.appendChild(ddelem);
     ddelem.setTagName("dd");
     
-    ddelem.setAttribute("path", dd->path().chars());
-    ddelem.setAttribute("dataType", dd->dataType().chars());
-    ddelem.setAttribute("displayType", dd->displayType().chars());     
+    ddelem.setAttribute("path", dd->path().c_str());
+    ddelem.setAttribute("dataType", dd->dataType().c_str());
+    ddelem.setAttribute("displayType", dd->displayType().c_str());
     
     for (QDomElement optgrp = ddelem.firstChildElement(); !optgrp.isNull(); 
                      optgrp = optgrp.nextSiblingElement()) {
@@ -2084,9 +2085,9 @@ Bool QtDisplayPanel::setPanelState(QDomDocument& restoredoc,
     for (QDomElement  ddelem = ddopts.firstChildElement(); !ddelem.isNull(); 
                       ddelem = ddelem.nextSiblingElement()) {
      
-      String     path = ddelem.attribute("path",        "#").toStdString(),
-             dataType = ddelem.attribute("dataType",    "#").toStdString(),
-          displayType = ddelem.attribute("displayType", "#").toStdString();
+    std::string     path = ddelem.attribute("path",        "#").toStdString(),
+                dataType = ddelem.attribute("dataType",    "#").toStdString(),
+             displayType = ddelem.attribute("displayType", "#").toStdString();
     
     
       if(path=="#" || dataType=="#" || displayType=="#") continue;
@@ -2323,7 +2324,26 @@ QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
 
 // load casa (or DS9?) region files...
 void QtDisplayPanel::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
-    toolmgr->loadRegions( path, datatype, displaytype );
+    // There are two approaches to parsing and loading regions. IMO the DS9
+    // approach is superior, but unifying them is no easy task...
+    if ( datatype == "casa region" ) {
+	toolmgr->loadRegions( path, datatype, displaytype );
+    } else if ( datatype == "ds9 region" ) {
+	ConstListIter<WorldCanvas*> wcl = panelDisplay()->myWCLI;
+	wcl.toStart( );
+	// really need to change this to find the world canvas for the display data that is currently visible...
+	// instead of just taking the first one in the list...  <<<see also QtRegionSource.cc>>>
+	WorldCanvas *wc_ = 0;
+	if(wcl.len() > 0) {
+	    wc_ = wcl.getRight( );
+	}
+	if ( wc_ ) {
+	    casa::viewer::ds9context context( wc_ );
+	    casa::viewer::ds9parser parser;
+	    parser.parse_file( context, path.c_str( ) );
+	}
+    }
+
 }
 
 const QtDisplayPanel::panel_state::colormap_state *QtDisplayPanel::panel_state::colormap( const std::string &path ) const {
@@ -2352,9 +2372,9 @@ void QtDisplayPanel::setPanelState( const panel_state &state ) {
 }
 
 
-Bool QtDisplayPanel::ddFileMatch_(String path, String dataType,
-                           String displayType,  QtDisplayData*& dd,
-			   QString origrestorefile, QString restoredir) {
+Bool QtDisplayPanel::ddFileMatch_( const std::string &path, const std::string &dataType,
+				   const std::string &displayType,  QtDisplayData*& dd,
+				   QString origrestorefile, QString restoredir) {
   // Tries to find existing DD (or create one from a file) that matches
   // the given path.  Used for restoring DDs from a restore file.
   // Several directories are checked, not just the one in path, to
@@ -2379,7 +2399,7 @@ Bool QtDisplayPanel::ddFileMatch_(String path, String dataType,
 	// Reuse lel dd iff lel strings match exactly; no directory
 	// search is feasible at present.
     
-    ddfi.setFile(dd->path().chars());  }
+    ddfi.setFile(dd->path().c_str());  }
 	// for file comparisons below.
     
   
@@ -2397,9 +2417,9 @@ Bool QtDisplayPanel::ddFileMatch_(String path, String dataType,
     return (dd!=0);  }	// We must find all data files in the exact location
 			// specified in lel string to reconstruct an lel dd.
 
-  QFileInfo pathfi(path.chars());
-  QString filename = pathfi.fileName();
-  QString dmDir = panel_->selectedDMDir.chars();
+  QFileInfo pathfi(path.c_str( ));
+  QString filename = pathfi.fileName( );
+  QString dmDir = panel_->selectedDMDir.c_str( );
   
   QFileInfo testfi;	// (will hold representation of the 5
 			//  filepaths below, in succession).
@@ -2481,7 +2501,7 @@ String QtDisplayPanel::suggestedRestoreFilename() {
     QtDisplayData* dd = dds.getRight();
     if(dd->dataType()=="lel") filename = "lel";
     else {
-      QFileInfo fi(dd->path().chars());
+      QFileInfo fi(dd->path().c_str());
       String nm = fi.fileName().toStdString();
       if(nm!="") filename = nm;  }  }
   

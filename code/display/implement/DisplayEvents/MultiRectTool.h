@@ -109,16 +109,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Is a rectangle currently defined?
 	    virtual Bool rectangleDefined() { return itsrectangleexists;  } 
  
-	    // called when the user (read GUI user) indicates that a region should be deleted...
-	    void revokeRegion( viewer::Region * );
-
 	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
 
 	    void checkPoint( WorldCanvas *wc, State &state );
 
-	    virtual bool create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
-				 const std::string &font, int font_size, int font_style, const std::string &font_color,
-				 const std::string &line_color, viewer::Region::LineStyle line_style );
+	    // called when the user (read GUI user) indicates that a region should be deleted...
+	    void revokeRegion( viewer::Region * );
+
+	    // returns a set which indicates regions this creator creates...
+	    const std::set<Types> &regionsCreated( ) const;
+
+	    bool create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+			 const std::string &font, int font_size, int font_style, const std::string &font_color,
+			 const std::string &line_color, viewer::Region::LineStyle line_style );
 
 	protected:
 

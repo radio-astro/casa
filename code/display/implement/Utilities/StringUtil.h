@@ -1,5 +1,5 @@
-//# MultiPointTool.cc: Base class for MultiWorldCanvas event-based point tools
-//# Copyright (C) 2000,2001,2002
+//# StringUtil.h: string utilities...
+//# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,21 +25,20 @@
 //#
 //# $Id$
 
-#include <display/DisplayEvents/MultiPointTool.h>
+#ifndef STRINGUTIL_H
+#define STRINGUTIL_H
+#include <string>
+#include <stdio.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
+    namespace viewer {
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double ) const {
-	return rfactory->point( wc, x, y );
-    }
-
-    static std::set<viewer::RegionCreator::Types> multi_point_tool_region_set;
-    const std::set<viewer::RegionCreator::Types> &MultiPointTool::regionsCreated( ) const {
-	if ( multi_point_tool_region_set.size( ) == 0 ) {
-	    multi_point_tool_region_set.insert( POINT );
+	inline std::string to_string(int i) {
+	    char buf[128];
+	    snprintf(buf,sizeof(buf),"%d",i);
+	    return std::string(buf);
 	}
-	return multi_point_tool_region_set;
     }
+}
 
-
-} //# NAMESPACE CASA - END
+#endif
