@@ -230,7 +230,7 @@
        <enum>QTabWidget::South</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="twoDReconstr">
        <property name="sizePolicy">
@@ -242,118 +242,210 @@
        <attribute name="title">
         <string>two-D-reconstruct</string>
        </attribute>
-       <widget class="QWidget" name="layoutWidget_3">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>580</width>
-          <height>34</height>
-         </rect>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QLabel" name="fromLabel">
-           <property name="text">
-            <string>&lt;font color='black'&gt;from:&lt;/font&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="startValue">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="toLabel">
-           <property name="text">
-            <string>&lt;font color='black'&gt;to:&lt;/font&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="endValue">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="collapseUnits">
-           <property name="minimumSize">
-            <size>
-             <width>45</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="collapseType">
-           <item>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QLabel" name="fromLabel">
             <property name="text">
-             <string>mean</string>
+             <string>&lt;font color='black'&gt;from:&lt;/font&gt;</string>
             </property>
-           </item>
-           <item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="startValue">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="toLabel">
             <property name="text">
-             <string>median</string>
+             <string>&lt;font color='black'&gt;to:&lt;/font&gt;</string>
             </property>
-           </item>
-           <item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="endValue">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="collapseUnits">
+            <property name="minimumSize">
+             <size>
+              <width>45</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="text">
-             <string>sum</string>
+             <string/>
             </property>
-           </item>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="collapseError">
-           <item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="collapseType">
+            <item>
+             <property name="text">
+              <string>mean</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>median</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>sum</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="collapseError">
+            <item>
+             <property name="text">
+              <string>no error</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>rmse</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>propagated</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="collapse">
+            <property name="toolTip">
+             <string>Collapse along the spectral axis.</string>
+            </property>
             <property name="text">
-             <string>no error</string>
+             <string>collapse</string>
             </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>rmse</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>propagated</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="collapse">
-           <property name="toolTip">
-            <string>Collapse along the spectral axis.</string>
-           </property>
-           <property name="text">
-            <string>collapse</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="lineFit">
        <attribute name="title">
         <string>linefit</string>
        </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="fromLabelFit">
+            <property name="text">
+             <string>&lt;font color='black'&gt;from:&lt;/font&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="startValueFit">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="toLabelFit">
+            <property name="text">
+             <string>&lt;font color='black'&gt;to:&lt;/font&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="endValueFit">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="fitUnits">
+            <property name="minimumSize">
+             <size>
+              <width>45</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="fitGauss">
+            <item>
+             <property name="text">
+              <string>gauss</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>no gauss</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="fitPolyN">
+            <item>
+             <property name="text">
+              <string>poly 1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>poly 0</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="clean">
+            <property name="text">
+             <string>clean</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="fit">
+            <property name="toolTip">
+             <string>Collapse along the spectral axis.</string>
+            </property>
+            <property name="text">
+             <string>fit</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

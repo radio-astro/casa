@@ -41,7 +41,8 @@
 #include <display/QtPlotter/QtProfile.qo.h>
 #include <display/QtPlotter/QtProfilePrefs.qo.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
-#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
+#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
@@ -80,7 +81,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
         :QMainWindow(parent),
          //pc(0),
          //te(0),
-         analysis(0), image(img), collapser(0), over(0),
+         analysis(0), image(img), collapser(0), fitter(0), over(0),
          coordinate("world"), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
          cSysRval(""), fileName(name), position(""), yUnit(""),
          yUnitPrefix(""), xpos(""), ypos(""), cube(0),
@@ -128,6 +129,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     ctypeUnit = String(ctype->currentText().toStdString());
     getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
     collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
+    fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 
     // get reference frame info for freq axis label
     MFrequency::Types freqtype = determineRefFrame(img);
@@ -161,6 +163,16 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(collapse, SIGNAL(clicked()),
             this, SLOT(doImgCollapse()));
 
+    startValueFit->setValidator(validator);
+    startValueFit->setMaximumWidth(100);
+    endValueFit->setValidator(validator);
+    endValueFit->setMaximumWidth(100);
+    connect(fit, SIGNAL(clicked()),
+            this, SLOT(doLineFit()));
+    connect(clean, SIGNAL(clicked()),
+            this, SLOT(plotMainCurve()));
+
+
     pixelCanvas->setTitle("");
     pixelCanvas->setWelcome("assign a mouse button to\n"
                    "'crosshair' or 'rectangle' or 'polygon'\n"
@@ -188,8 +200,15 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(actionMoveDown, SIGNAL(triggered()), this, SLOT(down()));
     connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
 
-    analysis = new ImageAnalysis(img);
-    collapser = new SpectralCollapser(img, String(viewer::options.temporaryPath( )));
+    try{
+   	 analysis  = new ImageAnalysis(img);
+   	 collapser = new SpectralCollapser(img, String(viewer::options.temporaryPath( )));
+   	 fitter    = new SpectralFitter();
+    }
+    catch (AipsError x){
+   	 String message = "Error when starting the profiler:\n" + x.getMesg();
+   	 *itsLog << LogIO::WARN << message << LogIO::POST;
+    }
 }
 
 MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
@@ -468,13 +487,23 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 {
 	image = img;
 
-	if (analysis)
-		delete analysis;
-	analysis = new ImageAnalysis(img);
+	try {
+		if (analysis)
+			delete analysis;
+		analysis = new ImageAnalysis(img);
 
-	if (collapser)
-		delete collapser;
-	collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
+		if (collapser)
+			delete collapser;
+		collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
+
+		if (fitter)
+			delete fitter;
+		fitter = new SpectralFitter();
+	}
+	catch (AipsError x){
+		String message = "Error when re-setting the profiler:\n" + x.getMesg();
+		*itsLog << LogIO::WARN << message << LogIO::POST;
+	}
 
 	fileName = name;
 	setWindowTitle(QString("Spectral Profile - ").append(name));
@@ -1329,10 +1358,112 @@ void QtProfile::doImgCollapse(){
 	return;
 }
 
+void QtProfile::doLineFit(){
+
+	*itsLog << LogOrigin("QtProfile", "doLineFit");
+
+	// get the values
+	QString startStr = startValueFit->text();
+	QString endStr   = endValueFit->text();
+	String  msg;
+
+	// make sure the input is reasonable
+
+	if (startStr.isEmpty()){
+		msg = String("No start value specified!");
+		*itsLog << LogIO::WARN << msg << LogIO::POST;
+		profileStatus->showMessage(QString(msg.c_str()));
+		return;
+	}
+	if (endStr.isEmpty()){
+		msg = String("No end value specified!");
+		*itsLog << LogIO::WARN << msg << LogIO::POST;
+		profileStatus->showMessage(QString(msg.c_str()));
+		return;
+	}
+
+	int pos=0;
+	if (startValueFit->validator()->validate(startStr, pos) != QValidator::Acceptable){
+		String startString(startStr.toStdString());
+		msg = String("Start value not correct: ") + startString;
+		*itsLog << LogIO::WARN << msg << LogIO::POST;
+		profileStatus->showMessage(QString(msg.c_str()));
+		return;
+	}
+	if (endValueFit->validator()->validate(endStr, pos) != QValidator::Acceptable){
+		String endString(endStr.toStdString());
+		msg = String("Start value not correct: ") + endString;
+		*itsLog << LogIO::WARN << msg << LogIO::POST;
+		profileStatus->showMessage(QString(msg.c_str()));
+		return;
+	}
+
+	// convert input values to Float
+	Float startVal=(Float)startStr.toFloat();
+	Float endVal  =(Float)endStr.toFloat();
+
+	// set the fitting modes
+	Bool doFitGauss(False);
+	Bool doFitPoly(False);
+	if (fitGauss->currentText()==QString("gauss"))
+		doFitGauss=True;
+	//Int polyN = Int(fitPolyN->value());
+	//if (polyN>-1)
+	//	doFitPoly=True;
+	Int polyN;
+	if (fitPolyN->currentText()==QString("poly 0")){
+		doFitPoly=True;
+		polyN=0;
+	}
+	else if (fitPolyN->currentText()==QString("poly 1")){
+		doFitPoly=True;
+		polyN=1;
+	}
+
+	// make sure something should be fitted at all
+	if (!doFitGauss && !doFitPoly){
+		msg = String("There is nothing to fit!");
+		*itsLog << LogIO::WARN << msg << LogIO::POST;
+		profileStatus->showMessage(QString(msg.c_str()));
+		return;
+	}
+
+	// do the fit
+	Bool ok = fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg);
+
+	if (fitter->getStatus() == SpectralFitter::SUCCESS){
+		// get the fit values
+		Vector<Float> z_xfit, z_yfit;
+		fitter->getFit(z_xval, z_xfit, z_yfit);
+
+		// report problems
+		if (z_yfit.size()<1){
+			msg = String("There exist no fit values!");
+			*itsLog << LogIO::WARN << msg << LogIO::POST;
+			profileStatus->showMessage(QString(msg.c_str()));
+			return;
+		}
+
+		// overplot the fit values
+		QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
+		pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
+	}
+	profileStatus->showMessage(QString((fitter->report(*itsLog)).c_str()));
+
+	return;
+}
+
+void QtProfile::plotMainCurve(){
+	pixelCanvas->clearData();
+	pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+}
+
 void QtProfile::setCollapseRange(float xmin, float xmax){
 	if (xmax < xmin){
 		startValue->clear();
 		endValue->clear();
+		startValueFit->clear();
+		endValueFit->clear();
 	}
 	else {
 		QString startStr;
@@ -1341,6 +1472,8 @@ void QtProfile::setCollapseRange(float xmin, float xmax){
 		endStr.setNum(xmax);
 		startValue->setText(startStr);
 		endValue->setText(endStr);
+		startValueFit->setText(startStr);
+		endValueFit->setText(endStr);
 	}
 }
 
