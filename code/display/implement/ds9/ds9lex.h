@@ -6,9 +6,9 @@
 #ifndef YY_DECL
 
 #define YY_DECL                                     				\
-    casa::viewer::ds9parse::token_type						\
-    casa::viewer::ds9lex::lex( casa::viewer::ds9parse::semantic_type* yylval,	\
-			       casa::viewer::ds9parse::location_type* yylloc	\
+    casa__viewer::ds9parse::token_type						\
+    casa__viewer::ds9lex::lex( casa__viewer::ds9parse::semantic_type* yylval,	\
+			       casa__viewer::ds9parse::location_type* yylloc	\
 			     )
 #endif
 
@@ -27,6 +27,10 @@ namespace casa {
     namespace viewer {
 
 	class Region;
+    }
+}
+
+namespace casa__viewer {
 
 	// Scanner is a derived class to add some extra function to the scanner
 	// class. Flex itself creates a class named yyFlexLexer, which is renamed using
@@ -53,7 +57,7 @@ namespace casa {
 
 		void discard( int );
 	};
-    }
+
 }
 
 

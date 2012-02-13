@@ -41,10 +41,10 @@
   #include <display/ds9parse.hh>
 
   // import the parser's token type into a local typedef
-  typedef casa::viewer::ds9parse::token token;
-  typedef casa::viewer::ds9parse::token_type token_type;
+  typedef casa__viewer::ds9parse::token token;
+  typedef casa__viewer::ds9parse::token_type token_type;
 
-  casa::viewer::ds9lex *mklexx;
+  casa__viewer::ds9lex *mklexx;
 %}
 
 %x DISCARD
@@ -306,19 +306,19 @@ yes		{return token::YES_;}
 
 %%
 
-void casa::viewer::ds9lex::discard( int doit ) {
+void casa__viewer::ds9lex::discard( int doit ) {
    begin(DISCARD, doit);
 }
 
 
-void casa::viewer::ds9lex::begin(int which, int doit)
+void casa__viewer::ds9lex::begin(int which, int doit)
 {
   BEGIN which;
   if (doit)
     yyless(0);
 }
 
-void casa::viewer::ds9lex::set_debug(bool b) { yy_flex_debug = b; }
+void casa__viewer::ds9lex::set_debug(bool b) { yy_flex_debug = b; }
 
 //------------------------------------------------------------------------------------------
 #ifdef yylex

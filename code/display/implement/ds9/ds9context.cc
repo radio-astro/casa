@@ -10,8 +10,21 @@
 #include <measures/Measures/MCDirection.h>
 #include <display/region/Region.h>
 
-namespace casa {
-    namespace viewer {
+namespace casa__viewer {
+
+	// casa__viewer -- casa__viewer casa__viewer -- casa__viewer casa__viewer -- casa__viewer
+	// REVISION 18161 has the pre-old-gcc namespace mangling...
+	#define Quantum casa::Quantum
+	#define MDirection casa::MDirection
+	#define String casa::String
+	#define Region casa::viewer::Region
+	#define RegionCreator casa::viewer::RegionCreator
+	#define pixel_to_linear casa::viewer::pixel_to_linear
+	#define pixel_offset_to_linear_offset casa::viewer::pixel_offset_to_linear_offset
+	#define to_linear casa::viewer::to_linear
+	#define to_linear_offset casa::viewer::to_linear_offset
+	// casa__viewer -- casa__viewer casa__viewer -- casa__viewer casa__viewer -- casa__viewer
+
 	double degToRad(double d) {
 	    double r =  M_PI * d / 180.;
 
@@ -127,7 +140,7 @@ namespace casa {
 	    Quantum<double> xq(x,String(xunits));
 	    Quantum<double> yq(y,String(yunits));
 	    MDirection md = MDirection::Convert(MDirection(xq,yq,original_coordsys), new_coordsys)();
-	    casa::Quantum<casa::Vector<double> > result = md.getAngle("rad");
+	    Quantum<casa::Vector<double> > result = md.getAngle("rad");
 	    xq.convert("rad");
 	    yq.convert("rad");
 	    result.getValue( )(0) = wrap_angle(xq.getValue( ), result.getValue( )(0));
@@ -331,5 +344,5 @@ void ds9context::create ## NAME ## Cmd( const Vector& center, int size, const ch
 	    }
 	}
 
-    }
+
 }

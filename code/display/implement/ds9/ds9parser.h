@@ -5,8 +5,7 @@
 #include <vector>
 #include <display/ds9/ds9lex.h>
 
-namespace casa {
-    namespace viewer {
+namespace casa__viewer {
 
 	class ds9parser {
 	    public:
@@ -43,7 +42,6 @@ namespace casa {
 
 	};
 
-    }
 }
 
 #endif

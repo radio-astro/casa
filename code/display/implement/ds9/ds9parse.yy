@@ -16,7 +16,7 @@
 %defines
 %skeleton "lalr1.cc"
 
-%name-prefix="casa::viewer"
+%name-prefix="casa__viewer"
 %define "parser_class_name" "ds9parse"
 
 %{
@@ -54,11 +54,11 @@ const int MAXANGLES = 720;
 //extern int mklex(void*, ds9lex*);
 //extern void mkDiscard(int);
 
-static casa::viewer::CoordSystem globalSystem;
-static casa::viewer::CoordSystem globalWCS;
-static casa::viewer::SkyFrame globalSky;
-static casa::viewer::CoordSystem localSystem;
-static casa::viewer::SkyFrame localSky;
+static casa__viewer::CoordSystem globalSystem;
+static casa__viewer::CoordSystem globalWCS;
+static casa__viewer::SkyFrame globalSky;
+static casa__viewer::CoordSystem localSystem;
+static casa__viewer::SkyFrame localSky;
 
 static int globalTile;
 
@@ -103,23 +103,23 @@ static double localTextAngle;
 static int globalTextRotate;
 static int localTextRotate;
 
-static casa::viewer::CoordSystem globalRulerCoordSystem;
-static casa::viewer::CoordSystem localRulerCoordSystem;
-static casa::viewer::SkyFrame globalRulerSkyFrame;
-static casa::viewer::SkyFrame localRulerSkyFrame;
-static casa::viewer::CoordSystem globalRulerDistSystem;
-static casa::viewer::CoordSystem localRulerDistSystem;
-static casa::viewer::SkyFormat globalRulerDistFormat;
-static casa::viewer::SkyFormat localRulerDistFormat;
+static casa__viewer::CoordSystem globalRulerCoordSystem;
+static casa__viewer::CoordSystem localRulerCoordSystem;
+static casa__viewer::SkyFrame globalRulerSkyFrame;
+static casa__viewer::SkyFrame localRulerSkyFrame;
+static casa__viewer::CoordSystem globalRulerDistSystem;
+static casa__viewer::CoordSystem localRulerDistSystem;
+static casa__viewer::SkyFormat globalRulerDistFormat;
+static casa__viewer::SkyFormat localRulerDistFormat;
 
-static casa::viewer::CoordSystem globalCompassCoordSystem;
-static casa::viewer::SkyFrame globalCompassSkyFrame;
+static casa__viewer::CoordSystem globalCompassCoordSystem;
+static casa__viewer::SkyFrame globalCompassSkyFrame;
 static char globalCompassNorth[80];
 static char globalCompassEast[80];
 static int globalCompassNArrow;
 static int globalCompassEArrow;
-static casa::viewer::CoordSystem localCompassCoordSystem;
-static casa::viewer::SkyFrame localCompassSkyFrame;
+static casa__viewer::CoordSystem localCompassCoordSystem;
+static casa__viewer::SkyFrame localCompassSkyFrame;
 static char localCompassNorth[80];
 static char localCompassEast[80];
 static int localCompassNArrow;
@@ -129,16 +129,16 @@ static int localCpanda;
 static int localEpanda;
 static int localBpanda;
 
-static std::list<casa::viewer::Vertex> polylist;
-static std::list<casa::viewer::Tag> taglist;
+static std::list<casa__viewer::Vertex> polylist;
+static std::list<casa__viewer::Tag> taglist;
 
 static double aAnnuli[MAXANNULI];
-static casa::viewer::Vector aVector[MAXANNULI];
+static casa__viewer::Vector aVector[MAXANNULI];
 static int aNum;
 static int aNumsao;
 static int aStatus;
 static int cStatus;
-static casa::viewer::Vector aCenter;
+static casa__viewer::Vector aCenter;
 static double aAngles[MAXANGLES];
 static int aAngNum;
 static double aAngle;
@@ -151,8 +151,8 @@ static char aText[80];
 static char aComment[80];
 
 static void setProps(unsigned short* props, unsigned short prop, int value);
-static casa::viewer::CoordSystem checkWCSSystem();
-static casa::viewer::SkyFrame checkWCSSky();
+static casa__viewer::CoordSystem checkWCSSystem();
+static casa__viewer::SkyFrame checkWCSSky();
 
 enum {CIRCLE,BOX,DIAMOND,CROSS,XPT,ARROW,BOXCIRCLE};
 %}
@@ -350,8 +350,8 @@ command : /* empty */
 	| GLOBAL_ global comment
 	| TILE_ INT {globalTile = $2;}
 
-	| coordSystem {globalSystem=(casa::viewer::CoordSystem)$1;} comment
-	| skyFrame {globalSystem=globalWCS; globalSky=(casa::viewer::SkyFrame)$1;} comment
+	| coordSystem {globalSystem=(casa__viewer::CoordSystem)$1;} comment
+	| skyFrame {globalSystem=globalWCS; globalSky=(casa__viewer::SkyFrame)$1;} comment
 	| LINEAR_ {globalSystem=globalWCS; globalSky=NATIVEWCS;} comment
 
 	| initLocal shape
@@ -443,42 +443,42 @@ value	: numeric {$$ = FITSPTR->mapLenToRef($1, localSystem, DEGREES);}
 
 vvalue	: numeric sp numeric 
 	{
-	  casa::viewer::Vector r = FITSPTR->mapLenToRef(doubletovec($1,$3), localSystem, DEGREES);
+	  casa__viewer::Vector r = FITSPTR->mapLenToRef(doubletovec($1,$3), localSystem, DEGREES);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
 	}
 	| PHYCOORD sp PHYCOORD 
 	{
-	  casa::viewer::Vector r = FITSPTR->mapLenToRef(doubletovec($1,$3), PHYSICAL);
+	  casa__viewer::Vector r = FITSPTR->mapLenToRef(doubletovec($1,$3), PHYSICAL);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
 	}
 	| IMGCOORD sp IMGCOORD 
 	{
-	  casa::viewer::Vector r = FITSPTR->mapLenToRef(doubletovec($1,$3), IMAGE);
+	  casa__viewer::Vector r = FITSPTR->mapLenToRef(doubletovec($1,$3), IMAGE);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
 	}
 	| ANGDEGREE sp ANGDEGREE
 	{
-	  casa::viewer::Vector r=FITSPTR->mapLenToRef(doubletovec($1,$3),checkWCSSystem(),DEGREES);
+	  casa__viewer::Vector r=FITSPTR->mapLenToRef(doubletovec($1,$3),checkWCSSystem(),DEGREES);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
 	}
 	| ARCMINUTE sp ARCMINUTE 
 	{
-	  casa::viewer::Vector r=FITSPTR->mapLenToRef(doubletovec($1,$3),checkWCSSystem(),ARCMIN);
+	  casa__viewer::Vector r=FITSPTR->mapLenToRef(doubletovec($1,$3),checkWCSSystem(),ARCMIN);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
 	}
 	| ARCSECOND sp ARCSECOND 
 	{
-	  casa::viewer::Vector r=FITSPTR->mapLenToRef(doubletovec($1,$3),checkWCSSystem(),ARCSEC);
+	  casa__viewer::Vector r=FITSPTR->mapLenToRef(doubletovec($1,$3),checkWCSSystem(),ARCSEC);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
@@ -499,9 +499,9 @@ dms	: DMSSTR {$$ = parseDMSStr($1);}
 
 coord	: sexagesimal sp sexagesimal
 	{
-	  casa::viewer::Vector r;
-	  casa::viewer::CoordSystem sys = checkWCSSystem();
-	  casa::viewer::SkyFrame sky = checkWCSSky();
+	  casa__viewer::Vector r;
+	  casa__viewer::CoordSystem sys = checkWCSSystem();
+	  casa__viewer::SkyFrame sky = checkWCSSky();
 	  if (sky == GALACTIC || sky == ECLIPTIC) 
 	    r = FITSPTR->mapToRef(doubletovec($1,$3), sys, sky);
 	  else
@@ -512,7 +512,7 @@ coord	: sexagesimal sp sexagesimal
 	}
 	| hms sp dms
         {
-	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3),
+	  casa__viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3),
 	  checkWCSSystem(), checkWCSSky());
 	  $$[0] = r[0];
 	  $$[1] = r[1];
@@ -520,7 +520,7 @@ coord	: sexagesimal sp sexagesimal
 	}
 	| dms sp dms
         {
-	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3),
+	  casa__viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3),
 	  checkWCSSystem(), checkWCSSky());
 	  $$[0] = r[0];
 	  $$[1] = r[1];
@@ -528,14 +528,14 @@ coord	: sexagesimal sp sexagesimal
 	}
 	| numeric sp numeric 
 	{
-	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), localSystem, localSky);
+	  casa__viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), localSystem, localSky);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
 	}
 	| ANGDEGREE sp ANGDEGREE
 	{
-	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), 
+	  casa__viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), 
 	    checkWCSSystem(), checkWCSSky());
 	  $$[0] = r[0];
 	  $$[1] = r[1];
@@ -543,14 +543,14 @@ coord	: sexagesimal sp sexagesimal
 	}
 	| IMGCOORD sp IMGCOORD
 	{
-	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), IMAGE);
+	  casa__viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), IMAGE);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	  $$[2] = r[2];
 	}
 	| PHYCOORD sp PHYCOORD
 	{
-	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), PHYSICAL);
+	  casa__viewer::Vector r = FITSPTR->mapToRef(doubletovec($1,$3), PHYSICAL);
 	  $$[0] = r[0];
 	  $$[1] = r[1];
 	}
@@ -560,7 +560,7 @@ coordSystem :IMAGE_ {$$ = IMAGE;}
 	| PHYSICAL_ {$$ = PHYSICAL;}
 	| DETECTOR_ {$$ = DETECTOR;}
 	| AMPLIFIER_ {$$ = AMPLIFIER;}
-	| wcsSystem {$$ = $1; globalWCS = (casa::viewer::CoordSystem)$1;}
+	| wcsSystem {$$ = $1; globalWCS = (casa__viewer::CoordSystem)$1;}
 	;
 
 wcsSystem : WCS_ {$$ = WCS;}
@@ -720,26 +720,26 @@ globalProperty : property '=' yesno
 	}
 	| TEXTANGLE_ '=' angle {globalTextAngle = localTextAngle = $3;}
 	| TEXTROTATE_ '=' INT {globalTextRotate = localTextRotate = $3;}
-	| WCS_ '=' wcsSystem {globalWCS = (casa::viewer::CoordSystem)$3;}
+	| WCS_ '=' wcsSystem {globalWCS = (casa__viewer::CoordSystem)$3;}
 	;
 
 globalRuler : coordSystem skyFrame coordSystem skyFormat
 	{
-	  globalRulerCoordSystem = localRulerCoordSystem = (casa::viewer::CoordSystem)$1;
-	  globalRulerSkyFrame = localRulerSkyFrame = (casa::viewer::SkyFrame)$2;
-	  globalRulerDistSystem = localRulerDistSystem = (casa::viewer::CoordSystem)$3;
+	  globalRulerCoordSystem = localRulerCoordSystem = (casa__viewer::CoordSystem)$1;
+	  globalRulerSkyFrame = localRulerSkyFrame = (casa__viewer::SkyFrame)$2;
+	  globalRulerDistSystem = localRulerDistSystem = (casa__viewer::CoordSystem)$3;
 	  globalRulerDistFormat = localRulerDistFormat = (SkyFormat)$4;
 	}
 	| coordSystem coordSystem
 	{
-	  globalRulerCoordSystem = localRulerCoordSystem = (casa::viewer::CoordSystem)$1;
+	  globalRulerCoordSystem = localRulerCoordSystem = (casa__viewer::CoordSystem)$1;
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
-	  globalRulerDistSystem = localRulerDistSystem = (casa::viewer::CoordSystem)$2;
+	  globalRulerDistSystem = localRulerDistSystem = (casa__viewer::CoordSystem)$2;
 	  globalRulerDistFormat = localRulerDistFormat = DEGREES;
 	}
 	| coordSystem skyFormat
 	{
-	  globalRulerCoordSystem = localRulerCoordSystem = (casa::viewer::CoordSystem)$1;
+	  globalRulerCoordSystem = localRulerCoordSystem = (casa__viewer::CoordSystem)$1;
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
 	  globalRulerDistSystem = localRulerDistSystem = WCS;
 	  globalRulerDistFormat = localRulerDistFormat = (SkyFormat)$2;
@@ -747,14 +747,14 @@ globalRuler : coordSystem skyFrame coordSystem skyFormat
 	| skyFrame coordSystem
 	{
 	  globalRulerCoordSystem = localRulerCoordSystem = WCS;
-	  globalRulerSkyFrame = localRulerSkyFrame = (casa::viewer::SkyFrame)$1;
-	  globalRulerDistSystem = localRulerDistSystem = (casa::viewer::CoordSystem)$2;
+	  globalRulerSkyFrame = localRulerSkyFrame = (casa__viewer::SkyFrame)$1;
+	  globalRulerDistSystem = localRulerDistSystem = (casa__viewer::CoordSystem)$2;
 	  globalRulerDistFormat = localRulerDistFormat = DEGREES;
 	}
 	| skyFrame skyFormat
 	{
 	  globalRulerCoordSystem = localRulerCoordSystem = WCS;
-	  globalRulerSkyFrame = localRulerSkyFrame = (casa::viewer::SkyFrame)$1;
+	  globalRulerSkyFrame = localRulerSkyFrame = (casa__viewer::SkyFrame)$1;
 	  globalRulerDistSystem = localRulerDistSystem = WCS;
 	  globalRulerDistFormat = localRulerDistFormat = (SkyFormat)$2;
 	}
@@ -762,7 +762,7 @@ globalRuler : coordSystem skyFrame coordSystem skyFormat
 	{
 	  globalRulerCoordSystem = localRulerCoordSystem = WCS;
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
-	  globalRulerDistSystem = localRulerDistSystem = (casa::viewer::CoordSystem)$2;
+	  globalRulerDistSystem = localRulerDistSystem = (casa__viewer::CoordSystem)$2;
 	  globalRulerDistFormat = localRulerDistFormat = DEGREES;
 	}
 	| LINEAR_ skyFormat
@@ -790,18 +790,18 @@ globalRuler : coordSystem skyFrame coordSystem skyFormat
 
 globalCompass : coordSystem skyFrame
 	{
-	  globalCompassCoordSystem = localCompassCoordSystem = (casa::viewer::CoordSystem)$1;
-	  globalCompassSkyFrame = localCompassSkyFrame = (casa::viewer::SkyFrame)$2;
+	  globalCompassCoordSystem = localCompassCoordSystem = (casa__viewer::CoordSystem)$1;
+	  globalCompassSkyFrame = localCompassSkyFrame = (casa__viewer::SkyFrame)$2;
 	}
 	| coordSystem
 	{
-	  globalCompassCoordSystem = localCompassCoordSystem = (casa::viewer::CoordSystem)$1;
+	  globalCompassCoordSystem = localCompassCoordSystem = (casa__viewer::CoordSystem)$1;
 	  globalCompassSkyFrame = localCompassSkyFrame = FK5;
 	}
 	| skyFrame
 	{
 	  globalCompassCoordSystem = localCompassCoordSystem = WCS;
-	  globalCompassSkyFrame = localCompassSkyFrame = (casa::viewer::SkyFrame)$1;
+	  globalCompassSkyFrame = localCompassSkyFrame = (casa__viewer::SkyFrame)$1;
 	}
 	| LINEAR_
 	{
@@ -898,21 +898,21 @@ localProperty : property '=' yesno {setProps(&localProps,$1,$3);}
 
 localRuler : coordSystem skyFrame coordSystem skyFormat
 	{
-	  localRulerCoordSystem = (casa::viewer::CoordSystem)$1;
-	  localRulerSkyFrame = (casa::viewer::SkyFrame)$2;
-	  localRulerDistSystem = (casa::viewer::CoordSystem)$3;
+	  localRulerCoordSystem = (casa__viewer::CoordSystem)$1;
+	  localRulerSkyFrame = (casa__viewer::SkyFrame)$2;
+	  localRulerDistSystem = (casa__viewer::CoordSystem)$3;
 	  localRulerDistFormat = (SkyFormat)$4;
 	}
 	| coordSystem coordSystem
 	{
-	  localRulerCoordSystem = (casa::viewer::CoordSystem)$1;
+	  localRulerCoordSystem = (casa__viewer::CoordSystem)$1;
 	  localRulerSkyFrame = FK5;
-	  localRulerDistSystem = (casa::viewer::CoordSystem)$2;
+	  localRulerDistSystem = (casa__viewer::CoordSystem)$2;
 	  localRulerDistFormat = DEGREES;
 	}
 	| coordSystem skyFormat
 	{
-	  localRulerCoordSystem = (casa::viewer::CoordSystem)$1;
+	  localRulerCoordSystem = (casa__viewer::CoordSystem)$1;
 	  localRulerSkyFrame = FK5;
 	  localRulerDistSystem = WCS;
 	  localRulerDistFormat = (SkyFormat)$2;
@@ -920,14 +920,14 @@ localRuler : coordSystem skyFrame coordSystem skyFormat
 	| skyFrame coordSystem
 	{
 	  localRulerCoordSystem = WCS;
-	  localRulerSkyFrame = (casa::viewer::SkyFrame)$1;
-	  localRulerDistSystem = (casa::viewer::CoordSystem)$2;
+	  localRulerSkyFrame = (casa__viewer::SkyFrame)$1;
+	  localRulerDistSystem = (casa__viewer::CoordSystem)$2;
 	  localRulerDistFormat = DEGREES;
 	}
 	| skyFrame skyFormat
 	{
 	  localRulerCoordSystem = WCS;
-	  localRulerSkyFrame = (casa::viewer::SkyFrame)$1;
+	  localRulerSkyFrame = (casa__viewer::SkyFrame)$1;
 	  localRulerDistSystem = WCS;
 	  localRulerDistFormat = (SkyFormat)$2;
 	}
@@ -935,7 +935,7 @@ localRuler : coordSystem skyFrame coordSystem skyFormat
 	{
 	  localRulerCoordSystem = WCS;
 	  localRulerSkyFrame = FK5;
-	  localRulerDistSystem = (casa::viewer::CoordSystem)$2;
+	  localRulerDistSystem = (casa__viewer::CoordSystem)$2;
 	  localRulerDistFormat = DEGREES;
 	}
 	| LINEAR_ skyFormat
@@ -963,18 +963,18 @@ localRuler : coordSystem skyFrame coordSystem skyFormat
 
 localCompass : coordSystem skyFrame
 	{
-	  localCompassCoordSystem = (casa::viewer::CoordSystem)$1;
-	  localCompassSkyFrame = (casa::viewer::SkyFrame)$2;
+	  localCompassCoordSystem = (casa__viewer::CoordSystem)$1;
+	  localCompassSkyFrame = (casa__viewer::SkyFrame)$2;
 	}
 	| coordSystem
 	{
-	  localCompassCoordSystem = (casa::viewer::CoordSystem)$1;
+	  localCompassCoordSystem = (casa__viewer::CoordSystem)$1;
 	  localCompassSkyFrame = FK5;
 	}
 	| skyFrame
 	{
 	  localCompassCoordSystem = WCS;
-	  localCompassSkyFrame = (casa::viewer::SkyFrame)$1;
+	  localCompassSkyFrame = (casa__viewer::SkyFrame)$1;
 	}
 	| LINEAR_
 	{
@@ -1558,23 +1558,23 @@ static void setProps(unsigned short* props, unsigned short prop, int value)
     *props &= ~prop;
 }
 
-static casa::viewer::CoordSystem checkWCSSystem()
+static casa__viewer::CoordSystem checkWCSSystem()
 {
   switch (localSystem) {
-  case casa::viewer::IMAGE:
-  case casa::viewer::PHYSICAL:
-    return casa::viewer::WCS;
+  case casa__viewer::IMAGE:
+  case casa__viewer::PHYSICAL:
+    return casa__viewer::WCS;
   default:
    return localSystem;
   }
 }
 
-static casa::viewer::SkyFrame checkWCSSky()
+static casa__viewer::SkyFrame checkWCSSky()
 {
   switch (localSystem) {
-  case casa::viewer::IMAGE:
-  case casa::viewer::PHYSICAL:
-    return casa::viewer::NATIVEWCS;
+  case casa__viewer::IMAGE:
+  case casa__viewer::PHYSICAL:
+    return casa__viewer::NATIVEWCS;
   default:
    return localSky;
   }
@@ -1582,6 +1582,6 @@ static casa::viewer::SkyFrame checkWCSSky()
 
 //------------------------------------------------------------------------------------------
 // pass error along to the driver (ds9parser)
-void casa::viewer::ds9parse::error( const ds9parse::location_type &l, const std::string &m )
+void casa__viewer::ds9parse::error( const ds9parse::location_type &l, const std::string &m )
      { driver.error(l,m); }
 //------------------------------------------------------------------------------------------

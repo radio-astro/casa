@@ -2338,8 +2338,8 @@ void QtDisplayPanel::loadRegions( const std::string &path, const std::string &da
 	    wc_ = wcl.getRight( );
 	}
 	if ( wc_ ) {
-	    casa::viewer::ds9context context( wc_ );
-	    casa::viewer::ds9parser parser;
+	    casa__viewer::ds9context context( wc_ );
+	    casa__viewer::ds9parser parser;
 	    parser.parse_file( context, path.c_str( ) );
 	}
     }

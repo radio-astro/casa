@@ -3,8 +3,7 @@
 
 #include <display/ds9/ds9parser.h>
 
-namespace casa {
-    namespace viewer {
+namespace casa__viewer {
 
 	ds9parser::ds9parser( ) : trace_scanning(false), trace_parsing(false) { }
 
@@ -15,7 +14,7 @@ namespace casa {
 	    scanner.set_debug(trace_scanning);
 	    lexer = &scanner;
 
-	    ds9parse parser( *this, &base );
+	    casa__viewer::ds9parse parser( *this, &base );
 	    parser.set_debug_level(trace_parsing);
 	    return (parser.parse() == 0);
 	}
@@ -31,13 +30,13 @@ namespace casa {
 	    return parse_stream(base, iss, sname);
 	}
 
-	void ds9parser::error(const class location& l, const std::string& m) {
+	void ds9parser::error(const class casa__viewer::location& l, const std::string& m) {
 	    std::cerr << l << ": " << m << std::endl;
 	}
 
 	void ds9parser::error(const std::string& m) {
 	    std::cerr << m << std::endl;
 	}
-    }
+
 }
 

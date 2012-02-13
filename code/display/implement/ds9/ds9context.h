@@ -6,8 +6,7 @@
 #include <measures/Measures/MDirection.h>
 #include <display/Display/WorldCanvas.h>
 
-namespace casa {
-    namespace viewer {
+namespace casa__viewer {
 
 	extern double degToRad(double);
 	extern double radToDeg(double);
@@ -31,13 +30,13 @@ namespace casa {
 	enum SkyFrame {FK4, FK5, ICRS, GALACTIC, ECLIPTIC, NATIVEWCS};
 	enum SkyFormat {DEGREES, SEXAGESIMAL, ARCMIN, ARCSEC};
 
-	inline MDirection::Types todirection( SkyFrame frame ) {
+	inline casa::MDirection::Types todirection( SkyFrame frame ) {
 	    switch ( frame ) {
-		case FK4: return MDirection::B1950;
-		case FK5: return MDirection::J2000;
-		case GALACTIC: return MDirection::GALACTIC;
-		case ECLIPTIC: return MDirection::ECLIPTIC;
-		default: return MDirection::GALACTIC;
+		case FK4: return casa::MDirection::B1950;
+		case FK5: return casa::MDirection::J2000;
+		case GALACTIC: return casa::MDirection::GALACTIC;
+		case ECLIPTIC: return casa::MDirection::ECLIPTIC;
+		default: return casa::MDirection::GALACTIC;
 	    }
 	}
 
@@ -77,7 +76,7 @@ namespace casa {
 
 	class ds9context {
 	    public:
-		ds9context( WorldCanvas *wc ) : wc_(wc) { }
+		ds9context( casa::WorldCanvas *wc ) : wc_(wc) { }
 
 		double mapAngleFromRef(double angle, CoordSystem sys, SkyFrame sky) { return 0; }
 		double mapAngleToRef(double angle, CoordSystem sys, SkyFrame sky) { return 0; }
@@ -226,9 +225,9 @@ namespace casa {
 		void markerDeleteLastCmd() { }
 
 	    private:
-		WorldCanvas *wc_;
+		casa::WorldCanvas *wc_;
 	};
-    }
+
 }
 
 #endif
