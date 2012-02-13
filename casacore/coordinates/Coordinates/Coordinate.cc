@@ -331,13 +331,12 @@ void Coordinate::getPrecision(Int &precision,
 }
    
 
-String Coordinate::format(String& units,
-                          Coordinate::formatType format, 
-                          Double worldValue, 
-                          uInt worldAxis, 
-                          Bool isAbsolute, 
-                          Bool showAsAbsolute,
-                          Int precision) const
+String Coordinate::format(
+	String& units, Coordinate::formatType format,
+	Double worldValue, uInt worldAxis,
+	Bool isAbsolute, Bool showAsAbsolute,
+	Int precision, Bool usePrecForMixed
+) const
 //
 // isAbsolute
 //    T means the worldValue is given as absolute
@@ -429,7 +428,10 @@ String Coordinate::format(String& units,
 // Format and get units.
   
    if (form == Coordinate::MIXED) {
-      oss << worldValue;
+	   if (usePrecForMixed) {
+		   oss << setprecision(prec);
+	   }
+	   oss << worldValue;
    } else if (form == Coordinate::SCIENTIFIC) {
       oss.setf(ios::scientific, ios::floatfield);
       if ( precision_set == false ) oss.precision(prec);
