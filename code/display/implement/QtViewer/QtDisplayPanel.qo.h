@@ -121,7 +121,7 @@ public:
   // Either qdd pointer or its name can be given.
   //<group>
   virtual Bool isRegistered(QtDisplayData*);
-  virtual Bool isRegistered(const std::string &);
+  virtual Bool isRegistered(String);
   //</group>
   
   // True only if DD is not on our registered List, but _is_
@@ -701,8 +701,9 @@ public:
   // Note: the DD will _not_ be registered automatically.
   // origrestorefile and (current) restoredir aid in locating data files
   // relative to the current restore file location.
-  virtual Bool ddFileMatch_( const std::string &path, const std::string &dataType, const std::string &displayType,
-			     QtDisplayData*& dd, QString origrestorefile, QString restoredir);
+  virtual Bool ddFileMatch_(String path, String dataType, String displayType,
+                            QtDisplayData*& dd,
+			    QString origrestorefile, QString restoredir);
  
   
   

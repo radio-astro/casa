@@ -58,7 +58,6 @@ namespace casa {
 
 		// returns mouse movement state
 		unsigned int mouseMovement( double x, double y, bool other_selected );
-		void resize( double, double ) { }
 
 		AnnotationBase *annotation( ) const;
 

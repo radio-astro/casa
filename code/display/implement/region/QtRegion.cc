@@ -12,20 +12,7 @@
 namespace casa {
     namespace viewer {
 
-	QtRegion::QtRegion( QtRegionSource *factory ) :
-			source_(factory), dock_(factory->dock()), name_(""), hold_signals(0),
-			z_index_within_range(true), id_(QtId::get_id( )) {
-	    statistics_visible = position_visible = false;
-	    statistics_update_needed = position_update_needed = true;
-
-	    static DTVisible aipsrc;
-	    color_ = QString::fromStdString(aipsrc.drawColor( ));
-
-	    if ( dock_ == 0 )
-		throw internal_error( "no dock widget is available" );
-
-	    dock_->addRegion(mystate);
-	}
+	QtRegion::freestate_list *QtRegion::freestates = 0;
 
 	QtRegion::QtRegion( const QString &nme, QtRegionSource *factory, bool hold_signals_ ) :
 			source_(factory), dock_(factory->dock()), name_(nme), hold_signals(hold_signals_ ? 1 : 0),
@@ -39,20 +26,28 @@ namespace casa {
 	    if ( dock_ == 0 )
 		throw internal_error( "no dock widget is available" );
 
-	    mystate = new QtRegionState(name_,this);
+	    if ( freestates == 0 )
+		freestates = new freestate_list( );
+
+	    // BEGIN - critical section
+	    if ( freestates->size() > 0 ) {
+		mystate = freestates->back( );
+		freestates->pop_back( );
+		// END - critical section
+		mystate->reset(name_,this);
+	    } else {
+		mystate = new QtRegionState(name_,this);
+	    }
 
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
-	    connect( mystate, SIGNAL(positionMove( const QString &, const QString &, const QString &, const QString &, const QString &,
-						   const QString &, const QString &, const QString & )),
-		     SLOT(position_move_event( const QString &, const QString &, const QString &, const QString &, const QString &,
-					       const QString &, const QString &, const QString & )) );
+	    connect( mystate, SIGNAL(positionMove( const QString &, const QString &, const QString &, const QString &)),
+		     SLOT(position_move_event( const QString &, const QString &, const QString &, const QString &)) );
 
 	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
 	    connect( dock_, SIGNAL(deleteRegion(QtRegionState*)), SLOT(revoke_region(QtRegionState*)) );
-	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, RegionTextList &)), SLOT(output(std::list<QtRegionState*>, RegionTextList &)) );
-	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, ds9writer &)), SLOT(output(std::list<QtRegionState*>, ds9writer &)) );
+	    connect( dock_, SIGNAL(outputRegions(std::list<QtRegionState*>, RegionTextList &)), SLOT(output(std::list<QtRegionState*>, RegionTextList &)) );
 
 	    dock_->addRegion(mystate);
 	    signal_region_change( RegionChangeCreate );
@@ -61,6 +56,7 @@ namespace casa {
 	QtRegion::~QtRegion( ) {
 	    dock_->removeRegion(mystate);
 	    disconnect(mystate, 0, 0, 0);
+	    freestates->push_back(mystate);
 	}
 
 	void QtRegion::setLabel( const std::string &l ) {  mystate->setTextValue(l); }
@@ -112,31 +108,20 @@ namespace casa {
 		if ( region_modified ) position_update_needed = true;
 	    } else if ( (position_update_needed || region_modified) && regionVisible( ) ) {
 		Region::Coord c;
-		Region::Units xu,yu;
-		std::string whu;
+		Region::Units u;
 		std::string x, y, angle;
-		double width, height;
 		static bool first_time_through = true;
 		if ( first_time_through ) {
-		    getCoordinatesAndUnits( c, xu, yu, whu );
-		    mystate->setCoordinatesAndUnits( c, xu, yu, whu );
+		    getCoordinatesAndUnits( c, u );
+		    mystate->setCoordinatesAndUnits( c, u );
 		    first_time_through = false;
 		}
 
-		mystate->getCoordinatesAndUnits( c, xu, yu, whu );
-		getPositionString( x, y, angle, width, height, c, xu, yu, whu );
-
-		int precision = ( whu == "arcmin" ? 2 :
-				  whu == "arcsec" ? 1 :
-				  whu == "deg" ? 3 : 5 );
-				  
+		mystate->getCoordinatesAndUnits( c, u );
+		getPositionString( x, y, angle, c, u );
 		mystate->updatePosition( QString::fromStdString(x),
 					 QString::fromStdString(y),
-					 QString::fromStdString(angle),
-					 QString("%1").arg(width,0,'f',precision),
-					 QString("%1").arg(height,0,'f',precision) );
-					 // QString("%1").arg(width), 
-					 // QString("%1").arg(height) );
+					 QString::fromStdString(angle) );
 	    }
 
 	}
@@ -156,11 +141,8 @@ namespace casa {
 	    updateStateInfo( false );
 	}
 
-	void QtRegion::position_move_event( const QString &x, const QString &y, const QString &coord,
-					    const QString &x_units, const QString &y_units,
-					    const QString &width, const QString &height, const QString &bounding_units ) {
-	    movePosition( x.toStdString( ), y.toStdString( ), coord.toStdString( ), x_units.toStdString( ), y_units.toStdString( ),
-			  width.toStdString( ), height.toStdString( ), bounding_units.toStdString( ) );
+	void QtRegion::position_move_event( const QString &x, const QString &y, const QString &coord, const QString &units ) {
+	    movePosition( x.toStdString( ), y.toStdString( ), coord.toStdString( ), units.toStdString( ) );
 	}
 
 	void QtRegion::refresh_zrange_event( int min, int max ) {
@@ -216,13 +198,6 @@ namespace casa {
 
 		regionlist.addLine(AsciiAnnotationFileLine(ann));
 
-	    }
-	}
-
-	void QtRegion::output( std::list<QtRegionState*> ol, ds9writer &out ) {
-	    std::list<QtRegionState*>::iterator iter = find( ol.begin(), ol.end( ), mystate );
-	    if ( iter != ol.end( ) ) {
-		output(out);
 	    }
 	}
 

@@ -33,13 +33,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	return rfactory->point( wc, x, y );
     }
 
-    static std::set<viewer::RegionCreator::Types> multi_point_tool_region_set;
-    const std::set<viewer::RegionCreator::Types> &MultiPointTool::regionsCreated( ) const {
-	if ( multi_point_tool_region_set.size( ) == 0 ) {
-	    multi_point_tool_region_set.insert( POINT );
-	}
-	return multi_point_tool_region_set;
-    }
-
 
 } //# NAMESPACE CASA - END

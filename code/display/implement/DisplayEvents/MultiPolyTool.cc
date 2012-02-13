@@ -501,15 +501,7 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
 	}
     }
 
-    static std::set<viewer::RegionCreator::Types> multi_poly_tool_region_set;
-    const std::set<viewer::RegionCreator::Types> &MultiPolyTool::regionsCreated( ) const {
-	if ( multi_poly_tool_region_set.size( ) == 0 ) {
-	    multi_poly_tool_region_set.insert( POLYGON );
-	}
-	return multi_poly_tool_region_set;
-    }
-
-    bool MultiPolyTool::create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+    bool MultiPolyTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style ) {
 	if ( pts.size( ) <= 2 ) return false;

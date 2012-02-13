@@ -58,12 +58,11 @@ namespace casa {
 		/* QString getRegionCategory( ) const { return categories->tabText(categories->currentIndex( )); } */
 		void justExposed( );
 
-		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &xu, Region::Units &yu, std::string &bounding_units ) const;
-		void setCoordinatesAndUnits( Region::Coord c, Region::Units x_units, Region::Units y_units, const std::string &bounding_units );
-		void updatePosition( const QString &x, const QString &y, const QString &angle,
-				     const QString &bounding_width, const QString &bounding_height );
+		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const;
+		void setCoordinatesAndUnits( Region::Coord c, Region::Units u );
+		void updatePosition( const QString &x, const QString &y, const QString &angle );
 
-		// may be called after "outputRegions" signal to notify the
+		// may be called after "outputRegion" signal to notify the
 		// user that no regions were selected for output...
 		void noOutputNotify( );
 
@@ -79,12 +78,10 @@ namespace casa {
 		void refreshCanvas( );
 		void statisticsVisible( bool );
 		void positionVisible( bool );
-		void positionMove( const QString &x,const QString &y,const QString &coord,const QString &x_units,const QString &y_units,
-				   const QString &width, const QString &height, const QString &bounding_units );
+		void positionMove(const QString &x,const QString &y,const QString &coord,const QString &units);
 		void zRange( int z_min, int z_max );
 		/* void regionCategoryChange( QString ); */
-		void outputRegions( const QString &what, const QString &name, const QString &type, const QString &csys );
-		void loadRegions( bool &handled, const QString &path, const QString &type );
+		void outputRegion( const QString &what, const QString &name );
 
 	    protected slots:
 		// updates canvas with any line changes
@@ -99,19 +96,10 @@ namespace casa {
 		// keeps text color in sync with line color (if they were the same before)
 		void line_color_change(const QString & );
 		QString default_extension( const QString & );
-
-		void update_default_file_extension(const QString&);
-		void update_save_type(const QString &);
 		void save_region(bool);
-
-		void update_load_type(const QString &);
-		void load_regions( bool );
 
 		void frame_min_change(int);
 		void frame_max_change(int);
-
-		void save_browser(bool);
-		void load_browser(bool);
 
 	    protected:
 		// keep track of which set of statistics
@@ -122,10 +110,6 @@ namespace casa {
 		QString last_line_color;
 		QtRegion *region_;
 
-		QString last_load_directory;
-		QString last_save_directory;
-
-		std::string bounding_index_to_string( int index ) const;
 	};
     }
 }

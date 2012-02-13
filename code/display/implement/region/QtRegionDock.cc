@@ -31,7 +31,6 @@
 #include <iostream>
 #include <display/region/QtRegionDock.qo.h>
 #include <display/region/QtRegionState.qo.h>
-#include <display/ds9/ds9writer.h>
 
 namespace casa {
     namespace viewer {
@@ -58,7 +57,6 @@ namespace casa {
 	    connect( region_scroll, SIGNAL(valueChanged(int)), SLOT(change_stack(int)) );
 
 	    connect( dismiss_region, SIGNAL(clicked(bool)), SLOT(delete_current_region(bool)) );
-	    connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
 
 	    hide( );
 
@@ -75,8 +73,7 @@ namespace casa {
 		regions->addWidget(state);
 	    }
 	    regions->setCurrentWidget(state);
-	    connect( state, SIGNAL(outputRegions(const QString &,const QString &,const QString&,const QString&)), SLOT(output_region_event(const QString &,const QString &,const QString&,const QString&)) );
-	    connect( state, SIGNAL(loadRegions(bool&,const QString &,const QString &)), SIGNAL(loadRegions(bool&,const QString &,const QString&)) );
+	    connect( state, SIGNAL(outputRegion(const QString &,const QString &)), SLOT(output_region_event(const QString &,const QString & )) );
 
 	    if ( ! isVisible( ) ) show( );
 	}
@@ -144,7 +141,7 @@ namespace casa {
 	    emit deleteRegion(dynamic_cast<QtRegionState*>(regions->currentWidget( )));
 	}
 
-      void QtRegionDock::output_region_event( const QString &what, const QString &where, const QString &type, const QString &csys ) {
+	void QtRegionDock::output_region_event(const QString &what, const QString &where) {
 	    std::list<QtRegionState*> regionstate_list;
 	    if ( what == "current" ) {
 		// current region, only...
@@ -171,18 +168,13 @@ namespace casa {
 	    }
 
 	    if ( regionstate_list.size( ) > 0 ) {
-		if ( type == "CASA region file" ) {
-		    AnnRegion::unitInit();
-		    RegionTextList annotation_list;
-		    emit saveRegions(regionstate_list,annotation_list);
-		    ofstream sink;
-		    sink.open(where.toAscii( ).constData( ));
-		    annotation_list.print(sink);
-		    sink.close( );
-		} else if ( type == "DS9 region file" ) {
-		    ds9writer writer(where.toAscii( ).constData( ),csys.toAscii( ).constData( ));
-		    emit saveRegions(regionstate_list,writer);
-		}
+	        AnnRegion::unitInit();
+		RegionTextList annotation_list;
+		emit outputRegions(regionstate_list,annotation_list);
+		ofstream sink;
+		sink.open(where.toAscii( ).constData( ));
+		annotation_list.print(sink);
+		sink.close( );
 	    } else {
 		QWidget *current_widget = regions->currentWidget( );
 		QtRegionState *current = dynamic_cast<QtRegionState*>(current_widget);
@@ -191,9 +183,5 @@ namespace casa {
 	    }
 	}
 
-	void QtRegionDock::handle_visibility( bool visible ) {
-	    // this is a dangling "improvement"...
-	    //fprintf( stderr, "!!!!!!!!!!!!!!! visibility: %s !!!!!!!!!!!!!!!\n", visible ? "is visible" : "is not visible" );
-	}
     }
 }

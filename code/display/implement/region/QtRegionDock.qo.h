@@ -36,7 +36,6 @@ namespace casa {
     namespace viewer {
 
 	class QtRegionState;
-	class ds9writer;
 
 	class QtRegionDock : public QDockWidget, protected Ui::QtRegionDock {
 	    Q_OBJECT
@@ -56,16 +55,13 @@ namespace casa {
 
 	    signals:
 		void deleteRegion(QtRegionState*);
-		void saveRegions( std::list<QtRegionState*>, RegionTextList & );
-		void saveRegions( std::list<QtRegionState*>, ds9writer & );
-		void loadRegions( bool &handled, const QString &path, const QString &type );
+		void outputRegions( std::list<QtRegionState*>, RegionTextList & );
 
 	    private slots:
 		void stack_changed(int);
 		void change_stack(int);
 		void delete_current_region(bool);
-		void output_region_event(const QString &what, const QString &where, const QString &type, const QString &csys );
-		void handle_visibility(bool);
+		void output_region_event(const QString &what, const QString &where);
 	};
     }
 }

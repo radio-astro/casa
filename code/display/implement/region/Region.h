@@ -55,19 +55,12 @@ namespace casa {
 	    const std::string str;
 	};
 
-	struct runtime_error : public std::exception {
-	    runtime_error( const char *err="runtime viewer error" ) : str(err) { }
-	    ~runtime_error( ) throw( ) { }
-	    const char* what() const throw() { return str.c_str( ); }
-	    const std::string str;
-	};
-
 	// convert linear coordinates to viewer screen coordinates...
 	void linear_to_screen( WorldCanvas *wc_, double, double, int &, int & );
 	void linear_to_screen( WorldCanvas *wc_, double, double, double, double, int &, int &, int &, int & );
 	// convert linear coordinates to casa pixel coordinates...
-	void linear_to_pixel( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_to_pixel( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
+	void linear_to_pixel( WorldCanvas *wc_, double, double, int &, int & );
+	void linear_to_pixel( WorldCanvas *wc_, double, double, double, double, int &, int &, int &, int & );
 	// convert viewer screen coordinates to linear coordinates...
 	void screen_to_linear( WorldCanvas *wc_, int, int, double &, double & );
 	void screen_to_linear( WorldCanvas *wc_, int, int, int, int, double &, double &, double &, double & );
@@ -78,33 +71,11 @@ namespace casa {
 	void world_to_linear( WorldCanvas *wc_, double, double, double &, double & );
 	void world_to_linear( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double& );
 	// convert casa pixel coordinates to world coordinates...
-	void pixel_to_world( WorldCanvas *wc_, double, double, double &, double & );
-	void pixel_to_world( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
+	void pixel_to_world( WorldCanvas *wc_, int, int, double &, double & );
 	// convert casa pixel coordinates to linear coordinates...
-	void pixel_to_linear( WorldCanvas *wc_, double, double, double &, double & );
-	void pixel_to_linear( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
-
-	// convert linear coordinates to specific coordinate systems...
-	void linear_to_j2000( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_to_j2000( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
-	void linear_to_b1950( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_to_b1950( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
-	void linear_to_galactic( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_to_galactic( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
-	void linear_to_ecliptic( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_to_ecliptic( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
-
-	void to_linear( WorldCanvas *, MDirection::Types in_type, double, double, double &, double & );
-	void to_linear( WorldCanvas *, MDirection::Types in_type, double, double, double, double, double &, double &, double &, double & );
-	void to_linear_offset( WorldCanvas *, MDirection::Types in_type, double, double, double &, double & );
+	void pixel_to_linear( WorldCanvas *wc_, int, int, double &, double & );
 
 	void screen_offset_to_linear_offset( WorldCanvas *wc_, int, int, double &, double & );
-	void pixel_offset_to_linear_offset( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_offset_to_pixel_offset( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_offset_to_world_offset( WorldCanvas *wc_, double, double, MDirection::Types coordsys, const std::string &units, double &, double & );
-	void world_offset_to_linear_offset( WorldCanvas *wc_, MDirection::Types coordsys, const std::string &units, double, double, double &, double & );
-
-	MDirection::Types get_coordinate_type( const CoordinateSystem &wc );
 
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
@@ -171,17 +142,12 @@ namespace casa {
 		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
 		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine ) = 0;
 
-		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units,
-					     std::string &width_height_units ) const;
+		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const;
 		void getPositionString( std::string &x, std::string &y, std::string &angle,
-					double &bounding_width, double &bounding_height,
 					Region::Coord coord = Region::DefaultCoord,
-					Region::Units x_units = Region::DefaultUnits,
-					Region::Units y_units = Region::DefaultUnits,
-					const std::string &bounding_units = "rad" ) const;
-		void movePosition( const std::string &x, const std::string &y, const std::string &coord,
-				   const std::string &x_units, const std::string &y_units,
-				   const std::string &width, const std::string &height, const std::string &bounding_units );
+					Region::Units units = Region::DefaultUnits ) const;
+		void movePosition( const std::string &x, const std::string &y,
+				   const std::string &coord, const std::string &units );
 
 
 		// one would expect the "number of frames" in our composite cube (including
@@ -233,8 +199,6 @@ namespace casa {
 		// for rectangles, moving a handle is resizing...
 		virtual int moveHandle( int handle, double /*x*/, double /*y*/ ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
 		virtual void move( double /*dx*/, double /*dy*/ ) DISPLAY_PURE_VIRTUAL(Region::move,);
-		virtual void resize( double /*width_delta*/, double /*height_delta*/ ) = 0;
-		virtual bool valid_translation( double dx, double dy, double width_delta, double height_delta ) = 0;
 
 		// functions added with the introduction of RegionToolManager and the
 		// unified selection and manipulation of the various region types...
@@ -247,14 +211,13 @@ namespace casa {
 			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
 	    protected:
-		static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
+		static Int getAxisIndex( ImageInterface<Float> *image, String axtype );
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
 
 		RegionInfo::stats_t *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
-		Units current_xunits( ) const;
-		Units current_yunits( ) const;
+		Units current_units( ) const;
 		Coord current_region_coordsys( ) const;
 		MDirection::Types current_casa_coordsys( ) const;
 

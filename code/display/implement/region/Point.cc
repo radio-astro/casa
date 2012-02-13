@@ -59,7 +59,7 @@ namespace casa {
 	    double wblc_x, wblc_y;
 	    linear_to_world( wc_, blc_x, blc_y, wblc_x, wblc_y );
 
-	    double pblc_x, pblc_y;
+	    int pblc_x, pblc_y;
 	    linear_to_pixel( wc_, blc_x, blc_y, pblc_x, pblc_y );
 
 	    pixel_pts.resize(1);

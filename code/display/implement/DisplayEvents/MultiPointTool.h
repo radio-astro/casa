@@ -95,9 +95,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
   
-	    // returns a set which indicates regions this creator creates...
-	    const std::set<Types> &regionsCreated( ) const;
-
 	protected:
 
 	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;

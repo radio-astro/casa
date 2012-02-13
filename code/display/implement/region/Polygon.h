@@ -41,8 +41,6 @@ namespace casa {
 
 	class Polygon : public Region {
 	    public:
-		typedef std::pair<double,double> pt;
-		typedef std::vector<pt> point_list;
 
 		Polygon( WorldCanvas *wc, double x1, double y1 ) : Region( wc ), closed(false),
 				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
@@ -59,8 +57,6 @@ namespace casa {
 		// for rectangles, moving a handle is resizing...
 		int moveHandle( int handle, double x, double y );
 		void move( double dx, double dy );
-		void resize( double /*width_delta*/, double /*height_delta*/ );
-		bool valid_translation( double dx, double dy, double width_delta, double height_delta );
 
 		// returns point state (Region::PointLocation)
 		PointInfo checkPoint( double x, double y ) const;
@@ -93,8 +89,6 @@ namespace casa {
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;
 
-		const point_list &drawing_points( ) const { return _drawing_points_; }
-
 	    private:
 		bool closed;
 
@@ -110,6 +104,9 @@ namespace casa {
 		void update_reference_state( int transformations, int handle, int new_handle );
 
 		double handle_delta_x, handle_delta_y;
+
+		typedef std::pair<double,double> pt;
+		typedef std::vector<pt> point_list;
 
 		point_list _ref_points_;
 		double _ref_blc_x_, _ref_blc_y_;

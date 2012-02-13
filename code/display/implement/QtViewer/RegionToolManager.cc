@@ -72,18 +72,6 @@ namespace casa {
 
 	}
 
-	RegionToolManager::~RegionToolManager( ) {
-	    for ( tool_map::iterator it = tools.begin( );
-		  it != tools.end(); ++it ) {
-		switch ( (*it).first ) {
-		    case PointTool:   pd->removeTool(QtMouseToolNames::POSITION); break;
-		    case PolyTool:    pd->removeTool(QtMouseToolNames::POLYGON); break;
-		    case RectTool:    pd->removeTool(QtMouseToolNames::RECTANGLE); break;
-		    case EllipseTool: pd->removeTool(QtMouseToolNames::ELLIPSE); break;
-		}
-	    }
-	}
-	  
 	bool RegionToolManager::add_mark_select( RegionTool::State &state ) {
 	    if ( state.count( viewer::Region::PointInside ) > 0 ) {
 		const region_list_type &new_marked_regions = state.regions(viewer::Region::PointInside);
@@ -368,7 +356,7 @@ namespace casa {
 
 				double lcx, lcy;
 				viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]), lcx, lcy );
-				double px, py;
+				int px, py;
 				viewer::linear_to_pixel( wc, lcx, lcy, px, py );
 
 				// region is outside of our pixel canvas area
@@ -404,7 +392,7 @@ namespace casa {
 				viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]),
 							 points[1].first.getValue(units[0]), points[1].second.getValue(units[1]),
 							 lblcx, lblcy, ltrcx, ltrcy );
-				double pblcx, pblcy, ptrcx, ptrcy;
+				int pblcx, pblcy, ptrcx, ptrcy;
 				viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
 
 				// region is outside of our pixel canvas area
@@ -468,7 +456,7 @@ namespace casa {
 				viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),
 							 qtrcx.getValue(units[0]), qtrcy.getValue(units[1]),
 							 lblcx, lblcy, ltrcx, ltrcy );
-				double pblcx, pblcy, ptrcx, ptrcy;
+				int pblcx, pblcy, ptrcx, ptrcy;
 				viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
 
 				// region is outside of our pixel canvas area
@@ -505,7 +493,7 @@ namespace casa {
 				for ( unsigned int i = 0; i < points.size( ); ++i ) {
 				    double lx, ly;
 				    viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
-				    double px, py;
+				    int px, py;
 				    viewer::linear_to_pixel( wc, lx, ly, px, py );
 
 				    // region is outside of our pixel canvas area

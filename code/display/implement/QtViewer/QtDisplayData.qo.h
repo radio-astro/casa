@@ -67,26 +67,24 @@ class QtDisplayData : public QObject {
 		//# name of this file in 'mocs' section.
 
  public:
-
-  static std::string path(const DisplayData *);
   
   QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType, String displayType,
 		 const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ) );
   ~QtDisplayData();
   
-  virtual std::string name() { return name_;  }
+  virtual String name() { return name_;  }
   virtual const char* nameChrs() { return name_.c_str();  }
-  virtual void setName(const std::string& name) { name_ = name;  }
+  virtual void setName(const String& name) { name_ = name;  }
  
-  virtual std::string dataType() const { return dataType_;  }
-  virtual std::string displayType() { return displayType_;  }
+  virtual String path() { return path_;  }
+  virtual String dataType() const { return dataType_;  }
+  virtual String displayType() { return displayType_;  }
 
   //virtual Bool delTmpData() const;
   virtual void delTmpData() const;
   virtual void setDelTmpData(Bool delTmpData);
 
-  std::string description( ) const;
-  std::string path( ) const { return path_; }
+  String description( ) const;
   
   virtual String errMsg() { return errMsg_;  }
   
@@ -339,10 +337,7 @@ class QtDisplayData : public QObject {
   // Can this QDD use a color bar?
   virtual Bool usesColorBar_() { return displayType_=="raster";  }
 
-
-  typedef std::map<const DisplayData*,QtDisplayData*> data_to_qtdata_map_type;
-  static data_to_qtdata_map_type dd_source_map;
-
+  
  private:
   
   // Not intended for use.
@@ -350,12 +345,12 @@ class QtDisplayData : public QObject {
 
   //# data
   QtDisplayPanelGui *panel_;
-  std::string path_, dataType_, displayType_;
+  String path_, dataType_, displayType_;
   ImageInterface<Float>* im_;
   ImageInterface<Complex>* cim_;
   DisplayData* dd_;
 
-  std::string name_;
+  String name_;
   
   // Name of colormap used by dd_  ("" if none)
   String clrMapName_;

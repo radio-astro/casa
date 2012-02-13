@@ -76,7 +76,7 @@ class QtExportManager : public QWidget, private Ui::QtExportManager {
   QString getOutDirNameOLD(QString &filter);
 
   enum DATATYPE { UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
-		  DIRECTORY, QUALIMG, CASAREGION, DS9REGION };
+		  DIRECTORY, QUALIMG, CASAREGION };
   enum DISPLAYTYPE { RASTER, CONTOUR, VECTOR, MARKER, SKY_CAT,
 		     NEWPANEL, OLDPANEL };
 
