@@ -139,7 +139,7 @@ def accum(vis=None,tablein=None,incrtable=None,caltable=None,field=None,calfield
                      accumtime=-1.0
 
               if ((type(vis)==str) & (os.path.exists(vis))):
-                     cb.open(vis)
+                     cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
               else:
                      raise Exception, 'Visibility data set not found - please verify the name'
 

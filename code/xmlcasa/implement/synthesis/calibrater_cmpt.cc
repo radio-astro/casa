@@ -53,7 +53,7 @@ calibrater::~calibrater()
 
 bool calibrater::open(const std::string& filename, 
 		      const bool compress,
-		      const bool addscratch, const bool addModel)
+		      const bool addcorr, const bool addModel)
 {
   bool rstat(False);
   try {
@@ -72,7 +72,7 @@ bool calibrater::open(const std::string& filename,
                                        MSMainEnums::PROCESSOR -
                                        MSMainEnums::STATE);
     AlwaysAssert(itsMS, AipsError);
-    rstat = itsCalibrater->initialize(*itsMS, compress,addscratch, addModel);
+    rstat = itsCalibrater->initialize(*itsMS, compress,addcorr, addModel);
 
     // Open LogSink for MS History table logging
     logSink_p=LogSink(LogMessage::NORMAL1, False);

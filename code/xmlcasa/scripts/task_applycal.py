@@ -39,7 +39,8 @@ def applycal(vis=None,
 	try:
                 mycb = cbtool.create()
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        mycb.open(vis)
+			# add CORRECTED_DATA column
+                        mycb.open(filename=vis,compress=False,addcorr=True,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 		# Back up the flags, if requested
