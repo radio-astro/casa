@@ -99,7 +99,7 @@ macro( casa_add_tasks module _target )
 
   set( _tasksref ${CASA_DOC_DIR}/helpfiles/tasksref.htex )
   add_custom_target(    
-   xmlcasa_tasksref
+   doc_tasksref
    COMMAND mkdir -p ${CASA_DOC_DIR}/helpfiles
    COMMAND echo > ${_tasksref}
    COMMAND for x in ${_all_tasks} \; do echo "\\\\input{$$x.htex}" >> ${_tasksref} \; done

@@ -1,4 +1,4 @@
-casa_add_tasks( xmlcasa xmlcasa_tasks 
+casa_add_tasks( tasks casa_tasks 
 tasks/accum.xml
 tasks/applycal.xml
 tasks/autoclean.xml

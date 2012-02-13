@@ -142,6 +142,7 @@ add_custom_target( generated_py SOURCES ${tools_py} )
 
 foreach(_tool ${tools_swig} )
    get_filename_component( _base ${_tool} NAME_WE )
+   add_dependencies( _${_base} libtools)
    add_dependencies( inst  _${_base} )
    install( TARGETS _${_base}
             DESTINATION python/${PYTHONV}/casac/${_base} )
