@@ -206,6 +206,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_accum.py
   scripts/task_applycal.py
   scripts/task_autoclean.py
+  scripts/task_asdmsummary.py
   scripts/task_testautoflag.py
   scripts/task_bandpass.py
   scripts/task_blcal.py
@@ -337,6 +338,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
 casa_add_tasks( xmlcasa xmlcasa_tasks 
   tasks/accum.xml
   tasks/applycal.xml
+  tasks/asdmsummary.xml
   tasks/autoclean.xml
   tasks/testautoflag.xml
   tasks/bandpass.xml
