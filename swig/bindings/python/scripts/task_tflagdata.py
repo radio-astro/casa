@@ -7,7 +7,7 @@ from flaghelper import *
 debug = False
 
 
-def tflagger(vis,
+def tflagdata(vis,
              mode,
              inpfile,       # mode list parameter
              spw,           # data selection parameters
@@ -67,24 +67,24 @@ def tflagger(vis,
     # vis, mode, run, savepars, display, writeflags                        
     
     #
-    # Task tflagger
+    # Task tflagdata
     #    Flags data based on data selection in various ways
     #    
     # This is a replacement task to flagdata. It takes different parameters and
     # different default values. This task uses a new tool and framework underneath.
 
     if pCASA.is_mms(vis):
-        pCASA.execute("tflagger", locals())
+        pCASA.execute("tflagdata", locals())
         return
 
-    casalog.origin('tflagger')
+    casalog.origin('tflagdata')
 
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
-    mslocal.writehistory(message='taskname = tflagger', origin='tflagger')
+    mslocal.writehistory(message='taskname = tflagdata', origin='tflagdata')
     mslocal.open(vis, nomodify=False)
 
 
@@ -402,9 +402,9 @@ def tflagger(vis,
         
     # Write history to the MS
     try:
-            param_names = tflagger.func_code.co_varnames[:tflagger.func_code.co_argcount]
+            param_names = tflagdata.func_code.co_varnames[:tflagdata.func_code.co_argcount]
             param_vals = [eval(p) for p in param_names]
-            retval &= write_history(mslocal, vis, 'tflagger', param_names,
+            retval &= write_history(mslocal, vis, 'tflagdata', param_names,
                                     param_vals, casalog)
     except Exception, instance:
             casalog.post("*** Error \'%s\' updating HISTORY" % (instance),

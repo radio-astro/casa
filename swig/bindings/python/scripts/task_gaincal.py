@@ -19,7 +19,7 @@ def gaincal(vis=None,caltable=None,
 	try: 
                 mycb = cbtool.create()
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        mycb.open(vis)
+                        mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 

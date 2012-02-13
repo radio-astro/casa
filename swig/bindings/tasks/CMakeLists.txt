@@ -104,7 +104,6 @@ split.xml
 statwt.xml
 testconcat.xml
 tflagcmd.xml
-tflagger.xml
 uvcontsub.xml
 uvcontsub2.xml
 uvcontsub3.xml

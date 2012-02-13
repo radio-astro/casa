@@ -16,7 +16,7 @@ def blcal(vis=None,caltable=None,
 
                 casalog.origin('blcal')
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        cb.open(vis)
+                        cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
