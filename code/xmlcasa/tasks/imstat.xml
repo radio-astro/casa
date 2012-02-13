@@ -65,10 +65,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Stretch the mask if necessary and possible? See help par.stretch </description>
         <value>False</value>
     </param>
+    <param type="string" name="logfile">
+        <description>Name of file to write fit results.</description>
+        <value></value>
+        <example>logfile="myimfitlog.txt"</example>
+    </param>
+    <param type="bool" name="append" subparam="true"> 
+        <description>If logfile exists, append to it if True or overwrite it if False</description>
+        <value>True</value>
+        <example>append=True</example>
+    </param> 
     <constraints>
         <when param="mask">
             <notequals type="string" value="">
                 <default param="stretch"><value type="bool">False</value></default>
+            </notequals>
+        </when>
+        <when param="logfile">
+            <notequals type="string" value="">
+                <default param="append">
+                    <value>True</value>
+                </default>
             </notequals>
         </when>
     </constraints>
@@ -113,6 +130,8 @@ listit       Print stats and bounding box to logger?
 verbose      Print additional messages to logger?
 mask         Mask to use. See help par.mask. Default is none.
 stretch      Stretch the mask if necessary and possible? See help par.stretch 
+logfile      Name of file to write fit results.
+append       If logfile exists, append to it (True) or overwrite it (False).
 
 
       General procedure:

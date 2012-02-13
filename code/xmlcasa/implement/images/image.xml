@@ -8343,7 +8343,7 @@ ia.close()
      </param>
   
      <param type="bool" direction="in" name="verbose">
-     <description>If T then print useful messages to the logger</description>
+     <description>If T then log statistics</description>
      <value>true</value>
      </param>
   
@@ -8355,6 +8355,14 @@ ia.close()
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
+     <param type="string" direction="in" name="logfile">
+        <description>Name of file to which to write statistics.</description>
+        <value/>
+     </param>
+    <param type="bool" direction="in" name="append">
+        <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
+        <value>true</value>
+    </param>
 </input>
 
 <returns type="any">
