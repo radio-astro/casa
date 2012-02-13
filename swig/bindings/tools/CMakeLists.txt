@@ -98,7 +98,7 @@ add_dependencies( libtools      tools_definitions )
 
 #casa_add_assay( bindingxerces/test/tXMLToRecord.cc )
 
-casa_add_tools( tools_swig tools_sources 
+casa_add_tools( tools_swig tools_sources tools_py
  atmosphere/atmosphere.xml
  calibrater/calplot.xml
  casa/logsink.xml
@@ -138,12 +138,21 @@ include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 add_definitions( -pthread -fno-strict-aliasing -DNDEBUG ) # may or may not be necessary for compiling python modules
 
 add_custom_target( generated_sources SOURCES ${tools_sources} ${tools_swig} )
-#add_dependencies( generated_sources )
-add_dependencies( libtools generated_sources )
+add_custom_target( generated_py SOURCES ${tools_py} )
 
-#foreach(_tool ${tools_swig} )
-#   get_filename_component( _base ${_tool} NAME_WE )
-#   install( FILES ${CMAKE_CURRENT_BINARY_DIR}/_${_base}.so
-#           ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
-#           DESTINATION python/${PYTHONV}/casac/${_base} )
-#endforeach()
+foreach(_tool ${tools_swig} )
+   get_filename_component( _base ${_tool} NAME_WE )
+   add_dependencies( inst  _${_base} )
+   install( TARGETS _${_base}
+            DESTINATION python/${PYTHONV}/casac/${_base} )
+endforeach()
+
+add_dependencies( inst  generated_py )
+
+foreach(_tool ${tools_py} )
+   get_filename_component( _base ${_tool} NAME_WE )
+   install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
+            DESTINATION python/${PYTHONV}/casac/${_base} )
+endforeach()
+
+

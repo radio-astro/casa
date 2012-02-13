@@ -173,7 +173,7 @@ endmacro()
 #  out_sources: generated .cc and .h files
 #
 
-macro( casa_add_tools out_swig out_sources )
+macro( casa_add_tools out_swig out_sources out_py )
 
   INCLUDE(${SWIG_USE_FILE})
   message (status  ${SWIG_USE_FILE} )
@@ -236,9 +236,11 @@ macro( casa_add_tools out_swig out_sources )
 	    ${_base}_cmpt.h
 	    ${_base}PYTHON_wrap.cxx
 	    )
+    set(_outpy ${_base}.py)
     set( ${out_swig} ${${out_swig}} ${_swig} )
 
     set( ${out_sources} ${${out_sources}} ${_outputs} )
+    set( ${out_py} ${${out_py}} ${_outpy} )
 
 
     # Create tool documentation
