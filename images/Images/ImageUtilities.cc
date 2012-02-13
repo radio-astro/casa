@@ -98,14 +98,13 @@ void ImageUtilities::openImage (PtrHolder<ImageInterface<Float> >& image,
 }
 
 
-Bool ImageUtilities::pixToWorld (Vector<String>& sWorld,
-                                 CoordinateSystem& cSysIn,
-                                 const Int& pixelAxis,
-                                 const Vector<Int>& cursorAxes,
-                                 const IPosition& blc,
-                                 const IPosition& trc,
-                                 const Vector<Double>& pixels,
-                                 const Int& prec)
+Bool ImageUtilities::pixToWorld (
+	Vector<String>& sWorld,	CoordinateSystem& cSysIn,
+	const Int& pixelAxis, const Vector<Int>& cursorAxes,
+	const IPosition& blc, const IPosition& trc,
+	const Vector<Double>& pixels,
+	const Int& prec, const Bool usePrecForMixed
+)
 //
 // This function converts pixel coordinates to world coordinates.
 // You specify pixel coordinates for only  one axis, the pixel axis,
@@ -175,7 +174,7 @@ Bool ImageUtilities::pixToWorld (Vector<String>& sWorld,
       pix(pixelAxis) = pixels(i);
       if (cSysIn.toWorld(world,pix)) {
          sWorld(i) = cSysIn.format(formatUnits, Coordinate::DEFAULT, world(pixelAxis), 
-                                   worldAxis, True, True, prec);
+                                   worldAxis, True, True, prec, usePrecForMixed);
       } else {
          sWorld(i) = "?";
       }

@@ -2506,21 +2506,21 @@ Bool CoordinateSystem::nearPixel  (const CoordinateSystem& other,
 
 
 
-String CoordinateSystem::format(String& units,
-                                Coordinate::formatType format,
-                                Double worldValue,
-                                uInt worldAxis,
-                                Bool isAbsolute,
-                                Bool showAsAbsolute,
-                                Int precision) const
-{
+String CoordinateSystem::format(
+	String& units, Coordinate::formatType format,
+	Double worldValue, uInt worldAxis,
+	Bool isAbsolute, Bool showAsAbsolute,
+	Int precision, Bool usePrecForMixed
+) const {
     AlwaysAssert(worldAxis < nWorldAxes(), AipsError);
 // 
     Int coord, axis;
     findWorldAxis(coord, axis, worldAxis);
     AlwaysAssert(coord>=0 && axis >= 0, AipsError);
-    return coordinates_p[coord]->format(units, format, worldValue, axis, 
-                                        isAbsolute, showAsAbsolute, precision);
+    return coordinates_p[coord]->format(
+    	units, format, worldValue, axis,
+    	isAbsolute, showAsAbsolute, precision, usePrecForMixed
+    );
 }
 
 ObsInfo CoordinateSystem::obsInfo() const
