@@ -18,20 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_library( tableplot
-  implement/TablePlot/BasePlot.cc
-  implement/TablePlot/CasaPyInterpreter.cc
-  implement/TablePlot/CrossPlot.cc
-  implement/TablePlot/FlagVersion.cc
-  implement/TablePlot/PanelParams.cc
-  implement/TablePlot/PlotterGlobals.cc
-  implement/TablePlot/SLog.cc
-  implement/TablePlot/TablePlot.cc
-  implement/TablePlot/TPPlotter.cc
-   )
-
 #casa_add_executable(tableplot projtable  apps/projtable/projtable.cc)
-casa_add_python( python casa_python python/${PYTHONV}
+casa_add_python( python  casa_python python/${PYTHONV}
 scripts/asap_init.py
 scripts/assignmentFilter.py
 scripts/casa_in_py.py

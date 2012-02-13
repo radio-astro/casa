@@ -1168,8 +1168,8 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
-#add_subdirectory(tasks)
-#add_subdirectory(python)
+add_subdirectory(tasks)
+add_subdirectory(python)
 add_subdirectory( doc/taskref )
 add_subdirectory( doc/casaref )
 
