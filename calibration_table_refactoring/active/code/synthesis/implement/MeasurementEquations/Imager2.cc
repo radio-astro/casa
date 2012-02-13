@@ -73,10 +73,10 @@
 #include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisImagingWeight.h>
-#include <msvis/MSVis/SubMS.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisImagingWeight.h>
+#include <synthesis/MSVis/SubMS.h>
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 
@@ -114,16 +114,16 @@
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
-#include <synthesis/MeasurementComponents/MosaicFT.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
-#include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
-#include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
-#include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
+#include <synthesis/TransformMachines/PBMath.h>
+#include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
+#include <synthesis/TransformMachines/SimpCompGridMachine.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/HetArrayConvFunc.h>
 #include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
@@ -131,7 +131,6 @@
 #include <synthesis/DataSampling/ImageDataSampling.h>
 #include <synthesis/DataSampling/PixonProcessor.h>
 
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
 #include <lattices/Lattices/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
@@ -150,7 +149,7 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCIntersection.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
+#include <synthesis/TransformMachines/PBMath.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>
@@ -190,7 +189,7 @@
 
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
-#include <synthesis/MeasurementComponents/MultiTermFT.h>
+#include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/AWConvFunc.h>
 
 using namespace std;
@@ -722,12 +721,12 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
   }
   
   if (polType(0)=="X" || polType(0)=="Y") {
-    polRep_p=SkyModel::LINEAR;
+    polRep_p=StokesImageUtil::LINEAR;
     os << LogIO::DEBUG1 
        << "Preferred polarization representation is linear" << LogIO::POST;
   }
   else {
-    polRep_p=SkyModel::CIRCULAR;
+    polRep_p=StokesImageUtil::CIRCULAR;
     os << LogIO::DEBUG1
        << "Preferred polarization representation is circular" << LogIO::POST;
   }
@@ -738,7 +737,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
   Vector<Int> whichStokes = decideNPolPlanes(True);
   if(whichStokes.nelements()==0 || (whichStokes.nelements()==1 && whichStokes[0]==0) ) 
     {
-      if(polRep_p==SkyModel::CIRCULAR) 
+      if(polRep_p==StokesImageUtil::CIRCULAR) 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Circular feeds." << LogIO::EXCEPTION;
       else 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Linear feeds." << LogIO::EXCEPTION;
@@ -1282,12 +1281,12 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
   }
   
   if (polType(0)=="X" || polType(0)=="Y") {
-    polRep_p=SkyModel::LINEAR;
+    polRep_p=StokesImageUtil::LINEAR;
     os << LogIO::DEBUG1 
        << "Preferred polarization representation is linear" << LogIO::POST;
   }
   else {
-    polRep_p=SkyModel::CIRCULAR;
+    polRep_p=StokesImageUtil::CIRCULAR;
     os << LogIO::DEBUG1
        << "Preferred polarization representation is circular" << LogIO::POST;
   }
@@ -1298,7 +1297,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
   Vector<Int> whichStokes = decideNPolPlanes(True);
   if(whichStokes.nelements()==0 || (whichStokes.nelements()==1 && whichStokes[0]==0) ) 
     {
-      if(polRep_p==SkyModel::CIRCULAR) 
+      if(polRep_p==StokesImageUtil::CIRCULAR) 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Circular feeds." << LogIO::EXCEPTION;
       else 
 	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Linear feeds." << LogIO::EXCEPTION;
@@ -1361,14 +1360,14 @@ Vector<Int> Imager::decideNPolPlanes(Bool checkwithMS)
            // Fill in the stokes vector for the output image
            whichStokes.resize(npol_p);
            // The first 8 depend on circular vs linear
-           if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RR")  whichStokes(0)=Stokes::RR;
-           else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="LL")  whichStokes(0)=Stokes::LL;
-           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RL")  whichStokes(0)=Stokes::RL;
-           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="LR")  whichStokes(0)=Stokes::LR;
-           else if(polRep_p==SkyModel::LINEAR && stokes_p=="XX") whichStokes(0)=Stokes::XX;
-           else if(polRep_p==SkyModel::LINEAR && stokes_p=="YY")  whichStokes(0)=Stokes::YY;
-           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="XY")  whichStokes(0)=Stokes::XY;
-           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="YX")  whichStokes(0)=Stokes::YX;
+           if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RR")  whichStokes(0)=Stokes::RR;
+           else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="LL")  whichStokes(0)=Stokes::LL;
+           ////else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RL")  whichStokes(0)=Stokes::RL;
+           ////else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="LR")  whichStokes(0)=Stokes::LR;
+           else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XX") whichStokes(0)=Stokes::XX;
+           else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="YY")  whichStokes(0)=Stokes::YY;
+           ////else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XY")  whichStokes(0)=Stokes::XY;
+           ////else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="YX")  whichStokes(0)=Stokes::YX;
            // these next 4 don't depend on circular vs linear
            else if(stokes_p=="I") whichStokes(0)=Stokes::I;
            else if(stokes_p=="Q") whichStokes(0)=Stokes::Q;
@@ -1392,13 +1391,13 @@ Vector<Int> Imager::decideNPolPlanes(Bool checkwithMS)
             // Check with polrep and fill in the stokes vector for the output image
            whichStokes.resize(npol_p);
            // The first 4 depend on circular vs linear
-           if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RRLL")  
+           if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RRLL")  
                  {whichStokes(0)=Stokes::RR; whichStokes(1)=Stokes::LL;}
-           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RLLR") 
+           ////else if(polRep_p==StokesImageUtil::CIRCULAR && stokes_p=="RLLR") 
            ////      {whichStokes(0)=Stokes::RL; whichStokes(1)=Stokes::LR;}
-           else if(polRep_p==SkyModel::LINEAR && stokes_p=="XXYY") 
+           else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XXYY") 
                   {whichStokes(0)=Stokes::XX; whichStokes(1)=Stokes::YY;}
-           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="XYYX") 
+           ////else if(polRep_p==StokesImageUtil::LINEAR && stokes_p=="XYYX") 
 	   ////      {whichStokes(0)=Stokes::XY; whichStokes(1)=Stokes::YX;}
            // These 4 don't care about circular vs linear
            else if(stokes_p=="IV") 
@@ -1920,7 +1919,8 @@ Bool Imager::pixon(const String& algorithm,
       os << LogIO::NORMAL << "Single dish pixon processing" << LogIO::POST; // Loglevel PROGRESS
       os << LogIO::NORMAL // Loglevel INFO
          << "Using defaults for primary beams in pixon processing" << LogIO::POST;
-      gvp_p=new VPSkyJones(*mssel_p, True, parAngleInc_p, squintType_p,
+      ROMSColumns msc(*mssel_p);
+      gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                            skyPosThreshold_p);
       os << LogIO::NORMAL << "Calculating data sampling, etc." << LogIO::POST; // Loglevel PROGRESS
       SDDataSampling ds(*mssel_p, *gvp_p, modelImage.coordinates(),
@@ -2187,8 +2187,14 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	  }
 	}
 	
-      }
-
+      }// end of for 'thismodel'
+ 
+      // If msmfs, calculate alpha, beta too
+      if(doWideBand_p && ntaylor_p>1)
+	{
+	  sm_p->calculateAlphaBeta(restoredNames, residualNames);
+	}
+   
     }
   }
 catch (exception &x) { 
@@ -2443,16 +2449,17 @@ Bool Imager::createFTMachine()
     os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
     if(gridfunction_p=="pb") {
       if(!gvp_p) {
+	ROMSColumns msc(*ms_p);
 	if (doDefaultVP_p) {
 	  os << LogIO::NORMAL // Loglevel INFO
              << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	  gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	  gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
 	} else {
 	  os << LogIO::NORMAL // Loglevel INFO
              << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
 	  Table vpTable( vpTableStr_p ); 
-	  gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,
+	  gvp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
 	}
       } 
@@ -2532,7 +2539,8 @@ Bool Imager::createFTMachine()
       {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	ROMSColumns msc(*ms_p);
+	gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
       }
 
@@ -2601,7 +2609,8 @@ Bool Imager::createFTMachine()
       {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	ROMSColumns msc(*ms_p);
+	gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
       }
     ft_p = new PBMosaicFT(*ms_p, wprojPlanes_p, cache_p/2, 
@@ -2668,7 +2677,8 @@ Bool Imager::createFTMachine()
     if(!gvp_p) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Using defaults for primary beams used in gridding" << LogIO::POST;
-      gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+      ROMSColumns msc(*ms_p);
+      gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
     }
     if(sdScale_p != 1.0)
@@ -2933,6 +2943,13 @@ Bool Imager::createFTMachine()
     
   }
 
+  ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
+  ft_p->setFreqInterpolation(freqInterpMethod_p);
+  if(doTrackSource_p){
+    ft_p->setMovingSource(trackDir_p);
+  }
+  ft_p->setSpwChanSelection(spwchansels_p);
+
   /******* Start MTFT code ********/
   // MultiTermFT is a container for an FTMachine of any type.
   //    It will apply Taylor-polynomial weights during gridding and degridding
@@ -2944,17 +2961,9 @@ Bool Imager::createFTMachine()
   { 
     //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
      FTMachine *tempftm = new MultiTermFT(ft_p, ftmachine_p, ntaylor_p, reffreq_p);
-     tempftm->setBasePrivates(*ft_p);
      ft_p = tempftm;
   }
   /******* End MTFT code ********/
-
-  ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
-  ft_p->setFreqInterpolation(freqInterpMethod_p);
-  if(doTrackSource_p){
-    ft_p->setMovingSource(trackDir_p);
-  }
-  ft_p->setSpwChanSelection(spwchansels_p);
 
   return True;
 }
@@ -3120,12 +3129,12 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     }
   
     if (polType(0)=="X" || polType(0)=="Y") {
-      polRep_p=SkyModel::LINEAR;
+      polRep_p=StokesImageUtil::LINEAR;
       os << LogIO::DEBUG1 
           << "Preferred polarization representation is linear" << LogIO::POST;
     }
     else {
-      polRep_p=SkyModel::CIRCULAR;
+      polRep_p=StokesImageUtil::CIRCULAR;
       os << LogIO::DEBUG1
          << "Preferred polarization representation is circular" << LogIO::POST;
     }
@@ -3302,11 +3311,12 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 
   // Now add any SkyJones that are needed
   if(doVP_p && (ft_p->name()!="MosaicFT")) {
+    ROMSColumns msc(*ms_p);
     if (doDefaultVP_p) {
-      vp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
+      vp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
     } else { 
       Table vpTable( vpTableStr_p ); 
-      vp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p, skyPosThreshold_p);
+      vp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p, skyPosThreshold_p);
     }
     se_p->setSkyJones(*vp_p);
   }
@@ -3616,7 +3626,6 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
   LogIO os(LogOrigin("Imager", "selectDataChannel()", WHERE));
 
 
-
   if(dataMode=="channel") {
       if (dataNchan.nelements() != spectralwindowids.nelements()){
 	if(dataNchan.nelements()==1){
@@ -3701,10 +3710,29 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
           else
             os << "channel " << dataStart[i];
           os << " for spw " << spwid << LogIO::POST;
-	  rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
-				     Int(dataStep[i]), spwid);
+	  
+	  ///////////This is totally funked ...does not respect the spw selection
+	  //whatever you do the the ngroups is always all the spw in the ms !!!
+	  //vi.allSelectedSpectralWindows gets borked because of that
+	  //rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
+	  //			     Int(dataStep[i]), spwid);
 	  dataNchan[i]=nch;
 	}
+	/////Temporary replacement via the multims one
+	Block<Vector<Int> > blspw(1);
+	Block<Vector<Int> > blngr(1);
+	Block<Vector<Int> > blstart(1);
+	Block<Vector<Int> > blwid(1);
+	Block<Vector<Int> > blinr(1);
+	blspw[0]=spectralwindowids;
+	blngr[0]=Vector<Int>(spectralwindowids.nelements(),1);
+	blstart[0]=dataStart;
+	blwid=dataNchan;
+	blinr[0]=dataStep;
+	rvi_p->selectChannel(blngr, blstart, blwid,
+				     blinr, blspw);
+	////////////////////////
+
       }	else {
         VisBufferAutoPtr vb (rvi_p);
         rvi_p->originChunks ();
@@ -3829,14 +3857,16 @@ void Imager::makeVisSet(MeasurementSet& ms,
   Matrix<Int> noselection;
   Double timeInterval=0;
   //if you want to use scratch col...make sure they are there
-  if(useModelCol_p)
+  if(useModelCol_p){
     VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
-  
+    //delete keyword models to make sure data column is read
+    VisModelData::clearModel(ms);
+  }
   if(imwgt_p.getType()=="none"){
       imwgt_p=VisImagingWeight("natural");
   }
 
-  if(!useModelCol_p){
+  if(!ms.isWritable()){
     rvi_p=new ROVisibilityIterator(ms, sort, timeInterval);
   }
   else{
@@ -4224,16 +4254,17 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
        (kpb==PBMath::OVRO) || (kpb==PBMath::ALMA) || (kpb==PBMath::ACA))){
     
     if(!gvp_p) {
+      ROMSColumns msc(*ms_p);
       if (doDefaultVP_p) {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+	gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
       } else {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
 	Table vpTable( vpTableStr_p ); 
-	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,
+	gvp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
       }
     } 
@@ -4248,7 +4279,20 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
     os << LogIO::NORMAL // Loglevel INFO
        << "Using antenna diameters for determining beams for gridding"
        << LogIO::POST;
-    CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc();
+    //Use 1D-Airy
+    PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
+    //Temporary special case for ALMA to use 2D images
+    //Temporary till it is made fully that with automatic image selections
+    if((kpb==PBMath::ACA) ||  (kpb==PBMath::ALMA)){
+      String useimage="false";
+      Aipsrc::find(useimage, "alma.vp.image", "false");
+      useimage.downcase();
+      if(useimage.contains("true")){
+	pbtype=PBMathInterface::IMAGE;
+
+      }
+    }
+    CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype);
     static_cast<MosaicFT &>(*ft_p).setConvFunc(mospb);
   }
   

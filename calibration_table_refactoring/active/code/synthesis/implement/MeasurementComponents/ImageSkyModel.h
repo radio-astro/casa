@@ -128,6 +128,9 @@ public:
   // MFS : Number of taylor terms per model
   virtual Int numberOfTaylorTerms() {return 1;};
 
+  // MFS : Calculate restored alpha and beta.
+  virtual Bool calculateAlphaBeta(const Vector<String>& restoredNames, const Vector<String>& residualNames){return False;};
+
   // MFS : Reference Frequency
   virtual Double getReferenceFrequency(){return 0.0;}
 
@@ -230,7 +233,7 @@ public:
   // Set a variable to indicate the polarization frame in the data (circular or linear).
   // This is used along with the user's choice of output Stokes parameter
   // to decide the stokesCoordinate of the temporary images "cImage".
-  void setDataPolFrame(SkyModel::PolRep datapolrep) {dataPolRep_p = datapolrep;};
+  void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {dataPolRep_p = datapolrep;};
 
   // Tries to return a pointer to a TempImage (allocated with new, so remember
   // to use delete) with the given shape and CoordinateSystem.
@@ -320,7 +323,7 @@ protected:
   Bool modified_p;
   // Parameter to indicate the polaraization type of the data (circular or linear)
   // Required by cImage() to decide shapes.
-  SkyModel::PolRep dataPolRep_p;
+  StokesImageUtil::PolRep dataPolRep_p;
 };
 
 

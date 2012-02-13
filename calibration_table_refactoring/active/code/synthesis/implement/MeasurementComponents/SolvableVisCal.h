@@ -37,11 +37,12 @@
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
-#include <calibration/CalTables/CalSet.h>
-#include <calibration/CalTables/CalSetMetaInfo.h>
-#include <calibration/CalTables/CalInterp.h>
-#include <calibration/CalTables/VisCalEnum.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CalSet.h>
+#include <synthesis/CalTables/CalSetMetaInfo.h>
+#include <synthesis/CalTables/CalInterp.h>
+#include <synthesis/CalTables/VisCalEnum.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/CalVisBuffer.h>
 #include <msvis/MSVis/VisBuffGroupAcc.h>
@@ -195,6 +196,10 @@ public:
   inline virtual Cube<Bool>&    solveParOK()  {return (*solveParOK_[currSpw()]);};
   inline virtual Cube<Float> &  solveParErr() {return (*solveParErr_[currSpw()]);};
   inline virtual Cube<Float> &  solveParSNR() {return (*solveParSNR_[currSpw()]);};
+  inline virtual Cube<Complex>& solveAllPar()    {return (*solveAllPar_[currSpw()]);};
+  inline virtual Cube<Bool>&    solveAllParOK()  {return (*solveAllParOK_[currSpw()]);};
+  inline virtual Cube<Float> &  solveAllParErr() {return (*solveAllParErr_[currSpw()]);};
+  inline virtual Cube<Float> &  solveAllParSNR() {return (*solveAllParSNR_[currSpw()]);};
 
   // Access to source pol parameters
   inline Vector<Complex>& srcPolPar() { return srcPolPar_; };
@@ -260,6 +265,14 @@ public:
 
   // Report solved-for QU
   virtual void reportSolvedQU();
+
+
+  // New CalTable handling
+  virtual void createMemCalTable();
+  virtual void keep1(Int ichan);
+  virtual void keepNCT();
+  virtual void storeNCT();
+
 
   // File the current solved solution into a slot in the CalSet
   virtual void keep(const Int& slot);
@@ -397,6 +410,9 @@ protected:
   void sortVisSet(VisSet& vs, const Bool verbose=False);
 
   Int parType_;
+
+  NewCalTable *ct_;
+
   // Solution/Interpolation 
   CalSet<Complex> *cs_;
   CalSet<Float> *rcs_;
@@ -485,6 +501,11 @@ private:
   PtrBlock<Cube<Bool>*>    solveParOK_; // [nSpw](nPar,1,{1|nElm})
   PtrBlock<Cube<Float>*>   solveParErr_; // [nSpw](nPar,1,{1|nElm})
   PtrBlock<Cube<Float>*>   solveParSNR_; // [nSpw](nPar,1,{1|nElm})
+
+  PtrBlock<Cube<Complex>*> solveAllPar_;    // [nSpw](nPar,nChan,{1|nElem})
+  PtrBlock<Cube<Bool>*>    solveAllParOK_;  // [nSpw](nPar,nChan,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveAllParErr_; // [nSpw](nPar,nChan,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveAllParSNR_; // [nSpw](nPar,nChan,{1|nElm})
 
   Vector<Complex> srcPolPar_;
 

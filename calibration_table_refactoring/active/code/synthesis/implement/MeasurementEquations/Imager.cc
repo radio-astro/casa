@@ -71,11 +71,11 @@
 #include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
-#include <msvis/MSVis/MSUtil.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisImagingWeight.h>
-/////////#include <msvis/MSVis/VisBufferAsync.h>
+#include <synthesis/MSVis/MSUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisImagingWeight.h>
+/////////#include <synthesis/MSVis/VisBufferAsync.h>
 
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
@@ -112,23 +112,21 @@
 #include <synthesis/MeasurementComponents/NNLSImageSkyModel.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/MosaicFT.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
-#include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
-#include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
-#include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
+#include <synthesis/TransformMachines/PBMath.h>
+#include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/HetArrayConvFunc.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
 #include <synthesis/DataSampling/SDDataSampling.h>
 #include <synthesis/DataSampling/ImageDataSampling.h>
 #include <synthesis/DataSampling/PixonProcessor.h>
 
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
 #include <lattices/Lattices/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
@@ -147,7 +145,7 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCIntersection.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
+#include <synthesis/TransformMachines/PBMath.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>
@@ -933,6 +931,9 @@ Bool Imager::defineImage(const Int nx, const Int ny,
     }
 
     */
+    // RVU : Disabling this Composite Number check, because image sizes are
+    //          anyway being re-calculated inside the FTMachines (accounding for padding too).
+    if(0)
     {
       CompositeNumber cn(nx);
       if (! cn.isComposite(nx)) {
@@ -1265,7 +1266,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const String& antnames,
 			  const String& spwstring,
                           const String& uvdist, const String& scan,
-                          const String& obs, const Bool useModelCol)
+                          const String& obs, const Bool useModelCol, const Bool /*readonly*/)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
@@ -1421,6 +1422,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     }
     catch(...){
       nullSelect_p = true;
+      this->unlock();
       // A "bad selection" warning message could be sent to the logger here,
       // but it should be left to the calling function to do that.  For
       // example, this function is called by setjy, and it would be a mistake
@@ -1484,7 +1486,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     Int maxnchan = 0;
     for (uInt i=0;i<nchanvec.nelements();i++) {
       maxnchan=max(nchanvec[i],maxnchan);
-    }	  
+    }
     
     spwchansels_p.resize(nms,nspw,maxnchan);
     spwchansels_p.set(0);
@@ -1602,12 +1604,13 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       }
     }
     if(!(exprNode.isNull())){
-      mssel_p = new MeasurementSet((*ms_p)(exprNode));
+      mssel_p = new MeasurementSet((*ms_p)(exprNode), &* ms_p);
     }
     else{
       // Null take all the ms ...setdata() blank means that
       mssel_p = new MeasurementSet(*ms_p);
     }
+
     AlwaysAssert(!mssel_p.null(), AipsError);
     if(mssel_p->nrow()==0) {
       //delete mssel_p; 
@@ -4628,8 +4631,8 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   
   LogIO os(LogOrigin("imager", "ft()", WHERE));
 
-  if (useModelCol_p == False)
-    os << LogIO::WARN << "Please start the imager tool with \"usescratch=true\" when using Imager::ft" << LogIO::EXCEPTION;
+  if (wvi_p==NULL)
+    os << LogIO::WARN << "Please make sure MS is writable when using Imager::ft" << LogIO::EXCEPTION;
   
   this->lock();
   try {
@@ -5067,6 +5070,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           if(reffreq.getValue().getValue() > 0.0){
             siModel.setRefFrequency(reffreq);
             siModel.setIndex(spix);
+            returnFluxes[selspw][0].setValue(fluxUsed[0] * siModel.sample(mfreqs[selspw][0]));
           }
           else{
             if(spix != 0.0){            // If not the default, complain and quit.
@@ -5113,6 +5117,17 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         }
       }
     }   // End of loop over fields.
+
+    if(!precompute && spix != 0.0 && reffreq.getValue().getValue() > 0.0){
+      os << LogIO::NORMAL
+         << "Flux density as a function of frequency (channel 0 of each spw):\n"
+         << "  Frequency (GHz)    Flux Density (Jy, Stokes I)"
+         << LogIO::POST;
+      for(uInt selspw = 0; selspw < nspws; ++selspw)
+        os << "     " << mfreqs[selspw][0].get("GHz").getValue() << "         "
+           << returnFluxes[selspw][0].value(Stokes::I).getValue()
+           << LogIO::POST;
+    }
 
     this->writeHistory(os);
     this->unlock();
@@ -5244,7 +5259,6 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
         createFTMachine();
       sm_p = new CleanImageSkyModel();
       sm_p->add(*tmodimage, 1);
-      useModelCol_p = True;
       ft_p->setFreqInterpolation("linear");
       setSkyEquation();
       se_p->predict(False);

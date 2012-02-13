@@ -40,10 +40,10 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/SimpleSubMS.h>
-#include <msvis/MSVis/SubMS.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/SimpleSubMS.h>
+#include <synthesis/MSVis/SubMS.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 
@@ -94,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      const String& scan,
                                       const String& obs){
     useModelCol_p=False;
-    LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
+    LogIO os(LogOrigin("imager", "setDataToMemory()"), logSink_p);
     if(!Table::isReadable(msname)){
       os << LogIO::SEVERE << "MeasurementSet " 
 	 << msname << " does not exist  " 
@@ -134,9 +134,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& uvdist,
                                    const String& scan,
                                    const String& obs,
-                                   const Bool useModel){
+                                   const Bool useModel, 
+				   const Bool readonly){
     useModelCol_p=useModel;
+    Bool rd=readonly;
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
+    if(useModel) 
+      rd=True;
     if(!Table::isReadable(msname)){
       os << LogIO::SEVERE << "MeasurementSet " 
 	 << msname << " does not exist  " 
@@ -145,14 +149,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else{
       MeasurementSet thisms;
-      if(useModelCol_p)
+      if(!readonly)
 	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Update);
       else
-	//thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
-	//		      Table::Old);
-	thisms=MeasurementSet(msname, TableLock(), 
+       thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Old);
+      //thisms=MeasurementSet(msname, TableLock(), 
+      //			      Table::Old);
       
       thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
@@ -410,10 +414,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
           Cube<Int> spwchansels_tmp=spwchansels_p;
 	  for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
-            Vector<Double> chanFreq=spwc.chanFreq()(k);
-            Vector<Double> freqResolution = spwc.chanWidth()(k);
+	    uInt curspwid=dataspectralwindowids_p[k];
+	    Vector<Double> chanFreq=spwc.chanFreq()(curspwid);
+            Vector<Double> freqResolution = spwc.chanWidth()(curspwid);
 
-            uInt curspwid=dataspectralwindowids_p[k];
+            
 	    //dataStep_p[k]=chanselmat.row(k)(3);
             if (nrow==0) {
               //dataStep_p=step[0];
@@ -514,8 +519,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
       if(mssel_p->nrow()!=thisms.nrow()) {
-	os << "Selected " << thisms.nrow() << " out of  "
-	   << mssel_p->nrow() << " rows." << LogIO::POST;
+	os << "Selected " << mssel_p->nrow() << " out of  "
+	   << thisms.nrow() << " rows." << LogIO::POST;
       }
       else {
 	os << "Selected all " << mssel_p->nrow() << " rows" << LogIO::POST;
@@ -551,7 +556,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       wvi_p=0;
 
       //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
-      if(!useModelCol_p){
+      if(!(mssel_p->isWritable())){
 	rvi_p=new ROVisibilityIterator(blockMSSel_p, sort);
 	
       }

@@ -55,7 +55,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicSL/Constants.h>
 
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/ConvolutionEquation.h>
 #include <synthesis/MeasurementEquations/ClarkCleanModel.h>
 
@@ -333,7 +333,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     os << LogIO::NORMAL2 << "Making residual images for all fields" << LogIO::POST; // Loglevel PROGRESS
     if(modified_p){ 
       blankOverlappingModels();
-      makeNewtonRaphsonStep(se, False);
+      makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
       //makeNewtonRaphsonStep(se, (cycle>1));
     }
 

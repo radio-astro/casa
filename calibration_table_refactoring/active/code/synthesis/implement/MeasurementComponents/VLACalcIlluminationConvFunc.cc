@@ -33,8 +33,8 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <synthesis/MeasurementComponents/Utils.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LatticeFFT.h>

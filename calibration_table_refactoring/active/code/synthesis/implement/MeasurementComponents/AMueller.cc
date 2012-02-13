@@ -24,11 +24,11 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include <calibration/CalTables/CalDescColumns.h>
+#include <synthesis/CalTables/CalDescColumns.h>
 //#include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBuffGroupAcc.h>
-#include <msvis/MSVis/VBContinuumSubtractor.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffGroupAcc.h>
+#include <synthesis/MSVis/VBContinuumSubtractor.h>
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>

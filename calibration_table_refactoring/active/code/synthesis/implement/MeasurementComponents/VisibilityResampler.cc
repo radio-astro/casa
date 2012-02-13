@@ -26,10 +26,10 @@
 //#
 //# $Id$
 
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
-#include <synthesis/MeasurementComponents/Utils.h>
-#include <msvis/MSVis/AsynchronousTools.h>
+#include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/MSVis/AsynchronousTools.h>
 #include <fstream>
 
 namespace casa{

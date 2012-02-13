@@ -30,6 +30,8 @@ namespace casa{
       Double reffreq;		a reference frequency 
       Double taperpoly[5];	polynomial expanded about reffreq 
       Int ntaperpoly;		number of terms in polynomial 
+      Double astigm_0;          astigmatism: coefficient of Zernike Polyn. Z6 a.k.a. 0-90
+      Double astigm_45;         astigmatism: coefficient of Zernike Polyn. Z5 a.k.a. 45-135
       */
 
       /* BeamCalc_ALMA_1 */
@@ -44,7 +46,8 @@ namespace casa{
 	0.375, // radius of central hole (m)
 	6.0, // antenna radius
 	31.3, // ref. freq (GHz), lower band edge
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 // T.B.C.
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1, // T.B.C.
+	0.,0.
       },
       /* BeamCalc_ALMA_2 */
       {
@@ -56,7 +59,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	67.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 ,
+	0.,0.
       },
       /* BeamCalc_ALMA_3 */
       {
@@ -68,7 +72,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	84.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1, 
+	0.,0.
       },
       /* BeamCalc_ALMA_4 */
       {
@@ -80,7 +85,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	125.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1,
+	0.,0. 
       },
       /* BeamCalc_ALMA_5 */
       {
@@ -92,7 +98,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	163.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1,
+	0.,0.
       },
       /* BeamCalc_ALMA_6 */
       {
@@ -104,7 +111,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	211.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1,
+	0.,0. 
       },
       /* BeamCalc_ALMA_7 */
       {
@@ -116,7 +124,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	275.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1,
+	0.,0. 
       },
       /* BeamCalc_ALMA_8 */
       {
@@ -128,7 +137,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	385.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1,
+	0.,0. 
       },
       /* BeamCalc_ALMA_9 */
       {
@@ -140,7 +150,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	602.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1,
+	0.,0. 
       },
       /* BeamCalc_ALMA_10 */
       {
@@ -152,7 +163,8 @@ namespace casa{
 	0.375,
 	6.0, 
 	787.0,
-	{6.5, 0.0, 0.0, 0.0, 0.0}, 1 
+	{6.5, 0.0, 0.0, 0.0, 0.0}, 1,
+	0.,0. 
       }
     };
 };

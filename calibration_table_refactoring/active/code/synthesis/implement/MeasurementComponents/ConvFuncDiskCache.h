@@ -29,7 +29,7 @@
 #define SYNTHESIS_CONVFUNCDISKCACHE_H
 
 #include <casa/Arrays/Matrix.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/Array.h>
@@ -37,10 +37,10 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
 // Apparently not required here? (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/EPTimeVarVisJones.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   // <summary> 
   //

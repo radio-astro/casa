@@ -26,11 +26,11 @@
 
 #include <synthesis/MeasurementComponents/LJJones.h>
 
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffAccumulator.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/MeasurementComponents/SteepestDescentSolver.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
@@ -118,7 +118,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       StokesImageUtil::CStokesCoord(//cimageShape,
 				    ModelImage.coordinates(),
 				    whichStokes,
-				    SkyModel::CIRCULAR);
+				    StokesImageUtil::CIRCULAR);
     
     Grid.resize(IPosition(ModelImage.ndim(),
 			  ModelImage.shape()(0),
@@ -132,8 +132,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     StokesImageUtil::From(Grid,ModelImage);
     
     if(vb.polFrame()==MSIter::Linear) 
-      StokesImageUtil::changeCStokesRep(Grid,SkyModel::LINEAR);
-    else StokesImageUtil::changeCStokesRep(Grid,SkyModel::CIRCULAR);
+      StokesImageUtil::changeCStokesRep(Grid,StokesImageUtil::LINEAR);
+    else StokesImageUtil::changeCStokesRep(Grid,StokesImageUtil::CIRCULAR);
   }
   //
   //-----------------------------------------------------------------------

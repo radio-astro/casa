@@ -43,32 +43,32 @@
 
 #include <synthesis/MeasurementComponents/SkyModel.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
-#include <synthesis/MeasurementComponents/SkyJones.h>
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <synthesis/TransformMachines/SkyJones.h>
+#include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
-#include <synthesis/MeasurementComponents/rGridFT.h>
-#include <synthesis/MeasurementComponents/MosaicFT.h>
-#include <synthesis/MeasurementComponents/MultiTermFT.h>
+#include <synthesis/TransformMachines/GridFT.h>
+#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
-#include <synthesis/MeasurementComponents/WPConvFunc.h>
-#include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
-#include <synthesis/MeasurementComponents/ComponentFTMachine.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <synthesis/TransformMachines/WPConvFunc.h>
+#include <synthesis/TransformMachines/SimplePBConvFunc.h>
+#include <synthesis/TransformMachines/ComponentFTMachine.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/MSVis/VisBufferUtil.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBufferUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -243,7 +243,7 @@ void CubeSkyEquation::init(FTMachine& ft){
     }
      for (Int k=0; k < (nmod); ++k){ 
        uInt tayindex = k/(sm_->numberOfModels()/sm_->numberOfTaylorTerms());
-       //       cout << "CubeSkyEqn : model : " << k << " : setting taylor index : " << tayindex << endl;
+       //cout << "CubeSkyEqn : model : " << k << " : setting taylor index : " << tayindex << endl;
        ftm_p[k]->setMiscInfo(tayindex);
       iftm_p[k]->setMiscInfo(tayindex);
     }
@@ -302,9 +302,11 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
   AlwaysAssert(sm_, AipsError);
   //AlwaysAssert(vs_, AipsError);
   if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
-  if(noModelCol_p)
-    throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
+  // if(noModelCol_p)
+  //  throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
   // Initialize 
+  if(wvi_p==NULL)
+    throw(AipsError("Cannot save model in non-writable ms"));
   VisIter& vi=*wvi_p;
   //Lets get the channel selection for later use
   vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
@@ -330,8 +332,10 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     // We are at the begining with an empty model as starting point
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	vb->setModelVisCube(Complex(0.0,0.0));
-	vi.setVis(vb->modelVisCube(),visCol);
+	if(!noModelCol_p){
+	  vb->setModelVisCube(Complex(0.0,0.0));
+	  vi.setVis(vb->modelVisCube(),visCol);
+	}
       }
     }
   }
@@ -339,7 +343,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     //If all model is zero...no need to continue
   if(isEmpty) 
     return;
-  
+  //TODO if nomodel set flat to 0.0
   
   
   // Now do the images
@@ -347,11 +351,11 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     // Change the model polarization frame
     if(vb->polFrame()==MSIter::Linear) {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::LINEAR);
+					StokesImageUtil::LINEAR);
     }
     else {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::CIRCULAR);
+					StokesImageUtil::CIRCULAR);
     }
     ft_=&(*ftm_p[model]);
     scaleImage(model, incremental);
@@ -366,16 +370,34 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 			    cubeSlice, nCubeSlice) || changedVI;
     vi.originChunks();
     vi.origin();
-    //vb.invalidate();
     initializeGetSlice(* vb, 0,incremental, cubeSlice, nCubeSlice);
+    ///vb->newMS does not seem to be set to true with originchunks
+    //so have to monitor msid
+    Int oldmsid=-1;
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	if(!incremental&&!initialized) {
-	  vb->setModelVisCube(Complex(0.0,0.0));
+	if(noModelCol_p){
+	  //cerr << "noModelCol_p " << noModelCol_p << " newms " << vb->newMS() << " nummod " << (sm_->numberOfModels()) << endl;
+	  if(vb->msId() != oldmsid){
+	    oldmsid=vb->msId();
+	    for (Int model=0; model < (sm_->numberOfModels());++model){
+	      Record ftrec;
+	      String error;
+	      //cerr << "in ftrec saving" << endl;
+	      if(!(ftm_p[model]->toRecord(error, ftrec, True)))
+		throw(AipsError("Error in record saving:  "+error));
+	      vi.putModel(ftrec, False, (model>0 || incremental));
+	    }
+	  }
 	}
-	// get the model visibility and write it to the model MS
-	getSlice(* vb,incremental, cubeSlice, nCubeSlice);
-	vi.setVis(vb->modelVisCube(),visCol);
+	else{
+	  if(!incremental&&!initialized) {
+	    vb->setModelVisCube(Complex(0.0,0.0));
+	  }
+	  // get the model visibility and write it to the model MS
+	  getSlice(* vb,incremental, cubeSlice, nCubeSlice);
+	  vi.setVis(vb->modelVisCube(),visCol);
+	}
       }
     }
     finalizeGetSlice();
@@ -495,11 +517,11 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     for (Int model=0; model < nmodels; ++model){
         if(vb->polFrame()==MSIter::Linear) {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::LINEAR);
+                                              StokesImageUtil::LINEAR);
         }
         else {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::CIRCULAR);
+                                              StokesImageUtil::CIRCULAR);
         }
     }
 
@@ -628,6 +650,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
             PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
                                               VisBufferComponents::Ant2,
                                               VisBufferComponents::ArrayId,
+                                              VisBufferComponents::DataDescriptionId,
                                               VisBufferComponents::Direction1,
                                               VisBufferComponents::Direction2,
                                               VisBufferComponents::Feed1,
@@ -636,9 +659,9 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                               VisBufferComponents::Feed2_pa,
                                               VisBufferComponents::FieldId,
                                               VisBufferComponents::FlagCube,
+                                              VisBufferComponents::Flag,
                                               VisBufferComponents::FlagRow,
                                               VisBufferComponents::Freq,
-                                              VisBufferComponents::ImagingWeight,
                                               VisBufferComponents::NChannel,
                                               VisBufferComponents::NCorr,
                                               VisBufferComponents::NRow,
@@ -648,6 +671,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                               VisBufferComponents::SpW,
                                               VisBufferComponents::Time,
                                               VisBufferComponents::Uvw,
+                                              VisBufferComponents::UvwMat,
+                                              VisBufferComponents::Weight,
                                               -1);
 
     Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
@@ -658,20 +683,23 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // and without corrected data columns.
     }
 
-
-    //        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
-    ////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
-    ////            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
-    ////        }
-    //        destroyVisibilityIterator_p = True;
-    //        vb_p.set (rvi_p); // replace existing VB with a potentially async one
-
     ROVisibilityIterator * oldRvi = NULL;
+    VisibilityIterator * oldWvi = NULL;
 
-    if (! commitModel && ROVisibilityIterator::isAsynchronousIoEnabled()){
+    if (ROVisibilityIterator::isAsynchronousIoEnabled()){
+
+        vb_p->detachFromVisIter();
         oldRvi = rvi_p;
-        rvi_p = new ROVisibilityIterator (& prefetchColumns, * rvi_p);
-        vb_p.set (rvi_p);  // detach from current vi
+
+        if (wvi_p != NULL){
+            oldWvi = wvi_p;
+            wvi_p = new VisibilityIterator (& prefetchColumns, * wvi_p);
+            rvi_p = wvi_p;
+        }
+        else{
+            rvi_p = new ROVisibilityIterator (& prefetchColumns, * rvi_p);
+        }
+
     }
     //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();
@@ -684,6 +712,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     //    Timers tCheckVisRows=Timers::getTime();
     checkVisIterNumRows(*rvi_p);
     VisBufferAutoPtr vb (rvi_p);
+
     //    Timers tVisAutoPtr=Timers::getTime();
 
     /**** Do we need to do this
@@ -708,11 +737,11 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // Change the model polarization frame
         if(vb->polFrame()==MSIter::Linear) {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::LINEAR);
+                                              StokesImageUtil::LINEAR);
         }
         else {
             StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-                                              SkyModel::CIRCULAR);
+                                              StokesImageUtil::CIRCULAR);
         }
         //scaleImage(model, incremental);
         ft_=&(*ftm_p[model]);
@@ -752,10 +781,11 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
         //	Timers tVBInValid=Timers::getTime();
-        vb->invalidate();
+        //vb->invalidate();
 
         //	Timers tInitGetSlice=Timers::getTime();
-        if(!isEmpty){
+        //if(!isEmpty){
+	{
             initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
         }
         //	Timers tInitPutSlice=Timers::getTime();
@@ -771,6 +801,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // aInitGetSlice += tInitPutSlice - tInitGetSlice;
         // aInitPutSlice += tDonePutSlice - tInitPutSlice;
 
+	Int oldmsid=-1;
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
 
@@ -787,8 +818,24 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 //saving the model for self-cal most probably
                 //	Timers tSetModel=Timers::getTime();
                 //		Timers tsetModel=Timers::getTime();
-                if(commitModel && !noModelCol_p)
+                if(commitModel && wvi_p != NULL){
+		  ///Bow commit model to disk or to the record keyword
+		  if(!noModelCol_p)
                     wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+		  else{
+		    if(vb->msId() != oldmsid){
+		      oldmsid=vb->msId();
+		      for (Int model=0; model < (sm_->numberOfModels());++model){
+			Record ftrec;
+			String error;
+			//cerr << "in ftrec saving" << endl;
+			if(!(ftm_p[model]->toRecord(error, ftrec, True)))
+			  throw(AipsError("Error in saving model;  "+error));
+			wvi_p->putModel(ftrec, False, (model>0 || predictedComp || incremental));
+		      }
+		    }
+		  }
+		}
                 // Now lets grid the -ve of residual
                 // use visCube if there is no correctedData
                 //		Timers tGetRes=Timers::getTime();
@@ -841,11 +888,24 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     // If using async, put things back the way they were.
 
     if (oldRvi != NULL){
+
         delete vb.release(); // get rid of local attached to Vi
-        vb_p.set (oldRvi);   // reattach vb_p to the old vi
-        delete rvi_p;        // kill the new vi
+        //vb_p.set (oldRvi);   // reattach vb_p to the old vi
+
+        if (oldWvi != NULL){
+            delete wvi_p;
+            wvi_p = oldWvi;
+        }
+        else{
+            delete rvi_p;        // kill the new vi
+        }
+
         rvi_p = oldRvi;      // make the old vi the current vi
+        rvi_p->originChunks(); // reset it
+        vb_p->attachToVisIter(* rvi_p);
     }
+
+
     // cerr << "gradChiSq: "
     // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " "
     // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " "
@@ -932,7 +992,7 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   }
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
-  vb_p->assign(vb, False);
+  vb_p->assign(vb, True);
   vb_p->updateCoordInfo(& vb, dirDep);
 }
 
@@ -990,7 +1050,7 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
             firstOneChangesGet_p=False;
 
         if(!isBeginingOfSkyJonesCache_p){
-            finalizePutSlice(* vb_p,  cubeSlice, nCubeSlice);
+            finalizePutSlice(*vb_p,  cubeSlice, nCubeSlice);
         }
         initializePutSlice(vb, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;

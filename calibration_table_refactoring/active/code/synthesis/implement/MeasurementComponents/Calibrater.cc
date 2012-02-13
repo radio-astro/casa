@@ -46,8 +46,8 @@
 #include <synthesis/MeasurementComponents/Calibrater.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisBuffAccumulator.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -57,7 +57,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <vector>
 using std::vector;
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 
 using namespace casa::utilj;
 
@@ -118,7 +118,7 @@ String Calibrater::timerString() {
 
 Bool Calibrater::initialize(MeasurementSet& inputMS, 
 			    Bool compress,
-			    Bool addScratch)  {
+			    Bool addScratch, Bool addModel)  {
   
   logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL3;
   
@@ -171,7 +171,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     Block<Int> nosort(0);
     Matrix<Int> noselection;
     Double timeInterval=0;
-    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress);
+    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress, addModel);
 
     // Size-up the chanmask PB
     initChanMask();
@@ -339,16 +339,20 @@ void Calibrater::selectvis(const String& time,
 
 
     // Assume no selection, for starters
-    mssel_p = new MeasurementSet(sorted);
+    mssel_p = new MeasurementSet(sorted, ms_p);
 
     // Apply user-supplied selection
     Bool nontrivsel=False;
-    nontrivsel= mssSetData(MeasurementSet(sorted),
+    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
 			   *mssel_p,"",
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,
 			   "",scan,"",intent, obsIDs);
+
+    // Keep any MR status for the MS
+
+    mssel_p->setMemoryResidentSubtables(ms_p->getMrsEligibility());
 
     // If non-trivial MSSelection invoked and nrow reduced:
     if(nontrivsel && mssel_p->nrow()<ms_p->nrow()) {
@@ -1490,6 +1494,9 @@ Bool Calibrater::genericGatherAndSolve() {
   Vector<Int> nChunkPerSol;
   Int nSol = svc_p->sizeUpSolve(*vs_p,nChunkPerSol);
 
+  // Create the in-memory (New)CalTable
+  svc_p->createMemCalTable();
+
   // The iterator, VisBuffer
   VisIter& vi(vs_p->iter());
   VisBuffer vb(vi);
@@ -1595,20 +1602,32 @@ Bool Calibrater::genericGatherAndSolve() {
 	  svc_p->markTimer();
 	  svc_p->focusChan()=ich;
 	  
+	  svc_p->state();
+	  
+	  cout << "Starting solution..." << endl;
+
 	  // Pass VE, SVC, VB to solver
 	  Bool goodSoln=vcs.solve(*ve_p,*svc_p,vbga);
 	  
+	  cout << "goodSoln= " << boolalpha << goodSoln << endl;
+
 	  // If good... 
 	  if (goodSoln) {
 	    totalGoodSol=True;
 	    
+	    cout << "formSolveSNR..." << flush;
 	    svc_p->formSolveSNR();
+	    cout << "done." << endl;
+	    cout << "applySNRThreshold..." << flush;
 	    svc_p->applySNRThreshold();
+	    cout << "done." << endl;
 	    
 	    // ..and file this solution in the correct slot
-	    svc_p->keep(slotidx(thisSpw));
-	    Int n=svc_p->nSlots(thisSpw);
-	    svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
+	    if (svc_p->freqDepPar())
+	      svc_p->keep1(ich);
+	    //	    svc_p->keep(slotidx(thisSpw));
+	    //      Int n=svc_p->nSlots(thisSpw);
+	    //	    svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
 	    
 	  }
 	  else 
@@ -1616,6 +1635,10 @@ Bool Calibrater::genericGatherAndSolve() {
 	    svc_p->currMetaNote();
 	  
 	} // parameter channels
+
+	if (totalGoodSol)
+	  svc_p->keepNCT();
+
 	
 	// Count good solutions.
 	if (totalGoodSol)	nGood++;
@@ -1654,10 +1677,13 @@ Bool Calibrater::genericGatherAndSolve() {
     // TBD: Remove BPOLY specificity here
     if (svc_p->typeName()!="BPOLY") {
       // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+
+  /* NEWCALTABLE
       svc_p->globalPostSolveTinker();
-      
+  */
       // write the table
-      svc_p->store();
+      svc_p->storeNCT();
+      //      svc_p->store();
     }
   }
 

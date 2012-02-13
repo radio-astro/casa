@@ -37,9 +37,9 @@
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <images/Images/TempImage.h>
 #include <casa/Exceptions.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/sstream.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 namespace casa{
 
   //  Int getVLABandID(Double& freq,String&telescopeName);

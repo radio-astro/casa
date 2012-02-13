@@ -27,7 +27,7 @@
 //# $Id$
 #ifndef SYNTHESIS_VBSTORE_H
 #define SYNTHESIS_VBSTORE_H
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   class VBStore

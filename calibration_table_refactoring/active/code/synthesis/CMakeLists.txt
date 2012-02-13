@@ -19,7 +19,156 @@
 #
 
 casa_add_library( synthesis
- implement/Parallel/Applicator.cc
+  implement/TransformMachines/BeamSkyJones.cc
+  implement/TransformMachines/BeamSquint.cc
+  implement/TransformMachines/CFCache.cc
+  implement/TransformMachines/CFStore.cc
+  implement/TransformMachines/ComponentFTMachine.cc
+  implement/TransformMachines/ConvolutionFunction.cc
+  implement/TransformMachines/DBeamSkyJones.cc
+  implement/TransformMachines/FTMachine.cc
+  implement/TransformMachines/GridFT.cc
+  implement/TransformMachines/HetArrayConvFunc.cc
+  implement/TransformMachines/MosaicFT.cc
+  implement/TransformMachines/MultiTermFT.cc	
+  implement/TransformMachines/PBMath1DAiry.cc
+  implement/TransformMachines/PBMath1D.cc
+  implement/TransformMachines/PBMath1DCosPoly.cc
+  implement/TransformMachines/PBMath1DGauss.cc
+  implement/TransformMachines/PBMath1DIPoly.cc
+  implement/TransformMachines/PBMath1DNumeric.cc
+  implement/TransformMachines/PBMath1DPoly.cc
+  implement/TransformMachines/PBMath2D.cc
+  implement/TransformMachines/PBMath2DImage.cc
+  implement/TransformMachines/PBMath.cc
+  implement/TransformMachines/PBMathInterface.cc
+  implement/TransformMachines/SimpCompGridMachine.cc
+  implement/TransformMachines/SimpComponentGridMachine.cc
+  implement/TransformMachines/SimpleComponentFTMachine.cc
+  implement/TransformMachines/SimplePBConvFunc.cc
+  implement/TransformMachines/SkyJones.cc
+  implement/TransformMachines/StokesImageUtil.cc
+  implement/TransformMachines/SynthesisError.cc
+  implement/TransformMachines/Utils.cc
+  implement/TransformMachines/VisModelData.cc
+  implement/TransformMachines/VPSkyJones.cc
+  implement/TransformMachines/WProjectFT.cc
+  implement/TransformMachines/WPConvFunc.cc
+  implement/fortran/fgridft.f		
+  implement/fortran/fmosaic.f
+  implement/fortran/wprojgrid.f
+  implement/MSVis/AsynchronousInterface.cc
+  implement/MSVis/AsynchronousTools.cc
+  implement/MSVis/CalVisBuffer.cc
+  implement/MSVis/GroupProcessor.cc
+  implement/MSVis/GroupWorker.cc
+  implement/MSVis/MSAnalysis.cc
+  implement/MSVis/MsAverager.cc
+  implement/MSVis/MSCalEnums.cc
+  implement/MSVis/MSContinuumSubtractor.cc
+  implement/MSVis/MSUVWGenerator.cc
+  implement/MSVis/MSUtil.cc
+  implement/MSVis/Partition.cc
+  implement/MSVis/Reweighter.cc
+  implement/MSVis/SelectAverageSpw.cc
+  implement/MSVis/SimpleSubMS.cc
+  implement/MSVis/StokesVector.cc
+  implement/MSVis/StatWT.cc
+  implement/MSVis/SubMS.cc
+  implement/MSVis/UtilJ.cc
+  implement/MSVis/VBContinuumSubtractor.cc
+  implement/MSVis/VBGContinuumSubtractor.cc
+  implement/MSVis/VBRemapper.cc
+  implement/MSVis/VisBuffAccumulator.cc
+  implement/MSVis/VisBuffer.cc
+  implement/MSVis/VisBufferAsync.cc
+  implement/MSVis/VisBufferAsyncWrapper.cc
+  implement/MSVis/VisBufferUtil.cc
+  implement/MSVis/VisBuffGroup.cc
+  implement/MSVis/VisBuffGroupAcc.cc
+  implement/MSVis/VisibilityIterator.cc
+  implement/MSVis/VisibilityIteratorImpl.cc
+  implement/MSVis/VisibilityIteratorImplAsync.cc
+  implement/MSVis/VisibilityProcessing.cc 
+  implement/MSVis/VisImagingWeight.cc
+  implement/MSVis/VisIterator.cc
+  implement/MSVis/VisSet.cc
+  implement/MSVis/VisSetUtil.cc
+  implement/MSVis/VisChunkAverager.cc
+  implement/MSVis/VLAT.cc
+  implement/MSVis/VWBT.cc
+  implement/CalTables/BJonesDesc.cc
+  implement/CalTables/BJonesMBuf.cc
+  implement/CalTables/BJonesMCol.cc
+  implement/CalTables/BJonesMRec.cc
+  implement/CalTables/BJonesTable.cc
+  implement/CalTables/CalBuffer.cc
+  implement/CalTables/CalDescBuffer.cc
+  implement/CalTables/CalDescColumns2.cc
+  implement/CalTables/CalDescColumns.cc
+  implement/CalTables/CalDescRecord.cc
+  implement/CalTables/CalHistoryBuffer.cc
+  implement/CalTables/CalHistoryColumns.cc
+  implement/CalTables/CalHistRecord.cc
+  implement/CalTables/CalInterp.cc
+  implement/CalTables/CalInterpolation.cc
+  implement/CalTables/CalInterpolator.cc
+  implement/CalTables/CalIntpMatch.cc
+  implement/CalTables/CalIter.cc
+  implement/CalTables/CalMainBuffer.cc
+  implement/CalTables/CalMainColumns.cc
+  implement/CalTables/CalMainRecord.cc
+  implement/CalTables/CalSet2.cc
+  implement/CalTables/CalSetMetaInfo.cc
+  implement/CalTables/CalTable2.cc
+  implement/CalTables/CalTable.cc
+  implement/CalTables/CalTableDesc2.cc
+  implement/CalTables/CalTableDesc.cc
+  implement/CalTables/CTColumns.cc
+  implement/CalTables/CTDesc.cc
+  implement/CalTables/CTEnums.cc
+  implement/CalTables/CTIter.cc
+  implement/CalTables/CTMainColumns.cc
+  implement/CalTables/CTMainRecord.cc
+  implement/CalTables/EPointDesc.cc
+  implement/CalTables/EPointMBuf.cc
+  implement/CalTables/EPointMCol.cc
+  implement/CalTables/EPointTable.cc
+  implement/CalTables/EPointVJMRec.cc
+  implement/CalTables/FVisJonesDesc.cc
+  implement/CalTables/FVisJonesMRec.cc
+  implement/CalTables/GJonesDesc.cc
+  implement/CalTables/GJonesMBuf.cc
+  implement/CalTables/GJonesMCol.cc
+  implement/CalTables/GJonesTable.cc
+  implement/CalTables/MJonesDesc.cc
+  implement/CalTables/MJonesMRec.cc
+  implement/CalTables/NewCalTable.cc
+  implement/CalTables/PlotCal.cc
+  implement/CalTables/SolvableMJDesc.cc
+  implement/CalTables/SolvableMJMRec.cc
+  implement/CalTables/SolvableVJDesc.cc
+  implement/CalTables/SolvableVJMBuf.cc
+  implement/CalTables/SolvableVJMCol.cc
+  implement/CalTables/SolvableVJMRec.cc
+  implement/CalTables/SolvableVJTable.cc
+  implement/CalTables/TimeVarMJDesc.cc
+  implement/CalTables/TimeVarMJMRec.cc
+  implement/CalTables/TimeVarVJDesc.cc
+  implement/CalTables/TimeVarVJMBuf.cc
+  implement/CalTables/TimeVarVJMCol.cc
+  implement/CalTables/TimeVarVJMRec.cc
+  implement/CalTables/TimeVarVJTable.cc
+  implement/CalTables/TJonesDesc.cc
+  implement/CalTables/TJonesMBuf.cc
+  implement/CalTables/TJonesMCol.cc
+  implement/CalTables/TJonesTable.cc
+  implement/CalTables/VisJonesDesc.cc
+  implement/CalTables/VisJonesMBuf.cc
+  implement/CalTables/VisJonesMCol.cc
+  implement/CalTables/VisJonesMRec.cc
+  implement/CalTables/VisJonesTable.cc
+  implement/Parallel/Applicator.cc
  implement/Parallel/MPIError.cc
  implement/Parallel/MPITransport.cc
  implement/Parallel/PabloIO.cc
@@ -40,33 +189,23 @@ casa_add_library( synthesis
  implement/MeasurementComponents/AWVisResampler.cc
  implement/MeasurementComponents/BeamCalc.cc
  implement/MeasurementComponents/BeamCalcParams.cc
- implement/MeasurementComponents/BeamSkyJones.cc
- implement/MeasurementComponents/BeamSquint.cc
  implement/MeasurementComponents/BPoly.cc
  implement/MeasurementComponents/CalCorruptor.cc
  implement/MeasurementComponents/Calibrater.cc
  implement/MeasurementComponents/CEMemImageSkyModel.cc
- implement/MeasurementComponents/CFCache.cc
- implement/MeasurementComponents/CFStore.cc
  implement/MeasurementComponents/ClarkCleanAlgorithm.cc
  implement/MeasurementComponents/ClarkCleanImageSkyModel.cc
  implement/MeasurementComponents/CleanImageSkyModel.cc
- implement/MeasurementComponents/ComponentFTMachine.cc
  implement/MeasurementComponents/ConvFuncDiskCache.cc
- implement/MeasurementComponents/ConvolutionFunction.cc
  implement/MeasurementComponents/CSCleanImageSkyModel.cc
- implement/MeasurementComponents/DBeamSkyJones.cc
  implement/MeasurementComponents/EVLAConvFunc.cc
  implement/MeasurementComponents/EVLAAperture.cc
  implement/MeasurementComponents/EJones.cc
  implement/MeasurementComponents/EPJones.cc
- implement/MeasurementComponents/FTMachine.cc
  implement/MeasurementComponents/GlobalFTMachineCallbacks.cc
  implement/MeasurementComponents/GridBoth.cc
- implement/MeasurementComponents/GridFT.cc
  implement/MeasurementComponents/rGridFT.cc
  implement/MeasurementComponents/GSpline.cc
- implement/MeasurementComponents/HetArrayConvFunc.cc
  implement/MeasurementComponents/HogbomCleanImageSkyModel.cc
  implement/MeasurementComponents/IlluminationConvFunc.cc
  implement/MeasurementComponents/ImageSkyModel.cc
@@ -77,24 +216,11 @@ casa_add_library( synthesis
  implement/MeasurementComponents/MFCEMemImageSkyModel.cc
  implement/MeasurementComponents/MFCleanImageSkyModel.cc
  implement/MeasurementComponents/MFMSCleanImageSkyModel.cc
- implement/MeasurementComponents/MosaicFT.cc
  implement/MeasurementComponents/MSCleanImageSkyModel.cc
  implement/MeasurementComponents/Mueller.cc
- implement/MeasurementComponents/MultiTermFT.cc
  implement/MeasurementComponents/MultiThreadedVisResampler.cc
  implement/MeasurementComponents/NNLSImageSkyModel.cc
  implement/MeasurementComponents/nPBWProjectFT.cc
- implement/MeasurementComponents/PBMath1DAiry.cc
- implement/MeasurementComponents/PBMath1D.cc
- implement/MeasurementComponents/PBMath1DCosPoly.cc
- implement/MeasurementComponents/PBMath1DGauss.cc
- implement/MeasurementComponents/PBMath1DIPoly.cc
- implement/MeasurementComponents/PBMath1DNumeric.cc
- implement/MeasurementComponents/PBMath1DPoly.cc
- implement/MeasurementComponents/PBMath2D.cc
- implement/MeasurementComponents/PBMath2DImage.cc
- implement/MeasurementComponents/PBMath.cc
- implement/MeasurementComponents/PBMathInterface.cc
  implement/MeasurementComponents/PBMosaicFT.cc
  implement/MeasurementComponents/PClarkCleanImageSkyModel.cc
  implement/MeasurementComponents/PixelatedConvFunc.cc
@@ -107,17 +233,10 @@ casa_add_library( synthesis
  implement/MeasurementComponents/SDGrid.cc
  implement/MeasurementComponents/SimACohCalc.cc
  implement/MeasurementComponents/SimACoh.cc
- implement/MeasurementComponents/SimpCompGridMachine.cc
- implement/MeasurementComponents/SimpComponentGridMachine.cc
- implement/MeasurementComponents/SimpleComponentFTMachine.cc
- implement/MeasurementComponents/SimplePBConvFunc.cc
- implement/MeasurementComponents/SkyJones.cc
  implement/MeasurementComponents/SolvableVisCal.cc
  implement/MeasurementComponents/StandardVisCal.cc
  implement/MeasurementComponents/SteepestDescentSolver.cc
- implement/MeasurementComponents/SynthesisError.cc
  implement/MeasurementComponents/TsysGainCal.cc
- implement/MeasurementComponents/Utils.cc
  implement/MeasurementComponents/UVMod.cc
  implement/MeasurementComponents/VisCal.cc
  implement/MeasurementComponents/VisCalGlobals.cc
@@ -127,13 +246,10 @@ casa_add_library( synthesis
  implement/MeasurementComponents/VisibilityResampler.cc
  implement/MeasurementComponents/VLACalcIlluminationConvFunc.cc
  implement/MeasurementComponents/VLAIlluminationConvFunc.cc
- implement/MeasurementComponents/VPSkyJones.cc
  implement/MeasurementComponents/WBCleanImageSkyModel.cc
  implement/MeasurementComponents/WFCleanImageSkyModel.cc
- implement/MeasurementComponents/WPConvFunc.cc
  implement/MeasurementComponents/WOnlyConvFunc.cc
  implement/MeasurementComponents/WTerm.cc
- implement/MeasurementComponents/WProjectFT.cc
  implement/MeasurementEquations/CCList.cc
  implement/MeasurementEquations/CEMemModel.cc
  implement/MeasurementEquations/CEMemProgress.cc
@@ -157,7 +273,6 @@ casa_add_library( synthesis
  implement/MeasurementEquations/MultiTermMatrixCleaner.cc
  implement/MeasurementEquations/Simulator.cc
  implement/MeasurementEquations/SkyEquation.cc
- implement/MeasurementEquations/StokesImageUtil.cc
  implement/MeasurementEquations/StokesUtil2.cc
  implement/MeasurementEquations/VisEquation.cc
  implement/MeasurementEquations/VPManager.cc
@@ -168,12 +283,19 @@ casa_add_library( synthesis
  implement/Parallel/SerialTransport.cc
  implement/Utilities/FixVis.cc
  implement/Utilities/ThreadCoordinator.cc
- implement/fortran/fgridft.f
- implement/fortran/fmosaic.f
- implement/fortran/fpbmos.f
- implement/fortran/fpbwproj.f
+ implement/fortran/fpbmos.f	
+ implement/fortran/fpbwproj.f	
  implement/fortran/leakantso.f
- implement/fortran/wprojgrid.f  )
+  )
+casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
+casa_add_assay( synthesis implement/MSVis/test/tHanningSmooth.cc )
+casa_add_assay( synthesis implement/MSVis/test/tMSCalEnums.cc )
+casa_add_assay( synthesis implement/MSVis/test/tUVSub.cc )
+casa_add_assay( synthesis implement/MSVis/test/tVisibilityIterator.cc )
+casa_add_assay( synthesis implement/MSVis/test/tVisibilityIteratorAsync.cc )
+casa_add_assay( synthesis implement/MSVis/test/VisibilityProcessing_Test.cc )
+casa_add_assay( synthesis implement/MSVis/test/tVisIter.cc )
+casa_add_assay( synthesis implement/TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis implement/DataSampling/test/tPixonProcessor.cc )
 casa_add_assay( synthesis implement/IDL/test/tIDL.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tALMAAperture.cc )
@@ -182,6 +304,7 @@ casa_add_assay( synthesis implement/MeasurementComponents/test/tAlgoPClark.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tBeamSquint.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tCalibrater.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tPBMath.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tPBMath2D.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tPBTable.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tVPSkyJones.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/dCEMemModel.cc )
@@ -195,4 +318,7 @@ casa_add_assay( synthesis implement/MeasurementEquations/test/tIncCEMemModel.cc 
 casa_add_assay( synthesis implement/MeasurementEquations/test/tLatConvEquation.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tStokesUtil.cc )
 casa_add_assay( synthesis implement/Parallel/test/tApplicator.cc )
-
+casa_add_assay( synthesis implement/CalTables/test/tCalInterpolation.cc )
+casa_add_assay( synthesis implement/CalTables/test/tCalIntpMatch.cc )
+casa_add_assay( synthesis implement/CalTables/test/tNewCalTable.cc )
+casa_add_assay( synthesis implement/CalTables/test/tCTIter.cc )

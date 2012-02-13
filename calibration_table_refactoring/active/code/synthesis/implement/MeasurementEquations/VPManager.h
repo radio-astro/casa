@@ -1,6 +1,7 @@
 //# VPManager functionality sits here; 
-//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 1996-2011
 //# Associated Universities, Inc. Washington DC, USA.
+//# Copyright by ESO (in the framework of the ALMA collaboration)
 //#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
@@ -27,6 +28,8 @@
 #ifndef SYNTHESIS_VPMANAGER_H
 #define SYNTHESIS_VPMANAGER_H
 
+#include <images/Images/AntennaResponses.h>
+
 namespace casa {
   //Forward declarations
   class Record;
@@ -39,14 +42,23 @@ namespace casa {
       //      enum Type{NONE, COMMONPB, AIRY, GAUSS, POLY, IPOLY, COSPOLY,
       //		NUMERIC, IMAGE, ZERNIKE, MAX=ZERNIKE};
 
-      // Default constructor                                        
-      
-      VPManager();
+      // this is a SINGLETON class
+      static VPManager* Instance();
+      static void reset();
 
-      // Destructor
-      virtual ~VPManager();
-      
+      // call before anything else (returns False if already locked)
+      Bool lock();
+      // or if you are ready to wait for the lock (returns True if successful)
+      Bool acquireLock(Double timeoutSecs, 
+		       Bool verbose=False);
+      // verbose check for lock
+      Bool isLocked();
+      // call when you are done
+      void release();
+            
       Bool saveastable(const String& tablename);
+
+      Bool loadfromtable(const String& tablename);
 
       Bool summarizevps(const Bool verbose);
 
@@ -114,7 +126,7 @@ namespace casa {
 
       Bool setpbimage(const String& telescope, const String& othertelescope, 
 		      const Bool dopb, const String& realimage, 
-		      const String& imagimage, Record& rec);
+		      const String& imagimage, const String& compleximage, Record& rec);
 
       Bool setpbpoly(const String& telescope, const String& othertelescope,
 		     const Bool dopb, const Vector<Double>& coeff,
@@ -126,10 +138,84 @@ namespace casa {
 		     const Quantity& paincrement,
 		     const Bool usesymmetricbeam,
 		     Record &rec);
+      
+
+      Bool setpbantresptable(const String& telescope, const String& othertelescope,
+			     const Bool dopb, const String& tablepath);
+                            // no record filled, need to access via getvp()
+
+      // set the default voltage pattern for the given telescope
+      Bool setuserdefault(const Int vplistfield,
+			  const String& telescope,
+			  const String& antennatype="");
+
+      Bool getuserdefault(Int& vplistfield,
+			  const String& telescope,
+			  const String& antennatype="");
+
+      Bool getanttypes(Vector<String>& anttypes,
+		       const String& telescope,
+		       const MEpoch& obstime,
+		       const MFrequency& freq, 
+		       const MDirection& obsdirection); // default: Zenith
+			      
+      // return number of voltage patterns satisfying the given constraints
+      Int numvps(const String& telescope,
+		 const MEpoch& obstime,
+		 const MFrequency& freq, 
+		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
+							   Quantity(90., "deg"), 
+							   MDirection::AZEL)
+		 ); 
+
+
+      // get the voltage pattern satisfying the given constraints
+      Bool getvp(Record &rec,
+		 const String& telescope,
+		 const MEpoch& obstime,
+		 const MFrequency& freq, 
+		 const String& antennatype="", 
+		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
+							   Quantity(90., "deg"), 
+							   MDirection::AZEL)
+		 ); 
+
+      // get a general voltage pattern for the given telescope and ant type if available
+      Bool getvp(Record &rec,
+		 const String& telescope,
+		 const String& antennatype=""
+		 ); 
+
+    protected:
+      VPManager(Bool verbose=False);
 
     private:
-      Record vplist_p;
+      static VPManager* instance_p;
 
+      Bool isLocked_p; // only to be modified by the dedicated methods
+
+      Record vplist_p; 
+      SimpleOrderedMap<String, Int > vplistdefaults_p; 
+      AntennaResponses aR_p; 
+
+      inline String antennaDescription(const String& telescope,
+				       const String& antennatype){
+	if(antennatype.empty()) return telescope;
+	return telescope + " " + antennatype;
+      };
+
+      inline String telFromAntDesc(const String& antDesc){
+	String tempstr = antDesc;
+	if(tempstr.contains(" ")) return tempstr.before(" ");
+	return tempstr;
+      };
+
+      inline String antTypeFromAntDesc(const String& antDesc){
+	String tempstr = antDesc;
+	if(tempstr.contains(" ")) return tempstr.after(" ");
+	tempstr = "";
+	return tempstr;
+      };
 
     };
 

@@ -26,13 +26,13 @@
 //# $Id$
 
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/TransformMachines/SimpCompGridMachine.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/PointShape.h>

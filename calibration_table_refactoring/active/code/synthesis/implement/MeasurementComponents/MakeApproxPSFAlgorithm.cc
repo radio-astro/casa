@@ -39,10 +39,10 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/sstream.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogIO.h>
@@ -54,7 +54,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

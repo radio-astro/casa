@@ -31,11 +31,11 @@
 
 #include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
-//#include <msvis/MSVis/UtilJ.h>
-#include <msvis/MSVis/VisBuffer.h>
+//#include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 

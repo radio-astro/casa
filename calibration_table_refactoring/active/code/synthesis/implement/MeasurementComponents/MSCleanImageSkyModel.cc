@@ -88,7 +88,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   */
   // Make the residual image
   if(modified_p)
-    makeNewtonRaphsonStep(se);
+    makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
   
   //Make the PSF
   if(!donePSF_p)

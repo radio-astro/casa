@@ -33,7 +33,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <images/Images/ImageRegrid.h>

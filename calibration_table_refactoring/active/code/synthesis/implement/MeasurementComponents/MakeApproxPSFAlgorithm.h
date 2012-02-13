@@ -31,13 +31,13 @@
 #include <casa/BasicSL/String.h>
 #include <synthesis/Parallel/Algorithm.h>
 #include <synthesis/Parallel/Applicator.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <synthesis/MeasurementComponents/GridFT.h>
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <synthesis/TransformMachines/GridFT.h>
+#include <synthesis/TransformMachines/FTMachine.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

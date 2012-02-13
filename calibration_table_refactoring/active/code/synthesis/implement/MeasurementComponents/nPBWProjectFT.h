@@ -29,10 +29,10 @@
 #ifndef SYNTHESIS_PBWPROJECTFT_H
 #define SYNTHESIS_PBWPROJECTFT_H
 
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <synthesis/TransformMachines/FTMachine.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
@@ -46,10 +46,10 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 //#include <synthesis/MeasurementComponents/EPJones.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>

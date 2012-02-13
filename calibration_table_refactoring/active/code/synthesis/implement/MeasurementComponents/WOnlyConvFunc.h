@@ -29,8 +29,8 @@
 #ifndef SYNTHESIS_WONLYCONVFUNC_H
 #define SYNTHESIS_WONLYCONVFUNC_H
 
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <synthesis/TransformMachines/ConvolutionFunction.h>
+#include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/MeasurementComponents/WTerm.h>
 #include <synthesis/MeasurementComponents/PSTerm.h>
 #include <images/Images/ImageInterface.h>

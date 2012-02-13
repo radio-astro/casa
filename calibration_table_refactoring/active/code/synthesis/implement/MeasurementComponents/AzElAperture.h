@@ -31,7 +31,7 @@
 
 #include <images/Images/ImageInterface.h>
 #include <synthesis/MeasurementComponents/ATerm.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 //
 //---------------------------------------------------------------------

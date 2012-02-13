@@ -26,9 +26,9 @@
 //#
 //# $Id$
 //
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/MeasurementComponents/EVLAAperture.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 #include <synthesis/MeasurementComponents/WTerm.h>
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>

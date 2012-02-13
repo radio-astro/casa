@@ -28,7 +28,7 @@
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayIter.h>
@@ -44,6 +44,8 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
+#include <synthesis/CalTables/CTMainColumns.h>
+#include <synthesis/CalTables/CTColumns.h>
 #include <casa/sstream.h>
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
@@ -65,6 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SolvableVisCal::SolvableVisCal(VisSet& vs) :
   VisCal(vs),
   corruptor_p(NULL),
+  ct_(NULL),
   cs_(NULL),
   cint_(NULL),
   maxTimePerSolution_p(0), 
@@ -94,6 +97,10 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solveParOK_(vs.numberSpw(),NULL),
   solveParErr_(vs.numberSpw(),NULL),
   solveParSNR_(vs.numberSpw(),NULL),
+  solveAllPar_(vs.numberSpw(),NULL),
+  solveAllParOK_(vs.numberSpw(),NULL),
+  solveAllParErr_(vs.numberSpw(),NULL),
+  solveAllParSNR_(vs.numberSpw(),NULL),
   srcPolPar_(),
   chanmask_(NULL),
   simulated_(False),
@@ -180,6 +187,7 @@ SolvableVisCal::~SolvableVisCal() {
 
   deleteSVC();
 
+  if (ct_)   delete ct_;   ct_=NULL;
   if (cs_)   delete cs_;   cs_=NULL;
   if (cint_) delete cint_; cint_=NULL;
 
@@ -1094,6 +1102,9 @@ void SolvableVisCal::setSolve(const Record& solve)
   setSolved(True);
   setApplied(False);
 
+
+  /* NEWCALTABLE
+
   // Create a pristine CalSet
   //  TBD: move this to inflate()?
   switch (parType())
@@ -1113,6 +1124,9 @@ void SolvableVisCal::setSolve(const Record& solve)
     default:
       throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
     }
+  */
+
+
   //  state();
 
 }
@@ -1560,6 +1574,18 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   nChunkPerSol=0;
 
   VisIter& vi(vs.iter());
+
+  Block< Vector<Int> > g,st,nch,icr,spw;
+  vi.getChannelSelection(g,st,nch,icr,spw);
+  for (uInt isel=0;isel<spw.nelements();++isel)
+    cout << isel << ":" << endl
+	 << " " << "nGrp =" << g[isel]
+	 << " " << "start=" << st[isel]
+	 << " " << "nchan=" << nch[isel]
+	 << " " << "icrem=" << icr[isel]
+	 << " " << "spw  =" << spw[isel]
+	 << endl;
+
   VisBuffer vb(vi);
   vi.originChunks();
   vi.origin();
@@ -1692,10 +1718,14 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 	    << LogIO::POST;
   //}
 
+/* NEWCALTABLE
+
   // Inflate the CalSet
   //  inflate(nChanParList(),startChanList(),nChunkPerSpw);
+
   inflate(nChanParList(),startChanList(),nSolPerSpw);
-    
+*/
+
   // Size the solvePar arrays
   initSolvePar();
 
@@ -2846,6 +2876,107 @@ void SolvableVisCal::reportSolvedQU() {
   }
 }
 
+void SolvableVisCal::createMemCalTable() {
+
+
+  cout << "currCPar().shape()  = " << currCPar().shape() << endl;
+  cout << "solveCPar().shape() = " << solveCPar().shape() << endl;
+
+  CTDesc caltabdesc;
+  ct_ = new NewCalTable("tempNCT.tab",caltabdesc,Table::Scratch,Table::Memory);
+  ct_->setMetaInfo(msName());
+
+  CTColumns ncc(*ct_);
+
+  cout << "currSpw() = " << currSpw() << endl;
+  cout << "nChanPar() = " << nChanPar() << endl;
+  cout << "nChanParList() = " << nChanParList() << endl;
+  cout << "startChan() = " << startChan() << endl;
+  cout << "ncc.spectralWindow().chanFreq().shape(0)         = " << ncc.spectralWindow().chanFreq().shape(0) << endl;
+  cout << boolalpha;
+  cout << "ncc.spectralWindow().chanFreq().canChangeShape() = " << ncc.spectralWindow().chanFreq().canChangeShape() << endl;
+
+  // Revise SPW frequencies
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+
+    currSpw()=ispw;
+
+    // MS freqs
+    Vector<Double> chfr;
+    ncc.spectralWindow().chanFreq().get(ispw,chfr);
+
+    Int nchan=0;
+    Vector<Double> calfreq;
+    if (startChan()>-1 && nChanPar()>0) {
+
+      if (freqDepPar()) { 
+	nchan=nChanPar();
+	if (nChanPar()<chfr.nelements())
+	  calfreq=chfr(Slice(startChan(),nChanPar()));
+	else
+	  calfreq.reference(chfr);
+      }
+      else {
+	nchan=1;
+	calfreq.resize(1);
+	calfreq(0)=mean(chfr(Slice(startChan(),nChanPar())));
+      }
+    }
+    cout << "nchan=" << nchan << " calfreq.nelements() = " << calfreq.nelements() << " " << calfreq << endl;
+    if (nchan>0) {
+      ncc.spectralWindow().chanFreq().setShape(ispw,IPosition(1,nchan));
+      cout << "ncc.spectralWindow().chanFreq().shape(ispw)         = " << ncc.spectralWindow().chanFreq().shape(ispw) << endl;
+      ncc.spectralWindow().chanFreq().put(ispw,calfreq);
+      ncc.spectralWindow().numChan().put(ispw,nchan);
+    }
+    else
+      ncc.spectralWindow().flagRow().put(ispw,True);
+  }
+
+  cout << "Done creating table." << endl;
+
+}
+
+// File a single-channel solved solution into the multi-channel space for it
+void SolvableVisCal::keep1(Int ichan) {
+  cout << "keep1..." << flush;
+  solveAllPar()(Slice(),Slice(ichan,1),Slice())=solveCPar();
+  solveAllParOK()(Slice(),Slice(ichan,1),Slice())=solveParOK();
+  solveAllParErr()(Slice(),Slice(ichan,1),Slice())=solveParErr();
+  solveAllParSNR()(Slice(),Slice(ichan,1),Slice())=solveParSNR();
+  cout << "done." << endl;
+}
+
+// File a solved solution (and meta-data) into the in-memory Caltable
+void SolvableVisCal::keepNCT() {
+
+  //  if (prtlev()>4) 
+  cout << " SVC::keepNCT" << endl;
+
+  //  cout << "ct_->nrow() = " << ct_->nrow() << endl;
+
+  CTMainColumns ncmc(*ct_);
+
+  Int nAddRows=nAnt();
+  RefRows rows(ct_->nrow(),ct_->nrow()+nAddRows-1,1); 
+  ct_->addRow(nAddRows);
+
+  ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,refTime()));
+  ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,currField()));
+  ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,currSpw()));
+  Vector<Int> antids(nAnt());
+  indgen(antids);
+  ncmc.antenna1().putColumnCells(rows,antids);
+  ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant()));
+  ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,-1));
+
+  ncmc.param().putColumnCells(rows,solveAllPar());
+  ncmc.paramerr().putColumnCells(rows,solveAllParErr());
+  ncmc.snr().putColumnCells(rows,solveAllParSNR());
+  ncmc.flag().putColumnCells(rows,!solveAllParOK());
+
+}
+
 // File a solved solution (and meta-data) into a slot in the CalSet
 void SolvableVisCal::keep(const Int& slot) {
 
@@ -2956,6 +3087,22 @@ void SolvableVisCal::normalize() {
   else 
     throw(AipsError("Solution normalization not supported."));
 	
+}
+
+void SolvableVisCal::storeNCT() {
+
+  if (prtlev()>3) cout << " SVC::storeNCT()" << endl;
+
+  if (append())
+    throw(AipsError("append NYI for New CalTables"));
+  //    logSink() << "Appending solutions to table: " << calTableName()
+  //	      << LogIO::POST;
+  else
+    logSink() << "Writing solutions to table: " << calTableName()
+	      << LogIO::POST;
+
+  ct_->writeToDisk(calTableName());
+
 }
 
 void SolvableVisCal::store() {
@@ -3075,6 +3222,10 @@ void SolvableVisCal::initSVC() {
     solveParOK_[ispw] = new Cube<Bool>();
     solveParErr_[ispw] = new Cube<Float>();
     solveParSNR_[ispw] = new Cube<Float>();
+    solveAllPar_[ispw] = new Cube<Complex>();
+    solveAllParOK_[ispw] = new Cube<Bool>();
+    solveAllParErr_[ispw] = new Cube<Float>();
+    solveAllParSNR_[ispw] = new Cube<Float>();
   }
   
   parType_=VisCalEnum::COMPLEX;
@@ -3091,12 +3242,20 @@ void SolvableVisCal::deleteSVC() {
     if (solveParOK_[ispw]) delete solveParOK_[ispw];
     if (solveParErr_[ispw]) delete solveParErr_[ispw];
     if (solveParSNR_[ispw]) delete solveParSNR_[ispw];
+    if (solveAllPar_[ispw])  delete solveAllPar_[ispw];
+    if (solveAllParOK_[ispw]) delete solveAllParOK_[ispw];
+    if (solveAllParErr_[ispw]) delete solveAllParErr_[ispw];
+    if (solveAllParSNR_[ispw]) delete solveAllParSNR_[ispw];
   }
   solveCPar_=NULL;
   solveRPar_=NULL;
   solveParOK_=NULL;
   solveParErr_=NULL;
   solveParSNR_=NULL;
+  solveAllPar_=NULL;
+  solveAllParOK_=NULL;
+  solveAllParErr_=NULL;
+  solveAllParSNR_=NULL;
 }
 
 void SolvableVisCal::verifyCalTable(const String& caltablename) {
@@ -4079,8 +4238,14 @@ void SolvableVisJones::initSolvePar() {
 
     switch (parType()) {
     case VisCalEnum::COMPLEX: {
-      solveCPar().resize(nPar(),1,nAnt());
-      solveCPar()=Complex(1.0);
+      solveAllPar().resize(nPar(),nChanPar(),nAnt());
+      solveAllPar()=Complex(1.0);
+      if (nChanPar()==1)
+	solveCPar().reference(solveAllPar());
+      else {
+	solveCPar().resize(nPar(),1,nAnt());
+	solveCPar()=Complex(1.0);
+      }
       break;
     }
     case VisCalEnum::REAL: {
@@ -4092,14 +4257,27 @@ void SolvableVisJones::initSolvePar() {
       throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
 		      "COMPLEXREAL found in SolvableVisJones::initSolvePar()"));
     }
-
-    solveParOK().resize(nPar(),1,nAnt());
-    solveParOK()=True;
-    solveParErr().resize(nPar(),1,nAnt());
-    solveParErr()=0.0;
-    solveParSNR().resize(nPar(),1,nAnt());
-    solveParSNR()=0.0;
-
+    
+    solveAllParOK().resize(nPar(),nChanPar(),nAnt());
+    solveAllParErr().resize(nPar(),nChanPar(),nAnt());
+    solveAllParSNR().resize(nPar(),nChanPar(),nAnt());
+    solveAllParOK()=True;
+    solveAllParErr()=0.0;
+    solveAllParSNR()=0.0;
+    if (nChanPar()==1) {
+      solveParOK().reference(solveAllParOK());
+      solveParErr().reference(solveAllParErr());
+      solveParSNR().reference(solveAllParSNR());
+    }
+    else {
+      // solving many channels, one at a time
+      solveParOK().resize(nPar(),1,nAnt());
+      solveParErr().resize(nPar(),1,nAnt());
+      solveParSNR().resize(nPar(),1,nAnt());
+      solveParOK()=True;
+      solveParErr()=0.0;
+      solveParSNR()=0.0;
+    }
   }
   currSpw()=0;
 
