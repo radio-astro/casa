@@ -1,4 +1,4 @@
-//# tSubImage.cc: Test program for class SubImage
+//# SpectralCollapser.h: Header file for class SpectralCollapser
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -28,7 +28,7 @@
 #ifndef IMAGEANALYSIS_SPECTRALCOLLAPSER_H
 #define IMAGEANALYSIS_SPECTRALCOLLAPSER_H
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <images/Images/ImageInterface.h>
 
 #include <casa/namespace.h>
 

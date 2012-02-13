@@ -39,6 +39,7 @@ implement/ImageAnalysis/ImageFitter.cc
 implement/ImageAnalysis/ImageInputProcessor.cc
 implement/ImageAnalysis/ImagePrimaryBeamCorrector.cc
 implement/ImageAnalysis/ImageProfileFitter.cc
+implement/ImageAnalysis/ImageStatsCalculator.cc
 implement/ImageAnalysis/ImageTransposer.cc
 implement/ImageAnalysis/ImageTask.cc
 implement/ImageAnalysis/SpectralCollapser.cc

@@ -33,7 +33,6 @@
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <images/Images/ImageFit1D.h>
 
-
 #include <casa/namespace.h>
 
 namespace casa {

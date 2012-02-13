@@ -124,6 +124,12 @@ casa_add_library( synthesis
   implement/CalTables/CalTable.cc
   implement/CalTables/CalTableDesc2.cc
   implement/CalTables/CalTableDesc.cc
+  implement/CalTables/CTColumns.cc
+  implement/CalTables/CTDesc.cc
+  implement/CalTables/CTEnums.cc
+  implement/CalTables/CTIter.cc
+  implement/CalTables/CTMainColumns.cc
+  implement/CalTables/CTMainRecord.cc
   implement/CalTables/EPointDesc.cc
   implement/CalTables/EPointMBuf.cc
   implement/CalTables/EPointMCol.cc
@@ -137,6 +143,7 @@ casa_add_library( synthesis
   implement/CalTables/GJonesTable.cc
   implement/CalTables/MJonesDesc.cc
   implement/CalTables/MJonesMRec.cc
+  implement/CalTables/NewCalTable.cc
   implement/CalTables/SolvableMJDesc.cc
   implement/CalTables/SolvableMJMRec.cc
   implement/CalTables/SolvableVJDesc.cc
@@ -635,3 +642,5 @@ casa_add_assay( synthesis implement/MeasurementEquations/test/tStokesUtil.cc )
 casa_add_assay( synthesis implement/Parallel/test/tApplicator.cc )
 casa_add_assay( synthesis implement/CalTables/test/tCalInterpolation.cc )
 casa_add_assay( synthesis implement/CalTables/test/tCalIntpMatch.cc )
+casa_add_assay( synthesis implement/CalTables/test/tNewCalTable.cc )
+casa_add_assay( synthesis implement/CalTables/test/tCTIter.cc )

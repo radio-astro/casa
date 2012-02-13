@@ -182,21 +182,48 @@ Double FlagAgentRFlag::median(vector<Double> &data)
 {
 	Double med;
 	sort(data.begin(),data.end());
+
 	if (data.size() % 2 == 1)
 	{
-		med = data[(data.size()+1)/2];
+		med = data[(data.size()-1)/2];
 	}
 	else
 	{
-		med = 0.5*(data[data.size()/2] + data[1 + data.size()/2]);
+		med = 0.5*(data[data.size()/2] + data[(data.size()/2)-1]);
 	}
 
 	return med;
 }
 
-Double FlagAgentRFlag::compueThreshold(vector<Double> &data,vector<Double> &dataSquared,vector<Double> &counts)
+Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &dataSquared,vector<Double> &counts)
 {
-
+/*
+ *      DO 100 JI = 1,NI
+         K = 0
+         MEDR = 0.0
+         MEDRR = 0.0
+         DO 10 JC = 1,NC
+            IF (RMSRMS(3,JC,JI).GE.1.0D0) THEN
+               RMSRMS(1,JC,JI) = RMSRMS(1,JC,JI) / RMSRMS(3,JC,JI)
+               RMSRMS(2,JC,JI) = RMSRMS(2,JC,JI) / RMSRMS(3,JC,JI) -
+     *            RMSRMS(1,JC,JI) * RMSRMS(1,JC,JI)
+               RMSRMS(2,JC,JI) = SQRT (MAX (0.0D0, RMSRMS(2,JC,JI)))
+               K = K + 1
+               VALUES(K) = RMSRMS(1,JC,JI)
+               END IF
+ 10         CONTINUE
+         IF (K.GT.0) THEN
+            MEDR = MEDIAN (K, VALUES)
+            DO 20 JC = 1,K
+               VALUES(JC) = ABS (VALUES(JC)-MEDR)
+ 20            CONTINUE
+            MEDRR = 1.4826 * MEDIAN (K, VALUES)
+            END IF
+         IF (SCALE.GT.0.0) XNOISE(JI) = SCALE * (MEDR + MEDRR)
+ 100     CONTINUE
+C
+ *
+ */
 	// Declare working variables
 	Double avg,avgSquared,std;
 
@@ -208,7 +235,7 @@ Double FlagAgentRFlag::compueThreshold(vector<Double> &data,vector<Double> &data
 		avgSquared = dataSquared[index]/counts[index];
 		std = avgSquared - avg*avg;
 		std = sqrt(std > 0?  std:0);
-		samplesForMedian[index] = std;
+		samplesForMedian[index] = avg;
 	}
 
 	// Compute median
@@ -225,6 +252,13 @@ Double FlagAgentRFlag::compueThreshold(vector<Double> &data,vector<Double> &data
 	Double mad = median(samplesForMad);
 
 	// Return median of std plus mad of std
+	/*
+	cout << " med is:" 	<< 1000*med
+						<< " mad is:" << 1000*mad
+						<< " med + mad is:" << 1000*(med + mad)
+						<< " med + 1.4826*mad is:" << 1000*(med + 1.4826*mad) << endl;
+	*/
+
 	return (med + 1.4826*mad);
 }
 
@@ -238,14 +272,14 @@ FlagReport FlagAgentRFlag::getReport()
 											"Time analysis",
 											noiseScale_p);
     dispRep.addReport(noiseStd);
-
+/*
 	FlagReport scutofStd = getReportCore(	spw_scutof_histogram_sum_p,
 											spw_scutof_histogram_sum_squares_p,
 											spw_scutof_histogram_counts_p,
 											"Spectral analysis",
 											scutofScale_p);
     dispRep.addReport(scutofStd);
-
+*/
 	return dispRep;
 }
 
@@ -287,7 +321,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< Int,vector<Double> > &data,
     	total_threshold_counts.insert(total_threshold_counts.end(),current_spw_threshold_counts.begin(),current_spw_threshold_counts.end());
 
     	// Display average (over baeline/channels) std per spw
-    	spwStd = scale*compueThreshold(current_spw_threshold,current_spw_threshold_squared,current_spw_threshold_counts);
+    	spwStd = scale*computeThreshold(current_spw_threshold,current_spw_threshold_squared,current_spw_threshold_counts);
     	*logger_p << LogIO::NORMAL << label.c_str() << " - Spw " << current_spw <<
     			" threshold (over baselines/timesteps) avg: " << spwStd << LogIO::POST;
 
@@ -370,7 +404,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 			AverageImag = 0;
 			StdImag = 0;
 
-			for (uInt timestep_i=timeStart;timestep_i<timeStop;timestep_i++)
+			for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 			{
 				// Ignore data point if it is already flagged
 				// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
@@ -417,9 +451,16 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 	            {
 	            	if (StdTotal > noise)
 	            	{
-	            		for (uInt timestep_i=timeStart;timestep_i<timeStop;timestep_i++)
+	            		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 	            		{
-	            			// cout << "pol: " << pol_k << " channel:" << chan_j << " centralTime:" << centralTime << " StdTotal:" << StdTotal << " noise:" << noise << endl;
+	            			/*
+	            			cout 	<< "pol: " << pol_k
+	            					<< " channel:" << chan_j
+	            					<< " timeStart:" << timeStart
+	            					<< " timeStop:" << timeStop
+	            					<< " StdTotal:" << StdTotal
+	            					<< " noise:" << noise << endl;
+	            				*/
 	            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
 	            			visBufferFlags_p += 1;
 	            		}
@@ -430,7 +471,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 	}
 
 	// Spectral analysis: Fix timestep/polarization and compute stats with all channels
-	for (uInt timestep_i=timeStart;timestep_i<timeStop;timestep_i++)
+	for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 	{
 		for (uInt pol_k=0;pol_k<nPols;pol_k++)
 		{
@@ -549,6 +590,32 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 		}
 	}
 
+	// Extend flags across polarizations (AIPS 'compress stokes')
+	if (!doplot_p)
+	{
+		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
+		{
+			for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+			{
+				for (uInt pol_k=0;pol_k<nPols;pol_k++)
+				{
+					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i))
+					{
+						for (Int ineer_pol_k=0;ineer_pol_k<nPols;ineer_pol_k++)
+						{
+							if (!flags.getModifiedFlags(ineer_pol_k,chan_j,timestep_i))
+							{
+								flags.setModifiedFlags(ineer_pol_k,chan_j,timestep_i);
+								visBufferFlags_p += 1;
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	return;
 }
 
@@ -656,21 +723,23 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		effectiveNTimeSteps = nTimesteps;
 	}
 
+	uInt effectiveNTimeStepsDelta = (effectiveNTimeSteps - 1)/2;
+
 	// Beginning time range: Move only central point
-	for (uInt timestep_i=0;timestep_i<effectiveNTimeSteps;timestep_i++)
+	for (uInt timestep_i=0;timestep_i<effectiveNTimeStepsDelta;timestep_i++)
 	{
-		computeAntennaPairFlagsCore(spw,noise,scutof,timestep_i,effectiveNTimeSteps,timestep_i,visibilities,flags);
+		computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
 	}
 
-	for (uInt timestep_i=effectiveNTimeSteps;timestep_i<nTimesteps-effectiveNTimeSteps;timestep_i++)
+	for (uInt timestep_i=effectiveNTimeStepsDelta;timestep_i<nTimesteps-effectiveNTimeStepsDelta;timestep_i++)
 	{
-		computeAntennaPairFlagsCore(spw,noise,scutof,timestep_i-effectiveNTimeSteps,timestep_i+effectiveNTimeSteps,timestep_i,visibilities,flags);
+		computeAntennaPairFlagsCore(spw,noise,scutof,timestep_i-effectiveNTimeStepsDelta,timestep_i+effectiveNTimeStepsDelta,timestep_i,visibilities,flags);
 	}
 
 	// End time range: Move only central point
-	for (uInt timestep_i=nTimesteps-effectiveNTimeSteps;timestep_i<nTimesteps;timestep_i++)
+	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<nTimesteps;timestep_i++)
 	{
-		computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps,timestep_i,visibilities,flags);
+		computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
 	}
 
 	return false;

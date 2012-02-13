@@ -29,6 +29,9 @@
 #define IMAGEANALYSIS_IMAGETASK_H
 
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
+
+#include <casa/IO/FiledesIO.h>
+
 #include <memory>
 
 #include <casa/namespace.h>
@@ -117,7 +120,14 @@ protected:
 
     const String& _getLogfile() const;
 
-    void _writeLogfile(const String& output) const;
+    Bool _writeLogfile(
+    	const String& output, const Bool open=True,
+    	const Bool close=True
+    );
+
+    Bool _openLogfile();
+
+    void _closeLogfile() const;
 
 
 private:
@@ -127,7 +137,8 @@ private:
     Record _regionRecord;
     String _region, _box, _chan, _stokesString, _mask, _outname, _logfile;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
-
+    Int _logFD;
+	std::auto_ptr<FiledesIO> _logFileIO;
 
 
 
