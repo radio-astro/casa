@@ -250,7 +250,7 @@ FlagAgentSummary::getReport()
   //         FlagReport summarylist("list");  
   //
   //         // Add the standard summary dictionary as a report of type 'summary'
-  //         summarylist.addReport( FlagReport("summary",getResult())  );
+  //         summarylist.addReport( FlagReport("summary", agentName_p, getResult())  );
   //
   //         // Make a report for a view, and add it to the list
   //         FlagReport viewrep("plotline",agentName_p,"title","xaxis","yaxis")
@@ -258,8 +258,11 @@ FlagAgentSummary::getReport()
   //         summarylist.addReport( viewRep );        
   //
   //         return summarylist;
+  //
+  // Note : Calculate these extra views only if the user has asked for it.
+  //
 
-  return FlagReport("summary", getResult());
+  return FlagReport("summary", agentName_p, getResult());
 }
 
 Record

@@ -43,8 +43,9 @@ class FlagReport : public Record
                 FlagReport(String type=String("none"),String name=String(""), 
                                  String title=String(""), 
 			         String xlabel=String(""), String ylabel=String("") );
-                FlagReport(String type, const Record &other); // TODO : By value. Change to by-reference
-                FlagReport(const Record &other); // TODO : By value. Change to by-reference
+                 // TODO : By value. Change to by-reference
+                FlagReport(String type, String name, const Record &other); 
+                FlagReport(const Record &other);
 		~FlagReport();
 
                 // Add, query and access reports from a "list" type FlagReport

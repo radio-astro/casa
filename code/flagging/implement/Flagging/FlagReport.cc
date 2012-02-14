@@ -29,6 +29,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 /// FlagReport implementation ///
 ////////////////////////////////////
 
+// All FlagReports must have 'type' and 'name' defined.
 FlagReport::FlagReport(String type,String name, String title, String xlabel, 
                                    String ylabel):Record(),logger_p()
 {
@@ -64,7 +65,7 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 
 }
 
-  FlagReport::FlagReport(String type, const Record &other)
+  FlagReport::FlagReport(String type, String name, const Record &other)
 {
 
         assign(other);
@@ -81,12 +82,14 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 	  {
 	    logger_p << LogIO::WARN << "Overwriting field 'type' of input record by that supplied in this FlagReport constructor : " << type << LogIO::POST;
 	  }
-
         define( RecordFieldId("type") , type );
 
-        // Verify that it is a valid type, and if not, add basic default fields.
-        // Not needed, because verifyFields() only checks for the existence of
-        // type, if type != summary and type !- none
+        if( isDefined("name") )
+	  {
+	    logger_p << LogIO::WARN << "Overwriting field 'name' of input record by that supplied in this FlagReport constructor : " << type << LogIO::POST;
+	  }
+        define( RecordFieldId("name") , name );
+
 }
 
   FlagReport::FlagReport(const Record &other)
@@ -98,6 +101,12 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 	  {
 	    // add a type='none' field, and send for validation checks.
 	    define( RecordFieldId("type") , "none" );
+	  }
+
+	if( ! isDefined( "name" ) )
+	  {
+	    // add a type='none' field, and send for validation checks.
+	    define( RecordFieldId("name") , "UnknownAgent" );
 	  }
 
 }
