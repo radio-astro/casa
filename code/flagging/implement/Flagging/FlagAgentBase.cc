@@ -1176,6 +1176,18 @@ FlagAgentBase::find(Matrix<Int> validPairs, Int element1, Int element2)
 }
 
 bool
+FlagAgentBase::isZero(Float number)
+{
+	return !number;
+}
+
+bool
+FlagAgentBase::isZero(Double number)
+{
+	return !number;
+}
+
+bool
 FlagAgentBase::isNaN(Float number)
 {
 	bool result = isnan(number);
