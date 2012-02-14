@@ -624,7 +624,7 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-recalcuvw"))
 		{
-			  agentParameters.define ("revalcuvw", (value.compare("True")==0));
+			  agentParameters.define ("recalcuvw", (value.compare("True")==0));
 		}
 	}
 

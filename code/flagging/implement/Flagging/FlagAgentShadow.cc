@@ -223,7 +223,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	recalculateUVW_p = False;
       }
     
-    *logger_p << logLevel_p << " recalcuvw is " << recalculateUVW_p << " meters "<< LogIO::POST;
+    *logger_p << logLevel_p << " recalcuvw is " << recalculateUVW_p << LogIO::POST;
 
     // catch the inconsistent case, and force consistency.
     if( recalculateUVW_p == False && additionalAntennas_p.nfields()>0 )
