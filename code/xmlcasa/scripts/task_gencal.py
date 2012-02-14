@@ -13,7 +13,8 @@ def gencal(vis=None,caltable=None,caltype=None,
        try:
 
               if ((type(vis)==str) & (os.path.exists(vis))):
-                     cb.open(vis,False,False)  # don't need scr col for this
+                     # don't need scr col for this
+                     cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)  
               else:
                      raise Exception, 'Visibility data set not found - please verify the name'
 

@@ -1,11 +1,12 @@
 import shutil
 import unittest
 import os
+import filecmp
 from tasks import *
 from taskinit import *
 
 #
-# Test of tflagcmd task. It uses tflagger to unflag and summary
+# Test of tflagcmd task. It uses tflagdata to unflag and summary
 #
 
 def test_eq(result, total, flagged):
@@ -52,7 +53,7 @@ class test_base(unittest.TestCase):
                          '/data/regression/ngc5921/ngc5921.fits', \
                          self.vis)
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_multi(self):
         self.vis = "multiobs.ms"
@@ -66,7 +67,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_flagdatatest_alma(self):
         self.vis = "flagdatatest-alma.ms"
@@ -80,10 +81,10 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagger(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
         
-class test_manualflag(test_base):
+class test_manual(test_base):
     '''Test manual selections'''
     
     def setUp(self):
@@ -93,10 +94,10 @@ class test_manualflag(test_base):
         input = "observation='1'"
         filename = create_input(input)
         
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=False)
-        test_eq(tflagger(vis=self.vis, mode='summary'), 2882778, 28500)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
 
-class test_selections_alma(test_base):
+class test_alma(test_base):
     # Test various selections for alma data 
 
     def setUp(self):
@@ -109,8 +110,8 @@ class test_selections_alma(test_base):
         filename = create_input(input)
         
         # flag POINTING CALIBRATION scans 
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=False)
-        test_eq(tflagger(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        test_eq(tflagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
         
     def test_extract(self):
         '''tflagcmd: action = extract and apply clip on WVR'''
@@ -119,14 +120,14 @@ class test_selections_alma(test_base):
         
         # Save cmd to FLAG_CMD
         cmd = "mode=clip clipminmax=[0,50] expression=ABS_WVR"
-        tflagcmd(vis=self.vis, inputmode='cmd', command=[cmd], action='list', savepars=True)
+        tflagcmd(vis=self.vis, inpmode='cmd', command=[cmd], action='list', savepars=True)
         
         # Extract it
         res = tflagcmd(vis=self.vis, action='extract')
         
         # Apply to clip only WVR
-        tflagcmd(vis=self.vis, inputmode='cmd', command=[res[0]['cmd']], savepars=False)
-        ret = tflagger(vis=self.vis, mode='summary')
+        tflagcmd(vis=self.vis, inpmode='cmd', command=[res[0]['command']], savepars=False, action='apply')
+        ret = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(ret['flagged'], 22752)
         self.assertEqual(ret['correlation']['I']['flagged'], 22752)
         self.assertEqual(ret['correlation']['XX']['flagged'], 0)
@@ -146,18 +147,18 @@ class test_unapply(test_base):
         # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
         # Flag using tfcrop agent
         input = "scan=3 mode=tfcrop expression='ABS_RR'"
         filename = create_input(input)
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
-        test_eq(tflagger(vis=self.vis,mode='summary',scan='1'), 568134, 568134)
-        test_eq(tflagger(vis=self.vis,mode='summary',scan='3'), 762048, 2829)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
+        test_eq(tflagdata(vis=self.vis,mode='summary',scan='1'), 568134, 568134)
+        test_eq(tflagdata(vis=self.vis,mode='summary',scan='3'), 762048, 2829)
         
         # Unapply only the tfcrop line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
-        result = tflagger(vis=self.vis,mode='summary',scan='3')
+        result = tflagdata(vis=self.vis,mode='summary',scan='3')
         self.assertEqual(result['flagged'], 0, 'Expected 0 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 762048,'Expected total 762048, found %s'%result['total'])
 
@@ -169,16 +170,16 @@ class test_unapply(test_base):
         # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
 
         # Flag using the quack agent
         input = "scan=1~3 mode=quack quackinterval=1.0"
         filename = create_input(input)
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
         # Unapply only the quack line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=True)
-        result = tflagger(vis=self.vis,mode='summary',scan='1')
+        result = tflagdata(vis=self.vis,mode='summary',scan='1')
         
         # Only the manual flags should be there
         self.assertEqual(result['flagged'], 568134, 'Expected 568134 flags, found %s'%result['flagged'])
@@ -192,16 +193,16 @@ class test_unapply(test_base):
         # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
 
         # Flag using the quack agent
         input = "scan=1~3 mode=quack quackinterval=1.0"
         filename = create_input(input)
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=True)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
         # Unapply only the manual line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
-        result = tflagger(vis=self.vis,mode='summary',scan='1')
+        result = tflagdata(vis=self.vis,mode='summary',scan='1')
         
         # Only the quack flags should be left
         self.assertEqual(result['flagged'], 44226, 'Expected 44226 flags, found %s'%result['flagged'])
@@ -214,11 +215,11 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag several scans and save them to FLAG_CMD with APPLIED=True
-        tflagger(vis=self.vis, scan='7', savepars=True)
-        tflagger(vis=self.vis, scan='1', savepars=True)
-        tflagger(vis=self.vis, scan='2', savepars=True)
-        tflagger(vis=self.vis, scan='3', savepars=True)
-        tflagger(vis=self.vis, scan='4', savepars=True)
+        tflagdata(vis=self.vis, scan='7', savepars=True)
+        tflagdata(vis=self.vis, scan='1', savepars=True)
+        tflagdata(vis=self.vis, scan='2', savepars=True)
+        tflagdata(vis=self.vis, scan='3', savepars=True)
+        tflagdata(vis=self.vis, scan='4', savepars=True)
         
         # There should be 5 cmds in FLAG_CMD. Unapply row=1 and set APPLIED to False
         tflagcmd(vis=self.vis, action='unapply', tablerows=1, savepars=False)
@@ -227,7 +228,7 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, action='unapply', tablerows=[2,3], savepars=False)
         
         # We should have left only scans 4 and 7 flagged.
-        res = tflagger(vis=self.vis, mode='summary')
+        res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 0, "It should not re-apply tablerows=1")
         self.assertEqual(res['scan']['4']['flagged'], 95256, "It should not unapply tablerows=4")
         self.assertEqual(res['scan']['7']['flagged'], 190512, "It should not unapply tablerows=7")
@@ -251,13 +252,13 @@ class test_savepars(test_base):
         os.system('cp '+filename+' '+filename1)
 
         # save command to MS
-        tflagcmd(vis=self.vis, action='list', inputmode='cmd', command=[input], savepars=True)
+        tflagcmd(vis=self.vis, action='list', inpmode='cmd', command=[input], savepars=True)
         
         # list/save to a file
+        os.system('rm -rf myflags.txt')
         tflagcmd(vis=self.vis, action='list', outfile='myflags.txt', savepars=True)
         
         # compare saved file with original input file
-        import filecmp
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
         
         ########## TEST 2 
@@ -266,7 +267,7 @@ class test_savepars(test_base):
         filename = create_input(input)
         
         # apply and don't save to MS
-        tflagcmd(vis=self.vis, inputmode='file', inputfile=filename, action='apply', savepars=False)
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
         
         # list and check that parameters were not saved to MS
         os.system('rm -rf myflags.txt')
@@ -275,17 +276,19 @@ class test_savepars(test_base):
         
         ########### TEST 3 
         # apply cmd from TEST 1 and update APPLIED column
-        tflagcmd(vis=self.vis, savepars=False)
+        tflagcmd(vis=self.vis, action='apply', savepars=False)
         
         # scans=1~3 should be fully flagged
-        res = tflagger(vis=self.vis, mode='summary')
+        res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['1']['total'], 568134)
         self.assertEqual(res['scan']['2']['flagged'], 238140)
         self.assertEqual(res['scan']['2']['total'], 238140)
         self.assertEqual(res['scan']['3']['flagged'], 762048)
         self.assertEqual(res['scan']['3']['total'], 762048)
+        # scan 4 should be partially flagged
         self.assertEqual(res['scan']['4']['flagged'], 3348)
+        self.assertEqual(res['scan']['4']['total'], 95256)
         
         # Only cmd form TEST 1 should be in MS
         os.system('rm -rf myflags.txt')
@@ -299,10 +302,10 @@ class test_savepars(test_base):
         
         # Save the parameters to FLAG_CMD but do not write the flags
         input = " scan=4 mode=clip expression=ABS_ALL clipminmax=[0,4]\n"
-        tflagcmd(vis=self.vis, inputmode='cmd', command=[input], writeflags=False, savepars=True)
+        tflagcmd(vis=self.vis, inpmode='cmd', command=[input], writeflags=False, savepars=True)
         
         # No flags should be in the MS
-        res = tflagger(vis=self.vis, mode='summary')
+        res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'Should not write flags when writeflags=False')
         
         
@@ -321,8 +324,8 @@ class cleanup(test_base):
 
 
 def suite():
-    return [test_manualflag,
-            test_selections_alma,
+    return [test_manual,
+            test_alma,
             test_unapply,
             test_savepars,
             cleanup]

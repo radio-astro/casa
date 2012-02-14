@@ -60,7 +60,7 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                casalog.origin('fluxscale')
 
                mycb = cbtool.create()
-               mycb.open(vis)
+               mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
                               transfer=transfer,append=append,refspwmap=refspwmap)
                mycb.close()

@@ -38,6 +38,7 @@
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <msfits/MSFits/MSFitsIDI.h>
+#include <fits/FITS/FITSReader.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <ms/MeasurementSets/MSLister.h>
@@ -130,6 +131,15 @@ inline Bool ms::ready2write_()
   return (!detached() && itsMS->isWritable());
 }
 ////// End of helper functions //////
+bool
+ms::listfits(const std::string &fitsfile)
+{
+  FITSReader fr;
+  fr.listFits(fitsfile.c_str());
+  return 1;
+}
+
+
 bool
 ms::createmultims(const std::string &outputTableName,
                   const std::vector<std::string> &tableNames,

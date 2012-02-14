@@ -402,9 +402,6 @@ class Calibrater
   VisSet* rawvs_p;
   VisEquation* ve_p;
 
-  // Do we have scr cols to work with?
-  Bool scrOk_p;
-
   // VisCals for applying and solving:
   PtrBlock<VisCal*> vc_p;
   SolvableVisCal* svc_p;

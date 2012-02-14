@@ -180,6 +180,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/dbusutil.py
   scripts/dict_to_table.py
   scripts/filecatalog.py
+  scripts/flaghelper.py
   scripts/get_user.py
   scripts/importarchive.py
   scripts/listing.py
@@ -262,6 +263,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/taskinit.py
   scripts/task_listcal.py
   scripts/task_listhistory.py
+  scripts/task_listfits.py
   scripts/task_listobs.py
   scripts/task_listsdm.py
   scripts/task_listvis.py
@@ -272,6 +274,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_plotcal.py
   scripts/task_plotms.py
   scripts/task_plotuv.py
+  scripts/task_plotweather.py
   scripts/task_plotxy.py
   scripts/task_partition.py
   scripts/task_polcal.py
@@ -308,7 +311,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_statwt.py
   scripts/task_testconcat.py
   scripts/task_tflagcmd.py
-  scripts/task_tflagger.py
+  scripts/task_tflagdata.py
   scripts/task_uvcontsub.py
   scripts/task_uvcontsub2.py
   scripts/task_uvcontsub3.py
@@ -390,6 +393,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/imval.xml
   tasks/listcal.xml
   tasks/listhistory.xml
+  tasks/listfits.xml
   tasks/listobs.xml
   tasks/listsdm.xml
   tasks/listvis.xml
@@ -399,6 +403,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/plotcal.xml
   tasks/plotms.xml
   tasks/plotuv.xml
+  tasks/plotweather.xml
   tasks/plotxy.xml
   tasks/partition.xml
   tasks/polcal.xml
@@ -435,7 +440,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/statwt.xml
   tasks/testconcat.xml
   tasks/tflagcmd.xml
-  tasks/tflagger.xml
+  tasks/tflagdata.xml
   tasks/uvcontsub.xml
   tasks/uvcontsub2.xml
   tasks/uvcontsub3.xml

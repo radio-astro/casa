@@ -70,7 +70,6 @@ Calibrater::Calibrater():
   mssel_p(0), 
   vs_p(0), 
   ve_p(0),
-  scrOk_p(False),
   vc_p(),
   svc_p(0),
   histLockCounter_p(), 
@@ -89,7 +88,6 @@ Calibrater &Calibrater::operator=(const Calibrater & other)
   mssel_p=other.mssel_p;
   vs_p=other.vs_p;
   ve_p=other.ve_p;
-  scrOk_p=other.scrOk_p;
   histLockCounter_p=other.histLockCounter_p;
   hist_p=other.hist_p;
   historytab_p=other.historytab_p;
@@ -148,11 +146,15 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     hist_p= new MSHistoryHandler(*ms_p, "calibrater");
 
 
-    // // Recognize if we'll need to initialize the imaging weights
-    // //  TBD: should Calibrater care?  (Imager doesn't know how to verify)
-    // Bool hadScratch=(ms_p->tableDesc().isColumn("CORRECTED_DATA"));
-
+    // Remember the ms's name
     msname_p=ms_p->tableName();
+
+
+    // Add/init scr cols, if requested (init is hard-wired)
+    if (addScratch || addModel) {
+      Bool alsoinit=True;
+      VisSetUtil::addScrCols(*ms_p,addModel,addScratch,alsoinit,compress);
+    }
 
     // Set the selected MeasurementSet to be the same initially
     // as the input MeasurementSet
@@ -163,7 +165,9 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
 	      << "Initializing nominal selection to the whole MS."
 	      << LogIO::POST;
 
-    // Create a VisSet with no selection 
+
+    // Create a VisSet with no selection
+    // (gmoellen 2012/02/06: this merely makes a VisIter now)
     if (vs_p) {
       delete vs_p;
       vs_p=0;
@@ -171,7 +175,8 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     Block<Int> nosort(0);
     Matrix<Int> noselection;
     Double timeInterval=0;
-    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress, addModel);
+    // gmoellen 2012/02/06    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress, addModel);
+    vs_p=new VisSet(*ms_p,nosort,noselection,False,timeInterval,False,False);
 
     // Size-up the chanmask PB
     initChanMask();
@@ -186,9 +191,6 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
 
     // Reset the apply/solve VisCals
     reset(True,True);
-
-    // Do we have the scratch columns (either previously, or created here)?
-    scrOk_p = addScratch || ms_p->tableDesc().isColumn("CORRECTED_DATA");
 
     return True;
 
@@ -290,15 +292,20 @@ void Calibrater::selectvis(const String& time,
     // Apply selection to the original MeasurementSet
     logSink() << "Performing selection on MeasurementSet" << endl;
     
+/* gmoellen 2012/01/30 
     // Delete VisSet and selected MS
     if (vs_p) {
       delete vs_p;
       vs_p=0;
     };
+*/
+
     if (mssel_p) {
       delete mssel_p;
       mssel_p=0;
     };
+
+/* gmoellen 2012/01/30
     
     // Force a re-sort of the MS
     if (ms_p->keywordSet().isDefined("SORTED_TABLE")) {
@@ -315,7 +322,8 @@ void Calibrater::selectvis(const String& time,
       VisSet vs(*ms_p,sort,noselection);
     }
     Table sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
-    
+*/    
+
     // Report non-trivial user selections
     if (time!="")
       logSink() << " Selecting on time: '" << time << "'" << endl;
@@ -339,11 +347,13 @@ void Calibrater::selectvis(const String& time,
 
 
     // Assume no selection, for starters
-    mssel_p = new MeasurementSet(sorted, ms_p);
+    // gmoellen 2012/01/30    mssel_p = new MeasurementSet(sorted, ms_p);
+    mssel_p = new MeasurementSet(*ms_p);
 
     // Apply user-supplied selection
     Bool nontrivsel=False;
-    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
+    // gmoellen 2012/01/30    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
+    nontrivsel= mssSetData(*ms_p,
 			   *mssel_p,"",
 			   time,baseline,
 			   field,spw,
@@ -351,7 +361,6 @@ void Calibrater::selectvis(const String& time,
 			   "",scan,"",intent, obsIDs);
 
     // Keep any MR status for the MS
-
     mssel_p->setMemoryResidentSubtables(ms_p->getMrsEligibility());
 
     // If non-trivial MSSelection invoked and nrow reduced:
@@ -375,7 +384,8 @@ void Calibrater::selectvis(const String& time,
     if(vs_p) delete vs_p; vs_p=0;
     Block<int> sort(0);
     Matrix<Int> noselection;
-    vs_p = new VisSet(*mssel_p,sort,noselection);
+    // gmoellen 2012/01/30    vs_p = new VisSet(*mssel_p,sort,noselection);
+    vs_p = new VisSet(*mssel_p,sort,noselection,False,0.0,False,False);
     AlwaysAssert(vs_p, AipsError);
 
     // Attempt to use MSSelection for channel selection
@@ -1142,9 +1152,9 @@ Bool Calibrater::correct() {
 
     // Nominally, we write out to the CORRECTED_DATA, unless absent
     VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Corrected);
-    if (!scrOk_p)
-      // read from and write to DATA column (no going back!)
-      whichOutCol = VisibilityIterator::Observed;
+
+    if (!ms_p->tableDesc().isColumn("CORRECTED_DATA"))
+      throw(AipsError("CORRECTED_DATA column unexpectedly absent. Cannot correct."));
 
     // Ensure apply list non-zero and properly sorted
     ve_p->setapply(vc_p);
@@ -1305,10 +1315,9 @@ Bool Calibrater::corrupt() {
 
     // Nominally, we write out to the MODEL_DATA, unless absent
     VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Model);
-    if (!scrOk_p)
-      // write to DATA column (no going back!)
-      // NB: this depends on overide by AMueller::corrupt below!!
-      whichOutCol = VisibilityIterator::Observed;
+
+    if (!ms_p->tableDesc().isColumn("MODEL_DATA"))
+      throw(AipsError("MODEL_DATA column unexpectedly absent. Cannot corrupt."));
 
     // Ensure apply list non-zero and properly sorted
     ve_p->setapply(vc_p);
@@ -3336,8 +3345,7 @@ CorrectorVp::processingStartImpl ()
     calculateWeights_p = calibrater_p->calWt();
     uncalibratedSpectralWindows_p.resize ();
     uncalibratedSpectralWindows_p.set (False);
-    whichOutputColumn_p = calibrater_p->scrOk_p ? VisibilityIterator::Corrected
-                                                : VisibilityIterator::Observed;
+    whichOutputColumn_p = VisibilityIterator::Corrected;
 }
 
 void

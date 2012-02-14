@@ -2,14 +2,15 @@ from taskinit import *
 import time
 import os
 import sys
+from flaghelper import *
 
 debug = False
 
 
-def tflagger(vis,
+def tflagdata(vis,
              mode,
-             selectdata,    # data selection parameters
-             spw,           
+             inpfile,       # mode list parameter
+             spw,           # data selection parameters
              field,
              antenna,
              uvrange,
@@ -53,49 +54,37 @@ def tflagger(vis,
              maxabs,
              spwchan,
              spwcorr,
-             display,
-             format,
+             run,           # run or not the tool
              writeflags,
              sequential,    # run in sequential or in parallel
-             savepars,      # save the current parameters to FLAG_CMD 
-             outfile,       # output file to save flag commands
-             flagbackup):
+             flagbackup,
+             display,
+             format,
+             savepars,      # save the current parameters to FLAG_CMD  or
+             outfile):      # output file to save flag commands
 
     # Global parameters
-    # vis, savepars, flagbackup, display, writeflags, sequential
-
-    # 
-    # Schema
-    #
-    # Open the MS with the TestFlagger tool -> ::open()
-    # Parse the data selection -> ::selectdata()
-    # Parse the agent's parameters -> ::parseAgentParameters()
-    # Parse the display parameters if requested -> ::parsetAgentParameters()
-    # Initialize the agents -> ::init()
-    # Run the tool
-    # Delete the tool
-    # Print the summary dictionary, if any
-                        
+    # vis, mode, run, savepars, display, writeflags                        
     
     #
-    # Task tflagger
+    # Task tflagdata
     #    Flags data based on data selection in various ways
     #    
     # This is a replacement task to flagdata. It takes different parameters and
     # different default values. This task uses a new tool and framework underneath.
 
     if pCASA.is_mms(vis):
-        pCASA.execute("tflagger", locals())
+        pCASA.execute("tflagdata", locals())
         return
 
-    casalog.origin('tflagger')
+    casalog.origin('tflagdata')
 
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
-    mslocal.writehistory(message='taskname = tflagger', origin='tflagger')
+    mslocal.writehistory(message='taskname = tflagdata', origin='tflagdata')
     mslocal.open(vis, nomodify=False)
 
 
@@ -129,9 +118,8 @@ def tflagger(vis,
                 else:
                     casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
                                     
-        casalog.post("new ntime is of type %s and value %s"%(type(newtime),newtime), 'DEBUG')
-        
-        
+        casalog.post("New ntime is of type %s and value %s"%(type(newtime),newtime), 'DEBUG')
+                
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
             tflocal.open(vis, newtime)
@@ -139,52 +127,38 @@ def tflagger(vis,
             raise Exception, 'Visibility data set not found - please verify the name'
 
 
-        # Select the data 
-        if (debug):
-            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
-                        type(feed),type(scan),type(antenna),type(uvrange),
-                        type(timerange),type(correlation),type(intent),type(observation),
-                        type(ntime), type(combinescans))
+        # Get the parameters for the mode
+        agent_pars = {}
 
-        casalog.post('selection is: field=%s spw=%s array=%s feed=%s scan=%s antenna=%s uvrange=%s' \
-                     'timerange=%s correlation=%s intent=%s observation=%s'%(field,spw,array, \
-                      feed,scan,antenna,uvrange,timerange,correlation,intent,observation), 'DEBUG')
-
-
-        # Correlation does not go in here            
-        tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
-                           baseline=antenna, uvrange=uvrange, time=timerange, \
-                           intent=intent, observation=str(observation))   
-
-
-        # Set apply parameter
-        apply = True
+        # List of parameters to save to outfile when mode != list
+        sel_pars = ''
+        
+        # Initialize the flaghelper module
+        fh = flaghelper(tflocal, casalog)
         
         # Default mode
         if mode == '':
             mode = 'manual'
-            
-        # Hold the name of the agent
-        agent_name = mode.capitalize()
-
-        # Disable writing the flags for summary mode
-        if (writeflags == True and mode == 'summary'):
-            casalog.post('Parameter writeflags will be reset to False to run together with mode=%s'%mode, 'WARN')
-            writeflags = False
-                        
-        # Create a list of the selection parameters to save to outfile
-        sel_pars = ''
-        sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
-                    ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
-                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
-                    
-        # Setup global parameters in the agent's dictionary
-        agent_pars = {}
-        agent_pars['name'] = agent_name
-        agent_pars['mode'] = mode
         
-        # Set up agent's parameters based on mode
-        if mode == 'manual':
+        # Read in the list of commands
+        if mode == 'list':
+            casalog.post('List mode is active')
+            # Parse the input file
+            try:
+                if inpfile == '':
+                     casalog.post('Input file is empty', 'ERROR')
+                     
+                flaglist = fh.readList(inpfile)
+                # Make a FLAG_CMD compatible dictionary
+                flagcmd = fh.makeDict(flaglist)
+                ncmd = flagcmd.keys()
+            except:
+                raise Exception, 'Error reading the input file '+inpfile
+            
+            casalog.post('Read ' + str(ncmd.__len__())
+                         + ' lines from file ' + inpfile)
+                             
+        elif mode == 'manual':
             casalog.post('Manual mode is active')
             
         elif mode == 'clip':
@@ -238,9 +212,7 @@ def tflagger(vis,
 
         elif mode == 'tfcrop':
             agent_pars['ntime'] = newtime
-            if combinescans:
-                agent_pars['combinescans'] = combinescans            
-
+            agent_pars['combinescans'] = combinescans            
             agent_pars['expression'] = expression
             agent_pars['datacolumn'] = datacolumn
             agent_pars['timecutoff'] = timecutoff
@@ -264,9 +236,7 @@ def tflagger(vis,
 
         elif mode == 'extend':
             agent_pars['ntime'] = newtime
-            if combinescans:
-                agent_pars['combinescans'] = combinescans       
-                     
+            agent_pars['combinescans'] = combinescans                            
             agent_pars['extendpols'] = extendpols
             agent_pars['growtime'] = growtime
             agent_pars['growfreq'] = growfreq
@@ -286,28 +256,74 @@ def tflagger(vis,
         elif mode == 'summary':
             agent_pars['spwchan'] = spwchan
             agent_pars['spwcorr'] = spwcorr
-            casalog.post('Summary mode is active')
             
-            # Do not save flag command for the summary mode
+            # Disable writeflags and savepars
+            writeflags = False
             savepars = False
-            
+            casalog.post('Summary mode is active')
 
-        # Now Parse the agent's parameters
-        casalog.post('Parsing the parameters for the %s agent'%mode)
-        
-        # Due to the way the MS Selection works, the correlation selection needs 
-        # to be done in here instead of in selectdata()
+        # Setup global parameters in the agent's dictionary
+        apply = True
+                    
+        # Correlation does not go in selectdata, but here
         agent_pars['correlation'] = correlation
         
-        # Add the apply parameter to be consistent with the tool
-        agent_pars['apply'] = apply
-
-        casalog.post('%s'%agent_pars, 'DEBUG')
-            
-        # Parse the parameters to the agent
-        if (not tflocal.parseagentparameters(agent_pars)):
-            casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
+        # Hold the name of the agent
+        agent_name = mode.capitalize()
+        agent_pars['name'] = agent_name
+        agent_pars['mode'] = mode
+        agent_pars['apply'] = apply      
         
+
+        # Purge the empty parameters from the selection string
+        if mode != 'list':
+            sel_pars = sel_pars+' mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
+                    ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
+                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
+            flaglist = fh.purgeEmptyPars(sel_pars) 
+            flagcmd = fh.makeDict([flaglist])
+
+
+        # Nunber of commands in dictionary
+        vrows = flagcmd.keys()
+                                  
+                          
+        ##########  Only save the parameters and exit; run = False        
+        if not run and savepars:
+
+            fh.writeFlagCmd(vis, flagcmd, vrows, False, outfile)  
+            if outfile == '':
+                casalog.post('Saving parameters to FLAG_CMD')
+            else:
+                casalog.post('Saving parameters to '+outfile)                            
+            return 0
+
+        
+        ######### From now on it is assumed that run = True
+        
+        # Select the data and parse the agent's parameters
+        if mode != 'list':
+            tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
+                               baseline=antenna, uvrange=uvrange, time=timerange, \
+                               intent=intent, observation=str(observation))   
+
+            casalog.post('Parsing the parameters for the %s mode'%mode)
+            if (not tflocal.parseagentparameters(agent_pars)):
+                casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
+                
+            casalog.post('%s'%agent_pars, 'DEBUG')
+       
+        else:        
+            # Select the union of the data selection from the list
+            if vrows.__len__() == 0:
+                raise Exception, 'There are no valid commands in list'
+            
+            unionpars = fh.getUnion(flaglist)
+            tflocal.selectdata(unionpars)
+            
+            # Parse the parameters for each agent in the list
+            list2save = fh.setupAgent(flagcmd, [], apply)
+
         # Do display if requested
         if display != '':
             
@@ -329,29 +345,34 @@ def tflagger(vis,
                 agent_pars['format'] = format
                 
             tflocal.parseagentparameters(agent_pars)
-
-        # Initialize the agent
-        casalog.post('Initializing the agent')
+                    
+        # Initialize the agents
+        casalog.post('Initializing the agents')
         tflocal.init()
 
-        # Purge the empty parameters from the selection string
-        flagcmd = purgePars(sel_pars) 
-
         # Backup the existing flags before applying new ones
+        # TODO: backup for the list
         if flagbackup and writeflags:
             casalog.post('Backup original flags before applying new flags')
-            backupFlags(tflocal, mode, flagcmd)
-
+            backupFlags(tflocal, mode, flaglist)
         
         # Run the tool
-        casalog.post('Running the tflagger tool')
+        casalog.post('Running the testflagger tool')
         summary_stats = tflocal.run(writeflags, sequential)
 
 
-        # Write the current parameters as flag commands to output
-        if savepars:         
-            ncmd = writeCMD(vis, flagcmd, writeflags, outfile)
-            
+        # Save the current parameters/list to FLAG_CMD or to output
+        if savepars:  
+            if outfile == '':
+                casalog.post('Saving parameters to FLAG_CMD')        
+            else:
+                casalog.post('Saving parameters to '+outfile)
+                                      
+            if mode != 'list':     
+                fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, outfile)  
+            else:
+                valid_rows = list2save.keys()
+                fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, outfile)        
             
         # Destroy the tool
         tflocal.done()
@@ -381,9 +402,9 @@ def tflagger(vis,
         
     # Write history to the MS
     try:
-            param_names = tflagger.func_code.co_varnames[:tflagger.func_code.co_argcount]
+            param_names = tflagdata.func_code.co_varnames[:tflagdata.func_code.co_argcount]
             param_vals = [eval(p) for p in param_names]
-            retval &= write_history(mslocal, vis, 'tflagger', param_names,
+            retval &= write_history(mslocal, vis, 'tflagdata', param_names,
                                     param_vals, casalog)
     except Exception, instance:
             casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
@@ -391,129 +412,6 @@ def tflagger(vis,
         
     return
 
-
-def writeCMD(msfile, flagcmd, writeflags, outfile):
-    ''' Reads a list of parameters and save it to the FLAG_CMD table or to a text file.
-        When saving in the FLAG_CMD table, it will also update the APPLIED column to True.
-        Returns the number of flag commands written (it's always one!!!)'''
-    
-    
-    nadd = 0
-    try:
-        import pylab as pl
-    except ImportError, e:
-        print 'failed to load pylab:\n', e
-        exit(1)
-
-    # Create lists for each column in the FLAG_CMD table
-    # TODO: How about the TIME column? How to calculate it?
-    tim_list = [0]
-    intv_list = [0]
-    reas_list = ['']        
-    typ_list = ['FLAG']
-    sev_list = [0]
-    lev_list = [0]
-    app_list = [writeflags]
-       
-    
-    if debug:
-        casalog.post("Flag command to save is %s"%flagcmd)
-
-
-    # Save to a text file
-    if outfile != '':
-        if os.path.exists(outfile):
-            raise Exception, 'Output file already exists, ' \
-                            + outfile
-            
-        ffout = open(outfile, 'w')
-
-        try:
-            casalog.post('Will save the current parameters to '+outfile)
-            print >> ffout, '%s' % flagcmd
-        except:
-            raise Exception, 'Error writing parameters to file ' \
-                + outfile
-        ffout.close()
-        return
-    
-    # Save to the FLAG_CMD table    
-    cmdline = []
-    cmdline.append(flagcmd)
-    nadd = cmdline.__len__()
-    mstable = msfile + '/FLAG_CMD'
-    try:
-        tb.open(mstable, nomodify=False)
-    except:
-        raise Exception, 'Error opening FLAG_CMD table ' + mstable
-    
-    nrows = int(tb.nrows())
-    casalog.post('There are ' + str(nrows) + ' rows already in the FLAG_CMD table')
-    
-    # Add blank rows
-    if (debug):
-        print pl.array(cmdline)
-        
-    tb.addrows(nadd)
-    
-    # Now fill them in
-    tb.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
-    tb.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('REASON', pl.array(reas_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('COMMAND', pl.array(cmdline), startrow=nrows,
-              nrow=nadd)
-    
-    # Other columns
-    tb.putcol('TYPE', pl.array(typ_list), startrow=nrows, nrow=nadd)
-    tb.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('LEVEL', pl.array(lev_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('APPLIED', pl.array(app_list), startrow=nrows,
-              nrow=nadd)
-    tb.close()
-
-    casalog.post('Wrote ' + str(nadd) + ' rows to FLAG_CMD')
-
-    return nadd
-
-
-def purgePars(cmdline):
-    '''Remove empty parameters from a string:
-       -> cmdline is a string with parameters
-       returns a string containing only parameters with values
-    '''            
-   
-    newstr = ''
-    
-    # Split by white space
-    keyvlist = cmdline.split()
-    if keyvlist.__len__() > 0:  
-        
-        # Split by '='
-        for keyv in keyvlist:
-
-            (xkey,xval) = keyv.split('=')
-
-            # Remove quotes
-            if type(xval) == str:
-                if xval.count("'") > 0:
-                    xval = xval.strip("'")
-                if xval.count('"') > 0:
-                    xval = xval.strip('"')
-            
-            # Write only parameters with values
-            if xval == '':
-                continue
-            else:
-                newstr = newstr+xkey+'='+xval+' '
-            
-    else:
-        casalog.post('String of parameters is empty','WARN')   
-         
-    return newstr
 
 
 def backupFlags(tflocal, mode, flagcmd):

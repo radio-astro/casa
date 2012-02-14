@@ -22,7 +22,7 @@
                         <value></value>
                 </param>
 
-                <param type="string" name="inputmode">
+                <param type="string" name="inpmode">
                         <description>Input mode for flag commands(table/file/xml/cmd)</description>
                         <value>table</value>
                         <allowed kind="enum">
@@ -33,25 +33,25 @@
                         </allowed>
                 </param>
 
-                <param type="string" name="inputfile" subparam="true">
+                <param type="string" name="inpfile" subparam="true">
                         <description>Name of flag command file to input</description>
                         <value></value>
                 </param>
 
                 <param type="intArray" name="tablerows" subparam="true">
-                        <description>Rows of inputfile to read</description>
+                        <description>Rows of inpfile to read</description>
                         <value type="vector"></value>
                 </param>
 
                 <param type="bool" name="useapplied" subparam="true">
-                        <description>Read in flag commands marked as applied also?</description>
+                        <description>Select by APPLIED column (True will select all)</description>
                         <value>False</value>
                 </param>
 
                 <param type="any" name="reason" subparam="true">
-                        <description>Allowed flag REASON types to select</description>
+                        <description>Select by REASON types</description>
                         <any type="variant" limittypes="string stringArray"/>
-                        <value type="string">any</value>
+                        <value type="string"></value>
                 </param>
 
                 <param type="any" name="command" subparam="true">
@@ -71,8 +71,8 @@
                 </param>
 
                 <param type="string" name="action">
-                        <description>Action to perform in MS and/or in inputfile (apply/unapply/list/plot/clear/extract)</description>
-                        <value>apply</value>
+                        <description>Action to perform in MS and/or in inpfile (apply/unapply/list/plot/clear/extract)</description>
+                        <value>list</value>
                         <allowed kind="enum">
                         <value>apply</value>
                         <value>unapply</value>
@@ -134,15 +134,15 @@
 
 
                 <constraints>
-                    <when param="inputmode">
+                    <when param="inpmode">
                             <equals value="table">
-                                    <default param="inputfile"><value type="string"></value></default>
+                                    <default param="inpfile"><value type="string"></value></default>
                                     <default param="tablerows"><value type="vector"></value></default>
-                                    <default param="useapplied"><value>False</value></default>
-                                    <default param="reason"><value type="string">any</value></default>
+                                    <default param="useapplied"><value type="bool">False</value></default>
+                                    <default param="reason"><value type="string"></value></default>
                             </equals>
                             <equals value="file">
-                                    <default param="inputfile"><value type="string"></value></default>
+                                    <default param="inpfile"><value type="string"></value></default>
                             </equals>
                             <equals value="cmd">
                                     <default param="command"><value>['']</value></default>
@@ -150,16 +150,16 @@
                             <equals value="xml">
                                     <default param="tbuff"><value>1.0</value></default>
                                     <default param="ants"><value type="string"></value></default>
-                                    <default param="reason"><value type="string">any</value></default>
+                                    <default param="reason"><value type="string"></value></default>
                             </equals>
                     </when>
 
                     <when param="action">
+                            <equals value="list"></equals>
                             <equals value="apply">
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="unapply">
-                                    <default param="sort"><value type="string">antenna</value></default>
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="plot">
@@ -201,7 +201,7 @@
         
         This task is equivalent to the corresponding parts of
         tflagger, but works from a series of flagging commands
-        specified by the "inputfile" parameter, which can refer to
+        specified by the "inpfile" parameter, which can refer to
         an ASCII file, a FLAG_CMD table or Flag.xml table in the MS, 
         or directly input the flagging commands as a list of strings.
 
@@ -209,9 +209,9 @@
         new flags. Previous flag versions can be recovered using the 
         flagmanager task.
 
-        The tflagcmd task will flag data based on the commands input on inputmode :
+        The tflagcmd task will flag data based on the commands input on inpmode :
             table = input from FLAG_CMD table in MS
-            file  = input from flagging command file "inputfile"
+            file  = input from flagging command file "inpfile"
             cmd   = input from "command" list of strings
             xml   = input from Flag.xml in the MS given by vis
 
@@ -222,17 +222,17 @@
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
 
-        inputmode -- Input mode for flags
+        inpmode -- Input mode for flags
                 options: 'table','file','cmd','xml'
                 default: 'table'
 
-           inputmode "table" --  input commands from FLAG_CMD table of MS
+           inpmode "table" --  input commands from FLAG_CMD table of MS
        
-              inputfile -- path to MS containing FLAG_CMD
+              inpfile -- path to MS containing FLAG_CMD
                    default: '' (read from FLAG_CMD table in vis)
 
                    Main use is to read flags from internal FLAG_CMD,
-                   but by setting inputfile to a different MS you can 
+                   but by setting inpfile to a different MS you can 
                    use this to copy the flags from one MS to another.
 
               tablerows -- list of rows of the FLAG_CMD table to read
@@ -245,15 +245,15 @@
                       tablerows = range(0,30) + range(50,55)
                    instead of '0~29,50~54' for now.
        
-              useapplied -- read flags already marked as applied also?
+              useapplied -- read flag commands based on APPLIED column values:
                    options: True,False
-                   default: False  
+                   default: False   
 
                    If useapplied=True it will read in both applied and
                    unapplied flags
 
-              reason -- select flags based on REASON(s) 
-                   default: 'Any' (all flags regardless of reason)
+              reason -- select flags commands based on REASON(s) 
+                   default: '' (all flags regardless of reason)
                             can be a string, or list of strings
                    example: reason='FOCUS_ERROR'
                             reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
@@ -263,17 +263,17 @@
                    and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
                    matches this compound reason string only
 
-           inputmode "file" --  input commands from ASCII file
+           inpmode "file" --  input commands from ASCII file
        
-              inputfile -- name of ASCII flagging command file
+              inpfile -- name of ASCII flagging command file
                    default: '' (read from FlagCMD.txt in MS)
        
-           inputmode "cmd" -- input commands via list of strings
+           inpmode "cmd" -- input commands via list of strings
        
               command -- list of command strings
                    default: ['']
        
-           inputmode "xml" -- input online flags from Flag.xml file in the MS
+           inpmode "xml" -- input online flags from Flag.xml file in the MS
        
               tbuff -- (float) time padding buffer (seconds, default=1.0)
        
@@ -292,26 +292,24 @@
                    and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
                    matches this compound reason string only
 
-        action -- operation to perform on MS and/or in flag commands from inputfile
+        action -- operation to perform on MS and/or in flag commands from inpfile
                 options: 'apply','clear','list','plot','unapply','extract'
                 default: 'apply'
 
            action "apply" --  apply flags to MS
        
-              This operation will apply the commands chosen by inputmode.       
-              If inputmode='table' it will set the APPLIED column to True.
+              This operation will apply the commands chosen by inpmode.       
+              If inpmode='table' it will set the APPLIED column to True.
               
               flagbackup -- Automatically backup MS FLAG column before applying?
                    options: True,False
-                   default: True
+                   default: False
 
        
            action "unapply" --  unapply flags in MS
 
-              This operation will unapply the commands chosen by inputmode.
-              If inputmode='table' it will set the APPLIED column to False. 
-              It reads also the rows set to APPLIED=True, even if useapplied is 
-              set to False.
+              This operation will unapply the commands chosen by inpmode.
+              If inpmode='table' it will set the APPLIED column to False. 
               
               IMPORTANT: In order to guarantee that only the data selected in 
               the command is unapplied, the framework will first unapply the selected
@@ -327,7 +325,7 @@
 
            action "list" --  list and/or save flag commands
 
-              This operation will list the commands chosen by inputmode on the screen
+              This operation will list the commands chosen by inpmode on the screen
               and save them to the MS or to a file without applying. It will save the commands
               to outfile if the parameter savepars is set to True. If outfile is None, it
               will save the commands to the MS given in vis.
@@ -335,7 +333,7 @@
 
            action "plot" --  plot flags (ant vs time)
 
-              This operation will plot the flags chosen by inputmode to a 
+              This operation will plot the flags chosen by inpmode to a 
               matplotlib gui or to a file.  These will be sorted by
               antenna vs. time.  Most useful for showing the online
               flags.
@@ -352,7 +350,7 @@
               the internal FLAG_CMD table of the MS.
 
               NOTE: choosing this option will disregard anything you
-              set in inputmode and will always work on the FLAG_CMD table
+              set in inpmode and will always work on the FLAG_CMD table
               in vis
 
               clearall -- really clear all flags?
@@ -426,35 +424,36 @@
 
      ===========================================================================
 
-     -- Internal FLAG_CMD input inputmode useage --
+     -- Internal FLAG_CMD input inpmode useage --
 
         (For mode='table')
 
-        It is a good idea to use optype='list' first to see what is there
+        It is a good idea to use action='list' first to see what is there
         before doing anything else, e.g.
         
-          inputmode = 'table'
+          inpmode = 'table'
           action = 'list'
-          useapplied = True
+          useapplied = ''
 
         To apply the flags stored in the FLAG_CMD table in the MS,
-        simply set inputmode='table' and action='apply', e.g.
+        simply set inpmode='table' and action='apply', e.g.
 
-          inputmode = 'table'
+          inpmode = 'table'
           action = 'apply'
+          useapplied = False
 
         This is the default setup of tflagcmd
 
         To merely save to FLAG_CMD but not apply, then
         
-          inputmode = 'table'
-          inputfile = 'other.ms'
+          inpmode = 'table'
+          inpfile = 'other.ms'
           action = 'list'
           
         To save commands from a file into the MS without applying
         
-          inputmode = 'file'
-          inputfile = 'flags.txt'
+          inpmode = 'file'
+          inpfile = 'flags.txt'
           action = 'list'
 
         If you need to select only certain rows from the FLAG_CMD table,
@@ -474,27 +473,27 @@
         (e.g. in 'list').  Set useapplied=True so that it will use these
         anyway.
 
-     -- Online flag input inputmode useage --
+     -- Online flag input inpmode useage --
 
-        (For inputmode='xml')
+        (For inpmode='xml')
 
         To list the online flags stored in the Flag.xml file in the
         MS, simply set:
 
-          inputmode = 'xml'
+          inpmode = 'xml'
           action = 'list'
           savepars = False
 
         It is then straightforward to save these to FLAG_CMD
 
-          inputmode = 'xml'
+          inpmode = 'xml'
           action = 'list'
           savepars = True
 
         To directly apply the online flags stored in the Flag.xml file in the
-        MS, set inputmode='xml' and desired buffer, e.g.
+        MS, set inpmode='xml' and desired buffer, e.g.
 
-          inputmode = 'xml'
+          inpmode = 'xml'
           tbuff = 1.0    # pad flag times by 1 sec
           action = 'apply'
           set savepars to save or not the commands in the MS
@@ -514,9 +513,9 @@
 
         Because the Flag.xml is copied to the MS by importevla,
         you can re-apply the online flags with an increased tbuff
-        simply by running with inputmode='xml' and optype='apply', e.g.
+        simply by running with inpmode='xml' and optype='apply', e.g.
 
-          inputmode = 'xml'
+          inpmode = 'xml'
           tbuff = 15.0    # pad flag times by 15 sec for 10sec integrations
           optype = 'apply'
 
@@ -527,7 +526,7 @@
 
      -- Flag command useage --
 
-        (For inputmode='file' and inputmode='cmd')
+        (For inpmode='file' and inpmode='cmd')
 
         For example, a series of commands might be:
 
@@ -543,13 +542,13 @@
           mode='quack' quackmode='end' quackinterval=1.0 antenna='ea22'
 
         These commands can be in an ASCII file, e.g. "myflags.txt"
-        and input using inputmode='file', e.g.
+        and input using inpmode='file', e.g.
 
-          tflagcmd(vis='myvis.ms',inputmode='file',inputfile='myflags.txt')
+          tflagcmd(vis='myvis.ms',inpmode='file',inpfile='myflags.txt')
 
         or input from the interface
 
-          tflagcmd(vis='myvis.ms',inputmode='cmd',
+          tflagcmd(vis='myvis.ms',inpmode='cmd',
                   command=["mode='shadow'",
                            "mode='clip' clipminmax=[0,5] expression='ABS_ALL'",
                            "mode='quack' quackmode='end' quackinterval=1.0",
@@ -565,7 +564,7 @@
 
           This will apply the selected commands to the data.
           
-          If inputmode='table' and inputfile='' then the APPLIED column in FLAG_CMD
+          If inpmode='table' and inpfile='' then the APPLIED column in FLAG_CMD
           will be set to True.
 
           NOTE: this can happen even if there was a failure in application, so 
@@ -591,7 +590,7 @@
         * action = 'clear'
           
           DANGER! This can be used to totally delete rows from the FLAG_CMD
-          table. It ignores what inputmode is pointing to and always works
+          table. It ignores what inpmode is pointing to and always works
           on FLAG_CMD.  Use at your own peril but sometimes you need to just
           blow that table away, e.g.
 

@@ -16,7 +16,7 @@ def polcal(vis=None,caltable=None,
 
 	try: 
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        cb.open(vis)
+                        cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
