@@ -43,9 +43,9 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
-	//flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
+	/////flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::TimeCentroid);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Direction1);
+	/////flagDataHandler_p->preLoadColumn(VisBufferComponents::Direction1);
 
 	// FlagAgentShadow counters and ids to handle static variables
 	staticMembersMutex_p.acquirelock();
@@ -417,8 +417,9 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
     MEpoch epoch(Quantity((Time), "s"), MEpoch::UT1);
 
     // Get the MDirection of the feed of antenna 1. Assume all ants point in the same direction.
-    MDirection refdir(vb.direction1()(rownr));  
-    
+    //MDirection refdir(vb.direction1()(rownr));  
+    MDirection refdir(vb.phaseCenter());    // Each visbuf sees only one fieldId
+
     // read position of first antenna as reference. Does not matter, since uvws are only differences.
     MPosition obsPos( shadowAntennaPositions_p[0] ); 
     
