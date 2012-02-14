@@ -75,8 +75,6 @@ void ASDMFiller::fill()
   
   Vector<casa::Double> antpos = table_->getHeader().antennaposition ;
 
-  //STHeader hdr = table_->getHeader() ;
-  
   // data selection
   reader_->select() ;
 
@@ -102,7 +100,6 @@ void ASDMFiller::fill()
   setFocus() ;
 
   // CYCLENO
-  //unsigned int cycleno = 0 ;
   map< unsigned int, unsigned int > cycleno ;
   map< unsigned int, unsigned int >::iterator citer ;
 
@@ -110,7 +107,6 @@ void ASDMFiller::fill()
     for ( uInt icon = 0 ; icon < numConfigDescId ; icon++ ) {
       //logsink_->postLocally( LogMessage("start configDescId "+String::toString(configDescIdList[icon])+" fieldId "+String::toString(fieldIdList[ifield]),LogOrigin(className_,funcName,WHERE)) ) ;
 
-      //Bool status = reader_->setMainRow( configDescIdList[icon], fieldIdList[ifield] ) ;
       if ( !(reader_->setMainRow( configDescIdList[icon], fieldIdList[ifield] )) ) {
         //logsink_->postLocally( LogMessage("skip configDescId "+String::toString(configDescIdList[icon])+" fieldId "+String::toString(fieldIdList[ifield]),LogOrigin(className_,funcName,WHERE)) ) ;
         continue ;
@@ -131,10 +127,8 @@ void ASDMFiller::fill()
         }
 
         // scan and subscan
-        //unsigned int scanno = reader_->getScanNo() ;
         unsigned int scanno = reader_->getScanNoOfCurrentRow() ;
         //logsink_->postLocally( LogMessage("scanno = "+String::toString(scanno),LogOrigin(className_,funcName,WHERE)) ) ;
-        //uInt subscanno = reader_->getSubscanNo() ;
         citer = cycleno.find( scanno ) ;
         if ( citer == cycleno.end() )
           cycleno[scanno] = 0 ;
@@ -159,12 +153,10 @@ void ASDMFiller::fill()
           reader_->prepareData( idata ) ;
 
           // subscan number
-          //unsigned int subscanno = reader_->getSubscanNo( idata ) ;
           unsigned int subscanno = reader_->getSubscanNo() ;
           //logsink_->postLocally( LogMessage("subscanno = "+String::toString(subscanno),LogOrigin(className_,funcName,WHERE)) ) ;
 
           // IFNO
-          //uInt ifno = reader_->getIFNo( idata ) ;
           uInt ifno = reader_->getIFNo() ;
           //logsink_->postLocally( LogMessage("ifno = "+String::toString(ifno),LogOrigin(className_,funcName,WHERE)) ) ;
           // source spec
@@ -176,13 +168,6 @@ void ASDMFiller::fill()
           vector<double> srcProperMotion ;
           double sysVel ;
           vector<double> rf ;
-          //reader_->getSourceProperty( idata, 
-          //                            srcname, 
-          //                            fieldname,
-          //                            srcDirection,
-          //                            srcProperMotion,
-          //                            sysVel,
-          //                            rf ) ;
           reader_->getSourceProperty( srcname, 
                                       fieldname,
                                       srcDirection,
@@ -198,8 +183,6 @@ void ASDMFiller::fill()
           setMolecule( restFreqs ) ;
           
           // time and interval
-          //casa::Double mjd = (casa::Double)(reader_->getTime( idata )) ;
-          //casa::Double interval = (casa::Double)(reader_->getInterval( idata )) ;
           casa::Double mjd = (casa::Double)(reader_->getTime()) ;
           casa::Double interval = (casa::Double)(reader_->getInterval()) ;
           //logsink_->postLocally( LogMessage("mjd = "+String::toString(mjd),LogOrigin(className_,funcName,WHERE)) ) ;
@@ -217,7 +200,6 @@ void ASDMFiller::fill()
           setSource( srcname, srctype, fieldname, srcDir, srcPM, (casa::Double)sysVel ) ;
 
           // fill FLAGROW
-          //unsigned int flagrow = reader_->getFlagRow( idata ) ;
           unsigned int flagrow = reader_->getFlagRow() ;
           setFlagrow( (uInt)flagrow ) ;
           //logsink_->postLocally( LogMessage("flagrow = "+String::toString(flagrow),LogOrigin(className_,funcName,WHERE)) ) ;
@@ -227,12 +209,6 @@ void ASDMFiller::fill()
           float humidity ;
           float windspeed ;
           float windaz ;
-          //reader_->getWeatherInfo( idata,
-          //                         temperature, 
-          //                         pressure,
-          //                         humidity,
-          //                         windspeed,
-          //                         windaz ) ;
           reader_->getWeatherInfo( temperature, 
                                    pressure,
                                    humidity,
@@ -249,11 +225,6 @@ void ASDMFiller::fill()
           double az ;
           double el ;
           vector<double> srate ;
-          //reader_->getPointingInfo( idata,
-          //                          dir,
-          //                          az,
-          //                          el,
-          //                          srate ) ;
           reader_->getPointingInfo( dir,
                                     az,
                                     el,
@@ -281,7 +252,6 @@ void ASDMFiller::fill()
             getFrequencyRec( ifkey, refpix, refval, incr ) ;
           }
           else {
-            //reader_->getFrequency( idata, refpix, refval, incr, freqref ) ;
             reader_->getFrequency( refpix, refval, incr, freqref ) ;
             refval = (double)toLSRK( casa::Double(refval), 
                                      String(freqref),
@@ -297,7 +267,6 @@ void ASDMFiller::fill()
           setFrequency( (casa::Double)refpix, (casa::Double)refval, (casa::Double)incr ) ;
 
           // loop on polarization
-          //vector<unsigned int> dataShape = reader_->getDataShape( idata ) ;
           vector<unsigned int> dataShape = reader_->getDataShape() ;
 //           ostringstream oss ;
 //           for ( unsigned int i = 0 ; i < dataShape.size() ; i++ ) {
@@ -310,25 +279,20 @@ void ASDMFiller::fill()
 //           }
 //           logsink_->postLocally( LogMessage(oss.str(),LogOrigin(className_,funcName,WHERE)) ) ;
                                      
-          //int numPol = reader_->getNumPol( idata ) ;
           unsigned int numPol = dataShape[0] ;
           unsigned int numChan = dataShape[1] ;
 
           //logsink_->postLocally( LogMessage("numPol = "+String::toString(numPol),LogOrigin(className_,funcName,WHERE)) ) ;
 
           // OPACITY
-          //vector<float> tau = reader_->getOpacity( idata ) ;
           vector<float> tau = reader_->getOpacity() ;
           Vector<casa::Float> opacity = toVector( tau, numPol ) ;
 
           // SPECTRA, FLAGTRA, TSYS, TCAL
-          //float *sp = reader_->getSpectrum( idata ) ;
-          //logsink_->postLocally( LogMessage("getting spectra...",LogOrigin(className_,funcName,WHERE)) ) ;
           float *sp = reader_->getSpectrum() ;
           //logsink_->postLocally( LogMessage("sp[0] = "+String::toString(sp[0]),LogOrigin(className_,funcName,WHERE)) ) ;
           vector< vector<float> > ts ;
           vector< vector<float> > tc ;
-          //reader_->getTcalAndTsys( idata, tc, ts ) ;
           reader_->getTcalAndTsys( tc, ts ) ;
           Matrix<casa::Float> spectra = toMatrix( sp, numPol, numChan ) ;
           //logsink_->postLocally( LogMessage("spectra(0,0) = "+String::toString(spectra(0,0)),LogOrigin(className_,funcName,WHERE)) ) ;

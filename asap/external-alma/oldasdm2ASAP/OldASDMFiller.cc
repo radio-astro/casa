@@ -75,8 +75,6 @@ void OldASDMFiller::fill()
   
   Vector<casa::Double> antpos = table_->getHeader().antennaposition ;
 
-  //STHeader hdr = table_->getHeader() ;
-  
   // data selection
   reader_->select() ;
 
@@ -102,7 +100,6 @@ void OldASDMFiller::fill()
   setFocus() ;
 
   // CYCLENO
-  //unsigned int cycleno = 0 ;
   map< unsigned int, unsigned int > cycleno ;
   map< unsigned int, unsigned int >::iterator citer ;
 
@@ -110,7 +107,6 @@ void OldASDMFiller::fill()
     for ( uInt icon = 0 ; icon < numConfigDescId ; icon++ ) {
       //logsink_->postLocally( LogMessage("start configDescId "+String::toString(configDescIdList[icon])+" fieldId "+String::toString(fieldIdList[ifield]),LogOrigin(className_,funcName,WHERE)) ) ;
 
-      //Bool status = reader_->setMainRow( configDescIdList[icon], fieldIdList[ifield] ) ;
       if ( !(reader_->setMainRow( configDescIdList[icon], fieldIdList[ifield] )) ) {
         //logsink_->postLocally( LogMessage("skip configDescId "+String::toString(configDescIdList[icon])+" fieldId "+String::toString(fieldIdList[ifield]),LogOrigin(className_,funcName,WHERE)) ) ;
         continue ;
@@ -131,9 +127,7 @@ void OldASDMFiller::fill()
         }
 
         // scan and subscan
-        //unsigned int scanno = reader_->getScanNo() ;
         unsigned int scanno = reader_->getScanNoOfCurrentRow() ;
-        //uInt subscanno = reader_->getSubscanNo() ;
         citer = cycleno.find( scanno ) ;
         if ( citer == cycleno.end() )
           cycleno[scanno] = 0 ;
@@ -156,11 +150,9 @@ void OldASDMFiller::fill()
           reader_->prepareData( idata ) ;
 
           // subscan number
-          //unsigned int subscanno = reader_->getSubscanNo( idata ) ;
           unsigned int subscanno = reader_->getSubscanNo() ;
 
           // IFNO
-          //uInt ifno = reader_->getIFNo( idata ) ;
           uInt ifno = reader_->getIFNo() ;
 
           // source spec
@@ -171,13 +163,6 @@ void OldASDMFiller::fill()
           vector<double> srcProperMotion ;
           double sysVel ;
           vector<double> rf ;
-          //reader_->getSourceProperty( idata, 
-          //                            srcname, 
-          //                            fieldname,
-          //                            srcDirection,
-          //                            srcProperMotion,
-          //                            sysVel,
-          //                            rf ) ;
           reader_->getSourceProperty( srcname, 
                                       fieldname,
                                       srcDirection,
@@ -192,8 +177,6 @@ void OldASDMFiller::fill()
           setMolecule( restFreqs ) ;
           
           // time and interval
-          //casa::Double mjd = (casa::Double)(reader_->getTime( idata )) ;
-          //casa::Double interval = (casa::Double)(reader_->getInterval( idata )) ;
           casa::Double mjd = (casa::Double)(reader_->getTime()) ;
           casa::Double interval = (casa::Double)(reader_->getInterval()) ;
 
@@ -210,7 +193,6 @@ void OldASDMFiller::fill()
           setSource( srcname, srctype, fieldname, srcDir, srcPM, (casa::Double)sysVel ) ;
 
           // fill FLAGROW
-          //unsigned int flagrow = reader_->getFlagRow( idata ) ;
           unsigned int flagrow = reader_->getFlagRow() ;
           setFlagrow( (uInt)flagrow ) ;
 
@@ -220,12 +202,6 @@ void OldASDMFiller::fill()
           float humidity ;
           float windspeed ;
           float windaz ;
-          //reader_->getWeatherInfo( idata,
-          //                         temperature, 
-          //                         pressure,
-          //                         humidity,
-          //                         windspeed,
-          //                         windaz ) ;
           reader_->getWeatherInfo( temperature, 
                                    pressure,
                                    humidity,
@@ -242,11 +218,6 @@ void OldASDMFiller::fill()
           double az ;
           double el ;
           vector<double> srate ;
-          //reader_->getPointingInfo( idata,
-          //                          dir,
-          //                          az,
-          //                          el,
-          //                          srate ) ;
           reader_->getPointingInfo( dir,
                                     az,
                                     el,
@@ -274,7 +245,6 @@ void OldASDMFiller::fill()
             getFrequencyRec( ifkey, refpix, refval, incr ) ;
           }
           else {
-            //reader_->getFrequency( idata, refpix, refval, incr, freqref ) ;
             reader_->getFrequency( refpix, refval, incr, freqref ) ;
             refval = (double)toLSRK( casa::Double(refval), 
                                      String(freqref),
@@ -290,7 +260,6 @@ void OldASDMFiller::fill()
           setFrequency( (casa::Double)refpix, (casa::Double)refval, (casa::Double)incr ) ;
 
           // loop on polarization
-          //vector<unsigned int> dataShape = reader_->getDataShape( idata ) ;
           vector<unsigned int> dataShape = reader_->getDataShape() ;
 //           ostringstream oss ;
 //           for ( unsigned int i = 0 ; i < dataShape.size() ; i++ ) {
@@ -303,23 +272,19 @@ void OldASDMFiller::fill()
 //           }
           //logsink_->postLocally( LogMessage(oss.str(),LogOrigin(className_,funcName,WHERE)) ) ;
                                      
-          //int numPol = reader_->getNumPol( idata ) ;
           unsigned int numPol = dataShape[0] ;
           unsigned int numChan = dataShape[1] ;
 
           //logsink_->postLocally( LogMessage("numPol = "+String::toString(numPol),LogOrigin(className_,funcName,WHERE)) ) ;
 
           // OPACITY
-          //vector<float> tau = reader_->getOpacity( idata ) ;
           vector<float> tau = reader_->getOpacity() ;
           Vector<casa::Float> opacity = toVector( tau, numPol ) ;
 
           // SPECTRA, FLAGTRA, TSYS, TCAL
-          //float *sp = reader_->getSpectrum( idata ) ;
           float *sp = reader_->getSpectrum() ;
           vector< vector<float> > ts ;
           vector< vector<float> > tc ;
-          //reader_->getTcalAndTsys( idata, tc, ts ) ;
           reader_->getTcalAndTsys( tc, ts ) ;
           Matrix<casa::Float> spectra = toMatrix( sp, numPol, numChan ) ;
           Vector<uChar> flagtra( numChan, 0 ) ;

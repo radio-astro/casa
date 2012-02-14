@@ -1,13 +1,17 @@
-#include <iostream>
-#include <fstream>
-#include <cfloat>
-
+//
+// C++ Implementation: STGrid
+//
+// Description:
+//
+//
+// Author: Takeshi Nakazato <takeshi.nakazato@nao.ac.jp>, (C) 2011
+//
+// Copyright: See COPYING file that comes with this distribution
+//
+//
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIter.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Utilities/CountedPtr.h>
@@ -18,7 +22,7 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/TableIter.h>
+#include <tables/Tables/TableCopy.h>
 
 #include <measures/Measures/MDirection.h>
 
@@ -1659,6 +1663,10 @@ void STGrid::prepareTable( Table &tab, String &name )
   Table t( infileList_[0], Table::Old ) ;
   t.deepCopy( name, Table::New, False, t.endianFormat(), True ) ;
   tab = Table( name, Table::Update ) ;
+  // 2012/02/13 TN
+  // explicitly copy subtables since no rows including subtables are 
+  // copied by Table::deepCopy with noRows=True
+  TableCopy::copySubTables( tab, t ) ;
 }
 
 }

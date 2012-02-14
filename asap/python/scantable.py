@@ -756,6 +756,20 @@ class scantable(Scantable):
             return self._get_column(self._gettsys, row)
         return self._row_callback(self._gettsys, "Tsys")
 
+    def get_tsysspectrum(self, row=-1):
+        """\
+        Return the channel dependent system temperatures.
+
+        Parameters:
+
+            row:    the rowno to get the information for. (default all rows)
+
+        Returns:
+
+            a list of Tsys values for the current selection
+
+        """
+        return self._get_column( self._gettsysspectrum, row )
 
     def get_weather(self, row=-1):
         """\
