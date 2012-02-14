@@ -45,6 +45,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
 	/////flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::TimeCentroid);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::PhaseCenter);
 	/////flagDataHandler_p->preLoadColumn(VisBufferComponents::Direction1);
 
 	// FlagAgentShadow counters and ids to handle static variables
