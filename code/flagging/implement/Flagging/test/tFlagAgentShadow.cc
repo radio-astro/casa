@@ -509,6 +509,7 @@ int main(int argc, char **argv)
 	string nThreadsParam,ntime;
 	Int nThreads = 0;
 	Double tolerance;
+        Bool recalcuvw=False;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -620,6 +621,10 @@ int main(int argc, char **argv)
 			tolerance = atof(value.c_str());
 			agentParameters.define ("tolerance", tolerance);
 			cout << "tolerance is: " << tolerance << endl;
+		}
+		else if (parameter == string("-recalcuvw"))
+		{
+			  agentParameters.define ("revalcuvw", (value.compare("True")==0));
 		}
 	}
 
