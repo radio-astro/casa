@@ -139,7 +139,7 @@ class test_tfcrop(test_base):
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4489)
-        
+
 
 class test_shadow(test_base):
     def setUp(self):
@@ -807,6 +807,34 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 2524284)
 
+    def test_list5(self):
+        '''tflagdata: clip only zero data'''
+        # get the correct data, by passing the previous setUp()
+        self.setUp_data4tfcrop()
+        
+        # creat input list
+        input = "mode=clip clipzeros=true"
+        filename = create_input(input)
+
+        tflagdata(vis=self.vis, mode='list',  inpfile=filename, run=True, savepars=False)
+        
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 68736)
+
+        
+class test_clip(test_base):
+    """tflagdata:: Test of mode = 'clip'"""
+    
+    def setUp(self):
+        self.setUp_data4tfcrop()
+        
+    def test_clipzeros(self):
+    	'''tflagdata: clip only zero-value data'''
+        tflagdata(vis = self.vis, mode = 'clip', clipzeros=True)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'],68736,'Should clip only spw=8')
+    	
+        
 
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -836,4 +864,5 @@ def suite():
             test_msselection,
             test_elevation,
             test_list,
+            test_clip,
             cleanup]

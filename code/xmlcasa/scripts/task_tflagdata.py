@@ -26,6 +26,7 @@ def tflagdata(vis,
              datacolumn,
              clipoutside,
              channelavg,
+             clipzeros,
              quackinterval, # mode quack parameters
              quackmode,
              quackincrement,
@@ -152,7 +153,7 @@ def tflagdata(vis,
                 # Make a FLAG_CMD compatible dictionary
                 flagcmd = fh.makeDict(flaglist)
                 
-                # Nunber of commands in dictionary
+                # Number of commands in dictionary
                 vrows = flagcmd.keys()
 
             except:
@@ -169,6 +170,7 @@ def tflagdata(vis,
             agent_pars['datacolumn'] = datacolumn
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
+            agent_pars['clipzeros'] = clipzeros
             
             # If clipminmax = [], do not write it in the dictionary.
             # It will be handled by the framework to flag NaNs only
@@ -189,7 +191,7 @@ def tflagdata(vis,
             
             sel_pars = sel_pars+' expression='+str(expr)+' datacolumn='+datacolumn+\
                        ' clipminmax='+str(cliprange)+' clipoutside='+str(clipoutside)+\
-                       ' channelavg='+str(channelavg)
+                       ' channelavg='+str(channelavg)+' clipzeros='+str(clipzeros)
             
         elif mode == 'shadow':
             agent_pars['diameter'] = diameter
@@ -286,8 +288,9 @@ def tflagdata(vis,
             flaglist = fh.purgeEmptyPars(sel_pars) 
             flagcmd = fh.makeDict([flaglist])
             
-            # Nunber of commands in dictionary
+            # Number of commands in dictionary
             vrows = flagcmd.keys()
+            casalog.post('There are %s cmds in dictionary of mode %s'%(vrows,mode),'DEBUG')
 
 
                                   

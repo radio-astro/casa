@@ -139,6 +139,10 @@ tfcrop,extend,unflag,summary)</description>
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
+            <param type="bool" name="clipzeros" subparam="true">
+                <description>Clip zero-value data</description>
+                <value type="bool">False</value>
+            </param>
 
             <param type="any" name="quackinterval" subparam="true">
                 <description>Quack n seconds from scan beginning or end</description>
@@ -334,6 +338,7 @@ tfcrop,extend,unflag,summary)</description>
                         <default param="clipminmax"><value type="doubleArray"></value></default>
                         <default param="clipoutside"><value type="bool">True</value></default>
                         <default param="channelavg"> <value type="bool">False</value></default>
+                        <default param="clipzeros"> <value type="bool">False</value></default>
                     </equals>
                     <equals value="quack">
                         <default param="field"><value type="string"></value></default>
@@ -594,6 +599,7 @@ tfcrop,extend,unflag,summary)</description>
                              any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
                              'WVR' refers to the water vapour radiometer of ALMA data.
                     example: expression='RE XX'
+                    
                channelavg -- Average data over (selected) channels? Channel
                             selections are taken into account. Flagged channels
                             are excluded from the average. The average is done
@@ -601,16 +607,22 @@ tfcrop,extend,unflag,summary)</description>
                             averaging.
                     default: False
                     options: True,False
+                    
                clipminmax -- Range of data (Jy) that will NOT be flagged
                     default: []; it will flag only the NaN data.
                     example: [0.0,1.5]
                     It will always flag the NaN data, independent of the values used.
+                    
                datacolumn -- Column to use for clipping.
                     default: 'DATA'
                     options: 'DATA','CORRECTED','MODEL', 'RESIDUAL, "RESIDUAL_DATA"
+                    
                clipoutside -- Clip OUTSIDE the range?
                     default: True
                     example: False; flag data WITHIN the range.
+
+               clipzeros -- Clip zero-value data.
+                    default: False
 
             quack -- Option to remove specified part of scan beginning/end
 
@@ -644,6 +656,7 @@ tfcrop,extend,unflag,summary)</description>
                              where one or both antennas were pointing at a strictly lower elevation
                              (as function of time), will be flagged.
                    default: 0.0
+                   
                upperlimit -- Upper limiting elevation in degrees. Data coming from a baseline
                              where one or both antennas were pointing at a strictly higher elevation
                              (as function of time), will be flagged.
