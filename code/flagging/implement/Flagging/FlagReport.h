@@ -43,6 +43,7 @@ class FlagReport : public Record
                 FlagReport(String type=String("none"),String name=String(""), 
                                  String title=String(""), 
 			         String xlabel=String(""), String ylabel=String("") );
+                FlagReport(String type, const Record &other); // TODO : By value. Change to by-reference
                 FlagReport(const Record &other); // TODO : By value. Change to by-reference
 		~FlagReport();
 
@@ -55,7 +56,6 @@ class FlagReport : public Record
                 Bool addData(Array<Float> data);
                 Bool addData(Vector<Float> xdata,Vector<Float> ydata, String label);
                 Int nData();
-
 
                 String reportType();
                 // Check validity of FlagReport.
