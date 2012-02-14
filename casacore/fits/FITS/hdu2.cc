@@ -1641,7 +1641,6 @@ void BinaryTableExtension::bt_assign() {
 	for (i = 0; i < tfields(); ++i)
 	    fld[i]->setaddr(&data_addr[i]); // set field addresses
 
-
 	// compute FITS rowsize and tablerowsize
 	fitsrowsize = 0;
 	tablerowsize = 0;

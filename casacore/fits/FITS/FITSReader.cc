@@ -45,7 +45,7 @@ void showHDU(HeaderDataUnit *h) {
           << "Axis " << (n + 1) << " size "
           << h->dim(n) << LogIO::POST;
      }
-     os << LogIO::NORMAL << "Keyword List:" << LogIO::POST;
+     //os << LogIO::NORMAL << "Keyword List:" << LogIO::POST;
 
      //ostringstream oss;
      //oss << *h << '\n';
@@ -158,7 +158,8 @@ void showHDU(HeaderDataUnit *h) {
 #define DOGROUP(Z) void showPrimaryGroup(PrimaryGroup<Z> &x) { \
    LogIO os(LogOrigin("FITSReader", "showPrimaryGroup", WHERE)); \
    int i, j; \
-   int number_to_display = 10; \
+   int ngroup_to_display = 2; \
+   int nele_to_display = 6; \
    showHDU(&x); \
    if (x.err() != HeaderDataUnit::OK) { \
        os << LogIO::SEVERE \
@@ -166,17 +167,19 @@ void showHDU(HeaderDataUnit *h) {
           << LogIO::POST; \
    } \
    os << LogIO::NORMAL; \
+   os << x.gcount() << " groups total, display first " << nele_to_display \
+      << " elements of the first " << ngroup_to_display << " groups\n"; \
    for (i = 0; i < x.gcount(); ++i) { \
        x.read(); \
-       if (i < number_to_display) { \
-      os << "Group " << i << " parms: " << "\n"; \
+       if (i < ngroup_to_display) { \
+      os << "Group " << i << " parms: " ; \
       for (j = 0; j < x.pcount(); ++j) \
-          os << " "<< x.parm(j); \
+          os << " " << x.parm(j); \
       os << "\n"; \
-      os << "Group " << i << " data: " << "\n"; \
-      for (j = 0; j < 4; ++j) \
+      os << "Group " << i << " data: " ; \
+      for (j = 0; j < 3 * nele_to_display ; j++) \
           os << " " << x(j); \
-      os << "\n"; \
+      os << "... \n"; \
        } \
    } \
    os << LogIO::POST; \
@@ -237,14 +240,16 @@ void showBinaryTable(BinaryTableExtension &x) {
           << "BT ERROR! " << x.err() << LogIO::POST;
        return;
    }
+   showHDU(&x);
+
    ostringstream oss;
    oss << x.nrows() << " rows, "
        << x.ncols() << " cols, "
        << x.fitsdatasize() << " bytes total\n";
-   showHDU(&x);
+   os << LogIO::NORMAL << String(oss) << LogIO::POST;
 
+   oss.str("");
    oss << "\nTable Data\n";
-
    int i;
    for (i = 0; i < x.ncols(); ++i) {
        oss << "Col " << i << ": " 
@@ -253,9 +258,10 @@ void showBinaryTable(BinaryTableExtension &x) {
           << x.ttype(i) << " "
           << x.tunit(i) << "\n";       
    }
+   os << LogIO::DEBUGGING << String(oss) << LogIO::POST;
 
-   oss << "number of rows in the table: " << x.nrows() << '\n'; 
 
+   oss.str("");
    x.read(x.nrows()); 
    char *theheap = 0;
    if (x.pcount()) {
@@ -329,13 +335,14 @@ void showBinaryTable(BinaryTableExtension &x) {
    }
 
    int displayLines = 5;
-   oss << "display the first " << displayLines << " rows\n"; 
+   int displayCols = 20;
+   oss << "the first " << displayCols << " cols of the first " << displayLines << " rows:\n"; 
    os << LogIO::NORMAL << String(oss) << LogIO::POST;
 
    oss.str("");
    for (int n = 0; n < displayLines && n < x.nrows(); ++n) { 
      oss << x.currrow() << ": | ";
-     for (i = 0; i < x.ncols(); ++i) {
+     for (i = 0; i < displayCols && i < x.ncols(); ++i) {
        if (i != 0) oss << "| ";
        if (x.field(i).nelements() != 0) 
          oss << x.field(i) << ' ';
@@ -443,7 +450,10 @@ void showBinaryTable(BinaryTableExtension &x) {
          }
        }
      }
-     oss << "|\n";
+     if (i < x.ncols())
+        oss << "| ...\n";
+     else
+        oss << "|\n";
      ++x; 
    }
    os << LogIO::NORMAL
@@ -516,8 +526,8 @@ void FITSReader::listFits(const char* fitsfile) {
      if (fin.rectype() == FITS::HDURecord) {
        switch (fin.hdutype()) {
          case FITS::PrimaryArrayHDU:
-            os << LogIO::NORMAL << "showing Primary Array -----\n";
-            os << "Data type is " << fin.datatype() << LogIO::POST;
+            os << LogIO::NORMAL << "Primary Array HDU ------>>>" << LogIO::POST;
+            os << LogIO::DEBUGGING << "Data type is " << fin.datatype() << LogIO::POST;
             switch (fin.datatype()) {
                case FITS::BYTE:
                   paB = new PrimaryArray<unsigned char>(fin);
@@ -542,15 +552,11 @@ void FITSReader::listFits(const char* fitsfile) {
                default:
                   break;
             }
-            os << LogIO::NORMAL 
-               << "PrimaryArray appropriated object instantiated."
-               << LogIO::POST;
+            os << LogIO::NORMAL << "<<<------ Primary Array HDU" << LogIO::POST;
             break;
          case FITS::PrimaryGroupHDU:
-            os << LogIO::NORMAL 
-               << "showing Primary Group -----\n"
-               << "Data type is " << fin.datatype() 
-               << LogIO::POST;
+            os << LogIO::NORMAL << "Primary Group HDU ------>>>" << LogIO::POST;
+            os << LogIO::DEBUGGING << "Data type is " << fin.datatype() << LogIO::POST;
             switch (fin.datatype()) {
                case FITS::BYTE:
                   pgB = new PrimaryGroup<unsigned char>(fin);
@@ -575,23 +581,25 @@ void FITSReader::listFits(const char* fitsfile) {
                default:
                   break;
             }
+            os << LogIO::NORMAL << "<<<------ Primary Group HDU" << LogIO::POST;
             break;
          case FITS::AsciiTableHDU:
+            os << LogIO::NORMAL << "Ascii Table HDU ------>>>" << LogIO::POST;
+            os << LogIO::DEBUGGING << "Data type is " << fin.datatype() << LogIO::POST;
             at = new AsciiTableExtension(fin);
-            os << LogIO::NORMAL << "showing ASCII Table -----"
-               << LogIO::POST;
             showBinaryTable(*at);
+            os << LogIO::NORMAL << "<<<------ Ascii Table HDU" << LogIO::POST;
             break;
          case FITS::BinaryTableHDU:
+            os << LogIO::NORMAL << "Binary Table HDU ------>>>" << LogIO::POST;
+            os << LogIO::DEBUGGING << "Data type is " << fin.datatype() << LogIO::POST;
             bt = new BinaryTableExtension(fin);
-            os << LogIO::NORMAL << "showing Binary Table -----"
-               << LogIO::POST;
             showBinaryTable(*bt);
+            os << LogIO::NORMAL << "<<<------ Binary Table HDU" << LogIO::POST;
             break;
          case FITS::ImageExtensionHDU:
-            os << LogIO::NORMAL 
-               << "showing Image Extension -----\n"
-               << "Data type is " << fin.datatype() << LogIO::POST;
+            os << LogIO::NORMAL << "Image Extension HDU ------>>>" << LogIO::POST;
+            os << LogIO::DEBUGGING << "Data type is " << fin.datatype() << LogIO::POST;
             switch (fin.datatype()) {
                case FITS::BYTE:
                   paB = new ImageExtension<unsigned char>(fin);
@@ -616,22 +624,19 @@ void FITSReader::listFits(const char* fitsfile) {
                default:
                   break;
             }
-            os << LogIO::NORMAL 
-               << "ImageExtension appropriated object instantiated."
-               << LogIO::POST;
+            os << LogIO::NORMAL << "<<<------ Image Extension HDU" << LogIO::POST;
             break;
          case FITS::UnknownExtensionHDU:
+            os << LogIO::NORMAL << "Unknown Extension HDU ------>>>" << LogIO::POST;
+            //os << LogIO::DEBUGGING << "Data type is " << fin.datatype() << LogIO::POST;
             h = new ExtensionHeaderDataUnit(fin);
-            os << LogIO::NORMAL5 
-               << "skip Unknown conforming extension -----"
-               << LogIO::POST;
             h->skip();
             delete h;
+            os << LogIO::NORMAL << "<<<------ Unknown Extension HDU" << LogIO::POST;
             break;
          default:
-            os << LogIO::DEBUGGING 
-               << "unknown HDU type"
-               << LogIO::POST;
+            os << LogIO::NORMAL << "Unknown Extension HDU ------>>>" << LogIO::POST;
+            os << LogIO::NORMAL << "<<<------ Unknown Extension HDU" << LogIO::POST;
             break;
       }
     }else if (fin.rectype() == FITS::BadBeginningRecord ||
