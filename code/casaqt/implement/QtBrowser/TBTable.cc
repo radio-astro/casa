@@ -526,13 +526,12 @@ TBPlotData* TBTable::plotIndices(PlotParams& dp, int axis, bool x, int row,
        (axis == -1 || 0 <= axis && axis <= dp.slice.size())) {
 
         int n = 1;
-        if(!dp.rowNumbers && axis >= 0) 
-	  n = dataDimensionsAt(dp.colIndex)[axis];
-        int steps = n;
-        steps += 1;
-        if(ph != NULL) ph->setSteps(steps);
         
         if(dp.rowNumbers) {
+	    int steps = n;
+	    steps += 1;
+	    if(ph != NULL) ph->setSteps(steps);
+
             double* xarr = new double[n];
             double* yarr = new double[n];
             data->rows.resize(n);
@@ -566,12 +565,20 @@ TBPlotData* TBTable::plotIndices(PlotParams& dp, int axis, bool x, int row,
 
         TBTable table(location, new DriverParams(dParams));
         table.setPrintDebug(false);
-	//TODO: wanna simply call table.dataAt to get data of a row and column
         Result r = table.loadRows(row, 1, true, f);
         delete f;
-        if(ph != NULL) ph->step();
 
         if(r.valid) {
+	    String type = table.fields.at(0)->getType();
+	    if(TBConstants::typeIsArray(type) && axis >= 0) {
+	      TBArrayData* tad = (TBArrayData*)table.data.at(0)->at(0);
+	      n = tad->getShape()[axis];
+	    }
+	    int steps = n;
+	    steps += 1;
+	    if(ph != NULL) ph->setSteps(steps);
+	    if(ph != NULL) ph->step();
+
             indexData = new double[n];
             columnData = new double[n];
                 
