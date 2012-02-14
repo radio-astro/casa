@@ -116,6 +116,7 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
     uiDataType_["Gipsy"]            = IMAGE;
     uiDataType_["Restore File"]     = RESTORE;
     uiDataType_["CASA Region File"] = CASAREGION;
+    uiDataType_["DS9 Region File"] = DS9REGION;
   
     dataType_[UNKNOWN]              = "unknown";
     dataType_[IMAGE]                = "image";
@@ -124,6 +125,7 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
     dataType_[SKY_CATALOG]          = "skycatalog";
     dataType_[RESTORE]              = "restore";
     dataType_[CASAREGION]           = "casa region";
+    dataType_[DS9REGION]           = "ds9 region";
 
     uiDisplayType_["raster image"]  = RASTER;
     uiDisplayType_["contour map"]   = CONTOUR;
@@ -445,6 +447,15 @@ void QtDataManager::showDisplayButtons(int ddtp) {
 	    regionButton_->show( );
 	}
 	break;
+    case DS9REGION:
+	if ( panel_->useNewRegions( ) ) {
+	    if ( panel_->nDDs( ) == 0 )
+		regionButton_->setDisabled(true);
+	    else
+		regionButton_->setDisabled(false);
+	    regionButton_->show( );
+	}
+	break;
   }
 }
 
@@ -460,6 +471,7 @@ QColor QtDataManager::getDirColor(int ddtp) {
 	case DIRECTORY:        clr = Qt::black;            break;
 	case QUALIMG:          clr = Qt::darkRed;          break;
 	case CASAREGION:       clr = Qt::darkYellow;       break;
+	case DS9REGION:        clr = QColor(255,153,51);   break;
 	case UNKNOWN: default: clr = Qt::darkMagenta;
     }
      

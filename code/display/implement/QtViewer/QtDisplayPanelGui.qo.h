@@ -145,7 +145,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   List<QtDisplayData*> unregisteredDDs();
   
   // retrieve a DD with given name (0 if none).
-  QtDisplayData* dd(const String& name);
+  QtDisplayData* dd(const std::string& name);
   
   // Check that a given DD is on the list.  Use qdd pointer or its name.
   //<group>

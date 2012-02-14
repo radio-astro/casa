@@ -35,7 +35,13 @@
 class QStackedWidget;
 
 namespace casa {
+
     class QtDisplayPanelGui;
+
+    class AnnRectBox;
+    class AnnEllipse;
+    class AnnSymbol;
+    class AnnPolygon;
 
     namespace viewer {
 
@@ -45,7 +51,7 @@ namespace casa {
 	class QtRegionSource : public QObject, public RegionSource {
 	    Q_OBJECT
 	    public:
-		QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) : RegionSource(rc), panel_(panel) { }
+		QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel );
 
 		/* std::tr1::shared_ptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ); */
 		std::tr1::shared_ptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
@@ -73,7 +79,17 @@ namespace casa {
 		void regionUpdate( int, const QList<double> &world_x, const QList<double> &world_y,
 				   const QList<int> &pixel_x, const QList<int> &pixel_y );
 
+	    protected slots:
+		void loadRegions( bool &handled, const QString &path, const QString &type );
+
 	    private: 
+
+		void load_crtf_regions( WorldCanvas *, const QString &path );
+		void load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *box );
+		void load_crtf_ellipse( WorldCanvas *wc, MDirection::Types cstype, const AnnEllipse *ellipse );
+		void load_crtf_point( WorldCanvas *wc, MDirection::Types cstype, const AnnSymbol *symbol );
+		void load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon );
+
 		QtDisplayPanelGui *panel_;
 	};
     }

@@ -18,6 +18,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+###
+### with RHEL6 we can switch back to building with flex/bison...
+###
+#find_package (BISON REQUIRED)
+#find_package (FLEX REQUIRED)
+
+#file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ds9)
+#INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+#BISON_TARGET( ds9parse implement/ds9/ds9parse.yy ${CMAKE_CURRENT_BINARY_DIR}/ds9parse.cc
+#              COMPILE_FLAGS "--file-prefix=${CMAKE_CURRENT_BINARY_DIR}" )
+#FLEX_TARGET(  ds9lex implement/ds9/ds9lex.ll ${CMAKE_CURRENT_BINARY_DIR}/ds9lex.cc
+#              COMPILE_FLAGS "-+" )
+#ADD_FLEX_BISON_DEPENDENCY(ds9lex ds9parse)
+
+
 include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
 
@@ -366,6 +381,7 @@ casa_add_library( display
   implement/region/QtPolygon.cc
   implement/region/QtEllipse.cc
   implement/region/QtPoint.cc
+  implement/region/RegionCreator.cc
   implement/region/RegionSource.cc
   implement/region/QtRegionSource.cc
   implement/region/QtRegionSourceFactory.cc
@@ -377,6 +393,13 @@ casa_add_library( display
   implement/region/Point.cc
   implement/region/Polygon.cc
   implement/region/Region.cc
+  implement/ds9/ds9context.cc
+  implement/ds9/ds9parser.cc
+  implement/ds9/ds9writer.cc
+#  ${BISON_ds9parse_OUTPUTS}
+  implement/ds9/ds9parse.cc
+#  ${FLEX_ds9lex_OUTPUTS}
+  implement/ds9/ds9lex.cc
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )

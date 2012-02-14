@@ -46,7 +46,8 @@
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
-#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
+#include <synthesis/MSVis/StokesVector.h>
+
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -146,8 +147,6 @@ public slots:
 	void changeAxis(String xa, String ya, String za, std::vector<int>);
 	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
 	void doImgCollapse();
-	void doLineFit();
-	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
 
 
@@ -182,7 +181,6 @@ private:
    ImageInterface<Float>* image;
 
    SpectralCollapser *collapser;
-   SpectralFitter    *fitter;
 
    QHash<QString, ImageAnalysis*> *over;
    String coordinate;

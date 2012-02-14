@@ -77,6 +77,7 @@ QtExportManager::QtExportManager(QtDisplayPanelGui* panel,
   dataType_[SKY_CATALOG]          = String("skycatalog");
   dataType_[RESTORE]              = String("restore");
   dataType_[CASAREGION]           = String("casa region");
+  dataType_[DS9REGION]           = String("ds9 region");
 
   uiDataType_["unknown"]          = UNKNOWN;
   uiDataType_["image"]            = IMAGE;
@@ -90,6 +91,7 @@ QtExportManager::QtExportManager(QtDisplayPanelGui* panel,
   //uiDataType_["Gipsy"]            = IMAGE;
   uiDataType_["restore file"]     = RESTORE;
   uiDataType_["CASA region file"] = CASAREGION;
+  uiDataType_["DS9 region file"] = DS9REGION;
 
   uiDisplayType_["raster image"]  = RASTER;
   uiDisplayType_["contour map"]   = CONTOUR;
@@ -352,6 +354,7 @@ QColor QtExportManager::getDirColor(int ddtp) {
 	case DIRECTORY:        clr = Qt::black;            break;
 	case QUALIMG:          clr = Qt::darkRed;          break;
 	case CASAREGION:       clr = Qt::darkYellow;       break;
+	case DS9REGION:        clr = QColor(255,153,51);   break;
 	case UNKNOWN: default: clr = Qt::darkMagenta;
 	}
 	return clr;
