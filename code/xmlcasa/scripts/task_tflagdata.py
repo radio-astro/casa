@@ -151,11 +151,14 @@ def tflagdata(vis,
                 flaglist = fh.readList(inpfile)
                 # Make a FLAG_CMD compatible dictionary
                 flagcmd = fh.makeDict(flaglist)
-                ncmd = flagcmd.keys()
+                
+                # Nunber of commands in dictionary
+                vrows = flagcmd.keys()
+
             except:
                 raise Exception, 'Error reading the input file '+inpfile
             
-            casalog.post('Read ' + str(ncmd.__len__())
+            casalog.post('Read ' + str(vrows.__len__())
                          + ' lines from file ' + inpfile)
                              
         elif mode == 'manual':
@@ -276,16 +279,17 @@ def tflagdata(vis,
         
 
         # Purge the empty parameters from the selection string
-        if mode != 'list':
+        if mode != 'list' and mode != 'summary':
             sel_pars = sel_pars+' mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
                     ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
             flaglist = fh.purgeEmptyPars(sel_pars) 
             flagcmd = fh.makeDict([flaglist])
+            
+            # Nunber of commands in dictionary
+            vrows = flagcmd.keys()
 
 
-        # Nunber of commands in dictionary
-        vrows = flagcmd.keys()
                                   
                           
         ##########  Only save the parameters and exit; run = False        
