@@ -513,7 +513,7 @@ int main(int argc, char **argv)
 	Array<Float> clipminmax;
 	Bool clipmin_set = false;
 	Bool clipmax_set = false;
-	Bool clipoutside, channelavg;
+	Bool clipoutside, channelavg, clipzero;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -656,6 +656,12 @@ int main(int argc, char **argv)
 			channelavg = casa::Bool(atoi(argv[i+1]));
 			agentParameters.define ("channelavg", channelavg);
 			cout << "channelavg is: " << channelavg << endl;
+		}
+		else if (parameter == string("-clipzeros"))
+		{
+			clipzero = casa::Bool(atoi(argv[i+1]));
+			agentParameters.define ("clipzeros", clipzero);
+			cout << "clipzeros is: " << clipzero << endl;
 		}
 	}
 
