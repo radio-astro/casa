@@ -43,7 +43,11 @@ int main( void ) {
 
   Vector<CalAnalysis::OUTPUT<CalStats::NONE> > oOutput;
   oOutput = oCA.stats<CalStats::NONE>( oField, oAntenna1, oAntenna2, dStartTime,
-      dStopTime, oFeed, oSPW, aoChannel, eAxisIterUser, oArg );
+      dStopTime, oFeed, oSPW, aoChannel, eAxisIterUser, CalAnalysis::REAL,
+      oArg );
+
+  cout << oOutput[0].oOut.shape() << endl << flush;
+  cout << endl << flush;
 
   for ( uInt o=0; o<oOutput.nelements(); o++ ) {
     cout << oOutput[o].uiFieldID << " " << oOutput[o].uiAntenna1 << " "

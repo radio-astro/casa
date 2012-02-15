@@ -40,13 +40,13 @@ int main( void ) {
 
   // Initialize the input data error cube
 
-  Cube<DComplex> oDataErr( oShape );
+  Cube<Double> oDataErr( oShape );
 
   for ( uInt p=0; p<uiNumPol; p++ ) {
     for ( uInt t=0; t<uiNumTime; t++ ) {
       Double dDataErr = 0.1;
       for ( uInt f=0; f<uiNumFreq; f++ ) {
-        oDataErr.operator()(p,f,t) = DComplex( dDataErr, dDataErr );
+        oDataErr.operator()(p,f,t) = dDataErr;
       }
     }
   }
