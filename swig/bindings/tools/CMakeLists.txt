@@ -145,7 +145,7 @@ foreach(_tool ${tools_swig} )
    add_dependencies( _${_base} libtools)
    add_dependencies( inst  _${_base} )
    install( TARGETS _${_base}
-            DESTINATION python/${PYTHONV}/casac/${_base} )
+            DESTINATION python/${PYTHONV}/casac )
 endforeach()
 
 add_dependencies( inst  generated_py )
