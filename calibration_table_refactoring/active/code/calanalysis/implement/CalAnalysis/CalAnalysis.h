@@ -11,8 +11,8 @@ This header file contains definitions for the CalStats class.
 
 Classes:
 --------
-CalAnalysis - This class acts as the interface between the NewCalTabIter and
-              CalStats classes.
+CalAnalysis - This class acts as the interface between the ROCTIter and CalStats
+              classes.
 
 Modification history:
 ---------------------
@@ -20,6 +20,9 @@ Modification history:
               Initial version.
 2012 Jan 25 - Nick Elias, NRAO
               Logging capability added.  Error checking added.
+2012 Feb 14 - Nick Elias, NRAO
+              Updated this code to reflect changes in NewCalTabIter (now
+              ROCTIter) and other classes.
 
 */
 
@@ -62,10 +65,11 @@ using namespace std;
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 
-#include <calibration/CalTables/NewCalTable.h>
-#include <calibration/CalTables/NewCalTabIter.h>
+#include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CTIter.h>
 
 #include <calanalysis/CalAnalysis/CalStats.h>
+#include <calanalysis/CalAnalysis/CalStatsDerived.h>
 #include <calanalysis/CalAnalysis/CalStatsFitter.h>
 
 // -----------------------------------------------------------------------------
@@ -84,8 +88,7 @@ CalAnalysis
 
 Description:
 ------------
-This class acts as the interface between the NewCalTabIter and CalAnalysis
-classes.
+This class acts as the interface between the ROCTIter and CalAnalysis classes.
 
 In a nutshell:
 --------------
@@ -102,10 +105,9 @@ In a nutshell:
     but the NewCalTable class doesn't have another way to access data and the
     time for each iteration is very fast.
   - For each iteration, the dimensions of the data, data error, and flag cubes
-    provided by NewCalTabIter are feed x frequency(spw) x row(spw,time).  This
-    shape is not useful for calculating statistics with CalStats, so the
-    parse<T>() function slices and dices the cubes into feed x frequency x
-    time.
+    provided by ROCTIter are feed x frequency(spw) x row(spw,time).  This shape
+    is not useful for calculating statistics with CalStats, so the parse<T>()
+    function slices and dices the cubes into feed x frequency x time.
   - The parsed cubes are further refined by the select<T>() function to include
     only the feeds, frequencies, and times selected by the input parameters.
   - The resulting cubes are fed to the CalStats class and its stats<T>()
@@ -154,7 +156,7 @@ freq        - This member function creates the total frequency vector based on
 Class template private member functions:
 ----------------------------------------
 parse<T>  - This member function reshapes the cubes provided by class
-            NewCalTabIter to dimensions prefered by class CalStats.
+            ROCTIter to dimensions required by class CalStats.
 select<T> - This member function selects the desired feeds, frequencies, and
             times from an input cube.
 
@@ -178,6 +180,9 @@ Modification history:
               member functions parse(), and select<T>(); and protected member
               functions CalAnalysis() (default), CalAnalysis() (copy), and
               operator=().
+2012 Feb 14 - Nick Elias, NRAO
+              Updated this code to reflect changes in NewCalTabIter (now
+              ROCTIter) and other classes.  Added the RAP enum.
 
 */
 
@@ -186,6 +191,11 @@ Modification history:
 class CalAnalysis {
 
   public:
+
+    // Real/Amplitude/Phase enums.
+    typedef enum RAP {
+      REAL=0, AMPLITUDE, PHASE
+    } RAP;
 
     // OUTPUT nested class (allowed T: CalStats::NONE, CalStatsFitter::FIT,
     // or CalStatsHist::HIST), used to hold the vector output of stats<T>().
@@ -218,7 +228,8 @@ class CalAnalysis {
         const Double& dStartTimeIn, const Double& dStopTimeIn,
         const Vector<String>& oFeedIn, const Vector<Int>& oSPWIn,
         const Vector<Int>* const aoChannelIn,
-        const CalStats::AXIS& eAxisIterUserID, const CalStats::ARG<T>& oArg );
+        const CalStats::AXIS& eAxisIterUserID, const RAP& eRAP,
+        const CalStats::ARG<T>& oArg );
 
     // Function to determine whether a value is present in an array
     template <typename T>
@@ -231,7 +242,7 @@ class CalAnalysis {
   private:
 
     NewCalTable* poNCT;
-    NewCalTabIter* poNCTIter;
+    ROCTIter* poNCTIter;
 
     String oTableType;
     String oPolBasis;
@@ -261,7 +272,7 @@ class CalAnalysis {
         Vector<Double>& oFreqOut ) const;
 
     // This function sorts the input feed x frequency(spw) x row(spw,time) cube
-    // (from NewCalTabIter) to feed x frequency x time (for CalStats)
+    // (from ROCTIter) to feed x frequency x time (for CalStats)
     template <typename T>
     Cube<T>& parse( const Cube<T>& oCubeIn ) const;
 
@@ -320,13 +331,12 @@ NB: The stats<T>() function calculates statistics (the type depends on T) and
   - The iteration loop goes over field, antenna1, and antenna2.  If a set of
     field, antenna1 and antenna2 numbers from an iteration is consistent with
     the inputs, statistics are calculated.  This is not the most efficient way,
-    but the NewCalTabIter class doesn't have another way to access data and the
-    time for each iteration is very fast.
+    but the ROCTIter class doesn't have another way to access data and the time
+    for each iteration is very fast.
   - For each iteration, the dimensions of the data, data error, and flag cubes
-    provided by NewCalTabIter are feed x frequency(spw) x row(spw,time).  This
-    shape is not useful for calculating statistics with CalStats, so the
-    parse<T>() function slices and dices the cubes into feed x frequency x
-    time.
+    provided by ROCTIter are feed x frequency(spw) x row(spw,time).  This shape
+    is not useful for calculating statistics with CalStats, so the parse<T>()
+    function slices and dices the cubes into feed x frequency x time.
   - The parsed cubes are further refined by the select<T>() function to include
     only the feeds, frequencies, and times selected by the input parameters.
   - The resulting cubes are fed to the CalStats class and its stats<T>()
@@ -355,6 +365,8 @@ aoChannelIn     - This array of Vector<Int> instances containing the channel
                   of oSPWIn.
 eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
                   FREQUENCY or TIME iteration axes (user defined).
+eRAP            - This reference to a CalAnalysis::RAP enum contains either
+                  REAL, AMPLITUDE, or PHASE.
 oArg<T>         - This reference to a CalStats::ARG<T> instance contains the
                   extra input parameters.
 
@@ -369,6 +381,10 @@ Modification history:
               Initial version.
 2012 Jan 25 - Nick Elias, NRAO
               Logging capability added.
+2012 Feb 14 - Nick Elias, NRAO
+              Updated this code to reflect changes in NewCalTabIter (now
+              ROCTIter) and other classes.  Added a RAP enum as an input
+              parameter.
 
 */
 
@@ -380,7 +396,8 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     const Vector<Int>& oAntenna2In, const Double& dStartTimeIn,
     const Double& dStopTimeIn, const Vector<String>& oFeedIn,
     const Vector<Int>& oSPWIn, const Vector<Int>* const aoChannelIn,
-    const CalStats::AXIS& eAxisIterUserID, const CalStats::ARG<T>& oArg ) {
+    const CalStats::AXIS& eAxisIterUserID, const RAP& eRAP,
+    const CalStats::ARG<T>& oArg ) {
 
   // Initialize the output vector containing statistics versus field ID, antenna
   // 1, and antenna 2
@@ -474,27 +491,47 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     poOutput->operator[](uiNumOutput-1).uiAntenna1 = poNCTIter->antenna1()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna2 = poNCTIter->antenna2()[0];
 
-    Cube<Float> oParam = select<Float>( parse<Float>(poNCTIter->param()),
-        oFeedTemp, oFreqTemp, oTimeTemp );
-    Cube<Double> oParamD( oParam.shape(), 0.0 );
-    convertArray<Double,Float>( oParamD, oParam );
+    Cube<Complex> oParamP = parse<Complex>( poNCTIter->param() );
+    Cube<Complex> oParam = select<Complex>( oParamP, oFeedTemp, oFreqTemp,
+        oTimeTemp );
+    Cube<DComplex> oParamD( oParam.shape(), 0.0 );
+    convertArray<DComplex,Complex>( oParamD, oParam );
 
-    Cube<Float> oParamErr = select<Float>( parse<Float>(poNCTIter->paramErr()),
-        oFeedTemp, oFreqTemp, oTimeTemp );
+    Cube<Float> oParamErrP = parse<Float>( poNCTIter->paramErr() );
+    Cube<Float> oParamErr = select<Float>( oParamErrP, oFeedTemp, oFreqTemp,
+        oTimeTemp );
     Cube<Double> oParamErrD( oParamErr.shape(), 0.0 );
     convertArray<Double,Float>( oParamErrD, oParamErr );
 
-    Cube<Bool> oFlag = select<Bool>( parse<Bool>(poNCTIter->flag()),
-        oFeedTemp, oFreqTemp, oTimeTemp );
+    Cube<Bool> oFlagP = parse<Bool>( poNCTIter->flag() );
+    Cube<Bool> oFlag = select<Bool>( oFlagP, oFeedTemp, oFreqTemp, oTimeTemp );
 
-    CalStats* poCS;
+    CalStats* poCS = NULL;
 
     try {
-      poCS = new CalStats( oParamD, oParamErrD, oFlag, oFeedTemp, oFreqTemp,
-          oTimeTemp, eAxisIterUserID );
+
+      switch ((uInt) eRAP) {
+        case (uInt) REAL:
+          poCS = (CalStats*) new CalStatsReal( real(oParamD), oParamErrD,
+              oFlag, oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID );
+          break;
+	case (uInt) AMPLITUDE:
+	  poCS = (CalStats*) new CalStatsAmp( oParamD, oParamErrD, oFlag,
+              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True );
+          break;
+	case (uInt) PHASE:
+	  poCS = (CalStats*) new CalStatsPhase( oParamD, oParamErrD, oFlag,
+              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True );
+          break;
+        default:
+          throw( AipsError( "Invalid parameter (REAL, AMPLITUDE, or PHASE)" ) );
+      }
+
       poOutput->operator[](uiNumOutput-1).oOut = poCS->stats<T>( oArg );
       delete poCS;
+
     }
+
     catch ( AipsError oAE ) {
       LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
       log << LogIO::WARN << oAE.getMesg()
@@ -646,8 +683,8 @@ CalAnalysis::parse<T>
 
 Description:
 ------------
-This member function reshapes the cubes provided by class NewCalTabIter to
-dimensions prefered by class CalStats.
+This member function reshapes the cubes provided by class ROCTIter to dimensions
+required by class CalStats.
 
 Inputs:
 -------

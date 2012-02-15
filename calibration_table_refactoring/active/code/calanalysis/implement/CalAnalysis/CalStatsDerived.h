@@ -131,6 +131,8 @@ Modification history:
               Initial version.  The public member functions are CalStatsAmp()
               (generic) and ~CalStatsAmp().  The static member function is
               norm().
+2012 Feb 15 - Nick Elias, NRAO
+              Data error input parameter changed from DComplex to Double.
 
 */
 
@@ -141,7 +143,7 @@ class CalStatsAmp : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsAmp( const Cube<DComplex>& oData, const Cube<DComplex>& oDataErr,
+    CalStatsAmp( const Cube<DComplex>& oData, const Cube<Double>& oDataErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
         const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const CalStats::AXIS& eAxisIterUser, const Bool& bNorm );
@@ -189,6 +191,8 @@ Modification history:
               Initial version.  The public member functions are CalStatsPhase()
               (generic) and ~CalStatsPhase().  The static member function is
               unwrap().
+2012 Feb 15 - Nick Elias, NRAO
+              Data error input parameter changed from DComplex to Double.
 
 */
 
@@ -199,7 +203,7 @@ class CalStatsPhase : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsPhase( const Cube<DComplex>& oData, const Cube<DComplex>& oDataErr,
+    CalStatsPhase( const Cube<DComplex>& oData, const Cube<Double>& oDataErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
         const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const CalStats::AXIS& eAxisIterUser, const Bool& bUnwrap );

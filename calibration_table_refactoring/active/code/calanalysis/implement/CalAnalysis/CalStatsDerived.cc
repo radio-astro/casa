@@ -271,9 +271,9 @@ amplitude errors do not include them.
 
 Inputs:
 -------
-oData           - This reference to a Cube<Double> instance contains the data.
+oData           - This reference to a Cube<DComplex> instance contains the data.
 oDataErr        - This reference to a Cube<Double> instance contains the data
-                  errors.
+                  errors (real and imaginary parts).
 oFlag           - This reference to a Cube<Bool> instance contains the flags.
 oFeed           - This reference to a Vector<String> instance is the feed
                   abscissae.
@@ -296,35 +296,24 @@ Modification history:
               Initial version.
 2012 Jan 25 - Nick Elias, NRAO
               Error checking added.
+2012 Feb 15 - Nick Elias, NRAO
+              Data error input parameter changed from DComplex to Double.
 
 */
 
 // -----------------------------------------------------------------------------
 
 CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oData,
-    const Cube<DComplex>& oDataErr, const Cube<Bool>& oFlag,
+    const Cube<Double>& oDataErr, const Cube<Bool>& oFlag,
     const Vector<String>& oFeed, const Vector<Double>& oFrequency,
     const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser,
     const Bool& bNorm ) : CalStats() {
 
-  // Calculate the amplitudes
+  // Calculate the amplitudes and their errors
 
   Cube<Double> oAmp( amplitude( oData ) );
 
-
-  // Calculate the amplitude errors
-
-  Cube<Double> oR( real( oData ) );
-  Cube<Double> oErrR( real( oDataErr ) );
-
-  Cube<Double> oI( imag( oData ) );
-  Cube<Double> oErrI( imag( oDataErr ) );
-
-  Cube<Double> oPhase( phase( oData ) );
-  Cube<Double> oCos( cos( oPhase ) );
-  Cube<Double> oSin( sin( oPhase ) );
-
-  Cube<Double> oAmpErr( sqrt( square(oCos*oErrR) + square(oSin*oErrI) ) );
+  Cube<Double> oAmpErr = oDataErr.copy();
 
 
   // Normalize the amplitudes and their errors, if selected.  The input flag
@@ -595,9 +584,9 @@ amplitude errors do not include them.
 
 Inputs:
 -------
-oData           - This reference to a Cube<Double> instance contains the data.
+oData           - This reference to a Cube<DComplex> instance contains the data.
 oDataErr        - This reference to a Cube<Double> instance contains the data
-                  errors.
+                  errors (real and imaginary parts).
 oFlag           - This reference to a Cube<Bool> instance contains the flags.
 oFeed           - This reference to a Vector<String> instance is the feed
                   abscissae.
@@ -622,80 +611,70 @@ Modification history:
               Flag updates according to low amplitude was added.
 2012 Jan 25 - Nick Elias, NRAO
               Error checking added.
+2012 Feb 15 - Nick Elias, NRAO
+              Data error input parameter changed from DComplex to Double.
 
 */
 
 // -----------------------------------------------------------------------------
 
 CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oData,
-    const Cube<DComplex>& oDataErr, const Cube<Bool>& oFlag,
+    const Cube<Double>& oDataErr, const Cube<Bool>& oFlag,
     const Vector<String>& oFeed, const Vector<Double>& oFrequency,
     const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser,
     const Bool& bUnwrap ) : CalStats() {
 
-  // Calculate the phases and create its iterator
+  // Calculate the phases and their initial errors (set to 0.0)
+
+  Cube<Double> oPhase( phase(oData) );
+  Cube<Double> oPhaseErr( oPhase.shape() );
+
+
+  // Create the iterators.  The input flag cube is copied since it cannot be
+  // modified.
 
   IPosition oIterShape( 2, (ssize_t) CalStats::FEED, (ssize_t) CalStats::TIME );
 
-  Cube<Double> oPhase( phase(oData) );
-  ArrayIterator<Double> oPhaseIter( oPhase, oIterShape, False );
-
-
-  // Create iterators for the input data, data error, flag , and phase error
-  // cubes.  The input cubes cannot be modified, so copies are made.  Create the
-  // phase error cube (initialized to M_PI) and its iterator.
-
   ReadOnlyArrayIterator<DComplex> oDataIter( oData, oIterShape, False );
-
-  ReadOnlyArrayIterator<DComplex> oDataErrIter( oDataErr, oIterShape, False );
+  ReadOnlyArrayIterator<Double> oDataErrIter( oDataErr, oIterShape, False );
 
   Cube<Bool> oFlagCopy( oFlag.copy() );
   ArrayIterator<Bool> oFlagIter( oFlagCopy, oIterShape, False );
 
-  Cube<Double> oPhaseErr( oPhase.shape(), (Double) M_PI );
+  ArrayIterator<Double> oPhaseIter( oPhase, oIterShape, False );
   ArrayIterator<Double> oPhaseErrIter( oPhaseErr, oIterShape, False );
 
 
-  // Calculate the phase errors.  They require dividing by amplitude.  Update
+  // Calculate the phase errors.  They require dividing by amplitude.  Set the
   // flags according to low amplitudes (corresponding to phase errors greater
-  // than M_PI).  All flagged phase errors remain M_PI.  The iteration axes are
-  // FEED and TIME.  A FREQUENCY for loop is located inside the FEED/TIME
-  // iteration loop. 
+  // than M_PI).  All flagged phase errors are set to M_PI.  The iteration axes
+  // are FEED and TIME.  A FREQUENCY for loop is located inside the FEED/TIME
+  // iteration loop.
 
   while ( !oDataIter.pastEnd() ) {
 
     uInt uiNumFrequency = oDataIter.array().nelements();
     IPosition oShape( 1, uiNumFrequency );
 
+    Vector<Double> oPhaseErrV( oShape );
+
     Vector<DComplex> oDataV( oDataIter.array().copy().reform(oShape) );
-    Vector<DComplex> oDataErrV( oDataErrIter.array().copy().reform(oShape) );
+    Vector<Double> oDataErrV( oDataErrIter.array().copy().reform(oShape) );
 
-    Vector<Double> oR( real(oDataV) );
-    Vector<Double> oRErr( real(oDataErrV) );
-
-    Vector<Double> oI( imag(oDataV) );
-    Vector<Double> oIErr( imag(oDataErrV) );
-
-    Vector<Double> oPhaseV( oPhaseIter.array().copy().reform(oShape) );
-    Vector<Double> oPhaseErrV( oPhaseErrIter.array().copy().reform(oShape) );
-
-    Vector<Double> oCos( cos(oPhaseV) );
-    Vector<Double> oSin( sin(oPhaseV) );
-
-    Vector<Double> oAmp( sqrt(square(oR)+square(oI)) );
-
-    Vector<Double> oMetricR = pow( oSin*oRErr, 2 );
-    Vector<Double> oMetricI = pow( oCos*oIErr, 2 );
-    Vector<Double> oMetric = sqrt( oMetricR+oMetricI );
+    Vector<Double> oAmpV( amplitude(oDataV) );
 
     Vector<Bool> oFlagV( oFlagIter.array().copy().reform(oShape) );
-    Vector<Bool> oFlagLow( oAmp <= oMetric/((Double) M_PI) );
+    Vector<Bool> oFlagLow( oAmpV <= oDataErrV/((Double) M_PI) );
 
     oFlagV = oFlagV || oFlagLow;
     oFlagIter.array() = oFlagV;
 
     for ( uInt f=0; f<uiNumFrequency; f++ ) {
-      if ( !oFlagV[f] ) oPhaseErrV[f] = oMetric[f] / oAmp[f];
+      if ( !oFlagV[f] ) {
+        oPhaseErrV[f] = oDataErrV[f] / oAmpV[f];
+      } else {
+        oPhaseErrV[f] = (Double) M_PI;
+      }
     }
 
     oPhaseErrIter.array() = oPhaseErrV;

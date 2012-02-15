@@ -11,8 +11,8 @@ This file contains member functions for the CalAnalysis class.
 
 Classes:
 --------
-CalAnalysis - This class acts as the interface between the NewCalTabIter and
-              CalAnalysis classes.
+CalAnalysis - This class acts as the interface between the ROCTIter and CalStats
+              classes.
 
 Modification history:
 ---------------------
@@ -20,6 +20,9 @@ Modification history:
               Initial version.
 2012 Jan 25 - Nick Elias, NRAO
               Logging capability added.  Error checking added.
+2012 Feb 14 - Nick Elias, NRAO
+              Updated this code to reflect changes in NewCalTabIter (now
+              ROCTIter) and other classes.
 
 */
 
@@ -45,8 +48,7 @@ CalAnalysis
 
 Description:
 ------------
-This class acts as the interface between the NewCalTabIter and CalAnalysis
-classes.
+This class acts as the interface between the ROCTIter and CalAnalysis classes.
 
 In a nutshell:
 --------------
@@ -63,10 +65,9 @@ In a nutshell:
     but the NewCalTable class doesn't have another way to access data and the
     time for each iteration is very fast.
   - For each iteration, the dimensions of the data, data error, and flag cubes
-    provided by NewCalTabIter are feed x frequency(spw) x row(spw,time).  This
-    shape is not useful for calculating statistics with CalStats, so the
-    parse<T>() function slices and dices the cubes into feed x frequency x
-    time.
+    provided by ROCTIter are feed x frequency(spw) x row(spw,time).  This shape
+    is not useful for calculating statistics with CalStats, so the parse<T>()
+    function slices and dices the cubes into feed x frequency x time.
   - The parsed cubes are further refined by the select<T>() function to include
     only the feeds, frequencies, and times selected by the input parameters.
   - The resulting cubes are fed to the CalStats class and its stats<T>()
@@ -115,7 +116,7 @@ freq        - This member function creates the total frequency vector based on
 Class template private member functions:
 ----------------------------------------
 parse<T>  - This member function reshapes the cubes provided by class
-            NewCalTabIter to dimensions prefered by class CalStats.
+            ROCTIter to dimensions required by class CalStats.
 select<T> - This member function selects the desired feeds, frequencies, and
             times from an input cube.
 
@@ -139,6 +140,9 @@ Modification history:
               member functions parse(), and select<T>(); and protected member
               functions CalAnalysis() (default), CalAnalysis() (copy), and
               operator=().
+2012 Feb 14 - Nick Elias, NRAO
+              Updated this code to reflect changes in NewCalTabIter (now
+              ROCTIter) and other classes.  Added the RAP enum.
 
 */
 
@@ -194,7 +198,7 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   oColIter[1] = String( "ANTENNA1" );
   oColIter[2] = String( "FIELD_ID" );
 
-  poNCTIter = new NewCalTabIter( *poNCT, oColIter );
+  poNCTIter = new ROCTIter( *poNCT, oColIter );
   poNCTIter->reset();
 
 
@@ -234,7 +238,7 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   // Get the CHAN_FREQ column from the spectral window subtable
 
   String oSPWName( oTableName + "/SPECTRAL_WINDOW" );
-  NewCalTable::CalSpectralWindow oCalSPW( oSPWName, Table::Old );
+  CTSpectralWindow oCalSPW( oSPWName, Table::Old );
 
   ROArrayColumn<Double> oFreqACD( ROMSSpWindowColumns(oCalSPW).chanFreq() );
 

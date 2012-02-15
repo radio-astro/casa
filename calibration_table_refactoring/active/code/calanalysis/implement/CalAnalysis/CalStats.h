@@ -226,11 +226,11 @@ class CalStats {
     // AXES nested class
     class AXES {
       public:
-        CalStats::AXIS eAxisIterFeedID; // FEED iteration axis ID
-        CalStats::AXIS eAxisIterUserID; // User-defined iteration axis ID
-        CalStats::AXIS eAxisNonIterID;  // Non-iteration axis ID
-        String sFeed;                   // FEED axis value
-        Double dAxisIterUser;           // User-defined iteration axis value
+        AXIS eAxisIterFeedID; // FEED iteration axis ID
+        AXIS eAxisIterUserID; // User-defined iteration axis ID
+        AXIS eAxisNonIterID;  // Non-iteration axis ID
+        String sFeed;         // FEED axis value
+        Double dAxisIterUser; // User-defined iteration axis value
         AXES( void );
         AXES( const AXES& oAxes );
         ~AXES( void );
