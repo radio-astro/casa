@@ -110,6 +110,8 @@ protected:
     	return vector<Coordinate::Type>(0);
     }
 
+    inline Bool _supportsMultipleRegions() {return True;}
+
 private:
     ImageAnalysis *const _ia;
     Vector<Int> _axes;

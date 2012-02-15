@@ -129,6 +129,7 @@ protected:
 
     void _closeLogfile() const;
 
+    virtual inline Bool _supportsMultipleRegions() {return False;}
 
 private:
     const ImageInterface<Float> *const _image;
