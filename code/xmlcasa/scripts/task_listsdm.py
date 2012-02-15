@@ -28,7 +28,10 @@ def listsdm(sdm=None):
         scandict[fid] = {}
         
         # number of subscans
-        rowsubs = rownode.getElementsByTagName("numSubScan")
+        rowsubs = rownode.getElementsByTagName("numSubscan")
+        if len(rowsubs) == 0:
+            # EVLA and old ALMA data
+            rowsubs = rownode.getElementsByTagName("numSubScan")
         nsubs = int(rowsubs[0].childNodes[0].nodeValue)
         
         # intents
