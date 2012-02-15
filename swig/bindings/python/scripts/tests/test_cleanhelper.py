@@ -147,6 +147,7 @@ class cleanhelper_test(unittest.TestCase):
         """[Cleanhelper newreadoutlier test (reader for new outlier file format)]"""
         imageids, imsizes, phasecenters, masks, models, paramdic, newformat=self.imset.newreadoutlier(self.newoutlierfile)
         # the reference outlier file contains each field's paramaters per line
+        print "Using ", self.newoutlierfile
         f = open(self.newoutlierreffile,'r')
         lines=f.readlines()
         f.close()
