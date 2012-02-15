@@ -145,7 +145,7 @@ foreach(_tool ${tools_swig} )
    add_dependencies( _${_base} libtools)
    add_dependencies( inst  _${_base} )
    install( TARGETS _${_base}
-            DESTINATION python/${PYTHONV}/casac )
+	            DESTINATION python/${PYTHONV}/casac )
 endforeach()
 
 add_dependencies( inst  generated_py )
@@ -155,6 +155,6 @@ add_dependencies( libtools_fast  generated_sources )
 foreach(_tool ${tools_py} )
    get_filename_component( _base ${_tool} NAME_WE )
    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
-            DESTINATION python/${PYTHONV}/casac )
+	               DESTINATION python/${PYTHONV}/casac )
 endforeach()
 

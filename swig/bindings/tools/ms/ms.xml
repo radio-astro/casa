@@ -3000,7 +3000,7 @@ for i in range(len(tcoord)):
     
      <param type="variant" direction="in" name="fitcorr">
      <description>Correlations (V, LL, XX, LR, XY, etc.) to get the scatter from.  ('' =&gt; all)</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" direction="in" name="combine">

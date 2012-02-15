@@ -1970,7 +1970,7 @@ of 33 degrees when added to the observed values.
 
      <param type="stringArray" name="fields">
      <description>Calibrator field names</description>
-     <value>""</value>
+     <value></value>
      </param>
 </input>
 <returns type="bool"/>

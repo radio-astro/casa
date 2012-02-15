@@ -347,7 +347,7 @@ This method enables plotting of a subset of the caltable.
      <param type="string" direction="in" name="poln">
      <description>Polarization to plot ("", "RL", "R", "L", "XY", "X",
 "Y", "/")</description>
-     <value>""</value>
+     <value></value>
      </param>
 
 </input>

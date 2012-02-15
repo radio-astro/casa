@@ -9684,7 +9684,7 @@ used to create a 2D temporary image.
         <param type="any" direction="in" name="pbimage">
             <any type="variant"/>
             <description>Name of the primary beam image which must exist or array of values for the pb response. Default ""</description>
-            <value>""</value>
+            <value></value>
         </param>
         <param type="string" direction="in" name="outfile">
             <description>Output image name. If empty, no image is written. Default ""</description>

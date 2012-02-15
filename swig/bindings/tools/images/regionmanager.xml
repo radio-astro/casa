@@ -883,7 +883,7 @@ coordinates plus auto extension to unspecified axes.
              <any type="variant"/>
         
         <description>Named region in the form imagename:regionname or region dictionary. Used only if box, chans, stokes not specified. Default "".</description>   
-       <value>""</value>
+       <value></value>
      </param>
 </input>
 <returns type="record">Region tool or fail</returns>

@@ -1798,7 +1798,7 @@ still exploring how this function should work.
 <input>
      <param type="stringArray" name="versionname">
      <description>Version name </description>
-     <value>""</value>
+     <value></value>
      </param>
 </input>
 <returns type="bool"/>
