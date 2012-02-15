@@ -249,6 +249,16 @@ macro( casa_add_tools out_swig out_sources out_py )
     endif() 
 
   endforeach()
+
+  set(_initpy ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+  add_custom_command(
+    OUTPUT ${_initpy}
+    COMMAND sh ${CMAKE_SOURCE_DIR}/install/mkinitpy.sh ${_xmls} > ${_initpy}
+    DEPENDS ${_xmls} ${CMAKE_SOURCE_DIR}/install/mkinitpy.sh
+    )
+
+  set(${out_sources} ${${out_sources}} ${_initpy} )
+  install(FILES ${_initpy} DESTINATION  python/${PYTHONV}/casac )
   
 endmacro( casa_add_tools )
 
