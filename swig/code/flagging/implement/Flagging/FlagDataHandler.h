@@ -630,6 +630,7 @@ public:
 	MeasurementSet *originalMeasurementSet_p;
 	MSSelection *measurementSetSelection_p;
 	Vector<String> *antennaNames_p;
+        ROScalarMeasColumn<MPosition> *antennaPositions_p;
 	Vector<Double> *antennaDiameters_p;
 	Vector<String> *fieldNames_p;
 	std::vector<String> *corrProducts_p;

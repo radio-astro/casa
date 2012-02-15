@@ -157,6 +157,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	visibilityBuffer_p = NULL;
 
 	antennaNames_p = NULL;
+	antennaPositions_p = NULL;
 	antennaDiameters_p = NULL;
 	antennaPairMap_p = NULL;
 	subIntegrationMap_p = NULL;
@@ -195,6 +196,7 @@ FlagDataHandler::~FlagDataHandler()
 
 	// Delete mapping members
 	if (antennaNames_p) delete antennaNames_p;
+	if (antennaPositions_p) delete antennaPositions_p;
 	if (antennaDiameters_p) delete antennaDiameters_p;
 	if (antennaPairMap_p) delete antennaPairMap_p;
 	if (subIntegrationMap_p) delete subIntegrationMap_p;
@@ -455,6 +457,7 @@ FlagDataHandler::open()
 	ROMSAntennaColumns *antennaSubTable = new ROMSAntennaColumns(originalMeasurementSet_p->antenna());
 	antennaNames_p = new Vector<String>(antennaSubTable->name().getColumn());
 	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
+        antennaPositions_p = new ROScalarMeasColumn<MPosition>(antennaSubTable->positionMeas());
 
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());

@@ -124,6 +124,8 @@ protected:
 	// Check if a given number is nan (for visibilities,gains and Tsys primarily)
 	bool isNaN(Double number);
 	bool isNaN(Float number);
+	bool isZero(Double number);
+	bool isZero(Float number);
 
 	// Check if buffer has to be processed
 	bool checkIfProcessBuffer();

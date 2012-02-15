@@ -868,7 +868,15 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	}
     }
 
-    bool MultiRectTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+    static std::set<viewer::RegionCreator::Types> multi_rect_tool_region_set;
+    const std::set<viewer::RegionCreator::Types> &MultiRectTool::regionsCreated( ) const {
+	if ( multi_rect_tool_region_set.size( ) == 0 ) {
+	    multi_rect_tool_region_set.insert( RECTANGLE );
+	}
+	return multi_rect_tool_region_set;
+    }
+
+    bool MultiRectTool::create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style ) {
 	if ( pts.size( ) != 2 ) return false;

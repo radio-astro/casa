@@ -45,6 +45,10 @@ namespace casa {
     class QtRectTool;
 
     namespace viewer {
+
+	// the RegionCreator class now has static members which allow for the
+	// retrieval of lists of RegionCreator objects for creating each type
+	// of region (currently rectangle, polygon, ellipse, and point).
 	class RegionToolManager : public QObject,
 			    public WCPositionEH,
 	                    public WCMotionEH,
@@ -55,6 +59,7 @@ namespace casa {
 		enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool };
 
 		RegionToolManager( QtRegionSourceFactory *rsf, PanelDisplay *pd );
+		~RegionToolManager( );
 
 		// Required operators for event handling - these are called when
 		// events occur, and distribute the events to the "user-level"

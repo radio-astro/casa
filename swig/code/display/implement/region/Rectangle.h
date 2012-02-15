@@ -67,6 +67,8 @@ namespace casa {
 		int moveHandle( int handle, double x, double y );
 		void move( double dx, double dy )
 		    { blc_x += dx; trc_x += dx; blc_y += dy; trc_y += dy; updateStateInfo( true ); }
+		void resize( double /*width_delta*/, double /*height_delta*/ );
+		bool valid_translation( double dx, double dy, double width_delta, double height_delta );
 
 		void regionCenter( double &x, double &y ) const;
 

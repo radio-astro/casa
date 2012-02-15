@@ -552,7 +552,7 @@ FlagReport
 		    if( type=="plotraster" || type=="plotline" || type=="plotscatter" )
 		      {
 			
-                            *logger_p << reportid << " : Report of type " << type << " with " << oneRep.nData() << " layer(s) " << " from " << agentName << LogIO::POST;
+                            *logger_p << reportid << " : " << type << " with " << oneRep.nData() << " layer(s) " << " from " << agentName << LogIO::POST;
 				
 			    if( type == "plotraster" ) 
 			      {
@@ -605,7 +605,7 @@ FlagReport
 			      {
 				showPlots_p = False; 
 				stopAndExit_p = True;
-				cout << "Exiting flagger" << endl;
+				//cout << "Exiting flagger" << endl;
 				if(reportplotter_p!=NULL) { reportplotter_p->done(); reportplotter_p=NULL; }
 				return True;
 			      }
@@ -628,6 +628,12 @@ FlagReport
 			      }
 
 		      }// if valid plot type
+		    else
+		      {
+			//*logger_p  <<  "No plot for Report : " << reportid << LogIO::POST;
+                        *logger_p << reportid << " : No plot for report from " << agentName << LogIO::POST;
+				
+		      }
 		  }// if valid plot record.
 		else
 		  {

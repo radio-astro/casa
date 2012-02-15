@@ -33,6 +33,40 @@ namespace casa {
 	}
 
 
+	bool Rectangle::valid_translation( double dx, double dy, double width_delta, double height_delta ) {
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
+
+	    const double lxmin = wc_->linXMin( );
+	    const double lxmax = wc_->linXMax( );
+	    const double lymin = wc_->linYMin( );
+	    const double lymax = wc_->linYMax( );
+
+	    const double x_delta = width_delta  / 2.0;
+	    const double y_delta = height_delta  / 2.0;
+
+	    double pt = blc_x + dx - x_delta;
+	    if ( pt < lxmin || pt > lxmax ) return false;
+	    pt = trc_x + dx + x_delta;
+	    if ( pt < lxmin || pt > lxmax ) return false;
+	    pt = blc_y + dy - y_delta;
+	    if ( pt < lymin || pt > lymax ) return false;
+	    pt = trc_y + dy + y_delta;
+	    if ( pt < lymin || pt > lymax ) return false;
+	    return true;
+	}
+
+	void Rectangle::resize( double width_delta, double height_delta ) {
+	    double dx = width_delta / 2.0;
+	    double dy = height_delta / 2.0;
+	    blc_x -= dx;
+	    blc_y -= dy;
+	    trc_x += dx;
+	    trc_y += dy;
+	    updateStateInfo( true );
+	}
+	    
+
 	int Rectangle::moveHandle( int handle, double x, double y ) {
 	    switch ( handle ) {
 	      case 1:		// trc handle
@@ -196,7 +230,7 @@ namespace casa {
 	    double wblc_x, wblc_y, wtrc_x, wtrc_y;
 	    linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
 
-	    int pblc_x, pblc_y, ptrc_x, ptrc_y;
+	    double pblc_x, pblc_y, ptrc_x, ptrc_y;
 	    linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y );
 
 	    pixel_pts.resize(2);

@@ -209,6 +209,57 @@ namespace casa {
 
 	int Polygon::clickHandle( double x, double y ) const { return check_handle( x, y ); }
 
+	bool Polygon::valid_translation( double dx, double dy, double width_delta, double height_delta ) {
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
+
+	    const double lxmin = wc_->linXMin( );
+	    const double lxmax = wc_->linXMax( );
+	    const double lymin = wc_->linYMin( );
+	    const double lymax = wc_->linYMax( );
+
+	    const double x_delta = width_delta  / 2.0;
+	    const double y_delta = height_delta  / 2.0;
+
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
+	    double pt = blc_x + dx - x_delta;
+	    if ( pt < lxmin || pt > lxmax ) return false;
+	    pt = trc_x + dx + x_delta;
+	    if ( pt < lxmin || pt > lxmax ) return false;
+	    pt = blc_y + dy - y_delta;
+	    if ( pt < lymin || pt > lymax ) return false;
+	    pt = trc_y + dy + y_delta;
+	    if ( pt < lymin || pt > lymax ) return false;
+	    return true;
+	}
+
+	void Polygon::resize( double width_delta, double height_delta ) {
+	    double dx = width_delta / 2.0;
+	    double dy = height_delta / 2.0;
+
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
+	    blc_x -= dx;
+	    blc_y -= dy;
+	    trc_x += dx;
+	    trc_y += dy;
+
+	    update_reference_bounds_rectangle( );
+
+	    // set the drawing bounds to the new bounds...
+	    // update scaling
+	    _drawing_blc_x_ = blc_x;
+	    _drawing_blc_y_ = blc_y;
+	    _drawing_trc_x_ = trc_x;
+	    _drawing_trc_y_ = trc_y;
+
+	    update_drawing_state( );
+	    updateStateInfo( true ); 
+	}
+
 	int Polygon::moveHandle( int handle, double x, double y ) {
 
 	    if ( handle >= 1 && handle <= 4 )
@@ -573,7 +624,7 @@ namespace casa {
 		world_pts[i].first = wx;
 		world_pts[i].second = wy;
 
-		int px, py;
+		double px, py;
 		linear_to_pixel( wc_, _drawing_points_[i].first, _drawing_points_[i].second, px, py );
 		pixel_pts[i].first = px;
 		pixel_pts[i].second = py;

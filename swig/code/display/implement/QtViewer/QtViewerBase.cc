@@ -251,6 +251,8 @@ String QtViewerBase::fileType(const String pathname) {
 
 	if ( pathName.endsWith(".crtf") )
 	    return "CASA Region File";
+	if ( pathName.endsWith(".reg") )
+	    return "DS9 Region File";
 
 	QFile file(pathName);
 	if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -260,6 +262,9 @@ String QtViewerBase::fileType(const String pathname) {
 		QString line(buf);
 		if ( line.startsWith("#CRTFv") ) {
 		    return "CASA Region File";
+		}
+		if ( line.startsWith("# Region file format: DS9") ) {
+		    return "DS9 Region File";
 		}
 		if ( line.remove(' ').contains("SIMPLE=T") ) {
 		    return "FITS Image";
