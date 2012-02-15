@@ -21,6 +21,7 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
+#include <flagging/Flagging/FlagAgentDisplay.h>
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
@@ -190,7 +191,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 
 }
 
-void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParameters)
+void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParameters, uShort displayMode)
 {
 	// Some test execution info
 	cout << "STEP 2: WRITE FLAGS ..." << endl;
@@ -238,6 +239,18 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		flaggingAgent = new FlagAgentTimeFreqCrop(dh,*iter);
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
+	}
+
+	if (displayMode == 2)
+	{
+		Record diplayAgentConfig;
+		diplayAgentConfig.define("name","FlagAgentDisplay");
+		diplayAgentConfig.define("datadisplay",True);
+
+		int exists = agentParameters[0].fieldNumber ("correlation");
+		if (exists >= 0) diplayAgentConfig.define("correlation",agentParameters[0].asString("correlation"));
+		FlagAgentDisplay *dataDisplayAgent = new FlagAgentDisplay(dh,diplayAgentConfig);
+		agentList.push_back(dataDisplayAgent);
 	}
 
 	// Generate iterators and vis buffers
@@ -329,6 +342,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			agentList.apply();
 
 			// Flush flags to MS
+			// dh->flushFlags_p = True;
 			dh->flushFlags();
 		}
 
@@ -514,6 +528,8 @@ int main(int argc, char **argv)
 	bool deleteFlagsActivated=false;
 	bool checkFlagsActivated=false;
 	bool returnCode=true;
+	bool display = false;
+	uShort displayMode = 0;
 
 	// Parse input parameters
 	Record agentParameters;
@@ -675,6 +691,13 @@ int main(int argc, char **argv)
 			agentParameters.define ("usewindowstats", usewindowstats);
 			cout << "usewindowstats is: " << usewindowstats << endl;
 		}
+		else if (parameter == string("-display"))
+		{
+			if (value.compare("True") == 0)
+			{
+				display = true;
+			}
+		}
 		/*
 		else if (parameter == string("-usepreflags"))
 		{
@@ -686,6 +709,11 @@ int main(int argc, char **argv)
 		*/
 	}
 
+
+	if (display)
+	{
+		displayMode = 2;
+	}
 
 	Record agentParameters_i;
 	vector<Record> agentParamersList;
@@ -710,7 +738,7 @@ int main(int argc, char **argv)
 	}
 
 	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection);
-	writeFlags(targetFile,dataSelection,agentParamersList);
+	writeFlags(targetFile,dataSelection,agentParamersList,displayMode);
 	if (checkFlagsActivated) returnCode = checkFlags(targetFile,referenceFile,dataSelection);
 
 	if (returnCode)

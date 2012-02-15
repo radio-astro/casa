@@ -247,8 +247,8 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		diplayAgentConfig.define("name","FlagAgentDisplay");
 		diplayAgentConfig.define("datadisplay",True);
 
-		int exists = agentParameters[0].fieldNumber ("expression");
-		if (exists >= 0) diplayAgentConfig.define("expression",agentParameters[0].asString("expression"));
+		int exists = agentParameters[0].fieldNumber ("correlation");
+		if (exists >= 0) diplayAgentConfig.define("correlation",agentParameters[0].asString("correlation"));
 		FlagAgentDisplay *dataDisplayAgent = new FlagAgentDisplay(dh,diplayAgentConfig);
 		agentList.push_back(dataDisplayAgent);
 	}

@@ -197,33 +197,6 @@ Double FlagAgentRFlag::median(vector<Double> &data)
 
 Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &dataSquared,vector<Double> &counts)
 {
-/*
- *      DO 100 JI = 1,NI
-         K = 0
-         MEDR = 0.0
-         MEDRR = 0.0
-         DO 10 JC = 1,NC
-            IF (RMSRMS(3,JC,JI).GE.1.0D0) THEN
-               RMSRMS(1,JC,JI) = RMSRMS(1,JC,JI) / RMSRMS(3,JC,JI)
-               RMSRMS(2,JC,JI) = RMSRMS(2,JC,JI) / RMSRMS(3,JC,JI) -
-     *            RMSRMS(1,JC,JI) * RMSRMS(1,JC,JI)
-               RMSRMS(2,JC,JI) = SQRT (MAX (0.0D0, RMSRMS(2,JC,JI)))
-               K = K + 1
-               VALUES(K) = RMSRMS(1,JC,JI)
-               END IF
- 10         CONTINUE
-         IF (K.GT.0) THEN
-            MEDR = MEDIAN (K, VALUES)
-            DO 20 JC = 1,K
-               VALUES(JC) = ABS (VALUES(JC)-MEDR)
- 20            CONTINUE
-            MEDRR = 1.4826 * MEDIAN (K, VALUES)
-            END IF
-         IF (SCALE.GT.0.0) XNOISE(JI) = SCALE * (MEDR + MEDRR)
- 100     CONTINUE
-C
- *
- */
 	// Declare working variables
 	Double avg,avgSquared,std;
 
@@ -251,14 +224,6 @@ C
 	// Compute median absolute deviation
 	Double mad = median(samplesForMad);
 
-	// Return median of std plus mad of std
-	/*
-	cout << " med is:" 	<< 1000*med
-						<< " mad is:" << 1000*mad
-						<< " med + mad is:" << 1000*(med + mad)
-						<< " med + 1.4826*mad is:" << 1000*(med + 1.4826*mad) << endl;
-	*/
-
 	return (med + 1.4826*mad);
 }
 
@@ -272,14 +237,14 @@ FlagReport FlagAgentRFlag::getReport()
 											"Time analysis",
 											noiseScale_p);
     dispRep.addReport(noiseStd);
-/*
+
 	FlagReport scutofStd = getReportCore(	spw_scutof_histogram_sum_p,
 											spw_scutof_histogram_sum_squares_p,
 											spw_scutof_histogram_counts_p,
 											"Spectral analysis",
 											scutofScale_p);
     dispRep.addReport(scutofStd);
-*/
+
 	return dispRep;
 }
 
