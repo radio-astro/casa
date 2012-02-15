@@ -44,6 +44,7 @@ namespace casa {
 	class QtRegionDock;
 	class QtRegionSource;
 	class QtRegionState;
+	class ds9writer;
 
 	// Key points:
 	//    <ul>
@@ -54,6 +55,9 @@ namespace casa {
 	    public:
 
 		enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeLabel };
+
+		// create a deginerate region just to gain access to the load regions dialog...
+		QtRegion( QtRegionSource *factory );
 
 		QtRegion( const QString &nme, QtRegionSource *factory, bool hold_signals_=false );
 		virtual ~QtRegion( );
@@ -94,12 +98,17 @@ namespace casa {
 		void updateStateInfo( bool region_modified );
 		void clearStatistics( );
 
-		virtual void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const DISPLAY_PURE_VIRTUAL(Region::getCoordinatesAndUnits,);
+		virtual void getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units,
+						     std::string &width_height_units ) const = 0; //DISPLAY_PURE_VIRTUAL(Region::getCoordinatesAndUnits,);
 		virtual void getPositionString( std::string &x, std::string &y, std::string &angle,
+						double &bounding_width, double &bounding_height,
 						Region::Coord coord = Region::DefaultCoord,
-						Region::Units units = Region::DefaultUnits ) const DISPLAY_PURE_VIRTUAL(Region::getPositionString,);
-		virtual void movePosition( const std::string &x, const std::string &y,
-					   const std::string &coord, const std::string &units ) DISPLAY_PURE_VIRTUAL(Region::movePosition,);
+						Region::Units x_units = Region::DefaultUnits,
+						Region::Units y_units = Region::DefaultUnits,
+						const std::string &bounding_units = "rad" ) const = 0; //DISPLAY_PURE_VIRTUAL(Region::getPositionString,);
+		virtual void movePosition( const std::string &x, const std::string &y, const std::string &coord,
+					   const std::string &x_units, const std::string &y_units,
+					   const std::string &width, const std::string &height, const std::string &bounding_units ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,);
 
 		void holdSignals( ) { hold_signals++; }
 		void releaseSignals( );
@@ -109,6 +118,8 @@ namespace casa {
 		void mark( bool set=true ) { mystate->mark( set ); }
 		bool marked( ) const { return mystate->marked( ); }
 		void mark_toggle( ) { mystate->mark_toggle( ); }
+
+		virtual void output( ds9writer &out ) const = 0;
 
 	    public slots:
 		/* void name( const QString &newname ); */
@@ -128,10 +139,13 @@ namespace casa {
 		void refresh_canvas_event( );
 		void refresh_statistics_event( bool );
 		void refresh_position_event( bool );
-		void position_move_event( const QString &x, const QString &y, const QString &coord, const QString &units );
+		void position_move_event( const QString &x, const QString &y, const QString &coord,
+					  const QString &x_units, const QString &y_units,
+					  const QString &width, const QString &height, const QString &bounding_units );
 		void refresh_zrange_event(int,int);
 		void revoke_region(QtRegionState*);
 		void output(std::list<QtRegionState*>,RegionTextList&);
+		void output(std::list<QtRegionState*>,ds9writer&);
 
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);
@@ -156,8 +170,6 @@ namespace casa {
 		QtRegionSource *source_;
 		QtRegionDock *dock_;
 		QtRegionState *mystate;
-		typedef std::list<QtRegionState*> freestate_list;
-		static freestate_list *freestates;
 		QString name_;
 		QString color_;
 	    private:

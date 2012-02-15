@@ -72,6 +72,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+QtDisplayData::data_to_qtdata_map_type QtDisplayData::dd_source_map;
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
 			      String displayType, const viewer::DisplayDataOptions &ddo ) :
@@ -95,10 +96,12 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
   viewer::guiwait wait_cursor;
 
   if(dataType=="lel") { 
-    name_ = path_;
-    if(name_.length()>25) name_ =  path_.before(15) + "..." +
-				   path_.from(path_.length()-7);  }
-  else name_ = Path(path_).baseName();
+      name_ = path_;
+      if( name_.length() > 25 )
+          name_ =  path_.substr(0,15) + "..." + path_.substr(path_.length()-7,path_.length());
+  } else {
+      name_ = Path(path_).baseName();
+  }
   
   if(displayType!="raster") name_ += "-"+displayType_;
 	// Default; can be changed with setName()
@@ -115,12 +118,14 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 
     if (displayType_=="skycatalog") {
       dd_ = new SkyCatOverlayDD(path);
-      if (dd_==0) throw(AipsError("Couldn't create skycatalog"));  }
+      if (dd_==0) throw(AipsError("Couldn't create skycatalog"));
+    }
     
 
       
     else if(dataType_=="ms" && displayType_=="raster") {
-      dd_ = new MSAsRaster( path_, ddo );  }
+      dd_ = new MSAsRaster( path_, ddo );
+    }
       
       
 
@@ -147,9 +152,14 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	  
 	    if(imagePixelType(path_)==TpFloat) {
 	      im_  = new PagedImage<Float>
-	                 (path_, TableLock::AutoNoReadLocking);  }
+	                 (path_, TableLock::AutoNoReadLocking);
+	      // regions in image...
+	      // Vector<String> regions = im_->regionNames( );
+	      // for ( int i = 0; i < regions.size( ); ++i ) {
+	      // 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
+	      // }
 
-	    else if(imagePixelType(path_)==TpComplex) {
+	    } else if(imagePixelType(path_)==TpComplex) {
 	      cim_ = new PagedImage<Complex>
 		         (path_, TableLock::AutoNoReadLocking);  }
 
@@ -313,7 +323,9 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 
       
   // Successful creation.
-  
+
+  dd_source_map.insert( data_to_qtdata_map_type::value_type(dd_,this) );
+
   dd_->setUIBase(0);  
 	// Items are numbered from zero in casaviewer as consistently
 	// as possible (including, e.g., axis 'pixel' positions).  This call
@@ -470,23 +482,33 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
     connect(this, SIGNAL(statsReady(const String&)),
             panel_,  SLOT(showStats(const String&)));
       
-    setColorBarOrientation_();  }  }
+    setColorBarOrientation_();  }
+}
 
-
-
-
-
+std::string QtDisplayData::path( const DisplayData *d ) {
+    if ( d == NULL ) return "";
+    data_to_qtdata_map_type::iterator it = dd_source_map.find(d);
+    if ( it == dd_source_map.end( ) ) return "";
+    return it->second->path( );
+}
 
 QtDisplayData::~QtDisplayData() { 
-  done();  }
+    for (data_to_qtdata_map_type::iterator it = dd_source_map.begin( ); it != dd_source_map.end();) {
+	if ( it->second == this )
+	    dd_source_map.erase(it++);
+	else ++it;
+    }
+    done();
+}
 
-String QtDisplayData::description( ) const {
+std::string QtDisplayData::description( ) const {
   return name_ + " (" + path_ + ") " + dataType_ + "/" + displayType_;
 }
 
 //Bool QtDisplayData::delTmpData() const {
 void QtDisplayData::delTmpData() const {
 	dd_->getDelTmpData();
+	return;
 }
 
 void QtDisplayData::setDelTmpData(Bool delTmpData){
@@ -1608,7 +1630,14 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
                  abs(deltas(0) * deltas(1));
     }
 
-    String head = description().after(" ") + "\n";   
+    std::string head;
+    {
+	std::string desc = description( );
+	int pos = desc.find(" ");
+	if (pos != std::string::npos) pos += 1;
+	head = desc.substr(pos);
+    }
+
     if (zaxis != "" )
         head += zaxis + "=" + zLabel;  
     if (haxis != "" )
@@ -1625,6 +1654,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     //     << " zPos=" << zPos << " zIndex=" << zIndex
     //     << " hPos=" << hPos << " hIndex=" << hIndex << endl;
     Bool statsOk =
+
     stats.getLayerStats(layerStats, beamArea, zPos, zIndex, hPos, hIndex); 
     //cout << layerStats << endl;
     if (!statsOk) { 
@@ -1632,9 +1662,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
        return False;
     }
 
-
-
-    layerStats = head + layerStats;
+    layerStats = String(head) + layerStats;
 
     //cout << "done getLayerStats" << endl ;
     emit statsReady(layerStats);

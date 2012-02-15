@@ -27,6 +27,7 @@
 //# $Id: QtDisplayPanelGui.cc,v 1.12 2006/10/10 21:59:19 dking Exp $
 
 #include <casa/BasicSL/String.h>
+#include <display/Utilities/StringUtil.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtViewerPrintGui.qo.h>
 #include <display/QtViewer/QtCanvasManager.qo.h>
@@ -701,7 +702,7 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String
   
   String name=qdd->name();
   for(Int i=2; dd(name)!=0; i++) {
-    name=qdd->name() + " <" + String::toString(i) + ">";  }
+    name=qdd->name() + " <" + viewer::to_string( i ) + ">";  }
   qdd->setName(name);
   
   ListIter<QtDisplayData* > qdds(qdds_);
@@ -755,7 +756,7 @@ void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string 
     qdp_->loadRegions( path, datatype, displaytype );
 }
 
-QtDisplayData* QtDisplayPanelGui::dd(const String& name) {
+QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
   // retrieve DD with given name (0 if none).
   QtDisplayData* qdd;
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
@@ -1332,7 +1333,7 @@ void QtDisplayPanelGui::showImageProfile() {
 		    if (!profile_) {
 			// Set up profiler for first time.
 	        
-		    	profile_ = new QtProfile(img, pdd->name().chars());
+		    	profile_ = new QtProfile(img, pdd->name().c_str());
 			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
 			connect( pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
@@ -1495,7 +1496,7 @@ void QtDisplayPanelGui::showImageProfile() {
 			if (profileDD_ != pdd) {
 
 			    // [Re-]orient pre-existing profiler to pdd
-			    profile_->resetProfile(img, pdd->name().chars());
+			    profile_->resetProfile(img, pdd->name().c_str());
 			    profileDD_ = pdd;
 			} else {
 			    pdd->checkAxis();
@@ -1514,7 +1515,7 @@ void QtDisplayPanelGui::showImageProfile() {
 		    //break;
 		} else {
 		    if (pdd->getAxisIndex(String("Spectral")) != -1) 
-		      overlap[pdd->name().chars()] = img;
+		      overlap[pdd->name().c_str()] = img;
 		}
 	    }
 	}
@@ -1657,7 +1658,7 @@ TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
   
   // (TrackBox as QroupBox)
   setFlat(True);
-  setObjectName(qdd_->name().chars());
+  setObjectName(qdd_->name().c_str());
   setTitle(objectName());
   setCheckable(True);
   setChecked(True);
@@ -2052,7 +2053,7 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
     // Note: the explicit parenting means that the Action will
     // be deleted on the next ddRegMenu_->clear().
     
-    action = new QAction(rdd->name().chars(), ddRegMenu_);
+    action = new QAction(rdd->name().c_str(), ddRegMenu_);
     
     action->setCheckable(True);
     action->setChecked(True);
@@ -2063,7 +2064,7 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
     
     // 'Close' menu item.
     
-    action = new QAction( ("Close "+rdd->name()).chars(), ddCloseMenu_ );
+    action = new QAction( ("Close "+rdd->name()).c_str(), ddCloseMenu_ );
     action->setData(ddv);
     ddCloseMenu_->addAction(action);
     connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));  }
@@ -2089,7 +2090,7 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
     
     // 'Unregister' menu item.
     
-    action = new QAction(udd->name().chars(), ddRegMenu_);
+    action = new QAction(udd->name().c_str(), ddRegMenu_);
     action->setCheckable(True);
     action->setChecked(False);
     action->setData(ddv);
@@ -2099,7 +2100,7 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
     
     // 'Close' menu item.
     
-    action = new QAction(("Close "+udd->name()).chars(), ddCloseMenu_);
+    action = new QAction(("Close "+udd->name()).c_str(), ddCloseMenu_);
     action->setData(ddv);
     ddCloseMenu_->addAction(action);
     connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));  }
