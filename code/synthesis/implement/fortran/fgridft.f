@@ -1,5 +1,5 @@
 *=======================================================================
-*     Copyright (C) 1999,2001,2002
+*     Copyright (C) 1999-2012
 *     Associated Universities, Inc. Washington DC, USA.
 *
 *     This library is free software; you can redistribute it and/or
@@ -215,6 +215,204 @@ C rotate but we do want to reproject uvw
       end do
       return
       end
+
+
+      subroutine sectggridd(uvw, dphase, values, nvispol, nvischan,
+     $   dopsf, flag, rflag, weight, nrow, 
+     $   scale, offset, grid, nx, ny, npol, nchan, freq, c,
+     $   support, sampling, convFunc, chanmap, polmap, sumwt, x0,
+     $    y0, nxsub, nysub, rbeg, rend)
+      implicit none
+
+      integer, intent(in) :: nx, ny, npol, nchan, nvispol, nvischan,nrow
+      complex, intent(in) :: values(nvispol, nvischan, nrow)
+      double complex, intent(inout) :: grid(nx, ny, npol, nchan)
+      double precision, intent(in) :: uvw(3, nrow), freq(nvischan), c, 
+     $ scale(2), offset(2)
+      integer :: x0, y0, nxsub, nysub
+      double precision, intent(in) :: convFunc(*)
+      integer, intent(in) :: chanmap(nvischan), polmap(nvispol)
+      integer, intent(in) ::  flag(nvispol, nvischan, nrow)
+      integer, intent(in) ::  rflag(nrow)
+      real, intent(in) :: weight(nvischan, nrow)
+      double precision, intent(inout) :: sumwt(npol, nchan)
+      integer, intent(in) :: support, sampling
+      integer, intent(in) ::  dopsf, rbeg, rend
+
+
+      integer :: loc(2),  off(2), iloc(2)
+      complex :: phasor
+      double precision, intent(in)  :: dphase(nrow)
+      double complex :: nvalue
+
+      double precision :: norm
+      double precision :: wt, wtx, wty
+
+      logical :: onmygrid
+
+      double precision :: pos(2)
+      integer :: ix, iy, ipol, ichan
+      integer :: apol, achan, irow
+      integer :: posx, posy
+      
+
+
+      do irow=rbeg, rend
+         if(rflag(irow).eq.0) then 
+         do ichan=1, nvischan
+            achan=chanmap(ichan)+1
+            if((achan.ge.1).and.(achan.le.nchan).and.
+     $           (weight(ichan,irow).ne.0.0)) then
+               call sgrid(uvw(1,irow), dphase(irow), freq(ichan), c, 
+     $              scale, offset, sampling, pos, loc, off, phasor)
+               if (onmygrid(loc, nx, ny, x0, y0, nxsub, nysub, 
+     $              support)) then
+                  do ipol=1, nvispol
+                     apol=polmap(ipol)+1
+                     if((flag(ipol,ichan,irow).ne.1).and.
+     $                    (apol.ge.1).and.(apol.le.npol)) then
+C If we are making a PSF then we don't want to phase
+C rotate but we do want to reproject uvw
+                        if(dopsf.eq.1) then
+                           nvalue=cmplx(weight(ichan,irow))
+                        else
+                           nvalue=weight(ichan,irow)*
+     $                    (values(ipol,ichan,irow)*phasor)
+                        end if
+                        norm=0.0
+                        do iy=-support,support
+                           posy=loc(2)+iy
+                           if( (posy .lt. (y0+nysub)) .and. 
+     $                          (posy.ge. y0)) then
+                              iloc(2)=abs(sampling*iy+off(2))+1
+                              wty=convFunc(iloc(2))
+                              do ix=-support,support
+                                 posx=loc(1)+ix
+                                 if( (posx .lt. (x0+nxsub)) .and. 
+     $                                (posx .ge. x0)) then
+C            write(*,*) posx, posy, loc(1), loc(2), x0, y0, nxsub, nysub
+                                  iloc(1)=abs(sampling*ix+off(1))+1
+                                  wtx=convFunc(iloc(1))
+                                  wt=wtx*wty
+                                  grid(posx,posy,apol,achan)=
+     $                             grid(posx, posy,apol,achan)+
+     $                                   nvalue*wt
+                                    norm=norm+wt
+                                 end if
+                              end do
+                           end if
+                        end do
+                        sumwt(apol,achan)=sumwt(apol,achan)+
+     $                       weight(ichan,irow)*norm
+                     end if
+                  end do
+               end if
+            end if
+         end do
+         end if
+      end do
+      return 
+      end
+
+      subroutine sectggrids(uvw, dphase, values, nvispol, nvischan,
+     $     dopsf, flag, rflag, weight, nrow, 
+     $     scale, offset, grid, nx, ny, npol, nchan, freq, c,
+     $     support, sampling, convFunc, chanmap, polmap, sumwt, x0,
+     $     y0, nxsub, nysub, rbeg, rend)
+      implicit none
+      
+      integer, intent(in) ::  nx,ny,npol,nchan, nvispol, nvischan, nrow
+      complex, intent(in) :: values(nvispol, nvischan, nrow)
+      complex, intent(inout) :: grid(nx, ny, npol, nchan)
+      double precision, intent(in) :: uvw(3, nrow), freq(nvischan), c, 
+     $ scale(2), offset(2)
+      integer, intent(in) ::  x0, y0, nxsub, nysub
+      double precision, intent(in) ::  convFunc(*)
+      integer, intent(in) :: chanmap(nvischan), polmap(nvispol)
+      integer, intent(in) ::  flag(nvispol, nvischan, nrow)
+      integer, intent(in) ::  rflag(nrow)
+      real, intent(in) ::  weight(nvischan, nrow)
+      double precision, intent(inout) ::  sumwt(npol, nchan)
+      integer, intent(in) :: support, sampling
+      integer, intent(in) ::  dopsf, rbeg, rend
+
+
+      integer :: loc(2),  off(2), iloc(2)
+      complex :: phasor
+      double precision, intent(in) :: dphase(nrow)
+      double complex :: nvalue
+
+      double precision :: norm
+      double precision :: wt, wtx, wty
+
+      logical :: onmygrid
+
+      double precision :: pos(2)
+      integer :: ix, iy, ipol, ichan
+      integer :: apol, achan, irow
+      integer :: posx, posy
+      
+
+
+      do irow=rbeg, rend
+         if(rflag(irow).eq.0) then 
+         do ichan=1, nvischan
+            achan=chanmap(ichan)+1
+            if((achan.ge.1).and.(achan.le.nchan).and.
+     $           (weight(ichan,irow).ne.0.0)) then
+               call sgrid(uvw(1,irow), dphase(irow), freq(ichan), c, 
+     $              scale, offset, sampling, pos, loc, off, phasor)
+               if (onmygrid(loc, nx, ny, x0, y0, nxsub, nysub, 
+     $              support)) then
+                  do ipol=1, nvispol
+                     apol=polmap(ipol)+1
+                     if((flag(ipol,ichan,irow).ne.1).and.
+     $                    (apol.ge.1).and.(apol.le.npol)) then
+C If we are making a PSF then we don't want to phase
+C rotate but we do want to reproject uvw
+                        if(dopsf.eq.1) then
+                           nvalue=cmplx(weight(ichan,irow))
+                        else
+                           nvalue=weight(ichan,irow)*
+     $                        (values(ipol,ichan,irow)*phasor)
+                        end if
+                        norm=0.0
+                        do iy=-support,support
+                           posy=loc(2)+iy
+                           if( (posy .lt. (y0+nysub)) .and. 
+     $                          (posy.ge. y0)) then
+                              iloc(2)=abs(sampling*iy+off(2))+1
+                              wty=convFunc(iloc(2))
+                              do ix=-support,support
+                                 posx=loc(1)+ix
+                                 if( (posx .lt. (x0+nxsub)) .and. 
+     $                                (posx .ge. x0)) then
+C             write(*,*) loc(1), loc(2), x0, y0, nxsub, nysub
+                                  iloc(1)=abs(sampling*ix+off(1))+1
+                                  wtx=convFunc(iloc(1))
+                                  wt=wtx*wty
+                                  grid(posx, posy ,apol,achan)=
+     $                             grid(posx, posy ,apol,achan)+
+     $                                   nvalue*wt
+                                    norm=norm+wt
+                                 end if
+                              end do
+                           end if
+                        end do
+                        sumwt(apol,achan)=sumwt(apol,achan)+
+     $                       weight(ichan,irow)*norm
+                     end if
+                  end do
+               end if
+            end if
+         end do
+         end if
+      end do
+      return 
+      end
+
+
+
 C
 C Degrid a number of visibility records
 C
@@ -298,6 +496,9 @@ C
       end do
       return
       end
+
+
+
 C
 C Calculate gridded coordinates and the phasor needed for
 C phase rotation.
@@ -333,4 +534,32 @@ C
       ogrid=(loc(1)-support.ge.1).and.(loc(1)+support.le.nx).and.
      $        (loc(2)-support.ge.1).and.(loc(2)+support.le.ny)
       return
+      end
+
+      logical function onmygrid(loc, nx, ny, nx0, ny0, nxsub, nysub, 
+     $     support)
+      implicit none
+      integer nx, ny, nx0, ny0, nxsub, nysub, loc(2), support
+      logical ogrid
+      logical onmygrid
+C      onmygrid=ogrid(nx, ny, loc, support)
+C      if(.not. onmygrid) then
+C         return 
+C      end if
+C      onmygrid=(loc(1)-nx0 .ge. (-support)) .and. ((loc(1)-nx0-nxsub) 
+C     $     .le. (support)) .and.((loc(2)-ny0) .ge. (-support)) .and. 
+C     $ ((loc(2)-ny0-nysub) .le. (support))  
+      integer loc1sub, loc1plus, loc2sub, loc2plus
+      loc1sub=loc(1)-support
+      loc1plus=loc(1)+support
+      loc2sub=loc(2)-support
+      loc2plus=loc(2)+support
+
+      onmygrid=(loc1sub.ge.1).and.(loc1plus.le.nx).and.
+     $     (loc2sub.ge.1).and.(loc2plus.le.ny) .and.
+     $     (loc1plus .ge. nx0) .and. (loc1sub 
+     $     .le. (nx0+nxsub)) .and.(loc2plus .ge. ny0) .and. 
+     $     (loc2sub .le. (ny0+nysub))  
+     
+      return 
       end

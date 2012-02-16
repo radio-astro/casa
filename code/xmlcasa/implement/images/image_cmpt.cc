@@ -99,6 +99,8 @@
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 
 #include <xmlcasa/version.h>
@@ -2767,7 +2769,8 @@ bool image::setrestoringbeam(const ::casac::variant& major,
 	const std::vector<double>& excludepix, const std::string& plotter,
 	const int nx, const int ny, const bool list, const bool force,
 	const bool disk, const bool robust, const bool verbose,
-	const bool /* async */, const bool stretch
+	const bool /* async */, const bool stretch, const string& logfile,
+	const bool append
 ) {
 	*_log << _ORIGIN;
 	if (detached()) {
@@ -2776,6 +2779,9 @@ bool image::setrestoringbeam(const ::casac::variant& major,
 	}
 	try {
 		std::auto_ptr<Record> regionRec(toRecord(region));
+		if (regionRec->nfields() == 0) {
+			regionRec.reset(0);
+		}
 		String mtmp = mask.toString();
 		if (mtmp == "false" || mtmp == "[]") {
 			mtmp = "";
@@ -2813,21 +2819,184 @@ bool image::setrestoringbeam(const ::casac::variant& major,
 		}
 		*_log << LogIO::NORMAL << "Determining stats for image "
 				<< _image->name(True) << LogIO::POST;
+		Record ret;
+		ImageStatsCalculator calculator(
+			_image.get(), "", regionRec.get(), "", "", "", mtmp
+		);
+		calculator.setPlotStats(plotStats);
+		calculator.setAxes(tmpaxes);
+		calculator.setIncludePix(tmpinclude);
+		calculator.setPlotter(plotter);
+		calculator.setExcludePix(tmpexclude);
+		calculator.setNXNY(nx, ny);
+		calculator.setList(list);
+		calculator.setForce(force);
+		calculator.setDisk(disk);
+		calculator.setRobust(robust);
+		calculator.setVerbose(verbose);
+		calculator.setStretch(stretch);
+		calculator.setLogfile(logfile);
+		calculator.setLogfileAppend(append);
+		return fromRecord(calculator.calculate());
+
+		/*
 		Record retval;
 		if (
-			_image->statistics(
+			! _image->statistics(
 				retval, tmpaxes, *regionRec, mtmp,
 				plotStats, tmpinclude, tmpexclude, plotter,
-				nx, ny, list, force, disk, robust, verbose,
+				nx, ny, list, force, disk, robust, False,
 				stretch
 			)
 		) {
-			return fromRecord(retval);
-		}
-		else {
 			return 0;
 		}
-	} catch (AipsError x) {
+		if (verbose || ! logfile.empty()) {
+			ImageCollapser collapsed(
+				_image->getImage(), axes, False,
+				ImageCollapser::ZERO, "", False
+			);
+			std::auto_ptr<ImageInterface<Float> > tempIm(
+				collapsed.collapse(True)
+			);
+			CoordinateSystem csys = tempIm->coordinates();
+			Vector<String> worldAxes = csys.worldAxisNames();
+			IPosition imShape = tempIm->shape();
+			vector<uInt> colwidth;
+			Int stokesCol = -1;
+			Int freqCol = -1;
+			Int raCol = -1;
+			Int decCol = -1;
+			IPosition otherCol;
+			for (Int i=worldAxes.size()-1; i>=0; i--) {
+				String gg = worldAxes[i];
+				gg.upcase();
+				if (gg == "RIGHT ASCENSION") {
+					raCol = i;
+				}
+				else if (gg == "DECLINATION") {
+					decCol = i;
+				}
+				else if (gg == "FREQUENCY") {
+					freqCol = i;
+				}
+				else if (gg == "STOKES") {
+					stokesCol = i;
+				}
+				else {
+					otherCol.append(IPosition(1, i));
+				}
+			}
+			IPosition idx(worldAxes.size(), 0);
+			uInt myloc = 0;
+			IPosition reportAxes;
+
+			if (stokesCol >= 0) {
+				idx[myloc] = stokesCol;
+				if (imShape[stokesCol] > 1) {
+					reportAxes.prepend(IPosition(1, stokesCol));
+				}
+				myloc++;
+			}
+			if (freqCol >= 0) {
+				idx[myloc] = freqCol;
+				if (imShape[freqCol] > 1) {
+					reportAxes.prepend(IPosition(1, freqCol));
+				}
+				myloc++;
+			}
+			if (decCol >= 0) {
+				idx[myloc] = decCol;
+				if (imShape[decCol] > 1) {
+					reportAxes.prepend(IPosition(1, decCol));
+				}
+				myloc++;
+			}
+			if (raCol >= 0) {
+				idx[myloc] = raCol;
+				if (imShape[raCol] > 1) {
+					reportAxes.prepend(IPosition(1, raCol));
+				}
+				myloc++;
+			}
+			if (otherCol.nelements() > 0) {
+				idx.prepend(otherCol);
+				for (uInt i=0; i<otherCol.nelements(); i++) {
+					if (imShape[otherCol[i] > 1]) {
+						reportAxes.append(IPosition(1, otherCol[i]));
+					}
+				}
+			}
+			ostringstream oss;
+			for (uInt i=0; i<reportAxes.nelements(); i++) {
+				String gg = worldAxes[reportAxes[i]];
+				gg.upcase();
+				uInt width = gg == "STOKES" ? 6 : gg == "FREQUENCY"?  16: 15;
+				colwidth.push_back(width);
+				oss << setw(width) << worldAxes[reportAxes[i]] << "(Pixel)" << " ";
+				width = 6;
+				colwidth.push_back(width);
+			}
+			Vector<Int> axesMap = reportAxes.asVector();
+			GenSort<Int>::sort(axesMap);
+			oss << "Npts          Sum           Mean          Rms           Std dev       Minimum       Maximum     " << endl;
+			for (uInt i=0; i<7; i++) {
+				colwidth.push_back(12);
+			}
+			TileStepper ts(
+				tempIm->niceCursorShape(),
+				IPosition(tempIm->ndim(), 1), idx
+			);
+			RO_MaskedLatticeIterator<Float> inIter(
+				*tempIm, ts
+			);
+			Vector<Double> world;
+			IPosition arrayIndex(axesMap.nelements(), 0);
+			IPosition position(tempIm->ndim(), 0);
+			oss << std::scientific;
+			uInt width = 13;
+			Vector<Vector<String> > coords(reportAxes.size());
+			for (uInt i=0; i<reportAxes.size(); i++) {
+				Vector<Double> indices(imShape[reportAxes[i]]);
+				indgen(indices);
+				uInt prec = reportAxes[i] == freqCol ? 9 : 5;
+				ImageUtilities::pixToWorld(
+					coords[i], csys, reportAxes[i], axes,
+					IPosition(imShape.nelements(),0), imShape-1, indices, prec
+				);
+			}
+			for (inIter.reset(); ! inIter.atEnd(); inIter++) {
+				position = inIter.position();
+				csys.toWorld(world, position);
+				uInt colNum = 0;
+				for (uInt i=0; i<reportAxes.nelements(); i++) {
+					oss << setw(colwidth[colNum]);
+					oss	<< coords[i][position[reportAxes[i]]];// world[reportAxes[i]];
+					colNum++;
+					oss << " " << setw(colwidth[colNum])
+						<< position[reportAxes[i]] << " ";
+					colNum++;
+				}
+				for (uInt i=0; i<axesMap.nelements(); i++) {
+					arrayIndex[i] = position[axesMap[i]];
+				}
+				oss << std::setw(width) << retval.asArrayDouble("npts")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("sum")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("mean")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("rms")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("sigma")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("min")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("max")(arrayIndex) << endl;
+			}
+			if (verbose) {
+				*_log << LogIO::NORMAL << oss.str() << LogIO::POST;
+			}
+		}
+
+		return fromRecord(retval);
+		*/
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

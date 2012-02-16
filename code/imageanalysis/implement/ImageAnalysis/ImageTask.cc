@@ -28,7 +28,6 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 #include <casa/IO/FilebufIO.h>
-#include <casa/IO/FiledesIO.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
@@ -52,7 +51,7 @@ ImageTask::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileSupport(False), _logfileAppend(False) {
+	_logfileSupport(False), _logfileAppend(False), _logFD(0) {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }
@@ -88,7 +87,7 @@ void ImageTask::_construct() {
 		_regionRecord, diagnostics, outputPtr,
     	_stokesString, _image, _regionPtr,
     	_region, _box, _chan,
-    	_getStokesControl(), False,
+    	_getStokesControl(), _supportsMultipleRegions(),
     	coordsPtr
     );
 }
@@ -158,9 +157,9 @@ const String& ImageTask::_getLogfile() const {
 	return _logfile;
 }
 
-void ImageTask::_writeLogfile(const String& output) const {
+Bool ImageTask::_openLogfile() {
 	if (_logfile.empty()) {
-		return;
+		return False;
 	}
 	*_log << LogOrigin(getClass(), __FUNCTION__);
 	if (! _logfileSupport) {
@@ -170,25 +169,14 @@ void ImageTask::_writeLogfile(const String& output) const {
 	switch (File::FileWriteStatus status = log.getWriteStatus()) {
 	case File::OVERWRITABLE:
 		if (_logfileAppend) {
-			Int fd = open(_logfile.c_str(), O_RDWR | O_APPEND);
-			FiledesIO fio(fd, _logfile.c_str());
-			fio.write(output.length(), output.c_str());
-			FiledesIO::close(fd);
-			*_log << LogIO::NORMAL << "Appended results to file "
-					<< _logfile << LogIO::POST;
+			_logFD = open(_logfile.c_str(), O_RDWR | O_APPEND);
 		}
 		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
 	case File::CREATABLE:
 		if (status == File::CREATABLE || ! _logfileAppend) {
 			// can fall throw from previous case block so status can be File::OVERWRITABLE
 			String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
-			Int fd = FiledesIO::create(_logfile.c_str());
-			FiledesIO fio (fd, _logfile.c_str());
-			fio.write(output.length(), output.c_str());
-			FiledesIO::close(fd);
-			*_log << LogIO::NORMAL << action << " file "
-					<< _logfile << " with new log file"
-					<< LogIO::POST;
+			_logFD = FiledesIO::create(_logfile.c_str());
 		}
 		break;
 	default:
@@ -197,6 +185,39 @@ void ImageTask::_writeLogfile(const String& output) const {
 		// those cases.
 		*_log << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
 	}
+	_logFileIO.reset(new FiledesIO(_logFD, _logfile.c_str()));
+
+	return True;
+}
+
+void ImageTask::_closeLogfile() const {
+	if (_logFD > 0) {
+		FiledesIO::close(_logFD);
+	}
+}
+
+Bool ImageTask::_writeLogfile(
+	const String& output, const Bool open, const Bool close
+) {
+	if (open) {
+		if (! _openLogfile()) {
+			return False;
+		}
+	}
+	else if (_logfile.empty()) {
+		return False;
+	}
+	else {
+		*_log << LogOrigin(getClass(), __FUNCTION__);
+		if (! _logfileSupport) {
+			*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
+		}
+	}
+	_logFileIO->write(output.length(), output.c_str());
+	if (close) {
+		_closeLogfile();
+	}
+	return True;
 }
 
 void ImageTask::setLogfileAppend(const Bool a) {

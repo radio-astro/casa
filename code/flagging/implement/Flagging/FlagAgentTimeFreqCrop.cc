@@ -689,7 +689,7 @@ void FlagAgentTimeFreqCrop :: polyFit(Vector<Float> &data,Vector<Bool> &flag, Ve
   
   
   LinearFit<Double> fitter;
-  Polynomial<AutoDiff<Double> > combination(deg);
+  Polynomial<Double> combination(deg);
   
   
   combination.setCoefficient(0,0.0);

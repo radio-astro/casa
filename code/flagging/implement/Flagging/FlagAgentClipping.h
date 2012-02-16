@@ -42,7 +42,10 @@ protected:
 	// Specialization of the different clipping cases
 	bool checkVisForClipOutside(Float visExpression);
 	bool checkVisForClipInside(Float visExpression);
+	bool checkVisForClipOutsideAndZeros(Float visExpression);
+	bool checkVisForClipInsideAndZeros(Float visExpression);
 	bool checkVisForNaNs(Float visExpression);
+	bool checkVisForNaNsAndZeros(Float visExpression);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
@@ -50,8 +53,10 @@ protected:
 private:
 
 	/// Input parameters ///
+	Bool clipminmax_p;
 	Bool clipoutside_p;
 	Bool channelavg_p;
+	Bool clipzeros_p;
 	Float clipmin_p;
 	Float clipmax_p;
 

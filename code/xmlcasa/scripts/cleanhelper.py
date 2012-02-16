@@ -1576,7 +1576,6 @@ class cleanhelper:
         imageids=[]
         masks=[]
         modelimages=[]
-        f=open(outlierfile)
         keywd = "imagename"
         oldformat=False
         nchar= len(keywd)
@@ -1584,19 +1583,17 @@ class cleanhelper:
         # set this to True to disallow old outlier file
         noOldOutlierFileSupport=False;
 
-        while 1:
-            try:
-                line=f.readline()
-                if len(line)!=0:
-                    if line.split()[0]=='C' or line.split()[0]=='c':
-                        oldformat=True
-                    elif line.split()[0]!='#':
-                        content0+=line     
-                else:
-                   raise Exception
-            except:
-                break
-        f.close()
+        with open(outlierfile) as f:  
+            for line in f:
+                try:
+                    if len(line)!=0 and line.split()!=[]:
+                        if line.split()[0]=='C' or line.split()[0]=='c':
+                            oldformat=True
+                        elif line.split()[0]!='#':
+                            content0+=line     
+                except:
+                    print "Unkown error while reading the file", outlierfile
+                    break
         if oldformat:
             if noOldOutlierFileSupport:
                 self._casalog.post("You are using the old outlier file format no longer supported. Please use the new format (see help).","SEVERE")
@@ -1627,7 +1624,7 @@ class cleanhelper:
 
                 if nexti == -1:
                     pars[i]=content[prevstart:]
-                    #print "range=",prevstart, " to the end"
+                #    print "range=",prevstart, " to the end"
                     break
                 pars[i]=content[prevstart:prevstart+nexti+step]
                 #print "range=",prevstart, " to", prevstart+nexti+step-1

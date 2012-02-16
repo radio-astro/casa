@@ -731,8 +731,14 @@ FlagAgentBase::setDataSelection(Record config)
 		{
 			*logger_p << LogIO::DEBUG1 << " no correlation selection" << LogIO::POST;
 		}
-		else
+		// Only process the polarization selection as in-row selection if there is no complex operator
+		else if ((polarizationSelection_p.find("REAL") == string::npos) and
+				(polarizationSelection_p.find("IMAG") == string::npos) and
+				(polarizationSelection_p.find("ARG") == string::npos) and
+				(polarizationSelection_p.find("ABS") == string::npos) and
+				(polarizationSelection_p.find("NORM") == string::npos))
 		{
+
 			parser.setPolnExpr(polarizationSelection_p);
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			polarizationList_p=parser.getPolMap();
@@ -872,14 +878,14 @@ FlagAgentBase::setAgentParameters(Record config)
 			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
 			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
 	{
-		exists = config.fieldNumber ("expression");
+		exists = config.fieldNumber ("correlation");
 		if (exists >= 0)
 		{
-			expression_p = config.asString("expression");
+			expression_p = config.asString("correlation");
 		}
 		else
 		{
-			expression_p = "ABS 1";
+			expression_p = "ABS " + flagDataHandler_p->corrProducts_p->at(0);
 		}
 
 		expression_p.upcase();
@@ -895,19 +901,17 @@ FlagAgentBase::setAgentParameters(Record config)
 				(expression_p.find("ABS") == string::npos) and
 				(expression_p.find("NORM") == string::npos))
 		{
-			*logger_p << LogIO::WARN <<
-					" Unsupported mapping expression: " <<
-					expression_p << ", selecting ABS by default. Supported expressions: REAL,IMAG,ARG,ABS,NORM." << LogIO::POST;
-			expression_p = "ABS 1";
-		}
-
-		// If expression is ABS 1 we flag the first correlation product
-		if (expression_p.find("1") != string::npos)
-		{
 			expression_p = "ABS " + flagDataHandler_p->corrProducts_p->at(0);
+			*logger_p 	<< LogIO::WARN
+						<< " Unsupported visibility expression: " << expression_p
+						<< ", selecting " << expression_p
+						<< " by default. Supported expressions: REAL,IMAG,ARG,ABS,NORM."
+						<< LogIO::POST;
 		}
-
-		*logger_p << logLevel_p << " visibility expression is " << expression_p << LogIO::POST;
+		else
+		{
+			*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
+		}
 
 		exists = config.fieldNumber ("datacolumn");
 		if (exists >= 0)
@@ -1173,6 +1177,18 @@ FlagAgentBase::find(Matrix<Int> validPairs, Int element1, Int element2)
 	}
 
 	return antennaNegation_p;
+}
+
+bool
+FlagAgentBase::isZero(Float number)
+{
+	return !number;
+}
+
+bool
+FlagAgentBase::isZero(Double number)
+{
+	return !number;
 }
 
 bool

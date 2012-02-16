@@ -95,8 +95,7 @@ class imstat_test(unittest.TestCase):
         _myia = iatool.create()
         _myia.open(self.s0_015)
         stats = _myia.statistics()
-        _myia.close()
-        print "*** " + str(stats['blcf'])
+        _myia.close() 
         self.assertTrue(stats['blcf'] == '15:22:00.1285, +05.03.58.0800, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:00.0040, +05.04.00.0450, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:22:00.1285, +05.03.59.7600, I, 1.41332e+09Hz')
@@ -104,11 +103,13 @@ class imstat_test(unittest.TestCase):
 
     def test005(self):
         """ Test 5: test position format for 0.0015 arcsec pixel image is correct """
+        print "*** test 5"
         _myia = iatool.create()
         shutil.copytree(self.datapath+self.s0_0015, self.s0_0015)
         _myia.open(self.s0_0015)
         stats = _myia.statistics()
         _myia.close()
+        print "*** blcf xxx " + str(stats['blcf'])
         self.assertTrue(stats['blcf'] == '15:22:00.01285, +05.03.59.80800, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:00.00040, +05.04.00.00450, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:22:00.01285, +05.03.59.97600, I, 1.41332e+09Hz')
@@ -271,7 +272,52 @@ class imstat_test(unittest.TestCase):
         )
         self.assertTrue(type(zz) == type({}) and (not zz == {}))
         yy.done()
-    
+   
+    def test010(self):
+        """test logfile """
+        def test_statistics(image, axes, logfile, append):
+            _myia = iatool.create()
+            _myia.open(image)
+            stats = _myia.statistics(
+                axes=axes, logfile=logfile, append=append
+            )
+            _myia.done()
+            return stats
+        
+        def test_imstat(image, axes, logfile, append):
+            return imstat(image, axes=axes, logfile=logfile, append=append)
+            
+        logfile = "imstat.log"
+        i = 1
+        myim = self.fourdim
+        shutil.copytree(self.datapath + myim, myim)
+        for code in [test_statistics, test_imstat]:
+            append = False
+            if i == 2:
+                append = True
+            stats = code(myim, [0], logfile, append)
+            size = os.path.getsize(logfile)
+            print "size " + str(size)
+            # appending, second time through size should double
+            self.assertTrue(size > 9e3*i and size < 1e4*i )
+            i = i+1
+
+
+    def test011(self):
+        """ test multiple region support"""
+        shape = [10, 10, 10]
+        ia.fromshape("test011.im", shape)
+        box = "0, 0, 2, 2, 4, 4, 6, 6"
+        chans = "0~4, 6, >8"
+        reg = rg.frombcs(
+            ia.coordsys().torecord(), shape,
+            box=box, chans=chans
+        )
+        bb = ia.statistics(region=reg)
+        self.assertTrue(bb["npts"][0] == 126)
+        bb = imstat(imagename=ia.name(), chans=chans, box=box)
+        self.assertTrue(bb["npts"][0] == 126)
+ 
 def suite():
     return [imstat_test]
 

@@ -111,11 +111,11 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 			return False;
 		}
 		startIndex = 0;
-		while (spcVals(startIndex) < endVal)
+		while (spcVals(startIndex) > endVal)
 			startIndex++;
 
 		endIndex = spcVals.size() - 1;
-		while (spcVals(endIndex) > startVal)
+		while (spcVals(endIndex) < startVal)
 			endIndex--;
 	}
 
@@ -212,9 +212,6 @@ void SpectralFitter::getFit(const Vector<Float> &spcVals, Vector<Float> &spcFit,
 	// change to Float
 	for (uInt index=0; index<tmp.size(); index++)
 		yFit(index)=Float(tmp(index));
-	//cout <<"spcFit: " << spcFit << endl;
-	//cout <<"yFit: " << yFit << endl;
-	//cout <<"start: " << _startIndex << " end: " << _endIndex << endl;
 }
 
 void SpectralFitter::report() const{

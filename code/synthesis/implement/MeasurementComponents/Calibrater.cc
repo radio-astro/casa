@@ -2201,7 +2201,7 @@ void Calibrater::fluxscale(const String& infile,
 
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      fsvj_->fluxscale2(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
+      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
      
       // If no outfile specified, use infile (overwrite!)
       String out(outfile);

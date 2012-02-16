@@ -180,7 +180,8 @@ Double FlagAgentRFlag::mean(vector<Double> &data,vector<Double> &counts)
 
 Double FlagAgentRFlag::median(vector<Double> &data)
 {
-	Double med;
+	Double med,medPoint;
+	vector<Double> datacopy = data;
 	sort(data.begin(),data.end());
 
 	if (data.size() % 2 == 1)
@@ -197,33 +198,6 @@ Double FlagAgentRFlag::median(vector<Double> &data)
 
 Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &dataSquared,vector<Double> &counts)
 {
-/*
- *      DO 100 JI = 1,NI
-         K = 0
-         MEDR = 0.0
-         MEDRR = 0.0
-         DO 10 JC = 1,NC
-            IF (RMSRMS(3,JC,JI).GE.1.0D0) THEN
-               RMSRMS(1,JC,JI) = RMSRMS(1,JC,JI) / RMSRMS(3,JC,JI)
-               RMSRMS(2,JC,JI) = RMSRMS(2,JC,JI) / RMSRMS(3,JC,JI) -
-     *            RMSRMS(1,JC,JI) * RMSRMS(1,JC,JI)
-               RMSRMS(2,JC,JI) = SQRT (MAX (0.0D0, RMSRMS(2,JC,JI)))
-               K = K + 1
-               VALUES(K) = RMSRMS(1,JC,JI)
-               END IF
- 10         CONTINUE
-         IF (K.GT.0) THEN
-            MEDR = MEDIAN (K, VALUES)
-            DO 20 JC = 1,K
-               VALUES(JC) = ABS (VALUES(JC)-MEDR)
- 20            CONTINUE
-            MEDRR = 1.4826 * MEDIAN (K, VALUES)
-            END IF
-         IF (SCALE.GT.0.0) XNOISE(JI) = SCALE * (MEDR + MEDRR)
- 100     CONTINUE
-C
- *
- */
 	// Declare working variables
 	Double avg,avgSquared,std;
 
@@ -232,9 +206,6 @@ C
 	for (size_t index = 0; index < data.size();index++)
 	{
 		avg = data[index]/counts[index];
-		avgSquared = dataSquared[index]/counts[index];
-		std = avgSquared - avg*avg;
-		std = sqrt(std > 0?  std:0);
 		samplesForMedian[index] = avg;
 	}
 
@@ -251,14 +222,6 @@ C
 	// Compute median absolute deviation
 	Double mad = median(samplesForMad);
 
-	// Return median of std plus mad of std
-	/*
-	cout << " med is:" 	<< 1000*med
-						<< " mad is:" << 1000*mad
-						<< " med + mad is:" << 1000*(med + mad)
-						<< " med + 1.4826*mad is:" << 1000*(med + 1.4826*mad) << endl;
-	*/
-
 	return (med + 1.4826*mad);
 }
 
@@ -272,14 +235,14 @@ FlagReport FlagAgentRFlag::getReport()
 											"Time analysis",
 											noiseScale_p);
     dispRep.addReport(noiseStd);
-/*
+
 	FlagReport scutofStd = getReportCore(	spw_scutof_histogram_sum_p,
 											spw_scutof_histogram_sum_squares_p,
 											spw_scutof_histogram_counts_p,
 											"Spectral analysis",
 											scutofScale_p);
     dispRep.addReport(scutofStd);
-*/
+
 	return dispRep;
 }
 
@@ -453,14 +416,6 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 	            	{
 	            		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 	            		{
-	            			/*
-	            			cout 	<< "pol: " << pol_k
-	            					<< " channel:" << chan_j
-	            					<< " timeStart:" << timeStart
-	            					<< " timeStop:" << timeStop
-	            					<< " StdTotal:" << StdTotal
-	            					<< " noise:" << noise << endl;
-	            				*/
 	            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
 	            			visBufferFlags_p += 1;
 	            		}
@@ -726,10 +681,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	uInt effectiveNTimeStepsDelta = (effectiveNTimeSteps - 1)/2;
 
 	// Beginning time range: Move only central point
+	/*
 	for (uInt timestep_i=0;timestep_i<effectiveNTimeStepsDelta;timestep_i++)
 	{
 		computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
 	}
+	*/
 
 	for (uInt timestep_i=effectiveNTimeStepsDelta;timestep_i<nTimesteps-effectiveNTimeStepsDelta;timestep_i++)
 	{
@@ -737,10 +694,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	}
 
 	// End time range: Move only central point
+	/*
 	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<nTimesteps;timestep_i++)
 	{
 		computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
 	}
+	*/
 
 	return false;
 }

@@ -25,6 +25,26 @@
 
 #include <flagging/Flagging/FlagAgentBase.h>
 
+#include <measures/Measures/MeasFrame.h>
+//#include <casa/Quanta/MVAngle.h>
+//#include <casa/Quanta/MVTime.h>
+//#include <measures/Measures/MeasTable.h>
+#include <measures/Measures/MBaseline.h>
+#include <measures/Measures/MCBaseline.h>
+#include <measures/Measures/Muvw.h>
+#include <measures/Measures/MCuvw.h>
+#include <casa/Quanta/MVuvw.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MCPosition.h>
+#include <measures/Measures/MDirection.h>
+#include <casa/Quanta/MVDirection.h>
+#include <measures/Measures.h>
+#include <casa/Utilities/DataType.h>
+
+#include <casa/Containers/Record.h>
+
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class FlagAgentShadow : public FlagAgentBase {
@@ -50,8 +70,22 @@ protected:
 
 private:
 
+        // Function to compute antenna UVW values for the current timestep
+        Bool computeAntUVW(const VisBuffer &vb, Int rownr);
+        // Function to compute shadowed antennas, given a list of antenna UVWs.
+        void calculateShadowedAntennas(const VisBuffer &visBuffer, Int rownr);
+        // Function to decide if the 'behind' antenna is shadowed or not, for one baseline
+        void decideBaselineShadow(Double uvDistance, Double w, Int antenna1, Int antenna2);
+ 
 	/// Input parameters ///
-	Double antennaDiameter_p;
+	Double shadowTolerance_p;
+        Record additionalAntennas_p;
+        Bool recalculateUVW_p;
+
+        // Copies of antenna-information lists, containing extra antennas if specified.
+        ///Vector<String> shadowAntennaNames_p;
+        Vector<Double> shadowAntennaDiameters_p;
+        Vector<MPosition> shadowAntennaPositions_p;
 
 	// Declaration of static members for common pre-processing
 	uShort agentNumber_p;
@@ -60,6 +94,11 @@ private:
 	static vector<bool> startedProcessing_p;
 	static bool preProcessingDone_p;
 	static uShort nAgents_p;
+        
+        // Private variables that change with each timestep
+        Matrix<Double> uvwAnt_p;
+        Double currTime_p;
+        
 };
 
 } //# NAMESPACE CASA - END

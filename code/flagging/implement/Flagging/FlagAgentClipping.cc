@@ -41,9 +41,23 @@ FlagAgentClipping::~FlagAgentClipping()
 void
 FlagAgentClipping::setAgentParameters(Record config)
 {
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	int exists;
+
+	// First check basic configuration to see what modules are plugged in the check
+	exists = config.fieldNumber ("clipzeros");
+	if (exists >= 0)
+	{
+		clipzeros_p = config.asBool("clipzeros");
+	}
+	else
+	{
+		clipzeros_p = False;
+	}
+
+	*logger_p << logLevel_p << " clipzeros is " << clipzeros_p << LogIO::POST;
+
 
 	exists = config.fieldNumber ("clipoutside");
 	if (exists >= 0)
@@ -55,35 +69,82 @@ FlagAgentClipping::setAgentParameters(Record config)
 		clipoutside_p = True;
 	}
 
-	if (clipoutside_p)
-	{
-		checkVis_p = &FlagAgentClipping::checkVisForClipOutside;
-	}
-	else
-	{
-		checkVis_p = &FlagAgentClipping::checkVisForClipInside;
-	}
-
 	*logger_p << logLevel_p << " clipoutside is " << clipoutside_p << LogIO::POST;
+
 
 	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
 	{
 		Array<Double> cliprange = config.asArrayDouble("clipminmax");
-		Bool deleteIt = False;
-		clipmin_p = cliprange.getStorage(deleteIt)[0];
-		clipmax_p = cliprange.getStorage(deleteIt)[1];
+		if (cliprange.size()==2)
+		{
+			Bool deleteIt = False;
+			clipmin_p = cliprange.getStorage(deleteIt)[0];
+			clipmax_p = cliprange.getStorage(deleteIt)[1];
+			*logger_p << logLevel_p << " clipmin is " << clipmin_p << LogIO::POST;
+			*logger_p << logLevel_p << " clipmax is " << clipmax_p << LogIO::POST;
 
-		*logger_p << logLevel_p << " clipmin is " << clipmin_p << LogIO::POST;
-		*logger_p << logLevel_p << " clipmax is " << clipmax_p << LogIO::POST;
+			clipminmax_p = true;
+		}
+		else
+		{
+			clipminmax_p = false;
+			*logger_p << logLevel_p << " clipminmax range not provided" << LogIO::POST;
+		}
 	}
 	else
 	{
-		checkVis_p = &FlagAgentClipping::checkVisForNaNs;
-
-		*logger_p << LogIO::WARN << " no clipminmax range provided, will clip only NaNs " << LogIO::POST;
+		clipminmax_p = false;
+		*logger_p << logLevel_p << " clipminmax range not provided" << LogIO::POST;
 	}
 
+
+	// Then, point to the function covering for all the modules selected
+	if (clipminmax_p)
+	{
+		if (clipoutside_p)
+		{
+			if (clipzeros_p)
+			{
+				checkVis_p = &FlagAgentClipping::checkVisForClipOutsideAndZeros;
+				*logger_p << logLevel_p << " Clipping outside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs and zeros" << LogIO::POST;
+			}
+			else
+			{
+				checkVis_p = &FlagAgentClipping::checkVisForClipOutside;
+				*logger_p << logLevel_p << " Clipping outside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs" << LogIO::POST;
+			}
+		}
+		else
+		{
+			if (clipzeros_p)
+			{
+				checkVis_p = &FlagAgentClipping::checkVisForClipInsideAndZeros;
+				*logger_p << logLevel_p << " Clipping inside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs and zeros" << LogIO::POST;
+			}
+			else
+			{
+				checkVis_p = &FlagAgentClipping::checkVisForClipInside;
+				*logger_p << logLevel_p << " Clipping inside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs" << LogIO::POST;
+			}
+		}
+	}
+	else
+	{
+		if (clipzeros_p)
+		{
+			checkVis_p = &FlagAgentClipping::checkVisForNaNsAndZeros;
+			*logger_p << logLevel_p << " Clipping range not provided, clipping NaNs and zeros" << LogIO::POST;
+		}
+		else
+		{
+			checkVis_p = &FlagAgentClipping::checkVisForNaNs;
+			*logger_p << logLevel_p << " Clipping range not provided, clipping only NaNs" << LogIO::POST;
+		}
+	}
+
+
+	// Finally, get channel average which is a neutral parameter
 	exists = config.fieldNumber ("channelavg");
 	if (exists >= 0)
 	{
@@ -146,6 +207,14 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 			visExpression = visibilities(chan_i,row);
 			if ((*this.*checkVis_p)(visExpression))
 			{
+				/*
+				Complex complexVis = visibilities.correlationProduct(0,chan_i,row);
+				cout 	<< " row=" << row
+						<< " chan=" << chan_i
+						<< " vis.real=" << complexVis.real()
+						<< " vis.imag=" << complexVis.imag()
+						<< " visExpression=" << visExpression << endl;
+						*/
 				flags.applyFlag(chan_i,row);
 				visBufferFlags_p += flags.nSelectedCorrelations();
 			}
@@ -182,9 +251,49 @@ FlagAgentClipping::checkVisForClipInside(Float visExpression)
 }
 
 bool
+FlagAgentClipping::checkVisForClipOutsideAndZeros(Float visExpression)
+{
+	if ((visExpression >  clipmax_p) or (visExpression <  clipmin_p))
+	{
+		return true;
+	}
+	else if ((clipzeros_p) and isZero(visExpression))
+	{
+		return true;
+	}
+	else
+	{
+		return isNaN(visExpression);
+	}
+}
+
+bool
+FlagAgentClipping::checkVisForClipInsideAndZeros(Float visExpression)
+{
+	if ((visExpression <=  clipmax_p) and (visExpression >=  clipmin_p))
+	{
+		return true;
+	}
+	else if ((clipzeros_p) and isZero(visExpression))
+	{
+		return true;
+	}
+	else
+	{
+		return isNaN(visExpression);
+	}
+}
+
+bool
 FlagAgentClipping::checkVisForNaNs(Float visExpression)
 {
 	return isNaN(visExpression);
+}
+
+bool
+FlagAgentClipping::checkVisForNaNsAndZeros(Float visExpression)
+{
+	return (isZero(visExpression) or isNaN(visExpression));
 }
 
 } //# NAMESPACE CASA - END

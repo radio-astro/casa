@@ -240,6 +240,31 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 	return false;
 }
 
+FlagReport
+FlagAgentSummary::getReport()
+{
+  // // Later, this function should return 'views' if they have been asked for.
+  // // In this case, make a 'list' type FlagReport, and do an addReport().
+  //
+  //         // Make the flagreport list
+  //         FlagReport summarylist("list");  
+  //
+  //         // Add the standard summary dictionary as a report of type 'summary'
+  //         summarylist.addReport( FlagReport("summary", agentName_p, getResult())  );
+  //
+  //         // Make a report for a view, and add it to the list
+  //         FlagReport viewrep("plotline",agentName_p,"title","xaxis","yaxis")
+  //         viewrep.addData(xdata,ydata,"label");
+  //         summarylist.addReport( viewRep );        
+  //
+  //         return summarylist;
+  //
+  // Note : Calculate these extra views only if the user has asked for it.
+  //
+
+  return FlagReport("summary", agentName_p, getResult());
+}
+
 Record
 FlagAgentSummary::getResult()
 {

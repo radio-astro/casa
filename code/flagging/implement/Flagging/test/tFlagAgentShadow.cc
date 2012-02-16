@@ -508,7 +508,8 @@ int main(int argc, char **argv)
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
 	string nThreadsParam,ntime;
 	Int nThreads = 0;
-	Double diameter;
+	Double tolerance;
+        Bool recalcuvw=False;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -615,11 +616,15 @@ int main(int argc, char **argv)
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
 		}
-		else if (parameter == string("-diameter"))
+		else if (parameter == string("-tolerance"))
 		{
-			diameter = atof(value.c_str());
-			agentParameters.define ("diameter", diameter);
-			cout << "diameter is: " << diameter << endl;
+			tolerance = atof(value.c_str());
+			agentParameters.define ("tolerance", tolerance);
+			cout << "tolerance is: " << tolerance << endl;
+		}
+		else if (parameter == string("-recalcuvw"))
+		{
+			  agentParameters.define ("recalcuvw", (value.compare("True")==0));
 		}
 	}
 

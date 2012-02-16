@@ -47,6 +47,9 @@ protected:
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
 
+        // Get the summary dictionary, and 'view' reports.
+        FlagReport getReport();
+
 private:
 
 	Bool spwChannelCounts;

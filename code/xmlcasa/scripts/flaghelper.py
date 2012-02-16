@@ -104,7 +104,6 @@ class flaghelper:
                 # Insert into main dictionary
                 myflagd[ncmds] = flagd
                 ncmds += 1
-                print ncmds
                     
         except:
             raise Exception, 'Cannot create dictionary'
@@ -557,7 +556,7 @@ class flaghelper:
         
         # Parameters for each mode
         manualpars = []
-        clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg']
+        clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
         quackpars = ['quackinterval','quackmode','quackincrement']
         shadowpars = ['diameter']
         elevationpars = ['lowerlimit','upperlimit'] 
@@ -847,6 +846,8 @@ class flaghelper:
                 params['clipoutside'] = params['clipoutside']
         if params.has_key('channelavg'):
             params['channelavg'] = eval(params['channelavg'].capitalize())
+        if params.has_key('clipzeros'):
+            params['clipzeros'] = eval(params['clipzeros'].capitalize())
                 
                 
         # shadow parameter

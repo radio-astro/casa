@@ -99,6 +99,7 @@ import os
 import time
 import regression_utility as tstutl
 import listing
+import datetime
 
 # Enable benchmarking?
 benchmarking = True
@@ -126,10 +127,9 @@ prefix=testdir+"/"+'ngc5921'
 # (WARNING! Removes old test directory of the same name if one exists)
 tstutl.maketestdir(testdir)
 
-import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
 outfile = 'ngc5921.' + datestring + '.log'
-logfile = open(outfile, 'w')
+n5921reglog = open(outfile, 'w')
 
 def reportresults(redi):
     """
@@ -149,10 +149,10 @@ def reportresults(redi):
     for t in redi:
         tup = redi[t]
         msg = passfail[tup[0]] + ' ' + t + ' test'
-        print >>logfile, msg
+        print >>n5921reglog, msg
         tstutl.note(msg, normalsevere[tup[0]])
         if len(tup) > 1:
-            print >>logfile, tup[1]
+            print >>n5921reglog, tup[1]
         #tstutl.note("\"tup[0]\": \"%s\"" % tup[0], "WARN")
         if not tup[0]:
             ok = False
@@ -1192,26 +1192,26 @@ if not benchmarking:
     print ''
     print '--- Done ---'
 else:
-    print >>logfile,''
-    print >>logfile,''
-    print >>logfile,'********** Data Summary *********'
-    print >>logfile,'*   Observer: TEST     Project:                                             *'
-    print >>logfile,'* Observation: VLA(28 antennas)                                             *'
-    print >>logfile,'* Data records: 22653  Total integration time = 5280 seconds                *'
-    print >>logfile,'* Observed from   09:19:00   to   10:47:00                                  *'
-    print >>logfile,'* Fields: 3                                                                 *'
-    print >>logfile,'*  ID   Name          Right Ascension  Declination   Epoch                  *'
-    print >>logfile,'*  0    1331+30500002_013:31:08.29      +30.30.32.96  J2000                 *'
-    print >>logfile,'*  1    1445+09900002_014:45:16.47      +09.58.36.07  J2000                 *'
-    print >>logfile,'*  2    N5921_2       15:22:00.00      +05.04.00.00  J2000                  *'
-    print >>logfile,'* Data descriptions: 1 (1 spectral windows and 1 polarization setups)       *'
-    print >>logfile,'*  ID  #Chans Frame Ch1(MHz)    Resoln(kHz) TotBW(kHz)  Ref(MHz)    Corrs   *'  
-    print >>logfile,'*  0       63 LSRK  1412.68608  24.4140625  1550.19688  1413.44902  RR  LL  *'
-    print >>logfile,'*********************************'
+    print >>n5921reglog,''
+    print >>n5921reglog,''
+    print >>n5921reglog,'********** Data Summary *********'
+    print >>n5921reglog,'*   Observer: TEST     Project:                                             *'
+    print >>n5921reglog,'* Observation: VLA(28 antennas)                                             *'
+    print >>n5921reglog,'* Data records: 22653  Total integration time = 5280 seconds                *'
+    print >>n5921reglog,'* Observed from   09:19:00   to   10:47:00                                  *'
+    print >>n5921reglog,'* Fields: 3                                                                 *'
+    print >>n5921reglog,'*  ID   Name          Right Ascension  Declination   Epoch                  *'
+    print >>n5921reglog,'*  0    1331+30500002_013:31:08.29      +30.30.32.96  J2000                 *'
+    print >>n5921reglog,'*  1    1445+09900002_014:45:16.47      +09.58.36.07  J2000                 *'
+    print >>n5921reglog,'*  2    N5921_2       15:22:00.00      +05.04.00.00  J2000                  *'
+    print >>n5921reglog,'* Data descriptions: 1 (1 spectral windows and 1 polarization setups)       *'
+    print >>n5921reglog,'*  ID  #Chans Frame Ch1(MHz)    Resoln(kHz) TotBW(kHz)  Ref(MHz)    Corrs   *'  
+    print >>n5921reglog,'*  0       63 LSRK  1412.68608  24.4140625  1550.19688  1413.44902  RR  LL  *'
+    print >>n5921reglog,'*********************************'
     print ""
-    print >>logfile,''
-    print >>logfile,'********* Export Tests***********'
-    print >>logfile,'*                               *'
+    print >>n5921reglog,''
+    print >>n5921reglog,'********* Export Tests***********'
+    print >>n5921reglog,'*                               *'
 
     exportresults = {'UVFITS existence': (uvfitsexists,),
                      'FITS image existence': (fitsimageexists,)}
@@ -1228,9 +1228,9 @@ else:
                                            diff_fitsrms)
     passedall = reportresults(exportresults) and passedall
 
-    print >>logfile,''
-    print >>logfile,'********** Regression ***********'
-    print >>logfile,'*                               *'
+    print >>n5921reglog,''
+    print >>n5921reglog,'********** Regression ***********'
+    print >>n5921reglog,'*                               *'
     quantresults = {}
     quantresults['cal max amplitude'] = (diff_cal < 0.05,
                                          '*  Cal max amp ' + str(thistest_cal), diff_cal)
@@ -1244,18 +1244,18 @@ else:
 
     if passedall: 
 	regstate=True
-	print >>logfile,'---'
-	print >>logfile,'Passed Regression test for NGC5921'
-	print >>logfile,'---'
+	print >>n5921reglog,'---'
+	print >>n5921reglog,'Passed Regression test for NGC5921'
+	print >>n5921reglog,'---'
         print ''
         print 'Regression PASSED'
         print ''
         tstutl.note("Passed Regression test for NGC5921","NORMAL")
     else: 
 	regstate=False
-	print >>logfile,'---'
-	print >>logfile,'FAILED Regression test for NGC5921'
-	print >>logfile,'---'
+	print >>n5921reglog,'---'
+	print >>n5921reglog,'FAILED Regression test for NGC5921'
+	print >>n5921reglog,'---'
         print ''
         print 'Regression FAILED'
         print ''
@@ -1264,36 +1264,36 @@ else:
         for d in (listvisresults, listcalresults, exportresults, quantresults):
             listfailures(d)
         
-    print >>logfile,'*********************************'
+    print >>n5921reglog,'*********************************'
 
-    print >>logfile,''
-    print >>logfile,''
-    print >>logfile,'********* Benchmarking *****************'
-    print >>logfile,'*                                      *'
-    print >>logfile,'Total wall clock time was: ', endTime - startTime
-    print >>logfile,'Total CPU        time was: ', endProc - startProc
-    print >>logfile,'Processing rate MB/s  was: ', 35.1/(endTime - startTime)
-    print >>logfile,'* Breakdown:                           *'
-    print >>logfile,'*   import       time was: '+str(importtime-startTime)
-    print >>logfile,'*   flagautocorr time was: '+str(flagtime-listtime)
-    print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
-    print >>logfile,'*   bandpass     time was: '+str(bptime-setjytime)
-    print >>logfile,'*   gaincal      time was: '+str(gaintime-bptime)
-    print >>logfile,'*   listcal      time was: '+str(listcaltime-gaintime)    
-    print >>logfile,'*   fluxscale    time was: '+str(fstime-listcaltime)
-    print >>logfile,'*   applycal     time was: '+str(correcttime-fstime)
-    print >>logfile,'*   split-cal    time was: '+str(splitcaltime-correcttime)
-    print >>logfile,'*   split-src    time was: '+str(splitsrctime-splitcaltime)
-    print >>logfile,'*   contsub      time was: '+str(contsubtime-exportuvfitstime)
-    print >>logfile,'*   listvis      time was: '+str(listvistime-contsubtime)
-    print >>logfile,'*   clean        time was: '+str(cleantime-listvistime)
-    print >>logfile,'*****************************************'
-    #print >>logfile,'basho (test cpu) time was: ?? seconds'
+    print >>n5921reglog,''
+    print >>n5921reglog,''
+    print >>n5921reglog,'********* Benchmarking *****************'
+    print >>n5921reglog,'*                                      *'
+    print >>n5921reglog,'Total wall clock time was: ', endTime - startTime
+    print >>n5921reglog,'Total CPU        time was: ', endProc - startProc
+    print >>n5921reglog,'Processing rate MB/s  was: ', 35.1/(endTime - startTime)
+    print >>n5921reglog,'* Breakdown:                           *'
+    print >>n5921reglog,'*   import       time was: '+str(importtime-startTime)
+    print >>n5921reglog,'*   flagautocorr time was: '+str(flagtime-listtime)
+    print >>n5921reglog,'*   setjy        time was: '+str(setjytime-flagtime)
+    print >>n5921reglog,'*   bandpass     time was: '+str(bptime-setjytime)
+    print >>n5921reglog,'*   gaincal      time was: '+str(gaintime-bptime)
+    print >>n5921reglog,'*   listcal      time was: '+str(listcaltime-gaintime)    
+    print >>n5921reglog,'*   fluxscale    time was: '+str(fstime-listcaltime)
+    print >>n5921reglog,'*   applycal     time was: '+str(correcttime-fstime)
+    print >>n5921reglog,'*   split-cal    time was: '+str(splitcaltime-correcttime)
+    print >>n5921reglog,'*   split-src    time was: '+str(splitsrctime-splitcaltime)
+    print >>n5921reglog,'*   contsub      time was: '+str(contsubtime-exportuvfitstime)
+    print >>n5921reglog,'*   listvis      time was: '+str(listvistime-contsubtime)
+    print >>n5921reglog,'*   clean        time was: '+str(cleantime-listvistime)
+    print >>n5921reglog,'*****************************************'
+    #print >>n5921reglog,'basho (test cpu) time was: ?? seconds'
 
     print ""
     print "Done!"
 
-logfile.close()
+n5921reglog.close()
 
 #exit()
 #

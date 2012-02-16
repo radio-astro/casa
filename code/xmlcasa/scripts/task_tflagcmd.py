@@ -724,7 +724,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     
     # Parameters for each mode
     manualpars = []
-    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg']
+    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
     shadowpars = ['diameter']
     elevationpars = ['lowerlimit','upperlimit'] 
@@ -963,6 +963,8 @@ def fixType(params):
             params['clipoutside'] = params['clipoutside']
     if params.has_key('channelavg'):
         params['channelavg'] = eval(params['channelavg'].capitalize())
+    if params.has_key('clipzeros'):
+        params['clipzeros'] = eval(params['clipzeros'].capitalize())
             
             
     # shadow parameter
