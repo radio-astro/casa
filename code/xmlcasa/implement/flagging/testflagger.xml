@@ -457,12 +457,6 @@ for the manual mode.
      <description>Observation Id. Example: '2~4' </description>
      <value>""</value>
      </param>
-
-     <param type="string" name="expression">
-     <description>\tExpression to flag on. Example: 'ABS I'. Default: 
-     </description>
-     <value>ABS ALL</value>
-     </param>
     
      <param type="string" name="datacolumn">
      <description>\tData column to use for clipping. Example: 'DATA'. Default:
