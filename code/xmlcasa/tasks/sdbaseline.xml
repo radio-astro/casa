@@ -14,6 +14,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
         fit/subtract a spectral baseline 
 
+        Modified (change default value of addwn from [] to [0]) 2012-02-16 WK
         Modified (add parameters applyfft,fftmethod,fftthresh,addwn,rejwn) 2011-06-07 WK
         Modified (delete parameters nwave,maxwavelength) 2011-06-07 WK
         Modified (rename parameter masking to maskmode) 2011-03-10 WK
@@ -166,7 +167,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
     <param type="any" name="addwn" subparam="true">
             <description>additional wave numbers to use</description>
-	    <value type='vector'><value></value></value>
+	    <value type='vector'><value>0</value></value>
     </param>
 
     <param type="any" name="rejwn" subparam="true">
@@ -275,7 +276,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="applyfft"><value>True</value></default>
 			<default param="fftmethod"><value type="string">fft</value></default>
 			<default param="fftthresh"><value type="double">3.0</value></default>
-			<default param="addwn"><value type="vector"><value></value></value></default>
+			<default param="addwn"><value type="vector"><value>0</value></value></default>
 			<default param="rejwn"><value type="vector"><value></value></value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>0</value></default>
@@ -429,7 +430,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                                '&gt;=a' (= a, a+1, ... up to the maximum wave
                                       number corresponding to the Nyquist
                                       frequency for the case of FFT).
-                         default: []
+                         default: [0] (i.e., constant is subtracted at least)
                  rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
                          can be set just as addwn but has higher priority:
                          wave numbers which are specified both in addwn
