@@ -119,24 +119,27 @@ class test_tfcrop(test_base):
     def test_tfcrop1(self):
         '''tflagdata:: Test1 of mode = tfcrop'''
         tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 4399104, 4489)
-        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='ea19'), 2199552, 2294)
-        test_eq(tflagdata(vis=self.vis, mode='summary', spw='7'), 274944, 0)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 4489)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 2294)
+        self.assertEqual(res['spw']['7']['flagged'], 0)
         
     def test_tfcrop2(self):
         '''tflagdata:: Test2 of mode = tfcrop ABS ALL'''
         tflagdata(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 4399104, 18696)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4258)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RL'), 1099776, 4999)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LR'), 1099776, 4950)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 18696)
+        self.assertEqual(res['correlation']['LL']['flagged'], 4258)
+        self.assertEqual(res['correlation']['RL']['flagged'], 4999)
+        self.assertEqual(res['correlation']['LR']['flagged'], 4950)
+        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
 
     def test_extend1(self):
         '''tflagdata:: Extend the flags created by tfcrop'''
         tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 0)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['correlation']['LL']['flagged'], 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4489)
 
@@ -148,17 +151,20 @@ class test_shadow(test_base):
     def test1(self):
         '''tflagdata:: Test1 of mode = shadow'''
         tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 5252)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 5252)
 
     def test2(self):
         """tflagdata:: Test2 of mode = shadow"""
         tflagdata(vis=self.vis, mode='shadow', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 2912)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2912)
 
     def test3(self):
         """tflagdata:: Test3 of mode = shadow"""
         tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 1456)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1456)
 
 
 #        # This MS seems to give wrong results with the old flagdata

@@ -57,14 +57,13 @@ def tflagdata(vis,
              run,           # run or not the tool
              writeflags,
              sequential,    # run in sequential or in parallel
-             flagbackup,
              display,
-             format,
+             flagbackup,
              savepars,      # save the current parameters to FLAG_CMD  or
              outfile):      # output file to save flag commands
 
     # Global parameters
-    # vis, mode, run, savepars, display, writeflags                        
+    # vis, mode, run, savepars                      
     
     #
     # Task tflagdata
@@ -352,14 +351,12 @@ def tflagdata(vis,
             if display == 'both':
                 agent_pars['datadisplay'] = True
                 agent_pars['reportdisplay'] = True
-                agent_pars['format'] = format
             
             elif display == 'data':
                 agent_pars['datadisplay'] = True
             
             elif display == 'report':
                 agent_pars['reportdisplay'] = True
-                agent_pars['format'] = format
                 
             tflocal.parseagentparameters(agent_pars)
                     
