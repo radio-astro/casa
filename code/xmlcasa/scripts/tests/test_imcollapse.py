@@ -108,7 +108,8 @@ class imcollapse_test(unittest.TestCase):
     
     def setUp(self):
         shutil.copy(datapath + good_image, good_image)
-    
+        self.tabular_spectral_image = datapath + "longZax"
+
     def tearDown(self):
         os.remove(good_image)
 
@@ -451,6 +452,29 @@ class imcollapse_test(unittest.TestCase):
                     "", maskim + ">0", False, True, True
                 )
             self.assertTrue(type(yy) == type(ia))
+            
+    def test_CAS3737(self):
+        """ imcollapse: test tabular spectral axis has correct collapsed reference value """
+        image = self.tabular_spectral_image
+        chans = "2445~2555"
+        mytool = run_collapse(
+            image, "mean", 2, "", "", "",
+            chans, "", "", False
+        )
+        expected = 98318505973583.641
+        got = mytool.toworld([0,0,0])["numeric"][2]
+        mytool.done()
+        frac = got/expected - 1
+        self.assertTrue(frac < 1e-6 and frac > -1e-6)
+        
+        mytool = run_imcollapse(
+            image, "mean", 2, "", "", "",
+            chans, "", "", False, True
+        )
+        got = mytool.toworld([0,0,0])["numeric"][2]
+        mytool.done()
+        frac = got/expected - 1
+        self.assertTrue(frac < 1e-6 and frac > -1e-6) 
 
 def suite():
     return [imcollapse_test]
