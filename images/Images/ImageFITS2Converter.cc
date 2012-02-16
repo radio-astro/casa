@@ -591,9 +591,6 @@ Bool ImageFITSConverter::removeFile (String& error, const File& outFile,
             if (outFile.isRegular()) {
 		RegularFile rfile(outFile);
 		rfile.remove();
-	    } else if (outFile.isDirectory()) {
-		Directory dfile(outFile);
-		dfile.removeRecursive();
 	    } else if (outFile.isSymLink()) {
 		SymLink sfile(outFile);
 		sfile.remove();
