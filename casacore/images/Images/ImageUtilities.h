@@ -149,14 +149,17 @@ public:
 // element is returned as "?"    Returns <src>False</src> if the lengths of
 // <<src>blc</src> and <src>trc</src> are not equal to the number of pixel axes
 // in the coordinate system.
-   static Bool pixToWorld (Vector<String>& sWorld,
-                           CoordinateSystem& cSys,
-                           const Int& pixelAxis,
-                           const Vector<Int>& cursorAxes,
-                           const IPosition& blc,
-                           const IPosition& trc,
-                           const Vector<Double>& pixels,
-                           const Int& prec);
+   static Bool pixToWorld (
+		   Vector<String>& sWorld,
+		   CoordinateSystem& cSys,
+		   const Int& pixelAxis,
+		   const Vector<Int>& cursorAxes,
+		   const IPosition& blc,
+		   const IPosition& trc,
+		   const Vector<Double>& pixels,
+		   const Int& prec,
+		   const Bool usePrecForMixed=False
+   );
 
 // Convert long axis names "Right Ascension", "Declination", "Frequency" and
 // "Velocity" to "RA", "Dec", "Freq", "Vel" respectively.  Unknown strings

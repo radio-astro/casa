@@ -2098,7 +2098,7 @@ String SpectralCoordinate::format (String& units,
                                    uInt worldAxis,
                                    Bool isAbsolute,
                                    Bool showAsAbsolute,
-                                   Int precision) const
+                                   Int precision, Bool usePrecForMixed) const
 {
 	//cout << "Using SpectralCoordinate::format()" << endl;
 
@@ -2141,7 +2141,7 @@ String SpectralCoordinate::format (String& units,
 // Requested unit is empty or consistent with Hz.  
 
       theString = Coordinate::format(units, form, worldValue, worldAxis,
-                                     isAbsolute, showAsAbsolute, precision);
+                                     isAbsolute, showAsAbsolute, precision, usePrecForMixed);
    } 
    else { // unit not frequency
 

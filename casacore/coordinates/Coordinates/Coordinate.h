@@ -433,13 +433,17 @@ public:
                               Int defPrecScientific,
                               Int defPrecFixed,
                               Int defPrecTime) const;
-    virtual String format(String& units,
-                          Coordinate::formatType format, 
-                          Double worldValue, 
-                          uInt axis, 
-                          Bool isAbsolute=True,
-                          Bool showAsAbsolute=True,
- 			  Int precision=-1) const;
+    virtual String format(
+    	String& units,
+    	Coordinate::formatType format,
+    	Double worldValue,
+    	uInt axis,
+    	Bool isAbsolute=True,
+    	Bool showAsAbsolute=True,
+    	Int precision=-1,
+    	Bool usePrecForMixed=False
+    ) const;
+
     String formatQuantity(String& units,
                           Coordinate::formatType format, 
                           const Quantum<Double>& worldValue, 

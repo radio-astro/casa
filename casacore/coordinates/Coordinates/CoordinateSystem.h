@@ -673,13 +673,15 @@ public:
     // function are then passed on to the formatter for that Coordinate. So
     // refer to the other derived Coordinate classes for specifics on the
     // formatting.
-    virtual String format(String& units,
-                          Coordinate::formatType format,
-                          Double worldValue,
-                          uInt worldAxis,
-                          Bool isAbsolute=True,
-                          Bool showAsAbsolute=True,
-                          Int precision=-1) const;
+    virtual String format(
+    	String& units,
+    	Coordinate::formatType format,
+    	Double worldValue,
+    	uInt worldAxis,
+    	Bool isAbsolute=True,
+    	Bool showAsAbsolute=True,
+    	Int precision=-1, Bool usePrecForMixed=False
+    ) const;
 
     // Miscellaneous information related to an observation, for example the
     // observation date.
