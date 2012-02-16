@@ -211,33 +211,25 @@ Bool ImageFITSConverter::FITSToImage(ImageInterface<Float> *&newImage,
 
 }
 
-Bool ImageFITSConverter::ImageToFITS(String &error,
-		ImageInterface<Float>& image,
-		const String &fitsName,
-		uInt memoryInMB,
-		Bool preferVelocity,
-		Bool opticalVelocity,
-		Int BITPIX, Float minPix, Float maxPix,
-		Bool allowOverwrite, Bool degenerateLast,
-		Bool verbose, Bool stokesLast,
-		Bool preferWavelength,
-		Bool airWavelength,
-		const String& origin)
-{
-	//
-	// Make a logger
-	//
+Bool ImageFITSConverter::ImageToFITS(
+	String &error, ImageInterface<Float>& image,
+	const String &fitsName, uInt memoryInMB,
+	Bool preferVelocity, Bool opticalVelocity,
+	Int BITPIX, Float minPix, Float maxPix,
+	Bool allowOverwrite, Bool degenerateLast,
+	Bool verbose, Bool stokesLast,
+	Bool preferWavelength, Bool airWavelength,
+	const String& origin
+) {
 	LogIO os;
-	os << LogOrigin("ImageFitsConverter", "ImageToFITS", WHERE);
+	os << LogOrigin("ImageFitsConverter", __FUNCTION__, WHERE);
 	//
 	error = "";
 	FitsOutput *outfile=0;
-
 	// create the FITS output
 	if (!ImageFITSConverter::openFitsOutput(error, outfile, fitsName, allowOverwrite)){
 		return False;
 	}
-
 	// get the coo-sys and check for a quality axis
 	CoordinateSystem cSys= image.coordinates();
 	if (cSys.hasQualityAxis()){
@@ -250,7 +242,6 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 		}
 	}
 	else{
-
 		// put the image to the FITSOut
 		if (!ImageFITSConverter::ImageToFITSOut(error, os, image, outfile, memoryInMB,
 				preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
@@ -258,8 +249,9 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 			return False;
 		}
 	}
-	if (outfile)
+	if (outfile) {
 		delete outfile;
+	}
 	return True;
 }
 
@@ -586,6 +578,12 @@ void ImageFITSConverter::restoreHistory (LoggerHolder& logger,
 Bool ImageFITSConverter::removeFile (String& error, const File& outFile,
                                      const String& outName, Bool allowOverwrite)
 {
+	String basename = outFile.path().baseName();
+	if (basename.empty() || basename == "." || basename == "..") {
+		throw AipsError(
+			"Invalid file path " + outFile.path().absoluteName() + ". You really don't want me to delete the directory you're in."
+		);
+	}
    if (outFile.exists()) {
       if (allowOverwrite) {
          String msg;
@@ -665,7 +663,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	if(stokesLast || degenerateLast){
 		Vector<Int> order(ndim);
 		Vector<String> cNames = cSys.worldAxisNames();
-		//       cout << "1: " << cNames << endl;
 		uInt nStokes = 0; // number of stokes axes
 		if(stokesLast){
 			for (uInt i=0; i<ndim; i++) { // loop over axes
@@ -685,9 +682,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 		if(nStokes>0){ // apply the stokes reordering
 			cSys.transpose(order,order);
 		}
-		//       cNames = cSys.worldAxisNames();
-		//       cout << "2: " << cNames << endl;
-
 		if (degenerateLast) {
 			// make sure the stokes axes stay where they are now
 			for (uInt i=ndim-nStokes; i<ndim; i++) {
@@ -709,8 +703,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 				}
 			}
 			cSys.transpose(order,order); // apply the degenerate reordering
-			//	   cNames = cSys.worldAxisNames();
-			//	   cout << "3: " << cNames << endl;
 		}
 
 		for (uInt i=0; i<ndim; i++) {
