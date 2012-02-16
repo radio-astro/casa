@@ -153,8 +153,9 @@ class test_unapply(test_base):
         input = "scan=3 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
-        test_eq(tflagdata(vis=self.vis,mode='summary',scan='1'), 568134, 568134)
-        test_eq(tflagdata(vis=self.vis,mode='summary',scan='3'), 762048, 2829)
+        res = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
+        self.assertEqual(res['scan']['3']['flagged'], 2829, 'scan=3 should be partially flagged')
         
         # Unapply only the tfcrop line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)

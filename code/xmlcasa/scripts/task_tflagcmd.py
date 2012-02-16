@@ -22,7 +22,6 @@ def tflagcmd(
     rowlist=None,
     plotfile=None,
     display=None,
-    format=None,
     writeflags=None,
     sequential=None,
     savepars=None,
@@ -304,14 +303,12 @@ def tflagcmd(
                 if display == 'both':
                     agent_pars['datadisplay'] = True
                     agent_pars['reportdisplay'] = True
-                    agent_pars['format'] = format
                 
                 elif display == 'data':
                     agent_pars['datadisplay'] = True
                 
                 elif display == 'report':
                     agent_pars['reportdisplay'] = True
-                    agent_pars['format'] = format
                     
                 tflocal.parseagentparameters(agent_pars)                
 

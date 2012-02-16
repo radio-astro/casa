@@ -108,11 +108,6 @@
                 <value type="string"></value>
             </param>
 
-            <param type="string" name="format" subparam="true">
-                <description>Display plots on the screen or save to a file</description>
-                <value type="string">screen</value>
-            </param>
-
             <param type="bool" name="writeflags">
                 <description>Write flags to the MS</description>
                 <value>True</value>
@@ -171,17 +166,6 @@
                             </equals>
                     </when>
                                         
-                    <when param="display">
-                        <equals type="string" value="" />
-                        <equals type="string" value="data" />
-                        <equals type="string" value="report">
-                            <default param="format"><value type="string">screen</value></default>
-                        </equals>                    
-                        <equals type="string" value="both">
-                            <default param="format"><value type="string">screen</value></default>
-                        </equals>                    
-                    </when>
-
                     <when param="savepars">
                         <equals type="bool" value="False" />
                         <equals type="bool" value="True">
@@ -391,12 +375,9 @@
                       obvious that the current set of parameters is just wrong.
                       -- There is an option to stop the display but continue flagging.
 
-                  'report' --> displays enf-of-MS reports on the screen or save on a file using the
-                                 format sub-parameter.
-                      format -- 'screen' or 'file'
-                                file is the name of the filename to be saved in disk.
+                  'report' --> displays enf-of-MS reports on the screen.
                                 
-                  'both' --> displays data per chunk and end-of-MS reports on the screen or saved on a file in disk.
+                  'both' --> displays data per chunk and end-of-MS reports on the screen.
 
         writeflags -- Choose whether or not to write flags to the MS 
                  default: True
@@ -532,7 +513,7 @@
 
           antenna='ea01' timerange='00:00:00~01:00:00'
           antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'
-          mode='clip' clipminmax=[0,5] expression='ABS_ALL'
+          mode='clip' clipminmax=[0,5] correlation='ABS_ALL'
           mode='quack' quackmode='end' quackinterval=1.0
           mode='shadow'
 
@@ -550,7 +531,7 @@
 
           tflagcmd(vis='myvis.ms',inpmode='cmd',
                   command=["mode='shadow'",
-                           "mode='clip' clipminmax=[0,5] expression='ABS_ALL'",
+                           "mode='clip' clipminmax=[0,5] correlation='ABS_ALL'",
                            "mode='quack' quackmode='end' quackinterval=1.0",
                            "antenna='ea01' timerange='00:00:00~01:00:00'",
                            "antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'"])
@@ -662,7 +643,7 @@
         2. Modes specific parameters with default values (for further details, refer to the task tflagger).
           
           2.1 Mode clip.
-              expression='ABS_ALL'
+              correlation='ABS_ALL'
               datacolumn='DATA'
               clipminmax=[]  
               clipoutside=True
@@ -683,7 +664,7 @@
           2.5 Mode tfcrop.
               ntime='scan'
               combinescans=False
-              expression='ABS_ALL'
+              correlation='ABS_ALL'
               datacolumn='DATA' 
               timecutoff=4.0 
               freqcutoff=3.0
