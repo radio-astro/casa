@@ -2,6 +2,7 @@ from taskinit import *
 import time
 import os
 import sys
+from flaghelper import *
 
 debug = False
 
@@ -92,6 +93,9 @@ def tflagcmd(
         casalog.post('MS spans timerange ' + ms_starttime + ' to '
                      + ms_endtime)
             
+        # Initialize the flaghelper module
+        fh = flaghelper(tflocal, casalog)
+        
         
         myflagcmd = {}
         cmdlist = []
@@ -274,7 +278,8 @@ def tflagcmd(
                 cmdlist.append(cmdline)
                     
             # Get the union of all selection parameters
-            unionpars = getUnion(cmdlist)
+#            unionpars = getUnion(cmdlist)
+            unionpars = fh.getUnion(cmdlist)
             casalog.post('The union of all parameters is %s' %(unionpars), 'DEBUG')
 
             # Select the data
@@ -285,7 +290,8 @@ def tflagcmd(
             if action == 'unapply':
                 apply = False
                 
-            list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
+#            list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
+            list2save = fh.setupAgent(myflagcmd, tablerows, apply)
             
             # If the display is requested, add it to list of agents
             if display != '':
