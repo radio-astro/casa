@@ -556,11 +556,11 @@ class flaghelper:
         
         # Parameters for each mode
         manualpars = []
-        clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
+        clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
         quackpars = ['quackinterval','quackmode','quackincrement']
         shadowpars = ['diameter']
         elevationpars = ['lowerlimit','upperlimit'] 
-        tfcroppars = ['ntime','combinescans','expression','datacolumn','timecutoff','freqcutoff',
+        tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
                       'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
         extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
                       'flagneartime','flagnearfreq']

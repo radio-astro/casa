@@ -302,6 +302,21 @@ class imstat_test(unittest.TestCase):
             self.assertTrue(size > 9e3*i and size < 1e4*i )
             i = i+1
 
+
+    def test011(self):
+        """ test multiple region support"""
+        shape = [10, 10, 10]
+        ia.fromshape("test011.im", shape)
+        box = "0, 0, 2, 2, 4, 4, 6, 6"
+        chans = "0~4, 6, >8"
+        reg = rg.frombcs(
+            ia.coordsys().torecord(), shape,
+            box=box, chans=chans
+        )
+        bb = ia.statistics(region=reg)
+        self.assertTrue(bb["npts"][0] == 126)
+        bb = imstat(imagename=ia.name(), chans=chans, box=box)
+        self.assertTrue(bb["npts"][0] == 126)
  
 def suite():
     return [imstat_test]

@@ -118,25 +118,28 @@ class test_tfcrop(test_base):
         
     def test_tfcrop1(self):
         '''tflagdata:: Test1 of mode = tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 4399104, 4489)
-        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='ea19'), 2199552, 2294)
-        test_eq(tflagdata(vis=self.vis, mode='summary', spw='7'), 274944, 0)
+        tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 4489)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 2294)
+        self.assertEqual(res['spw']['7']['flagged'], 0)
         
     def test_tfcrop2(self):
         '''tflagdata:: Test2 of mode = tfcrop ABS ALL'''
         tflagdata(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 4399104, 18696)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4258)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RL'), 1099776, 4999)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LR'), 1099776, 4950)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 18696)
+        self.assertEqual(res['correlation']['LL']['flagged'], 4258)
+        self.assertEqual(res['correlation']['RL']['flagged'], 4999)
+        self.assertEqual(res['correlation']['LR']['flagged'], 4950)
+        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
 
     def test_extend1(self):
         '''tflagdata:: Extend the flags created by tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 0)
+        tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['correlation']['LL']['flagged'], 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4489)
 
@@ -148,17 +151,20 @@ class test_shadow(test_base):
     def test1(self):
         '''tflagdata:: Test1 of mode = shadow'''
         tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 5252)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 5252)
 
     def test2(self):
         """tflagdata:: Test2 of mode = shadow"""
         tflagdata(vis=self.vis, mode='shadow', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 2912)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2912)
 
     def test3(self):
         """tflagdata:: Test3 of mode = shadow"""
         tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 1456)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1456)
 
 
 #        # This MS seems to give wrong results with the old flagdata
@@ -468,7 +474,7 @@ class test_statistics_queries(test_base):
 
     def test_CAS2212(self):
         '''tflagdata: Clipping scan selection, CAS-2212, CAS-3496'''
-        # By default expression='ABS ALL'
+        # By default correlation='ABS ALL'
         tflagdata(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3], savepars=False) 
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 85404)
         s = tflagdata(vis=self.vis, mode='summary')['scan']
@@ -506,23 +512,23 @@ class test_statistics_queries(test_base):
 
     def test_chanavg0(self):
         print "Test of channel average"
-        tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], expression='ABS RR',
+        tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], correlation='ABS RR',
                  savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 1414186)
 
     def test_chanavg1(self):
-        tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], expression='ABS RR',
+        tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], correlation='ABS RR',
                  savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 1347822)
 
     def test_chanavg2(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
-                 expression='ABS RR', savepars=False)
+                 correlation='ABS RR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 242053)
 
     def test_chanavg3(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], spw='0:0~10',
-                 expression='ABS RR', savepars=False)
+                 correlation='ABS RR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 231374)
                
 
@@ -660,17 +666,17 @@ class test_selections_alma(test_base):
 
     def test_abs_wvr(self):
         '''tflagdata: clip ABS WVR'''
-        tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], expression='ABS WVR', savepars=False)
+        tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS WVR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 22752)
         
     def test_abs_i(self):
         '''tflagdata: clip ABS I. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], expression='ABS I', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS I', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 0)
 
     def test_abs_all(self):
         '''tflagdata: clip ABS ALL. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], expression='ABS ALL', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
         
@@ -819,7 +825,7 @@ class test_list(test_base):
         tflagdata(vis=self.vis, mode='list',  inpfile=filename, run=True, savepars=False)
         
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 68736)
+        self.assertEqual(res['flagged'], 274944)
 
         
 class test_clip(test_base):
@@ -830,9 +836,9 @@ class test_clip(test_base):
         
     def test_clipzeros(self):
     	'''tflagdata: clip only zero-value data'''
-        tflagdata(vis = self.vis, mode = 'clip', clipzeros=True)
+        tflagdata(vis = self.vis, mode='clip', clipzeros=True)
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'],68736,'Should clip only spw=8')
+        self.assertEqual(res['flagged'],274944,'Should clip only spw=8')
     	
         
 

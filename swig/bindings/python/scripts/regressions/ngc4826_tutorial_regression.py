@@ -110,6 +110,8 @@ if benchmarking:
     startTime=time.time()
     startProc=time.clock()
 
+_mydatapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/ngc4826/'
+
 ##########################################################################
 # Import and concatenate sources
 ##########################################################################
@@ -122,37 +124,37 @@ default('importuvfits')
 print "Starting from the uvfits files exported by miriad"
 print "The USB spectral windows were written separately by miriad for 16apr98"
 
-importuvfits(fitsfile='fitsfiles/3c273.fits5', vis='ngc4826.tutorial.3c273.5.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/3c273.fits5', vis='ngc4826.tutorial.3c273.5.ms')
 
-importuvfits(fitsfile='fitsfiles/3c273.fits6', vis='ngc4826.tutorial.3c273.6.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/3c273.fits6', vis='ngc4826.tutorial.3c273.6.ms')
 
-importuvfits(fitsfile='fitsfiles/3c273.fits7', vis='ngc4826.tutorial.3c273.7.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/3c273.fits7', vis='ngc4826.tutorial.3c273.7.ms')
 
-importuvfits(fitsfile='fitsfiles/3c273.fits8', vis='ngc4826.tutorial.3c273.8.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/3c273.fits8', vis='ngc4826.tutorial.3c273.8.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits9', vis='ngc4826.tutorial.1310+323.ll.9.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits9', vis='ngc4826.tutorial.1310+323.ll.9.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits10', vis='ngc4826.tutorial.1310+323.ll.10.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits10', vis='ngc4826.tutorial.1310+323.ll.10.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits11', vis='ngc4826.tutorial.1310+323.ll.11.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits11', vis='ngc4826.tutorial.1310+323.ll.11.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits12', vis='ngc4826.tutorial.1310+323.ll.12.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits12', vis='ngc4826.tutorial.1310+323.ll.12.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits13', vis='ngc4826.tutorial.1310+323.ll.13.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits13', vis='ngc4826.tutorial.1310+323.ll.13.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits14', vis='ngc4826.tutorial.1310+323.ll.14.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits14', vis='ngc4826.tutorial.1310+323.ll.14.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits15', vis='ngc4826.tutorial.1310+323.ll.15.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits15', vis='ngc4826.tutorial.1310+323.ll.15.ms')
 
-importuvfits(fitsfile='fitsfiles/1310+323.ll.fits16', vis='ngc4826.tutorial.1310+323.ll.16.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/1310+323.ll.fits16', vis='ngc4826.tutorial.1310+323.ll.16.ms')
 
-importuvfits(fitsfile='fitsfiles/ngc4826.ll.fits5', vis='ngc4826.tutorial.ngc4826.ll.5.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/ngc4826.ll.fits5', vis='ngc4826.tutorial.ngc4826.ll.5.ms')
 
-importuvfits(fitsfile='fitsfiles/ngc4826.ll.fits6', vis='ngc4826.tutorial.ngc4826.ll.6.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/ngc4826.ll.fits6', vis='ngc4826.tutorial.ngc4826.ll.6.ms')
 
-importuvfits(fitsfile='fitsfiles/ngc4826.ll.fits7', vis='ngc4826.tutorial.ngc4826.ll.7.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/ngc4826.ll.fits7', vis='ngc4826.tutorial.ngc4826.ll.7.ms')
 
-importuvfits(fitsfile='fitsfiles/ngc4826.ll.fits8', vis='ngc4826.tutorial.ngc4826.ll.8.ms')
+importuvfits(fitsfile=_mydatapath+'fitsfiles/ngc4826.ll.fits8', vis='ngc4826.tutorial.ngc4826.ll.8.ms')
 
 if benchmarking:
     import2time=time.time()

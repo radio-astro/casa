@@ -98,6 +98,9 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                 casalog.origin('importasdm')
 		viso = ''
 		visoc = '' # for the wvr corrected version, if needed
+                # -----------------------------------------
+                # beginning of importasdm_sd implementation
+                # -----------------------------------------
                 if singledish:
                         theexecutable = 'asdm2ASAP'
                         if useversion == 'v2':
@@ -133,7 +136,46 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                         raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
                         else:
                                 casalog.post( 'You have to build ASAP to be able to create single-dish data.','SEVERE' )
-                        return 
+                        # implementation of asis option using tb.fromASDM
+                        if asis != '':
+                                import commands
+                                asdmTables = commands.getoutput('ls %s/*.xml'%(asdm)).split('\n')
+                                asdmTabNames = []
+                                for tab in asdmTables:
+                                        asdmTabNames.append( tab.split('/')[-1].rstrip('.xml') )
+                                if asis == '*':
+                                        targetTables = asdmTables
+                                        targetTabNames = asdmTabNames
+                                else:
+                                        targetTables = []
+                                        targetTabNames = []
+                                        tmpTabNames = asis.split()
+                                        for i in xrange(len(tmpTabNames)):
+                                                tab = tmpTabNames[i]
+                                                try:
+                                                        targetTables.append( asdmTables[asdmTabNames.index(tab)] )
+                                                        targetTabNames.append( tab )
+                                                except:
+                                                        pass
+                                outTabNames = []
+                                outTables = []
+                                for tab in targetTabNames:
+                                        out = 'ASDM_' + tab.upper()
+                                        outTabNames.append( out )
+                                        outTables.append( vis+'/'+out )
+                                tbtool = casac.homefinder.find_home_by_name('tableHome')
+                                tb = tbtool.create()
+                                tb.open(vis,nomodify=False)
+                                wtb = tbtool.create()
+                                for i in xrange(len(outTables)):
+                                        wtb.fromASDM( outTables[i], targetTables[i] )
+                                        tb.putkeyword( outTabNames[i], 'Table: %s'%(outTables[i]) )
+                                        tb.flush()
+                                tb.close()
+                        return
+                # -----------------------------------
+                # end of importasdm_sd implementation
+                # -----------------------------------
 		if(len(vis) > 0) :
 		   viso = vis
 		   tmps = vis.rstrip('.ms')

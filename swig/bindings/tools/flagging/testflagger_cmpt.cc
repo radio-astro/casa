@@ -307,7 +307,6 @@ testflagger::parseclipparameters(
 		const std::string& correlation,
 		const std::string& intent,
 		const std::string& observation,
-		const std::string& expression,
 		const std::string& datacolumn,
 		const std::vector<double>& clipminmax,
 		const bool clipoutside,
@@ -324,7 +323,7 @@ testflagger::parseclipparameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
-					String(intent), String(observation), String(expression),
+					String(intent), String(observation),
 					String(datacolumn), clipminmax, Bool(clipoutside),
 					Bool(channelavg), Bool(apply));
 

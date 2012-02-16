@@ -119,7 +119,7 @@ class test_alma(test_base):
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Save cmd to FLAG_CMD
-        cmd = "mode=clip clipminmax=[0,50] expression=ABS_WVR"
+        cmd = "mode=clip clipminmax=[0,50] correlation=ABS_WVR"
         tflagcmd(vis=self.vis, inpmode='cmd', command=[cmd], action='list', savepars=True)
         
         # Extract it
@@ -150,11 +150,12 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
         # Flag using tfcrop agent
-        input = "scan=3 mode=tfcrop expression='ABS_RR'"
+        input = "scan=3 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
-        test_eq(tflagdata(vis=self.vis,mode='summary',scan='1'), 568134, 568134)
-        test_eq(tflagdata(vis=self.vis,mode='summary',scan='3'), 762048, 2829)
+        res = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
+        self.assertEqual(res['scan']['3']['flagged'], 2829, 'scan=3 should be partially flagged')
         
         # Unapply only the tfcrop line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
@@ -246,7 +247,7 @@ class test_savepars(test_base):
         
         ########## TEST 1 
         # create text file called tflagcmd.txt
-        input = " scan=4 mode=clip expression=ABS_RR clipminmax=[0,4]\n"
+        input = " scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
         filename = create_input(input)
         filename1 = 'filename1.txt'
         os.system('cp '+filename+' '+filename1)
@@ -286,8 +287,8 @@ class test_savepars(test_base):
         self.assertEqual(res['scan']['2']['total'], 238140)
         self.assertEqual(res['scan']['3']['flagged'], 762048)
         self.assertEqual(res['scan']['3']['total'], 762048)
-        # scan 4 should be partially flagged
-        self.assertEqual(res['scan']['4']['flagged'], 3348)
+        # scan 4 should be partially flagged by clip mode
+        self.assertEqual(res['scan']['4']['flagged'], 3348, 'Only RR should be flagged')
         self.assertEqual(res['scan']['4']['total'], 95256)
         
         # Only cmd form TEST 1 should be in MS
@@ -301,7 +302,7 @@ class test_savepars(test_base):
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Save the parameters to FLAG_CMD but do not write the flags
-        input = " scan=4 mode=clip expression=ABS_ALL clipminmax=[0,4]\n"
+        input = " scan=4 mode=clip correlation=ABS_ALL clipminmax=[0,4]\n"
         tflagcmd(vis=self.vis, inpmode='cmd', command=[input], writeflags=False, savepars=True)
         
         # No flags should be in the MS
