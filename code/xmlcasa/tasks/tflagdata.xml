@@ -275,18 +275,13 @@ tfcrop,extend,unflag,summary)</description>
                 <description>Run the task in sequential or in parallel</description>
                 <value>False</value>
             </param>
-            <param type="bool" name="flagbackup" subparam="true">
-                <description>Back up the state of flags before the run</description>
-                <value>False</value>
-            </param>
-
-            <param type="string" name="display">
+            <param type="string" name="display" subparams="true">
                 <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
                 <value type="string"></value>
             </param>
-            <param type="string" name="format" subparam="true">
-                <description>Display plots on the screen or save to a file</description>
-                <value type="string">screen</value>
+            <param type="bool" name="flagbackup" subparam="true">
+                <description>Back up the state of flags before the run</description>
+                <value>False</value>
             </param>
 
             <param type="bool" name="savepars">
@@ -462,21 +457,11 @@ tfcrop,extend,unflag,summary)</description>
                     <equals type="bool" value="True">
                         <default param="writeflags"><value type="bool">True</value></default>
                         <default param="sequential"><value type="bool">False</value></default>
+                        <default param="display"><value type="string"></value></default>
                         <default param="flagbackup"><value type="bool">False</value></default>
                     </equals>
                 </when>
-                
-               <when param="display">
-                <equals type="string" value="" />
-                <equals type="string" value="data" />
-                <equals type="string" value="report">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-                <equals type="string" value="both">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-               </when>
-               
+                               
                <when param="savepars">
                 <equals type="bool" value="False" />
                  <equals type="bool" value="True">
@@ -856,17 +841,13 @@ tfcrop,extend,unflag,summary)</description>
               sequential -- Run the task in sequential or in parallel. 
                    default: False
                    options: False/True
-                
-              flagbackup -- Automatically backup flags before running the tool.
-                   default: False
-                   options: True/False
-                    
- 
-        display -- Display data and/or end-of-MS reports at runtime.
-        
-               default: 'none'
-               options: 'none', 'data', 'report', 'both'
-                  'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
+                 
+              display -- Display data and/or end-of-MS reports at runtime.        
+               	   default: 'none'
+               	   options: 'none', 'data', 'report', 'both'
+
+                  	 'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
+
                       This option opens a GUI to show the 2D time-freq planes of
                       the data with old and new flags, for all correlations per baseline.
                       -- The GUI allows stepping through all baselines (prev/next) in
@@ -875,13 +856,13 @@ tfcrop,extend,unflag,summary)</description>
                       obvious that the current set of parameters is just wrong.
                       -- There is an option to stop the display but continue flagging.
 
-                  'report' --> displays enf-of-MS reports on the screen or save on a file using the
-                                 format sub-parameter.
-                      format -- 'screen' or 'file'
-                                file is the name of the filename to be saved in disk.
-                                
-                  'both' --> displays data per chunk and end-of-MS reports on the screen or saved on a file in disk.
+                  	'report' --> displays enf-of-MS reports on the screen.
+
+                  	'both' --> displays data per chunk and end-of-MS reports on the screen
                                  
+              flagbackup -- Automatically backup flags before running the tool.
+                   default: False
+                   options: True/False                    
 
         savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
                 default: False
