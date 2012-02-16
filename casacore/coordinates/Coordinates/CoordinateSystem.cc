@@ -623,13 +623,13 @@ void CoordinateSystem::subImageInSitu(const Vector<Float> &originShift,
     uInt n = nPixelAxes();
     Vector<Double> crpix = referencePixel().copy();
     Vector<Double> cdelt = increment().copy();
-
 // Not efficient, but easy and this code shouldn't be called often
 
     Int coordinate, axisInCoordinate;
     for (uInt i=0; i<n; i++) {
     	findPixelAxis(coordinate, axisInCoordinate, i);
-        if (type(coordinate)==Coordinate::STOKES) {
+    	Coordinate::Type cType = type(coordinate);
+        if (cType == Coordinate::STOKES) {
 
 // Only integer shift and factor for Stokes
 
@@ -640,22 +640,43 @@ void CoordinateSystem::subImageInSitu(const Vector<Float> &originShift,
         			Int(pixincFac(i)+0.5), s);
         	replaceCoordinate(sc, coordinate);
         }
-        else if (type(coordinate)==Coordinate::QUALITY) {
-
+        else if (cType == Coordinate::QUALITY) {
         	Int s = -1;
         	if (nShape!=0) s = newShape(i);
         	QualityCoordinate qc = qualitySubImage(qualityCoordinate(coordinate),
         			Int(originShift(i)+0.5),
         			Int(pixincFac(i)+0.5), s);
         	replaceCoordinate(qc, coordinate);
-        }	else {
+        }
+        if (
+        	cType == Coordinate::SPECTRAL
+        	&& spectralCoordinate(coordinate).worldValues().size() > 0
+        ) {
+        	// tabular spectral coordinate
+        	SpectralCoordinate spCoord = spectralCoordinate(coordinate);
+        	Vector<Double> newWorldValues(newShape[i]);
+        	for (
+        		uInt j=0; j< newWorldValues.size(); j++
+        	) {
+        		Double pix = originShift[i] + j*pixincFac[i];
+        		if (! spCoord.toWorld(newWorldValues[j], pix)) {
+        			throw AipsError("Unable to convert tabular spectral coordinate");
+        		}
+        	}
+        	SpectralCoordinate newCoord(
+        		spCoord.frequencySystem(), newWorldValues, spCoord.restFrequency()
+        	);
+        	replaceCoordinate(newCoord, coordinate);
+        	crpix(i) = 0;
+        	cdelt[i] = newCoord.increment()[0];
+        }
+        else {
            AlwaysAssert(pixincFac(i) > 0, AipsError);
            crpix(i) -= originShift(i);
            crpix(i) /= pixincFac(i);
            cdelt(i) *= pixincFac(i);
         }
     }
-//
     setReferencePixel(crpix);
     setIncrement(cdelt);
 }
@@ -1014,15 +1035,9 @@ Bool CoordinateSystem::toWorld(Vector<Double> &world,
 		    pixel_replacement_values_p[i]->operator()(j);
 	    }
 	}
-
- //cout << "world pixel map: " << *(world_maps_p[i]) << " " << *(pixel_maps_p[i]) << endl;
-
- //cout << "toWorld # " << i << "pix=" << *pixel_tmps_p[i] << endl;
 	Bool oldok = ok;
 	ok = coordinates_p[i]->toWorld(
 		       *(world_tmps_p[i]), *(pixel_tmps_p[i]));
-
-// cout << "toWorld # " << i << "wld=" << *world_tmps_p[i] << endl;
 
 	if (!ok) {
 
@@ -2155,8 +2170,6 @@ Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units)
 
 Bool CoordinateSystem::setReferencePixel(const Vector<Double> &refPix)
 {
-    //cout << "refPix.nelements()=" << refPix.nelements() << endl;
-    //cout << "nPixelAxes()=" << nPixelAxes() << endl;
     Bool ok = (refPix.nelements()==nPixelAxes());
     if (!ok) {
       set_error("ref. pix vector must be of length nPixelAxes()");
@@ -2224,7 +2237,6 @@ Bool CoordinateSystem::setIncrement(const Vector<Double> &inc)
 	ok = (coordinates_p[i]->setIncrement(tmp) && ok);
         if (!ok) set_error (coordinates_p[i]->errorMessage());
     }
-
     return ok;
 }
 
