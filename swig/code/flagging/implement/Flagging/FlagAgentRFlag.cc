@@ -180,7 +180,8 @@ Double FlagAgentRFlag::mean(vector<Double> &data,vector<Double> &counts)
 
 Double FlagAgentRFlag::median(vector<Double> &data)
 {
-	Double med;
+	Double med,medPoint;
+	vector<Double> datacopy = data;
 	sort(data.begin(),data.end());
 
 	if (data.size() % 2 == 1)
@@ -205,9 +206,6 @@ Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &dat
 	for (size_t index = 0; index < data.size();index++)
 	{
 		avg = data[index]/counts[index];
-		avgSquared = dataSquared[index]/counts[index];
-		std = avgSquared - avg*avg;
-		std = sqrt(std > 0?  std:0);
 		samplesForMedian[index] = avg;
 	}
 
@@ -418,14 +416,6 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 	            	{
 	            		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 	            		{
-	            			/*
-	            			cout 	<< "pol: " << pol_k
-	            					<< " channel:" << chan_j
-	            					<< " timeStart:" << timeStart
-	            					<< " timeStop:" << timeStop
-	            					<< " StdTotal:" << StdTotal
-	            					<< " noise:" << noise << endl;
-	            				*/
 	            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
 	            			visBufferFlags_p += 1;
 	            		}
@@ -691,10 +681,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	uInt effectiveNTimeStepsDelta = (effectiveNTimeSteps - 1)/2;
 
 	// Beginning time range: Move only central point
+	/*
 	for (uInt timestep_i=0;timestep_i<effectiveNTimeStepsDelta;timestep_i++)
 	{
 		computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
 	}
+	*/
 
 	for (uInt timestep_i=effectiveNTimeStepsDelta;timestep_i<nTimesteps-effectiveNTimeStepsDelta;timestep_i++)
 	{
@@ -702,10 +694,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	}
 
 	// End time range: Move only central point
+	/*
 	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<nTimesteps;timestep_i++)
 	{
 		computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
 	}
+	*/
 
 	return false;
 }

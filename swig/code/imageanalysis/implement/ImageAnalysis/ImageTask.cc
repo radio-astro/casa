@@ -87,7 +87,7 @@ void ImageTask::_construct() {
 		_regionRecord, diagnostics, outputPtr,
     	_stokesString, _image, _regionPtr,
     	_region, _box, _chan,
-    	_getStokesControl(), False,
+    	_getStokesControl(), _supportsMultipleRegions(),
     	coordsPtr
     );
 }

@@ -146,10 +146,14 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 
 	// convert the input values to Double
 	Vector<Double> dspcVals(spcVals.size()), dyVals(yVals.size());
-	for (uInt index=0; index<spcVals.size(); index++)
-		dspcVals(index) = Double(spcVals(index));
-	for (uInt index=0; index<spcVals.size(); index++)
-		dyVals(index) = Double(yVals(index));
+	//for (uInt index=0; index<spcVals.size(); index++)
+	//	dspcVals(index) = Double(spcVals(index));
+	//for (uInt index=0; index<spcVals.size(); index++)
+	//	dyVals(index) = Double(yVals(index));
+	//convertArray(Array<T> &to,	const Array<U> &from);
+	convertArray(dspcVals,	spcVals);
+	convertArray(dyVals,	yVals);
+
 
 	// store start and end values
 	_startVal   = startVal;
@@ -210,8 +214,9 @@ void SpectralFitter::getFit(const Vector<Float> &spcVals, Vector<Float> &spcFit,
 	tmp    = (getFit())(IPosition(1, _startIndex), IPosition(1, _endIndex));
 
 	// change to Float
-	for (uInt index=0; index<tmp.size(); index++)
-		yFit(index)=Float(tmp(index));
+	//for (uInt index=0; index<tmp.size(); index++)
+	//	yFit(index)=Float(tmp(index));
+	convertArray(yFit, tmp);
 }
 
 void SpectralFitter::report() const{
@@ -271,8 +276,9 @@ Bool SpectralFitter::_prepareData(const Vector<Float> &xVals, const Vector<Float
 		weightVals=0.0;
 		Vector<Double> one(eVals.size(), 1.0);
 		Vector<Double> deVals(eVals.size(), 0.0);
-		for (uInt index=0; index<eVals.size(); index++)
-			deVals(index) = eVals(index);
+		//for (uInt index=0; index<eVals.size(); index++)
+		//	deVals(index) = eVals(index);
+		convertArray(deVals, eVals);
 		if (min(eVals(IPosition(1, startIndex), IPosition(1, endIndex)))<0.0)
 			return False;
 		weightVals(IPosition(1, startIndex), IPosition(1, endIndex)) = one(IPosition(1, startIndex), IPosition(1, endIndex)) / deVals(IPosition(1, startIndex), IPosition(1, endIndex));
@@ -308,23 +314,38 @@ Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Vector<Double> gPa
 Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Bool fitPoly, const uInt nPoly, Vector<Double> &xVals,
 		Vector<Double> &yVals, SpectralList& list){
 	Int nQuart=max(1,Int((_endIndex-_startIndex)/4));
-	//cout << "nQuart: " << nQuart << endl;
 
 	Double leftYVal(0.0), rightYVal(0.0);
 	Double leftXVal(0.0), rightXVal(0.0);
 	for (uInt index=_startIndex; index < (_startIndex+nQuart); index++){
 		leftXVal += xVals(index);
 		leftYVal += yVals(index);
-		//cout << " index: " << index;
 	}
+	leftXVal /= Double(nQuart);
 	leftYVal /= Double(nQuart);
 
-	for (uInt index=(_endIndex); index > (_endIndex-nQuart); index--){
+	for (uInt index=_endIndex; index > (_endIndex-nQuart); index--){
 		rightXVal += xVals(index);
 		rightYVal += yVals(index);
-		//cout << " index: " << index;
 	}
+	rightXVal /= Double(nQuart);
 	rightYVal /= Double(nQuart);
+
+	//cout << " leftXVal: " << leftXVal << " rightXVal: " << rightXVal << endl;
+	//cout << " leftYVal: " << leftYVal << " rightYVal: " << rightYVal << endl;
+	// swap the right and left values
+	if (xVals(_startIndex)>xVals(_endIndex)){
+		//cout << "Swapping...." << endl;
+		Double tmp;
+		tmp       = leftXVal;
+		leftXVal  = rightXVal;
+		rightXVal = tmp;
+
+		tmp       = leftYVal;
+		leftYVal  = rightYVal;
+		rightYVal = tmp;
+	}
+
 	//cout << " leftXVal: " << leftXVal << " rightXVal: " << rightXVal << endl;
 	//cout << " leftYVal: " << leftYVal << " rightYVal: " << rightYVal << endl;
 
@@ -333,40 +354,44 @@ Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Bool fitPoly, cons
 		if (nPoly==0){
 			Vector<Double> pPar(1, 0.5*(rightYVal+leftYVal));
 			list.add(PolynomialSpectralElement(pPar));
-			//cout << " pPar: " << pPar << endl;
 		}
 		else if (nPoly==1){
 			Vector<Double> pPar(2, 0.0);
 			pPar(1) = (rightYVal-leftYVal) / (rightXVal-leftXVal);
 			pPar(0) = rightYVal - pPar(1)*rightXVal;
 			list.add(PolynomialSpectralElement(pPar));
-			//cout << " pPar: " << pPar << endl;
 		}
 	}
 
 	// add a Gaussian
 	if (fitGauss){
-		Vector<Double> gPar(3, 0.0);
-
+		//Vector<Double> gPar(3, 0.0);
+		Double gAmp(0.0), gCentre(0.0), gSigma(0.0);
 		// integrate over the data
 		// integrate over the estimated polynomial
-		Double curveIntegral(0.0);
-		Double polyIntegral(0.0);
+		Double curveIntegral(0.0), polyIntegral(0.0), averDisp(0.0);
 		for (uInt index=_startIndex; index < (_endIndex+1); index++)
 			curveIntegral += yVals(index);
 		polyIntegral   = 0.5*(rightYVal+leftYVal)*Double(_endIndex-_startIndex+1);
+		averDisp = fabs(xVals(_endIndex) - xVals(_startIndex)) /  Double(_endIndex-_startIndex);
+		//cout << " curveIntegral: " << curveIntegral << " polyIntegral: " << polyIntegral << " averDisp: " << averDisp << endl;
 
 		// make an estimate for the sigma (FWHM ~1/4 of x-range);
 		// get the amplitude estimate from the integral and the sigma;
 		// the centre estimate is set to the middle of the x-range;
-		gPar(2) = (xVals(_startIndex+nQuart)-xVals(_endIndex-nQuart))/(2.0*GaussianSpectralElement::SigmaToFWHM);
-		if (gPar(2))
-			gPar(2) *= -1.0;
-		gPar(0) = (curveIntegral-polyIntegral)/(gPar(2)*sqrt(C::pi));
-		gPar(1) = xVals(_startIndex) + (xVals(_endIndex) - xVals(_startIndex)) / 2.0;
+		//gPar(2) = (xVals(_startIndex+nQuart)-xVals(_endIndex-nQuart))/(2.0*GaussianSpectralElement::SigmaToFWHM);
+		//if (gPar(2))
+		//	gPar(2) *= -1.0;
+		//gPar(0) = (curveIntegral-polyIntegral)/(gPar(2)*sqrt(C::pi));
+		//gPar(1) = xVals(_startIndex) + (xVals(_endIndex) - xVals(_startIndex)) / 2.0;
+		gSigma = (xVals(_startIndex+nQuart)-xVals(_endIndex-nQuart))/(2.0*GaussianSpectralElement::SigmaToFWHM);
+		if (gSigma<0.0)
+			gSigma *= -1.0;
+		gAmp = averDisp*(curveIntegral-polyIntegral)/(gSigma*sqrt(C::pi));
+		gCentre = xVals(_startIndex) + (xVals(_endIndex) - xVals(_startIndex)) / 2.0;
+		//cout << " gAmp: " << gAmp << " gCentre: " << gCentre << " gSigma: " << gSigma<<endl;
 
-		//cout << " gPar: " << gPar << endl;
-		list.add(GaussianSpectralElement(gPar));
+		list.add(GaussianSpectralElement(gAmp, gCentre, gSigma));
 	}
 
 	return True;
@@ -431,7 +456,8 @@ void SpectralFitter::_report(const ProfileFit1D<Double> &fit, const Bool print, 
 }
 */
 String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
-	String returnMsg("");
+	ostringstream sstream;
+
 	String spTypeStr;
 	Vector<Double> params, errors;
 	Double gaussAmpV(0.0), gaussCentV(0.0), gaussSigmaV(0.0), gaussFWHMV(0.0);
@@ -471,8 +497,8 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 
 			os << LogIO::NORMAL << "  Amplitude: " << String::toString(gaussAmpV) << "+-" << gaussAmpE << " centre: " << String::toString(gaussCentV) << "+-" << gaussCentE << " FWHM: " << String::toString(gaussFWHMV) << "+-" << gaussFWHME<< LogIO::POST;
 			os << LogIO::NORMAL << "  Gaussian area: " << String::toString(gaussAreaV) <<"+-"<< gaussAreaE << LogIO::POST;
-			returnMsg += " Cent.: " + String::toString(gaussCentV) + " FWHM: " + String::toString(gaussFWHMV) + "  Ampl.: " + String::toString(gaussAmpV);
-
+			//returnMsg += " Cent.: " + String::toString(gaussCentV) + " FWHM: " + String::toString(gaussFWHMV) + "  Ampl.: " + String::toString(gaussAmpV);
+			sstream << " Cent.: " << setiosflags(ios::scientific) << setprecision(6) << gaussCentV << " FWHM: " << setprecision(4) << gaussFWHMV << "  Ampl.: " << setprecision(3) << gaussAmpV;
 			break;
 
 		// extract and report the polynomial parameters
@@ -485,10 +511,12 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 				polySlopeE = errors(2);
 			}
 			os << LogIO::NORMAL << "  Offset: " << String::toString(polyOffsetV) << "+-"<< String::toString(polyOffsetE) <<LogIO::POST;
-			returnMsg += "  Offs.: " + String::toString(polyOffsetV);
+			//returnMsg += "  Offs.: " + String::toString(polyOffsetV);
+			sstream << "  Offs.: " << setiosflags(ios::scientific) << setprecision(3) << polyOffsetV;
 			if (params.size()>1){
 				os << LogIO::NORMAL << "  Slope:  " << String::toString(polySlopeV) << "+-"<< String::toString(polySlopeE) <<LogIO::POST;
-				returnMsg += "  Slope:  " + String::toString(polySlopeV);
+				sstream << "  Slope:  " << setiosflags(ios::scientific) << setprecision(3) << polySlopeV;
+				//returnMsg += "  Slope:  " + String::toString(polySlopeV);
 			}
 			break;
 
@@ -496,7 +524,8 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 		default:
 			os << LogIO::NORMAL << "  parameters: " << String::toString(params) << LogIO::POST;
 			os << LogIO::NORMAL << "  errors:     " << String::toString(errors) << LogIO::POST;
-			returnMsg += "  Params:  " + String::toString(polySlopeV);
+			//returnMsg += "  Params:  " + String::toString(params);
+			sstream << "  Params:  " << params;
 			break;
 		}
 	}
@@ -505,16 +534,17 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 	if (gaussIndex > -1 && polyIndex >- 1){
 		Double centVal = (*list[polyIndex])(gaussCentV);
 		if (centVal==0.0){
-			os << LogIO::NORMAL << "  Continuum is 0.0 - can not compute equivalent width!" << LogIO::POST;
+			sstream << LogIO::NORMAL << "  Continuum is 0.0 - can not compute equivalent width!" << LogIO::POST;
 		}
 		else{
 			os << LogIO::NORMAL << "Can compute equivalent width" << LogIO::POST;
 			os << LogIO::NORMAL << "  Continuum value: " << String::toString(centVal) << LogIO::POST;
 			os << LogIO::NORMAL << "  --> Equivalent width: " << String::toString(-1.0*gaussAreaV/centVal) << LogIO::POST;
-			returnMsg += " Equ.Width: "+ String::toString(-1.0*gaussAreaV/centVal);
+			sstream << " Equ.Width: " << setiosflags(ios::scientific) << setprecision(4) << -1.0*gaussAreaV/centVal;
+			//returnMsg += " Equ.Width: "+ String::toString(-1.0*gaussAreaV/centVal);
 		}
 	}
-	return returnMsg;
+	return String(sstream);
 }
 }
 
