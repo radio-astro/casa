@@ -1311,12 +1311,12 @@ in this case.  It is evaluated each time it is needed.
     </input>
     <returns type="image"/>
     <description>
-        This method collapses an image along a specified axis or set of axes of N pixels to 1 pixel. It computes
-        the specified aggregate function of pixels along that axis and places those values in the
-        single remaining plane of this axis in the output image. The method returns an image analysis
-        tool containing the newly created collapsed image. Choices of aggregate functions are:
-        max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
-        the function parameter (eg, function="r" will compute the rms of the pixel values).
+        This method collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
+        specified axis. It computes the specified aggregate function for pixel values along the specified axes
+        and places those values in the single remaining plane of those axes in the output image. The method returns
+        an image analysis tool containing the newly created collapsed image. Choices of aggregate functions are:
+        max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is supported for the function
+        parameter (eg, function="r" will compute the rms of the pixel values, "med" will compute the median).
         
         Axes can be specified as a single integer or array of integers indicating the zero-based axes along
         which to collapse the image. Axes may also be specified as a single or array of strings which minimally
@@ -1326,7 +1326,7 @@ in this case.  It is evaluated each time it is needed.
         If outfile is not specified (or contains only white spaces), no image is written but the
         collapsed image is still able to be accessed via the image analysis tool this method always
         returns which references the collpased image. If the returned object is not wanted it should
-        still be caught and deleted via its done() method. If this is not done, there is no gaurantee
+        still be captured and deleted via its done() method. If this is not done, there is no gaurantee
         for when the python garbage collector will delete it. If the returned object is wanted, it
         should be deleted as soon as possible for the same reasons, eg
         
@@ -1335,7 +1335,7 @@ in this case.  It is evaluated each time it is needed.
         collapsed_image.done()
 
         The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
-        of axis values of the pixels along that axis that were used in computing the aggregate value.
+        of the the first and last values of that axis in the specified region of the input image.
     </description>
         <example>
 

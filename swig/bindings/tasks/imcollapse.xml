@@ -130,33 +130,31 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
 wantreturn       If true, return an image analysis tool referencing the collapsed image, if
                  false, return false.
 
-This task collapses an image along a specified axis of N pixels to 1 pixel. It computes
-the specified aggregate function of pixels along that axis and places those values in the
-single remaining plane of this axis in the output image. The method returns an image analysis
-tool containing the newly created collapsed image. Choices of aggregate functions are:
-max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
-the function parameter (eg, function="r" will compute the rms of the pixel values). 
-
+This task collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
+specified axis. It computes the specified aggregate function for pixel values along the specified axes
+and places those values in the single remaining plane of those axes in the output image. It returns
+an image analysis tool containing the newly created collapsed image if wantreturn=True. Choices of
+aggregate functions are: max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is
+supported for the function parameter (eg, function="r" will compute the rms of the pixel values, "med"
+will compute the median).
+        
 Axes can be specified as a single integer or array of integers indicating the zero-based axes along
 which to collapse the image. Axes may also be specified as a single or array of strings which minimally
 and uniquely match (ignoring case) world axes names in the image (eg "dec" or ["ri, "d"] for
 collapsing along the declination axis or along the right ascension and declination axes, respectively).
-
-If outfile is not specified (or contains only white spaces), no image is written but one can
-request the method return an image analysis tool which references the collapsed image by
-specifying wantreturn=true. If the returned object is not wanted this value should be set to
-false (default) in which case false will be returned. It is recommended that if wantreturn is
-true, the returned tool is deleted as soon as possible to free up memory, eg
-    collapsed_image = ia.collapse(..., wantreturn=true)
-    # do things with collapsed_image
-    collapsed_image.done()
-If wantreturn is true but the return value is not caught, there is no gaurantee of when the
-python garbage collected will free the memory used by the object (in casapy, the object will
-implicitly be stored in the _Out array and so can still be accessed and deleted, assuming the
-task was started as imcollapse(), ie without "go").
+        
+If outfile is not specified (or contains only white spaces), no image is written but, if wantreturn=True,
+the collapsed image is still able to be accessed via the returned image analysis tool which references
+the collpased image. If the returned object is not wanted it should still be captured and deleted via its
+done() method. If this is not done, there is no gaurantee for when the python garbage collector will delete
+it. If the returned object is wanted, it should be deleted as soon as possible for the same reasons, eg
+        
+collapsed_image = imcollapse(..., wantreturn=T)
+# do things (or not) with collapsed_image and when done with object, do
+collapsed_image.done()
 
 The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
-of axis values of the pixels along that axis that were used in computing the aggregate value.
+of the the first and last values of that axis in the specified region of the input image.
 
 # myimage.im is a 512x512x128x4 (ra,dec,freq,stokes) image
 imagename = "myimage.im"
@@ -168,12 +166,9 @@ function="mean"
 axis=2
 box="127,127,383,383"
 chans="8~119"
-collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2, box="127,127,383,383", chans="8~119")
+collapsed = imcollapse(imagename=imagename, outfile=outfile, function=function, axes=axis, box=box, chans=chans, wantreturn=True)
 # manipulate collapsed
 collapsed.done()
-
-
-
 T
 </example>
 

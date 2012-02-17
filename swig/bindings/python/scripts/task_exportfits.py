@@ -1,7 +1,10 @@
 import os
 from taskinit import *
 
-def exportfits(imagename,fitsimage,velocity,optical,bitpix,minpix,maxpix,overwrite,dropstokes,stokeslast):
+def exportfits(
+	imagename, fitsimage, velocity, optical, bitpix,
+	minpix, maxpix, overwrite, dropstokes, stokeslast
+):
 	"""Convert a CASA image to a FITS file:
 	CASA-produced images can be written to disk for transporting
 	to other software packages.  No subimaging of the fits image
@@ -34,7 +37,11 @@ def exportfits(imagename,fitsimage,velocity,optical,bitpix,minpix,maxpix,overwri
 
 	#Python script
 	casalog.origin('exportfits')
-
-	ia.open(imagename)
-	ia.tofits(outfile=fitsimage,velocity=velocity,optical=optical,bitpix=bitpix,minpix=minpix,maxpix=maxpix,overwrite=overwrite,dropstokes=dropstokes,stokeslast=stokeslast)
-	ia.close()
+	_myia = iatool.create()
+	_myia.open(imagename)
+	_myia.tofits(
+		outfile=fitsimage, velocity=velocity, optical=optical,
+		bitpix=bitpix, minpix=minpix, maxpix=maxpix,
+		overwrite=overwrite, dropstokes=dropstokes, stokeslast=stokeslast
+	)
+	_myia.close()
