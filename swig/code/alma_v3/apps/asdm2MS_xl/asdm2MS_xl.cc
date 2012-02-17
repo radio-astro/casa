@@ -715,7 +715,7 @@ void checkVectorSize(const string& vectorAttrName,
   }
 }
 
-EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds, const string& asdmBinaryPath) {
+EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds) {
   EnumSet<AtmPhaseCorrection> result;
 
   vector<MainRow *> mRs = ds.getMain().get();
@@ -765,10 +765,13 @@ bool overTheTopExists(PointingRow* row) { return row->isOverTheTopExists(); }
 //
 // A collection of declarations and functions used for the parsing of the 'scans' option.
 //
-#include <boost/spirit.hpp>
-#include <boost/spirit/actor/assign_actor.hpp>
-#include <boost/spirit/actor/push_back_actor.hpp>
-using namespace boost::spirit;
+//#include <boost/spirit.hpp>
+#include <boost/spirit/include/classic.hpp>
+//#include <boost/spirit/actor/assign_actor.hpp>
+#include <boost/spirit/include/classic_assign_actor.hpp>
+//#include <boost/spirit/actor/push_back_actor.hpp>
+#include <boost/spirit/include/classic_push_back_actor.hpp>
+using namespace boost::spirit::classic;
 
 vector<int> eb_v;
 int allEbs = -1;
@@ -1174,6 +1177,302 @@ vector<int>	dataDescriptionIdx2Idx;
 int		ddIdx;
 map<MainRow*, int>     stateIdx2Idx;
 
+
+
+template<typename T>
+struct negateFunctor {
+public:
+  T operator() (const T& v) {
+    if ( v > 0.0 ) return v;
+    else return -v;
+  }
+};
+
+/** 
+ * This function fills the MS Spectral Window table.
+ * given :
+ * @parameter ds_p a pointer to the ASDM dataset.
+ */
+void fillSpectralWindow(ASDM* ds_p) {
+  try {
+    SpectralWindowTable& spwT = ds_p->getSpectralWindow();      
+    vector<Tag> reorderedSwIds = reorderSwIds(*ds_p); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
+    
+    for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) swIdx2Idx[reorderedSwIds[i].getTagValue()] = i;
+
+    SpectralWindowRow* r = 0;
+    int nSpectralWindow = spwT.size();
+    
+    infostream.str("");
+    infostream << "The dataset has " << nSpectralWindow << " spectral window(s)..."; 
+    info(infostream.str());
+    
+    for (vector<Tag>::size_type i = 0; i < reorderedSwIds.size(); i++) {
+      if ((r = spwT.getRowByKey(reorderedSwIds[i])) == 0) {
+	errstream.str("");
+	(errstream << "Problem while reading the SpectralWindow table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
+	error(errstream.str());
+      }
+            
+      /* Processing the chanFreqXXX
+       *
+       * Either (chanFreqStart, chanFreqStep) or (chanFreqArray) must be present
+       * with a priority to chanFreqArray if both are present. If chanFreqArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      bool chanStartAndStep = r->isChanFreqStartExists() && r->isChanFreqStepExists();
+      bool chanArray = r->isChanFreqArrayExists();
+      if (!chanStartAndStep && !chanArray) {
+	errstream.str("");
+	errstream << "Did not find (chanFreqStart, chanFreqStep) nor chanFreqArray. Can't go further.";
+	error(errstream.str());
+      }
+      
+      //double* chanFreq1D = (double *) 0;
+      //DConverter chanFreqConverter;
+      vector<double> chanFreq1D;
+      vector<Frequency> chanFreqArray;
+      Frequency chanFreqStart, chanFreqStep;
+      if (chanArray) { // Frequency channels are specified by an array.
+	chanFreqArray = r->getChanFreqArray();
+	if (chanFreqArray.size() != (unsigned int)r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of chanFreqArray ('"
+		    << chanFreqArray.size()
+		    << "') is not equal to numChan ('"
+		    << r->getNumChan()
+		    << "'). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+      else { // Frequency channels are specified by a (start, step) pair.
+	chanFreqStart = r->getChanFreqStart();
+	chanFreqStep  = r->getChanFreqStep();
+	for (int i = 0; i < r->getNumChan(); i++)
+	  chanFreqArray.push_back(chanFreqStart + i * chanFreqStep);
+      }
+      //chanFreq1D = chanFreqConverter.to1DArray(chanFreqArray);
+      chanFreq1D = DConverter::toVectorD<Frequency>(chanFreqArray);
+      
+      /* Processing the chanWidthXXX
+       *
+       * Either chanWidth or chanWidthArray must be present
+       * with a priority to chanWidthArray if both are present. If chanWidthArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      if (!r->isChanWidthExists() && !r->isChanWidthArrayExists()) {
+	errstream.str("");
+	errstream << "Did not find chanWidth nor chanWidthArray. Can't go further.";
+	error(errstream.str());
+      }
+      
+      //double* chanWidth1D = (double *) 0;
+      //DConverter chanWidthConverter;
+      vector<double> chanWidth1D;
+      vector<Frequency> chanWidthArray;
+      if (r->isChanWidthArrayExists()) { // Frequency channels widths are specified by an array.
+	chanWidthArray = r->getChanWidthArray();
+	if (chanWidthArray.size() != (unsigned int) r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of chanWidthArray ('"
+		    << chanWidthArray.size()
+		    << "') is not equal to numChan ('"
+		    << r->getNumChan()
+		    << "'). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+      else { // Frequency channels widths are specified by a constant value.
+	chanWidthArray.resize(r->getNumChan());
+	chanWidthArray.assign(chanWidthArray.size(), r->getChanWidth());
+      }
+      //chanWidth1D = chanWidthConverter.to1DArray(chanWidthArray);
+      chanWidth1D = DConverter::toVectorD<Frequency>(chanWidthArray);
+
+      // To answer JIRA ticket CAS-3265 / Dirk Petry
+      if (chanFreq1D[chanFreq1D.size() - 1] < chanFreq1D[0] )
+	transform(chanWidth1D.begin(), chanWidth1D.end(), chanWidth1D.begin(), negateFunctor<double>());
+      
+      /* Processing the effectiveBwXXX
+       *
+       * Either effectiveBw or effectiveBwArray must be present
+       * with a priority to effectiveBwArray if both are present. If effectiveBwArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      if (!r->isEffectiveBwExists() && !r->isEffectiveBwArrayExists()) {
+	errstream.str("");
+	errstream << "Did not find effectiveBw nor effectiveBwArray. Can't go further.";
+	error(errstream.str());
+      }
+      
+      //double* effectiveBw1D = (double *) 0;
+      vector<double> effectiveBw1D;
+      //DConverter effectiveBwConverter;
+      vector<Frequency> effectiveBwArray;
+      if (r->isEffectiveBwArrayExists()) { // Effective BWs are specified by an array.
+	effectiveBwArray = r->getEffectiveBwArray();
+	if (effectiveBwArray.size() != (unsigned int) r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of effectiveBwArray ('"
+		    << effectiveBwArray.size()
+		    << "') is not equal to numChan ('"
+		    << r->getNumChan()
+		    << "'). Can't go further." ;
+	  error(errstream.str());
+	}
+      }
+      else { // Effective BWs are specified by a constant value.
+	effectiveBwArray.resize(r->getNumChan());
+	effectiveBwArray.assign(effectiveBwArray.size(), r->getEffectiveBw());
+      }
+      //effectiveBw1D = effectiveBwConverter.to1DArray(effectiveBwArray);
+      effectiveBw1D = DConverter::toVectorD<Frequency>(effectiveBwArray);
+      
+      
+      /* Processing the resolutionXXX
+       *
+       * Either resolution or resolutionArray must be present
+       * with a priority to resolutionArray if both are present. If resolutionArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      if (!r->isResolutionExists() && !r->isResolutionArrayExists()) {
+	errstream.str("");
+	errstream << "Did not find resolution nor resolutionArray. Can't go further";
+	error(errstream.str());
+      }
+      
+      //double* resolution1D = (double *) 0;
+      vector<double> resolution1D;
+      //DConverter resolutionConverter;
+      vector<Frequency> resolutionArray;
+      if (r->isResolutionArrayExists()) { // Resolutions are specified by an array.
+	resolutionArray = r->getResolutionArray();
+	if (resolutionArray.size() != (unsigned int) r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of resolutionArray ('"
+		    << resolutionArray.size()
+		    << "') is not equal to numChan ('"
+		    << r->getNumChan()
+		    << "'). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+      else { // Resolutions are specified by a constant value.
+	resolutionArray.resize(r->getNumChan());
+	resolutionArray.assign(resolutionArray.size(), r->getResolution());
+      }
+      //resolution1D = resolutionConverter.to1DArray(resolutionArray);
+      resolution1D = DConverter::toVectorD<Frequency>(resolutionArray);
+
+      /*
+       * associated spectral windows and and natures.
+       */
+      
+      unsigned int numAssocValues = 0;
+      if (r->isNumAssocValuesExists()) numAssocValues = r->getNumAssocValues();
+      
+      // Test the simultaneous presence or absence of assocNature and assoSpectralWindowId
+      if ((r->isAssocNatureExists() && !r->isAssocSpectralWindowIdExists()) ||
+	  (!r->isAssocNatureExists() && r->isAssocSpectralWindowIdExists())) {
+	errstream.str("");
+	errstream << "Only one of the attributes assocSpectralWindowId and assocNature is present. Can't go further."
+		  << endl;
+	error(errstream.str());
+      }
+      
+      vector<int> assocSpectralWindowId_;
+      vector<string> assocNature_ ;
+
+      if (r->isAssocSpectralWindowIdExists()) { // it exists then the assocNature exists also, given the test
+	                                        // which is done before.
+	vector<Tag> assocSpectralWindowId = r->getAssocSpectralWindowId();
+	if (numAssocValues != assocSpectralWindowId.size()) {
+	  infostream.str("");
+	  infostream << "The size of assocSpectralWindowId ('"
+		     << assocSpectralWindowId.size()
+		     << "') is not equal to the value announced in numAssocValues ('"
+		     << numAssocValues
+		     << "'). Ignoring the difference and sending the full vector assocSpectralWindowId to the filler" 
+	    ;
+	  info(infostream.str());
+	}
+	numAssocValues = assocSpectralWindowId.size();
+	assocSpectralWindowId_ = IConverter::toVectorI(assocSpectralWindowId);
+
+	// Take into account the re ordering of the spectral window indices.
+	for (unsigned int iAssocSw = 0; iAssocSw < numAssocValues; iAssocSw++)
+	  assocSpectralWindowId_[iAssocSw] =  swIdx2Idx[assocSpectralWindowId_[iAssocSw]];
+
+	vector<SpectralResolutionType> assocNature = r->getAssocNature();
+
+	if (assocNature.size() != assocSpectralWindowId_.size()) {
+	  infostream.str("");
+	  infostream << "The size of assocNature ('"
+		     << assocNature.size() 
+		     << "') is not equal to the size of assocSpectralWindowId ('"
+		     << assocSpectralWindowId.size()
+		     << "'). Ignoring the difference and sending the full assocNature vector to the filler.";
+	  info(infostream.str());
+	}
+	assocNature_ = SConverter::toVectorS<SpectralResolutionType, CSpectralResolutionType>(r->getAssocNature());
+      }
+      
+      int numChan           = r->getNumChan();
+      string name           = r->isNameExists()?r->getName():"";
+      double refFreq        = r->getRefFreq().get();
+      int measFreqRef       = r->isMeasFreqRefExists()?FrequencyReferenceMapper::value(r->getMeasFreqRef()):MFrequency::TOPO;
+      double totalBandwidth = r->getTotBandwidth().get();
+      int netSideband       = r->getNetSideband();
+      int bbcNo             = r->getBasebandName();
+      int ifConvChain       = 0;
+      int freqGroup         = r->isFreqGroupExists()?r->getFreqGroup():0;
+      string freqGroupName  = r->isFreqGroupNameExists()?r->getFreqGroupName().c_str():"";
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addSpectralWindow(numChan,
+					name,
+					refFreq,
+					chanFreq1D,  
+					chanWidth1D, 
+					measFreqRef,
+					effectiveBw1D, 
+					resolution1D,
+					totalBandwidth,
+					netSideband,
+					bbcNo,
+					ifConvChain,
+					freqGroup,
+					freqGroupName,
+					numAssocValues,
+					assocSpectralWindowId_,
+					assocNature_);      
+      }      
+    }
+    if (nSpectralWindow) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set(s).";
+      info(infostream.str());
+    }
+  }
+  catch (IllegalAccessException& e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+}  
+
 /**
  * This function fills the MS State table.
  * given :
@@ -1258,7 +1557,7 @@ void fillMain(int		rowNum,
   
   if (debug) cout << "fillMain : entering" << endl;
 
-  ASDM & ds = r_p -> getTable() . getContainer();
+  // ASDM & ds = r_p -> getTable() . getContainer();
 
   // Then populate the Main table.
   ComplexDataFilter filter; // To process the case numCorr == 3
@@ -1303,7 +1602,7 @@ void fillMain(int		rowNum,
   } 
 
   // Here we make the assumption that the State is the same for all the antennas and let's use the first State found in the vector stateId contained in the ASDM Main Row
-  int asdmStateIdx = r_p->getStateId().at(0).getTagValue();  
+  // int asdmStateIdx = r_p->getStateId().at(0).getTagValue();  
   vector<int> msStateId(vmsData_p->v_m_data.size(), stateIdx2Idx[r_p]);
 
   ComplexDataFilter cdf;
@@ -1911,7 +2210,7 @@ int main(int argc, char *argv[]) {
   //
   // What are the apc literals present in the binary data.
   //
-  es_apc = apcLiterals(*ds, dsName+"/ASDMBinary");
+  es_apc = apcLiterals(*ds);
  
   //
   // Determine what kind of data complex (DATA column) or float (FLOAT_DATA) will be
@@ -2225,281 +2524,7 @@ int main(int argc, char *argv[]) {
   //
   // Process the SpectralWindow table.
   //
-  
-  try {
-    SpectralWindowTable& spwT = ds->getSpectralWindow();      
-    vector<Tag> reorderedSwIds = reorderSwIds(*ds); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
-    
-    for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) swIdx2Idx[reorderedSwIds[i].getTagValue()] = i;
-
-    SpectralWindowRow* r = 0;
-    int nSpectralWindow = spwT.size();
-    
-    infostream.str("");
-    infostream << "The dataset has " << nSpectralWindow << " spectral window(s)..."; 
-    info(infostream.str());
-    
-    for (vector<Tag>::size_type i = 0; i < reorderedSwIds.size(); i++) {
-      if ((r = spwT.getRowByKey(reorderedSwIds[i])) == 0) {
-	errstream.str("");
-	(errstream << "Problem while reading the SpectralWindow table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
-	error(errstream.str());
-      }
-      
-      
-      /* Processing the chanFreqXXX
-       *
-       * Either (chanFreqStart, chanFreqStep) or (chanFreqArray) must be present
-       * with a priority to chanFreqArray if both are present. If chanFreqArray
-       * is present it *must* have a size equal to numChan otherwiser EXIT.
-       */
-      bool chanStartAndStep = r->isChanFreqStartExists() && r->isChanFreqStepExists();
-      bool chanArray = r->isChanFreqArrayExists();
-      if (!chanStartAndStep && !chanArray) {
-	errstream.str("");
-	errstream << "Did not find (chanFreqStart, chanFreqStep) nor chanFreqArray. Can't go further.";
-	error(errstream.str());
-      }
-      
-      //double* chanFreq1D = (double *) 0;
-      //DConverter chanFreqConverter;
-      vector<double> chanFreq1D;
-      vector<Frequency> chanFreqArray;
-      Frequency chanFreqStart, chanFreqStep;
-      if (chanArray) { // Frequency channels are specified by an array.
-	chanFreqArray = r->getChanFreqArray();
-	if (chanFreqArray.size() != (unsigned int)r->getNumChan()) {
-	  errstream.str("");
-	  errstream << "Size of chanFreqArray ('"
-		    << chanFreqArray.size()
-		    << "') is not equal to numChan ('"
-		    << r->getNumChan()
-		    << "'). Can't go further.";
-	  error(errstream.str());
-	}
-      }
-      else { // Frequency channels are specified by a (start, step) pair.
-	chanFreqStart = r->getChanFreqStart();
-	chanFreqStep  = r->getChanFreqStep();
-	for (int i = 0; i < r->getNumChan(); i++)
-	  chanFreqArray.push_back(chanFreqStart + i * chanFreqStep);
-      }
-      //chanFreq1D = chanFreqConverter.to1DArray(chanFreqArray);
-      chanFreq1D = DConverter::toVectorD<Frequency>(chanFreqArray);
-      
-      /* Processing the chanWidthXXX
-       *
-       * Either chanWidth or chanWidthArray must be present
-       * with a priority to chanWidthArray if both are present. If chanWidthArray
-       * is present it *must* have a size equal to numChan otherwiser EXIT.
-       */
-      if (!r->isChanWidthExists() && !r->isChanWidthArrayExists()) {
-	errstream.str("");
-	errstream << "Did not find chanWidth nor chanWidthArray. Can't go further.";
-	error(errstream.str());
-      }
-      
-      //double* chanWidth1D = (double *) 0;
-      //DConverter chanWidthConverter;
-      vector<double> chanWidth1D;
-      vector<Frequency> chanWidthArray;
-      if (r->isChanWidthArrayExists()) { // Frequency channels widths are specified by an array.
-	chanWidthArray = r->getChanWidthArray();
-	if (chanWidthArray.size() != (unsigned int) r->getNumChan()) {
-	  errstream.str("");
-	  errstream << "Size of chanWidthArray ('"
-		    << chanWidthArray.size()
-		    << "') is not equal to numChan ('"
-		    << r->getNumChan()
-		    << "'). Can't go further.";
-	  error(errstream.str());
-	}
-      }
-      else { // Frequency channels widths are specified by a constant value.
-	chanWidthArray.resize(r->getNumChan());
-	chanWidthArray.assign(chanWidthArray.size(), r->getChanWidth());
-      }
-      //chanWidth1D = chanWidthConverter.to1DArray(chanWidthArray);
-      chanWidth1D = DConverter::toVectorD<Frequency>(chanWidthArray);
-      
-      /* Processing the effectiveBwXXX
-       *
-       * Either effectiveBw or effectiveBwArray must be present
-       * with a priority to effectiveBwArray if both are present. If effectiveBwArray
-       * is present it *must* have a size equal to numChan otherwiser EXIT.
-       */
-      if (!r->isEffectiveBwExists() && !r->isEffectiveBwArrayExists()) {
-	errstream.str("");
-	errstream << "Did not find effectiveBw nor effectiveBwArray. Can't go further.";
-	error(errstream.str());
-      }
-      
-      //double* effectiveBw1D = (double *) 0;
-      vector<double> effectiveBw1D;
-      //DConverter effectiveBwConverter;
-      vector<Frequency> effectiveBwArray;
-      if (r->isEffectiveBwArrayExists()) { // Effective BWs are specified by an array.
-	effectiveBwArray = r->getEffectiveBwArray();
-	if (effectiveBwArray.size() != (unsigned int) r->getNumChan()) {
-	  errstream.str("");
-	  errstream << "Size of effectiveBwArray ('"
-		    << effectiveBwArray.size()
-		    << "') is not equal to numChan ('"
-		    << r->getNumChan()
-		    << "'). Can't go further." ;
-	  error(errstream.str());
-	}
-      }
-      else { // Effective BWs are specified by a constant value.
-	effectiveBwArray.resize(r->getNumChan());
-	effectiveBwArray.assign(effectiveBwArray.size(), r->getEffectiveBw());
-      }
-      //effectiveBw1D = effectiveBwConverter.to1DArray(effectiveBwArray);
-      effectiveBw1D = DConverter::toVectorD<Frequency>(effectiveBwArray);
-      
-      
-      /* Processing the resolutionXXX
-       *
-       * Either resolution or resolutionArray must be present
-       * with a priority to resolutionArray if both are present. If resolutionArray
-       * is present it *must* have a size equal to numChan otherwiser EXIT.
-       */
-      if (!r->isResolutionExists() && !r->isResolutionArrayExists()) {
-	errstream.str("");
-	errstream << "Did not find resolution nor resolutionArray. Can't go further";
-	error(errstream.str());
-      }
-      
-      //double* resolution1D = (double *) 0;
-      vector<double> resolution1D;
-      //DConverter resolutionConverter;
-      vector<Frequency> resolutionArray;
-      if (r->isResolutionArrayExists()) { // Resolutions are specified by an array.
-	resolutionArray = r->getResolutionArray();
-	if (resolutionArray.size() != (unsigned int) r->getNumChan()) {
-	  errstream.str("");
-	  errstream << "Size of resolutionArray ('"
-		    << resolutionArray.size()
-		    << "') is not equal to numChan ('"
-		    << r->getNumChan()
-		    << "'). Can't go further.";
-	  error(errstream.str());
-	}
-      }
-      else { // Resolutions are specified by a constant value.
-	resolutionArray.resize(r->getNumChan());
-	resolutionArray.assign(resolutionArray.size(), r->getResolution());
-      }
-      //resolution1D = resolutionConverter.to1DArray(resolutionArray);
-      resolution1D = DConverter::toVectorD<Frequency>(resolutionArray);
-
-      /*
-       * associated spectral windows and and natures.
-       */
-      
-      unsigned int numAssocValues = 0;
-      if (r->isNumAssocValuesExists()) numAssocValues = r->getNumAssocValues();
-      
-      // Test the simultaneous presence or absence of assocNature and assoSpectralWindowId
-      if ((r->isAssocNatureExists() && !r->isAssocSpectralWindowIdExists()) ||
-	  (!r->isAssocNatureExists() && r->isAssocSpectralWindowIdExists())) {
-	errstream.str("");
-	errstream << "Only one of the attributes assocSpectralWindowId and assocNature is present. Can't go further."
-		  << endl;
-	error(errstream.str());
-      }
-      
-      vector<int> assocSpectralWindowId_;
-      vector<string> assocNature_ ;
-
-      if (r->isAssocSpectralWindowIdExists()) { // it exists then the assocNature exists also, given the test
-	                                        // which is done before.
-	vector<Tag> assocSpectralWindowId = r->getAssocSpectralWindowId();
-	if (numAssocValues != assocSpectralWindowId.size()) {
-	  infostream.str("");
-	  infostream << "The size of assocSpectralWindowId ('"
-		     << assocSpectralWindowId.size()
-		     << "') is not equal to the value announced in numAssocValues ('"
-		     << numAssocValues
-		     << "'). Ignoring the difference and sending the full vector assocSpectralWindowId to the filler" 
-	    ;
-	  info(infostream.str());
-	}
-	numAssocValues = assocSpectralWindowId.size();
-	assocSpectralWindowId_ = IConverter::toVectorI(assocSpectralWindowId);
-
-	// Take into account the re ordering of the spectral window indices.
-	for (unsigned int iAssocSw = 0; iAssocSw < numAssocValues; iAssocSw++)
-	  assocSpectralWindowId_[iAssocSw] =  swIdx2Idx[assocSpectralWindowId_[iAssocSw]];
-
-	vector<SpectralResolutionType> assocNature = r->getAssocNature();
-
-	if (assocNature.size() != assocSpectralWindowId_.size()) {
-	  infostream.str("");
-	  infostream << "The size of assocNature ('"
-		     << assocNature.size() 
-		     << "') is not equal to the size of assocSpectralWindowId ('"
-		     << assocSpectralWindowId.size()
-		     << "'). Ignoring the difference and sending the full assocNature vector to the filler.";
-	  info(infostream.str());
-	}
-	assocNature_ = SConverter::toVectorS<SpectralResolutionType, CSpectralResolutionType>(r->getAssocNature());
-      }
-      
-      int numChan           = r->getNumChan();
-      string name           = r->isNameExists()?r->getName():"";
-      double refFreq        = r->getRefFreq().get();
-      int measFreqRef       = r->isMeasFreqRefExists()?FrequencyReferenceMapper::value(r->getMeasFreqRef()):MFrequency::TOPO;
-      double totalBandwidth = r->getTotBandwidth().get();
-      int netSideband       = r->getNetSideband();
-      int bbcNo             = r->getBasebandName();
-      int ifConvChain       = 0;
-      int freqGroup         = r->isFreqGroupExists()?r->getFreqGroup():0;
-      string freqGroupName  = r->isFreqGroupNameExists()?r->getFreqGroupName().c_str():"";
-
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addSpectralWindow(numChan,
-					name,
-					refFreq,
-					chanFreq1D,  
-					chanWidth1D, 
-					measFreqRef,
-					effectiveBw1D, 
-					resolution1D,
-					totalBandwidth,
-					netSideband,
-					bbcNo,
-					ifConvChain,
-					freqGroup,
-					freqGroupName,
-					numAssocValues,
-					assocSpectralWindowId_,
-					assocNature_);      
-      }      
-    }
-    if (nSpectralWindow) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set(s).";
-      info(infostream.str());
-    }
-  }
-  catch (IllegalAccessException& e) {
-    errstream.str("");
-    errstream << e.getMessage();
-    error(errstream.str());
-  }
-  catch (ConversionException e) {
-    errstream.str("");
-    errstream << e.getMessage();
-    error(errstream.str());
-  }
-  catch ( std::exception & e) {
-    errstream.str("");
-    errstream << e.what();
-    error(errstream.str());      
-  }
+  fillSpectralWindow(ds);
 
   //
   // Process the Polarization table

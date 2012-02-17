@@ -426,7 +426,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 	}
 
 	// Spectral analysis: Fix timestep/polarization and compute stats with all channels
-	for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
+	for (uInt timestep_i=centralTime;timestep_i<=centralTime;timestep_i++)
 	{
 		for (uInt pol_k=0;pol_k<nPols;pol_k++)
 		{
@@ -496,20 +496,21 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 
 					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 
-					if (AverageReal > 0)
+					if (SumWeightReal > 0)
 					{
 						deviationReal = abs(visibility.real()-AverageReal);
-						spw_scutof_histogram_counts_p[spw][timestep_i] += 1;
-						spw_scutof_histogram_sum_p[spw][timestep_i] += deviationReal;
-						spw_scutof_histogram_sum_squares_p[spw][timestep_i] += deviationReal*deviationReal;
+						spw_scutof_histogram_counts_p[spw][chan_j] += 1;
+						spw_scutof_histogram_sum_p[spw][chan_j] += deviationReal;
+						spw_scutof_histogram_sum_squares_p[spw][chan_j] += deviationReal*deviationReal;
+							
 					}
 
-					if (AverageImag > 0)
+					if (SumWeightImag > 0)
 					{
 						deviationImag = abs(visibility.imag()-AverageImag);
-		            	spw_scutof_histogram_counts_p[spw][timestep_i] += 1;
-		            	spw_scutof_histogram_sum_p[spw][timestep_i] += deviationImag;
-		            	spw_scutof_histogram_sum_squares_p[spw][timestep_i] += deviationImag*deviationImag;
+						spw_scutof_histogram_counts_p[spw][chan_j] += 1;
+						spw_scutof_histogram_sum_p[spw][chan_j] += deviationImag;
+						spw_scutof_histogram_sum_squares_p[spw][chan_j] += deviationImag*deviationImag;
 					}
         		}
             }
@@ -650,21 +651,14 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		}
 	}
 
-	// Produce spectral analysis histogram for each spw
+	// Produce time analysis histogram for each spw
 	if (doplot_p)
 	{
 		if (spw_scutof_histogram_sum_p.find(spw) == spw_scutof_histogram_sum_p.end())
 		{
-			spw_scutof_histogram_sum_p[spw] = vector<Double>(nTimesteps,0);
-			spw_scutof_histogram_counts_p[spw] = vector<Double>(nTimesteps,0);
-			spw_scutof_histogram_sum_squares_p[spw] = vector<Double>(nTimesteps,0);
-		}
-		else if (spw_scutof_histogram_sum_p[spw].size() < nTimesteps)
-		{
-			vector<Double> aux(nTimesteps-spw_scutof_histogram_sum_p[spw].size(),0);
-			spw_scutof_histogram_sum_p[spw].insert(spw_scutof_histogram_sum_p[spw].end(),aux.begin(),aux.end());
-			spw_scutof_histogram_counts_p[spw].insert(spw_scutof_histogram_counts_p[spw].end(),aux.begin(),aux.end());
-			spw_scutof_histogram_sum_squares_p[spw].insert(spw_scutof_histogram_sum_squares_p[spw].end(),aux.begin(),aux.end());
+			spw_scutof_histogram_sum_p[spw] = vector<Double>(nChannels,0);
+			spw_scutof_histogram_counts_p[spw] = vector<Double>(nChannels,0);
+			spw_scutof_histogram_sum_squares_p[spw] = vector<Double>(nChannels,0);
 		}
 	}
 
@@ -681,12 +675,10 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	uInt effectiveNTimeStepsDelta = (effectiveNTimeSteps - 1)/2;
 
 	// Beginning time range: Move only central point
-	/*
 	for (uInt timestep_i=0;timestep_i<effectiveNTimeStepsDelta;timestep_i++)
 	{
 		computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
 	}
-	*/
 
 	for (uInt timestep_i=effectiveNTimeStepsDelta;timestep_i<nTimesteps-effectiveNTimeStepsDelta;timestep_i++)
 	{
@@ -694,12 +686,10 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	}
 
 	// End time range: Move only central point
-	/*
 	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<nTimesteps;timestep_i++)
 	{
 		computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
 	}
-	*/
 
 	return false;
 }
