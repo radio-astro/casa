@@ -57,19 +57,3 @@ def asap_init():
     myf['sdsmooth']=sdsmooth
     myf['sdstat']=sdstat
     myf['sdtpimaging']=sdtpimaging
-
-    print ""
-    print "*** Notice: The following SD task parameters have been renamed:"
-    print "***"
-    print "***         OldName       NewName    Task"
-    print "***         ----------------------------------------------------------"
-    print "***         sdfile     -> infile     all sd* tasks except for sdcoadd"
-    print "***         sdfilelist -> infiles    sdcoadd"
-    print "***         sdimages   -> infiles    sdimprocess"
-    print "***         msname     -> infile     msmoments"
-    print "***         imagename  -> outfile    sdimaging/sdimprocess/sdtpimaging"
-    print "***         fitfile    -> outfile    sdfit"
-    print "***         listfile   -> outfile    sdlist"
-    print "***         plotfile   -> outfile    sdplot"
-    print "***         statfile   -> outfile    sdstat"
-    print ""
