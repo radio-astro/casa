@@ -2,7 +2,7 @@ from taskinit import *
 import time
 import os
 import sys
-from flaghelper import *
+import flaghelper as fh
 
 debug = False
 
@@ -92,8 +92,6 @@ def tflagcmd(
         casalog.post('MS spans timerange ' + ms_starttime + ' to '
                      + ms_endtime)
             
-        # Initialize the flaghelper module
-        fh = flaghelper(tflocal, casalog)
         
         
         myflagcmd = {}
@@ -127,39 +125,58 @@ def tflagcmd(
         elif inpmode == 'file':
 
             casalog.post('Reading from ASCII file')
-            # Read ASCII file into command list
-            if inpfile == '':
-                casalog.post('Input file is empty', 'ERROR')
-            
-            flagtable = inpfile
-
-            if (type(flagtable) == str) & os.path.exists(flagtable):
-                try:
-                    ff = open(flagtable, 'r')
-                except:
-                    raise Exception, 'Error opening file ' + flagtable
-            else:
-                raise Exception, \
-                    'ASCII file not found - please verify the name'
-                    
-            #
-            # Parse file
+            ###### TO DO: take time ranges calculation into account ??????
+            # Parse the input file
             try:
-                cmdlist = ff.readlines()
-                 # First remove any blank lines
-                blanks = cmdlist.count('\n')
-                for i in range(blanks):
-                    cmdlist.remove('\n')
+                if inpfile == '':
+                     casalog.post('Input file is empty', 'ERROR')
+                     
+                cmdlist = fh.readFile(inpfile)
+                # Make a FLAG_CMD compatible dictionary
+                myflagcmd = fh.makeDict(cmdlist)
+                
+                # Number of commands in dictionary
+                vrows = myflagcmd.keys()
 
             except:
-                raise Exception, 'Error reading lines from file ' \
-                    + flagtable
-            ff.close()
-            casalog.post('Read ' + str(cmdlist.__len__())
-                         + ' lines from file ' + flagtable)
+                raise Exception, 'Error reading the input file '+inpfile
+            
+            casalog.post('Read ' + str(vrows.__len__())
+                         + ' lines from file ' + inpfile)
 
-            if cmdlist.__len__() > 0:
-                myflagcmd = readFromFile(cmdlist, ms_startmjds,ms_endmjds,myreason=reason)                               
+            # Read ASCII file into command list
+#            if inpfile == '':
+#                casalog.post('Input file is empty', 'ERROR')
+#            
+#            flagtable = inpfile
+#
+#            if (type(flagtable) == str) & os.path.exists(flagtable):
+#                try:
+#                    ff = open(flagtable, 'r')
+#                except:
+#                    raise Exception, 'Error opening file ' + flagtable
+#            else:
+#                raise Exception, \
+#                    'ASCII file not found - please verify the name'
+#                    
+#            #
+#            # Parse file
+#            try:
+#                cmdlist = ff.readlines()
+#                 # First remove any blank lines
+#                blanks = cmdlist.count('\n')
+#                for i in range(blanks):
+#                    cmdlist.remove('\n')
+#
+#            except:
+#                raise Exception, 'Error reading lines from file ' \
+#                    + flagtable
+#            ff.close()
+#            casalog.post('Read ' + str(cmdlist.__len__())
+#                         + ' lines from file ' + flagtable)
+#
+#            if cmdlist.__len__() > 0:
+#                myflagcmd = readFromFile(cmdlist, ms_startmjds,ms_endmjds,myreason=reason)                               
 
             listmode = 'file'
             
@@ -289,8 +306,7 @@ def tflagcmd(
             if action == 'unapply':
                 apply = False
                 
-#            list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
-            list2save = fh.setupAgent(myflagcmd, tablerows, apply)
+            list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
             
             # If the display is requested, add it to list of agents
             if display != '':

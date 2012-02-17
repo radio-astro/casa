@@ -514,22 +514,26 @@ class test_statistics_queries(test_base):
         print "Test of channel average"
         tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], correlation='ABS RR',
                  savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 1414186)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1414186)
 
     def test_chanavg1(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], correlation='ABS RR',
                  savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 1347822)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1347822)
 
     def test_chanavg2(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
                  correlation='ABS RR', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 242053)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 242053)
 
     def test_chanavg3(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], spw='0:0~10',
                  correlation='ABS RR', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 231374)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 231374)
                
 
 #    def test8(self):
@@ -541,22 +545,26 @@ class test_statistics_queries(test_base):
     def test9(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='beg', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 329994)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 329994)
 
     def test10(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='endb', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 333396)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 333396)
 
     def test11(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='end', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 2520882)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2520882)
 
     def test12(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 2524284)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2524284)
 
     def test13(self):
         '''tflagdata: quack mode, quackincrement'''
@@ -814,7 +822,7 @@ class test_list(test_base):
         self.assertEqual(res['flagged'], 2524284)
 
     def test_list5(self):
-        '''tflagdata: clip only zero data'''
+        '''tflagdata: clip only zero data in mode=list'''
         # get the correct data, by passing the previous setUp()
         self.setUp_data4tfcrop()
         
@@ -825,7 +833,7 @@ class test_list(test_base):
         tflagdata(vis=self.vis, mode='list',  inpfile=filename, run=True, savepars=False)
         
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 274944)
+        self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
 
         
 class test_clip(test_base):
@@ -836,7 +844,7 @@ class test_clip(test_base):
         
     def test_clipzeros(self):
     	'''tflagdata: clip only zero-value data'''
-        tflagdata(vis = self.vis, mode='clip', clipzeros=True)
+        tflagdata(vis=self.vis, mode='clip', clipzeros=True)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'],274944,'Should clip only spw=8')
     	

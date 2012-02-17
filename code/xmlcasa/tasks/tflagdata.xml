@@ -273,7 +273,7 @@ tfcrop,extend,unflag,summary)</description>
             </param>
             <param type="bool" name="sequential" subparam="true">
                 <description>Run the task in sequential or in parallel</description>
-                <value>False</value>
+                <value>True</value>
             </param>
             <param type="string" name="display" subparams="true">
                 <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
@@ -456,7 +456,7 @@ tfcrop,extend,unflag,summary)</description>
                 <when param="run">
                     <equals type="bool" value="True">
                         <default param="writeflags"><value type="bool">True</value></default>
-                        <default param="sequential"><value type="bool">False</value></default>
+                        <default param="sequential"><value type="bool">True</value></default>
                         <default param="display"><value type="string"></value></default>
                         <default param="flagbackup"><value type="bool">False</value></default>
                     </equals>
@@ -839,8 +839,8 @@ tfcrop,extend,unflag,summary)</description>
                     Note: this parameter is disabled when mode='summary'.
 
               sequential -- Run the task in sequential or in parallel. 
-                   default: False
-                   options: False/True
+                   default: True
+                   options: True/False
                  
               display -- Display data and/or end-of-MS reports at runtime.        
                	   default: 'none'
