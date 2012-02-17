@@ -24,6 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
+#include <boost/math/special_functions/round.hpp>
 
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/Quantum.h>
@@ -494,7 +495,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // data frequencies on which to interpolate. This new list is sync'd with the starting image chan
     // and have the same width as the data chans.
     if(((width >2.0) && (freqInterpMethod_p==InterpolateArray1D<Double, Complex>::linear)) || 
-	   (width >4.0) && (freqInterpMethod_p !=InterpolateArray1D<Double, Complex>::linear)){
+       ((width >4.0) && (freqInterpMethod_p !=InterpolateArray1D<Double, Complex>::linear))){
       Double minVF=min(visFreq);
       Double maxVF=max(visFreq);
       Double minIF=min(imageFreq_p);
@@ -790,16 +791,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       uInt nrows=dphase.nelements();
       Vector<Double> thisRow(3);
       thisRow=0.0;
-      uInt i;
-      for (uInt row=0;row<nrows;row++) {
-	for (i=0;i<3;i++) thisRow(i)=uvw(i,row);
-	uvwMachine_p->convertUVW(dphase(row), thisRow);
-	for (i=0;i<3;i++) uvw(i,row)=thisRow(i);
-      }
+      uInt irow;
+      //#pragma omp parallel default(shared) private(irow,thisRow)
+      {
+	//#pragma omp for
+	
+	  for (irow=0; irow<nrows;++irow) {
+	    thisRow.reference(uvw.row(irow));
+	    convUVW(dphase(irow), thisRow);
+	  }
+	
+      }//end pragma
     }
-    
   }
-  
+
+  void FTMachine::convUVW(Double& dphase, Vector<Double>& thisrow){
+    //for (uInt i=0;i<3;i++) thisRow(i)=uvw(i,row);
+    uvwMachine_p->convertUVW(dphase, thisrow);
+    //for (uint i=0;i<3;i++) uvw(i,row)=thisRow(i);
+
+  }
+
+
+  void FTMachine::locateuvw(const Double*& uvw, const Double*& dphase,
+			    const Double*& freq, const Int& nvchan,
+			    const Double*& scale, const Double*& offset,  const Int& sampling, Int*& loc, Int*& off, Complex*& phasor, const Int& row){
+    
+    //Int nvischan=freq.shape()[0];
+    Int rowoff=row*nvchan;
+    Double phase;
+    Vector<Double> pos(2);
+    for (Int f=0; f<nvchan; ++f){
+      for (Int k=0; k <2; ++k){
+	pos(k)=(scale[k])*uvw[3*row+k]*(freq[f])/C::c+((offset[k])+1.0);
+	loc[(rowoff+f)*2+k]=boost::math::iround(pos(k));
+	off[(rowoff+f)*2+k]=boost::math::iround((Double(loc[(rowoff+f)*2+k])-pos(k))*Double(sampling));
+	//off[(rowoff+f)*2+k]=(loc[(rowoff+f)*2+k]-pos(k))*sampling;	
+      }
+      phase=-Double(2.0)*C::pi*dphase[row]*(freq[f])/C::c;
+      phasor[rowoff+f]=Complex(cos(phase), sin(phase));
+	
+    }
+
+    
+
+
+  }
+
   //
   // Refocus the array on a point at finite distance
   //

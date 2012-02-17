@@ -113,7 +113,7 @@
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/rGridFT.h>
+#include <synthesis/TransformMachines/rGridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
@@ -2711,7 +2711,7 @@ Bool Imager::createFTMachine()
        << LogIO::POST;
     os << LogIO::NORMAL1 // gridfunction_p is too cryptic for most users.
        << "...with convolution function " << gridfunction_p << LogIO::POST;
-
+    /*
     // Make the re-gridder components.  Here, make the basic
     // re-sampler.
     CountedPtr<VisibilityResamplerBase> visResamplerCtor = new VisibilityResampler();
@@ -2719,23 +2719,26 @@ Bool Imager::createFTMachine()
     // re-sampler used in the worklet threads.
     CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
 											       visResamplerCtor);
+    */
     // Now make the FTMachine
     if(facets_p>1) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Multi-facet Fourier transforms will use specified common tangent point:"
 	 << LogIO::POST;
       os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
-      ft_p = new rGridFT(cache_p / 2, tile_p, mthVisResampler, gridfunction_p, mLocation_p,
-			 phaseCenter_p, padding, False, useDoublePrecGrid);
+      //      ft_p = new rGridFT(cache_p / 2, tile_p, mthVisResampler, gridfunction_p, mLocation_p,
+      //			 phaseCenter_p, padding, False, useDoublePrecGrid);
+
+      ft_p=new rGridFT(cache_p / 2, tile_p, gridfunction_p, mLocation_p,
+                        phaseCenter_p, padding, False, useDoublePrecGrid);
       
     }
     else {
       os << LogIO::DEBUG1
          << "Single facet Fourier transforms will use image center as tangent points"
 	 << LogIO::POST;
-      ft_p = new rGridFT(cache_p/2, tile_p, mthVisResampler, gridfunction_p, mLocation_p,
+      ft_p = new rGridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
 			padding, False, useDoublePrecGrid);
-
     }
     AlwaysAssert(ft_p, AipsError);
     
@@ -3855,7 +3858,7 @@ void Imager::makeVisSet(MeasurementSet& ms,
     sort[3] = MS::TIME;
   }
   Matrix<Int> noselection;
-  Double timeInterval=0;
+  Double timeInterval=0.0;
   //if you want to use scratch col...make sure they are there
   if(useModelCol_p){
     //VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
@@ -3875,7 +3878,10 @@ void Imager::makeVisSet(MeasurementSet& ms,
     rvi_p=wvi_p;    
   }
   rvi_p->useImagingWeight(imwgt_p);
-
+  
+  //////////////////////
+  //rvi_p->setRowBlocking(35);
+  ////////////////////
 }
 /*
 void Imager::makeVisSet(MeasurementSet& ms, 
