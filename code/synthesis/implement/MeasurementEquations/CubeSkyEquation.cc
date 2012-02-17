@@ -45,7 +45,7 @@
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/MeasurementComponents/rGridFT.h>
+#include <synthesis/TransformMachines/rGridFT.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
@@ -69,6 +69,7 @@
 #include <synthesis/MSVis/VisSet.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisBuffer.h>
+#include <omp.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -812,10 +813,25 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 }
                 // get the model visibility and write it to the model MS
                 //	Timers tGetSlice=Timers::getTime();
+
                 //		Timers tgetSlice=Timers::getTime();
+
+//#pragma omp parallel default(shared)
+ {
+   //  cerr << "num_threads " << omp_get_num_threads() << endl;
+   //#pragma omp sections nowait
+{
+  //#pragma omp section
                 if(!isEmpty)
                     getSlice(* vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
-                //saving the model for self-cal most probably
+  //#pragma omp section
+		if(!useCorrected)
+		  vb->visCube();
+		else
+		  vb->correctedVisCube();
+ }
+
+ }                //saving the model for self-cal most probably
                 //	Timers tSetModel=Timers::getTime();
                 //		Timers tsetModel=Timers::getTime();
                 if(commitModel && wvi_p != NULL){

@@ -200,6 +200,10 @@ public:
 	       const Vector<Int>& ant2,
 	       Vector<Double>& dphase, const VisBuffer& vb);
 
+  //helper function for openmp to call ...no private dependency
+  static void locateuvw(const Double*& uvw, const Double*&dphase, const Double*& freq, const Int& nchan, const Double*& scale, const Double*& offset,  const Int& sampling, Int*& loc,Int*& off, Complex*& phasor, const Int& row); 
+		 
+
   // Save and restore the FTMachine to and from a record
   virtual Bool toRecord(String& error, RecordInterface& outRecord, 
 			Bool withImage=False);
@@ -381,6 +385,7 @@ protected:
   
   void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
   void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
+  void convUVW(Double& dphase, Vector<Double>& thisrow);
   //A holder for the complex image if nobody else is keeping it
   CountedPtr<ImageInterface<Complex> > cmplxImage_p;
 

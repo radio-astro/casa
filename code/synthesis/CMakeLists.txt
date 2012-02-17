@@ -28,6 +28,7 @@ casa_add_library( synthesis
   implement/TransformMachines/DBeamSkyJones.cc
   implement/TransformMachines/FTMachine.cc
   implement/TransformMachines/GridFT.cc
+  implement/TransformMachines/rGridFT.cc
   implement/TransformMachines/HetArrayConvFunc.cc
   implement/TransformMachines/MosaicFT.cc
   implement/TransformMachines/MultiTermFT.cc	
@@ -204,7 +205,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/EPJones.cc
  implement/MeasurementComponents/GlobalFTMachineCallbacks.cc
  implement/MeasurementComponents/GridBoth.cc
- implement/MeasurementComponents/rGridFT.cc
  implement/MeasurementComponents/GSpline.cc
  implement/MeasurementComponents/HogbomCleanImageSkyModel.cc
  implement/MeasurementComponents/IlluminationConvFunc.cc
