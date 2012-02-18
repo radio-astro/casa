@@ -204,7 +204,7 @@ macro( casa_add_tools out_swig out_sources out_py )
     add_custom_command(
       OUTPUT ${_swig}
       #COMMAND echo "%module\\(package=\\\"casac\\\"\\) " ${_base} > ${_swig}
-      COMMAND echo "%module casac"  > ${_swig}
+      COMMAND echo "%module " ${_base}   > ${_swig}
       COMMAND echo "%include \\<tools/casa_typemaps.i\\> " >> ${_swig}
       COMMAND echo "%feature\\(\\\"autodoc\\\", \\\"1\\\"\\)\\;" >> ${_swig}
       COMMAND echo "%include \\\"${_base}_cmpt.h\\\"" >> ${_swig}
@@ -253,14 +253,22 @@ macro( casa_add_tools out_swig out_sources out_py )
   endforeach()
 
   set(_initpy ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+  set(_casacpy ${CMAKE_CURRENT_BINARY_DIR}/casac.py)
   add_custom_command(
     OUTPUT ${_initpy}
     COMMAND sh ${CMAKE_SOURCE_DIR}/install/mkinitpy.sh ${_xmls} > ${_initpy}
     DEPENDS ${_xmls} ${CMAKE_SOURCE_DIR}/install/mkinitpy.sh
     )
+  add_custom_command(
+    OUTPUT ${_casacpy}
+    COMMAND sh ${CMAKE_SOURCE_DIR}/install/mkcasacpy.sh ${_xmls} > ${_casacpy}
+    DEPENDS ${_xmls} ${CMAKE_SOURCE_DIR}/install/mkcasacpy.sh 
+    )
 
   set(${out_sources} ${${out_sources}} ${_initpy} )
-  install(FILES ${_initpy} DESTINATION  python/${PYTHONV}/casac )
+  set(${out_sources} ${${out_sources}} ${_casacpy} )
+  install(FILES ${_initpy} DESTINATION  python/${PYTHONV}/__casac__ )
+  install(FILES ${_casacpy} DESTINATION python/${PYTHONV} )
   
 endmacro( casa_add_tools )
 
