@@ -327,6 +327,9 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     isEmpty=isEmpty &&  (sm_->isEmpty(model));                
     
   }
+  ////if people want to use model but it isn't there..we'll ignore you
+  if(!noModelCol_p)
+    noModelCol_p=rvi_p->msColumns().modelData().isNull();
   
   
   if( (sm_->numberOfModels() >0) && isEmpty  && !initialized && !incremental){ 
@@ -677,6 +680,10 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                               -1);
 
     Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
+
+    ////if people want to use model but it isn't there
+    if(!noModelCol_p)
+      noModelCol_p=rvi_p->msColumns().modelData().isNull();
 
     if (addCorrectedVisCube){
         prefetchColumns.insert (VisBufferComponents::CorrectedCube);
