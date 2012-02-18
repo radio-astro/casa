@@ -795,9 +795,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //#pragma omp parallel default(shared) private(irow,thisRow)
       {
 	//#pragma omp for
-	
 	  for (irow=0; irow<nrows;++irow) {
-	    thisRow.reference(uvw.row(irow));
+	    thisRow.reference(uvw.column(irow));
 	    convUVW(dphase(irow), thisRow);
 	  }
 	
