@@ -291,7 +291,7 @@ class cleanhelper_test(unittest.TestCase):
         for i in xrange(100):
             x = random.randint(100,1000000)
             y = cleanhelper.getOptimumSize(x)
-            self.assertTrue(y>x)
+            self.assertTrue(y>=x,"input=%s output=%s" % (x,y))
             
             # Now Factorize this return
             remainder = float(y)
