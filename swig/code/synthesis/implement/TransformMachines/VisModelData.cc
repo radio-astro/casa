@@ -38,6 +38,7 @@
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
 #include <synthesis/TransformMachines/GridFT.h>
+#include <synthesis/TransformMachines/rGridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
@@ -234,6 +235,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     String name=ftrec.asString("name");
     if(name=="GridFT")
       return new GridFT(ftrec);
+    if(name=="rGridFT")
+      return new rGridFT(ftrec);
     if(name=="WProjectFT")
       return new WProjectFT(ftrec);
     if(name=="MultiTermFT")
