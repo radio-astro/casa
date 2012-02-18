@@ -203,7 +203,8 @@ macro( casa_add_tools out_swig out_sources out_py )
     set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}.i )
     add_custom_command(
       OUTPUT ${_swig}
-      COMMAND echo "%module\\(package=\\\"casac\\\"\\) " ${_base} > ${_swig}
+      #COMMAND echo "%module\\(package=\\\"casac\\\"\\) " ${_base} > ${_swig}
+      COMMAND echo "%module casac"  > ${_swig}
       COMMAND echo "%include \\<tools/casa_typemaps.i\\> " >> ${_swig}
       COMMAND echo "%feature\\(\\\"autodoc\\\", \\\"1\\\"\\)\\;" >> ${_swig}
       COMMAND echo "%include \\\"${_base}_cmpt.h\\\"" >> ${_swig}
