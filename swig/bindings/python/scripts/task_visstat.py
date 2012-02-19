@@ -17,7 +17,7 @@ def visstat(vis=None,
 
     casalog.origin('visstat')  
 
-    ms = casac.homefinder.find_home_by_name('msHome').create()
+    ms = casac.ms
 
     ms.open(vis)
 

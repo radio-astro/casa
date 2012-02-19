@@ -45,7 +45,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0):
 
     """
 
-    tbt = casac.homefinder.find_home_by_name('tableHome').create()
+    tbt = casac.table
 
     casalog.origin('fixplanets')
     try:

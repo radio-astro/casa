@@ -78,7 +78,7 @@ except OSError, e:
 ## ...do this after setting up the watchdog
 ##
 try:
-    import casac
+    import casac 
 except ImportError, e:
     print "failed to load casa:\n", e
     sys.exit(1)

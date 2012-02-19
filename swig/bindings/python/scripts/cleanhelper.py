@@ -1,4 +1,4 @@
-import casac
+from  casac import *
 import os
 import commands
 import math
@@ -10,18 +10,12 @@ from numpy import unique
 from odict import odict
 
 ###some helper tools
-mstool = casac.homefinder.find_home_by_name('msHome')
-ms = mstool.create()
-tbtool = casac.homefinder.find_home_by_name('tableHome')
-tb = tbtool.create()
-qatool = casac.homefinder.find_home_by_name('quantaHome')
-qa = qatool.create()
-metool = casac.homefinder.find_home_by_name('measuresHome')
-me = metool.create()
-rgtool=casac.homefinder.find_home_by_name('regionmanagerHome')
-rg = rgtool.create()
-iatool=casac.homefinder.find_home_by_name('imageHome')
-ia = iatool.create()
+ms = casac.ms
+tb = casac.table
+qa = casac.quanta
+me = casac.measures
+rg = casac.regionmanager
+ia = casac.image
 
 class cleanhelper:
     def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
@@ -53,8 +47,7 @@ class cleanhelper:
         # for multims handling
         self.sortedvislist=[]
         if not casalog:  # Not good!
-            loghome =  casac.homefinder.find_home_by_name('logsinkHome')
-            casalog = loghome.create()
+            casalog = casac.logsink
             #casalog.setglobal(True)
         self._casalog = casalog
         

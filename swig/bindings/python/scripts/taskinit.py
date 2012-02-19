@@ -1,10 +1,11 @@
 import pCASA
-import casac
+from casac import *
 import viewertool
 import inspect
 import string
 import sys
 import os
+
 
 def __taskinit_setlogfile( logger ) :
 	####
@@ -44,46 +45,45 @@ casa = __taskinit_casa( )
 ##allow globals for taskby default
 casaglobals=True
 # setup available tools
-imager = casac.homefinder.find_home_by_name('imagerHome')
+imager = casac.imager
 imtool=imager
-calibrater = casac.homefinder.find_home_by_name('calibraterHome')
+calibrater = casac.calibrater
 cbtool=calibrater
-mstool = casac.homefinder.find_home_by_name('msHome')
-tptool = casac.homefinder.find_home_by_name('tableplotHome')
-tp = tptool.create()
-mptool = casac.homefinder.find_home_by_name('msplotHome')
-mp = mptool.create()
-pmtool = casac.homefinder.find_home_by_name('plotmsHome')
-pm = pmtool.create()
-cptool = casac.homefinder.find_home_by_name('calplotHome')
-cp = cptool.create()
-qatool = casac.homefinder.find_home_by_name('quantaHome')
-qa = casac.qa = qatool.create()
-tbtool = casac.homefinder.find_home_by_name('tableHome')
-fgtool = casac.homefinder.find_home_by_name('flaggerHome')
-tftool = casac.homefinder.find_home_by_name('testflaggerHome')
-tf = tftool.create()
-metool = casac.homefinder.find_home_by_name('measuresHome')
-iatool = casac.homefinder.find_home_by_name('imageHome')
-potool = casac.homefinder.find_home_by_name('imagepolHome')
-smtool = casac.homefinder.find_home_by_name('simulatorHome')
-cltool = casac.homefinder.find_home_by_name('componentlistHome')
-coordsystool = casac.homefinder.find_home_by_name('coordsysHome')
-rgtool = casac.homefinder.find_home_by_name('regionmanagerHome')
-sltool = casac.homefinder.find_home_by_name('spectrallineHome')
-dctool = casac.homefinder.find_home_by_name('deconvolverHome')
-vptool = casac.homefinder.find_home_by_name('vpmanagerHome')
-utilstool = casac.homefinder.find_home_by_name('utilsHome')
-cu = casac.cu = utilstool.create()
-vftaskhome = casac.homefinder.find_home_by_name('vlafillertaskHome')
-vftask = vftaskhome.create()
+mstool = casac.ms
+tptool = casac.tableplot
+tp = tptool
+mptool = casac.msplot
+mp = mptool
+pmtool = casac.plotms
+pm = pmtool
+cptool = casac.calplot
+cp = cptool
+qatool = casac.quanta
+qa = casac.qa = qatool
+tbtool = casac.table
+fgtool = casac.flagger
+tftool = casac.testflagger
+tf = tftool
+metool = casac.measures
+iatool = casac.image
+potool = casac.imagepol
+smtool = casac.simulator
+cltool = casac.componentlist
+coordsystool = casac.coordsys
+rgtool = casac.regionmanager
+sltool = casac.spectralline
+dctool = casac.deconvolver
+vptool = casac.vpmanager
+utilstool = casac.utils
+cu = casac.cu = utilstool
+vftaskhome = casac.vlafillertask
+vftask = vftaskhome
 vlafiller=vftask.fill
-loghome =  casac.homefinder.find_home_by_name('logsinkHome')
-casalog = loghome.create()
+casalog =  casac.logsink
 __taskinit_setlogfile(casalog)
 casalog.setglobal(True)
-attool = casac.homefinder.find_home_by_name('atmosphereHome')
-at = attool.create()
+attool = casac.atmosphere
+at = attool
 
 def gentools(tools=None):
 	"""
@@ -94,11 +94,11 @@ def gentools(tools=None):
 	im, ia, cb=gentools(['im', 'ia', 'cb'])
 
 	"""
-	tooldic={'im':'imager.create()', 'cb' :'calibrater.create()', 'ms':'mstool.create()',
-		 'tb':'tbtool.create()', 'fg':'fgtool.create()', 'me' :'metool.create()', 
-		 'ia': 'iatool.create()', 'po':'potool.create()', 'sm' :'smtool.create()', 
-		 'cl': 'cltool.create()', 'cs' :'coordsystool.create()', 'rg':'rgtool.create()',
-		 'sl':'sltool.create()', 'dc':'dctool.create()', 'vp':'vptool.create()'}
+	tooldic={'im':'imager', 'cb' :'calibrater', 'ms':'mstool',
+		 'tb':'tbtool', 'fg':'fgtool', 'me' :'metool', 
+		 'ia': 'iatool', 'po':'potool', 'sm' :'smtool', 
+		 'cl': 'cltool', 'cs' :'coordsystool', 'rg':'rgtool',
+		 'sl':'sltool', 'dc':'dctool', 'vp':'vptool'}
 	reqtools=[]
         if (not tools) or not hasattr(tools, '__iter__'):
 		reqtools=['im', 'cb', 'ms','tb', 'fg', 'me', 'ia', 'po',

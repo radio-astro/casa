@@ -5,7 +5,7 @@ import numpy as np
 import pylab as pl
 from taskinit import *
 
-import casac
+from casac import *
 from tasks import *
 
 import commands;
@@ -22,7 +22,7 @@ def testautoflag( vis, field, spw,
               extendflags, extendpols, growtime, growfreq, growaround, flagneartime, flagnearfreq,
               datadisplay, plotsummary, showknownrfi, usepreflags,preflagzeros, writeflags, flagbackup):
 
-    lfg = casac.homefinder.find_home_by_name('lightflaggerHome').create();
+    lfg = casac.lightflagger
     flagstats={};
     msname=vis;
 
@@ -153,7 +153,7 @@ class classFlagSummary:
     ###################################
     def __init__(self):
           self.name = 'tfcrop';
-          self.lfg = casac.homefinder.find_home_by_name('lightflaggerHome').create();
+          self.lfg = casac.lightflagger
           self.flagstats={};
           self.msname="";
           self.nfld=1;

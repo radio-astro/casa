@@ -48,8 +48,8 @@ def tflagcmd(
     casalog.origin('tflagcmd')
 #    casalog.post('You are using flagcmd v3.6 Updated STM 2011-06-28')
 
-    tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
-    mslocal = casac.homefinder.find_home_by_name('msHome').create()
+    tflocal = casac.testflagger
+    mslocal = casac.ms
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
@@ -2051,11 +2051,11 @@ def plotflags(
     ):
     
     try:
-        import casac
+        from casac import *
     except ImportError, e:
         print 'failed to load casa:\n', e
         exit(1)
-    qatool = casac.homefinder.find_home_by_name('quantaHome')
+    qatool = casac.quanta
     qa = casac.qa = qatool.create()
 
     try:

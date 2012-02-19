@@ -101,7 +101,7 @@ def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell
     try:
 
         casalog.origin('csvclean')
-        ms = casac.homefinder.find_home_by_name('msHome').create()
+        ms = casac.ms
         
 
         parsummary = 'vis="'+str(vis)+'", imagename="'+str(imagename)+'", '

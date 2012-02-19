@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-import casac
+from casac import *
 
 ##
 ## first set up CASAPATH
@@ -52,55 +52,31 @@ for root, dirs, files in os.walk(__casapath__):
 ##
 ## finally load tools
 ##
-__quantahome__ = casac.homefinder.find_home_by_name('quantaHome')
-__measureshome__ = casac.homefinder.find_home_by_name('measuresHome')
-__imagerhome__ = casac.homefinder.find_home_by_name('imagerHome')
-__calibraterhome__ = casac.homefinder.find_home_by_name('calibraterHome')
-__mshome__ = casac.homefinder.find_home_by_name('msHome')
-__tableplothome__ = casac.homefinder.find_home_by_name('tableplotHome')
-__msplothome__ = casac.homefinder.find_home_by_name('msplotHome')
-__plotmshome__ = casac.homefinder.find_home_by_name('plotmsHome')
-__calplothome__ = casac.homefinder.find_home_by_name('calplotHome')
-__tablehome__ = casac.homefinder.find_home_by_name('tableHome')
-__flaggerhome__ = casac.homefinder.find_home_by_name('flaggerHome')
-__testflaggerhome__ = casac.homefinder.find_home_by_name('testflaggerHome')
-__imagehome__ = casac.homefinder.find_home_by_name('imageHome')
-__imagepolhome__ = casac.homefinder.find_home_by_name('imagepolHome')
-__simulatorhome__ = casac.homefinder.find_home_by_name('simulatorHome')
-__componentlisthome__ = casac.homefinder.find_home_by_name('componentlistHome')
-__coordsyshome__ = casac.homefinder.find_home_by_name('coordsysHome')
-__regionmanagerhome__ = casac.homefinder.find_home_by_name('regionmanagerHome')
-__spectrallinehome__ = casac.homefinder.find_home_by_name('spectrallineHome')
-__utilshome__ = casac.homefinder.find_home_by_name('utilsHome')
-__deconvolverhome__ = casac.homefinder.find_home_by_name('deconvolverHome')
-__vpmanagerhome__ = casac.homefinder.find_home_by_name('vpmanagerHome')
-__vlafillertaskhome__ = casac.homefinder.find_home_by_name('vlafillertaskHome')
-__atmospherehome__ = casac.homefinder.find_home_by_name('atmosphereHome')
 
-quanta = __quantahome__.create( )
-measures = __measureshome__.create( )
-imager = __imagerhome__.create( )
-calibrater = __calibraterhome__.create( )
-ms = __mshome__.create( )
-tableplot = __tableplothome__.create( )
-msplot = __msplothome__.create( )
-pmtool = __plotmshome__.create( )
-calplot = __calplothome__.create( )
-table = __tablehome__.create( )
-flagger = __flaggerhome__.create( )
-testflagger = __testflaggerhome__.create( )
-image = __imagehome__.create( )
-imagepol = __imagepolhome__.create( )
-simulator = __simulatorhome__.create( )
-componentlist = __componentlisthome__.create( )
-coordsys = __coordsyshome__.create( )
-regionmanager = __regionmanagerhome__.create( )
-spectralline = __spectrallinehome__.create( )
-utils = __utilshome__.create( )
-deconvolver = __deconvolverhome__.create( )
-vpmanager = __vpmanagerhome__.create( )
-vlafillertask = __vlafillertaskhome__.create( )
-atmosphere = __atmospherehome__.create( )
+quanta = casac.quanta
+measures = casac.measures
+imager = casac.imager
+calibrater = casac.calibrater
+ms = casac.ms
+tableplot = casac.tableplot
+msplot = casac.msplot
+pmtool = casac.plotms
+calplot = casac.calplot
+table = casac.table
+flagger = casac.flagger
+testflagger = casac.testflagger
+image = casac.image
+imagepol = casac.imagepol`
+simulator = casac.simulator
+componentlist = casac.componentlist
+coordsys = casac.coordsys
+regionmanager = casac.regionmanager
+spectralline = casac.spectralline
+utils = casac.utils
+deconvolver = casac.deconvolver
+vpmanager = casac.vpmanager
+vlafillertask = casac.vlafillertask
+atmosphere = casac.atmosphere
 
 from accum import  accum
 from applycal import  applycal

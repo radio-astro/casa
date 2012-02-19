@@ -166,8 +166,8 @@ def cvel(vis, outputvis,
     #Python script
 
     # make ms and tb tool local 
-    ms = casac.homefinder.find_home_by_name('msHome').create()
-    tb = casac.homefinder.find_home_by_name('tableHome').create()
+    ms = casac.ms
+    tb = casac.table
 
     try:
 	casalog.origin('cvel')

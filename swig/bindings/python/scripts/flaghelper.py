@@ -1,4 +1,4 @@
-import casac
+from casac import *
 import os
 import commands
 import math
@@ -9,8 +9,7 @@ from taskinit import *
 
 ###some helper tools
 #mslocal = casac.homefinder.find_home_by_name('msHome').create()
-tbtool = casac.homefinder.find_home_by_name('tableHome')
-tb=tbtool.create()
+tb=casac.table
 
 debug = False
 

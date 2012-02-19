@@ -14,8 +14,8 @@ def flagautocorr(vis=None):
 	"""
 	casalog.origin('flagautocorr')
 
-        fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
-        mslocal = casac.homefinder.find_home_by_name('msHome').create()
+        fglocal = casac.flagger
+        mslocal = casac.ms
 
 	#Python script
 	try:

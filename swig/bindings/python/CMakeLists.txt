@@ -44,7 +44,6 @@ scripts/parameter_check.py
 scripts/parameter_dictionary.py
 scripts/plotcomp.py
 scripts/pointcal.py
-scripts/qtcasapy.py
 scripts/regression.py
 scripts/regressframe.py
 scripts/regression_utility.py

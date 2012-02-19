@@ -14,9 +14,9 @@ import os
 import re
 import casadef
 
-import casac
+from  casac import *
 from IPython.Release import version
-casalog = casac.homefinder.find_home_by_name('logsinkHome').create()
+casalog = casac.logsink
 
 def log_message( state, file, lines ) :
     if not (state['engine'].has_key('current task')) :

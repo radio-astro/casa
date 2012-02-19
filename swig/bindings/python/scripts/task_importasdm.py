@@ -92,7 +92,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	#Python script
 
 	# make fg tool local 
-	fg = casac.homefinder.find_home_by_name('flaggerHome').create()	
+	fg = casac.flagger
 
 	try:
                 casalog.origin('importasdm')
@@ -163,8 +163,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                         out = 'ASDM_' + tab.upper()
                                         outTabNames.append( out )
                                         outTables.append( vis+'/'+out )
-                                tbtool = casac.homefinder.find_home_by_name('tableHome')
-                                tb = tbtool.create()
+                                tb = casac.table
                                 tb.open(vis,nomodify=False)
                                 wtb = tbtool.create()
                                 for i in xrange(len(outTables)):

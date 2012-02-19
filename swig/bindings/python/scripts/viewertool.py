@@ -45,7 +45,7 @@ class viewertool(object):
     "manage task engines"
 
     __t = string.maketrans("abcdefghijklmnopqrstuvwxyz0123456789/*:%$#@!&()~+,.:;{}[]|\\\"'^","abcdefghijklmnopqrstuvwxyz0123456789__________________________")
-    __rgm = casac.homefinder.find_home_by_name('regionmanagerHome').create( )
+    __rgm = casac.regionmanager
 
     ###
     ### 'use_existing' defaults to false because:

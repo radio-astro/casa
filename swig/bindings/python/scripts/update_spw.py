@@ -18,7 +18,7 @@ Example:
 import copy
 import os
 #from taskinit import mstool
-from casac import homefinder
+from casac import table
 from taskinit import ms
 
 def update_spw(spw, spwmap=None):
@@ -157,8 +157,6 @@ def spwchan_to_ranges(vis, spw):
     >>> selranges
     {0: (1,  3,  1), 1: (1,  3,  1), 5: (10, 20,  2), 7: (10, 20,  2)}
     """
-    #mstool = homefinder.find_home_by_name('msHome')
-    #myms = mstool.create()
     selarr = ms.msseltoindex(vis, spw=spw)['channel']
     nspw = selarr.shape[0]
     selranges = {}
@@ -197,8 +195,6 @@ def spwchan_to_sets(vis, spw):
     if not os.path.isdir(vis):
         raise ValueError, str(vis) + ' is not a valid MS.'
         
-#    mstool = homefinder.find_home_by_name('msHome')
-#    myms = mstool.create()
     sets = {}
     try:
         scharr = ms.msseltoindex(vis, spw=spw)['channel']
@@ -223,8 +219,7 @@ def spwchan_to_sets(vis, spw):
                 if spwd[s] == '':
                     # We need to get the spw's # of channels without using
                     # ms.msseltoindex.
-                    tbtool = homefinder.find_home_by_name('tableHome')
-                    mytb = tbtool.create()
+                    mytb = casac.table
                     mytb.open(vis + '/SPECTRAL_WINDOW')
                     spwd[s] = range(mytb.getcell('NUM_CHAN', s))
                     mytb.close()

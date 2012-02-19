@@ -164,7 +164,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
     fW=casac.Quantity(50.,'GHz')
     fR=casac.Quantity(0.25,'GHz')
 
-    attool=casac.homefinder.find_home_by_name('atmosphereHome')
+    attool=casac.atmosphere
     at=attool.create()
     hum=20.0
 

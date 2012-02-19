@@ -61,8 +61,8 @@ def flagdata(vis = None,
                 return
 
 
-        fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
-        mslocal = casac.homefinder.find_home_by_name('msHome').create()
+        fglocal = casac.flagger
+        mslocal = casac.ms
         
         try: 
                 if ((type(vis)==str) & (os.path.exists(vis))):

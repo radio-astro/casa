@@ -9,7 +9,7 @@ def listvis(vis, options, datacolumn, field,spw, selectdata, antenna, timerange,
     """List visibilities on terminal."""
         
     casalog.origin('listvis')
-    myms = casac.homefinder.find_home_by_name('msHome').create()
+    myms = casac.ms
     
     isInteractive=False;
     

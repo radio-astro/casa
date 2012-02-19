@@ -72,8 +72,8 @@ def flagdata2(vis = None,
         return
 
     casalog.origin('flagdata2')
-    fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
-    mslocal = casac.homefinder.find_home_by_name('msHome').create()
+    fglocal = casac.flagger
+    mslocal = casac.ms
 
 #    fg.done()
 #    fg.clearflagselection(0)

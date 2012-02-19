@@ -1,6 +1,5 @@
 import sys
 import os
-import casac
 import string
 import inspect
 import pdb
