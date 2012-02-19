@@ -53,30 +53,30 @@ for root, dirs, files in os.walk(__casapath__):
 ## finally load tools
 ##
 
-quanta = casac.quanta
-measures = casac.measures
-imager = casac.imager
-calibrater = casac.calibrater
-ms = casac.ms
-tableplot = casac.tableplot
-msplot = casac.msplot
-pmtool = casac.plotms
-calplot = casac.calplot
-table = casac.table
-flagger = casac.flagger
-testflagger = casac.testflagger
-image = casac.image
-imagepol = casac.imagepol`
-simulator = casac.simulator
-componentlist = casac.componentlist
-coordsys = casac.coordsys
-regionmanager = casac.regionmanager
-spectralline = casac.spectralline
-utils = casac.utils
-deconvolver = casac.deconvolver
-vpmanager = casac.vpmanager
-vlafillertask = casac.vlafillertask
-atmosphere = casac.atmosphere
+quanta = casac.quanta()
+measures = casac.measures()
+imager = casac.imager()
+calibrater = casac.calibrater()
+ms = casac.ms()
+tableplot = casac.tableplot()
+msplot = casac.msplot()
+pmtool = casac.plotms()
+calplot = casac.calplot()
+table = casac.table()
+flagger = casac.flagger()
+testflagger = casac.testflagger()
+image = casac.image()
+imagepol = casac.imagepol`()
+simulator = casac.simulator()
+componentlist = casac.componentlist()
+coordsys = casac.coordsys()
+regionmanager = casac.regionmanager()
+spectralline = casac.spectralline()
+utils = casac.utils()
+deconvolver = casac.deconvolver()
+vpmanager = casac.vpmanager()
+vlafillertask = casac.vlafillertask()
+atmosphere = casac.atmosphere()
 
 from accum import  accum
 from applycal import  applycal

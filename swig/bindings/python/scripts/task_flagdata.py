@@ -61,8 +61,8 @@ def flagdata(vis = None,
                 return
 
 
-        fglocal = casac.flagger
-        mslocal = casac.ms
+        fglocal = casac.flagger()
+        mslocal = casac.ms()
         
         try: 
                 if ((type(vis)==str) & (os.path.exists(vis))):

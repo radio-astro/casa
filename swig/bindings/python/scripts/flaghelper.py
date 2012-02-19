@@ -9,7 +9,7 @@ from taskinit import *
 
 ###some helper tools
 #mslocal = casac.homefinder.find_home_by_name('msHome').create()
-tb=casac.table
+tb=casac.table()
 
 debug = False
 

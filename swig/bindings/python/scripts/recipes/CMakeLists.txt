@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
+casa_add_python( tools tools_recipes_python python/${PYTHONV}/recipes
   benchmark.py
   checknan.py
   checkdataformat.py

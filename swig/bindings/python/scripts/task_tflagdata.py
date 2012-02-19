@@ -78,8 +78,8 @@ def tflagdata(vis,
 
     casalog.origin('tflagdata')
 
-    tflocal = casac.testflagger
-    mslocal = casac.ms
+    tflocal = casac.testflagger()
+    mslocal = casac.ms()
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)

@@ -16,7 +16,7 @@ import casadef
 
 from  casac import *
 from IPython.Release import version
-casalog = casac.logsink
+casalog = casac.logsink()
 
 def log_message( state, file, lines ) :
     if not (state['engine'].has_key('current task')) :

@@ -164,8 +164,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
     fW=casac.Quantity(50.,'GHz')
     fR=casac.Quantity(0.25,'GHz')
 
-    attool=casac.atmosphere
-    at=attool.create()
+    at=casac.atmosphere()
     hum=20.0
 
     myatm=at.initAtmProfile(alt,tmp,pre,mxA,hum,wvl,dpr,dpm,h0,att)

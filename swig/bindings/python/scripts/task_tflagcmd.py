@@ -48,8 +48,8 @@ def tflagcmd(
     casalog.origin('tflagcmd')
 #    casalog.post('You are using flagcmd v3.6 Updated STM 2011-06-28')
 
-    tflocal = casac.testflagger
-    mslocal = casac.ms
+    tflocal = casac.testflagger()
+    mslocal = casac.ms()
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
@@ -2055,8 +2055,7 @@ def plotflags(
     except ImportError, e:
         print 'failed to load casa:\n', e
         exit(1)
-    qatool = casac.quanta
-    qa = casac.qa = qatool.create()
+    qa = casac.qa = casac.quanta()
 
     try:
         import pylab as pl

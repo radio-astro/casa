@@ -10,12 +10,12 @@ from numpy import unique
 from odict import odict
 
 ###some helper tools
-ms = casac.ms
-tb = casac.table
-qa = casac.quanta
-me = casac.measures
-rg = casac.regionmanager
-ia = casac.image
+ms = casac.ms()
+tb = casac.table()
+qa = casac.quanta()
+me = casac.measures()
+rg = casac.regionmanager()
+ia = casac.image()
 
 class cleanhelper:
     def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
@@ -47,7 +47,7 @@ class cleanhelper:
         # for multims handling
         self.sortedvislist=[]
         if not casalog:  # Not good!
-            casalog = casac.logsink
+            casalog = casac.logsink()
             #casalog.setglobal(True)
         self._casalog = casalog
         

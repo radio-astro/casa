@@ -18,7 +18,7 @@ Example:
 import copy
 import os
 #from taskinit import mstool
-from casac import table
+from casac import *
 from taskinit import ms
 
 def update_spw(spw, spwmap=None):
@@ -219,7 +219,7 @@ def spwchan_to_sets(vis, spw):
                 if spwd[s] == '':
                     # We need to get the spw's # of channels without using
                     # ms.msseltoindex.
-                    mytb = casac.table
+                    mytb = casac.table()
                     mytb.open(vis + '/SPECTRAL_WINDOW')
                     spwd[s] = range(mytb.getcell('NUM_CHAN', s))
                     mytb.close()

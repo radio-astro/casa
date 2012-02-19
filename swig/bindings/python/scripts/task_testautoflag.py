@@ -22,7 +22,7 @@ def testautoflag( vis, field, spw,
               extendflags, extendpols, growtime, growfreq, growaround, flagneartime, flagnearfreq,
               datadisplay, plotsummary, showknownrfi, usepreflags,preflagzeros, writeflags, flagbackup):
 
-    lfg = casac.lightflagger
+    lfg = casac.lightflagger()
     flagstats={};
     msname=vis;
 
@@ -153,7 +153,7 @@ class classFlagSummary:
     ###################################
     def __init__(self):
           self.name = 'tfcrop';
-          self.lfg = casac.lightflagger
+          self.lfg = casac.lightflagger()
           self.flagstats={};
           self.msname="";
           self.nfld=1;

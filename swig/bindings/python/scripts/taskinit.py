@@ -51,19 +51,19 @@ calibrater = casac.calibrater
 cbtool=calibrater
 mstool = casac.ms
 tptool = casac.tableplot
-tp = tptool
+tp = tptool()
 mptool = casac.msplot
-mp = mptool
+mp = mptool()
 pmtool = casac.plotms
-pm = pmtool
+pm = pmtool()
 cptool = casac.calplot
-cp = cptool
+cp = cptool()
 qatool = casac.quanta
-qa = casac.qa = qatool
+qa = casac.qa =  qatool()
 tbtool = casac.table
 fgtool = casac.flagger
 tftool = casac.testflagger
-tf = tftool
+tf = tftool()
 metool = casac.measures
 iatool = casac.image
 potool = casac.imagepol
@@ -75,15 +75,13 @@ sltool = casac.spectralline
 dctool = casac.deconvolver
 vptool = casac.vpmanager
 utilstool = casac.utils
-cu = casac.cu = utilstool
-vftaskhome = casac.vlafillertask
-vftask = vftaskhome
+cu = casac.cu = utilstool()
+vftask = casac.vlafillertask()
 vlafiller=vftask.fill
-casalog =  casac.logsink
+casalog =  casac.logsink()
 __taskinit_setlogfile(casalog)
 casalog.setglobal(True)
-attool = casac.atmosphere
-at = attool
+at = casac.atmosphere()
 
 def gentools(tools=None):
 	"""
@@ -94,11 +92,11 @@ def gentools(tools=None):
 	im, ia, cb=gentools(['im', 'ia', 'cb'])
 
 	"""
-	tooldic={'im':'imager', 'cb' :'calibrater', 'ms':'mstool',
-		 'tb':'tbtool', 'fg':'fgtool', 'me' :'metool', 
-		 'ia': 'iatool', 'po':'potool', 'sm' :'smtool', 
-		 'cl': 'cltool', 'cs' :'coordsystool', 'rg':'rgtool',
-		 'sl':'sltool', 'dc':'dctool', 'vp':'vptool'}
+	tooldic={'im':'imager()', 'cb' :'calibrater()', 'ms':'mstool()',
+		 'tb':'tbtool()', 'fg':'fgtool()', 'me' :'metool()', 
+		 'ia': 'iatool()', 'po':'potool()', 'sm' :'smtool()', 
+		 'cl': 'cltool()', 'cs' :'coordsystool()', 'rg':'rgtool()',
+		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()'}
 	reqtools=[]
         if (not tools) or not hasattr(tools, '__iter__'):
 		reqtools=['im', 'cb', 'ms','tb', 'fg', 'me', 'ia', 'po',

@@ -24,7 +24,7 @@
 
 
 
-casa_add_python( xmlcasa xmlcasa_parallel_python python/${PYTHONV}/parallel
+casa_add_python( tools tools_parallel_python python/${PYTHONV}/parallel
   parallel_cont.py
   pimager.py
   parallel_task_helper.py

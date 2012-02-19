@@ -56,8 +56,8 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 	#Python script
 
 	# make ms and tb tool local 
-	ms = casac.ms
-	tb = casac.table
+	ms = casac.ms()
+	tb = casac.table()
 
 	try:
 		casalog.origin('wvrgcal')

@@ -44,8 +44,8 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 	#Python script
 
 	# make ms and tb tool local 
-	ms = casac.ms
-	tb = casac.table
+	ms = casac.ms()
+	tb = casac.table()
 
 	try:
 		casalog.origin('exportasdm')

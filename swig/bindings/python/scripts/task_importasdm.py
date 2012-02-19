@@ -92,7 +92,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	#Python script
 
 	# make fg tool local 
-	fg = casac.flagger
+	fg = casac.flagger()
 
 	try:
                 casalog.origin('importasdm')
@@ -163,7 +163,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                         out = 'ASDM_' + tab.upper()
                                         outTabNames.append( out )
                                         outTables.append( vis+'/'+out )
-                                tb = casac.table
+                                tb = casac.table()
                                 tb.open(vis,nomodify=False)
                                 wtb = tbtool.create()
                                 for i in xrange(len(outTables)):

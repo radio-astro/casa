@@ -184,4 +184,11 @@ scripts/simple_summary.py
 scripts/parallelSplit.py
 scripts/task_msmoments.py )
 
-
+add_subdirectory( scripts/tests )
+add_subdirectory( scripts/regressions )
+add_subdirectory( scripts/regressions/tests )
+add_subdirectory( scripts/regressions/admin )
+add_subdirectory( scripts/usecases )
+add_subdirectory( scripts/demos )
+add_subdirectory( scripts/recipes )
+add_subdirectory( scripts/parallel )

@@ -42,8 +42,8 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
         casalog.origin('flagcmd')
 	casalog.post('You are using flagcmd v4.1 Updated STM 2011-12-19')
 
-        fglocal = casac.flagger
-        mslocal = casac.ms
+        fglocal = casac.flagger()
+        mslocal = casac.ms()
 
         msopened = False
 	ms_starttime = ''
@@ -1768,7 +1768,7 @@ def plotflags(myflags, plotname, t1sdata, t2sdata):
     except ImportError, e: 
         print "failed to load casa:\n", e 
         exit(1) 
-    qa = casac.qa
+    qa = casac.qa()
     
     try:
         import pylab as pl
@@ -1857,7 +1857,7 @@ def getmstimes(vis,ms_starttime,ms_endtime,t1sdata,t2sdata):
     # Get start and end times from MS
     # this might take too long for large MS
     # NOTE: could also use values from OBSERVATION table col TIME_RANGE
-    mslocal2 = casac.ms
+    mslocal2 = casac.ms()
     success = True
     ms_starttime = ''
     ms_endtime = ''
@@ -1899,7 +1899,7 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
     except ImportError, e: 
         print "failed to load casa:\n", e 
         exit(1) 
-    qa = casac.qa = casac.quanta
+    qa = casac.qa = casac.quanta()
     
     try:
         import pylab as pl

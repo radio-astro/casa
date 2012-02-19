@@ -17,7 +17,7 @@ def visstat(vis=None,
 
     casalog.origin('visstat')  
 
-    ms = casac.ms
+    ms = casac.ms()
 
     ms.open(vis)
 

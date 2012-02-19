@@ -9,7 +9,7 @@ def flagmanager(vis=None,
 		merge=None):
 
         casalog.origin('flagmanager')
-        fglocal = casac.flagger
+        fglocal = casac.flagger()
 
 	try:
                 if type(vis)==str and os.path.exists(vis):

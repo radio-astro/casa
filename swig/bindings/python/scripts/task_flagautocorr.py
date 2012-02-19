@@ -14,8 +14,8 @@ def flagautocorr(vis=None):
 	"""
 	casalog.origin('flagautocorr')
 
-        fglocal = casac.flagger
-        mslocal = casac.ms
+        fglocal = casac.flagger()
+        mslocal = casac.ms()
 
 	#Python script
 	try:

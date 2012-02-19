@@ -45,7 +45,7 @@ def applycal(vis=None,
                         raise Exception, 'Visibility data set not found - please verify the name'
 		# Back up the flags, if requested
 		if (flagbackup):
-			fglocal = casac.flagger
+			fglocal = casac.flagger()
 			fglocal.open(vis)
 			backup_flags(fglocal)
 			fglocal.done()

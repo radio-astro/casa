@@ -74,32 +74,32 @@ except ImportError, e:
 ## finally load tools
 ####
 
-casalog = casac.logsink
+casalog = casac.logsink()
 casalog.setglobal(True)
-quanta = casac.quanta
-measures = casac.measures
-imager = casac.imager
-calibrater = casac.calibrater
-ms = casac.ms
-tableplot = casac.tableplot
-msplot = casac.msplot
-calplot = casac.calplot
-table = casac.table
-flagger = casac.flagger
-testflagger = casac.testflagger
-image = casac.image
-imagepol = casac.imagepol
-simulator = casac.simulator
-componentlist = casac.componentlist
-coordsys = casac.coordsys
-regionmanager = casac.regionmanager
-spectralline = casac.spectralline
-utils = casac.utils
-deconvolver = casac.deconvolver
-vpmanager = casac.vpmanager
-vlafillertask = casac.vlafillertask
-atmosphere = casac.atmosphere
-cu = casac.utils
+quanta = casac.quanta()
+measures = casac.measures()
+imager = casac.imager()
+calibrater = casac.calibrater()
+ms = casac.ms()
+tableplot = casac.tableplot()
+msplot = casac.msplot()
+calplot = casac.calplot()
+table = casac.table()
+flagger = casac.flagger()
+testflagger = casac.testflagger()
+image = casac.image()
+imagepol = casac.imagepol()
+simulator = casac.simulator()
+componentlist = casac.componentlist()
+coordsys = casac.coordsys()
+regionmanager = casac.regionmanager()
+spectralline = casac.spectralline()
+utils = casac.utils()
+deconvolver = casac.deconvolver()
+vpmanager = casac.vpmanager()
+vlafillertask = casac.vlafillertask()
+atmosphere = casac.atmosphere()
+cu = casac.utils()
 #plotms = __plotmshome__.create( )
 
 

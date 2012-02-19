@@ -30,7 +30,32 @@ add_custom_command( OUTPUT definitions
 	  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions_tmp
 	    COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 	    )
+    # Using only shell redirection (>) to generate the definitions file, will cause
+    # the file to be empty until the command has finished executing (which is a
+    # feature of the shell), and thus trigger other make rules before the file is
+    # complete.
 
+add_custom_target(
+    tools_python_casadef
+    COMMAND echo "import os" > casadef.py
+    COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_TASKDIR\\'\\\):" >> casadef.py
+    COMMAND echo "    task_directory = os.environ[\\'__CASAPY_TASKDIR\\']" >> casadef.py
+    COMMAND echo "else:" >> casadef.py
+    COMMAND echo "    task_directory = \\\"${PYTHON_TASKD_CASADEF}\\\"" >> casadef.py
+    COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_PYTHONDIR\\'\\\):" >> casadef.py
+    COMMAND echo "    python_library_directory = os.environ[\\'__CASAPY_PYTHONDIR\\']" >> casadef.py
+    COMMAND echo "else:" >> casadef.py
+    COMMAND echo "    python_library_directory = \\\"${PYTHON_LIBD_CASADEF}\\\"" >> casadef.py
+    COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
+    COMMAND cat definitions >> casadef.py
+    DEPENDS definitions
+    )
+
+add_dependencies( tools_python_casadef tools_definitions )
+
+add_dependencies( inst tools_python_casadef )
+add_dependencies( tools_fast tools_python_casadef )
+install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
 
 # Make sure that compile time definitions (build time, svn revision number)
 # are recomputed in every build.
@@ -148,7 +173,7 @@ foreach(_tool ${tools_swig} )
 	            DESTINATION python/${PYTHONV}/__casac__ )
 endforeach()
 
-add_dependencies( inst  generated_py )
+add_dependencies( inst  libtools generated_sources generated_py )
 add_dependencies( libtools  generated_sources )
 add_dependencies( libtools_fast  generated_sources )
 
