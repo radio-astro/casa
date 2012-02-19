@@ -607,8 +607,7 @@ print "--ComplexLinPol (toolkit)--"
 # http://casa.nrao.edu/docs/casaref/imagepol-Tool.html
 #
 # Make an imagepol tool and open the clean image 
-potool = casac.homefinder.find_home_by_name('imagepolHome')
-po = potool.create()
+po = casac.imagepol()
 po.open('3C129BC.clean.image')
 # Use complexlinpol to make a Q+iU image
 po.complexlinpol('3C129BC.cmplxlinpol')

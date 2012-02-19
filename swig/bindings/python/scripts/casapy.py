@@ -1095,6 +1095,12 @@ F     = False
 
 # Case where casapy is run non-interactively
 ipython = not casa['flags'].has_key('--noipython')
+try:
+   import IPython
+except ImportError, e:
+   print 'Failed to load IPython: ', e
+   exit(1)
+
 
 # setup available tasks
 #

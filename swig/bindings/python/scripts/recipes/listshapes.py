@@ -4,7 +4,7 @@ from glob import glob
 import os
 
 try:
-    import casac  # No-op if already in casapy.
+    from  casac import *  # No-op if already in casapy.
 except:
     import sys
     
@@ -16,7 +16,6 @@ except:
                                        'lib', 'python2.*'])))  # users
     #print "casacpath =", "\n".join(casacpath)
     sys.path.extend(casacpath)
-    import casac
 
 
 def get_tool(toolname):
@@ -26,8 +25,7 @@ def get_tool(toolname):
     toolhomes = {'tb': 'tableHome'}
     tool = None
     if toolhomes.has_key(toolname):
-        toolhome = casac.homefinder.find_home_by_name(toolhomes[toolname])
-        tool = toolhome.create()
+        tool = casac.toolnames()
     else:
         print "The factory name for", toolname, "is unknown."
     return tool

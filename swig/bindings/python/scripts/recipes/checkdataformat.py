@@ -1,10 +1,9 @@
 # guess what kind (format) of the input data is
 import commands
 import os
-import casac
+from  casac import *
 
-tbtool = casac.homefinder.find_home_by_name('tableHome')
-tb = tbtool.create()
+tb = casac.table()
 
 # main function 
 def dataformat(dataname):

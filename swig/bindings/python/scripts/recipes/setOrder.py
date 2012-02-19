@@ -24,7 +24,7 @@
 
 import os;
 import shutil;
-import casac;
+from  casac import *;
 
 def setToCasaOrder(inputMS='',outputMS=''):
   """
@@ -53,8 +53,7 @@ def setToCasaOrder(inputMS='',outputMS=''):
 
  """
   ## Make a local table tool
-  toolhome = casac.homefinder.find_home_by_name('tableHome');
-  tb = toolhome.create();
+  tb = casac.table()
 
   ## Old MS Name
   if(not os.path.exists(inputMS)):

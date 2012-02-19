@@ -5,17 +5,15 @@ import string
 import commands
 import shutil
 import sys
-import casac
+from  casac import *
 import inspect
 import re
 #from tasks import *  # execfile
 #from taskinit import casalog
 
-image = casac.homefinder.find_home_by_name('imageHome')
-ia=image.create()
+ia=casac.image()
 
-meas = casac.homefinder.find_home_by_name('msHome')
-ms=meas.create()
+ms=casac.ms()
 
 class testbase :
     def __init__(self, workdir=None):

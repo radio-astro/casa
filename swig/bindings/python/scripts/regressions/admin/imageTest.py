@@ -11,17 +11,13 @@ import string
 import tw_func
 
 
-image = casac.homefinder.find_home_by_name('imageHome')
-regman = casac.homefinder.find_home_by_name('regionmanagerHome')
-quanta=casac.homefinder.find_home_by_name('quantaHome')
-
 class ImageTest:
     def __init__(self, imageName, write=True,
                  resultDir='WEBPAGES/imageTest/',
                  imDir='IMAGES/'):
 
         import shutil
-        self.imTool=image.create()
+        self.imTool=casac.image()
         self.imTool.open(imageName) #open('tables/squint_corr.restored')
 
         # fix up images that don't have CASA-canonical stokes and spec:
@@ -63,8 +59,8 @@ class ImageTest:
             shutil.move(myImagename,imageName)
             self.imTool.open(imageName)                    
             
-        self.rgTool=regman.create()
-        self.qaTool=quanta.create()
+        self.rgTool=casac.regionmanager()
+        self.qaTool=casac.quanta()
 	self.getArr() #instead make explicit call to getArr()
 	self.write=write
 	self.imageName=imageName
@@ -757,7 +753,7 @@ class ImageTest:
         reg=self.rgTool.box(blc=[x0,y0], trc=[x0,y0])
         model = "mymodel.im"
         resid = "myresid.im"
-        myia = image.create()
+        myia = casac.image()
         for x in ([model, resid]):
             if (os.path.exists(x)):
                 myia.open(x)

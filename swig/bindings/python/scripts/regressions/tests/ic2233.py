@@ -1,12 +1,9 @@
 import casac
 from locatescript import copydata
 
-imager = casac.homefinder.find_home_by_name('imagerHome')
-image  = casac.homefinder.find_home_by_name('imageHome')
-
 quantity=casac.Quantity
-im = imager.create()
-ia = image.create()
+im = casac.imager()
+ia = casac.image()
 
 def data():
     return ['ic2233_1.ms']

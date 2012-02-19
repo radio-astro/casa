@@ -4,10 +4,9 @@
 #plotxy (tableplot) can only do non-interactive
 import sys
 #sys.path.insert(2,'/home/casa-dev-09/hye/gnuactive/linux_64b/python/2.5')
-import casac
+from  casac import *
 import matplotlib
-__tableplothome__ = casac.homefinder.find_home_by_name('tableplotHome')
-mytp=__tableplothome__.create( )
+mytp=casac.tableplot()
 #mytp.setgui(False)
 mytp.setgui(True)
 mytp.open(tabnames='ngc5921.ms')

@@ -24,6 +24,22 @@ using namespace casac;
 %typemap(in) string {
    $1 = string(PyString_AsString($input));
 }
+%typemap(typecheck) string {
+   $1 = PyString_Check($input);
+}
+%typemap(in) string& {
+   $1 = new string(PyString_AsString($input));
+}
+%typemap(typecheck) string& {
+   $1 = PyString_Check($input);
+}
+%typemap(in) const string& {
+   $1 = new string(PyString_AsString($input));
+}
+%typemap(typecheck) const string& {
+   $1 = PyString_Check($input);
+}
+
 %typemap(in) StringVec {
   /* Check if is a list */
   if (PyList_Check($input)) {
@@ -56,9 +72,24 @@ using namespace casac;
 }
 
 %typemap(in) variant {
-   $1 = pyobj2variant($input, true);
+   $1 = new varaiant(pyobj2variant($input, true));
 }
 
+%typemap(in) variant& {
+   $1 = new variant(pyobj2variant($input, true));
+}
+
+%typemap(in) variant* {
+   $1 = new variant(pyobj2variant($input, true));
+}
+
+%typemap(typecheck) variant {
+   $1=1;
+}
+
+%typemap(typecheck) variant& {
+   $1=1;
+}
 %typemap(in) record {
    if(PyDict_Check($input)){
       $1 = pyobj2variant($input, true).asRecord();      
@@ -149,6 +180,17 @@ using namespace casac;
 %typemap(out) record {
    $result = PyDict_New();
    for(record::const_iterator iter = $1.begin(); iter != $1.end(); ++iter){
+      const std::string &key = (*iter).first;
+      const variant &val = (*iter).second;
+      PyObject *v = variant2pyobj(val);
+      PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
+      Py_DECREF(v);
+   }
+}
+
+%typemap(out) record* {
+   $result = PyDict_New();
+   for(record::const_iterator iter = $1->begin(); iter != $1->end(); ++iter){
       const std::string &key = (*iter).first;
       const variant &val = (*iter).second;
       PyObject *v = variant2pyobj(val);

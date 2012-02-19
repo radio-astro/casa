@@ -36,8 +36,7 @@ import math
 import random
 from regression_utility import note
 
-potool = casac.homefinder.find_home_by_name('imagepolHome')
-po = potool.create()
+po = casac.imagepol()
 
 def imagepoltest(which=None):
     #

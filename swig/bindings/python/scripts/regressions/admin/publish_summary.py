@@ -17,8 +17,8 @@ import cProfile
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
-imager = casac.homefinder.find_home_by_name('imagerHome')
-image = casac.homefinder.find_home_by_name('imageHome')
+imager = casac.imager
+image = casac.image
 quantity=casac.Quantity
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]

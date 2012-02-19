@@ -455,7 +455,7 @@ def find_needed_items(musthave=set([]), listall=False):
         except:
             try:
                 try:
-                    import casac
+                    from  casac import *
                 except:
                     casacpath = glob(os.sep.join(os.environ["CASAPATH"].split() +
                                                  ['python', '2.*']))  # devs
@@ -471,8 +471,7 @@ def find_needed_items(musthave=set([]), listall=False):
                 ## my_globals = get_global_namespace()
                 ## tb = my_globals['tb']
                 #from casa import table as tb
-                tablehome = casac.homefinder.find_home_by_name('tableHome')
-                mytb = tablehome.create()
+                mytb = casac.table()
                 use_tb = hasattr(mytb, 'colnames')
             except:
                 print "Could not find the tb tool.  Try running inside a casapy session or setting PYTHONPATH to /usr/lib/casapy/.../lib/python2.*."

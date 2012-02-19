@@ -1,4 +1,4 @@
-import casac
+from  casac import *
 from tw_utils import *
 import os
 from time import *
@@ -10,15 +10,13 @@ import string
 import tw_func
 from plotms import plotms
 
-meas = casac.homefinder.find_home_by_name('msHome')
-
 class VisTest:
     def __init__(self, msName, write=True,
                  resultDir='WEBPAGES/visTest/',
                  imDir='IMAGES/'):
 
         import shutil
-        self.msTool=meas.create()
+        self.msTool=casac.ms()
         self.msTool.open(msName)             
 	self.write=write
 	self.msName=msName
