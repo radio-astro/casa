@@ -1082,7 +1082,7 @@ casa_add_module( flagging CASACORE Boost casadbus tableplot synthesis casaqt QT4
 casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost casadbus )
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis )
-casa_add_module( alma CASACORE LIBXML2 Boost )
+casa_add_module( alma CASACORE LIBXML2  LIBXSLT Boost synthesis)
 #casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
 #casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE )
