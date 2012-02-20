@@ -346,7 +346,7 @@ casa_add_library( alma
   implement/Enumtcl/WindowFunction.cc
   implement/Enumtcl/WeightType.cc
   implement/Enumtcl/WVRMethod.cc
-  implement/MS2ASDM/MS2ASDM.cc
+#  implement/MS2ASDM/MS2ASDM.cc
   )
 
 casa_add_executable( alma asdm2MS 
