@@ -57,6 +57,7 @@ using asdm::StationRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -80,6 +81,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::WeatherRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -105,6 +109,8 @@ namespace asdm {
 	
   		
 		
+		x->pressureExists = pressureExists;
+		
 		
 			
 		x->pressure = pressure.toIDLPressure();
@@ -115,17 +121,7 @@ namespace asdm {
 	
   		
 		
-		
-			
-				
-		x->pressureFlag = pressureFlag;
- 				
- 			
-		
-	
-
-	
-  		
+		x->relHumidityExists = relHumidityExists;
 		
 		
 			
@@ -137,17 +133,7 @@ namespace asdm {
 	
   		
 		
-		
-			
-				
-		x->relHumidityFlag = relHumidityFlag;
- 				
- 			
-		
-	
-
-	
-  		
+		x->temperatureExists = temperatureExists;
 		
 		
 			
@@ -159,17 +145,7 @@ namespace asdm {
 	
   		
 		
-		
-			
-				
-		x->temperatureFlag = temperatureFlag;
- 				
- 			
-		
-	
-
-	
-  		
+		x->windDirectionExists = windDirectionExists;
 		
 		
 			
@@ -181,17 +157,7 @@ namespace asdm {
 	
   		
 		
-		
-			
-				
-		x->windDirectionFlag = windDirectionFlag;
- 				
- 			
-		
-	
-
-	
-  		
+		x->windSpeedExists = windSpeedExists;
 		
 		
 			
@@ -203,34 +169,12 @@ namespace asdm {
 	
   		
 		
-		
-			
-				
-		x->windSpeedFlag = windSpeedFlag;
- 				
- 			
-		
-	
-
-	
-  		
+		x->windMaxExists = windMaxExists;
 		
 		
 			
 		x->windMax = windMax.toIDLSpeed();
 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->windMaxFlag = windMaxFlag;
- 				
- 			
 		
 	
 
@@ -249,12 +193,103 @@ namespace asdm {
 	
   		
 		
-		x->dewPointFlagExists = dewPointFlagExists;
+		x->numLayerExists = numLayerExists;
 		
 		
 			
 				
-		x->dewPointFlag = dewPointFlag;
+		x->numLayer = numLayer;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->layerHeightExists = layerHeightExists;
+		
+		
+			
+		x->layerHeight.length(layerHeight.size());
+		for (unsigned int i = 0; i < layerHeight.size(); ++i) {
+			
+			x->layerHeight[i] = layerHeight.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->temperatureProfileExists = temperatureProfileExists;
+		
+		
+			
+		x->temperatureProfile.length(temperatureProfile.size());
+		for (unsigned int i = 0; i < temperatureProfile.size(); ++i) {
+			
+			x->temperatureProfile[i] = temperatureProfile.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->cloudMonitorExists = cloudMonitorExists;
+		
+		
+			
+		x->cloudMonitor = cloudMonitor.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		x->numWVRExists = numWVRExists;
+		
+		
+			
+				
+		x->numWVR = numWVR;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->wvrTempExists = wvrTempExists;
+		
+		
+			
+		x->wvrTemp.length(wvrTemp.size());
+		for (unsigned int i = 0; i < wvrTemp.size(); ++i) {
+			
+			x->wvrTemp[i] = wvrTemp.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->waterExists = waterExists;
+		
+		
+			
+				
+		x->water = water;
  				
  			
 		
@@ -307,25 +342,23 @@ namespace asdm {
 
 	
 		
+		pressureExists = x.pressureExists;
+		if (x.pressureExists) {
+		
 		
 			
 		setPressure(Pressure (x.pressure));
 			
  		
 		
-	
-
-	
-		
-		
-			
-		setPressureFlag(x.pressureFlag);
-  			
- 		
+		}
 		
 	
 
 	
+		
+		relHumidityExists = x.relHumidityExists;
+		if (x.relHumidityExists) {
 		
 		
 			
@@ -333,19 +366,14 @@ namespace asdm {
 			
  		
 		
-	
-
-	
-		
-		
-			
-		setRelHumidityFlag(x.relHumidityFlag);
-  			
- 		
+		}
 		
 	
 
 	
+		
+		temperatureExists = x.temperatureExists;
+		if (x.temperatureExists) {
 		
 		
 			
@@ -353,19 +381,14 @@ namespace asdm {
 			
  		
 		
-	
-
-	
-		
-		
-			
-		setTemperatureFlag(x.temperatureFlag);
-  			
- 		
+		}
 		
 	
 
 	
+		
+		windDirectionExists = x.windDirectionExists;
+		if (x.windDirectionExists) {
 		
 		
 			
@@ -373,19 +396,14 @@ namespace asdm {
 			
  		
 		
-	
-
-	
-		
-		
-			
-		setWindDirectionFlag(x.windDirectionFlag);
-  			
- 		
+		}
 		
 	
 
 	
+		
+		windSpeedExists = x.windSpeedExists;
+		if (x.windSpeedExists) {
 		
 		
 			
@@ -393,19 +411,14 @@ namespace asdm {
 			
  		
 		
-	
-
-	
-		
-		
-			
-		setWindSpeedFlag(x.windSpeedFlag);
-  			
- 		
+		}
 		
 	
 
 	
+		
+		windMaxExists = x.windMaxExists;
+		if (x.windMaxExists) {
 		
 		
 			
@@ -413,15 +426,7 @@ namespace asdm {
 			
  		
 		
-	
-
-	
-		
-		
-			
-		setWindMaxFlag(x.windMaxFlag);
-  			
- 		
+		}
 		
 	
 
@@ -442,12 +447,117 @@ namespace asdm {
 
 	
 		
-		dewPointFlagExists = x.dewPointFlagExists;
-		if (x.dewPointFlagExists) {
+		numLayerExists = x.numLayerExists;
+		if (x.numLayerExists) {
 		
 		
 			
-		setDewPointFlag(x.dewPointFlag);
+		setNumLayer(x.numLayer);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		layerHeightExists = x.layerHeightExists;
+		if (x.layerHeightExists) {
+		
+		
+			
+		layerHeight .clear();
+		for (unsigned int i = 0; i <x.layerHeight.length(); ++i) {
+			
+			layerHeight.push_back(Length (x.layerHeight[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		temperatureProfileExists = x.temperatureProfileExists;
+		if (x.temperatureProfileExists) {
+		
+		
+			
+		temperatureProfile .clear();
+		for (unsigned int i = 0; i <x.temperatureProfile.length(); ++i) {
+			
+			temperatureProfile.push_back(Temperature (x.temperatureProfile[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		cloudMonitorExists = x.cloudMonitorExists;
+		if (x.cloudMonitorExists) {
+		
+		
+			
+		setCloudMonitor(Temperature (x.cloudMonitor));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		numWVRExists = x.numWVRExists;
+		if (x.numWVRExists) {
+		
+		
+			
+		setNumWVR(x.numWVR);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		wvrTempExists = x.wvrTempExists;
+		if (x.wvrTempExists) {
+		
+		
+			
+		wvrTemp .clear();
+		for (unsigned int i = 0; i <x.wvrTemp.length(); ++i) {
+			
+			wvrTemp.push_back(Temperature (x.wvrTemp[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		waterExists = x.waterExists;
+		if (x.waterExists) {
+		
+		
+			
+		setWater(x.water);
   			
  		
 		
@@ -498,97 +608,73 @@ namespace asdm {
 
   	
  		
+		if (pressureExists) {
+		
 		
 		Parser::toXML(pressure, "pressure", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(pressureFlag, "pressureFlag", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (relHumidityExists) {
+		
 		
 		Parser::toXML(relHumidity, "relHumidity", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(relHumidityFlag, "relHumidityFlag", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (temperatureExists) {
+		
 		
 		Parser::toXML(temperature, "temperature", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(temperatureFlag, "temperatureFlag", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (windDirectionExists) {
+		
 		
 		Parser::toXML(windDirection, "windDirection", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(windDirectionFlag, "windDirectionFlag", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (windSpeedExists) {
+		
 		
 		Parser::toXML(windSpeed, "windSpeed", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(windSpeedFlag, "windSpeedFlag", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (windMaxExists) {
+		
 		
 		Parser::toXML(windMax, "windMax", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(windMaxFlag, "windMaxFlag", buf);
-		
+		}
 		
 	
 
@@ -606,10 +692,82 @@ namespace asdm {
 
   	
  		
-		if (dewPointFlagExists) {
+		if (numLayerExists) {
 		
 		
-		Parser::toXML(dewPointFlag, "dewPointFlag", buf);
+		Parser::toXML(numLayer, "numLayer", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (layerHeightExists) {
+		
+		
+		Parser::toXML(layerHeight, "layerHeight", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (temperatureProfileExists) {
+		
+		
+		Parser::toXML(temperatureProfile, "temperatureProfile", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (cloudMonitorExists) {
+		
+		
+		Parser::toXML(cloudMonitor, "cloudMonitor", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (numWVRExists) {
+		
+		
+		Parser::toXML(numWVR, "numWVR", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (wvrTempExists) {
+		
+		
+		Parser::toXML(wvrTemp, "wvrTemp", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (waterExists) {
+		
+		
+		Parser::toXML(water, "water", buf);
 		
 		
 		}
@@ -657,98 +815,62 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<pressure>")) {
 			
-	  	setPressure(Parser::getPressure("pressure","Weather",rowDoc));
+	  		setPressure(Parser::getPressure("pressure","Weather",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<relHumidity>")) {
 			
-	  	setPressureFlag(Parser::getBoolean("pressureFlag","Weather",rowDoc));
+	  		setRelHumidity(Parser::getHumidity("relHumidity","Weather",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<temperature>")) {
 			
-	  	setRelHumidity(Parser::getHumidity("relHumidity","Weather",rowDoc));
+	  		setTemperature(Parser::getTemperature("temperature","Weather",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<windDirection>")) {
 			
-	  	setRelHumidityFlag(Parser::getBoolean("relHumidityFlag","Weather",rowDoc));
+	  		setWindDirection(Parser::getAngle("windDirection","Weather",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<windSpeed>")) {
 			
-	  	setTemperature(Parser::getTemperature("temperature","Weather",rowDoc));
+	  		setWindSpeed(Parser::getSpeed("windSpeed","Weather",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<windMax>")) {
 			
-	  	setTemperatureFlag(Parser::getBoolean("temperatureFlag","Weather",rowDoc));
+	  		setWindMax(Parser::getSpeed("windMax","Weather",rowDoc));
 			
-		
-	
-
-	
-  		
-			
-	  	setWindDirection(Parser::getAngle("windDirection","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindDirectionFlag(Parser::getBoolean("windDirectionFlag","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindSpeed(Parser::getSpeed("windSpeed","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindSpeedFlag(Parser::getBoolean("windSpeedFlag","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindMax(Parser::getSpeed("windMax","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindMaxFlag(Parser::getBoolean("windMaxFlag","Weather",rowDoc));
-			
-		
+		}
+ 		
 	
 
 	
@@ -763,9 +885,75 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<dewPointFlag>")) {
+        if (row.isStr("<numLayer>")) {
 			
-	  		setDewPointFlag(Parser::getBoolean("dewPointFlag","Weather",rowDoc));
+	  		setNumLayer(Parser::getInteger("numLayer","Weather",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<layerHeight>")) {
+			
+								
+	  		setLayerHeight(Parser::get1DLength("layerHeight","Weather",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<temperatureProfile>")) {
+			
+								
+	  		setTemperatureProfile(Parser::get1DTemperature("temperatureProfile","Weather",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<cloudMonitor>")) {
+			
+	  		setCloudMonitor(Parser::getTemperature("cloudMonitor","Weather",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<numWVR>")) {
+			
+	  		setNumWVR(Parser::getInteger("numWVR","Weather",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<wvrTemp>")) {
+			
+								
+	  		setWvrTemp(Parser::get1DTemperature("wvrTemp","Weather",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<water>")) {
+			
+	  		setWater(Parser::getDouble("water","Weather",rowDoc));
 			
 		}
  		
@@ -808,6 +996,12 @@ namespace asdm {
 		
 	
 
+
+	
+	
+	eoss.writeBoolean(pressureExists);
+	if (pressureExists) {
+	
 	
 	
 		
@@ -815,15 +1009,11 @@ namespace asdm {
 		
 	
 
-	
-	
-		
-						
-			eoss.writeBoolean(pressureFlag);
-				
-		
-	
+	}
 
+	eoss.writeBoolean(relHumidityExists);
+	if (relHumidityExists) {
+	
 	
 	
 		
@@ -831,15 +1021,11 @@ namespace asdm {
 		
 	
 
-	
-	
-		
-						
-			eoss.writeBoolean(relHumidityFlag);
-				
-		
-	
+	}
 
+	eoss.writeBoolean(temperatureExists);
+	if (temperatureExists) {
+	
 	
 	
 		
@@ -847,15 +1033,11 @@ namespace asdm {
 		
 	
 
-	
-	
-		
-						
-			eoss.writeBoolean(temperatureFlag);
-				
-		
-	
+	}
 
+	eoss.writeBoolean(windDirectionExists);
+	if (windDirectionExists) {
+	
 	
 	
 		
@@ -863,15 +1045,11 @@ namespace asdm {
 		
 	
 
-	
-	
-		
-						
-			eoss.writeBoolean(windDirectionFlag);
-				
-		
-	
+	}
 
+	eoss.writeBoolean(windSpeedExists);
+	if (windSpeedExists) {
+	
 	
 	
 		
@@ -879,15 +1057,11 @@ namespace asdm {
 		
 	
 
-	
-	
-		
-						
-			eoss.writeBoolean(windSpeedFlag);
-				
-		
-	
+	}
 
+	eoss.writeBoolean(windMaxExists);
+	if (windMaxExists) {
+	
 	
 	
 		
@@ -895,18 +1069,8 @@ namespace asdm {
 		
 	
 
-	
-	
-		
-						
-			eoss.writeBoolean(windMaxFlag);
-				
-		
-	
+	}
 
-
-	
-	
 	eoss.writeBoolean(dewPointExists);
 	if (dewPointExists) {
 	
@@ -919,14 +1083,90 @@ namespace asdm {
 
 	}
 
-	eoss.writeBoolean(dewPointFlagExists);
-	if (dewPointFlagExists) {
+	eoss.writeBoolean(numLayerExists);
+	if (numLayerExists) {
 	
 	
 	
 		
 						
-			eoss.writeBoolean(dewPointFlag);
+			eoss.writeInt(numLayer);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(layerHeightExists);
+	if (layerHeightExists) {
+	
+	
+	
+		
+	Length::toBin(layerHeight, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(temperatureProfileExists);
+	if (temperatureProfileExists) {
+	
+	
+	
+		
+	Temperature::toBin(temperatureProfile, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(cloudMonitorExists);
+	if (cloudMonitorExists) {
+	
+	
+	
+		
+	cloudMonitor.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(numWVRExists);
+	if (numWVRExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numWVR);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(wvrTempExists);
+	if (wvrTempExists) {
+	
+	
+	
+		
+	Temperature::toBin(wvrTemp, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(waterExists);
+	if (waterExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(water);
 				
 		
 	
@@ -935,184 +1175,248 @@ namespace asdm {
 
 	}
 	
-void WeatherRow::stationIdFromBin(EndianISStream& eiss) {
+void WeatherRow::stationIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		stationId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void WeatherRow::timeIntervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		stationId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void WeatherRow::pressureFromBin(EndianISStream& eiss) {
+void WeatherRow::timeIntervalFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		pressure =  Pressure::fromBin(eiss);
-		
-	
-	
-}
-void WeatherRow::pressureFlagFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		pressureFlag =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void WeatherRow::relHumidityFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		relHumidity =  Humidity::fromBin(eiss);
-		
-	
-	
-}
-void WeatherRow::relHumidityFlagFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		relHumidityFlag =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void WeatherRow::temperatureFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		temperature =  Temperature::fromBin(eiss);
-		
-	
-	
-}
-void WeatherRow::temperatureFlagFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		temperatureFlag =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void WeatherRow::windDirectionFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		windDirection =  Angle::fromBin(eiss);
-		
-	
-	
-}
-void WeatherRow::windDirectionFlagFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		windDirectionFlag =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void WeatherRow::windSpeedFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		windSpeed =  Speed::fromBin(eiss);
-		
-	
-	
-}
-void WeatherRow::windSpeedFlagFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		windSpeedFlag =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void WeatherRow::windMaxFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		windMax =  Speed::fromBin(eiss);
-		
-	
-	
-}
-void WeatherRow::windMaxFlagFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		windMaxFlag =  eiss.readBoolean();
-			
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
 		
 	
 	
 }
 
-void WeatherRow::dewPointFromBin(EndianISStream& eiss) {
+void WeatherRow::pressureFromBin(EndianIStream& eis) {
 		
-	dewPointExists = eiss.readBoolean();
+	pressureExists = eis.readBoolean();
+	if (pressureExists) {
+		
+	
+		
+		
+		pressure =  Pressure::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void WeatherRow::relHumidityFromBin(EndianIStream& eis) {
+		
+	relHumidityExists = eis.readBoolean();
+	if (relHumidityExists) {
+		
+	
+		
+		
+		relHumidity =  Humidity::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void WeatherRow::temperatureFromBin(EndianIStream& eis) {
+		
+	temperatureExists = eis.readBoolean();
+	if (temperatureExists) {
+		
+	
+		
+		
+		temperature =  Temperature::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void WeatherRow::windDirectionFromBin(EndianIStream& eis) {
+		
+	windDirectionExists = eis.readBoolean();
+	if (windDirectionExists) {
+		
+	
+		
+		
+		windDirection =  Angle::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void WeatherRow::windSpeedFromBin(EndianIStream& eis) {
+		
+	windSpeedExists = eis.readBoolean();
+	if (windSpeedExists) {
+		
+	
+		
+		
+		windSpeed =  Speed::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void WeatherRow::windMaxFromBin(EndianIStream& eis) {
+		
+	windMaxExists = eis.readBoolean();
+	if (windMaxExists) {
+		
+	
+		
+		
+		windMax =  Speed::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void WeatherRow::dewPointFromBin(EndianIStream& eis) {
+		
+	dewPointExists = eis.readBoolean();
 	if (dewPointExists) {
 		
 	
 		
 		
-		dewPoint =  Temperature::fromBin(eiss);
+		dewPoint =  Temperature::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
+void WeatherRow::numLayerFromBin(EndianIStream& eis) {
 		
-	dewPointFlagExists = eiss.readBoolean();
-	if (dewPointFlagExists) {
+	numLayerExists = eis.readBoolean();
+	if (numLayerExists) {
 		
 	
 	
 		
 			
-		dewPointFlag =  eiss.readBoolean();
+		numLayer =  eis.readInt();
+			
+		
+	
+
+	}
+	
+}
+void WeatherRow::layerHeightFromBin(EndianIStream& eis) {
+		
+	layerHeightExists = eis.readBoolean();
+	if (layerHeightExists) {
+		
+	
+		
+		
+			
+	
+	layerHeight = Length::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void WeatherRow::temperatureProfileFromBin(EndianIStream& eis) {
+		
+	temperatureProfileExists = eis.readBoolean();
+	if (temperatureProfileExists) {
+		
+	
+		
+		
+			
+	
+	temperatureProfile = Temperature::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void WeatherRow::cloudMonitorFromBin(EndianIStream& eis) {
+		
+	cloudMonitorExists = eis.readBoolean();
+	if (cloudMonitorExists) {
+		
+	
+		
+		
+		cloudMonitor =  Temperature::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void WeatherRow::numWVRFromBin(EndianIStream& eis) {
+		
+	numWVRExists = eis.readBoolean();
+	if (numWVRExists) {
+		
+	
+	
+		
+			
+		numWVR =  eis.readInt();
+			
+		
+	
+
+	}
+	
+}
+void WeatherRow::wvrTempFromBin(EndianIStream& eis) {
+		
+	wvrTempExists = eis.readBoolean();
+	if (wvrTempExists) {
+		
+	
+		
+		
+			
+	
+	wvrTemp = Temperature::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void WeatherRow::waterFromBin(EndianIStream& eis) {
+		
+	waterExists = eis.readBoolean();
+	if (waterExists) {
+		
+	
+	
+		
+			
+		water =  eis.readDouble();
 			
 		
 	
@@ -1122,23 +1426,186 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 }
 	
 	
-	WeatherRow* WeatherRow::fromBin(EndianISStream& eiss, WeatherTable& table, const vector<string>& attributesSeq) {
+	WeatherRow* WeatherRow::fromBin(EndianIStream& eis, WeatherTable& table, const vector<string>& attributesSeq) {
 		WeatherRow* row = new  WeatherRow(table);
 		
 		map<string, WeatherAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "WeatherTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "WeatherTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void WeatherRow::stationIdFromText(const string & s) {
+		 
+		stationId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void WeatherRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Pressure 
+	void WeatherRow::pressureFromText(const string & s) {
+		pressureExists = true;
+		 
+		pressure = ASDMValuesParser::parse<Pressure>(s);
+		
+	}
+	
+	
+	// Convert a string into an Humidity 
+	void WeatherRow::relHumidityFromText(const string & s) {
+		relHumidityExists = true;
+		 
+		relHumidity = ASDMValuesParser::parse<Humidity>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::temperatureFromText(const string & s) {
+		temperatureExists = true;
+		 
+		temperature = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void WeatherRow::windDirectionFromText(const string & s) {
+		windDirectionExists = true;
+		 
+		windDirection = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Speed 
+	void WeatherRow::windSpeedFromText(const string & s) {
+		windSpeedExists = true;
+		 
+		windSpeed = ASDMValuesParser::parse<Speed>(s);
+		
+	}
+	
+	
+	// Convert a string into an Speed 
+	void WeatherRow::windMaxFromText(const string & s) {
+		windMaxExists = true;
+		 
+		windMax = ASDMValuesParser::parse<Speed>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::dewPointFromText(const string & s) {
+		dewPointExists = true;
+		 
+		dewPoint = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void WeatherRow::numLayerFromText(const string & s) {
+		numLayerExists = true;
+		 
+		numLayer = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void WeatherRow::layerHeightFromText(const string & s) {
+		layerHeightExists = true;
+		 
+		layerHeight = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::temperatureProfileFromText(const string & s) {
+		temperatureProfileExists = true;
+		 
+		temperatureProfile = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::cloudMonitorFromText(const string & s) {
+		cloudMonitorExists = true;
+		 
+		cloudMonitor = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void WeatherRow::numWVRFromText(const string & s) {
+		numWVRExists = true;
+		 
+		numWVR = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WeatherRow::wvrTempFromText(const string & s) {
+		wvrTempExists = true;
+		 
+		wvrTemp = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void WeatherRow::waterFromText(const string & s) {
+		waterExists = true;
+		 
+		water = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	
+	void WeatherRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, WeatherAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "WeatherTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1177,13 +1644,25 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	
 
 	
+	/**
+	 * The attribute pressure is optional. Return true if this attribute exists.
+	 * @return true if and only if the pressure attribute exists. 
+	 */
+	bool WeatherRow::isPressureExists() const {
+		return pressureExists;
+	}
+	
 
 	
  	/**
- 	 * Get pressure.
+ 	 * Get pressure, which is optional.
  	 * @return pressure as Pressure
+ 	 * @throw IllegalAccessException If pressure does not exist.
  	 */
- 	Pressure WeatherRow::getPressure() const {
+ 	Pressure WeatherRow::getPressure() const  {
+		if (!pressureExists) {
+			throw IllegalAccessException("pressure", "Weather");
+		}
 	
   		return pressure;
  	}
@@ -1193,61 +1672,44 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
  	 * @param pressure The Pressure value to which pressure is to be set.
  	 
  	
- 		
  	 */
- 	void WeatherRow::setPressure (Pressure pressure)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void WeatherRow::setPressure (Pressure pressure) {
+	
  		this->pressure = pressure;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get pressureFlag.
- 	 * @return pressureFlag as bool
- 	 */
- 	bool WeatherRow::getPressureFlag() const {
-	
-  		return pressureFlag;
- 	}
-
- 	/**
- 	 * Set pressureFlag with the specified bool.
- 	 * @param pressureFlag The bool value to which pressureFlag is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setPressureFlag (bool pressureFlag)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->pressureFlag = pressureFlag;
+		pressureExists = true;
 	
  	}
 	
 	
+	/**
+	 * Mark pressure, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearPressure () {
+		pressureExists = false;
+	}
+	
 
+	
+	/**
+	 * The attribute relHumidity is optional. Return true if this attribute exists.
+	 * @return true if and only if the relHumidity attribute exists. 
+	 */
+	bool WeatherRow::isRelHumidityExists() const {
+		return relHumidityExists;
+	}
 	
 
 	
  	/**
- 	 * Get relHumidity.
+ 	 * Get relHumidity, which is optional.
  	 * @return relHumidity as Humidity
+ 	 * @throw IllegalAccessException If relHumidity does not exist.
  	 */
- 	Humidity WeatherRow::getRelHumidity() const {
+ 	Humidity WeatherRow::getRelHumidity() const  {
+		if (!relHumidityExists) {
+			throw IllegalAccessException("relHumidity", "Weather");
+		}
 	
   		return relHumidity;
  	}
@@ -1257,61 +1719,44 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
  	 * @param relHumidity The Humidity value to which relHumidity is to be set.
  	 
  	
- 		
  	 */
- 	void WeatherRow::setRelHumidity (Humidity relHumidity)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void WeatherRow::setRelHumidity (Humidity relHumidity) {
+	
  		this->relHumidity = relHumidity;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get relHumidityFlag.
- 	 * @return relHumidityFlag as bool
- 	 */
- 	bool WeatherRow::getRelHumidityFlag() const {
-	
-  		return relHumidityFlag;
- 	}
-
- 	/**
- 	 * Set relHumidityFlag with the specified bool.
- 	 * @param relHumidityFlag The bool value to which relHumidityFlag is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setRelHumidityFlag (bool relHumidityFlag)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->relHumidityFlag = relHumidityFlag;
+		relHumidityExists = true;
 	
  	}
 	
 	
+	/**
+	 * Mark relHumidity, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearRelHumidity () {
+		relHumidityExists = false;
+	}
+	
 
+	
+	/**
+	 * The attribute temperature is optional. Return true if this attribute exists.
+	 * @return true if and only if the temperature attribute exists. 
+	 */
+	bool WeatherRow::isTemperatureExists() const {
+		return temperatureExists;
+	}
 	
 
 	
  	/**
- 	 * Get temperature.
+ 	 * Get temperature, which is optional.
  	 * @return temperature as Temperature
+ 	 * @throw IllegalAccessException If temperature does not exist.
  	 */
- 	Temperature WeatherRow::getTemperature() const {
+ 	Temperature WeatherRow::getTemperature() const  {
+		if (!temperatureExists) {
+			throw IllegalAccessException("temperature", "Weather");
+		}
 	
   		return temperature;
  	}
@@ -1321,61 +1766,44 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
  	 * @param temperature The Temperature value to which temperature is to be set.
  	 
  	
- 		
  	 */
- 	void WeatherRow::setTemperature (Temperature temperature)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void WeatherRow::setTemperature (Temperature temperature) {
+	
  		this->temperature = temperature;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get temperatureFlag.
- 	 * @return temperatureFlag as bool
- 	 */
- 	bool WeatherRow::getTemperatureFlag() const {
-	
-  		return temperatureFlag;
- 	}
-
- 	/**
- 	 * Set temperatureFlag with the specified bool.
- 	 * @param temperatureFlag The bool value to which temperatureFlag is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setTemperatureFlag (bool temperatureFlag)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->temperatureFlag = temperatureFlag;
+		temperatureExists = true;
 	
  	}
 	
 	
+	/**
+	 * Mark temperature, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearTemperature () {
+		temperatureExists = false;
+	}
+	
 
+	
+	/**
+	 * The attribute windDirection is optional. Return true if this attribute exists.
+	 * @return true if and only if the windDirection attribute exists. 
+	 */
+	bool WeatherRow::isWindDirectionExists() const {
+		return windDirectionExists;
+	}
 	
 
 	
  	/**
- 	 * Get windDirection.
+ 	 * Get windDirection, which is optional.
  	 * @return windDirection as Angle
+ 	 * @throw IllegalAccessException If windDirection does not exist.
  	 */
- 	Angle WeatherRow::getWindDirection() const {
+ 	Angle WeatherRow::getWindDirection() const  {
+		if (!windDirectionExists) {
+			throw IllegalAccessException("windDirection", "Weather");
+		}
 	
   		return windDirection;
  	}
@@ -1385,61 +1813,44 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
  	 * @param windDirection The Angle value to which windDirection is to be set.
  	 
  	
- 		
  	 */
- 	void WeatherRow::setWindDirection (Angle windDirection)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void WeatherRow::setWindDirection (Angle windDirection) {
+	
  		this->windDirection = windDirection;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get windDirectionFlag.
- 	 * @return windDirectionFlag as bool
- 	 */
- 	bool WeatherRow::getWindDirectionFlag() const {
-	
-  		return windDirectionFlag;
- 	}
-
- 	/**
- 	 * Set windDirectionFlag with the specified bool.
- 	 * @param windDirectionFlag The bool value to which windDirectionFlag is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setWindDirectionFlag (bool windDirectionFlag)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->windDirectionFlag = windDirectionFlag;
+		windDirectionExists = true;
 	
  	}
 	
 	
+	/**
+	 * Mark windDirection, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearWindDirection () {
+		windDirectionExists = false;
+	}
+	
 
+	
+	/**
+	 * The attribute windSpeed is optional. Return true if this attribute exists.
+	 * @return true if and only if the windSpeed attribute exists. 
+	 */
+	bool WeatherRow::isWindSpeedExists() const {
+		return windSpeedExists;
+	}
 	
 
 	
  	/**
- 	 * Get windSpeed.
+ 	 * Get windSpeed, which is optional.
  	 * @return windSpeed as Speed
+ 	 * @throw IllegalAccessException If windSpeed does not exist.
  	 */
- 	Speed WeatherRow::getWindSpeed() const {
+ 	Speed WeatherRow::getWindSpeed() const  {
+		if (!windSpeedExists) {
+			throw IllegalAccessException("windSpeed", "Weather");
+		}
 	
   		return windSpeed;
  	}
@@ -1449,61 +1860,44 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
  	 * @param windSpeed The Speed value to which windSpeed is to be set.
  	 
  	
- 		
  	 */
- 	void WeatherRow::setWindSpeed (Speed windSpeed)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void WeatherRow::setWindSpeed (Speed windSpeed) {
+	
  		this->windSpeed = windSpeed;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get windSpeedFlag.
- 	 * @return windSpeedFlag as bool
- 	 */
- 	bool WeatherRow::getWindSpeedFlag() const {
-	
-  		return windSpeedFlag;
- 	}
-
- 	/**
- 	 * Set windSpeedFlag with the specified bool.
- 	 * @param windSpeedFlag The bool value to which windSpeedFlag is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setWindSpeedFlag (bool windSpeedFlag)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->windSpeedFlag = windSpeedFlag;
+		windSpeedExists = true;
 	
  	}
 	
 	
+	/**
+	 * Mark windSpeed, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearWindSpeed () {
+		windSpeedExists = false;
+	}
+	
 
+	
+	/**
+	 * The attribute windMax is optional. Return true if this attribute exists.
+	 * @return true if and only if the windMax attribute exists. 
+	 */
+	bool WeatherRow::isWindMaxExists() const {
+		return windMaxExists;
+	}
 	
 
 	
  	/**
- 	 * Get windMax.
+ 	 * Get windMax, which is optional.
  	 * @return windMax as Speed
+ 	 * @throw IllegalAccessException If windMax does not exist.
  	 */
- 	Speed WeatherRow::getWindMax() const {
+ 	Speed WeatherRow::getWindMax() const  {
+		if (!windMaxExists) {
+			throw IllegalAccessException("windMax", "Weather");
+		}
 	
   		return windMax;
  	}
@@ -1513,51 +1907,22 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
  	 * @param windMax The Speed value to which windMax is to be set.
  	 
  	
- 		
  	 */
- 	void WeatherRow::setWindMax (Speed windMax)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void WeatherRow::setWindMax (Speed windMax) {
+	
  		this->windMax = windMax;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get windMaxFlag.
- 	 * @return windMaxFlag as bool
- 	 */
- 	bool WeatherRow::getWindMaxFlag() const {
-	
-  		return windMaxFlag;
- 	}
-
- 	/**
- 	 * Set windMaxFlag with the specified bool.
- 	 * @param windMaxFlag The bool value to which windMaxFlag is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setWindMaxFlag (bool windMaxFlag)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->windMaxFlag = windMaxFlag;
+		windMaxExists = true;
 	
  	}
 	
+	
+	/**
+	 * Mark windMax, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearWindMax () {
+		windMaxExists = false;
+	}
 	
 
 	
@@ -1609,55 +1974,337 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 
 	
 	/**
-	 * The attribute dewPointFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewPointFlag attribute exists. 
+	 * The attribute numLayer is optional. Return true if this attribute exists.
+	 * @return true if and only if the numLayer attribute exists. 
 	 */
-	bool WeatherRow::isDewPointFlagExists() const {
-		return dewPointFlagExists;
+	bool WeatherRow::isNumLayerExists() const {
+		return numLayerExists;
 	}
 	
 
 	
  	/**
- 	 * Get dewPointFlag, which is optional.
- 	 * @return dewPointFlag as bool
- 	 * @throw IllegalAccessException If dewPointFlag does not exist.
+ 	 * Get numLayer, which is optional.
+ 	 * @return numLayer as int
+ 	 * @throw IllegalAccessException If numLayer does not exist.
  	 */
- 	bool WeatherRow::getDewPointFlag() const  {
-		if (!dewPointFlagExists) {
-			throw IllegalAccessException("dewPointFlag", "Weather");
+ 	int WeatherRow::getNumLayer() const  {
+		if (!numLayerExists) {
+			throw IllegalAccessException("numLayer", "Weather");
 		}
 	
-  		return dewPointFlag;
+  		return numLayer;
  	}
 
  	/**
- 	 * Set dewPointFlag with the specified bool.
- 	 * @param dewPointFlag The bool value to which dewPointFlag is to be set.
+ 	 * Set numLayer with the specified int.
+ 	 * @param numLayer The int value to which numLayer is to be set.
  	 
  	
  	 */
- 	void WeatherRow::setDewPointFlag (bool dewPointFlag) {
+ 	void WeatherRow::setNumLayer (int numLayer) {
 	
- 		this->dewPointFlag = dewPointFlag;
+ 		this->numLayer = numLayer;
 	
-		dewPointFlagExists = true;
+		numLayerExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark dewPointFlag, which is an optional field, as non-existent.
+	 * Mark numLayer, which is an optional field, as non-existent.
 	 */
-	void WeatherRow::clearDewPointFlag () {
-		dewPointFlagExists = false;
+	void WeatherRow::clearNumLayer () {
+		numLayerExists = false;
 	}
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	/**
+	 * The attribute layerHeight is optional. Return true if this attribute exists.
+	 * @return true if and only if the layerHeight attribute exists. 
+	 */
+	bool WeatherRow::isLayerHeightExists() const {
+		return layerHeightExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get layerHeight, which is optional.
+ 	 * @return layerHeight as vector<Length >
+ 	 * @throw IllegalAccessException If layerHeight does not exist.
+ 	 */
+ 	vector<Length > WeatherRow::getLayerHeight() const  {
+		if (!layerHeightExists) {
+			throw IllegalAccessException("layerHeight", "Weather");
+		}
+	
+  		return layerHeight;
+ 	}
+
+ 	/**
+ 	 * Set layerHeight with the specified vector<Length >.
+ 	 * @param layerHeight The vector<Length > value to which layerHeight is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setLayerHeight (vector<Length > layerHeight) {
+	
+ 		this->layerHeight = layerHeight;
+	
+		layerHeightExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark layerHeight, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearLayerHeight () {
+		layerHeightExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute temperatureProfile is optional. Return true if this attribute exists.
+	 * @return true if and only if the temperatureProfile attribute exists. 
+	 */
+	bool WeatherRow::isTemperatureProfileExists() const {
+		return temperatureProfileExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get temperatureProfile, which is optional.
+ 	 * @return temperatureProfile as vector<Temperature >
+ 	 * @throw IllegalAccessException If temperatureProfile does not exist.
+ 	 */
+ 	vector<Temperature > WeatherRow::getTemperatureProfile() const  {
+		if (!temperatureProfileExists) {
+			throw IllegalAccessException("temperatureProfile", "Weather");
+		}
+	
+  		return temperatureProfile;
+ 	}
+
+ 	/**
+ 	 * Set temperatureProfile with the specified vector<Temperature >.
+ 	 * @param temperatureProfile The vector<Temperature > value to which temperatureProfile is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setTemperatureProfile (vector<Temperature > temperatureProfile) {
+	
+ 		this->temperatureProfile = temperatureProfile;
+	
+		temperatureProfileExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark temperatureProfile, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearTemperatureProfile () {
+		temperatureProfileExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute cloudMonitor is optional. Return true if this attribute exists.
+	 * @return true if and only if the cloudMonitor attribute exists. 
+	 */
+	bool WeatherRow::isCloudMonitorExists() const {
+		return cloudMonitorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get cloudMonitor, which is optional.
+ 	 * @return cloudMonitor as Temperature
+ 	 * @throw IllegalAccessException If cloudMonitor does not exist.
+ 	 */
+ 	Temperature WeatherRow::getCloudMonitor() const  {
+		if (!cloudMonitorExists) {
+			throw IllegalAccessException("cloudMonitor", "Weather");
+		}
+	
+  		return cloudMonitor;
+ 	}
+
+ 	/**
+ 	 * Set cloudMonitor with the specified Temperature.
+ 	 * @param cloudMonitor The Temperature value to which cloudMonitor is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setCloudMonitor (Temperature cloudMonitor) {
+	
+ 		this->cloudMonitor = cloudMonitor;
+	
+		cloudMonitorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark cloudMonitor, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearCloudMonitor () {
+		cloudMonitorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute numWVR is optional. Return true if this attribute exists.
+	 * @return true if and only if the numWVR attribute exists. 
+	 */
+	bool WeatherRow::isNumWVRExists() const {
+		return numWVRExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numWVR, which is optional.
+ 	 * @return numWVR as int
+ 	 * @throw IllegalAccessException If numWVR does not exist.
+ 	 */
+ 	int WeatherRow::getNumWVR() const  {
+		if (!numWVRExists) {
+			throw IllegalAccessException("numWVR", "Weather");
+		}
+	
+  		return numWVR;
+ 	}
+
+ 	/**
+ 	 * Set numWVR with the specified int.
+ 	 * @param numWVR The int value to which numWVR is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setNumWVR (int numWVR) {
+	
+ 		this->numWVR = numWVR;
+	
+		numWVRExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numWVR, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearNumWVR () {
+		numWVRExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute wvrTemp is optional. Return true if this attribute exists.
+	 * @return true if and only if the wvrTemp attribute exists. 
+	 */
+	bool WeatherRow::isWvrTempExists() const {
+		return wvrTempExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get wvrTemp, which is optional.
+ 	 * @return wvrTemp as vector<Temperature >
+ 	 * @throw IllegalAccessException If wvrTemp does not exist.
+ 	 */
+ 	vector<Temperature > WeatherRow::getWvrTemp() const  {
+		if (!wvrTempExists) {
+			throw IllegalAccessException("wvrTemp", "Weather");
+		}
+	
+  		return wvrTemp;
+ 	}
+
+ 	/**
+ 	 * Set wvrTemp with the specified vector<Temperature >.
+ 	 * @param wvrTemp The vector<Temperature > value to which wvrTemp is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setWvrTemp (vector<Temperature > wvrTemp) {
+	
+ 		this->wvrTemp = wvrTemp;
+	
+		wvrTempExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark wvrTemp, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearWvrTemp () {
+		wvrTempExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute water is optional. Return true if this attribute exists.
+	 * @return true if and only if the water attribute exists. 
+	 */
+	bool WeatherRow::isWaterExists() const {
+		return waterExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get water, which is optional.
+ 	 * @return water as double
+ 	 * @throw IllegalAccessException If water does not exist.
+ 	 */
+ 	double WeatherRow::getWater() const  {
+		if (!waterExists) {
+			throw IllegalAccessException("water", "Weather");
+		}
+	
+  		return water;
+ 	}
+
+ 	/**
+ 	 * Set water with the specified double.
+ 	 * @param water The double value to which water is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setWater (double water) {
+	
+ 		this->water = water;
+	
+		waterExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark water, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearWater () {
+		waterExists = false;
+	}
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1695,9 +2342,10 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1734,27 +2382,27 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	
 
 	
-
+		pressureExists = false;
 	
 
 	
-
+		relHumidityExists = false;
 	
 
 	
-
+		temperatureExists = false;
 	
 
 	
-
+		windDirectionExists = false;
 	
 
 	
-
+		windSpeedExists = false;
 	
 
 	
-
+		windMaxExists = false;
 	
 
 	
@@ -1762,7 +2410,31 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	
 
 	
-		dewPointFlagExists = false;
+		numLayerExists = false;
+	
+
+	
+		layerHeightExists = false;
+	
+
+	
+		temperatureProfileExists = false;
+	
+
+	
+		cloudMonitorExists = false;
+	
+
+	
+		numWVRExists = false;
+	
+
+	
+		wvrTempExists = false;
+	
+
+	
+		waterExists = false;
 	
 
 	
@@ -1805,23 +2477,92 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	
 	 fromBinMethods["stationId"] = &WeatherRow::stationIdFromBin; 
 	 fromBinMethods["timeInterval"] = &WeatherRow::timeIntervalFromBin; 
-	 fromBinMethods["pressure"] = &WeatherRow::pressureFromBin; 
-	 fromBinMethods["pressureFlag"] = &WeatherRow::pressureFlagFromBin; 
-	 fromBinMethods["relHumidity"] = &WeatherRow::relHumidityFromBin; 
-	 fromBinMethods["relHumidityFlag"] = &WeatherRow::relHumidityFlagFromBin; 
-	 fromBinMethods["temperature"] = &WeatherRow::temperatureFromBin; 
-	 fromBinMethods["temperatureFlag"] = &WeatherRow::temperatureFlagFromBin; 
-	 fromBinMethods["windDirection"] = &WeatherRow::windDirectionFromBin; 
-	 fromBinMethods["windDirectionFlag"] = &WeatherRow::windDirectionFlagFromBin; 
-	 fromBinMethods["windSpeed"] = &WeatherRow::windSpeedFromBin; 
-	 fromBinMethods["windSpeedFlag"] = &WeatherRow::windSpeedFlagFromBin; 
-	 fromBinMethods["windMax"] = &WeatherRow::windMaxFromBin; 
-	 fromBinMethods["windMaxFlag"] = &WeatherRow::windMaxFlagFromBin; 
 		
 	
+	 fromBinMethods["pressure"] = &WeatherRow::pressureFromBin; 
+	 fromBinMethods["relHumidity"] = &WeatherRow::relHumidityFromBin; 
+	 fromBinMethods["temperature"] = &WeatherRow::temperatureFromBin; 
+	 fromBinMethods["windDirection"] = &WeatherRow::windDirectionFromBin; 
+	 fromBinMethods["windSpeed"] = &WeatherRow::windSpeedFromBin; 
+	 fromBinMethods["windMax"] = &WeatherRow::windMaxFromBin; 
 	 fromBinMethods["dewPoint"] = &WeatherRow::dewPointFromBin; 
-	 fromBinMethods["dewPointFlag"] = &WeatherRow::dewPointFlagFromBin; 
+	 fromBinMethods["numLayer"] = &WeatherRow::numLayerFromBin; 
+	 fromBinMethods["layerHeight"] = &WeatherRow::layerHeightFromBin; 
+	 fromBinMethods["temperatureProfile"] = &WeatherRow::temperatureProfileFromBin; 
+	 fromBinMethods["cloudMonitor"] = &WeatherRow::cloudMonitorFromBin; 
+	 fromBinMethods["numWVR"] = &WeatherRow::numWVRFromBin; 
+	 fromBinMethods["wvrTemp"] = &WeatherRow::wvrTempFromBin; 
+	 fromBinMethods["water"] = &WeatherRow::waterFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["stationId"] = &WeatherRow::stationIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &WeatherRow::timeIntervalFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["pressure"] = &WeatherRow::pressureFromText;
+		 	
+	 
+				
+	fromTextMethods["relHumidity"] = &WeatherRow::relHumidityFromText;
+		 	
+	 
+				
+	fromTextMethods["temperature"] = &WeatherRow::temperatureFromText;
+		 	
+	 
+				
+	fromTextMethods["windDirection"] = &WeatherRow::windDirectionFromText;
+		 	
+	 
+				
+	fromTextMethods["windSpeed"] = &WeatherRow::windSpeedFromText;
+		 	
+	 
+				
+	fromTextMethods["windMax"] = &WeatherRow::windMaxFromText;
+		 	
+	 
+				
+	fromTextMethods["dewPoint"] = &WeatherRow::dewPointFromText;
+		 	
+	 
+				
+	fromTextMethods["numLayer"] = &WeatherRow::numLayerFromText;
+		 	
+	 
+				
+	fromTextMethods["layerHeight"] = &WeatherRow::layerHeightFromText;
+		 	
+	 
+				
+	fromTextMethods["temperatureProfile"] = &WeatherRow::temperatureProfileFromText;
+		 	
+	 
+				
+	fromTextMethods["cloudMonitor"] = &WeatherRow::cloudMonitorFromText;
+		 	
+	 
+				
+	fromTextMethods["numWVR"] = &WeatherRow::numWVRFromText;
+		 	
+	 
+				
+	fromTextMethods["wvrTemp"] = &WeatherRow::wvrTempFromText;
+		 	
+	 
+				
+	fromTextMethods["water"] = &WeatherRow::waterFromText;
+		 	
+		
 	}
 	
 	WeatherRow::WeatherRow (WeatherTable &t, WeatherRow &row) : table(t) {
@@ -1833,27 +2574,27 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	
 
 	
-
+		pressureExists = false;
 	
 
 	
-
+		relHumidityExists = false;
 	
 
 	
-
+		temperatureExists = false;
 	
 
 	
-
+		windDirectionExists = false;
 	
 
 	
-
+		windSpeedExists = false;
 	
 
 	
-
+		windMaxExists = false;
 	
 
 	
@@ -1861,7 +2602,31 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	
 
 	
-		dewPointFlagExists = false;
+		numLayerExists = false;
+	
+
+	
+		layerHeightExists = false;
+	
+
+	
+		temperatureProfileExists = false;
+	
+
+	
+		cloudMonitorExists = false;
+	
+
+	
+		numWVRExists = false;
+	
+
+	
+		wvrTempExists = false;
+	
+
+	
+		waterExists = false;
 	
 
 	
@@ -1878,32 +2643,50 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 		
 		
 		
-			pressure = row.pressure;
-		
-			pressureFlag = row.pressureFlag;
-		
-			relHumidity = row.relHumidity;
-		
-			relHumidityFlag = row.relHumidityFlag;
-		
-			temperature = row.temperature;
-		
-			temperatureFlag = row.temperatureFlag;
-		
-			windDirection = row.windDirection;
-		
-			windDirectionFlag = row.windDirectionFlag;
-		
-			windSpeed = row.windSpeed;
-		
-			windSpeedFlag = row.windSpeedFlag;
-		
-			windMax = row.windMax;
-		
-			windMaxFlag = row.windMaxFlag;
 		
 		
 		
+		if (row.pressureExists) {
+			pressure = row.pressure;		
+			pressureExists = true;
+		}
+		else
+			pressureExists = false;
+		
+		if (row.relHumidityExists) {
+			relHumidity = row.relHumidity;		
+			relHumidityExists = true;
+		}
+		else
+			relHumidityExists = false;
+		
+		if (row.temperatureExists) {
+			temperature = row.temperature;		
+			temperatureExists = true;
+		}
+		else
+			temperatureExists = false;
+		
+		if (row.windDirectionExists) {
+			windDirection = row.windDirection;		
+			windDirectionExists = true;
+		}
+		else
+			windDirectionExists = false;
+		
+		if (row.windSpeedExists) {
+			windSpeed = row.windSpeed;		
+			windSpeedExists = true;
+		}
+		else
+			windSpeedExists = false;
+		
+		if (row.windMaxExists) {
+			windMax = row.windMax;		
+			windMaxExists = true;
+		}
+		else
+			windMaxExists = false;
 		
 		if (row.dewPointExists) {
 			dewPoint = row.dewPoint;		
@@ -1912,38 +2695,80 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 		else
 			dewPointExists = false;
 		
-		if (row.dewPointFlagExists) {
-			dewPointFlag = row.dewPointFlag;		
-			dewPointFlagExists = true;
+		if (row.numLayerExists) {
+			numLayer = row.numLayer;		
+			numLayerExists = true;
 		}
 		else
-			dewPointFlagExists = false;
+			numLayerExists = false;
+		
+		if (row.layerHeightExists) {
+			layerHeight = row.layerHeight;		
+			layerHeightExists = true;
+		}
+		else
+			layerHeightExists = false;
+		
+		if (row.temperatureProfileExists) {
+			temperatureProfile = row.temperatureProfile;		
+			temperatureProfileExists = true;
+		}
+		else
+			temperatureProfileExists = false;
+		
+		if (row.cloudMonitorExists) {
+			cloudMonitor = row.cloudMonitor;		
+			cloudMonitorExists = true;
+		}
+		else
+			cloudMonitorExists = false;
+		
+		if (row.numWVRExists) {
+			numWVR = row.numWVR;		
+			numWVRExists = true;
+		}
+		else
+			numWVRExists = false;
+		
+		if (row.wvrTempExists) {
+			wvrTemp = row.wvrTemp;		
+			wvrTempExists = true;
+		}
+		else
+			wvrTempExists = false;
+		
+		if (row.waterExists) {
+			water = row.water;		
+			waterExists = true;
+		}
+		else
+			waterExists = false;
 		
 		}
 		
 		 fromBinMethods["stationId"] = &WeatherRow::stationIdFromBin; 
 		 fromBinMethods["timeInterval"] = &WeatherRow::timeIntervalFromBin; 
-		 fromBinMethods["pressure"] = &WeatherRow::pressureFromBin; 
-		 fromBinMethods["pressureFlag"] = &WeatherRow::pressureFlagFromBin; 
-		 fromBinMethods["relHumidity"] = &WeatherRow::relHumidityFromBin; 
-		 fromBinMethods["relHumidityFlag"] = &WeatherRow::relHumidityFlagFromBin; 
-		 fromBinMethods["temperature"] = &WeatherRow::temperatureFromBin; 
-		 fromBinMethods["temperatureFlag"] = &WeatherRow::temperatureFlagFromBin; 
-		 fromBinMethods["windDirection"] = &WeatherRow::windDirectionFromBin; 
-		 fromBinMethods["windDirectionFlag"] = &WeatherRow::windDirectionFlagFromBin; 
-		 fromBinMethods["windSpeed"] = &WeatherRow::windSpeedFromBin; 
-		 fromBinMethods["windSpeedFlag"] = &WeatherRow::windSpeedFlagFromBin; 
-		 fromBinMethods["windMax"] = &WeatherRow::windMaxFromBin; 
-		 fromBinMethods["windMaxFlag"] = &WeatherRow::windMaxFlagFromBin; 
 			
 	
+		 fromBinMethods["pressure"] = &WeatherRow::pressureFromBin; 
+		 fromBinMethods["relHumidity"] = &WeatherRow::relHumidityFromBin; 
+		 fromBinMethods["temperature"] = &WeatherRow::temperatureFromBin; 
+		 fromBinMethods["windDirection"] = &WeatherRow::windDirectionFromBin; 
+		 fromBinMethods["windSpeed"] = &WeatherRow::windSpeedFromBin; 
+		 fromBinMethods["windMax"] = &WeatherRow::windMaxFromBin; 
 		 fromBinMethods["dewPoint"] = &WeatherRow::dewPointFromBin; 
-		 fromBinMethods["dewPointFlag"] = &WeatherRow::dewPointFlagFromBin; 
+		 fromBinMethods["numLayer"] = &WeatherRow::numLayerFromBin; 
+		 fromBinMethods["layerHeight"] = &WeatherRow::layerHeightFromBin; 
+		 fromBinMethods["temperatureProfile"] = &WeatherRow::temperatureProfileFromBin; 
+		 fromBinMethods["cloudMonitor"] = &WeatherRow::cloudMonitorFromBin; 
+		 fromBinMethods["numWVR"] = &WeatherRow::numWVRFromBin; 
+		 fromBinMethods["wvrTemp"] = &WeatherRow::wvrTempFromBin; 
+		 fromBinMethods["water"] = &WeatherRow::waterFromBin; 
 			
 	}
 
 	
-	bool WeatherRow::compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag) {
+	bool WeatherRow::compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval) {
 		bool result;
 		result = true;
 		
@@ -1961,149 +2786,10 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 		if (!result) return false;
 	
 
-	
-		
-		result = result && (this->pressure == pressure);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->pressureFlag == pressureFlag);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->relHumidity == relHumidity);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->relHumidityFlag == relHumidityFlag);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->temperature == temperature);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->temperatureFlag == temperatureFlag);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windDirection == windDirection);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windDirectionFlag == windDirectionFlag);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windSpeed == windSpeed);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windSpeedFlag == windSpeedFlag);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windMax == windMax);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windMaxFlag == windMaxFlag);
-		
-		if (!result) return false;
-	
-
 		return result;
 	}	
 	
 	
-	
-	bool WeatherRow::compareRequiredValue(Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag) {
-		bool result;
-		result = true;
-		
-	
-		if (!(this->pressure == pressure)) return false;
-	
-
-	
-		if (!(this->pressureFlag == pressureFlag)) return false;
-	
-
-	
-		if (!(this->relHumidity == relHumidity)) return false;
-	
-
-	
-		if (!(this->relHumidityFlag == relHumidityFlag)) return false;
-	
-
-	
-		if (!(this->temperature == temperature)) return false;
-	
-
-	
-		if (!(this->temperatureFlag == temperatureFlag)) return false;
-	
-
-	
-		if (!(this->windDirection == windDirection)) return false;
-	
-
-	
-		if (!(this->windDirectionFlag == windDirectionFlag)) return false;
-	
-
-	
-		if (!(this->windSpeed == windSpeed)) return false;
-	
-
-	
-		if (!(this->windSpeedFlag == windSpeedFlag)) return false;
-	
-
-	
-		if (!(this->windMax == windMax)) return false;
-	
-
-	
-		if (!(this->windMaxFlag == windMaxFlag)) return false;
-	
-
-		return result;
-	}
 	
 	
 	/**
@@ -2116,32 +2802,6 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 	 */
 	bool WeatherRow::equalByRequiredValue(WeatherRow* x) {
 		
-			
-		if (this->pressure != x->pressure) return false;
-			
-		if (this->pressureFlag != x->pressureFlag) return false;
-			
-		if (this->relHumidity != x->relHumidity) return false;
-			
-		if (this->relHumidityFlag != x->relHumidityFlag) return false;
-			
-		if (this->temperature != x->temperature) return false;
-			
-		if (this->temperatureFlag != x->temperatureFlag) return false;
-			
-		if (this->windDirection != x->windDirection) return false;
-			
-		if (this->windDirectionFlag != x->windDirectionFlag) return false;
-			
-		if (this->windSpeed != x->windSpeed) return false;
-			
-		if (this->windSpeedFlag != x->windSpeedFlag) return false;
-			
-		if (this->windMax != x->windMax) return false;
-			
-		if (this->windMaxFlag != x->windMaxFlag) return false;
-			
-		
 		return true;
 	}	
 	
@@ -2151,22 +2811,22 @@ void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
 		
 		result["stationId"] = &WeatherRow::stationIdFromBin;
 		result["timeInterval"] = &WeatherRow::timeIntervalFromBin;
+		
+		
 		result["pressure"] = &WeatherRow::pressureFromBin;
-		result["pressureFlag"] = &WeatherRow::pressureFlagFromBin;
 		result["relHumidity"] = &WeatherRow::relHumidityFromBin;
-		result["relHumidityFlag"] = &WeatherRow::relHumidityFlagFromBin;
 		result["temperature"] = &WeatherRow::temperatureFromBin;
-		result["temperatureFlag"] = &WeatherRow::temperatureFlagFromBin;
 		result["windDirection"] = &WeatherRow::windDirectionFromBin;
-		result["windDirectionFlag"] = &WeatherRow::windDirectionFlagFromBin;
 		result["windSpeed"] = &WeatherRow::windSpeedFromBin;
-		result["windSpeedFlag"] = &WeatherRow::windSpeedFlagFromBin;
 		result["windMax"] = &WeatherRow::windMaxFromBin;
-		result["windMaxFlag"] = &WeatherRow::windMaxFlagFromBin;
-		
-		
 		result["dewPoint"] = &WeatherRow::dewPointFromBin;
-		result["dewPointFlag"] = &WeatherRow::dewPointFlagFromBin;
+		result["numLayer"] = &WeatherRow::numLayerFromBin;
+		result["layerHeight"] = &WeatherRow::layerHeightFromBin;
+		result["temperatureProfile"] = &WeatherRow::temperatureProfileFromBin;
+		result["cloudMonitor"] = &WeatherRow::cloudMonitorFromBin;
+		result["numWVR"] = &WeatherRow::numWVRFromBin;
+		result["wvrTemp"] = &WeatherRow::wvrTempFromBin;
+		result["water"] = &WeatherRow::waterFromBin;
 			
 		
 		return result;	

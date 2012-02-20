@@ -25,10 +25,10 @@
 using namespace AssociatedFieldNatureMod;
 
 template<>
- struct enum_set_traits<AssociatedFieldNature> : public enum_set_traiter<AssociatedFieldNature,3,AssociatedFieldNatureMod::PHASE_REFERENCE> {};
+ struct enum_set_traits<AssociatedFieldNatureMod::AssociatedFieldNature> : public enum_set_traiter<AssociatedFieldNatureMod::AssociatedFieldNature,3,AssociatedFieldNatureMod::PHASE_REFERENCE> {};
 
 template<>
-class enum_map_traits<AssociatedFieldNature,void> : public enum_map_traiter<AssociatedFieldNature,void> {
+class enum_map_traits<AssociatedFieldNatureMod::AssociatedFieldNature,void> : public enum_map_traiter<AssociatedFieldNatureMod::AssociatedFieldNature,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,15 +37,15 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<AssociatedFieldNature,EnumPar<void> >
+    m_.insert(pair<AssociatedFieldNatureMod::AssociatedFieldNature,EnumPar<void> >
      (AssociatedFieldNatureMod::ON,ep((int)AssociatedFieldNatureMod::ON,"ON","un-documented")));
-    m_.insert(pair<AssociatedFieldNature,EnumPar<void> >
+    m_.insert(pair<AssociatedFieldNatureMod::AssociatedFieldNature,EnumPar<void> >
      (AssociatedFieldNatureMod::OFF,ep((int)AssociatedFieldNatureMod::OFF,"OFF","un-documented")));
-    m_.insert(pair<AssociatedFieldNature,EnumPar<void> >
+    m_.insert(pair<AssociatedFieldNatureMod::AssociatedFieldNature,EnumPar<void> >
      (AssociatedFieldNatureMod::PHASE_REFERENCE,ep((int)AssociatedFieldNatureMod::PHASE_REFERENCE,"PHASE_REFERENCE","un-documented")));
     return true;
   }
-  static map<AssociatedFieldNature,EnumPar<void> > m_;
+  static map<AssociatedFieldNatureMod::AssociatedFieldNature,EnumPar<void> > m_;
 };
 #define _ASSOCIATEDFIELDNATURE_HH
 #endif

@@ -87,19 +87,6 @@ class ASDM_ANTENNA : public ASDM_TABLE_SINGLETON<ASDM_ANTENNA>, public ASDM_TABL
   void fill(const ASDM& asdm);
 };
 	
-class ASDM_BEAM : public ASDM_TABLE_SINGLETON<ASDM_BEAM>, public ASDM_TABLE_BASE {
-  friend class ASDM_TABLE_SINGLETON<ASDM_BEAM>;
-
- private:
-  ASDM_BEAM();
-  ~ASDM_BEAM();
-  TableDesc tableDesc_;
-
- public:
-  const TableDesc& tableDesc() const;
-  void fill(const ASDM& asdm);
-};
-	
 class ASDM_CALAMPLI : public ASDM_TABLE_SINGLETON<ASDM_CALAMPLI>, public ASDM_TABLE_BASE {
   friend class ASDM_TABLE_SINGLETON<ASDM_CALAMPLI>;
 
@@ -665,6 +652,19 @@ class ASDM_SBSUMMARY : public ASDM_TABLE_SINGLETON<ASDM_SBSUMMARY>, public ASDM_
  private:
   ASDM_SBSUMMARY();
   ~ASDM_SBSUMMARY();
+  TableDesc tableDesc_;
+
+ public:
+  const TableDesc& tableDesc() const;
+  void fill(const ASDM& asdm);
+};
+	
+class ASDM_SCALE : public ASDM_TABLE_SINGLETON<ASDM_SCALE>, public ASDM_TABLE_BASE {
+  friend class ASDM_TABLE_SINGLETON<ASDM_SCALE>;
+
+ private:
+  ASDM_SCALE();
+  ~ASDM_SCALE();
   TableDesc tableDesc_;
 
  public:

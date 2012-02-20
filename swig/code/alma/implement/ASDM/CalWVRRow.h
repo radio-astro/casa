@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalWVRRowIDL;
 #endif
 
 
@@ -51,20 +47,25 @@ using asdmIDL::CalWVRRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -75,7 +76,6 @@ using  asdm::Frequency;
 
 	
 #include "CWVRMethod.h"
-using namespace WVRMethodMod;
 	
 
 	
@@ -110,9 +110,11 @@ using namespace WVRMethodMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalWVR.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -128,16 +130,19 @@ class CalReductionRow;
 	
 
 class CalWVRRow;
-typedef void (CalWVRRow::*CalWVRAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalWVRRow::*CalWVRAttributeFromBin) (EndianIStream& eis);
+typedef void (CalWVRRow::*CalWVRAttributeFromText) (const string& s);
 
 /**
  * The CalWVRRow class is a row of a CalWVRTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalWVRRow {
 friend class asdm::CalWVRTable;
+friend class asdm::RowTransformer<CalWVRRow>;
+//friend class asdm::TableStreamReader<CalWVRTable, CalWVRRow>;
 
 public:
 
@@ -844,7 +849,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalWVRRowIDL struct.
 	 */
-	CalWVRRowIDL *toIDL() const;
+	asdmIDL::CalWVRRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -853,14 +858,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalWVRRowIDL x) ;
+	void setFromIDL (asdmIDL::CalWVRRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -868,7 +873,44 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalWVRAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void wvrMethodFromBin( EndianIStream& eis);
+void numInputAntennasFromBin( EndianIStream& eis);
+void inputAntennaNamesFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void chanFreqFromBin( EndianIStream& eis);
+void chanWidthFromBin( EndianIStream& eis);
+void refTempFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void pathCoeffFromBin( EndianIStream& eis);
+void polyFreqLimitsFromBin( EndianIStream& eis);
+void wetPathFromBin( EndianIStream& eis);
+void dryPathFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalWVRTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalWVRRow* fromBin(EndianIStream& eis, CalWVRTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1138,30 +1180,95 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalWVRAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void wvrMethodFromBin( EndianISStream& eiss);
-void numInputAntennasFromBin( EndianISStream& eiss);
-void inputAntennaNamesFromBin( EndianISStream& eiss);
-void numChanFromBin( EndianISStream& eiss);
-void chanFreqFromBin( EndianISStream& eiss);
-void chanWidthFromBin( EndianISStream& eiss);
-void refTempFromBin( EndianISStream& eiss);
-void numPolyFromBin( EndianISStream& eiss);
-void pathCoeffFromBin( EndianISStream& eiss);
-void polyFreqLimitsFromBin( EndianISStream& eiss);
-void wetPathFromBin( EndianISStream& eiss);
-void dryPathFromBin( EndianISStream& eiss);
-void waterFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalWVRAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void wvrMethodFromBin( EndianIStream& eis);
+void numInputAntennasFromBin( EndianIStream& eis);
+void inputAntennaNamesFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void chanFreqFromBin( EndianIStream& eis);
+void chanWidthFromBin( EndianIStream& eis);
+void refTempFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void pathCoeffFromBin( EndianIStream& eis);
+void polyFreqLimitsFromBin( EndianIStream& eis);
+void wetPathFromBin( EndianIStream& eis);
+void dryPathFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalWVRAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void wvrMethodFromText (const string & s);
+	
+	
+void numInputAntennasFromText (const string & s);
+	
+	
+void inputAntennaNamesFromText (const string & s);
+	
+	
+void numChanFromText (const string & s);
+	
+	
+void chanFreqFromText (const string & s);
+	
+	
+void chanWidthFromText (const string & s);
+	
+	
+void refTempFromText (const string & s);
+	
+	
+void numPolyFromText (const string & s);
+	
+	
+void pathCoeffFromText (const string & s);
+	
+	
+void polyFreqLimitsFromText (const string & s);
+	
+	
+void wetPathFromText (const string & s);
+	
+	
+void dryPathFromText (const string & s);
+	
+	
+void waterFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1170,14 +1277,14 @@ void waterFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalWVRTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalWVRRow* fromBin(EndianISStream& eiss, CalWVRTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalWVRRow* fromBin(EndianIStream& eis, CalWVRTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

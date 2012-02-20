@@ -75,6 +75,7 @@ using asdm::ExecBlockRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -98,6 +99,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::TotalPowerRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -277,18 +281,6 @@ namespace asdm {
 			 						
 		
 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->flagRow = flagRow;
- 				
- 			
 		
 	
 
@@ -558,16 +550,6 @@ namespace asdm {
 		
 		
 			
-		setFlagRow(x.flagRow);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
 		setInterval(Interval (x.interval));
 			
  		
@@ -742,14 +724,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(flagRow, "flagRow", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(interval, "interval", buf);
 		
 		
@@ -917,14 +891,6 @@ namespace asdm {
 	  	setFlagPol(Parser::get2DInteger("flagPol","TotalPower",rowDoc));
 	  			
 	  		
-		
-	
-
-	
-  		
-			
-	  	setFlagRow(Parser::getBoolean("flagRow","TotalPower",rowDoc));
-			
 		
 	
 
@@ -1119,15 +1085,6 @@ namespace asdm {
 	
 	
 		
-						
-			eoss.writeBoolean(flagRow);
-				
-		
-	
-
-	
-	
-		
 	interval.toBin(eoss);
 		
 	
@@ -1165,115 +1122,115 @@ namespace asdm {
 
 	}
 	
-void TotalPowerRow::timeFromBin(EndianISStream& eiss) {
+void TotalPowerRow::timeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		time =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void TotalPowerRow::configDescriptionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		configDescriptionId =  Tag::fromBin(eiss);
+		time =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void TotalPowerRow::fieldIdFromBin(EndianISStream& eiss) {
+void TotalPowerRow::configDescriptionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		fieldId =  Tag::fromBin(eiss);
+		configDescriptionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void TotalPowerRow::scanNumberFromBin(EndianISStream& eiss) {
+void TotalPowerRow::fieldIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		fieldId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void TotalPowerRow::scanNumberFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		scanNumber =  eiss.readInt();
-			
-		
-	
-	
-}
-void TotalPowerRow::subscanNumberFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		subscanNumber =  eiss.readInt();
+		scanNumber =  eis.readInt();
 			
 		
 	
 	
 }
-void TotalPowerRow::integrationNumberFromBin(EndianISStream& eiss) {
+void TotalPowerRow::subscanNumberFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		integrationNumber =  eiss.readInt();
+		subscanNumber =  eis.readInt();
 			
 		
 	
 	
 }
-void TotalPowerRow::uvwFromBin(EndianISStream& eiss) {
+void TotalPowerRow::integrationNumberFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		integrationNumber =  eis.readInt();
+			
+		
+	
+	
+}
+void TotalPowerRow::uvwFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	uvw = Length::from2DBin(eiss);		
+	uvw = Length::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void TotalPowerRow::exposureFromBin(EndianISStream& eiss) {
+void TotalPowerRow::exposureFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	exposure = Interval::from2DBin(eiss);		
+	exposure = Interval::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void TotalPowerRow::timeCentroidFromBin(EndianISStream& eiss) {
+void TotalPowerRow::timeCentroidFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	timeCentroid = ArrayTime::from2DBin(eiss);		
+	timeCentroid = ArrayTime::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void TotalPowerRow::floatDataFromBin(EndianISStream& eiss) {
+void TotalPowerRow::floatDataFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1282,9 +1239,9 @@ void TotalPowerRow::floatDataFromBin(EndianISStream& eiss) {
 	
 		floatData.clear();
 			
-		unsigned int floatDataDim1 = eiss.readInt();
-		unsigned int floatDataDim2 = eiss.readInt();
-		unsigned int floatDataDim3 = eiss.readInt();
+		unsigned int floatDataDim1 = eis.readInt();
+		unsigned int floatDataDim2 = eis.readInt();
+		unsigned int floatDataDim3 = eis.readInt();
 		vector <vector<float> > floatDataAux2;
 		vector <float> floatDataAux1;
 		for (unsigned int i = 0; i < floatDataDim1; i++) {
@@ -1293,7 +1250,7 @@ void TotalPowerRow::floatDataFromBin(EndianISStream& eiss) {
 				floatDataAux1.clear();
 				for (unsigned int k = 0; k < floatDataDim3; k++) {
 			
-					floatDataAux1.push_back(eiss.readFloat());
+					floatDataAux1.push_back(eis.readFloat());
 			
 				}
 				floatDataAux2.push_back(floatDataAux1);
@@ -1306,7 +1263,7 @@ void TotalPowerRow::floatDataFromBin(EndianISStream& eiss) {
 	
 	
 }
-void TotalPowerRow::flagAntFromBin(EndianISStream& eiss) {
+void TotalPowerRow::flagAntFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1315,10 +1272,10 @@ void TotalPowerRow::flagAntFromBin(EndianISStream& eiss) {
 	
 		flagAnt.clear();
 		
-		unsigned int flagAntDim1 = eiss.readInt();
+		unsigned int flagAntDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < flagAntDim1; i++)
 			
-			flagAnt.push_back(eiss.readInt());
+			flagAnt.push_back(eis.readInt());
 			
 	
 
@@ -1326,7 +1283,7 @@ void TotalPowerRow::flagAntFromBin(EndianISStream& eiss) {
 	
 	
 }
-void TotalPowerRow::flagPolFromBin(EndianISStream& eiss) {
+void TotalPowerRow::flagPolFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1335,14 +1292,14 @@ void TotalPowerRow::flagPolFromBin(EndianISStream& eiss) {
 	
 		flagPol.clear();
 		
-		unsigned int flagPolDim1 = eiss.readInt();
-		unsigned int flagPolDim2 = eiss.readInt();
+		unsigned int flagPolDim1 = eis.readInt();
+		unsigned int flagPolDim2 = eis.readInt();
 		vector <int> flagPolAux1;
 		for (unsigned int i = 0; i < flagPolDim1; i++) {
 			flagPolAux1.clear();
 			for (unsigned int j = 0; j < flagPolDim2 ; j++)			
 			
-			flagPolAux1.push_back(eiss.readInt());
+			flagPolAux1.push_back(eis.readInt());
 			
 			flagPol.push_back(flagPolAux1);
 		}
@@ -1353,63 +1310,51 @@ void TotalPowerRow::flagPolFromBin(EndianISStream& eiss) {
 	
 	
 }
-void TotalPowerRow::flagRowFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		flagRow =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void TotalPowerRow::intervalFromBin(EndianISStream& eiss) {
+void TotalPowerRow::intervalFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		interval =  Interval::fromBin(eiss);
+		interval =  Interval::fromBin(eis);
 		
 	
 	
 }
-void TotalPowerRow::stateIdFromBin(EndianISStream& eiss) {
+void TotalPowerRow::stateIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	stateId = Tag::from1DBin(eiss);	
+	stateId = Tag::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void TotalPowerRow::execBlockIdFromBin(EndianISStream& eiss) {
+void TotalPowerRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
 }
 
-void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
+void TotalPowerRow::subintegrationNumberFromBin(EndianIStream& eis) {
 		
-	subintegrationNumberExists = eiss.readBoolean();
+	subintegrationNumberExists = eis.readBoolean();
 	if (subintegrationNumberExists) {
 		
 	
 	
 		
 			
-		subintegrationNumber =  eiss.readInt();
+		subintegrationNumber =  eis.readInt();
 			
 		
 	
@@ -1419,23 +1364,173 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 }
 	
 	
-	TotalPowerRow* TotalPowerRow::fromBin(EndianISStream& eiss, TotalPowerTable& table, const vector<string>& attributesSeq) {
+	TotalPowerRow* TotalPowerRow::fromBin(EndianIStream& eis, TotalPowerTable& table, const vector<string>& attributesSeq) {
 		TotalPowerRow* row = new  TotalPowerRow(table);
 		
 		map<string, TotalPowerAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "TotalPowerTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "TotalPowerTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an ArrayTime 
+	void TotalPowerRow::timeFromText(const string & s) {
+		 
+		time = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void TotalPowerRow::configDescriptionIdFromText(const string & s) {
+		 
+		configDescriptionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void TotalPowerRow::fieldIdFromText(const string & s) {
+		 
+		fieldId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void TotalPowerRow::scanNumberFromText(const string & s) {
+		 
+		scanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void TotalPowerRow::subscanNumberFromText(const string & s) {
+		 
+		subscanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void TotalPowerRow::integrationNumberFromText(const string & s) {
+		 
+		integrationNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void TotalPowerRow::uvwFromText(const string & s) {
+		 
+		uvw = ASDMValuesParser::parse2D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void TotalPowerRow::exposureFromText(const string & s) {
+		 
+		exposure = ASDMValuesParser::parse2D<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void TotalPowerRow::timeCentroidFromText(const string & s) {
+		 
+		timeCentroid = ASDMValuesParser::parse2D<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void TotalPowerRow::floatDataFromText(const string & s) {
+		 
+		floatData = ASDMValuesParser::parse3D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void TotalPowerRow::flagAntFromText(const string & s) {
+		 
+		flagAnt = ASDMValuesParser::parse1D<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void TotalPowerRow::flagPolFromText(const string & s) {
+		 
+		flagPol = ASDMValuesParser::parse2D<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void TotalPowerRow::intervalFromText(const string & s) {
+		 
+		interval = ASDMValuesParser::parse<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void TotalPowerRow::stateIdFromText(const string & s) {
+		 
+		stateId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void TotalPowerRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void TotalPowerRow::subintegrationNumberFromText(const string & s) {
+		subintegrationNumberExists = true;
+		 
+		subintegrationNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	
+	void TotalPowerRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, TotalPowerAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "TotalPowerTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1765,38 +1860,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool TotalPowerRow::getFlagRow() const {
-	
-  		return flagRow;
- 	}
-
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 	
- 		
- 	 */
- 	void TotalPowerRow::setFlagRow (bool flagRow)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->flagRow = flagRow;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get interval.
  	 * @return interval as Interval
  	 */
@@ -1873,9 +1936,9 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2013,9 +2076,10 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
  		
@@ -2186,8 +2250,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
 		subintegrationNumberExists = false;
 	
 
@@ -2228,8 +2290,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
 	
 	 fromBinMethods["time"] = &TotalPowerRow::timeFromBin; 
 	 fromBinMethods["configDescriptionId"] = &TotalPowerRow::configDescriptionIdFromBin; 
@@ -2243,7 +2303,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	 fromBinMethods["floatData"] = &TotalPowerRow::floatDataFromBin; 
 	 fromBinMethods["flagAnt"] = &TotalPowerRow::flagAntFromBin; 
 	 fromBinMethods["flagPol"] = &TotalPowerRow::flagPolFromBin; 
-	 fromBinMethods["flagRow"] = &TotalPowerRow::flagRowFromBin; 
 	 fromBinMethods["interval"] = &TotalPowerRow::intervalFromBin; 
 	 fromBinMethods["stateId"] = &TotalPowerRow::stateIdFromBin; 
 	 fromBinMethods["execBlockId"] = &TotalPowerRow::execBlockIdFromBin; 
@@ -2251,6 +2310,75 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	
 	 fromBinMethods["subintegrationNumber"] = &TotalPowerRow::subintegrationNumberFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["time"] = &TotalPowerRow::timeFromText;
+		 
+	
+				 
+	fromTextMethods["configDescriptionId"] = &TotalPowerRow::configDescriptionIdFromText;
+		 
+	
+				 
+	fromTextMethods["fieldId"] = &TotalPowerRow::fieldIdFromText;
+		 
+	
+				 
+	fromTextMethods["scanNumber"] = &TotalPowerRow::scanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["subscanNumber"] = &TotalPowerRow::subscanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["integrationNumber"] = &TotalPowerRow::integrationNumberFromText;
+		 
+	
+				 
+	fromTextMethods["uvw"] = &TotalPowerRow::uvwFromText;
+		 
+	
+				 
+	fromTextMethods["exposure"] = &TotalPowerRow::exposureFromText;
+		 
+	
+				 
+	fromTextMethods["timeCentroid"] = &TotalPowerRow::timeCentroidFromText;
+		 
+	
+				 
+	fromTextMethods["floatData"] = &TotalPowerRow::floatDataFromText;
+		 
+	
+				 
+	fromTextMethods["flagAnt"] = &TotalPowerRow::flagAntFromText;
+		 
+	
+				 
+	fromTextMethods["flagPol"] = &TotalPowerRow::flagPolFromText;
+		 
+	
+				 
+	fromTextMethods["interval"] = &TotalPowerRow::intervalFromText;
+		 
+	
+				 
+	fromTextMethods["stateId"] = &TotalPowerRow::stateIdFromText;
+		 
+	
+				 
+	fromTextMethods["execBlockId"] = &TotalPowerRow::execBlockIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["subintegrationNumber"] = &TotalPowerRow::subintegrationNumberFromText;
+		 	
+		
 	}
 	
 	TotalPowerRow::TotalPowerRow (TotalPowerTable &t, TotalPowerRow &row) : table(t) {
@@ -2259,8 +2387,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 		if (&row == 0) {
 	
 	
-	
-
 	
 
 	
@@ -2327,8 +2453,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 		
 			flagPol = row.flagPol;
 		
-			flagRow = row.flagRow;
-		
 			interval = row.interval;
 		
 			stateId = row.stateId;
@@ -2359,7 +2483,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 		 fromBinMethods["floatData"] = &TotalPowerRow::floatDataFromBin; 
 		 fromBinMethods["flagAnt"] = &TotalPowerRow::flagAntFromBin; 
 		 fromBinMethods["flagPol"] = &TotalPowerRow::flagPolFromBin; 
-		 fromBinMethods["flagRow"] = &TotalPowerRow::flagRowFromBin; 
 		 fromBinMethods["interval"] = &TotalPowerRow::intervalFromBin; 
 		 fromBinMethods["stateId"] = &TotalPowerRow::stateIdFromBin; 
 		 fromBinMethods["execBlockId"] = &TotalPowerRow::execBlockIdFromBin; 
@@ -2370,7 +2493,7 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	}
 
 	
-	bool TotalPowerRow::compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId) {
+	bool TotalPowerRow::compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, Interval interval, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
@@ -2460,13 +2583,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 
 	
 		
-		result = result && (this->flagRow == flagRow);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->interval == interval);
 		
 		if (!result) return false;
@@ -2491,7 +2607,7 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 	
 	
 	
-	bool TotalPowerRow::compareRequiredValue(int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId) {
+	bool TotalPowerRow::compareRequiredValue(int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, Interval interval, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
@@ -2529,10 +2645,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 
 	
 		if (!(this->flagPol == flagPol)) return false;
-	
-
-	
-		if (!(this->flagRow == flagRow)) return false;
 	
 
 	
@@ -2580,8 +2692,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 			
 		if (this->flagPol != x->flagPol) return false;
 			
-		if (this->flagRow != x->flagRow) return false;
-			
 		if (this->interval != x->interval) return false;
 			
 		if (this->stateId != x->stateId) return false;
@@ -2608,7 +2718,6 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
 		result["floatData"] = &TotalPowerRow::floatDataFromBin;
 		result["flagAnt"] = &TotalPowerRow::flagAntFromBin;
 		result["flagPol"] = &TotalPowerRow::flagPolFromBin;
-		result["flagRow"] = &TotalPowerRow::flagRowFromBin;
 		result["interval"] = &TotalPowerRow::intervalFromBin;
 		result["stateId"] = &TotalPowerRow::stateIdFromBin;
 		result["execBlockId"] = &TotalPowerRow::execBlockIdFromBin;

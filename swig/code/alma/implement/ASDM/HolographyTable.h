@@ -37,18 +37,16 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
 
 
+	
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	
 #include <Length.h>
-using  asdm::Length;
+	
 
 
 
@@ -63,7 +61,6 @@ using  asdm::Length;
 
 	
 #include "CHolographyChannelType.h"
-using namespace HolographyChannelTypeMod;
 	
 
 
@@ -73,14 +70,10 @@ using namespace HolographyChannelTypeMod;
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::HolographyTableIDL;
 #endif
 
 #include <Representable.h>
@@ -100,7 +93,7 @@ class HolographyRow;
  * Used for Single-Dish holography with a fixed transmitter.
  * <BR>
  
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Holography </CAPTION>
@@ -164,7 +157,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~HolographyTable();
@@ -186,17 +179,41 @@ public:
 	/**
 	 * Return the name of this table.
 	 *
+	 * This is a instance method of the class.
+	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
+	std::string getName() const;
+	
+	/**
+	 * Return the name of this table.
+	 *
+	 * This is a static method of the class.
+	 *
+	 * @return the name of this table in a string.
+	 */
+	static std::string name() ;	
+	
+	/**
+	 * Return the version information about this table.
+	 *
+	 */
+	 std::string getVersion() const ;
 	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
+	/**
+	 * Return the default sorted list of attributes names in the binary representation of the table.
+	 *
+	 * @return a const reference to a vector of string
+	 */
+	 static const std::vector<std::string>& defaultAttributesNamesInBin();
+	 
 	/**
 	 * Return this table's Entity.
 	 */
@@ -215,7 +232,7 @@ public:
 	 * @returns a string containing the XML representation.
 	 * @throws ConversionException
 	 */
-	string toXML()  ;
+	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -224,7 +241,7 @@ public:
 	 *
 	 * @return a pointer to a HolographyTableIDL
 	 */
-	HolographyTableIDL *toIDL() ;
+	asdmIDL::HolographyTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
@@ -234,7 +251,7 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(HolographyTableIDL x) ;
+	void fromIDL(asdmIDL::HolographyTableIDL x) ;
 #endif
 	
 	//
@@ -308,7 +325,7 @@ public:
 	 * @return Alls rows in a vector of pointers of HolographyRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the HolographyTable.
 	 */
-	vector<HolographyRow *> get() ;
+	std::vector<HolographyRow *> get() ;
 	
 	/**
 	 * Get a const reference on the collection of rows pointers internally hold by the table.
@@ -316,7 +333,7 @@ public:
 	 * in which they have been added to the HolographyTable.
 	 *
 	 */
-	 const vector<HolographyRow *>& get() const ;
+	 const std::vector<HolographyRow *>& get() const ;
 	
 
 
@@ -355,6 +372,9 @@ public:
 	HolographyRow* lookup(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type); 
 
 
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
+
 private:
 
 	/**
@@ -372,34 +392,42 @@ private:
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML	
 	
+	std::string version ; 
+	
 	Entity entity;
 	
 
 	// A map for the autoincrementation algorithm
-	map<string,int>  noAutoIncIds;
-	void autoIncrement(string key, HolographyRow* x);
+	std::map<std::string,int>  noAutoIncIds;
+	void autoIncrement(std::string key, HolographyRow* x);
 
 
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
+	static std::string itsName;
 	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
+	static std::vector<std::string> attributesNames;
 	
 	/**
-	 * A method to fill attributesNames;
+	 * The attributes names in the order in which they appear in the binary representation of the table.
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> attributesNamesInBin;
+	
 
+	/**
+	 * A method to fill attributesNames and attributesNamesInBin;
+	 */
+	static bool initAttributesNames(), initAttributesNamesDone ;
+	
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
@@ -412,17 +440,33 @@ private:
 	 
 	 */
 	HolographyRow* checkAndAdd(HolographyRow* x) ;
+	
+	/**
+	 * Brutally append an HolographyRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param HolographyRow* x a pointer onto the HolographyRow to be appended.
+	 */
+	 void append(HolographyRow* x) ;
+	 
+	/**
+	 * Brutally append an HolographyRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param HolographyRow* x a pointer onto the HolographyRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(HolographyRow* x) ;
+	 
+	 
 
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private vector of HolographyRow s.
-   vector<HolographyRow * > privateRows;
+   std::vector<HolographyRow * > privateRows;
    
 
 			
-	vector<HolographyRow *> row;
+	std::vector<HolographyRow *> row;
 
 	
 	void error() ; //throw(ConversionException);
@@ -434,14 +478,19 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string& xmlDoc) ;
+	void fromXML(std::string& xmlDoc) ;
 		
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
+
 	/**
 	  * Private methods involved during the build of this table out of the content
 	  * of file(s) containing an external representation of a Holography table.
 	  */
-	void setFromMIMEFile(const string& directory);
-	void setFromXMLFile(const string& directory);
+	void setFromMIMEFile(const std::string& directory);
+	/*
+	void openMIMEFile(const std::string& directory);
+	*/
+	void setFromXMLFile(const std::string& directory);
 	
 		 /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -450,7 +499,7 @@ private:
 	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
 	 * 
 	 */
-	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
   
 	
    /** 
@@ -459,12 +508,12 @@ private:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);
+	 void setFromMIME(const std::string & mimeMsg);
 	
 	/**
 	  * Private methods involved during the export of this table into disk file(s).
 	  */
-	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
 	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
@@ -475,7 +524,7 @@ private:
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
-	  void toFile(string directory);
+	  void toFile(std::string directory);
 	  
 	  /**
 	   * Load the table in memory if necessary.
@@ -497,7 +546,7 @@ private:
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);	
+	 void setFromFile(const std::string& directory);	
  
 };
 

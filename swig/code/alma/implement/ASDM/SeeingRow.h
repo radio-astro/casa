@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SeeingRowIDL;
 #endif
 
 
@@ -51,14 +47,17 @@ using asdmIDL::SeeingRowIDL;
 
 
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
 
 
@@ -81,9 +80,11 @@ using  asdm::ArrayTimeInterval;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Seeing.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -93,16 +94,19 @@ namespace asdm {
 	
 
 class SeeingRow;
-typedef void (SeeingRow::*SeeingAttributeFromBin) (EndianISStream& eiss);
+typedef void (SeeingRow::*SeeingAttributeFromBin) (EndianIStream& eis);
+typedef void (SeeingRow::*SeeingAttributeFromText) (const string& s);
 
 /**
  * The SeeingRow class is a row of a SeeingTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SeeingRow {
 friend class asdm::SeeingTable;
+friend class asdm::RowTransformer<SeeingRow>;
+//friend class asdm::TableStreamReader<SeeingTable, SeeingRow>;
 
 public:
 
@@ -371,7 +375,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SeeingRowIDL struct.
 	 */
-	SeeingRowIDL *toIDL() const;
+	asdmIDL::SeeingRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -380,14 +384,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SeeingRowIDL x) ;
+	void setFromIDL (asdmIDL::SeeingRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -395,7 +399,32 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SeeingAttributeFromBin> fromBinMethods;
+void timeIntervalFromBin( EndianIStream& eis);
+void numBaseLengthFromBin( EndianIStream& eis);
+void baseLengthFromBin( EndianIStream& eis);
+void phaseRmsFromBin( EndianIStream& eis);
+void seeingFromBin( EndianIStream& eis);
+void exponentFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SeeingTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SeeingRow* fromBin(EndianIStream& eis, SeeingTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -519,18 +548,47 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, SeeingAttributeFromBin> fromBinMethods;
-void timeIntervalFromBin( EndianISStream& eiss);
-void numBaseLengthFromBin( EndianISStream& eiss);
-void baseLengthFromBin( EndianISStream& eiss);
-void phaseRmsFromBin( EndianISStream& eiss);
-void seeingFromBin( EndianISStream& eiss);
-void exponentFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, SeeingAttributeFromBin> fromBinMethods;
+void timeIntervalFromBin( EndianIStream& eis);
+void numBaseLengthFromBin( EndianIStream& eis);
+void baseLengthFromBin( EndianIStream& eis);
+void phaseRmsFromBin( EndianIStream& eis);
+void seeingFromBin( EndianIStream& eis);
+void exponentFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SeeingAttributeFromText> fromTextMethods;
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void numBaseLengthFromText (const string & s);
+	
+	
+void baseLengthFromText (const string & s);
+	
+	
+void phaseRmsFromText (const string & s);
+	
+	
+void seeingFromText (const string & s);
+	
+	
+void exponentFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -539,14 +597,14 @@ void exponentFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SeeingTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SeeingRow* fromBin(EndianISStream& eiss, SeeingTable& table, const vector<string>& attributesSeq);	 
 
+	 static SeeingRow* fromBin(EndianIStream& eis, SeeingTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

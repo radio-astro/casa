@@ -65,12 +65,12 @@ namespace asdm {
 		this->id = id;		
 	}
 	
-	void PartId::toBin(EndianOSStream& eoss) {
+	void PartId::toBin(EndianOSStream& eoss) const {
 		eoss.writeString(id);	
 	}
 	
-	PartId PartId::fromBin(EndianISStream& eiss) {
-		return PartId(eiss.readString());	
+	PartId PartId::fromBin(EndianIStream& eis) {
+		return PartId(eis.readString());	
 	}
 
 } // End namespace asdm

@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CPositionMethod::version() {
 	return PositionMethodMod::version;
 	}
@@ -119,5 +118,25 @@ string CPositionMethod::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'PositionMethod'.";
 	return oss.str();
+}
+
+namespace PositionMethodMod {
+	std::ostream & operator << ( std::ostream & out, const PositionMethod& value) {
+		out << CPositionMethod::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , PositionMethod& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CPositionMethod::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

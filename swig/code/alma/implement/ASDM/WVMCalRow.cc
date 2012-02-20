@@ -63,6 +63,7 @@ using asdm::AntennaRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::WVMCalRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -189,10 +193,8 @@ namespace asdm {
 		x->refTemp.length(refTemp.size());
 		for (unsigned int i = 0; i < refTemp.size(); ++i) {
 			
-				
-			x->refTemp[i] = refTemp.at(i);
-	 			
-	 		
+			x->refTemp[i] = refTemp.at(i).toIDLTemperature();
+			
 	 	}
 			
 		
@@ -306,7 +308,7 @@ namespace asdm {
 		
 			
 		pathCoeff .clear();
-		vector<double> v_aux_pathCoeff;
+		vector<float> v_aux_pathCoeff;
 		for (unsigned int i = 0; i < x.pathCoeff.length(); ++i) {
 			v_aux_pathCoeff.clear();
 			for (unsigned int j = 0; j < x.pathCoeff[0].length(); ++j) {
@@ -328,8 +330,8 @@ namespace asdm {
 		refTemp .clear();
 		for (unsigned int i = 0; i <x.refTemp.length(); ++i) {
 			
-			refTemp.push_back(x.refTemp[i]);
-  			
+			refTemp.push_back(Temperature (x.refTemp[i]));
+			
 		}
 			
   		
@@ -526,7 +528,7 @@ namespace asdm {
   		
 			
 					
-	  	setPathCoeff(Parser::get2DDouble("pathCoeff","WVMCal",rowDoc));
+	  	setPathCoeff(Parser::get2DFloat("pathCoeff","WVMCal",rowDoc));
 	  			
 	  		
 		
@@ -536,7 +538,7 @@ namespace asdm {
   		
 			
 					
-	  	setRefTemp(Parser::get1DDouble("refTemp","WVMCal",rowDoc));
+	  	setRefTemp(Parser::get1DTemperature("refTemp","WVMCal",rowDoc));
 	  			
 	  		
 		
@@ -600,7 +602,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(wvrMethod);
+			eoss.writeString(CWVRMethod::name(wvrMethod));
+			/* eoss.writeInt(wvrMethod); */
 				
 		
 	
@@ -640,7 +643,7 @@ namespace asdm {
 		for (unsigned int i = 0; i < pathCoeff.size(); i++) 
 			for (unsigned int j = 0;  j < pathCoeff.at(0).size(); j++) 
 							 
-				eoss.writeDouble(pathCoeff.at(i).at(j));
+				eoss.writeFloat(pathCoeff.at(i).at(j));
 				
 	
 						
@@ -650,15 +653,7 @@ namespace asdm {
 	
 	
 		
-		
-			
-		eoss.writeInt((int) refTemp.size());
-		for (unsigned int i = 0; i < refTemp.size(); i++)
-				
-			eoss.writeDouble(refTemp.at(i));
-				
-				
-						
+	Temperature::toBin(refTemp, eoss);
 		
 	
 
@@ -667,87 +662,87 @@ namespace asdm {
 	
 	}
 	
-void WVMCalRow::antennaIdFromBin(EndianISStream& eiss) {
+void WVMCalRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void WVMCalRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void WVMCalRow::timeIntervalFromBin(EndianISStream& eiss) {
+void WVMCalRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void WVMCalRow::wvrMethodFromBin(EndianISStream& eiss) {
+void WVMCalRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void WVMCalRow::wvrMethodFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		wvrMethod = CWVRMethod::from_int(eiss.readInt());
+		wvrMethod = CWVRMethod::literal(eis.readString());
 			
 		
 	
 	
 }
-void WVMCalRow::polyFreqLimitsFromBin(EndianISStream& eiss) {
+void WVMCalRow::polyFreqLimitsFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	polyFreqLimits = Frequency::from1DBin(eiss);	
+	polyFreqLimits = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void WVMCalRow::numChanFromBin(EndianISStream& eiss) {
+void WVMCalRow::numChanFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numChan =  eiss.readInt();
-			
-		
-	
-	
-}
-void WVMCalRow::numPolyFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numPoly =  eiss.readInt();
+		numChan =  eis.readInt();
 			
 		
 	
 	
 }
-void WVMCalRow::pathCoeffFromBin(EndianISStream& eiss) {
+void WVMCalRow::numPolyFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numPoly =  eis.readInt();
+			
+		
+	
+	
+}
+void WVMCalRow::pathCoeffFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -756,14 +751,14 @@ void WVMCalRow::pathCoeffFromBin(EndianISStream& eiss) {
 	
 		pathCoeff.clear();
 		
-		unsigned int pathCoeffDim1 = eiss.readInt();
-		unsigned int pathCoeffDim2 = eiss.readInt();
-		vector <double> pathCoeffAux1;
+		unsigned int pathCoeffDim1 = eis.readInt();
+		unsigned int pathCoeffDim2 = eis.readInt();
+		vector <float> pathCoeffAux1;
 		for (unsigned int i = 0; i < pathCoeffDim1; i++) {
 			pathCoeffAux1.clear();
 			for (unsigned int j = 0; j < pathCoeffDim2 ; j++)			
 			
-			pathCoeffAux1.push_back(eiss.readDouble());
+			pathCoeffAux1.push_back(eis.readFloat());
 			
 			pathCoeff.push_back(pathCoeffAux1);
 		}
@@ -774,20 +769,14 @@ void WVMCalRow::pathCoeffFromBin(EndianISStream& eiss) {
 	
 	
 }
-void WVMCalRow::refTempFromBin(EndianISStream& eiss) {
+void WVMCalRow::refTempFromBin(EndianIStream& eis) {
 		
 	
-	
+		
 		
 			
 	
-		refTemp.clear();
-		
-		unsigned int refTempDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < refTempDim1; i++)
-			
-			refTemp.push_back(eiss.readDouble());
-			
+	refTemp = Temperature::from1DBin(eis);	
 	
 
 		
@@ -797,23 +786,116 @@ void WVMCalRow::refTempFromBin(EndianISStream& eiss) {
 
 		
 	
-	WVMCalRow* WVMCalRow::fromBin(EndianISStream& eiss, WVMCalTable& table, const vector<string>& attributesSeq) {
+	WVMCalRow* WVMCalRow::fromBin(EndianIStream& eis, WVMCalTable& table, const vector<string>& attributesSeq) {
 		WVMCalRow* row = new  WVMCalRow(table);
 		
 		map<string, WVMCalAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "WVMCalTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "WVMCalTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void WVMCalRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void WVMCalRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void WVMCalRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an WVRMethod 
+	void WVMCalRow::wvrMethodFromText(const string & s) {
+		 
+		wvrMethod = ASDMValuesParser::parse<WVRMethod>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void WVMCalRow::polyFreqLimitsFromText(const string & s) {
+		 
+		polyFreqLimits = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void WVMCalRow::numChanFromText(const string & s) {
+		 
+		numChan = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void WVMCalRow::numPolyFromText(const string & s) {
+		 
+		numPoly = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void WVMCalRow::pathCoeffFromText(const string & s) {
+		 
+		pathCoeff = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void WVMCalRow::refTempFromText(const string & s) {
+		 
+		refTemp = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+
+		
+	
+	void WVMCalRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, WVMCalAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "WVMCalTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -984,21 +1066,21 @@ void WVMCalRow::refTempFromBin(EndianISStream& eiss) {
 	
  	/**
  	 * Get pathCoeff.
- 	 * @return pathCoeff as vector<vector<double > >
+ 	 * @return pathCoeff as vector<vector<float > >
  	 */
- 	vector<vector<double > > WVMCalRow::getPathCoeff() const {
+ 	vector<vector<float > > WVMCalRow::getPathCoeff() const {
 	
   		return pathCoeff;
  	}
 
  	/**
- 	 * Set pathCoeff with the specified vector<vector<double > >.
- 	 * @param pathCoeff The vector<vector<double > > value to which pathCoeff is to be set.
+ 	 * Set pathCoeff with the specified vector<vector<float > >.
+ 	 * @param pathCoeff The vector<vector<float > > value to which pathCoeff is to be set.
  	 
  	
  		
  	 */
- 	void WVMCalRow::setPathCoeff (vector<vector<double > > pathCoeff)  {
+ 	void WVMCalRow::setPathCoeff (vector<vector<float > > pathCoeff)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1016,21 +1098,21 @@ void WVMCalRow::refTempFromBin(EndianISStream& eiss) {
 	
  	/**
  	 * Get refTemp.
- 	 * @return refTemp as vector<double >
+ 	 * @return refTemp as vector<Temperature >
  	 */
- 	vector<double > WVMCalRow::getRefTemp() const {
+ 	vector<Temperature > WVMCalRow::getRefTemp() const {
 	
   		return refTemp;
  	}
 
  	/**
- 	 * Set refTemp with the specified vector<double >.
- 	 * @param refTemp The vector<double > value to which refTemp is to be set.
+ 	 * Set refTemp with the specified vector<Temperature >.
+ 	 * @param refTemp The vector<Temperature > value to which refTemp is to be set.
  	 
  	
  		
  	 */
- 	void WVMCalRow::setRefTemp (vector<double > refTemp)  {
+ 	void WVMCalRow::setRefTemp (vector<Temperature > refTemp)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1044,9 +1126,9 @@ void WVMCalRow::refTempFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1120,9 +1202,10 @@ void WVMCalRow::refTempFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1228,6 +1311,47 @@ wvrMethod = CWVRMethod::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &WVMCalRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &WVMCalRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &WVMCalRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["wvrMethod"] = &WVMCalRow::wvrMethodFromText;
+		 
+	
+				 
+	fromTextMethods["polyFreqLimits"] = &WVMCalRow::polyFreqLimitsFromText;
+		 
+	
+				 
+	fromTextMethods["numChan"] = &WVMCalRow::numChanFromText;
+		 
+	
+				 
+	fromTextMethods["numPoly"] = &WVMCalRow::numPolyFromText;
+		 
+	
+				 
+	fromTextMethods["pathCoeff"] = &WVMCalRow::pathCoeffFromText;
+		 
+	
+				 
+	fromTextMethods["refTemp"] = &WVMCalRow::refTempFromText;
+		 
+	
+
+		
 	}
 	
 	WVMCalRow::WVMCalRow (WVMCalTable &t, WVMCalRow &row) : table(t) {
@@ -1300,7 +1424,7 @@ wvrMethod = CWVRMethod::from_int(0);
 	}
 
 	
-	bool WVMCalRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp) {
+	bool WVMCalRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp) {
 		bool result;
 		result = true;
 		
@@ -1372,7 +1496,7 @@ wvrMethod = CWVRMethod::from_int(0);
 	
 	
 	
-	bool WVMCalRow::compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp) {
+	bool WVMCalRow::compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp) {
 		bool result;
 		result = true;
 		

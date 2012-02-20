@@ -25,7 +25,7 @@
  */
 
 #include <Temperature.h>
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Double;
 using asdm::NumberFormatException;
@@ -78,36 +78,36 @@ void Temperature::toBin(const vector< vector<vector<Temperature> > >& temp,  End
 					eoss.writeDouble(temp.at(i).at(j).at(k).value);
 }
 
-Temperature Temperature::fromBin(EndianISStream & eiss) {
-	return Temperature(eiss.readDouble());
+Temperature Temperature::fromBin(EndianIStream & eis) {
+	return Temperature(eis.readDouble());
 }
 
-vector<Temperature> Temperature::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Temperature> Temperature::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Temperature> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Temperature(eiss.readDouble()));
+		result.push_back(Temperature(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Temperature > > Temperature::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Temperature > > Temperature::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<Temperature> >result;
 	vector <Temperature> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Temperature(eiss.readDouble()));
+			aux.push_back(Temperature(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Temperature > > > Temperature::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Temperature > > > Temperature::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Temperature> > >result;
 	vector < vector<Temperature> >aux1;
 	vector <Temperature> aux2;
@@ -116,7 +116,7 @@ vector<vector<vector<Temperature > > > Temperature::from3DBin(EndianISStream & e
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Temperature(eiss.readDouble()));
+				aux2.push_back(Temperature(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

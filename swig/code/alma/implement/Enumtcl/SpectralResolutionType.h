@@ -25,10 +25,10 @@
 using namespace SpectralResolutionTypeMod;
 
 template<>
- struct enum_set_traits<SpectralResolutionType> : public enum_set_traiter<SpectralResolutionType,3,SpectralResolutionTypeMod::FULL_RESOLUTION> {};
+ struct enum_set_traits<SpectralResolutionTypeMod::SpectralResolutionType> : public enum_set_traiter<SpectralResolutionTypeMod::SpectralResolutionType,3,SpectralResolutionTypeMod::FULL_RESOLUTION> {};
 
 template<>
-class enum_map_traits<SpectralResolutionType,void> : public enum_map_traiter<SpectralResolutionType,void> {
+class enum_map_traits<SpectralResolutionTypeMod::SpectralResolutionType,void> : public enum_map_traiter<SpectralResolutionTypeMod::SpectralResolutionType,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,15 +37,15 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<SpectralResolutionType,EnumPar<void> >
+    m_.insert(pair<SpectralResolutionTypeMod::SpectralResolutionType,EnumPar<void> >
      (SpectralResolutionTypeMod::CHANNEL_AVERAGE,ep((int)SpectralResolutionTypeMod::CHANNEL_AVERAGE,"CHANNEL_AVERAGE","un-documented")));
-    m_.insert(pair<SpectralResolutionType,EnumPar<void> >
+    m_.insert(pair<SpectralResolutionTypeMod::SpectralResolutionType,EnumPar<void> >
      (SpectralResolutionTypeMod::BASEBAND_WIDE,ep((int)SpectralResolutionTypeMod::BASEBAND_WIDE,"BASEBAND_WIDE","un-documented")));
-    m_.insert(pair<SpectralResolutionType,EnumPar<void> >
+    m_.insert(pair<SpectralResolutionTypeMod::SpectralResolutionType,EnumPar<void> >
      (SpectralResolutionTypeMod::FULL_RESOLUTION,ep((int)SpectralResolutionTypeMod::FULL_RESOLUTION,"FULL_RESOLUTION","un-documented")));
     return true;
   }
-  static map<SpectralResolutionType,EnumPar<void> > m_;
+  static map<SpectralResolutionTypeMod::SpectralResolutionType,EnumPar<void> > m_;
 };
 #define _SPECTRALRESOLUTIONTYPE_HH
 #endif

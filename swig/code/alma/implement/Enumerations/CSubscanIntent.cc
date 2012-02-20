@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSubscanIntent::version() {
 	return SubscanIntentMod::version;
 	}
@@ -47,7 +46,7 @@ string CSubscanIntent::revision () {
 }
 
 unsigned int CSubscanIntent::size() {
-	return 9;
+	return 11;
 	}
 	
 	
@@ -64,6 +63,10 @@ const std::string& CSubscanIntent::sSCANNING = "SCANNING";
 const std::string& CSubscanIntent::sHOT = "HOT";
 	
 const std::string& CSubscanIntent::sAMBIENT = "AMBIENT";
+	
+const std::string& CSubscanIntent::sSIGNAL = "SIGNAL";
+	
+const std::string& CSubscanIntent::sIMAGE = "IMAGE";
 	
 const std::string& CSubscanIntent::sTEST = "TEST";
 	
@@ -85,6 +88,10 @@ const std::vector<std::string> CSubscanIntent::names() {
     enumSet.insert(enumSet.end(), CSubscanIntent::sHOT);
     
     enumSet.insert(enumSet.end(), CSubscanIntent::sAMBIENT);
+    
+    enumSet.insert(enumSet.end(), CSubscanIntent::sSIGNAL);
+    
+    enumSet.insert(enumSet.end(), CSubscanIntent::sIMAGE);
     
     enumSet.insert(enumSet.end(), CSubscanIntent::sTEST);
     
@@ -116,6 +123,12 @@ std::string CSubscanIntent::name(const SubscanIntentMod::SubscanIntent& f) {
     
     case SubscanIntentMod::AMBIENT:
       return CSubscanIntent::sAMBIENT;
+    
+    case SubscanIntentMod::SIGNAL:
+      return CSubscanIntent::sSIGNAL;
+    
+    case SubscanIntentMod::IMAGE:
+      return CSubscanIntent::sIMAGE;
     
     case SubscanIntentMod::TEST:
       return CSubscanIntent::sTEST;
@@ -156,6 +169,14 @@ SubscanIntentMod::SubscanIntent CSubscanIntent::newSubscanIntent(const std::stri
     	
     if (name == CSubscanIntent::sAMBIENT) {
         return SubscanIntentMod::AMBIENT;
+    }
+    	
+    if (name == CSubscanIntent::sSIGNAL) {
+        return SubscanIntentMod::SIGNAL;
+    }
+    	
+    if (name == CSubscanIntent::sIMAGE) {
+        return SubscanIntentMod::IMAGE;
     }
     	
     if (name == CSubscanIntent::sTEST) {
@@ -199,6 +220,14 @@ SubscanIntentMod::SubscanIntent CSubscanIntent::literal(const std::string& name)
         return SubscanIntentMod::AMBIENT;
     }
     	
+    if (name == CSubscanIntent::sSIGNAL) {
+        return SubscanIntentMod::SIGNAL;
+    }
+    	
+    if (name == CSubscanIntent::sIMAGE) {
+        return SubscanIntentMod::IMAGE;
+    }
+    	
     if (name == CSubscanIntent::sTEST) {
         return SubscanIntentMod::TEST;
     }
@@ -224,5 +253,25 @@ string CSubscanIntent::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SubscanIntent'.";
 	return oss.str();
+}
+
+namespace SubscanIntentMod {
+	std::ostream & operator << ( std::ostream & out, const SubscanIntent& value) {
+		out << CSubscanIntent::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SubscanIntent& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSubscanIntent::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

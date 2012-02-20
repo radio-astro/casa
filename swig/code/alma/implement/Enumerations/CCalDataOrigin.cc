@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CCalDataOrigin::version() {
 	return CalDataOriginMod::version;
 	}
@@ -224,5 +223,25 @@ string CCalDataOrigin::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'CalDataOrigin'.";
 	return oss.str();
+}
+
+namespace CalDataOriginMod {
+	std::ostream & operator << ( std::ostream & out, const CalDataOrigin& value) {
+		out << CCalDataOrigin::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , CalDataOrigin& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CCalDataOrigin::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

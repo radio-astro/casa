@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CStationType::version() {
 	return StationTypeMod::version;
 	}
@@ -134,5 +133,25 @@ string CStationType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'StationType'.";
 	return oss.str();
+}
+
+namespace StationTypeMod {
+	std::ostream & operator << ( std::ostream & out, const StationType& value) {
+		out << CStationType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , StationType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CStationType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

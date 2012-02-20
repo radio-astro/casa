@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CDetectorBandType::version() {
 	return DetectorBandTypeMod::version;
 	}
@@ -149,5 +148,25 @@ string CDetectorBandType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'DetectorBandType'.";
 	return oss.str();
+}
+
+namespace DetectorBandTypeMod {
+	std::ostream & operator << ( std::ostream & out, const DetectorBandType& value) {
+		out << CDetectorBandType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , DetectorBandType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CDetectorBandType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

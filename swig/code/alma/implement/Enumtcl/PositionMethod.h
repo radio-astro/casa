@@ -25,10 +25,10 @@
 using namespace PositionMethodMod;
 
 template<>
- struct enum_set_traits<PositionMethod> : public enum_set_traiter<PositionMethod,2,PositionMethodMod::PHASE_FITTING> {};
+ struct enum_set_traits<PositionMethodMod::PositionMethod> : public enum_set_traiter<PositionMethodMod::PositionMethod,2,PositionMethodMod::PHASE_FITTING> {};
 
 template<>
-class enum_map_traits<PositionMethod,void> : public enum_map_traiter<PositionMethod,void> {
+class enum_map_traits<PositionMethodMod::PositionMethod,void> : public enum_map_traiter<PositionMethodMod::PositionMethod,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,13 +37,13 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<PositionMethod,EnumPar<void> >
+    m_.insert(pair<PositionMethodMod::PositionMethod,EnumPar<void> >
      (PositionMethodMod::DELAY_FITTING,ep((int)PositionMethodMod::DELAY_FITTING,"DELAY_FITTING","un-documented")));
-    m_.insert(pair<PositionMethod,EnumPar<void> >
+    m_.insert(pair<PositionMethodMod::PositionMethod,EnumPar<void> >
      (PositionMethodMod::PHASE_FITTING,ep((int)PositionMethodMod::PHASE_FITTING,"PHASE_FITTING","un-documented")));
     return true;
   }
-  static map<PositionMethod,EnumPar<void> > m_;
+  static map<PositionMethodMod::PositionMethod,EnumPar<void> > m_;
 };
 #define _POSITIONMETHOD_HH
 #endif

@@ -37,30 +37,32 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
 
 
+	
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	
 #include <Length.h>
-using  asdm::Length;
+	
 
+	
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -73,19 +75,16 @@ using  asdm::Frequency;
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
 #include "CFocusMethod.h"
-using namespace FocusMethodMod;
 	
 
 	
@@ -96,7 +95,8 @@ using namespace FocusMethodMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
+	
+
 	
 
 	
@@ -136,14 +136,10 @@ using namespace PolarizationTypeMod;
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalFocusTableIDL;
 #endif
 
 #include <Representable.h>
@@ -163,7 +159,7 @@ class CalFocusRow;
  * Result of focus calibration performed on-line by TelCal.
  * <BR>
  
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalFocus </CAPTION>
@@ -309,6 +305,13 @@ class CalFocusRow;
  * <TD> &nbsp;a measure of the quality of the fit (one triple per receptor). </TD>
  * </TR>
 	
+ * <TR>
+ * <TD> position </TD> 
+ * <TD> vector<vector<Length > > </TD>
+ * <TD>  numReceptor, 3 </TD> 
+ * <TD> &nbsp;the absolute focus position in X,Y,Z (one triple of values per receptor). </TD>
+ * </TR>
+	
 
 
  * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
@@ -397,7 +400,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~CalFocusTable();
@@ -419,17 +422,41 @@ public:
 	/**
 	 * Return the name of this table.
 	 *
+	 * This is a instance method of the class.
+	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
+	std::string getName() const;
+	
+	/**
+	 * Return the name of this table.
+	 *
+	 * This is a static method of the class.
+	 *
+	 * @return the name of this table in a string.
+	 */
+	static std::string name() ;	
+	
+	/**
+	 * Return the version information about this table.
+	 *
+	 */
+	 std::string getVersion() const ;
 	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
+	/**
+	 * Return the default sorted list of attributes names in the binary representation of the table.
+	 *
+	 * @return a const reference to a vector of string
+	 */
+	 static const std::vector<std::string>& defaultAttributesNamesInBin();
+	 
 	/**
 	 * Return this table's Entity.
 	 */
@@ -448,7 +475,7 @@ public:
 	 * @returns a string containing the XML representation.
 	 * @throws ConversionException
 	 */
-	string toXML()  ;
+	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -457,7 +484,7 @@ public:
 	 *
 	 * @return a pointer to a CalFocusTableIDL
 	 */
-	CalFocusTableIDL *toIDL() ;
+	asdmIDL::CalFocusTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
@@ -467,7 +494,7 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalFocusTableIDL x) ;
+	void fromIDL(asdmIDL::CalFocusTableIDL x) ;
 #endif
 	
 	//
@@ -521,8 +548,10 @@ public:
 	
  	 * @param reducedChiSquared
 	
+ 	 * @param position
+	
      */
-	CalFocusRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared);
+	CalFocusRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared, vector<vector<Length > > position);
 	
 
 
@@ -572,7 +601,7 @@ public:
 	 * @return Alls rows in a vector of pointers of CalFocusRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the CalFocusTable.
 	 */
-	vector<CalFocusRow *> get() ;
+	std::vector<CalFocusRow *> get() ;
 	
 	/**
 	 * Get a const reference on the collection of rows pointers internally hold by the table.
@@ -580,7 +609,7 @@ public:
 	 * in which they have been added to the CalFocusTable.
 	 *
 	 */
-	 const vector<CalFocusRow *>& get() const ;
+	 const std::vector<CalFocusRow *>& get() const ;
 	
 
 
@@ -648,10 +677,15 @@ public:
  	 * @param offsetWasTied
  	 		
  	 * @param reducedChiSquared
+ 	 		
+ 	 * @param position
  	 		 
  	 */
-	CalFocusRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared); 
+	CalFocusRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared, vector<vector<Length > > position); 
 
+
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
 
 private:
 
@@ -670,6 +704,8 @@ private:
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML	
 	
+	std::string version ; 
+	
 	Entity entity;
 	
 
@@ -677,23 +713,29 @@ private:
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
+	static std::string itsName;
 	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
+	static std::vector<std::string> attributesNames;
 	
 	/**
-	 * A method to fill attributesNames;
+	 * The attributes names in the order in which they appear in the binary representation of the table.
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> attributesNamesInBin;
+	
 
+	/**
+	 * A method to fill attributesNames and attributesNamesInBin;
+	 */
+	static bool initAttributesNames(), initAttributesNamesDone ;
+	
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
@@ -704,17 +746,33 @@ private:
 	 
 	 */
 	CalFocusRow* checkAndAdd(CalFocusRow* x) ;
+	
+	/**
+	 * Brutally append an CalFocusRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalFocusRow* x a pointer onto the CalFocusRow to be appended.
+	 */
+	 void append(CalFocusRow* x) ;
+	 
+	/**
+	 * Brutally append an CalFocusRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalFocusRow* x a pointer onto the CalFocusRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalFocusRow* x) ;
+	 
+	 
 
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private vector of CalFocusRow s.
-   vector<CalFocusRow * > privateRows;
+   std::vector<CalFocusRow * > privateRows;
    
 
 			
-	vector<CalFocusRow *> row;
+	std::vector<CalFocusRow *> row;
 
 	
 	void error() ; //throw(ConversionException);
@@ -726,14 +784,19 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string& xmlDoc) ;
+	void fromXML(std::string& xmlDoc) ;
 		
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
+
 	/**
 	  * Private methods involved during the build of this table out of the content
 	  * of file(s) containing an external representation of a CalFocus table.
 	  */
-	void setFromMIMEFile(const string& directory);
-	void setFromXMLFile(const string& directory);
+	void setFromMIMEFile(const std::string& directory);
+	/*
+	void openMIMEFile(const std::string& directory);
+	*/
+	void setFromXMLFile(const std::string& directory);
 	
 		 /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -742,7 +805,7 @@ private:
 	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
 	 * 
 	 */
-	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
   
 	
    /** 
@@ -751,12 +814,12 @@ private:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);
+	 void setFromMIME(const std::string & mimeMsg);
 	
 	/**
 	  * Private methods involved during the export of this table into disk file(s).
 	  */
-	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
 	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
@@ -767,7 +830,7 @@ private:
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
-	  void toFile(string directory);
+	  void toFile(std::string directory);
 	  
 	  /**
 	   * Load the table in memory if necessary.
@@ -789,7 +852,7 @@ private:
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);	
+	 void setFromFile(const std::string& directory);	
  
 };
 

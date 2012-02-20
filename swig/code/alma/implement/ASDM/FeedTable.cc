@@ -49,8 +49,11 @@ using asdm::FeedRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string FeedTable::tableName = "Feed";
-	const vector<string> FeedTable::attributesNames = initAttributesNames();
-		
+	string FeedTable::itsName = "Feed";
+	vector<string> FeedTable::attributesNames; 
+	vector<string> FeedTable::attributesNamesInBin; 
+	bool FeedTable::initAttributesNamesDone = FeedTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -145,14 +151,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FeedTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string FeedTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> FeedTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool FeedTable::initAttributesNames() {
 
 		attributesNames.push_back("antennaId");
 
@@ -184,15 +196,46 @@ namespace asdm {
 
 		attributesNames.push_back("position");
 
-		attributesNames.push_back("beamId");
 
-		return attributesNames;
+    
+    	 
+    	attributesNamesInBin.push_back("antennaId") ; 
+    	 
+    	attributesNamesInBin.push_back("spectralWindowId") ; 
+    	 
+    	attributesNamesInBin.push_back("timeInterval") ; 
+    	 
+    	attributesNamesInBin.push_back("feedId") ; 
+    	 
+    	attributesNamesInBin.push_back("numReceptor") ; 
+    	 
+    	attributesNamesInBin.push_back("beamOffset") ; 
+    	 
+    	attributesNamesInBin.push_back("focusReference") ; 
+    	 
+    	attributesNamesInBin.push_back("polarizationTypes") ; 
+    	 
+    	attributesNamesInBin.push_back("polResponse") ; 
+    	 
+    	attributesNamesInBin.push_back("receptorAngle") ; 
+    	 
+    	attributesNamesInBin.push_back("receiverId") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("feedNum") ; 
+    	 
+    	attributesNamesInBin.push_back("illumOffset") ; 
+    	 
+    	attributesNamesInBin.push_back("position") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& FeedTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& FeedTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -387,15 +430,20 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 			if (insertionId >= (int) context[k].size()) context[k].resize(insertionId+1);
 			return insertByStartTime(x, context[k][insertionId]);
 	}
+	
 		
 	
-
+		
+	void FeedTable::addWithoutCheckingUnique(FeedRow * x) {
+		FeedRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -481,6 +529,16 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 	}
 		
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void FeedTable::append(FeedRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -612,6 +670,9 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FeedTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -645,7 +706,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
+		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/3/FeedTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -664,8 +725,31 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 	}
 
 	
-	void FeedTable::fromXML(string& xmlDoc)  {
-		Parser xml(xmlDoc);
+	string FeedTable::getVersion() const {
+		return version;
+	}
+	
+
+	void FeedTable::fromXML(string& tableInXML)  {
+		//
+		// Look for a version information in the schemaVersion of the XML
+		//
+		xmlDoc *doc;
+		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+		if ( doc == NULL )
+			throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Feed");
+		
+		xmlNode* root_element = xmlDocGetRootElement(doc);
+   		if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      		throw ConversionException("Failed to retrieve the root element in the DOM structure.", "Feed");
+      		
+      	xmlChar * propValue = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	if ( propValue != 0 ) {
+      		version = string( (const char*) propValue);
+      		xmlFree(propValue);   		
+      	}
+      		     							
+		Parser xml(tableInXML);
 		if (!xml.isStr("<FeedTable")) 
 			error();
 		// cout << "Parsing a FeedTable" << endl;
@@ -685,12 +769,17 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FeedRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"FeedTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -699,10 +788,27 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 			catch (...) {
 				// cout << "Unexpected error in FeedTable::checkAndAdd called from FeedTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FeedTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FeedTable::addWithoutCheckingUnique called from FeedTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</FeedTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -722,7 +828,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
+		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/3/FeedTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FeedTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -743,7 +849,6 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		oss << "<feedNum/>\n"; 
 		oss << "<illumOffset/>\n"; 
 		oss << "<position/>\n"; 
-		oss << "<beamId/>\n"; 
 		oss << "</Attributes>\n";		
 		oss << "</FeedTable>\n";
 
@@ -857,38 +962,42 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("antennaId") ; 
-     
-    attributesSeq.push_back("spectralWindowId") ; 
-     
-    attributesSeq.push_back("timeInterval") ; 
-     
-    attributesSeq.push_back("feedId") ; 
-     
-    attributesSeq.push_back("numReceptor") ; 
-     
-    attributesSeq.push_back("beamOffset") ; 
-     
-    attributesSeq.push_back("focusReference") ; 
-     
-    attributesSeq.push_back("polarizationTypes") ; 
-     
-    attributesSeq.push_back("polResponse") ; 
-     
-    attributesSeq.push_back("receptorAngle") ; 
-     
-    attributesSeq.push_back("receiverId") ; 
     
-     
+    	 
+    attributesSeq.push_back("antennaId") ; 
+    	 
+    attributesSeq.push_back("spectralWindowId") ; 
+    	 
+    attributesSeq.push_back("timeInterval") ; 
+    	 
+    attributesSeq.push_back("feedId") ; 
+    	 
+    attributesSeq.push_back("numReceptor") ; 
+    	 
+    attributesSeq.push_back("beamOffset") ; 
+    	 
+    attributesSeq.push_back("focusReference") ; 
+    	 
+    attributesSeq.push_back("polarizationTypes") ; 
+    	 
+    attributesSeq.push_back("polResponse") ; 
+    	 
+    attributesSeq.push_back("receptorAngle") ; 
+    	 
+    attributesSeq.push_back("receiverId") ; 
+    	
+    	 
     attributesSeq.push_back("feedNum") ; 
-     
+    	 
     attributesSeq.push_back("illumOffset") ; 
-     
+    	 
     attributesSeq.push_back("position") ; 
+    	
      
-    attributesSeq.push_back("beamId") ; 
-              
+    
+    
+    // And decide that it has version == "2"
+    version = "2";         
      }
     else if (string("FeedTable").compare((const char*) root_element->name) == 0) {
       // It's a new (and correct) MIME file for tables.
@@ -897,6 +1006,12 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
       //
       xmlNode* bulkStoreRef = 0;
       xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
       
       // Skip the two first children (Entity and ContainerEntity).
       bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
@@ -936,13 +1051,13 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -954,22 +1069,48 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	FeedRow* aRow = FeedRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				FeedRow* aRow = FeedRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Feed");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Feed");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			FeedRow* aRow = FeedRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
+	}
+	
+	void FeedTable::setUnknownAttributeBinaryReader(const string& attributeName, BinaryAttributeReaderFunctor* barFctr) {
+		//
+		// Is this attribute really unknown ?
+		//
+		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+			if ((*iter).compare(attributeName) == 0) 
+				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Feed"); 
+		}
+		
+		// Ok then register the functor to activate when an unknown attribute is met during the reading of a binary table?
+		unknownAttributes2Functors[attributeName] = barFctr;
+	}
+	
+	BinaryAttributeReaderFunctor* FeedTable::getUnknownAttributeBinaryReader(const string& attributeName) const {
+		map<string, BinaryAttributeReaderFunctor*>::const_iterator iter = unknownAttributes2Functors.find(attributeName);
+		return (iter == unknownAttributes2Functors.end()) ? 0 : iter->second;
 	}
 
 	
@@ -1037,12 +1178,140 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
     
     setFromMIME(ss.str());
   }	
+/* 
+  void FeedTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/Feed.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "Feed");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "Feed");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "Feed");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Feed");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Feed");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("FeedTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/FeedTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "Feed");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/FeedTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "Feed");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/FeedTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "Feed");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/FeedTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "Feed");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void FeedTable::setFromXMLFile(const string& directory) {
     string tablePath ;
     
     tablePath = directory + "/Feed.xml";
+    
+    /*
     ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
     if (!tablefile.is_open()) { 
       throw ConversionException("Could not open file " + tablePath, "Feed");
@@ -1062,10 +1331,21 @@ void FeedTable::setFromXMLFile(const string& directory) {
 
     // Let's make a string out of the stringstream content and empty the stringstream.
     string xmlDocument = ss.str(); ss.str("");
-
+	
     // Let's make a very primitive check to decide
     // whether the XML content represents the table
     // or refers to it via a <BulkStoreRef element.
+    */
+    
+    string xmlDocument;
+    try {
+    	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
+    }
+    catch (XSLTransformerException e) {
+    	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Feed");
+    }
+    
     if (xmlDocument.find("<BulkStoreRef") != string::npos)
       setFromMIMEFile(directory);
     else

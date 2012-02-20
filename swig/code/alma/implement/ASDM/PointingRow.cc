@@ -63,6 +63,7 @@ using asdm::AntennaRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::PointingRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -321,6 +325,28 @@ namespace asdm {
 			x->sampledTimeInterval[i] = sampledTimeInterval.at(i).toIDLArrayTimeInterval();
 			
 	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->atmosphericCorrectionExists = atmosphericCorrectionExists;
+		
+		
+			
+		x->atmosphericCorrection.length(atmosphericCorrection.size());
+		for (unsigned int i = 0; i < atmosphericCorrection.size(); i++) {
+			x->atmosphericCorrection[i].length(atmosphericCorrection.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < atmosphericCorrection.size() ; i++)
+			for (unsigned int j = 0; j < atmosphericCorrection.at(i).size(); j++)
+					
+				x->atmosphericCorrection[i][j]= atmosphericCorrection.at(i).at(j).toIDLAngle();
+									
+		
 			
 		
 	
@@ -606,6 +632,31 @@ namespace asdm {
 	
 
 	
+		
+		atmosphericCorrectionExists = x.atmosphericCorrectionExists;
+		if (x.atmosphericCorrectionExists) {
+		
+		
+			
+		atmosphericCorrection .clear();
+		vector<Angle> v_aux_atmosphericCorrection;
+		for (unsigned int i = 0; i < x.atmosphericCorrection.length(); ++i) {
+			v_aux_atmosphericCorrection.clear();
+			for (unsigned int j = 0; j < x.atmosphericCorrection[0].length(); ++j) {
+				
+				v_aux_atmosphericCorrection.push_back(Angle (x.atmosphericCorrection[i][j]));
+				
+  			}
+  			atmosphericCorrection.push_back(v_aux_atmosphericCorrection);			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
 	
 		
 	
@@ -784,6 +835,18 @@ namespace asdm {
 		
 		
 		Parser::toXML(sampledTimeInterval, "sampledTimeInterval", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (atmosphericCorrectionExists) {
+		
+		
+		Parser::toXML(atmosphericCorrection, "atmosphericCorrection", buf);
 		
 		
 		}
@@ -979,6 +1042,18 @@ namespace asdm {
 	
 
 	
+  		
+        if (row.isStr("<atmosphericCorrection>")) {
+			
+								
+	  		setAtmosphericCorrection(Parser::get2DAngle("atmosphericCorrection","Pointing",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
 	
 		
 	
@@ -1141,7 +1216,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(sourceOffsetReferenceCode);
+			eoss.writeString(CDirectionReferenceCode::name(sourceOffsetReferenceCode));
+			/* eoss.writeInt(sourceOffsetReferenceCode); */
 				
 		
 	
@@ -1172,165 +1248,177 @@ namespace asdm {
 
 	}
 
+	eoss.writeBoolean(atmosphericCorrectionExists);
+	if (atmosphericCorrectionExists) {
+	
+	
+	
+		
+	Angle::toBin(atmosphericCorrection, eoss);
+		
+	
+
+	}
+
 	}
 	
-void PointingRow::antennaIdFromBin(EndianISStream& eiss) {
+void PointingRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void PointingRow::timeIntervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void PointingRow::numSampleFromBin(EndianISStream& eiss) {
+void PointingRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void PointingRow::numSampleFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numSample =  eiss.readInt();
+		numSample =  eis.readInt();
 			
 		
 	
 	
 }
-void PointingRow::encoderFromBin(EndianISStream& eiss) {
+void PointingRow::encoderFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	encoder = Angle::from2DBin(eiss);		
+	encoder = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void PointingRow::pointingTrackingFromBin(EndianISStream& eiss) {
+void PointingRow::pointingTrackingFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		pointingTracking =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void PointingRow::usePolynomialsFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		usePolynomials =  eiss.readBoolean();
+		pointingTracking =  eis.readBoolean();
 			
 		
 	
 	
 }
-void PointingRow::timeOriginFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeOrigin =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void PointingRow::numTermFromBin(EndianISStream& eiss) {
+void PointingRow::usePolynomialsFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numTerm =  eiss.readInt();
+		usePolynomials =  eis.readBoolean();
 			
 		
 	
 	
 }
-void PointingRow::pointingDirectionFromBin(EndianISStream& eiss) {
+void PointingRow::timeOriginFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeOrigin =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void PointingRow::numTermFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numTerm =  eis.readInt();
+			
+		
+	
+	
+}
+void PointingRow::pointingDirectionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	pointingDirection = Angle::from2DBin(eiss);		
+	pointingDirection = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void PointingRow::targetFromBin(EndianISStream& eiss) {
+void PointingRow::targetFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	target = Angle::from2DBin(eiss);		
+	target = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void PointingRow::offsetFromBin(EndianISStream& eiss) {
+void PointingRow::offsetFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	offset = Angle::from2DBin(eiss);		
+	offset = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void PointingRow::pointingModelIdFromBin(EndianISStream& eiss) {
+void PointingRow::pointingModelIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		pointingModelId =  eiss.readInt();
+		pointingModelId =  eis.readInt();
 			
 		
 	
 	
 }
 
-void PointingRow::overTheTopFromBin(EndianISStream& eiss) {
+void PointingRow::overTheTopFromBin(EndianIStream& eis) {
 		
-	overTheTopExists = eiss.readBoolean();
+	overTheTopExists = eis.readBoolean();
 	if (overTheTopExists) {
 		
 	
 	
 		
 			
-		overTheTop =  eiss.readBoolean();
+		overTheTop =  eis.readBoolean();
 			
 		
 	
@@ -1338,9 +1426,9 @@ void PointingRow::overTheTopFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void PointingRow::sourceOffsetFromBin(EndianISStream& eiss) {
+void PointingRow::sourceOffsetFromBin(EndianIStream& eis) {
 		
-	sourceOffsetExists = eiss.readBoolean();
+	sourceOffsetExists = eis.readBoolean();
 	if (sourceOffsetExists) {
 		
 	
@@ -1348,7 +1436,7 @@ void PointingRow::sourceOffsetFromBin(EndianISStream& eiss) {
 		
 			
 	
-	sourceOffset = Angle::from2DBin(eiss);		
+	sourceOffset = Angle::from2DBin(eis);		
 	
 
 		
@@ -1357,16 +1445,16 @@ void PointingRow::sourceOffsetFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void PointingRow::sourceOffsetReferenceCodeFromBin(EndianISStream& eiss) {
+void PointingRow::sourceOffsetReferenceCodeFromBin(EndianIStream& eis) {
 		
-	sourceOffsetReferenceCodeExists = eiss.readBoolean();
+	sourceOffsetReferenceCodeExists = eis.readBoolean();
 	if (sourceOffsetReferenceCodeExists) {
 		
 	
 	
 		
 			
-		sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		sourceOffsetReferenceCode = CDirectionReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -1374,24 +1462,24 @@ void PointingRow::sourceOffsetReferenceCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void PointingRow::sourceOffsetEquinoxFromBin(EndianISStream& eiss) {
+void PointingRow::sourceOffsetEquinoxFromBin(EndianIStream& eis) {
 		
-	sourceOffsetEquinoxExists = eiss.readBoolean();
+	sourceOffsetEquinoxExists = eis.readBoolean();
 	if (sourceOffsetEquinoxExists) {
 		
 	
 		
 		
-		sourceOffsetEquinox =  ArrayTime::fromBin(eiss);
+		sourceOffsetEquinox =  ArrayTime::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void PointingRow::sampledTimeIntervalFromBin(EndianISStream& eiss) {
+void PointingRow::sampledTimeIntervalFromBin(EndianIStream& eis) {
 		
-	sampledTimeIntervalExists = eiss.readBoolean();
+	sampledTimeIntervalExists = eis.readBoolean();
 	if (sampledTimeIntervalExists) {
 		
 	
@@ -1399,7 +1487,26 @@ void PointingRow::sampledTimeIntervalFromBin(EndianISStream& eiss) {
 		
 			
 	
-	sampledTimeInterval = ArrayTimeInterval::from1DBin(eiss);	
+	sampledTimeInterval = ArrayTimeInterval::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void PointingRow::atmosphericCorrectionFromBin(EndianIStream& eis) {
+		
+	atmosphericCorrectionExists = eis.readBoolean();
+	if (atmosphericCorrectionExists) {
+		
+	
+		
+		
+			
+	
+	atmosphericCorrection = Angle::from2DBin(eis);		
 	
 
 		
@@ -1410,23 +1517,194 @@ void PointingRow::sampledTimeIntervalFromBin(EndianISStream& eiss) {
 }
 	
 	
-	PointingRow* PointingRow::fromBin(EndianISStream& eiss, PointingTable& table, const vector<string>& attributesSeq) {
+	PointingRow* PointingRow::fromBin(EndianIStream& eis, PointingTable& table, const vector<string>& attributesSeq) {
 		PointingRow* row = new  PointingRow(table);
 		
 		map<string, PointingAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PointingTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PointingTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void PointingRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void PointingRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PointingRow::numSampleFromText(const string & s) {
+		 
+		numSample = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void PointingRow::encoderFromText(const string & s) {
+		 
+		encoder = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void PointingRow::pointingTrackingFromText(const string & s) {
+		 
+		pointingTracking = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void PointingRow::usePolynomialsFromText(const string & s) {
+		 
+		usePolynomials = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void PointingRow::timeOriginFromText(const string & s) {
+		 
+		timeOrigin = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PointingRow::numTermFromText(const string & s) {
+		 
+		numTerm = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void PointingRow::pointingDirectionFromText(const string & s) {
+		 
+		pointingDirection = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void PointingRow::targetFromText(const string & s) {
+		 
+		target = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void PointingRow::offsetFromText(const string & s) {
+		 
+		offset = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PointingRow::pointingModelIdFromText(const string & s) {
+		 
+		pointingModelId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an boolean 
+	void PointingRow::overTheTopFromText(const string & s) {
+		overTheTopExists = true;
+		 
+		overTheTop = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void PointingRow::sourceOffsetFromText(const string & s) {
+		sourceOffsetExists = true;
+		 
+		sourceOffset = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an DirectionReferenceCode 
+	void PointingRow::sourceOffsetReferenceCodeFromText(const string & s) {
+		sourceOffsetReferenceCodeExists = true;
+		 
+		sourceOffsetReferenceCode = ASDMValuesParser::parse<DirectionReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void PointingRow::sourceOffsetEquinoxFromText(const string & s) {
+		sourceOffsetEquinoxExists = true;
+		 
+		sourceOffsetEquinox = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void PointingRow::sampledTimeIntervalFromText(const string & s) {
+		sampledTimeIntervalExists = true;
+		 
+		sampledTimeInterval = ASDMValuesParser::parse1D<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void PointingRow::atmosphericCorrectionFromText(const string & s) {
+		atmosphericCorrectionExists = true;
+		 
+		atmosphericCorrection = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	
+	void PointingRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, PointingAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "PointingTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1988,9 +2266,56 @@ void PointingRow::sampledTimeIntervalFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	/**
+	 * The attribute atmosphericCorrection is optional. Return true if this attribute exists.
+	 * @return true if and only if the atmosphericCorrection attribute exists. 
+	 */
+	bool PointingRow::isAtmosphericCorrectionExists() const {
+		return atmosphericCorrectionExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get atmosphericCorrection, which is optional.
+ 	 * @return atmosphericCorrection as vector<vector<Angle > >
+ 	 * @throw IllegalAccessException If atmosphericCorrection does not exist.
+ 	 */
+ 	vector<vector<Angle > > PointingRow::getAtmosphericCorrection() const  {
+		if (!atmosphericCorrectionExists) {
+			throw IllegalAccessException("atmosphericCorrection", "Pointing");
+		}
+	
+  		return atmosphericCorrection;
+ 	}
+
+ 	/**
+ 	 * Set atmosphericCorrection with the specified vector<vector<Angle > >.
+ 	 * @param atmosphericCorrection The vector<vector<Angle > > value to which atmosphericCorrection is to be set.
+ 	 
+ 	
+ 	 */
+ 	void PointingRow::setAtmosphericCorrection (vector<vector<Angle > > atmosphericCorrection) {
+	
+ 		this->atmosphericCorrection = atmosphericCorrection;
+	
+		atmosphericCorrectionExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark atmosphericCorrection, which is an optional field, as non-existent.
+	 */
+	void PointingRow::clearAtmosphericCorrection () {
+		atmosphericCorrectionExists = false;
+	}
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2060,9 +2385,10 @@ void PointingRow::sampledTimeIntervalFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2156,6 +2482,10 @@ void PointingRow::sampledTimeIntervalFromBin(EndianISStream& eiss) {
 	
 
 	
+		atmosphericCorrectionExists = false;
+	
+
+	
 	
 
 	
@@ -2197,6 +2527,8 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
+
+	
 	
 	 fromBinMethods["antennaId"] = &PointingRow::antennaIdFromBin; 
 	 fromBinMethods["timeInterval"] = &PointingRow::timeIntervalFromBin; 
@@ -2217,7 +2549,85 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 	 fromBinMethods["sourceOffsetReferenceCode"] = &PointingRow::sourceOffsetReferenceCodeFromBin; 
 	 fromBinMethods["sourceOffsetEquinox"] = &PointingRow::sourceOffsetEquinoxFromBin; 
 	 fromBinMethods["sampledTimeInterval"] = &PointingRow::sampledTimeIntervalFromBin; 
+	 fromBinMethods["atmosphericCorrection"] = &PointingRow::atmosphericCorrectionFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &PointingRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &PointingRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["numSample"] = &PointingRow::numSampleFromText;
+		 
+	
+				 
+	fromTextMethods["encoder"] = &PointingRow::encoderFromText;
+		 
+	
+				 
+	fromTextMethods["pointingTracking"] = &PointingRow::pointingTrackingFromText;
+		 
+	
+				 
+	fromTextMethods["usePolynomials"] = &PointingRow::usePolynomialsFromText;
+		 
+	
+				 
+	fromTextMethods["timeOrigin"] = &PointingRow::timeOriginFromText;
+		 
+	
+				 
+	fromTextMethods["numTerm"] = &PointingRow::numTermFromText;
+		 
+	
+				 
+	fromTextMethods["pointingDirection"] = &PointingRow::pointingDirectionFromText;
+		 
+	
+				 
+	fromTextMethods["target"] = &PointingRow::targetFromText;
+		 
+	
+				 
+	fromTextMethods["offset"] = &PointingRow::offsetFromText;
+		 
+	
+				 
+	fromTextMethods["pointingModelId"] = &PointingRow::pointingModelIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["overTheTop"] = &PointingRow::overTheTopFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceOffset"] = &PointingRow::sourceOffsetFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceOffsetReferenceCode"] = &PointingRow::sourceOffsetReferenceCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceOffsetEquinox"] = &PointingRow::sourceOffsetEquinoxFromText;
+		 	
+	 
+				
+	fromTextMethods["sampledTimeInterval"] = &PointingRow::sampledTimeIntervalFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericCorrection"] = &PointingRow::atmosphericCorrectionFromText;
+		 	
+		
 	}
 	
 	PointingRow::PointingRow (PointingTable &t, PointingRow &row) : table(t) {
@@ -2264,6 +2674,10 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 
 	
 		sampledTimeIntervalExists = false;
+	
+
+	
+		atmosphericCorrectionExists = false;
 	
 
 	
@@ -2340,6 +2754,13 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 		else
 			sampledTimeIntervalExists = false;
 		
+		if (row.atmosphericCorrectionExists) {
+			atmosphericCorrection = row.atmosphericCorrection;		
+			atmosphericCorrectionExists = true;
+		}
+		else
+			atmosphericCorrectionExists = false;
+		
 		}
 		
 		 fromBinMethods["antennaId"] = &PointingRow::antennaIdFromBin; 
@@ -2361,6 +2782,7 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 		 fromBinMethods["sourceOffsetReferenceCode"] = &PointingRow::sourceOffsetReferenceCodeFromBin; 
 		 fromBinMethods["sourceOffsetEquinox"] = &PointingRow::sourceOffsetEquinoxFromBin; 
 		 fromBinMethods["sampledTimeInterval"] = &PointingRow::sampledTimeIntervalFromBin; 
+		 fromBinMethods["atmosphericCorrection"] = &PointingRow::atmosphericCorrectionFromBin; 
 			
 	}
 
@@ -2564,6 +2986,7 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 		result["sourceOffsetReferenceCode"] = &PointingRow::sourceOffsetReferenceCodeFromBin;
 		result["sourceOffsetEquinox"] = &PointingRow::sourceOffsetEquinoxFromBin;
 		result["sampledTimeInterval"] = &PointingRow::sampledTimeIntervalFromBin;
+		result["atmosphericCorrection"] = &PointingRow::atmosphericCorrectionFromBin;
 			
 		
 		return result;	

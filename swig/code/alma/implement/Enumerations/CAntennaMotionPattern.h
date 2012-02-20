@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace AntennaMotionPatternMod
   //! AntennaMotionPattern.
   //! Motion pattern of antenna , e.g. in a calibration scan.
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AntennaMotionPattern
@@ -83,7 +84,10 @@ namespace AntennaMotionPatternMod
 } 
 #endif
 
-using namespace std;
+namespace AntennaMotionPatternMod {
+	std::ostream & operator << ( std::ostream & out, const AntennaMotionPattern& value);
+	std::istream & operator >> ( std::istream & in , AntennaMotionPattern& value );
+}
 
 /** 
   * A helper class for the enumeration AntennaMotionPattern.
@@ -127,7 +131,7 @@ class CAntennaMotionPattern {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -181,8 +185,8 @@ class CAntennaMotionPattern {
     CAntennaMotionPattern(const CAntennaMotionPattern&);
     CAntennaMotionPattern& operator=(const CAntennaMotionPattern&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

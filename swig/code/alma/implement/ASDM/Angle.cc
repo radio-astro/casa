@@ -25,7 +25,7 @@
  */
 
 #include <Angle.h>
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Double;
 using asdm::NumberFormatException;
@@ -77,37 +77,37 @@ void Angle::toBin(const vector< vector<vector<Angle> > >& angle,  EndianOSStream
 					eoss.writeDouble(angle.at(i).at(j).at(k).value);
 }
 
-Angle Angle::fromBin(EndianISStream & eiss) {
-	return Angle(eiss.readDouble());
+Angle Angle::fromBin(EndianIStream & eis) {
+	return Angle(eis.readDouble());
 }
 
-vector<Angle> Angle::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Angle> Angle::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Angle> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Angle(eiss.readDouble()));
+		result.push_back(Angle(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Angle > > Angle::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Angle > > Angle::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 
 	vector< vector<Angle> >result;
 	vector <Angle> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Angle(eiss.readDouble()));
+			aux.push_back(Angle(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Angle > > > Angle::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Angle > > > Angle::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Angle> > >result;
 	vector < vector<Angle> >aux1;
 	vector <Angle> aux2;
@@ -116,7 +116,7 @@ vector<vector<vector<Angle > > > Angle::from3DBin(EndianISStream & eiss) {
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Angle(eiss.readDouble()));
+				aux2.push_back(Angle(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace DetectorBandTypeMod
   //! DetectorBandType.
   //!  [ASDM.SquareLawDetector] Types of detectors
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum DetectorBandType
@@ -73,7 +74,10 @@ namespace DetectorBandTypeMod
 } 
 #endif
 
-using namespace std;
+namespace DetectorBandTypeMod {
+	std::ostream & operator << ( std::ostream & out, const DetectorBandType& value);
+	std::istream & operator >> ( std::istream & in , DetectorBandType& value );
+}
 
 /** 
   * A helper class for the enumeration DetectorBandType.
@@ -107,7 +111,7 @@ class CDetectorBandType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -161,8 +165,8 @@ class CDetectorBandType {
     CDetectorBandType(const CDetectorBandType&);
     CDetectorBandType& operator=(const CDetectorBandType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

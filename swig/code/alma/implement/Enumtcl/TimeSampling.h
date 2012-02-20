@@ -25,10 +25,10 @@
 using namespace TimeSamplingMod;
 
 template<>
- struct enum_set_traits<TimeSampling> : public enum_set_traiter<TimeSampling,2,TimeSamplingMod::INTEGRATION> {};
+ struct enum_set_traits<TimeSamplingMod::TimeSampling> : public enum_set_traiter<TimeSamplingMod::TimeSampling,2,TimeSamplingMod::INTEGRATION> {};
 
 template<>
-class enum_map_traits<TimeSampling,void> : public enum_map_traiter<TimeSampling,void> {
+class enum_map_traits<TimeSamplingMod::TimeSampling,void> : public enum_map_traiter<TimeSamplingMod::TimeSampling,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,13 +37,13 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<TimeSampling,EnumPar<void> >
+    m_.insert(pair<TimeSamplingMod::TimeSampling,EnumPar<void> >
      (TimeSamplingMod::SUBINTEGRATION,ep((int)TimeSamplingMod::SUBINTEGRATION,"SUBINTEGRATION","un-documented")));
-    m_.insert(pair<TimeSampling,EnumPar<void> >
+    m_.insert(pair<TimeSamplingMod::TimeSampling,EnumPar<void> >
      (TimeSamplingMod::INTEGRATION,ep((int)TimeSamplingMod::INTEGRATION,"INTEGRATION","un-documented")));
     return true;
   }
-  static map<TimeSampling,EnumPar<void> > m_;
+  static map<TimeSamplingMod::TimeSampling,EnumPar<void> > m_;
 };
 #define _TIMESAMPLING_HH
 #endif

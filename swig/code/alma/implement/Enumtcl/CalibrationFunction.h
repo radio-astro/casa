@@ -25,10 +25,10 @@
 using namespace CalibrationFunctionMod;
 
 template<>
- struct enum_set_traits<CalibrationFunction> : public enum_set_traiter<CalibrationFunction,3,CalibrationFunctionMod::UNSPECIFIED> {};
+ struct enum_set_traits<CalibrationFunctionMod::CalibrationFunction> : public enum_set_traiter<CalibrationFunctionMod::CalibrationFunction,3,CalibrationFunctionMod::UNSPECIFIED> {};
 
 template<>
-class enum_map_traits<CalibrationFunction,void> : public enum_map_traiter<CalibrationFunction,void> {
+class enum_map_traits<CalibrationFunctionMod::CalibrationFunction,void> : public enum_map_traiter<CalibrationFunctionMod::CalibrationFunction,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,15 +37,15 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<CalibrationFunction,EnumPar<void> >
+    m_.insert(pair<CalibrationFunctionMod::CalibrationFunction,EnumPar<void> >
      (CalibrationFunctionMod::FIRST,ep((int)CalibrationFunctionMod::FIRST,"FIRST","un-documented")));
-    m_.insert(pair<CalibrationFunction,EnumPar<void> >
+    m_.insert(pair<CalibrationFunctionMod::CalibrationFunction,EnumPar<void> >
      (CalibrationFunctionMod::LAST,ep((int)CalibrationFunctionMod::LAST,"LAST","un-documented")));
-    m_.insert(pair<CalibrationFunction,EnumPar<void> >
+    m_.insert(pair<CalibrationFunctionMod::CalibrationFunction,EnumPar<void> >
      (CalibrationFunctionMod::UNSPECIFIED,ep((int)CalibrationFunctionMod::UNSPECIFIED,"UNSPECIFIED","un-documented")));
     return true;
   }
-  static map<CalibrationFunction,EnumPar<void> > m_;
+  static map<CalibrationFunctionMod::CalibrationFunction,EnumPar<void> > m_;
 };
 #define _CALIBRATIONFUNCTION_HH
 #endif

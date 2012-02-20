@@ -51,6 +51,7 @@ using asdm::HolographyTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::HolographyRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -389,7 +393,8 @@ namespace asdm {
 		eoss.writeInt((int) type.size());
 		for (unsigned int i = 0; i < type.size(); i++)
 				
-			eoss.writeInt(type.at(i));
+			eoss.writeString(CHolographyChannelType::name(type.at(i)));
+			/* eoss.writeInt(type.at(i)); */
 				
 				
 						
@@ -401,49 +406,49 @@ namespace asdm {
 	
 	}
 	
-void HolographyRow::holographyIdFromBin(EndianISStream& eiss) {
+void HolographyRow::holographyIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		holographyId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void HolographyRow::distanceFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		distance =  Length::fromBin(eiss);
+		holographyId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void HolographyRow::focusFromBin(EndianISStream& eiss) {
+void HolographyRow::distanceFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		focus =  Length::fromBin(eiss);
+		distance =  Length::fromBin(eis);
 		
 	
 	
 }
-void HolographyRow::numCorrFromBin(EndianISStream& eiss) {
+void HolographyRow::focusFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		focus =  Length::fromBin(eis);
+		
+	
+	
+}
+void HolographyRow::numCorrFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numCorr =  eiss.readInt();
+		numCorr =  eis.readInt();
 			
 		
 	
 	
 }
-void HolographyRow::typeFromBin(EndianISStream& eiss) {
+void HolographyRow::typeFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -452,10 +457,10 @@ void HolographyRow::typeFromBin(EndianISStream& eiss) {
 	
 		type.clear();
 		
-		unsigned int typeDim1 = eiss.readInt();
+		unsigned int typeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < typeDim1; i++)
 			
-			type.push_back(CHolographyChannelType::from_int(eiss.readInt()));
+			type.push_back(CHolographyChannelType::literal(eis.readString()));
 			
 	
 
@@ -466,23 +471,84 @@ void HolographyRow::typeFromBin(EndianISStream& eiss) {
 
 		
 	
-	HolographyRow* HolographyRow::fromBin(EndianISStream& eiss, HolographyTable& table, const vector<string>& attributesSeq) {
+	HolographyRow* HolographyRow::fromBin(EndianIStream& eis, HolographyTable& table, const vector<string>& attributesSeq) {
 		HolographyRow* row = new  HolographyRow(table);
 		
 		map<string, HolographyAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "HolographyTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "HolographyTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void HolographyRow::holographyIdFromText(const string & s) {
+		 
+		holographyId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void HolographyRow::distanceFromText(const string & s) {
+		 
+		distance = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void HolographyRow::focusFromText(const string & s) {
+		 
+		focus = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void HolographyRow::numCorrFromText(const string & s) {
+		 
+		numCorr = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an HolographyChannelType 
+	void HolographyRow::typeFromText(const string & s) {
+		 
+		type = ASDMValuesParser::parse1D<HolographyChannelType>(s);
+		
+	}
+	
+
+		
+	
+	void HolographyRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, HolographyAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "HolographyTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -649,13 +715,14 @@ void HolographyRow::typeFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -704,6 +771,31 @@ void HolographyRow::typeFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["holographyId"] = &HolographyRow::holographyIdFromText;
+		 
+	
+				 
+	fromTextMethods["distance"] = &HolographyRow::distanceFromText;
+		 
+	
+				 
+	fromTextMethods["focus"] = &HolographyRow::focusFromText;
+		 
+	
+				 
+	fromTextMethods["numCorr"] = &HolographyRow::numCorrFromText;
+		 
+	
+				 
+	fromTextMethods["type"] = &HolographyRow::typeFromText;
+		 
+	
+
+		
 	}
 	
 	HolographyRow::HolographyRow (HolographyTable &t, HolographyRow &row) : table(t) {

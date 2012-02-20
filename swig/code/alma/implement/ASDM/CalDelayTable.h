@@ -37,24 +37,24 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
 
 
+	
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -63,17 +63,14 @@ using  asdm::Frequency;
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
 #include "CBasebandName.h"
-using namespace BasebandNameMod;
 	
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -90,7 +87,8 @@ using namespace ReceiverBandMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
+	
+
 	
 
 	
@@ -107,7 +105,6 @@ using namespace PolarizationTypeMod;
 
 	
 #include "CReceiverSideband.h"
-using namespace ReceiverSidebandMod;
 	
 
 
@@ -117,14 +114,10 @@ using namespace ReceiverSidebandMod;
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalDelayTableIDL;
 #endif
 
 #include <Representable.h>
@@ -144,7 +137,7 @@ class CalDelayRow;
  * Result of delay offset calibration performed on-line by  TelCal. This calibration determines the delay offsets to be added in the  correlator to compensate for residual cable delays.   Delays are entered in seconds but represented as double precision floating point numbers.
  * <BR>
  
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDelay </CAPTION>
@@ -266,6 +259,13 @@ class CalDelayRow;
  * <TD> &nbsp;measure of the quality of the fit (one value per receptor). </TD>
  * </TR>
 	
+ * <TR>
+ * <TD> appliedDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the delay that was applied (one value per receptor). </TD>
+ * </TR>
+	
 
 
  * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
@@ -326,7 +326,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~CalDelayTable();
@@ -348,17 +348,41 @@ public:
 	/**
 	 * Return the name of this table.
 	 *
+	 * This is a instance method of the class.
+	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
+	std::string getName() const;
+	
+	/**
+	 * Return the name of this table.
+	 *
+	 * This is a static method of the class.
+	 *
+	 * @return the name of this table in a string.
+	 */
+	static std::string name() ;	
+	
+	/**
+	 * Return the version information about this table.
+	 *
+	 */
+	 std::string getVersion() const ;
 	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
+	/**
+	 * Return the default sorted list of attributes names in the binary representation of the table.
+	 *
+	 * @return a const reference to a vector of string
+	 */
+	 static const std::vector<std::string>& defaultAttributesNamesInBin();
+	 
 	/**
 	 * Return this table's Entity.
 	 */
@@ -377,7 +401,7 @@ public:
 	 * @returns a string containing the XML representation.
 	 * @throws ConversionException
 	 */
-	string toXML()  ;
+	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -386,7 +410,7 @@ public:
 	 *
 	 * @return a pointer to a CalDelayTableIDL
 	 */
-	CalDelayTableIDL *toIDL() ;
+	asdmIDL::CalDelayTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
@@ -396,7 +420,7 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalDelayTableIDL x) ;
+	void fromIDL(asdmIDL::CalDelayTableIDL x) ;
 #endif
 	
 	//
@@ -442,8 +466,10 @@ public:
 	
  	 * @param reducedChiSquared
 	
+ 	 * @param appliedDelay
+	
      */
-	CalDelayRow *newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared);
+	CalDelayRow *newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared, vector<double > appliedDelay);
 	
 
 
@@ -493,7 +519,7 @@ public:
 	 * @return Alls rows in a vector of pointers of CalDelayRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the CalDelayTable.
 	 */
-	vector<CalDelayRow *> get() ;
+	std::vector<CalDelayRow *> get() ;
 	
 	/**
 	 * Get a const reference on the collection of rows pointers internally hold by the table.
@@ -501,7 +527,7 @@ public:
 	 * in which they have been added to the CalDelayTable.
 	 *
 	 */
-	 const vector<CalDelayRow *>& get() const ;
+	 const std::vector<CalDelayRow *>& get() const ;
 	
 
 
@@ -565,10 +591,15 @@ public:
  	 * @param polarizationTypes
  	 		
  	 * @param reducedChiSquared
+ 	 		
+ 	 * @param appliedDelay
  	 		 
  	 */
-	CalDelayRow* lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared); 
+	CalDelayRow* lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared, vector<double > appliedDelay); 
 
+
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
 
 private:
 
@@ -587,6 +618,8 @@ private:
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML	
 	
+	std::string version ; 
+	
 	Entity entity;
 	
 
@@ -594,23 +627,29 @@ private:
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
+	static std::string itsName;
 	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
+	static std::vector<std::string> attributesNames;
 	
 	/**
-	 * A method to fill attributesNames;
+	 * The attributes names in the order in which they appear in the binary representation of the table.
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> attributesNamesInBin;
+	
 
+	/**
+	 * A method to fill attributesNames and attributesNamesInBin;
+	 */
+	static bool initAttributesNames(), initAttributesNamesDone ;
+	
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
@@ -621,17 +660,33 @@ private:
 	 
 	 */
 	CalDelayRow* checkAndAdd(CalDelayRow* x) ;
+	
+	/**
+	 * Brutally append an CalDelayRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalDelayRow* x a pointer onto the CalDelayRow to be appended.
+	 */
+	 void append(CalDelayRow* x) ;
+	 
+	/**
+	 * Brutally append an CalDelayRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalDelayRow* x a pointer onto the CalDelayRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalDelayRow* x) ;
+	 
+	 
 
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private vector of CalDelayRow s.
-   vector<CalDelayRow * > privateRows;
+   std::vector<CalDelayRow * > privateRows;
    
 
 			
-	vector<CalDelayRow *> row;
+	std::vector<CalDelayRow *> row;
 
 	
 	void error() ; //throw(ConversionException);
@@ -643,14 +698,19 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string& xmlDoc) ;
+	void fromXML(std::string& xmlDoc) ;
 		
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
+
 	/**
 	  * Private methods involved during the build of this table out of the content
 	  * of file(s) containing an external representation of a CalDelay table.
 	  */
-	void setFromMIMEFile(const string& directory);
-	void setFromXMLFile(const string& directory);
+	void setFromMIMEFile(const std::string& directory);
+	/*
+	void openMIMEFile(const std::string& directory);
+	*/
+	void setFromXMLFile(const std::string& directory);
 	
 		 /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -659,7 +719,7 @@ private:
 	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
 	 * 
 	 */
-	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
   
 	
    /** 
@@ -668,12 +728,12 @@ private:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);
+	 void setFromMIME(const std::string & mimeMsg);
 	
 	/**
 	  * Private methods involved during the export of this table into disk file(s).
 	  */
-	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
 	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
@@ -684,7 +744,7 @@ private:
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
-	  void toFile(string directory);
+	  void toFile(std::string directory);
 	  
 	  /**
 	   * Load the table in memory if necessary.
@@ -706,7 +766,7 @@ private:
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);	
+	 void setFromFile(const std::string& directory);	
  
 };
 

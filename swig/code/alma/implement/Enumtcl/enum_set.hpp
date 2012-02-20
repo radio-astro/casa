@@ -5,6 +5,19 @@
 
 using namespace std;
 
+template<typename type>
+struct enum_set_traits
+{
+  // friend struct enum_set_traiter; // commented out so it will build on llvm
+  typedef type enum_type;
+  static const bool         is_specialized = false;
+  static const type         first = type();
+  static const type         last = type();
+  static const int          step = 0;
+  static const std::size_t  count = 0;
+  static const unsigned int maxset;
+};
+
 template< typename type, unsigned int maxset_value,
 	  type last_value, type first_value = type(), 
 	  int step_value = 1>
@@ -19,18 +32,6 @@ struct enum_set_traiter
   static const unsigned int maxset = maxset_value;
 };
 
-template<typename type>
-struct enum_set_traits
-{
-  //friend struct enum_set_traiter;
-  typedef type enum_type;
-  static const bool         is_specialized = false;
-  static const type         first = type();
-  static const type         last = type();
-  static const int          step = 0;
-  static const std::size_t  count = 0;
-  static const unsigned int maxset;
-};
 
 template<typename enum_type,
 	 typename set_traits=enum_set_traits<enum_type> >

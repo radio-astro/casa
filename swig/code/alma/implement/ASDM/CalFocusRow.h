@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalFocusRowIDL;
 #endif
 
 
@@ -51,23 +47,29 @@ using asdmIDL::CalFocusRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -80,19 +82,16 @@ using  asdm::Frequency;
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
 #include "CFocusMethod.h"
-using namespace FocusMethodMod;
 	
 
 	
@@ -103,7 +102,8 @@ using namespace FocusMethodMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
+	
+
 	
 
 	
@@ -142,9 +142,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalFocus.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -160,16 +162,19 @@ class CalReductionRow;
 	
 
 class CalFocusRow;
-typedef void (CalFocusRow::*CalFocusAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalFocusRow::*CalFocusAttributeFromBin) (EndianIStream& eis);
+typedef void (CalFocusRow::*CalFocusAttributeFromText) (const string& s);
 
 /**
  * The CalFocusRow class is a row of a CalFocusTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalFocusRow {
 friend class asdm::CalFocusTable;
+friend class asdm::RowTransformer<CalFocusRow>;
+//friend class asdm::TableStreamReader<CalFocusTable, CalFocusRow>;
 
 public:
 
@@ -668,6 +673,36 @@ public:
  			
  	 */
  	void setReducedChiSquared (vector<vector<double > > reducedChiSquared);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute position
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get position.
+ 	 * @return position as vector<vector<Length > >
+ 	 */
+ 	vector<vector<Length > > getPosition() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set position with the specified vector<vector<Length > >.
+ 	 * @param position The vector<vector<Length > > value to which position is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPosition (vector<vector<Length > > position);
   		
 	
 	
@@ -1229,8 +1264,10 @@ public:
 	    
 	 * @param reducedChiSquared
 	    
+	 * @param position
+	    
 	 */ 
-	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared);
+	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared, vector<vector<Length > > position);
 	
 	
 
@@ -1267,8 +1304,10 @@ public:
 	    
 	 * @param reducedChiSquared
 	    
+	 * @param position
+	    
 	 */ 
-	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared, vector<vector<Length > > position); 
 		 
 	
 	/**
@@ -1286,7 +1325,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalFocusRowIDL struct.
 	 */
-	CalFocusRowIDL *toIDL() const;
+	asdmIDL::CalFocusRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1295,14 +1334,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalFocusRowIDL x) ;
+	void setFromIDL (asdmIDL::CalFocusRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1310,7 +1349,55 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalFocusAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void ambientTemperatureFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void focusMethodFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void pointingDirectionFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void wereFixedFromBin( EndianIStream& eis);
+void offsetFromBin( EndianIStream& eis);
+void offsetErrorFromBin( EndianIStream& eis);
+void offsetWasTiedFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+
+void polarizationsAveragedFromBin( EndianIStream& eis);
+void focusCurveWidthFromBin( EndianIStream& eis);
+void focusCurveWidthErrorFromBin( EndianIStream& eis);
+void focusCurveWasFixedFromBin( EndianIStream& eis);
+void offIntensityFromBin( EndianIStream& eis);
+void offIntensityErrorFromBin( EndianIStream& eis);
+void offIntensityWasFixedFromBin( EndianIStream& eis);
+void peakIntensityFromBin( EndianIStream& eis);
+void peakIntensityErrorFromBin( EndianIStream& eis);
+void peakIntensityWasFixedFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalFocusTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalFocusRow* fromBin(EndianIStream& eis, CalFocusTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1536,6 +1623,17 @@ private:
  	
 
 	
+	// ===> Attribute position
+	
+	
+
+	vector<vector<Length > > position;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute polarizationsAveraged, which is optional
 	
 	
@@ -1710,40 +1808,139 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalFocusAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void ambientTemperatureFromBin( EndianISStream& eiss);
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void focusMethodFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void pointingDirectionFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void wereFixedFromBin( EndianISStream& eiss);
-void offsetFromBin( EndianISStream& eiss);
-void offsetErrorFromBin( EndianISStream& eiss);
-void offsetWasTiedFromBin( EndianISStream& eiss);
-void reducedChiSquaredFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalFocusAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void ambientTemperatureFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void focusMethodFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void pointingDirectionFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void wereFixedFromBin( EndianIStream& eis);
+void offsetFromBin( EndianIStream& eis);
+void offsetErrorFromBin( EndianIStream& eis);
+void offsetWasTiedFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
 
-void polarizationsAveragedFromBin( EndianISStream& eiss);
-void focusCurveWidthFromBin( EndianISStream& eiss);
-void focusCurveWidthErrorFromBin( EndianISStream& eiss);
-void focusCurveWasFixedFromBin( EndianISStream& eiss);
-void offIntensityFromBin( EndianISStream& eiss);
-void offIntensityErrorFromBin( EndianISStream& eiss);
-void offIntensityWasFixedFromBin( EndianISStream& eiss);
-void peakIntensityFromBin( EndianISStream& eiss);
-void peakIntensityErrorFromBin( EndianISStream& eiss);
-void peakIntensityWasFixedFromBin( EndianISStream& eiss);
+void polarizationsAveragedFromBin( EndianIStream& eis);
+void focusCurveWidthFromBin( EndianIStream& eis);
+void focusCurveWidthErrorFromBin( EndianIStream& eis);
+void focusCurveWasFixedFromBin( EndianIStream& eis);
+void offIntensityFromBin( EndianIStream& eis);
+void offIntensityErrorFromBin( EndianIStream& eis);
+void offIntensityWasFixedFromBin( EndianIStream& eis);
+void peakIntensityFromBin( EndianIStream& eis);
+void peakIntensityErrorFromBin( EndianIStream& eis);
+void peakIntensityWasFixedFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalFocusAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void ambientTemperatureFromText (const string & s);
+	
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void focusMethodFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void pointingDirectionFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void wereFixedFromText (const string & s);
+	
+	
+void offsetFromText (const string & s);
+	
+	
+void offsetErrorFromText (const string & s);
+	
+	
+void offsetWasTiedFromText (const string & s);
+	
+	
+void reducedChiSquaredFromText (const string & s);
+	
+	
+void positionFromText (const string & s);
+	
+
+	
+void polarizationsAveragedFromText (const string & s);
+	
+	
+void focusCurveWidthFromText (const string & s);
+	
+	
+void focusCurveWidthErrorFromText (const string & s);
+	
+	
+void focusCurveWasFixedFromText (const string & s);
+	
+	
+void offIntensityFromText (const string & s);
+	
+	
+void offIntensityErrorFromText (const string & s);
+	
+	
+void offIntensityWasFixedFromText (const string & s);
+	
+	
+void peakIntensityFromText (const string & s);
+	
+	
+void peakIntensityErrorFromText (const string & s);
+	
+	
+void peakIntensityWasFixedFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1752,14 +1949,14 @@ void peakIntensityWasFixedFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalFocusTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalFocusRow* fromBin(EndianISStream& eiss, CalFocusTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalFocusRow* fromBin(EndianIStream& eis, CalFocusTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -49,8 +49,11 @@ using asdm::DelayModelRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string DelayModelTable::tableName = "DelayModel";
-	const vector<string> DelayModelTable::attributesNames = initAttributesNames();
-		
+	string DelayModelTable::itsName = "DelayModel";
+	vector<string> DelayModelTable::attributesNames; 
+	vector<string> DelayModelTable::attributesNamesInBin; 
+	bool DelayModelTable::initAttributesNamesDone = DelayModelTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -87,6 +93,8 @@ namespace asdm {
 
 	
 		key.push_back("antennaId");
+	
+		key.push_back("spectralWindowId");
 	
 		key.push_back("timeInterval");
 	
@@ -141,46 +149,159 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string DelayModelTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string DelayModelTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> DelayModelTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool DelayModelTable::initAttributesNames() {
 
 		attributesNames.push_back("antennaId");
+
+		attributesNames.push_back("spectralWindowId");
 
 		attributesNames.push_back("timeInterval");
 
 
-		attributesNames.push_back("timeOrigin");
-
 		attributesNames.push_back("numPoly");
-
-		attributesNames.push_back("atmDryDelay");
-
-		attributesNames.push_back("atmWetDelay");
-
-		attributesNames.push_back("clockDelay");
-
-		attributesNames.push_back("geomDelay");
-
-
-		attributesNames.push_back("dispDelay");
-
-		attributesNames.push_back("groupDelay");
 
 		attributesNames.push_back("phaseDelay");
 
-		return attributesNames;
+		attributesNames.push_back("phaseDelayRate");
+
+		attributesNames.push_back("groupDelay");
+
+		attributesNames.push_back("groupDelayRate");
+
+		attributesNames.push_back("fieldId");
+
+
+		attributesNames.push_back("timeOrigin");
+
+		attributesNames.push_back("atmosphericGroupDelay");
+
+		attributesNames.push_back("atmosphericGroupDelayRate");
+
+		attributesNames.push_back("geometricDelay");
+
+		attributesNames.push_back("geometricDelayRate");
+
+		attributesNames.push_back("numLO");
+
+		attributesNames.push_back("LOOffset");
+
+		attributesNames.push_back("LOOffsetRate");
+
+		attributesNames.push_back("dispersiveDelay");
+
+		attributesNames.push_back("dispersiveDelayRate");
+
+		attributesNames.push_back("atmosphericDryDelay");
+
+		attributesNames.push_back("atmosphericWetDelay");
+
+		attributesNames.push_back("padDelay");
+
+		attributesNames.push_back("antennaDelay");
+
+		attributesNames.push_back("numReceptor");
+
+		attributesNames.push_back("polarizationType");
+
+		attributesNames.push_back("electronicDelay");
+
+		attributesNames.push_back("electronicDelayRate");
+
+		attributesNames.push_back("receiverDelay");
+
+		attributesNames.push_back("IFDelay");
+
+		attributesNames.push_back("LODelay");
+
+		attributesNames.push_back("crossPolarizationDelay");
+
+
+    
+    	 
+    	attributesNamesInBin.push_back("antennaId") ; 
+    	 
+    	attributesNamesInBin.push_back("spectralWindowId") ; 
+    	 
+    	attributesNamesInBin.push_back("timeInterval") ; 
+    	 
+    	attributesNamesInBin.push_back("numPoly") ; 
+    	 
+    	attributesNamesInBin.push_back("phaseDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("phaseDelayRate") ; 
+    	 
+    	attributesNamesInBin.push_back("groupDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("groupDelayRate") ; 
+    	 
+    	attributesNamesInBin.push_back("fieldId") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("timeOrigin") ; 
+    	 
+    	attributesNamesInBin.push_back("atmosphericGroupDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("atmosphericGroupDelayRate") ; 
+    	 
+    	attributesNamesInBin.push_back("geometricDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("geometricDelayRate") ; 
+    	 
+    	attributesNamesInBin.push_back("numLO") ; 
+    	 
+    	attributesNamesInBin.push_back("LOOffset") ; 
+    	 
+    	attributesNamesInBin.push_back("LOOffsetRate") ; 
+    	 
+    	attributesNamesInBin.push_back("dispersiveDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("dispersiveDelayRate") ; 
+    	 
+    	attributesNamesInBin.push_back("atmosphericDryDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("atmosphericWetDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("padDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("antennaDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("numReceptor") ; 
+    	 
+    	attributesNamesInBin.push_back("polarizationType") ; 
+    	 
+    	attributesNamesInBin.push_back("electronicDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("electronicDelayRate") ; 
+    	 
+    	attributesNamesInBin.push_back("receiverDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("IFDelay") ; 
+    	 
+    	attributesNamesInBin.push_back("LODelay") ; 
+    	 
+    	attributesNamesInBin.push_back("crossPolarizationDelay") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& DelayModelTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& DelayModelTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -214,39 +335,43 @@ namespace asdm {
 	
  	 * @param antennaId 
 	
- 	 * @param timeInterval 
+ 	 * @param spectralWindowId 
 	
- 	 * @param timeOrigin 
+ 	 * @param timeInterval 
 	
  	 * @param numPoly 
 	
- 	 * @param atmDryDelay 
+ 	 * @param phaseDelay 
 	
- 	 * @param atmWetDelay 
+ 	 * @param phaseDelayRate 
 	
- 	 * @param clockDelay 
+ 	 * @param groupDelay 
 	
- 	 * @param geomDelay 
+ 	 * @param groupDelayRate 
+	
+ 	 * @param fieldId 
 	
      */
-	DelayModelRow* DelayModelTable::newRow(Tag antennaId, ArrayTimeInterval timeInterval, ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay){
+	DelayModelRow* DelayModelTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, vector<double > phaseDelay, vector<double > phaseDelayRate, vector<double > groupDelay, vector<double > groupDelayRate, Tag fieldId){
 		DelayModelRow *row = new DelayModelRow(*this);
 			
 		row->setAntennaId(antennaId);
 			
-		row->setTimeInterval(timeInterval);
+		row->setSpectralWindowId(spectralWindowId);
 			
-		row->setTimeOrigin(timeOrigin);
+		row->setTimeInterval(timeInterval);
 			
 		row->setNumPoly(numPoly);
 			
-		row->setAtmDryDelay(atmDryDelay);
+		row->setPhaseDelay(phaseDelay);
 			
-		row->setAtmWetDelay(atmWetDelay);
+		row->setPhaseDelayRate(phaseDelayRate);
 			
-		row->setClockDelay(clockDelay);
+		row->setGroupDelay(groupDelay);
 			
-		row->setGeomDelay(geomDelay);
+		row->setGroupDelayRate(groupDelayRate);
+			
+		row->setFieldId(fieldId);
 	
 		return row;		
 	}	
@@ -269,11 +394,13 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string DelayModelTable::Key(Tag antennaId) {
+	 string DelayModelTable::Key(Tag antennaId, Tag spectralWindowId) {
 	 	ostringstream ostrstr;
 	 		ostrstr  
 			
 				<<  antennaId.toString()  << "_"
+			
+				<<  spectralWindowId.toString()  << "_"
 			
 			;
 		return ostrstr.str();	 	
@@ -290,6 +417,8 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	 	 */
 		string k = Key(
 						x->getAntennaId()
+					   ,
+						x->getSpectralWindowId()
 					   );
  
 		if (context.find(k) == context.end()) { 
@@ -300,17 +429,21 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
 	
-
+		
+	void DelayModelTable::addWithoutCheckingUnique(DelayModelRow * x) {
+		DelayModelRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -324,6 +457,8 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	DelayModelRow*  DelayModelTable::checkAndAdd(DelayModelRow* x) {
 		string keystr = Key( 
 						x->getAntennaId() 
+					   , 
+						x->getSpectralWindowId() 
 					   ); 
 		if (context.find(keystr) == context.end()) {
 			vector<DelayModelRow *> v;
@@ -337,6 +472,16 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 					
 		
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void DelayModelTable::append(DelayModelRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -361,9 +506,12 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	
 	
 		
-	 vector<DelayModelRow *> *DelayModelTable::getByContext(Tag antennaId) {
+	 vector<DelayModelRow *> *DelayModelTable::getByContext(Tag antennaId, Tag spectralWindowId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "DelayModelTable");
+
 	 	checkPresenceInMemory();
-	  	string k = Key(antennaId);
+	  	string k = Key(antennaId, spectralWindowId);
  
 	    if (context.find(k) == context.end()) return 0;
  	   else return &(context[k]);		
@@ -386,9 +534,9 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
  */
  				
 				
-	DelayModelRow* DelayModelTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
+	DelayModelRow* DelayModelTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {
 		checkPresenceInMemory();
- 		string keystr = Key(antennaId);
+ 		string keystr = Key(antennaId, spectralWindowId);
  		vector<DelayModelRow *> row;
  		
  		if ( context.find(keystr)  == context.end()) return 0;
@@ -452,6 +600,9 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::DelayModelTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -485,7 +636,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/2/DelayModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
+		buf.append("<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/3/DelayModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -504,8 +655,31 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	}
 
 	
-	void DelayModelTable::fromXML(string& xmlDoc)  {
-		Parser xml(xmlDoc);
+	string DelayModelTable::getVersion() const {
+		return version;
+	}
+	
+
+	void DelayModelTable::fromXML(string& tableInXML)  {
+		//
+		// Look for a version information in the schemaVersion of the XML
+		//
+		xmlDoc *doc;
+		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+		if ( doc == NULL )
+			throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "DelayModel");
+		
+		xmlNode* root_element = xmlDocGetRootElement(doc);
+   		if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      		throw ConversionException("Failed to retrieve the root element in the DOM structure.", "DelayModel");
+      		
+      	xmlChar * propValue = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	if ( propValue != 0 ) {
+      		version = string( (const char*) propValue);
+      		xmlFree(propValue);   		
+      	}
+      		     							
+		Parser xml(tableInXML);
 		if (!xml.isStr("<DelayModelTable")) 
 			error();
 		// cout << "Parsing a DelayModelTable" << endl;
@@ -525,12 +699,17 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		DelayModelRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"DelayModelTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -539,10 +718,27 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in DelayModelTable::checkAndAdd called from DelayModelTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"DelayModelTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in DelayModelTable::addWithoutCheckingUnique called from DelayModelTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</DelayModelTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -562,24 +758,44 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/2/DelayModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
+		oss << "<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/3/DelayModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='DelayModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
 		oss << "<Attributes>\n";
 
 		oss << "<antennaId/>\n"; 
+		oss << "<spectralWindowId/>\n"; 
 		oss << "<timeInterval/>\n"; 
-		oss << "<timeOrigin/>\n"; 
 		oss << "<numPoly/>\n"; 
-		oss << "<atmDryDelay/>\n"; 
-		oss << "<atmWetDelay/>\n"; 
-		oss << "<clockDelay/>\n"; 
-		oss << "<geomDelay/>\n"; 
-
-		oss << "<dispDelay/>\n"; 
-		oss << "<groupDelay/>\n"; 
 		oss << "<phaseDelay/>\n"; 
+		oss << "<phaseDelayRate/>\n"; 
+		oss << "<groupDelay/>\n"; 
+		oss << "<groupDelayRate/>\n"; 
+		oss << "<fieldId/>\n"; 
+
+		oss << "<timeOrigin/>\n"; 
+		oss << "<atmosphericGroupDelay/>\n"; 
+		oss << "<atmosphericGroupDelayRate/>\n"; 
+		oss << "<geometricDelay/>\n"; 
+		oss << "<geometricDelayRate/>\n"; 
+		oss << "<numLO/>\n"; 
+		oss << "<LOOffset/>\n"; 
+		oss << "<LOOffsetRate/>\n"; 
+		oss << "<dispersiveDelay/>\n"; 
+		oss << "<dispersiveDelayRate/>\n"; 
+		oss << "<atmosphericDryDelay/>\n"; 
+		oss << "<atmosphericWetDelay/>\n"; 
+		oss << "<padDelay/>\n"; 
+		oss << "<antennaDelay/>\n"; 
+		oss << "<numReceptor/>\n"; 
+		oss << "<polarizationType/>\n"; 
+		oss << "<electronicDelay/>\n"; 
+		oss << "<electronicDelayRate/>\n"; 
+		oss << "<receiverDelay/>\n"; 
+		oss << "<IFDelay/>\n"; 
+		oss << "<LODelay/>\n"; 
+		oss << "<crossPolarizationDelay/>\n"; 
 		oss << "</Attributes>\n";		
 		oss << "</DelayModelTable>\n";
 
@@ -693,30 +909,76 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("antennaId") ; 
-     
-    attributesSeq.push_back("timeInterval") ; 
-     
-    attributesSeq.push_back("timeOrigin") ; 
-     
-    attributesSeq.push_back("numPoly") ; 
-     
-    attributesSeq.push_back("atmDryDelay") ; 
-     
-    attributesSeq.push_back("atmWetDelay") ; 
-     
-    attributesSeq.push_back("clockDelay") ; 
-     
-    attributesSeq.push_back("geomDelay") ; 
     
-     
-    attributesSeq.push_back("dispDelay") ; 
-     
-    attributesSeq.push_back("groupDelay") ; 
-     
+    	 
+    attributesSeq.push_back("antennaId") ; 
+    	 
+    attributesSeq.push_back("spectralWindowId") ; 
+    	 
+    attributesSeq.push_back("timeInterval") ; 
+    	 
+    attributesSeq.push_back("numPoly") ; 
+    	 
     attributesSeq.push_back("phaseDelay") ; 
-              
+    	 
+    attributesSeq.push_back("phaseDelayRate") ; 
+    	 
+    attributesSeq.push_back("groupDelay") ; 
+    	 
+    attributesSeq.push_back("groupDelayRate") ; 
+    	 
+    attributesSeq.push_back("fieldId") ; 
+    	
+    	 
+    attributesSeq.push_back("timeOrigin") ; 
+    	 
+    attributesSeq.push_back("atmosphericGroupDelay") ; 
+    	 
+    attributesSeq.push_back("atmosphericGroupDelayRate") ; 
+    	 
+    attributesSeq.push_back("geometricDelay") ; 
+    	 
+    attributesSeq.push_back("geometricDelayRate") ; 
+    	 
+    attributesSeq.push_back("numLO") ; 
+    	 
+    attributesSeq.push_back("LOOffset") ; 
+    	 
+    attributesSeq.push_back("LOOffsetRate") ; 
+    	 
+    attributesSeq.push_back("dispersiveDelay") ; 
+    	 
+    attributesSeq.push_back("dispersiveDelayRate") ; 
+    	 
+    attributesSeq.push_back("atmosphericDryDelay") ; 
+    	 
+    attributesSeq.push_back("atmosphericWetDelay") ; 
+    	 
+    attributesSeq.push_back("padDelay") ; 
+    	 
+    attributesSeq.push_back("antennaDelay") ; 
+    	 
+    attributesSeq.push_back("numReceptor") ; 
+    	 
+    attributesSeq.push_back("polarizationType") ; 
+    	 
+    attributesSeq.push_back("electronicDelay") ; 
+    	 
+    attributesSeq.push_back("electronicDelayRate") ; 
+    	 
+    attributesSeq.push_back("receiverDelay") ; 
+    	 
+    attributesSeq.push_back("IFDelay") ; 
+    	 
+    attributesSeq.push_back("LODelay") ; 
+    	 
+    attributesSeq.push_back("crossPolarizationDelay") ; 
+    	
+     
+    
+    
+    // And decide that it has version == "2"
+    version = "2";         
      }
     else if (string("DelayModelTable").compare((const char*) root_element->name) == 0) {
       // It's a new (and correct) MIME file for tables.
@@ -725,6 +987,12 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
       //
       xmlNode* bulkStoreRef = 0;
       xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
       
       // Skip the two first children (Entity and ContainerEntity).
       bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
@@ -764,13 +1032,13 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -782,22 +1050,48 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	DelayModelRow* aRow = DelayModelRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				DelayModelRow* aRow = DelayModelRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "DelayModel");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "DelayModel");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			DelayModelRow* aRow = DelayModelRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
+	}
+	
+	void DelayModelTable::setUnknownAttributeBinaryReader(const string& attributeName, BinaryAttributeReaderFunctor* barFctr) {
+		//
+		// Is this attribute really unknown ?
+		//
+		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+			if ((*iter).compare(attributeName) == 0) 
+				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "DelayModel"); 
+		}
+		
+		// Ok then register the functor to activate when an unknown attribute is met during the reading of a binary table?
+		unknownAttributes2Functors[attributeName] = barFctr;
+	}
+	
+	BinaryAttributeReaderFunctor* DelayModelTable::getUnknownAttributeBinaryReader(const string& attributeName) const {
+		map<string, BinaryAttributeReaderFunctor*>::const_iterator iter = unknownAttributes2Functors.find(attributeName);
+		return (iter == unknownAttributes2Functors.end()) ? 0 : iter->second;
 	}
 
 	
@@ -865,12 +1159,140 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
     
     setFromMIME(ss.str());
   }	
+/* 
+  void DelayModelTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/DelayModel.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "DelayModel");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "DelayModel");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "DelayModel");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "DelayModel");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "DelayModel");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("DelayModelTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/DelayModelTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "DelayModel");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/DelayModelTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "DelayModel");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/DelayModelTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "DelayModel");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/DelayModelTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "DelayModel");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void DelayModelTable::setFromXMLFile(const string& directory) {
     string tablePath ;
     
     tablePath = directory + "/DelayModel.xml";
+    
+    /*
     ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
     if (!tablefile.is_open()) { 
       throw ConversionException("Could not open file " + tablePath, "DelayModel");
@@ -890,10 +1312,21 @@ void DelayModelTable::setFromXMLFile(const string& directory) {
 
     // Let's make a string out of the stringstream content and empty the stringstream.
     string xmlDocument = ss.str(); ss.str("");
-
+	
     // Let's make a very primitive check to decide
     // whether the XML content represents the table
     // or refers to it via a <BulkStoreRef element.
+    */
+    
+    string xmlDocument;
+    try {
+    	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
+    }
+    catch (XSLTransformerException e) {
+    	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "DelayModel");
+    }
+    
     if (xmlDocument.find("<BulkStoreRef") != string::npos)
       setFromMIMEFile(directory);
     else

@@ -530,20 +530,20 @@ namespace asdmbinaries {
 
 
 
-  bool SDMDataObject::aborted() {
+  bool SDMDataObject::aborted() const {
     if (isTP()) Utils::invalidCall("SDMDataObject::aborted", this);
     
     return aborted_;
   }
 
-  unsigned long long SDMDataObject::abortTime() {
+  unsigned long long SDMDataObject::abortTime() const {
     if (isTP()) Utils::invalidCall("SDMDataObject::abortTime", this);
 
     return abortTime_;
 
   }
 
-  string SDMDataObject::abortReason() {
+  string SDMDataObject::abortReason() const {
     if (isTP()) Utils::invalidCall("SDMDataObject::abortReason", this);
 
     return abortReason_;
@@ -1039,27 +1039,27 @@ namespace asdmbinaries {
 
   // SDMDataSubset:: methods
   //
-  SDMDataSubset::SDMDataSubset(SDMDataObject* owner):
-    owner_(owner),
-    time_(0),
-    interval_(0),
-    actualTimes_(0),
-    nActualTimes_(0),
-    actualDurations_(0),
-    nActualDurations_(0),
-    zeroLags_(0),
-    nZeroLags_(0),
-    flags_ (0),
-    nFlags_ (0),
-    longCrossData_(0),
-    shortCrossData_(0),
-    nCrossData_(0),
-    autoData_(0),
-    nAutoData_(0),
-    aborted_(false)
-  {
-    integrationNum_ = 0;
+  SDMDataSubset::SDMDataSubset(SDMDataObject* owner) {
+    owner_	       = owner ;
+    integrationNum_    = 0;
     subintegrationNum_ = 0;
+    time_	       = 0;
+    interval_	       = 0;
+    actualTimes_       = 0;
+    nActualTimes_      = 0;
+    actualDurations_   = 0;
+    nActualDurations_  = 0;
+    zeroLags_	       = 0;
+    nZeroLags_	       = 0;
+    flags_	       = 0;
+    nFlags_	       = 0;
+    longCrossData_     = 0;
+    shortCrossData_    = 0;
+    floatCrossData_    = 0;
+    nCrossData_	       = 0;
+    autoData_	       = 0;
+    nAutoData_	       = 0;
+    aborted_	       = false;
   }
 
 
@@ -1083,6 +1083,75 @@ namespace asdmbinaries {
     aborted_ = false;
   }
   
+  SDMDataSubset::SDMDataSubset(const SDMDataSubset& sdmDataSubset) {
+    owner_	       = sdmDataSubset.owner_ ;
+    integrationNum_    = sdmDataSubset.integrationNum_;
+    subintegrationNum_ = sdmDataSubset.subintegrationNum_;
+    ref_               = sdmDataSubset.ref_;
+    time_	       = sdmDataSubset.time_;
+    interval_	       = sdmDataSubset.interval_;
+    dataStruct_        = sdmDataSubset.dataStruct_;
+    flagsREF_          = sdmDataSubset.flagsREF_;
+    actualTimesREF_    = sdmDataSubset.actualTimesREF_;
+    actualDurationsREF_= sdmDataSubset.actualDurationsREF_;
+    zeroLagsREF_       = sdmDataSubset.zeroLagsREF_;
+    crossDataREF_      = sdmDataSubset.crossDataREF_;
+    crossDataType_     = sdmDataSubset.crossDataType_;
+    autoDataREF_       = sdmDataSubset.autoDataREF_;
+    actualTimes_       = sdmDataSubset.actualTimes_;
+    nActualTimes_      = sdmDataSubset.nActualTimes_;
+    actualDurations_   = sdmDataSubset.actualDurations_;
+    nActualDurations_  = sdmDataSubset.nActualDurations_;
+    zeroLags_	       = sdmDataSubset.zeroLags_;
+    nZeroLags_	       = sdmDataSubset.nZeroLags_;
+    flags_	       = sdmDataSubset.flags_;
+    nFlags_	       = sdmDataSubset.nFlags_;
+    longCrossData_     = sdmDataSubset.longCrossData_;
+    shortCrossData_    = sdmDataSubset.shortCrossData_;
+    floatCrossData_    = sdmDataSubset.floatCrossData_;
+    nCrossData_	       = sdmDataSubset.nCrossData_;
+    autoData_	       = sdmDataSubset.autoData_;
+    nAutoData_	       = sdmDataSubset.nAutoData_;
+    aborted_	       = sdmDataSubset.aborted_;
+    abortTime_         = sdmDataSubset.abortTime_;
+    abortReason_       = sdmDataSubset.abortReason_;
+  }
+
+  SDMDataSubset& SDMDataSubset::operator=(const SDMDataSubset& sdmDataSubset) {
+    owner_	       = sdmDataSubset.owner_ ;
+    integrationNum_    = sdmDataSubset.integrationNum_;
+    subintegrationNum_ = sdmDataSubset.subintegrationNum_;
+    ref_               = sdmDataSubset.ref_;
+    time_	       = sdmDataSubset.time_;
+    interval_	       = sdmDataSubset.interval_;
+    dataStruct_        = sdmDataSubset.dataStruct_;
+    flagsREF_          = sdmDataSubset.flagsREF_;
+    actualTimesREF_    = sdmDataSubset.actualTimesREF_;
+    actualDurationsREF_= sdmDataSubset.actualDurationsREF_;
+    zeroLagsREF_       = sdmDataSubset.zeroLagsREF_;
+    crossDataREF_      = sdmDataSubset.crossDataREF_;
+    crossDataType_     = sdmDataSubset.crossDataType_;
+    autoDataREF_       = sdmDataSubset.autoDataREF_;
+    actualTimes_       = sdmDataSubset.actualTimes_;
+    nActualTimes_      = sdmDataSubset.nActualTimes_;
+    actualDurations_   = sdmDataSubset.actualDurations_;
+    nActualDurations_  = sdmDataSubset.nActualDurations_;
+    zeroLags_	       = sdmDataSubset.zeroLags_;
+    nZeroLags_	       = sdmDataSubset.nZeroLags_;
+    flags_	       = sdmDataSubset.flags_;
+    nFlags_	       = sdmDataSubset.nFlags_;
+    longCrossData_     = sdmDataSubset.longCrossData_;
+    shortCrossData_    = sdmDataSubset.shortCrossData_;
+    floatCrossData_    = sdmDataSubset.floatCrossData_;
+    nCrossData_	       = sdmDataSubset.nCrossData_;
+    autoData_	       = sdmDataSubset.autoData_;
+    nAutoData_	       = sdmDataSubset.nAutoData_;
+    aborted_	       = sdmDataSubset.aborted_;
+    abortTime_         = sdmDataSubset.abortTime_;
+    abortReason_       = sdmDataSubset.abortReason_;
+    return *this;
+  }
+
   SDMDataSubset::~SDMDataSubset() {;}
 
   string SDMDataSubset::projectPath() const {

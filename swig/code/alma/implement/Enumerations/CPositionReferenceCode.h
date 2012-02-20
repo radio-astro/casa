@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -56,7 +57,7 @@ namespace PositionReferenceCodeMod
   //! defines reference frames to qualify the measure of a position.
 
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum PositionReferenceCode
@@ -78,7 +79,10 @@ namespace PositionReferenceCodeMod
 } 
 #endif
 
-using namespace std;
+namespace PositionReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const PositionReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , PositionReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration PositionReferenceCode.
@@ -116,7 +120,7 @@ class CPositionReferenceCode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -170,8 +174,8 @@ class CPositionReferenceCode {
     CPositionReferenceCode(const CPositionReferenceCode&);
     CPositionReferenceCode& operator=(const CPositionReferenceCode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

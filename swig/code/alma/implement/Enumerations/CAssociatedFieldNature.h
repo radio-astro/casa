@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace AssociatedFieldNatureMod
   //! AssociatedFieldNature.
   //!  [ASDM.Field] Nature of the associated field
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AssociatedFieldNature
@@ -71,7 +72,10 @@ namespace AssociatedFieldNatureMod
 } 
 #endif
 
-using namespace std;
+namespace AssociatedFieldNatureMod {
+	std::ostream & operator << ( std::ostream & out, const AssociatedFieldNature& value);
+	std::istream & operator >> ( std::istream & in , AssociatedFieldNature& value );
+}
 
 /** 
   * A helper class for the enumeration AssociatedFieldNature.
@@ -103,7 +107,7 @@ class CAssociatedFieldNature {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CAssociatedFieldNature {
     CAssociatedFieldNature(const CAssociatedFieldNature&);
     CAssociatedFieldNature& operator=(const CAssociatedFieldNature&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

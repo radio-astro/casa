@@ -63,6 +63,7 @@ using asdm::CalReductionRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalPointingModelRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -1046,7 +1050,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(receiverBand);
+			eoss.writeString(CReceiverBand::name(receiverBand));
+			/* eoss.writeInt(receiverBand); */
 				
 		
 	
@@ -1083,7 +1088,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(antennaMake);
+			eoss.writeString(CAntennaMake::name(antennaMake));
+			/* eoss.writeInt(antennaMake); */
 				
 		
 	
@@ -1092,7 +1098,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(pointingModelMode);
+			eoss.writeString(CPointingModelMode::name(pointingModelMode));
+			/* eoss.writeInt(pointingModelMode); */
 				
 		
 	
@@ -1101,7 +1108,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(polarizationType);
+			eoss.writeString(CPolarizationType::name(polarizationType));
+			/* eoss.writeInt(polarizationType); */
 				
 		
 	
@@ -1244,119 +1252,119 @@ namespace asdm {
 
 	}
 	
-void CalPointingModelRow::antennaNameFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::antennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaName =  eiss.readString();
-			
-		
-	
-	
-}
-void CalPointingModelRow::receiverBandFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		receiverBand = CReceiverBand::from_int(eiss.readInt());
+		antennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalPointingModelRow::calDataIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalPointingModelRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalPointingModelRow::startValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalPointingModelRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalPointingModelRow::antennaMakeFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaMake = CAntennaMake::from_int(eiss.readInt());
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingModelRow::pointingModelModeFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::calDataIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalPointingModelRow::calReductionIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void CalPointingModelRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalPointingModelRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalPointingModelRow::antennaMakeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		pointingModelMode = CPointingModelMode::from_int(eiss.readInt());
+		antennaMake = CAntennaMake::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::pointingModelModeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		polarizationType = CPolarizationType::from_int(eiss.readInt());
-			
-		
-	
-	
-}
-void CalPointingModelRow::numCoeffFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numCoeff =  eiss.readInt();
+		pointingModelMode = CPointingModelMode::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingModelRow::coeffNameFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::polarizationTypeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		polarizationType = CPolarizationType::literal(eis.readString());
+			
+		
+	
+	
+}
+void CalPointingModelRow::numCoeffFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numCoeff =  eis.readInt();
+			
+		
+	
+	
+}
+void CalPointingModelRow::coeffNameFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1365,10 +1373,10 @@ void CalPointingModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 		coeffName.clear();
 		
-		unsigned int coeffNameDim1 = eiss.readInt();
+		unsigned int coeffNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
 			
-			coeffName.push_back(eiss.readString());
+			coeffName.push_back(eis.readString());
 			
 	
 
@@ -1376,7 +1384,7 @@ void CalPointingModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPointingModelRow::coeffValFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::coeffValFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1385,10 +1393,10 @@ void CalPointingModelRow::coeffValFromBin(EndianISStream& eiss) {
 	
 		coeffVal.clear();
 		
-		unsigned int coeffValDim1 = eiss.readInt();
+		unsigned int coeffValDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffValDim1; i++)
 			
-			coeffVal.push_back(eiss.readFloat());
+			coeffVal.push_back(eis.readFloat());
 			
 	
 
@@ -1396,7 +1404,7 @@ void CalPointingModelRow::coeffValFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPointingModelRow::coeffErrorFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::coeffErrorFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1405,10 +1413,10 @@ void CalPointingModelRow::coeffErrorFromBin(EndianISStream& eiss) {
 	
 		coeffError.clear();
 		
-		unsigned int coeffErrorDim1 = eiss.readInt();
+		unsigned int coeffErrorDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffErrorDim1; i++)
 			
-			coeffError.push_back(eiss.readFloat());
+			coeffError.push_back(eis.readFloat());
 			
 	
 
@@ -1416,7 +1424,7 @@ void CalPointingModelRow::coeffErrorFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPointingModelRow::coeffFixedFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::coeffFixedFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1425,10 +1433,10 @@ void CalPointingModelRow::coeffFixedFromBin(EndianISStream& eiss) {
 	
 		coeffFixed.clear();
 		
-		unsigned int coeffFixedDim1 = eiss.readInt();
+		unsigned int coeffFixedDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffFixedDim1; i++)
 			
-			coeffFixed.push_back(eiss.readBoolean());
+			coeffFixed.push_back(eis.readBoolean());
 			
 	
 
@@ -1436,59 +1444,59 @@ void CalPointingModelRow::coeffFixedFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPointingModelRow::azimuthRMSFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::azimuthRMSFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		azimuthRMS =  Angle::fromBin(eiss);
-		
-	
-	
-}
-void CalPointingModelRow::elevationRmsFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		elevationRms =  Angle::fromBin(eiss);
+		azimuthRMS =  Angle::fromBin(eis);
 		
 	
 	
 }
-void CalPointingModelRow::skyRMSFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::elevationRmsFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		skyRMS =  Angle::fromBin(eiss);
+		elevationRms =  Angle::fromBin(eis);
 		
 	
 	
 }
-void CalPointingModelRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::skyRMSFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		skyRMS =  Angle::fromBin(eis);
+		
+	
+	
+}
+void CalPointingModelRow::reducedChiSquaredFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		reducedChiSquared =  eiss.readDouble();
+		reducedChiSquared =  eis.readDouble();
 			
 		
 	
 	
 }
 
-void CalPointingModelRow::numObsFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::numObsFromBin(EndianIStream& eis) {
 		
-	numObsExists = eiss.readBoolean();
+	numObsExists = eis.readBoolean();
 	if (numObsExists) {
 		
 	
 	
 		
 			
-		numObs =  eiss.readInt();
+		numObs =  eis.readInt();
 			
 		
 	
@@ -1496,9 +1504,9 @@ void CalPointingModelRow::numObsFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
+void CalPointingModelRow::coeffFormulaFromBin(EndianIStream& eis) {
 		
-	coeffFormulaExists = eiss.readBoolean();
+	coeffFormulaExists = eis.readBoolean();
 	if (coeffFormulaExists) {
 		
 	
@@ -1508,10 +1516,10 @@ void CalPointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 		coeffFormula.clear();
 		
-		unsigned int coeffFormulaDim1 = eiss.readInt();
+		unsigned int coeffFormulaDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
 			
-			coeffFormula.push_back(eiss.readString());
+			coeffFormula.push_back(eis.readString());
 			
 	
 
@@ -1523,23 +1531,206 @@ void CalPointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalPointingModelRow* CalPointingModelRow::fromBin(EndianISStream& eiss, CalPointingModelTable& table, const vector<string>& attributesSeq) {
+	CalPointingModelRow* CalPointingModelRow::fromBin(EndianIStream& eis, CalPointingModelTable& table, const vector<string>& attributesSeq) {
 		CalPointingModelRow* row = new  CalPointingModelRow(table);
 		
 		map<string, CalPointingModelAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPointingModelTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPointingModelTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an String 
+	void CalPointingModelRow::antennaNameFromText(const string & s) {
+		 
+		antennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalPointingModelRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPointingModelRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPointingModelRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPointingModelRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPointingModelRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaMake 
+	void CalPointingModelRow::antennaMakeFromText(const string & s) {
+		 
+		antennaMake = ASDMValuesParser::parse<AntennaMake>(s);
+		
+	}
+	
+	
+	// Convert a string into an PointingModelMode 
+	void CalPointingModelRow::pointingModelModeFromText(const string & s) {
+		 
+		pointingModelMode = ASDMValuesParser::parse<PointingModelMode>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalPointingModelRow::polarizationTypeFromText(const string & s) {
+		 
+		polarizationType = ASDMValuesParser::parse<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalPointingModelRow::numCoeffFromText(const string & s) {
+		 
+		numCoeff = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalPointingModelRow::coeffNameFromText(const string & s) {
+		 
+		coeffName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalPointingModelRow::coeffValFromText(const string & s) {
+		 
+		coeffVal = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalPointingModelRow::coeffErrorFromText(const string & s) {
+		 
+		coeffError = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalPointingModelRow::coeffFixedFromText(const string & s) {
+		 
+		coeffFixed = ASDMValuesParser::parse1D<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingModelRow::azimuthRMSFromText(const string & s) {
+		 
+		azimuthRMS = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingModelRow::elevationRmsFromText(const string & s) {
+		 
+		elevationRms = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingModelRow::skyRMSFromText(const string & s) {
+		 
+		skyRMS = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalPointingModelRow::reducedChiSquaredFromText(const string & s) {
+		 
+		reducedChiSquared = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void CalPointingModelRow::numObsFromText(const string & s) {
+		numObsExists = true;
+		 
+		numObs = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalPointingModelRow::coeffFormulaFromText(const string & s) {
+		coeffFormulaExists = true;
+		 
+		coeffFormula = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	
+	void CalPointingModelRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalPointingModelAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalPointingModelTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2156,9 +2347,9 @@ void CalPointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2232,9 +2423,10 @@ void CalPointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2408,6 +2600,91 @@ polarizationType = CPolarizationType::from_int(0);
 	 fromBinMethods["numObs"] = &CalPointingModelRow::numObsFromBin; 
 	 fromBinMethods["coeffFormula"] = &CalPointingModelRow::coeffFormulaFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaName"] = &CalPointingModelRow::antennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalPointingModelRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalPointingModelRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalPointingModelRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalPointingModelRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalPointingModelRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["antennaMake"] = &CalPointingModelRow::antennaMakeFromText;
+		 
+	
+				 
+	fromTextMethods["pointingModelMode"] = &CalPointingModelRow::pointingModelModeFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationType"] = &CalPointingModelRow::polarizationTypeFromText;
+		 
+	
+				 
+	fromTextMethods["numCoeff"] = &CalPointingModelRow::numCoeffFromText;
+		 
+	
+				 
+	fromTextMethods["coeffName"] = &CalPointingModelRow::coeffNameFromText;
+		 
+	
+				 
+	fromTextMethods["coeffVal"] = &CalPointingModelRow::coeffValFromText;
+		 
+	
+				 
+	fromTextMethods["coeffError"] = &CalPointingModelRow::coeffErrorFromText;
+		 
+	
+				 
+	fromTextMethods["coeffFixed"] = &CalPointingModelRow::coeffFixedFromText;
+		 
+	
+				 
+	fromTextMethods["azimuthRMS"] = &CalPointingModelRow::azimuthRMSFromText;
+		 
+	
+				 
+	fromTextMethods["elevationRms"] = &CalPointingModelRow::elevationRmsFromText;
+		 
+	
+				 
+	fromTextMethods["skyRMS"] = &CalPointingModelRow::skyRMSFromText;
+		 
+	
+				 
+	fromTextMethods["reducedChiSquared"] = &CalPointingModelRow::reducedChiSquaredFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["numObs"] = &CalPointingModelRow::numObsFromText;
+		 	
+	 
+				
+	fromTextMethods["coeffFormula"] = &CalPointingModelRow::coeffFormulaFromText;
+		 	
+		
 	}
 	
 	CalPointingModelRow::CalPointingModelRow (CalPointingModelTable &t, CalPointingModelRow &row) : table(t) {

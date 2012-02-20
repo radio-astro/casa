@@ -39,11 +39,12 @@ using namespace std;
 using asdmIDLTypes::IDLTag;
 #endif
 
+#include <boost/regex.hpp>
 #include <StringTokenizer.h>
 #include <InvalidArgumentException.h>
 #include <TagFormatException.h>
 #include "TagType.h"
-#include "Integer.h"
+#include "IntegerWrapper.h"
 
 
 using asdm::StringTokenizer;
@@ -51,7 +52,9 @@ using asdm::InvalidArgumentException;
 
 #include "EndianStream.h"
 using asdm::EndianOSStream;
-using asdm::EndianISStream;
+using asdm::EndianIStream;
+
+using namespace boost;
 
 namespace asdm {
 
@@ -115,6 +118,18 @@ public:
 #endif
 
 	/**
+	 * Overloading of << to output the value of a Tag on an ostream.
+	 * @param os a reference to the ostream to be written on.
+	 * @param x a const reference to a Tag.
+	 */
+	friend std::ostream & operator << (ostream& os, const Tag & x);
+
+	/**
+	 * Overloading of >> to read a Tag from an istream.
+	 */
+	friend std::istream & operator >> ( istream & is, Tag & x);
+	
+	/**
 	 * Create a Tag whose initial value is the specified string.
 	 * 
 	 * @throws TagFormatException
@@ -142,22 +157,22 @@ public:
 	static void toBin(const vector<Tag>& tag, EndianOSStream& eoss) ;	 
 	
    /**
-	 * Read the binary representation of a Tag  from a EndianISStream.
+	 * Read the binary representation of a Tag  from a EndianIStream.
 	 * and use the read value to set a Tag.
-	 * @param eiss the the EndianISStream to be read
+	 * @param eis the the EndianIStream to be read
 	 * @return a Tag
 	 * @throws TagFormatException 
 	 */
-	static Tag fromBin(EndianISStream& eiss);
+	static Tag fromBin(EndianIStream& eis);
 	
    /**
-	 * Read the binary representation of a of  a vector of  Tag from an EndianISStream
+	 * Read the binary representation of a of  a vector of  Tag from an EndianIStream
 	 * and use the read value to set a vector of  Tag.
- 	 * @param eiis the EndianISStream to be read
+ 	 * @param eiis the EndianIStream to be read
 	 * @return a vector of Tag
 	 * @throws TagFormatException 
 	 */
-	static vector<Tag> from1DBin(EndianISStream & eiss);
+	static vector<Tag> from1DBin(EndianIStream & eis);
 	
 	/**
 	 * The Tag destructor.
@@ -245,6 +260,9 @@ public:
 protected:
 	string tag;
 	TagType* type;
+
+ private:
+	static boost::regex tagSyntax;
 };
 
 // End namespace asdm

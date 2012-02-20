@@ -25,7 +25,7 @@
  */
 
 #include <Humidity.h>
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Double;
 using asdm::NumberFormatException;
@@ -77,36 +77,36 @@ void Humidity::toBin(const vector< vector<vector<Humidity> > >& humidity,  Endia
 					eoss.writeDouble(humidity.at(i).at(j).at(k).value);
 }
 
-Humidity Humidity::fromBin(EndianISStream & eiss) {
-	return Humidity(eiss.readDouble());
+Humidity Humidity::fromBin(EndianIStream & eis) {
+	return Humidity(eis.readDouble());
 }
 
-vector<Humidity> Humidity::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Humidity> Humidity::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Humidity> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Humidity(eiss.readDouble()));
+		result.push_back(Humidity(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Humidity > > Humidity::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Humidity > > Humidity::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<Humidity> >result;
 	vector <Humidity> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Humidity(eiss.readDouble()));
+			aux.push_back(Humidity(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Humidity > > > Humidity::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Humidity > > > Humidity::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Humidity> > >result;
 	vector < vector<Humidity> >aux1;
 	vector <Humidity> aux2;
@@ -115,7 +115,7 @@ vector<vector<vector<Humidity > > > Humidity::from3DBin(EndianISStream & eiss) {
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Humidity(eiss.readDouble()));
+				aux2.push_back(Humidity(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

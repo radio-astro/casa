@@ -57,8 +57,6 @@ bool Name2Table::init() {
 	
 	  name2Table_["Antenna"] = ASDM_ANTENNA::instance();	
 	
-	  name2Table_["Beam"] = ASDM_BEAM::instance();	
-	
 	  name2Table_["CalAmpli"] = ASDM_CALAMPLI::instance();	
 	
 	  name2Table_["CalAtmosphere"] = ASDM_CALATMOSPHERE::instance();	
@@ -146,6 +144,8 @@ bool Name2Table::init() {
 	  name2Table_["Receiver"] = ASDM_RECEIVER::instance();	
 	
 	  name2Table_["SBSummary"] = ASDM_SBSUMMARY::instance();	
+	
+	  name2Table_["Scale"] = ASDM_SCALE::instance();	
 	
 	  name2Table_["Scan"] = ASDM_SCAN::instance();	
 	

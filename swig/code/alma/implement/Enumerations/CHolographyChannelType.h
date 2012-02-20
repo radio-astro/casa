@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace HolographyChannelTypeMod
   //! HolographyChannelType.
   //!  [ASDM.Holography] Type sof holography receiver output channels
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum HolographyChannelType
@@ -77,7 +78,10 @@ namespace HolographyChannelTypeMod
 } 
 #endif
 
-using namespace std;
+namespace HolographyChannelTypeMod {
+	std::ostream & operator << ( std::ostream & out, const HolographyChannelType& value);
+	std::istream & operator >> ( std::istream & in , HolographyChannelType& value );
+}
 
 /** 
   * A helper class for the enumeration HolographyChannelType.
@@ -115,7 +119,7 @@ class CHolographyChannelType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -169,8 +173,8 @@ class CHolographyChannelType {
     CHolographyChannelType(const CHolographyChannelType&);
     CHolographyChannelType& operator=(const CHolographyChannelType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

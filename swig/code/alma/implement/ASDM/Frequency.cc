@@ -25,7 +25,7 @@
  */
 
 #include <Frequency.h>
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Double;
 using asdm::NumberFormatException;
@@ -77,36 +77,36 @@ void Frequency::toBin(const vector< vector<vector<Frequency> > >& frequency,  En
 					eoss.writeDouble(frequency.at(i).at(j).at(k).value);
 }
 
-Frequency Frequency::fromBin(EndianISStream & eiss) {
-	return Frequency(eiss.readDouble());
+Frequency Frequency::fromBin(EndianIStream & eis) {
+	return Frequency(eis.readDouble());
 }
 
-vector<Frequency> Frequency::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<Frequency> Frequency::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<Frequency> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(Frequency(eiss.readDouble()));
+		result.push_back(Frequency(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<Frequency > > Frequency::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<Frequency > > Frequency::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<Frequency> >result;
 	vector <Frequency> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(Frequency(eiss.readDouble()));
+			aux.push_back(Frequency(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<Frequency > > > Frequency::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<Frequency > > > Frequency::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<Frequency> > >result;
 	vector < vector<Frequency> >aux1;
 	vector <Frequency> aux2;
@@ -115,7 +115,7 @@ vector<vector<vector<Frequency > > > Frequency::from3DBin(EndianISStream & eiss)
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(Frequency(eiss.readDouble()));
+				aux2.push_back(Frequency(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace SyscalMethodMod
   //! SyscalMethod.
   //! [CalDM.CalAtmosphere] Atmosphere calibration methods 
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum SyscalMethod
@@ -63,13 +64,18 @@ namespace SyscalMethodMod
     TEMPERATURE_SCALE /*!< Use single direction data to compute ta* scale */
      ,
     SKYDIP /*!< Use a skydip (observing the sky at various elevations) to get atmospheric opacity */
+     ,
+    SIDEBAND_RATIO /*!< Measure the sideband gain ratio. */
      
   };
   typedef SyscalMethod &SyscalMethod_out;
 } 
 #endif
 
-using namespace std;
+namespace SyscalMethodMod {
+	std::ostream & operator << ( std::ostream & out, const SyscalMethod& value);
+	std::istream & operator >> ( std::istream & in , SyscalMethod& value );
+}
 
 /** 
   * A helper class for the enumeration SyscalMethod.
@@ -86,6 +92,8 @@ class CSyscalMethod {
 	
 	static const std::string& sSKYDIP; /*!< A const string equal to "SKYDIP".*/
 	
+	static const std::string& sSIDEBAND_RATIO; /*!< A const string equal to "SIDEBAND_RATIO".*/
+	
 
 	/**
 	  * Return the major version number as an int.
@@ -99,7 +107,7 @@ class CSyscalMethod {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -153,8 +161,8 @@ class CSyscalMethod {
     CSyscalMethod(const CSyscalMethod&);
     CSyscalMethod& operator=(const CSyscalMethod&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

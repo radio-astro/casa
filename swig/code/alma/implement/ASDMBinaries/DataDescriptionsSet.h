@@ -97,14 +97,14 @@ namespace sdmbin {
      * @exception ndd has an illegal value or is too large for the number of dataDescriptions in the ConfigDescription 
      * @return The baseband number (one-based)
      */ 
-    BasebandName      getBasebandName(unsigned int ndd) throw (Error);  
+    BasebandName      getBasebandName(unsigned int ndd) ; // throw (Error);  
 
     /** Get the baseband number of a given dataDescription
      * @param ndd The index of the dataDescription identifier
      * @exception ndd has an illegal value or is too large for the number of dataDescriptions in the ConfigDescription 
      * @return The baseband number (one-based)
      */ 
-    unsigned int      getBasebandIndex(unsigned int ndd) throw (Error);  
+    unsigned int      getBasebandIndex(unsigned int ndd) ; // throw (Error);  
 				      
     /** Accessor to the number of basebands
      * @return the number of basebands \f$ N_{bb} \f$
@@ -117,7 +117,7 @@ namespace sdmbin {
      * @exception ndd is too large for the number of dataDescriptions in the ConfigDescription 
      * @return Number of steps for the baseband of a given dataDescription
      */
-    unsigned int      numBin(unsigned int ndd) throw (Error);       
+    unsigned int      numBin(unsigned int ndd) ; // throw (Error);       
 
     /** Accessor to the number of polarization products of a given dataDescription
      * @param ndd The index of the dataDescrition identifier in dataDescriptionIdArray
@@ -132,7 +132,7 @@ namespace sdmbin {
      *                    corresponding number \f$ N_{pp}^{o} \f$ for the zero baselines.
      * @note If it desired to get this number for a given baseband, use the method getNumPol(int bbNum).
      */
-    unsigned int      numPol(unsigned int ndd) throw (Error);   
+    unsigned int      numPol(unsigned int ndd) ; // throw (Error);   
 
     /** Accessor to the number of polarization cross-products of a given dataDescription
      * @param ndd The index (zero-based) of the dataDescription identifier in dataDescriptionIdArray
@@ -144,7 +144,7 @@ namespace sdmbin {
      * @note If it desired to get this number \f$ N_{pp}^{oo} \f$ for a given baseband, use the method 
      *       getNumSdPol(int bbNum).
      */
-    unsigned int      numSdPol(unsigned int ndd) throw (Error);     
+    unsigned int      numSdPol(unsigned int ndd) ; // throw (Error);     
 
     /** Accessor to the number of frequency channels of a given dataDescription
      * @param ndd The index of the dataDescription identifier in dataDescriptionIdArray
@@ -152,14 +152,14 @@ namespace sdmbin {
      * @exception ndd is too large for the number of dataDescriptions in the ConfigDescription 
      * @return Number of frequency channels (spectral points) for that dataDescription
      */
-    unsigned int      numChan(unsigned int ndd) throw (Error);
+    unsigned int      numChan(unsigned int ndd) ; // throw (Error);
 
     /** Accessor to get the spwtral window identifier of a given dataDescription
      * @param ndd The index of the dataDescription identifier in dataDescriptionIdArray
      * @exception ndd is too large for the number of dataDescriptions in the ConfigDescription 
      * @return The spectral window identifier
      */
-    Tag               getSpwId(unsigned int ndd) throw (Error);
+    Tag               getSpwId(unsigned int ndd) ; // throw (Error);
 
     /** Accessor to the total frequency bandwidth of a given dataDescription
      * @param ndd The index (zero-based) of the dataDescription identifier  dataDescriptionIdArray
@@ -167,7 +167,7 @@ namespace sdmbin {
      * @exception ndd has an illegal value or is too large for the number of dataDescriptions in the ConfigDescription 
      * @return Total spectral bandwidth (Hz)
      */
-    Frequency         totBandwidth(unsigned int ndd) throw (Error); 
+    Frequency         totBandwidth(unsigned int ndd) ; // throw (Error); 
 
     /** Size of the apc axis (can be only 1 or 2)
      * @return size of this axis (the 3rd inner most in the axis hierarchy)
@@ -196,7 +196,7 @@ namespace sdmbin {
       * @return  The index position (0-based) along the apc axis
       * @exception -1 returned if the input apc value is not present on the apc axis
       */ 
-     unsigned int atmPhaseCorrectionIndex(AtmPhaseCorrection apc) throw (Error);
+     unsigned int atmPhaseCorrectionIndex(AtmPhaseCorrection apc) ; // throw (Error);
 
     /** Provide the number of auto-correlations for a given dataDescription
      * \note would the dataDescription identifier for this index in ConfigDescription be for cross correlations, 
@@ -207,7 +207,7 @@ namespace sdmbin {
      * @return  Number of auto-correlations for that dataDescription
      * @exception 0 returned (lax mode) if correlationMode=0.
      */
-    int               numAutoData(unsigned int ndd) throw (Error);
+    int               numAutoData(unsigned int ndd) ; // throw (Error);
 
     /** Provide the number of cross-correlations for a given dataDescription
      * @param ndd The index (zero-based) of the dataDescription identifier in dataDescriptionIdArray
@@ -215,7 +215,7 @@ namespace sdmbin {
      * @return  the number of cross-correlations for that dataDescription
      * @exception returns 0 if correlationMode=1.
      */
-    unsigned int      numCrossData(unsigned int ndd) throw (Error);
+    unsigned int      numCrossData(unsigned int ndd) ; // throw (Error);
 
     /** Provide the number of switchCycle phases cumulated over all the basebands in the configuration.
      * @return the sum \f$ \sum_{i=1}^{N_{bb}} N_{bin}(i)  \f$
@@ -232,7 +232,7 @@ namespace sdmbin {
      * @exception ndd has an illegal value or is too large for the number of dataDescriptions in the ConfigDescription 
      * @return  The index in the metadata tree
      */
-     unsigned int      metaDataIndex(unsigned int ndd)  throw (Error);
+     unsigned int      metaDataIndex(unsigned int ndd)  ; // throw (Error);
 
     /** Get the bitSize (actually the number of bytes, 2 or 4) used for the visibilities
      * @return The size (actually in number of bytes)
@@ -267,7 +267,7 @@ namespace sdmbin {
      * @exception ndd equal or exeeding the number of dataDescription in the configuration setup
      * @return  The number of channels (spectral points) for that dataDescription number (1-based)
      */   
-    unsigned int      getNumChan(unsigned int ndd)  throw (Error);
+    unsigned int      getNumChan(unsigned int ndd)  ; // throw (Error);
 
     /** Get the number of Polarization Products given a baseband.
      * @param  nbb The baseband index
@@ -283,7 +283,7 @@ namespace sdmbin {
      * To get number of products given a dataDescription use the method numPol().
      * To get number of products given a basebandName, would that be constant per baseband, use getNumPol(BasebandName bbName)
      */
-    unsigned int       getNumPol(unsigned int bbIndex)  throw (Error);
+    unsigned int       getNumPol(unsigned int bbIndex)  ; // throw (Error);
 
     /** Get the number of Polarization Products given a baseband.
      * @param  bbName The baseband index (0-based)
@@ -297,7 +297,7 @@ namespace sdmbin {
      * @note
      * To get number of products given a dataDescription use the method numPol().
      */
-    unsigned int      getNumPol(BasebandName bbName)  throw (Error);
+    unsigned int      getNumPol(BasebandName bbName)  ; // throw (Error);
 
     /** Get the number of Polarization Products in the case of zero-baselines given a baseband.
      * @param  bbIndex The baseband index
@@ -310,7 +310,7 @@ namespace sdmbin {
      * - if the input baseband name does not belong to the configuration return 0
      * @note To get number of products given a dataDescription use the method numPol().
      */
-    unsigned int      getNumSdPol(unsigned int bbIndex)  throw (Error);
+    unsigned int      getNumSdPol(unsigned int bbIndex)  ; // throw (Error);
 
     /** Get the number of Polarization Products in the case of zero-baselines given a baseband.
      * @param  bbName The baseband index (0-based)
@@ -322,7 +322,7 @@ namespace sdmbin {
      * - if the input baseband name does not belong to the configuration return 0
      * @note To get number of products given a dataDescription use the method numPol().
      */
-    unsigned int      getNumSdPol(BasebandName bbName) throw(Error);
+    unsigned int      getNumSdPol(BasebandName bbName) ; // throw(Error);
 
     /** Get the index of a dataDescription given its index in its parent baseband
      * @param  bbIndex The baseband index
@@ -332,7 +332,7 @@ namespace sdmbin {
      * @return The index of the dataDescrition in the sequence of dataDescription in the
      *         configDescription
      */ 
-    unsigned int      getNdd(unsigned int bbIndex, unsigned int j)  throw (Error);
+    unsigned int      getNdd(unsigned int bbIndex, unsigned int j)  ; // throw (Error);
 
     /** Get the index of a dataDescription given its index in its parent baseband
      * @param  bbName The baseband name
@@ -341,14 +341,14 @@ namespace sdmbin {
      * @return The index of the dataDescrition in the sequence of dataDescription in the
      *         configDescription
      */ 
-    unsigned int      getNdd(BasebandName bbName, unsigned int j)  throw (Error);
+    unsigned int      getNdd(BasebandName bbName, unsigned int j)  ; // throw (Error);
 
     /** Get the number of Spectral Windows in a given baseband identified by its index.
      * @param  bbNum The baseband index (zero-based)
      * @exception bbNum illegal or exceeding the number of basebands used in the configuration
      * @return The number \f$ N_{sw} \f$ of spectral windows in the baseband
      */
-    unsigned int      getNumSpw(unsigned int bbIndex)  throw (Error);
+    unsigned int      getNumSpw(unsigned int bbIndex)  ; // throw (Error);
 
     /** Get the number of Spectral Windows in a given baseband identified by its name.
      * @param  bbName The baseband name
@@ -362,7 +362,7 @@ namespace sdmbin {
      * @exception dataDescriptionId does not exist in the set of dataDescription identifiers in the configuration
      * @return  The dataDescription index (0-based)
      */
-    unsigned int      getDataDescriptionIndex( Tag dataDescriptionId)  throw (Error);
+    unsigned int      getDataDescriptionIndex( Tag dataDescriptionId)  ; // throw (Error);
 
     /** Get the size of the block of data for the auto-correlations originating from one antenna. \n
      * This size is determined according to the formula \n
@@ -430,7 +430,7 @@ namespace sdmbin {
      *  see the method numSdPol(int ndd); 
      *  to get it for a given baseband, would it be baseband-based, see the method getNumSdPol(int bbNum).
      */  
-    unsigned long     getNumAutoData(Tag autoDataDescriptionId) throw (Error);
+    unsigned long     getNumAutoData(Tag autoDataDescriptionId) ; // throw (Error);
 
 
     /** Number of cross-correlations produced by one non-zero baseline for a given dataDescription.
@@ -440,7 +440,7 @@ namespace sdmbin {
      *  \note This number must be understood as the number complex values, one data value being
      *   a complex quantity.
      */
-    unsigned long     getNumCrossData(Tag crossDataDescriptionId)  throw (Error);
+    unsigned long     getNumCrossData(Tag crossDataDescriptionId)  ; // throw (Error);
 
     /** Get the array of dataDescriptionId identifiers for the auto-correlations
      * \param crossDataDescriptionId one of the dataDescription identifiers in the set used for the configuration setup
@@ -450,7 +450,7 @@ namespace sdmbin {
      * It is automaticly derived based on the input dataDescriptionId identifiers for the cross-correlations 
      * (the second parameter in the signature of the constructor of this class).
      */
-    Tag               getAutoDataDescriptionId(Tag crossDataDescriptionId) throw (Error);
+    Tag               getAutoDataDescriptionId(Tag crossDataDescriptionId) ; // throw (Error);
 
     /** Get the array of dataDescriptionId identifiers for the cross-correlations
      * @return The array of dataDescriptionId identifier for the auto-correlations (zero-baselines)

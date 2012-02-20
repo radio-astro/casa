@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalPointingRowIDL;
 #endif
 
 
@@ -51,20 +47,25 @@ using asdmIDL::CalPointingRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -73,7 +74,6 @@ using  asdm::Frequency;
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -84,12 +84,10 @@ using namespace ReceiverBandMod;
 
 	
 #include "CAntennaMake.h"
-using namespace AntennaMakeMod;
 	
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
@@ -98,19 +96,16 @@ using namespace AtmPhaseCorrectionMod;
 
 	
 #include "CPointingModelMode.h"
-using namespace PointingModelModeMod;
 	
 
 	
 #include "CPointingMethod.h"
-using namespace PointingMethodMod;
 	
 
 	
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -155,9 +150,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalPointing.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -173,16 +170,19 @@ class CalReductionRow;
 	
 
 class CalPointingRow;
-typedef void (CalPointingRow::*CalPointingAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalPointingRow::*CalPointingAttributeFromBin) (EndianIStream& eis);
+typedef void (CalPointingRow::*CalPointingAttributeFromText) (const string& s);
 
 /**
  * The CalPointingRow class is a row of a CalPointingTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalPointingRow {
 friend class asdm::CalPointingTable;
+friend class asdm::RowTransformer<CalPointingRow>;
+//friend class asdm::TableStreamReader<CalPointingTable, CalPointingRow>;
 
 public:
 
@@ -1490,7 +1490,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalPointingRowIDL struct.
 	 */
-	CalPointingRowIDL *toIDL() const;
+	asdmIDL::CalPointingRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1499,14 +1499,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPointingRowIDL x) ;
+	void setFromIDL (asdmIDL::CalPointingRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1514,7 +1514,59 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalPointingAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void ambientTemperatureFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void pointingModelModeFromBin( EndianIStream& eis);
+void pointingMethodFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void collOffsetRelativeFromBin( EndianIStream& eis);
+void collOffsetAbsoluteFromBin( EndianIStream& eis);
+void collErrorFromBin( EndianIStream& eis);
+void collOffsetTiedFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+
+void averagedPolarizationsFromBin( EndianIStream& eis);
+void beamPAFromBin( EndianIStream& eis);
+void beamPAErrorFromBin( EndianIStream& eis);
+void beamPAWasFixedFromBin( EndianIStream& eis);
+void beamWidthFromBin( EndianIStream& eis);
+void beamWidthErrorFromBin( EndianIStream& eis);
+void beamWidthWasFixedFromBin( EndianIStream& eis);
+void offIntensityFromBin( EndianIStream& eis);
+void offIntensityErrorFromBin( EndianIStream& eis);
+void offIntensityWasFixedFromBin( EndianIStream& eis);
+void peakIntensityFromBin( EndianIStream& eis);
+void peakIntensityErrorFromBin( EndianIStream& eis);
+void peakIntensityWasFixedFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalPointingTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalPointingRow* fromBin(EndianIStream& eis, CalPointingTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1975,45 +2027,155 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalPointingAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void ambientTemperatureFromBin( EndianISStream& eiss);
-void antennaMakeFromBin( EndianISStream& eiss);
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void directionFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void pointingModelModeFromBin( EndianISStream& eiss);
-void pointingMethodFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void collOffsetRelativeFromBin( EndianISStream& eiss);
-void collOffsetAbsoluteFromBin( EndianISStream& eiss);
-void collErrorFromBin( EndianISStream& eiss);
-void collOffsetTiedFromBin( EndianISStream& eiss);
-void reducedChiSquaredFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalPointingAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void ambientTemperatureFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void pointingModelModeFromBin( EndianIStream& eis);
+void pointingMethodFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void collOffsetRelativeFromBin( EndianIStream& eis);
+void collOffsetAbsoluteFromBin( EndianIStream& eis);
+void collErrorFromBin( EndianIStream& eis);
+void collOffsetTiedFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
 
-void averagedPolarizationsFromBin( EndianISStream& eiss);
-void beamPAFromBin( EndianISStream& eiss);
-void beamPAErrorFromBin( EndianISStream& eiss);
-void beamPAWasFixedFromBin( EndianISStream& eiss);
-void beamWidthFromBin( EndianISStream& eiss);
-void beamWidthErrorFromBin( EndianISStream& eiss);
-void beamWidthWasFixedFromBin( EndianISStream& eiss);
-void offIntensityFromBin( EndianISStream& eiss);
-void offIntensityErrorFromBin( EndianISStream& eiss);
-void offIntensityWasFixedFromBin( EndianISStream& eiss);
-void peakIntensityFromBin( EndianISStream& eiss);
-void peakIntensityErrorFromBin( EndianISStream& eiss);
-void peakIntensityWasFixedFromBin( EndianISStream& eiss);
+void averagedPolarizationsFromBin( EndianIStream& eis);
+void beamPAFromBin( EndianIStream& eis);
+void beamPAErrorFromBin( EndianIStream& eis);
+void beamPAWasFixedFromBin( EndianIStream& eis);
+void beamWidthFromBin( EndianIStream& eis);
+void beamWidthErrorFromBin( EndianIStream& eis);
+void beamWidthWasFixedFromBin( EndianIStream& eis);
+void offIntensityFromBin( EndianIStream& eis);
+void offIntensityErrorFromBin( EndianIStream& eis);
+void offIntensityWasFixedFromBin( EndianIStream& eis);
+void peakIntensityFromBin( EndianIStream& eis);
+void peakIntensityErrorFromBin( EndianIStream& eis);
+void peakIntensityWasFixedFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalPointingAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void ambientTemperatureFromText (const string & s);
+	
+	
+void antennaMakeFromText (const string & s);
+	
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void directionFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void pointingModelModeFromText (const string & s);
+	
+	
+void pointingMethodFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void collOffsetRelativeFromText (const string & s);
+	
+	
+void collOffsetAbsoluteFromText (const string & s);
+	
+	
+void collErrorFromText (const string & s);
+	
+	
+void collOffsetTiedFromText (const string & s);
+	
+	
+void reducedChiSquaredFromText (const string & s);
+	
+
+	
+void averagedPolarizationsFromText (const string & s);
+	
+	
+void beamPAFromText (const string & s);
+	
+	
+void beamPAErrorFromText (const string & s);
+	
+	
+void beamPAWasFixedFromText (const string & s);
+	
+	
+void beamWidthFromText (const string & s);
+	
+	
+void beamWidthErrorFromText (const string & s);
+	
+	
+void beamWidthWasFixedFromText (const string & s);
+	
+	
+void offIntensityFromText (const string & s);
+	
+	
+void offIntensityErrorFromText (const string & s);
+	
+	
+void offIntensityWasFixedFromText (const string & s);
+	
+	
+void peakIntensityFromText (const string & s);
+	
+	
+void peakIntensityErrorFromText (const string & s);
+	
+	
+void peakIntensityWasFixedFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -2022,14 +2184,14 @@ void peakIntensityWasFixedFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalPointingTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalPointingRow* fromBin(EndianISStream& eiss, CalPointingTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalPointingRow* fromBin(EndianIStream& eis, CalPointingTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

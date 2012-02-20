@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalDelayRowIDL;
 #endif
 
 
@@ -51,17 +47,21 @@ using asdmIDL::CalDelayRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -70,17 +70,14 @@ using  asdm::Frequency;
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
 #include "CBasebandName.h"
-using namespace BasebandNameMod;
 	
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -97,7 +94,8 @@ using namespace ReceiverBandMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
+	
+
 	
 
 	
@@ -114,7 +112,6 @@ using namespace PolarizationTypeMod;
 
 	
 #include "CReceiverSideband.h"
-using namespace ReceiverSidebandMod;
 	
 
 
@@ -123,9 +120,11 @@ using namespace ReceiverSidebandMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalDelay.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -141,16 +140,19 @@ class CalReductionRow;
 	
 
 class CalDelayRow;
-typedef void (CalDelayRow::*CalDelayAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalDelayRow::*CalDelayAttributeFromBin) (EndianIStream& eis);
+typedef void (CalDelayRow::*CalDelayAttributeFromText) (const string& s);
 
 /**
  * The CalDelayRow class is a row of a CalDelayTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalDelayRow {
 friend class asdm::CalDelayTable;
+friend class asdm::RowTransformer<CalDelayRow>;
+//friend class asdm::TableStreamReader<CalDelayTable, CalDelayRow>;
 
 public:
 
@@ -540,6 +542,36 @@ public:
 
 
 	
+	// ===> Attribute appliedDelay
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get appliedDelay.
+ 	 * @return appliedDelay as vector<double >
+ 	 */
+ 	vector<double > getAppliedDelay() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set appliedDelay with the specified vector<double >.
+ 	 * @param appliedDelay The vector<double > value to which appliedDelay is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAppliedDelay (vector<double > appliedDelay);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute crossDelayOffset, which is optional
 	
 	
@@ -922,8 +954,10 @@ public:
 	    
 	 * @param reducedChiSquared
 	    
+	 * @param appliedDelay
+	    
 	 */ 
-	bool compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared);
+	bool compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared, vector<double > appliedDelay);
 	
 	
 
@@ -948,8 +982,10 @@ public:
 	    
 	 * @param reducedChiSquared
 	    
+	 * @param appliedDelay
+	    
 	 */ 
-	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared, vector<double > appliedDelay); 
 		 
 	
 	/**
@@ -967,7 +1003,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalDelayRowIDL struct.
 	 */
-	CalDelayRowIDL *toIDL() const;
+	asdmIDL::CalDelayRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -976,14 +1012,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalDelayRowIDL x) ;
+	void setFromIDL (asdmIDL::CalDelayRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -991,7 +1027,47 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalDelayAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void refAntennaNameFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void delayErrorFromBin( EndianIStream& eis);
+void delayOffsetFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+void appliedDelayFromBin( EndianIStream& eis);
+
+void crossDelayOffsetFromBin( EndianIStream& eis);
+void crossDelayOffsetErrorFromBin( EndianIStream& eis);
+void numSidebandFromBin( EndianIStream& eis);
+void refFreqFromBin( EndianIStream& eis);
+void refFreqPhaseFromBin( EndianIStream& eis);
+void sidebandsFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalDelayTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalDelayRow* fromBin(EndianIStream& eis, CalDelayTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1173,6 +1249,17 @@ private:
  	
 
 	
+	// ===> Attribute appliedDelay
+	
+	
+
+	vector<double > appliedDelay;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute crossDelayOffset, which is optional
 	
 	
@@ -1295,32 +1382,107 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalDelayAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void basebandNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void refAntennaNameFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void delayErrorFromBin( EndianISStream& eiss);
-void delayOffsetFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void reducedChiSquaredFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalDelayAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void refAntennaNameFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void delayErrorFromBin( EndianIStream& eis);
+void delayOffsetFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+void appliedDelayFromBin( EndianIStream& eis);
 
-void crossDelayOffsetFromBin( EndianISStream& eiss);
-void crossDelayOffsetErrorFromBin( EndianISStream& eiss);
-void numSidebandFromBin( EndianISStream& eiss);
-void refFreqFromBin( EndianISStream& eiss);
-void refFreqPhaseFromBin( EndianISStream& eiss);
-void sidebandsFromBin( EndianISStream& eiss);
+void crossDelayOffsetFromBin( EndianIStream& eis);
+void crossDelayOffsetErrorFromBin( EndianIStream& eis);
+void numSidebandFromBin( EndianIStream& eis);
+void refFreqFromBin( EndianIStream& eis);
+void refFreqPhaseFromBin( EndianIStream& eis);
+void sidebandsFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalDelayAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void basebandNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void refAntennaNameFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void delayErrorFromText (const string & s);
+	
+	
+void delayOffsetFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void reducedChiSquaredFromText (const string & s);
+	
+	
+void appliedDelayFromText (const string & s);
+	
+
+	
+void crossDelayOffsetFromText (const string & s);
+	
+	
+void crossDelayOffsetErrorFromText (const string & s);
+	
+	
+void numSidebandFromText (const string & s);
+	
+	
+void refFreqFromText (const string & s);
+	
+	
+void refFreqPhaseFromText (const string & s);
+	
+	
+void sidebandsFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1329,14 +1491,14 @@ void sidebandsFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalDelayTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalDelayRow* fromBin(EndianISStream& eiss, CalDelayTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalDelayRow* fromBin(EndianIStream& eis, CalDelayTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

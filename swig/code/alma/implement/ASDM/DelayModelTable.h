@@ -37,21 +37,24 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
 
 
+	
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	
+#include <Frequency.h>
+	
+
+	
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
 
 
@@ -62,6 +65,44 @@ using  asdm::ArrayTimeInterval;
 
 	
 
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CPolarizationType.h"
 	
 
 	
@@ -83,14 +124,10 @@ using  asdm::ArrayTimeInterval;
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::DelayModelTableIDL;
 #endif
 
 #include <Representable.h>
@@ -107,10 +144,10 @@ class DelayModelRow;
  * <BR>
  * 
  * \par Role
- * Contains the delay model components.
+ * Contains the delay model components. For ALMA this includes all TMCDB delay model components.
  * <BR>
  
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of DelayModel </CAPTION>
@@ -129,6 +166,15 @@ class DelayModelRow;
 	
  * <TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in  SpectraWindowTable. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
  * <TD> timeInterval </TD>
  		 
  * <TD> ArrayTimeInterval</TD>
@@ -141,13 +187,6 @@ class DelayModelRow;
  * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
- * <TD> timeOrigin </TD> 
- * <TD> ArrayTime </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;value used as the origin for the polynomials. </TD>
- * </TR>
-	
- * <TR>
  * <TD> numPoly </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
@@ -155,31 +194,38 @@ class DelayModelRow;
  * </TR>
 	
  * <TR>
- * <TD> atmDryDelay </TD> 
+ * <TD> phaseDelay </TD> 
  * <TD> vector<double > </TD>
  * <TD>  numPoly </TD> 
- * <TD> &nbsp;the dry atmospheric delay component. </TD>
+ * <TD> &nbsp;the phase delay polynomial (rad). </TD>
  * </TR>
 	
  * <TR>
- * <TD> atmWetDelay </TD> 
+ * <TD> phaseDelayRate </TD> 
  * <TD> vector<double > </TD>
  * <TD>  numPoly </TD> 
- * <TD> &nbsp;the wet atmospheric delay. </TD>
+ * <TD> &nbsp;Phase delay rate polynomial (rad/s). </TD>
  * </TR>
 	
  * <TR>
- * <TD> clockDelay </TD> 
+ * <TD> groupDelay </TD> 
  * <TD> vector<double > </TD>
  * <TD>  numPoly </TD> 
- * <TD> &nbsp;the electronic delay. </TD>
+ * <TD> &nbsp;Group delay polynomial (s). </TD>
  * </TR>
 	
  * <TR>
- * <TD> geomDelay </TD> 
+ * <TD> groupDelayRate </TD> 
  * <TD> vector<double > </TD>
  * <TD>  numPoly </TD> 
- * <TD> &nbsp;the geometric delay. </TD>
+ * <TD> &nbsp;Group delay rate polynomial (s/s) </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> fieldId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
 
@@ -187,24 +233,157 @@ class DelayModelRow;
  * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> dispDelay </TD> 
- * <TD> vector<double > </TD>
- * <TD>  numPoly  </TD>
- * <TD>&nbsp; dispersive delay at 1m wavelength. </TD>
+ * <TD> timeOrigin </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; value used as the origin for the evaluation of the polynomials. </TD>
  * </TR>
 	
  * <TR>
- * <TD> groupDelay </TD> 
- * <TD> vector<double > </TD>
- * <TD>  numPoly  </TD>
- * <TD>&nbsp; the group delay at 1m wavelength. </TD>
+ * <TD> atmosphericGroupDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Atmosphere group delay. </TD>
  * </TR>
 	
  * <TR>
- * <TD> phaseDelay </TD> 
+ * <TD> atmosphericGroupDelayRate </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Atmosphere group delay rate. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> geometricDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Geometric delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> geometricDelayRate </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Geometric delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numLO </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of local oscillators. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> LOOffset </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numLO  </TD>
+ * <TD>&nbsp; Local oscillator offset. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> LOOffsetRate </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numLO  </TD>
+ * <TD>&nbsp; Local oscillator offset rate. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> dispersiveDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Dispersive delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> dispersiveDelayRate </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Dispersive delay rate. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> atmosphericDryDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the dry atmospheric delay component. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> atmosphericWetDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the wet atmospheric delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> padDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Pad delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> antennaDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Antenna delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp;  </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationType </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; describes the polarizations of the receptors (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> electronicDelay </TD> 
  * <TD> vector<double > </TD>
- * <TD>  numPoly  </TD>
- * <TD>&nbsp; the phase delay at 1m wavelength. </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the electronic delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> electronicDelayRate </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the electronic delay rate. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> receiverDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the receiver delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> IFDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the intermediate frequency delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> LODelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the local oscillator delay. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> crossPolarizationDelay </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the cross polarization delay. </TD>
  * </TR>
 	
 
@@ -221,7 +400,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~DelayModelTable();
@@ -243,17 +422,41 @@ public:
 	/**
 	 * Return the name of this table.
 	 *
+	 * This is a instance method of the class.
+	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
+	std::string getName() const;
+	
+	/**
+	 * Return the name of this table.
+	 *
+	 * This is a static method of the class.
+	 *
+	 * @return the name of this table in a string.
+	 */
+	static std::string name() ;	
+	
+	/**
+	 * Return the version information about this table.
+	 *
+	 */
+	 std::string getVersion() const ;
 	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
+	/**
+	 * Return the default sorted list of attributes names in the binary representation of the table.
+	 *
+	 * @return a const reference to a vector of string
+	 */
+	 static const std::vector<std::string>& defaultAttributesNamesInBin();
+	 
 	/**
 	 * Return this table's Entity.
 	 */
@@ -272,7 +475,7 @@ public:
 	 * @returns a string containing the XML representation.
 	 * @throws ConversionException
 	 */
-	string toXML()  ;
+	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -281,7 +484,7 @@ public:
 	 *
 	 * @return a pointer to a DelayModelTableIDL
 	 */
-	DelayModelTableIDL *toIDL() ;
+	asdmIDL::DelayModelTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
@@ -291,7 +494,7 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(DelayModelTableIDL x) ;
+	void fromIDL(asdmIDL::DelayModelTableIDL x) ;
 #endif
 	
 	//
@@ -311,22 +514,24 @@ public:
 	
  	 * @param antennaId
 	
- 	 * @param timeInterval
+ 	 * @param spectralWindowId
 	
- 	 * @param timeOrigin
+ 	 * @param timeInterval
 	
  	 * @param numPoly
 	
- 	 * @param atmDryDelay
+ 	 * @param phaseDelay
 	
- 	 * @param atmWetDelay
+ 	 * @param phaseDelayRate
 	
- 	 * @param clockDelay
+ 	 * @param groupDelay
 	
- 	 * @param geomDelay
+ 	 * @param groupDelayRate
+	
+ 	 * @param fieldId
 	
      */
-	DelayModelRow *newRow(Tag antennaId, ArrayTimeInterval timeInterval, ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay);
+	DelayModelRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, vector<double > phaseDelay, vector<double > phaseDelayRate, vector<double > groupDelay, vector<double > groupDelayRate, Tag fieldId);
 	
 
 
@@ -361,7 +566,7 @@ public:
 	 *
 	
 	 * @note The row is inserted in the table in such a way that all the rows having the same value of
-	 * ( antennaId ) are stored by ascending time.
+	 * ( antennaId, spectralWindowId ) are stored by ascending time.
 	 * @see method getByContext.
 	
 	 */
@@ -380,7 +585,7 @@ public:
 	 * @return Alls rows in a vector of pointers of DelayModelRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the DelayModelTable.
 	 */
-	vector<DelayModelRow *> get() ;
+	std::vector<DelayModelRow *> get() ;
 	
 	/**
 	 * Get a const reference on the collection of rows pointers internally hold by the table.
@@ -388,17 +593,20 @@ public:
 	 * in which they have been added to the DelayModelTable.
 	 *
 	 */
-	 const vector<DelayModelRow *>& get() const ;
+	 const std::vector<DelayModelRow *>& get() const ;
 	
 
 	/**
 	 * Returns all the rows sorted by ascending startTime for a given context. 
-	 * The context is defined by a value of ( antennaId ).
+	 * The context is defined by a value of ( antennaId, spectralWindowId ).
 	 *
 	 * @return a pointer on a vector<DelayModelRow *>. A null returned value means that the table contains
-	 * no DelayModelRow for the given ( antennaId ).
+	 * no DelayModelRow for the given ( antennaId, spectralWindowId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
-	 vector <DelayModelRow*> *getByContext(Tag antennaId);
+	 std::vector <DelayModelRow*> *getByContext(Tag antennaId, Tag spectralWindowId);
 	 
 
 
@@ -411,11 +619,13 @@ public:
 	
 	 * @param antennaId
 	
+	 * @param spectralWindowId
+	
 	 * @param timeInterval
 	
  	 *
 	 */
- 	DelayModelRow* getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval);
+ 	DelayModelRow* getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
 
  	 	
 
@@ -429,23 +639,28 @@ public:
 			
  	 * @param antennaId
  	 		
- 	 * @param timeInterval
+ 	 * @param spectralWindowId
  	 		
- 	 * @param timeOrigin
+ 	 * @param timeInterval
  	 		
  	 * @param numPoly
  	 		
- 	 * @param atmDryDelay
+ 	 * @param phaseDelay
  	 		
- 	 * @param atmWetDelay
+ 	 * @param phaseDelayRate
  	 		
- 	 * @param clockDelay
+ 	 * @param groupDelay
  	 		
- 	 * @param geomDelay
+ 	 * @param groupDelayRate
+ 	 		
+ 	 * @param fieldId
  	 		 
  	 */
-	DelayModelRow* lookup(Tag antennaId, ArrayTimeInterval timeInterval, ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay); 
+	DelayModelRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, vector<double > phaseDelay, vector<double > phaseDelayRate, vector<double > groupDelay, vector<double > groupDelayRate, Tag fieldId); 
 
+
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
 
 private:
 
@@ -464,6 +679,8 @@ private:
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML	
 	
+	std::string version ; 
+	
 	Entity entity;
 	
 
@@ -471,23 +688,29 @@ private:
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
+	static std::string itsName;
 	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
+	static std::vector<std::string> attributesNames;
 	
 	/**
-	 * A method to fill attributesNames;
+	 * The attributes names in the order in which they appear in the binary representation of the table.
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> attributesNamesInBin;
+	
 
+	/**
+	 * A method to fill attributesNames and attributesNamesInBin;
+	 */
+	static bool initAttributesNames(), initAttributesNamesDone ;
+	
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
@@ -498,6 +721,22 @@ private:
 	 
 	 */
 	DelayModelRow* checkAndAdd(DelayModelRow* x) ;
+	
+	/**
+	 * Brutally append an DelayModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param DelayModelRow* x a pointer onto the DelayModelRow to be appended.
+	 */
+	 void append(DelayModelRow* x) ;
+	 
+	/**
+	 * Brutally append an DelayModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param DelayModelRow* x a pointer onto the DelayModelRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(DelayModelRow* x) ;
+	 
+	 
 
 
 	
@@ -509,14 +748,14 @@ private:
 	 * @param vector <DelayModelRow*>& row . A reference to the vector where to insert x.
 	 *
 	 */
-	 DelayModelRow * insertByStartTime(DelayModelRow* x, vector<DelayModelRow* >& row);
+	 DelayModelRow * insertByStartTime(DelayModelRow* x, std::vector<DelayModelRow* >& row);
 	  
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private vector of DelayModelRow s.
-   vector<DelayModelRow * > privateRows;
+   std::vector<DelayModelRow * > privateRows;
    
 
 	
@@ -525,14 +764,14 @@ private:
 	
 		
 				
-	typedef vector <DelayModelRow* > TIME_ROWS;
-	map<string, TIME_ROWS > context;
+	typedef std::vector <DelayModelRow* > TIME_ROWS;
+	std::map<std::string, TIME_ROWS > context;
 		
 	/** 
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag antennaId) ;
+	 std::string Key(Tag antennaId, Tag spectralWindowId) ;
 		 
 		
 	
@@ -542,7 +781,7 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <DelayModelRow*>& vin, vector <DelayModelRow*>& vout,  Tag antennaId);
+	void getByKeyNoAutoIncNoTime(std::vector <DelayModelRow*>& vin, std::vector <DelayModelRow*>& vout,  Tag antennaId, Tag spectralWindowId);
 	
 
 	
@@ -555,14 +794,19 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string& xmlDoc) ;
+	void fromXML(std::string& xmlDoc) ;
 		
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
+
 	/**
 	  * Private methods involved during the build of this table out of the content
 	  * of file(s) containing an external representation of a DelayModel table.
 	  */
-	void setFromMIMEFile(const string& directory);
-	void setFromXMLFile(const string& directory);
+	void setFromMIMEFile(const std::string& directory);
+	/*
+	void openMIMEFile(const std::string& directory);
+	*/
+	void setFromXMLFile(const std::string& directory);
 	
 		 /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -571,7 +815,7 @@ private:
 	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
 	 * 
 	 */
-	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
   
 	
    /** 
@@ -580,12 +824,12 @@ private:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);
+	 void setFromMIME(const std::string & mimeMsg);
 	
 	/**
 	  * Private methods involved during the export of this table into disk file(s).
 	  */
-	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
 	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
@@ -596,7 +840,7 @@ private:
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
-	  void toFile(string directory);
+	  void toFile(std::string directory);
 	  
 	  /**
 	   * Load the table in memory if necessary.
@@ -618,7 +862,7 @@ private:
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);	
+	 void setFromFile(const std::string& directory);	
  
 };
 

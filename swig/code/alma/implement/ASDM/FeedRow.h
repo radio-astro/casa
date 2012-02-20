@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::FeedRowIDL;
 #endif
 
 
@@ -51,20 +47,25 @@ using asdmIDL::FeedRowIDL;
 
 
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
-#include <Complex.h>
-using  asdm::Complex;
+	
+#include <ComplexWrapper.h>
+	
 
 
 
@@ -81,7 +82,6 @@ using  asdm::Complex;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -100,9 +100,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Feed.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -118,22 +120,22 @@ class SpectralWindowRow;
 
 // class asdm::ReceiverRow;
 class ReceiverRow;
-
-// class asdm::BeamRow;
-class BeamRow;
 	
 
 class FeedRow;
-typedef void (FeedRow::*FeedAttributeFromBin) (EndianISStream& eiss);
+typedef void (FeedRow::*FeedAttributeFromBin) (EndianIStream& eis);
+typedef void (FeedRow::*FeedAttributeFromText) (const string& s);
 
 /**
  * The FeedRow class is a row of a FeedTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class FeedRow {
 friend class asdm::FeedTable;
+friend class asdm::RowTransformer<FeedRow>;
+//friend class asdm::TableStreamReader<FeedTable, FeedRow>;
 
 public:
 
@@ -546,47 +548,6 @@ public:
 
 
 	
-	// ===> Attribute beamId, which is optional
-	
-	
-	
-	/**
-	 * The attribute beamId is optional. Return true if this attribute exists.
-	 * @return true if and only if the beamId attribute exists. 
-	 */
-	bool isBeamIdExists() const;
-	
-
-	
- 	/**
- 	 * Get beamId, which is optional.
- 	 * @return beamId as vector<Tag> 
- 	 * @throws IllegalAccessException If beamId does not exist.
- 	 */
- 	vector<Tag>  getBeamId() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set beamId with the specified vector<Tag> .
- 	 * @param beamId The vector<Tag>  value to which beamId is to be set.
- 	 
- 		
- 	 */
- 	void setBeamId (vector<Tag>  beamId);
-		
-	
-	
-	
-	/**
-	 * Mark beamId, which is an optional field, as non-existent.
-	 */
-	void clearBeamId ();
-	
-
-
-	
 	// ===> Attribute receiverId
 	
 	
@@ -732,58 +693,6 @@ public:
 	
 
 	
- 		
- 	/**
- 	 * Set beamId[i] with the specified Tag.
- 	 * @param i The index in beamId where to set the Tag value.
- 	 * @param beamId The Tag value to which beamId[i] is to be set. 
- 	 * @throws OutOfBoundsException
-  	 */
-  	void setBeamId (int i, Tag beamId)  ;
- 			
-	
-
-	
-		 
-/**
- * Append a Tag to beamId.
- * @param id the Tag to be appended to beamId
- */
- void addBeamId(Tag id); 
-
-/**
- * Append a vector of Tag to beamId.
- * @param id an array of Tag to be appended to beamId
- */
- void addBeamId(const vector<Tag> & id); 
- 
-
- /**
-  * Returns the Tag stored in beamId at position i.
-  * @param i the position in beamId where the Tag is retrieved.
-  * @return the Tag stored at position i in beamId.
-  */
- const Tag getBeamId(int i);
- 
- /**
-  * Returns the BeamRow linked to this row via the tag stored in beamId
-  * at position i.
-  * @param i the position in beamId.
-  * @return a pointer on a BeamRow whose key (a Tag) is equal to the Tag stored at position
-  * i in the beamId. 
-  */
- BeamRow* getBeamUsingBeamId(int i); 
- 
- /**
-  * Returns the vector of BeamRow* linked to this row via the Tags stored in beamId
-  * @return an array of pointers on BeamRow.
-  */
- vector<BeamRow *> getBeamsUsingBeamId(); 
-  
-
-	
-
-	
 	
 	
 	/**
@@ -853,7 +762,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a FeedRowIDL struct.
 	 */
-	FeedRowIDL *toIDL() const;
+	asdmIDL::FeedRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -862,14 +771,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (FeedRowIDL x) ;
+	void setFromIDL (asdmIDL::FeedRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -877,7 +786,40 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, FeedAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void beamOffsetFromBin( EndianIStream& eis);
+void focusReferenceFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void polResponseFromBin( EndianIStream& eis);
+void receptorAngleFromBin( EndianIStream& eis);
+void receiverIdFromBin( EndianIStream& eis);
+
+void feedNumFromBin( EndianIStream& eis);
+void illumOffsetFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the FeedTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static FeedRow* fromBin(EndianIStream& eis, FeedTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1081,19 +1023,6 @@ private:
  	
 
 	
-	// ===> Attribute beamId, which is optional
-	
-	
-	bool beamIdExists;
-	
-
-	vector<Tag>  beamId;
-
-	
-	
- 	
-
-	
 	// ===> Attribute receiverId
 	
 	
@@ -1140,33 +1069,79 @@ private:
 	
 
 	
-		
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, FeedAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void beamOffsetFromBin( EndianIStream& eis);
+void focusReferenceFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void polResponseFromBin( EndianIStream& eis);
+void receptorAngleFromBin( EndianIStream& eis);
+void receiverIdFromBin( EndianIStream& eis);
 
+void feedNumFromBin( EndianIStream& eis);
+void illumOffsetFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
 
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, FeedAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void feedIdFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void beamOffsetFromText (const string & s);
+	
+	
+void focusReferenceFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void polResponseFromText (const string & s);
+	
+	
+void receptorAngleFromText (const string & s);
+	
+	
+void receiverIdFromText (const string & s);
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, FeedAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void feedIdFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void beamOffsetFromBin( EndianISStream& eiss);
-void focusReferenceFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void polResponseFromBin( EndianISStream& eiss);
-void receptorAngleFromBin( EndianISStream& eiss);
-void receiverIdFromBin( EndianISStream& eiss);
-
-void feedNumFromBin( EndianISStream& eiss);
-void illumOffsetFromBin( EndianISStream& eiss);
-void positionFromBin( EndianISStream& eiss);
-void beamIdFromBin( EndianISStream& eiss);
+void feedNumFromText (const string & s);
 	
+	
+void illumOffsetFromText (const string & s);
+	
+	
+void positionFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1175,14 +1150,14 @@ void beamIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the FeedTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static FeedRow* fromBin(EndianISStream& eiss, FeedTable& table, const vector<string>& attributesSeq);	 
 
+	 static FeedRow* fromBin(EndianIStream& eis, FeedTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

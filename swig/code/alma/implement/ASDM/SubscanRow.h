@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SubscanRowIDL;
 #endif
 
 
@@ -51,11 +47,13 @@ using asdmIDL::SubscanRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
 
 
@@ -72,14 +70,10 @@ using  asdm::Tag;
 
 	
 #include "CSubscanIntent.h"
-using namespace SubscanIntentMod;
 	
 
 	
 #include "CSwitchingMode.h"
-using namespace SwitchingModeMod;
-	
-
 	
 
 	
@@ -88,7 +82,6 @@ using namespace SwitchingModeMod;
 
 	
 #include "CCorrelatorCalibration.h"
-using namespace CorrelatorCalibrationMod;
 	
 
 
@@ -97,9 +90,11 @@ using namespace CorrelatorCalibrationMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Subscan.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -112,16 +107,19 @@ class ExecBlockRow;
 	
 
 class SubscanRow;
-typedef void (SubscanRow::*SubscanAttributeFromBin) (EndianISStream& eiss);
+typedef void (SubscanRow::*SubscanAttributeFromBin) (EndianIStream& eis);
+typedef void (SubscanRow::*SubscanAttributeFromText) (const string& s);
 
 /**
  * The SubscanRow class is a row of a SubscanTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SubscanRow {
 friend class asdm::SubscanTable;
+friend class asdm::RowTransformer<SubscanRow>;
+//friend class asdm::TableStreamReader<SubscanTable, SubscanRow>;
 
 public:
 
@@ -368,29 +366,29 @@ public:
 
 
 	
-	// ===> Attribute numberIntegration
+	// ===> Attribute numIntegration
 	
 	
 	
 
 	
  	/**
- 	 * Get numberIntegration.
- 	 * @return numberIntegration as int
+ 	 * Get numIntegration.
+ 	 * @return numIntegration as int
  	 */
- 	int getNumberIntegration() const;
+ 	int getNumIntegration() const;
 	
  
  	
  	
  	/**
- 	 * Set numberIntegration with the specified int.
- 	 * @param numberIntegration The int value to which numberIntegration is to be set.
+ 	 * Set numIntegration with the specified int.
+ 	 * @param numIntegration The int value to which numIntegration is to be set.
  	 
  		
  			
  	 */
- 	void setNumberIntegration (int numberIntegration);
+ 	void setNumIntegration (int numIntegration);
   		
 	
 	
@@ -398,59 +396,29 @@ public:
 
 
 	
-	// ===> Attribute numberSubintegration
+	// ===> Attribute numSubintegration
 	
 	
 	
 
 	
  	/**
- 	 * Get numberSubintegration.
- 	 * @return numberSubintegration as vector<int >
+ 	 * Get numSubintegration.
+ 	 * @return numSubintegration as vector<int >
  	 */
- 	vector<int > getNumberSubintegration() const;
+ 	vector<int > getNumSubintegration() const;
 	
  
  	
  	
  	/**
- 	 * Set numberSubintegration with the specified vector<int >.
- 	 * @param numberSubintegration The vector<int > value to which numberSubintegration is to be set.
+ 	 * Set numSubintegration with the specified vector<int >.
+ 	 * @param numSubintegration The vector<int > value to which numSubintegration is to be set.
  	 
  		
  			
  	 */
- 	void setNumberSubintegration (vector<int > numberSubintegration);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute flagRow
-	
-	
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool getFlagRow() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFlagRow (bool flagRow);
+ 	void setNumSubintegration (vector<int > numSubintegration);
   		
 	
 	
@@ -574,14 +542,12 @@ public:
 	    
 	 * @param subscanIntent
 	    
-	 * @param numberIntegration
+	 * @param numIntegration
 	    
-	 * @param numberSubintegration
-	    
-	 * @param flagRow
+	 * @param numSubintegration
 	    
 	 */ 
-	bool compareNoAutoInc(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow);
+	bool compareNoAutoInc(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numIntegration, vector<int > numSubintegration);
 	
 	
 
@@ -598,14 +564,12 @@ public:
 	    
 	 * @param subscanIntent
 	    
-	 * @param numberIntegration
+	 * @param numIntegration
 	    
-	 * @param numberSubintegration
-	    
-	 * @param flagRow
+	 * @param numSubintegration
 	    
 	 */ 
-	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow); 
+	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numIntegration, vector<int > numSubintegration); 
 		 
 	
 	/**
@@ -623,7 +587,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SubscanRowIDL struct.
 	 */
-	SubscanRowIDL *toIDL() const;
+	asdmIDL::SubscanRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -632,14 +596,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SubscanRowIDL x) ;
+	void setFromIDL (asdmIDL::SubscanRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -647,7 +611,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SubscanAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void subscanIntentFromBin( EndianIStream& eis);
+void numIntegrationFromBin( EndianIStream& eis);
+void numSubintegrationFromBin( EndianIStream& eis);
+
+void subscanModeFromBin( EndianIStream& eis);
+void correlatorCalibrationFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SubscanTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SubscanRow* fromBin(EndianIStream& eis, SubscanTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -776,33 +770,22 @@ private:
  	
 
 	
-	// ===> Attribute numberIntegration
+	// ===> Attribute numIntegration
 	
 	
 
-	int numberIntegration;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numberSubintegration
-	
-	
-
-	vector<int > numberSubintegration;
+	int numIntegration;
 
 	
 	
  	
 
 	
-	// ===> Attribute flagRow
+	// ===> Attribute numSubintegration
 	
 	
 
-	bool flagRow;
+	vector<int > numSubintegration;
 
 	
 	
@@ -848,24 +831,67 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, SubscanAttributeFromBin> fromBinMethods;
-void execBlockIdFromBin( EndianISStream& eiss);
-void scanNumberFromBin( EndianISStream& eiss);
-void subscanNumberFromBin( EndianISStream& eiss);
-void startTimeFromBin( EndianISStream& eiss);
-void endTimeFromBin( EndianISStream& eiss);
-void fieldNameFromBin( EndianISStream& eiss);
-void subscanIntentFromBin( EndianISStream& eiss);
-void numberIntegrationFromBin( EndianISStream& eiss);
-void numberSubintegrationFromBin( EndianISStream& eiss);
-void flagRowFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, SubscanAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void subscanIntentFromBin( EndianIStream& eis);
+void numIntegrationFromBin( EndianIStream& eis);
+void numSubintegrationFromBin( EndianIStream& eis);
 
-void subscanModeFromBin( EndianISStream& eiss);
-void correlatorCalibrationFromBin( EndianISStream& eiss);
+void subscanModeFromBin( EndianIStream& eis);
+void correlatorCalibrationFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SubscanAttributeFromText> fromTextMethods;
+	
+void execBlockIdFromText (const string & s);
+	
+	
+void scanNumberFromText (const string & s);
+	
+	
+void subscanNumberFromText (const string & s);
+	
+	
+void startTimeFromText (const string & s);
+	
+	
+void endTimeFromText (const string & s);
+	
+	
+void fieldNameFromText (const string & s);
+	
+	
+void subscanIntentFromText (const string & s);
+	
+	
+void numIntegrationFromText (const string & s);
+	
+	
+void numSubintegrationFromText (const string & s);
+	
+
+	
+void subscanModeFromText (const string & s);
+	
+	
+void correlatorCalibrationFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -874,14 +900,14 @@ void correlatorCalibrationFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SubscanTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SubscanRow* fromBin(EndianISStream& eiss, SubscanTable& table, const vector<string>& attributesSeq);	 
 
+	 static SubscanRow* fromBin(EndianIStream& eis, SubscanTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

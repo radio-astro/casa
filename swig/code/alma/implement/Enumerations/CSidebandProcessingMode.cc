@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSidebandProcessingMode::version() {
 	return SidebandProcessingModeMod::version;
 	}
@@ -164,5 +163,25 @@ string CSidebandProcessingMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SidebandProcessingMode'.";
 	return oss.str();
+}
+
+namespace SidebandProcessingModeMod {
+	std::ostream & operator << ( std::ostream & out, const SidebandProcessingMode& value) {
+		out << CSidebandProcessingMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SidebandProcessingMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSidebandProcessingMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

@@ -49,8 +49,11 @@ using asdm::AlmaRadiometerRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string AlmaRadiometerTable::tableName = "AlmaRadiometer";
-	const vector<string> AlmaRadiometerTable::attributesNames = initAttributesNames();
-		
+	string AlmaRadiometerTable::itsName = "AlmaRadiometer";
+	vector<string> AlmaRadiometerTable::attributesNames; 
+	vector<string> AlmaRadiometerTable::attributesNamesInBin; 
+	bool AlmaRadiometerTable::initAttributesNamesDone = AlmaRadiometerTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -139,14 +145,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string AlmaRadiometerTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string AlmaRadiometerTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> AlmaRadiometerTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool AlmaRadiometerTable::initAttributesNames() {
 
 		attributesNames.push_back("almaRadiometerId");
 
@@ -156,13 +168,24 @@ namespace asdm {
 
 		attributesNames.push_back("spectralWindowId");
 
-		return attributesNames;
+
+    
+    	 
+    	attributesNamesInBin.push_back("almaRadiometerId") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("numAntenna") ; 
+    	 
+    	attributesNamesInBin.push_back("spectralWindowId") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& AlmaRadiometerTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& AlmaRadiometerTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -225,15 +248,24 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void AlmaRadiometerTable::addWithoutCheckingUnique(AlmaRadiometerRow * x) {
+		if (getRowByKey(
+						x->getAlmaRadiometerId()
+						) != (AlmaRadiometerRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "AlmaRadiometerTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -265,6 +297,16 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void AlmaRadiometerTable::append(AlmaRadiometerRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -316,6 +358,9 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::AlmaRadiometerTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -349,7 +394,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/2/AlmaRadiometerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
+		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/3/AlmaRadiometerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -368,8 +413,31 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 	}
 
 	
-	void AlmaRadiometerTable::fromXML(string& xmlDoc)  {
-		Parser xml(xmlDoc);
+	string AlmaRadiometerTable::getVersion() const {
+		return version;
+	}
+	
+
+	void AlmaRadiometerTable::fromXML(string& tableInXML)  {
+		//
+		// Look for a version information in the schemaVersion of the XML
+		//
+		xmlDoc *doc;
+		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+		if ( doc == NULL )
+			throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "AlmaRadiometer");
+		
+		xmlNode* root_element = xmlDocGetRootElement(doc);
+   		if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      		throw ConversionException("Failed to retrieve the root element in the DOM structure.", "AlmaRadiometer");
+      		
+      	xmlChar * propValue = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	if ( propValue != 0 ) {
+      		version = string( (const char*) propValue);
+      		xmlFree(propValue);   		
+      	}
+      		     							
+		Parser xml(tableInXML);
 		if (!xml.isStr("<AlmaRadiometerTable")) 
 			error();
 		// cout << "Parsing a AlmaRadiometerTable" << endl;
@@ -389,12 +457,17 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		AlmaRadiometerRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"AlmaRadiometerTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -403,10 +476,27 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in AlmaRadiometerTable::checkAndAdd called from AlmaRadiometerTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"AlmaRadiometerTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in AlmaRadiometerTable::addWithoutCheckingUnique called from AlmaRadiometerTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</AlmaRadiometerTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -426,7 +516,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/2/AlmaRadiometerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
+		oss << "<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/3/AlmaRadiometerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='AlmaRadiometerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -549,14 +639,20 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("almaRadiometerId") ; 
     
-     
+    	 
+    attributesSeq.push_back("almaRadiometerId") ; 
+    	
+    	 
     attributesSeq.push_back("numAntenna") ; 
-     
+    	 
     attributesSeq.push_back("spectralWindowId") ; 
-              
+    	
+     
+    
+    
+    // And decide that it has version == "2"
+    version = "2";         
      }
     else if (string("AlmaRadiometerTable").compare((const char*) root_element->name) == 0) {
       // It's a new (and correct) MIME file for tables.
@@ -565,6 +661,12 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
       //
       xmlNode* bulkStoreRef = 0;
       xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
       
       // Skip the two first children (Entity and ContainerEntity).
       bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
@@ -604,13 +706,13 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -622,22 +724,48 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	AlmaRadiometerRow* aRow = AlmaRadiometerRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				AlmaRadiometerRow* aRow = AlmaRadiometerRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "AlmaRadiometer");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "AlmaRadiometer");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			AlmaRadiometerRow* aRow = AlmaRadiometerRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
+	}
+	
+	void AlmaRadiometerTable::setUnknownAttributeBinaryReader(const string& attributeName, BinaryAttributeReaderFunctor* barFctr) {
+		//
+		// Is this attribute really unknown ?
+		//
+		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+			if ((*iter).compare(attributeName) == 0) 
+				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "AlmaRadiometer"); 
+		}
+		
+		// Ok then register the functor to activate when an unknown attribute is met during the reading of a binary table?
+		unknownAttributes2Functors[attributeName] = barFctr;
+	}
+	
+	BinaryAttributeReaderFunctor* AlmaRadiometerTable::getUnknownAttributeBinaryReader(const string& attributeName) const {
+		map<string, BinaryAttributeReaderFunctor*>::const_iterator iter = unknownAttributes2Functors.find(attributeName);
+		return (iter == unknownAttributes2Functors.end()) ? 0 : iter->second;
 	}
 
 	
@@ -705,12 +833,140 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
     
     setFromMIME(ss.str());
   }	
+/* 
+  void AlmaRadiometerTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/AlmaRadiometer.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "AlmaRadiometer");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "AlmaRadiometer");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "AlmaRadiometer");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "AlmaRadiometer");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "AlmaRadiometer");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("AlmaRadiometerTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/AlmaRadiometerTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "AlmaRadiometer");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/AlmaRadiometerTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "AlmaRadiometer");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/AlmaRadiometerTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "AlmaRadiometer");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/AlmaRadiometerTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "AlmaRadiometer");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void AlmaRadiometerTable::setFromXMLFile(const string& directory) {
     string tablePath ;
     
     tablePath = directory + "/AlmaRadiometer.xml";
+    
+    /*
     ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
     if (!tablefile.is_open()) { 
       throw ConversionException("Could not open file " + tablePath, "AlmaRadiometer");
@@ -730,10 +986,21 @@ void AlmaRadiometerTable::setFromXMLFile(const string& directory) {
 
     // Let's make a string out of the stringstream content and empty the stringstream.
     string xmlDocument = ss.str(); ss.str("");
-
+	
     // Let's make a very primitive check to decide
     // whether the XML content represents the table
     // or refers to it via a <BulkStoreRef element.
+    */
+    
+    string xmlDocument;
+    try {
+    	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
+    }
+    catch (XSLTransformerException e) {
+    	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "AlmaRadiometer");
+    }
+    
     if (xmlDocument.find("<BulkStoreRef") != string::npos)
       setFromMIMEFile(directory);
     else

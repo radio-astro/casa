@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::FocusRowIDL;
 #endif
 
 
@@ -51,17 +47,28 @@ using asdmIDL::FocusRowIDL;
 
 
 
+	 
+#include <Angle.h>
+	
+
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
 
 
+
+	
+
+	
 
 	
 
@@ -77,9 +84,11 @@ using  asdm::ArrayTimeInterval;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Focus.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -95,16 +104,19 @@ class FocusModelRow;
 	
 
 class FocusRow;
-typedef void (FocusRow::*FocusAttributeFromBin) (EndianISStream& eiss);
+typedef void (FocusRow::*FocusAttributeFromBin) (EndianIStream& eis);
+typedef void (FocusRow::*FocusAttributeFromText) (const string& s);
 
 /**
  * The FocusRow class is a row of a FocusTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class FocusRow {
 friend class asdm::FocusTable;
+friend class asdm::RowTransformer<FocusRow>;
+//friend class asdm::TableStreamReader<FocusTable, FocusRow>;
 
 public:
 
@@ -218,6 +230,36 @@ public:
 
 
 	
+	// ===> Attribute focusRotationOffset
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get focusRotationOffset.
+ 	 * @return focusRotationOffset as vector<Angle >
+ 	 */
+ 	vector<Angle > getFocusRotationOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set focusRotationOffset with the specified vector<Angle >.
+ 	 * @param focusRotationOffset The vector<Angle > value to which focusRotationOffset is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFocusRotationOffset (vector<Angle > focusRotationOffset);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute measuredFocusPosition, which is optional
 	
 	
@@ -255,6 +297,47 @@ public:
 	 * Mark measuredFocusPosition, which is an optional field, as non-existent.
 	 */
 	void clearMeasuredFocusPosition ();
+	
+
+
+	
+	// ===> Attribute measuredFocusRotation, which is optional
+	
+	
+	
+	/**
+	 * The attribute measuredFocusRotation is optional. Return true if this attribute exists.
+	 * @return true if and only if the measuredFocusRotation attribute exists. 
+	 */
+	bool isMeasuredFocusRotationExists() const;
+	
+
+	
+ 	/**
+ 	 * Get measuredFocusRotation, which is optional.
+ 	 * @return measuredFocusRotation as vector<Angle >
+ 	 * @throws IllegalAccessException If measuredFocusRotation does not exist.
+ 	 */
+ 	vector<Angle > getMeasuredFocusRotation() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set measuredFocusRotation with the specified vector<Angle >.
+ 	 * @param measuredFocusRotation The vector<Angle > value to which measuredFocusRotation is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setMeasuredFocusRotation (vector<Angle > measuredFocusRotation);
+		
+	
+	
+	
+	/**
+	 * Mark measuredFocusRotation, which is an optional field, as non-existent.
+	 */
+	void clearMeasuredFocusRotation ();
 	
 
 
@@ -375,10 +458,12 @@ public:
 	    
 	 * @param focusOffset
 	    
+	 * @param focusRotationOffset
+	    
 	 * @param focusModelId
 	    
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId);
+	bool compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, vector<Angle > focusRotationOffset, int focusModelId);
 	
 	
 
@@ -391,10 +476,12 @@ public:
 	    
 	 * @param focusOffset
 	    
+	 * @param focusRotationOffset
+	    
 	 * @param focusModelId
 	    
 	 */ 
-	bool compareRequiredValue(bool focusTracking, vector<Length > focusOffset, int focusModelId); 
+	bool compareRequiredValue(bool focusTracking, vector<Length > focusOffset, vector<Angle > focusRotationOffset, int focusModelId); 
 		 
 	
 	/**
@@ -412,7 +499,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a FocusRowIDL struct.
 	 */
-	FocusRowIDL *toIDL() const;
+	asdmIDL::FocusRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -421,14 +508,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (FocusRowIDL x) ;
+	void setFromIDL (asdmIDL::FocusRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -436,7 +523,34 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, FocusAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void focusTrackingFromBin( EndianIStream& eis);
+void focusOffsetFromBin( EndianIStream& eis);
+void focusRotationOffsetFromBin( EndianIStream& eis);
+void focusModelIdFromBin( EndianIStream& eis);
+
+void measuredFocusPositionFromBin( EndianIStream& eis);
+void measuredFocusRotationFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the FocusTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static FocusRow* fromBin(EndianIStream& eis, FocusTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -519,6 +633,17 @@ private:
  	
 
 	
+	// ===> Attribute focusRotationOffset
+	
+	
+
+	vector<Angle > focusRotationOffset;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute measuredFocusPosition, which is optional
 	
 	
@@ -526,6 +651,19 @@ private:
 	
 
 	vector<Length > measuredFocusPosition;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute measuredFocusRotation, which is optional
+	
+	
+	bool measuredFocusRotationExists;
+	
+
+	vector<Angle > measuredFocusRotation;
 
 	
 	
@@ -575,18 +713,55 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, FocusAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void focusTrackingFromBin( EndianISStream& eiss);
-void focusOffsetFromBin( EndianISStream& eiss);
-void focusModelIdFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, FocusAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void focusTrackingFromBin( EndianIStream& eis);
+void focusOffsetFromBin( EndianIStream& eis);
+void focusRotationOffsetFromBin( EndianIStream& eis);
+void focusModelIdFromBin( EndianIStream& eis);
 
-void measuredFocusPositionFromBin( EndianISStream& eiss);
+void measuredFocusPositionFromBin( EndianIStream& eis);
+void measuredFocusRotationFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, FocusAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void focusTrackingFromText (const string & s);
+	
+	
+void focusOffsetFromText (const string & s);
+	
+	
+void focusRotationOffsetFromText (const string & s);
+	
+	
+void focusModelIdFromText (const string & s);
+	
+
+	
+void measuredFocusPositionFromText (const string & s);
+	
+	
+void measuredFocusRotationFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -595,14 +770,14 @@ void measuredFocusPositionFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the FocusTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static FocusRow* fromBin(EndianISStream& eiss, FocusTable& table, const vector<string>& attributesSeq);	 
 
+	 static FocusRow* fromBin(EndianIStream& eis, FocusTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

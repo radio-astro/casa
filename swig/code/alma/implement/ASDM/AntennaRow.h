@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::AntennaRowIDL;
 #endif
 
 
@@ -51,14 +47,17 @@ using asdmIDL::AntennaRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
 
 
@@ -69,12 +68,10 @@ using  asdm::Length;
 
 	
 #include "CAntennaMake.h"
-using namespace AntennaMakeMod;
 	
 
 	
 #include "CAntennaType.h"
-using namespace AntennaTypeMod;
 	
 
 	
@@ -91,9 +88,11 @@ using namespace AntennaTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Antenna.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -109,16 +108,19 @@ class StationRow;
 	
 
 class AntennaRow;
-typedef void (AntennaRow::*AntennaAttributeFromBin) (EndianISStream& eiss);
+typedef void (AntennaRow::*AntennaAttributeFromBin) (EndianIStream& eis);
+typedef void (AntennaRow::*AntennaAttributeFromText) (const string& s);
 
 /**
  * The AntennaRow class is a row of a AntennaTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class AntennaRow {
 friend class asdm::AntennaTable;
+friend class asdm::RowTransformer<AntennaRow>;
+//friend class asdm::TableStreamReader<AntennaTable, AntennaRow>;
 
 public:
 
@@ -562,7 +564,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a AntennaRowIDL struct.
 	 */
-	AntennaRowIDL *toIDL() const;
+	asdmIDL::AntennaRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -571,14 +573,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (AntennaRowIDL x) ;
+	void setFromIDL (asdmIDL::AntennaRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -586,7 +588,36 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, AntennaAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void antennaTypeFromBin( EndianIStream& eis);
+void dishDiameterFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void offsetFromBin( EndianIStream& eis);
+void timeFromBin( EndianIStream& eis);
+void stationIdFromBin( EndianIStream& eis);
+
+void assocAntennaIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the AntennaTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static AntennaRow* fromBin(EndianIStream& eis, AntennaTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -779,22 +810,63 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, AntennaAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void nameFromBin( EndianISStream& eiss);
-void antennaMakeFromBin( EndianISStream& eiss);
-void antennaTypeFromBin( EndianISStream& eiss);
-void dishDiameterFromBin( EndianISStream& eiss);
-void positionFromBin( EndianISStream& eiss);
-void offsetFromBin( EndianISStream& eiss);
-void timeFromBin( EndianISStream& eiss);
-void stationIdFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, AntennaAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void antennaTypeFromBin( EndianIStream& eis);
+void dishDiameterFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void offsetFromBin( EndianIStream& eis);
+void timeFromBin( EndianIStream& eis);
+void stationIdFromBin( EndianIStream& eis);
 
-void assocAntennaIdFromBin( EndianISStream& eiss);
+void assocAntennaIdFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, AntennaAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void nameFromText (const string & s);
+	
+	
+void antennaMakeFromText (const string & s);
+	
+	
+void antennaTypeFromText (const string & s);
+	
+	
+void dishDiameterFromText (const string & s);
+	
+	
+void positionFromText (const string & s);
+	
+	
+void offsetFromText (const string & s);
+	
+	
+void timeFromText (const string & s);
+	
+	
+void stationIdFromText (const string & s);
+	
+
+	
+void assocAntennaIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -803,14 +875,14 @@ void assocAntennaIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the AntennaTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static AntennaRow* fromBin(EndianISStream& eiss, AntennaTable& table, const vector<string>& attributesSeq);	 
 
+	 static AntennaRow* fromBin(EndianIStream& eis, AntennaTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace BaselineReferenceCodeMod
   //! BaselineReferenceCode.
   //! defines reference frames to qualify the measure of a baseline.
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum BaselineReferenceCode
@@ -121,7 +122,10 @@ namespace BaselineReferenceCodeMod
 } 
 #endif
 
-using namespace std;
+namespace BaselineReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const BaselineReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , BaselineReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration BaselineReferenceCode.
@@ -203,7 +207,7 @@ class CBaselineReferenceCode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -257,8 +261,8 @@ class CBaselineReferenceCode {
     CBaselineReferenceCode(const CBaselineReferenceCode&);
     CBaselineReferenceCode& operator=(const CBaselineReferenceCode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

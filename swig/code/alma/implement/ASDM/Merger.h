@@ -75,9 +75,6 @@
 #include "ReceiverTable.h"
 #include "ReceiverRow.h"
 
-#include "BeamTable.h"
-#include "BeamRow.h"
-
 #include "DopplerTable.h"
 #include "DopplerRow.h"
 
@@ -222,13 +219,16 @@
 #include "FlagTable.h"
 #include "FlagRow.h"
 
+#include "ScaleTable.h"
+#include "ScaleRow.h"
+
 #include "SysPowerTable.h"
 #include "SysPowerRow.h"
 
 
 
 /*\file "Merger.h"
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 using namespace std;
 
@@ -275,8 +275,6 @@ namespace asdm {
 			bool hasMergedPolarization;	
 
 			bool hasMergedReceiver;	
-
-			bool hasMergedBeam;	
 
 			bool hasMergedDoppler;	
 
@@ -374,6 +372,8 @@ namespace asdm {
 
 			bool hasMergedFlag;	
 
+			bool hasMergedScale;	
+
 			bool hasMergedSysPower;	
 			
 
@@ -416,9 +416,6 @@ namespace asdm {
 
 			void mergeReceiver();
 			void postMergeReceiver();			
-
-			void mergeBeam();
-			void postMergeBeam();			
 
 			void mergeDoppler();
 			void postMergeDoppler();			
@@ -564,6 +561,9 @@ namespace asdm {
 			void mergeFlag();
 			void postMergeFlag();			
 
+			void mergeScale();
+			void postMergeScale();			
+
 			void mergeSysPower();
 			void postMergeSysPower();			
 
@@ -594,8 +594,6 @@ namespace asdm {
 		void (Merger::*mergePolarizationPtr) () ;
 
 		void (Merger::*mergeReceiverPtr) () ;
-
-		void (Merger::*mergeBeamPtr) () ;
 
 		void (Merger::*mergeDopplerPtr) () ;
 
@@ -692,6 +690,8 @@ namespace asdm {
 		void (Merger::*mergeDelayModelPtr) () ;
 
 		void (Merger::*mergeFlagPtr) () ;
+
+		void (Merger::*mergeScalePtr) () ;
 
 		void (Merger::*mergeSysPowerPtr) () ;
 

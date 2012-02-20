@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace AtmPhaseCorrectionMod
   //! AtmPhaseCorrection.
   //!  Status of Phase correction
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AtmPhaseCorrection
@@ -69,7 +70,10 @@ namespace AtmPhaseCorrectionMod
 } 
 #endif
 
-using namespace std;
+namespace AtmPhaseCorrectionMod {
+	std::ostream & operator << ( std::ostream & out, const AtmPhaseCorrection& value);
+	std::istream & operator >> ( std::istream & in , AtmPhaseCorrection& value );
+}
 
 /** 
   * A helper class for the enumeration AtmPhaseCorrection.
@@ -99,7 +103,7 @@ class CAtmPhaseCorrection {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -153,8 +157,8 @@ class CAtmPhaseCorrection {
     CAtmPhaseCorrection(const CAtmPhaseCorrection&);
     CAtmPhaseCorrection& operator=(const CAtmPhaseCorrection&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

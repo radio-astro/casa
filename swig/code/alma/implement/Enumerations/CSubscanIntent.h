@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace SubscanIntentMod
   //! SubscanIntent.
   //! [ASDM.Subscan] Precise the intent for a subscan
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum SubscanIntent
@@ -74,6 +75,10 @@ namespace SubscanIntentMod
      ,
     AMBIENT /*!< ambient load measurement. */
      ,
+    SIGNAL /*!< Signal sideband measurement. */
+     ,
+    IMAGE /*!< Image sideband measurement. */
+     ,
     TEST /*!< reserved for development. */
      ,
     UNSPECIFIED /*!< Unspecified */
@@ -83,7 +88,10 @@ namespace SubscanIntentMod
 } 
 #endif
 
-using namespace std;
+namespace SubscanIntentMod {
+	std::ostream & operator << ( std::ostream & out, const SubscanIntent& value);
+	std::istream & operator >> ( std::istream & in , SubscanIntent& value );
+}
 
 /** 
   * A helper class for the enumeration SubscanIntent.
@@ -110,6 +118,10 @@ class CSubscanIntent {
 	
 	static const std::string& sAMBIENT; /*!< A const string equal to "AMBIENT".*/
 	
+	static const std::string& sSIGNAL; /*!< A const string equal to "SIGNAL".*/
+	
+	static const std::string& sIMAGE; /*!< A const string equal to "IMAGE".*/
+	
 	static const std::string& sTEST; /*!< A const string equal to "TEST".*/
 	
 	static const std::string& sUNSPECIFIED; /*!< A const string equal to "UNSPECIFIED".*/
@@ -127,7 +139,7 @@ class CSubscanIntent {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -181,8 +193,8 @@ class CSubscanIntent {
     CSubscanIntent(const CSubscanIntent&);
     CSubscanIntent& operator=(const CSubscanIntent&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

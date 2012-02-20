@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::GainTrackingRowIDL;
 #endif
 
 
@@ -51,31 +47,20 @@ using asdmIDL::GainTrackingRowIDL;
 
 
 
-#include <Angle.h>
-using  asdm::Angle;
-
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
-#include <Frequency.h>
-using  asdm::Frequency;
-
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
-
-#include <Complex.h>
-using  asdm::Complex;
-
-
-
-
 	
 
 	
-
+#include <ComplexWrapper.h>
 	
 
-	
+
+
 
 	
 
@@ -85,15 +70,6 @@ using  asdm::Complex;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -110,9 +86,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file GainTracking.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -131,16 +109,19 @@ class FeedRow;
 	
 
 class GainTrackingRow;
-typedef void (GainTrackingRow::*GainTrackingAttributeFromBin) (EndianISStream& eiss);
+typedef void (GainTrackingRow::*GainTrackingAttributeFromBin) (EndianIStream& eis);
+typedef void (GainTrackingRow::*GainTrackingAttributeFromText) (const string& s);
 
 /**
  * The GainTrackingRow class is a row of a GainTrackingTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class GainTrackingRow {
 friend class asdm::GainTrackingTable;
+friend class asdm::RowTransformer<GainTrackingRow>;
+//friend class asdm::TableStreamReader<GainTrackingTable, GainTrackingRow>;
 
 public:
 
@@ -194,66 +175,6 @@ public:
 
 
 	
-	// ===> Attribute attenuator
-	
-	
-	
-
-	
- 	/**
- 	 * Get attenuator.
- 	 * @return attenuator as float
- 	 */
- 	float getAttenuator() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set attenuator with the specified float.
- 	 * @param attenuator The float value to which attenuator is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAttenuator (float attenuator);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numLO
-	
-	
-	
-
-	
- 	/**
- 	 * Get numLO.
- 	 * @return numLO as int
- 	 */
- 	int getNumLO() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numLO with the specified int.
- 	 * @param numLO The int value to which numLO is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumLO (int numLO);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute numReceptor
 	
 	
@@ -284,29 +205,29 @@ public:
 
 
 	
-	// ===> Attribute cableDelay
+	// ===> Attribute attenuator
 	
 	
 	
 
 	
  	/**
- 	 * Get cableDelay.
- 	 * @return cableDelay as vector<double >
+ 	 * Get attenuator.
+ 	 * @return attenuator as vector<float >
  	 */
- 	vector<double > getCableDelay() const;
+ 	vector<float > getAttenuator() const;
 	
  
  	
  	
  	/**
- 	 * Set cableDelay with the specified vector<double >.
- 	 * @param cableDelay The vector<double > value to which cableDelay is to be set.
+ 	 * Set attenuator with the specified vector<float >.
+ 	 * @param attenuator The vector<float > value to which attenuator is to be set.
  	 
  		
  			
  	 */
- 	void setCableDelay (vector<double > cableDelay);
+ 	void setAttenuator (vector<float > attenuator);
   		
 	
 	
@@ -314,245 +235,32 @@ public:
 
 
 	
-	// ===> Attribute crossPolarizationDelay
+	// ===> Attribute polarizationType
 	
 	
 	
 
 	
  	/**
- 	 * Get crossPolarizationDelay.
- 	 * @return crossPolarizationDelay as double
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as vector<PolarizationTypeMod::PolarizationType >
  	 */
- 	double getCrossPolarizationDelay() const;
+ 	vector<PolarizationTypeMod::PolarizationType > getPolarizationType() const;
 	
  
  	
  	
  	/**
- 	 * Set crossPolarizationDelay with the specified double.
- 	 * @param crossPolarizationDelay The double value to which crossPolarizationDelay is to be set.
+ 	 * Set polarizationType with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationType The vector<PolarizationTypeMod::PolarizationType > value to which polarizationType is to be set.
  	 
  		
  			
  	 */
- 	void setCrossPolarizationDelay (double crossPolarizationDelay);
+ 	void setPolarizationType (vector<PolarizationTypeMod::PolarizationType > polarizationType);
   		
 	
 	
-	
-
-
-	
-	// ===> Attribute loPropagationDelay
-	
-	
-	
-
-	
- 	/**
- 	 * Get loPropagationDelay.
- 	 * @return loPropagationDelay as vector<double >
- 	 */
- 	vector<double > getLoPropagationDelay() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set loPropagationDelay with the specified vector<double >.
- 	 * @param loPropagationDelay The vector<double > value to which loPropagationDelay is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setLoPropagationDelay (vector<double > loPropagationDelay);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute receiverDelay
-	
-	
-	
-
-	
- 	/**
- 	 * Get receiverDelay.
- 	 * @return receiverDelay as vector<double >
- 	 */
- 	vector<double > getReceiverDelay() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set receiverDelay with the specified vector<double >.
- 	 * @param receiverDelay The vector<double > value to which receiverDelay is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setReceiverDelay (vector<double > receiverDelay);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute delayOffset, which is optional
-	
-	
-	
-	/**
-	 * The attribute delayOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the delayOffset attribute exists. 
-	 */
-	bool isDelayOffsetExists() const;
-	
-
-	
- 	/**
- 	 * Get delayOffset, which is optional.
- 	 * @return delayOffset as double
- 	 * @throws IllegalAccessException If delayOffset does not exist.
- 	 */
- 	double getDelayOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set delayOffset with the specified double.
- 	 * @param delayOffset The double value to which delayOffset is to be set.
- 	 
- 		
- 	 */
- 	void setDelayOffset (double delayOffset);
-		
-	
-	
-	
-	/**
-	 * Mark delayOffset, which is an optional field, as non-existent.
-	 */
-	void clearDelayOffset ();
-	
-
-
-	
-	// ===> Attribute freqOffset, which is optional
-	
-	
-	
-	/**
-	 * The attribute freqOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the freqOffset attribute exists. 
-	 */
-	bool isFreqOffsetExists() const;
-	
-
-	
- 	/**
- 	 * Get freqOffset, which is optional.
- 	 * @return freqOffset as vector<Frequency >
- 	 * @throws IllegalAccessException If freqOffset does not exist.
- 	 */
- 	vector<Frequency > getFreqOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set freqOffset with the specified vector<Frequency >.
- 	 * @param freqOffset The vector<Frequency > value to which freqOffset is to be set.
- 	 
- 		
- 	 */
- 	void setFreqOffset (vector<Frequency > freqOffset);
-		
-	
-	
-	
-	/**
-	 * Mark freqOffset, which is an optional field, as non-existent.
-	 */
-	void clearFreqOffset ();
-	
-
-
-	
-	// ===> Attribute phaseOffset, which is optional
-	
-	
-	
-	/**
-	 * The attribute phaseOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseOffset attribute exists. 
-	 */
-	bool isPhaseOffsetExists() const;
-	
-
-	
- 	/**
- 	 * Get phaseOffset, which is optional.
- 	 * @return phaseOffset as vector<Angle >
- 	 * @throws IllegalAccessException If phaseOffset does not exist.
- 	 */
- 	vector<Angle > getPhaseOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseOffset with the specified vector<Angle >.
- 	 * @param phaseOffset The vector<Angle > value to which phaseOffset is to be set.
- 	 
- 		
- 	 */
- 	void setPhaseOffset (vector<Angle > phaseOffset);
-		
-	
-	
-	
-	/**
-	 * Mark phaseOffset, which is an optional field, as non-existent.
-	 */
-	void clearPhaseOffset ();
 	
 
 
@@ -886,24 +594,14 @@ public:
 	    
 	 * @param feedId
 	    
-	 * @param attenuator
-	    
-	 * @param numLO
-	    
 	 * @param numReceptor
 	    
-	 * @param cableDelay
+	 * @param attenuator
 	    
-	 * @param crossPolarizationDelay
-	    
-	 * @param loPropagationDelay
-	    
-	 * @param polarizationTypes
-	    
-	 * @param receiverDelay
+	 * @param polarizationType
 	    
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, vector<float > attenuator, vector<PolarizationTypeMod::PolarizationType > polarizationType);
 	
 	
 
@@ -912,24 +610,14 @@ public:
 	 * Compare each mandatory value (i.e. not in the key) attribute  with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 	
-	 * @param attenuator
-	    
-	 * @param numLO
-	    
 	 * @param numReceptor
 	    
-	 * @param cableDelay
+	 * @param attenuator
 	    
-	 * @param crossPolarizationDelay
-	    
-	 * @param loPropagationDelay
-	    
-	 * @param polarizationTypes
-	    
-	 * @param receiverDelay
+	 * @param polarizationType
 	    
 	 */ 
-	bool compareRequiredValue(float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay); 
+	bool compareRequiredValue(int numReceptor, vector<float > attenuator, vector<PolarizationTypeMod::PolarizationType > polarizationType); 
 		 
 	
 	/**
@@ -947,7 +635,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a GainTrackingRowIDL struct.
 	 */
-	GainTrackingRowIDL *toIDL() const;
+	asdmIDL::GainTrackingRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -956,14 +644,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (GainTrackingRowIDL x) ;
+	void setFromIDL (asdmIDL::GainTrackingRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -971,7 +659,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, GainTrackingAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void attenuatorFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+
+void samplingLevelFromBin( EndianIStream& eis);
+void numAttFreqFromBin( EndianIStream& eis);
+void attFreqFromBin( EndianIStream& eis);
+void attSpectrumFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the GainTrackingTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static GainTrackingRow* fromBin(EndianIStream& eis, GainTrackingTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1032,28 +750,6 @@ private:
  	
 
 	
-	// ===> Attribute attenuator
-	
-	
-
-	float attenuator;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numLO
-	
-	
-
-	int numLO;
-
-	
-	
- 	
-
-	
 	// ===> Attribute numReceptor
 	
 	
@@ -1065,94 +761,22 @@ private:
  	
 
 	
-	// ===> Attribute cableDelay
+	// ===> Attribute attenuator
 	
 	
 
-	vector<double > cableDelay;
-
-	
-	
- 	
-
-	
-	// ===> Attribute crossPolarizationDelay
-	
-	
-
-	double crossPolarizationDelay;
+	vector<float > attenuator;
 
 	
 	
  	
 
 	
-	// ===> Attribute loPropagationDelay
+	// ===> Attribute polarizationType
 	
 	
 
-	vector<double > loPropagationDelay;
-
-	
-	
- 	
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-
-	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
-
-	
-	
- 	
-
-	
-	// ===> Attribute receiverDelay
-	
-	
-
-	vector<double > receiverDelay;
-
-	
-	
- 	
-
-	
-	// ===> Attribute delayOffset, which is optional
-	
-	
-	bool delayOffsetExists;
-	
-
-	double delayOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute freqOffset, which is optional
-	
-	
-	bool freqOffsetExists;
-	
-
-	vector<Frequency > freqOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phaseOffset, which is optional
-	
-	
-	bool phaseOffsetExists;
-	
-
-	vector<Angle > phaseOffset;
+	vector<PolarizationTypeMod::PolarizationType > polarizationType;
 
 	
 	
@@ -1272,31 +896,67 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, GainTrackingAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void feedIdFromBin( EndianISStream& eiss);
-void attenuatorFromBin( EndianISStream& eiss);
-void numLOFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void cableDelayFromBin( EndianISStream& eiss);
-void crossPolarizationDelayFromBin( EndianISStream& eiss);
-void loPropagationDelayFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void receiverDelayFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, GainTrackingAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void attenuatorFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
 
-void delayOffsetFromBin( EndianISStream& eiss);
-void freqOffsetFromBin( EndianISStream& eiss);
-void phaseOffsetFromBin( EndianISStream& eiss);
-void samplingLevelFromBin( EndianISStream& eiss);
-void numAttFreqFromBin( EndianISStream& eiss);
-void attFreqFromBin( EndianISStream& eiss);
-void attSpectrumFromBin( EndianISStream& eiss);
+void samplingLevelFromBin( EndianIStream& eis);
+void numAttFreqFromBin( EndianIStream& eis);
+void attFreqFromBin( EndianIStream& eis);
+void attSpectrumFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, GainTrackingAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void feedIdFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void attenuatorFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+
+	
+void samplingLevelFromText (const string & s);
+	
+	
+void numAttFreqFromText (const string & s);
+	
+	
+void attFreqFromText (const string & s);
+	
+	
+void attSpectrumFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1305,14 +965,14 @@ void attSpectrumFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the GainTrackingTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static GainTrackingRow* fromBin(EndianISStream& eiss, GainTrackingTable& table, const vector<string>& attributesSeq);	 
 
+	 static GainTrackingRow* fromBin(EndianIStream& eis, GainTrackingTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace SpectralResolutionTypeMod
   //! SpectralResolutionType.
   //!  [ASDM.SpectralWindow] The types of spectral resolutions for spectral windows.
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum SpectralResolutionType
@@ -71,7 +72,10 @@ namespace SpectralResolutionTypeMod
 } 
 #endif
 
-using namespace std;
+namespace SpectralResolutionTypeMod {
+	std::ostream & operator << ( std::ostream & out, const SpectralResolutionType& value);
+	std::istream & operator >> ( std::istream & in , SpectralResolutionType& value );
+}
 
 /** 
   * A helper class for the enumeration SpectralResolutionType.
@@ -103,7 +107,7 @@ class CSpectralResolutionType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CSpectralResolutionType {
     CSpectralResolutionType(const CSpectralResolutionType&);
     CSpectralResolutionType& operator=(const CSpectralResolutionType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

@@ -141,7 +141,7 @@ namespace asdmbinaries {
   }
 
   void HeaderParser::parseSDMDataHeader(xmlNode* a_node,  SDMDataObject& sdmDataObject){
-
+    //cout << "Entering parseSDMDataHeader" << endl;
     // Look up for the <sdmDataHeader ... element.
     SDMDataObjectParser::isElement(a_node, HeaderParser::SDMDATAHEADER);
 
@@ -172,14 +172,14 @@ namespace asdmbinaries {
 
     // Look up for the <dimensionality...
     child = child->next;
-    sdmDataObject.dimensionality((unsigned int) parseDimensionality(child) );
+    unsigned int dimensionality = parseDimensionality(child);
+    sdmDataObject.dimensionality(dimensionality);
 
-    if ( sdmDataObject.dimensionality() == 0) {
+    if ( dimensionality == 0 ) {
       // Look up for numTime... only if dimensionality == 0
       sdmDataObject.numTime((unsigned int) parseNumTime(child) );
     }
     
-
     // Look up for the <execBlock... child
     child = child->next;
     parseExecBlock(child, sdmDataObject);
@@ -203,7 +203,9 @@ namespace asdmbinaries {
 
     // Look up for the <dataStruct> ... child
     child = child->next;
-    parseDataStruct(child, sdmDataObject);    
+    parseDataStruct(child, sdmDataObject);
+
+    //cout << "Exiting parseSDMDataHeader" << endl;    
   }
 
 //   void HeaderParser::parseProjectPath(xmlNode* a_node, SDMDataObject& sdmDataObject) {
@@ -234,6 +236,7 @@ namespace asdmbinaries {
   } 
 
   int HeaderParser::parseDimensionality(xmlNode* a_node) {
+    //cout << "Entering parseDimensionality with " << a_node->name << endl;
     if (SDMDataObjectParser::testElement(a_node, HeaderParser::DIMENSIONALITY)) {
       return SDMDataObjectParser::parseInt(a_node->children);
     }
@@ -247,6 +250,8 @@ namespace asdmbinaries {
   } 
   
   void HeaderParser::parseExecBlock(xmlNode* a_node, SDMDataObject& sdmDataObject){
+    //cout << "Entering parseExecBlock with " << a_node << endl;
+
     SDMDataObjectParser::isElement(a_node, HeaderParser::EXECBLOCK);
 
     // Look up for the execBlockUID attribute.
@@ -289,6 +294,7 @@ namespace asdmbinaries {
   }
 
   void HeaderParser::parseDataStruct(xmlNode* a_node, SDMDataObject& sdmDataObject){
+    //cout << "Entering parseDataStruct with " << a_node->name << endl;
     SDMDataObjectParser::isElement(a_node, HeaderParser::DATASTRUCT);
 
     SDMDataObject::DataStruct dataStruct;
@@ -921,6 +927,7 @@ namespace asdmbinaries {
 
   // SDMDataObjectHeaderParser:: methods.
   void SDMDataObjectParser::isElement(xmlNode* a_node, const string& elementName) {
+    //cout << "Entering isElement for " << a_node->name << endl;
     if ((a_node == NULL) ||
 	(a_node->type != XML_ELEMENT_NODE) ||
 	(elementName.compare((const char*)a_node->name) != 0)) {
@@ -933,9 +940,11 @@ namespace asdmbinaries {
 								
       throw SDMDataObjectParserException(oss.str());
     }
+    //cout << "Exiting isElement" << endl;
   }
 
   bool SDMDataObjectParser::testElement(xmlNode* a_node, const string& elementName) {
+    //cout << "Entering testElement with " << elementName << " against " << a_node->name << endl;
     bool result = ((a_node != NULL) &&
 		   (a_node->type == XML_ELEMENT_NODE) &&
 		   (elementName.compare((const char*)a_node->name) == 0));
@@ -1037,7 +1046,7 @@ namespace asdmbinaries {
   }
 
   int SDMDataObjectParser::parseInt(xmlNode* a_node) {
-    
+    //cout << "Entering parseInt with " << a_node->content << endl;
     if ((a_node != NULL) && (a_node->next == NULL)) {
       const regex UINT("[0-9]+");
       cmatch what;
@@ -1112,6 +1121,7 @@ namespace asdmbinaries {
 
 
   string SDMDataObjectParser::parseStringAttr(xmlNode* a_node, const string& attrName) {
+    //cout << "Entering parseStringAttr with " << attrName << " in " << a_node->name << endl;
     xmlAttr* attr = 0;
 
     if ((attr = hasAttr(a_node, attrName))) {

@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SourceRowIDL;
 #endif
 
 
@@ -51,32 +47,41 @@ using asdmIDL::SourceRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <AngularRate.h>
-using  asdm::AngularRate;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Speed.h>
-using  asdm::Speed;
+	
 
+	 
 #include <Flux.h>
-using  asdm::Flux;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
 
 
@@ -95,7 +100,6 @@ using  asdm::ArrayTimeInterval;
 
 	
 #include "CDirectionReferenceCode.h"
-using namespace DirectionReferenceCodeMod;
 	
 
 	
@@ -120,12 +124,10 @@ using namespace DirectionReferenceCodeMod;
 
 	
 #include "CSourceModel.h"
-using namespace SourceModelMod;
 	
 
 	
 #include "CFrequencyReferenceCode.h"
-using namespace FrequencyReferenceCodeMod;
 	
 
 	
@@ -138,7 +140,6 @@ using namespace FrequencyReferenceCodeMod;
 
 	
 #include "CStokesParameter.h"
-using namespace StokesParameterMod;
 	
 
 	
@@ -151,6 +152,10 @@ using namespace StokesParameterMod;
 
 	
 
+	
+
+	
+#include "CRadialVelocityReferenceCode.h"
 	
 
 
@@ -159,9 +164,11 @@ using namespace StokesParameterMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Source.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -174,16 +181,19 @@ class SpectralWindowRow;
 	
 
 class SourceRow;
-typedef void (SourceRow::*SourceAttributeFromBin) (EndianISStream& eiss);
+typedef void (SourceRow::*SourceAttributeFromBin) (EndianIStream& eis);
+typedef void (SourceRow::*SourceAttributeFromText) (const string& s);
 
 /**
  * The SourceRow class is a row of a SourceTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SourceRow {
 friend class asdm::SourceTable;
+friend class asdm::RowTransformer<SourceRow>;
+//friend class asdm::TableStreamReader<SourceTable, SourceRow>;
 
 public:
 
@@ -1360,6 +1370,47 @@ public:
 	
 
 
+	
+	// ===> Attribute velRefCode, which is optional
+	
+	
+	
+	/**
+	 * The attribute velRefCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the velRefCode attribute exists. 
+	 */
+	bool isVelRefCodeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get velRefCode, which is optional.
+ 	 * @return velRefCode as RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode
+ 	 * @throws IllegalAccessException If velRefCode does not exist.
+ 	 */
+ 	RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode getVelRefCode() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set velRefCode with the specified RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode.
+ 	 * @param velRefCode The RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode value to which velRefCode is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setVelRefCode (RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode velRefCode);
+		
+	
+	
+	
+	/**
+	 * Mark velRefCode, which is an optional field, as non-existent.
+	 */
+	void clearVelRefCode ();
+	
+
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1471,7 +1522,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SourceRowIDL struct.
 	 */
-	SourceRowIDL *toIDL() const;
+	asdmIDL::SourceRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1480,14 +1531,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SourceRowIDL x) ;
+	void setFromIDL (asdmIDL::SourceRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1495,7 +1546,58 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SourceAttributeFromBin> fromBinMethods;
+void sourceIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void codeFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void properMotionFromBin( EndianIStream& eis);
+void sourceNameFromBin( EndianIStream& eis);
+
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+void calibrationGroupFromBin( EndianIStream& eis);
+void catalogFromBin( EndianIStream& eis);
+void deltaVelFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void numLinesFromBin( EndianIStream& eis);
+void transitionFromBin( EndianIStream& eis);
+void restFrequencyFromBin( EndianIStream& eis);
+void sysVelFromBin( EndianIStream& eis);
+void rangeVelFromBin( EndianIStream& eis);
+void sourceModelFromBin( EndianIStream& eis);
+void frequencyRefCodeFromBin( EndianIStream& eis);
+void numFreqFromBin( EndianIStream& eis);
+void numStokesFromBin( EndianIStream& eis);
+void frequencyFromBin( EndianIStream& eis);
+void frequencyIntervalFromBin( EndianIStream& eis);
+void stokesParameterFromBin( EndianIStream& eis);
+void fluxFromBin( EndianIStream& eis);
+void fluxErrFromBin( EndianIStream& eis);
+void positionAngleFromBin( EndianIStream& eis);
+void positionAngleErrFromBin( EndianIStream& eis);
+void sizeFromBin( EndianIStream& eis);
+void sizeErrFromBin( EndianIStream& eis);
+void velRefCodeFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SourceTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SourceRow* fromBin(EndianIStream& eis, SourceTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1934,6 +2036,19 @@ private:
 	
  	
 
+	
+	// ===> Attribute velRefCode, which is optional
+	
+	
+	bool velRefCodeExists;
+	
+
+	RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode velRefCode;
+
+	
+	
+ 	
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1961,43 +2076,151 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, SourceAttributeFromBin> fromBinMethods;
-void sourceIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void codeFromBin( EndianISStream& eiss);
-void directionFromBin( EndianISStream& eiss);
-void properMotionFromBin( EndianISStream& eiss);
-void sourceNameFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, SourceAttributeFromBin> fromBinMethods;
+void sourceIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void codeFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void properMotionFromBin( EndianIStream& eis);
+void sourceNameFromBin( EndianIStream& eis);
 
-void directionCodeFromBin( EndianISStream& eiss);
-void directionEquinoxFromBin( EndianISStream& eiss);
-void calibrationGroupFromBin( EndianISStream& eiss);
-void catalogFromBin( EndianISStream& eiss);
-void deltaVelFromBin( EndianISStream& eiss);
-void positionFromBin( EndianISStream& eiss);
-void numLinesFromBin( EndianISStream& eiss);
-void transitionFromBin( EndianISStream& eiss);
-void restFrequencyFromBin( EndianISStream& eiss);
-void sysVelFromBin( EndianISStream& eiss);
-void rangeVelFromBin( EndianISStream& eiss);
-void sourceModelFromBin( EndianISStream& eiss);
-void frequencyRefCodeFromBin( EndianISStream& eiss);
-void numFreqFromBin( EndianISStream& eiss);
-void numStokesFromBin( EndianISStream& eiss);
-void frequencyFromBin( EndianISStream& eiss);
-void frequencyIntervalFromBin( EndianISStream& eiss);
-void stokesParameterFromBin( EndianISStream& eiss);
-void fluxFromBin( EndianISStream& eiss);
-void fluxErrFromBin( EndianISStream& eiss);
-void positionAngleFromBin( EndianISStream& eiss);
-void positionAngleErrFromBin( EndianISStream& eiss);
-void sizeFromBin( EndianISStream& eiss);
-void sizeErrFromBin( EndianISStream& eiss);
+void directionCodeFromBin( EndianIStream& eis);
+void directionEquinoxFromBin( EndianIStream& eis);
+void calibrationGroupFromBin( EndianIStream& eis);
+void catalogFromBin( EndianIStream& eis);
+void deltaVelFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void numLinesFromBin( EndianIStream& eis);
+void transitionFromBin( EndianIStream& eis);
+void restFrequencyFromBin( EndianIStream& eis);
+void sysVelFromBin( EndianIStream& eis);
+void rangeVelFromBin( EndianIStream& eis);
+void sourceModelFromBin( EndianIStream& eis);
+void frequencyRefCodeFromBin( EndianIStream& eis);
+void numFreqFromBin( EndianIStream& eis);
+void numStokesFromBin( EndianIStream& eis);
+void frequencyFromBin( EndianIStream& eis);
+void frequencyIntervalFromBin( EndianIStream& eis);
+void stokesParameterFromBin( EndianIStream& eis);
+void fluxFromBin( EndianIStream& eis);
+void fluxErrFromBin( EndianIStream& eis);
+void positionAngleFromBin( EndianIStream& eis);
+void positionAngleErrFromBin( EndianIStream& eis);
+void sizeFromBin( EndianIStream& eis);
+void sizeErrFromBin( EndianIStream& eis);
+void velRefCodeFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SourceAttributeFromText> fromTextMethods;
+	
+void sourceIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void codeFromText (const string & s);
+	
+	
+void directionFromText (const string & s);
+	
+	
+void properMotionFromText (const string & s);
+	
+	
+void sourceNameFromText (const string & s);
+	
+
+	
+void directionCodeFromText (const string & s);
+	
+	
+void directionEquinoxFromText (const string & s);
+	
+	
+void calibrationGroupFromText (const string & s);
+	
+	
+void catalogFromText (const string & s);
+	
+	
+void deltaVelFromText (const string & s);
+	
+	
+void positionFromText (const string & s);
+	
+	
+void numLinesFromText (const string & s);
+	
+	
+void transitionFromText (const string & s);
+	
+	
+void restFrequencyFromText (const string & s);
+	
+	
+void sysVelFromText (const string & s);
+	
+	
+void rangeVelFromText (const string & s);
+	
+	
+void sourceModelFromText (const string & s);
+	
+	
+void frequencyRefCodeFromText (const string & s);
+	
+	
+void numFreqFromText (const string & s);
+	
+	
+void numStokesFromText (const string & s);
+	
+	
+void frequencyFromText (const string & s);
+	
+	
+void frequencyIntervalFromText (const string & s);
+	
+	
+void stokesParameterFromText (const string & s);
+	
+	
+void fluxFromText (const string & s);
+	
+	
+void fluxErrFromText (const string & s);
+	
+	
+void positionAngleFromText (const string & s);
+	
+	
+void positionAngleErrFromText (const string & s);
+	
+	
+void sizeFromText (const string & s);
+	
+	
+void sizeErrFromText (const string & s);
+	
+	
+void velRefCodeFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -2006,14 +2229,14 @@ void sizeErrFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SourceTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SourceRow* fromBin(EndianISStream& eiss, SourceTable& table, const vector<string>& attributesSeq);	 
 
+	 static SourceRow* fromBin(EndianIStream& eis, SourceTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

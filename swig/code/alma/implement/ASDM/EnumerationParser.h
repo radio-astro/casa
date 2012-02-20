@@ -78,6 +78,9 @@
  #include "CStokesParameter.h"
  using namespace StokesParameterMod;
  
+ #include "CRadialVelocityReferenceCode.h"
+ using namespace RadialVelocityReferenceCodeMod;
+ 
  #include "CPolarizationType.h"
  using namespace PolarizationTypeMod;
  
@@ -186,6 +189,18 @@
  #include "CFluxCalibrationMethod.h"
  using namespace FluxCalibrationMethodMod;
  
+ #include "CPrimaryBeamDescription.h"
+ using namespace PrimaryBeamDescriptionMod;
+ 
+ #include "CTimeScale.h"
+ using namespace TimeScaleMod;
+ 
+ #include "CDataScale.h"
+ using namespace DataScaleMod;
+ 
+ #include "CWeightType.h"
+ using namespace WeightTypeMod;
+ 
  #include "CCalibrationMode.h"
  using namespace CalibrationModeMod;
  
@@ -213,11 +228,11 @@
  #include "CBaselineReferenceCode.h"
  using namespace BaselineReferenceCodeMod;
  
- #include "CRadialVelocityReferenceCode.h"
- using namespace RadialVelocityReferenceCodeMod;
- 
  #include "CCorrelatorType.h"
  using namespace CorrelatorTypeMod;
+ 
+ #include "CDopplerTrackingMode.h"
+ using namespace DopplerTrackingModeMod;
  
  
  namespace asdm {
@@ -1154,6 +1169,77 @@
 	 * @return a vector<vector<vector<StokesParameterMod::StokesParameter> > >.
 	 */
 	static vector<vector<vector<StokesParameterMod::StokesParameter> > > getStokesParameter3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
+	 * @param e  RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >& vvv_e); 
+
+	/**
+	 * Returns a RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode from a string.
+	 * @param xml the string to be converted into a RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode
+	 * @return a RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode.
+	 */
+	static RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode getRadialVelocityReferenceCode(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> from a string.
+	 * @param xml the string to be converted into a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>
+	 * @return a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>.
+	 */
+	static vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> getRadialVelocityReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > from a string.
+	 * @param xml the string to be converted into a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >
+	 * @return a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >.
+	 */
+	static vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > getRadialVelocityReferenceCode2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >
+	 * @return a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >.
+	 */
+	static vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > > getRadialVelocityReferenceCode3D(const string &name, const string &tableName, const string &xmlDoc);								
 
 	/**
 	 * Returns a string which represents a XML element 
@@ -3716,6 +3802,290 @@
 	 * with name 'elementName' and a content equal to 
 	 * the string associated to 'e'
 	 * @param elementName a string.
+	 * @param e  PrimaryBeamDescriptionMod::PrimaryBeamDescription value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, PrimaryBeamDescriptionMod::PrimaryBeamDescription e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > >& vvv_e); 
+
+	/**
+	 * Returns a PrimaryBeamDescriptionMod::PrimaryBeamDescription from a string.
+	 * @param xml the string to be converted into a PrimaryBeamDescriptionMod::PrimaryBeamDescription
+	 * @return a PrimaryBeamDescriptionMod::PrimaryBeamDescription.
+	 */
+	static PrimaryBeamDescriptionMod::PrimaryBeamDescription getPrimaryBeamDescription(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> from a string.
+	 * @param xml the string to be converted into a vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription>
+	 * @return a vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription>.
+	 */
+	static vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> getPrimaryBeamDescription1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > from a string.
+	 * @param xml the string to be converted into a vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> >
+	 * @return a vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> >.
+	 */
+	static vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > getPrimaryBeamDescription2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > >
+	 * @return a vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > >.
+	 */
+	static vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > > getPrimaryBeamDescription3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
+	 * @param e  TimeScaleMod::TimeScale value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, TimeScaleMod::TimeScale e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<TimeScaleMod::TimeScale>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<TimeScaleMod::TimeScale>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<TimeScaleMod::TimeScale> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<TimeScaleMod::TimeScale> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<TimeScaleMod::TimeScale> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<TimeScaleMod::TimeScale> > >& vvv_e); 
+
+	/**
+	 * Returns a TimeScaleMod::TimeScale from a string.
+	 * @param xml the string to be converted into a TimeScaleMod::TimeScale
+	 * @return a TimeScaleMod::TimeScale.
+	 */
+	static TimeScaleMod::TimeScale getTimeScale(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<TimeScaleMod::TimeScale> from a string.
+	 * @param xml the string to be converted into a vector<TimeScaleMod::TimeScale>
+	 * @return a vector<TimeScaleMod::TimeScale>.
+	 */
+	static vector<TimeScaleMod::TimeScale> getTimeScale1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<TimeScaleMod::TimeScale> > from a string.
+	 * @param xml the string to be converted into a vector<vector<TimeScaleMod::TimeScale> >
+	 * @return a vector<vector<TimeScaleMod::TimeScale> >.
+	 */
+	static vector<vector<TimeScaleMod::TimeScale> > getTimeScale2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<TimeScaleMod::TimeScale> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<TimeScaleMod::TimeScale> > >
+	 * @return a vector<vector<vector<TimeScaleMod::TimeScale> > >.
+	 */
+	static vector<vector<vector<TimeScaleMod::TimeScale> > > getTimeScale3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
+	 * @param e  DataScaleMod::DataScale value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, DataScaleMod::DataScale e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<DataScaleMod::DataScale>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<DataScaleMod::DataScale>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<DataScaleMod::DataScale> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<DataScaleMod::DataScale> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<DataScaleMod::DataScale> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<DataScaleMod::DataScale> > >& vvv_e); 
+
+	/**
+	 * Returns a DataScaleMod::DataScale from a string.
+	 * @param xml the string to be converted into a DataScaleMod::DataScale
+	 * @return a DataScaleMod::DataScale.
+	 */
+	static DataScaleMod::DataScale getDataScale(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<DataScaleMod::DataScale> from a string.
+	 * @param xml the string to be converted into a vector<DataScaleMod::DataScale>
+	 * @return a vector<DataScaleMod::DataScale>.
+	 */
+	static vector<DataScaleMod::DataScale> getDataScale1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<DataScaleMod::DataScale> > from a string.
+	 * @param xml the string to be converted into a vector<vector<DataScaleMod::DataScale> >
+	 * @return a vector<vector<DataScaleMod::DataScale> >.
+	 */
+	static vector<vector<DataScaleMod::DataScale> > getDataScale2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<DataScaleMod::DataScale> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<DataScaleMod::DataScale> > >
+	 * @return a vector<vector<vector<DataScaleMod::DataScale> > >.
+	 */
+	static vector<vector<vector<DataScaleMod::DataScale> > > getDataScale3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
+	 * @param e  WeightTypeMod::WeightType value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, WeightTypeMod::WeightType e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<WeightTypeMod::WeightType>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<WeightTypeMod::WeightType>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<WeightTypeMod::WeightType> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<WeightTypeMod::WeightType> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<WeightTypeMod::WeightType> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<WeightTypeMod::WeightType> > >& vvv_e); 
+
+	/**
+	 * Returns a WeightTypeMod::WeightType from a string.
+	 * @param xml the string to be converted into a WeightTypeMod::WeightType
+	 * @return a WeightTypeMod::WeightType.
+	 */
+	static WeightTypeMod::WeightType getWeightType(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<WeightTypeMod::WeightType> from a string.
+	 * @param xml the string to be converted into a vector<WeightTypeMod::WeightType>
+	 * @return a vector<WeightTypeMod::WeightType>.
+	 */
+	static vector<WeightTypeMod::WeightType> getWeightType1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<WeightTypeMod::WeightType> > from a string.
+	 * @param xml the string to be converted into a vector<vector<WeightTypeMod::WeightType> >
+	 * @return a vector<vector<WeightTypeMod::WeightType> >.
+	 */
+	static vector<vector<WeightTypeMod::WeightType> > getWeightType2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<WeightTypeMod::WeightType> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<WeightTypeMod::WeightType> > >
+	 * @return a vector<vector<vector<WeightTypeMod::WeightType> > >.
+	 */
+	static vector<vector<vector<WeightTypeMod::WeightType> > > getWeightType3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
 	 * @param e  CalibrationModeMod::CalibrationMode value.
 	 * @return a string.
 	 */
@@ -4355,77 +4725,6 @@
 	 * with name 'elementName' and a content equal to 
 	 * the string associated to 'e'
 	 * @param elementName a string.
-	 * @param e  RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode value.
-	 * @return a string.
-	 */
-	 static string toXML(const string& elementName, RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode e);
-	 
-	 
-	/**
-	 * Returns a string which represents a XML element 
-	 * with name 'elementName' and of content equal to 
-	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
-	 * @param elementName a string.
-	 * @param v_e  a const reference to a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>.
-	 * @return a string.
-	 */
-	 static string toXML(const string& elementName, const vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>& v_e);
-	
-	/**
-	 * Returns a string which represents a XML element 
-	 * with name 'elementName' and of content equal to 
-	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
-	 * @param elementName a string.
-	 * @param vv_e  a const reference to a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >.
-	 * @return a string.
-	 */	
-	 static string toXML(const string& elementName, const vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >& vv_e); 
-	 
-
-
-	/**
-	 * Returns a string which represents a XML element 
-	 * with name 'elementName' and of content equal to 
-	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
-	 * @param elementName a string.
-	 * @param vvv_e  a const reference to a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >.
-	 * @return a string.
-	 */	
-	 static string toXML(const string& elementName, const vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >& vvv_e); 
-
-	/**
-	 * Returns a RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode from a string.
-	 * @param xml the string to be converted into a RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode
-	 * @return a RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode.
-	 */
-	static RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode getRadialVelocityReferenceCode(const string &name, const string &tableName, const string &xmlDoc);
-	
-	/**
-	 * Returns a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> from a string.
-	 * @param xml the string to be converted into a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>
-	 * @return a vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>.
-	 */
-	static vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> getRadialVelocityReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc);
-	
-	/**
-	 * Returns a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > from a string.
-	 * @param xml the string to be converted into a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >
-	 * @return a vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >.
-	 */
-	static vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > getRadialVelocityReferenceCode2D(const string &name, const string &tableName, const string &xmlDoc);
-	
-	/**
-	 * Returns a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > > from a string.
-	 * @param xml the string to be converted into a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >
-	 * @return a vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >.
-	 */
-	static vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > > getRadialVelocityReferenceCode3D(const string &name, const string &tableName, const string &xmlDoc);								
-
-	/**
-	 * Returns a string which represents a XML element 
-	 * with name 'elementName' and a content equal to 
-	 * the string associated to 'e'
-	 * @param elementName a string.
 	 * @param e  CorrelatorTypeMod::CorrelatorType value.
 	 * @return a string.
 	 */
@@ -4491,6 +4790,77 @@
 	 * @return a vector<vector<vector<CorrelatorTypeMod::CorrelatorType> > >.
 	 */
 	static vector<vector<vector<CorrelatorTypeMod::CorrelatorType> > > getCorrelatorType3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
+	 * @param e  DopplerTrackingModeMod::DopplerTrackingMode value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, DopplerTrackingModeMod::DopplerTrackingMode e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<DopplerTrackingModeMod::DopplerTrackingMode>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<DopplerTrackingModeMod::DopplerTrackingMode>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > >& vvv_e); 
+
+	/**
+	 * Returns a DopplerTrackingModeMod::DopplerTrackingMode from a string.
+	 * @param xml the string to be converted into a DopplerTrackingModeMod::DopplerTrackingMode
+	 * @return a DopplerTrackingModeMod::DopplerTrackingMode.
+	 */
+	static DopplerTrackingModeMod::DopplerTrackingMode getDopplerTrackingMode(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<DopplerTrackingModeMod::DopplerTrackingMode> from a string.
+	 * @param xml the string to be converted into a vector<DopplerTrackingModeMod::DopplerTrackingMode>
+	 * @return a vector<DopplerTrackingModeMod::DopplerTrackingMode>.
+	 */
+	static vector<DopplerTrackingModeMod::DopplerTrackingMode> getDopplerTrackingMode1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > from a string.
+	 * @param xml the string to be converted into a vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> >
+	 * @return a vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> >.
+	 */
+	static vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > getDopplerTrackingMode2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > >
+	 * @return a vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > >.
+	 */
+	static vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > > getDopplerTrackingMode3D(const string &name, const string &tableName, const string &xmlDoc);								
 
 	
 	};

@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalAtmosphereRowIDL;
 #endif
 
 
@@ -51,35 +47,45 @@ using asdmIDL::CalAtmosphereRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	 
 #include <Humidity.h>
-using  asdm::Humidity;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
+	 
 #include <Pressure.h>
-using  asdm::Pressure;
+	
 
 
 
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
+	
+
+	
+#include "CBasebandName.h"
 	
 
 	
@@ -106,7 +112,6 @@ using namespace ReceiverBandMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -115,7 +120,6 @@ using namespace PolarizationTypeMod;
 
 	
 #include "CSyscalMethod.h"
-using namespace SyscalMethodMod;
 	
 
 	
@@ -156,9 +160,11 @@ using namespace SyscalMethodMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalAtmosphere.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -174,16 +180,19 @@ class CalDataRow;
 	
 
 class CalAtmosphereRow;
-typedef void (CalAtmosphereRow::*CalAtmosphereAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalAtmosphereRow::*CalAtmosphereAttributeFromBin) (EndianIStream& eis);
+typedef void (CalAtmosphereRow::*CalAtmosphereAttributeFromText) (const string& s);
 
 /**
  * The CalAtmosphereRow class is a row of a CalAtmosphereTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalAtmosphereRow {
 friend class asdm::CalAtmosphereTable;
+friend class asdm::RowTransformer<CalAtmosphereRow>;
+//friend class asdm::TableStreamReader<CalAtmosphereTable, CalAtmosphereRow>;
 
 public:
 
@@ -262,6 +271,38 @@ public:
  	 		
  	 */
  	void setAntennaName (string antennaName);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute basebandName
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get basebandName.
+ 	 * @return basebandName as BasebandNameMod::BasebandName
+ 	 */
+ 	BasebandNameMod::BasebandName getBasebandName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set basebandName with the specified BasebandNameMod::BasebandName.
+ 	 * @param basebandName The BasebandNameMod::BasebandName value to which basebandName is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setBasebandName (BasebandNameMod::BasebandName basebandName);
   		
 	
 	
@@ -1377,6 +1418,8 @@ public:
 	    
 	 * @param receiverBand
 	    
+	 * @param basebandName
+	    
 	 * @param calDataId
 	    
 	 * @param calReductionId
@@ -1432,7 +1475,7 @@ public:
 	 * @param waterError
 	    
 	 */ 
-	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError);
+	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, BasebandNameMod::BasebandName basebandName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError);
 	
 	
 
@@ -1510,7 +1553,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalAtmosphereRowIDL struct.
 	 */
-	CalAtmosphereRowIDL *toIDL() const;
+	asdmIDL::CalAtmosphereRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1519,14 +1562,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalAtmosphereRowIDL x) ;
+	void setFromIDL (asdmIDL::CalAtmosphereRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1534,7 +1577,62 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalAtmosphereAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void numFreqFromBin( EndianIStream& eis);
+void numLoadFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void forwardEffSpectrumFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void groundPressureFromBin( EndianIStream& eis);
+void groundRelHumidityFromBin( EndianIStream& eis);
+void frequencySpectrumFromBin( EndianIStream& eis);
+void groundTemperatureFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void powerSkySpectrumFromBin( EndianIStream& eis);
+void powerLoadSpectrumFromBin( EndianIStream& eis);
+void syscalTypeFromBin( EndianIStream& eis);
+void tAtmSpectrumFromBin( EndianIStream& eis);
+void tRecSpectrumFromBin( EndianIStream& eis);
+void tSysSpectrumFromBin( EndianIStream& eis);
+void tauSpectrumFromBin( EndianIStream& eis);
+void tAtmFromBin( EndianIStream& eis);
+void tRecFromBin( EndianIStream& eis);
+void tSysFromBin( EndianIStream& eis);
+void tauFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+void waterErrorFromBin( EndianIStream& eis);
+
+void alphaSpectrumFromBin( EndianIStream& eis);
+void forwardEfficiencyFromBin( EndianIStream& eis);
+void forwardEfficiencyErrorFromBin( EndianIStream& eis);
+void sbGainFromBin( EndianIStream& eis);
+void sbGainErrorFromBin( EndianIStream& eis);
+void sbGainSpectrumFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalAtmosphereTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalAtmosphereRow* fromBin(EndianIStream& eis, CalAtmosphereTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1600,6 +1698,17 @@ private:
 	
 
 	string antennaName;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute basebandName
+	
+	
+
+	BasebandNameMod::BasebandName basebandName;
 
 	
 	
@@ -2003,47 +2112,167 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalAtmosphereAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void numFreqFromBin( EndianISStream& eiss);
-void numLoadFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void forwardEffSpectrumFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void groundPressureFromBin( EndianISStream& eiss);
-void groundRelHumidityFromBin( EndianISStream& eiss);
-void frequencySpectrumFromBin( EndianISStream& eiss);
-void groundTemperatureFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void powerSkySpectrumFromBin( EndianISStream& eiss);
-void powerLoadSpectrumFromBin( EndianISStream& eiss);
-void syscalTypeFromBin( EndianISStream& eiss);
-void tAtmSpectrumFromBin( EndianISStream& eiss);
-void tRecSpectrumFromBin( EndianISStream& eiss);
-void tSysSpectrumFromBin( EndianISStream& eiss);
-void tauSpectrumFromBin( EndianISStream& eiss);
-void tAtmFromBin( EndianISStream& eiss);
-void tRecFromBin( EndianISStream& eiss);
-void tSysFromBin( EndianISStream& eiss);
-void tauFromBin( EndianISStream& eiss);
-void waterFromBin( EndianISStream& eiss);
-void waterErrorFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalAtmosphereAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void numFreqFromBin( EndianIStream& eis);
+void numLoadFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void forwardEffSpectrumFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void groundPressureFromBin( EndianIStream& eis);
+void groundRelHumidityFromBin( EndianIStream& eis);
+void frequencySpectrumFromBin( EndianIStream& eis);
+void groundTemperatureFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void powerSkySpectrumFromBin( EndianIStream& eis);
+void powerLoadSpectrumFromBin( EndianIStream& eis);
+void syscalTypeFromBin( EndianIStream& eis);
+void tAtmSpectrumFromBin( EndianIStream& eis);
+void tRecSpectrumFromBin( EndianIStream& eis);
+void tSysSpectrumFromBin( EndianIStream& eis);
+void tauSpectrumFromBin( EndianIStream& eis);
+void tAtmFromBin( EndianIStream& eis);
+void tRecFromBin( EndianIStream& eis);
+void tSysFromBin( EndianIStream& eis);
+void tauFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+void waterErrorFromBin( EndianIStream& eis);
 
-void alphaSpectrumFromBin( EndianISStream& eiss);
-void forwardEfficiencyFromBin( EndianISStream& eiss);
-void forwardEfficiencyErrorFromBin( EndianISStream& eiss);
-void sbGainFromBin( EndianISStream& eiss);
-void sbGainErrorFromBin( EndianISStream& eiss);
-void sbGainSpectrumFromBin( EndianISStream& eiss);
+void alphaSpectrumFromBin( EndianIStream& eis);
+void forwardEfficiencyFromBin( EndianIStream& eis);
+void forwardEfficiencyErrorFromBin( EndianIStream& eis);
+void sbGainFromBin( EndianIStream& eis);
+void sbGainErrorFromBin( EndianIStream& eis);
+void sbGainSpectrumFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalAtmosphereAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void basebandNameFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void numFreqFromText (const string & s);
+	
+	
+void numLoadFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void forwardEffSpectrumFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void groundPressureFromText (const string & s);
+	
+	
+void groundRelHumidityFromText (const string & s);
+	
+	
+void frequencySpectrumFromText (const string & s);
+	
+	
+void groundTemperatureFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void powerSkySpectrumFromText (const string & s);
+	
+	
+void powerLoadSpectrumFromText (const string & s);
+	
+	
+void syscalTypeFromText (const string & s);
+	
+	
+void tAtmSpectrumFromText (const string & s);
+	
+	
+void tRecSpectrumFromText (const string & s);
+	
+	
+void tSysSpectrumFromText (const string & s);
+	
+	
+void tauSpectrumFromText (const string & s);
+	
+	
+void tAtmFromText (const string & s);
+	
+	
+void tRecFromText (const string & s);
+	
+	
+void tSysFromText (const string & s);
+	
+	
+void tauFromText (const string & s);
+	
+	
+void waterFromText (const string & s);
+	
+	
+void waterErrorFromText (const string & s);
+	
+
+	
+void alphaSpectrumFromText (const string & s);
+	
+	
+void forwardEfficiencyFromText (const string & s);
+	
+	
+void forwardEfficiencyErrorFromText (const string & s);
+	
+	
+void sbGainFromText (const string & s);
+	
+	
+void sbGainErrorFromText (const string & s);
+	
+	
+void sbGainSpectrumFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -2052,14 +2281,14 @@ void sbGainSpectrumFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalAtmosphereTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalAtmosphereRow* fromBin(EndianISStream& eiss, CalAtmosphereTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalAtmosphereRow* fromBin(EndianIStream& eis, CalAtmosphereTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm
