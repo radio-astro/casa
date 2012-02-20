@@ -809,8 +809,10 @@ def fixType(params):
             
             
     # shadow parameter
-    if params.has_key('diameter'):
-        params['diameter'] = float(params['diameter'])
+    if params.has_key('tolerance'):
+        params['tolerance'] = float(params['tolerance'])
+    if params.has_key('recalcuvw'):
+        params['recalcuvw'] = eval(params['recalcuvw'].capitalize())
            
     # elevation parameters
     if params.has_key('lowerlimit'):
@@ -880,3 +882,190 @@ def purgeEmptyPars(cmdline):
          
     return newstr
 
+####
+####   Set of functions to handle antenna information for shadowing.
+####
+####   -   extractAntennaInfo : Extract info into a returned dictionary (and text file)
+####   -   antListWrite : Write the dictionary to a text file
+####   -   antListRead : Read the text file and return a dictionary
+####
+####   Example : 
+####    alist = extractAntennaInfo(msname='../Data/shadowtest.ms',
+####                                                  antnamelist=['VLA1','VLA15'], outfile='ttt.txt')
+####
+####    alist = antListRead('ttt.txt');
+####
+###################################
+####    Example output text file ( 'ttt.txt' )
+###################################
+#
+#name = VLA1
+#diameter = 25.0
+#position = [-1601144.961466915, -5041998.0197185818, 3554864.76811967]
+#name = VLA15
+#diameter = 25.0
+#position = [-1601556.245351332, -5041990.7252590274, 3554684.6464035073]
+#
+###################################
+####    Example output dictionary ( alist )
+###################################
+#
+#{'0': {'diameter ': 25.0,
+#       'name ': 'VLA1',
+#       'position ': [-1601144.961466915,
+#                     -5041998.0197185818,
+#                     3554864.7681196001]},
+# '1': {'diameter ': 25.0,
+#       'name ': 'VLA15',
+#       'position ': [-1601556.245351332,
+#                     -5041990.7252590274,
+#                     3554684.6464035069]}}
+#
+##################################
+
+def extractAntennaInfo(msname='', antnamelist=[], outfile=''):
+    """
+    Function to extract antenna names, positions, and diameters
+    for a specified subset of the ANTENNA subtable of the specified MS.
+    - It writes a text file, which can be sent as input for shadow in the task
+    - It also returns a dictionary, which can be sent as input for shadow in the tool.
+      This dictionary can also be given as input in the task.
+    
+    msname : name of MS
+    antennalist : list of strings (antenna names). Names must match exactly. Case insensitive.
+    outfile : name of text file. Will be overwritten if exists. If outfile='', no output file is written
+    
+    Always returns a dictionary containing the same info as in the file
+    
+    Example : 
+    antinfo =  extractAntennaInfo(msname='xxx.ms',antnamelist=['vla1','vla2'],outfile='out.txt');
+    """
+    ## Check that the MS exists
+    if(not os.path.exists(msname)):
+          print "Cannot find MS : ", msname;
+          return False;
+    
+    ## If outfile exists, delete it
+    if(os.path.exists(outfile)):
+          print "Replacing existing file : ", outfile;
+          rmcmd = "rm -rf "+outfile;
+          os.system(rmcmd);
+    
+    ## Convert input antenna names to upper-case
+    newants=[];
+    for ants in antnamelist:
+        newants.append( ants.upper() );
+    antnamelist = newants;
+    
+    ## Read antenna subtable of input MS
+    tb.open(msname+'/ANTENNA');
+    a_position = (tb.getcol('POSITION')).transpose();
+    a_dish_diameter = tb.getcol('DISH_DIAMETER');
+    a_name = tb.getcol('NAME');
+    tb.close();
+    
+    ## Pick out only selected antennas from this list, and make a dictionary
+    antlist = {};
+    counter=0;
+    for antid in range(0, len(a_name)):
+          if (a_name[antid]).upper() in antnamelist:
+                antlist[str(counter)] = { 'name':a_name[antid] , 'position': list(a_position[antid]) , 'diameter': a_dish_diameter[antid]  }  ;
+                counter=counter+1;
+    
+    ## Open a new file and write this info into it, if requested
+    if(outfile != ''):
+          print "Making new file : ", outfile;
+          antListWrite(outfile, antlist);
+    ## always return the dictionary anyway.
+    return antlist;
+
+##############################################
+def writeAntennaList(outfile='', antlist={}):
+    """
+    Save the antlist dictionary as a text file
+    """
+    ofile = file(outfile, 'w');
+    for apid in sorted(antlist):
+          apars = antlist[apid];
+          ofile.write("name=" + str(apars['name']) + '\n');
+          ofile.write("diameter=" + str(apars['diameter'])+'\n');
+          ofile.write("position=" + str((apars['position']))+'\n');
+    ofile.close();
+
+##############################################
+def readAntennaList(infile=''):
+    """
+    Read the antlist text file and return a dictionary
+    
+    A return value of empty {} indicates an error (or, empty file).
+    
+    The file needs to have 3 entries per antenna, on separate lines.
+    The diameter and position are in units of meters, with positions in ITRF.
+    Multiple antennas can be specified by repeating these three lines.
+    Blank lines are allowed.
+    Lines can be commented with '#' as the first character.
+    
+    Example : 
+          name = ea05
+          diameter = 25.0
+          position = [-1601144.96146691, -5041998.01971858, 3554864.76811967]
+    
+    """
+
+    try:
+        if(os.path.exists(infile)):
+            ifile = file(infile,'r');
+            thelist = ifile.readlines();
+            ifile.close();
+            
+    except:
+            raise Exception, 'Error opening file ' + infile
+    
+    
+    cleanlist=[];
+    for aline in thelist:
+          if(len(aline)>5 and aline[0] != '#'):
+               cleanlist.append(aline.rstrip());
+    
+    #print 'Found ' + str(len(cleanlist)) + ' valid lines out of ' + str(len(thelist));
+    
+    if( len(cleanlist) > 0 and len(cleanlist) % 3 != 0 ):
+          print "\nThe file needs to have 3 entries per antenna, on separate lines. For example :"
+          print "name=ea05"
+          print "diameter=25.0";
+          print "position=[-1601144.96146691, -5041998.01971858,  3554864.76811967]";
+          print "\n";
+          print "The diameter and position are in units of meters, with positions in ITRF";
+          return False;
+    
+    antlist={};
+    counter=0;
+    for aline in range(0,len(cleanlist),3):
+          antdict = {};
+          for row in range(0,3):
+               pars = cleanlist[aline+row].split("=");
+               #print aline, row, pars
+               if(len(pars) != 2):
+                    print 'Error in parsing : ', cleanlist[aline+row];
+                    return {};
+               else:
+                    if(pars[0].count('name') > 0 ):
+                           antdict[pars[0].rstrip()] = str(pars[1].rsplit()[0]);
+                    if(pars[0].count('diameter') > 0 ):
+                           antdict[pars[0].rstrip()] = float(pars[1]);
+                    if(pars[0].count('position') > 0 ):
+                           plist = pars[1][1:-2].replace('[','').split(',');
+                           if(len(plist) != 3):
+                                 print 'Error in parsing : ', cleanlist[aline+row]
+                                 return {};
+                           else:
+                                 qlist=[];
+                                 for ind in range(0,3):
+                                     qlist.append(float(plist[ind]));
+                           antdict[pars[0].rstrip()] = qlist;
+          antlist[str(counter)] = antdict;
+          counter = counter+1;
+    
+    return antlist;
+
+################################################

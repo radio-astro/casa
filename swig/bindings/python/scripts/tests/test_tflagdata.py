@@ -18,24 +18,23 @@ def test_eq(result, total, flagged):
     assert result['flagged'] == flagged, \
            "%s flags set; %s expected" % (result['flagged'], flagged)
 
-def create_input(str_text):
+def create_input(str_text, filename):
     '''Save the string in a text file'''
     
-    inp = 'tflagcmd.txt'
+    inp = filename
     cmd = str_text
     
     # remove file first
     if os.path.exists(inp):
         os.system('rm -f '+ inp)
         
-    # save it in a file    
+    # save to a file    
     with open(inp, 'w') as f:
         f.write(cmd)
         
     f.close()
     
-    # return the name of the file
-    return inp
+    return
 
 # Base class which defines setUp functions
 # for importing different data sets
@@ -83,6 +82,34 @@ class test_base(unittest.TestCase):
 
     def setUp_data4tfcrop(self):
         self.vis = "Four_ants_3C286.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+
+    def setUp_shadowdata1(self):
+        self.vis = "shadowtest.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+
+    def setUp_shadowdata2(self):
+        self.vis = "shadowtest_part.ms"
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -146,25 +173,54 @@ class test_tfcrop(test_base):
 
 class test_shadow(test_base):
     def setUp(self):
-        self.setUp_flagdatatest()
+        self.setUp_shadowdata2()
 
-    def test1(self):
-        '''tflagdata:: Test1 of mode = shadow'''
-        tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
-        res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 5252)
+#    def test1(self):
+#        '''tflagdata:: Test1 of mode = shadow'''
+#        tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
+#        res = tflagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['flagged'], 5252)
+#
+#    def test2(self):
+#        """tflagdata:: Test2 of mode = shadow"""
+#        tflagdata(vis=self.vis, mode='shadow', savepars=False)
+#        res = tflagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['flagged'], 2912)
+#
+#    def test3(self):
+#        """tflagdata:: Test3 of mode = shadow"""
+#        tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
+#        res = tflagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['flagged'], 1456)
 
-    def test2(self):
-        """tflagdata:: Test2 of mode = shadow"""
-        tflagdata(vis=self.vis, mode='shadow', savepars=False)
-        res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 2912)
+    def test_CAS2399(self):
+        '''tflagdata: shadow by antennas not present in MS'''
+        
+        
+        input = 'name=VLA01\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
+                'name=VLA02\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]\n'+\
+                'name=VLA09\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601197.2182404203, -5041974.3604805721, 3554875.1995636248]\n'+\
+                'name=VLA10\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
 
-    def test3(self):
-        """tflagdata:: Test3 of mode = shadow"""
-        tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
+        filename = 'cas2399.txt'
+        create_input(input, filename)
+        
+        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, antennafile=filename)
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 1456)
+        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
+        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
+        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
+        
+        
+
 
 
 #        # This MS seems to give wrong results with the old flagdata
@@ -767,7 +823,8 @@ class test_list(test_base):
         '''tflagdata: apply flags from a list and do not save'''
         # creat input list
         input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
-        filename = create_input(input)
+        filename = 'list1.txt'
+        create_input(input, filename)
         
         # apply and don't save to MS
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, run=True)
@@ -779,7 +836,8 @@ class test_list(test_base):
         '''tflagdata: only save parameters without running the tool'''
         # creat input list
         input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
-        filename = create_input(input)
+        filename = 'list2.txt'
+        create_input(input, filename)
 
         # save to another file
         if os.path.exists("myflags.txt"):
@@ -795,7 +853,8 @@ class test_list(test_base):
         '''tflagdata: flag and save list to FLAG_CMD'''
         # creat input list
         input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
-        filename = create_input(input)
+        filename = 'list3.txt'
+        create_input(input, filename)
 
         # Delete any rows from FLAG_CMD
         tflagcmd(vis=self.vis, action='clear', clearall=True)
@@ -828,7 +887,8 @@ class test_list(test_base):
         
         # creat input list
         input = "mode=clip clipzeros=true"
-        filename = create_input(input)
+        filename = 'lsit5.txt'
+        create_input(input, filename)
 
         tflagdata(vis=self.vis, mode='list',  inpfile=filename, run=True, savepars=False)
         
@@ -862,6 +922,7 @@ class cleanup(test_base):
         os.system('rm -rf multiobs.ms')
         os.system('rm -rf flagdatatest-alma.ms')
         os.system('rm -rf Four_ants_3C286.ms')
+        os.system('rm -rf list*txt')
 
     def test1(self):
         '''tflagdata: Cleanup'''

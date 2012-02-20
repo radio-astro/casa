@@ -103,7 +103,6 @@ scripts/task_importevla.py
 scripts/task_importfits.py
 scripts/task_importfitsidi.py
 scripts/task_importgmrt.py
-scripts/task_importoldasdm.py
 scripts/task_importuvfits.py
 scripts/task_importvla.py
 scripts/task_imregrid.py

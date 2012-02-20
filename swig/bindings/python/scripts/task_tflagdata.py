@@ -29,7 +29,9 @@ def tflagdata(vis,
              quackinterval, # mode quack parameters
              quackmode,
              quackincrement,
-             diameter,      # mode shadow parameter
+             tolerance,      # mode shadow parameter
+             recalcuvw,
+             antennafile,
              lowerlimit,    # mode elevation parameters
              upperlimit,
              ntime,         # mode tfcrop
@@ -198,10 +200,20 @@ def tflagdata(vis,
                        ' channelavg='+str(channelavg)+' clipzeros='+str(clipzeros)
             
         elif mode == 'shadow':
-            agent_pars['diameter'] = diameter
+            agent_pars['tolerance'] = tolerance
+            # ONce this is implemented in the agent, uncomment next line
+#            agent_pars['addantenna'] = antennafile
+
+            if antennafile != '':
+            # Get a dictionary with the antenna names, positions and diameters
+                addantenna = fh.readAntennaList(antennafile)                
+                agent_pars['addantenna'] = addantenna
+                
+            agent_pars['recalcuvw'] = recalcuvw
             casalog.post('Shadow mode is active')
             
-            sel_pars = sel_pars+' diameter='+str(diameter)
+            sel_pars = sel_pars+' tolerance='+str(tolerance)+' recalcuvw='+str(recalcuvw)+\
+                        ' antennafile='+str(antennafile)
 
         elif mode == 'quack':
             agent_pars['quackmode'] = quackmode
@@ -534,7 +546,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     manualpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['diameter']
+    shadowpars = ['tolerance','recalcuvw','addantenna']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']

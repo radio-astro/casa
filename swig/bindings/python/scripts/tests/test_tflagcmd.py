@@ -84,6 +84,21 @@ class test_base(unittest.TestCase):
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
         
+    def setUp_evla(self):
+        self.vis = "tosr0001_scan3.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        
+        
 class test_manual(test_base):
     '''Test manual selections'''
     
@@ -309,6 +324,29 @@ class test_savepars(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'Should not write flags when writeflags=False')
         
+
+
+class test_XML(test_base):
+    
+    def setUp(self):
+        self.setUp_evla()
+        
+    def test_xml1(self):
+        '''tflagcmd: list xml file and save in outfile'''
+        tflagcmd(vis=self.vis, action='list', inpmode='xml', savepars=True, outfile='origxml.txt')
+        
+        # Now read from FLAG_CMD. The XML cmds have already been saved in there
+        tflagcmd(vis=self.vis, action='list', savepars=True, outfile='myxml.txt')
+        
+        # Compare with original XML
+        self.assertEqual(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
+        
+        # Apply some commands
+        tflagcmd(vis=self.vis, action='apply', reason='SHADOW')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 24064)
+        
+        
         
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -329,6 +367,7 @@ def suite():
             test_alma,
             test_unapply,
             test_savepars,
+            test_XML,
             cleanup]
         
         

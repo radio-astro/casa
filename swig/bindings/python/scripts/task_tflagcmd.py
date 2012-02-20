@@ -144,40 +144,6 @@ def tflagcmd(
             casalog.post('Read ' + str(vrows.__len__())
                          + ' lines from file ' + inpfile)
 
-            # Read ASCII file into command list
-#            if inpfile == '':
-#                casalog.post('Input file is empty', 'ERROR')
-#            
-#            flagtable = inpfile
-#
-#            if (type(flagtable) == str) & os.path.exists(flagtable):
-#                try:
-#                    ff = open(flagtable, 'r')
-#                except:
-#                    raise Exception, 'Error opening file ' + flagtable
-#            else:
-#                raise Exception, \
-#                    'ASCII file not found - please verify the name'
-#                    
-#            #
-#            # Parse file
-#            try:
-#                cmdlist = ff.readlines()
-#                 # First remove any blank lines
-#                blanks = cmdlist.count('\n')
-#                for i in range(blanks):
-#                    cmdlist.remove('\n')
-#
-#            except:
-#                raise Exception, 'Error reading lines from file ' \
-#                    + flagtable
-#            ff.close()
-#            casalog.post('Read ' + str(cmdlist.__len__())
-#                         + ' lines from file ' + flagtable)
-#
-#            if cmdlist.__len__() > 0:
-#                myflagcmd = readFromFile(cmdlist, ms_startmjds,ms_endmjds,myreason=reason)                               
-
             listmode = 'file'
             
         elif inpmode == 'xml':
@@ -190,7 +156,8 @@ def tflagcmd(
                 flagtable = inpfile
                 
             # Actually parse table
-            myflags = readFromXML(flagtable, mytbuff=tbuff)
+#            myflags = readFromXML(flagtable, mytbuff=tbuff)
+            myflags = fh.readXML(flagtable, mytbuff=tbuff)
             casalog.post('%s'%myflags, 'DEBUG')
 
             # Construct flags per antenna, selecting by reason if desired
@@ -259,29 +226,30 @@ def tflagcmd(
             
             # Save the flag cmds to the outfile
             if savepars:
-                # Save on the MS of vis
+                # These cmds came from the internal FLAG_CMD, only list on the screen
+                if inpmode == 'table' and inpfile == '':
+                    pass
+#                        writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False)
                 if outfile == '':
-                    # These cmds came from the internal FLAG_CMD, only list on the screen
-                    if inpmode == 'table' and inpfile == '':
-                        pass
-                    # Cmds came from external source, list on the screen
-                    # and save them to MS and set APPLIED to False
-                    else:
-                        writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False)
-                     
-                # Append to a file   
+                    casalog.post('Saving commands to FLAG_CMD')
+                    fh.writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False, outfile='')                     
                 else:
-
-                    ffout = open(outfile, 'a')
-
-                    try:
-                        casalog.post('Appending flag commands to '+outfile)
-                        for cmd in mycmdlist:
-                            print >> ffout, '%s' % cmd
-                    except:
-                        raise Exception, 'Error writing lines to file ' \
-                            + outfile
-                    ffout.close()
+                    casalog.post('Saving commands to '+outfile)
+                    fh.writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False, outfile=outfile)                     
+      
+                # Append to a file   
+#                else:
+#
+#                    ffout = open(outfile, 'a')
+#
+#                    try:
+#                        casalog.post('Appending flag commands to '+outfile)
+#                        for cmd in mycmdlist:
+#                            print >> ffout, '%s' % cmd
+#                    except:
+#                        raise Exception, 'Error writing lines to file ' \
+#                            + outfile
+#                    ffout.close()
                 
 
         # Apply/Unapply the flag commands to the data
@@ -732,7 +700,7 @@ def delEmptyPars(cmdline):
 
 def setupAgent(tflocal, myflagcmd, myrows, apply):
     ''' Setup the parameters of each agent and call the tflagger tool
-        myflagcmd --> it is a dictionary coming from readFromTable, readFromFile, etc.
+        myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
         myrows --> selected rows to apply/unapply flags
         apply --> it's a boolean to control whether to apply or unapply the flags'''
 
@@ -745,7 +713,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     manualpars = []
     clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['diameter']
+    shadowpars = ['tolerance', 'recalcuvw', 'antennafile']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','expression','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
@@ -776,31 +744,31 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         if cmdline.__contains__('mode'):                 
             if cmdline.__contains__('manual'): 
                 mode = 'manual'
-                modepars = getLinePars(cmdline,manualpars)   
+                modepars = fh.getLinePars(cmdline,manualpars)   
             elif cmdline.__contains__('clip'):
                 mode = 'clip'
-                modepars = getLinePars(cmdline,clippars)
+                modepars = fh.getLinePars(cmdline,clippars)
             elif cmdline.__contains__('quack'):
                 mode = 'quack'
-                modepars = getLinePars(cmdline,quackpars)
+                modepars = fh.getLinePars(cmdline,quackpars)
             elif cmdline.__contains__('shadow'):
                 mode = 'shadow'
-                modepars = getLinePars(cmdline,shadowpars)
+                modepars = fh.getLinePars(cmdline,shadowpars)
             elif cmdline.__contains__('elevation'):
                 mode = 'elevation'
-                modepars = getLinePars(cmdline,elevationpars)
+                modepars = fh.getLinePars(cmdline,elevationpars)
             elif cmdline.__contains__('tfcrop'):
                 mode = 'tfcrop'
-                modepars = getLinePars(cmdline,tfcroppars)
+                modepars = fh.getLinePars(cmdline,tfcroppars)
             elif cmdline.__contains__('extend'):
                 mode = 'extend'
-                modepars = getLinePars(cmdline,extendpars)
+                modepars = fh.getLinePars(cmdline,extendpars)
             elif cmdline.__contains__('unflag'):
                 mode = 'unflag'
-                modepars = getLinePars(cmdline,manualpars)
+                modepars = fh.getLinePars(cmdline,manualpars)
             elif cmdline.__contains__('rflag'):
                 mode = 'rflag'
-                modepars = getLinePars(cmdline,rflagpars)
+                modepars = fh.getLinePars(cmdline,rflagpars)
             else:
                 # Unknown mode, ignore it
                 casalog.post('Ignoring unknown mode', 'WARN')
@@ -810,14 +778,14 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             # No mode means manual
             mode = 'manual'
             cmdline = cmdline+' mode=manual'
-            modepars = getLinePars(cmdline,manualpars)   
+            modepars = fh.getLinePars(cmdline,manualpars)   
                 
                 
         # Read ntime
-        readNtime(modepars)
+        fh.readNtime(modepars)
         
         # Cast the correct type to non-string parameters
-        fixType(modepars)
+        fh.fixType(modepars)
         
         # Add the apply/unapply parameter to dictionary            
         modepars['apply'] = apply
@@ -874,194 +842,6 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     return savelist
 
 
-def getLinePars(cmdline, mlist=[]):
-    '''Get a dictionary of all selection parameters from a line:
-       -> cmdline is a string with parameters
-       -> mlist is a list of the mode parameters to add to the
-          returned dictionary.
-    '''
-            
-    # Dictionary of parameters to return
-    dicpars = {}
-        
-    # split by white space
-    keyvlist = cmdline.split()
-    if keyvlist.__len__() > 0:  
-        
-        # Split by '='
-        for keyv in keyvlist:
-            # Skip if it is a comment character #
-            if keyv.count('#') > 0:
-                break
-
-            (xkey,xval) = keyv.split('=')
-
-            # Remove quotes
-            if type(xval) == str:
-                if xval.count("'") > 0:
-                    xval = xval.strip("'")
-                if xval.count('"') > 0:
-                    xval = xval.strip('"')
-
-            # Check which parameter
-            if xkey == "scan":
-                dicpars['scan'] = xval
-
-            elif xkey == "field":
-                dicpars['field'] = xval
-
-            elif xkey == "antenna":
-                dicpars['antenna'] = xval
-
-            elif xkey == "timerange":
-                dicpars['timerange'] = xval
-
-            elif xkey == "correlation":
-                dicpars['correlation'] = xval
-
-            elif xkey == "intent":
-                dicpars['intent'] = xval
-
-            elif xkey == "feed":
-                dicpars['feed'] = xval
-
-            elif xkey == "array":
-                dicpars['array'] = xval
-
-            elif xkey == "uvrange":
-                dicpars['uvrange'] = xval
-
-            elif xkey == "spw":
-                dicpars['spw'] = xval
-                
-            elif xkey == "observation":
-                dicpars['observation'] = xval
-
-            elif xkey == "mode":
-                dicpars['mode'] = xval
-
-            elif mlist != []:
-                # Any parameters requested for this mode?
-                for m in mlist:
-                    if xkey == m:
-                        dicpars[m] = xval
-                        
-            
-    return dicpars
-
-
-def fixType(params):
-    '''Give correct types to non-string parameters'''
-
-    # quack parameters
-    if params.has_key('quackmode') and not params['quackmode'] in ['beg'
-            , 'endb', 'end', 'tail']:
-        raise Exception, \
-            "Illegal value '%s' of parameter quackmode, must be either 'beg', 'endb', 'end' or 'tail'" \
-            % params['quackmode']
-    if params.has_key('quackinterval'):
-        params['quackinterval'] = float(params['quackinterval'])        
-    if params.has_key('quackincrement'):
-        if type(params['quackincrement']) == str:
-            params['quackincrement'] = eval(params['quackincrement'].capitalize())
-
-    # clip parameters
-    if params.has_key('clipminmax'):
-        value01 = params['clipminmax']
-        # turn string into [min,max] range
-        value0 = value01.lstrip('[')
-        value = value0.rstrip(']')
-        r = value.split(',')
-        rmin = float(r[0])
-        rmax = float(r[1])
-        params['clipminmax'] = [rmin, rmax]        
-    if params.has_key('clipoutside'):
-        if type(params['clipoutside']) == str:
-            params['clipoutside'] = eval(params['clipoutside'].capitalize())
-        else:
-            params['clipoutside'] = params['clipoutside']
-    if params.has_key('channelavg'):
-        params['channelavg'] = eval(params['channelavg'].capitalize())
-    if params.has_key('clipzeros'):
-        params['clipzeros'] = eval(params['clipzeros'].capitalize())
-            
-            
-    # shadow parameter
-    if params.has_key('diameter'):
-        params['diameter'] = float(params['diameter'])
-        
-    # elevation parameters
-    if params.has_key('lowerlimit'):
-        params['lowerlimit'] = float(params['lowerlimit'])        
-    if params.has_key('upperlimit'):
-        params['upperlimit'] = float(params['upperlimit'])
-        
-    # extend parameters
-    if params.has_key('extendpols'):        
-        params['extendpols'] = eval(params['extendpols'].capitalize())
-    if params.has_key('growtime'):
-        params['growtime'] = float(params['growtime'])
-    if params.has_key('growfreq'):
-        params['growfreq'] = float(params['growfreq'])
-    if params.has_key('growaround'):
-        params['growaround'] = eval(params['growaround'].capitalize())
-    if params.has_key('flagneartime'):
-        params['flagneartime'] = eval(params['flagneartime'].capitalize())
-    if params.has_key('flagnearfreq'):
-        params['flagnearfreq'] = eval(params['flagnearfreq'].capitalize())
-
-    # tfcrop parameters
-    if params.has_key('combinescans'):
-        params['combinescans'] = eval(params['combinescans'].capitalize())        
-    if params.has_key('timecutoff'):
-        params['timecutoff'] = float(params['timecutoff'])       
-    if params.has_key('freqcutoff'):
-        params['freqcutoff'] = float(params['freqcutoff'])        
-    if params.has_key('maxnpieces'):
-        params['maxnpieces'] = int(params['maxnpieces'])        
-    if params.has_key('halfwin'):
-        params['halfwin'] = int(params['halfwin'])
-        
-
-def readNtime(params):
-    '''Check the value and units of ntime
-       params --> dictionary of agent's parameters '''
-
-    newtime = 0.0
-    
-    if params.has_key('ntime'):
-        ntime = params['ntime']
-
-        # Verify the ntime value
-        if type(ntime) == float or type(ntime) == int:
-            if ntime <= 0:
-                raise Exception, 'Parameter ntime cannot be < = 0'
-            else:
-                # units are seconds
-                newtime = float(ntime)
-        
-        elif type(ntime) == str:
-            if ntime == 'scan':
-                # iteration time step is a scan
-                newtime = 0.0
-            else:
-                # read the units from the string
-                qtime = qa.quantity(ntime)
-                
-                if qtime['unit'] == 'min':
-                    # convert to seconds
-                    qtime = qa.convert(qtime, 's')
-                elif qtime['unit'] == '':
-                    qtime['unit'] = 's'
-                    
-                # check units
-                if qtime['unit'] == 's':
-                    newtime = qtime['value']
-                else:
-                    casalog.post('Cannot convert units of ntime. Will use default 0.0s', 'WARN')
-          
-    params['ntime'] = float(newtime)
-                  
             
 def readFromTable(
     msfile,
@@ -1559,112 +1339,112 @@ def readFromFile(cmdlist, ms_startmjds, ms_endmjds, myreason=''):
     return myflagd
 
 
-def readFromXML(sdmfile, mytbuff):
-
-    '''readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
-                 into returned dictionary as flag command strings
-       sdmfile (string)  path to SDM containing Antenna.xml and Flag.xml
-       mytbuff (float)   time interval (start and end) padding (seconds)'''
+#def readFromXML(sdmfile, mytbuff):
 #
-#   Usage: myflags = readflagxml(sdmfile,tbuff)
+#    '''readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
+#                 into returned dictionary as flag command strings
+#       sdmfile (string)  path to SDM containing Antenna.xml and Flag.xml
+#       mytbuff (float)   time interval (start and end) padding (seconds)'''
+##
+##   Usage: myflags = readflagxml(sdmfile,tbuff)
+##
+##   Dictionary structure:
+##   fid : 'id' (string)
+##         'mode' (string)         flag mode ('online')
+##         'antenna' (string)
+##         'timerange' (string)
+##         'reason' (string)
+##         'time' (float)          in mjd seconds
+##         'interval' (float)      in mjd seconds
+##         'cmd' (string)          string (for COMMAND col in FLAG_CMD)
+##         'type' (string)         'FLAG' / 'UNFLAG'
+##         'applied' (bool)        set to True here on read-in
+##         'level' (int)           set to 0 here on read-in
+##         'severity' (int)        set to 0 here on read-in
+##
 #
-#   Dictionary structure:
-#   fid : 'id' (string)
-#         'mode' (string)         flag mode ('online')
-#         'antenna' (string)
-#         'timerange' (string)
-#         'reason' (string)
-#         'time' (float)          in mjd seconds
-#         'interval' (float)      in mjd seconds
-#         'cmd' (string)          string (for COMMAND col in FLAG_CMD)
-#         'type' (string)         'FLAG' / 'UNFLAG'
-#         'applied' (bool)        set to True here on read-in
-#         'level' (int)           set to 0 here on read-in
-#         'severity' (int)        set to 0 here on read-in
+#    try:
+#        from xml.dom import minidom
+#    except ImportError, e:
+#        print 'failed to load xml.dom.minidom:\n', e
+#        exit(1)
 #
-
-    try:
-        from xml.dom import minidom
-    except ImportError, e:
-        print 'failed to load xml.dom.minidom:\n', e
-        exit(1)
-
-    if type(mytbuff) != float:
-        casalog.post('Warning: incorrect type for tbuff, found "'
-                     + str(mytbuff) + '", setting to 1.0')
-        mytbuff = 1.0
-
-    # construct look-up dictionary of name vs. id from Antenna.xml
-    xmlants = minidom.parse(sdmfile + '/Antenna.xml')
-    antdict = {}
-    rowlist = xmlants.getElementsByTagName('row')
-    for rownode in rowlist:
-        rowname = rownode.getElementsByTagName('name')
-        ant = str(rowname[0].childNodes[0].nodeValue)
-        rowid = rownode.getElementsByTagName('antennaId')
-        antid = str(rowid[0].childNodes[0].nodeValue)
-        antdict[antid] = ant
-    casalog.post('Found ' + str(rowlist.length)
-                 + ' antennas in Antenna.xml')
-
-    # now read Flag.xml into dictionary row by row
-    xmlflags = minidom.parse(sdmfile + '/Flag.xml')
-    flagdict = {}
-    rowlist = xmlflags.getElementsByTagName('row')
-    nrows = rowlist.length
-    for fid in range(nrows):
-        rownode = rowlist[fid]
-        rowfid = rownode.getElementsByTagName('flagId')
-        fidstr = str(rowfid[0].childNodes[0].nodeValue)
-        flagdict[fid] = {}
-        flagdict[fid]['id'] = fidstr
-        rowid = rownode.getElementsByTagName('antennaId')
-        antid = str(rowid[0].childNodes[0].nodeValue)
-        antname = antdict[antid]
-        # start and end times in mjd ns
-        rowstart = rownode.getElementsByTagName('startTime')
-        start = int(rowstart[0].childNodes[0].nodeValue)
-        startmjds = float(start) * 1.0E-9 - mytbuff
-        t = qa.quantity(startmjds, 's')
-        starttime = qa.time(t, form='ymd', prec=9)
-        rowend = rownode.getElementsByTagName('endTime')
-        end = int(rowend[0].childNodes[0].nodeValue)
-        endmjds = float(end) * 1.0E-9 + mytbuff
-        t = qa.quantity(endmjds, 's')
-        endtime = qa.time(t, form='ymd', prec=9)
-    # time and interval for FLAG_CMD use
-        times = 0.5 * (startmjds + endmjds)
-        intervs = endmjds - startmjds
-        flagdict[fid]['time'] = times
-        flagdict[fid]['interval'] = intervs
-        # reasons
-        rowreason = rownode.getElementsByTagName('reason')
-        reas = str(rowreason[0].childNodes[0].nodeValue)
-        # Construct antenna name and timerange and reason strings
-        flagdict[fid]['antenna'] = antname
-        timestr = starttime + '~' + endtime
-        flagdict[fid]['timerange'] = timestr
-        flagdict[fid]['reason'] = reas
-        # Construct command strings (per input flag)
-        cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
-        flagdict[fid]['command'] = cmd
-    #
-        flagdict[fid]['type'] = 'FLAG'
-        flagdict[fid]['applied'] = False
-        flagdict[fid]['level'] = 0
-        flagdict[fid]['severity'] = 0
-        flagdict[fid]['mode'] = 'online'
-
-    flags = {}
-    if rowlist.length > 0:
-        flags = flagdict
-        casalog.post('Found ' + str(rowlist.length)
-                     + ' flags in Flag.xml')
-    else:
-        casalog.post('No valid flags found in Flag.xml')
-
-    # return the dictionary for later use
-    return flags
+#    if type(mytbuff) != float:
+#        casalog.post('Warning: incorrect type for tbuff, found "'
+#                     + str(mytbuff) + '", setting to 1.0')
+#        mytbuff = 1.0
+#
+#    # construct look-up dictionary of name vs. id from Antenna.xml
+#    xmlants = minidom.parse(sdmfile + '/Antenna.xml')
+#    antdict = {}
+#    rowlist = xmlants.getElementsByTagName('row')
+#    for rownode in rowlist:
+#        rowname = rownode.getElementsByTagName('name')
+#        ant = str(rowname[0].childNodes[0].nodeValue)
+#        rowid = rownode.getElementsByTagName('antennaId')
+#        antid = str(rowid[0].childNodes[0].nodeValue)
+#        antdict[antid] = ant
+#    casalog.post('Found ' + str(rowlist.length)
+#                 + ' antennas in Antenna.xml')
+#
+#    # now read Flag.xml into dictionary row by row
+#    xmlflags = minidom.parse(sdmfile + '/Flag.xml')
+#    flagdict = {}
+#    rowlist = xmlflags.getElementsByTagName('row')
+#    nrows = rowlist.length
+#    for fid in range(nrows):
+#        rownode = rowlist[fid]
+#        rowfid = rownode.getElementsByTagName('flagId')
+#        fidstr = str(rowfid[0].childNodes[0].nodeValue)
+#        flagdict[fid] = {}
+#        flagdict[fid]['id'] = fidstr
+#        rowid = rownode.getElementsByTagName('antennaId')
+#        antid = str(rowid[0].childNodes[0].nodeValue)
+#        antname = antdict[antid]
+#        # start and end times in mjd ns
+#        rowstart = rownode.getElementsByTagName('startTime')
+#        start = int(rowstart[0].childNodes[0].nodeValue)
+#        startmjds = float(start) * 1.0E-9 - mytbuff
+#        t = qa.quantity(startmjds, 's')
+#        starttime = qa.time(t, form='ymd', prec=9)
+#        rowend = rownode.getElementsByTagName('endTime')
+#        end = int(rowend[0].childNodes[0].nodeValue)
+#        endmjds = float(end) * 1.0E-9 + mytbuff
+#        t = qa.quantity(endmjds, 's')
+#        endtime = qa.time(t, form='ymd', prec=9)
+#    # time and interval for FLAG_CMD use
+#        times = 0.5 * (startmjds + endmjds)
+#        intervs = endmjds - startmjds
+#        flagdict[fid]['time'] = times
+#        flagdict[fid]['interval'] = intervs
+#        # reasons
+#        rowreason = rownode.getElementsByTagName('reason')
+#        reas = str(rowreason[0].childNodes[0].nodeValue)
+#        # Construct antenna name and timerange and reason strings
+#        flagdict[fid]['antenna'] = antname
+#        timestr = starttime + '~' + endtime
+#        flagdict[fid]['timerange'] = timestr
+#        flagdict[fid]['reason'] = reas
+#        # Construct command strings (per input flag)
+#        cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
+#        flagdict[fid]['command'] = cmd
+#    #
+#        flagdict[fid]['type'] = 'FLAG'
+#        flagdict[fid]['applied'] = False
+#        flagdict[fid]['level'] = 0
+#        flagdict[fid]['severity'] = 0
+#        flagdict[fid]['mode'] = 'online'
+#
+#    flags = {}
+#    if rowlist.length > 0:
+#        flags = flagdict
+#        casalog.post('Found ' + str(rowlist.length)
+#                     + ' flags in Flag.xml')
+#    else:
+#        casalog.post('No valid flags found in Flag.xml')
+#
+#    # return the dictionary for later use
+#    return flags
 
 
 def updateTable(
