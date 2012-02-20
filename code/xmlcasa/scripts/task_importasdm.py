@@ -86,7 +86,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 
 	   showversion -- report the version of the asdm2MS being used.
 
-	   useversion -- Selects the version of asdm2MS to be used (\'v3\' (default) or \'v2\' (version before May 2011))
+	   useversion -- Selects the version of asdm2MS to be used . This option is not really operational; the only possible (and default) value is \'v3\'.
                      default: v3
         """
 	#Python script
@@ -193,9 +193,8 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                       viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
                       vis = asdm.rstrip('/') + '.asap'
 
+		useversion = 'v3'
 		theexecutable = 'asdm2MS'
-		if(useversion == 'v3'):
-			theexecutable = 'asdm2MS_v3'
 
 		execute_string = theexecutable+' --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' \
 				 + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' \
@@ -212,13 +211,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 				execute_string = execute_string +' --no-caldevice'
 			if (not process_pointing) :
 				execute_string = execute_string +' --no-pointing'
-		else:
-			if (process_syspower):
-				execute_string = execute_string +' --process-syspower'
-			if (process_caldevice) :
-				execute_string = execute_string +' --process-caldevice'
-			if (not process_pointing) :
-				raise Exception, "You have set parameter \"process_pointing\" to False. This only works together with useversion=\"v3\"."
+
 		if(compression) :
 		   execute_string= execute_string +' --compression'
 		if(verbose) :
