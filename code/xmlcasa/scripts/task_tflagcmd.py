@@ -745,7 +745,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     manualpars = []
     clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['diameter']
+    shadowpars = ['tolerance', 'recalcuvw', 'antennafile']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','expression','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
