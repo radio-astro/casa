@@ -253,7 +253,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_importfits.py
   scripts/task_importfitsidi.py
   scripts/task_importgmrt.py
-  scripts/task_importoldasdm.py
   scripts/task_importuvfits.py
   scripts/task_importvla.py
   scripts/task_imregrid.py
@@ -385,7 +384,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/importfits.xml
   tasks/importfitsidi.xml
   tasks/importgmrt.xml
-  tasks/importoldasdm.xml
   tasks/importuvfits.xml
   tasks/importvla.xml
   tasks/imregrid.xml
