@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalFocusModelRowIDL;
 #endif
 
 
@@ -51,14 +47,17 @@ using asdmIDL::CalFocusModelRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
 
 
@@ -67,12 +66,10 @@ using  asdm::Length;
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -81,7 +78,6 @@ using namespace PolarizationTypeMod;
 
 	
 #include "CAntennaMake.h"
-using namespace AntennaMakeMod;
 	
 
 	
@@ -110,9 +106,11 @@ using namespace AntennaMakeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalFocusModel.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -128,16 +126,19 @@ class CalDataRow;
 	
 
 class CalFocusModelRow;
-typedef void (CalFocusModelRow::*CalFocusModelAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalFocusModelRow::*CalFocusModelAttributeFromBin) (EndianIStream& eis);
+typedef void (CalFocusModelRow::*CalFocusModelAttributeFromText) (const string& s);
 
 /**
  * The CalFocusModelRow class is a row of a CalFocusModelTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalFocusModelRow {
 friend class asdm::CalFocusModelTable;
+friend class asdm::RowTransformer<CalFocusModelRow>;
+//friend class asdm::TableStreamReader<CalFocusModelTable, CalFocusModelRow>;
 
 public:
 
@@ -844,7 +845,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalFocusModelRowIDL struct.
 	 */
-	CalFocusModelRowIDL *toIDL() const;
+	asdmIDL::CalFocusModelRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -853,14 +854,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalFocusModelRowIDL x) ;
+	void setFromIDL (asdmIDL::CalFocusModelRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -868,7 +869,44 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalFocusModelAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void numSourceObsFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffFormulaFromBin( EndianIStream& eis);
+void coeffValueFromBin( EndianIStream& eis);
+void coeffErrorFromBin( EndianIStream& eis);
+void coeffFixedFromBin( EndianIStream& eis);
+void focusModelFromBin( EndianIStream& eis);
+void focusRMSFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalFocusModelTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalFocusModelRow* fromBin(EndianIStream& eis, CalFocusModelTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1138,30 +1176,95 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalFocusModelAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void polarizationTypeFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void antennaMakeFromBin( EndianISStream& eiss);
-void numCoeffFromBin( EndianISStream& eiss);
-void numSourceObsFromBin( EndianISStream& eiss);
-void coeffNameFromBin( EndianISStream& eiss);
-void coeffFormulaFromBin( EndianISStream& eiss);
-void coeffValueFromBin( EndianISStream& eiss);
-void coeffErrorFromBin( EndianISStream& eiss);
-void coeffFixedFromBin( EndianISStream& eiss);
-void focusModelFromBin( EndianISStream& eiss);
-void focusRMSFromBin( EndianISStream& eiss);
-void reducedChiSquaredFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalFocusModelAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void numSourceObsFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffFormulaFromBin( EndianIStream& eis);
+void coeffValueFromBin( EndianIStream& eis);
+void coeffErrorFromBin( EndianIStream& eis);
+void coeffFixedFromBin( EndianIStream& eis);
+void focusModelFromBin( EndianIStream& eis);
+void focusRMSFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalFocusModelAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void antennaMakeFromText (const string & s);
+	
+	
+void numCoeffFromText (const string & s);
+	
+	
+void numSourceObsFromText (const string & s);
+	
+	
+void coeffNameFromText (const string & s);
+	
+	
+void coeffFormulaFromText (const string & s);
+	
+	
+void coeffValueFromText (const string & s);
+	
+	
+void coeffErrorFromText (const string & s);
+	
+	
+void coeffFixedFromText (const string & s);
+	
+	
+void focusModelFromText (const string & s);
+	
+	
+void focusRMSFromText (const string & s);
+	
+	
+void reducedChiSquaredFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1170,14 +1273,14 @@ void reducedChiSquaredFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalFocusModelTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalFocusModelRow* fromBin(EndianISStream& eiss, CalFocusModelTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalFocusModelRow* fromBin(EndianIStream& eis, CalFocusModelTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

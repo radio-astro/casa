@@ -63,6 +63,7 @@ using asdm::CalReductionRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalPointingRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -1867,7 +1871,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(receiverBand);
+			eoss.writeString(CReceiverBand::name(receiverBand));
+			/* eoss.writeInt(receiverBand); */
 				
 		
 	
@@ -1911,7 +1916,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(antennaMake);
+			eoss.writeString(CAntennaMake::name(antennaMake));
+			/* eoss.writeInt(antennaMake); */
 				
 		
 	
@@ -1920,7 +1926,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(atmPhaseCorrection);
+			eoss.writeString(CAtmPhaseCorrection::name(atmPhaseCorrection));
+			/* eoss.writeInt(atmPhaseCorrection); */
 				
 		
 	
@@ -1943,7 +1950,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(pointingModelMode);
+			eoss.writeString(CPointingModelMode::name(pointingModelMode));
+			/* eoss.writeInt(pointingModelMode); */
 				
 		
 	
@@ -1952,7 +1960,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(pointingMethod);
+			eoss.writeString(CPointingMethod::name(pointingMethod));
+			/* eoss.writeInt(pointingMethod); */
 				
 		
 	
@@ -1974,7 +1983,8 @@ namespace asdm {
 		eoss.writeInt((int) polarizationTypes.size());
 		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
 				
-			eoss.writeInt(polarizationTypes.at(i));
+			eoss.writeString(CPolarizationType::name(polarizationTypes.at(i)));
+			/* eoss.writeInt(polarizationTypes.at(i)); */
 				
 				
 						
@@ -2211,169 +2221,169 @@ namespace asdm {
 
 	}
 	
-void CalPointingRow::antennaNameFromBin(EndianISStream& eiss) {
+void CalPointingRow::antennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaName =  eiss.readString();
+		antennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalPointingRow::receiverBandFromBin(EndianISStream& eiss) {
+void CalPointingRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverBand = CReceiverBand::from_int(eiss.readInt());
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingRow::calDataIdFromBin(EndianISStream& eiss) {
+void CalPointingRow::calDataIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalPointingRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalPointingRow::startValidTimeFromBin(EndianISStream& eiss) {
+void CalPointingRow::calReductionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalPointingRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalPointingRow::ambientTemperatureFromBin(EndianISStream& eiss) {
+void CalPointingRow::startValidTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		ambientTemperature =  Temperature::fromBin(eiss);
+		startValidTime =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void CalPointingRow::antennaMakeFromBin(EndianISStream& eiss) {
+void CalPointingRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalPointingRow::ambientTemperatureFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		ambientTemperature =  Temperature::fromBin(eis);
+		
+	
+	
+}
+void CalPointingRow::antennaMakeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaMake = CAntennaMake::from_int(eiss.readInt());
+		antennaMake = CAntennaMake::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+void CalPointingRow::atmPhaseCorrectionFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+		atmPhaseCorrection = CAtmPhaseCorrection::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingRow::directionFromBin(EndianISStream& eiss) {
+void CalPointingRow::directionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	direction = Angle::from1DBin(eiss);	
+	direction = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalPointingRow::frequencyRangeFromBin(EndianISStream& eiss) {
+void CalPointingRow::frequencyRangeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	frequencyRange = Frequency::from1DBin(eiss);	
+	frequencyRange = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void CalPointingRow::pointingModelModeFromBin(EndianISStream& eiss) {
+void CalPointingRow::pointingModelModeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		pointingModelMode = CPointingModelMode::from_int(eiss.readInt());
-			
-		
-	
-	
-}
-void CalPointingRow::pointingMethodFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		pointingMethod = CPointingMethod::from_int(eiss.readInt());
+		pointingModelMode = CPointingModelMode::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingRow::numReceptorFromBin(EndianISStream& eiss) {
+void CalPointingRow::pointingMethodFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		pointingMethod = CPointingMethod::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPointingRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void CalPointingRow::numReceptorFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numReceptor =  eis.readInt();
+			
+		
+	
+	
+}
+void CalPointingRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -2382,10 +2392,10 @@ void CalPointingRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -2393,49 +2403,49 @@ void CalPointingRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPointingRow::collOffsetRelativeFromBin(EndianISStream& eiss) {
+void CalPointingRow::collOffsetRelativeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	collOffsetRelative = Angle::from2DBin(eiss);		
+	collOffsetRelative = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void CalPointingRow::collOffsetAbsoluteFromBin(EndianISStream& eiss) {
+void CalPointingRow::collOffsetAbsoluteFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	collOffsetAbsolute = Angle::from2DBin(eiss);		
+	collOffsetAbsolute = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void CalPointingRow::collErrorFromBin(EndianISStream& eiss) {
+void CalPointingRow::collErrorFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	collError = Angle::from2DBin(eiss);		
+	collError = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void CalPointingRow::collOffsetTiedFromBin(EndianISStream& eiss) {
+void CalPointingRow::collOffsetTiedFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -2444,14 +2454,14 @@ void CalPointingRow::collOffsetTiedFromBin(EndianISStream& eiss) {
 	
 		collOffsetTied.clear();
 		
-		unsigned int collOffsetTiedDim1 = eiss.readInt();
-		unsigned int collOffsetTiedDim2 = eiss.readInt();
+		unsigned int collOffsetTiedDim1 = eis.readInt();
+		unsigned int collOffsetTiedDim2 = eis.readInt();
 		vector <bool> collOffsetTiedAux1;
 		for (unsigned int i = 0; i < collOffsetTiedDim1; i++) {
 			collOffsetTiedAux1.clear();
 			for (unsigned int j = 0; j < collOffsetTiedDim2 ; j++)			
 			
-			collOffsetTiedAux1.push_back(eiss.readBoolean());
+			collOffsetTiedAux1.push_back(eis.readBoolean());
 			
 			collOffsetTied.push_back(collOffsetTiedAux1);
 		}
@@ -2462,7 +2472,7 @@ void CalPointingRow::collOffsetTiedFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPointingRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+void CalPointingRow::reducedChiSquaredFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -2471,10 +2481,10 @@ void CalPointingRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 		reducedChiSquared.clear();
 		
-		unsigned int reducedChiSquaredDim1 = eiss.readInt();
+		unsigned int reducedChiSquaredDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
 			
-			reducedChiSquared.push_back(eiss.readDouble());
+			reducedChiSquared.push_back(eis.readDouble());
 			
 	
 
@@ -2483,16 +2493,16 @@ void CalPointingRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalPointingRow::averagedPolarizationsFromBin(EndianISStream& eiss) {
+void CalPointingRow::averagedPolarizationsFromBin(EndianIStream& eis) {
 		
-	averagedPolarizationsExists = eiss.readBoolean();
+	averagedPolarizationsExists = eis.readBoolean();
 	if (averagedPolarizationsExists) {
 		
 	
 	
 		
 			
-		averagedPolarizations =  eiss.readBoolean();
+		averagedPolarizations =  eis.readBoolean();
 			
 		
 	
@@ -2500,9 +2510,9 @@ void CalPointingRow::averagedPolarizationsFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::beamPAFromBin(EndianISStream& eiss) {
+void CalPointingRow::beamPAFromBin(EndianIStream& eis) {
 		
-	beamPAExists = eiss.readBoolean();
+	beamPAExists = eis.readBoolean();
 	if (beamPAExists) {
 		
 	
@@ -2510,7 +2520,7 @@ void CalPointingRow::beamPAFromBin(EndianISStream& eiss) {
 		
 			
 	
-	beamPA = Angle::from1DBin(eiss);	
+	beamPA = Angle::from1DBin(eis);	
 	
 
 		
@@ -2519,9 +2529,9 @@ void CalPointingRow::beamPAFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::beamPAErrorFromBin(EndianISStream& eiss) {
+void CalPointingRow::beamPAErrorFromBin(EndianIStream& eis) {
 		
-	beamPAErrorExists = eiss.readBoolean();
+	beamPAErrorExists = eis.readBoolean();
 	if (beamPAErrorExists) {
 		
 	
@@ -2529,7 +2539,7 @@ void CalPointingRow::beamPAErrorFromBin(EndianISStream& eiss) {
 		
 			
 	
-	beamPAError = Angle::from1DBin(eiss);	
+	beamPAError = Angle::from1DBin(eis);	
 	
 
 		
@@ -2538,16 +2548,16 @@ void CalPointingRow::beamPAErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::beamPAWasFixedFromBin(EndianISStream& eiss) {
+void CalPointingRow::beamPAWasFixedFromBin(EndianIStream& eis) {
 		
-	beamPAWasFixedExists = eiss.readBoolean();
+	beamPAWasFixedExists = eis.readBoolean();
 	if (beamPAWasFixedExists) {
 		
 	
 	
 		
 			
-		beamPAWasFixed =  eiss.readBoolean();
+		beamPAWasFixed =  eis.readBoolean();
 			
 		
 	
@@ -2555,9 +2565,9 @@ void CalPointingRow::beamPAWasFixedFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::beamWidthFromBin(EndianISStream& eiss) {
+void CalPointingRow::beamWidthFromBin(EndianIStream& eis) {
 		
-	beamWidthExists = eiss.readBoolean();
+	beamWidthExists = eis.readBoolean();
 	if (beamWidthExists) {
 		
 	
@@ -2565,7 +2575,7 @@ void CalPointingRow::beamWidthFromBin(EndianISStream& eiss) {
 		
 			
 	
-	beamWidth = Angle::from2DBin(eiss);		
+	beamWidth = Angle::from2DBin(eis);		
 	
 
 		
@@ -2574,9 +2584,9 @@ void CalPointingRow::beamWidthFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::beamWidthErrorFromBin(EndianISStream& eiss) {
+void CalPointingRow::beamWidthErrorFromBin(EndianIStream& eis) {
 		
-	beamWidthErrorExists = eiss.readBoolean();
+	beamWidthErrorExists = eis.readBoolean();
 	if (beamWidthErrorExists) {
 		
 	
@@ -2584,7 +2594,7 @@ void CalPointingRow::beamWidthErrorFromBin(EndianISStream& eiss) {
 		
 			
 	
-	beamWidthError = Angle::from2DBin(eiss);		
+	beamWidthError = Angle::from2DBin(eis);		
 	
 
 		
@@ -2593,9 +2603,9 @@ void CalPointingRow::beamWidthErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::beamWidthWasFixedFromBin(EndianISStream& eiss) {
+void CalPointingRow::beamWidthWasFixedFromBin(EndianIStream& eis) {
 		
-	beamWidthWasFixedExists = eiss.readBoolean();
+	beamWidthWasFixedExists = eis.readBoolean();
 	if (beamWidthWasFixedExists) {
 		
 	
@@ -2605,10 +2615,10 @@ void CalPointingRow::beamWidthWasFixedFromBin(EndianISStream& eiss) {
 	
 		beamWidthWasFixed.clear();
 		
-		unsigned int beamWidthWasFixedDim1 = eiss.readInt();
+		unsigned int beamWidthWasFixedDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < beamWidthWasFixedDim1; i++)
 			
-			beamWidthWasFixed.push_back(eiss.readBoolean());
+			beamWidthWasFixed.push_back(eis.readBoolean());
 			
 	
 
@@ -2618,9 +2628,9 @@ void CalPointingRow::beamWidthWasFixedFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::offIntensityFromBin(EndianISStream& eiss) {
+void CalPointingRow::offIntensityFromBin(EndianIStream& eis) {
 		
-	offIntensityExists = eiss.readBoolean();
+	offIntensityExists = eis.readBoolean();
 	if (offIntensityExists) {
 		
 	
@@ -2628,7 +2638,7 @@ void CalPointingRow::offIntensityFromBin(EndianISStream& eiss) {
 		
 			
 	
-	offIntensity = Temperature::from1DBin(eiss);	
+	offIntensity = Temperature::from1DBin(eis);	
 	
 
 		
@@ -2637,9 +2647,9 @@ void CalPointingRow::offIntensityFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::offIntensityErrorFromBin(EndianISStream& eiss) {
+void CalPointingRow::offIntensityErrorFromBin(EndianIStream& eis) {
 		
-	offIntensityErrorExists = eiss.readBoolean();
+	offIntensityErrorExists = eis.readBoolean();
 	if (offIntensityErrorExists) {
 		
 	
@@ -2647,7 +2657,7 @@ void CalPointingRow::offIntensityErrorFromBin(EndianISStream& eiss) {
 		
 			
 	
-	offIntensityError = Temperature::from1DBin(eiss);	
+	offIntensityError = Temperature::from1DBin(eis);	
 	
 
 		
@@ -2656,16 +2666,16 @@ void CalPointingRow::offIntensityErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::offIntensityWasFixedFromBin(EndianISStream& eiss) {
+void CalPointingRow::offIntensityWasFixedFromBin(EndianIStream& eis) {
 		
-	offIntensityWasFixedExists = eiss.readBoolean();
+	offIntensityWasFixedExists = eis.readBoolean();
 	if (offIntensityWasFixedExists) {
 		
 	
 	
 		
 			
-		offIntensityWasFixed =  eiss.readBoolean();
+		offIntensityWasFixed =  eis.readBoolean();
 			
 		
 	
@@ -2673,9 +2683,9 @@ void CalPointingRow::offIntensityWasFixedFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::peakIntensityFromBin(EndianISStream& eiss) {
+void CalPointingRow::peakIntensityFromBin(EndianIStream& eis) {
 		
-	peakIntensityExists = eiss.readBoolean();
+	peakIntensityExists = eis.readBoolean();
 	if (peakIntensityExists) {
 		
 	
@@ -2683,7 +2693,7 @@ void CalPointingRow::peakIntensityFromBin(EndianISStream& eiss) {
 		
 			
 	
-	peakIntensity = Temperature::from1DBin(eiss);	
+	peakIntensity = Temperature::from1DBin(eis);	
 	
 
 		
@@ -2692,9 +2702,9 @@ void CalPointingRow::peakIntensityFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::peakIntensityErrorFromBin(EndianISStream& eiss) {
+void CalPointingRow::peakIntensityErrorFromBin(EndianIStream& eis) {
 		
-	peakIntensityErrorExists = eiss.readBoolean();
+	peakIntensityErrorExists = eis.readBoolean();
 	if (peakIntensityErrorExists) {
 		
 	
@@ -2702,7 +2712,7 @@ void CalPointingRow::peakIntensityErrorFromBin(EndianISStream& eiss) {
 		
 			
 	
-	peakIntensityError = Temperature::from1DBin(eiss);	
+	peakIntensityError = Temperature::from1DBin(eis);	
 	
 
 		
@@ -2711,16 +2721,16 @@ void CalPointingRow::peakIntensityErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalPointingRow::peakIntensityWasFixedFromBin(EndianISStream& eiss) {
+void CalPointingRow::peakIntensityWasFixedFromBin(EndianIStream& eis) {
 		
-	peakIntensityWasFixedExists = eiss.readBoolean();
+	peakIntensityWasFixedExists = eis.readBoolean();
 	if (peakIntensityWasFixedExists) {
 		
 	
 	
 		
 			
-		peakIntensityWasFixed =  eiss.readBoolean();
+		peakIntensityWasFixed =  eis.readBoolean();
 			
 		
 	
@@ -2730,23 +2740,321 @@ void CalPointingRow::peakIntensityWasFixedFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalPointingRow* CalPointingRow::fromBin(EndianISStream& eiss, CalPointingTable& table, const vector<string>& attributesSeq) {
+	CalPointingRow* CalPointingRow::fromBin(EndianIStream& eis, CalPointingTable& table, const vector<string>& attributesSeq) {
 		CalPointingRow* row = new  CalPointingRow(table);
 		
 		map<string, CalPointingAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPointingTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPointingTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an String 
+	void CalPointingRow::antennaNameFromText(const string & s) {
+		 
+		antennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalPointingRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPointingRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPointingRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPointingRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPointingRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalPointingRow::ambientTemperatureFromText(const string & s) {
+		 
+		ambientTemperature = ASDMValuesParser::parse<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaMake 
+	void CalPointingRow::antennaMakeFromText(const string & s) {
+		 
+		antennaMake = ASDMValuesParser::parse<AntennaMake>(s);
+		
+	}
+	
+	
+	// Convert a string into an AtmPhaseCorrection 
+	void CalPointingRow::atmPhaseCorrectionFromText(const string & s) {
+		 
+		atmPhaseCorrection = ASDMValuesParser::parse<AtmPhaseCorrection>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::directionFromText(const string & s) {
+		 
+		direction = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalPointingRow::frequencyRangeFromText(const string & s) {
+		 
+		frequencyRange = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an PointingModelMode 
+	void CalPointingRow::pointingModelModeFromText(const string & s) {
+		 
+		pointingModelMode = ASDMValuesParser::parse<PointingModelMode>(s);
+		
+	}
+	
+	
+	// Convert a string into an PointingMethod 
+	void CalPointingRow::pointingMethodFromText(const string & s) {
+		 
+		pointingMethod = ASDMValuesParser::parse<PointingMethod>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalPointingRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalPointingRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::collOffsetRelativeFromText(const string & s) {
+		 
+		collOffsetRelative = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::collOffsetAbsoluteFromText(const string & s) {
+		 
+		collOffsetAbsolute = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::collErrorFromText(const string & s) {
+		 
+		collError = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalPointingRow::collOffsetTiedFromText(const string & s) {
+		 
+		collOffsetTied = ASDMValuesParser::parse2D<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalPointingRow::reducedChiSquaredFromText(const string & s) {
+		 
+		reducedChiSquared = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an boolean 
+	void CalPointingRow::averagedPolarizationsFromText(const string & s) {
+		averagedPolarizationsExists = true;
+		 
+		averagedPolarizations = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::beamPAFromText(const string & s) {
+		beamPAExists = true;
+		 
+		beamPA = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::beamPAErrorFromText(const string & s) {
+		beamPAErrorExists = true;
+		 
+		beamPAError = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalPointingRow::beamPAWasFixedFromText(const string & s) {
+		beamPAWasFixedExists = true;
+		 
+		beamPAWasFixed = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::beamWidthFromText(const string & s) {
+		beamWidthExists = true;
+		 
+		beamWidth = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPointingRow::beamWidthErrorFromText(const string & s) {
+		beamWidthErrorExists = true;
+		 
+		beamWidthError = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalPointingRow::beamWidthWasFixedFromText(const string & s) {
+		beamWidthWasFixedExists = true;
+		 
+		beamWidthWasFixed = ASDMValuesParser::parse1D<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalPointingRow::offIntensityFromText(const string & s) {
+		offIntensityExists = true;
+		 
+		offIntensity = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalPointingRow::offIntensityErrorFromText(const string & s) {
+		offIntensityErrorExists = true;
+		 
+		offIntensityError = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalPointingRow::offIntensityWasFixedFromText(const string & s) {
+		offIntensityWasFixedExists = true;
+		 
+		offIntensityWasFixed = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalPointingRow::peakIntensityFromText(const string & s) {
+		peakIntensityExists = true;
+		 
+		peakIntensity = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalPointingRow::peakIntensityErrorFromText(const string & s) {
+		peakIntensityErrorExists = true;
+		 
+		peakIntensityError = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void CalPointingRow::peakIntensityWasFixedFromText(const string & s) {
+		peakIntensityWasFixedExists = true;
+		 
+		peakIntensityWasFixed = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	
+	void CalPointingRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalPointingAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalPointingTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -3944,9 +4252,9 @@ void CalPointingRow::peakIntensityWasFixedFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -4020,9 +4328,10 @@ void CalPointingRow::peakIntensityWasFixedFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -4286,6 +4595,143 @@ pointingMethod = CPointingMethod::from_int(0);
 	 fromBinMethods["peakIntensityError"] = &CalPointingRow::peakIntensityErrorFromBin; 
 	 fromBinMethods["peakIntensityWasFixed"] = &CalPointingRow::peakIntensityWasFixedFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaName"] = &CalPointingRow::antennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalPointingRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalPointingRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalPointingRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalPointingRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalPointingRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["ambientTemperature"] = &CalPointingRow::ambientTemperatureFromText;
+		 
+	
+				 
+	fromTextMethods["antennaMake"] = &CalPointingRow::antennaMakeFromText;
+		 
+	
+				 
+	fromTextMethods["atmPhaseCorrection"] = &CalPointingRow::atmPhaseCorrectionFromText;
+		 
+	
+				 
+	fromTextMethods["direction"] = &CalPointingRow::directionFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyRange"] = &CalPointingRow::frequencyRangeFromText;
+		 
+	
+				 
+	fromTextMethods["pointingModelMode"] = &CalPointingRow::pointingModelModeFromText;
+		 
+	
+				 
+	fromTextMethods["pointingMethod"] = &CalPointingRow::pointingMethodFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &CalPointingRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &CalPointingRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["collOffsetRelative"] = &CalPointingRow::collOffsetRelativeFromText;
+		 
+	
+				 
+	fromTextMethods["collOffsetAbsolute"] = &CalPointingRow::collOffsetAbsoluteFromText;
+		 
+	
+				 
+	fromTextMethods["collError"] = &CalPointingRow::collErrorFromText;
+		 
+	
+				 
+	fromTextMethods["collOffsetTied"] = &CalPointingRow::collOffsetTiedFromText;
+		 
+	
+				 
+	fromTextMethods["reducedChiSquared"] = &CalPointingRow::reducedChiSquaredFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["averagedPolarizations"] = &CalPointingRow::averagedPolarizationsFromText;
+		 	
+	 
+				
+	fromTextMethods["beamPA"] = &CalPointingRow::beamPAFromText;
+		 	
+	 
+				
+	fromTextMethods["beamPAError"] = &CalPointingRow::beamPAErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["beamPAWasFixed"] = &CalPointingRow::beamPAWasFixedFromText;
+		 	
+	 
+				
+	fromTextMethods["beamWidth"] = &CalPointingRow::beamWidthFromText;
+		 	
+	 
+				
+	fromTextMethods["beamWidthError"] = &CalPointingRow::beamWidthErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["beamWidthWasFixed"] = &CalPointingRow::beamWidthWasFixedFromText;
+		 	
+	 
+				
+	fromTextMethods["offIntensity"] = &CalPointingRow::offIntensityFromText;
+		 	
+	 
+				
+	fromTextMethods["offIntensityError"] = &CalPointingRow::offIntensityErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["offIntensityWasFixed"] = &CalPointingRow::offIntensityWasFixedFromText;
+		 	
+	 
+				
+	fromTextMethods["peakIntensity"] = &CalPointingRow::peakIntensityFromText;
+		 	
+	 
+				
+	fromTextMethods["peakIntensityError"] = &CalPointingRow::peakIntensityErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["peakIntensityWasFixed"] = &CalPointingRow::peakIntensityWasFixedFromText;
+		 	
+		
 	}
 	
 	CalPointingRow::CalPointingRow (CalPointingTable &t, CalPointingRow &row) : table(t) {

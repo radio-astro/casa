@@ -51,6 +51,7 @@ using asdm::SeeingTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::SeeingRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -454,75 +458,75 @@ namespace asdm {
 	
 	}
 	
-void SeeingRow::timeIntervalFromBin(EndianISStream& eiss) {
+void SeeingRow::timeIntervalFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-	
-}
-void SeeingRow::numBaseLengthFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numBaseLength =  eiss.readInt();
-			
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
 		
 	
 	
 }
-void SeeingRow::baseLengthFromBin(EndianISStream& eiss) {
+void SeeingRow::numBaseLengthFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numBaseLength =  eis.readInt();
+			
+		
+	
+	
+}
+void SeeingRow::baseLengthFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	baseLength = Length::from1DBin(eiss);	
+	baseLength = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void SeeingRow::phaseRmsFromBin(EndianISStream& eiss) {
+void SeeingRow::phaseRmsFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	phaseRms = Angle::from1DBin(eiss);	
+	phaseRms = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void SeeingRow::seeingFromBin(EndianISStream& eiss) {
+void SeeingRow::seeingFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		seeing =  eiss.readFloat();
+		seeing =  eis.readFloat();
 			
 		
 	
 	
 }
-void SeeingRow::exponentFromBin(EndianISStream& eiss) {
+void SeeingRow::exponentFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		exponent =  eiss.readFloat();
+		exponent =  eis.readFloat();
 			
 		
 	
@@ -531,23 +535,92 @@ void SeeingRow::exponentFromBin(EndianISStream& eiss) {
 
 		
 	
-	SeeingRow* SeeingRow::fromBin(EndianISStream& eiss, SeeingTable& table, const vector<string>& attributesSeq) {
+	SeeingRow* SeeingRow::fromBin(EndianIStream& eis, SeeingTable& table, const vector<string>& attributesSeq) {
 		SeeingRow* row = new  SeeingRow(table);
 		
 		map<string, SeeingAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SeeingTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SeeingTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an ArrayTimeInterval 
+	void SeeingRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SeeingRow::numBaseLengthFromText(const string & s) {
+		 
+		numBaseLength = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void SeeingRow::baseLengthFromText(const string & s) {
+		 
+		baseLength = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void SeeingRow::phaseRmsFromText(const string & s) {
+		 
+		phaseRms = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SeeingRow::seeingFromText(const string & s) {
+		 
+		seeing = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SeeingRow::exponentFromText(const string & s) {
+		 
+		exponent = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+
+		
+	
+	void SeeingRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SeeingAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SeeingTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -746,13 +819,14 @@ void SeeingRow::exponentFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -806,6 +880,35 @@ void SeeingRow::exponentFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["timeInterval"] = &SeeingRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["numBaseLength"] = &SeeingRow::numBaseLengthFromText;
+		 
+	
+				 
+	fromTextMethods["baseLength"] = &SeeingRow::baseLengthFromText;
+		 
+	
+				 
+	fromTextMethods["phaseRms"] = &SeeingRow::phaseRmsFromText;
+		 
+	
+				 
+	fromTextMethods["seeing"] = &SeeingRow::seeingFromText;
+		 
+	
+				 
+	fromTextMethods["exponent"] = &SeeingRow::exponentFromText;
+		 
+	
+
+		
 	}
 	
 	SeeingRow::SeeingRow (SeeingTable &t, SeeingRow &row) : table(t) {

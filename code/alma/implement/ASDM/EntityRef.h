@@ -29,6 +29,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
 #include <EntityId.h>
@@ -61,7 +62,6 @@ ostream & operator << ( ostream &, const EntityRef & );
  */
 class EntityRef {
     friend ostream & operator << ( ostream &, const EntityRef & );
-	friend istream & operator >> ( istream &, EntityRef&);
 
 public:
 	static EntityRef getEntityRef(StringTokenizer &t) throw(InvalidArgumentException);
@@ -91,15 +91,27 @@ public:
    /**
 	 * Write the binary representation of this to a EndianOSStream.
 	 */
-	void toBin(EndianOSStream& eoss);
+	void toBin(EndianOSStream& eoss) const ;
+
+   /**
+    * Write the binary representation of a vector of EntityRef to an EndianOSStream.
+    */
+	static void toBin(const vector<EntityRef>& entityRef,  EndianOSStream& eoss);
 	 
    /**
-	 * Read the binary representation of an EntityRef from a EndianISStream
+	 * Read the binary representation of an EntityRef from a EndianIStream
 	 * and use the read value to set an  EntityRef.
-	 * @param eiss the EndianStream to be read
+	 * @param eis the EndianStream to be read
 	 * @return an EntityRef
 	 */
-	static EntityRef fromBin(EndianISStream& eiss);
+	static EntityRef fromBin(EndianIStream& eis);
+	/**
+	 * Read the binary representation of  a vector of  EntityRef from an EndianIStream
+	 * and use the read value to set a vector of  EntityRef.
+	 * @param dis the EndianIStream to be read
+	 * @return a vector of EntityRef
+	 */
+	static vector<EntityRef> from1DBin(EndianIStream & eis);
 
 	EntityId getEntityId() const;
 	PartId getPartId() const;

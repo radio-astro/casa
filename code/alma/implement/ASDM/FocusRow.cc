@@ -63,6 +63,7 @@ using asdm::FocusModelRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::FocusRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -138,6 +142,21 @@ namespace asdm {
 	
   		
 		
+		
+			
+		x->focusRotationOffset.length(focusRotationOffset.size());
+		for (unsigned int i = 0; i < focusRotationOffset.size(); ++i) {
+			
+			x->focusRotationOffset[i] = focusRotationOffset.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
 		x->measuredFocusPositionExists = measuredFocusPositionExists;
 		
 		
@@ -146,6 +165,23 @@ namespace asdm {
 		for (unsigned int i = 0; i < measuredFocusPosition.size(); ++i) {
 			
 			x->measuredFocusPosition[i] = measuredFocusPosition.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->measuredFocusRotationExists = measuredFocusRotationExists;
+		
+		
+			
+		x->measuredFocusRotation.length(measuredFocusRotation.size());
+		for (unsigned int i = 0; i < measuredFocusRotation.size(); ++i) {
+			
+			x->measuredFocusRotation[i] = measuredFocusRotation.at(i).toIDLAngle();
 			
 	 	}
 			
@@ -239,6 +275,21 @@ namespace asdm {
 
 	
 		
+		
+			
+		focusRotationOffset .clear();
+		for (unsigned int i = 0; i <x.focusRotationOffset.length(); ++i) {
+			
+			focusRotationOffset.push_back(Angle (x.focusRotationOffset[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
 		measuredFocusPositionExists = x.measuredFocusPositionExists;
 		if (x.measuredFocusPositionExists) {
 		
@@ -248,6 +299,26 @@ namespace asdm {
 		for (unsigned int i = 0; i <x.measuredFocusPosition.length(); ++i) {
 			
 			measuredFocusPosition.push_back(Length (x.measuredFocusPosition[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		measuredFocusRotationExists = x.measuredFocusRotationExists;
+		if (x.measuredFocusRotationExists) {
+		
+		
+			
+		measuredFocusRotation .clear();
+		for (unsigned int i = 0; i <x.measuredFocusRotation.length(); ++i) {
+			
+			measuredFocusRotation.push_back(Angle (x.measuredFocusRotation[i]));
 			
 		}
 			
@@ -328,10 +399,30 @@ namespace asdm {
 
   	
  		
+		
+		Parser::toXML(focusRotationOffset, "focusRotationOffset", buf);
+		
+		
+	
+
+  	
+ 		
 		if (measuredFocusPositionExists) {
 		
 		
 		Parser::toXML(measuredFocusPosition, "measuredFocusPosition", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (measuredFocusRotationExists) {
+		
+		
+		Parser::toXML(measuredFocusRotation, "measuredFocusRotation", buf);
 		
 		
 		}
@@ -407,10 +498,32 @@ namespace asdm {
 
 	
   		
+			
+					
+	  	setFocusRotationOffset(Parser::get1DAngle("focusRotationOffset","Focus",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
         if (row.isStr("<measuredFocusPosition>")) {
 			
 								
 	  		setMeasuredFocusPosition(Parser::get1DLength("measuredFocusPosition","Focus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<measuredFocusRotation>")) {
+			
+								
+	  		setMeasuredFocusRotation(Parser::get1DAngle("measuredFocusRotation","Focus",rowDoc));
 	  			
 	  		
 		}
@@ -483,6 +596,13 @@ namespace asdm {
 	
 	
 		
+	Angle::toBin(focusRotationOffset, eoss);
+		
+	
+
+	
+	
+		
 						
 			eoss.writeInt(focusModelId);
 				
@@ -504,70 +624,96 @@ namespace asdm {
 
 	}
 
+	eoss.writeBoolean(measuredFocusRotationExists);
+	if (measuredFocusRotationExists) {
+	
+	
+	
+		
+	Angle::toBin(measuredFocusRotation, eoss);
+		
+	
+
+	}
+
 	}
 	
-void FocusRow::antennaIdFromBin(EndianISStream& eiss) {
+void FocusRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FocusRow::timeIntervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FocusRow::focusTrackingFromBin(EndianISStream& eiss) {
+void FocusRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void FocusRow::focusTrackingFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		focusTracking =  eiss.readBoolean();
+		focusTracking =  eis.readBoolean();
 			
 		
 	
 	
 }
-void FocusRow::focusOffsetFromBin(EndianISStream& eiss) {
+void FocusRow::focusOffsetFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	focusOffset = Length::from1DBin(eiss);	
+	focusOffset = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void FocusRow::focusModelIdFromBin(EndianISStream& eiss) {
+void FocusRow::focusRotationOffsetFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+			
+	
+	focusRotationOffset = Angle::from1DBin(eis);	
+	
+
+		
+	
+	
+}
+void FocusRow::focusModelIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		focusModelId =  eiss.readInt();
+		focusModelId =  eis.readInt();
 			
 		
 	
 	
 }
 
-void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
+void FocusRow::measuredFocusPositionFromBin(EndianIStream& eis) {
 		
-	measuredFocusPositionExists = eiss.readBoolean();
+	measuredFocusPositionExists = eis.readBoolean();
 	if (measuredFocusPositionExists) {
 		
 	
@@ -575,7 +721,26 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	measuredFocusPosition = Length::from1DBin(eiss);	
+	measuredFocusPosition = Length::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void FocusRow::measuredFocusRotationFromBin(EndianIStream& eis) {
+		
+	measuredFocusRotationExists = eis.readBoolean();
+	if (measuredFocusRotationExists) {
+		
+	
+		
+		
+			
+	
+	measuredFocusRotation = Angle::from1DBin(eis);	
 	
 
 		
@@ -586,23 +751,110 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 }
 	
 	
-	FocusRow* FocusRow::fromBin(EndianISStream& eiss, FocusTable& table, const vector<string>& attributesSeq) {
+	FocusRow* FocusRow::fromBin(EndianIStream& eis, FocusTable& table, const vector<string>& attributesSeq) {
 		FocusRow* row = new  FocusRow(table);
 		
 		map<string, FocusAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FocusTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FocusTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FocusRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void FocusRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void FocusRow::focusTrackingFromText(const string & s) {
+		 
+		focusTracking = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FocusRow::focusOffsetFromText(const string & s) {
+		 
+		focusOffset = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FocusRow::focusRotationOffsetFromText(const string & s) {
+		 
+		focusRotationOffset = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FocusRow::focusModelIdFromText(const string & s) {
+		 
+		focusModelId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Length 
+	void FocusRow::measuredFocusPositionFromText(const string & s) {
+		measuredFocusPositionExists = true;
+		 
+		measuredFocusPosition = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FocusRow::measuredFocusRotationFromText(const string & s) {
+		measuredFocusRotationExists = true;
+		 
+		measuredFocusRotation = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	
+	void FocusRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FocusAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FocusTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -705,6 +957,38 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	
 
 	
+
+	
+ 	/**
+ 	 * Get focusRotationOffset.
+ 	 * @return focusRotationOffset as vector<Angle >
+ 	 */
+ 	vector<Angle > FocusRow::getFocusRotationOffset() const {
+	
+  		return focusRotationOffset;
+ 	}
+
+ 	/**
+ 	 * Set focusRotationOffset with the specified vector<Angle >.
+ 	 * @param focusRotationOffset The vector<Angle > value to which focusRotationOffset is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void FocusRow::setFocusRotationOffset (vector<Angle > focusRotationOffset)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->focusRotationOffset = focusRotationOffset;
+	
+ 	}
+	
+	
+
+	
 	/**
 	 * The attribute measuredFocusPosition is optional. Return true if this attribute exists.
 	 * @return true if and only if the measuredFocusPosition attribute exists. 
@@ -752,9 +1036,56 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	/**
+	 * The attribute measuredFocusRotation is optional. Return true if this attribute exists.
+	 * @return true if and only if the measuredFocusRotation attribute exists. 
+	 */
+	bool FocusRow::isMeasuredFocusRotationExists() const {
+		return measuredFocusRotationExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get measuredFocusRotation, which is optional.
+ 	 * @return measuredFocusRotation as vector<Angle >
+ 	 * @throw IllegalAccessException If measuredFocusRotation does not exist.
+ 	 */
+ 	vector<Angle > FocusRow::getMeasuredFocusRotation() const  {
+		if (!measuredFocusRotationExists) {
+			throw IllegalAccessException("measuredFocusRotation", "Focus");
+		}
+	
+  		return measuredFocusRotation;
+ 	}
+
+ 	/**
+ 	 * Set measuredFocusRotation with the specified vector<Angle >.
+ 	 * @param measuredFocusRotation The vector<Angle > value to which measuredFocusRotation is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FocusRow::setMeasuredFocusRotation (vector<Angle > measuredFocusRotation) {
+	
+ 		this->measuredFocusRotation = measuredFocusRotation;
+	
+		measuredFocusRotationExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark measuredFocusRotation, which is an optional field, as non-existent.
+	 */
+	void FocusRow::clearMeasuredFocusRotation () {
+		measuredFocusRotationExists = false;
+	}
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -824,9 +1155,10 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -886,10 +1218,16 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	
 
 	
+
+	
 		measuredFocusPositionExists = false;
 	
 
 	
+		measuredFocusRotationExists = false;
+	
+
+	
 	
 
 	
@@ -897,6 +1235,10 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	
 	
 	
+	
+
+	
+
 	
 
 	
@@ -911,11 +1253,50 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	 fromBinMethods["timeInterval"] = &FocusRow::timeIntervalFromBin; 
 	 fromBinMethods["focusTracking"] = &FocusRow::focusTrackingFromBin; 
 	 fromBinMethods["focusOffset"] = &FocusRow::focusOffsetFromBin; 
+	 fromBinMethods["focusRotationOffset"] = &FocusRow::focusRotationOffsetFromBin; 
 	 fromBinMethods["focusModelId"] = &FocusRow::focusModelIdFromBin; 
 		
 	
 	 fromBinMethods["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromBin; 
+	 fromBinMethods["measuredFocusRotation"] = &FocusRow::measuredFocusRotationFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &FocusRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &FocusRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["focusTracking"] = &FocusRow::focusTrackingFromText;
+		 
+	
+				 
+	fromTextMethods["focusOffset"] = &FocusRow::focusOffsetFromText;
+		 
+	
+				 
+	fromTextMethods["focusRotationOffset"] = &FocusRow::focusRotationOffsetFromText;
+		 
+	
+				 
+	fromTextMethods["focusModelId"] = &FocusRow::focusModelIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromText;
+		 	
+	 
+				
+	fromTextMethods["measuredFocusRotation"] = &FocusRow::measuredFocusRotationFromText;
+		 	
+		
 	}
 	
 	FocusRow::FocusRow (FocusTable &t, FocusRow &row) : table(t) {
@@ -931,7 +1312,13 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	
 
 	
+
+	
 		measuredFocusPositionExists = false;
+	
+
+	
+		measuredFocusRotationExists = false;
 	
 
 	
@@ -954,6 +1341,8 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 		
 			focusOffset = row.focusOffset;
 		
+			focusRotationOffset = row.focusRotationOffset;
+		
 			focusModelId = row.focusModelId;
 		
 		
@@ -966,21 +1355,30 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 		else
 			measuredFocusPositionExists = false;
 		
+		if (row.measuredFocusRotationExists) {
+			measuredFocusRotation = row.measuredFocusRotation;		
+			measuredFocusRotationExists = true;
+		}
+		else
+			measuredFocusRotationExists = false;
+		
 		}
 		
 		 fromBinMethods["antennaId"] = &FocusRow::antennaIdFromBin; 
 		 fromBinMethods["timeInterval"] = &FocusRow::timeIntervalFromBin; 
 		 fromBinMethods["focusTracking"] = &FocusRow::focusTrackingFromBin; 
 		 fromBinMethods["focusOffset"] = &FocusRow::focusOffsetFromBin; 
+		 fromBinMethods["focusRotationOffset"] = &FocusRow::focusRotationOffsetFromBin; 
 		 fromBinMethods["focusModelId"] = &FocusRow::focusModelIdFromBin; 
 			
 	
 		 fromBinMethods["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromBin; 
+		 fromBinMethods["measuredFocusRotation"] = &FocusRow::measuredFocusRotationFromBin; 
 			
 	}
 
 	
-	bool FocusRow::compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId) {
+	bool FocusRow::compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, vector<Angle > focusRotationOffset, int focusModelId) {
 		bool result;
 		result = true;
 		
@@ -1014,6 +1412,13 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 
 	
 		
+		result = result && (this->focusRotationOffset == focusRotationOffset);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->focusModelId == focusModelId);
 		
 		if (!result) return false;
@@ -1024,7 +1429,7 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 	
 	
 	
-	bool FocusRow::compareRequiredValue(bool focusTracking, vector<Length > focusOffset, int focusModelId) {
+	bool FocusRow::compareRequiredValue(bool focusTracking, vector<Length > focusOffset, vector<Angle > focusRotationOffset, int focusModelId) {
 		bool result;
 		result = true;
 		
@@ -1034,6 +1439,10 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 
 	
 		if (!(this->focusOffset == focusOffset)) return false;
+	
+
+	
+		if (!(this->focusRotationOffset == focusRotationOffset)) return false;
 	
 
 	
@@ -1059,6 +1468,8 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 			
 		if (this->focusOffset != x->focusOffset) return false;
 			
+		if (this->focusRotationOffset != x->focusRotationOffset) return false;
+			
 		if (this->focusModelId != x->focusModelId) return false;
 			
 		
@@ -1073,10 +1484,12 @@ void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
 		result["timeInterval"] = &FocusRow::timeIntervalFromBin;
 		result["focusTracking"] = &FocusRow::focusTrackingFromBin;
 		result["focusOffset"] = &FocusRow::focusOffsetFromBin;
+		result["focusRotationOffset"] = &FocusRow::focusRotationOffsetFromBin;
 		result["focusModelId"] = &FocusRow::focusModelIdFromBin;
 		
 		
 		result["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromBin;
+		result["measuredFocusRotation"] = &FocusRow::measuredFocusRotationFromBin;
 			
 		
 		return result;	

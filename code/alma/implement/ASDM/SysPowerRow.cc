@@ -41,22 +41,19 @@ using std::set;
 #include <SysPowerRow.h>
 #include <SysPowerTable.h>
 
-#include <FeedTable.h>
-#include <FeedRow.h>
-
 #include <AntennaTable.h>
 #include <AntennaRow.h>
 
 #include <SpectralWindowTable.h>
 #include <SpectralWindowRow.h>
+
+#include <FeedTable.h>
+#include <FeedRow.h>
 	
 
 using asdm::ASDM;
 using asdm::SysPowerRow;
 using asdm::SysPowerTable;
-
-using asdm::FeedTable;
-using asdm::FeedRow;
 
 using asdm::AntennaTable;
 using asdm::AntennaRow;
@@ -64,11 +61,15 @@ using asdm::AntennaRow;
 using asdm::SpectralWindowTable;
 using asdm::SpectralWindowRow;
 
+using asdm::FeedTable;
+using asdm::FeedRow;
+
 
 #include <Parser.h>
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -92,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::SysPowerRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -685,64 +689,64 @@ namespace asdm {
 
 	}
 	
-void SysPowerRow::antennaIdFromBin(EndianISStream& eiss) {
+void SysPowerRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void SysPowerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SysPowerRow::feedIdFromBin(EndianISStream& eiss) {
+void SysPowerRow::spectralWindowIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		spectralWindowId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void SysPowerRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void SysPowerRow::timeIntervalFromBin(EndianISStream& eiss) {
+void SysPowerRow::timeIntervalFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
 		
 	
 	
 }
-void SysPowerRow::numReceptorFromBin(EndianISStream& eiss) {
+void SysPowerRow::numReceptorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
 	
 }
 
-void SysPowerRow::switchedPowerDifferenceFromBin(EndianISStream& eiss) {
+void SysPowerRow::switchedPowerDifferenceFromBin(EndianIStream& eis) {
 		
-	switchedPowerDifferenceExists = eiss.readBoolean();
+	switchedPowerDifferenceExists = eis.readBoolean();
 	if (switchedPowerDifferenceExists) {
 		
 	
@@ -752,10 +756,10 @@ void SysPowerRow::switchedPowerDifferenceFromBin(EndianISStream& eiss) {
 	
 		switchedPowerDifference.clear();
 		
-		unsigned int switchedPowerDifferenceDim1 = eiss.readInt();
+		unsigned int switchedPowerDifferenceDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < switchedPowerDifferenceDim1; i++)
 			
-			switchedPowerDifference.push_back(eiss.readFloat());
+			switchedPowerDifference.push_back(eis.readFloat());
 			
 	
 
@@ -765,9 +769,9 @@ void SysPowerRow::switchedPowerDifferenceFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysPowerRow::switchedPowerSumFromBin(EndianISStream& eiss) {
+void SysPowerRow::switchedPowerSumFromBin(EndianIStream& eis) {
 		
-	switchedPowerSumExists = eiss.readBoolean();
+	switchedPowerSumExists = eis.readBoolean();
 	if (switchedPowerSumExists) {
 		
 	
@@ -777,10 +781,10 @@ void SysPowerRow::switchedPowerSumFromBin(EndianISStream& eiss) {
 	
 		switchedPowerSum.clear();
 		
-		unsigned int switchedPowerSumDim1 = eiss.readInt();
+		unsigned int switchedPowerSumDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < switchedPowerSumDim1; i++)
 			
-			switchedPowerSum.push_back(eiss.readFloat());
+			switchedPowerSum.push_back(eis.readFloat());
 			
 	
 
@@ -790,9 +794,9 @@ void SysPowerRow::switchedPowerSumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysPowerRow::requantizerGainFromBin(EndianISStream& eiss) {
+void SysPowerRow::requantizerGainFromBin(EndianIStream& eis) {
 		
-	requantizerGainExists = eiss.readBoolean();
+	requantizerGainExists = eis.readBoolean();
 	if (requantizerGainExists) {
 		
 	
@@ -802,10 +806,10 @@ void SysPowerRow::requantizerGainFromBin(EndianISStream& eiss) {
 	
 		requantizerGain.clear();
 		
-		unsigned int requantizerGainDim1 = eiss.readInt();
+		unsigned int requantizerGainDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < requantizerGainDim1; i++)
 			
-			requantizerGain.push_back(eiss.readFloat());
+			requantizerGain.push_back(eis.readFloat());
 			
 	
 
@@ -817,23 +821,111 @@ void SysPowerRow::requantizerGainFromBin(EndianISStream& eiss) {
 }
 	
 	
-	SysPowerRow* SysPowerRow::fromBin(EndianISStream& eiss, SysPowerTable& table, const vector<string>& attributesSeq) {
+	SysPowerRow* SysPowerRow::fromBin(EndianIStream& eis, SysPowerTable& table, const vector<string>& attributesSeq) {
 		SysPowerRow* row = new  SysPowerRow(table);
 		
 		map<string, SysPowerAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SysPowerTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SysPowerTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void SysPowerRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void SysPowerRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SysPowerRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void SysPowerRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SysPowerRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an float 
+	void SysPowerRow::switchedPowerDifferenceFromText(const string & s) {
+		switchedPowerDifferenceExists = true;
+		 
+		switchedPowerDifference = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SysPowerRow::switchedPowerSumFromText(const string & s) {
+		switchedPowerSumExists = true;
+		 
+		switchedPowerSum = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SysPowerRow::requantizerGainFromText(const string & s) {
+		requantizerGainExists = true;
+		 
+		requantizerGain = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	
+	void SysPowerRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SysPowerAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SysPowerTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1045,9 +1137,9 @@ void SysPowerRow::requantizerGainFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1157,29 +1249,11 @@ void SysPowerRow::requantizerGainFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
-	
-	
-	
-	
-		
 
-	// ===> Slice link from a row of SysPower table to a collection of row of Feed table.
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
-	/**
-	 * Get the collection of row in the Feed table having their attribut feedId == this->feedId
-	 */
-	vector <FeedRow *> SysPowerRow::getFeeds() {
-		
-			return table.getContainer().getFeed().getRowByFeedId(feedId);
-		
-	}
-	
-
-	
-
 	
 	
 	
@@ -1215,6 +1289,25 @@ void SysPowerRow::requantizerGainFromBin(EndianISStream& eiss) {
 	 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
 	 }
 	 
+
+	
+
+	
+	
+	
+		
+
+	// ===> Slice link from a row of SysPower table to a collection of row of Feed table.
+	
+	/**
+	 * Get the collection of row in the Feed table having their attribut feedId == this->feedId
+	 */
+	vector <FeedRow *> SysPowerRow::getFeeds() {
+		
+			return table.getContainer().getFeed().getRowByFeedId(feedId);
+		
+	}
+	
 
 	
 
@@ -1280,6 +1373,43 @@ void SysPowerRow::requantizerGainFromBin(EndianISStream& eiss) {
 	 fromBinMethods["switchedPowerSum"] = &SysPowerRow::switchedPowerSumFromBin; 
 	 fromBinMethods["requantizerGain"] = &SysPowerRow::requantizerGainFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &SysPowerRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &SysPowerRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &SysPowerRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &SysPowerRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &SysPowerRow::numReceptorFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["switchedPowerDifference"] = &SysPowerRow::switchedPowerDifferenceFromText;
+		 	
+	 
+				
+	fromTextMethods["switchedPowerSum"] = &SysPowerRow::switchedPowerSumFromText;
+		 	
+	 
+				
+	fromTextMethods["requantizerGain"] = &SysPowerRow::requantizerGainFromText;
+		 	
+		
 	}
 	
 	SysPowerRow::SysPowerRow (SysPowerTable &t, SysPowerRow &row) : table(t) {

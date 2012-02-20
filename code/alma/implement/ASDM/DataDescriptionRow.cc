@@ -86,7 +86,7 @@ namespace asdm {
   }
 	
   bool DataDescriptionRow::isAdded() const {
-	  return hasBeenAdded;
+    return hasBeenAdded;
   }
 
   void DataDescriptionRow::isAdded(bool added) {
@@ -263,7 +263,46 @@ namespace asdm {
       throw ConversionException (err.getMessage(),"DataDescription");
     }
   }
-	
+
+  void DataDescriptionRow::toBin(EndianOSStream& eoss) {
+    dataDescriptionId.toBin(eoss);
+    polOrHoloId.toBin(eoss);
+    spectralWindowId.toBin(eoss);
+  }
+
+  void DataDescriptionRow::dataDescriptionIdFromBin(EndianIStream& eis) {
+    dataDescriptionId = Tag::fromBin(eis);
+  }
+
+  void DataDescriptionRow::polOrHoloIdFromBin(EndianIStream& eis) {
+    polOrHoloId = Tag::fromBin(eis);
+  }
+
+  void DataDescriptionRow::spectralWindowIdFromBin(EndianIStream& eis) {
+    spectralWindowId = Tag::fromBin(eis);
+  }
+
+  DataDescriptionRow* DataDescriptionRow::fromBin(EndianIStream& eis, DataDescriptionTable& table, const vector<string>& attributesSeq) {
+    DataDescriptionRow* row = new  DataDescriptionRow(table);
+    
+    map<string, DataDescriptionAttributeFromBin>::iterator iter ;
+    for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+      iter = row->fromBinMethods.find(attributesSeq.at(i));
+      if (iter != row->fromBinMethods.end()) {
+	(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
+      }
+      else {
+	BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+	if (functorP)
+	  (*functorP)(eis);
+	else
+	  throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DataDescriptionTable");
+      }
+      
+    }				
+    return row;
+  }
+
   ////////////////////////////////
   // Intrinsic Table Attributes //
   ////////////////////////////////
@@ -320,7 +359,7 @@ namespace asdm {
    * Set polOrHoloId with the specified Tag.
    * @param polOrHoloId The Tag value to which polOrHoloId is to be set.
  	
-  */
+   */
   void DataDescriptionRow::setPolOrHoloId (Tag polOrHoloId) {
 	
     this->polOrHoloId = polOrHoloId;
@@ -345,7 +384,7 @@ namespace asdm {
    * Set spectralWindowId with the specified Tag.
    * @param spectralWindowId The Tag value to which spectralWindowId is to be set.
  	
-  */
+   */
   void DataDescriptionRow::setSpectralWindowId (Tag spectralWindowId) {
 	
     this->spectralWindowId = spectralWindowId;
@@ -387,7 +426,7 @@ namespace asdm {
    * @return a SpectralWindowRow*
    * 
 	 
-  */
+   */
   SpectralWindowRow* DataDescriptionRow::getSpectralWindowUsingSpectralWindowId() {
 	 
     return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
@@ -441,7 +480,7 @@ namespace asdm {
 		
       spectralWindowId = row.spectralWindowId;
 				
-  }	
+    }	
 
   }
 	

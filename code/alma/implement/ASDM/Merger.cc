@@ -67,8 +67,6 @@ namespace asdm {
 
 		Merger::mergeReceiverPtr = &Merger::mergeReceiver;
 
-		Merger::mergeBeamPtr = &Merger::mergeBeam;
-
 		Merger::mergeDopplerPtr = &Merger::mergeDoppler;
 
 		Merger::mergeProcessorPtr = &Merger::mergeProcessor;
@@ -165,6 +163,8 @@ namespace asdm {
 
 		Merger::mergeFlagPtr = &Merger::mergeFlag;
 
+		Merger::mergeScalePtr = &Merger::mergeScale;
+
 		Merger::mergeSysPowerPtr = &Merger::mergeSysPower;
 
 	}
@@ -203,8 +203,6 @@ namespace asdm {
 		hasMergedPolarization = false;
 
 		hasMergedReceiver = false;
-
-		hasMergedBeam = false;
 
 		hasMergedDoppler = false;
 
@@ -302,6 +300,8 @@ namespace asdm {
 
 		hasMergedFlag = false;
 
+		hasMergedScale = false;
+
 		hasMergedSysPower = false;
 
 
@@ -330,8 +330,6 @@ namespace asdm {
 		mergePolarization( );
 
 		mergeReceiver( );
-
-		mergeBeam( );
 
 		mergeDoppler( );
 
@@ -429,6 +427,8 @@ namespace asdm {
 
 		mergeFlag( );
 
+		mergeScale( );
+
 		mergeSysPower( );
 
 
@@ -457,8 +457,6 @@ namespace asdm {
 		postMergePolarization( );
 
 		postMergeReceiver( );
-
-		postMergeBeam( );
 
 		postMergeDoppler( );
 
@@ -555,6 +553,8 @@ namespace asdm {
 		postMergeDelayModel( );
 
 		postMergeFlag( );
+
+		postMergeScale( );
 
 		postMergeSysPower( );
 			
@@ -944,30 +944,6 @@ namespace asdm {
 	void Merger::postMergeFeed() {
 		cout << "Entering Merger::postMergeFeed" << endl;
 	
-		vector <FeedRow *> rows1 = ds1->getFeed().get();
-		FeedRow *row1 = 0;
-		for (unsigned int i = 0; i < rows1.size(); i++) {
-			row1 = rows1.at(i);
-
-		
-			
-			if (row1->isBeamIdExists()) {
-				
-				
-				vector<Tag> beamId1 = row1->getBeamId();
-				vector<Tag> beamId1_new;
-				for (unsigned int j = 0; j < beamId1.size(); j++) {
-					
-					beamId1_new.push_back(getTag( beamId1.at(j), 0));
-					
-				}
-				row1->setBeamId(	beamId1_new);
-				
-			}
-			
-		
-		}
-	
 		cout << "Exiting Merger::postMergeFeed" << endl;
 	}			
 
@@ -1124,20 +1100,6 @@ namespace asdm {
 		cout << "Entering Merger::postMergeReceiver" << endl;
 	
 		cout << "Exiting Merger::postMergeReceiver" << endl;
-	}			
-
-	void Merger::mergeBeam() {
-		cout << "Entering Merger::mergeBeam" << endl;
-		if (hasMergedBeam) return;
-	
-		hasMergedBeam = true;
-		cout << "Exiting Merger::mergeBeam" << endl;
-	}
-	
-	void Merger::postMergeBeam() {
-		cout << "Entering Merger::postMergeBeam" << endl;
-	
-		cout << "Exiting Merger::postMergeBeam" << endl;
 	}			
 
 	void Merger::mergeDoppler() {
@@ -1617,6 +1579,26 @@ namespace asdm {
 	
 	void Merger::postMergeExecBlock() {
 		cout << "Entering Merger::postMergeExecBlock" << endl;
+	
+		vector <ExecBlockRow *> rows1 = ds1->getExecBlock().get();
+		ExecBlockRow *row1 = 0;
+		for (unsigned int i = 0; i < rows1.size(); i++) {
+			row1 = rows1.at(i);
+
+		
+			
+			if (row1->isScaleIdExists()) {
+				
+				
+				
+					
+			row1->setScaleId(getTag(row1->getScaleId(), 0));
+					
+				
+			}
+			
+		
+		}
 	
 		cout << "Exiting Merger::postMergeExecBlock" << endl;
 	}			
@@ -2673,6 +2655,22 @@ namespace asdm {
 				
 			
 		
+			
+				
+				
+			Tag fieldIdTag = getTag(row->getFieldId(), mergeFieldPtr);
+			row->setFieldId(fieldIdTag);
+				
+			
+		
+			
+				
+				
+			Tag spectralWindowIdTag = getTag(row->getSpectralWindowId(), mergeSpectralWindowPtr);
+			row->setSpectralWindowId(spectralWindowIdTag);
+				
+			
+		
 			DelayModelRow * retRow = ds1->getDelayModel().add(row);
 		
 		}
@@ -2762,6 +2760,20 @@ namespace asdm {
 		}
 	
 		cout << "Exiting Merger::postMergeFlag" << endl;
+	}			
+
+	void Merger::mergeScale() {
+		cout << "Entering Merger::mergeScale" << endl;
+		if (hasMergedScale) return;
+	
+		hasMergedScale = true;
+		cout << "Exiting Merger::mergeScale" << endl;
+	}
+	
+	void Merger::postMergeScale() {
+		cout << "Entering Merger::postMergeScale" << endl;
+	
+		cout << "Exiting Merger::postMergeScale" << endl;
 	}			
 
 	void Merger::mergeSysPower() {

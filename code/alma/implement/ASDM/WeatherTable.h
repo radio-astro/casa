@@ -37,33 +37,40 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
 
 
+	
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	
 #include <Speed.h>
-using  asdm::Speed;
+	
 
+	
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	
+#include <Length.h>
+	
+
+	
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	
 #include <Humidity.h>
-using  asdm::Humidity;
+	
 
+	
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
+	
 #include <Pressure.h>
-using  asdm::Pressure;
+	
 
 
 
@@ -105,14 +112,10 @@ using  asdm::Pressure;
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::WeatherTableIDL;
 #endif
 
 #include <Representable.h>
@@ -132,7 +135,7 @@ class WeatherRow;
  * Weather station information.
  * <BR>
  
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Weather </CAPTION>
@@ -160,95 +163,50 @@ class WeatherRow;
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> pressure </TD> 
  * <TD> Pressure </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the ambient pressure. </TD>
- * </TR>
-	
- * <TR>
- * <TD> pressureFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the ambient pressure's value  is invalid (true) or valid (false). </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the ambient pressure. </TD>
  * </TR>
 	
  * <TR>
  * <TD> relHumidity </TD> 
  * <TD> Humidity </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the relative humidity. </TD>
- * </TR>
-	
- * <TR>
- * <TD> relHumidityFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the relative humidity's value  is invalid (true) or valid (false). </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the relative humidity. </TD>
  * </TR>
 	
  * <TR>
  * <TD> temperature </TD> 
  * <TD> Temperature </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the ambient temperature. </TD>
- * </TR>
-	
- * <TR>
- * <TD> temperatureFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the ambient temperature's value is invalid (true) or valid (false). </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the ambient temperature. </TD>
  * </TR>
 	
  * <TR>
  * <TD> windDirection </TD> 
  * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the wind direction. </TD>
- * </TR>
-	
- * <TR>
- * <TD> windDirectionFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the wind direction's value is invalid (true) or valid (false). </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the wind direction. </TD>
  * </TR>
 	
  * <TR>
  * <TD> windSpeed </TD> 
  * <TD> Speed </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the wind speed. </TD>
- * </TR>
-	
- * <TR>
- * <TD> windSpeedFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the  wind speed value is invalid (true) or valid (false). </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the wind speed. </TD>
  * </TR>
 	
  * <TR>
  * <TD> windMax </TD> 
  * <TD> Speed </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the maximum wind speed </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the maximum wind speed </TD>
  * </TR>
-	
- * <TR>
- * <TD> windMaxFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the maximum wind speed value is invalid (true) or valid (false). </TD>
- * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> dewPoint </TD> 
@@ -258,10 +216,52 @@ class WeatherRow;
  * </TR>
 	
  * <TR>
- * <TD> dewPointFlag </TD> 
- * <TD> bool </TD>
+ * <TD> numLayer </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp; </TD>
- * <TD>&nbsp; the dew point's value is invalid (true) or valid (false). </TD>
+ * <TD>&nbsp; NLayer the number of layers in the temperature profile. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> layerHeight </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  numLayer  </TD>
+ * <TD>&nbsp; the height of each layer for the temperature profile. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> temperatureProfile </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numLayer  </TD>
+ * <TD>&nbsp; the temperature on the atmosphere at each height. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> cloudMonitor </TD> 
+ * <TD> Temperature </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the temperature of the cloud monitor. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numWVR </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of WVR channels. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> wvrTemp </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numWVR  </TD>
+ * <TD>&nbsp; the observed temperature in each WVR channel. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> water </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the water precipitable content. </TD>
  * </TR>
 	
 
@@ -278,7 +278,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~WeatherTable();
@@ -300,17 +300,41 @@ public:
 	/**
 	 * Return the name of this table.
 	 *
+	 * This is a instance method of the class.
+	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
+	std::string getName() const;
+	
+	/**
+	 * Return the name of this table.
+	 *
+	 * This is a static method of the class.
+	 *
+	 * @return the name of this table in a string.
+	 */
+	static std::string name() ;	
+	
+	/**
+	 * Return the version information about this table.
+	 *
+	 */
+	 std::string getVersion() const ;
 	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
+	/**
+	 * Return the default sorted list of attributes names in the binary representation of the table.
+	 *
+	 * @return a const reference to a vector of string
+	 */
+	 static const std::vector<std::string>& defaultAttributesNamesInBin();
+	 
 	/**
 	 * Return this table's Entity.
 	 */
@@ -329,7 +353,7 @@ public:
 	 * @returns a string containing the XML representation.
 	 * @throws ConversionException
 	 */
-	string toXML()  ;
+	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -338,7 +362,7 @@ public:
 	 *
 	 * @return a pointer to a WeatherTableIDL
 	 */
-	WeatherTableIDL *toIDL() ;
+	asdmIDL::WeatherTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
@@ -348,7 +372,7 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(WeatherTableIDL x) ;
+	void fromIDL(asdmIDL::WeatherTableIDL x) ;
 #endif
 	
 	//
@@ -370,32 +394,8 @@ public:
 	
  	 * @param timeInterval
 	
- 	 * @param pressure
-	
- 	 * @param pressureFlag
-	
- 	 * @param relHumidity
-	
- 	 * @param relHumidityFlag
-	
- 	 * @param temperature
-	
- 	 * @param temperatureFlag
-	
- 	 * @param windDirection
-	
- 	 * @param windDirectionFlag
-	
- 	 * @param windSpeed
-	
- 	 * @param windSpeedFlag
-	
- 	 * @param windMax
-	
- 	 * @param windMaxFlag
-	
      */
-	WeatherRow *newRow(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag);
+	WeatherRow *newRow(Tag stationId, ArrayTimeInterval timeInterval);
 	
 
 
@@ -449,7 +449,7 @@ public:
 	 * @return Alls rows in a vector of pointers of WeatherRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the WeatherTable.
 	 */
-	vector<WeatherRow *> get() ;
+	std::vector<WeatherRow *> get() ;
 	
 	/**
 	 * Get a const reference on the collection of rows pointers internally hold by the table.
@@ -457,7 +457,7 @@ public:
 	 * in which they have been added to the WeatherTable.
 	 *
 	 */
-	 const vector<WeatherRow *>& get() const ;
+	 const std::vector<WeatherRow *>& get() const ;
 	
 
 	/**
@@ -466,8 +466,11 @@ public:
 	 *
 	 * @return a pointer on a vector<WeatherRow *>. A null returned value means that the table contains
 	 * no WeatherRow for the given ( stationId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
-	 vector <WeatherRow*> *getByContext(Tag stationId);
+	 std::vector <WeatherRow*> *getByContext(Tag stationId);
 	 
 
 
@@ -499,34 +502,13 @@ public:
  	 * @param stationId
  	 		
  	 * @param timeInterval
- 	 		
- 	 * @param pressure
- 	 		
- 	 * @param pressureFlag
- 	 		
- 	 * @param relHumidity
- 	 		
- 	 * @param relHumidityFlag
- 	 		
- 	 * @param temperature
- 	 		
- 	 * @param temperatureFlag
- 	 		
- 	 * @param windDirection
- 	 		
- 	 * @param windDirectionFlag
- 	 		
- 	 * @param windSpeed
- 	 		
- 	 * @param windSpeedFlag
- 	 		
- 	 * @param windMax
- 	 		
- 	 * @param windMaxFlag
  	 		 
  	 */
-	WeatherRow* lookup(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag); 
+	WeatherRow* lookup(Tag stationId, ArrayTimeInterval timeInterval); 
 
+
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
 
 private:
 
@@ -545,6 +527,8 @@ private:
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML	
 	
+	std::string version ; 
+	
 	Entity entity;
 	
 
@@ -552,23 +536,29 @@ private:
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
+	static std::string itsName;
 	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
+	static std::vector<std::string> attributesNames;
 	
 	/**
-	 * A method to fill attributesNames;
+	 * The attributes names in the order in which they appear in the binary representation of the table.
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> attributesNamesInBin;
+	
 
+	/**
+	 * A method to fill attributesNames and attributesNamesInBin;
+	 */
+	static bool initAttributesNames(), initAttributesNamesDone ;
+	
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
@@ -579,6 +569,22 @@ private:
 	 
 	 */
 	WeatherRow* checkAndAdd(WeatherRow* x) ;
+	
+	/**
+	 * Brutally append an WeatherRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param WeatherRow* x a pointer onto the WeatherRow to be appended.
+	 */
+	 void append(WeatherRow* x) ;
+	 
+	/**
+	 * Brutally append an WeatherRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param WeatherRow* x a pointer onto the WeatherRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(WeatherRow* x) ;
+	 
+	 
 
 
 	
@@ -590,14 +596,14 @@ private:
 	 * @param vector <WeatherRow*>& row . A reference to the vector where to insert x.
 	 *
 	 */
-	 WeatherRow * insertByStartTime(WeatherRow* x, vector<WeatherRow* >& row);
+	 WeatherRow * insertByStartTime(WeatherRow* x, std::vector<WeatherRow* >& row);
 	  
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private vector of WeatherRow s.
-   vector<WeatherRow * > privateRows;
+   std::vector<WeatherRow * > privateRows;
    
 
 	
@@ -606,14 +612,14 @@ private:
 	
 		
 				
-	typedef vector <WeatherRow* > TIME_ROWS;
-	map<string, TIME_ROWS > context;
+	typedef std::vector <WeatherRow* > TIME_ROWS;
+	std::map<std::string, TIME_ROWS > context;
 		
 	/** 
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag stationId) ;
+	 std::string Key(Tag stationId) ;
 		 
 		
 	
@@ -623,7 +629,7 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <WeatherRow*>& vin, vector <WeatherRow*>& vout,  Tag stationId);
+	void getByKeyNoAutoIncNoTime(std::vector <WeatherRow*>& vin, std::vector <WeatherRow*>& vout,  Tag stationId);
 	
 
 	
@@ -636,14 +642,19 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string& xmlDoc) ;
+	void fromXML(std::string& xmlDoc) ;
 		
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
+
 	/**
 	  * Private methods involved during the build of this table out of the content
 	  * of file(s) containing an external representation of a Weather table.
 	  */
-	void setFromMIMEFile(const string& directory);
-	void setFromXMLFile(const string& directory);
+	void setFromMIMEFile(const std::string& directory);
+	/*
+	void openMIMEFile(const std::string& directory);
+	*/
+	void setFromXMLFile(const std::string& directory);
 	
 		 /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -652,7 +663,7 @@ private:
 	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
 	 * 
 	 */
-	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
   
 	
    /** 
@@ -661,12 +672,12 @@ private:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);
+	 void setFromMIME(const std::string & mimeMsg);
 	
 	/**
 	  * Private methods involved during the export of this table into disk file(s).
 	  */
-	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
 	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
@@ -677,7 +688,7 @@ private:
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
-	  void toFile(string directory);
+	  void toFile(std::string directory);
 	  
 	  /**
 	   * Load the table in memory if necessary.
@@ -699,7 +710,7 @@ private:
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);	
+	 void setFromFile(const std::string& directory);	
  
 };
 

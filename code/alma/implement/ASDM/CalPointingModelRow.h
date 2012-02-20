@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalPointingModelRowIDL;
 #endif
 
 
@@ -51,14 +47,17 @@ using asdmIDL::CalPointingModelRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
 
 
@@ -67,7 +66,6 @@ using  asdm::Tag;
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -76,17 +74,14 @@ using namespace ReceiverBandMod;
 
 	
 #include "CAntennaMake.h"
-using namespace AntennaMakeMod;
 	
 
 	
 #include "CPointingModelMode.h"
-using namespace PointingModelModeMod;
 	
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -117,9 +112,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalPointingModel.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -135,16 +132,19 @@ class CalReductionRow;
 	
 
 class CalPointingModelRow;
-typedef void (CalPointingModelRow::*CalPointingModelAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalPointingModelRow::*CalPointingModelAttributeFromBin) (EndianIStream& eis);
+typedef void (CalPointingModelRow::*CalPointingModelAttributeFromText) (const string& s);
 
 /**
  * The CalPointingModelRow class is a row of a CalPointingModelTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalPointingModelRow {
 friend class asdm::CalPointingModelTable;
+friend class asdm::RowTransformer<CalPointingModelRow>;
+//friend class asdm::TableStreamReader<CalPointingModelTable, CalPointingModelRow>;
 
 public:
 
@@ -933,7 +933,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalPointingModelRowIDL struct.
 	 */
-	CalPointingModelRowIDL *toIDL() const;
+	asdmIDL::CalPointingModelRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -942,14 +942,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPointingModelRowIDL x) ;
+	void setFromIDL (asdmIDL::CalPointingModelRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -957,7 +957,46 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalPointingModelAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void pointingModelModeFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffValFromBin( EndianIStream& eis);
+void coeffErrorFromBin( EndianIStream& eis);
+void coeffFixedFromBin( EndianIStream& eis);
+void azimuthRMSFromBin( EndianIStream& eis);
+void elevationRmsFromBin( EndianIStream& eis);
+void skyRMSFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+
+void numObsFromBin( EndianIStream& eis);
+void coeffFormulaFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalPointingModelTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalPointingModelRow* fromBin(EndianIStream& eis, CalPointingModelTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1253,32 +1292,103 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalPointingModelAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void antennaMakeFromBin( EndianISStream& eiss);
-void pointingModelModeFromBin( EndianISStream& eiss);
-void polarizationTypeFromBin( EndianISStream& eiss);
-void numCoeffFromBin( EndianISStream& eiss);
-void coeffNameFromBin( EndianISStream& eiss);
-void coeffValFromBin( EndianISStream& eiss);
-void coeffErrorFromBin( EndianISStream& eiss);
-void coeffFixedFromBin( EndianISStream& eiss);
-void azimuthRMSFromBin( EndianISStream& eiss);
-void elevationRmsFromBin( EndianISStream& eiss);
-void skyRMSFromBin( EndianISStream& eiss);
-void reducedChiSquaredFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalPointingModelAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaMakeFromBin( EndianIStream& eis);
+void pointingModelModeFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void numCoeffFromBin( EndianIStream& eis);
+void coeffNameFromBin( EndianIStream& eis);
+void coeffValFromBin( EndianIStream& eis);
+void coeffErrorFromBin( EndianIStream& eis);
+void coeffFixedFromBin( EndianIStream& eis);
+void azimuthRMSFromBin( EndianIStream& eis);
+void elevationRmsFromBin( EndianIStream& eis);
+void skyRMSFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
 
-void numObsFromBin( EndianISStream& eiss);
-void coeffFormulaFromBin( EndianISStream& eiss);
+void numObsFromBin( EndianIStream& eis);
+void coeffFormulaFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalPointingModelAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void antennaMakeFromText (const string & s);
+	
+	
+void pointingModelModeFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+	
+void numCoeffFromText (const string & s);
+	
+	
+void coeffNameFromText (const string & s);
+	
+	
+void coeffValFromText (const string & s);
+	
+	
+void coeffErrorFromText (const string & s);
+	
+	
+void coeffFixedFromText (const string & s);
+	
+	
+void azimuthRMSFromText (const string & s);
+	
+	
+void elevationRmsFromText (const string & s);
+	
+	
+void skyRMSFromText (const string & s);
+	
+	
+void reducedChiSquaredFromText (const string & s);
+	
+
+	
+void numObsFromText (const string & s);
+	
+	
+void coeffFormulaFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1287,14 +1397,14 @@ void coeffFormulaFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalPointingModelTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalPointingModelRow* fromBin(EndianISStream& eiss, CalPointingModelTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalPointingModelRow* fromBin(EndianIStream& eis, CalPointingModelTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

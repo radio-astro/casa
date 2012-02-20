@@ -37,15 +37,12 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
 
 
+	
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
 
 
@@ -71,14 +68,10 @@ using  asdm::ArrayTimeInterval;
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::FlagCmdTableIDL;
 #endif
 
 #include <Representable.h>
@@ -98,7 +91,7 @@ class FlagCmdRow;
  * Flag commands.
  * <BR>
  
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of FlagCmd </CAPTION>
@@ -176,7 +169,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~FlagCmdTable();
@@ -198,17 +191,41 @@ public:
 	/**
 	 * Return the name of this table.
 	 *
+	 * This is a instance method of the class.
+	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
+	std::string getName() const;
+	
+	/**
+	 * Return the name of this table.
+	 *
+	 * This is a static method of the class.
+	 *
+	 * @return the name of this table in a string.
+	 */
+	static std::string name() ;	
+	
+	/**
+	 * Return the version information about this table.
+	 *
+	 */
+	 std::string getVersion() const ;
 	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
+	/**
+	 * Return the default sorted list of attributes names in the binary representation of the table.
+	 *
+	 * @return a const reference to a vector of string
+	 */
+	 static const std::vector<std::string>& defaultAttributesNamesInBin();
+	 
 	/**
 	 * Return this table's Entity.
 	 */
@@ -227,7 +244,7 @@ public:
 	 * @returns a string containing the XML representation.
 	 * @throws ConversionException
 	 */
-	string toXML()  ;
+	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -236,7 +253,7 @@ public:
 	 *
 	 * @return a pointer to a FlagCmdTableIDL
 	 */
-	FlagCmdTableIDL *toIDL() ;
+	asdmIDL::FlagCmdTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
@@ -246,7 +263,7 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(FlagCmdTableIDL x) ;
+	void fromIDL(asdmIDL::FlagCmdTableIDL x) ;
 #endif
 	
 	//
@@ -333,7 +350,7 @@ public:
 	 * @return Alls rows in a vector of pointers of FlagCmdRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the FlagCmdTable.
 	 */
-	vector<FlagCmdRow *> get() ;
+	std::vector<FlagCmdRow *> get() ;
 	
 	/**
 	 * Get a const reference on the collection of rows pointers internally hold by the table.
@@ -341,7 +358,7 @@ public:
 	 * in which they have been added to the FlagCmdTable.
 	 *
 	 */
-	 const vector<FlagCmdRow *>& get() const ;
+	 const std::vector<FlagCmdRow *>& get() const ;
 	
 
 	/**
@@ -350,8 +367,11 @@ public:
 	 *
 	 * @return a pointer on a vector<FlagCmdRow *>. A null returned value means that the table contains
 	 * no FlagCmdRow for the given (  ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
-	 vector <FlagCmdRow*> *getByContext();
+	 std::vector <FlagCmdRow*> *getByContext();
 	 
 
 
@@ -396,6 +416,9 @@ public:
 	FlagCmdRow* lookup(ArrayTimeInterval timeInterval, string type, string reason, int level, int severity, bool applied, string command); 
 
 
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
+
 private:
 
 	/**
@@ -413,6 +436,8 @@ private:
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML	
 	
+	std::string version ; 
+	
 	Entity entity;
 	
 
@@ -420,23 +445,29 @@ private:
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
+	static std::string itsName;
 	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
+	static std::vector<std::string> attributesNames;
 	
 	/**
-	 * A method to fill attributesNames;
+	 * The attributes names in the order in which they appear in the binary representation of the table.
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> attributesNamesInBin;
+	
 
+	/**
+	 * A method to fill attributesNames and attributesNamesInBin;
+	 */
+	static bool initAttributesNames(), initAttributesNamesDone ;
+	
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
@@ -447,6 +478,22 @@ private:
 	 
 	 */
 	FlagCmdRow* checkAndAdd(FlagCmdRow* x) ;
+	
+	/**
+	 * Brutally append an FlagCmdRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FlagCmdRow* x a pointer onto the FlagCmdRow to be appended.
+	 */
+	 void append(FlagCmdRow* x) ;
+	 
+	/**
+	 * Brutally append an FlagCmdRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FlagCmdRow* x a pointer onto the FlagCmdRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FlagCmdRow* x) ;
+	 
+	 
 
 
 	
@@ -458,14 +505,14 @@ private:
 	 * @param vector <FlagCmdRow*>& row . A reference to the vector where to insert x.
 	 *
 	 */
-	 FlagCmdRow * insertByStartTime(FlagCmdRow* x, vector<FlagCmdRow* >& row);
+	 FlagCmdRow * insertByStartTime(FlagCmdRow* x, std::vector<FlagCmdRow* >& row);
 	  
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private vector of FlagCmdRow s.
-   vector<FlagCmdRow * > privateRows;
+   std::vector<FlagCmdRow * > privateRows;
    
 
 	
@@ -474,7 +521,7 @@ private:
 	
 		
 		
-	vector <FlagCmdRow *> row;
+	std::vector <FlagCmdRow *> row;
 		 
 		
 	
@@ -490,14 +537,19 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string& xmlDoc) ;
+	void fromXML(std::string& xmlDoc) ;
 		
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
+
 	/**
 	  * Private methods involved during the build of this table out of the content
 	  * of file(s) containing an external representation of a FlagCmd table.
 	  */
-	void setFromMIMEFile(const string& directory);
-	void setFromXMLFile(const string& directory);
+	void setFromMIMEFile(const std::string& directory);
+	/*
+	void openMIMEFile(const std::string& directory);
+	*/
+	void setFromXMLFile(const std::string& directory);
 	
 		 /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -506,7 +558,7 @@ private:
 	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
 	 * 
 	 */
-	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
   
 	
    /** 
@@ -515,12 +567,12 @@ private:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);
+	 void setFromMIME(const std::string & mimeMsg);
 	
 	/**
 	  * Private methods involved during the export of this table into disk file(s).
 	  */
-	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
 	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
@@ -531,7 +583,7 @@ private:
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
-	  void toFile(string directory);
+	  void toFile(std::string directory);
 	  
 	  /**
 	   * Load the table in memory if necessary.
@@ -553,7 +605,7 @@ private:
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);	
+	 void setFromFile(const std::string& directory);	
  
 };
 

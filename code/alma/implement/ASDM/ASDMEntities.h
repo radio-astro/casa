@@ -37,8 +37,6 @@
 
 #include <AntennaRow.h>
 
-#include <BeamRow.h>
-
 #include <CalAmpliRow.h>
 
 #include <CalAtmosphereRow.h>
@@ -127,6 +125,8 @@
 
 #include <SBSummaryRow.h>
 
+#include <ScaleRow.h>
+
 #include <ScanRow.h>
 
 #include <SeeingRow.h>
@@ -164,8 +164,6 @@
 #include <AnnotationTable.h>
 
 #include <AntennaTable.h>
-
-#include <BeamTable.h>
 
 #include <CalAmpliTable.h>
 
@@ -254,6 +252,8 @@
 #include <ReceiverTable.h>
 
 #include <SBSummaryTable.h>
+
+#include <ScaleTable.h>
 
 #include <ScanTable.h>
 

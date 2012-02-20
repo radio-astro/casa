@@ -51,6 +51,7 @@ using asdm::SwitchCycleTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::SwitchCycleRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -600,7 +604,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(directionCode);
+			eoss.writeString(CDirectionReferenceCode::name(directionCode));
+			/* eoss.writeInt(directionCode); */
 				
 		
 	
@@ -621,29 +626,29 @@ namespace asdm {
 
 	}
 	
-void SwitchCycleRow::switchCycleIdFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::switchCycleIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		switchCycleId =  Tag::fromBin(eiss);
+		switchCycleId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SwitchCycleRow::numStepFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::numStepFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numStep =  eiss.readInt();
+		numStep =  eis.readInt();
 			
 		
 	
 	
 }
-void SwitchCycleRow::weightArrayFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::weightArrayFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -652,10 +657,10 @@ void SwitchCycleRow::weightArrayFromBin(EndianISStream& eiss) {
 	
 		weightArray.clear();
 		
-		unsigned int weightArrayDim1 = eiss.readInt();
+		unsigned int weightArrayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < weightArrayDim1; i++)
 			
-			weightArray.push_back(eiss.readFloat());
+			weightArray.push_back(eis.readFloat());
 			
 	
 
@@ -663,42 +668,42 @@ void SwitchCycleRow::weightArrayFromBin(EndianISStream& eiss) {
 	
 	
 }
-void SwitchCycleRow::dirOffsetArrayFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::dirOffsetArrayFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	dirOffsetArray = Angle::from2DBin(eiss);		
+	dirOffsetArray = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void SwitchCycleRow::freqOffsetArrayFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::freqOffsetArrayFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	freqOffsetArray = Frequency::from1DBin(eiss);	
+	freqOffsetArray = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void SwitchCycleRow::stepDurationArrayFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::stepDurationArrayFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	stepDurationArray = Interval::from1DBin(eiss);	
+	stepDurationArray = Interval::from1DBin(eis);	
 	
 
 		
@@ -706,16 +711,16 @@ void SwitchCycleRow::stepDurationArrayFromBin(EndianISStream& eiss) {
 	
 }
 
-void SwitchCycleRow::directionCodeFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::directionCodeFromBin(EndianIStream& eis) {
 		
-	directionCodeExists = eiss.readBoolean();
+	directionCodeExists = eis.readBoolean();
 	if (directionCodeExists) {
 		
 	
 	
 		
 			
-		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		directionCode = CDirectionReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -723,15 +728,15 @@ void SwitchCycleRow::directionCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SwitchCycleRow::directionEquinoxFromBin(EndianISStream& eiss) {
+void SwitchCycleRow::directionEquinoxFromBin(EndianIStream& eis) {
 		
-	directionEquinoxExists = eiss.readBoolean();
+	directionEquinoxExists = eis.readBoolean();
 	if (directionEquinoxExists) {
 		
 	
 		
 		
-		directionEquinox =  ArrayTime::fromBin(eiss);
+		directionEquinox =  ArrayTime::fromBin(eis);
 		
 	
 
@@ -740,23 +745,110 @@ void SwitchCycleRow::directionEquinoxFromBin(EndianISStream& eiss) {
 }
 	
 	
-	SwitchCycleRow* SwitchCycleRow::fromBin(EndianISStream& eiss, SwitchCycleTable& table, const vector<string>& attributesSeq) {
+	SwitchCycleRow* SwitchCycleRow::fromBin(EndianIStream& eis, SwitchCycleTable& table, const vector<string>& attributesSeq) {
 		SwitchCycleRow* row = new  SwitchCycleRow(table);
 		
 		map<string, SwitchCycleAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SwitchCycleTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SwitchCycleTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void SwitchCycleRow::switchCycleIdFromText(const string & s) {
+		 
+		switchCycleId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SwitchCycleRow::numStepFromText(const string & s) {
+		 
+		numStep = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SwitchCycleRow::weightArrayFromText(const string & s) {
+		 
+		weightArray = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void SwitchCycleRow::dirOffsetArrayFromText(const string & s) {
+		 
+		dirOffsetArray = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void SwitchCycleRow::freqOffsetArrayFromText(const string & s) {
+		 
+		freqOffsetArray = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void SwitchCycleRow::stepDurationArrayFromText(const string & s) {
+		 
+		stepDurationArray = ASDMValuesParser::parse1D<Interval>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an DirectionReferenceCode 
+	void SwitchCycleRow::directionCodeFromText(const string & s) {
+		directionCodeExists = true;
+		 
+		directionCode = ASDMValuesParser::parse<DirectionReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void SwitchCycleRow::directionEquinoxFromText(const string & s) {
+		directionEquinoxExists = true;
+		 
+		directionEquinox = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	
+	void SwitchCycleRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SwitchCycleAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SwitchCycleTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1049,13 +1141,14 @@ void SwitchCycleRow::directionEquinoxFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -1126,6 +1219,43 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	 fromBinMethods["directionCode"] = &SwitchCycleRow::directionCodeFromBin; 
 	 fromBinMethods["directionEquinox"] = &SwitchCycleRow::directionEquinoxFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["switchCycleId"] = &SwitchCycleRow::switchCycleIdFromText;
+		 
+	
+				 
+	fromTextMethods["numStep"] = &SwitchCycleRow::numStepFromText;
+		 
+	
+				 
+	fromTextMethods["weightArray"] = &SwitchCycleRow::weightArrayFromText;
+		 
+	
+				 
+	fromTextMethods["dirOffsetArray"] = &SwitchCycleRow::dirOffsetArrayFromText;
+		 
+	
+				 
+	fromTextMethods["freqOffsetArray"] = &SwitchCycleRow::freqOffsetArrayFromText;
+		 
+	
+				 
+	fromTextMethods["stepDurationArray"] = &SwitchCycleRow::stepDurationArrayFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["directionCode"] = &SwitchCycleRow::directionCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["directionEquinox"] = &SwitchCycleRow::directionEquinoxFromText;
+		 	
+		
 	}
 	
 	SwitchCycleRow::SwitchCycleRow (SwitchCycleTable &t, SwitchCycleRow &row) : table(t) {

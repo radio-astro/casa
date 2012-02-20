@@ -51,6 +51,7 @@ using asdm::StationTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::StationRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -132,6 +136,18 @@ namespace asdm {
 		x->type = type;
  				
  			
+		
+	
+
+	
+  		
+		
+		x->timeExists = timeExists;
+		
+		
+			
+		x->time = time.toIDLArrayTime();
+			
 		
 	
 
@@ -201,6 +217,21 @@ namespace asdm {
 	
 
 	
+		
+		timeExists = x.timeExists;
+		if (x.timeExists) {
+		
+		
+			
+		setTime(ArrayTime (x.time));
+			
+ 		
+		
+		}
+		
+	
+
+	
 	
 		
 		} catch (IllegalAccessException err) {
@@ -248,6 +279,18 @@ namespace asdm {
 		
 			buf.append(EnumerationParser::toXML("type", type));
 		
+		
+	
+
+  	
+ 		
+		if (timeExists) {
+		
+		
+		Parser::toXML(time, "time", buf);
+		
+		
+		}
 		
 	
 
@@ -307,6 +350,16 @@ namespace asdm {
 	
 
 	
+  		
+        if (row.isStr("<time>")) {
+			
+	  		setTime(Parser::getArrayTime("time","Station",rowDoc));
+			
+		}
+ 		
+	
+
+	
 	
 		
 		} catch (IllegalAccessException err) {
@@ -344,7 +397,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(type);
+			eoss.writeString(CStationType::name(type));
+			/* eoss.writeInt(type); */
 				
 		
 	
@@ -352,76 +406,165 @@ namespace asdm {
 
 	
 	
+	eoss.writeBoolean(timeExists);
+	if (timeExists) {
+	
+	
+	
+		
+	time.toBin(eoss);
+		
+	
+
+	}
+
 	}
 	
-void StationRow::stationIdFromBin(EndianISStream& eiss) {
+void StationRow::stationIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		stationId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void StationRow::nameFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		name =  eiss.readString();
-			
+		stationId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void StationRow::positionFromBin(EndianISStream& eiss) {
+void StationRow::nameFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		name =  eis.readString();
+			
+		
+	
+	
+}
+void StationRow::positionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	position = Length::from1DBin(eiss);	
+	position = Length::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void StationRow::typeFromBin(EndianISStream& eiss) {
+void StationRow::typeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		type = CStationType::from_int(eiss.readInt());
+		type = CStationType::literal(eis.readString());
 			
 		
 	
 	
 }
 
+void StationRow::timeFromBin(EndianIStream& eis) {
+		
+	timeExists = eis.readBoolean();
+	if (timeExists) {
 		
 	
-	StationRow* StationRow::fromBin(EndianISStream& eiss, StationTable& table, const vector<string>& attributesSeq) {
+		
+		
+		time =  ArrayTime::fromBin(eis);
+		
+	
+
+	}
+	
+}
+	
+	
+	StationRow* StationRow::fromBin(EndianIStream& eis, StationTable& table, const vector<string>& attributesSeq) {
 		StationRow* row = new  StationRow(table);
 		
 		map<string, StationAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "StationTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "StationTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void StationRow::stationIdFromText(const string & s) {
+		 
+		stationId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void StationRow::nameFromText(const string & s) {
+		 
+		name = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void StationRow::positionFromText(const string & s) {
+		 
+		position = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an StationType 
+	void StationRow::typeFromText(const string & s) {
+		 
+		type = ASDMValuesParser::parse<StationType>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an ArrayTime 
+	void StationRow::timeFromText(const string & s) {
+		timeExists = true;
+		 
+		time = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	
+	void StationRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, StationAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "StationTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -556,13 +699,61 @@ void StationRow::typeFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	/**
+	 * The attribute time is optional. Return true if this attribute exists.
+	 * @return true if and only if the time attribute exists. 
+	 */
+	bool StationRow::isTimeExists() const {
+		return timeExists;
+	}
 	
-	///////////
-	// Links //
-	///////////
+
+	
+ 	/**
+ 	 * Get time, which is optional.
+ 	 * @return time as ArrayTime
+ 	 * @throw IllegalAccessException If time does not exist.
+ 	 */
+ 	ArrayTime StationRow::getTime() const  {
+		if (!timeExists) {
+			throw IllegalAccessException("time", "Station");
+		}
+	
+  		return time;
+ 	}
+
+ 	/**
+ 	 * Set time with the specified ArrayTime.
+ 	 * @param time The ArrayTime value to which time is to be set.
+ 	 
+ 	
+ 	 */
+ 	void StationRow::setTime (ArrayTime time) {
+	
+ 		this->time = time;
+	
+		timeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark time, which is an optional field, as non-existent.
+	 */
+	void StationRow::clearTime () {
+		timeExists = false;
+	}
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
+	
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -586,6 +777,10 @@ void StationRow::typeFromBin(EndianISStream& eiss) {
 	
 
 	
+		timeExists = false;
+	
+
+	
 	
 	
 	
@@ -601,6 +796,8 @@ type = CStationType::from_int(0);
 	
 
 	
+
+	
 	
 	 fromBinMethods["stationId"] = &StationRow::stationIdFromBin; 
 	 fromBinMethods["name"] = &StationRow::nameFromBin; 
@@ -608,7 +805,33 @@ type = CStationType::from_int(0);
 	 fromBinMethods["type"] = &StationRow::typeFromBin; 
 		
 	
+	 fromBinMethods["time"] = &StationRow::timeFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["stationId"] = &StationRow::stationIdFromText;
+		 
+	
+				 
+	fromTextMethods["name"] = &StationRow::nameFromText;
+		 
+	
+				 
+	fromTextMethods["position"] = &StationRow::positionFromText;
+		 
+	
+				 
+	fromTextMethods["type"] = &StationRow::typeFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["time"] = &StationRow::timeFromText;
+		 	
+		
 	}
 	
 	StationRow::StationRow (StationTable &t, StationRow &row) : table(t) {
@@ -623,6 +846,10 @@ type = CStationType::from_int(0);
 
 	
 
+	
+
+	
+		timeExists = false;
 	
 
 			
@@ -644,6 +871,13 @@ type = CStationType::from_int(0);
 		
 		
 		
+		if (row.timeExists) {
+			time = row.time;		
+			timeExists = true;
+		}
+		else
+			timeExists = false;
+		
 		}
 		
 		 fromBinMethods["stationId"] = &StationRow::stationIdFromBin; 
@@ -652,6 +886,7 @@ type = CStationType::from_int(0);
 		 fromBinMethods["type"] = &StationRow::typeFromBin; 
 			
 	
+		 fromBinMethods["time"] = &StationRow::timeFromBin; 
 			
 	}
 
@@ -737,6 +972,7 @@ type = CStationType::from_int(0);
 		result["type"] = &StationRow::typeFromBin;
 		
 		
+		result["time"] = &StationRow::timeFromBin;
 			
 		
 		return result;	

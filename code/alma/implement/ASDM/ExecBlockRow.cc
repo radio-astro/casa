@@ -46,6 +46,9 @@ using std::set;
 
 #include <SBSummaryTable.h>
 #include <SBSummaryRow.h>
+
+#include <ScaleTable.h>
+#include <ScaleRow.h>
 	
 
 using asdm::ASDM;
@@ -58,11 +61,15 @@ using asdm::AntennaRow;
 using asdm::SBSummaryTable;
 using asdm::SBSummaryRow;
 
+using asdm::ScaleTable;
+using asdm::ScaleRow;
+
 
 #include <Parser.h>
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::ExecBlockRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -155,7 +165,7 @@ namespace asdm {
 		
 		
 			
-		x->projectId = projectId.toIDLEntityRef();
+		x->projectUID = projectUID.toIDLEntityRef();
 			
 		
 	
@@ -202,8 +212,8 @@ namespace asdm {
 		
 			
 				
-		x->observingLog = CORBA::string_dup(observingLog.c_str());
-				
+		x->numObservingLog = numObservingLog;
+ 				
  			
 		
 	
@@ -213,19 +223,14 @@ namespace asdm {
 		
 		
 			
-				
-		x->sessionReference = CORBA::string_dup(sessionReference.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
+		x->observingLog.length(observingLog.size());
+		for (unsigned int i = 0; i < observingLog.size(); ++i) {
 			
-		x->sbSummary = sbSummary.toIDLEntityRef();
+				
+			x->observingLog[i] = CORBA::string_dup(observingLog.at(i).c_str());
+				
+	 		
+	 	}
 			
 		
 	
@@ -235,10 +240,8 @@ namespace asdm {
 		
 		
 			
-				
-		x->schedulerMode = CORBA::string_dup(schedulerMode.c_str());
-				
- 			
+		x->sessionReference = sessionReference.toIDLEntityRef();
+			
 		
 	
 
@@ -297,36 +300,6 @@ namespace asdm {
 		
 		
 			
-		x->siteAltitude = siteAltitude.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->siteLongitude = siteLongitude.toIDLAngle();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->siteLatitude = siteLatitude.toIDLAngle();
-			
-		
-	
-
-	
-  		
-		
-		
-			
 				
 		x->aborted = aborted;
  				
@@ -361,14 +334,76 @@ namespace asdm {
 	
   		
 		
-		x->flagRowExists = flagRowExists;
+		x->schedulerModeExists = schedulerModeExists;
 		
 		
 			
 				
-		x->flagRow = flagRow;
- 				
+		x->schedulerMode = CORBA::string_dup(schedulerMode.c_str());
+				
  			
+		
+	
+
+	
+  		
+		
+		x->siteAltitudeExists = siteAltitudeExists;
+		
+		
+			
+		x->siteAltitude = siteAltitude.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		x->siteLongitudeExists = siteLongitudeExists;
+		
+		
+			
+		x->siteLongitude = siteLongitude.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x->siteLatitudeExists = siteLatitudeExists;
+		
+		
+			
+		x->siteLatitude = siteLatitude.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x->observingScriptExists = observingScriptExists;
+		
+		
+			
+				
+		x->observingScript = CORBA::string_dup(observingScript.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x->observingScriptUIDExists = observingScriptUIDExists;
+		
+		
+			
+		x->observingScriptUID = observingScriptUID.toIDLEntityRef();
+			
 		
 	
 
@@ -401,7 +436,23 @@ namespace asdm {
   	
 
 	
+  	
+ 		
+ 		
+		x->scaleIdExists = scaleIdExists;
 		
+		
+	 	
+			
+		x->scaleId = scaleId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
 	
 
 	
@@ -477,7 +528,7 @@ namespace asdm {
 		
 		
 			
-		setProjectId(EntityRef (x.projectId));
+		setProjectUID(EntityRef (x.projectUID));
 			
  		
 		
@@ -517,8 +568,8 @@ namespace asdm {
 		
 		
 			
-		setObservingLog(string (x.observingLog));
-			
+		setNumObservingLog(x.numObservingLog);
+  			
  		
 		
 	
@@ -527,9 +578,14 @@ namespace asdm {
 		
 		
 			
-		setSessionReference(string (x.sessionReference));
+		observingLog .clear();
+		for (unsigned int i = 0; i <x.observingLog.length(); ++i) {
 			
- 		
+			observingLog.push_back(string (x.observingLog[i]));
+			
+		}
+			
+  		
 		
 	
 
@@ -537,17 +593,7 @@ namespace asdm {
 		
 		
 			
-		setSbSummary(EntityRef (x.sbSummary));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setSchedulerMode(string (x.schedulerMode));
+		setSessionReference(EntityRef (x.sessionReference));
 			
  		
 		
@@ -607,36 +653,6 @@ namespace asdm {
 		
 		
 			
-		setSiteAltitude(Length (x.siteAltitude));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setSiteLongitude(Angle (x.siteLongitude));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setSiteLatitude(Angle (x.siteLatitude));
-			
- 		
-		
-	
-
-	
-		
-		
-			
 		setAborted(x.aborted);
   			
  		
@@ -670,13 +686,88 @@ namespace asdm {
 
 	
 		
-		flagRowExists = x.flagRowExists;
-		if (x.flagRowExists) {
+		schedulerModeExists = x.schedulerModeExists;
+		if (x.schedulerModeExists) {
 		
 		
 			
-		setFlagRow(x.flagRow);
-  			
+		setSchedulerMode(string (x.schedulerMode));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		siteAltitudeExists = x.siteAltitudeExists;
+		if (x.siteAltitudeExists) {
+		
+		
+			
+		setSiteAltitude(Length (x.siteAltitude));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		siteLongitudeExists = x.siteLongitudeExists;
+		if (x.siteLongitudeExists) {
+		
+		
+			
+		setSiteLongitude(Angle (x.siteLongitude));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		siteLatitudeExists = x.siteLatitudeExists;
+		if (x.siteLatitudeExists) {
+		
+		
+			
+		setSiteLatitude(Angle (x.siteLatitude));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		observingScriptExists = x.observingScriptExists;
+		if (x.observingScriptExists) {
+		
+		
+			
+		setObservingScript(string (x.observingScript));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		observingScriptUIDExists = x.observingScriptUIDExists;
+		if (x.observingScriptUIDExists) {
+		
+		
+			
+		setObservingScriptUID(EntityRef (x.observingScriptUID));
+			
  		
 		
 		}
@@ -709,6 +800,23 @@ namespace asdm {
 
 	
 		
+		scaleIdExists = x.scaleIdExists;
+		if (x.scaleIdExists) {
+		
+		
+			
+		setScaleId(Tag (x.scaleId));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+	
+
 	
 
 	
@@ -772,7 +880,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(projectId, "projectId", buf);
+		Parser::toXML(projectUID, "projectUID", buf);
 		
 		
 	
@@ -804,6 +912,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numObservingLog, "numObservingLog", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(observingLog, "observingLog", buf);
 		
 		
@@ -813,22 +929,6 @@ namespace asdm {
  		
 		
 		Parser::toXML(sessionReference, "sessionReference", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(sbSummary, "sbSummary", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(schedulerMode, "schedulerMode", buf);
 		
 		
 	
@@ -876,30 +976,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(siteAltitude, "siteAltitude", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(siteLongitude, "siteLongitude", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(siteLatitude, "siteLatitude", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(aborted, "aborted", buf);
 		
 		
@@ -927,10 +1003,70 @@ namespace asdm {
 
   	
  		
-		if (flagRowExists) {
+		if (schedulerModeExists) {
 		
 		
-		Parser::toXML(flagRow, "flagRow", buf);
+		Parser::toXML(schedulerMode, "schedulerMode", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (siteAltitudeExists) {
+		
+		
+		Parser::toXML(siteAltitude, "siteAltitude", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (siteLongitudeExists) {
+		
+		
+		Parser::toXML(siteLongitude, "siteLongitude", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (siteLatitudeExists) {
+		
+		
+		Parser::toXML(siteLatitude, "siteLatitude", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (observingScriptExists) {
+		
+		
+		Parser::toXML(observingScript, "observingScript", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (observingScriptUIDExists) {
+		
+		
+		Parser::toXML(observingScriptUID, "observingScriptUID", buf);
 		
 		
 		}
@@ -956,8 +1092,22 @@ namespace asdm {
 		
 	
 
+  	
+ 		
+		if (scaleIdExists) {
+		
+		
+		Parser::toXML(scaleId, "scaleId", buf);
+		
+		
+		}
+		
+	
+
 	
 		
+	
+
 	
 
 	
@@ -1021,7 +1171,7 @@ namespace asdm {
 	
   		
 			
-	  	setProjectId(Parser::getEntityRef("projectId","ExecBlock",rowDoc));
+	  	setProjectUID(Parser::getEntityRef("projectUID","ExecBlock",rowDoc));
 			
 		
 	
@@ -1053,7 +1203,7 @@ namespace asdm {
 	
   		
 			
-	  	setObservingLog(Parser::getString("observingLog","ExecBlock",rowDoc));
+	  	setNumObservingLog(Parser::getInteger("numObservingLog","ExecBlock",rowDoc));
 			
 		
 	
@@ -1061,23 +1211,17 @@ namespace asdm {
 	
   		
 			
-	  	setSessionReference(Parser::getString("sessionReference","ExecBlock",rowDoc));
-			
+					
+	  	setObservingLog(Parser::get1DString("observingLog","ExecBlock",rowDoc));
+	  			
+	  		
 		
 	
 
 	
   		
 			
-	  	setSbSummary(Parser::getEntityRef("sbSummary","ExecBlock",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setSchedulerMode(Parser::getString("schedulerMode","ExecBlock",rowDoc));
+	  	setSessionReference(Parser::getEntityRef("sessionReference","ExecBlock",rowDoc));
 			
 		
 	
@@ -1125,30 +1269,6 @@ namespace asdm {
 	
   		
 			
-	  	setSiteAltitude(Parser::getLength("siteAltitude","ExecBlock",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setSiteLongitude(Parser::getAngle("siteLongitude","ExecBlock",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setSiteLatitude(Parser::getAngle("siteLatitude","ExecBlock",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 	  	setAborted(Parser::getBoolean("aborted","ExecBlock",rowDoc));
 			
 		
@@ -1174,9 +1294,59 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<flagRow>")) {
+        if (row.isStr("<schedulerMode>")) {
 			
-	  		setFlagRow(Parser::getBoolean("flagRow","ExecBlock",rowDoc));
+	  		setSchedulerMode(Parser::getString("schedulerMode","ExecBlock",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<siteAltitude>")) {
+			
+	  		setSiteAltitude(Parser::getLength("siteAltitude","ExecBlock",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<siteLongitude>")) {
+			
+	  		setSiteLongitude(Parser::getAngle("siteLongitude","ExecBlock",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<siteLatitude>")) {
+			
+	  		setSiteLatitude(Parser::getAngle("siteLatitude","ExecBlock",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<observingScript>")) {
+			
+	  		setObservingScript(Parser::getString("observingScript","ExecBlock",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<observingScriptUID>")) {
+			
+	  		setObservingScriptUID(Parser::getEntityRef("observingScriptUID","ExecBlock",rowDoc));
 			
 		}
  		
@@ -1200,7 +1370,19 @@ namespace asdm {
 	
 
 	
+  		
+        if (row.isStr("<scaleId>")) {
+			
+	  		setScaleId(Parser::getTag("scaleId","ExecBlock",rowDoc));
+			
+		}
+ 		
+	
+
+	
 		
+	
+
 	
 
 	
@@ -1253,7 +1435,7 @@ namespace asdm {
 	
 	
 		
-	projectId.toBin(eoss);
+	projectUID.toBin(eoss);
 		
 	
 
@@ -1288,7 +1470,7 @@ namespace asdm {
 	
 		
 						
-			eoss.writeString(observingLog);
+			eoss.writeInt(numObservingLog);
 				
 		
 	
@@ -1296,25 +1478,22 @@ namespace asdm {
 	
 	
 		
+		
+			
+		eoss.writeInt((int) observingLog.size());
+		for (unsigned int i = 0; i < observingLog.size(); i++)
+				
+			eoss.writeString(observingLog.at(i));
+				
+				
 						
-			eoss.writeString(sessionReference);
-				
 		
 	
 
 	
 	
 		
-	sbSummary.toBin(eoss);
-		
-	
-
-	
-	
-		
-						
-			eoss.writeString(schedulerMode);
-				
+	sessionReference.toBin(eoss);
 		
 	
 
@@ -1350,27 +1529,6 @@ namespace asdm {
 	
 		
 	basePa.toBin(eoss);
-		
-	
-
-	
-	
-		
-	siteAltitude.toBin(eoss);
-		
-	
-
-	
-	
-		
-	siteLongitude.toBin(eoss);
-		
-	
-
-	
-	
-		
-	siteLatitude.toBin(eoss);
 		
 	
 
@@ -1421,321 +1579,453 @@ namespace asdm {
 
 	}
 
-	eoss.writeBoolean(flagRowExists);
-	if (flagRowExists) {
+	eoss.writeBoolean(schedulerModeExists);
+	if (schedulerModeExists) {
 	
 	
 	
 		
 						
-			eoss.writeBoolean(flagRow);
+			eoss.writeString(schedulerMode);
 				
 		
 	
 
 	}
 
+	eoss.writeBoolean(siteAltitudeExists);
+	if (siteAltitudeExists) {
+	
+	
+	
+		
+	siteAltitude.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(siteLongitudeExists);
+	if (siteLongitudeExists) {
+	
+	
+	
+		
+	siteLongitude.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(siteLatitudeExists);
+	if (siteLatitudeExists) {
+	
+	
+	
+		
+	siteLatitude.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(observingScriptExists);
+	if (observingScriptExists) {
+	
+	
+	
+		
+						
+			eoss.writeString(observingScript);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(observingScriptUIDExists);
+	if (observingScriptUIDExists) {
+	
+	
+	
+		
+	observingScriptUID.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(scaleIdExists);
+	if (scaleIdExists) {
+	
+	
+	
+		
+	scaleId.toBin(eoss);
+		
+	
+
+	}
+
 	}
 	
-void ExecBlockRow::execBlockIdFromBin(EndianISStream& eiss) {
+void ExecBlockRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::startTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startTime =  ArrayTime::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::endTimeFromBin(EndianISStream& eiss) {
+void ExecBlockRow::startTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		endTime =  ArrayTime::fromBin(eiss);
+		startTime =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::execBlockNumFromBin(EndianISStream& eiss) {
+void ExecBlockRow::endTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::execBlockNumFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		execBlockNum =  eiss.readInt();
+		execBlockNum =  eis.readInt();
 			
 		
 	
 	
 }
-void ExecBlockRow::execBlockUIDFromBin(EndianISStream& eiss) {
+void ExecBlockRow::execBlockUIDFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockUID =  EntityRef::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::projectIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		projectId =  EntityRef::fromBin(eiss);
+		execBlockUID =  EntityRef::fromBin(eis);
 		
 	
 	
 }
-void ExecBlockRow::configNameFromBin(EndianISStream& eiss) {
+void ExecBlockRow::projectUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		projectUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::configNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		configName =  eiss.readString();
+		configName =  eis.readString();
 			
 		
 	
 	
 }
-void ExecBlockRow::telescopeNameFromBin(EndianISStream& eiss) {
+void ExecBlockRow::telescopeNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		telescopeName =  eiss.readString();
+		telescopeName =  eis.readString();
 			
 		
 	
 	
 }
-void ExecBlockRow::observerNameFromBin(EndianISStream& eiss) {
+void ExecBlockRow::observerNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		observerName =  eiss.readString();
+		observerName =  eis.readString();
 			
 		
 	
 	
 }
-void ExecBlockRow::observingLogFromBin(EndianISStream& eiss) {
+void ExecBlockRow::numObservingLogFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		observingLog =  eiss.readString();
+		numObservingLog =  eis.readInt();
 			
 		
 	
 	
 }
-void ExecBlockRow::sessionReferenceFromBin(EndianISStream& eiss) {
+void ExecBlockRow::observingLogFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		sessionReference =  eiss.readString();
+	
+		observingLog.clear();
+		
+		unsigned int observingLogDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < observingLogDim1; i++)
 			
-		
-	
-	
-}
-void ExecBlockRow::sbSummaryFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		sbSummary =  EntityRef::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::schedulerModeFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
+			observingLog.push_back(eis.readString());
 			
-		schedulerMode =  eiss.readString();
-			
-		
-	
-	
-}
-void ExecBlockRow::baseRangeMinFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		baseRangeMin =  Length::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::baseRangeMaxFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		baseRangeMax =  Length::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::baseRmsMinorFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		baseRmsMinor =  Length::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::baseRmsMajorFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		baseRmsMajor =  Length::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::basePaFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		basePa =  Angle::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::siteAltitudeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		siteAltitude =  Length::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::siteLongitudeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		siteLongitude =  Angle::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::siteLatitudeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		siteLatitude =  Angle::fromBin(eiss);
-		
-	
-	
-}
-void ExecBlockRow::abortedFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		aborted =  eiss.readBoolean();
-			
-		
-	
-	
-}
-void ExecBlockRow::numAntennaFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numAntenna =  eiss.readInt();
-			
-		
-	
-	
-}
-void ExecBlockRow::antennaIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-			
-	
-	antennaId = Tag::from1DBin(eiss);	
 	
 
 		
 	
 	
 }
-void ExecBlockRow::sBSummaryIdFromBin(EndianISStream& eiss) {
+void ExecBlockRow::sessionReferenceFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		sBSummaryId =  Tag::fromBin(eiss);
+		sessionReference =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::baseRangeMinFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		baseRangeMin =  Length::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::baseRangeMaxFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		baseRangeMax =  Length::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::baseRmsMinorFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		baseRmsMinor =  Length::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::baseRmsMajorFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		baseRmsMajor =  Length::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::basePaFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		basePa =  Angle::fromBin(eis);
+		
+	
+	
+}
+void ExecBlockRow::abortedFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		aborted =  eis.readBoolean();
+			
+		
+	
+	
+}
+void ExecBlockRow::numAntennaFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numAntenna =  eis.readInt();
+			
+		
+	
+	
+}
+void ExecBlockRow::antennaIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+			
+	
+	antennaId = Tag::from1DBin(eis);	
+	
+
+		
+	
+	
+}
+void ExecBlockRow::sBSummaryIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		sBSummaryId =  Tag::fromBin(eis);
 		
 	
 	
 }
 
-void ExecBlockRow::releaseDateFromBin(EndianISStream& eiss) {
+void ExecBlockRow::releaseDateFromBin(EndianIStream& eis) {
 		
-	releaseDateExists = eiss.readBoolean();
+	releaseDateExists = eis.readBoolean();
 	if (releaseDateExists) {
 		
 	
 		
 		
-		releaseDate =  ArrayTime::fromBin(eiss);
+		releaseDate =  ArrayTime::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
+void ExecBlockRow::schedulerModeFromBin(EndianIStream& eis) {
 		
-	flagRowExists = eiss.readBoolean();
-	if (flagRowExists) {
+	schedulerModeExists = eis.readBoolean();
+	if (schedulerModeExists) {
 		
 	
 	
 		
 			
-		flagRow =  eiss.readBoolean();
+		schedulerMode =  eis.readString();
 			
+		
+	
+
+	}
+	
+}
+void ExecBlockRow::siteAltitudeFromBin(EndianIStream& eis) {
+		
+	siteAltitudeExists = eis.readBoolean();
+	if (siteAltitudeExists) {
+		
+	
+		
+		
+		siteAltitude =  Length::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void ExecBlockRow::siteLongitudeFromBin(EndianIStream& eis) {
+		
+	siteLongitudeExists = eis.readBoolean();
+	if (siteLongitudeExists) {
+		
+	
+		
+		
+		siteLongitude =  Angle::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void ExecBlockRow::siteLatitudeFromBin(EndianIStream& eis) {
+		
+	siteLatitudeExists = eis.readBoolean();
+	if (siteLatitudeExists) {
+		
+	
+		
+		
+		siteLatitude =  Angle::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void ExecBlockRow::observingScriptFromBin(EndianIStream& eis) {
+		
+	observingScriptExists = eis.readBoolean();
+	if (observingScriptExists) {
+		
+	
+	
+		
+			
+		observingScript =  eis.readString();
+			
+		
+	
+
+	}
+	
+}
+void ExecBlockRow::observingScriptUIDFromBin(EndianIStream& eis) {
+		
+	observingScriptUIDExists = eis.readBoolean();
+	if (observingScriptUIDExists) {
+		
+	
+		
+		
+		observingScriptUID =  EntityRef::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void ExecBlockRow::scaleIdFromBin(EndianIStream& eis) {
+		
+	scaleIdExists = eis.readBoolean();
+	if (scaleIdExists) {
+		
+	
+		
+		
+		scaleId =  Tag::fromBin(eis);
 		
 	
 
@@ -1744,23 +2034,255 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 }
 	
 	
-	ExecBlockRow* ExecBlockRow::fromBin(EndianISStream& eiss, ExecBlockTable& table, const vector<string>& attributesSeq) {
+	ExecBlockRow* ExecBlockRow::fromBin(EndianIStream& eis, ExecBlockTable& table, const vector<string>& attributesSeq) {
 		ExecBlockRow* row = new  ExecBlockRow(table);
 		
 		map<string, ExecBlockAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ExecBlockTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ExecBlockTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void ExecBlockRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void ExecBlockRow::startTimeFromText(const string & s) {
+		 
+		startTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void ExecBlockRow::endTimeFromText(const string & s) {
+		 
+		endTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ExecBlockRow::execBlockNumFromText(const string & s) {
+		 
+		execBlockNum = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::configNameFromText(const string & s) {
+		 
+		configName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::telescopeNameFromText(const string & s) {
+		 
+		telescopeName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::observerNameFromText(const string & s) {
+		 
+		observerName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ExecBlockRow::numObservingLogFromText(const string & s) {
+		 
+		numObservingLog = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::observingLogFromText(const string & s) {
+		 
+		observingLog = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRangeMinFromText(const string & s) {
+		 
+		baseRangeMin = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRangeMaxFromText(const string & s) {
+		 
+		baseRangeMax = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRmsMinorFromText(const string & s) {
+		 
+		baseRmsMinor = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::baseRmsMajorFromText(const string & s) {
+		 
+		baseRmsMajor = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void ExecBlockRow::basePaFromText(const string & s) {
+		 
+		basePa = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void ExecBlockRow::abortedFromText(const string & s) {
+		 
+		aborted = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ExecBlockRow::numAntennaFromText(const string & s) {
+		 
+		numAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void ExecBlockRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void ExecBlockRow::sBSummaryIdFromText(const string & s) {
+		 
+		sBSummaryId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an ArrayTime 
+	void ExecBlockRow::releaseDateFromText(const string & s) {
+		releaseDateExists = true;
+		 
+		releaseDate = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::schedulerModeFromText(const string & s) {
+		schedulerModeExists = true;
+		 
+		schedulerMode = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void ExecBlockRow::siteAltitudeFromText(const string & s) {
+		siteAltitudeExists = true;
+		 
+		siteAltitude = ASDMValuesParser::parse<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void ExecBlockRow::siteLongitudeFromText(const string & s) {
+		siteLongitudeExists = true;
+		 
+		siteLongitude = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void ExecBlockRow::siteLatitudeFromText(const string & s) {
+		siteLatitudeExists = true;
+		 
+		siteLatitude = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ExecBlockRow::observingScriptFromText(const string & s) {
+		observingScriptExists = true;
+		 
+		observingScript = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Tag 
+	void ExecBlockRow::scaleIdFromText(const string & s) {
+		scaleIdExists = true;
+		 
+		scaleId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	
+	void ExecBlockRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, ExecBlockAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "ExecBlockTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1930,29 +2452,29 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get projectId.
- 	 * @return projectId as EntityRef
+ 	 * Get projectUID.
+ 	 * @return projectUID as EntityRef
  	 */
- 	EntityRef ExecBlockRow::getProjectId() const {
+ 	EntityRef ExecBlockRow::getProjectUID() const {
 	
-  		return projectId;
+  		return projectUID;
  	}
 
  	/**
- 	 * Set projectId with the specified EntityRef.
- 	 * @param projectId The EntityRef value to which projectId is to be set.
+ 	 * Set projectUID with the specified EntityRef.
+ 	 * @param projectUID The EntityRef value to which projectUID is to be set.
  	 
  	
  		
  	 */
- 	void ExecBlockRow::setProjectId (EntityRef projectId)  {
+ 	void ExecBlockRow::setProjectUID (EntityRef projectUID)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->projectId = projectId;
+ 		this->projectUID = projectUID;
 	
  	}
 	
@@ -2058,22 +2580,54 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get observingLog.
- 	 * @return observingLog as string
+ 	 * Get numObservingLog.
+ 	 * @return numObservingLog as int
  	 */
- 	string ExecBlockRow::getObservingLog() const {
+ 	int ExecBlockRow::getNumObservingLog() const {
+	
+  		return numObservingLog;
+ 	}
+
+ 	/**
+ 	 * Set numObservingLog with the specified int.
+ 	 * @param numObservingLog The int value to which numObservingLog is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setNumObservingLog (int numObservingLog)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numObservingLog = numObservingLog;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get observingLog.
+ 	 * @return observingLog as vector<string >
+ 	 */
+ 	vector<string > ExecBlockRow::getObservingLog() const {
 	
   		return observingLog;
  	}
 
  	/**
- 	 * Set observingLog with the specified string.
- 	 * @param observingLog The string value to which observingLog is to be set.
+ 	 * Set observingLog with the specified vector<string >.
+ 	 * @param observingLog The vector<string > value to which observingLog is to be set.
  	 
  	
  		
  	 */
- 	void ExecBlockRow::setObservingLog (string observingLog)  {
+ 	void ExecBlockRow::setObservingLog (vector<string > observingLog)  {
   	
   	
   		if (hasBeenAdded) {
@@ -2091,21 +2645,21 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
  	/**
  	 * Get sessionReference.
- 	 * @return sessionReference as string
+ 	 * @return sessionReference as EntityRef
  	 */
- 	string ExecBlockRow::getSessionReference() const {
+ 	EntityRef ExecBlockRow::getSessionReference() const {
 	
   		return sessionReference;
  	}
 
  	/**
- 	 * Set sessionReference with the specified string.
- 	 * @param sessionReference The string value to which sessionReference is to be set.
+ 	 * Set sessionReference with the specified EntityRef.
+ 	 * @param sessionReference The EntityRef value to which sessionReference is to be set.
  	 
  	
  		
  	 */
- 	void ExecBlockRow::setSessionReference (string sessionReference)  {
+ 	void ExecBlockRow::setSessionReference (EntityRef sessionReference)  {
   	
   	
   		if (hasBeenAdded) {
@@ -2113,70 +2667,6 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
   		}
   	
  		this->sessionReference = sessionReference;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get sbSummary.
- 	 * @return sbSummary as EntityRef
- 	 */
- 	EntityRef ExecBlockRow::getSbSummary() const {
-	
-  		return sbSummary;
- 	}
-
- 	/**
- 	 * Set sbSummary with the specified EntityRef.
- 	 * @param sbSummary The EntityRef value to which sbSummary is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setSbSummary (EntityRef sbSummary)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->sbSummary = sbSummary;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get schedulerMode.
- 	 * @return schedulerMode as string
- 	 */
- 	string ExecBlockRow::getSchedulerMode() const {
-	
-  		return schedulerMode;
- 	}
-
- 	/**
- 	 * Set schedulerMode with the specified string.
- 	 * @param schedulerMode The string value to which schedulerMode is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setSchedulerMode (string schedulerMode)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->schedulerMode = schedulerMode;
 	
  	}
 	
@@ -2346,102 +2836,6 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get siteAltitude.
- 	 * @return siteAltitude as Length
- 	 */
- 	Length ExecBlockRow::getSiteAltitude() const {
-	
-  		return siteAltitude;
- 	}
-
- 	/**
- 	 * Set siteAltitude with the specified Length.
- 	 * @param siteAltitude The Length value to which siteAltitude is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setSiteAltitude (Length siteAltitude)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->siteAltitude = siteAltitude;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get siteLongitude.
- 	 * @return siteLongitude as Angle
- 	 */
- 	Angle ExecBlockRow::getSiteLongitude() const {
-	
-  		return siteLongitude;
- 	}
-
- 	/**
- 	 * Set siteLongitude with the specified Angle.
- 	 * @param siteLongitude The Angle value to which siteLongitude is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setSiteLongitude (Angle siteLongitude)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->siteLongitude = siteLongitude;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get siteLatitude.
- 	 * @return siteLatitude as Angle
- 	 */
- 	Angle ExecBlockRow::getSiteLatitude() const {
-	
-  		return siteLatitude;
- 	}
-
- 	/**
- 	 * Set siteLatitude with the specified Angle.
- 	 * @param siteLatitude The Angle value to which siteLatitude is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setSiteLatitude (Angle siteLatitude)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->siteLatitude = siteLatitude;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get aborted.
  	 * @return aborted as bool
  	 */
@@ -2551,55 +2945,290 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
 	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
+	 * The attribute schedulerMode is optional. Return true if this attribute exists.
+	 * @return true if and only if the schedulerMode attribute exists. 
 	 */
-	bool ExecBlockRow::isFlagRowExists() const {
-		return flagRowExists;
+	bool ExecBlockRow::isSchedulerModeExists() const {
+		return schedulerModeExists;
 	}
 	
 
 	
  	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throw IllegalAccessException If flagRow does not exist.
+ 	 * Get schedulerMode, which is optional.
+ 	 * @return schedulerMode as string
+ 	 * @throw IllegalAccessException If schedulerMode does not exist.
  	 */
- 	bool ExecBlockRow::getFlagRow() const  {
-		if (!flagRowExists) {
-			throw IllegalAccessException("flagRow", "ExecBlock");
+ 	string ExecBlockRow::getSchedulerMode() const  {
+		if (!schedulerModeExists) {
+			throw IllegalAccessException("schedulerMode", "ExecBlock");
 		}
 	
-  		return flagRow;
+  		return schedulerMode;
  	}
 
  	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 * Set schedulerMode with the specified string.
+ 	 * @param schedulerMode The string value to which schedulerMode is to be set.
  	 
  	
  	 */
- 	void ExecBlockRow::setFlagRow (bool flagRow) {
+ 	void ExecBlockRow::setSchedulerMode (string schedulerMode) {
 	
- 		this->flagRow = flagRow;
+ 		this->schedulerMode = schedulerMode;
 	
-		flagRowExists = true;
+		schedulerModeExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
+	 * Mark schedulerMode, which is an optional field, as non-existent.
 	 */
-	void ExecBlockRow::clearFlagRow () {
-		flagRowExists = false;
+	void ExecBlockRow::clearSchedulerMode () {
+		schedulerModeExists = false;
 	}
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	/**
+	 * The attribute siteAltitude is optional. Return true if this attribute exists.
+	 * @return true if and only if the siteAltitude attribute exists. 
+	 */
+	bool ExecBlockRow::isSiteAltitudeExists() const {
+		return siteAltitudeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get siteAltitude, which is optional.
+ 	 * @return siteAltitude as Length
+ 	 * @throw IllegalAccessException If siteAltitude does not exist.
+ 	 */
+ 	Length ExecBlockRow::getSiteAltitude() const  {
+		if (!siteAltitudeExists) {
+			throw IllegalAccessException("siteAltitude", "ExecBlock");
+		}
+	
+  		return siteAltitude;
+ 	}
+
+ 	/**
+ 	 * Set siteAltitude with the specified Length.
+ 	 * @param siteAltitude The Length value to which siteAltitude is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ExecBlockRow::setSiteAltitude (Length siteAltitude) {
+	
+ 		this->siteAltitude = siteAltitude;
+	
+		siteAltitudeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark siteAltitude, which is an optional field, as non-existent.
+	 */
+	void ExecBlockRow::clearSiteAltitude () {
+		siteAltitudeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute siteLongitude is optional. Return true if this attribute exists.
+	 * @return true if and only if the siteLongitude attribute exists. 
+	 */
+	bool ExecBlockRow::isSiteLongitudeExists() const {
+		return siteLongitudeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get siteLongitude, which is optional.
+ 	 * @return siteLongitude as Angle
+ 	 * @throw IllegalAccessException If siteLongitude does not exist.
+ 	 */
+ 	Angle ExecBlockRow::getSiteLongitude() const  {
+		if (!siteLongitudeExists) {
+			throw IllegalAccessException("siteLongitude", "ExecBlock");
+		}
+	
+  		return siteLongitude;
+ 	}
+
+ 	/**
+ 	 * Set siteLongitude with the specified Angle.
+ 	 * @param siteLongitude The Angle value to which siteLongitude is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ExecBlockRow::setSiteLongitude (Angle siteLongitude) {
+	
+ 		this->siteLongitude = siteLongitude;
+	
+		siteLongitudeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark siteLongitude, which is an optional field, as non-existent.
+	 */
+	void ExecBlockRow::clearSiteLongitude () {
+		siteLongitudeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute siteLatitude is optional. Return true if this attribute exists.
+	 * @return true if and only if the siteLatitude attribute exists. 
+	 */
+	bool ExecBlockRow::isSiteLatitudeExists() const {
+		return siteLatitudeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get siteLatitude, which is optional.
+ 	 * @return siteLatitude as Angle
+ 	 * @throw IllegalAccessException If siteLatitude does not exist.
+ 	 */
+ 	Angle ExecBlockRow::getSiteLatitude() const  {
+		if (!siteLatitudeExists) {
+			throw IllegalAccessException("siteLatitude", "ExecBlock");
+		}
+	
+  		return siteLatitude;
+ 	}
+
+ 	/**
+ 	 * Set siteLatitude with the specified Angle.
+ 	 * @param siteLatitude The Angle value to which siteLatitude is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ExecBlockRow::setSiteLatitude (Angle siteLatitude) {
+	
+ 		this->siteLatitude = siteLatitude;
+	
+		siteLatitudeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark siteLatitude, which is an optional field, as non-existent.
+	 */
+	void ExecBlockRow::clearSiteLatitude () {
+		siteLatitudeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute observingScript is optional. Return true if this attribute exists.
+	 * @return true if and only if the observingScript attribute exists. 
+	 */
+	bool ExecBlockRow::isObservingScriptExists() const {
+		return observingScriptExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get observingScript, which is optional.
+ 	 * @return observingScript as string
+ 	 * @throw IllegalAccessException If observingScript does not exist.
+ 	 */
+ 	string ExecBlockRow::getObservingScript() const  {
+		if (!observingScriptExists) {
+			throw IllegalAccessException("observingScript", "ExecBlock");
+		}
+	
+  		return observingScript;
+ 	}
+
+ 	/**
+ 	 * Set observingScript with the specified string.
+ 	 * @param observingScript The string value to which observingScript is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ExecBlockRow::setObservingScript (string observingScript) {
+	
+ 		this->observingScript = observingScript;
+	
+		observingScriptExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark observingScript, which is an optional field, as non-existent.
+	 */
+	void ExecBlockRow::clearObservingScript () {
+		observingScriptExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute observingScriptUID is optional. Return true if this attribute exists.
+	 * @return true if and only if the observingScriptUID attribute exists. 
+	 */
+	bool ExecBlockRow::isObservingScriptUIDExists() const {
+		return observingScriptUIDExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get observingScriptUID, which is optional.
+ 	 * @return observingScriptUID as EntityRef
+ 	 * @throw IllegalAccessException If observingScriptUID does not exist.
+ 	 */
+ 	EntityRef ExecBlockRow::getObservingScriptUID() const  {
+		if (!observingScriptUIDExists) {
+			throw IllegalAccessException("observingScriptUID", "ExecBlock");
+		}
+	
+  		return observingScriptUID;
+ 	}
+
+ 	/**
+ 	 * Set observingScriptUID with the specified EntityRef.
+ 	 * @param observingScriptUID The EntityRef value to which observingScriptUID is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ExecBlockRow::setObservingScriptUID (EntityRef observingScriptUID) {
+	
+ 		this->observingScriptUID = observingScriptUID;
+	
+		observingScriptUIDExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark observingScriptUID, which is an optional field, as non-existent.
+	 */
+	void ExecBlockRow::clearObservingScriptUID () {
+		observingScriptUIDExists = false;
+	}
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2665,9 +3294,57 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+	
+	/**
+	 * The attribute scaleId is optional. Return true if this attribute exists.
+	 * @return true if and only if the scaleId attribute exists. 
+	 */
+	bool ExecBlockRow::isScaleIdExists() const {
+		return scaleIdExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get scaleId, which is optional.
+ 	 * @return scaleId as Tag
+ 	 * @throw IllegalAccessException If scaleId does not exist.
+ 	 */
+ 	Tag ExecBlockRow::getScaleId() const  {
+		if (!scaleIdExists) {
+			throw IllegalAccessException("scaleId", "ExecBlock");
+		}
+	
+  		return scaleId;
+ 	}
+
+ 	/**
+ 	 * Set scaleId with the specified Tag.
+ 	 * @param scaleId The Tag value to which scaleId is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ExecBlockRow::setScaleId (Tag scaleId) {
+	
+ 		this->scaleId = scaleId;
+	
+		scaleIdExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark scaleId, which is an optional field, as non-existent.
+	 */
+	void ExecBlockRow::clearScaleId () {
+		scaleIdExists = false;
+	}
+	
+
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
  		
@@ -2765,6 +3442,30 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
+	
+	
+		
+
+	/**
+	 * Returns the pointer to the row in the Scale table having Scale.scaleId == scaleId
+	 * @return a ScaleRow*
+	 * 
+	 
+	 * throws IllegalAccessException
+	 
+	 */
+	 ScaleRow* ExecBlockRow::getScaleUsingScaleId() {
+	 
+	 	if (!scaleIdExists)
+	 		throw IllegalAccessException();	 		 
+	 
+	 	return table.getContainer().getScale().getRowByKey(scaleId);
+	 }
+	 
+
+	
+
+	
 	/**
 	 * Create a ExecBlockRow.
 	 * <p>
@@ -2816,19 +3517,31 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
-
-	
-
-	
-
-	
 		releaseDateExists = false;
 	
 
 	
-		flagRowExists = false;
+		schedulerModeExists = false;
+	
+
+	
+		siteAltitudeExists = false;
+	
+
+	
+		siteLongitudeExists = false;
+	
+
+	
+		siteLatitudeExists = false;
+	
+
+	
+		observingScriptExists = false;
+	
+
+	
+		observingScriptUIDExists = false;
 	
 
 	
@@ -2837,8 +3550,14 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
+		scaleIdExists = false;
+	
+
 	
 	
+	
+	
+
 	
 
 	
@@ -2896,22 +3615,18 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	 fromBinMethods["endTime"] = &ExecBlockRow::endTimeFromBin; 
 	 fromBinMethods["execBlockNum"] = &ExecBlockRow::execBlockNumFromBin; 
 	 fromBinMethods["execBlockUID"] = &ExecBlockRow::execBlockUIDFromBin; 
-	 fromBinMethods["projectId"] = &ExecBlockRow::projectIdFromBin; 
+	 fromBinMethods["projectUID"] = &ExecBlockRow::projectUIDFromBin; 
 	 fromBinMethods["configName"] = &ExecBlockRow::configNameFromBin; 
 	 fromBinMethods["telescopeName"] = &ExecBlockRow::telescopeNameFromBin; 
 	 fromBinMethods["observerName"] = &ExecBlockRow::observerNameFromBin; 
+	 fromBinMethods["numObservingLog"] = &ExecBlockRow::numObservingLogFromBin; 
 	 fromBinMethods["observingLog"] = &ExecBlockRow::observingLogFromBin; 
 	 fromBinMethods["sessionReference"] = &ExecBlockRow::sessionReferenceFromBin; 
-	 fromBinMethods["sbSummary"] = &ExecBlockRow::sbSummaryFromBin; 
-	 fromBinMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin; 
 	 fromBinMethods["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromBin; 
 	 fromBinMethods["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromBin; 
 	 fromBinMethods["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromBin; 
 	 fromBinMethods["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromBin; 
 	 fromBinMethods["basePa"] = &ExecBlockRow::basePaFromBin; 
-	 fromBinMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin; 
-	 fromBinMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin; 
-	 fromBinMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin; 
 	 fromBinMethods["aborted"] = &ExecBlockRow::abortedFromBin; 
 	 fromBinMethods["numAntenna"] = &ExecBlockRow::numAntennaFromBin; 
 	 fromBinMethods["antennaId"] = &ExecBlockRow::antennaIdFromBin; 
@@ -2919,8 +3634,127 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		
 	
 	 fromBinMethods["releaseDate"] = &ExecBlockRow::releaseDateFromBin; 
-	 fromBinMethods["flagRow"] = &ExecBlockRow::flagRowFromBin; 
+	 fromBinMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin; 
+	 fromBinMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin; 
+	 fromBinMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin; 
+	 fromBinMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin; 
+	 fromBinMethods["observingScript"] = &ExecBlockRow::observingScriptFromBin; 
+	 fromBinMethods["observingScriptUID"] = &ExecBlockRow::observingScriptUIDFromBin; 
+	 fromBinMethods["scaleId"] = &ExecBlockRow::scaleIdFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["execBlockId"] = &ExecBlockRow::execBlockIdFromText;
+		 
+	
+				 
+	fromTextMethods["startTime"] = &ExecBlockRow::startTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endTime"] = &ExecBlockRow::endTimeFromText;
+		 
+	
+				 
+	fromTextMethods["execBlockNum"] = &ExecBlockRow::execBlockNumFromText;
+		 
+	
+		 
+	
+		 
+	
+				 
+	fromTextMethods["configName"] = &ExecBlockRow::configNameFromText;
+		 
+	
+				 
+	fromTextMethods["telescopeName"] = &ExecBlockRow::telescopeNameFromText;
+		 
+	
+				 
+	fromTextMethods["observerName"] = &ExecBlockRow::observerNameFromText;
+		 
+	
+				 
+	fromTextMethods["numObservingLog"] = &ExecBlockRow::numObservingLogFromText;
+		 
+	
+				 
+	fromTextMethods["observingLog"] = &ExecBlockRow::observingLogFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromText;
+		 
+	
+				 
+	fromTextMethods["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromText;
+		 
+	
+				 
+	fromTextMethods["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromText;
+		 
+	
+				 
+	fromTextMethods["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromText;
+		 
+	
+				 
+	fromTextMethods["basePa"] = &ExecBlockRow::basePaFromText;
+		 
+	
+				 
+	fromTextMethods["aborted"] = &ExecBlockRow::abortedFromText;
+		 
+	
+				 
+	fromTextMethods["numAntenna"] = &ExecBlockRow::numAntennaFromText;
+		 
+	
+				 
+	fromTextMethods["antennaId"] = &ExecBlockRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["sBSummaryId"] = &ExecBlockRow::sBSummaryIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["releaseDate"] = &ExecBlockRow::releaseDateFromText;
+		 	
+	 
+				
+	fromTextMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromText;
+		 	
+	 
+				
+	fromTextMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromText;
+		 	
+	 
+				
+	fromTextMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromText;
+		 	
+	 
+				
+	fromTextMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromText;
+		 	
+	 
+				
+	fromTextMethods["observingScript"] = &ExecBlockRow::observingScriptFromText;
+		 	
+	 
+		 	
+	 
+				
+	fromTextMethods["scaleId"] = &ExecBlockRow::scaleIdFromText;
+		 	
+		
 	}
 	
 	ExecBlockRow::ExecBlockRow (ExecBlockTable &t, ExecBlockRow &row) : table(t) {
@@ -2968,24 +3802,40 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
-
-	
-
-	
-
-	
 		releaseDateExists = false;
 	
 
 	
-		flagRowExists = false;
+		schedulerModeExists = false;
+	
+
+	
+		siteAltitudeExists = false;
+	
+
+	
+		siteLongitudeExists = false;
+	
+
+	
+		siteLatitudeExists = false;
+	
+
+	
+		observingScriptExists = false;
+	
+
+	
+		observingScriptUIDExists = false;
 	
 
 	
 	
 
+	
+
+	
+		scaleIdExists = false;
 	
 		
 		}
@@ -3005,7 +3855,7 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		
 			execBlockUID = row.execBlockUID;
 		
-			projectId = row.projectId;
+			projectUID = row.projectUID;
 		
 			configName = row.configName;
 		
@@ -3013,13 +3863,11 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		
 			observerName = row.observerName;
 		
+			numObservingLog = row.numObservingLog;
+		
 			observingLog = row.observingLog;
 		
 			sessionReference = row.sessionReference;
-		
-			sbSummary = row.sbSummary;
-		
-			schedulerMode = row.schedulerMode;
 		
 			baseRangeMin = row.baseRangeMin;
 		
@@ -3030,12 +3878,6 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 			baseRmsMajor = row.baseRmsMajor;
 		
 			basePa = row.basePa;
-		
-			siteAltitude = row.siteAltitude;
-		
-			siteLongitude = row.siteLongitude;
-		
-			siteLatitude = row.siteLatitude;
 		
 			aborted = row.aborted;
 		
@@ -3055,12 +3897,54 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		else
 			releaseDateExists = false;
 		
-		if (row.flagRowExists) {
-			flagRow = row.flagRow;		
-			flagRowExists = true;
+		if (row.schedulerModeExists) {
+			schedulerMode = row.schedulerMode;		
+			schedulerModeExists = true;
 		}
 		else
-			flagRowExists = false;
+			schedulerModeExists = false;
+		
+		if (row.siteAltitudeExists) {
+			siteAltitude = row.siteAltitude;		
+			siteAltitudeExists = true;
+		}
+		else
+			siteAltitudeExists = false;
+		
+		if (row.siteLongitudeExists) {
+			siteLongitude = row.siteLongitude;		
+			siteLongitudeExists = true;
+		}
+		else
+			siteLongitudeExists = false;
+		
+		if (row.siteLatitudeExists) {
+			siteLatitude = row.siteLatitude;		
+			siteLatitudeExists = true;
+		}
+		else
+			siteLatitudeExists = false;
+		
+		if (row.observingScriptExists) {
+			observingScript = row.observingScript;		
+			observingScriptExists = true;
+		}
+		else
+			observingScriptExists = false;
+		
+		if (row.observingScriptUIDExists) {
+			observingScriptUID = row.observingScriptUID;		
+			observingScriptUIDExists = true;
+		}
+		else
+			observingScriptUIDExists = false;
+		
+		if (row.scaleIdExists) {
+			scaleId = row.scaleId;		
+			scaleIdExists = true;
+		}
+		else
+			scaleIdExists = false;
 		
 		}
 		
@@ -3069,22 +3953,18 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		 fromBinMethods["endTime"] = &ExecBlockRow::endTimeFromBin; 
 		 fromBinMethods["execBlockNum"] = &ExecBlockRow::execBlockNumFromBin; 
 		 fromBinMethods["execBlockUID"] = &ExecBlockRow::execBlockUIDFromBin; 
-		 fromBinMethods["projectId"] = &ExecBlockRow::projectIdFromBin; 
+		 fromBinMethods["projectUID"] = &ExecBlockRow::projectUIDFromBin; 
 		 fromBinMethods["configName"] = &ExecBlockRow::configNameFromBin; 
 		 fromBinMethods["telescopeName"] = &ExecBlockRow::telescopeNameFromBin; 
 		 fromBinMethods["observerName"] = &ExecBlockRow::observerNameFromBin; 
+		 fromBinMethods["numObservingLog"] = &ExecBlockRow::numObservingLogFromBin; 
 		 fromBinMethods["observingLog"] = &ExecBlockRow::observingLogFromBin; 
 		 fromBinMethods["sessionReference"] = &ExecBlockRow::sessionReferenceFromBin; 
-		 fromBinMethods["sbSummary"] = &ExecBlockRow::sbSummaryFromBin; 
-		 fromBinMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin; 
 		 fromBinMethods["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromBin; 
 		 fromBinMethods["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromBin; 
 		 fromBinMethods["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromBin; 
 		 fromBinMethods["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromBin; 
 		 fromBinMethods["basePa"] = &ExecBlockRow::basePaFromBin; 
-		 fromBinMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin; 
-		 fromBinMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin; 
-		 fromBinMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin; 
 		 fromBinMethods["aborted"] = &ExecBlockRow::abortedFromBin; 
 		 fromBinMethods["numAntenna"] = &ExecBlockRow::numAntennaFromBin; 
 		 fromBinMethods["antennaId"] = &ExecBlockRow::antennaIdFromBin; 
@@ -3092,12 +3972,18 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 			
 	
 		 fromBinMethods["releaseDate"] = &ExecBlockRow::releaseDateFromBin; 
-		 fromBinMethods["flagRow"] = &ExecBlockRow::flagRowFromBin; 
+		 fromBinMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin; 
+		 fromBinMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin; 
+		 fromBinMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin; 
+		 fromBinMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin; 
+		 fromBinMethods["observingScript"] = &ExecBlockRow::observingScriptFromBin; 
+		 fromBinMethods["observingScriptUID"] = &ExecBlockRow::observingScriptUIDFromBin; 
+		 fromBinMethods["scaleId"] = &ExecBlockRow::scaleIdFromBin; 
 			
 	}
 
 	
-	bool ExecBlockRow::compareNoAutoInc(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
+	bool ExecBlockRow::compareNoAutoInc(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectUID, string configName, string telescopeName, string observerName, int numObservingLog, vector<string > observingLog, EntityRef sessionReference, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
 		bool result;
 		result = true;
 		
@@ -3131,7 +4017,7 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
 		
-		result = result && (this->projectId == projectId);
+		result = result && (this->projectUID == projectUID);
 		
 		if (!result) return false;
 	
@@ -3159,6 +4045,13 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
 		
+		result = result && (this->numObservingLog == numObservingLog);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->observingLog == observingLog);
 		
 		if (!result) return false;
@@ -3167,20 +4060,6 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 		
 		result = result && (this->sessionReference == sessionReference);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->sbSummary == sbSummary);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->schedulerMode == schedulerMode);
 		
 		if (!result) return false;
 	
@@ -3222,27 +4101,6 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
 		
-		result = result && (this->siteAltitude == siteAltitude);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->siteLongitude == siteLongitude);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->siteLatitude == siteLatitude);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->aborted == aborted);
 		
 		if (!result) return false;
@@ -3274,7 +4132,7 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 	
 	
-	bool ExecBlockRow::compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
+	bool ExecBlockRow::compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectUID, string configName, string telescopeName, string observerName, int numObservingLog, vector<string > observingLog, EntityRef sessionReference, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
 		bool result;
 		result = true;
 		
@@ -3295,7 +4153,7 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
-		if (!(this->projectId == projectId)) return false;
+		if (!(this->projectUID == projectUID)) return false;
 	
 
 	
@@ -3311,19 +4169,15 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
+		if (!(this->numObservingLog == numObservingLog)) return false;
+	
+
+	
 		if (!(this->observingLog == observingLog)) return false;
 	
 
 	
 		if (!(this->sessionReference == sessionReference)) return false;
-	
-
-	
-		if (!(this->sbSummary == sbSummary)) return false;
-	
-
-	
-		if (!(this->schedulerMode == schedulerMode)) return false;
 	
 
 	
@@ -3344,18 +4198,6 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
 		if (!(this->basePa == basePa)) return false;
-	
-
-	
-		if (!(this->siteAltitude == siteAltitude)) return false;
-	
-
-	
-		if (!(this->siteLongitude == siteLongitude)) return false;
-	
-
-	
-		if (!(this->siteLatitude == siteLatitude)) return false;
 	
 
 	
@@ -3397,7 +4239,7 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 			
 		if (this->execBlockUID != x->execBlockUID) return false;
 			
-		if (this->projectId != x->projectId) return false;
+		if (this->projectUID != x->projectUID) return false;
 			
 		if (this->configName != x->configName) return false;
 			
@@ -3405,13 +4247,11 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 			
 		if (this->observerName != x->observerName) return false;
 			
+		if (this->numObservingLog != x->numObservingLog) return false;
+			
 		if (this->observingLog != x->observingLog) return false;
 			
 		if (this->sessionReference != x->sessionReference) return false;
-			
-		if (this->sbSummary != x->sbSummary) return false;
-			
-		if (this->schedulerMode != x->schedulerMode) return false;
 			
 		if (this->baseRangeMin != x->baseRangeMin) return false;
 			
@@ -3422,12 +4262,6 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		if (this->baseRmsMajor != x->baseRmsMajor) return false;
 			
 		if (this->basePa != x->basePa) return false;
-			
-		if (this->siteAltitude != x->siteAltitude) return false;
-			
-		if (this->siteLongitude != x->siteLongitude) return false;
-			
-		if (this->siteLatitude != x->siteLatitude) return false;
 			
 		if (this->aborted != x->aborted) return false;
 			
@@ -3450,22 +4284,18 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		result["endTime"] = &ExecBlockRow::endTimeFromBin;
 		result["execBlockNum"] = &ExecBlockRow::execBlockNumFromBin;
 		result["execBlockUID"] = &ExecBlockRow::execBlockUIDFromBin;
-		result["projectId"] = &ExecBlockRow::projectIdFromBin;
+		result["projectUID"] = &ExecBlockRow::projectUIDFromBin;
 		result["configName"] = &ExecBlockRow::configNameFromBin;
 		result["telescopeName"] = &ExecBlockRow::telescopeNameFromBin;
 		result["observerName"] = &ExecBlockRow::observerNameFromBin;
+		result["numObservingLog"] = &ExecBlockRow::numObservingLogFromBin;
 		result["observingLog"] = &ExecBlockRow::observingLogFromBin;
 		result["sessionReference"] = &ExecBlockRow::sessionReferenceFromBin;
-		result["sbSummary"] = &ExecBlockRow::sbSummaryFromBin;
-		result["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin;
 		result["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromBin;
 		result["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromBin;
 		result["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromBin;
 		result["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromBin;
 		result["basePa"] = &ExecBlockRow::basePaFromBin;
-		result["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin;
-		result["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin;
-		result["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin;
 		result["aborted"] = &ExecBlockRow::abortedFromBin;
 		result["numAntenna"] = &ExecBlockRow::numAntennaFromBin;
 		result["antennaId"] = &ExecBlockRow::antennaIdFromBin;
@@ -3473,7 +4303,13 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
 		
 		
 		result["releaseDate"] = &ExecBlockRow::releaseDateFromBin;
-		result["flagRow"] = &ExecBlockRow::flagRowFromBin;
+		result["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin;
+		result["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin;
+		result["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin;
+		result["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin;
+		result["observingScript"] = &ExecBlockRow::observingScriptFromBin;
+		result["observingScriptUID"] = &ExecBlockRow::observingScriptUIDFromBin;
+		result["scaleId"] = &ExecBlockRow::scaleIdFromBin;
 			
 		
 		return result;	

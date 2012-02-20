@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::PolarizationRowIDL;
 #endif
 
 
@@ -51,8 +47,9 @@ using asdmIDL::PolarizationRowIDL;
 
 
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
 
 
@@ -63,14 +60,10 @@ using  asdm::Tag;
 
 	
 #include "CStokesParameter.h"
-using namespace StokesParameterMod;
 	
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
-	
-
 	
 
 
@@ -79,9 +72,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Polarization.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -91,16 +86,19 @@ namespace asdm {
 	
 
 class PolarizationRow;
-typedef void (PolarizationRow::*PolarizationAttributeFromBin) (EndianISStream& eiss);
+typedef void (PolarizationRow::*PolarizationAttributeFromBin) (EndianIStream& eis);
+typedef void (PolarizationRow::*PolarizationAttributeFromText) (const string& s);
 
 /**
  * The PolarizationRow class is a row of a PolarizationTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class PolarizationRow {
 friend class asdm::PolarizationTable;
+friend class asdm::RowTransformer<PolarizationRow>;
+//friend class asdm::TableStreamReader<PolarizationTable, PolarizationRow>;
 
 public:
 
@@ -231,47 +229,6 @@ public:
 	
 
 
-	
-	// ===> Attribute flagRow, which is optional
-	
-	
-	
-	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
-	 */
-	bool isFlagRowExists() const;
-	
-
-	
- 	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throws IllegalAccessException If flagRow does not exist.
- 	 */
- 	bool getFlagRow() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 		
- 	 */
- 	void setFlagRow (bool flagRow);
-		
-	
-	
-	
-	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
-	 */
-	void clearFlagRow ();
-	
-
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -328,7 +285,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a PolarizationRowIDL struct.
 	 */
-	PolarizationRowIDL *toIDL() const;
+	asdmIDL::PolarizationRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -337,14 +294,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (PolarizationRowIDL x) ;
+	void setFromIDL (asdmIDL::PolarizationRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -352,7 +309,30 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, PolarizationAttributeFromBin> fromBinMethods;
+void polarizationIdFromBin( EndianIStream& eis);
+void numCorrFromBin( EndianIStream& eis);
+void corrTypeFromBin( EndianIStream& eis);
+void corrProductFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the PolarizationTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static PolarizationRow* fromBin(EndianIStream& eis, PolarizationTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -457,19 +437,6 @@ private:
 	
  	
 
-	
-	// ===> Attribute flagRow, which is optional
-	
-	
-	bool flagRowExists;
-	
-
-	bool flagRow;
-
-	
-	
- 	
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -479,17 +446,39 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, PolarizationAttributeFromBin> fromBinMethods;
-void polarizationIdFromBin( EndianISStream& eiss);
-void numCorrFromBin( EndianISStream& eiss);
-void corrTypeFromBin( EndianISStream& eiss);
-void corrProductFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, PolarizationAttributeFromBin> fromBinMethods;
+void polarizationIdFromBin( EndianIStream& eis);
+void numCorrFromBin( EndianIStream& eis);
+void corrTypeFromBin( EndianIStream& eis);
+void corrProductFromBin( EndianIStream& eis);
 
-void flagRowFromBin( EndianISStream& eiss);
 	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, PolarizationAttributeFromText> fromTextMethods;
+	
+void polarizationIdFromText (const string & s);
+	
+	
+void numCorrFromText (const string & s);
+	
+	
+void corrTypeFromText (const string & s);
+	
+	
+void corrProductFromText (const string & s);
+	
+
+		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -498,14 +487,14 @@ void flagRowFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the PolarizationTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static PolarizationRow* fromBin(EndianISStream& eiss, PolarizationTable& table, const vector<string>& attributesSeq);	 
 
+	 static PolarizationRow* fromBin(EndianIStream& eis, PolarizationTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

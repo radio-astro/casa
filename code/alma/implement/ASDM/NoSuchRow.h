@@ -30,7 +30,7 @@
 #include <string>
 using std::string;
 
-#include <Integer.h>
+#include <IntegerWrapper.h>
 using asdm::Integer;
 
 namespace asdm {

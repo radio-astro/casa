@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalPositionRowIDL;
 #endif
 
 
@@ -51,17 +47,21 @@ using asdmIDL::CalPositionRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
 
 
@@ -70,7 +70,6 @@ using  asdm::Length;
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
@@ -85,12 +84,10 @@ using namespace AtmPhaseCorrectionMod;
 
 	
 #include "CPositionMethod.h"
-using namespace PositionMethodMod;
 	
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -119,9 +116,11 @@ using namespace ReceiverBandMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalPosition.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -137,16 +136,19 @@ class CalReductionRow;
 	
 
 class CalPositionRow;
-typedef void (CalPositionRow::*CalPositionAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalPositionRow::*CalPositionAttributeFromBin) (EndianIStream& eis);
+typedef void (CalPositionRow::*CalPositionAttributeFromText) (const string& s);
 
 /**
  * The CalPositionRow class is a row of a CalPositionTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalPositionRow {
 friend class asdm::CalPositionTable;
+friend class asdm::RowTransformer<CalPositionRow>;
+//friend class asdm::TableStreamReader<CalPositionTable, CalPositionRow>;
 
 public:
 
@@ -969,7 +971,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalPositionRowIDL struct.
 	 */
-	CalPositionRowIDL *toIDL() const;
+	asdmIDL::CalPositionRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -978,14 +980,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPositionRowIDL x) ;
+	void setFromIDL (asdmIDL::CalPositionRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -993,7 +995,47 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalPositionAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaPositionFromBin( EndianIStream& eis);
+void stationNameFromBin( EndianIStream& eis);
+void stationPositionFromBin( EndianIStream& eis);
+void positionMethodFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void refAntennaNamesFromBin( EndianIStream& eis);
+void axesOffsetFromBin( EndianIStream& eis);
+void axesOffsetErrFromBin( EndianIStream& eis);
+void axesOffsetFixedFromBin( EndianIStream& eis);
+void positionOffsetFromBin( EndianIStream& eis);
+void positionErrFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
+
+void delayRmsFromBin( EndianIStream& eis);
+void phaseRmsFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalPositionTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalPositionRow* fromBin(EndianIStream& eis, CalPositionTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1300,33 +1342,107 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalPositionAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void antennaPositionFromBin( EndianISStream& eiss);
-void stationNameFromBin( EndianISStream& eiss);
-void stationPositionFromBin( EndianISStream& eiss);
-void positionMethodFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void numAntennaFromBin( EndianISStream& eiss);
-void refAntennaNamesFromBin( EndianISStream& eiss);
-void axesOffsetFromBin( EndianISStream& eiss);
-void axesOffsetErrFromBin( EndianISStream& eiss);
-void axesOffsetFixedFromBin( EndianISStream& eiss);
-void positionOffsetFromBin( EndianISStream& eiss);
-void positionErrFromBin( EndianISStream& eiss);
-void reducedChiSquaredFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalPositionAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void antennaPositionFromBin( EndianIStream& eis);
+void stationNameFromBin( EndianIStream& eis);
+void stationPositionFromBin( EndianIStream& eis);
+void positionMethodFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void refAntennaNamesFromBin( EndianIStream& eis);
+void axesOffsetFromBin( EndianIStream& eis);
+void axesOffsetErrFromBin( EndianIStream& eis);
+void axesOffsetFixedFromBin( EndianIStream& eis);
+void positionOffsetFromBin( EndianIStream& eis);
+void positionErrFromBin( EndianIStream& eis);
+void reducedChiSquaredFromBin( EndianIStream& eis);
 
-void delayRmsFromBin( EndianISStream& eiss);
-void phaseRmsFromBin( EndianISStream& eiss);
+void delayRmsFromBin( EndianIStream& eis);
+void phaseRmsFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalPositionAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void antennaPositionFromText (const string & s);
+	
+	
+void stationNameFromText (const string & s);
+	
+	
+void stationPositionFromText (const string & s);
+	
+	
+void positionMethodFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void numAntennaFromText (const string & s);
+	
+	
+void refAntennaNamesFromText (const string & s);
+	
+	
+void axesOffsetFromText (const string & s);
+	
+	
+void axesOffsetErrFromText (const string & s);
+	
+	
+void axesOffsetFixedFromText (const string & s);
+	
+	
+void positionOffsetFromText (const string & s);
+	
+	
+void positionErrFromText (const string & s);
+	
+	
+void reducedChiSquaredFromText (const string & s);
+	
+
+	
+void delayRmsFromText (const string & s);
+	
+	
+void phaseRmsFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1335,14 +1451,14 @@ void phaseRmsFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalPositionTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalPositionRow* fromBin(EndianISStream& eiss, CalPositionTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalPositionRow* fromBin(EndianIStream& eis, CalPositionTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::FlagRowIDL;
 #endif
 
 
@@ -51,11 +47,13 @@ using asdmIDL::FlagRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
 
 
@@ -78,7 +76,6 @@ using  asdm::Tag;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 
@@ -87,9 +84,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Flag.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -108,16 +107,19 @@ class SpectralWindowRow;
 	
 
 class FlagRow;
-typedef void (FlagRow::*FlagAttributeFromBin) (EndianISStream& eiss);
+typedef void (FlagRow::*FlagAttributeFromBin) (EndianIStream& eis);
+typedef void (FlagRow::*FlagAttributeFromText) (const string& s);
 
 /**
  * The FlagRow class is a row of a FlagTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class FlagRow {
 friend class asdm::FlagTable;
+friend class asdm::RowTransformer<FlagRow>;
+//friend class asdm::TableStreamReader<FlagTable, FlagRow>;
 
 public:
 
@@ -775,7 +777,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a FlagRowIDL struct.
 	 */
-	FlagRowIDL *toIDL() const;
+	asdmIDL::FlagRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -784,14 +786,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (FlagRowIDL x) ;
+	void setFromIDL (asdmIDL::FlagRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -799,7 +801,38 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, FlagAttributeFromBin> fromBinMethods;
+void flagIdFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void reasonFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
+
+void numPolarizationTypeFromBin( EndianIStream& eis);
+void numSpectralWindowFromBin( EndianIStream& eis);
+void numPairedAntennaFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void pairedAntennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the FlagTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static FlagRow* fromBin(EndianIStream& eis, FlagTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1031,24 +1064,71 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, FlagAttributeFromBin> fromBinMethods;
-void flagIdFromBin( EndianISStream& eiss);
-void startTimeFromBin( EndianISStream& eiss);
-void endTimeFromBin( EndianISStream& eiss);
-void reasonFromBin( EndianISStream& eiss);
-void numAntennaFromBin( EndianISStream& eiss);
-void antennaIdFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, FlagAttributeFromBin> fromBinMethods;
+void flagIdFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void reasonFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
 
-void numPolarizationTypeFromBin( EndianISStream& eiss);
-void numSpectralWindowFromBin( EndianISStream& eiss);
-void numPairedAntennaFromBin( EndianISStream& eiss);
-void polarizationTypeFromBin( EndianISStream& eiss);
-void pairedAntennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
+void numPolarizationTypeFromBin( EndianIStream& eis);
+void numSpectralWindowFromBin( EndianIStream& eis);
+void numPairedAntennaFromBin( EndianIStream& eis);
+void polarizationTypeFromBin( EndianIStream& eis);
+void pairedAntennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, FlagAttributeFromText> fromTextMethods;
+	
+void flagIdFromText (const string & s);
+	
+	
+void startTimeFromText (const string & s);
+	
+	
+void endTimeFromText (const string & s);
+	
+	
+void reasonFromText (const string & s);
+	
+	
+void numAntennaFromText (const string & s);
+	
+	
+void antennaIdFromText (const string & s);
+	
+
+	
+void numPolarizationTypeFromText (const string & s);
+	
+	
+void numSpectralWindowFromText (const string & s);
+	
+	
+void numPairedAntennaFromText (const string & s);
+	
+	
+void polarizationTypeFromText (const string & s);
+	
+	
+void pairedAntennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1057,14 +1137,14 @@ void spectralWindowIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the FlagTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static FlagRow* fromBin(EndianISStream& eiss, FlagTable& table, const vector<string>& attributesSeq);	 
 
+	 static FlagRow* fromBin(EndianIStream& eis, FlagTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

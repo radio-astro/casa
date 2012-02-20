@@ -50,7 +50,7 @@ using asdmIDL::DataDescriptionRowIDL;
 #include <AngularRate.h>
 #include <ArrayTime.h>
 #include <ArrayTimeInterval.h>
-#include <Complex.h>
+#include <ComplexWrapper.h>
 #include <Entity.h>
 #include <EntityId.h>
 #include <EntityRef.h>
@@ -94,14 +94,17 @@ namespace asdm {
 
 
 // class asdm::PolarizationRow;
-class PolarizationRow;
-
-// class asdm::HolographyRow;
-class HolographyRow;
-
-// class asdm::SpectralWindowRow;
-class SpectralWindowRow;
-	
+  class PolarizationRow;
+  
+  // class asdm::HolographyRow;
+  class HolographyRow;
+  
+  // class asdm::SpectralWindowRow;
+  class SpectralWindowRow;
+  
+  class DataDescriptionRow;
+  typedef void (DataDescriptionRow::*DataDescriptionAttributeFromBin) (EndianIStream& eis);  
+  
 
 /**
  * The DataDescriptionRow class is a row of a DataDescriptionTable.
@@ -236,9 +239,28 @@ public:
 	// Links //
 	///////////
 	
-	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////	
+	std::map<std::string, DataDescriptionAttributeFromBin> fromBinMethods;
+	void dataDescriptionIdFromBin(EndianIStream& eis);
+	void polOrHoloIdFromBin(EndianIStream& eis);
+	void spectralWindowIdFromBin(EndianIStream& eis);
 
-	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eis the EndianIStream to be read.
+	  * @param table the DataDescriptionTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static DataDescriptionRow* fromBin(EndianIStream& eis, DataDescriptionTable& table, const std::vector<std::string>& attributesSeq);	
 		
 	/**
 	 * Returns pointer to the row in the Polarization table having Polarization.polarizationId == polOrHoloId

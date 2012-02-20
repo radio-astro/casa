@@ -63,6 +63,7 @@ using asdm::CalDataRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalPrimaryBeamRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -159,12 +163,29 @@ namespace asdm {
 		
 		
 			
+				
+		x->numSubband = numSubband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
 		x->frequencyRange.length(frequencyRange.size());
-		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
-			
-			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
-			
-	 	}
+		for (unsigned int i = 0; i < frequencyRange.size(); i++) {
+			x->frequencyRange[i].length(frequencyRange.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < frequencyRange.size() ; i++)
+			for (unsigned int j = 0; j < frequencyRange.at(i).size(); j++)
+					
+				x->frequencyRange[i][j]= frequencyRange.at(i).at(j).toIDLFrequency();
+									
+		
 			
 		
 	
@@ -220,7 +241,7 @@ namespace asdm {
 		
 		
 			
-		x->beamMapUID = beamMapUID.toIDLEntityRef();
+		x->beamDescriptionUID = beamDescriptionUID.toIDLEntityRef();
 			
 		
 	
@@ -234,6 +255,95 @@ namespace asdm {
 		x->relativeAmplitudeRms = relativeAmplitudeRms;
  				
  			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x->direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->minValidDirection.length(minValidDirection.size());
+		for (unsigned int i = 0; i < minValidDirection.size(); ++i) {
+			
+			x->minValidDirection[i] = minValidDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->maxValidDirection.length(maxValidDirection.size());
+		for (unsigned int i = 0; i < maxValidDirection.size(); ++i) {
+			
+			x->maxValidDirection[i] = maxValidDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->descriptionType = descriptionType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->imageChannelNumber.length(imageChannelNumber.size());
+		for (unsigned int i = 0; i < imageChannelNumber.size(); ++i) {
+			
+				
+			x->imageChannelNumber[i] = imageChannelNumber.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->imageNominalFrequency.length(imageNominalFrequency.size());
+		for (unsigned int i = 0; i < imageNominalFrequency.size(); ++i) {
+			
+			x->imageNominalFrequency[i] = imageNominalFrequency.at(i).toIDLFrequency();
+			
+	 	}
+			
 		
 	
 
@@ -339,11 +449,26 @@ namespace asdm {
 		
 		
 			
+		setNumSubband(x.numSubband);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
 		frequencyRange .clear();
-		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
-			
-			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
-			
+		vector<Frequency> v_aux_frequencyRange;
+		for (unsigned int i = 0; i < x.frequencyRange.length(); ++i) {
+			v_aux_frequencyRange.clear();
+			for (unsigned int j = 0; j < x.frequencyRange[0].length(); ++j) {
+				
+				v_aux_frequencyRange.push_back(Frequency (x.frequencyRange[i][j]));
+				
+  			}
+  			frequencyRange.push_back(v_aux_frequencyRange);			
 		}
 			
   		
@@ -394,7 +519,7 @@ namespace asdm {
 		
 		
 			
-		setBeamMapUID(EntityRef (x.beamMapUID));
+		setBeamDescriptionUID(EntityRef (x.beamDescriptionUID));
 			
  		
 		
@@ -407,6 +532,91 @@ namespace asdm {
 		setRelativeAmplitudeRms(x.relativeAmplitudeRms);
   			
  		
+		
+	
+
+	
+		
+		
+			
+		direction .clear();
+		for (unsigned int i = 0; i <x.direction.length(); ++i) {
+			
+			direction.push_back(Angle (x.direction[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		minValidDirection .clear();
+		for (unsigned int i = 0; i <x.minValidDirection.length(); ++i) {
+			
+			minValidDirection.push_back(Angle (x.minValidDirection[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		maxValidDirection .clear();
+		for (unsigned int i = 0; i <x.maxValidDirection.length(); ++i) {
+			
+			maxValidDirection.push_back(Angle (x.maxValidDirection[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setDescriptionType(x.descriptionType);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		imageChannelNumber .clear();
+		for (unsigned int i = 0; i <x.imageChannelNumber.length(); ++i) {
+			
+			imageChannelNumber.push_back(x.imageChannelNumber[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		imageNominalFrequency .clear();
+		for (unsigned int i = 0; i <x.imageNominalFrequency.length(); ++i) {
+			
+			imageNominalFrequency.push_back(Frequency (x.imageNominalFrequency[i]));
+			
+		}
+			
+  		
 		
 	
 
@@ -498,6 +708,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numSubband, "numSubband", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(frequencyRange, "frequencyRange", buf);
 		
 		
@@ -530,7 +748,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(beamMapUID, "beamMapUID", buf);
+		Parser::toXML(beamDescriptionUID, "beamDescriptionUID", buf);
 		
 		
 	
@@ -539,6 +757,54 @@ namespace asdm {
  		
 		
 		Parser::toXML(relativeAmplitudeRms, "relativeAmplitudeRms", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(direction, "direction", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(minValidDirection, "minValidDirection", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(maxValidDirection, "maxValidDirection", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("descriptionType", descriptionType));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(imageChannelNumber, "imageChannelNumber", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(imageNominalFrequency, "imageNominalFrequency", buf);
 		
 		
 	
@@ -631,8 +897,16 @@ namespace asdm {
 	
   		
 			
+	  	setNumSubband(Parser::getInteger("numSubband","CalPrimaryBeam",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 					
-	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalPrimaryBeam",rowDoc));
+	  	setFrequencyRange(Parser::get2DFrequency("frequencyRange","CalPrimaryBeam",rowDoc));
 	  			
 	  		
 		
@@ -669,7 +943,7 @@ namespace asdm {
 	
   		
 			
-	  	setBeamMapUID(Parser::getEntityRef("beamMapUID","CalPrimaryBeam",rowDoc));
+	  	setBeamDescriptionUID(Parser::getEntityRef("beamDescriptionUID","CalPrimaryBeam",rowDoc));
 			
 		
 	
@@ -679,6 +953,66 @@ namespace asdm {
 			
 	  	setRelativeAmplitudeRms(Parser::getFloat("relativeAmplitudeRms","CalPrimaryBeam",rowDoc));
 			
+		
+	
+
+	
+  		
+			
+					
+	  	setDirection(Parser::get1DAngle("direction","CalPrimaryBeam",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setMinValidDirection(Parser::get1DAngle("minValidDirection","CalPrimaryBeam",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setMaxValidDirection(Parser::get1DAngle("maxValidDirection","CalPrimaryBeam",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+		
+		
+		
+		descriptionType = EnumerationParser::getPrimaryBeamDescription("descriptionType","CalPrimaryBeam",rowDoc);
+		
+		
+		
+	
+
+	
+  		
+			
+					
+	  	setImageChannelNumber(Parser::get1DInteger("imageChannelNumber","CalPrimaryBeam",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setImageNominalFrequency(Parser::get1DFrequency("imageNominalFrequency","CalPrimaryBeam",rowDoc));
+	  			
+	  		
 		
 	
 
@@ -728,7 +1062,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(receiverBand);
+			eoss.writeString(CReceiverBand::name(receiverBand));
+			/* eoss.writeInt(receiverBand); */
 				
 		
 	
@@ -765,7 +1100,17 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(antennaMake);
+			eoss.writeString(CAntennaMake::name(antennaMake));
+			/* eoss.writeInt(antennaMake); */
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numSubband);
 				
 		
 	
@@ -794,7 +1139,8 @@ namespace asdm {
 		eoss.writeInt((int) polarizationTypes.size());
 		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
 				
-			eoss.writeInt(polarizationTypes.at(i));
+			eoss.writeString(CPolarizationType::name(polarizationTypes.at(i)));
+			/* eoss.writeInt(polarizationTypes.at(i)); */
 				
 				
 						
@@ -819,7 +1165,7 @@ namespace asdm {
 	
 	
 		
-	beamMapUID.toBin(eoss);
+	beamDescriptionUID.toBin(eoss);
 		
 	
 
@@ -832,114 +1178,179 @@ namespace asdm {
 		
 	
 
+	
+	
+		
+	Angle::toBin(direction, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(minValidDirection, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(maxValidDirection, eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeString(CPrimaryBeamDescription::name(descriptionType));
+			/* eoss.writeInt(descriptionType); */
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) imageChannelNumber.size());
+		for (unsigned int i = 0; i < imageChannelNumber.size(); i++)
+				
+			eoss.writeInt(imageChannelNumber.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	Frequency::toBin(imageNominalFrequency, eoss);
+		
+	
+
 
 	
 	
 	}
 	
-void CalPrimaryBeamRow::antennaNameFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::antennaNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaName =  eiss.readString();
+		antennaName =  eis.readString();
 			
 		
 	
 	
 }
-void CalPrimaryBeamRow::receiverBandFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::receiverBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverBand = CReceiverBand::from_int(eiss.readInt());
+		receiverBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPrimaryBeamRow::calDataIdFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::calDataIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalPrimaryBeamRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalPrimaryBeamRow::startValidTimeFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::calReductionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalPrimaryBeamRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalPrimaryBeamRow::antennaMakeFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalPrimaryBeamRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalPrimaryBeamRow::antennaMakeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		antennaMake = CAntennaMake::from_int(eiss.readInt());
+		antennaMake = CAntennaMake::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalPrimaryBeamRow::frequencyRangeFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::numSubbandFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numSubband =  eis.readInt();
+			
+		
+	
+	
+}
+void CalPrimaryBeamRow::frequencyRangeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	frequencyRange = Frequency::from1DBin(eiss);	
+	frequencyRange = Frequency::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void CalPrimaryBeamRow::numReceptorFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::numReceptorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
 	
 }
-void CalPrimaryBeamRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -948,10 +1359,10 @@ void CalPrimaryBeamRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -959,7 +1370,7 @@ void CalPrimaryBeamRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPrimaryBeamRow::mainBeamEfficiencyFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::mainBeamEfficiencyFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -968,10 +1379,10 @@ void CalPrimaryBeamRow::mainBeamEfficiencyFromBin(EndianISStream& eiss) {
 	
 		mainBeamEfficiency.clear();
 		
-		unsigned int mainBeamEfficiencyDim1 = eiss.readInt();
+		unsigned int mainBeamEfficiencyDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < mainBeamEfficiencyDim1; i++)
 			
-			mainBeamEfficiency.push_back(eiss.readDouble());
+			mainBeamEfficiency.push_back(eis.readDouble());
 			
 	
 
@@ -979,24 +1390,112 @@ void CalPrimaryBeamRow::mainBeamEfficiencyFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalPrimaryBeamRow::beamMapUIDFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::beamDescriptionUIDFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		beamMapUID =  EntityRef::fromBin(eiss);
+		beamDescriptionUID =  EntityRef::fromBin(eis);
 		
 	
 	
 }
-void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
+void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		relativeAmplitudeRms =  eiss.readFloat();
+		relativeAmplitudeRms =  eis.readFloat();
 			
+		
+	
+	
+}
+void CalPrimaryBeamRow::directionFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+			
+	
+	direction = Angle::from1DBin(eis);	
+	
+
+		
+	
+	
+}
+void CalPrimaryBeamRow::minValidDirectionFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+			
+	
+	minValidDirection = Angle::from1DBin(eis);	
+	
+
+		
+	
+	
+}
+void CalPrimaryBeamRow::maxValidDirectionFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+			
+	
+	maxValidDirection = Angle::from1DBin(eis);	
+	
+
+		
+	
+	
+}
+void CalPrimaryBeamRow::descriptionTypeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		descriptionType = CPrimaryBeamDescription::literal(eis.readString());
+			
+		
+	
+	
+}
+void CalPrimaryBeamRow::imageChannelNumberFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+	
+		imageChannelNumber.clear();
+		
+		unsigned int imageChannelNumberDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < imageChannelNumberDim1; i++)
+			
+			imageChannelNumber.push_back(eis.readInt());
+			
+	
+
+		
+	
+	
+}
+void CalPrimaryBeamRow::imageNominalFrequencyFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+			
+	
+	imageNominalFrequency = Frequency::from1DBin(eis);	
+	
+
 		
 	
 	
@@ -1004,23 +1503,197 @@ void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
 
 		
 	
-	CalPrimaryBeamRow* CalPrimaryBeamRow::fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table, const vector<string>& attributesSeq) {
+	CalPrimaryBeamRow* CalPrimaryBeamRow::fromBin(EndianIStream& eis, CalPrimaryBeamTable& table, const vector<string>& attributesSeq) {
 		CalPrimaryBeamRow* row = new  CalPrimaryBeamRow(table);
 		
 		map<string, CalPrimaryBeamAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPrimaryBeamTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPrimaryBeamTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an String 
+	void CalPrimaryBeamRow::antennaNameFromText(const string & s) {
+		 
+		antennaName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void CalPrimaryBeamRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPrimaryBeamRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalPrimaryBeamRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPrimaryBeamRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalPrimaryBeamRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an AntennaMake 
+	void CalPrimaryBeamRow::antennaMakeFromText(const string & s) {
+		 
+		antennaMake = ASDMValuesParser::parse<AntennaMake>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalPrimaryBeamRow::numSubbandFromText(const string & s) {
+		 
+		numSubband = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalPrimaryBeamRow::frequencyRangeFromText(const string & s) {
+		 
+		frequencyRange = ASDMValuesParser::parse2D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalPrimaryBeamRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void CalPrimaryBeamRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalPrimaryBeamRow::mainBeamEfficiencyFromText(const string & s) {
+		 
+		mainBeamEfficiency = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an float 
+	void CalPrimaryBeamRow::relativeAmplitudeRmsFromText(const string & s) {
+		 
+		relativeAmplitudeRms = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPrimaryBeamRow::directionFromText(const string & s) {
+		 
+		direction = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPrimaryBeamRow::minValidDirectionFromText(const string & s) {
+		 
+		minValidDirection = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalPrimaryBeamRow::maxValidDirectionFromText(const string & s) {
+		 
+		maxValidDirection = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an PrimaryBeamDescription 
+	void CalPrimaryBeamRow::descriptionTypeFromText(const string & s) {
+		 
+		descriptionType = ASDMValuesParser::parse<PrimaryBeamDescription>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalPrimaryBeamRow::imageChannelNumberFromText(const string & s) {
+		 
+		imageChannelNumber = ASDMValuesParser::parse1D<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalPrimaryBeamRow::imageNominalFrequencyFromText(const string & s) {
+		 
+		imageNominalFrequency = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+
+		
+	
+	void CalPrimaryBeamRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalPrimaryBeamAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalPrimaryBeamTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1194,22 +1867,54 @@ void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
+ 	 * Get numSubband.
+ 	 * @return numSubband as int
  	 */
- 	vector<Frequency > CalPrimaryBeamRow::getFrequencyRange() const {
+ 	int CalPrimaryBeamRow::getNumSubband() const {
+	
+  		return numSubband;
+ 	}
+
+ 	/**
+ 	 * Set numSubband with the specified int.
+ 	 * @param numSubband The int value to which numSubband is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setNumSubband (int numSubband)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numSubband = numSubband;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get frequencyRange.
+ 	 * @return frequencyRange as vector<vector<Frequency > >
+ 	 */
+ 	vector<vector<Frequency > > CalPrimaryBeamRow::getFrequencyRange() const {
 	
   		return frequencyRange;
  	}
 
  	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 * Set frequencyRange with the specified vector<vector<Frequency > >.
+ 	 * @param frequencyRange The vector<vector<Frequency > > value to which frequencyRange is to be set.
  	 
  	
  		
  	 */
- 	void CalPrimaryBeamRow::setFrequencyRange (vector<Frequency > frequencyRange)  {
+ 	void CalPrimaryBeamRow::setFrequencyRange (vector<vector<Frequency > > frequencyRange)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1322,29 +2027,29 @@ void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get beamMapUID.
- 	 * @return beamMapUID as EntityRef
+ 	 * Get beamDescriptionUID.
+ 	 * @return beamDescriptionUID as EntityRef
  	 */
- 	EntityRef CalPrimaryBeamRow::getBeamMapUID() const {
+ 	EntityRef CalPrimaryBeamRow::getBeamDescriptionUID() const {
 	
-  		return beamMapUID;
+  		return beamDescriptionUID;
  	}
 
  	/**
- 	 * Set beamMapUID with the specified EntityRef.
- 	 * @param beamMapUID The EntityRef value to which beamMapUID is to be set.
+ 	 * Set beamDescriptionUID with the specified EntityRef.
+ 	 * @param beamDescriptionUID The EntityRef value to which beamDescriptionUID is to be set.
  	 
  	
  		
  	 */
- 	void CalPrimaryBeamRow::setBeamMapUID (EntityRef beamMapUID)  {
+ 	void CalPrimaryBeamRow::setBeamDescriptionUID (EntityRef beamDescriptionUID)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->beamMapUID = beamMapUID;
+ 		this->beamDescriptionUID = beamDescriptionUID;
 	
  	}
 	
@@ -1383,9 +2088,201 @@ void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+
+	
+ 	/**
+ 	 * Get direction.
+ 	 * @return direction as vector<Angle >
+ 	 */
+ 	vector<Angle > CalPrimaryBeamRow::getDirection() const {
+	
+  		return direction;
+ 	}
+
+ 	/**
+ 	 * Set direction with the specified vector<Angle >.
+ 	 * @param direction The vector<Angle > value to which direction is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setDirection (vector<Angle > direction)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->direction = direction;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get minValidDirection.
+ 	 * @return minValidDirection as vector<Angle >
+ 	 */
+ 	vector<Angle > CalPrimaryBeamRow::getMinValidDirection() const {
+	
+  		return minValidDirection;
+ 	}
+
+ 	/**
+ 	 * Set minValidDirection with the specified vector<Angle >.
+ 	 * @param minValidDirection The vector<Angle > value to which minValidDirection is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setMinValidDirection (vector<Angle > minValidDirection)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->minValidDirection = minValidDirection;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get maxValidDirection.
+ 	 * @return maxValidDirection as vector<Angle >
+ 	 */
+ 	vector<Angle > CalPrimaryBeamRow::getMaxValidDirection() const {
+	
+  		return maxValidDirection;
+ 	}
+
+ 	/**
+ 	 * Set maxValidDirection with the specified vector<Angle >.
+ 	 * @param maxValidDirection The vector<Angle > value to which maxValidDirection is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setMaxValidDirection (vector<Angle > maxValidDirection)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->maxValidDirection = maxValidDirection;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get descriptionType.
+ 	 * @return descriptionType as PrimaryBeamDescriptionMod::PrimaryBeamDescription
+ 	 */
+ 	PrimaryBeamDescriptionMod::PrimaryBeamDescription CalPrimaryBeamRow::getDescriptionType() const {
+	
+  		return descriptionType;
+ 	}
+
+ 	/**
+ 	 * Set descriptionType with the specified PrimaryBeamDescriptionMod::PrimaryBeamDescription.
+ 	 * @param descriptionType The PrimaryBeamDescriptionMod::PrimaryBeamDescription value to which descriptionType is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setDescriptionType (PrimaryBeamDescriptionMod::PrimaryBeamDescription descriptionType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->descriptionType = descriptionType;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get imageChannelNumber.
+ 	 * @return imageChannelNumber as vector<int >
+ 	 */
+ 	vector<int > CalPrimaryBeamRow::getImageChannelNumber() const {
+	
+  		return imageChannelNumber;
+ 	}
+
+ 	/**
+ 	 * Set imageChannelNumber with the specified vector<int >.
+ 	 * @param imageChannelNumber The vector<int > value to which imageChannelNumber is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setImageChannelNumber (vector<int > imageChannelNumber)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->imageChannelNumber = imageChannelNumber;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get imageNominalFrequency.
+ 	 * @return imageNominalFrequency as vector<Frequency >
+ 	 */
+ 	vector<Frequency > CalPrimaryBeamRow::getImageNominalFrequency() const {
+	
+  		return imageNominalFrequency;
+ 	}
+
+ 	/**
+ 	 * Set imageNominalFrequency with the specified vector<Frequency >.
+ 	 * @param imageNominalFrequency The vector<Frequency > value to which imageNominalFrequency is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setImageNominalFrequency (vector<Frequency > imageNominalFrequency)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->imageNominalFrequency = imageNominalFrequency;
+	
+ 	}
+	
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1459,9 +2356,10 @@ void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1537,6 +2435,20 @@ void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 	
 
 	
@@ -1573,6 +2485,23 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+descriptionType = CPrimaryBeamDescription::from_int(0);
+	
+
+	
+
+	
+
+	
 	
 	 fromBinMethods["antennaName"] = &CalPrimaryBeamRow::antennaNameFromBin; 
 	 fromBinMethods["receiverBand"] = &CalPrimaryBeamRow::receiverBandFromBin; 
@@ -1581,15 +2510,105 @@ antennaMake = CAntennaMake::from_int(0);
 	 fromBinMethods["startValidTime"] = &CalPrimaryBeamRow::startValidTimeFromBin; 
 	 fromBinMethods["endValidTime"] = &CalPrimaryBeamRow::endValidTimeFromBin; 
 	 fromBinMethods["antennaMake"] = &CalPrimaryBeamRow::antennaMakeFromBin; 
+	 fromBinMethods["numSubband"] = &CalPrimaryBeamRow::numSubbandFromBin; 
 	 fromBinMethods["frequencyRange"] = &CalPrimaryBeamRow::frequencyRangeFromBin; 
 	 fromBinMethods["numReceptor"] = &CalPrimaryBeamRow::numReceptorFromBin; 
 	 fromBinMethods["polarizationTypes"] = &CalPrimaryBeamRow::polarizationTypesFromBin; 
 	 fromBinMethods["mainBeamEfficiency"] = &CalPrimaryBeamRow::mainBeamEfficiencyFromBin; 
-	 fromBinMethods["beamMapUID"] = &CalPrimaryBeamRow::beamMapUIDFromBin; 
+	 fromBinMethods["beamDescriptionUID"] = &CalPrimaryBeamRow::beamDescriptionUIDFromBin; 
 	 fromBinMethods["relativeAmplitudeRms"] = &CalPrimaryBeamRow::relativeAmplitudeRmsFromBin; 
+	 fromBinMethods["direction"] = &CalPrimaryBeamRow::directionFromBin; 
+	 fromBinMethods["minValidDirection"] = &CalPrimaryBeamRow::minValidDirectionFromBin; 
+	 fromBinMethods["maxValidDirection"] = &CalPrimaryBeamRow::maxValidDirectionFromBin; 
+	 fromBinMethods["descriptionType"] = &CalPrimaryBeamRow::descriptionTypeFromBin; 
+	 fromBinMethods["imageChannelNumber"] = &CalPrimaryBeamRow::imageChannelNumberFromBin; 
+	 fromBinMethods["imageNominalFrequency"] = &CalPrimaryBeamRow::imageNominalFrequencyFromBin; 
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaName"] = &CalPrimaryBeamRow::antennaNameFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &CalPrimaryBeamRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalPrimaryBeamRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalPrimaryBeamRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalPrimaryBeamRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalPrimaryBeamRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["antennaMake"] = &CalPrimaryBeamRow::antennaMakeFromText;
+		 
+	
+				 
+	fromTextMethods["numSubband"] = &CalPrimaryBeamRow::numSubbandFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyRange"] = &CalPrimaryBeamRow::frequencyRangeFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &CalPrimaryBeamRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &CalPrimaryBeamRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["mainBeamEfficiency"] = &CalPrimaryBeamRow::mainBeamEfficiencyFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["relativeAmplitudeRms"] = &CalPrimaryBeamRow::relativeAmplitudeRmsFromText;
+		 
+	
+				 
+	fromTextMethods["direction"] = &CalPrimaryBeamRow::directionFromText;
+		 
+	
+				 
+	fromTextMethods["minValidDirection"] = &CalPrimaryBeamRow::minValidDirectionFromText;
+		 
+	
+				 
+	fromTextMethods["maxValidDirection"] = &CalPrimaryBeamRow::maxValidDirectionFromText;
+		 
+	
+				 
+	fromTextMethods["descriptionType"] = &CalPrimaryBeamRow::descriptionTypeFromText;
+		 
+	
+				 
+	fromTextMethods["imageChannelNumber"] = &CalPrimaryBeamRow::imageChannelNumberFromText;
+		 
+	
+				 
+	fromTextMethods["imageNominalFrequency"] = &CalPrimaryBeamRow::imageNominalFrequencyFromText;
+		 
+	
+
+		
 	}
 	
 	CalPrimaryBeamRow::CalPrimaryBeamRow (CalPrimaryBeamTable &t, CalPrimaryBeamRow &row) : table(t) {
@@ -1598,6 +2617,20 @@ antennaMake = CAntennaMake::from_int(0);
 		if (&row == 0) {
 	
 	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1646,6 +2679,8 @@ antennaMake = CAntennaMake::from_int(0);
 		
 			antennaMake = row.antennaMake;
 		
+			numSubband = row.numSubband;
+		
 			frequencyRange = row.frequencyRange;
 		
 			numReceptor = row.numReceptor;
@@ -1654,9 +2689,21 @@ antennaMake = CAntennaMake::from_int(0);
 		
 			mainBeamEfficiency = row.mainBeamEfficiency;
 		
-			beamMapUID = row.beamMapUID;
+			beamDescriptionUID = row.beamDescriptionUID;
 		
 			relativeAmplitudeRms = row.relativeAmplitudeRms;
+		
+			direction = row.direction;
+		
+			minValidDirection = row.minValidDirection;
+		
+			maxValidDirection = row.maxValidDirection;
+		
+			descriptionType = row.descriptionType;
+		
+			imageChannelNumber = row.imageChannelNumber;
+		
+			imageNominalFrequency = row.imageNominalFrequency;
 		
 		
 		
@@ -1670,19 +2717,26 @@ antennaMake = CAntennaMake::from_int(0);
 		 fromBinMethods["startValidTime"] = &CalPrimaryBeamRow::startValidTimeFromBin; 
 		 fromBinMethods["endValidTime"] = &CalPrimaryBeamRow::endValidTimeFromBin; 
 		 fromBinMethods["antennaMake"] = &CalPrimaryBeamRow::antennaMakeFromBin; 
+		 fromBinMethods["numSubband"] = &CalPrimaryBeamRow::numSubbandFromBin; 
 		 fromBinMethods["frequencyRange"] = &CalPrimaryBeamRow::frequencyRangeFromBin; 
 		 fromBinMethods["numReceptor"] = &CalPrimaryBeamRow::numReceptorFromBin; 
 		 fromBinMethods["polarizationTypes"] = &CalPrimaryBeamRow::polarizationTypesFromBin; 
 		 fromBinMethods["mainBeamEfficiency"] = &CalPrimaryBeamRow::mainBeamEfficiencyFromBin; 
-		 fromBinMethods["beamMapUID"] = &CalPrimaryBeamRow::beamMapUIDFromBin; 
+		 fromBinMethods["beamDescriptionUID"] = &CalPrimaryBeamRow::beamDescriptionUIDFromBin; 
 		 fromBinMethods["relativeAmplitudeRms"] = &CalPrimaryBeamRow::relativeAmplitudeRmsFromBin; 
+		 fromBinMethods["direction"] = &CalPrimaryBeamRow::directionFromBin; 
+		 fromBinMethods["minValidDirection"] = &CalPrimaryBeamRow::minValidDirectionFromBin; 
+		 fromBinMethods["maxValidDirection"] = &CalPrimaryBeamRow::maxValidDirectionFromBin; 
+		 fromBinMethods["descriptionType"] = &CalPrimaryBeamRow::descriptionTypeFromBin; 
+		 fromBinMethods["imageChannelNumber"] = &CalPrimaryBeamRow::imageChannelNumberFromBin; 
+		 fromBinMethods["imageNominalFrequency"] = &CalPrimaryBeamRow::imageNominalFrequencyFromBin; 
 			
 	
 			
 	}
 
 	
-	bool CalPrimaryBeamRow::compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms) {
+	bool CalPrimaryBeamRow::compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numSubband, vector<vector<Frequency > > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamDescriptionUID, float relativeAmplitudeRms, vector<Angle > direction, vector<Angle > minValidDirection, vector<Angle > maxValidDirection, PrimaryBeamDescriptionMod::PrimaryBeamDescription descriptionType, vector<int > imageChannelNumber, vector<Frequency > imageNominalFrequency) {
 		bool result;
 		result = true;
 		
@@ -1737,6 +2791,13 @@ antennaMake = CAntennaMake::from_int(0);
 
 	
 		
+		result = result && (this->numSubband == numSubband);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->frequencyRange == frequencyRange);
 		
 		if (!result) return false;
@@ -1765,7 +2826,7 @@ antennaMake = CAntennaMake::from_int(0);
 
 	
 		
-		result = result && (this->beamMapUID == beamMapUID);
+		result = result && (this->beamDescriptionUID == beamDescriptionUID);
 		
 		if (!result) return false;
 	
@@ -1777,12 +2838,54 @@ antennaMake = CAntennaMake::from_int(0);
 		if (!result) return false;
 	
 
+	
+		
+		result = result && (this->direction == direction);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->minValidDirection == minValidDirection);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->maxValidDirection == maxValidDirection);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->descriptionType == descriptionType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->imageChannelNumber == imageChannelNumber);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->imageNominalFrequency == imageNominalFrequency);
+		
+		if (!result) return false;
+	
+
 		return result;
 	}	
 	
 	
 	
-	bool CalPrimaryBeamRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms) {
+	bool CalPrimaryBeamRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numSubband, vector<vector<Frequency > > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamDescriptionUID, float relativeAmplitudeRms, vector<Angle > direction, vector<Angle > minValidDirection, vector<Angle > maxValidDirection, PrimaryBeamDescriptionMod::PrimaryBeamDescription descriptionType, vector<int > imageChannelNumber, vector<Frequency > imageNominalFrequency) {
 		bool result;
 		result = true;
 		
@@ -1796,6 +2899,10 @@ antennaMake = CAntennaMake::from_int(0);
 
 	
 		if (!(this->antennaMake == antennaMake)) return false;
+	
+
+	
+		if (!(this->numSubband == numSubband)) return false;
 	
 
 	
@@ -1815,11 +2922,35 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
-		if (!(this->beamMapUID == beamMapUID)) return false;
+		if (!(this->beamDescriptionUID == beamDescriptionUID)) return false;
 	
 
 	
 		if (!(this->relativeAmplitudeRms == relativeAmplitudeRms)) return false;
+	
+
+	
+		if (!(this->direction == direction)) return false;
+	
+
+	
+		if (!(this->minValidDirection == minValidDirection)) return false;
+	
+
+	
+		if (!(this->maxValidDirection == maxValidDirection)) return false;
+	
+
+	
+		if (!(this->descriptionType == descriptionType)) return false;
+	
+
+	
+		if (!(this->imageChannelNumber == imageChannelNumber)) return false;
+	
+
+	
+		if (!(this->imageNominalFrequency == imageNominalFrequency)) return false;
 	
 
 		return result;
@@ -1843,6 +2974,8 @@ antennaMake = CAntennaMake::from_int(0);
 			
 		if (this->antennaMake != x->antennaMake) return false;
 			
+		if (this->numSubband != x->numSubband) return false;
+			
 		if (this->frequencyRange != x->frequencyRange) return false;
 			
 		if (this->numReceptor != x->numReceptor) return false;
@@ -1851,9 +2984,21 @@ antennaMake = CAntennaMake::from_int(0);
 			
 		if (this->mainBeamEfficiency != x->mainBeamEfficiency) return false;
 			
-		if (this->beamMapUID != x->beamMapUID) return false;
+		if (this->beamDescriptionUID != x->beamDescriptionUID) return false;
 			
 		if (this->relativeAmplitudeRms != x->relativeAmplitudeRms) return false;
+			
+		if (this->direction != x->direction) return false;
+			
+		if (this->minValidDirection != x->minValidDirection) return false;
+			
+		if (this->maxValidDirection != x->maxValidDirection) return false;
+			
+		if (this->descriptionType != x->descriptionType) return false;
+			
+		if (this->imageChannelNumber != x->imageChannelNumber) return false;
+			
+		if (this->imageNominalFrequency != x->imageNominalFrequency) return false;
 			
 		
 		return true;
@@ -1870,12 +3015,19 @@ antennaMake = CAntennaMake::from_int(0);
 		result["startValidTime"] = &CalPrimaryBeamRow::startValidTimeFromBin;
 		result["endValidTime"] = &CalPrimaryBeamRow::endValidTimeFromBin;
 		result["antennaMake"] = &CalPrimaryBeamRow::antennaMakeFromBin;
+		result["numSubband"] = &CalPrimaryBeamRow::numSubbandFromBin;
 		result["frequencyRange"] = &CalPrimaryBeamRow::frequencyRangeFromBin;
 		result["numReceptor"] = &CalPrimaryBeamRow::numReceptorFromBin;
 		result["polarizationTypes"] = &CalPrimaryBeamRow::polarizationTypesFromBin;
 		result["mainBeamEfficiency"] = &CalPrimaryBeamRow::mainBeamEfficiencyFromBin;
-		result["beamMapUID"] = &CalPrimaryBeamRow::beamMapUIDFromBin;
+		result["beamDescriptionUID"] = &CalPrimaryBeamRow::beamDescriptionUIDFromBin;
 		result["relativeAmplitudeRms"] = &CalPrimaryBeamRow::relativeAmplitudeRmsFromBin;
+		result["direction"] = &CalPrimaryBeamRow::directionFromBin;
+		result["minValidDirection"] = &CalPrimaryBeamRow::minValidDirectionFromBin;
+		result["maxValidDirection"] = &CalPrimaryBeamRow::maxValidDirectionFromBin;
+		result["descriptionType"] = &CalPrimaryBeamRow::descriptionTypeFromBin;
+		result["imageChannelNumber"] = &CalPrimaryBeamRow::imageChannelNumberFromBin;
+		result["imageNominalFrequency"] = &CalPrimaryBeamRow::imageNominalFrequencyFromBin;
 		
 		
 			

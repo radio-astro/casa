@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::ProcessorRowIDL;
 #endif
 
 
@@ -51,8 +47,9 @@ using asdmIDL::ProcessorRowIDL;
 
 
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
 
 
@@ -63,12 +60,10 @@ using  asdm::Tag;
 
 	
 #include "CProcessorType.h"
-using namespace ProcessorTypeMod;
 	
 
 	
 #include "CProcessorSubType.h"
-using namespace ProcessorSubTypeMod;
 	
 
 
@@ -77,9 +72,11 @@ using namespace ProcessorSubTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Processor.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -89,16 +86,19 @@ namespace asdm {
 	
 
 class ProcessorRow;
-typedef void (ProcessorRow::*ProcessorAttributeFromBin) (EndianISStream& eiss);
+typedef void (ProcessorRow::*ProcessorAttributeFromBin) (EndianIStream& eis);
+typedef void (ProcessorRow::*ProcessorAttributeFromText) (const string& s);
 
 /**
  * The ProcessorRow class is a row of a ProcessorTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class ProcessorRow {
 friend class asdm::ProcessorTable;
+friend class asdm::RowTransformer<ProcessorRow>;
+//friend class asdm::TableStreamReader<ProcessorTable, ProcessorRow>;
 
 public:
 
@@ -285,7 +285,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a ProcessorRowIDL struct.
 	 */
-	ProcessorRowIDL *toIDL() const;
+	asdmIDL::ProcessorRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -294,14 +294,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (ProcessorRowIDL x) ;
+	void setFromIDL (asdmIDL::ProcessorRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -309,7 +309,30 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, ProcessorAttributeFromBin> fromBinMethods;
+void processorIdFromBin( EndianIStream& eis);
+void modeIdFromBin( EndianIStream& eis);
+void processorTypeFromBin( EndianIStream& eis);
+void processorSubTypeFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the ProcessorTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ProcessorRow* fromBin(EndianIStream& eis, ProcessorTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -423,16 +446,39 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, ProcessorAttributeFromBin> fromBinMethods;
-void processorIdFromBin( EndianISStream& eiss);
-void modeIdFromBin( EndianISStream& eiss);
-void processorTypeFromBin( EndianISStream& eiss);
-void processorSubTypeFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, ProcessorAttributeFromBin> fromBinMethods;
+void processorIdFromBin( EndianIStream& eis);
+void modeIdFromBin( EndianIStream& eis);
+void processorTypeFromBin( EndianIStream& eis);
+void processorSubTypeFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, ProcessorAttributeFromText> fromTextMethods;
+	
+void processorIdFromText (const string & s);
+	
+	
+void modeIdFromText (const string & s);
+	
+	
+void processorTypeFromText (const string & s);
+	
+	
+void processorSubTypeFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -441,14 +487,14 @@ void processorSubTypeFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the ProcessorTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static ProcessorRow* fromBin(EndianISStream& eiss, ProcessorTable& table, const vector<string>& attributesSeq);	 
 
+	 static ProcessorRow* fromBin(EndianIStream& eis, ProcessorTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

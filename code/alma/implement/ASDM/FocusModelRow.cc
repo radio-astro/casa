@@ -63,6 +63,7 @@ using asdm::FocusModelRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::FocusModelRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -631,7 +635,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(polarizationType);
+			eoss.writeString(CPolarizationType::name(polarizationType));
+			/* eoss.writeInt(polarizationType); */
 				
 		
 	
@@ -640,7 +645,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(receiverBand);
+			eoss.writeString(CReceiverBand::name(receiverBand));
+			/* eoss.writeInt(receiverBand); */
 				
 		
 	
@@ -722,65 +728,65 @@ namespace asdm {
 	
 	}
 	
-void FocusModelRow::antennaIdFromBin(EndianISStream& eiss) {
+void FocusModelRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FocusModelRow::focusModelIdFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		focusModelId =  eiss.readInt();
-			
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FocusModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
+void FocusModelRow::focusModelIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		polarizationType = CPolarizationType::from_int(eiss.readInt());
+		focusModelId =  eis.readInt();
 			
 		
 	
 	
 }
-void FocusModelRow::receiverBandFromBin(EndianISStream& eiss) {
+void FocusModelRow::polarizationTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-	
-}
-void FocusModelRow::numCoeffFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numCoeff =  eiss.readInt();
+		polarizationType = CPolarizationType::literal(eis.readString());
 			
 		
 	
 	
 }
-void FocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
+void FocusModelRow::receiverBandFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		receiverBand = CReceiverBand::literal(eis.readString());
+			
+		
+	
+	
+}
+void FocusModelRow::numCoeffFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numCoeff =  eis.readInt();
+			
+		
+	
+	
+}
+void FocusModelRow::coeffNameFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -789,10 +795,10 @@ void FocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 		coeffName.clear();
 		
-		unsigned int coeffNameDim1 = eiss.readInt();
+		unsigned int coeffNameDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
 			
-			coeffName.push_back(eiss.readString());
+			coeffName.push_back(eis.readString());
 			
 	
 
@@ -800,7 +806,7 @@ void FocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
 	
 	
 }
-void FocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
+void FocusModelRow::coeffFormulaFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -809,10 +815,10 @@ void FocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 		coeffFormula.clear();
 		
-		unsigned int coeffFormulaDim1 = eiss.readInt();
+		unsigned int coeffFormulaDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
 			
-			coeffFormula.push_back(eiss.readString());
+			coeffFormula.push_back(eis.readString());
 			
 	
 
@@ -820,7 +826,7 @@ void FocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 	
 	
 }
-void FocusModelRow::coeffValFromBin(EndianISStream& eiss) {
+void FocusModelRow::coeffValFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -829,10 +835,10 @@ void FocusModelRow::coeffValFromBin(EndianISStream& eiss) {
 	
 		coeffVal.clear();
 		
-		unsigned int coeffValDim1 = eiss.readInt();
+		unsigned int coeffValDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < coeffValDim1; i++)
 			
-			coeffVal.push_back(eiss.readFloat());
+			coeffVal.push_back(eis.readFloat());
 			
 	
 
@@ -840,25 +846,25 @@ void FocusModelRow::coeffValFromBin(EndianISStream& eiss) {
 	
 	
 }
-void FocusModelRow::assocNatureFromBin(EndianISStream& eiss) {
+void FocusModelRow::assocNatureFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		assocNature =  eiss.readString();
+		assocNature =  eis.readString();
 			
 		
 	
 	
 }
-void FocusModelRow::assocFocusModelIdFromBin(EndianISStream& eiss) {
+void FocusModelRow::assocFocusModelIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		assocFocusModelId =  eiss.readInt();
+		assocFocusModelId =  eis.readInt();
 			
 		
 	
@@ -867,23 +873,124 @@ void FocusModelRow::assocFocusModelIdFromBin(EndianISStream& eiss) {
 
 		
 	
-	FocusModelRow* FocusModelRow::fromBin(EndianISStream& eiss, FocusModelTable& table, const vector<string>& attributesSeq) {
+	FocusModelRow* FocusModelRow::fromBin(EndianIStream& eis, FocusModelTable& table, const vector<string>& attributesSeq) {
 		FocusModelRow* row = new  FocusModelRow(table);
 		
 		map<string, FocusModelAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FocusModelTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FocusModelTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FocusModelRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FocusModelRow::focusModelIdFromText(const string & s) {
+		 
+		focusModelId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void FocusModelRow::polarizationTypeFromText(const string & s) {
+		 
+		polarizationType = ASDMValuesParser::parse<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void FocusModelRow::receiverBandFromText(const string & s) {
+		 
+		receiverBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FocusModelRow::numCoeffFromText(const string & s) {
+		 
+		numCoeff = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FocusModelRow::coeffNameFromText(const string & s) {
+		 
+		coeffName = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FocusModelRow::coeffFormulaFromText(const string & s) {
+		 
+		coeffFormula = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void FocusModelRow::coeffValFromText(const string & s) {
+		 
+		coeffVal = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FocusModelRow::assocNatureFromText(const string & s) {
+		 
+		assocNature = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FocusModelRow::assocFocusModelIdFromText(const string & s) {
+		 
+		assocFocusModelId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+
+		
+	
+	void FocusModelRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FocusModelAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FocusModelTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1146,9 +1253,9 @@ void FocusModelRow::assocFocusModelIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1218,9 +1325,10 @@ void FocusModelRow::assocFocusModelIdFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1334,6 +1442,51 @@ receiverBand = CReceiverBand::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &FocusModelRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["focusModelId"] = &FocusModelRow::focusModelIdFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationType"] = &FocusModelRow::polarizationTypeFromText;
+		 
+	
+				 
+	fromTextMethods["receiverBand"] = &FocusModelRow::receiverBandFromText;
+		 
+	
+				 
+	fromTextMethods["numCoeff"] = &FocusModelRow::numCoeffFromText;
+		 
+	
+				 
+	fromTextMethods["coeffName"] = &FocusModelRow::coeffNameFromText;
+		 
+	
+				 
+	fromTextMethods["coeffFormula"] = &FocusModelRow::coeffFormulaFromText;
+		 
+	
+				 
+	fromTextMethods["coeffVal"] = &FocusModelRow::coeffValFromText;
+		 
+	
+				 
+	fromTextMethods["assocNature"] = &FocusModelRow::assocNatureFromText;
+		 
+	
+				 
+	fromTextMethods["assocFocusModelId"] = &FocusModelRow::assocFocusModelIdFromText;
+		 
+	
+
+		
 	}
 	
 	FocusModelRow::FocusModelRow (FocusModelTable &t, FocusModelRow &row) : table(t) {

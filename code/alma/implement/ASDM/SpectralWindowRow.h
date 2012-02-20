@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SpectralWindowRowIDL;
 #endif
 
 
@@ -51,11 +47,13 @@ using asdmIDL::SpectralWindowRowIDL;
 
 
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -64,12 +62,10 @@ using  asdm::Frequency;
 
 	
 #include "CBasebandName.h"
-using namespace BasebandNameMod;
 	
 
 	
 #include "CNetSideband.h"
-using namespace NetSidebandMod;
 	
 
 	
@@ -78,14 +74,12 @@ using namespace NetSidebandMod;
 
 	
 #include "CSidebandProcessingMode.h"
-using namespace SidebandProcessingModeMod;
 	
 
 	
 
 	
 #include "CWindowFunction.h"
-using namespace WindowFunctionMod;
 	
 
 	
@@ -100,7 +94,6 @@ using namespace WindowFunctionMod;
 
 	
 #include "CCorrelationBit.h"
-using namespace CorrelationBitMod;
 	
 
 	
@@ -115,7 +108,6 @@ using namespace CorrelationBitMod;
 
 	
 #include "CFrequencyReferenceCode.h"
-using namespace FrequencyReferenceCodeMod;
 	
 
 	
@@ -134,7 +126,6 @@ using namespace FrequencyReferenceCodeMod;
 
 	
 #include "CSpectralResolutionType.h"
-using namespace SpectralResolutionTypeMod;
 	
 
 
@@ -143,9 +134,11 @@ using namespace SpectralResolutionTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file SpectralWindow.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -164,16 +157,19 @@ class DopplerRow;
 	
 
 class SpectralWindowRow;
-typedef void (SpectralWindowRow::*SpectralWindowAttributeFromBin) (EndianISStream& eiss);
+typedef void (SpectralWindowRow::*SpectralWindowAttributeFromBin) (EndianIStream& eis);
+typedef void (SpectralWindowRow::*SpectralWindowAttributeFromText) (const string& s);
 
 /**
  * The SpectralWindowRow class is a row of a SpectralWindowTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SpectralWindowRow {
 friend class asdm::SpectralWindowTable;
+friend class asdm::RowTransformer<SpectralWindowRow>;
+//friend class asdm::TableStreamReader<SpectralWindowTable, SpectralWindowRow>;
 
 public:
 
@@ -1525,7 +1521,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SpectralWindowRowIDL struct.
 	 */
-	SpectralWindowRowIDL *toIDL() const;
+	asdmIDL::SpectralWindowRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1534,14 +1530,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SpectralWindowRowIDL x) ;
+	void setFromIDL (asdmIDL::SpectralWindowRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1549,7 +1545,57 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SpectralWindowAttributeFromBin> fromBinMethods;
+void spectralWindowIdFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void netSidebandFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void refFreqFromBin( EndianIStream& eis);
+void sidebandProcessingModeFromBin( EndianIStream& eis);
+void totBandwidthFromBin( EndianIStream& eis);
+void windowFunctionFromBin( EndianIStream& eis);
+
+void chanFreqStartFromBin( EndianIStream& eis);
+void chanFreqStepFromBin( EndianIStream& eis);
+void chanFreqArrayFromBin( EndianIStream& eis);
+void chanWidthFromBin( EndianIStream& eis);
+void chanWidthArrayFromBin( EndianIStream& eis);
+void correlationBitFromBin( EndianIStream& eis);
+void effectiveBwFromBin( EndianIStream& eis);
+void effectiveBwArrayFromBin( EndianIStream& eis);
+void freqGroupFromBin( EndianIStream& eis);
+void freqGroupNameFromBin( EndianIStream& eis);
+void lineArrayFromBin( EndianIStream& eis);
+void measFreqRefFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void oversamplingFromBin( EndianIStream& eis);
+void quantizationFromBin( EndianIStream& eis);
+void refChanFromBin( EndianIStream& eis);
+void resolutionFromBin( EndianIStream& eis);
+void resolutionArrayFromBin( EndianIStream& eis);
+void numAssocValuesFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void assocSpectralWindowIdFromBin( EndianIStream& eis);
+void imageSpectralWindowIdFromBin( EndianIStream& eis);
+void dopplerIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SpectralWindowTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SpectralWindowRow* fromBin(EndianIStream& eis, SpectralWindowTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -2025,43 +2071,147 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, SpectralWindowAttributeFromBin> fromBinMethods;
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void basebandNameFromBin( EndianISStream& eiss);
-void netSidebandFromBin( EndianISStream& eiss);
-void numChanFromBin( EndianISStream& eiss);
-void refFreqFromBin( EndianISStream& eiss);
-void sidebandProcessingModeFromBin( EndianISStream& eiss);
-void totBandwidthFromBin( EndianISStream& eiss);
-void windowFunctionFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, SpectralWindowAttributeFromBin> fromBinMethods;
+void spectralWindowIdFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void netSidebandFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void refFreqFromBin( EndianIStream& eis);
+void sidebandProcessingModeFromBin( EndianIStream& eis);
+void totBandwidthFromBin( EndianIStream& eis);
+void windowFunctionFromBin( EndianIStream& eis);
 
-void chanFreqStartFromBin( EndianISStream& eiss);
-void chanFreqStepFromBin( EndianISStream& eiss);
-void chanFreqArrayFromBin( EndianISStream& eiss);
-void chanWidthFromBin( EndianISStream& eiss);
-void chanWidthArrayFromBin( EndianISStream& eiss);
-void correlationBitFromBin( EndianISStream& eiss);
-void effectiveBwFromBin( EndianISStream& eiss);
-void effectiveBwArrayFromBin( EndianISStream& eiss);
-void freqGroupFromBin( EndianISStream& eiss);
-void freqGroupNameFromBin( EndianISStream& eiss);
-void lineArrayFromBin( EndianISStream& eiss);
-void measFreqRefFromBin( EndianISStream& eiss);
-void nameFromBin( EndianISStream& eiss);
-void oversamplingFromBin( EndianISStream& eiss);
-void quantizationFromBin( EndianISStream& eiss);
-void refChanFromBin( EndianISStream& eiss);
-void resolutionFromBin( EndianISStream& eiss);
-void resolutionArrayFromBin( EndianISStream& eiss);
-void numAssocValuesFromBin( EndianISStream& eiss);
-void assocNatureFromBin( EndianISStream& eiss);
-void assocSpectralWindowIdFromBin( EndianISStream& eiss);
-void imageSpectralWindowIdFromBin( EndianISStream& eiss);
-void dopplerIdFromBin( EndianISStream& eiss);
+void chanFreqStartFromBin( EndianIStream& eis);
+void chanFreqStepFromBin( EndianIStream& eis);
+void chanFreqArrayFromBin( EndianIStream& eis);
+void chanWidthFromBin( EndianIStream& eis);
+void chanWidthArrayFromBin( EndianIStream& eis);
+void correlationBitFromBin( EndianIStream& eis);
+void effectiveBwFromBin( EndianIStream& eis);
+void effectiveBwArrayFromBin( EndianIStream& eis);
+void freqGroupFromBin( EndianIStream& eis);
+void freqGroupNameFromBin( EndianIStream& eis);
+void lineArrayFromBin( EndianIStream& eis);
+void measFreqRefFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void oversamplingFromBin( EndianIStream& eis);
+void quantizationFromBin( EndianIStream& eis);
+void refChanFromBin( EndianIStream& eis);
+void resolutionFromBin( EndianIStream& eis);
+void resolutionArrayFromBin( EndianIStream& eis);
+void numAssocValuesFromBin( EndianIStream& eis);
+void assocNatureFromBin( EndianIStream& eis);
+void assocSpectralWindowIdFromBin( EndianIStream& eis);
+void imageSpectralWindowIdFromBin( EndianIStream& eis);
+void dopplerIdFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SpectralWindowAttributeFromText> fromTextMethods;
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void basebandNameFromText (const string & s);
+	
+	
+void netSidebandFromText (const string & s);
+	
+	
+void numChanFromText (const string & s);
+	
+	
+void refFreqFromText (const string & s);
+	
+	
+void sidebandProcessingModeFromText (const string & s);
+	
+	
+void totBandwidthFromText (const string & s);
+	
+	
+void windowFunctionFromText (const string & s);
+	
+
+	
+void chanFreqStartFromText (const string & s);
+	
+	
+void chanFreqStepFromText (const string & s);
+	
+	
+void chanFreqArrayFromText (const string & s);
+	
+	
+void chanWidthFromText (const string & s);
+	
+	
+void chanWidthArrayFromText (const string & s);
+	
+	
+void correlationBitFromText (const string & s);
+	
+	
+void effectiveBwFromText (const string & s);
+	
+	
+void effectiveBwArrayFromText (const string & s);
+	
+	
+void freqGroupFromText (const string & s);
+	
+	
+void freqGroupNameFromText (const string & s);
+	
+	
+void lineArrayFromText (const string & s);
+	
+	
+void measFreqRefFromText (const string & s);
+	
+	
+void nameFromText (const string & s);
+	
+	
+void oversamplingFromText (const string & s);
+	
+	
+void quantizationFromText (const string & s);
+	
+	
+void refChanFromText (const string & s);
+	
+	
+void resolutionFromText (const string & s);
+	
+	
+void resolutionArrayFromText (const string & s);
+	
+	
+void numAssocValuesFromText (const string & s);
+	
+	
+void assocNatureFromText (const string & s);
+	
+	
+void assocSpectralWindowIdFromText (const string & s);
+	
+	
+void imageSpectralWindowIdFromText (const string & s);
+	
+	
+void dopplerIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -2070,14 +2220,14 @@ void dopplerIdFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SpectralWindowTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SpectralWindowRow* fromBin(EndianISStream& eiss, SpectralWindowTable& table, const vector<string>& attributesSeq);	 
 
+	 static SpectralWindowRow* fromBin(EndianIStream& eis, SpectralWindowTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

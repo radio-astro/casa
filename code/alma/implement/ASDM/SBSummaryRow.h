@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SBSummaryRowIDL;
 #endif
 
 
@@ -51,20 +47,25 @@ using asdmIDL::SBSummaryRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Interval.h>
-using  asdm::Interval;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <EntityRef.h>
-using  asdm::EntityRef;
+	
 
 
 
@@ -81,12 +82,10 @@ using  asdm::EntityRef;
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
 #include "CSBType.h"
-using namespace SBTypeMod;
 	
 
 	
@@ -109,7 +108,6 @@ using namespace SBTypeMod;
 
 	
 #include "CDirectionReferenceCode.h"
-using namespace DirectionReferenceCodeMod;
 	
 
 	
@@ -120,9 +118,11 @@ using namespace DirectionReferenceCodeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file SBSummary.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -132,16 +132,19 @@ namespace asdm {
 	
 
 class SBSummaryRow;
-typedef void (SBSummaryRow::*SBSummaryAttributeFromBin) (EndianISStream& eiss);
+typedef void (SBSummaryRow::*SBSummaryAttributeFromBin) (EndianIStream& eis);
+typedef void (SBSummaryRow::*SBSummaryAttributeFromText) (const string& s);
 
 /**
  * The SBSummaryRow class is a row of a SBSummaryTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SBSummaryRow {
 friend class asdm::SBSummaryTable;
+friend class asdm::RowTransformer<SBSummaryRow>;
+//friend class asdm::TableStreamReader<SBSummaryTable, SBSummaryRow>;
 
 public:
 
@@ -243,29 +246,29 @@ public:
 
 
 	
-	// ===> Attribute obsUnitSetId
+	// ===> Attribute obsUnitSetUID
 	
 	
 	
 
 	
  	/**
- 	 * Get obsUnitSetId.
- 	 * @return obsUnitSetId as EntityRef
+ 	 * Get obsUnitSetUID.
+ 	 * @return obsUnitSetUID as EntityRef
  	 */
- 	EntityRef getObsUnitSetId() const;
+ 	EntityRef getObsUnitSetUID() const;
 	
  
  	
  	
  	/**
- 	 * Set obsUnitSetId with the specified EntityRef.
- 	 * @param obsUnitSetId The EntityRef value to which obsUnitSetId is to be set.
+ 	 * Set obsUnitSetUID with the specified EntityRef.
+ 	 * @param obsUnitSetUID The EntityRef value to which obsUnitSetUID is to be set.
  	 
  		
  			
  	 */
- 	void setObsUnitSetId (EntityRef obsUnitSetId);
+ 	void setObsUnitSetUID (EntityRef obsUnitSetUID);
   		
 	
 	
@@ -386,36 +389,6 @@ public:
  			
  	 */
  	void setSbDuration (Interval sbDuration);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute centerDirection
-	
-	
-	
-
-	
- 	/**
- 	 * Get centerDirection.
- 	 * @return centerDirection as vector<Angle >
- 	 */
- 	vector<Angle > getCenterDirection() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set centerDirection with the specified vector<Angle >.
- 	 * @param centerDirection The vector<Angle > value to which centerDirection is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCenterDirection (vector<Angle > centerDirection);
   		
 	
 	
@@ -633,6 +606,47 @@ public:
 
 
 	
+	// ===> Attribute centerDirection, which is optional
+	
+	
+	
+	/**
+	 * The attribute centerDirection is optional. Return true if this attribute exists.
+	 * @return true if and only if the centerDirection attribute exists. 
+	 */
+	bool isCenterDirectionExists() const;
+	
+
+	
+ 	/**
+ 	 * Get centerDirection, which is optional.
+ 	 * @return centerDirection as vector<Angle >
+ 	 * @throws IllegalAccessException If centerDirection does not exist.
+ 	 */
+ 	vector<Angle > getCenterDirection() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set centerDirection with the specified vector<Angle >.
+ 	 * @param centerDirection The vector<Angle > value to which centerDirection is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setCenterDirection (vector<Angle > centerDirection);
+		
+	
+	
+	
+	/**
+	 * Mark centerDirection, which is an optional field, as non-existent.
+	 */
+	void clearCenterDirection ();
+	
+
+
+	
 	// ===> Attribute centerDirectionCode, which is optional
 	
 	
@@ -733,7 +747,7 @@ public:
 	    
 	 * @param projectUID
 	    
-	 * @param obsUnitSetId
+	 * @param obsUnitSetUID
 	    
 	 * @param frequency
 	    
@@ -742,8 +756,6 @@ public:
 	 * @param sbType
 	    
 	 * @param sbDuration
-	    
-	 * @param centerDirection
 	    
 	 * @param numObservingMode
 	    
@@ -760,7 +772,7 @@ public:
 	 * @param weatherConstraint
 	    
 	 */ 
-	bool compareNoAutoInc(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
+	bool compareNoAutoInc(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetUID, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
 	
 	
 
@@ -773,7 +785,7 @@ public:
 	    
 	 * @param projectUID
 	    
-	 * @param obsUnitSetId
+	 * @param obsUnitSetUID
 	    
 	 * @param frequency
 	    
@@ -782,8 +794,6 @@ public:
 	 * @param sbType
 	    
 	 * @param sbDuration
-	    
-	 * @param centerDirection
 	    
 	 * @param numObservingMode
 	    
@@ -800,7 +810,7 @@ public:
 	 * @param weatherConstraint
 	    
 	 */ 
-	bool compareRequiredValue(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint); 
+	bool compareRequiredValue(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetUID, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint); 
 		 
 	
 	/**
@@ -818,7 +828,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SBSummaryRowIDL struct.
 	 */
-	SBSummaryRowIDL *toIDL() const;
+	asdmIDL::SBSummaryRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -827,14 +837,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SBSummaryRowIDL x) ;
+	void setFromIDL (asdmIDL::SBSummaryRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -842,7 +852,44 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SBSummaryAttributeFromBin> fromBinMethods;
+void sBSummaryIdFromBin( EndianIStream& eis);
+void sbSummaryUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void obsUnitSetUIDFromBin( EndianIStream& eis);
+void frequencyFromBin( EndianIStream& eis);
+void frequencyBandFromBin( EndianIStream& eis);
+void sbTypeFromBin( EndianIStream& eis);
+void sbDurationFromBin( EndianIStream& eis);
+void numObservingModeFromBin( EndianIStream& eis);
+void observingModeFromBin( EndianIStream& eis);
+void numberRepeatsFromBin( EndianIStream& eis);
+void numScienceGoalFromBin( EndianIStream& eis);
+void scienceGoalFromBin( EndianIStream& eis);
+void numWeatherConstraintFromBin( EndianIStream& eis);
+void weatherConstraintFromBin( EndianIStream& eis);
+
+void centerDirectionFromBin( EndianIStream& eis);
+void centerDirectionCodeFromBin( EndianIStream& eis);
+void centerDirectionEquinoxFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SBSummaryTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SBSummaryRow* fromBin(EndianIStream& eis, SBSummaryTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -937,11 +984,11 @@ private:
  	
 
 	
-	// ===> Attribute obsUnitSetId
+	// ===> Attribute obsUnitSetUID
 	
 	
 
-	EntityRef obsUnitSetId;
+	EntityRef obsUnitSetUID;
 
 	
 	
@@ -986,17 +1033,6 @@ private:
 	
 
 	Interval sbDuration;
-
-	
-	
- 	
-
-	
-	// ===> Attribute centerDirection
-	
-	
-
-	vector<Angle > centerDirection;
 
 	
 	
@@ -1080,6 +1116,19 @@ private:
  	
 
 	
+	// ===> Attribute centerDirection, which is optional
+	
+	
+	bool centerDirectionExists;
+	
+
+	vector<Angle > centerDirection;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute centerDirectionCode, which is optional
 	
 	
@@ -1114,30 +1163,89 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, SBSummaryAttributeFromBin> fromBinMethods;
-void sBSummaryIdFromBin( EndianISStream& eiss);
-void sbSummaryUIDFromBin( EndianISStream& eiss);
-void projectUIDFromBin( EndianISStream& eiss);
-void obsUnitSetIdFromBin( EndianISStream& eiss);
-void frequencyFromBin( EndianISStream& eiss);
-void frequencyBandFromBin( EndianISStream& eiss);
-void sbTypeFromBin( EndianISStream& eiss);
-void sbDurationFromBin( EndianISStream& eiss);
-void centerDirectionFromBin( EndianISStream& eiss);
-void numObservingModeFromBin( EndianISStream& eiss);
-void observingModeFromBin( EndianISStream& eiss);
-void numberRepeatsFromBin( EndianISStream& eiss);
-void numScienceGoalFromBin( EndianISStream& eiss);
-void scienceGoalFromBin( EndianISStream& eiss);
-void numWeatherConstraintFromBin( EndianISStream& eiss);
-void weatherConstraintFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, SBSummaryAttributeFromBin> fromBinMethods;
+void sBSummaryIdFromBin( EndianIStream& eis);
+void sbSummaryUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void obsUnitSetUIDFromBin( EndianIStream& eis);
+void frequencyFromBin( EndianIStream& eis);
+void frequencyBandFromBin( EndianIStream& eis);
+void sbTypeFromBin( EndianIStream& eis);
+void sbDurationFromBin( EndianIStream& eis);
+void numObservingModeFromBin( EndianIStream& eis);
+void observingModeFromBin( EndianIStream& eis);
+void numberRepeatsFromBin( EndianIStream& eis);
+void numScienceGoalFromBin( EndianIStream& eis);
+void scienceGoalFromBin( EndianIStream& eis);
+void numWeatherConstraintFromBin( EndianIStream& eis);
+void weatherConstraintFromBin( EndianIStream& eis);
 
-void centerDirectionCodeFromBin( EndianISStream& eiss);
-void centerDirectionEquinoxFromBin( EndianISStream& eiss);
+void centerDirectionFromBin( EndianIStream& eis);
+void centerDirectionCodeFromBin( EndianIStream& eis);
+void centerDirectionEquinoxFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SBSummaryAttributeFromText> fromTextMethods;
+	
+void sBSummaryIdFromText (const string & s);
+	
+	
+	
+	
+	
+void frequencyFromText (const string & s);
+	
+	
+void frequencyBandFromText (const string & s);
+	
+	
+void sbTypeFromText (const string & s);
+	
+	
+void sbDurationFromText (const string & s);
+	
+	
+void numObservingModeFromText (const string & s);
+	
+	
+void observingModeFromText (const string & s);
+	
+	
+void numberRepeatsFromText (const string & s);
+	
+	
+void numScienceGoalFromText (const string & s);
+	
+	
+void scienceGoalFromText (const string & s);
+	
+	
+void numWeatherConstraintFromText (const string & s);
+	
+	
+void weatherConstraintFromText (const string & s);
+	
+
+	
+void centerDirectionFromText (const string & s);
+	
+	
+void centerDirectionCodeFromText (const string & s);
+	
+	
+void centerDirectionEquinoxFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1146,14 +1254,14 @@ void centerDirectionEquinoxFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SBSummaryTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SBSummaryRow* fromBin(EndianISStream& eiss, SBSummaryTable& table, const vector<string>& attributesSeq);	 
 
+	 static SBSummaryRow* fromBin(EndianIStream& eis, SBSummaryTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

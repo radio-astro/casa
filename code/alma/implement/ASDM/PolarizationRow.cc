@@ -51,6 +51,7 @@ using asdm::PolarizationTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::PolarizationRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -144,20 +148,6 @@ namespace asdm {
 			 						
 		
 			
-		
-	
-
-	
-  		
-		
-		x->flagRowExists = flagRowExists;
-		
-		
-			
-				
-		x->flagRow = flagRow;
- 				
- 			
 		
 	
 
@@ -237,21 +227,6 @@ namespace asdm {
 	
 
 	
-		
-		flagRowExists = x.flagRowExists;
-		if (x.flagRowExists) {
-		
-		
-			
-		setFlagRow(x.flagRow);
-  			
- 		
-		
-		}
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
@@ -299,18 +274,6 @@ namespace asdm {
 		
 			buf.append(EnumerationParser::toXML("corrProduct", corrProduct));
 		
-		
-	
-
-  	
- 		
-		if (flagRowExists) {
-		
-		
-		Parser::toXML(flagRow, "flagRow", buf);
-		
-		
-		}
 		
 	
 
@@ -370,16 +333,6 @@ namespace asdm {
 	
 
 	
-  		
-        if (row.isStr("<flagRow>")) {
-			
-	  		setFlagRow(Parser::getBoolean("flagRow","Polarization",rowDoc));
-			
-		}
- 		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
@@ -414,7 +367,8 @@ namespace asdm {
 		eoss.writeInt((int) corrType.size());
 		for (unsigned int i = 0; i < corrType.size(); i++)
 				
-			eoss.writeInt(corrType.at(i));
+			eoss.writeString(CStokesParameter::name(corrType.at(i)));
+			/* eoss.writeInt(corrType.at(i)); */
 				
 				
 						
@@ -431,7 +385,8 @@ namespace asdm {
 		for (unsigned int i = 0; i < corrProduct.size(); i++) 
 			for (unsigned int j = 0;  j < corrProduct.at(0).size(); j++) 
 				
-				eoss.writeInt(corrProduct.at(i).at(j));
+				eoss.writeString(CPolarizationType::name(corrProduct.at(i).at(j)));				
+				/* eoss.writeInt(corrProduct.at(i).at(j)); */
 				
 	
 						
@@ -441,45 +396,31 @@ namespace asdm {
 
 	
 	
-	eoss.writeBoolean(flagRowExists);
-	if (flagRowExists) {
-	
-	
-	
-		
-						
-			eoss.writeBoolean(flagRow);
-				
-		
-	
-
-	}
-
 	}
 	
-void PolarizationRow::polarizationIdFromBin(EndianISStream& eiss) {
+void PolarizationRow::polarizationIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		polarizationId =  Tag::fromBin(eiss);
+		polarizationId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void PolarizationRow::numCorrFromBin(EndianISStream& eiss) {
+void PolarizationRow::numCorrFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numCorr =  eiss.readInt();
+		numCorr =  eis.readInt();
 			
 		
 	
 	
 }
-void PolarizationRow::corrTypeFromBin(EndianISStream& eiss) {
+void PolarizationRow::corrTypeFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -488,10 +429,10 @@ void PolarizationRow::corrTypeFromBin(EndianISStream& eiss) {
 	
 		corrType.clear();
 		
-		unsigned int corrTypeDim1 = eiss.readInt();
+		unsigned int corrTypeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < corrTypeDim1; i++)
 			
-			corrType.push_back(CStokesParameter::from_int(eiss.readInt()));
+			corrType.push_back(CStokesParameter::literal(eis.readString()));
 			
 	
 
@@ -499,7 +440,7 @@ void PolarizationRow::corrTypeFromBin(EndianISStream& eiss) {
 	
 	
 }
-void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
+void PolarizationRow::corrProductFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -508,14 +449,14 @@ void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
 	
 		corrProduct.clear();
 		
-		unsigned int corrProductDim1 = eiss.readInt();
-		unsigned int corrProductDim2 = eiss.readInt();
+		unsigned int corrProductDim1 = eis.readInt();
+		unsigned int corrProductDim2 = eis.readInt();
 		vector <PolarizationType> corrProductAux1;
 		for (unsigned int i = 0; i < corrProductDim1; i++) {
 			corrProductAux1.clear();
 			for (unsigned int j = 0; j < corrProductDim2 ; j++)			
 			
-			corrProductAux1.push_back(CPolarizationType::from_int(eiss.readInt()));
+			corrProductAux1.push_back(CPolarizationType::literal(eis.readString()));
 			
 			corrProduct.push_back(corrProductAux1);
 		}
@@ -527,42 +468,78 @@ void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
 	
 }
 
-void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
-		
-	flagRowExists = eiss.readBoolean();
-	if (flagRowExists) {
 		
 	
-	
-		
-			
-		flagRow =  eiss.readBoolean();
-			
-		
-	
-
-	}
-	
-}
-	
-	
-	PolarizationRow* PolarizationRow::fromBin(EndianISStream& eiss, PolarizationTable& table, const vector<string>& attributesSeq) {
+	PolarizationRow* PolarizationRow::fromBin(EndianIStream& eis, PolarizationTable& table, const vector<string>& attributesSeq) {
 		PolarizationRow* row = new  PolarizationRow(table);
 		
 		map<string, PolarizationAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PolarizationTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PolarizationTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void PolarizationRow::polarizationIdFromText(const string & s) {
+		 
+		polarizationId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void PolarizationRow::numCorrFromText(const string & s) {
+		 
+		numCorr = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an StokesParameter 
+	void PolarizationRow::corrTypeFromText(const string & s) {
+		 
+		corrType = ASDMValuesParser::parse1D<StokesParameter>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void PolarizationRow::corrProductFromText(const string & s) {
+		 
+		corrProduct = ASDMValuesParser::parse2D<PolarizationType>(s);
+		
+	}
+	
+
+		
+	
+	void PolarizationRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, PolarizationAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "PolarizationTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -697,60 +674,14 @@ void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
-	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
-	 */
-	bool PolarizationRow::isFlagRowExists() const {
-		return flagRowExists;
-	}
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 
-	
- 	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throw IllegalAccessException If flagRow does not exist.
- 	 */
- 	bool PolarizationRow::getFlagRow() const  {
-		if (!flagRowExists) {
-			throw IllegalAccessException("flagRow", "Polarization");
-		}
-	
-  		return flagRow;
- 	}
-
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 	
- 	 */
- 	void PolarizationRow::setFlagRow (bool flagRow) {
-	
- 		this->flagRow = flagRow;
-	
-		flagRowExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
-	 */
-	void PolarizationRow::clearFlagRow () {
-		flagRowExists = false;
-	}
-	
-
-	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
-	
-	///////////
-	// Links //
-	///////////
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -774,15 +705,9 @@ void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
-		flagRowExists = false;
-	
-
 	
 	
 	
-	
-	
-
 	
 
 	
@@ -799,8 +724,28 @@ void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 	 fromBinMethods["corrProduct"] = &PolarizationRow::corrProductFromBin; 
 		
 	
-	 fromBinMethods["flagRow"] = &PolarizationRow::flagRowFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["polarizationId"] = &PolarizationRow::polarizationIdFromText;
+		 
+	
+				 
+	fromTextMethods["numCorr"] = &PolarizationRow::numCorrFromText;
+		 
+	
+				 
+	fromTextMethods["corrType"] = &PolarizationRow::corrTypeFromText;
+		 
+	
+				 
+	fromTextMethods["corrProduct"] = &PolarizationRow::corrProductFromText;
+		 
+	
+
+		
 	}
 	
 	PolarizationRow::PolarizationRow (PolarizationTable &t, PolarizationRow &row) : table(t) {
@@ -815,10 +760,6 @@ void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
 
-	
-
-	
-		flagRowExists = false;
 	
 
 			
@@ -840,13 +781,6 @@ void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 		
 		
 		
-		if (row.flagRowExists) {
-			flagRow = row.flagRow;		
-			flagRowExists = true;
-		}
-		else
-			flagRowExists = false;
-		
 		}
 		
 		 fromBinMethods["polarizationId"] = &PolarizationRow::polarizationIdFromBin; 
@@ -855,7 +789,6 @@ void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 		 fromBinMethods["corrProduct"] = &PolarizationRow::corrProductFromBin; 
 			
 	
-		 fromBinMethods["flagRow"] = &PolarizationRow::flagRowFromBin; 
 			
 	}
 
@@ -941,7 +874,6 @@ void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 		result["corrProduct"] = &PolarizationRow::corrProductFromBin;
 		
 		
-		result["flagRow"] = &PolarizationRow::flagRowFromBin;
 			
 		
 		return result;	
