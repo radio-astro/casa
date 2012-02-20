@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace FrequencyReferenceCodeMod
   //! FrequencyReferenceCode.
   //! defines reference frames to qualify the measure of a frequency.
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum FrequencyReferenceCode
@@ -81,7 +82,10 @@ namespace FrequencyReferenceCodeMod
 } 
 #endif
 
-using namespace std;
+namespace FrequencyReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const FrequencyReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , FrequencyReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration FrequencyReferenceCode.
@@ -123,7 +127,7 @@ class CFrequencyReferenceCode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -177,8 +181,8 @@ class CFrequencyReferenceCode {
     CFrequencyReferenceCode(const CFrequencyReferenceCode&);
     CFrequencyReferenceCode& operator=(const CFrequencyReferenceCode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

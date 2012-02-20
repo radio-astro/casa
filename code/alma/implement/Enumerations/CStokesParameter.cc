@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CStokesParameter::version() {
 	return StokesParameterMod::version;
 	}
@@ -569,5 +568,25 @@ string CStokesParameter::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'StokesParameter'.";
 	return oss.str();
+}
+
+namespace StokesParameterMod {
+	std::ostream & operator << ( std::ostream & out, const StokesParameter& value) {
+		out << CStokesParameter::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , StokesParameter& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CStokesParameter::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

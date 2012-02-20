@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CNetSideband::version() {
 	return NetSidebandMod::version;
 	}
@@ -149,5 +148,25 @@ string CNetSideband::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'NetSideband'.";
 	return oss.str();
+}
+
+namespace NetSidebandMod {
+	std::ostream & operator << ( std::ostream & out, const NetSideband& value) {
+		out << CNetSideband::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , NetSideband& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CNetSideband::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

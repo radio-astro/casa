@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CAssociatedFieldNature::version() {
 	return AssociatedFieldNatureMod::version;
 	}
@@ -134,5 +133,25 @@ string CAssociatedFieldNature::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'AssociatedFieldNature'.";
 	return oss.str();
+}
+
+namespace AssociatedFieldNatureMod {
+	std::ostream & operator << ( std::ostream & out, const AssociatedFieldNature& value) {
+		out << CAssociatedFieldNature::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , AssociatedFieldNature& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CAssociatedFieldNature::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

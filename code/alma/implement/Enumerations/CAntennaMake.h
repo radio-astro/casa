@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace AntennaMakeMod
   //! AntennaMake.
   //! The physical types of antenna
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AntennaMake
@@ -83,7 +84,10 @@ namespace AntennaMakeMod
 } 
 #endif
 
-using namespace std;
+namespace AntennaMakeMod {
+	std::ostream & operator << ( std::ostream & out, const AntennaMake& value);
+	std::istream & operator >> ( std::istream & in , AntennaMake& value );
+}
 
 /** 
   * A helper class for the enumeration AntennaMake.
@@ -127,7 +131,7 @@ class CAntennaMake {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -181,8 +185,8 @@ class CAntennaMake {
     CAntennaMake(const CAntennaMake&);
     CAntennaMake& operator=(const CAntennaMake&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

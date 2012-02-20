@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CProcessorType::version() {
 	return ProcessorTypeMod::version;
 	}
@@ -134,5 +133,25 @@ string CProcessorType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'ProcessorType'.";
 	return oss.str();
+}
+
+namespace ProcessorTypeMod {
+	std::ostream & operator << ( std::ostream & out, const ProcessorType& value) {
+		out << CProcessorType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , ProcessorType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CProcessorType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace ScanIntentMod
   //! ScanIntent.
   //!  [ASDM.Scan] Scan intents
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum ScanIntent
@@ -107,7 +108,10 @@ namespace ScanIntentMod
 } 
 #endif
 
-using namespace std;
+namespace ScanIntentMod {
+	std::ostream & operator << ( std::ostream & out, const ScanIntent& value);
+	std::istream & operator >> ( std::istream & in , ScanIntent& value );
+}
 
 /** 
   * A helper class for the enumeration ScanIntent.
@@ -175,7 +179,7 @@ class CScanIntent {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -229,8 +233,8 @@ class CScanIntent {
     CScanIntent(const CScanIntent&);
     CScanIntent& operator=(const CScanIntent&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

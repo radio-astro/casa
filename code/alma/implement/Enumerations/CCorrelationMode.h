@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace CorrelationModeMod
   //! CorrelationMode.
   //!  [ASDM.Binary] Actual data products in binary data
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum CorrelationMode
@@ -71,7 +72,10 @@ namespace CorrelationModeMod
 } 
 #endif
 
-using namespace std;
+namespace CorrelationModeMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelationMode& value);
+	std::istream & operator >> ( std::istream & in , CorrelationMode& value );
+}
 
 /** 
   * A helper class for the enumeration CorrelationMode.
@@ -103,7 +107,7 @@ class CCorrelationMode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CCorrelationMode {
     CCorrelationMode(const CCorrelationMode&);
     CCorrelationMode& operator=(const CCorrelationMode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

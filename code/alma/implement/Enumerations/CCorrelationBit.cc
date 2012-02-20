@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CCorrelationBit::version() {
 	return CorrelationBitMod::version;
 	}
@@ -134,5 +133,25 @@ string CCorrelationBit::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'CorrelationBit'.";
 	return oss.str();
+}
+
+namespace CorrelationBitMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelationBit& value) {
+		out << CCorrelationBit::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , CorrelationBit& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CCorrelationBit::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CPointingModelMode::version() {
 	return PointingModelModeMod::version;
 	}
@@ -119,5 +118,25 @@ string CPointingModelMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'PointingModelMode'.";
 	return oss.str();
+}
+
+namespace PointingModelModeMod {
+	std::ostream & operator << ( std::ostream & out, const PointingModelMode& value) {
+		out << CPointingModelMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , PointingModelMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CPointingModelMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

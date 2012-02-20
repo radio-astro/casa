@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace DopplerReferenceCodeMod
   //! DopplerReferenceCode.
   //! defines reference frames to qualify the measure of a radial velocity expressed as doppler shift.
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum DopplerReferenceCode
@@ -81,7 +82,10 @@ namespace DopplerReferenceCodeMod
 } 
 #endif
 
-using namespace std;
+namespace DopplerReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const DopplerReferenceCode& value);
+	std::istream & operator >> ( std::istream & in , DopplerReferenceCode& value );
+}
 
 /** 
   * A helper class for the enumeration DopplerReferenceCode.
@@ -121,7 +125,7 @@ class CDopplerReferenceCode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -175,8 +179,8 @@ class CDopplerReferenceCode {
     CDopplerReferenceCode(const CDopplerReferenceCode&);
     CDopplerReferenceCode& operator=(const CDopplerReferenceCode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

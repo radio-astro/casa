@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace CorrelatorNameMod
   //! CorrelatorName.
   //! 
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum CorrelatorName
@@ -85,7 +86,10 @@ namespace CorrelatorNameMod
 } 
 #endif
 
-using namespace std;
+namespace CorrelatorNameMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelatorName& value);
+	std::istream & operator >> ( std::istream & in , CorrelatorName& value );
+}
 
 /** 
   * A helper class for the enumeration CorrelatorName.
@@ -131,7 +135,7 @@ class CCorrelatorName {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -185,8 +189,8 @@ class CCorrelatorName {
     CCorrelatorName(const CCorrelatorName&);
     CCorrelatorName& operator=(const CCorrelatorName&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

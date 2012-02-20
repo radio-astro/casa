@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSpectralResolutionType::version() {
 	return SpectralResolutionTypeMod::version;
 	}
@@ -134,5 +133,25 @@ string CSpectralResolutionType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SpectralResolutionType'.";
 	return oss.str();
+}
+
+namespace SpectralResolutionTypeMod {
+	std::ostream & operator << ( std::ostream & out, const SpectralResolutionType& value) {
+		out << CSpectralResolutionType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SpectralResolutionType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSpectralResolutionType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

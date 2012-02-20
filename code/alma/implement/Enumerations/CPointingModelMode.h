@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace PointingModelModeMod
   //! PointingModelMode.
   //!  [CalDM.PointingModel] Mode of Pointing Model 
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum PointingModelMode
@@ -69,7 +70,10 @@ namespace PointingModelModeMod
 } 
 #endif
 
-using namespace std;
+namespace PointingModelModeMod {
+	std::ostream & operator << ( std::ostream & out, const PointingModelMode& value);
+	std::istream & operator >> ( std::istream & in , PointingModelMode& value );
+}
 
 /** 
   * A helper class for the enumeration PointingModelMode.
@@ -99,7 +103,7 @@ class CPointingModelMode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -153,8 +157,8 @@ class CPointingModelMode {
     CPointingModelMode(const CPointingModelMode&);
     CPointingModelMode& operator=(const CPointingModelMode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

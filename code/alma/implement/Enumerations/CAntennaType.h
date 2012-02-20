@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace AntennaTypeMod
   //! AntennaType.
   //!  Functional types of antenna
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AntennaType
@@ -71,7 +72,10 @@ namespace AntennaTypeMod
 } 
 #endif
 
-using namespace std;
+namespace AntennaTypeMod {
+	std::ostream & operator << ( std::ostream & out, const AntennaType& value);
+	std::istream & operator >> ( std::istream & in , AntennaType& value );
+}
 
 /** 
   * A helper class for the enumeration AntennaType.
@@ -103,7 +107,7 @@ class CAntennaType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CAntennaType {
     CAntennaType(const CAntennaType&);
     CAntennaType& operator=(const CAntennaType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

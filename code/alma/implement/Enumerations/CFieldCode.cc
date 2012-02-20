@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CFieldCode::version() {
 	return FieldCodeMod::version;
 	}
@@ -104,5 +103,25 @@ string CFieldCode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'FieldCode'.";
 	return oss.str();
+}
+
+namespace FieldCodeMod {
+	std::ostream & operator << ( std::ostream & out, const FieldCode& value) {
+		out << CFieldCode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , FieldCode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CFieldCode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

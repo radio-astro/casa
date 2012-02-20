@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace CalCurveTypeMod
   //! CalCurveType.
   //!  [CalDM.CalCurve] type pf calibration curve
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum CalCurveType
@@ -71,7 +72,10 @@ namespace CalCurveTypeMod
 } 
 #endif
 
-using namespace std;
+namespace CalCurveTypeMod {
+	std::ostream & operator << ( std::ostream & out, const CalCurveType& value);
+	std::istream & operator >> ( std::istream & in , CalCurveType& value );
+}
 
 /** 
   * A helper class for the enumeration CalCurveType.
@@ -103,7 +107,7 @@ class CCalCurveType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CCalCurveType {
     CCalCurveType(const CCalCurveType&);
     CCalCurveType& operator=(const CCalCurveType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CCorrelationMode::version() {
 	return CorrelationModeMod::version;
 	}
@@ -134,5 +133,25 @@ string CCorrelationMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'CorrelationMode'.";
 	return oss.str();
+}
+
+namespace CorrelationModeMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelationMode& value) {
+		out << CCorrelationMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , CorrelationMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CCorrelationMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 
