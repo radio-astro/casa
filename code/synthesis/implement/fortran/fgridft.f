@@ -1,3 +1,4 @@
+
 *=======================================================================
 *     Copyright (C) 1999-2012
 *     Associated Universities, Inc. Washington DC, USA.
@@ -657,7 +658,7 @@ C
       implicit none
       integer nx, ny, nx0, ny0, nxsub, nysub, loc(2), support
       logical ogrid
-      logical onmygrid
+C      logical onmygrid
 C      onmygrid=ogrid(nx, ny, loc, support)
 C      if(.not. onmygrid) then
 C         return 
