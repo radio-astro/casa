@@ -810,8 +810,10 @@ def fixType(params):
             
             
     # shadow parameter
-    if params.has_key('diameter'):
-        params['diameter'] = float(params['diameter'])
+    if params.has_key('tolerance'):
+        params['tolerance'] = float(params['tolerance'])
+    if params.has_key('recalcuvw'):
+        params['recalcuvw'] = eval(params['recalcuvw'].capitalize())
            
     # elevation parameters
     if params.has_key('lowerlimit'):
