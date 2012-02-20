@@ -18,8 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_definitions( -DWITHOUT_ACS )
+#add_definitions( -DWITHOUT_ACS -pg )
+#set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg" )
+#set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg" )
+#set( CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -pg" )
 
+add_definitions( -DWITHOUT_ACS )
 if( APPLE AND
     NOT CMAKE_CXX_FLAGS MATCHES x86_64 AND
     NOT _gcc_machine MATCHES x86_64 AND
@@ -40,8 +44,6 @@ casa_add_library( alma
   implement/ASDM/ArrayTimeInterval.cc
   implement/ASDM/ASDM.cc
   implement/ASDM/Base64.cc
-  implement/ASDM/BeamRow.cc
-  implement/ASDM/BeamTable.cc
   implement/ASDMBinaries/BaselineMetadata.cc
   implement/ASDMBinaries/BaselinesSet.cc
   implement/ASDMBinaries/DataDescriptionsSet.cc
@@ -51,10 +53,11 @@ casa_add_library( alma
   implement/ASDMBinaries/SDMDataObject.cc
   implement/ASDMBinaries/SDMDataObjectParser.cc
   implement/ASDMBinaries/SDMDataObjectReader.cc
+  implement/ASDMBinaries/SDMDataObjectStreamReader.cc
   implement/ASDMBinaries/SDMDataObjectWriter.cc
   implement/ASDMBinaries/SwitchCyclesList.cc
-  implement/ASDM/Boolean.cc
-  implement/ASDM/Byte.cc
+  implement/ASDM/BooleanWrapper.cc
+  implement/ASDM/ByteWrapper.cc
   implement/ASDM/CalAmpliRow.cc
   implement/ASDM/CalAmpliTable.cc
   implement/ASDM/CalAtmosphereRow.cc
@@ -95,8 +98,8 @@ casa_add_library( alma
   implement/ASDM/CalSeeingTable.cc
   implement/ASDM/CalWVRRow.cc
   implement/ASDM/CalWVRTable.cc
-  implement/ASDM/Character.cc
-  implement/ASDM/Complex.cc
+  implement/ASDM/CharacterWrapper.cc
+  implement/ASDM/ComplexWrapper.cc
   implement/ASDM/ConfigDescriptionRow.cc
   implement/ASDM/ConfigDescriptionTable.cc
   implement/ASDM/ConversionException.cc
@@ -108,7 +111,7 @@ casa_add_library( alma
   implement/ASDM/DelayModelTable.cc
   implement/ASDM/DopplerRow.cc
   implement/ASDM/DopplerTable.cc
-  implement/ASDM/Double.cc
+  implement/ASDM/DoubleWrapper.cc
   implement/ASDM/DuplicateKey.cc
   implement/ASDM/EndianStream.cc
   implement/ASDM/Entity.cc
@@ -127,7 +130,7 @@ casa_add_library( alma
   implement/ASDM/FlagTable.cc
   implement/ASDM/FlagCmdRow.cc
   implement/ASDM/FlagCmdTable.cc
-  implement/ASDM/Float.cc
+  implement/ASDM/FloatWrapper.cc
   implement/ASDM/Flux.cc
   implement/ASDM/FocusModelRow.cc
   implement/ASDM/FocusModelTable.cc
@@ -144,12 +147,12 @@ casa_add_library( alma
   implement/ASDM/HolographyTable.cc
   implement/ASDM/Humidity.cc
   implement/ASDM/IllegalAccessException.cc
-  implement/ASDM/Integer.cc
+  implement/ASDM/IntegerWrapper.cc
   implement/ASDM/Interval.cc
   implement/ASDM/InvalidArgumentException.cc
   implement/ASDM/InvalidDataException.cc
   implement/ASDM/Length.cc
-  implement/ASDM/Long.cc
+  implement/ASDM/LongWrapper.cc
   implement/ASDM/MainRow.cc
   implement/ASDM/MainTable.cc
   implement/ASDM/Merger.cc
@@ -174,11 +177,15 @@ casa_add_library( alma
   implement/ASDM/ReceiverTable.cc
   implement/ASDM/SBSummaryRow.cc
   implement/ASDM/SBSummaryTable.cc
+  implement/ASDM/ScaleTable.cc
+  implement/ASDM/ScaleTable.h
+  implement/ASDM/ScaleRow.cc
+  implement/ASDM/ScaleRow.h
   implement/ASDM/ScanRow.cc
   implement/ASDM/ScanTable.cc
   implement/ASDM/SeeingRow.cc
   implement/ASDM/SeeingTable.cc
-  implement/ASDM/Short.cc
+  implement/ASDM/ShortWrapper.cc
   implement/ASDM/SourceRow.cc
   implement/ASDM/SourceTable.cc
   implement/ASDM/SpectralWindowRow.cc
@@ -234,9 +241,11 @@ casa_add_library( alma
   implement/Enumerations/CCorrelatorName.cc
   implement/Enumerations/CCorrelatorType.cc
   implement/Enumerations/CDataContent.cc
+  implement/Enumerations/CDataScale.cc
   implement/Enumerations/CDetectorBandType.cc
   implement/Enumerations/CDirectionReferenceCode.cc
   implement/Enumerations/CDopplerReferenceCode.cc
+  implement/Enumerations/CDopplerTrackingMode.cc
   implement/Enumerations/CFieldCode.cc
   implement/Enumerations/CFilterMode.cc
   implement/Enumerations/CFluxCalibrationMethod.cc
@@ -250,6 +259,7 @@ casa_add_library( alma
   implement/Enumerations/CPolarizationType.cc
   implement/Enumerations/CPositionMethod.cc
   implement/Enumerations/CPositionReferenceCode.cc
+  implement/Enumerations/CPrimaryBeamDescription.cc
   implement/Enumerations/CPrimitiveDataType.cc
   implement/Enumerations/CProcessorSubType.cc
   implement/Enumerations/CProcessorType.cc
@@ -268,6 +278,8 @@ casa_add_library( alma
   implement/Enumerations/CSwitchingMode.cc
   implement/Enumerations/CSyscalMethod.cc
   implement/Enumerations/CTimeSampling.cc
+  implement/Enumerations/CTimeScale.cc
+  implement/Enumerations/CWeightType.cc
   implement/Enumerations/CWindowFunction.cc
   implement/Enumerations/CWVRMethod.cc
   implement/Enumtcl/ACAPolarization.cc
@@ -294,9 +306,11 @@ casa_add_library( alma
   implement/Enumtcl/CorrelatorName.cc
   implement/Enumtcl/CorrelatorType.cc
   implement/Enumtcl/DataContent.cc
+  implement/Enumtcl/DataScale.cc
   implement/Enumtcl/DetectorBandType.cc
   implement/Enumtcl/DirectionReferenceCode.cc
   implement/Enumtcl/DopplerReferenceCode.cc
+  implement/Enumtcl/DopplerTrackingMode.cc
   implement/Enumtcl/FieldCode.cc
   implement/Enumtcl/FilterMode.cc
   implement/Enumtcl/FluxCalibrationMethod.cc
@@ -310,6 +324,7 @@ casa_add_library( alma
   implement/Enumtcl/PolarizationType.cc
   implement/Enumtcl/PositionMethod.cc
   implement/Enumtcl/PositionReferenceCode.cc
+  implement/Enumtcl/PrimaryBeamDescription.cc
   implement/Enumtcl/PrimitiveDataType.cc
   implement/Enumtcl/ProcessorSubType.cc
   implement/Enumtcl/ProcessorType.cc
@@ -327,10 +342,12 @@ casa_add_library( alma
   implement/Enumtcl/SwitchingMode.cc
   implement/Enumtcl/SyscalMethod.cc
   implement/Enumtcl/TimeSampling.cc
+  implement/Enumtcl/TimeScale.cc
   implement/Enumtcl/WindowFunction.cc
+  implement/Enumtcl/WeightType.cc
   implement/Enumtcl/WVRMethod.cc
   implement/MS2ASDM/MS2ASDM.cc
-   )
+  )
 
 casa_add_executable( alma asdm2MS 
   apps/asdm2MS/asdm2MS.cc
@@ -341,4 +358,16 @@ casa_add_executable( alma asdm2MS
   apps/asdm2MS/Name2Table.cc
   apps/asdm2MS/UvwCoords.cc
   )
-casa_add_executable( alma MS2asdm apps/MS2asdm/MS2asdm.cc )
+
+#casa_add_executable( alma_v3 MS2asdm_v3
+#  apps/MS2asdm_v3/MS2asdm_v3.cc 
+#  )
+
+casa_add_executable( alma asdmSummary
+  apps/asdmSummary/asdmSummary.cc 
+  )
+
+casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadBigBDF.cc)
+casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadAllBDFs.cc)
+casa_add_assay(alma_v3 implement/ASDM/test/tTableStreamReader.cc)
+
