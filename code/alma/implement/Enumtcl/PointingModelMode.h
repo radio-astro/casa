@@ -25,10 +25,10 @@
 using namespace PointingModelModeMod;
 
 template<>
- struct enum_set_traits<PointingModelMode> : public enum_set_traiter<PointingModelMode,2,PointingModelModeMod::OPTICAL> {};
+ struct enum_set_traits<PointingModelModeMod::PointingModelMode> : public enum_set_traiter<PointingModelModeMod::PointingModelMode,2,PointingModelModeMod::OPTICAL> {};
 
 template<>
-class enum_map_traits<PointingModelMode,void> : public enum_map_traiter<PointingModelMode,void> {
+class enum_map_traits<PointingModelModeMod::PointingModelMode,void> : public enum_map_traiter<PointingModelModeMod::PointingModelMode,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,13 +37,13 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<PointingModelMode,EnumPar<void> >
+    m_.insert(pair<PointingModelModeMod::PointingModelMode,EnumPar<void> >
      (PointingModelModeMod::RADIO,ep((int)PointingModelModeMod::RADIO,"RADIO","un-documented")));
-    m_.insert(pair<PointingModelMode,EnumPar<void> >
+    m_.insert(pair<PointingModelModeMod::PointingModelMode,EnumPar<void> >
      (PointingModelModeMod::OPTICAL,ep((int)PointingModelModeMod::OPTICAL,"OPTICAL","un-documented")));
     return true;
   }
-  static map<PointingModelMode,EnumPar<void> > m_;
+  static map<PointingModelModeMod::PointingModelMode,EnumPar<void> > m_;
 };
 #define _POINTINGMODELMODE_HH
 #endif

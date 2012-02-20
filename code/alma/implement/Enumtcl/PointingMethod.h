@@ -25,10 +25,10 @@
 using namespace PointingMethodMod;
 
 template<>
- struct enum_set_traits<PointingMethod> : public enum_set_traiter<PointingMethod,5,PointingMethodMod::CIRCLE> {};
+ struct enum_set_traits<PointingMethodMod::PointingMethod> : public enum_set_traiter<PointingMethodMod::PointingMethod,5,PointingMethodMod::CIRCLE> {};
 
 template<>
-class enum_map_traits<PointingMethod,void> : public enum_map_traiter<PointingMethod,void> {
+class enum_map_traits<PointingMethodMod::PointingMethod,void> : public enum_map_traiter<PointingMethodMod::PointingMethod,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,19 +37,19 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<PointingMethod,EnumPar<void> >
+    m_.insert(pair<PointingMethodMod::PointingMethod,EnumPar<void> >
      (PointingMethodMod::THREE_POINT,ep((int)PointingMethodMod::THREE_POINT,"THREE_POINT","un-documented")));
-    m_.insert(pair<PointingMethod,EnumPar<void> >
+    m_.insert(pair<PointingMethodMod::PointingMethod,EnumPar<void> >
      (PointingMethodMod::FOUR_POINT,ep((int)PointingMethodMod::FOUR_POINT,"FOUR_POINT","un-documented")));
-    m_.insert(pair<PointingMethod,EnumPar<void> >
+    m_.insert(pair<PointingMethodMod::PointingMethod,EnumPar<void> >
      (PointingMethodMod::FIVE_POINT,ep((int)PointingMethodMod::FIVE_POINT,"FIVE_POINT","un-documented")));
-    m_.insert(pair<PointingMethod,EnumPar<void> >
+    m_.insert(pair<PointingMethodMod::PointingMethod,EnumPar<void> >
      (PointingMethodMod::CROSS,ep((int)PointingMethodMod::CROSS,"CROSS","un-documented")));
-    m_.insert(pair<PointingMethod,EnumPar<void> >
+    m_.insert(pair<PointingMethodMod::PointingMethod,EnumPar<void> >
      (PointingMethodMod::CIRCLE,ep((int)PointingMethodMod::CIRCLE,"CIRCLE","un-documented")));
     return true;
   }
-  static map<PointingMethod,EnumPar<void> > m_;
+  static map<PointingMethodMod::PointingMethod,EnumPar<void> > m_;
 };
 #define _POINTINGMETHOD_HH
 #endif

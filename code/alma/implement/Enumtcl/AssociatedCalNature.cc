@@ -1,10 +1,10 @@
 #include "AssociatedCalNature.h"
 
-string enum_map_traits<AssociatedCalNature,void>::typeName_="AssociatedCalNature";
-string enum_map_traits<AssociatedCalNature,void>::enumerationDesc_="";
-string enum_map_traits<AssociatedCalNature,void>::order_="";
-string enum_map_traits<AssociatedCalNature,void>::xsdBaseType_="void";
-map<AssociatedCalNature,EnumPar<void> > enum_map_traits<AssociatedCalNature,void>::m_;
-bool   enum_map_traits<AssociatedCalNature,void>::init_=init();
+string enum_map_traits<AssociatedCalNatureMod::AssociatedCalNature,void>::typeName_="AssociatedCalNature";
+string enum_map_traits<AssociatedCalNatureMod::AssociatedCalNature,void>::enumerationDesc_="";
+string enum_map_traits<AssociatedCalNatureMod::AssociatedCalNature,void>::order_="";
+string enum_map_traits<AssociatedCalNatureMod::AssociatedCalNature,void>::xsdBaseType_="void";
+map<AssociatedCalNatureMod::AssociatedCalNature,EnumPar<void> > enum_map_traits<AssociatedCalNatureMod::AssociatedCalNature,void>::m_;
+bool   enum_map_traits<AssociatedCalNatureMod::AssociatedCalNature,void>::init_=init();
 
 

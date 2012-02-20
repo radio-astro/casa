@@ -25,10 +25,10 @@
 using namespace ACAPolarizationMod;
 
 template<>
- struct enum_set_traits<ACAPolarization> : public enum_set_traiter<ACAPolarization,4,ACAPolarizationMod::ACA_YY_50> {};
+ struct enum_set_traits<ACAPolarizationMod::ACAPolarization> : public enum_set_traiter<ACAPolarizationMod::ACAPolarization,4,ACAPolarizationMod::ACA_YY_50> {};
 
 template<>
-class enum_map_traits<ACAPolarization,void> : public enum_map_traiter<ACAPolarization,void> {
+class enum_map_traits<ACAPolarizationMod::ACAPolarization,void> : public enum_map_traiter<ACAPolarizationMod::ACAPolarization,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,17 +37,17 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<ACAPolarization,EnumPar<void> >
+    m_.insert(pair<ACAPolarizationMod::ACAPolarization,EnumPar<void> >
      (ACAPolarizationMod::ACA_STANDARD,ep((int)ACAPolarizationMod::ACA_STANDARD,"ACA_STANDARD","un-documented")));
-    m_.insert(pair<ACAPolarization,EnumPar<void> >
+    m_.insert(pair<ACAPolarizationMod::ACAPolarization,EnumPar<void> >
      (ACAPolarizationMod::ACA_XX_YY_SUM,ep((int)ACAPolarizationMod::ACA_XX_YY_SUM,"ACA_XX_YY_SUM","un-documented")));
-    m_.insert(pair<ACAPolarization,EnumPar<void> >
+    m_.insert(pair<ACAPolarizationMod::ACAPolarization,EnumPar<void> >
      (ACAPolarizationMod::ACA_XX_50,ep((int)ACAPolarizationMod::ACA_XX_50,"ACA_XX_50","un-documented")));
-    m_.insert(pair<ACAPolarization,EnumPar<void> >
+    m_.insert(pair<ACAPolarizationMod::ACAPolarization,EnumPar<void> >
      (ACAPolarizationMod::ACA_YY_50,ep((int)ACAPolarizationMod::ACA_YY_50,"ACA_YY_50","un-documented")));
     return true;
   }
-  static map<ACAPolarization,EnumPar<void> > m_;
+  static map<ACAPolarizationMod::ACAPolarization,EnumPar<void> > m_;
 };
 #define _ACAPOLARIZATION_HH
 #endif

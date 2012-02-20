@@ -25,10 +25,10 @@
 using namespace CorrelationModeMod;
 
 template<>
- struct enum_set_traits<CorrelationMode> : public enum_set_traiter<CorrelationMode,3,CorrelationModeMod::CROSS_AND_AUTO> {};
+ struct enum_set_traits<CorrelationModeMod::CorrelationMode> : public enum_set_traiter<CorrelationModeMod::CorrelationMode,3,CorrelationModeMod::CROSS_AND_AUTO> {};
 
 template<>
-class enum_map_traits<CorrelationMode,void> : public enum_map_traiter<CorrelationMode,void> {
+class enum_map_traits<CorrelationModeMod::CorrelationMode,void> : public enum_map_traiter<CorrelationModeMod::CorrelationMode,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,15 +37,15 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<CorrelationMode,EnumPar<void> >
+    m_.insert(pair<CorrelationModeMod::CorrelationMode,EnumPar<void> >
      (CorrelationModeMod::CROSS_ONLY,ep((int)CorrelationModeMod::CROSS_ONLY,"CROSS_ONLY","un-documented")));
-    m_.insert(pair<CorrelationMode,EnumPar<void> >
+    m_.insert(pair<CorrelationModeMod::CorrelationMode,EnumPar<void> >
      (CorrelationModeMod::AUTO_ONLY,ep((int)CorrelationModeMod::AUTO_ONLY,"AUTO_ONLY","un-documented")));
-    m_.insert(pair<CorrelationMode,EnumPar<void> >
+    m_.insert(pair<CorrelationModeMod::CorrelationMode,EnumPar<void> >
      (CorrelationModeMod::CROSS_AND_AUTO,ep((int)CorrelationModeMod::CROSS_AND_AUTO,"CROSS_AND_AUTO","un-documented")));
     return true;
   }
-  static map<CorrelationMode,EnumPar<void> > m_;
+  static map<CorrelationModeMod::CorrelationMode,EnumPar<void> > m_;
 };
 #define _CORRELATIONMODE_HH
 #endif

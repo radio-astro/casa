@@ -25,10 +25,10 @@
 using namespace AssociatedCalNatureMod;
 
 template<>
- struct enum_set_traits<AssociatedCalNature> : public enum_set_traiter<AssociatedCalNature,1,AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK> {};
+ struct enum_set_traits<AssociatedCalNatureMod::AssociatedCalNature> : public enum_set_traiter<AssociatedCalNatureMod::AssociatedCalNature,1,AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK> {};
 
 template<>
-class enum_map_traits<AssociatedCalNature,void> : public enum_map_traiter<AssociatedCalNature,void> {
+class enum_map_traits<AssociatedCalNatureMod::AssociatedCalNature,void> : public enum_map_traiter<AssociatedCalNatureMod::AssociatedCalNature,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,11 +37,11 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<AssociatedCalNature,EnumPar<void> >
+    m_.insert(pair<AssociatedCalNatureMod::AssociatedCalNature,EnumPar<void> >
      (AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK,ep((int)AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK,"ASSOCIATED_EXECBLOCK","un-documented")));
     return true;
   }
-  static map<AssociatedCalNature,EnumPar<void> > m_;
+  static map<AssociatedCalNatureMod::AssociatedCalNature,EnumPar<void> > m_;
 };
 #define _ASSOCIATEDCALNATURE_HH
 #endif

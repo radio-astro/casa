@@ -25,10 +25,10 @@
 using namespace AtmPhaseCorrectionMod;
 
 template<>
- struct enum_set_traits<AtmPhaseCorrection> : public enum_set_traiter<AtmPhaseCorrection,2,AtmPhaseCorrectionMod::AP_CORRECTED> {};
+ struct enum_set_traits<AtmPhaseCorrectionMod::AtmPhaseCorrection> : public enum_set_traiter<AtmPhaseCorrectionMod::AtmPhaseCorrection,2,AtmPhaseCorrectionMod::AP_CORRECTED> {};
 
 template<>
-class enum_map_traits<AtmPhaseCorrection,void> : public enum_map_traiter<AtmPhaseCorrection,void> {
+class enum_map_traits<AtmPhaseCorrectionMod::AtmPhaseCorrection,void> : public enum_map_traiter<AtmPhaseCorrectionMod::AtmPhaseCorrection,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,13 +37,13 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<AtmPhaseCorrection,EnumPar<void> >
+    m_.insert(pair<AtmPhaseCorrectionMod::AtmPhaseCorrection,EnumPar<void> >
      (AtmPhaseCorrectionMod::AP_UNCORRECTED,ep((int)AtmPhaseCorrectionMod::AP_UNCORRECTED,"AP_UNCORRECTED","un-documented")));
-    m_.insert(pair<AtmPhaseCorrection,EnumPar<void> >
+    m_.insert(pair<AtmPhaseCorrectionMod::AtmPhaseCorrection,EnumPar<void> >
      (AtmPhaseCorrectionMod::AP_CORRECTED,ep((int)AtmPhaseCorrectionMod::AP_CORRECTED,"AP_CORRECTED","un-documented")));
     return true;
   }
-  static map<AtmPhaseCorrection,EnumPar<void> > m_;
+  static map<AtmPhaseCorrectionMod::AtmPhaseCorrection,EnumPar<void> > m_;
 };
 #define _ATMPHASECORRECTION_HH
 #endif

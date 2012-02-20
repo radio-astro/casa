@@ -25,10 +25,10 @@
 using namespace FilterModeMod;
 
 template<>
- struct enum_set_traits<FilterMode> : public enum_set_traiter<FilterMode,4,FilterModeMod::UNDEFINED> {};
+ struct enum_set_traits<FilterModeMod::FilterMode> : public enum_set_traiter<FilterModeMod::FilterMode,4,FilterModeMod::UNDEFINED> {};
 
 template<>
-class enum_map_traits<FilterMode,void> : public enum_map_traiter<FilterMode,void> {
+class enum_map_traits<FilterModeMod::FilterMode,void> : public enum_map_traiter<FilterModeMod::FilterMode,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,17 +37,17 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<FilterMode,EnumPar<void> >
+    m_.insert(pair<FilterModeMod::FilterMode,EnumPar<void> >
      (FilterModeMod::FILTER_NA,ep((int)FilterModeMod::FILTER_NA,"FILTER_NA","un-documented")));
-    m_.insert(pair<FilterMode,EnumPar<void> >
+    m_.insert(pair<FilterModeMod::FilterMode,EnumPar<void> >
      (FilterModeMod::FILTER_TDM,ep((int)FilterModeMod::FILTER_TDM,"FILTER_TDM","un-documented")));
-    m_.insert(pair<FilterMode,EnumPar<void> >
+    m_.insert(pair<FilterModeMod::FilterMode,EnumPar<void> >
      (FilterModeMod::FILTER_TFB,ep((int)FilterModeMod::FILTER_TFB,"FILTER_TFB","un-documented")));
-    m_.insert(pair<FilterMode,EnumPar<void> >
+    m_.insert(pair<FilterModeMod::FilterMode,EnumPar<void> >
      (FilterModeMod::UNDEFINED,ep((int)FilterModeMod::UNDEFINED,"UNDEFINED","un-documented")));
     return true;
   }
-  static map<FilterMode,EnumPar<void> > m_;
+  static map<FilterModeMod::FilterMode,EnumPar<void> > m_;
 };
 #define _FILTERMODE_HH
 #endif
