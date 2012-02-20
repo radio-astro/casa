@@ -1,5 +1,3 @@
-#include <casa/Quanta/MVAngle.h>
-#include <casa/BasicSL/String.h>
 #include	"stdio.h"			/* <stdio.h> */
 #include	"stddef.h"			/* <stddef.h> */
 #include        <math.h>
@@ -60,7 +58,10 @@ void	timer( double *cpu_time ,		/* cpu timer */
 
 
 
+
+
 #include "ASDM2MSFiller.h"
+#include "synthesis/MSVis/SubMS.h"
 
 using namespace casa;
 
@@ -163,9 +164,33 @@ int ddMgr::getSwId(int i) {
   }
 }
 
+
 map<string, MDirection::Types> ASDM2MSFiller::string2MDirectionInit() {
   map<string, MDirection::Types> string2MDirection;
   string2MDirection.clear();
+
+  string2MDirection["J2000"]     = MDirection::J2000; 	  
+  string2MDirection["JMEAN"]     = MDirection::JMEAN; 	  
+  string2MDirection["JTRUE"]     = MDirection::JTRUE; 	  
+  string2MDirection["APP"]       = MDirection::APP; 	  
+  string2MDirection["B1950"]     = MDirection::B1950; 	  
+  string2MDirection["B1950_VLA"] = MDirection::B1950_VLA; 	
+  string2MDirection["BMEAN"]     = MDirection::BMEAN; 	  
+  string2MDirection["BTRUE"]     = MDirection::BTRUE; 	  
+  string2MDirection["GALACTIC"]  = MDirection::GALACTIC;  	
+  string2MDirection["HADEC"]     = MDirection::HADEC; 	  
+  string2MDirection["AZELSW"]    = MDirection::AZELSW; 	  
+  string2MDirection["AZELGEO"]   = MDirection::AZELGEO;   	
+  string2MDirection["AZELSWGEO"] = MDirection::AZELSWGEO; 	
+  string2MDirection["AZELNEGEO"] = MDirection::AZELNEGEO; 	  
+  string2MDirection["JNAT"]      = MDirection::JNAT; 	  
+  string2MDirection["ECLIPTIC"]  = MDirection::ECLIPTIC;  	
+  string2MDirection["MECLIPTIC"] = MDirection::MECLIPTIC; 	
+  string2MDirection["TECLIPTIC"] = MDirection::TECLIPTIC; 	
+  string2MDirection["SUPERGAL"]  = MDirection::SUPERGAL;  	
+  string2MDirection["ITRF"]      = MDirection::ITRF; 	  
+  string2MDirection["TOPO"]      = MDirection::TOPO; 	  
+  string2MDirection["ICRS"]      = MDirection::ICRS;      
 
   string2MDirection["MERCURY"] = MDirection::MERCURY; 
   string2MDirection["VENUS"]   = MDirection::VENUS;
@@ -177,12 +202,12 @@ map<string, MDirection::Types> ASDM2MSFiller::string2MDirectionInit() {
   string2MDirection["PLUTO"]   = MDirection::PLUTO;
   string2MDirection["SUN"]     = MDirection::SUN;
   string2MDirection["MOON"]    = MDirection::MOON;
-  string2MDirection["COMET"]   = MDirection::COMET;
 
   return string2MDirection;
 }
 
 map<string, MDirection::Types> ASDM2MSFiller::string2MDirection = ASDM2MSFiller::string2MDirectionInit();
+
 
 
 // Methods of ASDM2MSFiller classe.
@@ -192,7 +217,11 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
 			     bool          withRadioMeters_,
 			     bool          complexData,
 			     bool          withCompression,
-			     bool          withCorrectedData):
+			     //bool          withCorrectedData):
+			     const string& telname_,
+                             int           maxNumCorr,
+                             int           maxNumChan,
+                             bool          withCorrectedData):
   itsFeedTimeMgr(0),
   itsFieldTimeMgr(0),
   itsObservationTimeMgr(0),
@@ -219,7 +248,13 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
   itsScanNumber         = 0;
 
   //cout << "About to call createMS" << endl;
-  status = createMS(name_, complexData, withCompression, withCorrectedData);
+  status = createMS(name_, 
+                    complexData, 
+                    withCompression, 
+                    telname_, 
+                    maxNumCorr,
+                    maxNumChan,
+                    withCorrectedData);
   //cout << "Back from call createMS" << endl;
 
 }
@@ -229,7 +264,7 @@ ASDM2MSFiller::~ASDM2MSFiller() {
   ;
 }
 
-int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCompression, bool withCorrectedData) {
+int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCompression, const string& telescopeName, int maxNumCorr, int maxNumChan, bool withCorrectedData) {
 
   String aName(msName);
 
@@ -242,6 +277,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 
   //cout << "Entering createMS : measurement set = "<< aName <<"\n";
 
+//commented out to replace with SubMS::setupMS()
+#if 0
   // Get the MS main default table description
   TableDesc td = MS::requiredTableDesc();
   //cout << "createMS TableDesc\n";
@@ -368,6 +405,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     
 
   SetupNewTable newTab(aName, td, Table::New);
+#else
+#endif
 
   //cout << "createMS SetupNewTable\n";
     
@@ -377,12 +416,17 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   // const Int tileSizeKBytes = 16;
 
   // Choose the Tile size per column to be 1 MB thanks to Jonas.
-  const Int nTileCorr = 4;
-  const Int nTileChan = 64;
+//  const Int nTileCorr = 4;
+//  const Int nTileChan = 64;
   const Int tileSizeKBytes = 1024;
+//determine from the data
+  const Int nTileCorr = maxNumCorr;
+  const Int nTileChan = maxNumChan;
 
   Int nTileRow;
 
+//commented out (TT)
+#if 0
   // Create an incremental storage manager
   IncrementalStMan      incrStMan;
 
@@ -502,6 +546,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   TiledShapeStMan imWgtStMan("TiledImWgt", imWgtTileShape);
   newTab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT), imWgtStMan);
   */
+#else
+#endif
     
   // WEIGHT and SIGMA hypercolumn
 #if 0
@@ -511,13 +557,12 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
   TiledShapeStMan sigmaStMan("TiledSigma", weightTileShape);
   newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
-#else
+//#else
   StandardStMan weightStMan("StandardStManWeight");
   newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
   StandardStMan sigmaStMan("StandardStManSigma");
   newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
-
-#endif
+//#endif
   // UVW hyperColumn
   nTileRow = (tileSizeKBytes * 1024 / (8 * 3));
   IPosition uvwTileShape(2, 3, nTileRow);
@@ -538,6 +583,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 				    flagCategoryTileShape);
   newTab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),
 		    flagCategoryStMan);
+#else
+#endif
 
   //cout << "createMS bindAll\n";
 
@@ -550,8 +597,33 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   //Table::TableOption openOption = Table::New;
   //itsMS = new MeasurementSet(newTab, openOption);
   //cout << "About to call the Measurement set constructor" << endl;
-  itsMS = new casa::MeasurementSet(newTab);
+  //itsMS = new casa::MeasurementSet(newTab);
   //cout << "createMS MeasurementSet, adress=" << (int) itsMS << endl;
+  
+  //needed to call setupMS
+  String telescop(telescopeName);
+  casa::Int inint = 0;
+  Vector<MS::PredefinedColumns> colnames;
+  if (complexData) {
+    if (withCorrectedData) {
+      colnames.resize(2);
+      colnames(0)=MS::DATA;
+      colnames(1)=MS::CORRECTED_DATA;
+    }
+    else {
+      colnames.resize(1);
+      colnames(0)= MS::DATA;
+    }
+  }
+  else {
+    colnames.resize(1);
+    colnames(0)= MS::FLOAT_DATA;
+  }
+  //Use SubMS::setupMS() 
+
+  itsMS = SubMS::setupMS(msName,nTileChan,nTileCorr,telescop,colnames,inint,withCompression);
+
+
   if (! itsMS) {
     return False;
   }
@@ -560,7 +632,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 
   itsMSCol = new casa::MSMainColumns(*itsMS);
 
-
+//commented out as standard MS subtable creation is
+//done through setupMS
+#if 0
   // Create all subtables and their possible extra columns.
   // Antenna
   {
@@ -578,6 +652,8 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::DATA_DESCRIPTION),
 				      Table(tabSetup));
   }
+
+
   // Feed
   {
     TableDesc td = MSFeed::requiredTableDesc();
@@ -588,6 +664,17 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FEED),
 				      Table(tabSetup));
   }
+#else
+#endif
+  // Feed (just missing column
+  {
+    TableDesc td;
+    StandardStMan feedStMan("feed standard manager");
+    MSFeed::addColumnToDesc(td, MSFeed::FOCUS_LENGTH);
+    itsMS->feed().addColumn(td, feedStMan);
+  }
+
+#if 0
   // Flag
   {
     SetupNewTable tabSetup(itsMS->flagCmdTableName(),
@@ -596,6 +683,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FLAG_CMD),
 				      Table(tabSetup));
   }
+#else
+#endif
+
 #if 0
   // Field
   //
@@ -614,11 +704,15 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   }
 #else
   // Field
+  // modified by TT : updated Field table
+  // cout<<"update field table"<<endl;
   {
-    TableDesc td = MSField::requiredTableDesc();
-    td.removeColumn("DELAY_DIR");
-    td.removeColumn("PHASE_DIR");
-    td.removeColumn("REFERENCE_DIR");
+    //TableDesc td = MSField::requiredTableDesc();
+    //td.removeColumn("DELAY_DIR");
+    //td.removeColumn("PHASE_DIR");
+    //td.removeColumn("REFERENCE_DIR");
+    TableDesc td;
+    StandardStMan fldStMan("field standard manager");
     {
       ArrayColumnDesc<Double> cdMDir("PHASE_DIR", "variable phase dir",
 				     IPosition(2, 2, 1), ColumnDesc::Direct);
@@ -652,17 +746,20 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
       TableMeasDesc<MDirection> tmdMDirection3(tmvd3, tmrd3);
       tmdMDirection3.write(td);
     }
+    itsMS->field().removeColumn("DELAY_DIR");
+    itsMS->field().removeColumn("PHASE_DIR");
+    itsMS->field().removeColumn("REFERENCE_DIR");
+    itsMS->field().addColumn(td,fldStMan);
     
-    SetupNewTable tabSetup(itsMS->fieldTableName(),
-			   td,
-			   Table::New);
+    //SetupNewTable tabSetup(itsMS->fieldTableName(),
+    //			   td,
+    //			   Table::New);
 
-    itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FIELD),
-				      Table(tabSetup));
+    //itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FIELD),
+    //				      Table(tabSetup));
   }
-
 #endif
-
+#if 0
   // History
   {
     SetupNewTable tabSetup(itsMS->historyTableName(),
@@ -679,7 +776,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::OBSERVATION),
 				      Table(tabSetup));
   }
+#else
   // Pointing
+  // need to add this (TT)
   {
     TableDesc td = MSPointing::requiredTableDesc();
     MSPointing::addColumnToDesc (td, MSPointing::POINTING_OFFSET);
@@ -690,7 +789,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
 				      Table(tabSetup));
   }
+#endif
 
+#if 0
   // Polarization
   {
     TableDesc td = MSPolarization::requiredTableDesc();
@@ -707,31 +808,42 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::PROCESSOR),
 				      Table(tabSetup));
   }
+#else
   // Source
+  // need to update with additional columns (TT) 
   {
-    TableDesc td = MSSource::requiredTableDesc();
+    //TableDesc td = MSSource::requiredTableDesc();
+    TableDesc td;
+    StandardStMan srcStMan("source table col st man");
     MSSource::addColumnToDesc (td, MSSource::POSITION);
     MSSource::addColumnToDesc (td, MSSource::TRANSITION);
     MSSource::addColumnToDesc (td, MSSource::REST_FREQUENCY);
     MSSource::addColumnToDesc (td, MSSource::SYSVEL);
-    SetupNewTable tabSetup(itsMS->sourceTableName(),
-			   td, Table::New);
-    itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
-				      Table(tabSetup));
+    itsMS->source().addColumn(td,srcStMan);
+    //SetupNewTable tabSetup(itsMS->sourceTableName(),
+    //			   td, Table::New);
+    //itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
+    //				      Table(tabSetup));
   }
   // Spectral Window
+  // need to update to add extra columns (TT)
   {
-    TableDesc td = MSSpectralWindow::requiredTableDesc();
+    //TableDesc td = MSSpectralWindow::requiredTableDesc();
+    TableDesc td;
+    StandardStMan spwStMan("SpW optional column Standard Manager");
     MSSpectralWindow::addColumnToDesc (td, MSSpectralWindow::BBC_NO);
     MSSpectralWindow::addColumnToDesc (td, MSSpectralWindow::ASSOC_SPW_ID);
     MSSpectralWindow::addColumnToDesc (td, MSSpectralWindow::ASSOC_NATURE);
-    SetupNewTable tabSetup(itsMS->spectralWindowTableName(),
-			   td, Table::New);
-    itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SPECTRAL_WINDOW),
-				      Table(tabSetup));
+    itsMS->spectralWindow().addColumn(td,spwStMan);
+    //SetupNewTable tabSetup(itsMS->spectralWindowTableName(),
+    //			   td, Table::New);
+    //itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SPECTRAL_WINDOW),
+    //				      Table(tabSetup));
 
   }
+#endif
 
+#if 0
   // State
   {
     SetupNewTable tabSetup(itsMS->stateTableName(),
@@ -740,7 +852,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::STATE),
 				      Table(tabSetup));
   }
+#else
   // Syscal
+  // need to add subtable (TT)
   {
     TableDesc td = MSSysCal::requiredTableDesc();
     MSSysCal::addColumnToDesc (td, MSSysCal::TCAL_SPECTRUM);
@@ -785,6 +899,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::WEATHER),
 				      Table(tabSetup));   
   }
+#endif
 
   //
   // New Tables.
@@ -864,6 +979,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   mspointingCol.direction().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", dirref);
   mspointingCol.target().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", dirref);
   mspointingCol.pointingOffset().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", dirref);
+  mspointingCol.encoder().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", dirref);
   
   itsMS->initRefs();
 
@@ -1267,7 +1383,7 @@ int  ASDM2MSFiller::addUniqueDataDescription( int spectral_window_id_,
 	i < crow
 	  &&  ( msddCol.spectralWindowId()(i) != spectral_window_id_ ||
 		msddCol.polarizationId()(i)   != polarization_id_ ) ; 
-	i++ ){;}
+	i++ );
   
   if (i < crow) return i;
 
@@ -1406,7 +1522,8 @@ void ASDM2MSFiller::addField(const string&      name_,
 			     vector<double>&	delay_dir_,
 			     vector<double>&	phase_dir_,
 			     vector<double>&	reference_dir_,
-			     int               source_id_) {
+			     const string&      direction_code_,
+			     int                source_id_) {
   uInt						crow;
   // cout << "\naddField : entering";
   Vector<MDirection>                           delayDir(1);
@@ -1424,7 +1541,13 @@ void ASDM2MSFiller::addField(const string&      name_,
   msfieldCol.time().put(crow, time_);
   msfieldCol.numPoly().put(crow, 0);
 
-  String s(name_); s.trim(); s.upcase();
+  String s(direction_code_);
+  if(s==""){
+    //cout << "directionCode doesn't exist or is empty. Will try to determine it based on name." << endl;
+    s=name_;
+  }
+
+  s.trim(); s.upcase();
   map<string, MDirection::Types>::const_iterator iter = string2MDirection.find(s);
 
   MDirection   delayDirMD;
@@ -1432,11 +1555,13 @@ void ASDM2MSFiller::addField(const string&      name_,
   MDirection   phaseDirMD;
   
   if (iter == string2MDirection.end()) {
+    //cout << "Could not determine directionCode. Assuming J2000 ..." << endl;
     delayDirMD    = MDirection(Quantity(delay_dir_[0], "rad"), Quantity(delay_dir_[1], "rad"), MDirection::J2000);
     referenceDirMD = MDirection(Quantity(reference_dir_[0], "rad"), Quantity(reference_dir_[1], "rad"), MDirection::J2000);
     phaseDirMD    = MDirection(Quantity(phase_dir_[0], "rad"), Quantity(phase_dir_[1], "rad"), MDirection::J2000);
   }
   else {
+    //cout << "directionCode is " << s << endl;
     delayDirMD    = MDirection(Quantity(delay_dir_[0], "rad"), Quantity(delay_dir_[1], "rad"), iter->second);
     referenceDirMD = MDirection(Quantity(reference_dir_[0], "rad"), Quantity(reference_dir_[1], "rad"),  iter->second);
     phaseDirMD    = MDirection(Quantity(phase_dir_[0], "rad"), Quantity(phase_dir_[1], "rad"), iter->second);
@@ -1445,7 +1570,7 @@ void ASDM2MSFiller::addField(const string&      name_,
   delayDir(0)    = delayDirMD;
   referenceDir(0) = referenceDirMD;
   phaseDir(0)    = phaseDirMD;
-  
+
   msfieldCol.delayDirMeasCol().put(crow, delayDir);
   
   msfieldCol.referenceDirMeasCol().put(crow, referenceDir);
@@ -1623,6 +1748,8 @@ void ASDM2MSFiller::addPointingSlice(unsigned int                 n_row_,
   MSPointingColumns mspointingCol(mspointing);
   unsigned int crow = mspointing.nrow();
 
+  // Let's fill tracking
+  tracking = Vector<bool>(tracking_);
   // Define a slicer to write blocks of values in each column of the pointing table.
   Slicer slicer(IPosition(1, crow),
 		IPosition(1, crow + n_row_ - 1),
@@ -1782,9 +1909,8 @@ int ASDM2MSFiller::addUniqueState(bool sig_,
 				  unsigned int sub_scan_,
 				  string& obs_mode_,
 				  bool flag_row_) {
-  MSState msstate = itsMS -> state();
-  MSStateColumns msstateCol(msstate);
-  uInt crow = msstate.nrow();
+  MSStateColumns msstateCol(itsMS -> state());
+  uInt crow = itsMS->state().nrow();
   
   uInt i = 0;
   
@@ -1800,7 +1926,7 @@ int ASDM2MSFiller::addUniqueState(bool sig_,
     }
   }
   
-  msstate.addRow();
+  itsMS->state().addRow();
   msstateCol.sig().put(crow, sig_);
   msstateCol.ref().put(crow, ref_);
   msstateCol.cal().put(crow, cal_);
@@ -1822,6 +1948,7 @@ void ASDM2MSFiller::addSource(int             source_id_,
 			      int             calibration_group_,
 			      string&         code_,
 			      vector<double>& direction_,
+			      string&         direction_code_,
 			      vector<double>& position_,
 			      vector<double>& proper_motion_,
 			      vector<string>& transition_,
@@ -1830,12 +1957,57 @@ void ASDM2MSFiller::addSource(int             source_id_,
   MSSource mssource = itsMS -> source();
   MSSourceColumns mssourceCol(mssource);
 
-      
+  String s(direction_code_);
+  if(s==""){
+    cout << "SOURCE table: directionCode doesn't exist or is empty. Will assume J2000." << endl;
+    s="J2000";
+  }
+  s.trim(); s.upcase();
+  map<string, MDirection::Types>::const_iterator iter = string2MDirection.find(s);
+
+  MDirection directionMD;
+
+  if (iter == string2MDirection.end()) {
+    //cout << "Could not determine directionCode. Assuming J2000 ..." << endl;
+    directionMD    = MDirection(Quantity(direction_[0], "rad"), Quantity(direction_[1], "rad"), MDirection::J2000);
+  }
+  else {
+    //cout << "directionCode is " << s << " (" << (int)iter->second << ")" << endl;
+    directionMD    = MDirection(Quantity(direction_[0], "rad"), Quantity(direction_[1], "rad"), iter->second);
+  }
+
+  MDirection::Types theType;
+  MDirection::getType(theType, directionMD.getRefString());
+  if(mssource.nrow()==0){ // setDescRefCode works only with empty table 
+    //cout << "Setting Source table direction reference to " << (int)theType << endl;
+    if( ((int)theType) >= MDirection::N_Types ){
+      cout << "Solar system object reference frame handling in Source table not yet implemented. Falling back to J2000." << endl;
+      mssourceCol.directionMeas().setDescRefCode((int)MDirection::J2000, True); 
+    }
+    else{
+      mssourceCol.directionMeas().setDescRefCode((int)theType, True); 
+    }
+  }
+  else{
+    casa::MDirection mD;
+    mssourceCol.directionMeas().get(0, mD);
+    casa::MDirection::Types theFirstType;
+    casa::MDirection::getType(theFirstType, mD.getRefString());
+    if(theType != theFirstType){
+      cout << "Inconsistent directionCodes in Source table: " << theType << " (" << MDirection::showType(theType) << ") and "
+	   << theFirstType << " (" << MDirection::showType(theFirstType) << ")"<< endl;
+      cout << "Will convert all directions to type " << theFirstType << " (" << MDirection::showType(theFirstType) << ")" << endl;
+      if( ((int)theType) >= MDirection::N_Types ){
+	cout << "(Proper conversion not yet implemented for solar system objects.)" << endl;
+	directionMD = MDirection(Quantity(direction_[0], "rad"), Quantity(direction_[1], "rad"), theFirstType);
+      }
+    }
+  }
+    
   // Add a new row.
   int crow = mssource.nrow();
   mssource.addRow();
 
-  Vector<Double> direction(IPosition(1, 2), &direction_[0], SHARE);
   Vector<Double> properMotion(IPosition(1, 2), &proper_motion_[0], SHARE);
 
   // Fill the new row
@@ -1847,7 +2019,7 @@ void ASDM2MSFiller::addSource(int             source_id_,
   mssourceCol.name().put(crow,String(name_));
   mssourceCol.calibrationGroup().put(crow,calibration_group_);
   mssourceCol.code().put(crow,String(code_));
-  mssourceCol.direction().put(crow,direction);
+  mssourceCol.directionMeas().put(crow,directionMD);
   if (position_.size() > 0) mssourceCol.position().put(crow,Vector<Double>(IPosition(1, 3), &position_[0], SHARE));
   mssourceCol.properMotion().put(crow,properMotion);
   if ( transition_.size() > 0 ) {
@@ -2037,24 +2209,17 @@ void ASDM2MSFiller:: addSysCal(int    antenna_id,
 }
 
 // Adds a  record weather in the table WEATHER.
-void ASDM2MSFiller::addWeather(int             antenna_id_,
-			       double          time_,
-			       double          interval_,
-			       float           pressure_,
-			       bool            pressure_flag_,
-			       float           rel_humidity_,
-			       bool            rel_humidity_flag_,
-			       float           temperature_,
-			       bool            temperature_flag_,
-			       float           wind_direction_,
-			       bool            wind_direction_flag_,
-			       float           wind_speed_,
-			       bool            wind_speed_flag_,
-			       bool            has_dew_point_,
-			       float           dew_point_,
-			       bool            dew_point_flag_,
-			       int             wx_station_id_,
-			       vector<double>& wx_station_position_) {
+  void ASDM2MSFiller::addWeather(int				antenna_id_,
+				 double				time_,
+				 double				interval_,
+				 const pair<bool, float>&	pressure_opt_,
+				 const pair<bool, float>&	relHumidity_opt_,
+				 const pair<bool, float>&	temperature_opt_,
+				 const pair<bool, float>&	windDirection_opt_,
+				 const pair<bool, float>&	windSpeed_opt_,
+				 const pair<bool, float>&	dewPoint_opt_,
+				 int				wx_station_id_,
+				 vector<double>&		wx_station_position_) {
   
   MSWeather msweather = itsMS -> weather();
   MSWeatherColumns msweatherCol(msweather);
@@ -2068,20 +2233,12 @@ void ASDM2MSFiller::addWeather(int             antenna_id_,
   msweatherCol.interval().put(crow, interval_);
   msweatherCol.time().put(crow, time_);
 
-  msweatherCol.pressure().put(crow, pressure_);
-  msweatherCol.pressureFlag().put(crow, pressure_flag_);
-  msweatherCol.relHumidity().put(crow, rel_humidity_);
-  msweatherCol.relHumidityFlag().put(crow, rel_humidity_flag_);
-  msweatherCol.temperature().put(crow, temperature_);
-  msweatherCol.temperatureFlag().put(crow, temperature_flag_);
-  msweatherCol.windDirection().put(crow, wind_direction_);
-  msweatherCol.windDirectionFlag().put(crow, wind_direction_flag_);
-  msweatherCol.windSpeed().put(crow, wind_speed_);
-  msweatherCol.windSpeedFlag().put(crow, wind_speed_flag_);
-  if (has_dew_point_) {
-    msweatherCol.dewPoint().put(crow, dew_point_);
-    msweatherCol.dewPointFlag().put(crow, dew_point_flag_);
-  }
+  if (pressure_opt_.first) msweatherCol.pressure().put(crow, pressure_opt_.second);
+  if (relHumidity_opt_.first) msweatherCol.relHumidity().put(crow, relHumidity_opt_.second);
+  if (temperature_opt_.first) msweatherCol.temperature().put(crow, temperature_opt_.second);
+  if (windDirection_opt_.first) msweatherCol.windDirection().put(crow, windDirection_opt_.second);
+  if (windSpeed_opt_.first) msweatherCol.windSpeed().put(crow, windSpeed_opt_.second);
+  if (dewPoint_opt_.first) msweatherCol.dewPoint().put(crow, dewPoint_opt_.second);
 
   ScalarColumn<int> nsWXStationId(msweather, "NS_WX_STATION_ID");
   nsWXStationId.put(crow, wx_station_id_);
