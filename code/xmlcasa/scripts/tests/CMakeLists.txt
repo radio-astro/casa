@@ -67,7 +67,6 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_importasdm_sd.py
   test_importevla.py
   test_importfitsidi.py
-  test_importoldasdm.py
   test_imregrid.py
   test_imsmooth.py
   test_imstat.py
