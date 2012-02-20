@@ -24,7 +24,7 @@ namespace sdmbin {
      * @param v_antennaIdArray  Array of antenna identifiers
      * @param v_feedIdArray     Array of feed identifiers 
      *   \note                    Because with ALMA there is only one feed used at any time this vector has 
-                                  the same size as v_antennaIdArray. With Focal Plane Array this size is
+     the same size as v_antennaIdArray. With Focal Plane Array this size is
      *                            multiplied by the number of feeds in the FPA
      * @param v_phasedArrayList Place-holder, not yet implemented
      * @param v_antennaUsedArray Array to tell in the antennaIdArray which antenna have been actually used
@@ -122,7 +122,7 @@ namespace sdmbin {
      * @exception Error if there is no antenna effectively 
      * producing data with this antennaId.
      */
-    unsigned int baselineIndex( Tag antennaId)  throw (Error);
+    unsigned int baselineIndex( Tag antennaId)  ; // throw (Error);
 
     /** Baseline number for a given pair of antenna identifiers
      * @param  antennaId1 Antenna identifier of one of the antenna in a pair of a non-zero baseline
@@ -143,7 +143,7 @@ namespace sdmbin {
      *      convention that baselines are defined on the basis of a pair onf indices (see the note in the documentation
      *      for the transferId(int, int, int, int, int) method.
      */ 
-    unsigned int baselineIndex( Tag antennaId1, Tag antennaId2) throw (Error);
+    unsigned int baselineIndex( Tag antennaId1, Tag antennaId2) ; // throw (Error);
 
     /** Baseline number for a given pair of antenna indices in the list of antennas effectively producing data
      * @param  na1 index (zero-based) of antenna 1
@@ -160,7 +160,7 @@ namespace sdmbin {
      * -# By definition the first index in any pair being always smaller than the second index, would in the input na1>na2,
      * the method swaps these indices. 
      */ 
-    unsigned int baselineIndex( unsigned int na1, unsigned int na2) throw(Error);
+    unsigned int baselineIndex( unsigned int na1, unsigned int na2) ; // throw(Error);
 
     /** Antenna index of the first antenna of a pair defining a baseline number 
      * @param baselineIndex A baseline number (zero-based)
@@ -171,7 +171,7 @@ namespace sdmbin {
      *       how baselines are ordered and how baselines correspond to pairs of 
      *       antenna indices. 
      */
-    unsigned int antenna1(unsigned int baselineIndex)  throw (Error);
+    unsigned int antenna1(unsigned int baselineIndex)  ; // throw (Error);
 
     /** Antenna index of the second antenna of a pair defining a baseline number
      * @param baselineIndex A baseline number (one-based)
@@ -182,7 +182,7 @@ namespace sdmbin {
      *       how baselines are ordered and how baselines correspond to pairs of 
      *       antenna indices. 
      */
-    unsigned int antenna2(unsigned int baselineIndex)  throw (Error);
+    unsigned int antenna2(unsigned int baselineIndex)  ; // throw (Error);
 
     /** Accessor to the feed index of a feed identifier given an antenna identifier
      * @param antennaId Antenna identifier of an antenna
@@ -192,14 +192,14 @@ namespace sdmbin {
      * - No antenna with this antenna identifier. In this case, in lax mode, this method return -1.
      * - No feed with this feed identifier given the antenna identifier. In this case, in lax mode, this method return -2.
      */
-    unsigned int feedIndex(Tag antennaId, int feedId) throw (Error);
+    unsigned int feedIndex(Tag antennaId, int feedId) ; // throw (Error);
 
     /** Antenna identifier from its index in the sequence of antenna restricted to those effectively producing data
      * @param na The antenna index in the list of \f$ N'_{ant}\f$ antennas effectively producing data
      * @exception na exceeds \f$ N'_{ant}-1\f$
      * @return The antenna identifier
      */
-    Tag         getEffAntennaId(unsigned int na) throw (Error);
+    Tag         getEffAntennaId(unsigned int na) ; // throw (Error);
 
     /** Number of antenna involved in the data if none would have been dropped
      * @return this number \f$ N_{ant} \f$ which is also the number of antenna scheduled for the observations
@@ -219,7 +219,7 @@ namespace sdmbin {
      *       e.g. the ALMA bands 2 and 3, some of the data obtained with band 2 and the other
      *       data with band 3 for identical spectral windows.
      */   
-    int         getFeedId(unsigned int na, unsigned int nfe) throw (Error);
+    int         getFeedId(unsigned int na, unsigned int nfe) ; // throw (Error);
 
     /** Number of antenna actualy involved in the data
      * @return the actual number \f$ N'_{ant} \f$ producing data
@@ -271,7 +271,37 @@ namespace sdmbin {
     vector<Tag>  v_effAntennaIdArray_;//!< Effective array of antenna identifiers
 
   };
-}
 
+
+  inline unsigned int BaselinesSet::transferId(unsigned int na1,unsigned int na2,unsigned int nfe, unsigned int ndd,unsigned int nbin,unsigned int napc){
+
+    unsigned int baselineidx = baselineIndex(na1,na2);                   //cout << "baselineidx=" << baselineidx << endl;
+
+    unsigned int v_cumulCrossSize_ndd=0; if(v_cumulCrossSize_.size()!=0)v_cumulCrossSize_ndd = v_cumulCrossSize_[ndd];
+    unsigned int v_crossSize_ndd=0;      if(v_crossSize_.size()!=0)     v_crossSize_ndd      = v_crossSize_[ndd];
+
+    unsigned int n = 
+      baselineidx*numFeeds_*sumCrossSize_ +                           // /baseline
+      nfe*sumCrossSize_ +                                             // /baseline/feed     
+      v_cumulCrossSize_ndd +                                          // /baseline/feed/datadesc
+      nbin*(v_crossSize_ndd/numBin(ndd)) +                            // /baseline/feed/datadesc/bin
+      napc*(v_crossSize_ndd/(numBin(ndd)*numApc_));                   // /baseline/feed/datadesc/bin/napc
+
+    return n;
+  }
+
+  inline unsigned int DataDescriptionsSet::numBin(unsigned int ndd) { // throw(Error){
+    // if(ndd>=v_basebandName_.size())
+    //   Error(SERIOUS,"The dataDescription index must be smaller than %d",
+    // 	    v_basebandName_.size());
+    return v_numBin_[ndd];  
+  }
+
+  inline unsigned int BaselinesSet::baselineIndex( unsigned int na1, unsigned int na2) { // throw(Error){
+    unsigned int iIdx = min (na1, na2);
+    unsigned int jIdx = max (na1, na2);
+    return jIdx * (jIdx - 1) / 2 + iIdx;
+  }
+}
 #define _BASELINESSET_H
 #endif

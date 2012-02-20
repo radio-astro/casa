@@ -1,6 +1,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdlib.h> // for atoi()
+#include <stdint.h>
 using namespace std;
 
 #include "Integration.h"
@@ -1405,9 +1406,11 @@ namespace sdmbin{
       }
     }
     if(v_node.size()==5)
-      return setSubintegration(v_node[4],v_node[5]);
-    else if(v_node.size()==4)
-      return setIntegration(v_node[4]);
+      //return setSubintegration(v_node[4],v_node[5]);
+      return setSubintegration(v_node[3],v_node[4]);
+    else if(v_node.size()==4) 
+      // return setIntegration(v_node[4]);
+      return setIntegration(v_node[3]);
     return 0;
   }
 
