@@ -1191,7 +1191,6 @@ cb.close()
    
 
 <input>
-
      <param type="string" direction="in" name="tablein">
      <description>Input calibration table name</description>
      </param>
@@ -1219,19 +1218,17 @@ cb.close()
      </param>
 
      <param type="intArray" direction="in" name="refspwmap">
-     <description>List of alternate spw for
-referencing</description>
+     <description>List of alternate spw for referencing</description>
      <value>-1</value>
      </param>
 </input>
 
-<output>
-     <param type="doubleArray" direction="out" name="fluxd">
-     <description>Array of output flux densities</description>
-     <value></value>
-     </param>
-</output>
-<returns type="bool"/>
+<returns type="record">
+   <description>
+     The record keys are the field IDs.  Each field ID points to records whose
+     keys are spectral window IDs.  Each of those keys points to a flux value.
+   </description>
+</returns>
 
 <description>
 
