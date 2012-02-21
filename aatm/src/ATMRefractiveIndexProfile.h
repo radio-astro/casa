@@ -30,6 +30,7 @@
 #endif
 
 #include "ATMAngle.h"
+#include "ATMCommon.h"
 #include "ATMInverseLength.h"
 #include "ATMOpacity.h"
 #include "ATMProfile.h"

@@ -12,8 +12,9 @@ dnl aatm-0.4.1 libatm 2:1:0
 dnl aatm-0.4.2 libatm 2:2:0
 dnl aatm-0.4.3 libatm 2:3:0
 dnl aatm-0.5 libatm 3:0:0
+dnl aatm-0.5(+fix) libaatm 3:1:0
 
-AATM_LT_VERSION="3:0:0"
+AATM_LT_VERSION="3:1:0"
 AC_SUBST(AATM_LT_VERSION)
 
 
