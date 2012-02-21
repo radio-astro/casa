@@ -78,7 +78,6 @@ def makeDict(cmdlist):
     applied = False
     interval = 0.0
     level = 0
-    reason = ''
     severity = 0
     time = 0.0
     type = 'FLAG'
@@ -96,14 +95,23 @@ def makeDict(cmdlist):
             if command.__contains__('summary'):
                 casalog.post('Mode summary is not allowed in list operation', 'WARN')
                 continue
-                
+
             flagd = {}
             flagd['row'] = str(i)
             flagd['applied'] = applied
+            reason = ''
+            
+            # Get the reason into the dictionary
+            if command.__contains__('reason'):
+                reason = getReason(command)
+                # Remove reason from command string
+                newline = command
+                command = purgeParameter(newline, 'reason')
+            
+            flagd['reason'] = reason                
             flagd['command'] = command
             flagd['interval'] = interval
             flagd['level'] = level
-            flagd['reason'] = reason
             flagd['severity'] = severity
             flagd['time'] = time
             flagd['type'] = type
@@ -580,8 +588,13 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
         
         try:
             for key in myflags.keys():
-                cmdline = myflags[key]['command']
-                print >> ffout, '%s' % cmdline
+                # remove leading and trailing white spaces
+                cmdline = myflags[key]['command'].strip()
+                reason = myflags[key]['reason']
+                if reason != '':
+                    print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
+                else:
+                    print >> ffout, '%s' %cmdline
         except:
             raise Exception, 'Error writing lines to file ' \
                 + outfile
@@ -654,6 +667,41 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
     return nadd
 
 
+def getReason(cmdline):
+    '''Get the reason values from a line with strings
+       -> cmdline is a string with parameters
+          returns a string with reason values.
+    '''
+            
+    reason = ''
+    
+    # Split by white space
+    keyvlist = cmdline.split()
+    if keyvlist.__len__() > 0:  
+        
+        for keyv in keyvlist:            
+
+            # Skip if it is a comment character #
+            if keyv.count('#') > 0:
+                break
+
+            # Split by '='
+            (xkey,xval) = keyv.split('=')
+
+            # Remove quotes
+            if type(xval) == str:
+                if xval.count("'") > 0:
+                    xval = xval.strip("'")
+                if xval.count('"') > 0:
+                    xval = xval.strip('"')
+
+            # Check if reason is in
+            if xkey == "reason":
+                reason = xval
+                break;
+    
+                                    
+    return reason
 
 
 def getLinePars(cmdline, mlist=[]):
@@ -721,7 +769,7 @@ def getLinePars(cmdline, mlist=[]):
 
             elif xkey == "mode":
                 dicpars['mode'] = xval
-
+                
             elif mlist != []:
                 # Any parameters requested for this mode?
                 for m in mlist:
@@ -882,6 +930,46 @@ def purgeEmptyPars(cmdline):
         casalog.post('String of parameters is empty','WARN')   
          
     return newstr
+
+
+def purgeParameter(cmdline, par):
+    '''Remove parameter par from a string:
+       -> cmdline is a string with a parameter to be removed
+       returns a string containing the remaining parameters
+    '''
+               
+    newstr = ''
+    
+    # split by white space
+    keyvlist = cmdline.split()
+    if keyvlist.__len__() > 0:  
+        
+        # Split by '='
+        for keyv in keyvlist:
+
+            (xkey,xval) = keyv.split('=')
+
+            # Remove quotes
+            if type(xval) == str:
+                if xval.count("'") > 0:
+                    xval = xval.strip("'")
+                if xval.count('"') > 0:
+                    xval = xval.strip('"')
+            
+            # Write only parameters with values
+            if xkey == par:
+                continue
+            else:
+                newstr = newstr+' '+xkey+'='+xval+' '
+            
+    else:
+        casalog.post('String of parameters is empty','WARN')   
+         
+    return newstr
+
+
+
+
 
 ####
 ####   Set of functions to handle antenna information for shadowing.

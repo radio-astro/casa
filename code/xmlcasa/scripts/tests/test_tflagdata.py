@@ -822,7 +822,7 @@ class test_list(test_base):
     def test_list1(self):
         '''tflagdata: apply flags from a list and do not save'''
         # creat input list
-        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
         filename = 'list1.txt'
         create_input(input, filename)
         
@@ -835,7 +835,7 @@ class test_list(test_base):
     def test_list2(self):
         '''tflagdata: only save parameters without running the tool'''
         # creat input list
-        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
         filename = 'list2.txt'
         create_input(input, filename)
 
@@ -852,7 +852,7 @@ class test_list(test_base):
     def test_list3(self):
         '''tflagdata: flag and save list to FLAG_CMD'''
         # creat input list
-        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
         filename = 'list3.txt'
         create_input(input, filename)
 
@@ -881,16 +881,20 @@ class test_list(test_base):
         self.assertEqual(res['flagged'], 2524284)
 
     def test_list5(self):
-        '''tflagdata: clip only zero data in mode=list'''
+        '''tflagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
         # get the correct data, by passing the previous setUp()
         self.setUp_data4tfcrop()
         
         # creat input list
-        input = "mode=clip clipzeros=true"
-        filename = 'lsit5.txt'
+        input = "mode=clip clipzeros=true reason=\'CLIP_ZERO\'"
+        filename = 'list5.txt'
         create_input(input, filename)
 
-        tflagdata(vis=self.vis, mode='list',  inpfile=filename, run=True, savepars=False)
+        # Save to FLAG_CMD
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, run=False, savepars=True)
+        
+        # Run in tflagcmd and select by reason
+        tflagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
         
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
