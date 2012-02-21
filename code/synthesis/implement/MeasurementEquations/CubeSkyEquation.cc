@@ -45,7 +45,7 @@
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/MeasurementComponents/rGridFT.h>
+#include <synthesis/TransformMachines/rGridFT.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
@@ -69,6 +69,7 @@
 #include <synthesis/MSVis/VisSet.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisBuffer.h>
+#include <omp.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -326,6 +327,9 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     isEmpty=isEmpty &&  (sm_->isEmpty(model));                
     
   }
+  ////if people want to use model but it isn't there..we'll ignore you
+  if(!noModelCol_p)
+    noModelCol_p=rvi_p->msColumns().modelData().isNull();
   
   
   if( (sm_->numberOfModels() >0) && isEmpty  && !initialized && !incremental){ 
@@ -677,6 +681,10 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
     Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
 
+    ////if people want to use model but it isn't there
+    if(!noModelCol_p)
+      noModelCol_p=rvi_p->msColumns().modelData().isNull();
+
     if (addCorrectedVisCube){
         prefetchColumns.insert (VisBufferComponents::CorrectedCube);
         // This can cause an error if a multi-MS has a mixture of MSs with corrected
@@ -812,10 +820,25 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 }
                 // get the model visibility and write it to the model MS
                 //	Timers tGetSlice=Timers::getTime();
+
                 //		Timers tgetSlice=Timers::getTime();
+
+//#pragma omp parallel default(shared)
+ {
+   //  cerr << "num_threads " << omp_get_num_threads() << endl;
+   //#pragma omp sections nowait
+{
+  //#pragma omp section
                 if(!isEmpty)
                     getSlice(* vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
-                //saving the model for self-cal most probably
+  //#pragma omp section
+		if(!useCorrected)
+		  vb->visCube();
+		else
+		  vb->correctedVisCube();
+ }
+
+ }                //saving the model for self-cal most probably
                 //	Timers tSetModel=Timers::getTime();
                 //		Timers tsetModel=Timers::getTime();
                 if(commitModel && wvi_p != NULL){

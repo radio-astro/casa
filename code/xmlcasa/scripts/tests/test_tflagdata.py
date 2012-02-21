@@ -18,24 +18,23 @@ def test_eq(result, total, flagged):
     assert result['flagged'] == flagged, \
            "%s flags set; %s expected" % (result['flagged'], flagged)
 
-def create_input(str_text):
+def create_input(str_text, filename):
     '''Save the string in a text file'''
     
-    inp = 'tflagcmd.txt'
+    inp = filename
     cmd = str_text
     
     # remove file first
     if os.path.exists(inp):
         os.system('rm -f '+ inp)
         
-    # save it in a file    
+    # save to a file    
     with open(inp, 'w') as f:
         f.write(cmd)
         
     f.close()
     
-    # return the name of the file
-    return inp
+    return
 
 # Base class which defines setUp functions
 # for importing different data sets
@@ -94,6 +93,34 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
+
+    def setUp_shadowdata1(self):
+        self.vis = "shadowtest.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+
+    def setUp_shadowdata2(self):
+        self.vis = "shadowtest_part.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
         
     def setUp_multi(self):
         self.vis = "multiobs.ms"
@@ -118,47 +145,82 @@ class test_tfcrop(test_base):
         
     def test_tfcrop1(self):
         '''tflagdata:: Test1 of mode = tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 4399104, 4489)
-        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='ea19'), 2199552, 2294)
-        test_eq(tflagdata(vis=self.vis, mode='summary', spw='7'), 274944, 0)
+        tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 4489)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 2294)
+        self.assertEqual(res['spw']['7']['flagged'], 0)
         
     def test_tfcrop2(self):
         '''tflagdata:: Test2 of mode = tfcrop ABS ALL'''
         tflagdata(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 4399104, 18696)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4258)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RL'), 1099776, 4999)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LR'), 1099776, 4950)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 18696)
+        self.assertEqual(res['correlation']['LL']['flagged'], 4258)
+        self.assertEqual(res['correlation']['RL']['flagged'], 4999)
+        self.assertEqual(res['correlation']['LR']['flagged'], 4950)
+        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
 
     def test_extend1(self):
         '''tflagdata:: Extend the flags created by tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', expression='ABS RR',ntime=51.0,spw='9', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RR'), 1099776, 4489)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 0)
+        tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['correlation']['LL']['flagged'], 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4489)
 
 
 class test_shadow(test_base):
     def setUp(self):
-        self.setUp_flagdatatest()
+        self.setUp_shadowdata2()
 
-    def test1(self):
-        '''tflagdata:: Test1 of mode = shadow'''
-        tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 5252)
+#    def test1(self):
+#        '''tflagdata:: Test1 of mode = shadow'''
+#        tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
+#        res = tflagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['flagged'], 5252)
+#
+#    def test2(self):
+#        """tflagdata:: Test2 of mode = shadow"""
+#        tflagdata(vis=self.vis, mode='shadow', savepars=False)
+#        res = tflagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['flagged'], 2912)
+#
+#    def test3(self):
+#        """tflagdata:: Test3 of mode = shadow"""
+#        tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
+#        res = tflagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['flagged'], 1456)
 
-    def test2(self):
-        """tflagdata:: Test2 of mode = shadow"""
-        tflagdata(vis=self.vis, mode='shadow', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 2912)
+    def test_CAS2399(self):
+        '''tflagdata: shadow by antennas not present in MS'''
+        
+        
+        input = 'name=VLA01\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
+                'name=VLA02\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]\n'+\
+                'name=VLA09\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601197.2182404203, -5041974.3604805721, 3554875.1995636248]\n'+\
+                'name=VLA10\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
 
-    def test3(self):
-        """tflagdata:: Test3 of mode = shadow"""
-        tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 70902, 1456)
+        filename = 'cas2399.txt'
+        create_input(input, filename)
+        
+        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, antennafile=filename)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
+        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
+        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
+        
+        
+
 
 
 #        # This MS seems to give wrong results with the old flagdata
@@ -468,7 +530,7 @@ class test_statistics_queries(test_base):
 
     def test_CAS2212(self):
         '''tflagdata: Clipping scan selection, CAS-2212, CAS-3496'''
-        # By default expression='ABS ALL'
+        # By default correlation='ABS ALL'
         tflagdata(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3], savepars=False) 
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 85404)
         s = tflagdata(vis=self.vis, mode='summary')['scan']
@@ -506,24 +568,28 @@ class test_statistics_queries(test_base):
 
     def test_chanavg0(self):
         print "Test of channel average"
-        tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], expression='ABS RR',
+        tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], correlation='ABS RR',
                  savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 1414186)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1414186)
 
     def test_chanavg1(self):
-        tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], expression='ABS RR',
+        tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], correlation='ABS RR',
                  savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 1347822)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1347822)
 
     def test_chanavg2(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
-                 expression='ABS RR', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 242053)
+                 correlation='ABS RR', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 242053)
 
     def test_chanavg3(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], spw='0:0~10',
-                 expression='ABS RR', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 231374)
+                 correlation='ABS RR', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 231374)
                
 
 #    def test8(self):
@@ -535,22 +601,26 @@ class test_statistics_queries(test_base):
     def test9(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='beg', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 329994)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 329994)
 
     def test10(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='endb', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 333396)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 333396)
 
     def test11(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='end', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 2520882)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2520882)
 
     def test12(self):
         '''tflagdata: quack mode'''
         tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 2524284)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2524284)
 
     def test13(self):
         '''tflagdata: quack mode, quackincrement'''
@@ -660,17 +730,17 @@ class test_selections_alma(test_base):
 
     def test_abs_wvr(self):
         '''tflagdata: clip ABS WVR'''
-        tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], expression='ABS WVR', savepars=False)
+        tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS WVR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 22752)
         
     def test_abs_i(self):
         '''tflagdata: clip ABS I. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], expression='ABS I', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS I', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 0)
 
     def test_abs_all(self):
         '''tflagdata: clip ABS ALL. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], expression='ABS ALL', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
         
@@ -753,7 +823,8 @@ class test_list(test_base):
         '''tflagdata: apply flags from a list and do not save'''
         # creat input list
         input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
-        filename = create_input(input)
+        filename = 'list1.txt'
+        create_input(input, filename)
         
         # apply and don't save to MS
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, run=True)
@@ -765,7 +836,8 @@ class test_list(test_base):
         '''tflagdata: only save parameters without running the tool'''
         # creat input list
         input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
-        filename = create_input(input)
+        filename = 'list2.txt'
+        create_input(input, filename)
 
         # save to another file
         if os.path.exists("myflags.txt"):
@@ -781,7 +853,8 @@ class test_list(test_base):
         '''tflagdata: flag and save list to FLAG_CMD'''
         # creat input list
         input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
-        filename = create_input(input)
+        filename = 'list3.txt'
+        create_input(input, filename)
 
         # Delete any rows from FLAG_CMD
         tflagcmd(vis=self.vis, action='clear', clearall=True)
@@ -808,18 +881,19 @@ class test_list(test_base):
         self.assertEqual(res['flagged'], 2524284)
 
     def test_list5(self):
-        '''tflagdata: clip only zero data'''
+        '''tflagdata: clip only zero data in mode=list'''
         # get the correct data, by passing the previous setUp()
         self.setUp_data4tfcrop()
         
         # creat input list
         input = "mode=clip clipzeros=true"
-        filename = create_input(input)
+        filename = 'lsit5.txt'
+        create_input(input, filename)
 
         tflagdata(vis=self.vis, mode='list',  inpfile=filename, run=True, savepars=False)
         
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 68736)
+        self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
 
         
 class test_clip(test_base):
@@ -830,9 +904,9 @@ class test_clip(test_base):
         
     def test_clipzeros(self):
     	'''tflagdata: clip only zero-value data'''
-        tflagdata(vis = self.vis, mode = 'clip', clipzeros=True)
+        tflagdata(vis=self.vis, mode='clip', clipzeros=True)
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'],68736,'Should clip only spw=8')
+        self.assertEqual(res['flagged'],274944,'Should clip only spw=8')
     	
         
 
@@ -848,6 +922,7 @@ class cleanup(test_base):
         os.system('rm -rf multiobs.ms')
         os.system('rm -rf flagdatatest-alma.ms')
         os.system('rm -rf Four_ants_3C286.ms')
+        os.system('rm -rf list*txt')
 
     def test1(self):
         '''tflagdata: Cleanup'''

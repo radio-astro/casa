@@ -3098,6 +3098,12 @@ bool image::tofits(
 		return false;
 	}
 	try {
+		if (fitsfile.empty()) {
+			*_log << "fitsfile must be specified" << LogIO::EXCEPTION;
+		}
+		if (fitsfile == "." || fitsfile == "..") {
+			*_log << "Invalid fitsfile name " << fitsfile << LogIO::EXCEPTION;
+		}
 		std::auto_ptr<Record> pRegion(toRecord(region));
 		String mask = vmask.toString();
 		if (mask == "[]") {
@@ -3119,7 +3125,7 @@ bool image::tofits(
 		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }

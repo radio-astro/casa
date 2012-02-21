@@ -37,7 +37,7 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (list,manual,clip,shadow,quack,elevation, \
+                <description>Flagging mode (list,manual,clip,shadow,quack,elevation,\
 tfcrop,extend,unflag,summary)</description>
                 <value>manual</value>
                 <allowed kind="enum">
@@ -114,11 +114,6 @@ tfcrop,extend,unflag,summary)</description>
                 <value type="string" />
             </param>
 
-            <param type="any" name="expression" subparam="true">
-                <description>Expression to flag on</description>
-                <any type="variant" limittypes="string stringArray" />
-                <value type="string">ABS ALL</value>
-            </param>
             <param type="any" name="clipminmax" subparam="true">
                 <description>Range to use for clipping</description>
                 <any type="variant" limittypes="doubleArray doubleyArrayArray" />
@@ -160,11 +155,19 @@ tfcrop,extend,unflag,summary)</description>
                 <value type="bool">False</value>
             </param>
 
-            <param type="double" name="diameter" subparam="true">
-                <description>Effective diameter to use (in meters)</description>
-                <value>-1.0</value>
+            <param type="double" name="tolerance" subparam="true">
+                <description>Amount of shadow allowed (in meters)</description>
+                <value>0.0</value>
             </param>
-
+            <param type="bool" name="recalcuvw" subparam="true">
+                <description>Recalculate U,V,W</description>
+                <value>False</value>
+            </param>
+            <param type="string" name="antennafile" subparam="true">
+                <description>File name with additional antenna names, positions and diameters</description>
+                <value></value>
+            </param>
+            
             <param type="double" name="lowerlimit" subparam="true">
                 <description>Lower limiting elevation (in degrees)</description>
                 <value>0.0</value>
@@ -278,20 +281,15 @@ tfcrop,extend,unflag,summary)</description>
             </param>
             <param type="bool" name="sequential" subparam="true">
                 <description>Run the task in sequential or in parallel</description>
-                <value>False</value>
+                <value>True</value>
+            </param>
+            <param type="string" name="display" subparam="true">
+                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <value type="string"></value>
             </param>
             <param type="bool" name="flagbackup" subparam="true">
                 <description>Back up the state of flags before the run</description>
                 <value>False</value>
-            </param>
-
-            <param type="string" name="display">
-                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
-                <value type="string"></value>
-            </param>
-            <param type="string" name="format" subparam="true">
-                <description>Display plots on the screen or save to a file</description>
-                <value type="string">screen</value>
             </param>
 
             <param type="bool" name="savepars">
@@ -333,7 +331,6 @@ tfcrop,extend,unflag,summary)</description>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
-                        <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
                         <default param="clipminmax"><value type="doubleArray"></value></default>
                         <default param="clipoutside"><value type="bool">True</value></default>
@@ -368,7 +365,9 @@ tfcrop,extend,unflag,summary)</description>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
-                        <default param="diameter"><value type="double">-1.0</value></default>
+                        <default param="tolerance"><value type="double">0.0</value></default>
+                        <default param="recalcuvw"><value type="bool">False</value></default>
+                        <default param="antennafile"><value type="string"></value></default>
                     </equals>
                     <equals value="elevation">
                         <default param="field"><value type="string"></value></default>
@@ -399,7 +398,6 @@ tfcrop,extend,unflag,summary)</description>
                         <default param="observation"><value type="string"></value></default>
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>
-                        <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
                         <default param="timecutoff"><value type="double">4.0</value></default>
                         <default param="freqcutoff"><value type="double">3.0</value></default>
@@ -468,22 +466,12 @@ tfcrop,extend,unflag,summary)</description>
                 <when param="run">
                     <equals type="bool" value="True">
                         <default param="writeflags"><value type="bool">True</value></default>
-                        <default param="sequential"><value type="bool">False</value></default>
+                        <default param="sequential"><value type="bool">True</value></default>
+                        <default param="display"><value type="string"></value></default>
                         <default param="flagbackup"><value type="bool">False</value></default>
                     </equals>
                 </when>
-                
-               <when param="display">
-                <equals type="string" value="" />
-                <equals type="string" value="data" />
-                <equals type="string" value="report">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-                <equals type="string" value="both">
-                        <default param="format"><value type="string">screen</value></default>
-                </equals>                    
-               </when>
-               
+                               
                <when param="savepars">
                 <equals type="bool" value="False" />
                  <equals type="bool" value="True">
@@ -509,7 +497,8 @@ tfcrop,extend,unflag,summary)</description>
     
         Keyword arguments:
         vis -- Name of input visibility file
-                default: none example: vis='ngc5921.ms'
+                default: '' (none) 
+		        example: vis='ngc5921.ms'
 
           Any flagging will only be applied to the specified selection.
 
@@ -523,24 +512,35 @@ tfcrop,extend,unflag,summary)</description>
                     antenna='1&amp;&amp;*' # cross and auto-correlation baselines between antenna 1
                                              and all other available antennas
                     antenna='1~7&amp;&amp;&amp;' # only the auto-correlation baselines for antennas in range 1~7
+
               spw -- Select data based on spectral window and channels
                     default: '' (all); example: spw='1'
                     spw='&lt;2' #spectral windows less than 2
                     spw='&gt;1' #spectral windows greater than 1
                     spw='0:0~10' # first 10 channels from spw 0
                     spw='0:0~5;56~60' # multiple separated channel chunks.
-              correlation -- Correlation types
-                    default: '' (all);
-                    example: correlation='RR LL'
-              field -- Select data based on field id(s) or name(s)
+
+              correlation -- Correlation types or expression.
+                    default: '' (all correlations or 'ABS ALL' for modes clip and tfcrop);
+                    example: correlation='RR LL' or
+                    options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
+                             any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
+                             'WVR' refers to the water vapour radiometer of ALMA data.
+                    example: correlation='RE XX'
+					
+                    The expression is used in modes clip and tfcrop only.            
+
+			  field -- Select data based on field id(s) or name(s)
                     default: '' (all); example: field='1'
                     field='0~2' # field ids inclusive from 0 to 2
                     field='3C*' # all field names starting with 3C
+
               uvrange -- Select data within uvrange (default units meters)
                     default: '' (all); example:
                     uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lamgda
                     uvrange='&gt;4klamda';uvranges greater than 4 kilo-lambda
                     uvrange='0~1000km'; uvrange in kilometers
+
               timerange  -- Select data based on time range:
                     default = '' (all); example,
                     timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
@@ -549,12 +549,17 @@ tfcrop,extend,unflag,summary)</description>
                     timerange='09:44:00' # data within one integration of time
                     timerange='&gt;10:24:00' # data after this time
                     timerange='09:44:00+00:13:00' #data 13 minutes after time
+
               scan -- Select data based on scan number
                     default: '' (all); example: scan='&gt;3'
+
               intent -- Select data based on observation intent
                     default: '' (all); example: intent='*CAL*,*BAND*'
+
               feed -- Selection based on the feed - NOT IMPLEMENTED YET
+
               array -- Selection based on the antenna array
+
               observation -- Selection based on the observation ID
                     default: '' (all); example: observation='1' or observation=1
 
@@ -580,25 +585,16 @@ tfcrop,extend,unflag,summary)</description>
                   Example: the following commands can be put in a file and given to the task.
                   
                      scan=1~3 mode=manual
-                     mode=clip clipminmax=[0,2] expression=ABS_XX clipoutside=False
-                     spw=9 mode=tfcrop expression=ABS_RR ntime=51.0,spw=9
+                     mode=clip clipminmax=[0,2] correlation=ABS_XX clipoutside=False
+                     spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0 spw=9
                      mode=extend extendpols=True
                      
                   See the syntax for writing flag commands at the end of this help.                  
 
 
             manual -- Flag according to the data selection specified.
-                   If data is pre-selected using selectdata=True, then flagging
-                   will apply only to that subset of the MS.
                   
             clip -- Clip data according to values of the following subparameters.
-
-               expression -- Clip using the following:
-                    default: 'ABS ALL'; use all the available polarizations.
-                    options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
-                             any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
-                             'WVR' refers to the water vapour radiometer of ALMA data.
-                    example: expression='RE XX'
                     
                channelavg -- Average data over (selected) channels? Channel
                             selections are taken into account. Flagged channels
@@ -644,11 +640,14 @@ tfcrop,extend,unflag,summary)</description>
 
             shadow -- Option to flag data of shadowed antennas
                      
-                diameter -- Effective diameter to use when determining if an antenna
-                            is shadowed at a given time stamp. The given value is used
-                            for all antennas. If this is set to a negative number the actual 
-                            antenna diameters are used.
-                   default: -1.0
+                tolerance -- Amount of shadowing allowed...
+                   default: 0.0
+
+                recalcuvw -- Recalculate U,V,W..........
+                   default: False
+
+                antennafile -- File name with additional antenna names, positions and diameters.
+                   default: ''
 
             elevation -- Option to flag based on antenna elevation
                  
@@ -675,13 +674,6 @@ tfcrop,extend,unflag,summary)</description>
                     default: False
                         It only makes sense when ntime not equal 'scan'.                
 
-               expression -- Flag using the following:
-                    default: 'ABS ALL'; use all the available polarizations.
-                    options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
-                             any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
-                             'WVR' refers to the water vapour radiometer of ALMA data.
-                    example: expression='RE XX'
-                    
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA','CORRECTED','MODEL', 'RESIDUAL, "RESIDUAL_DATA"
@@ -816,13 +808,17 @@ tfcrop,extend,unflag,summary)</description>
                   
                 minrel -- Minimum number of flags (relative) to include in histogram
                     default: 0.0
+
                 maxrel -- Maximum number of flags (relative) to include in histogram
                     default: 1.0
+
                 minabs -- Minimum number of flags (absolute, inclusive) to include in histogram
                     default: 0
+
                 maxabs -- Maximum number of flags (absolute, inclusive) to include in histogram
                           To indicate infinity, use any negative number.
                     default: -1
+
                 spwchan -- list the number of flags per spw and per channel.
                     default: False
                 spwcorr -- list the number of flags per spw and per correlation.
@@ -855,19 +851,15 @@ tfcrop,extend,unflag,summary)</description>
                     Note: this parameter is disabled when mode='summary'.
 
               sequential -- Run the task in sequential or in parallel. 
-                   default: False
-                   options: False/True
-                
-              flagbackup -- Automatically backup flags before running the tool.
-                   default: False
+                   default: True
                    options: True/False
-                    
- 
-        display -- Display data and/or end-of-MS reports at runtime.
-        
-               default: 'none'
-               options: 'none', 'data', 'report', 'both'
-                  'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
+                 
+              display -- Display data and/or end-of-MS reports at runtime.        
+               	   default: 'none'
+               	   options: 'none', 'data', 'report', 'both'
+
+                  	 'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
+
                       This option opens a GUI to show the 2D time-freq planes of
                       the data with old and new flags, for all correlations per baseline.
                       -- The GUI allows stepping through all baselines (prev/next) in
@@ -876,13 +868,13 @@ tfcrop,extend,unflag,summary)</description>
                       obvious that the current set of parameters is just wrong.
                       -- There is an option to stop the display but continue flagging.
 
-                  'report' --> displays enf-of-MS reports on the screen or save on a file using the
-                                 format sub-parameter.
-                      format -- 'screen' or 'file'
-                                file is the name of the filename to be saved in disk.
-                                
-                  'both' --> displays data per chunk and end-of-MS reports on the screen or saved on a file in disk.
+                  	'report' --> displays enf-of-MS reports on the screen.
+
+                  	'both' --> displays data per chunk and end-of-MS reports on the screen
                                  
+              flagbackup -- Automatically backup flags before running the tool.
+                   default: False
+                   options: True/False                    
 
         savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
                 default: False
@@ -907,28 +899,32 @@ tfcrop,extend,unflag,summary)</description>
         
         cat flags.txt
         scan=1~3 mode=manual
-        spw=9 mode=tfcrop expression=ABS_RR ntime=51.0,spw=9
+        spw=9 mode=tfcrop correlation=ABS_RR ntime=51.0 spw=9
         mode=extend extendpols=True
         
-            tflagdata('my.ms', mode='list')
+            tflagdata('my.ms', mode='list', inpfile='flags.txt')
 
-        4) Display the data and flags per-chunk and do not write flags to the MS
+        4) Display the data and flags per-chunk and do not write flags to the MS.
         
-            tflagdata('my.ms', mode='list', writeflags=False, display='data')
+            tflagdata('my.ms', mode='list', inpfile='flags.txt', writeflags=False, display='data')
             
-        5) Flag all the antennas except antenna=5
+        5) Flag all the antennas except antenna=5.
         
             tflagdata(vis='my.ms', antenna='!5', mode='manual)
             
-        6) Clip only the NaN in the data. An empty clipminmax will flag only NaN.
+        6) Clip the NaN in the data. An empty clipminmax will flag only NaN.
         
             tflagdata(vis=self.vis, mode='clip')
             
         7) Clip only the water vapour radiometer data.
         
-            tflagdata(vis='my.ms',mode='clip',clipminmax=[0,50], expression='ABS WVR')
+            tflagdata(vis='my.ms',mode='clip',clipminmax=[0,50], correlation='ABS WVR')
+
+		8) Clip only zero-value data.
+
+            tflagdata(vis='my.ms',mode='clip',clipzeros=True)
             
-        8) Flag only auto-correlations.
+        9) Flag only auto-correlations.
            
             tflagdata(vis=self.vis, mode='manual', antenna='*&amp;&amp;&amp;')
             
@@ -943,14 +939,25 @@ tfcrop,extend,unflag,summary)</description>
           NOTE: There should be no whitespace between KEY=VALUE or within each KEY or 
           VALUE, since the simple parser first breaks command lines on whitespace, 
           then on "=". 
+
+          Use only white spaces to separate the parameters (no commas).
         
-          Each key should only appear once on a given command line/string
+          Each key should only appear once on a given command line/string.
         
           There is an implicit "mode" for each command, with the default
           being 'manual' if not given.
 
           Comment lines can start with '#' and will be ignored.
           Parts of a command line after a '#' token are also ignored.
+
+          Example:
+        
+          scan=1~3 mode=manual
+          # this line will ignored
+          spw=9 mode=tfcrop correlation=ABS_RR ntime=51.0 spw=9
+          mode=extend extendpols=True
+          scan=1~3,10~12 mode=quack quackinterval=1.0
+          
 
 
     

@@ -2,7 +2,7 @@ from taskinit import *
 import time
 import os
 import sys
-from flaghelper import *
+import flaghelper as fh
 
 debug = False
 
@@ -21,8 +21,7 @@ def tflagdata(vis,
              feed,
              array,
              observation,
-             expression,    # mode clip parameters
-             clipminmax,
+             clipminmax,    # mode clip parameters
              datacolumn,
              clipoutside,
              channelavg,
@@ -30,7 +29,9 @@ def tflagdata(vis,
              quackinterval, # mode quack parameters
              quackmode,
              quackincrement,
-             diameter,      # mode shadow parameter
+             tolerance,      # mode shadow parameter
+             recalcuvw,
+             antennafile,
              lowerlimit,    # mode elevation parameters
              upperlimit,
              ntime,         # mode tfcrop
@@ -58,14 +59,13 @@ def tflagdata(vis,
              run,           # run or not the tool
              writeflags,
              sequential,    # run in sequential or in parallel
-             flagbackup,
              display,
-             format,
+             flagbackup,
              savepars,      # save the current parameters to FLAG_CMD  or
              outfile):      # output file to save flag commands
 
     # Global parameters
-    # vis, mode, run, savepars, display, writeflags                        
+    # vis, mode, run, savepars                      
     
     #
     # Task tflagdata
@@ -135,7 +135,7 @@ def tflagdata(vis,
         sel_pars = ''
         
         # Initialize the flaghelper module
-        fh = flaghelper(tflocal, casalog)
+#        fh = flaghelper(tflocal, casalog)
         
         # Default mode
         if mode == '':
@@ -149,7 +149,8 @@ def tflagdata(vis,
                 if inpfile == '':
                      casalog.post('Input file is empty', 'ERROR')
                      
-                flaglist = fh.readList(inpfile)
+                flaglist = fh.readFile(inpfile)
+                
                 # Make a FLAG_CMD compatible dictionary
                 flagcmd = fh.makeDict(flaglist)
                 
@@ -166,7 +167,11 @@ def tflagdata(vis,
             casalog.post('Manual mode is active')
             
         elif mode == 'clip':
-            agent_pars['expression'] = expression
+#            agent_pars['expression'] = expression
+            if correlation == '':
+                # default
+                correlation = "ABS_ALL"
+                
             agent_pars['datacolumn'] = datacolumn
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
@@ -174,7 +179,7 @@ def tflagdata(vis,
             
             # If clipminmax = [], do not write it in the dictionary.
             # It will be handled by the framework to flag NaNs only
-            if clipminmax != []:      
+            if clipminmax.__len__() == 2:      
                 # Cast to float to avoid the missing decimal point                 
                 clipmin = float(clipminmax[0])
                 clipmax = float(clipminmax[1])
@@ -186,18 +191,29 @@ def tflagdata(vis,
             casalog.post('Clip mode is active')
             
             # Replace the white spaces
-            expr = delspace(expression, '_')            
+            expr = delspace(correlation, '_')
+            correlation = expr     
             cliprange = delspace(str(clipminmax), '')
             
-            sel_pars = sel_pars+' expression='+str(expr)+' datacolumn='+datacolumn+\
+            sel_pars = sel_pars+' datacolumn='+datacolumn+\
                        ' clipminmax='+str(cliprange)+' clipoutside='+str(clipoutside)+\
                        ' channelavg='+str(channelavg)+' clipzeros='+str(clipzeros)
             
         elif mode == 'shadow':
-            agent_pars['diameter'] = diameter
+            agent_pars['tolerance'] = tolerance
+            # ONce this is implemented in the agent, uncomment next line
+#            agent_pars['addantenna'] = antennafile
+
+            if antennafile != '':
+            # Get a dictionary with the antenna names, positions and diameters
+                addantenna = fh.readAntennaList(antennafile)                
+                agent_pars['addantenna'] = addantenna
+                
+            agent_pars['recalcuvw'] = recalcuvw
             casalog.post('Shadow mode is active')
             
-            sel_pars = sel_pars+' diameter='+str(diameter)
+            sel_pars = sel_pars+' tolerance='+str(tolerance)+' recalcuvw='+str(recalcuvw)+\
+                        ' antennafile='+str(antennafile)
 
         elif mode == 'quack':
             agent_pars['quackmode'] = quackmode
@@ -216,9 +232,13 @@ def tflagdata(vis,
             sel_pars = sel_pars+' lowerlimit='+str(lowerlimit)+' upperlimit='+str(upperlimit)
 
         elif mode == 'tfcrop':
+            if correlation == '':
+                # default
+                correlation = "ABS_ALL"
+                
             agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans            
-            agent_pars['expression'] = expression
+#            agent_pars['expression'] = expression
             agent_pars['datacolumn'] = datacolumn
             agent_pars['timecutoff'] = timecutoff
             agent_pars['freqcutoff'] = freqcutoff
@@ -230,10 +250,11 @@ def tflagdata(vis,
             agent_pars['halfwin'] = str(halfwin)
             casalog.post('Time and Frequency (tfcrop) mode is active')
 
-            expr = delspace(expression, '_')
+            expr = delspace(correlation, '_')
+            correlation = expr
             
-            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+' expression=\"'+\
-                       str(expr)+'\" datacolumn='+datacolumn+\
+            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+\
+                      '\" datacolumn='+datacolumn+\
                       ' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
                       ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
                       ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
@@ -270,8 +291,9 @@ def tflagdata(vis,
         # Setup global parameters in the agent's dictionary
         apply = True
                     
-        # Correlation does not go in selectdata, but here
+        # Correlation does not go in selectdata, but in the agent's parameters
         agent_pars['correlation'] = correlation
+        
         
         # Hold the name of the agent
         agent_name = mode.capitalize()
@@ -329,7 +351,7 @@ def tflagdata(vis,
             tflocal.selectdata(unionpars)
             
             # Parse the parameters for each agent in the list
-            list2save = fh.setupAgent(flagcmd, [], apply)
+            list2save = setupAgent(tflocal, flagcmd, [], apply)
 
         # Do display if requested
         if display != '':
@@ -342,14 +364,12 @@ def tflagdata(vis,
             if display == 'both':
                 agent_pars['datadisplay'] = True
                 agent_pars['reportdisplay'] = True
-                agent_pars['format'] = format
             
             elif display == 'data':
                 agent_pars['datadisplay'] = True
             
             elif display == 'report':
                 agent_pars['reportdisplay'] = True
-                agent_pars['format'] = format
                 
             tflocal.parseagentparameters(agent_pars)
                     
@@ -365,7 +385,7 @@ def tflagdata(vis,
         
         # Run the tool
         casalog.post('Running the testflagger tool')
-        summary_stats = tflocal.run(writeflags, sequential)
+        summary_stats_list = tflocal.run(writeflags, sequential)
 
 
         # Save the current parameters/list to FLAG_CMD or to output
@@ -384,24 +404,42 @@ def tflagdata(vis,
         # Destroy the tool
         tflocal.done()
 
+        # Pull out the 'summary' part of summary_stats_list.
+        # (This is the task, and there will be only one such dictionary.)
+        # After this step, the only thing left in summary_stats_list are the
+        # list of reports/views, if any.  Return it, if the user wants it.
+        summary_stats={};
         if mode == 'summary':
-            # Filter out baselines/antennas/fields/spws/...
-            # which do not fall within limits
-            if type(summary_stats) is dict:
-                for x in summary_stats.keys():
-                    if type(summary_stats[x]) is dict:
-                        for xx in summary_stats[x].keys():
-                            flagged = summary_stats[x][xx]
-                            assert type(flagged) is dict
-                            assert flagged.has_key('flagged')
-                            assert flagged.has_key('total')
-                            if flagged['flagged'] < minabs or \
-                               (flagged['flagged'] > maxabs and maxabs >= 0) or \
-                               flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
-                               flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
-                                    del summary_stats[x][xx]
+           if type(summary_stats_list) is dict:
+               nreps = summary_stats_list['nreport'];
+               for rep in range(0,nreps):
+                    repname = "report"+str(rep);
+                    if summary_stats_list[repname]['type'] == "summary":
+                          summary_stats = summary_stats_list.pop(repname);
+                          summary_stats_list[repname] = {'type':'none'};
+                          break;  # pull out only one summary.
         
-        return summary_stats
+           # Filter out baselines/antennas/fields/spws/... from summary_stats
+           # which do not fall within limits
+           if type(summary_stats) is dict:
+               for x in summary_stats.keys():
+                   if type(summary_stats[x]) is dict:
+                       for xx in summary_stats[x].keys():
+                           flagged = summary_stats[x][xx]
+                           assert type(flagged) is dict
+                           assert flagged.has_key('flagged')
+                           assert flagged.has_key('total')
+                           if flagged['flagged'] < minabs or \
+                              (flagged['flagged'] > maxabs and maxabs >= 0) or \
+                              flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
+                              flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
+                                   del summary_stats[x][xx]
+        
+        # if (need to return the reports/views as well as summary_stats) :
+        #      return summary_stats , summary_stats_list;
+        # else :
+        #      return summary_stats;
+        return summary_stats;
     
     except Exception, instance:
         casalog.post('%s'%instance,'ERROR')
@@ -490,3 +528,159 @@ def delspace(word, replace):
     
     return newword
     
+def setupAgent(tflocal, myflagcmd, myrows, apply):
+    ''' Setup the parameters of each agent and call the testflagger tool
+    
+        myflagcmd --> it is a dictionary with the following structure:
+        {0: {'cmd': " mode='clip' clipmin=[0,4]",'id': '0'}
+        myrows --> selected rows to apply/unapply flags
+        apply --> it's a boolean to control whether to apply or unapply the flags
+        Returns a dictionary '''
+
+
+    if not myflagcmd.__len__() >0:
+        casalog.post('There are no flag commands in list', 'SEVERE')
+        return
+    
+    # Parameters for each mode
+    manualpars = []
+    clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
+    quackpars = ['quackinterval','quackmode','quackincrement']
+    shadowpars = ['tolerance','recalcuvw','addantenna']
+    elevationpars = ['lowerlimit','upperlimit'] 
+    tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
+                  'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
+    extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
+                  'flagneartime','flagnearfreq']
+    
+        
+    # dictionary of successful command lines to save to outfile
+    savelist = {}
+
+    # Setup the agent for each input line    
+    for key in myflagcmd.keys():
+        cmdline = myflagcmd[key]['command']
+        applied = myflagcmd[key]['applied']
+        interval = myflagcmd[key]['interval']
+        level = myflagcmd[key]['level']
+        reason = myflagcmd[key]['reason']
+        severity = myflagcmd[key]['severity']
+        time = myflagcmd[key]['time']
+        type = myflagcmd[key]['type']
+
+        casalog.post('cmdline for key%s'%key, 'DEBUG')
+        casalog.post('%s'%cmdline, 'DEBUG')
+        casalog.post('applied is %s'%applied, 'DEBUG')
+        
+        if cmdline.startswith('#'):
+            continue
+    
+        modepars = {}
+        parslist = {}
+        mode = ''    
+        valid = True
+                
+        # Get the specific parameters for the mode
+        if cmdline.__contains__('mode'):                 
+            if cmdline.__contains__('manual'): 
+                mode = 'manual'
+                modepars = fh.getLinePars(cmdline,manualpars)   
+            elif cmdline.__contains__('clip'):
+                mode = 'clip'
+                modepars = fh.getLinePars(cmdline,clippars)
+            elif cmdline.__contains__('quack'):
+                mode = 'quack'
+                modepars = fh.getLinePars(cmdline,quackpars)
+            elif cmdline.__contains__('shadow'):
+                mode = 'shadow'
+                modepars = fh.getLinePars(cmdline,shadowpars)
+            elif cmdline.__contains__('elevation'):
+                mode = 'elevation'
+                modepars = fh.getLinePars(cmdline,elevationpars)
+            elif cmdline.__contains__('tfcrop'):
+                mode = 'tfcrop'
+                modepars = fh.getLinePars(cmdline,tfcroppars)
+            elif cmdline.__contains__('extend'):
+                mode = 'extend'
+                modepars = fh.getLinePars(cmdline,extendpars)
+            elif cmdline.__contains__('unflag'):
+                mode = 'unflag'
+                modepars = fh.getLinePars(cmdline,manualpars)
+            elif cmdline.__contains__('rflag'):
+                mode = 'rflag'
+                modepars = fh.getLinePars(cmdline,rflagpars)
+            else:
+                # Unknown mode, ignore it
+                casalog.post('Ignoring unknown mode', 'WARN')
+                valid = False
+
+        else:
+            # No mode means manual
+            mode = 'manual'
+            cmdline = cmdline+' mode=manual'
+            modepars = fh.getLinePars(cmdline,manualpars)   
+                
+                
+        # CHECK if modepars gets modified in task
+        # Read ntime
+        fh.readNtime(modepars)
+        
+        # Cast the correct type to non-string parameters
+        fh.fixType(modepars)
+        
+        # Add the apply/unapply parameter to dictionary            
+        modepars['apply'] = apply
+        
+        # Unapply selected rows only and re-apply the other rows with APPLIED=True
+        if not apply and myrows.__len__() > 0:
+            if key in myrows:
+                modepars['apply'] = False
+            elif not applied:
+                casalog.post("Skipping this %s"%modepars,"DEBUG")
+                continue
+            elif applied:
+                modepars['apply'] = True
+                valid = False
+        
+        # Keep only cmds that overlap with the unapply cmds
+        # TODO later
+        
+        # Hold the name of the agent and the cmd row number
+        agent_name = mode.capitalize()+'_'+str(key)
+        modepars['name'] = agent_name
+        
+        # Remove the data selection parameters if there is only one agent,
+        # for performance reasons
+        if myflagcmd.__len__() == 1:
+            sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
+                     'spw','observation']
+            for k in sellist:
+                if modepars.has_key(k):
+                    modepars.pop(k)
+
+        casalog.post('Parsing parameters of mode %s in row %s'%(mode,key), 'DEBUG')
+        casalog.post('%s'%modepars, 'DEBUG')
+
+        # Parse the dictionary of parameters to the tool
+        if (not tflocal.parseagentparameters(modepars)):
+            casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,key), 'WARN')
+            continue
+                            
+        # Save the dictionary of valid agents
+        if valid:               
+            # add this command line to list to save in outfile
+            parslist['row'] = key
+            parslist['command'] = cmdline
+            parslist['applied'] = applied
+            parslist['interval'] = interval
+            parslist['level'] = level
+            parslist['reason'] = reason
+            parslist['severity'] = severity
+            parslist['time'] = time
+            parslist['type'] = type
+            savelist[key] = parslist
+                
+    casalog.post('Dictionary of valid commands to save','DEBUG')
+    casalog.post('%s'%savelist, 'DEBUG')
+
+    return savelist

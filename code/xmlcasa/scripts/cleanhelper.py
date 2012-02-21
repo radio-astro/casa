@@ -30,6 +30,10 @@ class cleanhelper:
         like so:
         a=cleanhelper(im, vis)
         """
+        ###fix for assumption that if it is a list of 1 it is sngle ms mode
+        if((type(vis)==list) and (len(vis)==1)):
+            vis=vis[0]
+        ####
         if((type(imtool) != str) and (len(vis) !=0)):
             # for multi-mses input (not fully implemented yet)
             if(type(vis)==list):

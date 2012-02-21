@@ -101,6 +101,15 @@ class ia_tofits_test(unittest.TestCase):
         )
         self.assertTrue(zz and type(zz) == type(True))
         yy.done()
+        
+    def test_CAS3675(self):
+        """ test fix for CAS 3675, outfile must be specified """
+        name = "my.im"
+        yy = iatool.create()
+        yy.fromshape(name, [1,1,1,1])
+        self.assertRaises(Exception, yy.tofits, overwrite=T)
+        yy.done()
+        self.assertFalse(exportfits(imagename=name, overwrite=T))
     
 def suite():
     return [ia_tofits_test]

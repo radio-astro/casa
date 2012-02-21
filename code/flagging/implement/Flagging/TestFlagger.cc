@@ -287,7 +287,6 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	// Default values for some parameters
 	String mode = "";
-	String expression = "ABS ALL";
 	String agent_name = "";
 	Bool apply = true;
 
@@ -331,11 +330,10 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	agentParams_p.get("name", agent_name);
 
-	// Enforce a defaut value for the apply parameter
+	// Enforce a default value for the apply parameter
 	if (! agentParams_p.isDefined("apply")){
 		agentParams_p.define("apply", apply);
 	}
-
 
 	// If there is a tfcrop or extend agent in the list,
 	// get the maximum value of ntime and the combinescans parameter
@@ -362,19 +360,25 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	// Create one agent for each polarization
 	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0) {
 
-		if (agentParams_p.isDefined("expression")) {
+		// Default for these modes
+		String correlation = "ABS ALL";
 
-			agentParams_p.get("expression", expression);
+		if (agentParams_p.isDefined("correlation")) {
+
+			agentParams_p.get("correlation", correlation);
 		}
 		else {
-			agentParams_p.define("expression", expression);
+			agentParams_p.define("correlation", correlation);
+		}
+		if (dbg){
+			cout << "mode="<<mode<<" correlation="<<correlation<<endl;
 		}
 
 		// Is the expression polarization an ALL?
-		if (isExpressionPolarizationAll(expression)) {
+		if (isExpressionPolarizationAll(correlation)) {
 
 			// Get the complex unitary function (ABS, NORM, REAL, IMAG, ARG)
-			String function = getExpressionFunction(expression);
+			String function = getExpressionFunction(correlation);
 
 			// Get all the polarizations in the MS
 			std::vector<String> *allpol = fdh_p->corrProducts_p;
@@ -387,7 +391,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 				exp = func.append(pol);
 
 				// Save the record to a list of agents
-				agentParams_p.define("expression", exp);
+				agentParams_p.define("correlation", exp);
 				String name = agent_name;
 				name = name.append("_");
 				name = name.append(pol);
@@ -625,15 +629,16 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 		displayAgent_p->displayReports(combinedReport);
 
 	// Get the record with the summary if there was any summary agent in the list
-	Record summary_stats = Record();
-	if (summaryAgent_p){
-		summary_stats = summaryAgent_p->getResult();
+//	Record summary_stats = Record();
+//	if (summaryAgent_p){
+//		summary_stats = summaryAgent_p->getResult();
 
-	}
+//	}
 
 	agents_list_p.clear();
 
-	return summary_stats;
+//	return summary_stats;
+	return combinedReport;
 }
 
 // ---------------------------------------------------------------------
@@ -642,10 +647,10 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::isExpressionPolarizationAll(String expression)
+TestFlagger::isExpressionPolarizationAll(String correlation)
 {
 
-	if (expression.find("ALL") == string::npos){
+	if (correlation.find("ALL") == string::npos){
 		return false;
 	}
 
@@ -870,7 +875,7 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 bool
 TestFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange,String correlation,
-   	    String intent, String observation, String expression, String datacolumn,
+   	    String intent, String observation, String datacolumn,
    	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply)
 {
 
@@ -898,7 +903,6 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 	agent_record.define("apply", apply);
 	agent_record.define("name", agent_name);
 
-	agent_record.define("expression", expression);
 	agent_record.define("datacolumn", datacolumn);
 	agent_record.define("clipminmax", clipminmax);
 	agent_record.define("clipoutside", clipoutside);
