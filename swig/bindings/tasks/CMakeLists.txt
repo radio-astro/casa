@@ -47,7 +47,6 @@ importevla.xml
 importfits.xml
 importfitsidi.xml
 importgmrt.xml
-importoldasdm.xml
 importuvfits.xml
 importvla.xml
 imregrid.xml

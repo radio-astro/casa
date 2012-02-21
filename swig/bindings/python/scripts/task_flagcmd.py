@@ -1763,11 +1763,6 @@ def updateflagcmd(msfile,mycol='',myval=None,myrowlist=[]):
 #
 #===============================================================================
 def plotflags(myflags, plotname, t1sdata, t2sdata):
-    try: 
-        from casac import *
-    except ImportError, e: 
-        print "failed to load casa:\n", e 
-        exit(1) 
     qa = casac.qa()
     
     try:
@@ -1894,11 +1889,6 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
     # Function to plot flagging dictionary
     # Adapted from J.Marvil
     # Updated STM v4.1 2011-11-02 to handle ALMA flags
-    try: 
-        from casac import *
-    except ImportError, e: 
-        print "failed to load casa:\n", e 
-        exit(1) 
     qa = casac.qa = casac.quanta()
     
     try:

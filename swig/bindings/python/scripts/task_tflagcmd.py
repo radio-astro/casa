@@ -1830,11 +1830,6 @@ def plotflags(
     t2sdata,
     ):
     
-    try:
-        from casac import *
-    except ImportError, e:
-        print 'failed to load casa:\n', e
-        exit(1)
     qa = casac.qa = casac.quanta()
 
     try:

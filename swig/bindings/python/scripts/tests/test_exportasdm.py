@@ -117,7 +117,7 @@ class exportasdm_test(unittest.TestCase):
         self.assertFalse(self.rval)
 
     def test2(self):
-        '''Test 2: small input MS, default output, v2'''
+        '''Test 2: small input MS, default output, v3'''
         myvis = self.vis_b
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
@@ -126,7 +126,7 @@ class exportasdm_test(unittest.TestCase):
                 archiveid="S1",
                 verbose=True,
                 apcorrected=False,
-                useversion='v2')
+                useversion='v3')
 
         self.assertNotEqual(self.rval,False)
         omsname = "test"+str(2)+self.out
@@ -134,17 +134,17 @@ class exportasdm_test(unittest.TestCase):
         self.verify_asdm(omsname, False)
 
     def test3(self):
-        '''Test 3: simulated input MS, default output, v2'''
+        '''Test 3: simulated input MS, default output, v3'''
         myvis = self.vis_f
         os.system('cp -R ' + myvis + ' myinput.ms')
-        self.rval = exportasdm(vis = 'myinput.ms',asdm = self.out,archiveid="S1", useversion='v2')
+        self.rval = exportasdm(vis = 'myinput.ms',asdm = self.out,archiveid="S1", useversion='v3')
         self.assertNotEqual(self.rval,False)
         omsname = "test"+str(3)+self.out
         os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
         self.verify_asdm(omsname, True)
 
     def test4(self):
-        '''Test 4: real input MS, default output, v2'''
+        '''Test 4: real input MS, default output, v3'''
         myvis = self.vis_d
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
@@ -152,7 +152,7 @@ class exportasdm_test(unittest.TestCase):
             asdm = self.out,
             archiveid="S1",
             apcorrected=False,
-            useversion='v2'
+            useversion='v3'
             )
 
         self.assertNotEqual(self.rval,False)
@@ -161,7 +161,7 @@ class exportasdm_test(unittest.TestCase):
         self.verify_asdm(omsname, False)
 
     def test5(self):
-        '''Test 5: real input MS, MS has several SPWs observed in parallel, v2 - not supported, expected error'''
+        '''Test 5: real input MS, MS has several SPWs observed in parallel, v3 - not supported, expected error'''
         myvis = self.vis_e
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
@@ -169,13 +169,13 @@ class exportasdm_test(unittest.TestCase):
             asdm = self.out,
             archiveid="S1",
             apcorrected=False,
-            useversion = 'v2'
+            useversion = 'v3'
             )
 
         self.assertFalse(self.rval)
 
     def test6(self):
-        '''Test 6: simulated input MS with pointing table, default output, v2'''
+        '''Test 6: simulated input MS with pointing table, default output, v3'''
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
@@ -183,7 +183,7 @@ class exportasdm_test(unittest.TestCase):
             asdm = self.out,
             archiveid="S002",
             apcorrected=False,
-            useversion = 'v2'
+            useversion = 'v3'
             )
 
         self.assertNotEqual(self.rval,False)
