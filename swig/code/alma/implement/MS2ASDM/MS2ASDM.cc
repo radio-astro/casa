@@ -22,7 +22,6 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 //#  MA 02111-1307  USA
 //# $Id: $
-#include <alma/MS2ASDM/MS2ASDM.h>
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -69,8 +68,11 @@
 #include <alma/ASDMBinaries/SDMDataObjectWriter.h>
 #include <alma/ASDMBinaries/SDMDataObject.h>
 
+#include <alma/MS2ASDM/MS2ASDM.h>
+
 using asdm::ASDM;
 using asdm::TagType;
+using namespace asdm;
 using namespace asdmbinaries;
 
 namespace casa {
@@ -483,16 +485,60 @@ namespace casa {
 	os << LogIO::WARN << "Scan Number is 0. Note that by convention scan numbers in ASDMs should start at 1." << LogIO::POST;
 	warned = True;
       }
-      
+
+      // find the first occurence of the timestamp which has the most baselines
+      uInt theSampleStartRow = 0;
+      {
+	uInt maxNRows = 0;
+	
+	uInt mainTabRowX=startRow; 
+
+	while(mainTabRowX <= endRow){
+	
+	  DDId = dataDescId()(mainTabRowX);
+	  if(DDId != theDDId){ // skip all other Data Description Ids
+	    mainTabRowX++;
+	    continue;
+	  }
+	  FId = fieldId()(mainTabRowX);
+	  if(FId != theFieldId){ // skip all other Field Ids
+	    mainTabRowX++;
+	    continue;
+	  }
+	  
+	  Double theTStamp = time()(mainTabRowX);
+	  uInt sRow = mainTabRowX;
+	  uInt nRows = 0;
+	  while(mainTabRowX < nMainTabRows 
+		&& time()(mainTabRowX)==theTStamp){
+	    DDId = dataDescId()(mainTabRowX);
+	    if(DDId != theDDId){ // skip all other Data Description Ids
+	      mainTabRowX++;
+	      continue;
+	    }
+	    FId = fieldId()(mainTabRowX);
+	    if(FId != theFieldId){ // skip all other Field Ids
+	      mainTabRowX++;
+	      continue;
+	    }
+	    nRows++;
+	    mainTabRowX++;
+	  }
+	  if(nRows>maxNRows){
+	    maxNRows = nRows;
+	    theSampleStartRow = sRow;
+	  }
+	} // end while
+      }
+
       // determine actual number of baselines and antennas
-      // assume that the first timestamp has complete information
       // (at the same time also fill the stateId vector)
       unsigned int numAutoCorrs = 0;
       unsigned int numBaselines = 0;
       unsigned int numAntennas = 0;
       vector<Int> ant;
       {
-	uInt i = startRow;
+	uInt i = theSampleStartRow;
 	Double thisTStamp = time()(i); 
 	while(i<nMainTabRows && time()(i)== thisTStamp){
 	  
@@ -848,6 +894,60 @@ namespace casa {
 	  //	    actualDurations.push_back((int64_t)floor(interval()(iRow))*1000.);
 	}// end loop over rows in this timestamp sorted by baseline
 	
+
+	// fill with flagged entries in case there are missing baselines in the MS
+	uInt nToAdd1 = 0;
+	uInt nToAdd2 = 0;
+	uInt nToAdd3 = 0;
+	uInt nToAdd4 = 0;
+	uInt nToAdd5 = 0;
+	uInt nToAdd6 = 0;
+
+	if(flags.size()<bpFlagsSize){
+	  nToAdd1 = bpFlagsSize - flags.size();
+	  for(uInt i=0; i<nToAdd1; i++){
+	    flags.push_back(1);
+	  }
+	}	
+	if(actualTimes.size()<bpTimesSize){
+	  nToAdd2 = bpTimesSize-actualTimes.size();
+	  for(uInt i=0; i<nToAdd2; i++){
+	    actualTimes.push_back(0);
+	  }
+	}
+	if(actualDurations.size()<bpDurSize){
+	  nToAdd3 = bpDurSize-actualDurations.size();
+	  for(uInt i=0; i<nToAdd3; i++){
+	    actualDurations.push_back(0);
+	  }
+	}
+	if(zeroLags.size()<bpLagsSize){
+	  nToAdd4 = bpLagsSize-zeroLags.size();
+	  for(uInt i=0; i<nToAdd4; i++){
+	    zeroLags.push_back(0.);
+	  }
+	}
+	if(crossData.size()<bpCrossSize){
+	  nToAdd5 = bpCrossSize-crossData.size();
+	  for(uInt i=0; i<nToAdd5; i++){
+	    crossData.push_back(0.);
+	  }
+	}
+	if(autoData.size()<bpAutoSize){
+	  nToAdd6 = bpAutoSize-autoData.size();
+	  for(uInt i=0; i<nToAdd6; i++){
+	    autoData.push_back(0.);
+	  }
+	}
+
+	if(nToAdd1+nToAdd2+nToAdd3+nToAdd4+nToAdd5+nToAdd6>0){
+	  os << LogIO::WARN << "Encountered missing integrations for some baselines in MS."
+	     << " Will fill with flagged entries (" << nToAdd1 << ", " << nToAdd2 << ", " << nToAdd3 
+	     << ", "<< nToAdd4 << ", "<< nToAdd5 << ", "<< nToAdd6 << ")" << LogIO::POST; 
+	}
+	
+	// finally write the integration
+	  
 	if(verbosity_p>1){
 	  cout << "Sizes: " << endl;
 	  cout << "   flags " << flags.size() << endl;
@@ -858,25 +958,33 @@ namespace casa {
 	  cout << "   autoData " << autoData.size() << endl;
 	}
 
-	sdmdow.addIntegration(integrationNum,    // integration's index.
-			      timev,             // midpoint
-			      intervalv,         // time interval
-			      flags,             // flags binary data 
-			      actualTimes,       // actual times binary data      
-			      actualDurations,   // actual durations binary data          
-			      zeroLags,          // zero lags binary data                 
-			      crossData,    // cross data (can be short or int)  
-			      autoData);         // single dish data.  
+	try{
 
-	integrationNum++;
-	datasize += flags.size() * sizeof(unsigned int)
-	  + actualTimes.size() * sizeof( int64_t )
-	  + actualDurations.size() * sizeof( int64_t )
-	  + zeroLags.size() * sizeof( float )
-	  + crossData.size() * sizeof( float )
-	  + autoData.size() * sizeof( float );
-	numIntegrations++;
-	
+	  sdmdow.addIntegration(integrationNum,    // integration's index.
+				timev,             // midpoint
+				intervalv,         // time interval
+				flags,             // flags binary data 
+				actualTimes,       // actual times binary data      
+				actualDurations,   // actual durations binary data          
+				zeroLags,          // zero lags binary data                 
+				crossData,    // cross data (can be short or int)  
+				autoData);         // single dish data.  
+
+	  integrationNum++;
+	  datasize += flags.size() * sizeof(unsigned int)
+	    + actualTimes.size() * sizeof( int64_t )
+	    + actualDurations.size() * sizeof( int64_t )
+	    + zeroLags.size() * sizeof( float )
+	    + crossData.size() * sizeof( float )
+	    + autoData.size() * sizeof( float );
+	  numIntegrations++;
+
+	}
+	catch(asdmbinaries::SDMDataObjectWriterException x){
+	  os << LogIO::WARN << "Error writing ASDM:" << x.getMessage() << endl
+	     << "Will try to continue ..."
+	     << LogIO::POST; 
+	}
 	// (Note: subintegrations are used only for channel averaging to gain time res. by sacrificing spec. res.)
 	
       } // end while 
@@ -1207,6 +1315,11 @@ namespace casa {
 	direction.push_back( Angle( theSourceDir.getAngle( unitASDMAngle() ).getValue()(0) ) ); // RA
 	direction.push_back( Angle( theSourceDir.getAngle( unitASDMAngle() ).getValue()(1) ) ); // DEC
 	
+	MDirection::Types dirRef;
+	MDirection::getType(dirRef, theSourceDir.getRefString());
+	DirectionReferenceCodeMod::DirectionReferenceCode directionCode
+	  = ASDMDirRefCode(dirRef);
+
 	vector< AngularRate > properMotion;
 	if(!source().properMotionQuant().isNull()){
 	  Vector< Quantity > pMV;
@@ -1229,6 +1342,8 @@ namespace casa {
 
 	tR = tT.newRow(timeInterval, spectralWindowId, code, direction, properMotion, sourceName);
     
+	tR->setDirectionCode(directionCode);
+
 	asdm::SourceRow* tR2;
 	tR2 = tT.add(tR);
 	if(tR2 != tR){ // did not lead to the creation of a new tag
@@ -1266,6 +1381,10 @@ namespace casa {
     skipCorr_p.resize(0); 
 
     for(uInt irow=0; irow<polarization().nrow(); irow++){
+
+      if(polarization().flagRow()(irow)){
+	continue;
+      }
 
       vector< Bool > skipCorr;
 
@@ -1385,8 +1504,8 @@ namespace casa {
 
       //cout << "ASDM numCorr is " << numCorr << endl;
 
-      bool flagRow = polarization().flagRow()(irow);
-      tR->setFlagRow(flagRow);
+      ////bool flagRow = polarization().flagRow()(irow);
+      ////tR->setFlagRow(flagRow);
 
       // add the row to the table
       asdm::PolarizationRow* tR2 = 0;
@@ -1685,7 +1804,7 @@ namespace casa {
       string fieldName = field().name()(irow).c_str();
       string code = field().code()(irow).c_str();
       if(code=="" || code==" "){
-	code="-";
+       code="-";
       }
       int numPoly = field().numPoly()(irow) + 1; // MS give poly order, ASDM needs number of coefficients
       if(numPoly>1){
@@ -1696,6 +1815,23 @@ namespace casa {
 
       String msAngUnit = "rad"; // MS uses radians here
       Matrix< Double > mdir; // aux. matrix
+
+
+      MDirection::Types phaseDirRef;
+      MDirection::getType(phaseDirRef, field().phaseDirMeasCol()(irow)(IPosition(1,0)).getRefString());
+      MDirection::Types delayDirRef;
+      MDirection::getType(delayDirRef, field().delayDirMeasCol()(irow)(IPosition(1,0)).getRefString());
+      MDirection::Types refDirRef;
+      MDirection::getType(refDirRef, field().referenceDirMeasCol()(irow)(IPosition(1,0)).getRefString());
+      if((phaseDirRef!=delayDirRef) || phaseDirRef!=refDirRef){
+	os << LogIO::SEVERE << "Internal error: the reference frames for phase, delay, and reference direction are not identical" 
+	   << "in the MS Field table row " << irow << "." << endl
+	   << "Not yet supported case." << LogIO::POST;
+	return False;
+      }
+	
+      DirectionReferenceCodeMod::DirectionReferenceCode directionCode
+	= ASDMDirRefCode(phaseDirRef);
 
       vector< vector< Angle > > delayDirV;
       mdir.reference(field().delayDir()(irow));
@@ -1730,8 +1866,11 @@ namespace casa {
 	referenceDirV.push_back(dirV);
       }
 
-      tR = tT.newRow(fieldName, code, numPoly, delayDirV, phaseDirV, referenceDirV);
-
+      ////tR = tT.newRow(fieldName, code, numPoly, delayDirV, phaseDirV, referenceDirV);
+      tR = tT.newRow(fieldName, numPoly, delayDirV, phaseDirV, referenceDirV);
+      
+      tR->setCode(code);
+      tR->setDirectionCode(directionCode);
       tR->setTime(ASDMArrayTime(field().timeQuant()(irow).getValue("s")));
 
       Int sId = field().sourceId()(irow);
@@ -3039,11 +3178,11 @@ namespace casa {
       os << LogIO::NORMAL << oss.str() << LogIO::POST;
     }
 
-    MVPosition mObsPos = pos.getValue();
-    Vector<Double> hlonlat = mObsPos.get(); // get three-vector of height, lon, lat  in m, rad, rad
-    Length siteAltitude = Length(hlonlat(0));
-    Angle siteLongitude = Angle(hlonlat(1));
-    Angle siteLatitude = Angle(hlonlat(2));
+    ////MVPosition mObsPos = pos.getValue();
+    ////Vector<Double> hlonlat = mObsPos.get(); // get three-vector of height, lon, lat  in m, rad, rad
+    ////Length siteAltitude = Length(hlonlat(0));
+    ////Angle siteLongitude = Angle(hlonlat(1));
+    ////Angle siteLatitude = Angle(hlonlat(2));
 
     // loop over main table
     Bool warned = False; // aux. var. to avoid warning repetition  
@@ -3180,9 +3319,9 @@ namespace casa {
       else{
 	firstFieldIdFromObsId.define(obsId,fId);
       } 
-      MDirection theFieldDir = field().phaseDirMeas(fId,0);
-      centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
-      centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
+      ////MDirection theFieldDir = field().phaseDirMeas(fId,0);
+      ////centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
+      ////centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
       
       int numObservingMode = 1;
       vector< string > observingMode;
@@ -3195,7 +3334,8 @@ namespace casa {
       weatherConstraint.push_back("weather constraint t.b.d.");
       
       tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, reprFreq, frequencyBand, sbType, sbDuration, 
-		     centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, 
+		     ////centerDirection, 
+		     numObservingMode, observingMode, numberRepeats, numScienceGoal, 
 		     scienceGoal, numWeatherConstraint, weatherConstraint);
       
       asdm::SBSummaryRow* tR2 = 0;
@@ -3269,21 +3409,23 @@ namespace casa {
 	  if(observerName==""){
 	    observerName = "unknown";
 	  }
-	  string observingLog = "log not filled";
+	  ////string observingLog = "log not filled";
+	  vector<string > observingLog(1);
+	  int numObservingLog = 1;
+	  observingLog[0] = "log not filled"; 
 	  Vector< String > sV;
 	  if(observation().log().isDefined(obsId)){// log string array not empty
 	    sV.reference(observation().log()(obsId)); // the observation log is an array of strings
-	    observingLog = "";
+	    observingLog.resize(sV.size());
+	    numObservingLog = observingLog.size();
 	    for(uInt i=0; i<sV.size(); i++){
-	      if(i>0){
-		observingLog += "\n";
-	      }
-	      observingLog += string(sV[i].c_str());
+	      observingLog[i] = string(sV[i].c_str());
 	    }
 	  }
-	  string sessionReference = "sessionReference t.b.d."; // ???
-	  EntityRef sbSummary = sbSummaryUID;
-	  string schedulerMode = "CASA exportasdm"; //???
+	  ////string sessionReference = "sessionReference t.b.d."; // ???
+	  ////EntityRef sbSummary = sbSummaryUID;
+	  EntityRef sessionReference = sbSummaryUID;
+	  ////string schedulerMode = "CASA exportasdm"; //???
 	  Length baseRangeMin = Length( minBaseline(sBSummaryTag) );
 	  Length baseRangeMax = Length( maxBaseline(sBSummaryTag) );
 	  Length baseRmsMinor = Length(0); // ???
@@ -3294,9 +3436,12 @@ namespace casa {
 	  int numAntenna = cDR->getNumAntenna();
 	  vector< Tag > antennaId = cDR->getAntennaId();
 
-	  tER = tET.newRow(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName,
-			   observerName, observingLog, sessionReference, sbSummary, schedulerMode, baseRangeMin,
-			   baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, 
+	  tER = tET.newRow(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName, observerName, 
+			   numObservingLog, observingLog, //// now vector< string>
+			   sessionReference, //// now of type EntityRef
+			   ////sbSummary, schedulerMode, 
+			   baseRangeMin, baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, 
+			   ////siteAltitude, siteLongitude, siteLatitude, 
 			   aborted, numAntenna, antennaId, sBSummaryTag);
 	  
 	  asdm::ExecBlockRow* tER2;
@@ -3410,21 +3555,25 @@ namespace casa {
       if(observerName==""){
 	observerName = "unknown";
       }
-      string observingLog = "log not filled";
+
+      ////string observingLog = "log not filled";
+      vector<string > observingLog(1);
+      int numObservingLog = 1;
+      observingLog[0] = "log not filled"; 
       Vector< String > sV;
-      if(observation().log().isDefined(obsId)){ // string array column not empty
+      if(observation().log().isDefined(obsId)){// log string array not empty
 	sV.reference(observation().log()(obsId)); // the observation log is an array of strings
-	observingLog = "";
+	observingLog.resize(sV.size());
+	numObservingLog = observingLog.size();
 	for(uInt i=0; i<sV.size(); i++){
-	  if(i>0){
-	    observingLog += "\n";
-	  }
-	  observingLog += string(sV[i].c_str());
+	  observingLog[i] = string(sV[i].c_str());
 	}
       }
-      string sessionReference = "sessionReference t.b.d."; // ???
-      EntityRef sbSummary = tR->getSbSummaryUID();
-      string schedulerMode = "CASA exportasdm"; //???
+    
+      //// string sessionReference = "sessionReference t.b.d."; // ???
+      ////EntityRef sbSummary = tR->getSbSummaryUID();
+      EntityRef sessionReference = tR->getSbSummaryUID();
+      ////string schedulerMode = "CASA exportasdm"; //???
       Length baseRangeMin = Length( minBaseline(sBSummaryTag) );
       Length baseRangeMax = Length( maxBaseline(sBSummaryTag) );
       Length baseRmsMinor = Length(0); // ???
@@ -3435,9 +3584,12 @@ namespace casa {
       int numAntenna = cDR->getNumAntenna();
       vector< Tag > antennaId = cDR->getAntennaId();
       
-      tER = tET.newRow(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName,
-		       observerName, observingLog, sessionReference, sbSummary, schedulerMode, baseRangeMin,
-		       baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, 
+      tER = tET.newRow(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName, observerName, 
+		       numObservingLog, observingLog, 
+		       sessionReference, 
+		       ////sbSummary, schedulerMode, 
+		       baseRangeMin, baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, 
+		       ////siteAltitude, siteLongitude, siteLatitude, 
 		       aborted, numAntenna, antennaId, sBSummaryTag);
       
       asdm::ExecBlockRow* tER2;
@@ -3564,7 +3716,7 @@ namespace casa {
     vector< ScanIntentMod::ScanIntent > scanIntent;
     vector< CalDataOriginMod::CalDataOrigin > scanCalDataType;
     vector< bool > scanCalibrationOnLine;
-    bool scanFlagRow = False; // always false ???
+    ////bool scanFlagRow = False; // always false ???
     
     uInt nMainTabRows = ms_p.nrow();
     for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
@@ -3591,7 +3743,7 @@ namespace casa {
 	scanIntent.resize(0);
 	scanCalDataType.resize(0);
 	scanCalibrationOnLine.resize(0);
-	scanFlagRow = False;
+	////scanFlagRow = False;
       } // end if a new exec block has started
       else if(execBlockId == Tag()){
 	os << LogIO::WARN << "Encountered main tab row " << mainTabRow << " which is not part of an execblock." << LogIO::POST;
@@ -3623,7 +3775,7 @@ namespace casa {
 	    scanIntent.resize(0);
 	    scanCalDataType.resize(0);
 	    scanCalibrationOnLine.resize(0);
-	    scanFlagRow = False;
+	    ////scanFlagRow = False;
 	    break;
 	  }
 	}
@@ -3695,7 +3847,7 @@ namespace casa {
 	    string fieldName = field().name()(fieldId()(startRow)).c_str(); 
 	    SubscanIntentMod::SubscanIntent subscanIntent = SubscanIntentMod::ON_SOURCE;
 	    vector< int > numberSubintegration;
-	    bool flagRow = False;
+	    ////bool flagRow = False;
 
 	    // parameters for the corresponding new Main table row
 	    ArrayTime mainTime = ASDMArrayTime((timestampStartSecs(startRow) + timestampEndSecs(endRow))/2.); // midpoint!
@@ -3752,7 +3904,8 @@ namespace casa {
 	    // write corresponding Subscan table row
 	    
 	    tSSR = tSST.newRow(execBlockId, scanNumber, subscanNumber, subScanStartArrayTime, subScanEndArrayTime, 
-			       fieldName, subscanIntent, numIntegration, numberSubintegration, flagRow);
+			       fieldName, subscanIntent, numIntegration, numberSubintegration //// , flagRow
+			       );
 	    
 	    tSST.add(tSSR);
 	    
@@ -3777,7 +3930,8 @@ namespace casa {
       }
 
       tSR = tST.newRow(execBlockId, scanNumber, scanStartTime, scanEndTime, scanNumIntent, numSubScan, scanIntent, 
-		       scanCalDataType, scanCalibrationOnLine, scanFlagRow);
+		       scanCalDataType, scanCalibrationOnLine ////, scanFlagRow
+		       );
       
       tST.add(tSR);
       
@@ -4261,6 +4415,47 @@ namespace casa {
     return angV;
   }
     
+  DirectionReferenceCodeMod::DirectionReferenceCode MS2ASDM::ASDMDirRefCode(const MDirection::Types type){
+
+    switch(type){
+    case MDirection::J2000:     return DirectionReferenceCodeMod::J2000; 	  
+    case MDirection::JMEAN:     return DirectionReferenceCodeMod::JMEAN; 	  
+    case MDirection::JTRUE:     return DirectionReferenceCodeMod::JTRUE; 	  
+    case MDirection::APP:       return DirectionReferenceCodeMod::APP; 	  
+    case MDirection::B1950:     return DirectionReferenceCodeMod::B1950; 	  
+    case MDirection::B1950_VLA: return DirectionReferenceCodeMod::B1950_VLA; 	
+    case MDirection::BMEAN:     return DirectionReferenceCodeMod::BMEAN; 	  
+    case MDirection::BTRUE:     return DirectionReferenceCodeMod::BTRUE; 	  
+    case MDirection::GALACTIC:  return DirectionReferenceCodeMod::GALACTIC;  	
+    case MDirection::HADEC:     return DirectionReferenceCodeMod::HADEC; 	  
+    case MDirection::AZELSW:    return DirectionReferenceCodeMod::AZELSW; 	  
+    case MDirection::AZELSWGEO: return DirectionReferenceCodeMod::AZELSWGEO; 
+      //case MDirection::AZELGEO:   return DirectionReferenceCodeMod::AZELNEGEO; //(same case as MDirection::AZELNEGEO!)   	
+    case MDirection::AZELNEGEO: return DirectionReferenceCodeMod::AZELNEGEO; 	  
+    case MDirection::JNAT:      return DirectionReferenceCodeMod::JNAT; 	  
+    case MDirection::ECLIPTIC:  return DirectionReferenceCodeMod::ECLIPTIC;  	
+    case MDirection::MECLIPTIC: return DirectionReferenceCodeMod::MECLIPTIC; 	
+    case MDirection::TECLIPTIC: return DirectionReferenceCodeMod::TECLIPTIC; 	
+    case MDirection::SUPERGAL:  return DirectionReferenceCodeMod::SUPERGAL;  	
+    case MDirection::ITRF:      return DirectionReferenceCodeMod::ITRF; 	  
+    case MDirection::TOPO:      return DirectionReferenceCodeMod::TOPO; 	  
+    case MDirection::ICRS:      return DirectionReferenceCodeMod::ICRS;      
+    
+    case MDirection::MERCURY: return DirectionReferenceCodeMod::MERCURY; 
+    case MDirection::VENUS:   return DirectionReferenceCodeMod::VENUS;
+    case MDirection::MARS:    return DirectionReferenceCodeMod::MARS;
+    case MDirection::JUPITER: return DirectionReferenceCodeMod::JUPITER;
+    case MDirection::SATURN:  return DirectionReferenceCodeMod::SATURN;
+    case MDirection::URANUS:  return DirectionReferenceCodeMod::URANUS;
+    case MDirection::NEPTUNE: return DirectionReferenceCodeMod::NEPTUNE;
+    case MDirection::PLUTO:   return DirectionReferenceCodeMod::PLUTO;
+    case MDirection::SUN:     return DirectionReferenceCodeMod::SUN;
+    case MDirection::MOON:    return DirectionReferenceCodeMod::MOON;
+    default:
+      return DirectionReferenceCodeMod::J2000;
+    }
+
+  }
 
 
   BasebandNameMod::BasebandName MS2ASDM::ASDMBBName( Int BBCNo ){
