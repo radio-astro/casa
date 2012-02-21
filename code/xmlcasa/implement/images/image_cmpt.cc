@@ -1138,7 +1138,8 @@ record* image::fitprofile(const string& box, const variant& region,
     const variant& gmfwhmcon, const vector<double>& gmampest,
     const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
     const variant& gmfix, const string& logfile, const bool append,
-    const variant& pfunc
+    const variant& pfunc, const vector<double>& goodamprange,
+    const vector<double>& goodcenterrange, const vector<double>& goodfwhmrange
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
@@ -1169,6 +1170,18 @@ record* image::fitprofile(const string& box, const variant& region,
 		vector<double> mygmfwhmcon = toVectorDouble(gmfwhmcon, "gmfwhmcon");
 		vector<string> mygmfix = toVectorString(gmfix, "gmfix");
 
+		vector<double> mygoodamps = toVectorDouble(goodamprange, "goodamprange");
+		if (mygoodamps.size() > 2) {
+			*_log << "Too many elements in goodamprange" << LogIO::EXCEPTION;
+		}
+		vector<double> mygoodcenters = toVectorDouble(goodcenterrange, "goodcenterrange");
+		if (mygoodcenters.size() > 2) {
+			*_log << "Too many elements in goodcenterrange" << LogIO::EXCEPTION;
+		}
+		vector<double> mygoodfwhms = toVectorDouble(goodfwhmrange, "goodcenterrange");
+		if (mygoodfwhms.size() > 2) {
+			*_log << "Too many elements in goodfwhmrange" << LogIO::EXCEPTION;
+		}
 		Bool makeSpectralList = (
 			mygmncomps.size() > 0
 			|| ! (
@@ -1364,6 +1377,15 @@ record* image::fitprofile(const string& box, const variant& region,
 		if (! logfile.empty()) {
 			fitter.setLogfile(logfile);
 			fitter.setLogfileAppend(append);
+		}
+		if (mygoodamps.size() == 2) {
+			fitter.setGoodAmpRange(mygoodamps[0], mygoodamps[1]);
+		}
+		if (mygoodcenters.size() == 2) {
+			fitter.setGoodCenterRange(mygoodcenters[0], mygoodcenters[1]);
+		}
+		if (mygoodfwhms.size() == 2) {
+			fitter.setGoodFWHMRange(mygoodfwhms[0], mygoodfwhms[1]);
 		}
 		return fromRecord(fitter.fit());
 	} catch (AipsError x) {

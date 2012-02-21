@@ -173,8 +173,6 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 					stokesPix = -1;
 				}
 				if (stokesPix >= 0) {
-					//uInt newSize = ranges.size() + 2;
-					//ranges.resize(newSize, True);
 					ranges.push_back(stokesPix);
 					ranges.push_back(stokesPix);
 					// consume the string
@@ -469,24 +467,24 @@ ImageRegion CasacRegionManager::_fromBCS(
 		if (x < 0 || y < 0 ) {
 			*itsLog << "blc in box spec is less than 0" << LogIO::EXCEPTION;
 		}
-		if (
-			(
-				itsCSys->hasDirectionCoordinate()
-				&& (
-					x >= imShape[directionAxisNumbers[0]]
-					|| y >= imShape[directionAxisNumbers[1]]
-				)
-			)
-			|| (
-				itsCSys->hasLinearCoordinate()
-				&& (
-					x >= imShape[linearAxisNumbers[0]]
-			        || y >= imShape[linearAxisNumbers[1]]
-				)
+		if (itsCSys->hasDirectionCoordinate()) {
+			if (
+				x >= imShape[directionAxisNumbers[0]]
+				|| y >= imShape[directionAxisNumbers[1]]
+			) {
+				*itsLog << "trc in box spec is greater than or equal to number "
+					<< "of direction coordinate pixels in the image" << LogIO::EXCEPTION;
+			}
+		}
+		else if (
+			itsCSys->hasLinearCoordinate()
+			&& (
+				x >= imShape[linearAxisNumbers[0]]
+				|| y >= imShape[linearAxisNumbers[1]]
 			)
 		) {
 			*itsLog << "trc in box spec is greater than or equal to number "
-					<< "of direction pixels in the image" << LogIO::EXCEPTION;
+				<< "of linear coordinate pixels in the image" << LogIO::EXCEPTION;
 		}
 		xCorners[i] = x;
 		yCorners[i] = y;
@@ -552,7 +550,8 @@ ImageRegion CasacRegionManager::_fromBCS(
 					&& (Int)axisNumber == directionAxisNumbers[0]
 				)
 				|| (
-					linearAxisNumbers.size() > 1
+					! itsCSys->hasDirectionCoordinate()
+					&& linearAxisNumbers.size() > 1
 					&& (Int)axisNumber == linearAxisNumbers[0]
 				)
 			) {
@@ -564,7 +563,8 @@ ImageRegion CasacRegionManager::_fromBCS(
 					&& (Int)axisNumber == directionAxisNumbers[1]
 				)
 				|| (
-					linearAxisNumbers.size() > 1
+					! itsCSys->hasDirectionCoordinate()
+					&& linearAxisNumbers.size() > 1
 					&& (Int)axisNumber == linearAxisNumbers[1]
 				)
 			) {
@@ -577,8 +577,13 @@ ImageRegion CasacRegionManager::_fromBCS(
 				axisCornerMap[axisNumber] = extPolEndPts;
 			}
 			else {
+				Vector<Double> range(2, 0);
+				range[1] = imShape[axisNumber] - 1;
+				axisCornerMap[axisNumber] = range;
+				/*
 				*itsLog << "Unhandled image axis number " << axisNumber
 					<< LogIO::EXCEPTION;
+				*/
 			}
 		}
 	}

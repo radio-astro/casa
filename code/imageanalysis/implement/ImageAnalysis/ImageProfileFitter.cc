@@ -68,7 +68,9 @@ ImageProfileFitter::ImageProfileFitter(
 	_multiFit(False), _deleteImageOnDestruct(False), _logResults(True),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(ngauss),
 	_nGaussMultiplets(0), _nLorentzSinglets(0), _minGoodPoints(0),
-	_results(Record()), _nonPolyEstimates(SpectralList()) {
+	_results(Record()), _nonPolyEstimates(SpectralList()),
+	_goodAmpRange(Vector<Double>(0)), _goodCenterRange(Vector<Double>(0)),
+	_goodFWHMRange(Vector<Double>(0)){
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
     if (! estimatesFilename.empty()) {
     	if (spectralList.nelements() > 0) {
@@ -138,12 +140,8 @@ Record ImageProfileFitter::fit() {
     	std::auto_ptr<ImageInterface<Float> > clone(
     		_getImage()->cloneII()
     	);
-    	std::auto_ptr<Record> regionClone(
-    		dynamic_cast<Record *>(_getRegion()->clone())
-    	);
     	_subImage = SubImage<Float>::createSubImage(
-    		*clone,
-    		*(ImageRegion::tweakedRegionRecord(regionClone.get())),
+    		*clone, *_getRegion(),
     		_getMask(), 0, False, AxesSpecifier(), _getStretch()
     	);
     }
@@ -151,11 +149,11 @@ Record ImageProfileFitter::fit() {
 	try {
 		if (_multiFit) {
 			// FIXME need to be able to specify the weights image
-			_fitters = _fitallprofiles(weightsImageName);
+			_fitallprofiles(weightsImageName);
 		    *_getLog() << logOrigin;
 		}
 		else {
-			ImageFit1D<Float> fitter = _fitProfile();
+			_fitProfile();
 		    *_getLog() << logOrigin;
 			IPosition axes(1, _fitAxis);
 			ImageCollapser collapser(
@@ -169,8 +167,6 @@ Record ImageProfileFitter::fit() {
 				*x, Record(), "", _getLog().get(),
 				False, AxesSpecifier(), False
 			);
-			_fitters.resize(IPosition(1,1));
-			_fitters(IPosition(1, 0)) = fitter;
 		}
 	}
 	catch (AipsError exc) {
@@ -180,15 +176,36 @@ Record ImageProfileFitter::fit() {
 	_setResults();
     *_getLog() << logOrigin;
     if (_logResults || ! _getLogfile().empty()) {
-    	String resultsString = _getResultsString();
+    	_resultsToLog();
+    	// String resultsString = _getResultsString();
+    	/*
     	if (_logResults) {
     		*_getLog() << LogIO::NORMAL << resultsString << endl << LogIO::POST;
     	}
     	if (! _getLogfile().empty()) {
     		_writeLogfile(resultsString);
     	}
+    	*/
     }
 	return _results;
+}
+
+void ImageProfileFitter::setGoodAmpRange(const Double min, const Double max) {
+	_goodAmpRange.resize(2);
+	_goodAmpRange[0] = min < max ? min : max;
+	_goodAmpRange[1] = min < max ? max : min;
+}
+
+void ImageProfileFitter::setGoodCenterRange(const Double min, const Double max) {
+	_goodCenterRange.resize(2);
+	_goodCenterRange[0] = min < max ? min : max;
+	_goodCenterRange[1] = min < max ? max : min;
+}
+
+void ImageProfileFitter::setGoodFWHMRange(const Double min, const Double max) {
+	_goodFWHMRange.resize(2);
+	_goodFWHMRange[0] = min < max ? min : max;
+	_goodFWHMRange[1] = min < max ? max : min;
 }
 
 Record ImageProfileFitter::getResults() const {
@@ -263,7 +280,10 @@ void ImageProfileFitter::_setResults() {
     	nComps++;
     }
 	Array<Bool> attemptedArr(IPosition(1, _fitters.size()), False);
+	Array<Bool> successArr(IPosition(1, _fitters.size()), False);
 	Array<Bool> convergedArr(IPosition(1, _fitters.size()), False);
+	Array<Bool> validArr(IPosition(1, _fitters.size()), False);
+
 	Array<Int> niterArr(IPosition(1, _fitters.size()), -1);
 	vector<vector<Matrix<Double> > > pcfMatrices(
 		NGSOLMATRICES, vector<Matrix<Double> >(_nGaussMultiplets+_nOthers)
@@ -317,8 +337,11 @@ void ImageProfileFitter::_setResults() {
 	) {
 		IPosition idx(1, count);
 		attemptedArr(idx) = fitter->getList().nelements() > 0;
-		convergedArr(idx) = attemptedArr(idx) && fitter->converged();
-		if (fitter->converged()) {
+		successArr(idx) = fitter->succeeded();
+		convergedArr(idx) = attemptedArr(idx) && successArr(idx)
+			&& fitter->converged();
+		validArr(idx) = convergedArr(idx) && fitter->isValid();
+		if (validArr(idx)) {
 			IPosition subimPos = inIter.position();
 			mask(idx) = anyTrue(inIter.getMask());
 			niterArr(idx) = (Int)fitter->getNumberIterations();
@@ -352,7 +375,8 @@ void ImageProfileFitter::_setResults() {
 							gCount++;
 						}
 						_insertPCF(
-							pcfMatrices, plane, *pcf, count, col, subimPos, increment
+							pcfMatrices, plane, *pcf, count, col,
+							subimPos, increment
 						);
 					}
 					break;
@@ -379,6 +403,12 @@ void ImageProfileFitter::_setResults() {
 			}
 		}
 	}
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogIO::NORMAL << "Number of profiles       = " << _fitters.size() << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number of fits attempted = " << ntrue(attemptedArr) << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number succeeded         = " << ntrue(successArr) << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number converged         = " << ntrue(convergedArr) << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number valid             = " << ntrue(validArr) << LogIO::POST;
 	Bool someConverged = anyTrue(convergedArr);
 	String key;
 	IPosition axes(1, _fitAxis);
@@ -390,7 +420,9 @@ void ImageProfileFitter::_setResults() {
 	);
 	IPosition shape = myTemplate->shape();
 	_results.define("attempted", attemptedArr.reform(shape));
+	_results.define("succeeded", successArr.reform(shape));
 	_results.define("converged", convergedArr.reform(shape));
+	_results.define("valid", validArr.reform(shape));
 	_results.define("niter", niterArr.reform(shape));
 	_results.define("ncomps", nCompArr.reform(shape));
 	_results.define("xUnit", _xUnit);
@@ -469,10 +501,10 @@ String ImageProfileFitter::_getTag(const uInt i) const {
 }
 
 void ImageProfileFitter::_insertPCF(
-	vector<vector<Matrix<Double> > >& pcfMatrices, const uInt idx,
-	const PCFSpectralElement& pcf,
+	vector<vector<Matrix<Double> > >& pcfMatrices, /*Bool& isSolutionSane,*/
+	const uInt idx, const PCFSpectralElement& pcf,
 	const uInt row, const uInt col, const IPosition& pos,
-	const Double increment
+	const Double increment/*, const uInt npix*/
 ) const {
 	pcfMatrices[CENTER][idx](row, col) = _centerWorld(pcf, pos);
 	pcfMatrices[FWHM][idx](row, col) = pcf.getFWHM() * increment;
@@ -629,10 +661,19 @@ String ImageProfileFitter::_radToRa(Float ras) const {
 	return raStr;
 }
 
-String ImageProfileFitter::_getResultsString() const {
+void ImageProfileFitter::_resultsToLog() {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << _summaryHeader();
+	if (_goodAmpRange.size() == 2) {
+		summary << "       --- valid amplitude range: " << _goodAmpRange << endl;
+	}
+	if (_goodCenterRange.size() == 2) {
+		summary << "       --- valid center range: " << _goodCenterRange << endl;
+	}
+	if (_goodFWHMRange.size() == 2) {
+		summary << "       --- valid FWHM range: " << _goodFWHMRange << endl;
+	}
 	summary << "       --- number of Gaussian singlets: " << _nGaussSinglets << endl;
 	summary << "       --- number of Gaussian multiplets: " << _nGaussMultiplets << endl;
 	if (_nGaussMultiplets > 0) {
@@ -656,7 +697,12 @@ String ImageProfileFitter::_getResultsString() const {
 	else {
 		summary << "       --- One profile fit, averaged over several pixels if necessary" << endl;
 	}
-	*_getLog() << LogIO::NORMAL << summary.str() << LogIO::POST;
+	if (_logResults) {
+		*_getLog() << LogIO::NORMAL << summary.str() << LogIO::POST;
+	}
+	if (! _getLogfile().empty()) {
+		_writeLogfile(summary.str(), True, False);
+	}
 	IPosition inTileShape = _subImage.niceCursorShape();
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
@@ -684,8 +730,7 @@ String ImageProfileFitter::_getResultsString() const {
 	SpectralList solutions;
 	String axisUnit = csysIm.worldAxisUnits()[_fitAxis];
 	Int pixPrecision = _multiFit ? 0 : 3;
-	Int basePrecision = summary.precision(1);
-	summary.precision(basePrecision);
+
 	for (
 		Vector<String>::iterator iter = axesNames.begin();
 		iter != axesNames.end(); iter++
@@ -697,6 +742,9 @@ String ImageProfileFitter::_getResultsString() const {
 		! inIter.atEnd() && fitter != _fitters.end();
 		inIter++, fitter++
 	) {
+		summary.str("");
+		Int basePrecision = summary.precision(1);
+		summary.precision(basePrecision);
 		subimPos = inIter.position();
 		if (csysSub.toWorld(world, subimPos)) {
 			summary << "Fit   :" << endl;
@@ -754,48 +802,59 @@ String ImageProfileFitter::_getResultsString() const {
 			String converged = fitter->converged() ? "YES" : "NO";
 			summary << "    Converged    : " << converged << endl;
 			if (fitter->converged()) {
-				solutions = fitter->getList();
 				summary << "    Iterations   : " << fitter->getNumberIterations() << endl;
-				for (uInt i=0; i<solutions.nelements(); i++) {
-					SpectralElement::Types type = solutions[i]->getType();
-					summary << "    Results for component " << i << ":" << endl;
-					switch(type) {
-					case SpectralElement::GAUSSIAN:
-						// allow fall through; gaussians and lorentzians use the same
-						// method for output
-					case SpectralElement::LORENTZIAN:
-						{
-							const PCFSpectralElement *pcf
-								= dynamic_cast<const PCFSpectralElement*>(solutions[i]);
-							summary << _pcfToString(
-								pcf, csys, world.copy(), subimPos
-							);
-						}
-						break;
-					case SpectralElement::GMULTIPLET:
-						{
-							const GaussianMultipletSpectralElement *gm
-								= dynamic_cast<const GaussianMultipletSpectralElement*>(solutions[i]);
-							summary << _gaussianMultipletToString(
-								*gm, csys, world.copy(), subimPos
-							);
+				String valid = fitter->isValid() ? "YES" : "NO";
+				summary << "    Valid        : " << valid << endl;
+				if (fitter->isValid()) {
+					solutions = fitter->getList();
+					for (uInt i=0; i<solutions.nelements(); i++) {
+						SpectralElement::Types type = solutions[i]->getType();
+						summary << "    Results for component " << i << ":" << endl;
+						switch(type) {
+						case SpectralElement::GAUSSIAN:
+							// allow fall through; gaussians and lorentzians use the same
+							// method for output
+						case SpectralElement::LORENTZIAN:
+							{
+								const PCFSpectralElement *pcf
+									= dynamic_cast<const PCFSpectralElement*>(solutions[i]);
+								summary << _pcfToString(
+									pcf, csys, world.copy(), subimPos
+								);
+							}
 							break;
+						case SpectralElement::GMULTIPLET:
+							{
+								const GaussianMultipletSpectralElement *gm
+									= dynamic_cast<const GaussianMultipletSpectralElement*>(solutions[i]);
+								summary << _gaussianMultipletToString(
+									*gm, csys, world.copy(), subimPos
+								);
+								break;
+							}
+						case SpectralElement::POLYNOMIAL:
+							{
+								const PolynomialSpectralElement *p
+									= dynamic_cast<const PolynomialSpectralElement*>(solutions[i]);
+								summary << _polynomialToString(*p, csys, imPix, world);
+							}
+							break;
+						default:
+							*_getLog() << "Logic Error: Unhandled spectral element type"
+							    << LogIO::EXCEPTION;
 						}
-					case SpectralElement::POLYNOMIAL: {
-						const PolynomialSpectralElement *p
-							= dynamic_cast<const PolynomialSpectralElement*>(solutions[i]);
-						summary << _polynomialToString(*p, csys, imPix, world);
-						}
-					break;
-					default:
-						*_getLog() << "Logic Error: Unhandled spectral element type"
-							<< LogIO::EXCEPTION;
 					}
 				}
 			}
 		}
+    	if (_logResults) {
+    		*_getLog() << LogIO::NORMAL << summary.str() << endl << LogIO::POST;
+    	}
+    	if (! _getLogfile().empty()) {
+    		_writeLogfile(summary.str(), False, False);
+    	}
 	}
-	return summary.str();
+	_closeLogfile();
 }
 
 String ImageProfileFitter::_elementToString(
@@ -1085,7 +1144,7 @@ void ImageProfileFitter::_makeSolutionImage(
 }
 
 // moved from ImageAnalysis
-ImageFit1D<Float> ImageProfileFitter::_fitProfile(
+void ImageProfileFitter::_fitProfile(
 	const Bool fitIt, const String weightsImageName
 ) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
@@ -1175,36 +1234,41 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 			PolynomialSpectralElement polyEl(_polyOrder);
 			fitter.addElement(polyEl);
 		}
-		if (! fitter.fit()) {
+		if (fitter.fit()) {
+			_flagFitterIfNecessary(fitter);
+			if (fitter.isValid()) {
+				if (! _model.empty()) {
+					model = fitter.getFit();
+					ImageCollapser collapser(
+						&_subImage, IPosition(1, _fitAxis), True,
+						ImageCollapser::ZERO, _model, True
+					);
+					std::auto_ptr<PagedImage<Float> > modelImage(
+						static_cast<PagedImage<Float>*>(
+							collapser.collapse(True)
+						)
+					);
+					modelImage->put(model.reform(modelImage->shape()));
+					modelImage->flush();
+				}
+				if (! _residual.empty()) {
+					residual = fitter.getResidual(-1, True);
+					ImageCollapser collapser(
+						&_subImage, IPosition(1, _fitAxis), True,
+						ImageCollapser::ZERO, _residual, True
+					);
+					std::auto_ptr<PagedImage<Float> > residualImage(
+						static_cast<PagedImage<Float>*>(
+							collapser.collapse(True)
+						)
+					);
+					residualImage->put(residual.reform(residualImage->shape()));
+					residualImage->flush();
+				}
+			}
+		}
+		else {
 			*_getLog() << LogIO::WARN << "Fit failed to converge" << LogIO::POST;
-		}
-		if (! _model.empty()) {
-			model = fitter.getFit();
-			ImageCollapser collapser(
-				&_subImage, IPosition(1, _fitAxis), True,
-				ImageCollapser::ZERO, _model, True
-			);
-			std::auto_ptr<PagedImage<Float> > modelImage(
-				static_cast<PagedImage<Float>*>(
-					collapser.collapse(True)
-				)
-			);
-			modelImage->put(model.reform(modelImage->shape()));
-			modelImage->flush();
-		}
-		if (! _residual.empty()) {
-			residual = fitter.getResidual(-1, True);
-            ImageCollapser collapser(
-				&_subImage, IPosition(1, _fitAxis), True,
-				ImageCollapser::ZERO, _residual, True
-			);
-			std::auto_ptr<PagedImage<Float> > residualImage(
-				static_cast<PagedImage<Float>*>(
-					collapser.collapse(True)
-				)
-			);
-			residualImage->put(residual.reform(residualImage->shape()));
-			residualImage->flush();
 		}
 	}
 	else {
@@ -1224,10 +1288,11 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 			}
 		}
 	}
-	return fitter;
+	_fitters.resize(IPosition(1,1));
+	_fitters(IPosition(1, 0)) = fitter;
 }
 
-Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
+void ImageProfileFitter::_fitallprofiles(
 	const String& weightsImageName
 ) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
@@ -1290,7 +1355,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 			_xUnit, doppler, _fitAxis, cSys
 		);
 	}
-	return _fitProfiles(
+	_fitProfiles(
 		pFit, pResid,
 		pWeights.get(),
 		showProgress
@@ -1298,7 +1363,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 }
 
 // moved from ImageUtilities
-Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
+void ImageProfileFitter::_fitProfiles(
 	ImageInterface<Float>*& pFit, ImageInterface<Float>*& pResid,
     const ImageInterface<Float> *const &weightsImage,
     const Bool showProgress
@@ -1351,7 +1416,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 	IPosition sliceShape(nDim, 1);
 	sliceShape(_fitAxis) = inShape(_fitAxis);
 	Array<Float> failData(sliceShape);
-	failData = 0.0;
+	failData = NAN;
 	Array<Bool> failMask(sliceShape);
 	failMask = False;
 	Array<Float> resultData(sliceShape);
@@ -1388,13 +1453,11 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
 
-	uInt nFail = 0;
-	uInt nConv = 0;
 	uInt nProfiles = 0;
 	uInt nFit = 0;
 	IPosition fitterShape = inShape;
 	fitterShape[_fitAxis] = 1;
-	Array<ImageFit1D<Float> > fitters(fitterShape);
+	_fitters.resize(fitterShape);
 	Array<ImageFit1D<Float> *> goodFits(fitterShape);
 	Int nPoints = fitterShape.product();
 	uInt count = 0;
@@ -1426,7 +1489,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 				// not enough good points, just add a dummy fitter
 				// and go to the next position
 				// fitters[index] = ImageFit1D<T>();
-				fitters(curPos) = ImageFit1D<Float>();
+				_fitters(curPos) = ImageFit1D<Float>();
 				continue;
 			}
 		}
@@ -1471,7 +1534,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 						}
 					}
 					if (
-						fitters(*iter).getList().nelements() == nOrigComps
+						_fitters(*iter).getList().nelements() == nOrigComps
 						&& ! larger
 					) {
 						minDist2 = dist2;
@@ -1482,7 +1545,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 						}
 					}
 				}
-				newEstimates = fitters(nearest).getList();
+				newEstimates = _fitters(nearest).getList();
 			}
 			fitter.setElements(newEstimates);
 		}
@@ -1492,20 +1555,21 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 		nFit++;
 		Bool ok = False;
 		try {
-			if (ok = fitter.fit()) {               // ok == False means no convergence
-				if (_nonPolyEstimates.nelements() > 0) {
+			if (ok = fitter.fit()) {
+				_flagFitterIfNecessary(fitter);
+				ok = fitter.isValid();
+				if (
+					ok && _nonPolyEstimates.nelements() > 0
+				) {
 					goodFits(curPos) = &fitter;
 					goodPos.push_back(curPos);
 				}
 			}
-			else {
-				nConv++;
-			}
-		} catch (AipsError x) {
-			ok = False;                       // Some other error
-			nFail++;
 		}
-		fitters(curPos) = fitter;
+		catch (AipsError x) {
+			ok = False;                       // Some other error
+		}
+		_fitters(curPos) = fitter;
 		// Evaluate and fill
 		if (ok) {
 			Array<Bool> resultMask = fitter.getTotalMask().reform(sliceShape);
@@ -1541,13 +1605,89 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 		}
 		count++;
 	}
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	*_getLog() << LogIO::NORMAL << "Number of profiles       = " << nProfiles << LogIO::POST;
-	*_getLog() << LogIO::NORMAL << "Number of fits attempted = " << nFit << LogIO::POST;
-	*_getLog() << LogIO::NORMAL << "Number converged         = " << nFit - nConv - nFail << LogIO::POST;
-	*_getLog() << LogIO::NORMAL << "Number not converged     = " << nConv << LogIO::POST;
-	*_getLog() << LogIO::NORMAL << "Number failed            = " << nFail << LogIO::POST;
-	return fitters;
 }
+
+void ImageProfileFitter::_flagFitterIfNecessary(
+	ImageFit1D<Float>& fitter
+) const {
+	if (
+		! fitter.converged()
+		|| (
+			_goodAmpRange.size() == 0 && _goodCenterRange.size() == 0
+			&& _goodFWHMRange.size() == 0
+		)
+	) {
+		return;
+	}
+	SpectralList solutions = fitter.getList(True);
+	for (uInt i=0; i<solutions.nelements(); i++) {
+		switch (solutions[i]->getType()) {
+		case SpectralElement::GAUSSIAN:
+		// allow fall through
+		case SpectralElement::LORENTZIAN: {
+			if (
+				! _isPCFSolutionOK(
+					dynamic_cast<
+						const PCFSpectralElement*
+					>(solutions[i])
+				)
+			) {
+				fitter.invalidate();
+				return;
+			}
+			break;
+		}
+		case SpectralElement::GMULTIPLET: {
+			const GaussianMultipletSpectralElement *gm = dynamic_cast<
+					const GaussianMultipletSpectralElement*
+				>(solutions[i]);
+			Vector<GaussianSpectralElement> gse = gm->getGaussians();
+			for (uInt j=0; j<gse.size(); j++) {
+				if (! _isPCFSolutionOK(&gse[i])) {
+					fitter.invalidate();
+					return;
+				}
+			}
+			break;
+		}
+		default:
+			continue;
+		}
+	}
+}
+
+Bool ImageProfileFitter::_isPCFSolutionOK(
+	const PCFSpectralElement *const &pcf
+) const {
+	if (_goodAmpRange.size() == 2) {
+		Double amp = pcf->getAmpl();
+		if (
+			amp < _goodAmpRange[0]
+			|| amp > _goodAmpRange[1]
+		) {
+			return False;
+		}
+	}
+	if (_goodCenterRange.size() == 2) {
+		Double center = pcf->getCenter();
+		if (
+			center < _goodCenterRange[0]
+			|| center > _goodCenterRange[1]
+		) {
+			return False;
+		}
+	}
+	if (_goodFWHMRange.size() == 2) {
+		Double fwhm = pcf->getFWHM();
+		if (
+			fwhm < _goodFWHMRange[0]
+			|| fwhm > _goodFWHMRange[1]
+		) {
+			return False;
+		}
+	}
+	return True;
+}
+
 
 } //# NAMESPACE CASA - END
