@@ -86,7 +86,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 
 	   showversion -- report the version of the asdm2MS being used.
 
-	   useversion -- Selects the version of asdm2MS to be used . This option is not really operational; the only possible (and default) value is \'v3\'.
+	   useversion -- Selects the version of asdm2MS to be used (presently only \'v3\' is available).
                      default: v3
         """
 	#Python script

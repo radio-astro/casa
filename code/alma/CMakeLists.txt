@@ -346,7 +346,7 @@ casa_add_library( alma
   implement/Enumtcl/WindowFunction.cc
   implement/Enumtcl/WeightType.cc
   implement/Enumtcl/WVRMethod.cc
-#  implement/MS2ASDM/MS2ASDM.cc
+  implement/MS2ASDM/MS2ASDM.cc
   )
 
 casa_add_executable( alma asdm2MS 
@@ -359,15 +359,15 @@ casa_add_executable( alma asdm2MS
   apps/asdm2MS/UvwCoords.cc
   )
 
-#casa_add_executable( alma_v3 MS2asdm_v3
-#  apps/MS2asdm_v3/MS2asdm_v3.cc 
-#  )
+casa_add_executable( alma MS2asdm
+  apps/MS2asdm/MS2asdm.cc 
+  )
 
 casa_add_executable( alma asdmSummary
   apps/asdmSummary/asdmSummary.cc 
   )
 
-casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadBigBDF.cc)
-casa_add_assay(alma_v3 implement/ASDMBinaries/test/tReadAllBDFs.cc)
-casa_add_assay(alma_v3 implement/ASDM/test/tTableStreamReader.cc)
+casa_add_assay(alma implement/ASDMBinaries/test/tReadBigBDF.cc)
+casa_add_assay(alma implement/ASDMBinaries/test/tReadAllBDFs.cc)
+casa_add_assay(alma implement/ASDM/test/tTableStreamReader.cc)
 

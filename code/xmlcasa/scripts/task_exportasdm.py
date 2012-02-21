@@ -37,8 +37,8 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 	showversion -- report the version of the ASDM class set, 
                  default: True
 
-	useversion -- Selects the version of MS2asdm to be used (\'v2\' (default) or \'v3\' (use for ALMA data))
-              default: v2
+	useversion -- Selects the version of MS2asdm to be used (presently only \'v3\' is available)
+              default: v3
 
 	"""
 	#Python script
@@ -103,7 +103,7 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 
 		theexecutable = 'MS2asdm'
 		if (useversion == 'v3'):
-			theexecutable = 'MS2asdm_v3'
+			theexecutable = 'MS2asdm'
 
 		execute_string += ' ' + vis + '-tsorted ' + asdm
 
