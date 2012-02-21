@@ -244,6 +244,12 @@ public:
                                  const String& doppler, uInt pixelAxis);
 
 
+    // flag the solution as invalid based on external criteria.
+    void invalidate();
+
+    // is the solution valid? If False, some external logic has
+    // called invalidate()
+    Bool isValid() const;
 
 private:
    ImageInterface<T>* itsImagePtr;
@@ -257,7 +263,7 @@ private:
    ProfileFit1D<FitterType> itsFitter;
    CoordinateSystem itsCS;
    mutable String itsError;                // Error message
-   Bool _converged, _success;
+   Bool _converged, _success, _isValid;
 // Functions
    
    void check() const;
