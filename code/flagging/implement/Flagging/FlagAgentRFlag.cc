@@ -343,7 +343,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< Int,vector<Double> > &data,
 											map< Int,vector<Double> > &dataSquared,
 											map< Int,vector<Double> > &counts,
 											string label,
-											uInt scale)
+											Double scale)
 {
 	// Set logger origin
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
@@ -464,7 +464,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 			{
 				// Ignore data point if it is already flagged
 				// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
-				if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+				if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
 
 				visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 				SumWeight += 1;
@@ -544,7 +544,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 				{
 					// Ignore data point if it is already flagged or weight is <= 0
 					// NOTE: In our case visibilities come w/o weights, so we check only vs flags
-					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+					if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
 
 					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 					if (abs(visibility.real()-AverageReal)<thresholdRobust_p[robustIter]*StdReal)
@@ -585,7 +585,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
         		{
 					// Ignore data point if it is already flagged
 					// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
-					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+					if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
 
 					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 
@@ -767,10 +767,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 
 	uInt effectiveNTimeStepsDelta = (effectiveNTimeSteps - 1)/2;
 
-	// Beginning time range: Move only central point
+	// Beginning time range: Move only central point (only for spectral analysis)
+	// We set start/stop time with decreasing values to deactivate time analysis
 	for (uInt timestep_i=0;timestep_i<effectiveNTimeStepsDelta;timestep_i++)
 	{
-		computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
+		// computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
+		computeAntennaPairFlagsCore(spw,noise,scutof,-1,-2,timestep_i,visibilities,flags);
 	}
 
 	for (uInt timestep_i=effectiveNTimeStepsDelta;timestep_i<nTimesteps-effectiveNTimeStepsDelta;timestep_i++)
@@ -778,10 +780,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		computeAntennaPairFlagsCore(spw,noise,scutof,timestep_i-effectiveNTimeStepsDelta,timestep_i+effectiveNTimeStepsDelta,timestep_i,visibilities,flags);
 	}
 
-	// End time range: Move only central point
+	// End time range: Move only central point (only for spectral analysis)
+	// We set start/stop time with decreasing values to deactivate time analysis
 	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<nTimesteps;timestep_i++)
 	{
-		computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
+		// computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
+		computeAntennaPairFlagsCore(spw,noise,scutof,-1,-2,timestep_i,visibilities,flags);
 	}
 
 	return false;
