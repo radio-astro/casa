@@ -262,7 +262,7 @@ class test_savepars(test_base):
         
         ########## TEST 1 
         # create text file called tflagcmd.txt
-        input = " scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
+        input = "scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
         filename = create_input(input)
         filename1 = 'filename1.txt'
         os.system('cp '+filename+' '+filename1)
@@ -279,7 +279,7 @@ class test_savepars(test_base):
         
         ########## TEST 2 
         # create another input
-        input = " scan=1~3 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"
         filename = create_input(input)
         
         # apply and don't save to MS
@@ -317,7 +317,7 @@ class test_savepars(test_base):
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Save the parameters to FLAG_CMD but do not write the flags
-        input = " scan=4 mode=clip correlation=ABS_ALL clipminmax=[0,4]\n"
+        input = "scan=4 mode=clip correlation=ABS_ALL clipminmax=[0,4]\n"
         tflagcmd(vis=self.vis, inpmode='cmd', command=[input], writeflags=False, savepars=True)
         
         # No flags should be in the MS
