@@ -156,7 +156,7 @@ class fitter:
                 else:
                     asaplog.push('lengths of data and mask are not the same. preset mask will be ignored')
                     asaplog.post('WARN','asapfit.fit')
-                    self.mask=_n_bools(len(self.x), True)
+                    self.mask=self.data._getmask(row)
                 asaplog.push("Fitting:")
                 i = row
                 out = "Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (self.data.getscan(i),
@@ -664,13 +664,13 @@ class fitter:
             asaplog.push(out, False)
             self.x = scan._getabcissa(r)
             self.y = scan._getspectrum(r)
+            #self.mask = mask_and(self.mask, scan._getmask(r))
             if len(self.x) == len(self.mask):
                 self.mask = mask_and(self.mask, self.data._getmask(row))
             else:
                 asaplog.push('lengths of data and mask are not the same. preset mask will be ignored')
                 asaplog.post('WARN','asapfit.fit')
-                self.mask=_n_bools(len(self.x), True)
-            #self.mask = mask_and(self.mask, scan._getmask(r))
+                self.mask=self.data._getmask(row)
             self.data = None
             self.fit()
             x = self.get_parameters()

@@ -194,6 +194,7 @@ private:
   void initPol( Int ipol ) ;
   void initTable( uInt idx ) ;
   Bool isMultiIF( Table &tab ) ;
+  void fillMainColumns( Table &tab ) ;
   static bool produceChunk(void *ctx) throw(concurrent::PCException);
   static void consumeChunk(void *ctx) throw(concurrent::PCException);
   static void consumeChunkWithClipping(void *ctx) throw(concurrent::PCException);

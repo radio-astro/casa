@@ -942,7 +942,8 @@ void STLineFinder::setScan(const ScantableWrapper &in_scan) throw(AipsError)
 // method in scantable class. (Dec 22, 2010 by W.Kawasaki)
 void STLineFinder::setData(const std::vector<float> &in_spectrum)
 {
-  spectrum = Vector<Float>(in_spectrum);
+  //spectrum = Vector<Float>(in_spectrum);
+  spectrum.assign( Vector<Float>(in_spectrum) );
   useScantable = false;
 }
 
@@ -965,10 +966,12 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
   // set up mask and edge rejection
   // no mask given...
   if (in_mask.size() == 0) {
-    mask = Vector<Bool>(nchan,True);
+    //mask = Vector<Bool>(nchan,True);
+    mask.assign( Vector<Bool>(nchan,True) );
   } else {
     // use provided mask
-    mask=Vector<Bool>(in_mask);
+    //mask=Vector<Bool>(in_mask);
+    mask.assign( Vector<Bool>(in_mask) );
   }
   if (mask.nelements()!=nchan)
       throw AipsError("STLineFinder::findLines - in_scan and in_mask, or in_spectrum "

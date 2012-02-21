@@ -19,6 +19,17 @@ from asap.coordinate import coordinate
 from asap.utils import _n_bools, mask_not, mask_and, mask_or, page
 from asap.asapfitter import fitter
 
+###############################################################
+### WK temporarily added these lines for testing 2011/11/28 ###
+###############################################################
+#from asap._asap import TestClass
+
+#class testclass(TestClass):
+#    def __init__(self, nelem):
+#        TestClass.__init__(self, nelem)
+
+###############################################################
+
 
 def preserve_selection(func):
     @wraps_dec(func)
@@ -1252,34 +1263,42 @@ class scantable(Scantable):
         """
         if rowno is None:
             rowno = []
-        if mask is None:
-            mask = []
         if isinstance(rowno, int):
             rowno = [rowno]
         elif not (isinstance(rowno, list) or isinstance(rowno, tuple)):
             raise TypeError("The row number(s) must be int, list or tuple.")
-
         if len(rowno) == 0: rowno = [i for i in xrange(self.nrow())]
 
-        if not (isinstance(mask, list) or isinstance(mask, tuple)):
-            raise TypeError("The mask must be a boolean list or a list of "
-                            "boolean list.")
-        if len(mask) == 0: mask = [True for i in xrange(self.nchan())]
-        if isinstance(mask[0], bool): mask = [mask]
-        elif not (isinstance(mask[0], list) or isinstance(mask[0], tuple)):
+        usecommonmask = True
+        
+        if mask is None:
+            mask = []
+        if isinstance(mask, list) or isinstance(mask, tuple):
+            if len(mask) == 0:
+                mask = [[]]
+            else:
+                if isinstance(mask[0], bool):
+                    if len(mask) != self.nchan(self.getif(rowno[0])):
+                        raise ValueError("The spectra and the mask have "
+                                         "different length.")
+                    mask = [mask]
+                elif isinstance(mask[0], list) or isinstance(mask[0], tuple):
+                    usecommonmask = False
+                    if len(mask) != len(rowno):
+                        raise ValueError("When specifying masks for each "
+                                         "spectrum, the numbers of them "
+                                         "must be identical.")
+                    for i in xrange(mask):
+                        if len(mask[i]) != self.nchan(self.getif(rowno[i])):
+                            raise ValueError("The spectra and the mask have "
+                                             "different length.")
+                else:
+                    raise TypeError("The mask must be a boolean list or "
+                                    "a list of boolean list.")
+        else:
             raise TypeError("The mask must be a boolean list or a list of "
                             "boolean list.")
 
-        usecommonmask = (len(mask) == 1)
-        if not usecommonmask:
-            if len(mask) != len(rowno):
-                raise ValueError("When specifying masks for each spectrum, "
-                                 "the numbers of them must be identical.")
-        for amask in mask:
-            if len(amask) != self.nchan():
-                raise ValueError("The spectra and the mask have different "
-                                 "length.")
-        
         res = []
 
         imask = 0
@@ -2310,18 +2329,34 @@ class scantable(Scantable):
             elif wn[-1] == '>':                      # case 'a>' :         return [0,1,...,a-2,a-1]
                 val = int(wn[:-1])
                 res = [i for i in xrange(val)]
-            elif wn[:2] == '>=' or wn[:2] == '=>':   # cases '>=a','=>a' : return [a,a+1,...,a_nyq]
+            elif wn[:2] == '>=' or wn[:2] == '=>':   # cases '>=a','=>a' : return [a,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a,a+1,...,a_nyq]
+                                                     #                     (CAS-3759)
                 val = int(wn[2:])
-                res = [i for i in xrange(val, self.nchan()/2+1)]
-            elif wn[-2:] == '<=' or wn[-2:] == '=<': # cases 'a<=','a=<' : return [a,a+1,...,a_nyq]
+                res = [val, -999]
+                #res = [i for i in xrange(val, self.nchan()/2+1)]
+            elif wn[-2:] == '<=' or wn[-2:] == '=<': # cases 'a<=','a=<' : return [a,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a,a+1,...,a_nyq]
+                                                     #                     (CAS-3759)
                 val = int(wn[:-2])
-                res = [i for i in xrange(val, self.nchan()/2+1)]
-            elif wn[0] == '>':                       # case '>a' :         return [a+1,a+2,...,a_nyq]
+                res = [val, -999]
+                #res = [i for i in xrange(val, self.nchan()/2+1)]
+            elif wn[0] == '>':                       # case '>a' :         return [a+1,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a+1,a+2,...,a_nyq]
+                                                     #                     (CAS-3759)
                 val = int(wn[1:])+1
-                res = [i for i in xrange(val, self.nchan()/2+1)]
-            elif wn[-1] == '<':                      # case 'a<' :         return [a+1,a+2,...,a_nyq]
+                res = [val, -999]
+                #res = [i for i in xrange(val, self.nchan()/2+1)]
+            elif wn[-1] == '<':                      # case 'a<' :         return [a+1,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a+1,a+2,...,a_nyq]
+                                                     #                     (CAS-3759)
                 val = int(wn[:-1])+1
-                res = [i for i in xrange(val, self.nchan()/2+1)]
+                res = [val, -999]
+                #res = [i for i in xrange(val, self.nchan()/2+1)]
 
             return res
         else:
@@ -2370,7 +2405,7 @@ class scantable(Scantable):
                                  '>=a' (= a, a+1, ... up to the maximum wave
                                         number corresponding to the Nyquist
                                         frequency for the case of FFT).
-                           default is []. 
+                           default is [0]. 
             rejwn:         the wave numbers NOT to be used for fitting. 
                            can be set just as addwn but has higher priority: 
                            wave numbers which are specified both in addwn
@@ -2414,11 +2449,12 @@ class scantable(Scantable):
             else:
                 workscan = self.copy()
             
-            if mask          is None: mask          = [True for i in xrange(workscan.nchan())]
+            #if mask          is None: mask          = [True for i in xrange(workscan.nchan())]
+            if mask          is None: mask          = []
             if applyfft      is None: applyfft      = True
             if fftmethod     is None: fftmethod     = 'fft'
             if fftthresh     is None: fftthresh     = 3.0
-            if addwn         is None: addwn         = []
+            if addwn         is None: addwn         = [0]
             if rejwn         is None: rejwn         = []
             if clipthresh    is None: clipthresh    = 3.0
             if clipniter     is None: clipniter     = 0
@@ -2493,7 +2529,7 @@ class scantable(Scantable):
                                   '>=a' (= a, a+1, ... up to the maximum wave
                                          number corresponding to the Nyquist
                                          frequency for the case of FFT).
-                            default is []. 
+                            default is [0]. 
             rejwn:          the wave numbers NOT to be used for fitting. 
                             can be set just as addwn but has higher priority: 
                             wave numbers which are specified both in addwn
@@ -2554,11 +2590,12 @@ class scantable(Scantable):
             else:
                 workscan = self.copy()
             
-            if mask           is None: mask           = [True for i in xrange(workscan.nchan())]
+            #if mask           is None: mask           = [True for i in xrange(workscan.nchan())]
+            if mask           is None: mask           = []
             if applyfft       is None: applyfft       = True
             if fftmethod      is None: fftmethod      = 'fft'
             if fftthresh      is None: fftthresh      = 3.0
-            if addwn          is None: addwn          = []
+            if addwn          is None: addwn          = [0]
             if rejwn          is None: rejwn          = []
             if clipthresh     is None: clipthresh     = 3.0
             if clipniter      is None: clipniter      = 0
@@ -2649,7 +2686,8 @@ class scantable(Scantable):
             else:
                 workscan = self.copy()
 
-            if mask         is None: mask         = [True for i in xrange(workscan.nchan())]
+            #if mask         is None: mask         = [True for i in xrange(workscan.nchan())]
+            if mask         is None: mask         = []
             if npiece       is None: npiece       = 2
             if clipthresh   is None: clipthresh   = 3.0
             if clipniter    is None: clipniter    = 0
@@ -2751,7 +2789,8 @@ class scantable(Scantable):
             else:
                 workscan = self.copy()
             
-            if mask           is None: mask           = [True for i in xrange(workscan.nchan())]
+            #if mask           is None: mask           = [True for i in xrange(workscan.nchan())]
+            if mask           is None: mask           = []
             if npiece         is None: npiece         = 2
             if clipthresh     is None: clipthresh     = 3.0
             if clipniter      is None: clipniter      = 0
@@ -2827,8 +2866,9 @@ class scantable(Scantable):
             else:
                 workscan = self.copy()
 
-            if mask         is None: mask         = [True for i in \
-                                                       xrange(workscan.nchan())]
+            #if mask         is None: mask         = [True for i in \
+            #                                           xrange(workscan.nchan())]
+            if mask         is None: mask         = []
             if order        is None: order        = 0
             if plot         is None: plot         = False
             if getresidual  is None: getresidual  = True
@@ -2966,7 +3006,8 @@ class scantable(Scantable):
             else:
                 workscan = self.copy()
 
-            if mask           is None: mask           = [True for i in xrange(workscan.nchan())]
+            #if mask           is None: mask           = [True for i in xrange(workscan.nchan())]
+            if mask           is None: mask           = []
             if order          is None: order          = 0
             if edge           is None: edge           = (0, 0)
             if threshold      is None: threshold      = 3

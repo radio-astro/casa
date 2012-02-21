@@ -9,6 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, \
 	FigureManagerTkAgg
 # Force use of the newfangled toolbar.
 matplotlib.rcParams['toolbar'] = 'toolbar2'
+from matplotlib import _pylab_helpers
 
 class asaplotgui(asaplotbase):
     """
@@ -27,15 +28,19 @@ class asaplotgui(asaplotbase):
 
         asaplotbase.__init__(self, **v)
         self.window = Tk.Tk()
-        def dest_callback():
-            self.is_dead = True
-            self.window.destroy()
+        #def dest_callback():
+        #    print "dest_callback"
+        #    self.is_dead = True
+        #    self.window.destroy()
 
-        self.window.protocol("WM_DELETE_WINDOW", dest_callback)
+        self.window.protocol("WM_DELETE_WINDOW", self.quit)
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.window)
         self.canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
         # Simply instantiating this is enough to get a working toolbar.
-        self.figmgr = FigureManagerTkAgg(self.canvas, 1, self.window)
+        self.figmgr = FigureManagerTkAgg(self.canvas, 0, self.window)
+        # Register this plot to matplotlib without activating it
+        #_pylab_helpers.Gcf.set_active(self.figmgr)
+        _pylab_helpers.Gcf.figs[self.figmgr.num] = self.figmgr
         self._set_window_title('ASAP Plotter - Tk')
 
 	self.events = {'button_press':None,
@@ -60,7 +65,12 @@ class asaplotgui(asaplotbase):
         Destroy the ASAPlot graphics window.
         """
         self.is_dead = True
-        self.window.destroy()
+        #self.window.destroy()
+        _pylab_helpers.Gcf.destroy(self.figmgr.num)
+        del self.window, self.canvas
+        self.window = None
+        self.canvas = None
+        
 
     def show(self, hardrefresh=True):
         """

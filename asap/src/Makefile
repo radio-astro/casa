@@ -141,8 +141,6 @@ OBJECTS := $(CCOBJECTS) $(PYOBJECTS)
 
 HEADERS   := MathUtils.h \
 	     LineCatalog.h \
-	     Lorentzian1D.h \
-	     Lorentzian1DParam.h \
              Logger.h \
              STAttr.h \
              STHeader.h \

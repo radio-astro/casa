@@ -56,9 +56,12 @@
 using namespace casa;
 using namespace asap;
 
+// 2012/02/17 TN
+// Since STGrid is implemented, average doesn't consider direction 
+// when accumulating
 // tolerance for direction comparison (rad)
-#define TOL_OTF    1.0e-15
-#define TOL_POINT  2.9088821e-4  // 1 arcmin
+// #define TOL_OTF    1.0e-15
+// #define TOL_POINT  2.9088821e-4  // 1 arcmin
 
 STMath::STMath(bool insitu) :
   insitu_(insitu)
@@ -82,15 +85,18 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
                     "Use merge first."));
   WeightType wtype = stringToWeight(weight);
 
+  // 2012/02/17 TN
+  // Since STGrid is implemented, average doesn't consider direction 
+  // when accumulating
   // check if OTF observation
-  String obstype = in[0]->getHeader().obstype ;
-  Double tol = 0.0 ;
-  if ( (obstype.find( "OTF" ) != String::npos) || (obstype.find( "OBSERVE_TARGET" ) != String::npos) ) {
-    tol = TOL_OTF ;
-  }
-  else {
-    tol = TOL_POINT ;
-  }
+//   String obstype = in[0]->getHeader().obstype ;
+//   Double tol = 0.0 ;
+//   if ( (obstype.find( "OTF" ) != String::npos) || (obstype.find( "OBSERVE_TARGET" ) != String::npos) ) {
+//     tol = TOL_OTF ;
+//   }
+//   else {
+//     tol = TOL_POINT ;
+//   }
 
   // output
   // clone as this is non insitu
@@ -141,50 +147,53 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
 //   int count = 0 ;
   while (!iter.pastEnd()) {
     Table subt = iter.table();
-//     // copy the first row of this selection into the new table
-//     tout.addRow();
-//     TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
-//     // re-index to 0
-//     if ( avmode != "SCAN" && avmode != "SOURCE" ) {
-//       scanColOut.put(outrowCount, uInt(0));
+    // copy the first row of this selection into the new table
+    tout.addRow();
+    TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
+    // re-index to 0
+    if ( avmode != "SCAN" && avmode != "SOURCE" ) {
+      scanColOut.put(outrowCount, uInt(0));
+    }
+    ++outrowCount;
+    // 2012/02/17 TN
+    // Since STGrid is implemented, average doesn't consider direction 
+    // when accumulating
+//     MDirection::ScalarColumn dircol ;
+//     dircol.attach( subt, "DIRECTION" ) ;
+//     Int length = subt.nrow() ;
+//     vector< Vector<Double> > dirs ;
+//     vector<int> indexes ;
+//     for ( Int i = 0 ; i < length ; i++ ) {
+//       Vector<Double> t = dircol(i).getAngle(Unit(String("rad"))).getValue() ;
+//       //os << << count++ << ": " ;
+//       //os << "[" << t[0] << "," << t[1] << "]" << LogIO::POST ;
+//       bool adddir = true ;
+//       for ( uInt j = 0 ; j < dirs.size() ; j++ ) {
+//         //if ( allTrue( t == dirs[j] ) ) {
+//         Double dx = t[0] - dirs[j][0] ;
+//         Double dy = t[1] - dirs[j][1] ;
+//         Double dd = sqrt( dx * dx + dy * dy ) ;
+//         //if ( allNearAbs( t, dirs[j], tol ) ) {
+//         if ( dd <= tol ) {
+//           adddir = false ;
+//           break ;
+//         }
+//       }
+//       if ( adddir ) {
+//         dirs.push_back( t ) ;
+//         indexes.push_back( i ) ;
+//       }
 //     }
-//     ++outrowCount;
-    MDirection::ScalarColumn dircol ;
-    dircol.attach( subt, "DIRECTION" ) ;
-    Int length = subt.nrow() ;
-    vector< Vector<Double> > dirs ;
-    vector<int> indexes ;
-    for ( Int i = 0 ; i < length ; i++ ) {
-      Vector<Double> t = dircol(i).getAngle(Unit(String("rad"))).getValue() ;
-      //os << << count++ << ": " ;
-      //os << "[" << t[0] << "," << t[1] << "]" << LogIO::POST ;
-      bool adddir = true ;
-      for ( uInt j = 0 ; j < dirs.size() ; j++ ) {
-        //if ( allTrue( t == dirs[j] ) ) {
-        Double dx = t[0] - dirs[j][0] ;
-        Double dy = t[1] - dirs[j][1] ;
-        Double dd = sqrt( dx * dx + dy * dy ) ;
-        //if ( allNearAbs( t, dirs[j], tol ) ) {
-        if ( dd <= tol ) {
-          adddir = false ;
-          break ;
-        }
-      }
-      if ( adddir ) {
-        dirs.push_back( t ) ;
-        indexes.push_back( i ) ;
-      }
-    }
-    uInt rowNum = dirs.size() ;
-    tout.addRow( rowNum ) ;
-    for ( uInt i = 0 ; i < rowNum ; i++ ) {
-      TableCopy::copyRows( tout, subt, outrowCount+i, indexes[i], 1 ) ;
-      // re-index to 0
-      if ( avmode != "SCAN" && avmode != "SOURCE" ) {
-        scanColOut.put(outrowCount+i, uInt(0));
-      }        
-    }
-    outrowCount += rowNum ;
+//     uInt rowNum = dirs.size() ;
+//     tout.addRow( rowNum ) ;
+//     for ( uInt i = 0 ; i < rowNum ; i++ ) {
+//       TableCopy::copyRows( tout, subt, outrowCount+i, indexes[i], 1 ) ;
+//       // re-index to 0
+//       if ( avmode != "SCAN" && avmode != "SOURCE" ) {
+//         scanColOut.put(outrowCount+i, uInt(0));
+//       }        
+//     }
+//     outrowCount += rowNum ;
     ++iter;
   }
   RowAccumulator acc(wtype);
@@ -217,26 +226,29 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
         subt = basesubt;
       }
 
-      vector<uInt> removeRows ;
-      uInt nrsubt = subt.nrow() ;
-      for ( uInt irow = 0 ; irow < nrsubt ; irow++ ) {
-        //if ( !allTrue((subt.col("DIRECTION").getArrayDouble(TableExprId(irow)))==rec.asArrayDouble("DIRECTION")) ) {
-        Vector<Double> x0 = (subt.col("DIRECTION").getArrayDouble(TableExprId(irow))) ;
-        Vector<Double> x1 = rec.asArrayDouble("DIRECTION") ;
-        double dx = x0[0] - x1[0];
-        double dy = x0[1] - x1[1];
-        Double dd = sqrt( dx * dx + dy * dy ) ;
-        //if ( !allNearAbs((subt.col("DIRECTION").getArrayDouble(TableExprId(irow))), rec.asArrayDouble("DIRECTION"), tol ) ) {
-        if ( dd > tol ) {
-          removeRows.push_back( irow ) ;
-        }
-      }
-      if ( removeRows.size() != 0 ) {
-        subt.removeRow( removeRows ) ;
-      }
+      // 2012/02/17 TN
+      // Since STGrid is implemented, average doesn't consider direction 
+      // when accumulating
+//       vector<uInt> removeRows ;
+//       uInt nrsubt = subt.nrow() ;
+//       for ( uInt irow = 0 ; irow < nrsubt ; irow++ ) {
+//         //if ( !allTrue((subt.col("DIRECTION").getArrayDouble(TableExprId(irow)))==rec.asArrayDouble("DIRECTION")) ) {
+//         Vector<Double> x0 = (subt.col("DIRECTION").getArrayDouble(TableExprId(irow))) ;
+//         Vector<Double> x1 = rec.asArrayDouble("DIRECTION") ;
+//         double dx = x0[0] - x1[0];
+//         double dy = x0[1] - x1[1];
+//         Double dd = sqrt( dx * dx + dy * dy ) ;
+//         //if ( !allNearAbs((subt.col("DIRECTION").getArrayDouble(TableExprId(irow))), rec.asArrayDouble("DIRECTION"), tol ) ) {
+//         if ( dd > tol ) {
+//           removeRows.push_back( irow ) ;
+//         }
+//       }
+//       if ( removeRows.size() != 0 ) {
+//         subt.removeRow( removeRows ) ;
+//       }
       
-      if ( nrsubt == removeRows.size() )
-        throw(AipsError("Averaging data is empty.")) ;
+//       if ( nrsubt == removeRows.size() )
+//         throw(AipsError("Averaging data is empty.")) ;
 
       specCol.attach(subt,"SPECTRA");
       flagCol.attach(subt,"FLAGTRA");
@@ -320,15 +332,18 @@ STMath::averageChannel( const CountedPtr < Scantable > & in,
                           const std::string& avmode )
 {
   (void) mode; // currently unused
+  // 2012/02/17 TN
+  // Since STGrid is implemented, average doesn't consider direction 
+  // when accumulating
   // check if OTF observation
-  String obstype = in->getHeader().obstype ;
-  Double tol = 0.0 ;
-  if ( obstype.find( "OTF" ) != String::npos ) {
-    tol = TOL_OTF ;
-  }
-  else {
-    tol = TOL_POINT ;
-  }
+//   String obstype = in->getHeader().obstype ;
+//   Double tol = 0.0 ;
+//   if ( obstype.find( "OTF" ) != String::npos ) {
+//     tol = TOL_OTF ;
+//   }
+//   else {
+//     tol = TOL_POINT ;
+//   }
 
   // clone as this is non insitu
   bool insitu = insitu_;
@@ -361,117 +376,122 @@ STMath::averageChannel( const CountedPtr < Scantable > & in,
     specCol.attach(subt,"SPECTRA");
     flagCol.attach(subt,"FLAGTRA");
     tsysCol.attach(subt,"TSYS");
-//     tout.addRow();
-//     TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
-//     if ( avmode != "SCAN") {
-//       scanColOut.put(outrowCount, uInt(0));
-//     }
-//     Vector<Float> tmp;
-//     specCol.get(0, tmp);
-//     uInt nchan = tmp.nelements();
-//     // have to do channel by channel here as MaskedArrMath
-//     // doesn't have partialMedians
-//     Vector<uChar> flags = flagCol.getColumn(Slicer(Slice(0)));
-//     Vector<Float> outspec(nchan);
-//     Vector<uChar> outflag(nchan,0);
-//     Vector<Float> outtsys(1);/// @fixme when tsys is channel based
-//     for (uInt i=0; i<nchan; ++i) {
-//       Vector<Float> specs = specCol.getColumn(Slicer(Slice(i)));
-//       MaskedArray<Float> ma = maskedArray(specs,flags);
-//       outspec[i] = median(ma);
-//       if ( allEQ(ma.getMask(), False) )
-//         outflag[i] = userflag;// flag data
-//     }
-//     outtsys[0] = median(tsysCol.getColumn());
-//     specColOut.put(outrowCount, outspec);
-//     flagColOut.put(outrowCount, outflag);
-//     tsysColOut.put(outrowCount, outtsys);
-//     Double intsum = sum(intCol.getColumn());
-//     intColOut.put(outrowCount, intsum);
-//     ++outrowCount;
-//     ++iter;
-    MDirection::ScalarColumn dircol ;
-    dircol.attach( subt, "DIRECTION" ) ;
-    Int length = subt.nrow() ;
-    vector< Vector<Double> > dirs ;
-    vector<int> indexes ;
-    // Handle MX mode averaging
-    if (in->nbeam() > 1 ) {      
-      length = 1;
+
+    tout.addRow();
+    TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
+    if ( avmode != "SCAN") {
+      scanColOut.put(outrowCount, uInt(0));
     }
-    for ( Int i = 0 ; i < length ; i++ ) {
-      Vector<Double> t = dircol(i).getAngle(Unit(String("rad"))).getValue() ;
-      bool adddir = true ;
-      for ( uInt j = 0 ; j < dirs.size() ; j++ ) {
-        //if ( allTrue( t == dirs[j] ) ) {
-        Double dx = t[0] - dirs[j][0] ;
-        Double dy = t[1] - dirs[j][1] ;
-        Double dd = sqrt( dx * dx + dy * dy ) ;
-        //if ( allNearAbs( t, dirs[j], tol ) ) {
-        if ( dd <= tol ) {
-          adddir = false ;
-          break ;
-        }
-      }
-      if ( adddir ) {
-        dirs.push_back( t ) ;
-        indexes.push_back( i ) ;
-      }
+    Vector<Float> tmp;
+    specCol.get(0, tmp);
+    uInt nchan = tmp.nelements();
+    // have to do channel by channel here as MaskedArrMath
+    // doesn't have partialMedians
+    Vector<uChar> flags = flagCol.getColumn(Slicer(Slice(0)));
+    Vector<Float> outspec(nchan);
+    Vector<uChar> outflag(nchan,0);
+    Vector<Float> outtsys(1);/// @fixme when tsys is channel based
+    for (uInt i=0; i<nchan; ++i) {
+      Vector<Float> specs = specCol.getColumn(Slicer(Slice(i)));
+      MaskedArray<Float> ma = maskedArray(specs,flags);
+      outspec[i] = median(ma);
+      if ( allEQ(ma.getMask(), False) )
+        outflag[i] = userflag;// flag data
     }
-    uInt rowNum = dirs.size() ;
-    tout.addRow( rowNum );
-    for ( uInt i = 0 ; i < rowNum ; i++ ) {
-      TableCopy::copyRows(tout, subt, outrowCount+i, indexes[i], 1) ;
-      // Handle MX mode averaging
-      if ( avmode != "SCAN") {
-        scanColOut.put(outrowCount+i, uInt(0));
-      }
-    }
-    MDirection::ScalarColumn dircolOut ;
-    dircolOut.attach( tout, "DIRECTION" ) ;
-    for ( uInt irow = 0 ; irow < rowNum ; irow++ ) {
-      Vector<Double> t = \
-	dircolOut(outrowCount+irow).getAngle(Unit(String("rad"))).getValue() ;
-      Vector<Float> tmp;
-      specCol.get(0, tmp);
-      uInt nchan = tmp.nelements();
-      // have to do channel by channel here as MaskedArrMath
-      // doesn't have partialMedians
-      Vector<uChar> flags = flagCol.getColumn(Slicer(Slice(0)));
-      // mask spectra for different DIRECTION
-      for ( uInt jrow = 0 ; jrow < subt.nrow() ; jrow++ ) {
-        Vector<Double> direction = \
-	  dircol(jrow).getAngle(Unit(String("rad"))).getValue() ;
-        //if ( t[0] != direction[0] || t[1] != direction[1] ) {
-        Double dx = t[0] - direction[0];
-        Double dy = t[1] - direction[1];
-        Double dd = sqrt(dx*dx + dy*dy);
-        //if ( !allNearAbs( t, direction, tol ) ) {
-        if ( dd > tol &&  in->nbeam() < 2 ) {
-          flags[jrow] = userflag ;
-        }
-      }
-      Vector<Float> outspec(nchan);
-      Vector<uChar> outflag(nchan,0);
-      Vector<Float> outtsys(1);/// @fixme when tsys is channel based
-      for (uInt i=0; i<nchan; ++i) {
-        Vector<Float> specs = specCol.getColumn(Slicer(Slice(i)));
-        MaskedArray<Float> ma = maskedArray(specs,flags);
-        outspec[i] = median(ma);
-        if ( allEQ(ma.getMask(), False) )
-          outflag[i] = userflag;// flag data
-      }
-      outtsys[0] = median(tsysCol.getColumn());
-      specColOut.put(outrowCount+irow, outspec);
-      flagColOut.put(outrowCount+irow, outflag);
-      tsysColOut.put(outrowCount+irow, outtsys);
-      Vector<Double> integ = intCol.getColumn() ;
-      MaskedArray<Double> mi = maskedArray( integ, flags ) ;
-      Double intsum = sum(mi);
-      intColOut.put(outrowCount+irow, intsum);
-    }
-    outrowCount += rowNum ;
+    outtsys[0] = median(tsysCol.getColumn());
+    specColOut.put(outrowCount, outspec);
+    flagColOut.put(outrowCount, outflag);
+    tsysColOut.put(outrowCount, outtsys);
+    Double intsum = sum(intCol.getColumn());
+    intColOut.put(outrowCount, intsum);
+    ++outrowCount;
     ++iter;
+
+    // 2012/02/17 TN
+    // Since STGrid is implemented, average doesn't consider direction 
+    // when accumulating
+//     MDirection::ScalarColumn dircol ;
+//     dircol.attach( subt, "DIRECTION" ) ;
+//     Int length = subt.nrow() ;
+//     vector< Vector<Double> > dirs ;
+//     vector<int> indexes ;
+//     // Handle MX mode averaging
+//     if (in->nbeam() > 1 ) {      
+//       length = 1;
+//     }
+//     for ( Int i = 0 ; i < length ; i++ ) {
+//       Vector<Double> t = dircol(i).getAngle(Unit(String("rad"))).getValue() ;
+//       bool adddir = true ;
+//       for ( uInt j = 0 ; j < dirs.size() ; j++ ) {
+//         //if ( allTrue( t == dirs[j] ) ) {
+//         Double dx = t[0] - dirs[j][0] ;
+//         Double dy = t[1] - dirs[j][1] ;
+//         Double dd = sqrt( dx * dx + dy * dy ) ;
+//         //if ( allNearAbs( t, dirs[j], tol ) ) {
+//         if ( dd <= tol ) {
+//           adddir = false ;
+//           break ;
+//         }
+//       }
+//       if ( adddir ) {
+//         dirs.push_back( t ) ;
+//         indexes.push_back( i ) ;
+//       }
+//     }
+//     uInt rowNum = dirs.size() ;
+//     tout.addRow( rowNum );
+//     for ( uInt i = 0 ; i < rowNum ; i++ ) {
+//       TableCopy::copyRows(tout, subt, outrowCount+i, indexes[i], 1) ;
+//       // Handle MX mode averaging
+//       if ( avmode != "SCAN") {
+//         scanColOut.put(outrowCount+i, uInt(0));
+//       }
+//     }
+//     MDirection::ScalarColumn dircolOut ;
+//     dircolOut.attach( tout, "DIRECTION" ) ;
+//     for ( uInt irow = 0 ; irow < rowNum ; irow++ ) {
+//       Vector<Double> t = \
+// 	dircolOut(outrowCount+irow).getAngle(Unit(String("rad"))).getValue() ;
+//       Vector<Float> tmp;
+//       specCol.get(0, tmp);
+//       uInt nchan = tmp.nelements();
+//       // have to do channel by channel here as MaskedArrMath
+//       // doesn't have partialMedians
+//       Vector<uChar> flags = flagCol.getColumn(Slicer(Slice(0)));
+//       // mask spectra for different DIRECTION
+//       for ( uInt jrow = 0 ; jrow < subt.nrow() ; jrow++ ) {
+//         Vector<Double> direction = \
+// 	  dircol(jrow).getAngle(Unit(String("rad"))).getValue() ;
+//         //if ( t[0] != direction[0] || t[1] != direction[1] ) {
+//         Double dx = t[0] - direction[0];
+//         Double dy = t[1] - direction[1];
+//         Double dd = sqrt(dx*dx + dy*dy);
+//         //if ( !allNearAbs( t, direction, tol ) ) {
+//         if ( dd > tol &&  in->nbeam() < 2 ) {
+//           flags[jrow] = userflag ;
+//         }
+//       }
+//       Vector<Float> outspec(nchan);
+//       Vector<uChar> outflag(nchan,0);
+//       Vector<Float> outtsys(1);/// @fixme when tsys is channel based
+//       for (uInt i=0; i<nchan; ++i) {
+//         Vector<Float> specs = specCol.getColumn(Slicer(Slice(i)));
+//         MaskedArray<Float> ma = maskedArray(specs,flags);
+//         outspec[i] = median(ma);
+//         if ( allEQ(ma.getMask(), False) )
+//           outflag[i] = userflag;// flag data
+//       }
+//       outtsys[0] = median(tsysCol.getColumn());
+//       specColOut.put(outrowCount+irow, outspec);
+//       flagColOut.put(outrowCount+irow, outflag);
+//       tsysColOut.put(outrowCount+irow, outtsys);
+//       Vector<Double> integ = intCol.getColumn() ;
+//       MaskedArray<Double> mi = maskedArray( integ, flags ) ;
+//       Double intsum = sum(mi);
+//       intColOut.put(outrowCount+irow, intsum);
+//     }
+//     outrowCount += rowNum ;
+//     ++iter;
   }
   return out;
 }
@@ -2953,15 +2973,18 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     throw(AipsError("Can't perform 'SCAN' averaging on multiple tables.\n"
                     "Use merge first."));
   
+  // 2012/02/17 TN
+  // Since STGrid is implemented, average doesn't consider direction 
+  // when accumulating
   // check if OTF observation
-  String obstype = in[0]->getHeader().obstype ;
-  Double tol = 0.0 ;
-  if ( obstype.find( "OTF" ) != String::npos ) {
-    tol = TOL_OTF ;
-  }
-  else {
-    tol = TOL_POINT ;
-  }
+//   String obstype = in[0]->getHeader().obstype ;
+//   Double tol = 0.0 ;
+//   if ( obstype.find( "OTF" ) != String::npos ) {
+//     tol = TOL_OTF ;
+//   }
+//   else {
+//     tol = TOL_POINT ;
+//   }
 
   CountedPtr<Scantable> out ;     // processed result 
   if ( compel ) {
@@ -3556,8 +3579,8 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     polnoColOut.attach( out->table(), "POLNO" ) ;
     ScalarColumn<uInt> freqidColOut ;
     freqidColOut.attach( out->table(), "FREQ_ID" ) ;
-    MDirection::ScalarColumn dirColOut ;
-    dirColOut.attach( out->table(), "DIRECTION" ) ;
+//     MDirection::ScalarColumn dirColOut ;
+//     dirColOut.attach( out->table(), "DIRECTION" ) ;
     Table &tab = tmpout->table() ;
     Block<String> cols(1);
     cols[0] = String("POLNO") ;
@@ -3574,8 +3597,8 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
       ifnoCol.attach( iter.table(), "IFNO" ) ;
       ScalarColumn<uInt> polnos ;
       polnos.attach( iter.table(), "POLNO" ) ;
-      MDirection::ScalarColumn dircol ;
-      dircol.attach( iter.table(), "DIRECTION" ) ;
+//       MDirection::ScalarColumn dircol ;
+//       dircol.attach( iter.table(), "DIRECTION" ) ;
       uInt polno = polnos( 0 ) ;
       //os << "POLNO iteration: " << polno << LogIO::POST ;
 //       for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
@@ -3634,7 +3657,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
         uInt polout = polnoColOut( irow ) ;
         if ( polout == polno ) {
           uInt ifout = ifnoColOut( irow ) ;
-          Vector<Double> direction = dirColOut(irow).getAngle(Unit(String("rad"))).getValue() ;
+//           Vector<Double> direction = dirColOut(irow).getAngle(Unit(String("rad"))).getValue() ;
           uInt igrp ;
           for ( uInt jgrp = 0 ; jgrp < freqgrp.size() ; jgrp++ ) {
             if ( ifout == gmemid[jgrp] ) {
@@ -3645,13 +3668,17 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
           for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
             for ( uInt jrow = 0 ; jrow < iter.table().nrow() ; jrow++ ) {
               uInt ifno = ifnoCol( jrow ) ;
-              Vector<Double> tdir = dircol(jrow).getAngle(Unit(String("rad"))).getValue() ;
-              //if ( ifno == freqgrp[igrp][imem] && allTrue( tdir == direction  ) ) {
-              Double dx = tdir[0] - direction[0] ;
-              Double dy = tdir[1] - direction[1] ;
-              Double dd = sqrt( dx * dx + dy * dy ) ;
+              // 2012/02/17 TN
+              // Since STGrid is implemented, average doesn't consider direction 
+              // when accumulating
+//               Vector<Double> tdir = dircol(jrow).getAngle(Unit(String("rad"))).getValue() ;
+//               //if ( ifno == freqgrp[igrp][imem] && allTrue( tdir == direction  ) ) {
+//               Double dx = tdir[0] - direction[0] ;
+//               Double dy = tdir[1] - direction[1] ;
+//               Double dd = sqrt( dx * dx + dy * dy ) ;
               //if ( ifno == freqgrp[igrp][imem] && allNearAbs( tdir, direction, tol ) ) {
-              if ( ifno == freqgrp[igrp][imem] && dd <= tol ) {
+//               if ( ifno == freqgrp[igrp][imem] && dd <= tol ) {
+              if ( ifno == freqgrp[igrp][imem] ) {
                 Vector<Float> spec = specCols( jrow ) ;
                 Vector<uChar> flag = flagCols( jrow ) ;
                 vector<Float> svec ;

@@ -1255,7 +1255,7 @@ class asapplotter:
 
         PL.ion()
         PL.draw()
-        PL.gcf().show()
+        if matplotlib.get_backend() == 'Qt4Agg': PL.gcf().show()
         if (self._outfile is not None):
            PL.savefig(self._outfile)
 
@@ -1294,9 +1294,9 @@ class asapplotter:
         PL.title('Telescope pointings')
         [xmin,xmax,ymin,ymax] = PL.axis()
         PL.axis([xmax,xmin,ymin,ymax])
-        #PL.ion()
+        PL.ion()
         PL.draw()
-        PL.gcf().show()
+        if matplotlib.get_backend() == 'Qt4Agg': PL.gcf().show()
         if (self._outfile is not None):
            PL.savefig(self._outfile)
 

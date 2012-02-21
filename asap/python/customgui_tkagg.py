@@ -134,6 +134,7 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         #self.delete_bar()
         self.disable_button()
         self.figmgr.window.wm_withdraw()
+        self._p.quit()
 
     def enable_button(self):
         if self.button: return
@@ -146,8 +147,8 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         if not self.button: return
         #self.bSpec.config(relief='raised', state=Tk.DISABLED)
         self.bStat.config(relief='raised', state=Tk.DISABLED)
-        #self.bNext.config(state=Tk.DISABLED)
-        #self.bPrev.config(state=Tk.DISABLED)
+        self.bNext.config(state=Tk.DISABLED)
+        self.bPrev.config(state=Tk.DISABLED)
         self.button = False
         self.mode = ''
         self.__disconnect_event()
@@ -646,6 +647,7 @@ class CustomFlagToolbarTkAgg(CustomFlagToolbarCommon, Tk.Frame):
         self.__disconnect_event()
         self.disable_button()
         self.figmgr.window.wm_withdraw()
+        self._p.quit()
 
     def enable_button(self):
         if self.button: return

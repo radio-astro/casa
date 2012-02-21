@@ -19,6 +19,7 @@
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableRecord.h>
+#include <tables/Tables/TableRow.h>
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -1655,6 +1656,8 @@ string STGrid::saveData( string outfile )
   t1 = mathutil::gettimeofday_sec() ;
   os << "saveData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
 
+  fillMainColumns( tab ) ;
+
   return outfile_ ;
 }
 
@@ -1667,6 +1670,34 @@ void STGrid::prepareTable( Table &tab, String &name )
   // explicitly copy subtables since no rows including subtables are 
   // copied by Table::deepCopy with noRows=True
   TableCopy::copySubTables( tab, t ) ;
+}
+
+void STGrid::fillMainColumns( Table &tab ) 
+{
+  // values for fill
+  Table t( infileList_[0], Table::Old ) ;
+  Table tsel = t( t.col( "IFNO" ) == (uInt)ifno_, 1 ) ;
+  ROTableRow row( tsel ) ;
+  row.get( 0 ) ;
+  const TableRecord &rec = row.record() ;
+  uInt freqId = rec.asuInt( "FREQ_ID" ) ;
+  Vector<Float> defaultTsys( 1, 1.0 ) ;
+  // @todo how to set flagtra for gridded spectra?
+  Vector<uChar> flagtra = rec.asArrayuChar( "FLAGTRA" ) ;
+  flagtra = (uChar)0 ;
+
+  // fill columns
+  Int nrow = tab.nrow() ;
+  ScalarColumn<uInt> ifnoCol( tab, "IFNO" ) ;
+  ScalarColumn<uInt> freqIdCol( tab, "FREQ_ID" ) ;
+  ArrayColumn<uChar> flagtraCol( tab, "FLAGTRA" ) ;
+  ArrayColumn<Float> tsysCol( tab, "TSYS" ) ;
+  for ( Int i = 0 ; i < nrow ; i++ ) {
+    ifnoCol.put( i, (uInt)ifno_ ) ;
+    freqIdCol.put( i, freqId ) ;
+    flagtraCol.put( i, flagtra ) ;
+    tsysCol.put( i, defaultTsys ) ;
+  }
 }
 
 }

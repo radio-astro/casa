@@ -2696,7 +2696,7 @@ void Scantable::selectWaveNumbers(const int whichrow, const std::vector<bool>& c
     doSelectWaveNumbers(whichrow, chanMask, fftMethod, fftThSigma, fftThTop, fftThAttr, nWaves);
   }
 
-  addAuxWaveNumbers(addNWaves, rejectNWaves, nWaves);
+  addAuxWaveNumbers(whichrow, addNWaves, rejectNWaves, nWaves);
 }
 
 void Scantable::parseThresholdExpression(const std::string& fftThresh, std::string& fftThAttr, float& fftThSigma, int& fftThTop)
@@ -2778,22 +2778,37 @@ void Scantable::doSelectWaveNumbers(const int whichrow, const std::vector<bool>&
   }
 }
 
-void Scantable::addAuxWaveNumbers(const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, std::vector<int>& nWaves)
+void Scantable::addAuxWaveNumbers(const int whichrow, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, std::vector<int>& nWaves)
 {
+  std::vector<int> tempAddNWaves, tempRejectNWaves;
   for (uInt i = 0; i < addNWaves.size(); ++i) {
+    tempAddNWaves.push_back(addNWaves[i]);
+  }
+  if ((tempAddNWaves.size() == 2) && (tempAddNWaves[1] == -999)) {
+    setWaveNumberListUptoNyquistFreq(whichrow, tempAddNWaves);
+  }
+
+  for (uInt i = 0; i < rejectNWaves.size(); ++i) {
+    tempRejectNWaves.push_back(rejectNWaves[i]);
+  }
+  if ((tempRejectNWaves.size() == 2) && (tempRejectNWaves[1] == -999)) {
+    setWaveNumberListUptoNyquistFreq(whichrow, tempRejectNWaves);
+  }
+
+  for (uInt i = 0; i < tempAddNWaves.size(); ++i) {
     bool found = false;
     for (uInt j = 0; j < nWaves.size(); ++j) {
-      if (nWaves[j] == addNWaves[i]) {
+      if (nWaves[j] == tempAddNWaves[i]) {
 	found = true;
 	break;
       }
     }
-    if (!found) nWaves.push_back(addNWaves[i]);
+    if (!found) nWaves.push_back(tempAddNWaves[i]);
   }
 
-  for (uInt i = 0; i < rejectNWaves.size(); ++i) {
+  for (uInt i = 0; i < tempRejectNWaves.size(); ++i) {
     for (std::vector<int>::iterator j = nWaves.begin(); j != nWaves.end(); ) {
-      if (*j == rejectNWaves[i]) {
+      if (*j == tempRejectNWaves[i]) {
 	j = nWaves.erase(j);
       } else {
 	++j;
@@ -2804,6 +2819,22 @@ void Scantable::addAuxWaveNumbers(const std::vector<int>& addNWaves, const std::
   if (nWaves.size() > 1) {
     sort(nWaves.begin(), nWaves.end());
     unique(nWaves.begin(), nWaves.end());
+  }
+}
+
+void Scantable::setWaveNumberListUptoNyquistFreq(const int whichrow, std::vector<int>& nWaves)
+{
+  if ((nWaves.size() == 2)&&(nWaves[1] == -999)) {
+    int val = nWaves[0];
+    int nyquistFreq = nchan(getIF(whichrow))/2+1;
+    nWaves.clear();
+    if (val > nyquistFreq) {  // for safety, at least nWaves contains a constant; CAS-3759
+      nWaves.push_back(0);
+    }
+    while (val <= nyquistFreq) {
+      nWaves.push_back(val);
+      val++;
+    }
   }
 }
 
@@ -2843,6 +2874,7 @@ void Scantable::sinusoidBaseline(const std::vector<bool>& mask, const bool apply
       selectWaveNumbers(whichrow, chanMask, applyFFT, fftMethod, fftThresh, addNWaves, rejectNWaves, nWaves);
 
       //FOR DEBUGGING------------
+      /*
       if (whichrow < 0) {// == nRow -1) {
 	cout << "+++ i=" << setw(3) << whichrow << ", IF=" << setw(2) << getIF(whichrow);
 	if (applyFFT) {
@@ -2854,6 +2886,7 @@ void Scantable::sinusoidBaseline(const std::vector<bool>& mask, const bool apply
 	}
 	cout << flush;
       }
+      */
       //-------------------------
 
       //fitBaseline(chanMask, whichrow, fitter);
@@ -3188,11 +3221,13 @@ std::vector<bool> Scantable::getCompositeChanMask(int whichrow, const std::vecto
 {
   std::vector<bool> mask = getMask(whichrow);
   uInt maskSize = mask.size();
-  if (maskSize != inMask.size()) {
-    throw(AipsError("mask sizes are not the same."));
-  }
-  for (uInt i = 0; i < maskSize; ++i) {
-    mask[i] = mask[i] && inMask[i];
+  if (inMask.size() != 0) {
+    if (maskSize != inMask.size()) {
+      throw(AipsError("mask sizes are not the same."));
+    }
+    for (uInt i = 0; i < maskSize; ++i) {
+      mask[i] = mask[i] && inMask[i];
+    }
   }
 
   return mask;

@@ -31,11 +31,12 @@ class asaplotgui(asaplotbase):
 
         self.canvas = FigureCanvasQTAgg(self.figure)
         # Simply instantiating this is enough to get a working toolbar.
-        self.figmgr = FigureManagerQTAgg(self.canvas, 1)
+        self.figmgr = FigureManagerQTAgg(self.canvas, 0)
         self.window = self.figmgr.window
         self._set_window_title('ASAP Plotter - Qt4')
-        # register this plot to matplotlib
-        _pylab_helpers.Gcf.set_active(self.figmgr)
+        # Register this plot to matplotlib without activating it
+        #_pylab_helpers.Gcf.set_active(self.figmgr)
+        _pylab_helpers.Gcf.figs[self.figmgr.num] = self.figmgr
 
         #############
         ### DO WE HAVE TO DO SOMETHING FOR WINDOW CLOSE CALL?

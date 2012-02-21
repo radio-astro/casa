@@ -738,9 +738,12 @@ private:
 			   const int fftThTop, 
 			   const std::string& fftThAttr, 
 			   std::vector<int>& nWaves);
-  void addAuxWaveNumbers(const std::vector<int>& addNWaves, 
+  void addAuxWaveNumbers(const int whichrow,
+			 const std::vector<int>& addNWaves, 
 			 const std::vector<int>& rejectNWaves, 
 			 std::vector<int>& nWaves);
+  void setWaveNumberListUptoNyquistFreq(const int whichrow,
+					std::vector<int>& nWaves);
   bool hasSameNchanOverIFs();
   std::string getMaskRangeList(const std::vector<bool>& mask, 
 				int whichrow, 
