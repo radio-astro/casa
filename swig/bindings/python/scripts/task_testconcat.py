@@ -41,8 +41,8 @@ def testconcat(vislist,testconcatvis,freqtol,dirtol,copypointing):
 	#Python script
 	try:
 		casalog.origin('testconcat')
-		t = tbtool.create()
-		m = mstool.create()
+		t = tbtool()
+		m = mstool()
 		#break the reference between vis and vislist as we modify vis
 		if(type(vislist)==str):
 			vis=[vislist]

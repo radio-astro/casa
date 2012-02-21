@@ -32,7 +32,7 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
     if ( filesExist ):
         return False
     
-    _myia = iatool.create()
+    _myia = iatool()
     _myia.open(imagename)
     mycsys = _myia.coordsys()
 

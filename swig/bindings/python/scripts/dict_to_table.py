@@ -146,7 +146,7 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None):
     # Create and fill the table.
     retval = True
     try:
-        mytb = tbtool.create()
+        mytb = tbtool()
         mytb.create(tablepath, tabdesc)
         if type(info) == dict:
             mytb.putinfo(info)

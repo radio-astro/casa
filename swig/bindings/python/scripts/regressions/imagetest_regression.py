@@ -394,7 +394,7 @@ def imagetest(which=None, size=[32,32,8]):
         #
         # Very simple test. Align major axis of source with beam.
         #
-        newcl = cltool.create()
+        newcl = cltool()
         newcl.simulate(1)
         #
         major = qa.quantity(1.5*majIn, 'arcsec')
@@ -414,7 +414,7 @@ def imagetest(which=None, size=[32,32,8]):
         cl2 = myim.deconvolvecomponentlist(newcl.torecord())
         if not cl2:
             stop ('deconvolvecomponentlist 1 failed')
-        cl2tool = cltool.create()
+        cl2tool = cltool()
         cl2tool.fromrecord(cl2)
         shape = cl2tool.getshape(0)
         #
@@ -444,7 +444,7 @@ def imagetest(which=None, size=[32,32,8]):
         return True
 
     def gaussian(flux, major, minor, pa, dir=None):
-        newcl = cltool.create()
+        newcl = cltool()
         newcl.simulate(1,log=F);
         #newcl.setspectrum(0)
         newcl.setshape(which=0, type='Gaussian',
@@ -5000,7 +5000,7 @@ def imagetest(which=None, size=[32,32,8]):
             stop('fitcomponents 1 failed')
         if not cl1['converged']:
             stop('fitcomponents 1 did not converge')
-        cl1tool=cltool.create()
+        cl1tool=cltool()
         cl1tool.fromrecord(cl1['results'])
         if not compareComponentList(cl0,cl1tool):
             stop('failed fitcomponents 1')
@@ -5585,7 +5585,7 @@ def imagetest(which=None, size=[32,32,8]):
         f1 = 100.0
         cl1 = gaussian(f1, qmaj, qmin, qpa, dir=d1)
         if not cl1: fail()
-	cl1Point = cltool.create()
+	cl1Point = cltool()
         cl1Point.simulate(1)
         ok = cl1Point.setflux(0, cl1.getfluxvalue(0))
         if not ok: fail()
@@ -5608,7 +5608,7 @@ def imagetest(which=None, size=[32,32,8]):
         cl4 = gaussian(f4, qmaj, qmin, qpa, dir=d4)
         if not cl4: fail()
         #
-        clIn = cltool.create()
+        clIn = cltool()
         clIn.concatenate(cl1.torecord(), log=F)
         clIn.concatenate(cl2.torecord(), log=F)
         clIn.concatenate(cl3.torecord(), log=F)
@@ -5623,7 +5623,7 @@ def imagetest(which=None, size=[32,32,8]):
         # Now find them
         clOut = myim.findsources(10, cutoff=0.3)
         if not clOut: fail()
-        clOuttool = cltool.create()
+        clOuttool = cltool()
         clOuttool.fromrecord(clOut);
         if not compareComponentList(clIn,clOuttool,dotype=F):
             stop('failed findsources 1')
@@ -5633,9 +5633,9 @@ def imagetest(which=None, size=[32,32,8]):
         #
         clOut = myim.findsources(10, cutoff=0.5)
         if not clOut: fail()
-        clOuttool = cltool.create()
+        clOuttool = cltool()
         clOuttool.fromrecord(clOut)
-        clIn2 = cltool.create()
+        clIn2 = cltool()
         clIn2.concatenate (clIn.torecord(), [0,1,2], log=F)
         if not compareComponentList(clIn2,clOuttool,dotype=F):
             stop('failed findsources 2')
@@ -5647,7 +5647,7 @@ def imagetest(which=None, size=[32,32,8]):
         # Maxfit
         clOut = myim.maxfit()
         if not clOut: fail()
-        clOuttool = cltool.create()
+        clOuttool = cltool()
         clOuttool.fromrecord(clOut)
         if not compareComponentList(cl1Point,clOuttool,dotype=F):
             stop('failed maxfit')

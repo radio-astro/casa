@@ -106,8 +106,12 @@ bool
 utils::verifyparam(const ::casac::record& param)
 {
    bool rstat(true);
-   if(myConstraints){
+   if(myConstraints && !param.empty()){
       rec_map::iterator iter = myConstraints->begin(); // We need the underlying record...
+      cerr << "Constraints Record " << endl;
+      dumpRecord(std::cerr, *myConstraints);
+      cerr << "Param  Record " << endl;
+      dumpRecord(std::cerr, param);
       rstat = stdBaseInterface::verifyOne(const_cast<record &>(param), (*iter).second.asRecord(), *itsLog);
       /*
       if(rstat){
@@ -119,8 +123,13 @@ utils::verifyparam(const ::casac::record& param)
       }
       */
    } else {
-         *itsLog << LogOrigin("utils", "verifyparam") << LogIO::WARN
+	 if(param.empty()){
+            *itsLog << LogOrigin("utils", "verifyparam") << LogIO::WARN
+		 << "parameter not set, unable to verify parameter" << LogIO::POST;
+	 }else{
+            *itsLog << LogOrigin("utils", "verifyparam") << LogIO::WARN
 		 << "Contraints record not set, unable to verify parameter" << LogIO::POST;
+	 }
    }
    return rstat;
 }

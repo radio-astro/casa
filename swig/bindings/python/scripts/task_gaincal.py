@@ -17,7 +17,7 @@ def gaincal(vis=None,caltable=None,
         casalog.origin('gaincal')
 
 	try: 
-                mycb = cbtool.create()
+                mycb = cbtool()
                 if ((type(vis)==str) & (os.path.exists(vis))):
                         mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:

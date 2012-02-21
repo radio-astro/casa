@@ -26,7 +26,7 @@
 #
 import sys
 import os
-import casac
+#from casac import *
 import string
 import time
 import inspect
@@ -75,6 +75,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text disable-output-escaping="yes">
 	if not hasattr(self, "__globals__") or self.__globals__ == None :
            self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
+	casac = self.__globals__['casac']
+	casalog = self.__globals__['casalog']
         self.__globals__['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         self.__globals__['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###

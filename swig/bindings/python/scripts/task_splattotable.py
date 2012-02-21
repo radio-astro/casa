@@ -66,7 +66,7 @@ def splattotable(filenames=None, table=None, wantreturn=None):
     casalog.origin('splattotable')
     newsl = None
     try:
-        mysl = sltool.create()
+        mysl = sltool()
         newsl = mysl.splattotable(filenames=filenames, table=table)
         mysl.done()
         if (not newsl):

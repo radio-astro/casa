@@ -38,7 +38,7 @@ def importvla(archivefiles,vis,
         try:
                 param_names = importvla.func_code.co_varnames[:importvla.func_code.co_argcount]
                 param_vals = [eval(p) for p in param_names]
-                ok &= write_history(mstool.create(), vis, 'importvla', param_names,
+                ok &= write_history(mstool(), vis, 'importvla', param_names,
                                     param_vals, casalog)
         except Exception, instance:
                 casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
@@ -46,7 +46,7 @@ def importvla(archivefiles,vis,
 
         # write initial flag version
         try:
-                myfg = fgtool.create()
+                myfg = fgtool()
                 ok &= myfg.open(vis);
                 ok &= myfg.saveflagversion('Original',
                                            comment='Original flags at import into CASA',

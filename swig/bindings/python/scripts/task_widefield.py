@@ -7,7 +7,7 @@ def widefield(vis, imagename, outlierfile, field, spw, selectdata, timerange, uv
 	"""Calculate a wide-field deconvolved image with selected algorithm:
 
 	"""
-	ms1=mstool.create()
+	ms1=mstool()
         ###
 	#Python script
 	try:
@@ -35,7 +35,7 @@ def widefield(vis, imagename, outlierfile, field, spw, selectdata, timerange, uv
 
 ###Set image parameters
 		casalog.origin('widefield')
-		im1=imtool.create()
+		im1=imtool()
 		if(multims):
 			imset=cleanhelper()
 		else:

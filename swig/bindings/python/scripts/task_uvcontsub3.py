@@ -9,8 +9,8 @@ def uvcontsub3(vis, fitspw, combine, fitorder, field, spw,
     retval = True
     casalog.origin('uvcontsub3')
 
-    myms = mstool.create()
-    mytb = tbtool.create()
+    myms = mstool()
+    mytb = tbtool()
     # This one is redundant - it is already checked at the XML level.
     if not ((type(vis) == str) and os.path.isdir(vis)):
         casalog.post('Visibility data set not found - please verify the name', 'SEVERE')
@@ -98,7 +98,7 @@ def uvcontsub3(vis, fitspw, combine, fitorder, field, spw,
     if ((spw != '') and (spw != '*')):
         isopen = False
         try:
-            mytb = tbtool.create()
+            mytb = tbtool()
             mytb.open(outputvis + '/FLAG_CMD', nomodify=False)
             isopen = True
             #print "is open"

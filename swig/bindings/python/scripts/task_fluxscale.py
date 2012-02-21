@@ -59,7 +59,7 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
        try:
                casalog.origin('fluxscale')
 
-               mycb = cbtool.create()
+               mycb = cbtool()
                mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
                               transfer=transfer,append=append,refspwmap=refspwmap)
@@ -69,7 +69,7 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                try:
                       param_names = fluxscale.func_code.co_varnames[:fluxscale.func_code.co_argcount]
                       param_vals = [eval(p) for p in param_names]
-                      write_history(mstool.create(), vis, 'fluxscale', param_names,
+                      write_history(mstool(), vis, 'fluxscale', param_names,
                                     param_vals, casalog)
                except Exception, instance:
                       casalog.post("*** Error \'%s\' updating HISTORY" % (instance),

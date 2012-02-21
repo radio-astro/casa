@@ -41,8 +41,8 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 	#Python script
 	try:
 		casalog.origin('concat')
-		t = tbtool.create()
-		m = mstool.create()
+		t = tbtool()
+		m = mstool()
 		
 		#break the reference between vis and vislist as we modify vis
 		if(type(vislist)==str):

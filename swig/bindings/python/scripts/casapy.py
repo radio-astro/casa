@@ -427,7 +427,6 @@ showconsole = False
 
 thelogfile = ''
 
-print casa
 showconsole = casa['flags'].has_key('--log2term')
 if casa['flags'].has_key('--logfile') :
     thelogfile = casa['flags']['--logfile']

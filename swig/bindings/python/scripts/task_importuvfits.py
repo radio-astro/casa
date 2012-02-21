@@ -15,7 +15,7 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
 	try:
 		casalog.origin('importuvfits')
 		casalog.post("")
-		myms = mstool.create()
+		myms = mstool()
 		myms.fromfits(vis, fitsfile, antnamescheme=antnamescheme)
 		myms.close()
 	except Exception, instance: 
@@ -34,7 +34,7 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
 
 	# save original flagversion
 	try:
-		myfg = fgtool.create()
+		myfg = fgtool()
 		ok &= myfg.open(vis)
 		ok &= myfg.saveflagversion('Original',
 					   comment='Original flags at import into CASA',

@@ -90,12 +90,25 @@ using namespace casac;
 %typemap(typecheck) variant& {
    $1=1;
 }
+
 %typemap(in) record {
    if(PyDict_Check($input)){
       $1 = pyobj2variant($input, true).asRecord();      
    } else {
       PyErr_SetString(PyExc_TypeError,"not a dictionary");
    }
+}
+
+%typemap(in) record &{
+   if(PyDict_Check($input)){
+      $1 = new record(pyobj2variant($input, true).asRecord());      
+   } else {
+      PyErr_SetString(PyExc_TypeError,"not a dictionary");
+   }
+}
+
+%typemap(typecheck) record& {
+   $1 = PyDict_Check($input);
 }
 
 %typemap(in) BoolVec {

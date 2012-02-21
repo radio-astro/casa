@@ -207,7 +207,7 @@ class PartitionHelper(ParallelTaskHelper):
         print "Start of Select MS"
         if self._msTool is None:
             # Open up the msTool
-            self._msTool = mstool.create()
+            self._msTool = mstool()
             self._msTool.open(self._arg['vis'])    
         else:
             self._msTool.reset()
@@ -498,7 +498,7 @@ def partition(vis,
 
     # Create the msTool
     try:
-        msTool = mstool.create()
+        msTool = mstool()
         msTool.open(vis)
         msTool.partition(outputms=outputvis,
                          field=field,

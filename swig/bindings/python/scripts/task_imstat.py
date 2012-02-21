@@ -5,7 +5,7 @@ def imstat(
     stokes=None, listit=None, verbose=None, mask=None, stretch=None,
     logfile=None, append=None
 ):
-    _myia = iatool.create()
+    _myia = iatool()
     try:
         casalog.origin('imstat')
         _myia.open(imagename)

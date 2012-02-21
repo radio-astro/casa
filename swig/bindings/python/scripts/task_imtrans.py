@@ -66,7 +66,7 @@ from taskinit import *
 
 def imtrans(imagename=None, outfile=None, order=None, wantreturn=None):
     casalog.origin('imtrans')
-    myia = iatool.create()
+    myia = iatool()
     newim = None
     try:
         if (not myia.open(imagename)):

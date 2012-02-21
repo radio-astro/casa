@@ -15,7 +15,7 @@ def imregrid(imagename, template, output, asvelocity):
         if os.path.exists(output):
             raise Exception, 'Output destination ' + output + \
               " exists.\nPlease remove it or change the output file name."
-    _myia = iatool.create()
+    _myia = iatool()
 
     try:
         if not os.path.isdir(imagename) or not os.access(imagename, os.R_OK):

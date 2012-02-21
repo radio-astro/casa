@@ -249,7 +249,7 @@ def immath(
         varnames.append( 'IM'+str(i) )
     casalog.post( 'Variable name list is: '+str(varnames), 'DEBUG1' )
 
-    _myia = iatool.create()
+    _myia = iatool()
 
     #file existance check
     ignoreimagename=False
@@ -535,7 +535,7 @@ def _immath_parse( expr='' ):
 
 # check stokes type for the list of images
 def __check_stokes(images):
-        _myia = iatool.create()
+        _myia = iatool()
         retValue=[]
         for fname in images:
             _myia.open(fname)
@@ -564,7 +564,7 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
     # calculate a polarization position angle image
     stkslist = __check_stokes(filenames)
     Uimage = Qimage = ''
-    _myia = iatool.create()
+    _myia = iatool()
     if len(filenames) == 1:
         # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
         if (type(stkslist[0]) != list):
@@ -638,7 +638,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
         # do multistokes image
         if (type(stkslist[0]) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
-        _myia = iatool.create()
+        _myia = iatool()
         _myia.open(filenames[0])
         stokesPixel = _myia.coordsys().findcoordinate('stokes')['pixel']
         if (type(stokesPixel) != int):
@@ -722,7 +722,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
 def _immath_createPolMask(polithresh, lpol, outfile):
     # make the linear polarization threshhold mask CAS-2120
     myexpr = "'" + lpol + "' >= " + str(qa.getvalue(polithresh))
-    _myia = iatool.create()
+    _myia = iatool()
     _myia.open(outfile)
     _myia.calcmask(name='mask0', mask=myexpr)
     casalog.post('Calculated mask based on linear polarization threshold ' + str(polithresh),

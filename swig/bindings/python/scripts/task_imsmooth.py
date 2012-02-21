@@ -99,7 +99,7 @@ def imsmooth(
                       ' exists. imsmooth can not proceed, please\n'+\
                       'remove it or change the output file name.', 'SEVERE' )
         return retValue
-    _myia = iatool.create()
+    _myia = iatool()
     _myia.open(imagename)
     mycsys = _myia.coordsys()
     reg = rg.frombcs(

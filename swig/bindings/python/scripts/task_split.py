@@ -66,7 +66,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     if not outputvis or outputvis.isspace():
         raise ValueError, 'Please specify outputvis'
 
-    myms = mstool.create()
+    myms = mstool()
     if ((type(vis)==str) & (os.path.exists(vis))):
         myms.open(vis, nomodify=True)
     else:
@@ -226,7 +226,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     if ((spw != '') and (spw != '*')) or do_chan_mod:
         isopen = False
         try:
-            mytb = tbtool.create()
+            mytb = tbtool()
             mytb.open(outputvis + '/FLAG_CMD', nomodify=False)
             isopen = True
             #print "is open"

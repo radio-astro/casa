@@ -28,8 +28,8 @@ def setjy(vis=None, field=None, spw=None,
                      "SEVERE")
         return False
 
-      myms = mstool.create()
-      myim = imtool.create()
+      myms = mstool()
+      myim = imtool()
 
       if type(vis) == str and os.path.isdir(vis):
         n_selected_rows = nselrows(vis, field, spw, observation, timerange,
@@ -167,7 +167,7 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
   the paths of the member MSes.
   """
   retval = 0
-  myms = mstool.create()
+  myms = mstool()
   if ParallelTaskHelper.isParallelMS(vis):
     myms.open(vis)
     mses = myms.getreferencedtables()
@@ -206,7 +206,7 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
     if scan:
       query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
 
-    mytb = tbtool.create()
+    mytb = tbtool()
     mytb.open(vis)
     st = mytb.query(' and '.join(query),
                     style='python')  # Does style matter here?

@@ -28,7 +28,7 @@ def feather(imagename=None,highres=None,lowres=None):
         casalog.origin('feather')
 
 	try:
-		imFea=imtool.create()
+		imFea=imtool()
 		imFea.setvp(dovp=True)
 		imFea.feather(imagename,highres,lowres)
 		imFea.done()

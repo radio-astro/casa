@@ -206,6 +206,7 @@ macro( casa_add_tools out_swig out_sources out_py )
       #COMMAND echo "%module\\(package=\\\"casac\\\"\\) " ${_base} > ${_swig}
       COMMAND echo "%module " ${_base}   > ${_swig}
       COMMAND echo "%include \\<tools/casa_typemaps.i\\> " >> ${_swig}
+      COMMAND echo "%feature\\(\\\"kwargs\\\"\\)\\;" >> ${_swig}
       COMMAND echo "%feature\\(\\\"autodoc\\\", \\\"1\\\"\\)\\;" >> ${_swig}
       COMMAND echo "%include \\\"${_base}_cmpt.h\\\"" >> ${_swig}
       COMMAND echo "%{" >> ${_swig}

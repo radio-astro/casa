@@ -69,7 +69,7 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
         #print "telescopename:", telescopename
 
         # Check that the source is up.
-        myme = metool.create()
+        myme = metool()
         posobs = myme.observatory(telescopename)
         #print "posobs:", posobs
         myme.doframe(epoch)
@@ -114,7 +114,7 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
         workingdir = os.path.abspath(os.path.dirname(clist.rstrip('/')))
         tempms = tempfile.mkdtemp(prefix=objname, dir=workingdir)
 
-        mysm = smtool.create()
+        mysm = smtool()
         mysm.open(tempms)
 
         su.setcfg(mysm, telescopename, stnx, stny, stnz, diam,
@@ -159,7 +159,7 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
         mysm.close()
         casalog.post("Simulation finished.")
 
-        mytb = tbtool.create()
+        mytb = tbtool()
         mytb.open(tempms)
         data = mytb.getcol('DATA')[0]       # Again, only 1 polarization for now. 
         data = abs(data)

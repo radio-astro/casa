@@ -108,7 +108,7 @@ def immoments(
                       +" returned value\nis saved then you can used in" \
                       +" the same way the image tool (ia). can", 'WARN' )    
         
-    _myia = iatool.create()
+    _myia = iatool()
     try:
         # Translate the string value into an index value.
         axis=_immoments_parse_axis( imagename, axis )

@@ -9,8 +9,8 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
     casalog.origin('statwt')
     retval = True
     try:
-        myms = mstool.create()
-        mytb = tbtool.create()
+        myms = mstool()
+        mytb = tbtool()
         
         datacol = 'DATA'
         mytb.open(vis)

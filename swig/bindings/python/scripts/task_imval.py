@@ -34,7 +34,7 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
     # If the user hasn't specified any region information then
     # find the very last data point -- what ia.getpixelvalue        
     # defaults too.
-    myia = iatool.create()
+    myia = iatool()
     if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 ):
         try:
             #print "GETTING SINGLE PIXEL VALUE"
@@ -267,7 +267,7 @@ def _imval_get_single( box, chans, stokes, axes ):
 # Use the ia.getregion() function to construct the requested data.
 def _imval_getregion( imagename="", region={} ):
     retvalue= {}
-    myia = iatool.create()
+    myia = iatool()
     try:
         # Open the image for processing!
         myia.open(imagename)

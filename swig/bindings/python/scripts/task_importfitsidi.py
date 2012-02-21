@@ -18,7 +18,7 @@ def importfitsidi(fitsidifile,vis):
 	try:
 		casalog.origin('importfitsidi')
 		casalog.post("")
-                myms = mstool.create()
+                myms = mstool()
 		if(type(fitsidifile)==str):
 			casalog.post('### Reading file '+fitsidifile, 'INFO')
 			myms.fromfitsidi(vis,fitsidifile)

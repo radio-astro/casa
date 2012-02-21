@@ -69,7 +69,7 @@ class UVPlotInfo:
 
         self.vis = vis
         self.title = vis
-        self.tb = tbtool.create()
+        self.tb = tbtool()
 
         # Convert '' to '*' for ms.msseltoindex.
         if not spw:

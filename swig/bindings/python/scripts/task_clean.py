@@ -42,7 +42,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
        and not interactive:
 
 	casalog.post('analysing intended channalization...')
-        imCln=imtool.create()
+        imCln=imtool()
         imset=cleanhelper(imCln, vis, usescratch, casalog)
 
         (npage, localstart, localwidth)=imset.setChannelizeNonDefault(mode,
@@ -192,7 +192,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
     try:
         # Create a new imager tool
-        imCln=imtool.create();
+        imCln=imtool();
 
         ###if usescratch open ms with scratch column
         ###if mosweight use scratch columns as there in no
@@ -618,7 +618,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
                 # Check that reference-frequency is a valid string
                 reffreqVal=0.0;
-                qat=qatool.create();
+                qat=qatool();
                 try:
                     rff=qat.canonical(reffreq);
                 except Exception, instance:

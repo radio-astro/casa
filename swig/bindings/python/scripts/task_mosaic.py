@@ -23,7 +23,7 @@ def mosaic(vis,imagename,mode,alg,imsize,cell,phasecenter,stokes,niter,gain,thre
 
 	try:
 ###Set image parameters
-		imMos=imtool.create()
+		imMos=imtool()
 		casalog.origin('mosaic')
 		if((len(imagename)==0) or (imagename.isspace())):
 			raise Exception, 'Cannot proceed with blank imagename'

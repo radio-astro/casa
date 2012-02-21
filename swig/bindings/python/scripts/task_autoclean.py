@@ -35,7 +35,7 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
     inputmask = None
     if(mask):
         casalog.post('Using input mask from user.')
-        imCln = imtool.create()
+        imCln = imtool()
         imset = cleanhelper(imCln, vis)
         imset.defineimages(imsize=imsize, cell=cell, stokes=stokes,
                            mode=mode, spw=spw, nchan=1,

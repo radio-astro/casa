@@ -37,7 +37,7 @@ def exportfits(
 
 	#Python script
 	casalog.origin('exportfits')
-	_myia = iatool.create()
+	_myia = iatool()
 	_myia.open(imagename)
 	_myia.tofits(
 		outfile=fitsimage, velocity=velocity, optical=optical,

@@ -76,7 +76,7 @@ def predictcomp(objname=None, standard=None, epoch=None,
             nfreqs = 1
         freqs = pl.linspace(minfreqHz, maxfreqHz, nfreqs)
 
-        myme = metool.create()
+        myme = metool()
         mepoch = myme.epoch('UTC', epoch)
         if not prefix:
             ## meanfreq = {'value': 0.5 * (minfreqHz + maxfreqHz),
@@ -91,7 +91,7 @@ def predictcomp(objname=None, standard=None, epoch=None,
             prefix = ''
 
         # Get clist
-        myim = imtool.create()
+        myim = imtool()
         if hasattr(myim, 'predictcomp'):
             casalog.post('local im instance created', 'DEBUG1')
         else:
@@ -109,7 +109,7 @@ def predictcomp(objname=None, standard=None, epoch=None,
                       'epoch': mepoch,
                       'freqs (GHz)': 1.0e-9 * freqs,
                       'antennalist': antennalist}
-            mycl = cltool.create()
+            mycl = cltool()
             mycl.open(clist)
             comp = mycl.getcomponent(0)
             mycl.close(False)               # False prevents the stupid warning.

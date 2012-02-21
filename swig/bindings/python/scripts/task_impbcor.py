@@ -71,7 +71,7 @@ def impbcor(
 ):
     casalog.origin('impbcor')
     retval = None
-    myia = iatool.create()
+    myia = iatool()
     try:
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename

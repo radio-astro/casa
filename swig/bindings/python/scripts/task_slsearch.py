@@ -73,7 +73,7 @@ def slsearch(
 ):
     casalog.origin('slsearch')
     newsl = None
-    mysl = sltool.create()
+    mysl = sltool()
     try:
         mysl.open(table)
         newsl = mysl.search(

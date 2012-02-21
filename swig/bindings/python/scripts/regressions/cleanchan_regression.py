@@ -188,7 +188,7 @@ toplot=[]
 
 if pyonly:
     from cleanhelper import *
-    imCln=imtool.create()
+    imCln=imtool()
     vis=rt+'.ms'
     imset=cleanhelper(imCln, vis, False, casalog)
     outframe=''

@@ -26,7 +26,7 @@
 #
 import sys
 import os
-import casac
+from casac import *
 import string
 import time
 import inspect
@@ -130,7 +130,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 
 <xsl:when test="@units">
         if type(<xsl:value-of select="@name"/>) == str :
-           mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = casac.qa.quantity(<xsl:value-of select="@name"/>)
+           mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = casac.quanta().quantity(<xsl:value-of select="@name"/>)
         else :
            mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/>
 </xsl:when>
@@ -141,11 +141,11 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
         pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/'
-        trec = casac.cu.torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
+        trec = casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
 <xsl:text disable-output-escaping="yes">
         casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)
-        if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.cu.verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
+        if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.utils().verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
 	    return False
 </xsl:text>
 

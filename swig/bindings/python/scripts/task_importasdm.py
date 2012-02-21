@@ -165,7 +165,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                         outTables.append( vis+'/'+out )
                                 tb = casac.table()
                                 tb.open(vis,nomodify=False)
-                                wtb = tbtool.create()
+                                wtb = tbtool()
                                 for i in xrange(len(outTables)):
                                         wtb.fromASDM( outTables[i], targetTables[i] )
                                         tb.putkeyword( outTabNames[i], 'Table: %s'%(outTables[i]) )

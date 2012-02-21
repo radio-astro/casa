@@ -90,7 +90,7 @@ def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist
 		       if(type(model)==str or (not (type(model)==list and len(model)==nterms)) ):
 			       raise Exception, 'For nterms>1, please provide a list of nterms model-image names';
 		       # parse the reference-frequency field.
-                       qat=qatool.create();
+                       qat=qatool();
                        try:
 		          rff=qat.canonical(reffreq);
 		       except Exception, instance:

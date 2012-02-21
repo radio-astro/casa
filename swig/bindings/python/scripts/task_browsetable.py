@@ -29,7 +29,7 @@ def browsetable(tablename=None, mightedit=None,
     try:
         casalog.origin('browsetable')
         if type(tablename) == str:
-            t = tbtool.create()
+            t = tbtool()
             mightfilter = sortlist or taql or skipcols
             if os.path.exists(tablename):
                 t.open(tablename, nomodify=not mightedit)
