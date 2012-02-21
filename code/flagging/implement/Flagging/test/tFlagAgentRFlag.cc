@@ -685,11 +685,19 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-noise"))
 		{
-			noise.push_back(atof(argv[i+1]));
+			Record spwRecord;
+			spwRecord.define("spw=13",atof(argv[i+1]));
+			Record fieldRecord;
+			fieldRecord.defineRecord("field=1",spwRecord);
+			agentParameters.defineRecord ("noise", fieldRecord);
 		}
 		else if (parameter == string("-scutof"))
 		{
-			scutof.push_back(atof(argv[i+1]));
+			Record spwRecord;
+			spwRecord.define("spw=13",atof(argv[i+1]));
+			Record fieldRecord;
+			fieldRecord.defineRecord("field=1",spwRecord);
+			agentParameters.defineRecord ("scutof", fieldRecord);
 		}
 		else if (parameter == string("-spectralmin"))
 		{

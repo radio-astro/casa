@@ -53,7 +53,7 @@ protected:
 	Double computeThreshold(vector<Double> &data, vector<Double> &dataSquared, vector<Double> &counts);
 
 	// Function to be called for each timestep/channel
-	void computeAntennaPairFlagsCore(	Int spw,
+	void computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 										Double noise,
 										Double scutof,
 										uInt timeStart,
@@ -65,9 +65,10 @@ protected:
 	FlagReport getReport();
 
 	// Function to return histograms
-	FlagReport getReportCore(	map< Int,vector<Double> > &data,
-								map< Int,vector<Double> > &dataSquared,
-								map< Int,vector<Double> > &counts,
+	FlagReport getReportCore(	map< pair<Int,Int>,vector<Double> > &data,
+								map< pair<Int,Int>,vector<Double> > &dataSquared,
+								map< pair<Int,Int>,vector<Double> > &counts,
+								map< pair<Int,Int>,Double > &threshold,
 								string label,
 								Double scale);
 
@@ -86,18 +87,18 @@ private:
 	Double spectralmax_p;
 
 	// Time-direction analysis
-	Array<Double> noise_p;
-	map<Int,Double> spw_noise_map_p;
-	map< Int,vector<Double> > spw_noise_histogram_sum_p;
-	map< Int,vector<Double> > spw_noise_histogram_sum_squares_p;
-	map< Int,vector<Double> > spw_noise_histogram_counts_p;
+	Record noise_p;
+	map< pair<Int,Int>,Double > field_spw_noise_map_p;
+	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_p;
+	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_squares_p;
+	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_counts_p;
 
 	// Spectral analysis
-	Array<Double> scutof_p;
-	map<Int,Double> spw_scutof_map_p;
-	map< Int,vector<Double> > spw_scutof_histogram_sum_p;
-	map< Int,vector<Double> > spw_scutof_histogram_sum_squares_p;
-	map< Int,vector<Double> > spw_scutof_histogram_counts_p;
+	Record scutof_p;
+	map< pair<Int,Int>,Double > field_spw_scutof_map_p;
+	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_p;
+	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_squares_p;
+	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_counts_p;
 };
 
 
