@@ -64,6 +64,13 @@ class VisEquation;
 class SolvableVisCal : virtual public VisCal {
 public:
 
+  typedef struct fluxScaleStruct {
+    Matrix<Double> fd;
+    Matrix<Double> fderr;
+    Matrix<Int> numSol;
+    Matrix<Double> freq;
+  } fluxScaleStruct;
+
   SolvableVisCal(VisSet& vs);
   
   SolvableVisCal(const Int& nAnt);
@@ -278,7 +285,7 @@ public:
 			 const Vector<Int>& tranFieldIn,
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
-			 Matrix<Double>& fluxScaleFactor)=0;
+			 fluxScaleStruct& oFluxScaleStruct)=0;
 
   // Tell the CalSet to write a CalTable
   virtual void store();
@@ -550,7 +557,8 @@ public:
 			 const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
-			 Matrix<Double>& ) { throw(AipsError("NYI")); };
+			 SolvableVisCal::fluxScaleStruct&)
+	{ throw(AipsError("NYI")); };
 
   // Report state:
   inline virtual void state() { stateSVM(True); };
@@ -680,7 +688,7 @@ public:
 		 const Vector<Int>& tranFieldIn,
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
-		 Matrix<Double>& fluxScaleFactor);
+		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct);
 			     
   // Report state:
   inline virtual void state() { stateSVJ(True); };
