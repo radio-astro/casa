@@ -53,16 +53,16 @@ class asdmsd_import( unittest.TestCase ):
         shutil.rmtree(myasdm_dataset_name)
         shutil.rmtree(asapname,ignore_errors=True)
 
-    def test0( self ):
-        """asdmsd_import_v2: Test direct import to single-dish format (oldasdm2ASAP)"""
-        # 1) test import
-        self.doImport( version='v2' )
+##     def test0( self ):
+##         """asdmsd_import_v2: Test direct import to single-dish format (oldasdm2ASAP)"""
+##         # 1) test import
+##         self.doImport( version='v2' )
 
-        # 2) table existence check
-        self.tableExistenceCheck()
+##         # 2) table existence check
+##         self.tableExistenceCheck()
 
-        # 3) table contents check
-        self.tableContentsCheck()
+##         # 3) table contents check
+##         self.tableContentsCheck()
         
     def test1( self ):
         """asdmsd_import_v3: Test direct import to single-dish format (asdm2ASAP)"""
