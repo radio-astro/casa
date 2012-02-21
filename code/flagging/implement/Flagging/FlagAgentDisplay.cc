@@ -451,6 +451,7 @@ FlagReport
        // Make empty list
        FlagReport dispRep("list");
 
+       /*
        // Make sample arrays/vectors
        Int N=10;
        Array<Float> sample( IPosition(2, N, N) );
@@ -487,6 +488,7 @@ FlagReport
 
        if( ! dispRep.verifyFields() )
 	 cout << "Problem ! " << endl;
+       */
 
        return dispRep;
  }// end of getReport()
