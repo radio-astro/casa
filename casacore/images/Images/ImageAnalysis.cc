@@ -4845,12 +4845,7 @@ Bool ImageAnalysis::tofits(
 ) {
 
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
-
-	//
-	// Convert image to FITS
-	//
 	String error;
-
 	// Check output file
 	if (!overwrite && !fitsfile.empty()) {
 		NewFile validfile;
@@ -4859,14 +4854,12 @@ Bool ImageAnalysis::tofits(
 			*itsLog << errmsg << LogIO::EXCEPTION;
 		}
 	}
-
 	// The SubImage that goes to the FITSCOnverter no longer will know
 	// the name of the parent mask, so spit it out here
 	if (pImage_p->isMasked()) {
 		*itsLog << LogIO::NORMAL << "Applying mask of name '"
 				<< pImage_p->getDefaultMask() << "'" << LogIO::POST;
 	}
-
 	IPosition keepAxes;
 	if (!dropDeg) {
 		if (dropStokes) {
@@ -4887,36 +4880,36 @@ Bool ImageAnalysis::tofits(
 			//else: nothing to drop
 		}
 	}
-
 	AxesSpecifier axesSpecifier;
 	if (dropDeg) { // just drop all degenerate axes
 		axesSpecifier = AxesSpecifier(False);
-	} else if (!keepAxes.empty()) { // specify which axes to keep
+	}
+	else if (!keepAxes.empty()) { // specify which axes to keep
 		axesSpecifier = AxesSpecifier(keepAxes);
 	}
-
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		mask, itsLog, False, axesSpecifier, stretch
 	);
-
-	Bool ok = ImageFITSConverter::ImageToFITS(error, subImage, fitsfile,
-						  HostInfo::memoryFree() / 1024, 
-						  velocity, optical, 
-						  bitpix, minpix, maxpix, overwrite, 
-						  False, //  deglast default
-						  False, //  verbose default
-						  stokesLast, 
-						  wavelength,
-						  airWavelength, // for airWavelength=True
-						  origin
-						  );
-	if (!ok)
+	if (
+		ImageFITSConverter::ImageToFITS(
+			error, subImage, fitsfile,
+			HostInfo::memoryFree() / 1024,
+			velocity, optical,
+			bitpix, minpix, maxpix, overwrite,
+			False, //  deglast default
+			False, //  verbose default
+			stokesLast,	wavelength,
+			airWavelength, // for airWavelength=True
+			origin
+		)
+	) {
+		return True;
+	}
+	else {
 		*itsLog << error << LogIO::EXCEPTION;
-
-	return ok;
-
+	}
 }
 
 Bool ImageAnalysis::toASCII(
