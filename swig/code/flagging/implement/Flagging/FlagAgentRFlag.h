@@ -24,6 +24,7 @@
 #define FlagAgentRFlag_H_
 
 #include <flagging/Flagging/FlagAgentBase.h>
+#include <casa/Utilities/DataType.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -68,15 +69,15 @@ protected:
 								map< Int,vector<Double> > &dataSquared,
 								map< Int,vector<Double> > &counts,
 								string label,
-								uInt scale);
+								Double scale);
 
 private:
 
 	// General parameters
 	Bool doplot_p;
 	uInt nTimeSteps_p;
-	uInt noiseScale_p;
-	uInt scutofScale_p;
+	Double noiseScale_p;
+	Double scutofScale_p;
 
 	// Spectral Robust fit
 	uInt nIterationsRobust_p;

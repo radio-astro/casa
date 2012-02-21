@@ -72,7 +72,7 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 	logger_p = casa::LogIO();
 
         // Type of report. Options : none, summary
-        if( ! ( type == "summary" || type == "none" ) )
+        if( ! ( type == "summary" || type == "rflag" || type == "none" ) )
 	{
 	       logger_p << LogIO::WARN << "Invalid FlagReport type : " << type << ". Setting to 'none' " << LogIO::POST;
 	       type="none";

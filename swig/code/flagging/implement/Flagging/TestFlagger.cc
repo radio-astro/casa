@@ -337,7 +337,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	// If there is a tfcrop or extend agent in the list,
 	// get the maximum value of ntime and the combinescans parameter
-	if (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0) {
+	if (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or mode.compare("rflag") == 0) {
 		Double ntime;
 		if (agentParams_p.isDefined("ntime")){
 			agentParams_p.get("ntime", ntime);
@@ -510,14 +510,14 @@ TestFlagger::initAgents()
 		agent_rec.get("mode", mode);
 
 		// Set the new time interval only once
-		if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0)) {
+		if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or mode.compare("rflag") == 0)) {
 			fdh_p->setTimeInterval(max_p);
 			timeset_p = true;
 		}
 
 		// Change the new iteration approach only once
 		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
-			or mode.compare("display") == 0)) {
+			or mode.compare("rflag") == 0 or mode.compare("display") == 0)) {
 			if (combinescans_p)
 				fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
 			else

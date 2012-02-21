@@ -165,6 +165,59 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 		scutofScale_p = 5;
 	}
 
+
+	// Read in "display" and "writeflags" and decide the value of "doplot"
+	// DEMO code
+	String display("none");
+	exists = config.fieldNumber ("display");
+	if (exists >= 0)
+	{
+	  display = config.asString("display");
+	}
+	Bool writeflags(True);
+	exists = config.fieldNumber ("writeflags");
+	if (exists >= 0)
+	{
+	  writeflags = config.asBool("writeflags");
+	}
+
+	if(display != String("none") && writeflags==False)
+	  {
+	    doplot_p = True;
+	    *logger_p << logLevel_p << " Changing 'doplot' to " << doplot_p << LogIO::POST;
+	  }
+
+	// Input thresholds. This can be a Double, a String ('auto'), or a Record
+	// FOR DEMO : 'thresholds' is a local variable....
+	exists = config.fieldNumber ("threshold");
+	if (exists >= 0)
+	{
+	  if( config.type( config.type(exists) ) == casa::TpFloat ||  config.type( config.type(exists) ) == casa::TpDouble )
+	    {
+	      Double thresholds = config.asDouble("threshold");
+	      cout << "RFLAG::setAgentPar : Using same threshold for all fields and spws : " << thresholds << endl;
+	    }
+	  else if( config.type(exists) == casa::TpRecord )
+	    {
+	      Record thresholds = config.subRecord( RecordFieldId("threshold") );
+	      ostringstream recprint;
+	      thresholds.print(recprint);
+	      cout << "RFLAG::setAgentPar : Thresholds from input record : " << endl << recprint.str() << endl;
+	      // Justo, here, step through the record, and fill in your map for time and freq thresholds for each field and spw. Go through thresholds.nfields(), and for each, check that the key contains the string "thresh".  Fields and spws for which this is not specified, must default to 'auto'.
+
+	    }
+	  else
+	    {
+	      String thresholds = String("auto");
+	      cout << "RFLAG::setAgentPar : Default threshold. Setting to 'auto' " << endl;
+	    }
+	}
+	else
+	{
+	  String thresholds = String("auto");
+          cout << "RFLAG::setAgentPar : Automatic thresholds ! " << endl;
+	}
+
 	return;
 }
 
@@ -243,6 +296,46 @@ FlagReport FlagAgentRFlag::getReport()
 											scutofScale_p);
     dispRep.addReport(scutofStd);
 
+    // ############ START DEMO Code ###############
+    // TODO : Add the report with all the thresholds.
+    if(doplot_p==True)
+      {
+	// Make a Record from the 'field/spw/cutoffs' and return it.
+	Record threshList;
+	
+	// For one field,spw
+	Record oneThreshold; 
+	oneThreshold.define( RecordFieldId("field"),(Int)0 ) ;
+	oneThreshold.define( RecordFieldId("spw") ,(Int)11 );
+	oneThreshold.define( RecordFieldId("timecutoff"),(Double)0.05 );
+	oneThreshold.define( RecordFieldId("freqcutoff"),(Double)0.08 );
+	
+	threshList.defineRecord( RecordFieldId(String("thresh_0")) , oneThreshold );
+	
+	// For another field,spw
+	Record twoThreshold;
+	twoThreshold.define( RecordFieldId("field"),(Int)0 ) ;
+	twoThreshold.define( RecordFieldId("spw") ,(Int)9 );
+	twoThreshold.define( RecordFieldId("timecutoff"),(Double)0.04 );
+	twoThreshold.define( RecordFieldId("freqcutoff"),(Double)0.06 );
+	
+	threshList.defineRecord( RecordFieldId(String("thresh_1")) , twoThreshold );
+	ostringstream recprint;
+	threshList.print(recprint);
+	cout << "RFLAG::getReport : Record being returned : " << endl << recprint.str() << endl;
+	
+	// Make a FlagReport of type 'rflag' - so that it can be pulled out from the list in python
+	FlagReport returnThresh("rflag",agentName_p, threshList);
+	
+	// Add this to the list of reports
+	dispRep.addReport(returnThresh);
+      }
+    else
+      {
+	cout <<"RFLAG::getReport : NO thresholds being returned " << endl;
+      }
+    // ############ END Demo Code ###############
+    
 	return dispRep;
 }
 
@@ -250,7 +343,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< Int,vector<Double> > &data,
 											map< Int,vector<Double> > &dataSquared,
 											map< Int,vector<Double> > &counts,
 											string label,
-											uInt scale)
+											Double scale)
 {
 	// Set logger origin
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
@@ -371,7 +464,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 			{
 				// Ignore data point if it is already flagged
 				// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
-				if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+				if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
 
 				visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 				SumWeight += 1;
@@ -451,7 +544,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
 				{
 					// Ignore data point if it is already flagged or weight is <= 0
 					// NOTE: In our case visibilities come w/o weights, so we check only vs flags
-					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+					if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
 
 					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 					if (abs(visibility.real()-AverageReal)<thresholdRobust_p[robustIter]*StdReal)
@@ -492,7 +585,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	Int spw,
         		{
 					// Ignore data point if it is already flagged
 					// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
-					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i)) continue;
+					if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
 
 					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 
@@ -674,10 +767,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 
 	uInt effectiveNTimeStepsDelta = (effectiveNTimeSteps - 1)/2;
 
-	// Beginning time range: Move only central point
+	// Beginning time range: Move only central point (only for spectral analysis)
+	// We set start/stop time with decreasing values to deactivate time analysis
 	for (uInt timestep_i=0;timestep_i<effectiveNTimeStepsDelta;timestep_i++)
 	{
-		computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
+		// computeAntennaPairFlagsCore(spw,noise,scutof,0,effectiveNTimeSteps,timestep_i,visibilities,flags);
+		computeAntennaPairFlagsCore(spw,noise,scutof,-1,-2,timestep_i,visibilities,flags);
 	}
 
 	for (uInt timestep_i=effectiveNTimeStepsDelta;timestep_i<nTimesteps-effectiveNTimeStepsDelta;timestep_i++)
@@ -685,10 +780,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		computeAntennaPairFlagsCore(spw,noise,scutof,timestep_i-effectiveNTimeStepsDelta,timestep_i+effectiveNTimeStepsDelta,timestep_i,visibilities,flags);
 	}
 
-	// End time range: Move only central point
+	// End time range: Move only central point (only for spectral analysis)
+	// We set start/stop time with decreasing values to deactivate time analysis
 	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<nTimesteps;timestep_i++)
 	{
-		computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
+		// computeAntennaPairFlagsCore(spw,noise,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
+		computeAntennaPairFlagsCore(spw,noise,scutof,-1,-2,timestep_i,visibilities,flags);
 	}
 
 	return false;
