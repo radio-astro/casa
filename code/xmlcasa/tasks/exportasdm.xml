@@ -62,10 +62,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="useversion" >
-	    <description>Selects the version of MS2asdm to be used (\'v3\' (default) or \'v2\' (version before May 2011))</description>
+	    <description>Selects the version of MS2asdm to be used (\'v3\' (default and only option presently))</description>
 	    <value>v3</value>
 	    <allowed kind="enum">
-	      <value>v2</value>
 	      <value>v3</value>
 	      <value></value>
 	    </allowed>
