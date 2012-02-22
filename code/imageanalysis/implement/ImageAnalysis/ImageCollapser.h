@@ -134,7 +134,7 @@ private:
 	AggregateType _aggType;
 	static const String _class;
 
-	//static map<uInt, Float (*)(const Array<Float>&)> *_funcMap;
+	static map<uInt, Float (*)(const Array<Float>&)> _funcMap;
 	static map<uInt, String> *_funcNameMap, *_minMatchMap;
 
 	// disallow default constructor
@@ -156,6 +156,9 @@ private:
 		const std::auto_ptr<ImageInterface<Float> >& outImage,
 		const Array<Bool>& outMask
 	) const;
+
+	static const map<uInt, Float (*)(const Array<Float>&)>& _getFuncMap();
+
 
 };
 }
