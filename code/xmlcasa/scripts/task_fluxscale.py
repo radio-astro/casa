@@ -61,7 +61,7 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
 
                mycb = cbtool.create()
                mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
-               mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
+               output = mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
                               transfer=transfer,append=append,refspwmap=refspwmap)
                mycb.close()
 
@@ -79,3 +79,5 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                print '*** Error ***',instance
                mycb.close()
                raise Exception, instance
+
+       return output
