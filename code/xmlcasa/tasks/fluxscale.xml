@@ -62,6 +62,13 @@
 		</param>
 
 	</input>
+    <output>
+    <param type="any" name="fluxd">
+    	<description>Dictionary containing the transfer fluxes and their errors.</description>
+	<any type="variant"/>
+	<value>{}</value>
+    </param>
+    </output>
 <returns type="void"/>
 
 <example>
