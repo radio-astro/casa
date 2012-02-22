@@ -299,7 +299,7 @@ def getUnion(cmdlist):
                     fields += xval + ','
 
                 elif xkey == "antenna":
-                    ants += xval + ','
+                    ants += xval + ';'
 
                 elif xkey == "timerange":
                     times += xval + ','
@@ -329,7 +329,7 @@ def getUnion(cmdlist):
     # Strip out the extra comma at the end
     scans = scans.rstrip(',')
     fields = fields.rstrip(',')
-    ants = ants.rstrip(',')
+    ants = ants.rstrip(';')
     times = times.rstrip(',')
     corrs = corrs.rstrip(',')
     ints = ints.rstrip(',')

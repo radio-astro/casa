@@ -12,11 +12,12 @@
 #include <iostream>
 #include <calibrater_cmpt.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
-#include <ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 
+#include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
+#include <casa/Containers/RecordDesc.h>
 #include <casa/Containers/SimOrdMap.h>
 
 #include <casa/Quanta/QC.h>
@@ -24,7 +25,11 @@
 //#include <casa/BasicSL/Constants.h>
 #include <casa/OS/File.h>
 #include <casa/OS/SymLink.h>
+#include <tables/Tables/ScalarColumn.h>
+#include <ms/MeasurementSets.h>
 #include <ms/MeasurementSets/MSRange.h>
+#include <ms/MeasurementSets/MSField.h>
+#include <ms/MeasurementSets/MSSpectralWindow.h>
 
 #include <measures/Measures/MeasTable.h>
 #include <iostream>
@@ -586,22 +591,24 @@ uniqueIntV(std::vector<int> &ulist, const Vector<Int> &list) {
 
 //----------------------------------------------------------------------------
 //Fluxscale - bootstrap the flux density scale from std. amplitude calibrators
-bool 
-calibrater::fluxscale(std::vector<double> & fluxd,
-		      const std::string& tablein,
+casac::record* calibrater::fluxscale(
+                      const std::string& tablein,
 		      const ::casac::variant& reference,
 		      const std::string& tableout,
 		      const ::casac::variant& transfer,
 		      const bool append, 
 		      const std::vector<int>& refspwmap)
 {
-  if (! itsMS) {
-    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
-	    << endl << LogIO::POST;
-    return false;
-  }
+
+  casac::record* poOutput;
 
   try {
+
+    if (! itsMS) {
+      *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+  	    << endl << LogIO::POST;
+      throw( AipsError( "Must first open a MeasurementSet." ) );
+    }
 
     // Write parameters to HISTORY log
     logSink_p.clearLocally();
@@ -609,13 +616,19 @@ calibrater::fluxscale(std::vector<double> & fluxd,
     os << "Beginning fluxscale--(MSSelection version)-------" << LogIO::POST;
     
     // Forward to Calibrater object:
-    Matrix<Double> fluxScaleFactor;
+    SolvableVisCal::fluxScaleStruct oFluxD;
+//    Matrix<Double> fluxd;
+//    Matrix<Double> fluxderr;
+    Vector<Int> tranidx;
     itsCalibrater->fluxscale(tablein,tableout,
 			     toCasaString(reference),
 			     refspwmap,
 			     toCasaString(transfer),
-			     append,fluxScaleFactor);
-    
+			     append,
+			     oFluxD,
+			     tranidx);
+
+/*    
     // Do something about output
     //  fluxd.reference(fd.reform(IPosition(1,fd.nelements())));
     fluxd = std::vector<double>();
@@ -624,12 +637,59 @@ calibrater::fluxscale(std::vector<double> & fluxd,
 	fluxd.push_back(fluxScaleFactor(i,j));
       }
     }
-    
-  } catch (AipsError x) {
+*/
+
+    // Associate the field IDs with the field numbers
+
+    String oName( "NAME" );
+
+    Table oFieldTable( itsMS->fieldTableName() );
+    ROScalarColumn<String> oFieldColumn( oFieldTable, oName );
+    Vector<String> oFieldID( oFieldColumn.getColumn() );
+
+    Table oSPWTable( itsMS->spectralWindowTableName() );
+    ROScalarColumn<String> oSPWColumn( oSPWTable, oName );
+    Vector<String> oSPWID( oSPWColumn.getColumn() );
+
+
+    // New code used to return a record containing the field names, the spectral
+    // windows, flux densities, flux density errors, number of antennas, and
+    // frequencies
+
+    uInt uiNumSPW = oFluxD.fd.shape()[0];
+    uInt uiNumTran = tranidx.nelements();
+
+    Record oRecord;
+    oRecord.define( "spwID", oSPWID );
+
+    for ( uInt t=0; t<uiNumTran; t++ ) {
+
+      Record oSubRecord;
+
+      IPosition oStart( 2, 0, tranidx[t] );
+      IPosition oEnd( 2, uiNumSPW-1, tranidx[t] );
+
+      oSubRecord.define( "fieldID", oFieldID[tranidx[t]] );
+      oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
+      oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
+      oSubRecord.define( "freq", Vector<Double>(uiNumSPW,-1.0) );
+      oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
+
+      oRecord.defineRecord( String::toString<Int>(tranidx[t]), oSubRecord );
+
+    }
+
+    poOutput = fromRecord( oRecord );
+
+  }
+
+  catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return true;
+
+  return( poOutput );
+
 }
 
 bool

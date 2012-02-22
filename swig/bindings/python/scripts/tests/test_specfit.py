@@ -77,6 +77,7 @@ import numpy
 twogauss = "specfit_multipix_2gauss.fits"
 polyim = "specfit_multipix_poly_2gauss.fits"
 gauss_triplet = "gauss_triplet.fits"
+invalid_fits = "invalid_fits.im"
 solims = [
     "amp", "ampErr", "center", "centerErr",
     "fwhm", "fwhmErr", "integral", "integralErr"
@@ -91,10 +92,11 @@ def run_fitprofile (
     axis, mask, ngauss, poly, multifit, model="",
     residual="", amp="", amperr="", center="", centererr="",
     fwhm="", fwhmerr="", integral="", integralerr="",
-    estimates="",gampest="", gcenterest="", gfwhmest="",
-    gfix="", gmncomps=0, gmampcon="", gmcentercon="",
+    estimates="", logresults=True, pampest="", pcenterest="", pfwhmest="",
+    pfix="", gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix="", logfile=""
+    gmfwhmest=[0], gmfix="", logfile="", pfunc="",
+    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0]
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -109,12 +111,16 @@ def run_fitprofile (
         model=model, residual=residual, amp=amp,
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
-        integralerr=integralerr, gampest=gampest,
-        gcenterest=gcenterest, gfwhmest=gfwhmest, gfix=gfix,
+        integralerr=integralerr, logresults=logresults, pampest=pampest,
+        pcenterest=pcenterest, pfwhmest=pfwhmest, pfix=pfix,
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
-        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile
+        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
+        pfunc=pfunc, goodamprange=goodamprange,
+        goodcenterrange=goodcenterrange,
+        goodfwhmrange=goodfwhmrange
+>>>>>>> .merge-right.r18376
     )
     myia.close()
     myia.done()
@@ -125,11 +131,12 @@ def run_specfit(
     axis, mask, ngauss, poly, multifit, model="",
     residual="", amp="", amperr="", center="", centererr="",
     fwhm="", fwhmerr="", integral="", integralerr="",
-    wantreturn=True, estimates="",
+    wantreturn=True, estimates="", logresults=None,
     gampest="", gcenterest="", gfwhmest="", gfix="",
     gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix="", logfile=""
+    gmfwhmest=[0], gmfix="", logfile="", pfunc="",
+    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0]
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
@@ -140,12 +147,16 @@ def run_specfit(
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
         integralerr=integralerr,
-        wantreturn=wantreturn, gampest=gampest,
-        gcenterest=gcenterest, gfwhmest=gfwhmest, gfix=gfix,
+        wantreturn=wantreturn, logresults=logresults, pampest=pampest,
+        pcenterest=pcenterest, pfwhmest=pfwhmest, pfix=pfix,
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
-        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile
+        gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
+        pfunc=pfunc,
+        goodamprange=goodamprange,
+        goodcenterrange=goodcenterrange,
+        goodfwhmrange=goodfwhmrange
     )
 
 class specfit_test(unittest.TestCase):
@@ -596,6 +607,7 @@ class specfit_test(unittest.TestCase):
         myim.open(residname)
         pixels = myim.getchunk()
         self.assertTrue(pixels.shape == tuple(shape))
+        print str(pixels)
         self.assertTrue((pixels == 0).all())
         myim.done()
         
@@ -700,6 +712,60 @@ class specfit_test(unittest.TestCase):
             # appending, second time through size should double
             self.assertTrue(os.path.getsize(logfile) > 3e4*i)
             i = i+1
+
+    def test_12(self):
+        """test results of lorentzian fitting"""
+        imagename=datapath+two_lorentzians
+        pamp = [1, 7]
+        pcen = [30, 111]
+        pfwhm = [4, 4]
+        pfunc = ["l", "l"]
+        
+        logfile = "two_lorentzian_fit.log"
+        i = 1
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename=imagename, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=-1,
+                multifit=True, center="center",
+                centererr="centerErr", fwhm="fwhm",
+                fwhmerr="fwhmErr", amp="amp", amperr="ampErr",
+                integral="integral", integralerr="integralErr",
+                pampest=pamp, pcenterest=pcen, pfwhmest=pfwhm,
+                logfile=logfile, pfunc=pfunc
+            )
+            for image in (
+                "center", "centerErr", "fwhm", "fwhmErr", "amp",
+                "ampErr", "integral", "integralErr"
+            ):
+                self.checkImage(
+                    image + "_ls", datapath + image + "_ls"
+                )
+            # appending, second time through size should double
+            self.assertTrue(os.path.getsize(logfile) > 2e4*i)
+            i = i+1
+            
+    def test_13(self):
+        """test setting solution parameter validities """
+        imagename=datapath+invalid_fits
+        i = 0
+        goodfwhmrange= [[0], [2,20]]
+        for gfr in goodfwhmrange:
+            for code in [run_fitprofile, run_specfit]:
+                res = code(
+                    imagename=imagename, box="", region="", chans="",
+                    stokes="", axis=3, mask="", ngauss=2, poly=-1,
+                    multifit=True, logresults=False, goodfwhmrange=gfr
+                )
+                print "**** " + str(res["valid"].sum())
+                if i == 0:
+                    exp = 16
+                else:
+                    exp = 7
+                self.assertTrue(res["valid"].sum() == exp)
+            i = i+1
+           
+
 
 def suite():
     return [specfit_test]

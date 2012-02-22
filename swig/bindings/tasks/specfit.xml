@@ -198,6 +198,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.</description>
             <value type="string"/>
         </param>
+        <param type="doubleArray" direction="in" name="goodamprange">
+            <description>Acceptable amplitude solution range. [0.0] => all amplitude solutions are acceptable.</description>
+            <value>0.0</value>
+        </param>
+        <param type="doubleArray" direction="in" name="goodcenterrange">
+            <description>Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.</description>
+            <value>0.0</value>
+        </param>
+        <param type="doubleArray" direction="in" name="goodfwhmrange">
+            <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
+            <value>0.0</value>
+        </param>
         <constraints>
             <when param="mask">
                 <notequals type="string" value="">
@@ -297,55 +309,57 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 This task simultaneously fits one or more gaussian singlets lorentzian singlets, gaussian multiplets, and/or a polynomial to one dimensional profiles.
 
 ARAMETER SUMMARY
-imagename    Name of the input (CASA, FITS, MIRIAD) image
-box          Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
-             may be specified. If not specified, region is used if specified. If region
-             is also not specified, entire directional plane unioned with any chans and
-             stokes specification determines the region.
-region       Region of interest. See help par.region for possible specifications.
-chans        Optional contiguous frequency channel number specification. Not used if
-             region is specified. Default is all channels.
-stokes       Contiguous stokes planes specification. Not used if region is specified.
-             Default is all stokes.     
-axis         Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
-             zeroth axis if a spectral axis is not present.
-mask         Mask to use. See help par.mask. Default is none.
-stretch      Stretch the input mask if necessary and possible? Only used if a mask is specified.
-             See help par.stretch.
-ngauss       Maximum number of gaussians to fit.
-poly         Order of polynomial to fit. &lt;0 means do not fit a polynomial.
-estimates    Name of file containing initial gaussian estimates.
-minpts       Minimum number of points necessary to attempt a fit.
-multifit     Fit models at each pixel in region (true) or average profiles and fit a single model (false).
-model        Name of model image to write.
-residual     Name of residual image to write.
-amp          Name of amplitude solution image. Default: do not write the image ("")
-amperr       Name of amplitude solution error image. Default: do not write the image ("")
-center       Name of center solution image. Default: do not write the image ("")
-centererr    Name of center solution error image. Default: do not write the image ("")
-fwhm         Name of fwhm solution image. Default: do not write the image ("")
-fwhmerr      Name of fwhm solution error image. Default: do not write the image ("")
-integral     Name of integral solution image. Default: do not write the image ("")
-integralerr  Name of integral solution error image. Default: do not write the image ("")
-wantreturn   If true, return a record summarizing the fit results, if false, return false.
-stretch      Stretch the mask if necessary and possible? See help par.stretch 
-logresults   Output results to logger?
-pampest      Initial estimate of PCF profile (gaussian or lorentzian) amplitudes.
-pcenterest   Initial estimate PCF profile centers, in pixels.
-pfwhmest     Initial estimate PCF profile FWHMs, in pixels.
-pfix         PCF profile parameters to fix during fit.
-pfunc        PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.
-gmncomps     Number of components in each Gaussian multiplet to fit.
-gmampcon     The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.
-gmcentercon  The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.
-gmfwhmcon    The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.
-gmampest     Initial estimate of individual gaussian amplitudes in gaussian multiplets.
-gmcenterest  Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.
-gmfwhmest    Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.
-gmfix        Parameters of individual gaussians in gaussian multiplets to fix during fit.
-logfile      File in which to log results. Default is not to write a logfile.
-append       Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.
-
+imagename       Name of the input (CASA, FITS, MIRIAD) image
+box             Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
+                may be specified. If not specified, region is used if specified. If region
+                is also not specified, entire directional plane unioned with any chans and
+                stokes specification determines the region.
+region          Region of interest. See help par.region for possible specifications.
+chans           Optional contiguous frequency channel number specification. Not used if
+                region is specified. Default is all channels.
+stokes          Contiguous stokes planes specification. Not used if region is specified.
+                Default is all stokes.     
+axis            Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
+                zeroth axis if a spectral axis is not present.
+mask            Mask to use. See help par.mask. Default is none.
+stretch         Stretch the input mask if necessary and possible? Only used if a mask is specified.
+                See help par.stretch.
+ngauss          Maximum number of gaussians to fit.
+poly            Order of polynomial to fit. &lt;0 means do not fit a polynomial.
+estimates       Name of file containing initial gaussian estimates.
+minpts          Minimum number of points necessary to attempt a fit.
+multifit        Fit models at each pixel in region (true) or average profiles and fit a single model (false).
+model           Name of model image to write.
+residual        Name of residual image to write.
+amp             Name of amplitude solution image. Default: do not write the image ("")
+amperr          Name of amplitude solution error image. Default: do not write the image ("")
+center          Name of center solution image. Default: do not write the image ("")
+centererr       Name of center solution error image. Default: do not write the image ("")
+fwhm            Name of fwhm solution image. Default: do not write the image ("")
+fwhmerr         Name of fwhm solution error image. Default: do not write the image ("")
+integral        Name of integral solution image. Default: do not write the image ("")
+integralerr     Name of integral solution error image. Default: do not write the image ("")
+wantreturn      If true, return a record summarizing the fit results, if false, return false.
+stretch         Stretch the mask if necessary and possible? See help par.stretch 
+logresults      Output results to logger?
+pampest         Initial estimate of PCF profile (gaussian or lorentzian) amplitudes.
+pcenterest      Initial estimate PCF profile centers, in pixels.
+pfwhmest        Initial estimate PCF profile FWHMs, in pixels.
+pfix            PCF profile parameters to fix during fit.
+pfunc           PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.
+gmncomps        Number of components in each Gaussian multiplet to fit.
+gmampcon        The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.
+gmcentercon     The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.
+gmfwhmcon       The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.
+gmampest        Initial estimate of individual gaussian amplitudes in gaussian multiplets.
+gmcenterest     Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.
+gmfwhmest       Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.
+gmfix           Parameters of individual gaussians in gaussian multiplets to fix during fit.
+logfile         File in which to log results. Default is not to write a logfile.
+append          Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.
+goodamprange    Acceptable amplitude solution range. 0 => all amplitude solutions are acceptable. [0.0] => All amplitude solutions are acceptable.
+goodcenterrange Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.
+goodfwhmrange   Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.
 
 This task simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
 and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
@@ -520,6 +534,18 @@ be silently held fixed as well).
 
 The same rules that apply to singlets when multifit=True apply to multiplets.
 
+LIMITING RANGES FOR SOLUTION PARAMETERS
+In cases of low (or no) signal to noise spectra, it is still possible for the fit to converge, but often to a
+nonsensical solution. The astronomer can use her knowledge of the source to filter out obviously bogus solutions.
+One can limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
+parameters. Any combination can be specified and the limit constraints will be ANDed together. The ranges apply to all PCF components
+that might be fit; choosing ranges on a component by component basis is not supported. If specified,
+an array of exactly two numerical values must be given to indicate the range of acceptable solution values for
+that parameter.  goodamprange is expressed in terms of image brightness units. goodcenterrange is expressed in terms of pixels
+from the zeroth pixel in the specified region. goodfwhmrange is expressed in terms of pixels (only non-negative values should be
+given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
+ranges, the entire solution is considered to be invalid.
+
 RETURNED DICTIONARY STRUCTURE
 The dictionary returned (if wantreturn=True) has a (necessarily) complex structure. First, there are keys "xUnit" and "yUnit" whose values are
 the abscissa unit and the ordinate unit described by simple strings. Next there are arrays giving a broad overview of the
@@ -528,6 +554,7 @@ axis having length of 1:
 
 attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
+valid: a boolean array indicating which solutions fall within the specified valid ranges of parameter space
 niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
 ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
         &lt;0 if the fit did not converge
