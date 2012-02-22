@@ -156,6 +156,14 @@ using namespace casac;
    $result = variant2pyobj($1);
 }
 
+%typemap(out) variant& {
+   $result = variant2pyobj($1);
+}
+
+%typemap(out) variant* {
+   $result = variant2pyobj(*$1);
+}
+
 %typemap(out) BoolVec {
    $result = ::map_array($1.value, $1.shape);
 }
