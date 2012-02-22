@@ -154,51 +154,85 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("display");
 	if (exists >= 0)
 	{
-	  display = config.asString("display");
+	        display = config.asString("display");
 	}
 	Bool writeflags(True);
 	exists = config.fieldNumber ("writeflags");
 	if (exists >= 0)
 	{
-	  writeflags = config.asBool("writeflags");
+	        writeflags = config.asBool("writeflags");
 	}
 
 	if(display != String("none") && writeflags==False)
 	  {
-	    doplot_p = True;
-	    *logger_p << logLevel_p << " Changing 'doplot' to " << doplot_p << LogIO::POST;
+	        doplot_p = True;
+	        *logger_p << logLevel_p << " Changing 'doplot' to " << doplot_p << LogIO::POST;
 	  }
 
-	// Input thresholds. This can be a Double, a String ('auto'), or a Record
-	// FOR DEMO : 'thresholds' is a local variable....
-	exists = config.fieldNumber ("threshold");
+	// FOR DEMO : 'timedev' is a local variable....
+	exists = config.fieldNumber ("timedev");
 	if (exists >= 0)
 	{
 	  if( config.type( config.type(exists) ) == casa::TpFloat ||  config.type( config.type(exists) ) == casa::TpDouble )
 	    {
-	      Double thresholds = config.asDouble("threshold");
-	      cout << "RFLAG::setAgentPar : Using same threshold for all fields and spws : " << thresholds << endl;
+	           Double timedev = config.asDouble("timedev");
+	           *logger_p << logLevel_p << " timedev (same for all fields and spws) is " << timedev << LogIO::POST;
 	    }
-	  else if( config.type(exists) == casa::TpRecord )
+	  else if( config.type(exists) == casa::TpArrayDouble )
 	    {
-	      Record thresholds = config.subRecord( RecordFieldId("threshold") );
-	      ostringstream recprint;
-	      thresholds.print(recprint);
-	      cout << "RFLAG::setAgentPar : Thresholds from input record : " << endl << recprint.str() << endl;
-	      // Justo, here, step through the record, and fill in your map for time and freq thresholds for each field and spw. Go through thresholds.nfields(), and for each, check that the key contains the string "thresh".  Fields and spws for which this is not specified, must default to 'auto'.
-
+	      Matrix<Double> timedev = config.asArrayDouble( RecordFieldId("timedev") );
+	      if(timedev.ncolumn()==3)
+		{
+		        *logger_p << logLevel_p << " timedev [field,spw,dev] is " << timedev << LogIO::POST;
+	      // Justo, here, step through the matrix, and fill in your map for time thresholds for each field and spw. Fields and spws for which this is not specified, must default to 'auto' (or 1E5).
+		}
+	      else
+		{
+		  cout << "RFLAG::setAgentPar : The timedev matrix needs to have 3 columns. Setting to Automatic thresholds" << endl;
+		}
 	    }
 	  else
 	    {
-	      String thresholds = String("auto");
-	      cout << "RFLAG::setAgentPar : Default threshold. Setting to 'auto' " << endl;
+	      cout << "RFLAG::setAgentPar : Automatic thresholds for timedev. " << endl;
 	    }
 	}
 	else
 	{
-	  String thresholds = String("auto");
-          cout << "RFLAG::setAgentPar : Automatic thresholds ! " << endl;
+          cout << "RFLAG::setAgentPar : Automatic thresholds for timedev ! " << endl;
 	}
+
+	// FOR DEMO : 'freqdev' is a local variable....
+	exists = config.fieldNumber ("freqdev");
+	if (exists >= 0)
+	{
+	  if( config.type( config.type(exists) ) == casa::TpFloat ||  config.type( config.type(exists) ) == casa::TpDouble )
+	    {
+	           Double freqdev = config.asDouble("freqdev");
+	           *logger_p << logLevel_p << " freqdev (same for all fields and spws) is " << freqdev << LogIO::POST;
+	    }
+	  else if( config.type(exists) == casa::TpArrayDouble )
+	    {
+	      Matrix<Double> freqdev = config.asArrayDouble( RecordFieldId("freqdev") );
+	      if(freqdev.ncolumn()==3)
+		{
+		        *logger_p << logLevel_p << " freqdev [field,spw,dev] is " << freqdev << LogIO::POST;
+	      // Justo, here, step through the matrix, and fill in your map for freq thresholds for each field and spw. Fields and spws for which this is not specified, must default to 'auto' (or 1E5).
+		}
+	      else
+		{
+		  cout << "RFLAG::setAgentPar : The freqdev matrix needs to have 3 columns. Setting to Automatic thresholds" << endl;
+		}
+	    }
+	  else
+	    {
+	      cout << "RFLAG::setAgentPar : Automatic thresholds for freqdev. " << endl;
+	    }
+	}
+	else
+	{
+          cout << "RFLAG::setAgentPar : Automatic thresholds for freqdev ! " << endl;
+	}
+
 
 	return;
 }
@@ -283,6 +317,8 @@ FlagReport FlagAgentRFlag::getReport()
     if (doplot_p)
     {
     	Record threshList;
+
+	/*
     	Int threshCount = 0;
     	pair<Int,Int> field_spw;
         for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
@@ -302,6 +338,31 @@ FlagReport FlagAgentRFlag::getReport()
         	threshList.defineRecord( RecordFieldId(threshStr) , thresh_i );
         	threshCount++;
         }
+	*/
+
+	// Start new code
+        Int nEntries = field_spw_noise_map_p.size();
+        Matrix<Double> timedev(nEntries,3), freqdev(nEntries,3);
+    	Int threshCount = 0;
+    	pair<Int,Int> field_spw;
+        for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
+        		spw_field_iter != field_spw_noise_map_p.end();
+        		spw_field_iter++)
+	{
+                field_spw = spw_field_iter->first;
+
+                timedev(threshCount,0) = field_spw.first;
+                timedev(threshCount,1) = field_spw.second;
+                timedev(threshCount,2) = field_spw_noise_map_p[field_spw];
+                freqdev(threshCount,0) = field_spw.first;
+                freqdev(threshCount,1) = field_spw.second;
+                freqdev(threshCount,2) = field_spw_scutof_map_p[field_spw];
+
+                threshCount++;
+	}
+	threshList.define( RecordFieldId("timedev") , timedev );
+	threshList.define( RecordFieldId("freqdev") , freqdev );
+	// End new code
 
     	FlagReport returnThresh("rflag",agentName_p, threshList);
     	dispRep.addReport(returnThresh);

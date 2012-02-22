@@ -145,6 +145,13 @@ public:
     // gaussian integral error image name
     inline void setIntegralErrName(const String& s) { _integralErrName = s; }
     // </group>
+
+    void setGoodAmpRange(const Double min, const Double max);
+
+    void setGoodCenterRange(const Double min, const Double max);
+
+    void setGoodFWHMRange(const Double min, const Double max);
+
 private:
 
 	String _residual, _model, _regionString, _xUnit,
@@ -162,6 +169,7 @@ private:
 	SubImage<Float> _subImage;
 	Record _results;
 	SpectralList _nonPolyEstimates;
+	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 
 	const static String _class;
 
@@ -187,7 +195,7 @@ private:
 
     String _radToRa(const Float ras) const;
 
-    String _getResultsString() const;
+    void _resultsToLog();
 
     String _getTag(const uInt i) const;
 
@@ -220,10 +228,10 @@ private:
     );
 
     void _insertPCF(
-    	vector<vector<Matrix<Double> > >& pcfMatrices, const uInt idx,
-    	const PCFSpectralElement& pcf,
+    	vector<vector<Matrix<Double> > >& pcfMatrices, /* Bool& isSolutionSane,*/
+    	const uInt idx, const PCFSpectralElement& pcf,
     	const uInt row, const uInt col, const IPosition& pos,
-    	const Double increment
+    	const Double increment/*, const uInt npix*/
     ) const;
 
     void _writeImages(
@@ -232,13 +240,13 @@ private:
     ) const;
 
     // moved from ImageAnalysis
-    ImageFit1D<Float> _fitProfile(
+    void _fitProfile(
         const Bool fitIt=True,
         const String weightsImageName=""
     );
 
     // moved from ImageAnalysis
-    Array<ImageFit1D<Float> > _fitallprofiles(
+    void _fitallprofiles(
         const String& weightsImageName = ""
     );
 
@@ -257,7 +265,7 @@ private:
     // in pixel space here and requiring the caller to deal with converting
     // to something astronomer friendly if it so desires.
 
-    Array<ImageFit1D<Float> > _fitProfiles(
+    void _fitProfiles(
     	ImageInterface<Float>* &pFit,
         ImageInterface<Float>* &pResid,
         const ImageInterface<Float> *const &weightsImage=0,
@@ -271,6 +279,10 @@ private:
     ) const;
 
     Bool _inVelocitySpace() const;
+
+    void _flagFitterIfNecessary(ImageFit1D<Float>& fitter) const;
+
+    Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
 };
 }

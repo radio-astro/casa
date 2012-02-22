@@ -145,7 +145,7 @@ Record ImageStatsCalculator::calculate() {
 			for (uInt i=0; i<otherCol.nelements(); i++) {
 				idx[myloc] = otherCol[i];
 				myloc++;
-				if (imShape[otherCol[i] > 1]) {
+				if (imShape[otherCol[i]] > 1) {
 					reportAxes.append(IPosition(1, otherCol[i]));
 				}
 			}
@@ -178,6 +178,7 @@ Record ImageStatsCalculator::calculate() {
 		IPosition position(tempIm->ndim(), 0);
 		oss << std::scientific;
 		uInt width = 13;
+
 		Vector<Vector<String> > coords(reportAxes.size());
 		for (uInt i=0; i<reportAxes.size(); i++) {
 			Vector<Double> indices(imShape[reportAxes[i]]);
@@ -189,7 +190,6 @@ Record ImageStatsCalculator::calculate() {
 				True
 			);
 		}
-
 		for (inIter.reset(); ! inIter.atEnd(); inIter++) {
     	    uInt colNum = 0;
             position = inIter.position();
@@ -210,17 +210,21 @@ Record ImageStatsCalculator::calculate() {
 					arrayIndex[i] = position[axesMap[i]];
 				}
 			}
-			oss << std::setw(width) << retval.asArrayDouble("npts")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("sum")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("mean")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("rms")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("sigma")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("min")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("max")(arrayIndex) << endl;
+			if (retval.asArrayDouble("npts").size() == 0) {
+				oss << "NO VALID POINTS FOR WHICH TO DETERMINE STATISTICS" << endl;
+			}
+			else {
+				oss << std::setw(width) << retval.asArrayDouble("npts")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("sum")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("mean")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("rms")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("sigma")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("min")(arrayIndex) << " "
+					<< std::setw(width) << retval.asArrayDouble("max")(arrayIndex) << endl;
+			}
 			if (_verbose) {
 				*_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
 			}
-
 			_writeLogfile(oss.str(), False, False);
             oss.str("");
 		}
