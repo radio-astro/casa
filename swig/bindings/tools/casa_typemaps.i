@@ -99,6 +99,14 @@ using namespace casac;
    }
 }
 
+%typemap(in) record *{
+   if(PyDict_Check($input)){
+      $1 = new record(pyobj2variant($input, true).asRecord());      
+   } else {
+      PyErr_SetString(PyExc_TypeError,"not a dictionary");
+   }
+}
+
 %typemap(in) record &{
    if(PyDict_Check($input)){
       $1 = new record(pyobj2variant($input, true).asRecord());      
@@ -202,8 +210,19 @@ using namespace casac;
    $result = PyDict_New();
    for(record::const_iterator iter = $1.begin(); iter != $1.end(); ++iter){
       const std::string &key = (*iter).first;
-      const variant &val = (*iter).second;
-      PyObject *v = variant2pyobj(val);
+      const casac::variant &val = (*iter).second;
+      PyObject *v = casac::variant2pyobj(val);
+      PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
+      Py_DECREF(v);
+   }
+}
+
+%typemap(out) record& {
+   $result = PyDict_New();
+   for(record::const_iterator iter = $1->begin(); iter != $1->end(); ++iter){
+      const std::string &key = (*iter).first;
+      const casac::variant &val = (*iter).second;
+      PyObject *v = casac::variant2pyobj(val);
       PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
       Py_DECREF(v);
    }
@@ -213,9 +232,39 @@ using namespace casac;
    $result = PyDict_New();
    for(record::const_iterator iter = $1->begin(); iter != $1->end(); ++iter){
       const std::string &key = (*iter).first;
-      const variant &val = (*iter).second;
-      PyObject *v = variant2pyobj(val);
+      const casac::variant &val = (*iter).second;
+      PyObject *v = casac::variant2pyobj(val);
       PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
       Py_DECREF(v);
    }
 }
+
+%typemap(argout) record& header {
+   PyObject *o = PyDict_New();
+   for(record::const_iterator iter = $1->begin(); iter != $1->end(); ++iter){
+      const std::string &key = (*iter).first;
+      const casac::variant &val = (*iter).second;
+      PyObject *v = casac::variant2pyobj(val);
+      PyDict_SetItem(o, PyString_FromString(key.c_str()), v);
+      Py_DECREF(v);
+   }
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+%apply record& header {record &summary}
+%apply record& header {record &spwInfo} 
+
