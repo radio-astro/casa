@@ -52,16 +52,19 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/iostream.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
+//#include <ms/MeasurementSets/MSSelectableTable.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/GenSort.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSAntennaParse.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   //----------------------------------------------------------------------------
   
   MSSelection::MSSelection() : 
-    fullTEN_p(),ms_p(NULL), antennaExpr_p(""), fieldExpr_p(""),
+    fullTEN_p(),ms_p(NULL), /*msFace_p(), */ antennaExpr_p(""), fieldExpr_p(""),
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
     polnExpr_p(""), taqlExpr_p(""), stateExpr_p(""), observationExpr_p(""),
     exprOrder_p(MAX_EXPR, NO_EXPR), antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
@@ -88,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   const String& arrayExpr,
 			   const String& stateExpr,
 			   const String& observationExpr):
-    fullTEN_p(), ms_p(&ms), antennaExpr_p(""), fieldExpr_p(""),
+    fullTEN_p(), ms_p(&ms), /*msFace_p(ms),*/ antennaExpr_p(""), fieldExpr_p(""),
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
     polnExpr_p(""),taqlExpr_p(""), stateExpr_p(""), observationExpr_p(""),
     exprOrder_p(MAX_EXPR, NO_EXPR), antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
@@ -134,12 +137,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const String& observationExpr)
   {
     //
-    // Do not initialize the private string variables directly. Instead
-    // using the setExpr* methods to do that keeps that state of the
-    // object consistent.
+    // Do not initialize the private string variables
+    // directly. Instead using the setExpr* methods to do that so that
+    // it keeps that state of the object consistent.
     //
+    //    msFace_p.setTable(ms);
+    //    ms_p = msFace_p.asMS();
     ms_p = &ms;
-    
+
     clear(); // Clear everything
     setAntennaExpr(antennaExpr);
     setFieldExpr(fieldExpr);
@@ -332,6 +337,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     resetMS(*ms);
     TableExprNode condition;
+    MSSelectionErrorHandler msErrHandler;
+    setErrorHandler(ANTENNA_EXPR, msErrHandler);
     try
       {
 	for(uInt i=0; i<exprOrder_p.nelements(); i++)
@@ -474,10 +481,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw(x);
       }	
 
+    runErrorHandler();
     deleteNodes();
     return condition;
   }
   
+  //----------------------------------------------------------------------------
+  void MSSelection::setErrorHandler(const MSExprType type, MSSelectionErrorHandler& mssEH,
+				    const Bool overRide)
+  {
+    switch (type)
+      {
+      case ANTENNA_EXPR:
+	{
+	  if (overRide)
+	    MSAntennaParse::thisMSAErrorHandler = &mssEH;
+	  else if (MSAntennaParse::thisMSAErrorHandler == NULL)
+	    MSAntennaParse::thisMSAErrorHandler = &mssEH;
+	  break;
+	}
+      default: throw(MSSelectionError(String("Wrong MSExprType in MSSelection::setErrorHandler()")));
+      };
+  }
+
+  //----------------------------------------------------------------------------
+  void MSSelection::runErrorHandler()
+  {
+    MSSelectionAntennaParseError msAntException(String(""));
+    MSAntennaParse::thisMSAErrorHandler->handleError(msAntException);
+    MSAntennaParse::thisMSAErrorHandler = NULL;
+  }
+
   //----------------------------------------------------------------------------
   Bool MSSelection::getSelectedMS(MeasurementSet& selectedMS, 
 				  const String& outMSName)

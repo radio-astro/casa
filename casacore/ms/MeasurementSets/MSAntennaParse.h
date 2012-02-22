@@ -30,6 +30,7 @@
 
 //# Includes
 #include <ms/MeasurementSets/MSParse.h>
+#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
 #include <casa/Arrays/Matrix.h>
 #include <bitset>
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -159,6 +160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //# Data members.
   public:
     static MSAntennaParse* thisMSAParser;
+    static MSSelectionErrorHandler* thisMSAErrorHandler;
     std::bitset<HIGHESTLEVEL> complexity;
   private:
     TableExprNode node_p;

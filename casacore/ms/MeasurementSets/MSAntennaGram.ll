@@ -64,7 +64,6 @@ PATT1     ({NAMENNUM}|{PATTCHAR})({NAMECHAR}|{PATTCHAR})*
 PATT2     ({NAMECHAR}|{PATTCHAR})*{COLON}({NAMECHAR}|{PATTCHAR}|{COLON})*
 PATTERN   {PATT1}|{PATT2}
 
-
 /* rules */
 %%
 
@@ -84,7 +83,6 @@ PATTERN   {PATT1}|{PATT2}
              return REGEX;
           }
 
-
 {UNIT}    {
              msAntennaGramPosition() += yyleng;
              lvalp->str = (char*)malloc(strlen(MSAntennaGramtext) + 1);
@@ -96,6 +94,7 @@ PATTERN   {PATT1}|{PATT2}
              msAntennaGramPosition() += yyleng;
              lvalp->str = (char *)malloc((strlen(MSAntennaGramtext) + 1));
              strcpy(lvalp->str, MSAntennaGramtext);
+	     //	     cerr << "NAME = " << lvalp->str << endl;
              return IDENTIFIER;
           }
 
@@ -103,6 +102,7 @@ PATTERN   {PATT1}|{PATT2}
              msAntennaGramPosition() += yyleng;
              lvalp->str = (char *)malloc((strlen(MSAntennaGramtext)));
              strcpy(lvalp->str, MSAntennaGramtext+1);
+	     //	     cerr << "NAME ID = " << lvalp->str << endl;
              return IDENTIFIER;
           }
 
@@ -110,6 +110,7 @@ PATTERN   {PATT1}|{PATT2}
              msAntennaGramPosition() += yyleng;
              lvalp->str = (char *)malloc((strlen(MSAntennaGramtext) + 1));
              strcpy(lvalp->str, MSAntennaGramtext);
+	     //	     cerr << "NAME QS = " << lvalp->str << endl;
              return QSTRING;
           }
 
