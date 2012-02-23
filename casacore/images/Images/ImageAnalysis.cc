@@ -3421,7 +3421,6 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 			*itsLog << errmsg << LogIO::EXCEPTION;
 		}
 	}
-
 	Vector<Int> tmpShape;
 	Vector<Int> tmpShape2;
 	if (inshape.size() == 1 && inshape[0] == -1) {
@@ -3457,19 +3456,17 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	// Deal with axes
 	Vector<Int> axes(inaxes);
 	IPosition axes2(axes);
-	//cout << "axes2 " << axes2 << endl;
 	Vector<Int> shape(tmpShape);
 	IPosition outShape(shape);
 
 	// Make CoordinateSystem from user given
 	CoordinateSystem cSysFrom = subImage.coordinates();
 	CoordinateSystem pCSTo(
-		coordinates.nCoordinates() != 0
-		? coordinates
-		: subImage.coordinates()
+		coordinates.nCoordinates() == 0
+		? subImage.coordinates()
+		: coordinates
 	);
 	pCSTo.setObsInfo(cSysFrom.obsInfo());
-
 	// Now build a CS which copies the user specified Coordinate for
 	// axes to be regridded and the input image Coordinate for axes not
 	// to be regridded
@@ -3483,24 +3480,22 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	}
 
 	// Create the image and mask
-	PtrHolder<ImageInterface<Float> > imOut;
+	std::auto_ptr<ImageInterface<Float> > imOut(0);
 	if (outFile.empty()) {
 		*itsLog << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
-		imOut.set(new TempImage<Float> (outShape, cSys));
+		imOut.reset(new TempImage<Float> (outShape, cSys));
 	} else {
 		*itsLog << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
-		imOut.set(new PagedImage<Float> (outShape, cSys, outFile));
+		imOut.reset(new PagedImage<Float> (outShape, cSys, outFile));
 	}
-	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
+	std::auto_ptr<ImageInterface<Float> > pImOut(imOut->cloneII());
 	pImOut->set(0.0);
 	ImageUtilities::copyMiscellaneous(*pImOut, subImage);
 	String maskName("");
 	makeMask(*pImOut, maskName, True, True, *itsLog, True);
-	//
 	Interpolate2D::Method method = Interpolate2D::stringToMethod(methodU);
-	IPosition dummy;
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	ir.disableReferenceConversions(!doRefChange);
@@ -3511,7 +3506,7 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	);
 
 	// Cleanup and return image
-	return pImOut;
+	return pImOut.release();
 }
 
 ImageInterface<Float>* ImageAnalysis::regrid(
@@ -3546,13 +3541,11 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 	} else {
 		tmpShape = inshape;
 	}
-
 	std::auto_ptr<CoordinateSystem> csys(
 		coordinates.nfields() > 0
 		? makeCoordinateSystem(coordinates, IPosition(tmpShape))
 		: new CoordinateSystem()
 	);
-
 	Bool regridByVel = False;
 	if (
 		specAsVelocity && pImage_p->coordinates().hasSpectralAxis()
@@ -4893,7 +4886,7 @@ Bool ImageAnalysis::tofits(
 		mask, itsLog, False, axesSpecifier, stretch
 	);
 	if (
-		ImageFITSConverter::ImageToFITS(
+		! ImageFITSConverter::ImageToFITS(
 			error, subImage, fitsfile,
 			HostInfo::memoryFree() / 1024,
 			velocity, optical,
@@ -4905,11 +4898,9 @@ Bool ImageAnalysis::tofits(
 			origin
 		)
 	) {
-		return True;
-	}
-	else {
 		*itsLog << error << LogIO::EXCEPTION;
 	}
+	return True;
 }
 
 Bool ImageAnalysis::toASCII(
@@ -5908,7 +5899,6 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		return False;
 
 	convertArray(specVal, xworld);
-	//cout << xworld << endl;
 	return True;
 }
 
