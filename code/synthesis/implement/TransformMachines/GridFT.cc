@@ -70,7 +70,9 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
+#ifdef HAS_OMP
 #include <omp.h>
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //  using namespace casa::async;

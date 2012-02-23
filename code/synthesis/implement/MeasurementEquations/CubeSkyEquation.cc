@@ -69,7 +69,9 @@
 #include <synthesis/MSVis/VisSet.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisBuffer.h>
+#ifdef HAS_OMP
 #include <omp.h>
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
