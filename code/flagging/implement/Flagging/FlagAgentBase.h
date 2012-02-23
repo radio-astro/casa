@@ -113,13 +113,16 @@ protected:
 	void indigen(vector<uInt> &index, uInt size);
 
 	// For checking ids
-	bool find(Vector<Int> validRange, Int element);
+	bool find(Vector<Int> &validRange, Int element);
 
 	// For checking ranges
-	bool find(Matrix<Double> validRange, Double element);
+	bool find(Matrix<Double> &validRange, Double element);
 
 	// For checking pairs
-	bool find(Matrix<Int> validPairs, Int element1, Int element2);
+	bool find(Matrix<Int> &validPairs, Int element1, Int element2);
+
+	// For checking columns
+	bool find(Block<int> &columns, int col);
 
 	// Check if a given number is nan (for visibilities,gains and Tsys primarily)
 	bool isNaN(Double number);

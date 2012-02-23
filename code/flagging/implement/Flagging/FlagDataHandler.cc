@@ -600,7 +600,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("array"), arraySelection_p);
-		*logger_p << LogIO::NORMAL << " array selection is " << arraySelection_p << LogIO::POST;
+
+		if (arraySelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " array selection is " << arraySelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -613,7 +617,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("field"), fieldSelection_p);
-		*logger_p << LogIO::NORMAL << " field selection is " << fieldSelection_p << LogIO::POST;
+
+		if (fieldSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " field selection is " << fieldSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -626,7 +634,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("scan"), scanSelection_p);
-		*logger_p << LogIO::NORMAL << " scan selection is " << scanSelection_p << LogIO::POST;
+
+		if (scanSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " scan selection is " << scanSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -639,7 +651,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("timerange"), timeSelection_p);
-		*logger_p << LogIO::NORMAL << " timerange selection is " << timeSelection_p << LogIO::POST;
+
+		if (timeSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " timerange selection is " << timeSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -652,7 +668,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("spw"), spwSelection_p);
-		*logger_p << LogIO::NORMAL << " spw selection is " << spwSelection_p << LogIO::POST;
+
+		if (spwSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " spw selection is " << spwSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -665,7 +685,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("antenna"), baselineSelection_p);
-		*logger_p << LogIO::NORMAL << " antenna selection is " << baselineSelection_p << LogIO::POST;
+
+		if (baselineSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " antenna selection is " << baselineSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -678,7 +702,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("uvrange"), uvwSelection_p);
-		*logger_p << LogIO::NORMAL << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+
+		if (uvwSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -691,7 +719,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("correlation"), polarizationSelection_p);
-		*logger_p << LogIO::NORMAL << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+
+		if (polarizationSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -704,7 +736,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("observation"), observationSelection_p);
-		*logger_p << LogIO::NORMAL << " observation selection is " << observationSelection_p << LogIO::POST;
+
+		if (observationSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " observation selection is " << observationSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -717,7 +753,11 @@ FlagDataHandler::setDataSelection(Record record)
 	{
 		anySelection_p = true;
 		record.get (record.fieldNumber ("intent"), scanIntentSelection_p);
-		*logger_p << LogIO::NORMAL << " scan intent selection is " << scanIntentSelection_p << LogIO::POST;
+
+		if (scanIntentSelection_p.size())
+		{
+			*logger_p << LogIO::NORMAL << " scan intent selection is " << scanIntentSelection_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -1527,7 +1567,10 @@ FlagDataHandler::generateIterator()
 	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator in sync mode)
 	applyChannelSelection(rwVisibilityIterator_p);
 
-	checkMaxMemory();
+	if (mapScanStartStop_p)
+	{
+		checkMaxMemory();
+	}
 
 	// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
 	// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
