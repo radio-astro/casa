@@ -189,39 +189,51 @@ macro( casa_add_tools out_swig out_sources out_py )
     set( _out_xml casa${_base}.xml )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2swigxml.xsl )
     set( _swigh ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h )
+    set( _swigi ${CMAKE_CURRENT_BINARY_DIR}/${_base}.i )
     set( _xsl2 ${CMAKE_SOURCE_DIR}/install/casa2c++h.xsl )
+    set( _xsl3 ${CMAKE_SOURCE_DIR}/install/casa2swigi.xsl )
     add_custom_command(
-      OUTPUT ${_swigh}
+      OUTPUT ${_out_xml}
       COMMAND ${SAXON} ${_xml} ${_xsl} > ${_out_xml}_tmp1
       COMMAND sed -e \"s/exmlns/xmlns/\" ${_out_xml}_tmp1 > ${_out_xml}
+      DEPENDS ${_xml} ${_xsl}
+      )
+    add_custom_command(
+      OUTPUT ${_swigh}
       COMMAND ${SAXON} ${_out_xml} ${_xsl2} > ${_swigh}_tmp2
       COMMAND sed -e \"s/<?xml version=.*//\" ${_swigh}_tmp2 > ${_swigh}
-      DEPENDS ${_xml} ${_xsl} ${_xsl2}
+      DEPENDS ${_xml} ${_out_xml} ${_xsl2}
+      )
+    add_custom_command(
+      OUTPUT ${_swigi}
+      COMMAND ${SAXON} ${_out_xml} ${_xsl3} > ${_swigi}_tmp2
+      COMMAND sed -e \"s/<?xml version=.*//\" ${_swigi}_tmp2 > ${_swigi}
+      DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3}
       )
 
     # Then generate the swig interface file
-    set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}.i )
-    add_custom_command(
-      OUTPUT ${_swig}
+    #set( _swig ${CMAKE_CURRENT_BINARY_DIR}/${_base}.i )
+    #add_custom_command(
+    #OUTPUT ${_swig}
       #COMMAND echo "%module\\(package=\\\"casac\\\"\\) " ${_base} > ${_swig}
-      COMMAND echo "%module " ${_base}   > ${_swig}
-      COMMAND echo "%include \\<tools/casa_typemaps.i\\> " >> ${_swig}
-      COMMAND echo "%feature\\(\\\"kwargs\\\"\\)\\;" >> ${_swig}
-      COMMAND echo "%feature\\(\\\"autodoc\\\", \\\"1\\\"\\)\\;" >> ${_swig}
-      COMMAND echo "%include \\\"${_base}_cmpt.h\\\"" >> ${_swig}
-      COMMAND echo "%{" >> ${_swig}
-      COMMAND echo "\\#include \\<${_base}_cmpt.h\\> " >> ${_swig}
-      COMMAND echo "%}" >> ${_swig}
-      DEPENDS ${_swigh} ${_xsl} 
-      )
+      #COMMAND echo "%module " ${_base}   > ${_swig}
+      #COMMAND echo "%include \\<tools/casa_typemaps.i\\> " >> ${_swig}
+      #COMMAND echo "%feature\\(\\\"kwargs\\\"\\)\\;" >> ${_swig}
+      #COMMAND echo "%feature\\(\\\"autodoc\\\", \\\"1\\\"\\)\\;" >> ${_swig}
+      #COMMAND echo "%include \\\"${_base}_cmpt.h\\\"" >> ${_swig}
+      #COMMAND echo "%{" >> ${_swig}
+      #COMMAND echo "\\#include \\<${_base}_cmpt.h\\> " >> ${_swig}
+      #COMMAND echo "%}" >> ${_swig}
+      #DEPENDS ${_swigh} ${_xsl} 
+      #)
 
     install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h
              DESTINATION include/casa/tools/${_base} )
     
-    SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES CPLUSPLUS 1 )
-    SET_SOURCE_FILES_PROPERTIES(${_swig} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}") 
+    SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES CPLUSPLUS 1 )
+    SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR} -includeall") 
     #SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
-    SWIG_ADD_MODULE(${_base} python ${_swig} )
+    SWIG_ADD_MODULE(${_base} python ${_swigi} )
     SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES}
 	                          ${PYTHON_LIBRARIES}
 				  ${ATM_LIBRARIES}
@@ -240,7 +252,7 @@ macro( casa_add_tools out_swig out_sources out_py )
 	    ${_base}PYTHON_wrap.cxx
 	    )
     set(_outpy ${_base}.py)
-    set( ${out_swig} ${${out_swig}} ${_swig} )
+    set( ${out_swig} ${${out_swig}} ${_swigi} )
 
     set( ${out_sources} ${${out_sources}} ${_outputs} )
     set( ${out_py} ${${out_py}} ${_outpy} )

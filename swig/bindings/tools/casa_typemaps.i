@@ -239,7 +239,7 @@ using namespace casac;
    }
 }
 
-%typemap(argout) record& header {
+%typemap(argout) record& OUTARGREC {
    PyObject *o = PyDict_New();
    for(record::const_iterator iter = $1->begin(); iter != $1->end(); ++iter){
       const std::string &key = (*iter).first;
@@ -264,7 +264,3 @@ using namespace casac;
       Py_DECREF(o3);
    }
 }
-
-%apply record& header {record &summary}
-%apply record& header {record &spwInfo} 
-
