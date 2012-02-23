@@ -1199,9 +1199,18 @@ class cleanhelper:
                 ia.removefile('__temp_model2')
 
             modelos.append(modelosname)
+
+            
             if( (ia.brightnessunit().count('/beam')) > 0):
+                ##single dish-style model
                 maskelos.append(modelos[k]+'.sdmask')
                 self.im.makemodelfromsd(sdimage=modim,modelimage=modelos[k],maskimage=maskelos[k])
+                ia.open(maskelos[k])
+                ##sd mask cover whole image...delete it as it is not needed
+                if((ia.statistics()['min']) >0):
+                    ia.remove(done=True, verbose=False)
+                    maskelos.remove(maskelos[k])
+                ia.done()
             else:
                 ##assuming its a model image already then just regrid it
                 #self.im.make(modelos[k])
