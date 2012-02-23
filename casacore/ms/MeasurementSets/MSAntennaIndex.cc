@@ -28,8 +28,6 @@
 #include <ms/MeasurementSets/MSAntennaIndex.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-//#include <ms/MeasurementSets/MSAntennaParse.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -68,7 +66,7 @@ MSAntennaIndex::MSAntennaIndex(const MSAntenna& antenna)
     if (IDs.nelements() == 0)
       {
 	ostringstream mesg;
-	mesg << "No match found for the antenna specification [ID(s): " << sourceId << "]";
+	mesg << "No match found for the antenna specificion [ID(s): " << sourceId << "]";
 	throw (MSSelectionAntennaParseError(mesg));
       }
     return IDs;
