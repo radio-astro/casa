@@ -53,12 +53,15 @@ def readFile(inputfile):
     
     return cmdlist
 
-def makeDict(cmdlist):
+def makeDict(cmdlist, myreason=''):
     '''Make a dictionary compatible with a FLAG_CMD table structure
+       and select by reason if any is given
     
        cmdlist --> list of parameters to go into the COMMAND column
        
-       Returns a dictionary with the following structure and default values
+       Returns a dictionary with the the selected rows with the following 
+       structure and default values:
+       
         flagd['row']      =
         flagd['applied']  = False
         flagd['command']  = ''
@@ -70,24 +73,59 @@ def makeDict(cmdlist):
         flagd['type']     = 'FLAG'
 
     '''
-
+    
     if cmdlist.__len__() == 0:
         raise Exception, 'Empty list of commands'
+
+    # select by these reasons
+    myreaslist = []
+    if type(myreason) == str:
+        if myreason != '':
+            myreaslist.append(myreason)
+    elif type(myreason) == list:
+        myreaslist = myreason
+    else:
+        casalog.post('Cannot read reason; it contains unknown variable types',
+                     'ERROR')
+        return
+
+    # List of reasons in input file
+    nrows = cmdlist.__len__()
+    reaslist = []
+    for i in range(nrows):            
+        command = cmdlist[i]
+        if command.__contains__('reason'):
+            reaslist.append(getReason(command))
+        else:
+            # so that cmdlist and reaslist have the same sizes
+            reaslist.append('')
+            
     
     # Defaults for columns
     applied = False
     interval = 0.0
     level = 0
     severity = 0
-    time = 0.0
-    type = 'FLAG'
+    coltime = 0.0
+    coltype = 'FLAG'
     
     myflagd = {}
     ncmds = 0
-    nrows = cmdlist.__len__()
+    rowlist = range(nrows)
+
+    # If select by reason is requested
+    if myreaslist.__len__() > 0:
+        rowl = []
+        for i in range(nrows):
+            # If selection matches what is in input line
+            if myreaslist.count(reaslist[i]) > 0:
+                rowl.append(i)
+        rowlist = rowl
+
     try:
-        for i in range(nrows):            
+        for i in rowlist:            
             command = cmdlist[i]
+            reason = reaslist[i]
                                 
             if command == '':
                 casalog.post('Ignoring empty command line', 'WARN')
@@ -97,24 +135,20 @@ def makeDict(cmdlist):
                 continue
 
             flagd = {}
+                        
             flagd['row'] = str(i)
             flagd['applied'] = applied
-            reason = ''
+            flagd['reason'] = reason 
             
-            # Get the reason into the dictionary
-            if command.__contains__('reason'):
-                reason = getReason(command)
-                # Remove reason from command string
-                newline = command
-                command = purgeParameter(newline, 'reason')
-            
-            flagd['reason'] = reason                
+            # Remove reason from command line               
+            newline = command
+            command = purgeParameter(newline, 'reason')
             flagd['command'] = command
             flagd['interval'] = interval
             flagd['level'] = level
             flagd['severity'] = severity
-            flagd['time'] = time
-            flagd['type'] = type
+            flagd['time'] = coltime
+            flagd['type'] = coltype
             # Insert into main dictionary
             myflagd[ncmds] = flagd
             ncmds += 1
@@ -372,6 +406,8 @@ def getUnion(cmdlist):
             uniondic.pop(k)
     
     return uniondic
+
+
 
 
 def getNumPar(cmdlist):
@@ -960,7 +996,7 @@ def purgeParameter(cmdline, par):
             if xkey == par:
                 continue
             else:
-                newstr = newstr+' '+xkey+'='+xval+' '
+                newstr = newstr+xkey+'='+xval+' '
             
     else:
         casalog.post('String of parameters is empty','WARN')   
