@@ -194,14 +194,14 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
 
 //----------------------------------------------------------------------
 void WProjectFT::init() {
-  if((padding_p*padding_p*image->shape().product())>cachesize) {
+  /*  if((padding_p*padding_p*image->shape().product())>cachesize) {
     isTiled=True;
     nx    = image->shape()(0);
     ny    = image->shape()(1);
     npol  = image->shape()(2);
     nchan = image->shape()(3);
   }
-  else {
+  else {*/
     // We are padding.
     isTiled=False;
     CompositeNumber cn(uInt(image->shape()(0)*2));    
@@ -209,7 +209,7 @@ void WProjectFT::init() {
     ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));   
     npol  = image->shape()(2);
     nchan = image->shape()(3);
-  }
+    //}
   
   //  if(image->shape().product()>cachesize) {
   //   isTiled=True;
@@ -523,6 +523,9 @@ Array<Complex>* WProjectFT::getDataPointer(const IPosition& centerLoc2D,
 #define gwgrid gwgrid_
 #define gwproj gwproj_
 #define dwproj dwproj_
+#define sectgwgridd sectgwgridd_
+#define sectgwgrids sectgwgrids_
+#define sectdwgrid sectdwgrid_
 #endif
 
 extern "C" { 
@@ -555,7 +558,79 @@ extern "C" {
 	      Int*,
 	      Int*,
 	      Double*);
+
+  void sectgwgridd(const Double*,
+		   const Complex*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Float*,
+	      const Int*,
+	      DComplex*,
+	      const Int*,
+	      const Int*,
+	      const Int *,
+	      const Int *,
+		   //support
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Complex*,
+	      const Int*,
+	      const Int*,
+		   Double*,
+		   //x0
+		   const Int*,
+		   const Int*,
+		   const Int*, 
+		   const Int*, 
+		   const Int*, 
+		   const Int*,
+		   const Int*,
+		   const Int*,
+		   const Complex*
+		   );
+
   //Single precision gridding
+    void sectgwgrids(const Double*,
+		   const Complex*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Float*,
+	      const Int*,
+	      Complex*,
+	      const Int*,
+	      const Int*,
+	      const Int *,
+	      const Int *,
+		   //support
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Int*,
+	      const Complex*,
+	      const Int*,
+	      const Int*,
+		   Double*,
+		   //x0
+		   const Int*,
+		   const Int*,
+		   const Int*, 
+		   const Int*, 
+		   const Int*, 
+		   const Int*,
+		   const Int*,
+		   const Int*,
+		   const Complex*
+		   );
+
+
   void gwproj(const Double*,
 	      Double*,
 	      const Complex*,
@@ -584,6 +659,33 @@ extern "C" {
 	      Int*,
 	      Int*,
 	      Double*);
+
+  void sectdwgrid(const Double*,
+		  Complex*,
+		  const Int*,
+		  const Int*,
+		  const Int*,
+		  const Int*,
+		  const Int*,
+		  const Complex*,
+		  const Int*,
+		  const Int*,
+		  const Int *,
+		  const Int *,
+		  //support
+		  const Int*,
+		  const Int*,
+		  const Int*,
+		  const Int*,
+		  const Complex*,
+		  const Int*,
+		  const Int*,
+		  //rbeg, rend, loc, off, phasor
+		  const Int*,
+		  const Int*,
+		  const Int*,
+		  const Int*,
+		  const Complex*);
   void dwproj(const Double*,
 	      Double*,
 	      Complex*,
@@ -689,8 +791,6 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
-  // This is the convention for dphase ....hmmm why ?
-  // dphase*=-1.0;
 
   
   // Take care of translation of Bools to Integer
@@ -708,77 +808,174 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   
   Bool del;
+  //    IPosition s(flags.shape());
+  Vector<Int> s(flags.shape().nelements());
+  convertArray(s, flags.shape().asVector());
+  Int nvp=s[0];
+  Int nvc=s[1];
+  Int nvisrow=s[2];
+
+  Int csamp=convSampling;
+  
   Bool uvwcopy; 
   const Double *uvwstor=uvw.getStorage(uvwcopy);
   Bool gridcopy;
   Bool convcopy;
   const Complex *convstor=convFunc.getStorage(convcopy);
-  Vector<Int> s(flags.shape().nelements());
-  convertArray(s, flags.shape().asVector());
+  Cube<Int> loc(3, nvc, nRow);
+  Cube<Int> off(3, nvc, nRow);
+  Matrix<Complex> phasor(nvc, nRow);
+  Bool delphase;
+  Complex * phasorstor=phasor.getStorage(delphase);
+  const Double * visfreqstor=interpVisFreq_p.getStorage(del);
+  const Double * scalestor=uvScale.getStorage(del);
+  const Double * offsetstor=uvOffset.getStorage(del);
+  Int * locstor=loc.getStorage(del);
+  Int * offstor=off.getStorage(del);
+  const Double *dpstor=dphase.getStorage(del);
+  Int irow;
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
+  {
+#pragma omp for
+  for (irow=startRow; irow<=endRow;irow++){
+    locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
+	      locstor, 
+	      offstor, phasorstor, irow, True);
+  }  
+
+  }//end pragma parallel
+
+  Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
+  ixsub=2;
+  iysub=2; 
+  x0=1;
+  y0=1;
+  nxsub=nx;
+  nysub=ny;
+  Int rbeg=startRow+1;
+  Int rend=endRow+1;
+  Block<Matrix<Double> > sumwgt(ixsub*iysub);
+  for (icounter=0; icounter < ixsub*iysub; ++icounter){
+    sumwgt[icounter].resize(sumWeight.shape());
+    sumwgt[icounter].set(0.0);
+  }
+  const Int* pmapstor=polMap.getStorage(del);
+  const Int *cmapstor=chanMap.getStorage(del);
+  Int nc=nchan;
+  Int np=npol;
+  Int nxp=nx;
+  Int nyp=ny;
+  Int csize=convSize;
+   Int wcsize=wConvSize;
+  const Int * flagstor=flags.getStorage(del);
+  const Int * rowflagstor=rowFlags.getStorage(del);
+  const Int * suppstor=convSupport.getStorage(del);
+
   if(!useDoubleGrid_p){
     Complex *gridstor=griddedData.getStorage(gridcopy);
-    gwproj(uvwstor,
-	   dphase.getStorage(del),
+    #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) 
+    {
+#pragma omp for nowait     
+    for(icounter=0; icounter < ixsub*iysub; ++icounter){
+      ix= (icounter+1)-((icounter)/ixsub)*ixsub;
+      iy=(icounter)/ixsub+1;
+      y0=(nyp/iysub)*(iy-1)+1;
+      nysub=nyp/iysub;
+      if( iy == iysub) {
+	nysub=nyp-(nyp/iysub)*(iy-1);
+      }
+      x0=(nxp/ixsub)*(ix-1)+1;
+      nxsub=nxp/ixsub;
+      if( ix == ixsub){
+	nxsub=nxp-(nxp/ixsub)*(ix-1);
+      } 
+
+      sectgwgrids(uvwstor,
 	   datStorage,
-	   &s[0],
-	   &s[1],
+	   &nvp,
+	   &nvc,
 	   &idopsf,
-	   flags.getStorage(del),
-	   rowFlags.getStorage(del),
+	   flagstor,
+	   rowflagstor,
 	   wgtStorage,
-	   &s[2],
-	   &row,
-	   uvScale.getStorage(del),
-	   uvOffset.getStorage(del),
+	   &nvisrow,
 	   gridstor,
-	   &nx,
-	   &ny,
-	   &npol,
-	   &nchan,
-	   interpVisFreq_p.getStorage(del),
-	   &C::c,
-	   convSupport.getStorage(del),
-	   &convSize,
-	   &convSampling,
-	   &wConvSize,
+	   &nxp,
+	   &nyp,
+	   &np,
+	   &nc,
+	   suppstor,
+	   &csize,
+	   &csamp,
+	   &wcsize,
 	   convstor,
-	   chanMap.getStorage(del),
-	   polMap.getStorage(del),
-	   sumWeight.getStorage(del));
-    
+	   cmapstor,
+	   pmapstor,
+		  (sumwgt[icounter]).getStorage(del), 
+		  &x0, &y0, &nxsub, &nysub, &rbeg, &rend, locstor, offstor,
+		 phasorstor);
+    }
+    }//end pragma parallel
+
+
+
+    for (icounter=0; icounter < ixsub*iysub; ++icounter){
+      sumWeight=sumWeight+sumwgt[icounter];
+    }    
     griddedData.putStorage(gridstor, gridcopy);
     
   }
   else{
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
-    gwgrid(uvwstor,
-	   dphase.getStorage(del),
+#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) 
+    {
+#pragma omp for nowait     
+    for(icounter=0; icounter < ixsub*iysub; ++icounter){
+      ix= (icounter+1)-((icounter)/ixsub)*ixsub;
+      iy=(icounter)/ixsub+1;
+      y0=(nyp/iysub)*(iy-1)+1;
+      nysub=nyp/iysub;
+      if( iy == iysub) {
+	nysub=nyp-(nyp/iysub)*(iy-1);
+      }
+      x0=(nxp/ixsub)*(ix-1)+1;
+      nxsub=nxp/ixsub;
+      if( ix == ixsub){
+	nxsub=nxp-(nxp/ixsub)*(ix-1);
+      } 
+
+      sectgwgridd(uvwstor,
 	   datStorage,
-	   &s(0),
-	   &s(1),
+	   &nvp,
+	   &nvc,
 	   &idopsf,
-	   flags.getStorage(del),
-	   rowFlags.getStorage(del),
+	   flagstor,
+	   rowflagstor,
 	   wgtStorage,
-	   &s(2),
-	   &row,
-	   uvScale.getStorage(del),
-	   uvOffset.getStorage(del),
+	   &nvisrow,
 	   gridstor,
-	   &nx,
-	   &ny,
-	   &npol,
-	   &nchan,
-	   interpVisFreq_p.getStorage(del),
-	   &C::c,
-	   convSupport.getStorage(del),
-	   &convSize,
-	   &convSampling,
-	   &wConvSize,
+	   &nxp,
+	   &nyp,
+	   &np,
+	   &nc,
+	   suppstor,
+	   &csize,
+	   &csamp,
+	   &wcsize,
 	   convstor,
-	   chanMap.getStorage(del),
-	   polMap.getStorage(del),
-	   sumWeight.getStorage(del));
+	   cmapstor,
+	   pmapstor,
+		  (sumwgt[icounter]).getStorage(del), 
+		  &x0, &y0, &nxsub, &nysub, &rbeg, &rend, locstor, offstor,
+		 phasorstor);
+    }
+    }//end pragma parallel
+
+
+
+    for (icounter=0; icounter < ixsub*iysub; ++icounter){
+      sumWeight=sumWeight+sumwgt[icounter];
+    }
     griddedData2.putStorage(gridstor, gridcopy);
   }
   uvw.freeStorage(uvwstor, uvwcopy);
@@ -848,6 +1045,8 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   Cube<Int> flags;
   getInterpolateArrays(vb, data, flags);
 
+
+  
   Complex *datStorage;
   Bool isCopy;
   datStorage=data.getStorage(isCopy);
@@ -861,41 +1060,84 @@ void WProjectFT::get(VisBuffer& vb, Int row)
     }
   }
   
-
+  Int nvp=data.shape()(0);
+  Int nvc=data.shape()(1);
+  Int nvisrow=data.shape()(2);
+  Int nc=nchan;
+  Int np=npol;
+  Int nxp=nx;
+  Int nyp=ny;
+  Cube<Int> loc(3, nvc, nvisrow);
+  Cube<Int> off(3, nvc, nRow);
+  Int csamp=convSampling;
+  Int csize=convSize;
+  Int wcsize=wConvSize;
+  Matrix<Complex> phasor(nvc, nRow);
+  Bool delphase;
   Bool del;
+  Complex * phasorstor=phasor.getStorage(delphase);
+  const Double * visfreqstor=interpVisFreq_p.getStorage(del);
+  const Double * scalestor=uvScale.getStorage(del);
+  const Double * offsetstor=uvOffset.getStorage(del);
+  Int * locstor=loc.getStorage(del);
+  Int * offstor=off.getStorage(del);
+  const Int * flagstor=flags.getStorage(del);
+  const Int * rowflagstor=rowFlags.getStorage(del);
+  const Double *dpstor=dphase.getStorage(del);
   Bool uvwcopy; 
   const Double *uvwstor=uvw.getStorage(uvwcopy);
   Bool gridcopy;
   const Complex *gridstor=griddedData.getStorage(gridcopy);
   Bool convcopy;
   const Complex *convstor=convFunc.getStorage(convcopy);
-  Vector<Int> s(data.shape().nelements());
-  convertArray(s,data.shape().asVector());
-  dwproj(uvwstor,
-	 dphase.getStorage(del),
-	 datStorage,
-	 &s[0],
-	 &s[1],
-	 flags.getStorage(del),
-	 rowFlags.getStorage(del),
-	 &s[2],
-	 &row,
-	 uvScale.getStorage(del),
-	 uvOffset.getStorage(del),
-	 gridstor,
-	 &nx,
-	 &ny,
-	 &npol,
-	 &nchan,
-	 interpVisFreq_p.getStorage(del),
-	 &C::c,
-	 convSupport.getStorage(del),
-	 &convSize,
-	 &convSampling,
-	 &wConvSize,
-	 convstor,
-	 chanMap.getStorage(del),
-	 polMap.getStorage(del));
+  const Int* pmapstor=polMap.getStorage(del);
+  const Int *cmapstor=chanMap.getStorage(del);
+  const Int * suppstor=convSupport.getStorage(del);
+  Int irow;
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
+  {
+#pragma omp for
+    for (irow=startRow; irow<=endRow; ++irow){
+      locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
+		locstor, 
+		offstor, phasorstor, irow, True);
+  }  
+
+  }//end pragma parallel
+  Int rbeg=startRow+1;
+  Int rend=endRow+1;
+  Int npart=4;
+  Int ix=0;
+  #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart)
+  {
+    #pragma omp for nowait
+    for (ix=0; ix< npart; ++ix){
+      rbeg=ix*(nvisrow/npart)+1;
+      rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;
+      // cerr << "rbeg " << rbeg << " rend " << rend << " nRow " << nvisrow << endl;
+      sectdwgrid(uvwstor,
+		 datStorage,
+		 &nvp,
+		 &nvc,
+		 flagstor,
+		 rowflagstor,
+		 &nvisrow,
+		 gridstor,
+		 &nxp,
+		 &nyp,
+		 &np,
+		 &nc,
+		 suppstor,
+		 &csize,
+		 &csamp,
+		 &wcsize,
+		 convstor,
+		 cmapstor,
+		 pmapstor,
+		 &rbeg, &rend, locstor, offstor, phasorstor);
+    }
+
+  }//end pragma parallel
   data.putStorage(datStorage, isCopy);
   uvw.freeStorage(uvwstor, uvwcopy);
   griddedData.freeStorage(gridstor, gridcopy);

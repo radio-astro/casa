@@ -179,17 +179,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convSampling=convSampling_p;
   Int maxConvSize=convSize;
   
+  
   // Make a two dimensional image to calculate the
   // primary beam. We want this on a fine grid in the
   // UV plane 
+  CompositeNumber cn(uInt(nx_p*2)); 
   AlwaysAssert(directionIndex>=0, AipsError);
   DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
   Vector<Double> sampling;
   sampling = dc.increment();
   sampling*=Double(convSampling_p);
   //sampling*=Double(max(nx,ny))/Double(convSize);
-  sampling[0]*=Double(nx_p*padding)/Double(convSize);
-  sampling[1]*=Double(ny_p*padding)/Double(convSize);
+  sampling[0]*=Double(cn.nextLargerEven(Int(padding*Float(nx_p)-0.5)))/Double(convSize);
+  sampling[1]*=Double(cn.nextLargerEven(Int(padding*Float(ny_p)-0.5)))/Double(convSize);
   dc.setIncrement(sampling);
   
   Vector<Double> unitVec(2);
@@ -215,7 +217,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Int inner=convSize/convSampling_p;
   ConvolveGridder<Double, Complex>
     ggridder(IPosition(2, inner, inner), uvScale, uvOffset, "SF");
-
+  /*
+  ConvolveGridder<Double, Complex>
+    ggridder(IPosition(2, cn.nextLargerEven(Int(padding*Float(nx_p)-0.5)), 
+		       cn.nextLargerEven(Int(padding*Float(ny_p)-0.5))), uvScale, 
+	     uvOffset, "SF");
+  */
   convFunc.resize(); // break any reference 
   convFunc.resize(convSize/2-1, convSize/2-1, wConvSize);
   convFunc.set(0.0);
