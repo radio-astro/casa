@@ -231,5 +231,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 # endif
 #endif
 
+// Toggle on OMP if not clang compiler
+#ifndef  __clang__ 
+#ifndef HAS_OMP
+#define HAS_OMP 1
+#endif
+#endif
+
 } //# NAMESPACE CASA - END
 #endif
