@@ -1,5 +1,5 @@
 //# GridFT.h: Definition for GridFT
-//# Copyright (C) 1996,1997,1998,1999,2000,2002
+//# Copyright (C) 1996-2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -287,6 +287,7 @@ protected:
   //machine name
   String machineName_p;
 
+  Double timemass_p, timegrid_p;
   //  casa::async::SynthesisAsyncPeek *peek;
 };
 
