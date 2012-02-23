@@ -201,9 +201,6 @@ def tflagdata(vis,
             
         elif mode == 'shadow':
             agent_pars['tolerance'] = tolerance
-            # ONce this is implemented in the agent, uncomment next line
-#            agent_pars['addantenna'] = antennafile
-
             if antennafile != '':
             # Get a dictionary with the antenna names, positions and diameters
                 addantenna = fh.readAntennaList(antennafile)                
@@ -546,7 +543,6 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     manualpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
-#    shadowpars = ['tolerance','recalcuvw','addantenna']
     shadowpars = ['tolerance','recalcuvw','antennafile']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
@@ -594,7 +590,13 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 modepars = fh.getLinePars(cmdline,quackpars)
             elif cmdline.__contains__('shadow'):
                 mode = 'shadow'
+                antennafile = ''
                 modepars = fh.getLinePars(cmdline,shadowpars)
+                # Get antennafile
+                if modepars['antennafile'] != '':
+                    antennafile = modepars['antennafile']
+                    addantenna = fh.readAntennaList(antennafile)
+                    modepars['addantenna'] = addantenna
             elif cmdline.__contains__('elevation'):
                 mode = 'elevation'
                 modepars = fh.getLinePars(cmdline,elevationpars)
