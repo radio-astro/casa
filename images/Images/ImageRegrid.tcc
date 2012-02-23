@@ -115,7 +115,7 @@ void ImageRegrid<T>::regrid(
 	Bool replicate, uInt decimate, Bool showProgress,
 	Bool forceRegrid
 ) {
-	LogIO os(LogOrigin("ImageRegrid", "regrid(...)", WHERE));
+	LogIO os(LogOrigin("ImageRegrid", __FUNCTION__, WHERE));
 	Timer t0;
 	IPosition outShape = outImage.shape();
 	IPosition inShape = inImage.shape();
@@ -582,69 +582,68 @@ Bool ImageRegrid<T>::insert (ImageInterface<T>& outImage,
 
 
 
-template<class T>
-CoordinateSystem
-ImageRegrid<T>::makeCoordinateSystem(LogIO& os,
-				     const CoordinateSystem& cSysTo,
-				     const CoordinateSystem& cSysFrom,
-				     const IPosition& outPixelAxes)
-{
-   const uInt nCoordsFrom = cSysFrom.nCoordinates();
-   const uInt nPixelAxesFrom = cSysFrom.nPixelAxes();
+template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
+	LogIO& os, const CoordinateSystem& cSysTo,
+	const CoordinateSystem& cSysFrom,
+	const IPosition& outPixelAxes
+) {
+	const uInt nCoordsFrom = cSysFrom.nCoordinates();
+	const uInt nPixelAxesFrom = cSysFrom.nPixelAxes();
 
-// Create output CS.  Copy the output ObsInfo over first.
+	// Create output CS.  Copy the output ObsInfo over first.
 
-   CoordinateSystem cSysOut(cSysFrom);
+	CoordinateSystem cSysOut(cSysFrom);
 
-// If specified axes are empty, set to all
+	// If specified axes are empty, set to all
 
-   IPosition outPixelAxes2;
-   if (outPixelAxes.nelements()==0) {
-      outPixelAxes2 = IPosition::makeAxisPath(nPixelAxesFrom);
-   } else {
-      outPixelAxes2 = outPixelAxes;
-   }
+	IPosition outPixelAxes2;
+	if (outPixelAxes.nelements()==0) {
+		outPixelAxes2 = IPosition::makeAxisPath(nPixelAxesFrom);
+	} else {
+		outPixelAxes2 = outPixelAxes;
+	}
 
-// Loop over coordinates in the From CS
+	// Loop over coordinates in the From CS
 
-   for (uInt i=0; i<nCoordsFrom; i++) {
-      Coordinate::Type typeFrom = cSysFrom.type(i);
+	for (uInt i=0; i<nCoordsFrom; i++) {
+		Coordinate::Type typeFrom = cSysFrom.type(i);
+		// Are any of this coordinates axes being regridded ?
 
-// Are any of this coordinates axes being regridded ?
+		Vector<Int> pixelAxes = cSysFrom.pixelAxes(i);
+		Bool regridIt = False;
+		for (uInt k=0; k<pixelAxes.nelements(); k++) {
+			for (uInt j=0; j<outPixelAxes2.nelements(); j++) {
+				if (pixelAxes[k] == outPixelAxes2(j)) {
+					regridIt = True;
+				}
+			}
+		}
 
-      Vector<Int> pixelAxes = cSysFrom.pixelAxes(i);
-      Bool regridIt = False;                 
-      for (uInt k=0; k<pixelAxes.nelements(); k++) {
-         for (uInt j=0; j<outPixelAxes2.nelements(); j++) {
-            if (Int(k)==outPixelAxes2(j)) {              
-               regridIt = True;  
-            }
-         }
-      }
+		// We are regridding some axis from this coordinate.
+		// Replace it from 'To' if we can find it.
 
-// We are regridding some axis from this coordinate.
-// Replace it from 'To' if we can find it.
+		if (regridIt) {
 
-      if (regridIt) {
+			// Trouble with multiple Coordinates of this type here.
 
-// Trouble with multiple Coordinates of this type here.
-
-         Int afterCoord = -1;
-         Int iCoordTo = cSysTo.findCoordinate(typeFrom, afterCoord);    
-         if (cSysTo.pixelAxes(iCoordTo).nelements() != 
-	     cSysFrom.pixelAxes(i).nelements()) {
-            os << "Wrong number of pixel axes in 'To' CoordinateSystem for "
-	      "coordinate of type " <<
-	      cSysTo.showType(iCoordTo) << LogIO::EXCEPTION;
-         }
-//
-         if (iCoordTo >= 0) {
-            cSysOut.replaceCoordinate (cSysTo.coordinate(iCoordTo), i); 
-         }
-      }
-   }
-//
-   return cSysOut;
+			Int iCoordTo = cSysTo.findCoordinate(typeFrom, -1);
+			if (iCoordTo < 1) {
+				os << Coordinate::typeToString(typeFrom) << " coordinate is not present "
+					<< " in the output coordinate system, so it cannot be regridded"
+					<< endl;
+			}
+			if (
+				cSysTo.pixelAxes(iCoordTo).nelements()
+				!= cSysFrom.pixelAxes(i).nelements()
+			) {
+				os << "Wrong number of pixel axes in 'To' CoordinateSystem for "
+						"coordinate of type " <<
+						cSysTo.showType(iCoordTo) << LogIO::EXCEPTION;
+			}
+			cSysOut.replaceCoordinate (cSysTo.coordinate(iCoordTo), i);
+		}
+	}
+	return cSysOut;
 }
 
 
