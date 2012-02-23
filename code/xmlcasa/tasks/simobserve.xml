@@ -207,7 +207,7 @@ it'll do them for the same amount of time -->
     <param type="string" name="thermalnoise">
       <description>add thermal noise: [tsys-atm|tsys-manual|""]</description>
       <value type="string"></value>
-      <allowed type="enum">
+      <allowed kind="enum">
 	<value type="string"></value>
 	<value type="string">tsys-atm</value>
 	<value type="string">tsys-manual</value>
@@ -218,17 +218,21 @@ it'll do them for the same amount of time -->
     <param type="double" name="user_pwv" subparam="true">
       <description>Precipitable Water Vapor in mm</description>
       <value>1.</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
     </param>
 
     <param type="double" name="t_ground" subparam="true">
       <description>ambient temperature</description><value>270.</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
     </param>
     <param type="double" name="t_sky" subparam="true">
        <description>atmospheric temperature</description>
        <value>260.</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
     </param>	
     <param type="double" name="tau0" subparam="true">
       <description>zenith opacity</description><value>0.1</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
     </param>
     <param type="int" name="seed" subparam="true">
       <description>random number seed</description><value>11111</value>
@@ -237,6 +241,7 @@ it'll do them for the same amount of time -->
     <param type="double" name="leakage">
       <description>cross polarization (interferometer only)</description>
       <value>0.0</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
     </param>    
 
     

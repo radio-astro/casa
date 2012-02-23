@@ -82,11 +82,12 @@ def simobserve(
 
         # convert "alma;0.4arcsec" to an actual configuration
         # can only be done after reading skymodel, so here, we just string parse
-        if str.upper(antennalist[0:4]) == "ALMA":            
+        if str.upper(antennalist[0:4]) == "ALMA":
             foo=antennalist[0:4]+"_"+antennalist[5:]
+        elif len(antennalist) > 0:
+            foo=antennalist
         else:
-            if len(antennalist) > 0:
-                foo=antennalist
+            msg("The name of antenna list (antennalist/sdantlist) is not specified",priority="error")
 
         if foo:
             foo=foo.replace(".cfg","")
@@ -280,7 +281,7 @@ def simobserve(
                 antennalist = repodir + antennalist
             # Now make sure the antennalist exists
             if not os.path.exists(antennalist):
-                util.msg("Invalid antennalist: %s" % antennalist, priority="error")
+                util.msg("Couldn't find antennalist: %s" % antennalist, priority="error")
         elif predict or components_only:
             # antennalist is required when predicting or components only
             util.msg("Must specify antennalist", priority="error")
@@ -298,7 +299,7 @@ def simobserve(
                 # KS TODO: what if not predicting but SD with multi-Ants
                 # in antennalist (e.g., aca.tp)? In that case, PB on plots and
                 # pointingspacing="??PB" will not be correct for heterogeneous list.
-                if sdant > nant-1:
+                if sdant > nant-1 or sdant < -nant:
                     msg("antenna index %d is out of range. setting sdant=0"%sdant,priority="warn")
                     sdant = 0
                 stnx = [stnx[sdant]]
@@ -1122,10 +1123,12 @@ def simobserve(
         msg("task_simobserve -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
-        print "task_simobserve -- OptionError: ", e
+        #print "task_simobserve -- OptionError: ", e
+        msg("task_simobserve -- OptionError: %s" % e,priority="error")
         return
     except Exception, instance:
         print '***Error***',instance
+        msg("task_simobserve -- Exception: %s" % instance,priority="error")
         return
 
 
