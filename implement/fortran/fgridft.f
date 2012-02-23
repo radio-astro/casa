@@ -419,27 +419,19 @@ C rotate but we do want to reproject uvw
      $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1   
                         do iy=msupporty,psupporty
                            posy=loc(2, ichan, irow)+iy
-C++                           if( (posy .lt. (y0+nysub)) .and. 
-C     $                          (posy.ge. y0)) then
-                            iloc(2)=abs(sampling*iy+off(2,ichan,irow))+1
-                            wty=convFunc(iloc(2))
-                            do ix=msupportx,psupportx
-                               posx=loc(1, ichan, irow)+ix
-C--                              if( (posx .lt. (x0+nxsub)) .and. 
-C     $                              (posx .ge. x0)) then
-C            write(*,*) posx, posy, loc(1), loc(2), x0, y0, nxsub, nysub
-                                iloc(1)=abs(sampling*ix+off(1,ichan, 
-     $                                 irow))+1
-                                  wtx=convFunc(iloc(1))
-                                  wt=wtx*wty
-                                  grid(posx,posy,apol,achan)=
+                           iloc(2)=abs(sampling*iy+off(2,ichan,irow))+1
+                           wty=convFunc(iloc(2))
+                           do ix=msupportx,psupportx
+                              posx=loc(1, ichan, irow)+ix
+                              iloc(1)=abs(sampling*ix+off(1,ichan, 
+     $                             irow))+1
+                              wtx=convFunc(iloc(1))
+                              wt=wtx*wty
+                              grid(posx,posy,apol,achan)=
      $                             grid(posx, posy,apol,achan)+
-     $                                   nvalue*wt
-                                   norm=norm+wt
-C                                   write(*,*) iloc(1), iloc(2)
-C--                                end if
-                              end do
-C++                           end if
+     $                             nvalue*wt
+                              norm=norm+wt
+                           end do
                         end do
                         sumwt(apol,achan)=sumwt(apol,achan)+
      $                       weight(ichan,irow)*norm

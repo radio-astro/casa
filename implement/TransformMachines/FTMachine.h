@@ -201,7 +201,7 @@ public:
 	       Vector<Double>& dphase, const VisBuffer& vb);
 
   //helper function for openmp to call ...no private dependency
-  static void locateuvw(const Double*& uvw, const Double*&dphase, const Double*& freq, const Int& nchan, const Double*& scale, const Double*& offset,  const Int& sampling, Int*& loc,Int*& off, Complex*& phasor, const Int& row); 
+  static void locateuvw(const Double*& uvw, const Double*&dphase, const Double*& freq, const Int& nchan, const Double*& scale, const Double*& offset,  const Int& sampling, Int*& loc,Int*& off, Complex*& phasor, const Int& row, const Bool& doW=False); 
 		 
 
   // Save and restore the FTMachine to and from a record
