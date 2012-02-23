@@ -83,7 +83,6 @@ MeasurementSets/MSUvDistGram.cc
 MeasurementSets/MSFieldIndex.cc
 MeasurementSets/MSStateIndex.cc
 MeasurementSets/MSSelectionError.cc
-MeasurementSets/MSSelectionErrorHandler.cc
 MeasurementSets/MSObservation.cc
 MeasurementSets/MSSelectionTools.cc
 MeasurementSets/MSSelectionKeywords.cc
@@ -243,9 +242,7 @@ MeasurementSets/MSSelUtil.tcc
 MeasurementSets/MSSelUtil2.h
 MeasurementSets/MSSelUtil2.tcc
 MeasurementSets/MSSelection.h
-#MeasurementSets/MSSelectableTable.h
 MeasurementSets/MSSelectionError.h
-MeasurementSets/MSSelectionErrorHandler.h
 MeasurementSets/MSSelectionKeywords.h
 MeasurementSets/MSSelectionTools.h
 MeasurementSets/MSSelector.h

@@ -97,26 +97,22 @@
   Bool MSAntennaGramNegate=False;
   void reportError(char *token,String source=String(""))
   {
-    LogIO logIO;
-    ostringstream Mesg,tok;
+    ostringstream Mesg;
     if (source != "") Mesg << source; else Mesg << "Antenna Expression";
 
-    Mesg << ": No match found for token(s) ";
-    tok << "\"";
-    if (MSAntennaGramNegate) tok << "!";
-    tok << token << "\"";
+    Mesg << ": No match found for \"";
+    if (MSAntennaGramNegate) Mesg << "!" << token << "\"";
+    else Mesg << token << "\"";
 
-    MSAntennaParse::thisMSAErrorHandler->reportError(tok.str().c_str(), Mesg.str());
-    Mesg << tok.str();
-    // if (MSAntennaGramNegate)
-    //   {
-    // 	logIO << Mesg.str() 
-    // 	      << " (just a helpful message (from your friendly MSAntennaSelection object))" 
-    // 	      << LogIO::WARN;
-    //   }
-    // else
-    //   //      throw(MSSelectionAntennaParseError(Mesg.str()));
-    //   logIO << Mesg.str() << LogIO::WARN;
+    if (MSAntennaGramNegate)
+      {
+	LogIO logIO;
+	logIO << Mesg.str() 
+	      << " (just a helpful message (from your friendly MSAntennaSelection object))" 
+	      << LogIO::WARN;
+      }
+    else
+      throw(MSSelectionAntennaParseError(Mesg.str()));
   }
   //
   // Keep life from getting too computer-like (encouragement may be a
@@ -228,7 +224,7 @@ identstr: IDENTIFIER { $$ = $1; }
           
 // A single station name (this could be a regex and hence produce a
 // list of indices)
-stationid: identstr // IDENTIFIER
+stationid: IDENTIFIER  
             { // Use the string as-is.  This cannot include patterns/regex
 	      // which has characters that are part of range or list
 	      // syntax (',', '-') (that's all I think).
@@ -270,8 +266,7 @@ stationid: identstr // IDENTIFIER
 	      MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::STATIONREGEX);
 	    }
 
-// A single antenna name (this could be a regex and hence produce a
-// list of indices)
+// A single antenna name (this could be a regex and hence produce a list inf indices)
 antid: identstr
         { // Use the string as-is.  This cannot include patterns/regex
 	  // which has characters that are part of range or list

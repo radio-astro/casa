@@ -39,10 +39,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
-//#include <ms/MeasurementSets/MSSelectableTable.h>
 #include <casa/Containers/OrderedMap.h>
 #include <casa/Containers/MapIO.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
@@ -354,10 +352,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void setMaxScans(const Int& n) {maxScans_p=n;};
     void setMaxObs(const Int& n) {maxObs_p=n;};
     
-    void setErrorHandler(const MSExprType type, MSSelectionErrorHandler& mssEH,
-			 const Bool overRide=False);
-
-    void runErrorHandler();
   private:
     // Set into the order of the selection expression
     Bool setOrder(MSSelection::MSExprType type);
@@ -374,7 +368,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     TableExprNode fullTEN_p;
     const MeasurementSet *ms_p;
-    //    MSInterface msFace_p;
     // Selection expressions
     String antennaExpr_p;
     String fieldExpr_p;
