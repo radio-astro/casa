@@ -44,8 +44,8 @@ namespace casac {
          ~<xsl:value-of select="@name"/>();
 <xsl:for-each select="aps:method">
 <xsl:if test="lower-case(@type)!='constructor'">
- <xsl:text>         </xsl:text><xsl:apply-templates select="aps:returns"/> <xsl:value-of select="@name"/>(<xsl:apply-templates select="aps:output"></xsl:apply-templates> <xsl:if test="aps:output and aps:input">, </xsl:if>
-              <xsl:apply-templates select="aps:input">
+ <xsl:text>         </xsl:text><xsl:apply-templates select="aps:returns"/> <xsl:value-of select="@name"/>(<xsl:apply-templates select="aps:input"></xsl:apply-templates> <xsl:if test="aps:output and aps:input">, </xsl:if>
+              <xsl:apply-templates select="aps:output">
 </xsl:apply-templates>);
 </xsl:if>
 </xsl:for-each>

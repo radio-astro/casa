@@ -104,6 +104,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdstat.py
   test_sdtpimaging.py
   test_setjy.py
+  test_simobserve.py
   test_simplecluster.py
   test_slsearch.py
   test_smoothcal.py

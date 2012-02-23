@@ -1115,10 +1115,16 @@ class cleanhelper:
         self.im.weight(type=weighting,rmode=rmode,robust=robust, 
                          npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
      
+        if((uvtaper==True) and (type(outertaper) in (str, int, float, long))):
+            outertaper=[outertaper]
         if((uvtaper==True) and (type(outertaper)==list) and (len(outertaper) > 0)):
             if(len(outertaper)==1):
                 outertaper.append(outertaper[0])
                 outertaper.append('0deg')
+            if(qa.quantity(outertaper[0])['unit']==''):
+                outertaper[0]=qa.quantity(qa.quantity(outertaper[0])['value'],'lambda')
+            if(qa.quantity(outertaper[1])['unit']==''):
+                outertaper[1]=qa.quantity(qa.quantity(outertaper[1])['value'],'lambda')
             if(qa.quantity(outertaper[0])['value'] > 0.0):
                 self.im.filter(type='gaussian', bmaj=outertaper[0],
                                bmin=outertaper[1], bpa=outertaper[2])

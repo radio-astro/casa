@@ -11,18 +11,16 @@ def tflagcmd(
     inpmode=None,
     inpfile=None,
     tablerows=None,
-    useapplied=None,
     reason=None,
     command=None,
     tbuff=None,
     ants=None,
     action=None,
+    useapplied=None,
     flagbackup=None,
     clearall=None,
     rowlist=None,
     plotfile=None,
-    display=None,
-    writeflags=None,
     sequential=None,
     savepars=None,
     outfile=None,
@@ -110,15 +108,11 @@ def tflagcmd(
 
             # Read only the selected rows for action = apply and 
             # always read all rows with APPLIED=True for action = unapply
-            if action == 'apply' or action == 'list':
+            if action == 'apply':
                 myflagcmd = readFromTable(msfile, myflagrows=tablerows, useapplied=useapplied,
                                           myreason=reason)
-            elif action == 'unapply':
-                myflagcmd = readFromTable(msfile, useapplied=True, myreason=reason)
-                # Check if selected rows are in read dictionary               
             else:
-                myflagcmd = readFromTable(msfile, useapplied=useapplied, myreason=reason)
-                                    
+                myflagcmd = readFromTable(msfile, useapplied=True, myreason=reason)                                    
             
             listmode = 'cmd'
             
@@ -132,8 +126,9 @@ def tflagcmd(
                      casalog.post('Input file is empty', 'ERROR')
                      
                 cmdlist = fh.readFile(inpfile)
-                # Make a FLAG_CMD compatible dictionary
-                myflagcmd = fh.makeDict(cmdlist)
+
+                # Make a FLAG_CMD compatible dictionary and select by reason
+                myflagcmd = fh.makeDict(cmdlist, reason)
                 
                 # Number of commands in dictionary
                 vrows = myflagcmd.keys()
@@ -161,9 +156,9 @@ def tflagcmd(
             casalog.post('%s'%myflags, 'DEBUG')
 
             # Construct flags per antenna, selecting by reason if desired
-            # Do not resort at this time
+            # Never sort!
             if ants != '' or reason != '':
-                myflagcmd = sortflags(myflags, myantenna=ants,
+                myflagcmd = selectFlags(myflags, myantenna=ants,
                         myreason=reason, myflagsort='')
             else:
                 myflagcmd = myflags
@@ -185,7 +180,7 @@ def tflagcmd(
 
         # Specific for some actions
         # Get the commands as a list of strings with reason back in
-#        if action == 'apply' or action == 'unapply'  or action == 'save':               
+        # TODO: maybe this is not needed anymore!!!!!!!!!!!!!!!
         if action == 'apply' or action == 'unapply'  or action == 'list':               
             # If there are no flag commands, exit
             if myflagcmd.__len__() == 0:
@@ -220,49 +215,35 @@ def tflagcmd(
         if (action == 'list'):
             
             # List the flag cmds on the screen
-            listFlagCmd(myflagcmd, myantenna=ants, myreason=reason, myoutfile='', 
-                            listmode=listmode)
+#            listFlagCmd(myflagcmd, myantenna=ants, myreason=reason, myoutfile='', 
+#                            listmode=listmode)
+            listFlagCmd(myflagcmd, myoutfile='', listmode=listmode)
             
             
             # Save the flag cmds to the outfile
             if savepars:
                 # These cmds came from the internal FLAG_CMD, only list on the screen
-                if inpmode == 'table' and inpfile == '':
-                    pass
-#                        writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False)
                 if outfile == '':
-                    casalog.post('Saving commands to FLAG_CMD')
-                    fh.writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False, outfile='')                     
+                    if inpmode == 'table' and inpfile == '':
+                        pass
+                    else:
+                        casalog.post('Saving commands to FLAG_CMD')
+                        fh.writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False, outfile='')                     
                 else:
                     casalog.post('Saving commands to '+outfile)
-                    fh.writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False, outfile=outfile)                     
-      
-                # Append to a file   
-#                else:
-#
-#                    ffout = open(outfile, 'a')
-#
-#                    try:
-#                        casalog.post('Appending flag commands to '+outfile)
-#                        for cmd in mycmdlist:
-#                            print >> ffout, '%s' % cmd
-#                    except:
-#                        raise Exception, 'Error writing lines to file ' \
-#                            + outfile
-#                    ffout.close()
-                
+                    fh.writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False, outfile=outfile)                                     
 
         # Apply/Unapply the flag commands to the data
         elif action == 'apply' or action == 'unapply':
             apply = True
 
             # Get the list of parameters
+            cmdlist = []
             for key in myflagcmd.keys():
                 cmdline = myflagcmd[key]['command']
                 cmdlist.append(cmdline)
                     
             # Get the union of all selection parameters
-#            unionpars = getUnion(cmdlist)
             unionpars = fh.getUnion(cmdlist)
             casalog.post('The union of all parameters is %s' %(unionpars), 'DEBUG')
 
@@ -276,84 +257,44 @@ def tflagcmd(
                 
             list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
             
-            # If the display is requested, add it to list of agents
-            if display != '':
-                
-                agent_pars = {}
-                casalog.post('Parsing the display parameters')
-                    
-                agent_pars['mode'] = 'display'
-                # need to create different parameters for both, data and report.
-                if display == 'both':
-                    agent_pars['datadisplay'] = True
-                    agent_pars['reportdisplay'] = True
-                
-                elif display == 'data':
-                    agent_pars['datadisplay'] = True
-                
-                elif display == 'report':
-                    agent_pars['reportdisplay'] = True
-                    
-                tflocal.parseagentparameters(agent_pars)                
-
             # Initialize the Agents
             tflocal.init()
      
             # Backup the flags before running
-            if flagbackup and writeflags:
+            if flagbackup:
                 backupCmd(tflocal, list2save)
                 
             # Run the tool
-            stats = tflocal.run(writeflags, sequential)
+            stats = tflocal.run(True, sequential)
                         
             tflocal.done()
             
             # Update the APPLIED column
-            # These flags came from internal FLAG_CMD
             valid_rows = list2save.keys()  
-            if inpmode == 'table' and inpfile == '':
-                # do not need to save them as they are already in MS
-                savepars = False
-                myrowlist = myflagcmd.keys()
-                if myrowlist.__len__() > 0:     
-                    if not writeflags:
-                        # APPLIED is set to False for any action
-                        updateTable(vis, mycol='APPLIED', myval=False, myrowlist=valid_rows)
-                    else:
-                        # update APPLIED according to requested action
-                        if apply:       
-                            updateTable(vis, mycol='APPLIED', myval=True, myrowlist=valid_rows)
-                        else:
-                            updateTable(vis, mycol='APPLIED', myval=False, myrowlist=valid_rows)
-                    
-                                           
-            # Save the valid command lines to the output file or FLAG_CMD
-            if savepars:                           
-                if valid_rows.__len__() > 0:                   
-                    # save to MS
+            if valid_rows.__len__ > 0:
+                
+                if savepars:                
+                    # These flags came from internal FLAG_CMD. Only update APPLIED
                     if outfile == '':
-                        if not writeflags:
-                            # APPLIED is set to False for any action
-                            writeFlagCmd(vis, myflagcmd, valid_rows, writeflags)
+                        if inpmode == 'table' and inpfile == '':
+                            updateTable(vis, mycol='APPLIED', myval=apply, myrowlist=valid_rows)
                         else:
-                            # Add the flag commands to the MS and update APPLIED
-                            writeFlagCmd(vis, myflagcmd, valid_rows, applied=apply)                            
-                           
-                    # append to a file 
+                            # save to FLAG_CMD
+                            casalog.post('Saving commands to FLAG_CMD')
+                            fh.writeFlagCmd(vis, myflagcmd, vrows=valid_rows, applied=apply, outfile='')
+                    
+                    # Save to a file
                     else:
-                        ffout = open(outfile, 'a')
-    
-                        try:
-                            casalog.post('Appending flag commands to '+outfile)
-                            for key in list2save:
-                                cmdline = list2save[key]['command']
-                                print >> ffout, '%s' % cmdline
-                        except:
-                            raise Exception, 'Error writing lines to file ' \
-                                + outfile
-                        ffout.close()
+                        fh.writeFlagCmd(vis, myflagcmd, vrows=valid_rows, applied=apply, outfile=outfile) 
+                
+                # Do not save cmds but maybe update APPLIED
                 else:
-                    casalog.post('There are no valid commands to save', 'WARN')
+                    if inpmode == 'table' and inpfile == '':
+                        updateTable(vis, mycol='APPLIED', myval=apply, myrowlist=valid_rows)
+                    
+                                               
+            else:
+                casalog.post('There are no valid commands to save', 'WARN')
                  
                                             
         elif action == 'clear':
@@ -412,291 +353,6 @@ def tflagcmd(
 # ************************************************************************
 #                    Helper Functions
 # ************************************************************************
-
-def getNumPar(cmdlist):
-    '''Get the number of occurrences of all parameter keys
-       -> cmdlist is a list of strings with parameters and values
-    '''
-
-    nrows = cmdlist.__len__()
-            
-    # Dictionary of number of occurrences to return
-    npars = {
-    'field':0,
-    'scan':0,
-    'antenna':0,
-    'spw':0,
-    'timerange':0,
-    'correlation':0,
-    'intent':0,
-    'feed':0,
-    'array':0,
-    'uvrange':0,
-    'comment':0
-    }
-
-    ci = 0  # count the number of lines with comments (starting with a #)
-    si = 0  # count the number of lines with scan
-    fi = 0  # count the number of lines with field
-    ai = 0  # count the number of lines with antenna
-    ti = 0  # count the number of lines with timerange
-    coi = 0  # count the number of lines with correlation
-    ii = 0  # count the number of lines with intent
-    fei = 0  # count the number of lines with feed
-    ari = 0  # count the number of lines with array
-    ui = 0  # count the number of lines with yvrange
-    pi = 0  # count the number of lines with spw
-    
-    for i in range(nrows):
-        cmdline = cmdlist[i]
-
-        if cmdline.startswith('#'):
-            ci += 1
-            npars['comment'] = ci
-            continue
-
-        # split by white space
-        keyvlist = cmdline.split()
-        if keyvlist.__len__() > 0:  
-
-            # Split by '='
-            for keyv in keyvlist:
-
-                # Skip if it is a comment character #
-                if keyv.count('#') > 0:
-                    break
-
-                (xkey,xval) = keyv.split('=')
-
-                # Remove quotes
-                if type(xval) == str:
-                    if xval.count("'") > 0:
-                        xval = xval.strip("'")
-                    if xval.count('"') > 0:
-                        xval = xval.strip('"')
-
-                # Check which parameter
-                if xkey == "scan":
-                    si += 1
-                    npars['scan'] = si
-
-                elif xkey == "field":
-                    fi += 1
-                    npars['field'] = fi
-
-                elif xkey == "antenna":
-                    ai += 1
-                    npars['antenna'] = ai
-
-                elif xkey == "timerange":
-                    ti += 1
-                    npars['timerange'] = ti
-
-                elif xkey == "correlation":
-                    coi += 1
-                    npars['correlation'] = coi
-
-                elif xkey == "intent":
-                    ii += 1
-                    npars['intent'] = ii
-
-                elif xkey == "feed":
-                    fei += 1
-                    npars['feed'] = fei
-
-                elif xkey == "array":
-                    ari += 1
-                    npars['array'] = ari
-                    arrays += xval + ','
-
-                elif xkey == "uvrange":
-                    ui += 1
-                    npars['uvrange'] = ui
-
-                elif xkey == "spw":
-                    pi += 1
-                    npars['spw'] = pi
-
-
-    return npars
-
-
-def getUnion(cmdlist):
-    '''Get a dictionary of a union of all selection parameters from a list of lines:
-       -> cmdlist is a list of strings with parameters and values
-    '''
-    
-    # Dictionary of parameters to return
-    dicpars = {
-    'field':'',
-    'scan':'',
-    'antenna':'',
-    'spw':'',
-    'timerange':'',
-    'correlation':'',
-    'intent':'',
-    'feed':'',
-    'array':'',
-    'uvrange':'',
-    'observation':''
-    }
-
-    # Strings for each parameter
-    scans = ''
-    fields = ''
-    ants = ''
-    times = ''
-    corrs = ''
-    ints = ''
-    feeds = ''
-    arrays = ''
-    uvs = ''
-    spws = ''
-    obs = ''
-        
-    nrows = cmdlist.__len__()
-
-    for i in range(nrows):
-        cmdline = cmdlist[i]
-        
-        # split by white space
-        keyvlist = cmdline.split()
-        if keyvlist.__len__() > 0:  
-
-            # Split by '='
-            for keyv in keyvlist:
-
-                # Skip if it is a comment character #
-#                if keyv.count('#') > 0:
-                if keyv.startswith('#'):
-                    break
-                    
-                (xkey,xval) = keyv.split('=')
-
-                # Remove quotes
-                if type(xval) == str:
-                    if xval.count("'") > 0:
-                        xval = xval.strip("'")
-                    if xval.count('"') > 0:
-                        xval = xval.strip('"')
-
-                # Check which parameter
-                if xkey == "scan":
-                    scans += xval + ','
-
-                elif xkey == "field":
-                    fields += xval + ','
-
-                elif xkey == "antenna":
-                    ants += xval + ','
-
-                elif xkey == "timerange":
-                    times += xval + ','
-
-                elif xkey == "correlation":
-                    corrs += xval + ','
-
-                elif xkey == "intent":
-                    ints += xval + ','
-
-                elif xkey == "feed":
-                    feeds += xval + ','
-
-                elif xkey == "array":
-                    arrays += xval + ','
-
-                elif xkey == "uvrange":
-                    uvs += xval + ','
-
-                elif xkey == "spw":
-                    spws += xval + ','
-
-                elif xkey == "observation":
-                    obs += xval + ','
-
-                        
-    # Strip out the extra comma at the end
-    scans = scans.rstrip(',')
-    fields = fields.rstrip(',')
-    ants = ants.rstrip(',')
-    times = times.rstrip(',')
-    corrs = corrs.rstrip(',')
-    ints = ints.rstrip(',')
-    feeds = feeds.rstrip(',')
-    arrays = arrays.rstrip(',')
-    uvs = uvs.rstrip(',')
-    spws = spws.rstrip(',')
-    obs = obs.rstrip(',')
-
-    dicpars['scan'] = scans
-    dicpars['field'] = fields
-    dicpars['antenna'] = ants
-    dicpars['timerange'] = times
-    # Correlations should be handled only by the agents
-    dicpars['correlation'] = ''
-    dicpars['intent'] = ints
-    dicpars['feed'] = feeds
-    dicpars['array'] = arrays
-    dicpars['uvrange'] = uvs
-    dicpars['spw'] = spws
-    dicpars['observation'] = obs
-
-    # Real number of input lines
-    # Get the number of occurrences of each parameter
-    npars = getNumPar(cmdlist)
-    nlines = nrows - npars['comment']
-        
-    # Make the union. 
-    for k,v in npars.iteritems():
-        if k != 'comment':
-            if v < nlines:
-                dicpars[k] = ''
-
-
-    uniondic = dicpars.copy()
-    # Remove empty parameters from the dictionary
-    for k,v in dicpars.iteritems():
-        if v == '':
-            uniondic.pop(k)
-    
-    return uniondic
-
-
-def delEmptyPars(cmdline):
-    '''Remove empty parameters from a string:
-       -> cmdline is a string with parameters
-       returns a string containing only parameters with values
-    '''
-               
-    newstr = ''
-    
-    # split by white space
-    keyvlist = cmdline.split()
-    if keyvlist.__len__() > 0:  
-        
-        # Split by '='
-        for keyv in keyvlist:
-
-            (xkey,xval) = keyv.split('=')
-
-            # Remove quotes
-            if type(xval) == str:
-                if xval.count("'") > 0:
-                    xval = xval.strip("'")
-                if xval.count('"') > 0:
-                    xval = xval.strip('"')
-            
-            # Write only parameters with values
-            if xval == '':
-                continue
-            else:
-                newstr = newstr+' '+xkey+'='+xval+' '
-            
-    else:
-        casalog.post('String of parameters is empty','WARN')   
-         
-    return newstr
-
 
 def setupAgent(tflocal, myflagcmd, myrows, apply):
     ''' Setup the parameters of each agent and call the tflagger tool
@@ -1582,7 +1238,7 @@ def listFlagCmd(
             'Command',
             )
     elif listmode == 'file':
-        phdr = '%8s %s' % ('Key', 'Command')
+        phdr = '%8s %32s %s' % ('Key', 'Reason', 'Command')
     else:
         return
     
@@ -1656,7 +1312,7 @@ def listFlagCmd(
                         cmd,
                         )
                 else:
-                    pstr = '%8s %s' % (skey, cmd)
+                    pstr = '%8s %32s %s' % (skey, reas, cmd)
                 if myoutfile != '':
                     # list to output file
                     print >> lfout, pstr
@@ -1701,6 +1357,328 @@ def backupCmd(tflocal, cmdlist):
                             comment='tflagcmd autosave on ' + time_string, merge='replace')
 
 
+def selectFlags(
+    myflags=None,
+    myantenna='',
+    myreason='Any',
+    myflagsort='',
+    ):
+    #
+    # Return dictionary of input flags using selection by antenna/reason
+    # and grouped/sorted by flagsort.
+    #
+    #   selectFlags: Return dictionary of flags using selection by antenna/reason
+    #              and grouped/sorted by flagsort.
+    #      myflags (dictionary)  input flag dictionary (e.g. from readflagxml
+    #      myantenna (string)    selection by antenna(s)
+    #      myreason (string)     selection by reason(s)
+    #      myflagsort (string)   toggle for flag group/sort
+    #
+    #   Usage: myflagd = selectFlags(myflags,antenna,reason,flagsort)
+    #
+    #   Dictionary structure:
+    #   fid : 'id' (string)
+    #         'mode' (string)         flag mode '','clip','shadow','quack','online'
+    #         'antenna' (string)
+    #         'timerange' (string)
+    #         'reason' (string)
+    #         'time' (float)          in mjd seconds
+    #         'interval' (float)      in mjd seconds
+    #         'cmd' (string)          command string (for COMMAND col in FLAG_CMD)
+    #         'type' (string)         'FLAG' / 'UNFLAG'
+    #         'applied' (bool)        set to True here on read-in
+    #         'level' (int)           set to 0 here on read-in
+    #         'severity' (int)        set to 0 here on read-in
+    #
+    # NOTE: flag sorting is needed to avoid error "Too many flagging agents instantiated"
+    # If myflagsort=''              keep individual flags separate
+    #              ='antenna'       combine all flags with a particular antenna
+    #
+    #
+    # Check if any operation is needed
+    if myantenna == '' and myreason == '' and myflagsort == '':
+        print 'No selection or sorting needed - sortflags returning input dictionary'
+        casalog.post('No selection or sorting needed - sortflags returning input dictionary'
+                     )
+        flagd = myflags
+        return flagd
+    #
+    flagd = {}
+    nflagd = 0
+    keylist = myflags.keys()
+    print 'Selecting from ' + str(keylist.__len__()) \
+        + ' flagging commands'
+    if keylist.__len__() > 0:
+        #
+        # Sort by key
+        #
+        keylist.sort()
+        #
+        # Construct flag command list for selected ant,reason
+        #
+    # print 'Selecting flags by antenna="'+str(myantenna)+'"'
+        casalog.post('Selecting flags by antenna="' + str(myantenna)
+                     + '"')
+        myantlist = myantenna.split(',')
+
+    # print 'Selecting flags by reason="'+str(myreason)+'"'
+        casalog.post('Selecting flags by reason="' + str(myreason) + '"'
+                     )
+        myreaslist = []
+    # Parse myreason
+        if type(myreason) == str:
+            if myreason == '':
+                print 'WARNING: reason= is treated as selection on a blank REASON!'
+                casalog.post('WARNING: reason= is treated as selection on a blank REASON!'
+                             , 'WARN')
+            if myreason != 'Any':
+                myreaslist.append(myreason)
+        elif type(myreason) == list:
+            myreaslist = myreason
+        else:
+            print 'ERROR: reason contains unallowed variable type'
+            casalog.post('ERROR: reason contains unknown variable type'
+                         , 'SEVERE')
+            return
+        if myreaslist.__len__() > 0:
+            print 'Selecting for reasons: ' + str(myreaslist)
+            casalog.post('Selecting for reasons: ' + str(myreaslist))
+        else:
+            print 'No selection on reason'
+            casalog.post('No selection on reason')
+
+    # Note antenna and reason selection checks for inclusion not exclusivity
+        doselect = myantenna != '' or myreaslist.__len__() > 0
+
+    # Now loop over flags, break into sorted and unsorted groups
+        nsortd = 0
+        sortd = {}
+        sortdlist = []
+        nunsortd = 0
+        unsortd = {}
+        unsortdlist = []
+        if myflagsort == 'antenna':
+        # will be resorting by antenna
+            for key in keylist:
+                myd = myflags[key]
+                mymode = myd['mode']
+                ant = myd['antenna']
+        # work out number of selections for this flag command
+                nselect = 0
+                if myd.has_key('timerange'):
+                    if myd['timerange'] != '':
+                        nselect += 1
+                if myd.has_key('spw'):
+                    if myd['spw'] != '':
+                        nselect += 1
+                if myd.has_key('field'):
+                    if myd['field'] != '':
+                        nselect += 1
+                if myd.has_key('corr'):
+                    if myd['corr'] != '':
+                        nselect += 1
+                if myd.has_key('scan'):
+                    if myd['scan'] != '':
+                        nselect += 1
+                if myd.has_key('intent'):
+                    if myd['intent'] != '':
+                        nselect += 1
+                if myd.has_key('feed'):
+                    if myd['feed'] != '':
+                        nselect += 1
+                if myd.has_key('uvrange'):
+                    if myd['uvrange'] != '':
+                        nselect += 1
+                if myd.has_key('observation'):
+                    if myd['observation'] != '':
+                        nselect += 1
+        # check if we can sort this by antenna
+                antsort = False
+        # can only sort mode manualflag together
+                if mymode == 'online':
+                    antsort = nselect == 1
+                elif mymode == '' or mymode == 'manualflag':
+            # must have non-blank antenna selection
+                    if ant != '':
+                # exclude flags with multiple/no selection
+                        if myd.has_key('timerange'):
+                            antsort = myd['timerange'] != '' \
+                                and nselect == 1
+
+                if antsort:
+                    if ant.count('&') > 0:
+                # for baseline specifications split on ;
+                        antlist = ant.split(';')
+                    else:
+                # for antenna specifications split on ,
+                        antlist = ant.split(',')
+            # break this flag by antenna
+                    for a in antlist:
+                        if myantenna == '' or myantlist.count(a) > 0:
+                            addf = False
+                            reas = myd['reason']
+                            reaslist = reas.split(',')
+                            reastr = ''
+                            if myreaslist.__len__() > 0:
+                                for r in myreaslist:
+                                    if r == reas or reaslist.count(r) \
+    > 0:
+                                        addf = True
+                    # check if this is a new reason
+                                        if reastr != '':
+                                            rlist = reastr.split(',')
+                                            if rlist.count(r) == 0:
+                                                reastr += ',' + r
+                                        else:
+                                            reastr = r
+                            else:
+                                addf = True
+                                reastr = reas
+                #
+                            if addf:
+                    # check if this is a new antenna
+                                if sortd.has_key(a):
+                        # Already existing flag for this antenna, add this one
+                                    t = sortd[a]['timerange']
+                                    tlist = t.split(',')
+                                    timelist = myd['timerange'
+        ].split(',')
+                                    for tim in timelist:
+                            # check if this is a new timerange
+                                        if tlist.count(tim) == 0:
+                                            t += ',' + tim
+                                    sortd[a]['timerange'] = t
+                                    reas = sortd[a]['reason']
+                                    if reastr != '':
+                                        reas += ',' + reastr
+                                    sortd[a]['reason'] = reas
+                    # adjust timerange in command string
+                                    cmdstr = ''
+                                    cmdlist = sortd[a]['cmd'].split()
+                                    for cmd in cmdlist:
+                                        (cmdkey, cmdval) = cmd.split('='
+        )
+                                        if cmdkey == 'timerange':
+                                            cmdstr += " timerange='" \
+    + t + "'"
+                                        elif cmdkey == 'reason':
+                                            cmdstr += " reason='" \
+    + reastr + "'"
+                                        else:
+                                            cmdstr += ' ' + cmd
+                                    sortd[a]['cmd'] = cmdstr
+                    # adjust other keys
+                                    if myd['level'] > sortd[a]['level']:
+                                        sortd[a]['level'] = myd['level']
+                                    if myd['severity'] \
+    > sortd[a]['severity']:
+                                        sortd[a]['severity'] = \
+    myd['severity']
+                                else:
+                        # add this flag (copy most of it)
+                                    sortd[a] = myd
+                                    sortd[a]['id'] = a
+                                    sortd[a]['antenna'] = a
+                                    sortd[a]['reason'] = reastr
+                else:
+            # cannot compress flags from this mode, add to unsortd instead
+            # doesn't clash
+                    unsortd[nunsortd] = myd
+                    nunsortd += 1
+            sortdlist = sortd.keys()
+            nsortd = sortdlist.__len__()
+            unsortdlist = unsortd.keys()
+        else:
+        # All flags are in unsorted list
+            unsortd = myflags.copy()
+            unsortdlist = unsortd.keys()
+            nunsortd = unsortdlist.__len__()
+
+        print 'Found ' + str(nsortd) + ' sorted flags and ' \
+            + str(nunsortd) + ' incompressible flags'
+        casalog.post('Found ' + str(nsortd) + ' sorted flags and '
+                     + str(nunsortd) + ' incompressible flags')
+
+    # selection on unsorted flags
+        if doselect and nunsortd > 0:
+            keylist = unsortd.keys()
+            for key in keylist:
+                myd = unsortd[key]
+                ant = myd['antenna']
+                antlist = ant.split(',')
+                reas = myd['reason']
+                reaslist = reas.split(',')
+        # break this flag by antenna
+                antstr = ''
+                reastr = ''
+                addf = False
+
+                for a in antlist:
+                    if myantenna == '' or myantlist.count(a) > 0:
+                        addr = False
+                        if myreaslist.__len__() > 0:
+                            for r in myreaslist:
+                                if reas == r or reaslist.count(r) > 0:
+                                    addr = True
+                    # check if this is a new reason
+                                    rlist = reastr.split(',')
+                                    if reastr != '':
+                                        rlist = reastr.split(',')
+                                        if rlist.count(r) == 0:
+                                            reastr += ',' + r
+                                    else:
+                                        reastr = r
+                        else:
+                            addr = True
+                            reastr = reas
+                        if addr:
+                            addf = True
+                            if antstr != '':
+                    # check if this is a new antenna
+                                alist = antstr.split(',')
+                                if alist.count(a) == 0:
+                                    antstr += ',' + a
+                            else:
+                                antstr = a
+                if addf:
+                    flagd[nflagd] = myd
+                    flagd[nflagd]['antenna'] = antstr
+                    flagd[nflagd]['reason'] = reastr
+                    nflagd += 1
+            flagdlist = flagd.keys()
+        elif nunsortd > 0:
+        # just copy to flagd w/o selection
+            flagd = unsortd.copy()
+            flagdlist = flagd.keys()
+            nflagd = flagdlist.__len__()
+
+        if nsortd > 0:
+        # Add sorted keys back in to flagd
+            print 'Adding ' + str(nsortd) + ' sorted flags to ' \
+                + str(nflagd) + ' incompressible flags'
+            casalog.post('Adding ' + str(nsortd) + ' sorted flags to '
+                         + str(nflagd) + ' incompressible flags')
+            sortdlist.sort()
+            for skey in sortdlist:
+                flagd[nflagd] = sortd[skey]
+                nflagd += 1
+
+        if nflagd > 0:
+            print 'Found total of ' + str(nflagd) \
+                + ' flags meeting selection/sorting criteria'
+            casalog.post('Found total of ' + str(nflagd)
+                         + ' flags meeting selection/sorting criteria')
+        else:
+            print 'No flagging commands found meeting criteria'
+            casalog.post('No flagging commands found meeting criteria')
+    else:
+        print 'No flags found in input dictionary'
+        casalog.post('No flags found in input dictionary')
+
+    return flagd
+
+
+# Done
 
 
 def writeFlagCmd(msfile, myflags, vrows, applied):
