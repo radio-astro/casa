@@ -344,8 +344,11 @@ def tflagdata(vis,
             if vrows.__len__() == 0:
                 raise Exception, 'There are no valid commands in list'
             
-            unionpars = fh.getUnion(flaglist)
+            unionpars = fh.getUnion(mslocal, vis, flaglist)
             tflocal.selectdata(unionpars)
+            
+            casalog.post('The union is', 'DEBUG')
+            casalog.post('%s'%unionpars, 'DEBUG')
             
             # Parse the parameters for each agent in the list
             list2save = setupAgent(tflocal, flagcmd, [], apply)
@@ -369,6 +372,11 @@ def tflagdata(vis,
                 agent_pars['reportdisplay'] = True
                 
             tflocal.parseagentparameters(agent_pars)
+            
+            # Disable saving the parameters to avoid inconsistencies
+            if savepars:
+                casalog.post('Disabling savepars for the display', 'WARN')
+                savepars = False
                     
         # Initialize the agents
         casalog.post('Initializing the agents')
@@ -378,7 +386,8 @@ def tflagdata(vis,
         # TODO: backup for the list
         if flagbackup and writeflags:
             casalog.post('Backup original flags before applying new flags')
-            backupFlags(tflocal, mode, flaglist)
+#            backupFlags(tflocal, mode)
+            fh.backupFlags(tflocal, mode)
         
         # Run the tool
         casalog.post('Running the testflagger tool')
@@ -387,6 +396,7 @@ def tflagdata(vis,
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  
+
             if outfile == '':
                 casalog.post('Saving parameters to FLAG_CMD')        
             else:
@@ -456,7 +466,7 @@ def tflagdata(vis,
 
 
 
-def backupFlags(tflocal, mode, flagcmd):
+def backupFlags(tflocal, mode):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
@@ -495,7 +505,7 @@ def backupFlags(tflocal, mode, flagcmd):
 #                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
 #                           merge='replace')
     tflocal.saveflagversion(versionname=versionname,
-                           comment='backup before applying\"'+flagcmd+'\"on ' + time_string,
+                           comment='backup flags before applying\"on ' + time_string,
                            merge='replace')
 
     # Save flagcmd to flagbackup

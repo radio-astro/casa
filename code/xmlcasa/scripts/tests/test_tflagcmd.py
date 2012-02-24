@@ -343,15 +343,14 @@ class test_XML(test_base):
         
         # Now apply them by selecting the reasons and save in another file
         # 507 cmds crash on my computer.
-#        reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
-        reasons = ['FOCUS_ERROR']
+        reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
         tflagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt',
                  sequential=True)
                 
         # Compare with original XML
-        # Only compare after the memory problem above is solved. For the
-        # moment the origxml.txt file contains all cmds, not only FOCUS_ERROR
-#        self.assertEqual(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
+        self.assertTrue(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
+        
+        # Check that APPLIED column has been updated to TRUE
         
         
     def test_xml2(self):

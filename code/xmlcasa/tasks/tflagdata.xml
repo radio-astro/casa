@@ -847,7 +847,7 @@ tfcrop,extend,unflag,summary)</description>
                    options: True/False
                         The tflagdata task can be run in 'writeflags=False' mode just to inspect the data,
                         or to try different parameters and converge on a set that works for a particular
-                        dataset.
+                        dataset. Use the display parameter to inspect the data.
                     Note: this parameter is disabled when mode='summary'.
 
               sequential -- Run the task in sequential or in parallel. 
@@ -864,7 +864,7 @@ tfcrop,extend,unflag,summary)</description>
                       the data with old and new flags, for all correlations per baseline.
                       -- The GUI allows stepping through all baselines (prev/next) in
                       the current chunk (set by 'ntime'), and stepping to the next-chunk.
-                      -- The 'testautoflag' task can be quit from the GUI, in case it becomes
+                      -- The 'tflagdata' task can be quit from the GUI, in case it becomes
                       obvious that the current set of parameters is just wrong.
                       -- There is an option to stop the display but continue flagging.
 
