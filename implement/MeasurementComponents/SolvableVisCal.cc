@@ -4999,7 +4999,7 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
 	String oMsg( "" );
 
-	oMsg += "# Flux density for ";
+	oMsg += " Flux density for ";
 	oMsg += fldNames(tranidx);
 	oMsg += " in SpW=";
 	oMsg += String::toString<Int>( ispw );
@@ -5037,7 +5037,7 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 	  } else {
 	    oStream.open( oListFile.chars(), ios::out|ios::app );
 	  }
-	  oStream << oMsg << endl << flush;
+	  oStream << "#" << oMsg << endl << flush;
 	  oStream.close();
 	}
 
