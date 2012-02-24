@@ -117,7 +117,7 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
 </xsl:when>
 <xsl:when test="lower-case(@xsi:type)='variant'"><xsl:text disable-output-escaping="yes">variant </xsl:text><xsl:value-of select="../../../@name"/>::<xsl:value-of select="@name"/>_<xsl:value-of select="$mymethod"/>=initialize_variant("");
 </xsl:when>
-<xsl:when test="lower-case(@xsi:type)='record'"><xsl:text disable-output-escaping="yes">variant </xsl:text><xsl:value-of select="../../../@name"/>::<xsl:value-of select="@name"/>_<xsl:value-of select="$mymethod"/>=initialize_record("");
+<xsl:when test="lower-case(@xsi:type)='record'"><xsl:text disable-output-escaping="yes">record </xsl:text><xsl:value-of select="../../../@name"/>::<xsl:value-of select="@name"/>_<xsl:value-of select="$mymethod"/>=initialize_record("");
 </xsl:when>
 		<xsl:otherwise>
 			<xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of select="../../../@name"/>::<xsl:value-of select="@name"/>_<xsl:value-of select="$mymethod"/>= <xsl:value-of select="@xsi:type"/>();
