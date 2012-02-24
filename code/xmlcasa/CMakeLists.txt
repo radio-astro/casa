@@ -332,6 +332,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/simple_cluster.py
   scripts/simple_summary.py
   scripts/parallelSplit.py
+  scripts/filltsys.py
   scripts/task_msmoments.py )
 
 casa_add_tasks( xmlcasa xmlcasa_tasks 
