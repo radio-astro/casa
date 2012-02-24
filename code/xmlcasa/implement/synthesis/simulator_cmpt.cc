@@ -214,13 +214,7 @@ simulator::settimes(const ::casac::variant& integrationtime, const bool usehoura
 	
       }
       casa::Quantity qIntTime(casaQuantity(integrationtime));
-      if(qIntTime.getValue() < 0.){
-	// Negative integration time crashes casa
-	*itsLog << LogIO::SEVERE 
-		<< "Negative integration time is not allowed"
-		<< LogIO::POST;
-      }
-
+      AlwaysAssert(qIntTime.getValue("s")>=0, AipsError);
       rstat=itsSim->settimes(qIntTime, usehourangle, lepoch);
     }
 
