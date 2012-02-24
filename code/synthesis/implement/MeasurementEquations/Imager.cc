@@ -5913,10 +5913,10 @@ Bool Imager::plotuv(const Bool rotate)
 	return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
       plotter->scatter(dbus::af(u),dbus::af(v),"blue","unrotated","hexagon",6,-1,panel_id.getInt( ));
       plotter->scatter(dbus::af(uRotated),dbus::af(vRotated),"red","rotated","ellipse",6,-1,panel_id.getInt( ));
-
+      plotter->release( panel_id.getInt( ) );
     }
     else {
       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
@@ -5928,12 +5928,12 @@ Bool Imager::plotuv(const Bool rotate)
 	return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
       plotter->scatter(dbus::af(u),dbus::af(v),"blue","uv in data","rect",6,-1,panel_id.getInt( ));
       u=u*Float(-1.0);
       v=v*Float(-1.0);
       plotter->scatter(dbus::af(u),dbus::af(v),"red","conjugate","ellipse",6,-1,panel_id.getInt( ));
-
+      plotter->release( panel_id.getInt( ) );
     }
     
     this->unlock();
@@ -6154,7 +6154,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
       return False;
     }
 
-    plotter->release( panel_id.getInt( ) );
+    
 
     if(type=="all"||type==""||type.contains("observed")) {
       plotter->scatter(dbus::af(uvDistance),dbus::af(amp),"blue","observed","hexagon",6,-1,panel_id.getInt( ));
@@ -6169,7 +6169,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
     if((type=="all"||type==""||type.contains("residual")) && (hasCorrected && hasModel)) {
       plotter->scatter(dbus::af(uvDistance),dbus::af(residualAmp),"yellow","residual","cross",6,-1,panel_id.getInt( ));
     }
-
+    plotter->release( panel_id.getInt( ) );
    
 
 
@@ -6273,7 +6273,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	  return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
 
       gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
       IPosition shape = gwt.shape( );
@@ -6287,7 +6287,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
 
       plotter->raster( data, (int) shape[1], (int) shape[0] );
-
+      plotter->release( panel_id.getInt( ) );
 
     }
     else {
@@ -6375,9 +6375,9 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
       plotter->scatter(dbus::af(uvDistance),dbus::af(weights),"blue","","hexagon",4,-1,panel_id.getInt( ));
-
+      plotter->release( panel_id.getInt( ) );
     }
     
 
