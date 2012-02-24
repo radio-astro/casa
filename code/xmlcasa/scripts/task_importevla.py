@@ -31,9 +31,14 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 	#Vers8.3 (3.2.0) GAM 2011-01-18 added switchedpower option (sw power gain/tsys)
 	#Vers8.4 (3.2.0) STM 2011-03-24 fix casalog.post line-length bug
 	#Vers8.5 (3.4.0) STM 2011-12-08 new readflagxml for new Flag.xml format
+	#Vers8.6 (3.4.0) STM 2011-02-22 full handling of new Flag.xml ant+spw+pol flags
+	#
+	if applyflags:
+		fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
+	#
 	try:
                 casalog.origin('importevla')
-		casalog.post('You are using importevla v8.5 STM Updated 2011-12-08')
+		casalog.post('You are using importevla v8.5 STM Updated 2012-02-22')
 		viso = ''
                 casalog.post('corr_mode is forcibly set to all.')
 		if(len(vis) > 0) :
@@ -94,17 +99,24 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 		nflags = 0
 		myflagd = {}
 		if os.access(asdm+'/Flag.xml',os.F_OK):
-		    # Find (and copy) Antenna.xml and Flag.xml
+	            # Find (and copy) Flag.xml
+		    print "  Found Flag.xml in SDM, copying to MS"
+		    casalog.post("Found Flag.xml in SDM, copying to MS")
+		    os.system('cp -rf '+asdm+'/Flag.xml '+viso+'/')
+		    # Find (and copy) Antenna.xml
 		    if os.access(asdm+'/Antenna.xml',os.F_OK):
 		       print "  Found Antenna.xml in SDM, copying to MS"
 		       casalog.post("Found Antenna.xml in SDM, copying to MS")
 		       os.system('cp -rf '+asdm+'/Antenna.xml '+viso+'/')
 	            else:
 		       raise Exception, "Failed to find Antenna.xml in SDM"
-	            #
-		    print "  Found Flag.xml in SDM, copying to MS"
-		    casalog.post("Found Flag.xml in SDM, copying to MS")
-		    os.system('cp -rf '+asdm+'/Flag.xml '+viso+'/')
+		    # Find (and copy) SpectralWindow.xml
+		    if os.access(asdm+'/SpectralWindow.xml',os.F_OK):
+		       print "  Found SpectralWindow.xml in SDM, copying to MS"
+		       casalog.post("Found SpectralWindow.xml in SDM, copying to MS")
+		       os.system('cp -rf '+asdm+'/SpectralWindow.xml '+viso+'/')
+	            else:
+		       raise Exception, "Failed to find SpectralWindow.xml in SDM"
 		    #
 		    # Parse Flag.xml into flag dictionary
 		    #
@@ -124,26 +136,8 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 
 		if flagzero or shadow:
 		    # Get overall MS time range for later use (if needed)
-		    try:
-		        # this might take too long for large MS
-			ms.open(viso)
-			timd = ms.range(["time"])
-			ms.close()
-		    except:
-		        raise Exception, "Error opening MS "+viso 
-		    ms_startmjds = timd['time'][0]
-		    ms_endmjds = timd['time'][1]
-		    t = qa.quantity(ms_startmjds,'s')
-		    ms_starttime = qa.time(t,form="ymd",prec=9)
-		    ms_startdate = qa.time(t,form=["ymd","no_time"])
-		    t0 = qa.totime(ms_startdate+'/00:00:00.00')
-		    t0d = qa.convert(t0,'d')
-		    t0s = qa.convert(t0,'s')
-		    t = qa.quantity(ms_endmjds,'s')
-		    ms_endtime = qa.time(t,form="ymd",prec=9)
-		    # NOTE: could also use values from OBSERVATION table col TIME_RANGE
-		    casalog.post('MS spans timerange '+ms_starttime+' to '+ms_endtime)
-
+		    (ms_startmjds,ms_endmjds,ms_starttime,ms_endtime) = getmsmjds(viso)
+		    
 		# Now add zero and shadow flags
 		if flagzero:
 		    flagz = {}
@@ -225,11 +219,13 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 		        #
 			# First sort the flags by antenna to compress
 			# Needed to avoid error "too many agents"
-			myflagsd = sortflags(myflagd,myflagsort='antenna')
+			myflagsort = 'antpol'
+			myflagsd = sortflags(myflagd,myflagsort)
 		        #
 			# Now flag the data
 			#
-			applyflagcmd(viso, False, myflagsd)
+			reset = False
+			nappl = applyflagcmd(fglocal, viso, False, myflagsd, reset)
 		    else:
 		        print 'No flagging found in Flag.xml'
 			casalog.post('No flagging found in Flag.xml')
@@ -259,7 +255,41 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
         ms.close()
 
 #===============================================================================
+def getmsmjds(vis):
+    # Get start and end times from MS, return in mjds
+    # this might take too long for large MS
+    # NOTE: could also use values from OBSERVATION table col TIME_RANGE
+    mslocal2 = casac.homefinder.find_home_by_name('msHome').create()
+    success = True
+    ms_time1 = ''
+    ms_time2 = ''
+    ms_startmjds=0.0
+    ms_endmjds=0.0
+    try:
+	    mslocal2.open(vis)
+	    timd = mslocal2.range(["time"])
+	    mslocal2.close()
+    except:
+	    success=False
+	    print "Error opening MS "+vis
+    if success:
+	    ms_startmjds = timd['time'][0]
+	    ms_endmjds = timd['time'][1]
+	    t = qa.quantity(ms_startmjds,'s')
+	    t1sd = t['value']
+	    ms_time1 = qa.time(t,form="ymd",prec=9)
+	    t = qa.quantity(ms_endmjds,'s')
+	    t2sd = t['value']
+	    ms_time2 = qa.time(t,form="ymd",prec=9)
+	    casalog.post('MS spans timerange '+ms_time1+' to '+ms_time2)
+    else:
+	    print 'WARNING: Could not open vis as MS to find times'
+	    casalog.post('WARNING: Could not open vis as MS to find times')
+    return (ms_startmjds, ms_endmjds, ms_time1, ms_time2)
+
+#===============================================================================
 # Flag dictionary manipulation routines
+# Same versions as flagcmd v4.2 2012-02-21
 #===============================================================================
 
 def readflagxml(sdmfile, mytbuff):
@@ -285,7 +315,23 @@ def readflagxml(sdmfile, mytbuff):
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
 #
-#   Updated STM v8.4 2011-12-08 handle new SDM Flag.xml format from EVLA
+#   Updated STM 2011-11-02 handle new SDM Flag.xml format from ALMA
+#   Updated STM 2012-02-14 handle spectral window indices, names, IDs
+#   Updated STM 2012-02-21 handle polarization types
+#
+#   Mode to use for spectral window selection in commands:
+#   spwmode =  0 none (flag all spw)
+#   spwmode =  1 use name
+#   spwmode = -1 use index (counting rows in SpectralWindow.xml)
+#
+#   Mode to use for polarization selection in commands:
+#   polmode =  0 none (flag all pols/corrs)
+#   polmode =  1 use polarization type
+#
+#   CURRENT DEFAULT: Use spw names, flag pols
+    spwmode = 1
+    polmode = 1
+
 #
     try:
         from xml.dom import minidom
@@ -296,7 +342,22 @@ def readflagxml(sdmfile, mytbuff):
     if type(mytbuff)!=float:
         casalog.post('Warning: incorrect type for tbuff, found "'+str(mytbuff)+'", setting to 1.0')
         mytbuff=1.0
-    
+
+    # make sure Flag.xml and Antenna.xml are available (SpectralWindow.xml depends)
+    flagexist = os.access(sdmfile+'/Flag.xml',os.F_OK)
+    antexist = os.access(sdmfile+'/Antenna.xml',os.F_OK)
+    spwexist = os.access(sdmfile+'/SpectralWindow.xml',os.F_OK)
+    if not flagexist:
+        print 'ERROR: Cannot open '+sdmfile+'/Flag.xml'
+	casalog.post('Cannot open '+sdmfile+'/Flag.xml','SEVERE')
+	exit(1)
+    if not antexist:
+        print 'ERROR: Cannot open '+sdmfile+'/Antenna.xml'
+	casalog.post('Cannot open '+sdmfile+'/Antenna.xml','SEVERE')
+	exit(1)
+    if not spwexist:
+	casalog.post('Cannot open '+sdmfile+'/SpectralWindow.xml','WARN')
+
     # construct look-up dictionary of name vs. id from Antenna.xml
     xmlants = minidom.parse(sdmfile+'/Antenna.xml')
     antdict = {}
@@ -310,12 +371,50 @@ def readflagxml(sdmfile, mytbuff):
     print '  Found '+str(rowlist.length)+' antennas in Antenna.xml'
     casalog.post('Found '+str(rowlist.length)+' antennas in Antenna.xml')
 
+    # construct look-up dictionary of name vs. id from SpectralWindow.xml
+    if spwexist:
+        xmlspws = minidom.parse(sdmfile+'/SpectralWindow.xml')
+	spwdict = {}
+	rowlist = xmlspws.getElementsByTagName("row")
+	ispw = 0
+	for rownode in rowlist:
+	    rowname = rownode.getElementsByTagName("name")
+	    spw = str(rowname[0].childNodes[0].nodeValue)
+	    rowid = rownode.getElementsByTagName("spectralWindowId")
+	    spwid = str(rowid[0].childNodes[0].nodeValue)
+	    spwdict[spwid] = {}
+	    spwdict[spwid]['name'] = spw
+	    spwdict[spwid]['index'] = ispw
+	    ispw += 1
+	print '  Found '+str(rowlist.length)+' spw in SpectralWindow.xml'
+	casalog.post('Found '+str(rowlist.length)+' spw in SpectralWindow.xml')
+
+    # report chosen spw and pol modes
+    if spwmode>0:
+	    print 'Will construct spw flags using Names'
+	    casalog.post('Will construct spw flags using names')
+    elif spwmode<0:
+	    print 'Will construct spw flags using table indices'
+	    casalog.post('Will construct spw flags using table indices')
+    else:
+	    print 'Will not set spw dependent flags (flag all spws)'
+	    casalog.post('')
+    #
+    if polmode==0:
+	    print 'Will not set polarization dependent flags (flag all corrs)'
+	    casalog.post('Will not set polarization dependent flags (flag all corrs)')
+    else:
+	    print 'Will construct polarization flags using polarizationType'
+	    casalog.post('Will construct polarization flags using polarizationType')
+    
     # now read Flag.xml into dictionary row by row
     xmlflags = minidom.parse(sdmfile+'/Flag.xml')
     flagdict = {}
     rowlist = xmlflags.getElementsByTagName("row")
     nrows = rowlist.length
     newsdm = -1
+    newspw = -1
+    newpol = -1
     for fid in range(nrows):
         rownode = rowlist[fid]
         rowfid = rownode.getElementsByTagName("flagId")
@@ -331,7 +430,7 @@ def readflagxml(sdmfile, mytbuff):
 		xid = antid.split()
 		nant = int(rownant[0].childNodes[0].nodeValue)
 		if newsdm<0:
-			print '  Found numAntenna must be a new style SDM'
+			print '  Found numAntenna='+str(nant)+' must be a new style SDM'
 			casalog.post('Found numAntenna='+str(nant)+' must be a new style SDM')
 		newsdm=1
 		if nant>0:
@@ -376,34 +475,50 @@ def readflagxml(sdmfile, mytbuff):
 	# NEW SDM ADDITIONS 2011-11-01
 	rownspw = rownode.getElementsByTagName("numSpectralWindow")
 	spwstring = ''
-	if rownspw.__len__()>0:
+	if spwmode!=0 and rownspw.__len__()>0:
 		nspw = int(rownspw[0].childNodes[0].nodeValue)
 		# has a new-style spw specification
+		if newspw<0:
+			if not spwexist:
+				print 'ERROR: Cannot open '+sdmfile+'/SpectralWindow.xml'
+				casalog.post('Cannot open '+sdmfile+'/SpectralWindow.xml','SEVERE')
+				exit(1)
+			print '  Found numSpectralWindow='+str(nspw)+' must be a new style SDM'
+			casalog.post('Found SpectralWindow='+str(nspw)+' must be a new style SDM')
+		newspw=1
 		if nspw>0:
 			rowspwid = rownode.getElementsByTagName("spectralWindowId")
 			spwids = rowspwid[0].childNodes[0].nodeValue
 			xspw = spwids.split()
 			for isp in range(nspw):
-				spid = xspw[2+isp]
-				if spwstring=='':
-					spwstring=spid
+				spid = str(xspw[2+isp])
+				if spwmode>0:
+					spstr = spwdict[spid]['name']
 				else:
-					spwstring+=','+spid
-	# polstring = ''
-	# rownpol = rownode.getElementsByTagName("numPolarizationType")
-	# if rownpol.__len__()>0:
-	# 	npol = int(rownpol[0].childNodes[0].nodeValue)
-	# 	# has a new-style pol specification
-	# 	if npol>0:
-	# 		rowpolid = rownode.getElementsByTagName("PolarizationType")
-	# 		polids = rowpolid[0].childNodes[0].nodeValue
-	# 		xpol = polids.split()
-	# 		for ipol in range(npol):
-	# 			polid = xpol[2+ipol]
-	# 			if polstring=='':
-	# 				polstring=polid
-	# 			else:
-	# 				polstring+=','+polid
+					spstr = str( spwdict[spid]['index'] )
+				if spwstring=='':
+					spwstring=spstr
+				else:
+					spwstring+=','+spstr
+	polstring = ''
+	rownpol = rownode.getElementsByTagName("numPolarizationType")
+	if polmode!=0 and rownpol.__len__()>0:
+		npol = int(rownpol[0].childNodes[0].nodeValue)
+		# has a new-style pol specification
+		if newpol<0:
+			print '  Found numPolarizationType='+str(npol)+' must be a new style SDM'
+			casalog.post('Found numPolarizationType='+str(npol)+' must be a new style SDM')
+		newpol=1
+		if npol>0:
+			rowpolid = rownode.getElementsByTagName("polarizationType")
+			polids = rowpolid[0].childNodes[0].nodeValue
+			xpol = polids.split()
+			for ipol in range(npol):
+				polid = str(xpol[2+ipol])
+				if polstring=='':
+					polstring=polid
+				else:
+					polstring+=','+polid
 	#
         # Construct antenna name and timerange and reason strings
         flagdict[fid]['antenna'] = antname
@@ -414,8 +529,10 @@ def readflagxml(sdmfile, mytbuff):
         cmd = "antenna='"+antname+"' timerange='"+timestr+"'"
 	if spwstring!='':
 		cmd += " spw='"+spwstring+"'"
-	# if polstring!='':
-	# 	cmd += " pol='"+polstring+"'"
+		flagdict[fid]['spw'] = spwstring
+	if polstring!='':
+	 	cmd += " poln='"+polstring+"'"
+		flagdict[fid]['poln'] = polstring
         flagdict[fid]['cmd'] = cmd
 	#
 	flagdict[fid]['type'] = 'FLAG'
@@ -437,8 +554,7 @@ def readflagxml(sdmfile, mytbuff):
     return flags
 # Done
 
-
-def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
+def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
     #
     # Return dictionary of input flags using selection by antenna/reason
     # and grouped/sorted by flagsort.
@@ -454,21 +570,25 @@ def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
     #
     #   Dictionary structure:
     #   fid : 'id' (string)
-    #         'mode' (string)         flag mode '','clip','shadow','quack'
+    #         'mode' (string)         flag mode '','clip','shadow','quack','online'
     #         'antenna' (string)
     #         'timerange' (string)
+    #         'reason' (string)
     #         'time' (float)          in mjd seconds
     #         'interval' (float)      in mjd seconds
-    #         'cmd' (string)          string (for COMMAND col in FLAG_CMD)
+    #         'cmd' (string)          command string (for COMMAND col in FLAG_CMD)
     #         'type' (string)         'FLAG' / 'UNFLAG'
     #         'applied' (bool)        set to True here on read-in
     #         'level' (int)           set to 0 here on read-in
     #         'severity' (int)        set to 0 here on read-in
     #
-    # NOTE: flag sorting is needed to avoid error "Too many flagging agents instantiated"
+    # NOTE: flag sorting is possibly needed to avoid error "Too many flagging agents
+    # instantiated" and will generally speed up flagging in any event
     # If myflagsort=''              keep individual flags separate
     #              ='antenna'       combine all flags with a particular antenna
+    #              ='antspw'        combine antenna+spw flags
     #
+    # Updated STM 2012-02-21 handle poln flags, myflagsort='antspw'
     #
     # Check if any operation is needed
     if myantenna=='' and myreason=='' and myflagsort=='':
@@ -476,6 +596,19 @@ def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
         casalog.post('No selection or sorting needed - sortflags returning input dictionary')
         flagd = myflags
 	return flagd
+    #
+    if myflagsort=='antenna':
+        print 'Will sort flags by antenna'
+	casalog.post('Will sort flags by antenna')
+    elif myflagsort=='antspw':
+        print 'Will sort flags by antenna+spw'
+	casalog.post('Will sort flags by antenna+spw')
+    elif myflagsort=='antpol':
+        print 'Will sort flags by antenna+spw+pol'
+	casalog.post('Will sort flags by antenna+spw+pol')
+    else:
+        print 'Will not sort flags'
+	casalog.post('Will not sort flags')
     #
     flagd={}
     nflagd = 0
@@ -492,42 +625,167 @@ def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
 	#print 'Selecting flags by antenna="'+str(myantenna)+'"'
 	casalog.post('Selecting flags by antenna="'+str(myantenna)+'"')
 	myantlist = myantenna.split(',')
+
 	#print 'Selecting flags by reason="'+str(myreason)+'"'
 	casalog.post('Selecting flags by reason="'+str(myreason)+'"')
-	myreaslist = myreason.split(',')
+	myreaslist = []
+	# Parse myreason
+	if type(myreason)==str:
+	    if myreason=='':
+	        print 'WARNING: reason='' is treated as selection on a blank REASON!'
+		casalog.post('WARNING: reason='' is treated as selection on a blank REASON!', 'WARN')
+	    if myreason!='Any':
+	        myreaslist.append(myreason)
+	elif type(myreason)==list:
+	    myreaslist=myreason
+        else:
+	    print 'ERROR: reason contains unallowed variable type'
+	    casalog.post('ERROR: reason contains unknown variable type','SEVERE')
+	    return
+        if myreaslist.__len__()>0:
+	    print 'Selecting for reasons: '+str(myreaslist)
+	    casalog.post('Selecting for reasons: '+str(myreaslist))
+        else:
+	    print 'No selection on reason'
+	    casalog.post('No selection on reason')
+    
 	# Note antenna and reason selection checks for inclusion not exclusivity
+	doselect = myantenna!='' or myreaslist.__len__()>0
 
 	# Now loop over flags, break into sorted and unsorted groups
-	if myflagsort=='antenna':
+	nsortd = 0
+	sortd = {}
+	sortdlist = []
+	nunsortd = 0
+	unsortd = {}
+	unsortdlist = []
+	if myflagsort=='antenna' or myflagsort=='antspw' or myflagsort=='antpol':
 	    # will be resorting by antenna
-	    nsortd = 0
-	    sortd = {}
 	    for key in keylist:
 	        myd = myflags[key]
-		# can only sort mode manualflag together
 		mymode = myd['mode']
-		if mymode=='' or mymode=='manualflag':
-		    ant = myd['antenna']
-		    antlist = ant.split(',')
-		    # break this flag by antenna
+		ant = myd['antenna']
+		# work out number of selections for this flag command
+		nselect = 0
+		if myd.has_key('timerange'):
+		    if myd['timerange']!='': nselect += 1
+		if (myflagsort!='antspw' and myflagsort!='antpol') and myd.has_key('spw'):
+		    if myd['spw']!='': nselect += 1
+		if myd.has_key('field'):
+		    if myd['field']!='': nselect += 1
+		if myd.has_key('correlation'):
+		    if myd['correlation']!='': nselect += 1
+		if myflagsort!='antpol' and myd.has_key('poln'):
+		    if myd['poln']!='': nselect += 1
+		if myd.has_key('scan'):
+		    if myd['scan']!='': nselect += 1
+                if myd.has_key('intent'):
+                    if myd['intent'] != '': nselect += 1
+		if myd.has_key('feed'):
+		    if myd['feed']!='': nselect += 1
+		if myd.has_key('uvrange'):
+		    if myd['uvrange']!='': nselect += 1
+                if myd.has_key('observation'):
+                    if myd['observation'] != '': nselect += 1
+		# check if we can sort this by antenna
+		antsort = False
+		# can only sort mode manualflag together
+		if mymode=='online':
+		    antsort = nselect==1
+		elif mymode=='' or mymode=='manualflag':
+		    # must have non-blank antenna selection
+		    if ant!='':
+		        # exclude flags with multiple/no selection
+			if myd.has_key('timerange'):
+			    antsort = myd['timerange']!='' and nselect==1
+			
+		if antsort:
+		    # the antennas
+		    if ant.count('&')>0:
+		        # for baseline specifications split on ;
+		        antlist = ant.split(';')
+		    else:
+		        # for antenna specifications split on ,
+		        antlist = ant.split(',')
+		    # the spw
+		    if (myflagsort=='antspw' or myflagsort=='antpol') and myd.has_key('spw'):
+		        spwsort = True
+		        spw = myd['spw']
+		        spwlist = spw.split(',')
+		    else:
+		        spwsort = False
+			spw = ''
+		    if myflagsort=='antpol' and myd.has_key('pol'):
+		        polsort = True
+			poln = myd['poln']
+		        polnlist = poln.split(',')
+		    else:
+		        polsort = False
+			poln = ''
+		    
+		    # construct the joint list
+		    jlist = []
+		    jdict = {}
 		    for a in antlist:
+		        if spwsort:
+			    for s in spwlist:
+			        if polsort:
+				    for p in polnlist:
+				        jx = a+'_spw'+s+'_pol'+p
+					jlist.append(jx)
+					jdict[jx]={}
+					jdict[jx]['antenna']=a
+					jdict[jx]['spw']=s
+					jdict[jx]['poln']=p
+				else:
+				    jx = a+'_spw'+s
+				    jlist.append(jx)
+				    jdict[jx]={}
+				    jdict[jx]['antenna']=a
+				    jdict[jx]['spw']=s
+				    jdict[jx]['poln']=''
+			elif polsort:
+			    for p in polnlist:
+			        jx = a+'_pol'+p
+				jlist.append(jx)
+				jdict[jx]={}
+				jdict[jx]['antenna']=a
+				jdict[jx]['spw']=''
+				jdict[jx]['poln']=p
+			else:
+			    jx = a
+			    jlist.append(jx)
+			    jdict[jx]={}
+			    jdict[jx]['antenna']=a
+			    jdict[jx]['spw']=''
+			    jdict[jx]['poln']=''
+
+		    # break this flag by the criteria
+		    for a in jlist:
 		        if myantenna=='' or myantlist.count(a)>0:
 			    addf = False
 			    reas = myd['reason']
 			    reaslist = reas.split(',')
 			    reastr = ''
-			    for r in reaslist:
-			        if myreason=='' or myreaslist.count(r)>0:
-			            addf = True
-				    # check if this is a new reason
-				    if sortd.has_key(a):
-				        rlist = reastr.split(',')
-					if rlist.count(r)==0:
-					    reastr += ','+r
+			    if myreaslist.__len__()>0:
+			        for r in myreaslist:
+				    if r==reas or reaslist.count(r)>0:
+				        addf = True
+					# check if this is a new reason
+					if reastr!='':
+					    rlist = reastr.split(',')
+					    if rlist.count(r)==0:
+					        reastr += ','+r
+					else:
+					    reastr = r
+			    else:
+			        addf=True
+				reastr = reas
 			    #
 			    if addf:
-			        # check if this is a new antenna
+			        # check if this is a new item
 				if sortd.has_key(a):
+			            # Already existing flag for this antenna, add this one
 				    t = sortd[a]['timerange']
 				    tlist = t.split(',')
 				    timelist = myd['timerange'].split(',')
@@ -536,7 +794,10 @@ def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
 					if tlist.count(tim)==0:
 				            t += ',' + tim
 				    sortd[a]['timerange'] = t
-			            sortd[a]['reason'] = reastr
+				    reas = sortd[a]['reason']
+				    if reastr!='':
+				        reas += ',' + reastr
+				    sortd[a]['reason'] = reas
 				    # adjust timerange in command string
 				    cmdstr = ''
 				    cmdlist = sortd[a]['cmd'].split()
@@ -558,28 +819,34 @@ def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
 			            # add this flag (copy most of it)
 				    sortd[a] = myd
 				    sortd[a]['id'] = a
-				    sortd[a]['antenna'] = a
+				    sortd[a]['antenna'] = jdict[a]['antenna']
+				    if spwsort:
+					    sortd[a]['spw'] = jdict[a]['spw']
+				    if polsort:
+					    sortd[a]['poln'] = jdict[a]['poln']
 				    sortd[a]['reason'] = reastr
 		else:
-		    # cannot compress flags from this mode, add to flagd instead
+		    # cannot compress flags from this mode, add to unsortd instead
 		    # doesn't clash
-		    flagd[nflagd] = myd
-		    nflagd += 1
-
-	    # Add sorted keys back in to flagd
+		    unsortd[nunsortd] = myd
+		    nunsortd += 1
 	    sortdlist = sortd.keys()
 	    nsortd = sortdlist.__len__()
-	    if nsortd>0:
-		print 'Adding '+str(nsortd)+' sorted flags to '+str(nflagd)+' incompressible flags'
-		casalog.post('Adding '+str(nsortd)+' sorted flags to '+str(nflagd)+' incompressible flags')
-	        sortdlist.sort()
-	        for skey in sortdlist:
-	            flagd[nflagd] = sortd[skey]
-		    nflagd += 1
+	    unsortdlist = unsortd.keys()
 	else:
-	    # no antenna sorting, can keep flags as-is (just select)
+	    # All flags are in unsorted list
+	    unsortd = myflags.copy()
+	    unsortdlist = unsortd.keys()
+	    nunsortd = unsortdlist.__len__()
+
+	print 'Found '+str(nsortd)+' sorted flags and '+str(nunsortd)+' incompressible flags'
+	casalog.post('Found '+str(nsortd)+' sorted flags and '+str(nunsortd)+' incompressible flags')
+
+	# selection on unsorted flags
+	if doselect and nunsortd>0:
+	    keylist = unsortd.keys()
 	    for key in keylist:
-	        myd = myflags[key]
+	        myd = unsortd[key]
 		ant = myd['antenna']
 		antlist = ant.split(',')
 		reas = myd['reason']
@@ -588,27 +855,55 @@ def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
 		antstr = ''
 		reastr = ''
 		addf = False
+		
 		for a in antlist:
 		    if myantenna=='' or myantlist.count(a)>0:
 		        addr = False
-		        for r in reaslist:
-			    if myreason=='' or myreaslist.count(r)>0:
-			        addr = True
-				# check if this is a new reason
-				rlist = reastr.split(',')
-				if rlist.count(r)==0:
-				    reastr += ','+r
+			if myreaslist.__len__()>0:
+		            for r in myreaslist:
+			        if reas==r or reaslist.count(r)>0:
+			            addr = True
+				    # check if this is a new reason
+				    rlist = reastr.split(',')
+				    if reastr!='':
+				        rlist = reastr.split(',')
+					if rlist.count(r)==0:
+				            reastr += ','+r
+				    else:
+				        reastr = r
+			else:
+			    addr = True
+			    reastr = reas
 			if addr:
 			    addf = True
-			    # check if this is a new antenna
-			    alist = antstr.split(',')
-			    if alist.count(a)==0:
-			        antstr += ','+a
+			    if antstr!='':
+			        # check if this is a new antenna
+			        alist = antstr.split(',')
+			        if alist.count(a)==0:
+				    antstr += ','+a
+			    else:
+			        antstr = a
 		if addf:
 		    flagd[nflagd] = myd
 		    flagd[nflagd]['antenna'] = antstr
 		    flagd[nflagd]['reason'] = reastr
 		    nflagd += 1
+	    flagdlist = flagd.keys()
+	elif nunsortd>0:
+	    # just copy to flagd w/o selection
+	    flagd = unsortd.copy()
+	    flagdlist = flagd.keys()
+	    nflagd = flagdlist.__len__()
+
+        if nsortd>0:
+	    # Add sorted keys back in to flagd
+	    print 'Adding '+str(nsortd)+' sorted flags to '+str(nflagd)+' incompressible flags'
+	    casalog.post('Adding '+str(nsortd)+' sorted flags to '+str(nflagd)+' incompressible flags')
+	    sortdlist.sort()
+	    for skey in sortdlist:
+	        flagd[nflagd] = sortd[skey]
+		nflagd += 1
+
         if nflagd>0:
 	    print 'Found total of '+str(nflagd)+' flags meeting selection/sorting criteria'
 	    casalog.post('Found total of '+str(nflagd)+' flags meeting selection/sorting criteria')
@@ -622,10 +917,11 @@ def sortflags(myflags=None,myantenna='',myreason='',myflagsort=''):
     return flagd
 # Done
 
-def writeflagcmd(msfile,myflags):
+def writeflagcmd(msfile,myflags,tag=''):
     #
     # Takes input flag dictionary (e.g. from readflagxml) 
     # Save the flag commands to the FLAG_CMD table for msfile
+    # Can change applied tag if requested (tag='applied' or tag='unapplied')
     # Returns number of flags written
     #
     nadd = 0
@@ -657,7 +953,13 @@ def writeflagcmd(msfile,myflags):
 	    typ_list.append( myflags[key]['type'] )
 	    sev_list.append( myflags[key]['severity'] )
 	    lev_list.append( myflags[key]['level'] )
-	    app_list.append( myflags[key]['applied'] )
+	    if tag=='applied':
+		    appl = True
+	    elif tag=='unapplied':
+		    appl = False
+	    else:
+		    appl = myflags[key]['applied']
+	    app_list.append( appl )
 	#
 	# Save to FLAG_CMD table
 	nadd = cmd_list.__len__()
@@ -696,24 +998,44 @@ def writeflagcmd(msfile,myflags):
 
 #===============================================================================
 # Apply flag commands using flagger tool
+# Same versions as flagcmd v4.2 2012-02-21
 #===============================================================================
 
-def applyflagcmd(msfile, flagbackup, myflags):
+def applyflagcmd(fglocal, msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
         #
 	# Takes input flag dictionary myflags (e.g. from readflagxml) 
 	# and applies using flagger tool to MS msfile.
 	#
 	# If flagbackup=True will save copy of flags before flagging.
 	#
+	# If reset=True will reset flags before flagging.
+	#
+	# If flagtype='FLAG' or 'UNFLAG' will override the unflag choice in the 
+	# individual flags
+	#
+	# Returns number of flags applied
+	#
+        # Updated STM 2012-02-21 handle polarization (poln) flags
+	#
+	ncmd = 0
 
-        fg.done()
-        fg.clearflagselection(-1)
+        #fglocal.done()
+        #fglocal.clearflagselection(-1)
+
+	if flagtype=='FLAG' or flagtype=='flag':
+	    mytype='FLAG'
+	elif flagtype=='UNFLAG' or flagtype=='unflag':
+	    mytype='UNFLAG'
+	else:
+	    mytype='Unset'
 
 	try:
 	    if ((type(msfile)==str) & (os.path.exists(msfile))):
-	        fg.open(msfile)
+	        fglocal.open(msfile)
 	    else:
-	        raise Exception, 'MS '+msfile+' not found'
+	        print 'ERROR MS '+msfile+' not found'
+		casalog.post('ERROR MS '+msfile+' not found','SEVERE')
+		return ncmd
 
 	    # ============================
 	    # Important boilerplate:
@@ -721,10 +1043,14 @@ def applyflagcmd(msfile, flagbackup, myflags):
 	    kmodes = {}
 	    # Keys to ignore
 	    iparams = ['reason','flagtime','id','level','severity'] # currently not used
+	    # Keys for online flags
+	    oparams = ['antenna','timerange','correlation','feed','array','spw','field','poln']
 	    # Keys to recognize uparams=Universal sparams=Selection
 	    uparams = [] 
-	    sparams = ['antenna','timerange','correlation','scan','feed','array','uvrange','spw','field']
+	    # SMC CAS-3320: added observation and intent
+	    sparams = ['antenna','timerange','correlation','scan','intent','feed','array','uvrange','observation','spw','field']
 	    aparams = uparams + sparams
+	    kmodes['online'] = oparams
 	    kmodes['manualflag'] = aparams + ['unflag']
 	    kmodes['clip'] = aparams + ['unflag','cliprange','clipexpr','clipcolumn','clipchanavg']
 	    kmodes['quack'] = aparams + ['unflag','quackinterval','quackmode','quackincrement']
@@ -737,42 +1063,31 @@ def applyflagcmd(msfile, flagbackup, myflags):
 	    nkeys = keylist.__len__()
 	    casalog.post('Found '+str(nkeys)+' flags to apply')
 	    if nkeys>0:
-	        fg.setdata()
+	        fglocal.setdata()
 		cmdlist = []
 		param_set = {}
 		for key in keylist:
+	            # Get command from dictionary (must be there)
 	            cmd = myflags[key]['cmd']
+		    # Get optional type from dictionary
+		    if myflags[key].has_key('type'):
+		        intype=myflags[key]['type']
+			if intype=='FLAG' or intype=='flag':
+			    intype='FLAG'
+		        elif intype=='UNFLAG' or intype=='unflag':
+			    intype='UNFLAG'
+		        else:
+			    intype='Unset'
+		    else:
+		        intype='Unset'
+			    
 		    if debug: print 'Processing command '+cmd
 		    # Parse each command - currently just split by whitespace into key=value strings
 		    params = {}
 		    param_list = ''
 		    # First ignore comment lines starting with "#"
 		    if cmd[:1]!='#':
-		        mycmd = cmd.split()
-			for x in mycmd:
-			    # expect each atomic command to be a key=value pair, split on '='
-			    # expects only one = in string
-			    if x.count('=')==1:
-				xs = x.split('=')
-			    elif x=='#':
-				# start of a comment
-				break
-			    else:
-				raise Exception(str(x)+' not a key=value pair')
-			    xkey=xs[0]
-			    xval=xs[1]
-			    if xkey=='':
-				raise Exception(str(x)+' no non-blank key')
-			    if debug: print xkey+' has value '+str(xval)
-			    # check to see if this one is a repeat
-			    if params.has_key(xkey):
-				# a repeat
-				print str(x)+' has duplicate key, using only first instance'
-			    else:
-				# strip external quotes from value
-				if xval.count("'")>0: xval=xval.strip("'")
-				if xval.count('"')>0: xval=xval.strip('"')
-				params[xkey] = xval
+			params = parse_cmd(cmd)
 
 			# should now have list of parsed params and values
 			if params.__len__() > 0:
@@ -785,8 +1100,37 @@ def applyflagcmd(msfile, flagbackup, myflags):
 				mode = 'clip'
 			    elif params.has_key('quackinterval'):
 				mode = 'quack'
+			    elif myflags[key].has_key('mode'):
+			        mode = myflags[key]['mode']
+				if mode=='': mode = 'manualflag'
 			    else:
-				mode = 'manualflag'
+			        mode = 'manualflag'
+			    if mode!='shadow':
+			        # Logic tree for unflag
+			        if mytype=='FLAG':
+			            # user has chosen to override flag
+				    dounflag=False
+			        elif mytype=='UNFLAG':
+			            # user has chosen to override unflag
+				    dounflag=True
+				elif params.has_key('unflag'):
+				    # explict unflag in command string
+				    if params['unflag']:
+				        dounflag=True
+				    else:
+				        dounflag=False
+				elif intype=='FLAG':
+			            # user has chosen to override flag
+				    dounflag=False
+			        elif intype=='UNFLAG':
+			            # user has chosen to override unflag
+				    dounflag=True
+			        else:
+				    # default to flagging
+				    dounflag=False
+				# Now implement choice (possibly adding)
+				params['unflag'] = dounflag
+						
 			    if kmodes.has_key(mode):
 				# valid mode, check for known params
 				param_i = {}
@@ -816,40 +1160,49 @@ def applyflagcmd(msfile, flagbackup, myflags):
 				if param_set.has_key(mode):
 				    n = param_set[mode].__len__()
 				    name = mode+'_'+str(n)
-				    param_set[mode][name] = param_i
+				    param_set[mode][name] = param_i.copy()
 				else:
 				    name = mode+'_0'
 				    param_set[mode]={}
-				    param_set[mode][name] = param_i
+				    param_set[mode][name] = param_i.copy()
 				cmdlist.append(param_list)
 				# Done with this flag command
 			    else:
 				print ' Warning: ignoring unknown mode '+mode
 	        # Were any valid flagging commands set up?
+		if cmdlist.__len__()>0:
+		    if reset:
+		        print 'WARNING: Will reset flags before application'
+			casalog.post('Will reset flags before application','WARN')
 		# Process these for each mode
 		modelist = param_set.keys()
 		modelist.sort()
 		for mode in modelist:
 		    nf = param_set[mode].__len__()
 		    if nf > 0:
-			fg.setdata()
-			fg.clearflagselection(-1)
+			print 'Processing '+str(nf)+' flagging commands for mode '+mode
+			casalog.post('Processing '+str(nf)+' flagging commands for mode '+mode)
+			fglocal.setdata()
+			fglocal.clearflagselection(-1)
 			for s in param_set[mode].keys():
 			    param_i = param_set[mode][s]
 			    if mode=='shadow':
 			        if debug: print 'Applying shadow with params: ',param_i
 				if param_i.__len__()>0:
-				    fg.setshadowflags(**param_i)
+				    fglocal.setshadowflags(**param_i)
 			        else:
-				    fg.setshadowflags()
+				    fglocal.setshadowflags()
 			    else:
 			        if param_i.__len__()>0:
-				    fg.setmanualflags(**param_i)
+				    fglocal.setmanualflags(**param_i)
 			        else:
-				    fg.setmanualflags()
+				    fglocal.setmanualflags()
 			if flagbackup:
-			    backup_cmdflags('importevla_'+mode)
-			fg.run()
+			    backup_cmdflags(fglocal, 'flagcmd_'+mode)
+			if reset:
+			    fglocal.run(reset=True)
+		        else:
+			    fglocal.run()
 			print 'Applied '+str(nf)+' flagging commands for mode '+mode
 			casalog.post('Applied '+str(nf)+' flagging commands for mode '+mode)
 		
@@ -863,16 +1216,57 @@ def applyflagcmd(msfile, flagbackup, myflags):
 		    casalog.post('Warning: no valid flagging commands executed')
 
         except Exception, instance:
-                fg.done()
+                fglocal.done()
                 print '*** Error ***', instance
                 #raise
-        fg.done()
+        fglocal.done()
+
+	return ncmd
+
+def parse_cmd(cmd):
+	# Parse a command string into param key=val pairs
+	params = {}
+	param_list = ''
+	mycmd = cmd.split()
+	for x in mycmd:
+		# expect each atomic command to be a key=value pair, split on '='
+		# expects only one = in string
+		if x.count('=')==1:
+			xs = x.split('=')
+		elif x=='#':
+			# start of a comment
+			break
+		else:
+			raise Exception(str(x)+' not a key=value pair')
+		xkey=xs[0]
+		xval=xs[1]
+		if xkey=='':
+			raise Exception(str(x)+' no non-blank key')
+		# strip external quotes from key (added STM 20111019)
+		if xkey.count("'")>0: xkey=xkey.strip("'")
+		if xkey.count('"')>0: xkey=xkey.strip('"')
+
+		if debug: print xkey+' has value '+str(xval)
+		# check to see if this one is a repeat
+		if params.has_key(xkey):
+			# a repeat
+			print str(x)+' has duplicate key, using only first instance'
+		else:
+			# strip external quotes from value
+			if xval.count("'")>0: xval=xval.strip("'")
+			if xval.count('"')>0: xval=xval.strip('"')
+			params[xkey] = xval
+
+	return params
 
 def parse_cmdparams(params):
 	# rename some parameters,
 	# in order to match the interface of fg.tool
 	#
 	# validate parameter quackmode
+	#
+        # Updated STM v4.2 2012-02-21 handle polarization (poln) flags
+	#
 
         if params.has_key('quackmode') and \
           not params['quackmode'] in ['beg', 'endb', 'end', 'tail']:
@@ -884,6 +1278,32 @@ def parse_cmdparams(params):
 	if params.has_key('timerange'):
 		params['time']=params['timerange']
 		del(params['timerange'])
+	if params.has_key('poln'):
+		# STM 2012-02-21 Kludge for no poln selection
+		# flags all cross-corrs
+		# does not handle mixed linears and circs
+		pp = params['poln']
+		if pp.count('R')>0:
+			if pp.count('L')>0:
+				corr = 'RR,RL,LR,LL'
+			else:
+				corr = 'RR,RL,LR'
+		elif pp.count('L')>0:
+			corr = 'LL,LR,RL'
+		elif pp.count('X')>0:
+			if pp.count('Y')>0:
+				corr = 'XX,XY,YX,YY'
+			else:
+				corr = 'XX,XY,YX'
+		elif pp.count('Y')>0:
+			corr = 'YY,YX,XY'
+		#	
+		if params.has_key('correlation'):
+			corp = params['correlation']
+			params['correlation']=corp + ',' + corr
+		else:
+			params['correlation']=corr
+		del(params['poln'])
 	if params.has_key('cliprange'):
 		v = params['cliprange']
 		# turn string into [min,max] range
@@ -893,7 +1313,10 @@ def parse_cmdparams(params):
 		params['cliprange'] = [rmin,rmax]
 		params['outside']=False
 	if params.has_key('clipoutside'):
-		params['outside'] = params['clipoutside']
+		if type(params['clipoutside'])==str:
+			params['outside'] = eval(params['clipoutside'])
+		else:
+			params['outside'] = params['clipoutside']
 		del params['clipoutside']
 	if params.has_key('clipexpr'):
 		# Unpack using underscore, e.g. 'ABS_RR' => 'ABS RR'
@@ -903,15 +1326,24 @@ def parse_cmdparams(params):
 		elif params['clipexpr']=='all':
 			print " clipexpr='all' not implemented, using ABS RR"
 			params['clipexpr'] = 'ABS RR'
+	if params.has_key('clipchanavg'):
+		if type(params['clipchanavg'])==str:
+			params['clipchanavg'] = eval(params['clipchanavg'])
         if params.has_key('autocorr'):
-		params['autocorrelation'] = params['autocorr']
+		if type(params['autocorr'])==str:
+			params['autocorrelation'] = eval(params['autocorr'])
+		else:
+			params['autocorrelation'] = params['autocorr']
 		del params['autocorr']
         if params.has_key('quackinterval'):
 		params['quackinterval'] = float(params['quackinterval'])
+        if params.has_key('quackincrement'):
+		if type(params['quackincrement'])==str:
+			params['quackincrement'] = eval(params['quackincrement'])
         if params.has_key('diameter'):
 		params['diameter'] = float(params['diameter'])
 
-def backup_cmdflags(mode):
+def backup_cmdflags(fglocal, mode):
 
         # Create names like this:
         # before_manualflag_1,
@@ -922,7 +1354,7 @@ def backup_cmdflags(mode):
         # Generally  before_<mode>_<i>, where i is the smallest
         # integer giving a name, which does not already exist
        
-        existing = fg.getflagversionlist(printflags=False)
+        existing = fglocal.getflagversionlist(printflags=False)
 
 	# remove comments from strings
 	existing = [x[0:x.find(' : ')] for x in existing]
@@ -939,7 +1371,7 @@ def backup_cmdflags(mode):
 
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-        fg.saveflagversion(versionname=versionname,
+        fglocal.saveflagversion(versionname=versionname,
                            comment='flagcmd autosave before ' + mode + ' on ' + time_string,
                            merge='replace')
 
