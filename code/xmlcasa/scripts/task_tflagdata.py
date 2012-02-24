@@ -593,7 +593,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 antennafile = ''
                 modepars = fh.getLinePars(cmdline,shadowpars)
                 # Get antennafile
-                if modepars['antennafile'] != '':
+                if (modepars.__contains__('antennafile') and 
+                    modepars['antennafile'] != ''):
                     antennafile = modepars['antennafile']
                     addantenna = fh.readAntennaList(antennafile)
                     modepars['addantenna'] = addantenna

@@ -409,7 +409,14 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 modepars = fh.getLinePars(cmdline,quackpars)
             elif cmdline.__contains__('shadow'):
                 mode = 'shadow'
+                antennafile = ''
                 modepars = fh.getLinePars(cmdline,shadowpars)
+                # Get antennafile
+                if (modepars.__contains__('antennafile') and
+                    modepars['antennafile'] != ''):
+                    antennafile = modepars['antennafile']
+                    addantenna = fh.readAntennaList(antennafile)
+                    modepars['addantenna'] = addantenna
             elif cmdline.__contains__('elevation'):
                 mode = 'elevation'
                 modepars = fh.getLinePars(cmdline,elevationpars)

@@ -1137,14 +1137,27 @@ def readAntennaList(infile=''):
     
     """
 
-    try:
-        if(os.path.exists(infile)):
+    if (type(infile) == str) & os.path.exists(infile):
+        try:
             ifile = file(infile,'r');
-            thelist = ifile.readlines();
-            ifile.close();
-            
-    except:
+        except:
             raise Exception, 'Error opening file ' + infile
+        
+        thelist = ifile.readlines();
+        ifile.close();
+    else:
+        raise Exception, \
+            'File %s not found - please verify the name'%infile
+
+#    try:
+#        if(os.path.exists(infile)):
+#            print 'file exists'
+#            ifile = file(infile,'r');
+#            thelist = ifile.readlines();
+#            ifile.close();
+#            
+#    except:
+#            raise Exception, 'Error opening file ' + infile
     
     
     cleanlist=[];
