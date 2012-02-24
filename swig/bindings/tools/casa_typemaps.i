@@ -116,7 +116,10 @@ using namespace casac;
 }
 
 %typemap(typecheck) record& {
-   $1 = PyDict_Check($input);
+   if($input)
+     $1 = PyDict_Check($input);
+   else
+     $1 = 1
 }
 
 %typemap(in) BoolVec {

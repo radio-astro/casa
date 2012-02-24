@@ -1025,11 +1025,11 @@ qa.time(time)                    # Format with quanta
    
 <output>  
   
-     <param type="int" direction="out" name="coordinate">
+     <param type="int" name="coordinate">
      <description>Coordinate number</description>
      </param>
   
-     <param type="int" direction="out" name="axisincoordinate">
+     <param type="int" name="axisincoordinate">
      <description>Axis in the coordinate</description>
      </param>
 </output>  
@@ -1087,11 +1087,11 @@ the Linear Coordinate (coordinate 1).
    
 <output>  
   
-     <param type="intArray" direction="out" name="pixel">
+     <param type="intArray" name="pixel">
      <description>Pixel axes</description>
      </param>
   
-     <param type="intArray" direction="out" name="world">
+     <param type="intArray" name="world">
      <description>World axes</description>
      </param>
 </output>  

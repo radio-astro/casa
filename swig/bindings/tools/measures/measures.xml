@@ -1092,15 +1092,16 @@ print me.measure(me.uvw('itrf','30deg','40deg','10m'), 'j2000')
 
      <param type="record" direction="in" name="v">
      <description>baseline measure</description>
+     <value/>
      </param>
 
 </input>
 <output>
-     <param type="record" direction="out" name="dot">
+     <param type="record" name="dot">
      <description>uvw-dot (quantity array)</description>
      </param>
 
-     <param type="record" direction="out" name="xyz">
+     <param type="record" name="xyz">
      <description>uvw (quantity array)</description>
      </param>
 
@@ -1282,10 +1283,11 @@ print a
 
      <param type="record" direction="in" name="v">
      <description>measure (baseline, position or uvw measure)</description>
+     <value/>
      </param>
 </input>
 <output>
-     <param type="record" direction="out" name="xyz">
+     <param type="record" name="xyz">
      <description>uvw (quantity array)</description>
      </param>
 </output>

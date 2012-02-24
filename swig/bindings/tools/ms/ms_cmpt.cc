@@ -565,7 +565,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 
 
 bool
-ms::summary(::casac::record& header, const bool verbose, const std::string& listfile)
+ms::summary(bool verbose, const std::string& listfile, ::casac::record& header)
 {
   Bool rstat(False);
   try {

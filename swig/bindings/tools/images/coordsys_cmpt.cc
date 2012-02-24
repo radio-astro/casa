@@ -612,8 +612,8 @@ coordsys::epoch()
 }
 
 bool
-coordsys::findaxis(int& coordinate, int& axisInCoordinate,
-		   const bool isWorld, const int axis)
+coordsys::findaxis( const bool isWorld, const int axis,
+		int& coordinate, int& axisInCoordinate)
 {
   *itsLog << LogOrigin("coordsys", "findaxis");
 
@@ -634,9 +634,8 @@ coordsys::findaxis(int& coordinate, int& axisInCoordinate,
 }
 
 bool
-coordsys::findcoordinate(std::vector<int>& pixelaxes,
-			 std::vector<int>& worldaxes,
-			 const std::string& coordType, const int which)
+coordsys::findcoordinate( const std::string& coordType, const int which,
+		         std::vector<int>& pixelaxes, std::vector<int>& worldaxes)
 {
   *itsLog << LogOrigin("coordsys", "findcoordinate");
 
@@ -3220,7 +3219,7 @@ coordsys::units(const std::string& cordtype)
   } else {
     std::vector<int> pixelaxes;
     std::vector<int> worldaxes;
-    if (findcoordinate (pixelaxes, worldaxes, cordtype, 0)) {
+    if (findcoordinate (cordtype, 0, pixelaxes, worldaxes)) {
       int n = pixelaxes.size();
       for (int i = 0; i < n; i++) {
 	rstat.push_back(units[pixelaxes[i]]);

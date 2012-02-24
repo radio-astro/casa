@@ -1085,7 +1085,7 @@ record2MeasureHolder(String& error, MeasureHolder& mh, const ::casac::record &r)
 
 // Baseline v converted to uvw and uvwdot
 ::casac::record*
-measures::touvw(::casac::record& dotOut, ::casac::record& xyzOut, const ::casac::record& v)
+measures::touvw(const ::casac::record& v, ::casac::record& xyzOut, ::casac::record& dotOut )
 {
   String error;
   ::casac::record *retval(0);
@@ -1217,7 +1217,7 @@ expand(Quantum<Vector<Double> > &xyzres, MeasureHolder &val) {
 
 // expand to baselines from positions v
 ::casac::record*
-measures::expand(::casac::record& xyzres, const ::casac::record& v)
+measures::expand(const ::casac::record& v, ::casac::record& xyzres )
 {
   String error;
   ::casac::record *retval= 0;

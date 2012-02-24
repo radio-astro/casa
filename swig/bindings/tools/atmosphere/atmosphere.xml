@@ -253,51 +253,51 @@ print at.updateAtmProfile(alt, new_tmp, pre, hum, wvl, h0)
    </shortdescription>
    <output>
 
-     <param type="double" direction="out" name="altitude" units="m">
+     <param type="double" name="altitude" units="m">
      <description>Site altitude - Quantity with units of altitude, meter
        </description>
      </param>
 
-     <param type="double" direction="out" name="temperature" units="K">
+     <param type="double" name="temperature" units="K">
      <description>Ambient ground temperature - Quantity with units of temperature, K
        </description>
      </param>
 
-     <param type="double" direction="out" name="pressure" units="mbar">
+     <param type="double" name="pressure" units="mbar">
      <description>Ambient pressure - Quantity with units of pressure, mbar
        </description>
      </param>
 
-     <param type="double" direction="out" name="maxAltitude" units="km">
+     <param type="double" name="maxAltitude" units="km">
      <description>altitude of the top pf the modelled atmosphere -
         Quantity with dimension of length, and units of kilometer
         </description>
      </param>
 
-     <param type="double" direction="out" name="humidity">
+     <param type="double" name="humidity">
      <description>Ground relative humidity used to guess water (0-100)</description>
      </param>
 
-     <param type="double" direction="out" name="dTem_dh" units="K/km">
+     <param type="double" name="dTem_dh" units="K/km">
      <description>Current Tropospheric Lapse Rate (the derivative of temperature with respect to height)
          - Quantity with units of K/km</description>
      </param>
 
-     <param type="double" direction="out" name="dP" units="mbar">
+     <param type="double" name="dP" units="mbar">
      <description>initial pressure step - 
         Quantity with the units of pressure, mb</description>
      </param>
 
-     <param type="double" direction="out" name="dPm">
+     <param type="double" name="dPm">
      <description>pressure multiplicative factor for steps</description>
      </param>
 
-     <param type="double" direction="out" name="h0" units="km">
+     <param type="double" name="h0" units="km">
      <description>Water vapor scale height ( exp distribution ) -
        Quantity with the dimension of length, and units of kilometer </description>
      </param>
 
-     <param type="string" direction="out" name="atmType">
+     <param type="string" name="atmType">
      <description> atmospheric type used to describe the behaviour above
          the tropopause.
          1(tropical),2(mid latitude summer),3(mid latitude winter),

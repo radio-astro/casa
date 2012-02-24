@@ -1840,13 +1840,13 @@ std::vector<bool> image::haslock() {
 }
 
 bool image::histograms(
-	::casac::record& histout, const vector<int>& axes,
+const vector<int>& axes,
 	const ::casac::record& region, const ::casac::variant& mask,
 	const int nbins, const vector<double>& includepix,
 	const bool gauss, const bool cumu, const bool log, const bool list,
 	const string& plotter, const int nx, const int ny,
 	const vector<int>& size, const bool force, const bool disk,
-	const bool /* async */, bool stretch
+	const bool /* async */, bool stretch, casac::record& histout 
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
@@ -2920,8 +2920,8 @@ bool image::twopointcorrelation(
 	}
 }
 
-std::vector<std::string> image::summary(casac::record& header,
-		const std::string& doppler, const bool list, const bool pixelorder) {
+std::vector<std::string> image::summary( const std::string& doppler, const bool list,
+	                        	const bool pixelorder, casac::record& header){
 	std::vector<string> rstat;
 	try {
 		*_log << LogOrigin("image", "summary");

@@ -3165,19 +3165,19 @@ constructor.
    <shortdescription>Convert from pixel to world coordinate wrapped as Measures</shortdescription>
 <!--   
 <output>
-     <param type="record" direction="out" name="intensity">
+     <param type="record" name="intensity">
      <description>Returned intensity quantity for pixel</description>
      </param>
 
-     <param type="record" direction="out" name="direction">
+     <param type="record" name="direction">
      <description>Returned direction measure for pixel</description>
      </param>
 
-     <param type="record" direction="out" name="frequency">
+     <param type="record" name="frequency">
      <description>Returned frequency measure for pixel</description>
      </param>
 
-     <param type="record" direction="out" name="velocity">
+     <param type="record" name="velocity">
      <description>Returned radial velocity measure for pixel</description>
      </param>
 </output>
@@ -5036,7 +5036,7 @@ and acquires just a read lock.
    
 
 <output>  
-     <param type="record" direction="out" name="histout">
+     <param type="record" name="histout">
      <description>record containing the histograms</description>
      </param>
 </output>  
@@ -8757,7 +8757,7 @@ ia.close()
    <shortdescription>Summarize basic information about the image</shortdescription>
    
 <output>  
-     <param type="record" direction="out" name="header">
+     <param type="record" name="header">
      <description>Header information</description>
      </param>
 </output>  
@@ -9904,7 +9904,7 @@ ia.echo(x)
    <shortdescription>returns a variant</shortdescription>
 
 <output>
-     <param type="any" direction="out" name="v">
+     <param type="any" name="v">
      <any type="variant"/>
      <description>a variant</description>
      </param>

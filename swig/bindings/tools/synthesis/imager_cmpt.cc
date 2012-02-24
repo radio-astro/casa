@@ -66,9 +66,8 @@ imager::~imager()
 }
 
 bool
-imager::advise(int& pixels, ::casac::record& cell, int& facets,
-               std::string& phasecenter, const bool takeadvice,
-               const double amplitudeloss, const ::casac::variant& fieldofview)
+imager::advise( const bool takeadvice, const double amplitudeloss, const ::casac::variant& fieldofview,
+	       int& pixels, ::casac::record& cell, int& facets, std::string& phasecenter )
 {
    Bool rstat(False);
    if(hasValidMS_p){
@@ -410,8 +409,8 @@ imager::filter(const std::string& type, const ::casac::variant& bmaj, const ::ca
 }
 
 bool
-imager::fitpsf(::casac::record& bmaj, ::casac::record& bmin, ::casac::record& bpa,
-               const std::string& psf, const bool async)
+imager::fitpsf( const std::string& psf, const bool async,
+	       ::casac::record& bmaj, ::casac::record& bmin, ::casac::record& bpa)
 {
   /*
     bmaj, bmin, and bpa are returned, so they must not be const!
@@ -1204,8 +1203,8 @@ imager::restore(const std::vector<std::string>& model, const std::string& compli
 }
 
 bool
-imager::sensitivity(::casac::record& pointsource, double& relative,
-                    double& sumweights, const bool async)
+imager::sensitivity(const bool async, ::casac::record& pointsource, double& relative,
+                    double& sumweights )
 {
    Bool rstat(False);
    if(hasValidMS_p){

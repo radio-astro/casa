@@ -1228,7 +1228,7 @@ the ms definition itself. -->
   <keyword>summary</keyword>
   <output>
     
-     <param type="record" direction="out" name="header">
+     <param type="record" name="header">
      <description>Header information (PARAMETER IGNORED..its an output)</description>
      </param>
    </output>
@@ -1277,7 +1277,7 @@ the ms definition itself. -->
 
   <keyword>getscansummary</keyword>
   <output>
-     <param type="record" direction="out" name="summary">
+     <param type="record" name="summary">
        <description>Return information (PARAMETER IGNORED..its an output)</description>
      </param>
    </output>
@@ -1295,7 +1295,7 @@ the ms definition itself. -->
   <shortdescription>Get a summary of the spectral windows</shortdescription>
   <keyword>getspectralwindowinfo</keyword>
   <output>
-     <param type="record" direction="out" name="spwInfo">
+     <param type="record" name="spwInfo">
        <description>Return information (PARAMETER IGNORED..its an output)</description>
      </param>
    </output>

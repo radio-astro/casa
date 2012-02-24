@@ -134,19 +134,19 @@ for the beam size both in the plane of the sky and along the $w$ axis.
 
 </input>
 <output>
-     <param type="int" direction="out" name="pixels">
+     <param type="int" name="pixels">
      <description>Number of pixels on a side</description>
      </param>
 
-     <param type="record" direction="out" name="cell">
+     <param type="record" name="cell">
      <description>Recommended maximum cellsize</description>
      </param>
 
-     <param type="int" direction="out" name="facets">
+     <param type="int" name="facets">
      <description>Recommended number of facets on one axis</description>
      </param>
 
-     <param type="MDirection" direction="out" name="phasecenter">
+     <param type="MDirection" name="phasecenter">
      <description>Direction of phase center as a measure</description>
      </param>
 </output>
@@ -1350,15 +1350,15 @@ the weights. Use the function <link anchor="imager:imager.summary.function">summ
  
 </description>
 <output>
-     <param type="record" direction="out" name="bmaj">
+     <param type="record" name="bmaj">
      <description>Major axis of beam</description>
      </param>
 
-     <param type="record" direction="out" name="bmin">
+     <param type="record" name="bmin">
      <description>Minor axis of beam</description>
      </param>
 
-     <param type="record" direction="out" name="bpa">
+     <param type="record" name="bpa">
      <description>Position angle of beam</description>
      </param>
 </output>
@@ -2882,15 +2882,15 @@ of <link anchor="imager:imager.weight.function">weight</link> and <link anchor="
 
 </description>
 <output>
-     <param type="record" direction="out" name="pointsource">
+     <param type="record" name="pointsource">
      <description>Calculated point source sensitivity (Jy/beam)</description>
      </param>
 
-     <param type="double" direction="out" name="relative">
+     <param type="double" name="relative">
      <description>Calculated relative sensitivity</description>
      </param>
 
-     <param type="double" direction="out" name="sumweights">
+     <param type="double" name="sumweights">
      <description>Calculated sum of weights</description>
      </param>
 

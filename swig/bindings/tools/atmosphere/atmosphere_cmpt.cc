@@ -1029,7 +1029,7 @@ atmosphere::getH2OContOpacity(int nc, int spwId)
 
 
 int
-atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, int spwId)
+atmosphere::getDryOpacitySpec(int spwId, std::vector<double>& dryOpacity)
 {
   int nchan(-1);
   try {
@@ -1054,7 +1054,7 @@ atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, int spwId)
 }
 
 int
-atmosphere::getWetOpacitySpec(Quantity& wetOpacity, int spwId)
+atmosphere::getWetOpacitySpec(int spwId, Quantity& wetOpacity)
 {
   int nchan(-1);
   try {
