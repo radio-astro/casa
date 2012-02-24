@@ -70,7 +70,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
-#ifndef __clang__
+#ifdef HAS_OMP
 #include <omp.h>
 #endif
 

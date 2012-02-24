@@ -69,7 +69,7 @@
 #include <synthesis/MSVis/VisSet.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisBuffer.h>
-#ifndef __clang__
+#ifdef HAS_OMP
 #include <omp.h>
 #endif
 

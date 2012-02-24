@@ -661,8 +661,10 @@ Bool Simulator::settimes(const Quantity& integrationTime,
 {
   
   LogIO os(LogOrigin("simulator", "settimes()"));
+  // Negative integration time crashes casa
+  AlwaysAssert(integrationTime.getValue("s")>=0, AipsError);
   try {
-    
+
     integrationTime_p=integrationTime;
     useHourAngle_p=useHourAngle;
     refTime_p=refTime;

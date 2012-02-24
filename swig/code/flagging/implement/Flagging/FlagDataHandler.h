@@ -657,6 +657,10 @@ public:
 	// detached because of the dynamically called destructor
 	VisBufferAutoPtr *visibilityBuffer_p;
 
+	// Vis buffer characteristics (constant values)
+	bool groupTimeSteps_p;
+	Block<int> sortOrder_p;
+
 
 protected:
 
@@ -683,9 +687,7 @@ private:
 
 	// Iteration parameters
 	uShort iterationApproach_p;
-	Block<int> sortOrder_p;
 	Double timeInterval_p;
-	bool groupTimeSteps_p;
 	// Slurp flag
 	bool slurp_p;
 	// Iteration initialization parameters
