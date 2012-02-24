@@ -35,7 +35,7 @@ class ParallelTaskHelper:
         build one job for each referenced ms.
         '''
         try:
-            msTool = mstool.create()
+            msTool = mstool()
             if not msTool.open(self._arg['vis']):
                 raise ValueError, "Unable to open MS %s," % self._arg['vis']
             if not msTool.ismultims():
@@ -68,7 +68,7 @@ class ParallelTaskHelper:
 
     @staticmethod
     def getReferencedMSs(vis):
-        msTool = mstool.create()
+        msTool = mstool()
         if not msTool.open(vis):
             raise ValueError, "Unable to open MS %s." % vis
 
@@ -88,7 +88,7 @@ class ParallelTaskHelper:
         This task really will let us know if we can do the simple form
         of parallelization by invoking on many refernced mss.
         '''
-        msTool = mstool.create()
+        msTool = mstool()
         if not msTool.open(vis):
             raise ValueError, "Unable to open MS %s," % vis
         rtnVal = msTool.ismultims() and \

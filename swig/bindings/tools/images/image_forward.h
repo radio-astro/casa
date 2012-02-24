@@ -1,4 +1,6 @@
+#define NO_INITIALIZE_STATICS 1
 #include <coordsys_cmpt.h>
+#undef NO_INITIALIZE_STATICS
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>

@@ -190,8 +190,10 @@ macro( casa_add_tools out_swig out_sources out_py )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2swigxml.xsl )
     set( _swigh ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h )
     set( _swigi ${CMAKE_CURRENT_BINARY_DIR}/${_base}.i )
+    set( _swigstatics ${CMAKE_CURRENT_BINARY_DIR}/${_base}_statics.cc )
     set( _xsl2 ${CMAKE_SOURCE_DIR}/install/casa2c++h.xsl )
     set( _xsl3 ${CMAKE_SOURCE_DIR}/install/casa2swigi.xsl )
+    set( _xsl4 ${CMAKE_SOURCE_DIR}/install/casa2statics.xsl )
     add_custom_command(
       OUTPUT ${_out_xml}
       COMMAND ${SAXON} ${_xml} ${_xsl} > ${_out_xml}_tmp1
@@ -209,6 +211,12 @@ macro( casa_add_tools out_swig out_sources out_py )
       COMMAND ${SAXON} ${_out_xml} ${_xsl3} > ${_swigi}_tmp2
       COMMAND sed -e \"s/<?xml version=.*//\" ${_swigi}_tmp2 > ${_swigi}
       DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3}
+      )
+    add_custom_command(
+      OUTPUT ${_swigstatics}
+      COMMAND ${SAXON} ${_out_xml} ${_xsl4} > ${_swigstatics}_tmp2
+      COMMAND sed -e \"s/<?xml version=.*//\" ${_swigstatics}_tmp2 > ${_swigstatics}
+      DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl4}
       )
 
     # Then generate the swig interface file
@@ -233,7 +241,7 @@ macro( casa_add_tools out_swig out_sources out_py )
     SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES CPLUSPLUS 1 )
     SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR} -includeall") 
     #SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
-    SWIG_ADD_MODULE(${_base} python ${_swigi} )
+    SWIG_ADD_MODULE(${_base} python ${_swigi} ${_swigstatics})
     SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES}
 	                          ${PYTHON_LIBRARIES}
 				  ${ATM_LIBRARIES}
@@ -250,13 +258,13 @@ macro( casa_add_tools out_swig out_sources out_py )
     set( _outputs
 	    ${_base}_cmpt.h
 	    ${_base}PYTHON_wrap.cxx
+	    ${_base}_statics.cc
 	    )
     set(_outpy ${_base}.py)
     set( ${out_swig} ${${out_swig}} ${_swigi} )
 
     set( ${out_sources} ${${out_sources}} ${_outputs} )
     set( ${out_py} ${${out_py}} ${_outpy} )
-
 
     # Create tool documentation
     if ( NOT ${_base} STREQUAL plotms )    # because there is already a plotms task, and there would be a name conflict!
