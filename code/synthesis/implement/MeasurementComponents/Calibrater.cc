@@ -2050,7 +2050,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& refSpwMap, 
 			   const Vector<String>& tranFields,
 			   const Bool& append,
-			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor) {
+			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			   const String& oListFile) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -2095,7 +2096,8 @@ void Calibrater::fluxscale(const String& infile,
   }
 
   // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor);
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
+    oListFile);
 
 }
 
@@ -2106,7 +2108,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const String& tranFields,
 			   const Bool& append,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-			   Vector<Int>& tranidx) {
+			   Vector<Int>& tranidx,
+			   const String& oListFile) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -2126,7 +2129,8 @@ void Calibrater::fluxscale(const String& infile,
     tranidx=getFieldIdx(tranFields);
 
   // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor);
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
+    oListFile);
 
 }
 
@@ -2136,7 +2140,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& refSpwMap, 
 			   const Vector<Int>& tranField,
 			   const Bool& append,
-			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor) {
+			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			   const String& oListFile) {
 
   //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
 
@@ -2202,7 +2207,8 @@ void Calibrater::fluxscale(const String& infile,
 
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor);
+      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
+        oListFile);
      
       // If no outfile specified, use infile (overwrite!)
       String out(outfile);
