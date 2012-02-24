@@ -272,6 +272,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     baddir = "J3000 19h00m00 -23d00m00"
     badname = "badname"
     badtime = "-100s"
+    badquant = "5bad"
     badnum = -1.
     project = simobserve_unittest_base.thistask+"_bad"
     
@@ -282,7 +283,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         
         for data in self.indata:
             if os.path.exists(data):
-                os.system("rm -r %s" % data)
+                os.system("rm -rf %s" % data)
             os.system("cp -r %s %s" % (self.datapath+data, data))
         
         default(simobserve)
@@ -290,7 +291,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     def tearDown(self):
         for data in self.indata:
             if os.path.exists(data):
-                os.system("rm -r %s" % data)
+                os.system("rm -rf %s" % data)
         if (os.path.exists(self.project)):
             shutil.rmtree(self.project)
 
@@ -303,7 +304,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def test_noProject(self):
         """Test no project name"""
-        
         project = ''
         
         res = simobserve(project=project)
@@ -312,7 +312,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_skymodel(self):
         """Test bad skymodel name"""
-
         skymodel=self.badname
 
         res = simobserve(project=self.project,skymodel=skymodel)
@@ -327,20 +326,17 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
                          skymodel=skymodel)
         self.assertFalse(res)
         
-#         # simobserve so far does not catches this
-#     def testBad_inbright(self):
-#         """Test bad inbright"""
-# 
-#         inbright="-1.2Jy/pixel"
-# 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          inbright=inbright)
-#         self.assertFalse(res)
+    def testBad_inbright(self):
+        """Test bad inbright"""
+        inbright=self.badquant
+
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         inbright=inbright)
+        self.assertFalse(res)
         
     def testBad_indirection(self):
         """Test bad indirection ('J3000' is defaulted to 'J2000')"""
-
         indirection=self.baddir
 
         res = simobserve(project=self.project,skymodel=self.inimage,
@@ -350,42 +346,42 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         # Need to compare MS with one generated with J2000
 
         
-#         # simobserve so far does not catches this
-#     def testBad_incell(self):
-#         """Test bad incell"""
-#
-#         incell=self.badsize
-# 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          incell=incell)
-#         self.assertFalse(res)
+    def testBad_incell(self):
+        """Test bad incell"""
+        incell=self.badquant
+
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         incell=incell)
+        self.assertFalse(res)
+
+
+    def testBad_incenter(self):
+        """Test bad incenter"""
+        # Negaitve and non-frequency quantity are ignored
+        incenter=self.badfreq
+
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         incenter=incenter)
+        self.assertEqual(res,None)
+        # Need to compare MS with one generated with J2000
         
-#         # simobserve so far does not catches this
-#     def testBad_incenter(self):
-#         """Test bad incenter"""
-#
-#         incenter=self.badfreq
-# 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          incenter=incenter)
-#         self.assertFalse(res)
         
-#         # simobserve so far does not catches this
-#     def testBad_inwidth(self):
-#         """Test bad inwidth"""
-#
-#         inwidth=self.badfreq
-# 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          inwidth=inwidth)
-#         self.assertFalse(res)
-        
+    def testBad_inwidth(self):
+        """Test bad inwidth"""
+        # Negaitve and non-frequency quantity are ignored
+        inwidth=self.badfreq
+
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         inwidth=inwidth)
+        self.assertEqual(res,None)
+        # Need to compare MS with one generated with J2000
+
+
     def testBad_complist(self):
         """Test bad complist name"""
-
         complist=self.badname
         
         res = simobserve(project=self.project,complist=complist,
@@ -394,27 +390,25 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         
     def test_notComp(self):
         """Test non-components list complist"""
-
         complist=self.inimage
         
         res = simobserve(project=self.project,complist=complist,
                          totaltime=self.tottime,mapsize=self.mapsize)
         self.assertFalse(res)
 
-#         # simobserve so far does not catches this
-#     def testBad_compwidth(self):
-#         """Test bad compwidth"""
-# 
-#         compwidth=self.badfreq
-# 
-#         res = simobserve(project=self.project,complist=self.incomp,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          compwidth=compwidth)
-#         self.assertFalse(res)
+    def testBad_compwidth(self):
+        """Test bad compwidth"""
+        # not frequency
+        compwidth="2arcsec"
+
+        res = simobserve(project=self.project,complist=self.incomp,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         compwidth=compwidth)
+        self.assertFalse(res)
+
         
     def testBad_ptgfile(self):
         """Test bad ptgfile name"""
-
         setpointings=False
         ptgfile = self.badname
 
@@ -422,6 +416,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
                          totaltime=self.tottime,mapsize=self.mapsize,
                          setpointings=setpointings,ptgfile=ptgfile)
         self.assertFalse(res)
+
 
     def test_notPtgfile(self):
         """Test nonconforming ptgfile"""
@@ -440,21 +435,19 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
                          setpointings=setpointings,ptgfile=ptgfile)
         self.assertFalse(res)
 
-#         # negative integration makes casa crazy
-#     def testBad_integration(self):
-#         """Test bad integration"""
-# 
-#         integration = self.badtime
-# 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          integration=integration)
-#         self.assertFalse(res)
+
+    def testBad_integration(self):
+        """Test bad integration"""
+        integration = self.badtime
+
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         integration=integration)
+        self.assertFalse(res)
         
 
     def testBad_direction(self):
         """Test bad direction ('J3000' is defaulted to 'J2000')"""
-
         direction = self.baddir
 
         res = simobserve(project=self.project,skymodel=self.inimage,
@@ -464,21 +457,19 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         # Need to compare MS with one generated with J2000
 
 
-#         # simobserve so far does not catche this (sims single point)
-#     def testBad_mapsize(self):
-#         """Test bad mapsize"""
-#
-#         setpointings=True
-#         mapsize = [self.badsize, self.badsize]
-#
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,
-#                          setpointings=setpointings,mapsize=mapsize)
-#         self.assertFalse(res)
+    def testBad_mapsize(self):
+        """Test bad mapsize"""
+        setpointings=True
+        mapsize = [self.badquant, self.badquant]
+
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,
+                         setpointings=setpointings,mapsize=mapsize)
+        self.assertFalse(res)
+
 
     def testBad_maptype(self):
         """Test bad maptype"""
-
         maptype = self.badname
 
         res = simobserve(project=self.project,skymodel=self.inimage,
@@ -486,21 +477,19 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
                          maptype=maptype)
         self.assertFalse(res)
 
-#         # simobserve so far does not catches this (sims single point)
-#     def testBad_spacing(self):
-#         """Test bad pointingspacing"""
 
-#         pointingspacing = self.badsize
+    def testBad_spacing(self):
+        """Test bad pointingspacing"""
+        pointingspacing = self.badquant
 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          pointingspacing=pointingspacing)
-#         self.assertFalse(res)
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         pointingspacing=pointingspacing)
+        self.assertFalse(res)
 
 
     def testBad_obsmode(self):
         """Test bad obsmode"""
-
         obsmode = self.badname
 
         res = simobserve(project=self.project,skymodel=self.inimage,
@@ -511,7 +500,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_antennalist(self):
         """Test bad antennalist name"""
-
         antennalist = self.badname
 
         res = simobserve(project=self.project,skymodel=self.inimage,
@@ -522,7 +510,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_caldirection(self):
         """Test bad caldirection ('J3000' is defaulted to 'J2000')"""
-
         caldirection = self.baddir
 
         res = simobserve(project=self.project,skymodel=self.inimage,
@@ -532,22 +519,20 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         # Need to compare MS with one generated with J2000
 
 
-#         # simobserve so far does not catches this
-#     def testBad_calflux(self):
-#         """Test bad calflux"""
+        # simobserve so far does not catches this
+    def testBad_calflux(self):
+        """Test bad calflux"""
+        caldirection = "J2000 19h00m00 -23d00m50"
+        calflux = self.badquant
 
-#         caldirection = "J2000 19h00m00 -23d00m50"
-#         calflux = "-1Jy"
-
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          caldirection=caldirection,calflux=calflux)
-#         self.assertFalse(res)
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         caldirection=caldirection,calflux=calflux)
+        self.assertFalse(res)
 
 
     def testBad_sdantlist(self):
         """Test bad sdantlist name"""
-
         obsmode = "sd"
         sdantlist = self.badname
 
@@ -561,7 +546,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     # therefore testing non-numeric 'sdant' here
     def testBad_sdant(self):
         """Test bad sdant (non-numeric sdant)"""
-
         obsmode = "sd"
         sdantlist = self.sdantlist
         sdant = self.badname
@@ -575,7 +559,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_refdate(self):
         """Test bad refdate"""
-
         obsmode = "sd"
         sdantlist = self.sdantlist
         refdate = "05/21"
@@ -589,7 +572,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_hourangle(self):
         """Test bad hourangle"""
-
         obsmode = "sd"
         sdantlist = self.sdantlist
         hourangle = self.badname
@@ -601,23 +583,21 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         self.assertFalse(res)
         
 
-#     # casapy crashes for totaltime < 0
-#     def testBad_totaltime(self):
-#         """Test bad totaltime"""
+    # casapy crashes for totaltime < 0
+    def testBad_totaltime(self):
+        """Test bad totaltime"""
+        obsmode = "sd"
+        sdantlist = self.sdantlist
+        totaltime = self.badtime
 
-#         obsmode = "sd"
-#         sdantlist = self.sdantlist
-#         totaltime = self.badtime
-
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          mapsize=self.mapsize,
-#                          obsmode=obsmode,sdantlist=sdantlist,totaltime=totaltime)
-#         self.assertFalse(res)
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         mapsize=self.mapsize,
+                         obsmode=obsmode,sdantlist=sdantlist,totaltime=totaltime)
+        self.assertFalse(res)
     
 
     def testBad_noisetype(self):
         """Test bad thermalnoise type"""
-
         thermalnoise = self.badname
 
         res = simobserve(project=self.project,skymodel=self.inimage,
@@ -628,7 +608,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_pwv(self):
         """Test bad user_pwv"""
-
         thermalnoise = 'tsys-atm'
         user_pwv = self.badnum
 
@@ -640,7 +619,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_Tground(self):
         """Test bad t_ground"""
-
         thermalnoise = 'tsys-atm'
         t_ground = self.badnum
 
@@ -651,7 +629,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_Tsky(self):
         """Test bad t_sky"""
-
         thermalnoise = 'tsys-manual'
         t_sky = self.badnum
 
@@ -662,7 +639,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_tau0(self):
         """Test bad tau0"""
-
         thermalnoise = 'tsys-manual'
         tau0 = self.badnum
 
@@ -674,7 +650,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
     def testBad_leakage(self):
         """Test bad leakage"""
-
         leakage = self.badnum
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
@@ -684,7 +659,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     
     def testBad_graphics(self):
         """Test bad graphics selection"""
-
         graphics = self.badname
         
         res = simobserve(project=self.project,skymodel=self.inimage,

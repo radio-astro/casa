@@ -98,6 +98,19 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         
+    def setUp_shadowdata(self):
+        self.vis = "shadowtest_part.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
         
         
 class test_manual(test_base):
@@ -330,15 +343,14 @@ class test_XML(test_base):
         
         # Now apply them by selecting the reasons and save in another file
         # 507 cmds crash on my computer.
-#        reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
-        reasons = ['FOCUS_ERROR']
+        reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
         tflagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt',
                  sequential=True)
                 
         # Compare with original XML
-        # Only compare after the memory problem above is solved. For the
-        # moment the origxml.txt file contains all cmds, not only FOCUS_ERROR
-#        self.assertEqual(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
+        self.assertTrue(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
+        
+        # Check that APPLIED column has been updated to TRUE
         
         
     def test_xml2(self):
@@ -350,6 +362,52 @@ class test_XML(test_base):
         tflagcmd(vis=self.vis, action='apply', reason='SHADOW')
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 240640)
+
+class test_shadow(test_base):
+    def setUp(self):
+        self.setUp_shadowdata()
+
+    def test_CAS2399(self):
+        '''tflagcmd: shadow by antennas not present in MS'''
+        
+        # Create antennafile in disk
+        input = 'name=VLA01\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
+                'name=VLA02\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]\n'+\
+                'name=VLA09\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601197.2182404203, -5041974.3604805721, 3554875.1995636248]\n'+\
+                'name=VLA10\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
+
+#        antfile = 'myants.txt'
+#        if os.path.exists(antfile):
+#            os.system('rm -rf myants.txt')
+
+        filename = create_input(input)
+
+        # Create command line
+        input = ['mode=shadow tolerance=10.0 antennafile=tflagcmd.txt']
+#        filename = 'cmdfile.txt'
+#        if os.path.exists(filename):
+#            os.system('rm -rf cmdfile.txt')
+        
+#        create_input(input, filename)
+        
+        # Flag
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+#        tflagcmd(vis=self.vis, action='apply', inpmode='file', inpfile=filename)
+        tflagcmd(vis=self.vis, action='apply', inpmode='cmd', command=input)
+        
+        # Check flags
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
+        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
+        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
          
         
 # Dummy class which cleans up created files
@@ -372,6 +430,7 @@ def suite():
             test_unapply,
             test_savepars,
             test_XML,
+            test_shadow,
             cleanup]
         
         

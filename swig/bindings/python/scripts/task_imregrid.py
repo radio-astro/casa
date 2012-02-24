@@ -2,7 +2,7 @@ import os
 import shutil
 from taskinit import *
 
-def imregrid(imagename, template, output, asvelocity):
+def imregrid(imagename, template, output, asvelocity, axes):
     casalog.origin('imregrid')
     if hasattr(template, 'lower') and not template.lower() == "get":
         # First check to see if the output file exists.  If it
@@ -18,8 +18,6 @@ def imregrid(imagename, template, output, asvelocity):
     _myia = iatool()
 
     try:
-        if not os.path.isdir(imagename) or not os.access(imagename, os.R_OK):
-            raise TypeError, 'Cannot read source image ' + imagename
 
         # Figure out what the user wants.
         if not isinstance(template, dict):
@@ -28,7 +26,6 @@ def imregrid(imagename, template, output, asvelocity):
                 csys = _myia.coordsys().torecord()
                 shap = _myia.shape()
                 _myia.done()
-                tb.clearlocks()                        # Still needed?
                 return {'csys': csys, 'shap': shap}
             elif template.upper() in ('J2000', 'B1950', 'B1950_VLA',
                                       'GALACTIC', 'HADEC', 'AZEL',
@@ -39,7 +36,6 @@ def imregrid(imagename, template, output, asvelocity):
                 csys = _myia.coordsys().torecord()
                 shap = _myia.shape()
                 _myia.done()
-                tb.clearlocks()                        # Still needed?
 
                 newrefcode = template.upper()
                 oldrefcode = csys['direction0']['system']
@@ -77,17 +73,15 @@ def imregrid(imagename, template, output, asvelocity):
 
         # The actual regridding.
         _myia.open(imagename)
-        _tmp = _myia.regrid(outfile=output, shape=shap, csys=csys, overwrite=True, asvelocity=asvelocity)
+        _tmp = _myia.regrid(outfile=output, shape=shap, csys=csys, axes=axes, overwrite=True, asvelocity=asvelocity)
         _myia.done()
         _tmp.done()
-        tb.clearlocks()
         return True
         
     except Exception, instance:
         print '*** Error ***',instance
         try:
             _myia.close()
-            tb.clearlocks()
         except: pass
         return False
         

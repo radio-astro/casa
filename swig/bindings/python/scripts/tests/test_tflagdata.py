@@ -196,6 +196,8 @@ class test_shadow(test_base):
     def test_CAS2399(self):
         '''tflagdata: shadow by antennas not present in MS'''
         
+        if os.path.exists("cas2399.txt"):
+            os.system('rm -rf cas2399.txt')
         
         input = 'name=VLA01\n'+\
                 'diameter=25.0\n'+\
@@ -219,9 +221,41 @@ class test_shadow(test_base):
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
         
+    def test_addantenna(self):
+        '''tflagdata: use antennafile in list mode'''
+        if os.path.exists("myants.txt"):
+            os.system('rm -rf myants.txt')
         
+        # Create antennafile in disk
+        input = 'name=VLA01\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
+                'name=VLA02\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]\n'+\
+                'name=VLA09\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601197.2182404203, -5041974.3604805721, 3554875.1995636248]\n'+\
+                'name=VLA10\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
 
-
+        antfile = 'myants.txt'
+        create_input(input, antfile)
+        
+        # Create list file
+        input = 'mode=shadow tolerance=10.0 antennafile=myants.txt'
+        filename = 'listfile.txt'
+        create_input(input, filename)
+        
+        # Flag
+        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        
+        # Check flags
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
+        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
+        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
 
 #        # This MS seems to give wrong results with the old flagdata
 #        # compared to tflagdata. Will remove this test and use a different

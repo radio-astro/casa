@@ -244,7 +244,7 @@ def tflagcmd(
                 cmdlist.append(cmdline)
                     
             # Get the union of all selection parameters
-            unionpars = fh.getUnion(cmdlist)
+            unionpars = fh.getUnion(mslocal, vis, cmdlist)
             casalog.post('The union of all parameters is %s' %(unionpars), 'DEBUG')
 
             # Select the data
@@ -262,7 +262,9 @@ def tflagcmd(
      
             # Backup the flags before running
             if flagbackup:
-                backupCmd(tflocal, list2save)
+#                backupCmd(tflocal, list2save)
+                fh.backupFlags(tflocal, 'tflagcmd')
+                
                 
             # Run the tool
             stats = tflocal.run(True, sequential)
@@ -274,7 +276,7 @@ def tflagcmd(
             if valid_rows.__len__ > 0:
                 
                 if savepars:                
-                    # These flags came from internal FLAG_CMD. Only update APPLIED
+                    # These flags came from internal FLAG_CMD. Always update APPLIED
                     if outfile == '':
                         if inpmode == 'table' and inpfile == '':
                             updateTable(vis, mycol='APPLIED', myval=apply, myrowlist=valid_rows)
@@ -285,6 +287,11 @@ def tflagcmd(
                     
                     # Save to a file
                     else:
+                        # Still need to update APPLIED column
+                        if inpmode == 'table' and inpfile == '':
+                            updateTable(vis, mycol='APPLIED', myval=apply, myrowlist=valid_rows)
+
+                        casalog.post('Saving commands to file '+outfile)
                         fh.writeFlagCmd(vis, myflagcmd, vrows=valid_rows, applied=apply, outfile=outfile) 
                 
                 # Do not save cmds but maybe update APPLIED
@@ -409,7 +416,14 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 modepars = fh.getLinePars(cmdline,quackpars)
             elif cmdline.__contains__('shadow'):
                 mode = 'shadow'
+                antennafile = ''
                 modepars = fh.getLinePars(cmdline,shadowpars)
+                # Get antennafile
+                if (modepars.__contains__('antennafile') and
+                    modepars['antennafile'] != ''):
+                    antennafile = modepars['antennafile']
+                    addantenna = fh.readAntennaList(antennafile)
+                    modepars['addantenna'] = addantenna
             elif cmdline.__contains__('elevation'):
                 mode = 'elevation'
                 modepars = fh.getLinePars(cmdline,elevationpars)

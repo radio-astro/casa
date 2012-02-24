@@ -282,6 +282,7 @@ def simobserve(
             # Now make sure the antennalist exists
             if not os.path.exists(antennalist):
                 util.msg("Couldn't find antennalist: %s" % antennalist, priority="error")
+                return False
         elif predict or components_only:
             # antennalist is required when predicting or components only
             util.msg("Must specify antennalist", priority="error")
@@ -449,6 +450,10 @@ def simobserve(
         util.direction = dir0
         
         # if the integration time is a real time quantity
+#         if qa.quantity(integration)['value'] < 0.:
+#            # casapy crashes for negative totaltime
+#            msg("Negative integration time is not allowed",priority="error")
+#            return False
         if qa.quantity(integration)['unit'] != '':
             intsec = qa.convert(qa.quantity(integration),"s")['value']
         else:
@@ -693,6 +698,10 @@ def simobserve(
             usehourangle=True
 
             # totaltime as an integer for # times through the mosaic:
+            if qa.quantity(totaltime)['value'] < 0.:
+                # casapy crashes for negative totaltime
+                msg("Negative totaltime is not allowed.",priority="error")
+                return False
             if qa.quantity(totaltime)['unit'] == '':
                 # assume it means number of maps, or # repetitions.
                 totalsec = sum(etime)
@@ -786,7 +795,7 @@ def simobserve(
 
             # can before sources
             if docalibrator:                            
-                endtime = sttime + qa.convert(integration,'s')['value'] 
+                endtime = sttime + qa.convert(integration,'s')['value']
                 sm.observe(sourcename="phase calibrator", spwname=fband,
                            starttime=qa.quantity(sttime, "s"),
                            stoptime=qa.quantity(endtime, "s"),
@@ -1120,14 +1129,17 @@ def simobserve(
             shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
 
     except TypeError, e:
+        finalize_tools()
         msg("task_simobserve -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
+        finalize_tools()
         #print "task_simobserve -- OptionError: ", e
         msg("task_simobserve -- OptionError: %s" % e,priority="error")
         return
     except Exception, instance:
-        print '***Error***',instance
+        finalize_tools()
+        #print '***Error***',instance
         msg("task_simobserve -- Exception: %s" % instance,priority="error")
         return
 
@@ -1180,3 +1192,8 @@ def plotpb(pb,axes,lims=None,color='k'):
         #pl.matplotlib.patches.bbox_artist(beam,axes.figure.canvas.get_renderer(),props=props)
         axes.add_artist(box)
         axes.add_artist(beam)
+
+def finalize_tools():
+    if ia.isopen(): ia.close()
+    sm.close()
+    #cl.close()   # crashes casa

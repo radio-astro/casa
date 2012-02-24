@@ -33,6 +33,10 @@ the same coordinate structure.
         <description>Regrid spectral axis in velocity space rather than frequency space?</description>
         <value>False</value>
      </param>
+     <param type="intArray" direction="in" name="axes">
+        <description>The pixel axes to regrid. -1 => all.</description>
+         <value>-1</value>
+     </param>
 
 </input>
 <example>
@@ -53,6 +57,7 @@ output      Name for the regridded image
             default: imagename + '.regridded'; example: imagename='orion_shifted.im'
 asvelocity  Regrid spectral axis with respect to velocity, not frequency?
             default: False
+axes        The pixel axes to regrid. -1 => all.
 async       Run task in a separate process (return CASA prompt)
             default: False; example: async=True
                 
