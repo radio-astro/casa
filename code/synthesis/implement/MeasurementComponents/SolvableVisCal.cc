@@ -4606,7 +4606,8 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 				 const Vector<Int>& tranFieldIn,
 				 const Vector<Int>& inRefSpwMap,
 				 const Vector<String>& fldNames,
-				 fluxScaleStruct& oFluxScaleStruct) {
+				 fluxScaleStruct& oFluxScaleStruct,
+				 const String& oListFile) {
 
   //  cout << "REVISED FLUXSCALE" << endl;
 
@@ -4993,7 +4994,59 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 	  fderr(ispw,tranidx)=fdrms(ispw,tranidx)/sqrt(Double(nPA-1));
 	  numSol(ispw,tranidx) = nPA;
 	}
-	  
+
+	// Compose the fit message for the list file and the log
+
+	String oMsg( "" );
+
+	oMsg += "# Flux density for ";
+	oMsg += fldNames(tranidx);
+	oMsg += " in SpW=";
+	oMsg += String::toString<Int>( ispw );
+
+	if ( refSpw != ispw ) {
+	  oMsg += " (ref SpW=";
+	  oMsg += String::toString<Int>( refSpw );
+	  oMsg += ")";
+	}
+
+	oMsg += " is: ";
+
+	if ( scaleOK(ispw,tranidx) ) {
+	  oMsg += String::toString<Double>( fd(ispw,tranidx) );
+	  oMsg += " +/- ";
+	  oMsg += String::toString<Double>( fderr(ispw,tranidx) );
+	  oMsg += " (SNR = ";
+	  oMsg += String::toString<Double>( fd(ispw,tranidx)/fderr(ispw,tranidx) );
+	  oMsg += ", N = ";
+	  oMsg += String::toString<Int>( nPA );
+	  oMsg += ")";
+	} else {
+	  oMsg += " INSUFFICIENT DATA ";
+	}
+
+	// Write the fit message to the output list file if the file name is
+	// non-null.  In the first iteration (first transfer field and spw),
+	// open the list file and truncate any previous version.  In subsequent
+	// iterations, append the messages.
+
+	if ( oListFile != "" ) {
+	  ofstream oStream;
+	  if ( iTran == 0 && ispw == 0 ) {
+	    oStream.open( oListFile.chars(), ios::out|ios::trunc );
+	  } else {
+	    oStream.open( oListFile.chars(), ios::out|ios::app );
+	  }
+	  oStream << oMsg << endl << flush;
+	  oStream.close();
+	}
+
+
+	// Write the fit message to the logger
+
+	logSink() << oMsg << LogIO::POST;
+
+/*
 	// Report flux densities to logger
 	logSink() << " Flux density for " << fldNames(tranidx)
 		  << " in SpW=" << ispw;
@@ -5011,11 +5064,11 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 	  logSink() << " INSUFFICIENT DATA ";
 
 	logSink() << LogIO::POST;
+*/
 
       } // ispw
 		  
     } // iTran
-
 
     oFluxScaleStruct.fd = fd.copy();
     oFluxScaleStruct.fderr = fderr.copy();

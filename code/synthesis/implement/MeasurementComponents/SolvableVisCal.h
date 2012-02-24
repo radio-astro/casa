@@ -51,6 +51,9 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/Timer.h>
 
+#include <iostream>
+#include <fstream>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -285,7 +288,8 @@ public:
 			 const Vector<Int>& tranFieldIn,
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
-			 fluxScaleStruct& oFluxScaleStruct)=0;
+			 fluxScaleStruct& oFluxScaleStruct,
+			 const String& oListFile)=0;
 
   // Tell the CalSet to write a CalTable
   virtual void store();
@@ -557,7 +561,8 @@ public:
 			 const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
-			 SolvableVisCal::fluxScaleStruct&)
+			 SolvableVisCal::fluxScaleStruct&,
+			 const String&)
 	{ throw(AipsError("NYI")); };
 
   // Report state:
@@ -688,7 +693,8 @@ public:
 		 const Vector<Int>& tranFieldIn,
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
-		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct);
+		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
+		 const String& oListFile);
 			     
   // Report state:
   inline virtual void state() { stateSVJ(True); };
