@@ -343,12 +343,16 @@ def tflagdata(vis,
             # Select the union of the data selection from the list
             if vrows.__len__() == 0:
                 raise Exception, 'There are no valid commands in list'
-            
+           
             unionpars = fh.getUnion(mslocal, vis, flaglist)
-            tflocal.selectdata(unionpars)
-            
-            casalog.post('The union is', 'DEBUG')
-            casalog.post('%s'%unionpars, 'DEBUG')
+
+            if( len( unionpars.keys() ) > 0 ):
+                casalog.post('Pre-selecting a subset of the MS : ');
+                casalog.post('%s'%unionpars);
+            else:
+                casalog.post('Iterating through the entire MS');
+
+            tflocal.selectdata(unionpars);
             
             # Parse the parameters for each agent in the list
             list2save = setupAgent(tflocal, flagcmd, [], apply)

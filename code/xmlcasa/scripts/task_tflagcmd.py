@@ -245,7 +245,11 @@ def tflagcmd(
                     
             # Get the union of all selection parameters
             unionpars = fh.getUnion(mslocal, vis, cmdlist)
-            casalog.post('The union of all parameters is %s' %(unionpars), 'DEBUG')
+            if( len( unionpars.keys() ) > 0 ):
+                casalog.post('Pre-selecting a subset of the MS : ');
+                casalog.post('%s'%unionpars);
+            else:
+                casalog.post('Iterating through the entire MS');
 
             # Select the data
             # Correlation will not go in here            
