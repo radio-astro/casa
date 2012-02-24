@@ -85,7 +85,7 @@
 
                 <param type="bool" name="flagbackup" subparam="true">
                         <description>Automatically backup the FLAG column before execution</description>
-                        <value>True</value>
+                        <value>False</value>
                 </param>
 
                 <param type="bool" name="clearall" subparam="true">
