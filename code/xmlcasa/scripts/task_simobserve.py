@@ -449,6 +449,10 @@ def simobserve(
         util.direction = dir0
         
         # if the integration time is a real time quantity
+        if qa.quantity(integration)['value'] < 0.:
+            # casapy crashes for negative totaltime
+            msg("Negative integration time is not allowed",priority="error")
+            return False
         if qa.quantity(integration)['unit'] != '':
             intsec = qa.convert(qa.quantity(integration),"s")['value']
         else:
@@ -693,6 +697,10 @@ def simobserve(
             usehourangle=True
 
             # totaltime as an integer for # times through the mosaic:
+            if qa.quantity(totaltime)['value'] < 0.:
+                # casapy crashes for negative totaltime
+                msg("Negative totaltime is not allowed.",priority="error")
+                return False
             if qa.quantity(totaltime)['unit'] == '':
                 # assume it means number of maps, or # repetitions.
                 totalsec = sum(etime)
@@ -786,7 +794,7 @@ def simobserve(
 
             # can before sources
             if docalibrator:                            
-                endtime = sttime + qa.convert(integration,'s')['value'] 
+                endtime = sttime + qa.convert(integration,'s')['value']
                 sm.observe(sourcename="phase calibrator", spwname=fband,
                            starttime=qa.quantity(sttime, "s"),
                            stoptime=qa.quantity(endtime, "s"),

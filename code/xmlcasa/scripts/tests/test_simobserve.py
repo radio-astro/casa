@@ -282,7 +282,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         
         for data in self.indata:
             if os.path.exists(data):
-                os.system("rm -r %s" % data)
+                os.system("rm -rf %s" % data)
             os.system("cp -r %s %s" % (self.datapath+data, data))
         
         default(simobserve)
@@ -290,7 +290,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     def tearDown(self):
         for data in self.indata:
             if os.path.exists(data):
-                os.system("rm -r %s" % data)
+                os.system("rm -rf %s" % data)
         if (os.path.exists(self.project)):
             shutil.rmtree(self.project)
 
@@ -440,16 +440,15 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
                          setpointings=setpointings,ptgfile=ptgfile)
         self.assertFalse(res)
 
-#         # negative integration makes casa crazy
-#     def testBad_integration(self):
-#         """Test bad integration"""
-# 
-#         integration = self.badtime
-# 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          totaltime=self.tottime,mapsize=self.mapsize,
-#                          integration=integration)
-#         self.assertFalse(res)
+    def testBad_integration(self):
+        """Test bad integration"""
+
+        integration = self.badtime
+
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         totaltime=self.tottime,mapsize=self.mapsize,
+                         integration=integration)
+        self.assertFalse(res)
         
 
     def testBad_direction(self):
@@ -601,18 +600,18 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         self.assertFalse(res)
         
 
-#     # casapy crashes for totaltime < 0
-#     def testBad_totaltime(self):
-#         """Test bad totaltime"""
+    # casapy crashes for totaltime < 0
+    def testBad_totaltime(self):
+        """Test bad totaltime"""
 
-#         obsmode = "sd"
-#         sdantlist = self.sdantlist
-#         totaltime = self.badtime
+        obsmode = "sd"
+        sdantlist = self.sdantlist
+        totaltime = self.badtime
 
-#         res = simobserve(project=self.project,skymodel=self.inimage,
-#                          mapsize=self.mapsize,
-#                          obsmode=obsmode,sdantlist=sdantlist,totaltime=totaltime)
-#         self.assertFalse(res)
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         mapsize=self.mapsize,
+                         obsmode=obsmode,sdantlist=sdantlist,totaltime=totaltime)
+        self.assertFalse(res)
     
 
     def testBad_noisetype(self):
