@@ -247,8 +247,9 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		diplayAgentConfig.define("name","FlagAgentDisplay");
 		diplayAgentConfig.define("datadisplay",True);
 
-		int exists = agentParameters[0].fieldNumber ("correlation");
-		if (exists >= 0) diplayAgentConfig.define("correlation",agentParameters[0].asString("correlation"));
+		if (agentParameters[0].fieldNumber ("correlation") >= 0) diplayAgentConfig.define("correlation",agentParameters[0].asString("correlation"));
+		if (agentParameters[0].fieldNumber ("spw") >= 0) diplayAgentConfig.define("spw",agentParameters[0].asString("spw"));
+
 		FlagAgentDisplay *dataDisplayAgent = new FlagAgentDisplay(dh,diplayAgentConfig);
 		agentList.push_back(dataDisplayAgent);
 	}
@@ -585,7 +586,7 @@ int main(int argc, char **argv)
 		else if (parameter == string("-spw"))
 		{
 			spw = casa::String(value);
-			dataSelection.define ("spw", spw);
+			agentParameters.define ("spw", spw);
 			cout << "SPW selection is: " << spw << endl;
 		}
 		else if (parameter == string("-antenna"))

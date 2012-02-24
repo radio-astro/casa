@@ -1085,16 +1085,11 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 				channelStart = channelList_p(spw_i,1);
 				channelStop = channelList_p(spw_i,2);
 				spwFound = true;
+				for (uInt channel_i=0;channel_i<nChannels;channel_i++)
+				{
+					if ((channel_i>=channelStart) and (channel_i<=channelStop)) channelIndex_p.push_back(channel_i);
+				}
 			}
-		}
-
-		// If the spw is not found we return w/o adding any channels
-		if (!spwFound) return;
-
-		// Finally check what channels are within the range
-		for (uInt channel_i=0;channel_i<nChannels;channel_i++)
-		{
-			if ((channel_i>=channelStart) and (channel_i<=channelStop)) channelIndex_p.push_back(channel_i);
 		}
 	}
 	else
