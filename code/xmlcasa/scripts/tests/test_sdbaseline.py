@@ -768,7 +768,131 @@ class sdbaseline_functest(unittest.TestCase):
         self.assertTrue((rms <= max_rms), msg = "CSpline fitting failed.")
 
 
+class sdbaseline_multi_IF_test(unittest.TestCase):
+    """
+    Unit tests for task sdbaseline. No interactive testing.
+
+    This test intends to check whether sdbaseline task works fine
+    for data that has multiple IFs whose nchan differ each other. 
+
+    The list of tests:
+    test0 --- test multi IF data input
+
+    created 24/02/2012 by Takeshi Nakazato
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
+    # Input and output names
+    infile = 'testMultiIF.asap'
+    blparamfile_suffix = '_blparam.txt'
+    outroot = 'sdbaseline_test'
+    refblparamfile = 'refblparam_multiIF'
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(sdbaseline)
+
+    def tearDown(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+
+    def test01multi(self):
+        """test01multi: Test the task works with multi IF data"""
+        infile = self.infile
+        mode = "list"
+        blfunc = "poly"
+        order = 1
+        outfile = self.outroot+".asap"
+        blparamfile = outfile+self.blparamfile_suffix
+        
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._compareBLparam(blparamfile,self.datapath+self.refblparamfile)
+        reference = {5: {'rms': 1.4250789880752563,
+                         'min': -4.2702846527099609,
+                         'max': 5.5566844940185547,
+                         'max_abscissa': {'value': 823.0,
+                                          'unit': 'channel'},
+                         'median': 0.017315864562988281,
+                         'min_abscissa': {'value': 520.0,
+                                          'unit': 'channel'},
+                         'stddev': 1.425775408744812},
+                     7: {'rms': 1.4971292018890381,
+                         'min': -4.7103700637817383,
+                         'max': 5.4820127487182617,
+                         'max_abscissa': {'value': 1335.0,
+                                          'unit': 'channel'},
+                         'median': 0.027227401733398438,
+                         'min_abscissa': {'value': 1490.0,
+                                          'unit': 'channel'},
+                         'stddev': 1.4974949359893799}}
+        # sdstat must run each IF separately
+        for ifno in [5,7]:
+            self._compareStats(outfile,ifno,reference[ifno])
+        
+    def _compareBLparam(self,out,reference):
+        # test if baseline parameters are equal to the reference values
+        # currently comparing every lines in the files
+        # TO DO: compare only "Fitter range" and "Baseline parameters"
+        self.assertTrue(os.path.exists(out))
+        self.assertTrue(os.path.exists(reference),
+                        msg="Reference file doesn't exist: "+reference)
+#         self.assertTrue(listing.compare(out,reference),
+#                         'New and reference files are different. %s != %s. '
+#                         %(out,reference))
+
+    def _compareStats(self,outfile,ifno,reference):
+        # test if the statistics of baselined spectra are equal to
+        # the reference values
+        self.assertTrue(os.path.exists(outfile))
+        currstat = sdstat(infile=outfile,iflist=ifno)
+        self.assertTrue(isinstance(currstat,dict),
+                        msg="Failed to calculate statistics.")
+
+        #self.assertTrue(os.path.exists(reference),
+        #                msg="Reference file doesn't exist: "+reference)
+        refstat = reference
+
+        print "Statistics of baselined spectra:\n",currstat
+        print "Reference values:\n",refstat
+        # compare statistic values
+        #compstats = ['max','min','mean','sum','rms']
+        compstats = ['max','min','rms','median','stddev']
+        allowdiff = 0.01
+        self.assertEqual(currstat['max_abscissa']['unit'],
+                         refstat['max_abscissa']['unit'],
+                         msg="The units of max_abscissa are different")
+        self.assertEqual(currstat['min_abscissa']['unit'],
+                         refstat['min_abscissa']['unit'],
+                         msg="The units of min_abscissa are different")
+        if isinstance(refstat['max'],list):
+            for i in xrange(len(refstat['max'])):
+                for stat in compstats:
+                    rdiff = (currstat[stat][i]-refstat[stat][i])/refstat[stat][i]
+                    self.assertTrue((abs(rdiff)<allowdiff),
+                                    msg="'%s' of spectrum %s are different." % (stat, str(i)))
+                self.assertEqual(currstat['max_abscissa']['value'][i],
+                                 refstat['max_abscissa']['value'][i],
+                                 msg="The max channels/frequencies/velocities of spectrum %s are different" % str(i))
+                self.assertEqual(currstat['min_abscissa']['value'][i],
+                                 refstat['min_abscissa']['value'][i],
+                                 msg="The min channels/frequencies/velocities of spectrum %s are different" % str(i))
+        else:
+            for stat in compstats:
+                rdiff = (currstat[stat]-refstat[stat])/refstat[stat]
+                self.assertTrue((abs(rdiff)<allowdiff),
+                                msg="'%s' of spectrum %s are different." % (stat, str(0)))
+            self.assertEqual(currstat['max_abscissa']['value'],
+                             refstat['max_abscissa']['value'],
+                             msg="The max channels/frequencies/velocities of spectrum %s are different" % str(0))
+            self.assertEqual(currstat['min_abscissa']['value'],
+                             refstat['min_abscissa']['value'],
+                             msg="The min channels/frequencies/velocities of spectrum %s are different" % str(0))
+    
 
 
 def suite():
-    return [sdbaseline_basictest, sdbaseline_masktest, sdbaseline_functest]
+    return [sdbaseline_basictest, sdbaseline_masktest, sdbaseline_functest,
+            sdbaseline_multi_IF_test]
