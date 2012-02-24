@@ -33,6 +33,11 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
         # v4.1 Updated STM 2011-11-03 (3.4.0) improved plotting
 	# v4.1 Updated STM 2011-12-14 (3.4.0) merge with SMC changes
 	# v4.1 Updated STM 2011-12-19 (3.4.0) bug fix, better history handling
+	# v4.2 Updated STM 2012-02-10 (3.4.0) allow save to file for sdm
+	# v4.2 Updated STM 2012-02-13 (3.4.0) readflagxml spectral window fix
+	# v4.2 Updated STM 2012-02-16 (3.4.0) newplotflags trim flag times to data times
+	# v4.2 Updated STM 2012-02-21 (3.4.0) update subroutines for ant+spw+sol sorting
+	# v4.2 Updated STM 2012-02-23 (3.4.0) final fixes
 	#
 	try:
 		from xml.dom import minidom
@@ -40,7 +45,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v4.1 Updated STM 2011-12-19')
+	casalog.post('You are using flagcmd v4.2 Updated STM 2012-02-23')
 
         fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
         mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -56,11 +61,15 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	if os.path.exists(vis+'/table.dat'):
 		# this is probably an ms
 		# Get overall MS time range for later use (if needed)
-		msopened = getmstimes(vis,ms_starttime,ms_endtime,t1sdata,t2sdata)
+		# Updated STM 2012-02-16 v4.2
+		(ms_starttime,ms_endtime,t1sdata,t2sdata) = getmstimes(vis)
+		msopened = ms_starttime != ''
 		if msopened:
 			print 'It appears that vis is a MS'
 			casalog.post('It appears that vis is a MS')
 			datatype = 0
+			print 'Found data times from '+ms_starttime+' to '+ms_endtime
+			#casalog.post('Found data times from '+ms_starttime+' to '+ms_endtime)
 		else:
 			print 'WARNING: I thought that vis is a MS, but cannot open it'
 			casalog.post('I thought that vis is a MS, but cannot open it','WARN')
@@ -75,10 +84,11 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		casalog.post('Unknown data type for vis = '+vis,'WARN')
 
 	if datatype != 0:
-		print 'This is not a MS, only listing and plotting available'
-		casalog.post('This is not a MS, only listing and plotting available')
+		print 'This is not a MS, only listing, plotting, and save-to-file available'
+		casalog.post('This is not a MS, only listing, plotting, and save-to-file  available')
 
-	if msopened or (flagmode!='table' and (optype=='list' or optype=='plot')):
+	if msopened or (flagmode!='table' and (optype=='list' or optype=='plot' or
+					       (optype=='save' and outfile!=''))):
             try: 
 		myflagcmd = {}
 		cmdlist = []
@@ -175,7 +185,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		# Now have list of commands - do something with them
 		if optype == 'apply':
 			# Possibly resort flags before application
-			# NEEDED TO AVOID FLAG AGENT ERROR
+			# NEEDED TO AVOID FLAG AGENT ERROR IN PRE-3.3
 			if flagsort!='' and flagsort!='id':
 				myflagd = sortflags(myflagcmd,myantenna='',myreason='Any',myflagsort=flagsort)
 			else:
@@ -274,6 +284,8 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 				# Save to ascii file
 				try:
 					ffout = open(outfile,'w')
+					print '   Saving to file '+outfile
+					casalog.post('Saving to file '+outfile)
 				except:
 					raise Exception, "Error opening output file "+outfile
 				try:
@@ -366,6 +378,8 @@ def applyflagcmd(fglocal, msfile, flagbackup, myflags, reset=False, flagtype='Un
 	#
 	# Returns number of flags applied
 	#
+        # Updated STM v4.2 2012-02-21 handle polarization (poln) flags
+	#
 	ncmd = 0
 
         #fglocal.done()
@@ -393,7 +407,7 @@ def applyflagcmd(fglocal, msfile, flagbackup, myflags, reset=False, flagtype='Un
 	    # Keys to ignore
 	    iparams = ['reason','flagtime','id','level','severity'] # currently not used
 	    # Keys for online flags
-	    oparams = ['antenna','timerange','correlation','feed','array','spw','field']
+	    oparams = ['antenna','timerange','correlation','feed','array','spw','field','poln']
 	    # Keys to recognize uparams=Universal sparams=Selection
 	    uparams = [] 
 	    # SMC CAS-3320: added observation and intent
@@ -613,6 +627,9 @@ def parse_cmdparams(params):
 	# in order to match the interface of fg.tool
 	#
 	# validate parameter quackmode
+	#
+        # Updated STM v4.2 2012-02-21 handle polarization (poln) flags
+	#
 
         if params.has_key('quackmode') and \
           not params['quackmode'] in ['beg', 'endb', 'end', 'tail']:
@@ -624,6 +641,32 @@ def parse_cmdparams(params):
 	if params.has_key('timerange'):
 		params['time']=params['timerange']
 		del(params['timerange'])
+	if params.has_key('poln'):
+		# STM 2012-02-21 Kludge for no poln selection
+		# flags all cross-corrs
+		# does not handle mixed linears and circs
+		pp = params['poln']
+		if pp.count('R')>0:
+			if pp.count('L')>0:
+				corr = 'RR,RL,LR,LL'
+			else:
+				corr = 'RR,RL,LR'
+		elif pp.count('L')>0:
+			corr = 'LL,LR,RL'
+		elif pp.count('X')>0:
+			if pp.count('Y')>0:
+				corr = 'XX,XY,YX,YY'
+			else:
+				corr = 'XX,XY,YX'
+		elif pp.count('Y')>0:
+			corr = 'YY,YX,XY'
+		#	
+		if params.has_key('correlation'):
+			corp = params['correlation']
+			params['correlation']=corp + ',' + corr
+		else:
+			params['correlation']=corr
+		del(params['poln'])
 	if params.has_key('cliprange'):
 		v = params['cliprange']
 		# turn string into [min,max] range
@@ -722,7 +765,23 @@ def readflagxml(sdmfile, mytbuff):
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
 #
-#   Updated STM v4.1 2011-11-02 handle new SDM Flag.xml format from ALMA
+#   Updated STM 2011-11-02 handle new SDM Flag.xml format from ALMA
+#   Updated STM 2012-02-14 handle spectral window indices, names, IDs
+#   Updated STM 2012-02-21 handle polarization types
+#
+#   Mode to use for spectral window selection in commands:
+#   spwmode =  0 none (flag all spw)
+#   spwmode =  1 use name
+#   spwmode = -1 use index (counting rows in SpectralWindow.xml)
+#
+#   Mode to use for polarization selection in commands:
+#   polmode =  0 none (flag all pols/corrs)
+#   polmode =  1 use polarization type
+#
+#   CURRENT DEFAULT: Use spw names, flag pols
+    spwmode = 1
+    polmode = 1
+
 #
     try:
         from xml.dom import minidom
@@ -733,7 +792,22 @@ def readflagxml(sdmfile, mytbuff):
     if type(mytbuff)!=float:
         casalog.post('Warning: incorrect type for tbuff, found "'+str(mytbuff)+'", setting to 1.0')
         mytbuff=1.0
-    
+
+    # make sure Flag.xml and Antenna.xml are available (SpectralWindow.xml depends)
+    flagexist = os.access(sdmfile+'/Flag.xml',os.F_OK)
+    antexist = os.access(sdmfile+'/Antenna.xml',os.F_OK)
+    spwexist = os.access(sdmfile+'/SpectralWindow.xml',os.F_OK)
+    if not flagexist:
+        print 'ERROR: Cannot open '+sdmfile+'/Flag.xml'
+	casalog.post('Cannot open '+sdmfile+'/Flag.xml','SEVERE')
+	exit(1)
+    if not antexist:
+        print 'ERROR: Cannot open '+sdmfile+'/Antenna.xml'
+	casalog.post('Cannot open '+sdmfile+'/Antenna.xml','SEVERE')
+	exit(1)
+    if not spwexist:
+	casalog.post('Cannot open '+sdmfile+'/SpectralWindow.xml','WARN')
+
     # construct look-up dictionary of name vs. id from Antenna.xml
     xmlants = minidom.parse(sdmfile+'/Antenna.xml')
     antdict = {}
@@ -747,12 +821,50 @@ def readflagxml(sdmfile, mytbuff):
     print '  Found '+str(rowlist.length)+' antennas in Antenna.xml'
     casalog.post('Found '+str(rowlist.length)+' antennas in Antenna.xml')
 
+    # construct look-up dictionary of name vs. id from SpectralWindow.xml
+    if spwexist:
+        xmlspws = minidom.parse(sdmfile+'/SpectralWindow.xml')
+	spwdict = {}
+	rowlist = xmlspws.getElementsByTagName("row")
+	ispw = 0
+	for rownode in rowlist:
+	    rowname = rownode.getElementsByTagName("name")
+	    spw = str(rowname[0].childNodes[0].nodeValue)
+	    rowid = rownode.getElementsByTagName("spectralWindowId")
+	    spwid = str(rowid[0].childNodes[0].nodeValue)
+	    spwdict[spwid] = {}
+	    spwdict[spwid]['name'] = spw
+	    spwdict[spwid]['index'] = ispw
+	    ispw += 1
+	print '  Found '+str(rowlist.length)+' spw in SpectralWindow.xml'
+	casalog.post('Found '+str(rowlist.length)+' spw in SpectralWindow.xml')
+
+    # report chosen spw and pol modes
+    if spwmode>0:
+	    print 'Will construct spw flags using Names'
+	    casalog.post('Will construct spw flags using names')
+    elif spwmode<0:
+	    print 'Will construct spw flags using table indices'
+	    casalog.post('Will construct spw flags using table indices')
+    else:
+	    print 'Will not set spw dependent flags (flag all spws)'
+	    casalog.post('')
+    #
+    if polmode==0:
+	    print 'Will not set polarization dependent flags (flag all corrs)'
+	    casalog.post('Will not set polarization dependent flags (flag all corrs)')
+    else:
+	    print 'Will construct polarization flags using polarizationType'
+	    casalog.post('Will construct polarization flags using polarizationType')
+    
     # now read Flag.xml into dictionary row by row
     xmlflags = minidom.parse(sdmfile+'/Flag.xml')
     flagdict = {}
     rowlist = xmlflags.getElementsByTagName("row")
     nrows = rowlist.length
     newsdm = -1
+    newspw = -1
+    newpol = -1
     for fid in range(nrows):
         rownode = rowlist[fid]
         rowfid = rownode.getElementsByTagName("flagId")
@@ -768,7 +880,7 @@ def readflagxml(sdmfile, mytbuff):
 		xid = antid.split()
 		nant = int(rownant[0].childNodes[0].nodeValue)
 		if newsdm<0:
-			print '  Found numAntenna must be a new style SDM'
+			print '  Found numAntenna='+str(nant)+' must be a new style SDM'
 			casalog.post('Found numAntenna='+str(nant)+' must be a new style SDM')
 		newsdm=1
 		if nant>0:
@@ -813,34 +925,50 @@ def readflagxml(sdmfile, mytbuff):
 	# NEW SDM ADDITIONS 2011-11-01
 	rownspw = rownode.getElementsByTagName("numSpectralWindow")
 	spwstring = ''
-	if rownspw.__len__()>0:
+	if spwmode!=0 and rownspw.__len__()>0:
 		nspw = int(rownspw[0].childNodes[0].nodeValue)
 		# has a new-style spw specification
+		if newspw<0:
+			if not spwexist:
+				print 'ERROR: Cannot open '+sdmfile+'/SpectralWindow.xml'
+				casalog.post('Cannot open '+sdmfile+'/SpectralWindow.xml','SEVERE')
+				exit(1)
+			print '  Found numSpectralWindow='+str(nspw)+' must be a new style SDM'
+			casalog.post('Found SpectralWindow='+str(nspw)+' must be a new style SDM')
+		newspw=1
 		if nspw>0:
 			rowspwid = rownode.getElementsByTagName("spectralWindowId")
 			spwids = rowspwid[0].childNodes[0].nodeValue
 			xspw = spwids.split()
 			for isp in range(nspw):
-				spid = xspw[2+isp]
-				if spwstring=='':
-					spwstring=spid
+				spid = str(xspw[2+isp])
+				if spwmode>0:
+					spstr = spwdict[spid]['name']
 				else:
-					spwstring+=','+spid
-	# polstring = ''
-	# rownpol = rownode.getElementsByTagName("numPolarizationType")
-	# if rownpol.__len__()>0:
-	# 	npol = int(rownpol[0].childNodes[0].nodeValue)
-	# 	# has a new-style pol specification
-	# 	if npol>0:
-	# 		rowpolid = rownode.getElementsByTagName("PolarizationType")
-	# 		polids = rowpolid[0].childNodes[0].nodeValue
-	# 		xpol = polids.split()
-	# 		for ipol in range(npol):
-	# 			polid = xpol[2+ipol]
-	# 			if polstring=='':
-	# 				polstring=polid
-	# 			else:
-	# 				polstring+=','+polid
+					spstr = str( spwdict[spid]['index'] )
+				if spwstring=='':
+					spwstring=spstr
+				else:
+					spwstring+=','+spstr
+	polstring = ''
+	rownpol = rownode.getElementsByTagName("numPolarizationType")
+	if polmode!=0 and rownpol.__len__()>0:
+		npol = int(rownpol[0].childNodes[0].nodeValue)
+		# has a new-style pol specification
+		if newpol<0:
+			print '  Found numPolarizationType='+str(npol)+' must be a new style SDM'
+			casalog.post('Found numPolarizationType='+str(npol)+' must be a new style SDM')
+		newpol=1
+		if npol>0:
+			rowpolid = rownode.getElementsByTagName("polarizationType")
+			polids = rowpolid[0].childNodes[0].nodeValue
+			xpol = polids.split()
+			for ipol in range(npol):
+				polid = str(xpol[2+ipol])
+				if polstring=='':
+					polstring=polid
+				else:
+					polstring+=','+polid
 	#
         # Construct antenna name and timerange and reason strings
         flagdict[fid]['antenna'] = antname
@@ -851,8 +979,10 @@ def readflagxml(sdmfile, mytbuff):
         cmd = "antenna='"+antname+"' timerange='"+timestr+"'"
 	if spwstring!='':
 		cmd += " spw='"+spwstring+"'"
-	# if polstring!='':
-	# 	cmd += " pol='"+polstring+"'"
+		flagdict[fid]['spw'] = spwstring
+	if polstring!='':
+	 	cmd += " poln='"+polstring+"'"
+		flagdict[fid]['poln'] = polstring
         flagdict[fid]['cmd'] = cmd
 	#
 	flagdict[fid]['type'] = 'FLAG'
@@ -902,10 +1032,13 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
     #         'level' (int)           set to 0 here on read-in
     #         'severity' (int)        set to 0 here on read-in
     #
-    # NOTE: flag sorting is needed to avoid error "Too many flagging agents instantiated"
+    # NOTE: flag sorting is possibly needed to avoid error "Too many flagging agents
+    # instantiated" and will generally speed up flagging in any event
     # If myflagsort=''              keep individual flags separate
     #              ='antenna'       combine all flags with a particular antenna
+    #              ='antspw'        combine antenna+spw flags
     #
+    # Updated STM 2012-02-21 handle poln flags, myflagsort='antspw'
     #
     # Check if any operation is needed
     if myantenna=='' and myreason=='' and myflagsort=='':
@@ -913,6 +1046,19 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
         casalog.post('No selection or sorting needed - sortflags returning input dictionary')
         flagd = myflags
 	return flagd
+    #
+    if myflagsort=='antenna':
+        print 'Will sort flags by antenna'
+	casalog.post('Will sort flags by antenna')
+    elif myflagsort=='antspw':
+        print 'Will sort flags by antenna+spw'
+	casalog.post('Will sort flags by antenna+spw')
+    elif myflagsort=='antpol':
+        print 'Will sort flags by antenna+spw+pol'
+	casalog.post('Will sort flags by antenna+spw+pol')
+    else:
+        print 'Will not sort flags'
+	casalog.post('Will not sort flags')
     #
     flagd={}
     nflagd = 0
@@ -963,7 +1109,7 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
 	nunsortd = 0
 	unsortd = {}
 	unsortdlist = []
-	if myflagsort=='antenna':
+	if myflagsort=='antenna' or myflagsort=='antspw' or myflagsort=='antpol':
 	    # will be resorting by antenna
 	    for key in keylist:
 	        myd = myflags[key]
@@ -973,12 +1119,14 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
 		nselect = 0
 		if myd.has_key('timerange'):
 		    if myd['timerange']!='': nselect += 1
-		if myd.has_key('spw'):
+		if (myflagsort!='antspw' and myflagsort!='antpol') and myd.has_key('spw'):
 		    if myd['spw']!='': nselect += 1
 		if myd.has_key('field'):
 		    if myd['field']!='': nselect += 1
-		if myd.has_key('corr'):
-		    if myd['corr']!='': nselect += 1
+		if myd.has_key('correlation'):
+		    if myd['correlation']!='': nselect += 1
+		if myflagsort!='antpol' and myd.has_key('poln'):
+		    if myd['poln']!='': nselect += 1
 		if myd.has_key('scan'):
 		    if myd['scan']!='': nselect += 1
                 if myd.has_key('intent'):
@@ -1002,14 +1150,68 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
 			    antsort = myd['timerange']!='' and nselect==1
 			
 		if antsort:
+		    # the antennas
 		    if ant.count('&')>0:
 		        # for baseline specifications split on ;
 		        antlist = ant.split(';')
 		    else:
 		        # for antenna specifications split on ,
 		        antlist = ant.split(',')
-		    # break this flag by antenna
+		    # the spw
+		    if (myflagsort=='antspw' or myflagsort=='antpol') and myd.has_key('spw'):
+		        spwsort = True
+		        spw = myd['spw']
+		        spwlist = spw.split(',')
+		    else:
+		        spwsort = False
+			spw = ''
+		    if myflagsort=='antpol' and myd.has_key('pol'):
+		        polsort = True
+			poln = myd['poln']
+		        polnlist = poln.split(',')
+		    else:
+		        polsort = False
+			poln = ''
+		    
+		    # construct the joint list
+		    jlist = []
+		    jdict = {}
 		    for a in antlist:
+		        if spwsort:
+			    for s in spwlist:
+			        if polsort:
+				    for p in polnlist:
+				        jx = a+'_spw'+s+'_pol'+p
+					jlist.append(jx)
+					jdict[jx]={}
+					jdict[jx]['antenna']=a
+					jdict[jx]['spw']=s
+					jdict[jx]['poln']=p
+				else:
+				    jx = a+'_spw'+s
+				    jlist.append(jx)
+				    jdict[jx]={}
+				    jdict[jx]['antenna']=a
+				    jdict[jx]['spw']=s
+				    jdict[jx]['poln']=''
+			elif polsort:
+			    for p in polnlist:
+			        jx = a+'_pol'+p
+				jlist.append(jx)
+				jdict[jx]={}
+				jdict[jx]['antenna']=a
+				jdict[jx]['spw']=''
+				jdict[jx]['poln']=p
+			else:
+			    jx = a
+			    jlist.append(jx)
+			    jdict[jx]={}
+			    jdict[jx]['antenna']=a
+			    jdict[jx]['spw']=''
+			    jdict[jx]['poln']=''
+
+		    # break this flag by the criteria
+		    for a in jlist:
 		        if myantenna=='' or myantlist.count(a)>0:
 			    addf = False
 			    reas = myd['reason']
@@ -1031,7 +1233,7 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
 				reastr = reas
 			    #
 			    if addf:
-			        # check if this is a new antenna
+			        # check if this is a new item
 				if sortd.has_key(a):
 			            # Already existing flag for this antenna, add this one
 				    t = sortd[a]['timerange']
@@ -1067,7 +1269,11 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
 			            # add this flag (copy most of it)
 				    sortd[a] = myd
 				    sortd[a]['id'] = a
-				    sortd[a]['antenna'] = a
+				    sortd[a]['antenna'] = jdict[a]['antenna']
+				    if spwsort:
+					    sortd[a]['spw'] = jdict[a]['spw']
+				    if polsort:
+					    sortd[a]['poln'] = jdict[a]['poln']
 				    sortd[a]['reason'] = reastr
 		else:
 		    # cannot compress flags from this mode, add to unsortd instead
@@ -1264,9 +1470,11 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
 #   
-# v3.2 Updated STM 2010-12-03 (3.2.0) handle comments # again
-# v3.2 Updated STM 2010-12-08 (3.2.0) bug fixes in flagsort use, parsing
-# v3.3 Updated STM 2010-12-20 (3.2.0) bug fixes parsing errors
+# Updated STM 2010-12-03 (3.2.0) handle comments # again
+# Updated STM 2010-12-08 (3.2.0) bug fixes in flagsort use, parsing
+# Updated STM 2010-12-20 (3.2.0) bug fixes parsing errors
+# Updated STM 2012-02-21 (3.4.0) handle poln flags
+# Updated STM 2012-02-23 (3.4.0) handle spw,poln as optional keys
 #
     myflagd={}
     nrows = cmdlist.__len__()
@@ -1287,6 +1495,7 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 	    # break string into key=val sets
 	    keyvlist = cmdstr.split()
 	    if keyvlist.__len__()>0:
+		    # Fixed key defaults
 		    ant = ''
 		    timstr = ''
 		    tim = 0.5*(ms_startmjds+ms_endmjds)
@@ -1300,6 +1509,9 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 		    levl = 0
 		    sevr = 0
 		    fmode = ''
+		    # Optional keys
+		    spw = 'Unset'
+		    poln = 'Unset'
 		    for keyv in keyvlist:
 			    # check for comment character #
 			    if keyv.count("#")>0:
@@ -1368,6 +1580,10 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 					    
 				    elif xkey=='antenna':
 					    ant = xval
+				    elif xkey=='spw':
+					    poln = xval
+				    elif xkey=='poln':
+					    ant = poln
 				    elif xkey=='id':
 					    fid = xval
 				    elif xkey=='unflag':
@@ -1380,6 +1596,7 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 		    # Make sure there is a non-blank command string after reason/id extraction
 		    if cmd!='':
 			    flagd = {}
+			    # Fixed keys
 			    flagd['id'] = fid
 			    flagd['mode'] = fmode
 			    flagd['antenna']=ant
@@ -1392,6 +1609,11 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 			    flagd['level']=levl
 			    flagd['severity']=sevr
 			    flagd['applied']=appl
+			    # Optional keys
+			    if spw!='Unset':
+				    flagd['spw']=spw
+			    if poln!='Unset':
+				    flagd['poln']=poln
 			    # Insert into main dictionary
 			    myflagd[ncmds] = flagd
 			    ncmds+=1
@@ -1756,114 +1978,16 @@ def updateflagcmd(msfile,mycol='',myval=None,myrowlist=[]):
     
 # Done
 
-#===============================================================================
-#
-# helper functions to plot flag results, courteys J. Marvil
-# currently only works from individual online flags from xml or FLAG_CMD
-#
-#===============================================================================
-def plotflags(myflags, plotname, t1sdata, t2sdata):
-    try: 
-        import casac 
-    except ImportError, e: 
-        print "failed to load casa:\n", e 
-        exit(1) 
-    qatool = casac.homefinder.find_home_by_name('quantaHome') 
-    qa = casac.qa = qatool.create()
-    
-    try:
-        import pylab as pl
-    except ImportError, e:
-        print "failed to load pylab:\n", e
-        exit(1)
-
-    # get list of flag keys
-    keylist=myflags.keys()
-
-    # get list of antennas
-    myants=[]
-    for key in keylist:
-	    ant = myflags[key]['antenna']
-	    if myants.count(ant)==0:
-		    myants.append(ant)
-    myants.sort()
-		    
-    antind=0
-    if plotname=='':
-	    pl.ion()
-    else:
-	    pl.ioff()
-
-    f1=pl.figure()
-    ax1=f1.add_axes([.15,.1,.75,.85])
-#    ax1.set_ylabel('antenna')
-#    ax1.set_xlabel('time')
-    badflags=[]
-    for thisant in myants:
-        antind+=1
-	for thisflag in myflags:
-	    if myflags[thisflag]['antenna']==thisant:
-	        #print thisant, myflags[thisflag]['reason'], myflags[thisflag]['timerange']
-                thisReason=myflags[thisflag]['reason']
-		if thisReason=='FOCUS_ERROR': thisColor='red'; thisOffset=.3
-		elif thisReason=='SUBREFLECTOR_ERROR': thisColor='blue'; thisOffset=.15
-		elif thisReason=='ANTENNA_NOT_ON_SOURCE': thisColor='green'; thisOffset=0
-		elif thisReason=='ANTENNA_NOT_IN_SUBARRAY': thisColor='black'; thisOffset=-.15
-		else: thisColor='orange'; thisOffset=-0.3
-		mytimerange=myflags[thisflag]['timerange']
-		if mytimerange!='':
-		    t1=mytimerange[:mytimerange.find('~')]
-		    t2=mytimerange[mytimerange.find('~')+1:]
-		    t1s, t2s=qa.convert(t1,'s')['value'], qa.convert(t2,'s')['value']
-		else:
-		    t1s=t1sdata
-		    t2s=t2sdata
-                myTimeSpan=t2s-t1s
-		if myTimeSpan < 10000: ax1.plot([t1s,t2s],[antind+thisOffset,antind+thisOffset], color=thisColor, lw=2, alpha=.7)
-		else: badflags.append((thisant, myTimeSpan, thisReason))
-
-    ##badflags are ones which span a time longer than that used above
-    ##they can be so long that including them compresses the time axis so that none of the other flags are visible    
-#    print 'badflags', badflags
-    myXlim=ax1.get_xlim()
-    myXrange=myXlim[1]-myXlim[0]
-    legendFontSize=12
-    ax1.text(myXlim[0]+.05*myXrange, 29, 'FOCUS', color='red', size=legendFontSize)
-    ax1.text(myXlim[0]+.17*myXrange, 29, 'SUBREFLECTOR', color='blue', size=legendFontSize)
-    ax1.text(myXlim[0]+.42*myXrange, 29, 'OFF SOURCE', color='green', size=legendFontSize)
-    ax1.text(myXlim[0]+.62*myXrange, 29, 'NOT IN SUBARRAY', color='black', size=legendFontSize)
-    ax1.text(myXlim[0]+.90*myXrange, 29, 'Other', color='orange', size=legendFontSize)
-    ax1.set_ylim([0,30])   
-
-    ax1.set_yticks(range(1,len(myants)+1))
-    ax1.set_yticklabels(myants)
-    ax1.set_xticks(pl.linspace(myXlim[0],myXlim[1],3))
-
-    mytime=[myXlim[0],(myXlim[1]+myXlim[0])/2.0,myXlim[1]]
-    myTimestr = []
-    for time in mytime:
-        q1=qa.quantity(time,'s')
-        time1=qa.time(q1,form='ymd',prec=9)
-        myTimestr.append(time1)
-
-    ax1.set_xticklabels([myTimestr[0],myTimestr[1][11:], myTimestr[2][11:]])
-    #print myTimestr
-    if plotname=='':
-	    pl.draw()
-    else:
-	    pl.savefig(plotname, dpi=150)    
-    return
-
-def getmstimes(vis,ms_starttime,ms_endtime,t1sdata,t2sdata):
+def getmstimes(vis):
     # Get start and end times from MS
     # this might take too long for large MS
     # NOTE: could also use values from OBSERVATION table col TIME_RANGE
     mslocal2 = casac.homefinder.find_home_by_name('msHome').create()
     success = True
-    ms_starttime = ''
-    ms_endtime = ''
-    t1sdata=0.0
-    t2sdata=0.0
+    ms_time1 = ''
+    ms_time2 = ''
+    t1sd=0.0
+    t2sd=0.0
     try:
 	    mslocal2.open(vis)
 	    timd = mslocal2.range(["time"])
@@ -1875,26 +1999,23 @@ def getmstimes(vis,ms_starttime,ms_endtime,t1sdata,t2sdata):
 	    ms_startmjds = timd['time'][0]
 	    ms_endmjds = timd['time'][1]
 	    t = qa.quantity(ms_startmjds,'s')
-	    t1sdata = t['value']
-	    ms_starttime = qa.time(t,form="ymd",prec=9)
-	    ms_startdate = qa.time(t,form=["ymd","no_time"])
-	    t0 = qa.totime(ms_startdate+'/00:00:00.00')
-	    t0d = qa.convert(t0,'d')
-	    t0s = qa.convert(t0,'s')
+	    t1sd = t['value']
+	    ms_time1 = qa.time(t,form="ymd",prec=9)
 	    t = qa.quantity(ms_endmjds,'s')
-	    t2sdata = t['value']
-	    ms_endtime = qa.time(t,form="ymd",prec=9)
-	    casalog.post('MS spans timerange '+ms_starttime+' to '+ms_endtime)
+	    t2sd = t['value']
+	    ms_time2 = qa.time(t,form="ymd",prec=9)
+	    casalog.post('MS spans timerange '+ms_time1+' to '+ms_time2)
     else:
 	    print 'WARNING: Could not open vis as MS to find times'
 	    casalog.post('WARNING: Could not open vis as MS to find times')
-    return success
+    return (ms_time1, ms_time2, t1sd, t2sd)
 
 def newplotflags(myflags, plotname, t1sdata, t2sdata):
     #
     # Function to plot flagging dictionary
     # Adapted from J.Marvil
     # Updated STM v4.1 2011-11-02 to handle ALMA flags
+    # Updated STM v4.2 2012-02-16 trim flag times to data times
     try: 
         import casac 
     except ImportError, e: 
@@ -2054,7 +2175,25 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
 		    else:
 			    plotflag[ipf]['t1s'] = timmin
 			    plotflag[ipf]['t2s'] = timmax
-			    
+		    
+	    
+    # if flag times are beyond range of data, trim them
+    # Added STM 2012-02-16
+    if (t2sdata >= t1sdata > 0) and (timmin<t1sdata or timmax>t2sdata):
+	    # min,max data times
+	    q1 = qa.quantity(t1sdata,'s')
+	    tdata1=qa.time(q1,form='ymd',prec=9)
+	    q2 = qa.quantity(t2sdata,'s')
+	    tdata2=qa.time(q2,form='ymd',prec=9)
+	    print '  WARNING: Trimming flag times to data limits '+tdata1+' to '+tdata2
+	    
+	    for ipf in range(npf):
+		    t1s = plotflag[ipf]['t1s']
+		    t2s = plotflag[ipf]['t2s']
+		    if t1s < t1sdata:
+			    plotflag[ipf]['t1s'] = t1sdata
+		    if t2s > t2sdata:
+			    plotflag[ipf]['t2s'] = t2sdata
 	    
     # make reason dictionary with mapping of colors and offsets (-0.3 to 0.3)
     readict = {}
@@ -2103,7 +2242,7 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
     ax1=f1.add_axes([.15,.1,.75,.85])
 #    ax1.set_ylabel('antenna')
 #    ax1.set_xlabel('time')
-    badflags=[]
+    #badflags=[]
     for thisant in myants:
         antind+=1
 	for ipf in range(npf):
@@ -2114,9 +2253,13 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
 		t1s = plotflag[ipf]['t1s']
 		t2s = plotflag[ipf]['t2s']
 		myTimeSpan=t2s-t1s
-		if myTimeSpan < 10000: ax1.plot([t1s,t2s],[antind+thisOffset,antind+thisOffset], color=thisColor, lw=2, alpha=.7)
-		else: badflags.append((thisant, myTimeSpan, thisReason))
+		#
+		# Old approach, restrict timerange
+		# if myTimeSpan < 10000:
+		# 	ax1.plot([t1s,t2s],[antind+thisOffset,antind+thisOffset], color=thisColor, lw=2, alpha=.7)
+		# else: badflags.append((thisant, myTimeSpan, thisReason))
 
+		ax1.plot([t1s,t2s],[antind+thisOffset,antind+thisOffset], color=thisColor, lw=2, alpha=.7)
     ##badflags are ones which span a time longer than that used above
     ##they can be so long that including them compresses the time axis so that none of the other flags are visible    
 #    print 'badflags', badflags
