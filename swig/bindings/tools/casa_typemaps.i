@@ -131,7 +131,25 @@ using namespace casac;
    }
 }
 
+%typemap(in) BoolVec& {
+   $1 = new casac::BoolAry;
+   if(pyarray_check($input)){
+      numpy2vector($input, $1->value, $1->shape);
+   } else {
+      pylist2vector($input,  $1->value, $1->shape);
+   }
+}
+
 %typemap(in) IntVec {
+   $1 = new casac::IntAry;
+   if(pyarray_check($input)){
+      numpy2vector($input, $1->value, $1->shape);
+   } else {
+      pylist2vector($input,  $1->value, $1->shape);
+   }
+}
+
+%typemap(in) IntVec& {
    $1 = new casac::IntAry;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
@@ -149,7 +167,53 @@ using namespace casac;
    }
 }
 
+%typemap(in) DoubleVec& {
+   if(!$1)
+      $1 = new casac::DoubleAry;
+   if(pyarray_check($input)){
+      numpy2vector($input, $1->value, $1->shape);
+   } else {
+      pylist2vector($input,  $1->value, $1->shape);
+   }
+}
+
+%typemap(in) std::vector<double> & {
+   $1 = new std::vector<double>(0);
+   std::vector<int> shape;
+   PyObject *mytype = PyObject_Str(PyObject_Type($input));
+   //cerr << PyString_AsString(mytype) << endl;
+  
+   if(casac::pyarray_check($input)){
+      //cerr << "numpy2vec" << endl;
+      casac::numpy2vector($input, *$1, shape);
+   } else if (PyString_Check($input)){
+      //cerr << "PyString_AsDouble" << endl;
+      $1->push_back(-1);
+   } else if (PyInt_Check($input)){
+      //cerr << "PyInt_AsDouble" << endl;
+      $1->push_back(double(PyInt_AsLong($input)));
+   } else if (PyLong_Check($input)){
+      //cerr << "PyLong_AsDouble" << endl;
+      $1->push_back(PyLong_AsDouble($input));
+   } else if (PyFloat_Check($input)){
+      //cerr << "PyFloat_AsDouble" << endl;
+      $1->push_back(PyFloat_AsDouble($input));
+   } else {
+      //cerr << "pylist2vector" << endl;
+      casac::pylist2vector($input,  *$1, shape);
+   }
+}
+
 %typemap(in) ComplexVec {
+   $1 = new casac::ComplexAry;
+   if(pyarray_check($input)){
+      numpy2vector($input, $1->value, $1->shape);
+   } else {
+      pylist2vector($input,  $1->value, $1->shape);
+   }
+}
+
+%typemap(in) ComplexVec& {
    $1 = new casac::ComplexAry;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);

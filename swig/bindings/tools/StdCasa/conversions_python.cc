@@ -1,5 +1,5 @@
-#include <tools/swigconvert_python.h>
 #include <tools/casaswig_types.h>
+#include <tools/swigconvert_python.h>
 #include <Python.h>
 #include <string.h>
 #if USING_NUMPY_ARRAYS
@@ -8,6 +8,7 @@
 #include <patchlevel.h>
 
 #include <stdcasa/StdCasa/string_conversions>
+#include <iostream>
 
 STRINGTOCOMPLEX_DEFINITION(casac::complex,stringtoccomplex)
 
@@ -154,7 +155,7 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
 
 #ifndef AIPS_64B
 #define NUMPY2VECTOR(TYPE,NPYTYPE,NPY_TYPE,DIRECT_COPY_COND,BOOLCVT,COPY,STRCVT,CPXCVT,CPXIMAG,BTOSTR,ITOSTR,DTOSTR,CTOSTR,ASSIGN,INCR) \
-static void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
+void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
     int *dims = (int *)PyArray_DIMS(obj);							\
     int ndims = PyArray_NDIM(obj);							\
     int itemsize = PyArray_ITEMSIZE(obj);						\
@@ -269,7 +270,7 @@ static void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<in
 }
 #else
 #define NUMPY2VECTOR(TYPE,NPYTYPE,NPY_TYPE,DIRECT_COPY_COND,BOOLCVT,COPY,STRCVT,CPXCVT,CPXIMAG,BTOSTR,ITOSTR,DTOSTR,CTOSTR,ASSIGN,INCR) \
-static void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
+void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
     long *dims = PyArray_DIMS(obj);							\
     int ndims = PyArray_NDIM(obj);							\
     int itemsize = PyArray_ITEMSIZE(obj);						\
@@ -403,7 +404,7 @@ inline void initialize_numpy( ) {
 	import_array( );
     }
 }
-inline int pyarray_check(PyObject *obj) {
+int casac::pyarray_check(PyObject *obj) {
     if ( initialized_numpy_ == 0 ) initialize_numpy( );
     return PyArray_Check(obj);
 }
@@ -461,7 +462,7 @@ inline int pyarray_check(PyObject *obj) {
 #define CPXCVT_REAL(val) (val.real)
 
 #define PYLIST2VECTOR(TYPE,BOOLCVT,INTCVT,DOUBLECVT,COMPLEXCVT,STRINGCVT)		\
-static int pylist2vector( PyObject *array, std::vector<TYPE> &vec, std::vector<int> &shape, int stride = 1, int offset = 0 ) { \
+int casac::pylist2vector( PyObject *array, std::vector<TYPE> &vec, std::vector<int> &shape, int stride, int offset ) { \
 											\
     if ( PyList_Check(array) || PyTuple_Check(array) ) {				\
 	int number_elements = -1;							\
@@ -487,7 +488,7 @@ static int pylist2vector( PyObject *array, std::vector<TYPE> &vec, std::vector<i
 		    return 0;								\
 											\
 		std::vector<int> element_shape;						\
-		int result = pylist2vector( ele, vec, element_shape, stride*array_size, i*stride+offset ); \
+		int result = casac::pylist2vector( ele, vec, element_shape, stride*array_size, i*stride+offset ); \
 											\
 		if ( result == 0 ) return 0;						\
 											\
@@ -733,11 +734,11 @@ PyObject *map_array_numpy( const std::vector<std::string> &vec, const std::vecto
 
 #define HANDLE_NUMPY_ARRAY_CASE(NPYTYPE,CVTTYPE)				\
     case NPYTYPE:								\
-	numpy2vector(obj,result.as ## CVTTYPE ## Vec(),result.arrayshape()); 	\
+        casac::numpy2vector(obj,result.as ## CVTTYPE ## Vec(),result.arrayshape()); 	\
 	break;
 
 #define HANDLE_NUMPY_ARRAY							\
-else if ( pyarray_check(obj) ) {						\
+else if ( casac::pyarray_check(obj) ) {						\
     switch ( PyArray_TYPE(obj) ) {						\
     HANDLE_NUMPY_ARRAY_CASE(NPY_BOOL,Bool)					\
     HANDLE_NUMPY_ARRAY_CASE(NPY_BYTE,Int)					\
@@ -784,7 +785,7 @@ else if ( pyarray_check(obj) ) {						\
     }										\
 }
 
-#define NOT_NUMPY_ARRAY(OBJ) && ! pyarray_check(OBJ)
+#define NOT_NUMPY_ARRAY(OBJ) && ! casac::pyarray_check(OBJ)
 
 #else
 
@@ -1025,7 +1026,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
             if(PyBool_Check(val) || PyInt_Check(val) || PyLong_Check(val) ||            \
                PyFloat_Check(val) || PyString_Check(val) || PyComplex_Check(val) ||     \
                PyList_Check(val) || PyTuple_Check(val) || PyDict_Check(val) ||          \
-               (pyarray_check(val) && (PyArray_TYPE(val) == NPY_BOOL ||                 \
+               (casac::pyarray_check(val) && (PyArray_TYPE(val) == NPY_BOOL ||                 \
                PyArray_TYPE(val) == NPY_BYTE || PyArray_TYPE(val) == NPY_UBYTE ||       \
                PyArray_TYPE(val) == NPY_SHORT || PyArray_TYPE(val) == NPY_USHORT ||     \
                PyArray_TYPE(val) == NPY_INT || PyArray_TYPE(val) == NPY_UINT ||         \
@@ -1042,7 +1043,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 	}										\
     }
 
-void pyobj2variant(PyObject *obj, variant &result) {
+void casac::pyobj2variant(PyObject *obj, variant &result) {
     PYOBJ2VARIANT(result.push,,false)
 }
 
@@ -1188,7 +1189,7 @@ PyObject *variant2pyobj(const variant &val) {
     return result;
 }
 
-variant pyobj2variant(PyObject *obj, bool throw_error) {
+variant casac::pyobj2variant(PyObject *obj, bool throw_error) {
     variant result;
 
     PYOBJ2VARIANT(return variant,,throw_error)
@@ -1233,40 +1234,18 @@ static int python_ ## ARY ## Ary_check_pytuple(PyObject *obj) {				\
 }											\
 											\
 int python_ ## ARY ## Ary_check(PyObject *obj) {					\
-    if (pyarray_check(obj)) return 1;							\
+    if (casac::pyarray_check(obj)) return 1;							\
     if (PyList_Check(obj)) return python_ ## ARY ## Ary_check_pylist(obj);		\
     if (PyTuple_Check(obj)) return python_ ## ARY ## Ary_check_pytuple(obj);		\
     return 0;										\
-}											\
-											\
-PyObject *convert_idl_ ## ARY ## Ary_to_python_ ## ARY ## Ary( const ARY ## Ary &from) { \
-  return map_array( from.value, from.shape );						\
-}											\
-											\
-int convert_idl_ ## ARY ## Ary_from_python_ ## ARY ## Ary(PyObject *obj, void *s) {	\
-    casac::ARY ## Ary *to = (casac::ARY ## Ary *) s;					\
-    if (pyarray_check(obj)) {								\
-	numpy2vector(obj,to->value,to->shape);						\
-    } else {										\
-	pylist2vector(obj,to->value,to->shape);						\
-    }											\
-    return 1;										\
 }
+											\
 #else
 #define ARYSTRUCT_CONVERT(ARY)								\
 											\
 int python_ ## ARY ## Ary_check(PyObject *obj) {					\
 	return PyList_Check(obj) || PyTuple_Check(obj);					\
-}											\
-											\
-PyObject *convert_idl_ ## ARY ## Ary_to_python_ ## ARY ## Ary( const ARY ## Ary &from) { \
-  return map_array( from.value, from.shape );						\
-}											\
-											\
-int convert_idl_ ## ARY ## Ary_from_python_ ## ARY ## Ary(PyObject *obj, void *s) {	\
-    casac::ARY ## Ary *to = (casac::ARY ## Ary *) s;					\
-    pylist2vector(obj,to->value,to->shape);						\
-    return 1;										\
+}
 }
 #endif
 ARYSTRUCT_CONVERT(Bool)
@@ -1276,7 +1255,7 @@ ARYSTRUCT_CONVERT(Double)
 ARYSTRUCT_CONVERT(String)
 
 int is_intvec_compatible_numpy_array( PyObject *obj ) {
-    if ( pyarray_check(obj) &&
+    if ( casac::pyarray_check(obj) &&
 	 ( PyArray_TYPE(obj) == NPY_BOOL ||
 	   PyArray_TYPE(obj) == NPY_BYTE ||
 	   PyArray_TYPE(obj) == NPY_UBYTE ||
@@ -1292,7 +1271,7 @@ int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s ) {
     if ( is_intvec_compatible_numpy_array(obj) ) {
 	std::vector<int> *to = (std::vector<int>*) s;
 	std::vector<int> shape;
-	numpy2vector(obj,*to, shape);
+	casac::numpy2vector(obj,*to, shape);
 	return 1;
     }
     return 0;

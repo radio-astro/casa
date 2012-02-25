@@ -10,6 +10,7 @@
 //#include <casac/StringAry.h>
 //#include <WX/Utils/value.h>
 #include <string>
+#include <tools/casaswig_types.h>
 //#include <casac/complex.h>
 
 namespace casac {
@@ -40,6 +41,7 @@ namespace casac {
 
 
 variant pyobj2variant(PyObject*,bool throw_error=false);
+void pyobj2variant(PyObject*,variant&);
 PyObject *variant2pyobj(const variant &val);
 PyObject *record2pydict(const record &val);
 int convert_record_value_from_python_dict(PyObject *obj, void *s);
@@ -55,22 +57,31 @@ int convert_variant_value_from_python_obj(PyObject *obj, void *s);
 int is_intvec_compatible_numpy_array( PyObject *obj );
 int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s );
 
+
+int pyarray_check(PyObject *obj);
+
 #define AMAP_ARRAY(TYPE) \
 PyObject *map_array_numpy(const std::vector<TYPE> &vec, const std::vector<int> &shape);         \
 PyObject *map_vector_numpy(const std::vector<TYPE> &vec);                                       \
 inline PyObject *map_array( const std::vector<TYPE> &vec, const std::vector<int> &shape ) {     \
                             return map_array_numpy(vec, shape);                                 \
-                                                                                                \
 }                                                                                               \
+                                                                                                \
 inline PyObject *map_vector( const std::vector<TYPE> &vec ) {                                   \
                              return map_vector_numpy( vec );                                    \
-}
+}                                                                                               \
+void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape );           \
+int pylist2vector( PyObject *array, std::vector<TYPE> &vec, std::vector<int> &shape, int stride = 1, int offset = 0 );
+
 
 AMAP_ARRAY(std::string)
 AMAP_ARRAY(bool)
 AMAP_ARRAY(int)
 AMAP_ARRAY(double)
-//AMAP_ARRAY(casac::complex)
+struct casac::complex;
+AMAP_ARRAY(casac::complex)
 AMAP_ARRAY(std::complex<double>)
-	}
+
+}
+
 #endif
