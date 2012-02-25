@@ -1213,6 +1213,11 @@ cb.close()
      <value></value>
      </param>
 
+     <param type="string" direction="in" name="listfile">
+     <description>Name of listfile that contains the fit information.  Default is '' (no file).</description>
+     <value></value>
+     </param>
+
      <param type="bool" direction="in" name="append">
      <description>Append to existing table?</description>
      <value>false</value>

@@ -181,6 +181,7 @@ scripts/vishead_util.py
 scripts/simple_cluster.py
 scripts/simple_summary.py
 scripts/parallelSplit.py
+scripts/filltsys.py
 scripts/task_msmoments.py )
 
 add_subdirectory( scripts/tests )

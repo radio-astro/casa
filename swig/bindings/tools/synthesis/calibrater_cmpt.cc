@@ -596,6 +596,7 @@ casac::record* calibrater::fluxscale(
 		      const ::casac::variant& reference,
 		      const std::string& tableout,
 		      const ::casac::variant& transfer,
+		      const std::string& listfile,
 		      const bool append, 
 		      const std::vector<int>& refspwmap)
 {
@@ -616,17 +617,30 @@ casac::record* calibrater::fluxscale(
     os << "Beginning fluxscale--(MSSelection version)-------" << LogIO::POST;
     
     // Forward to Calibrater object:
+
     SolvableVisCal::fluxScaleStruct oFluxD;
 //    Matrix<Double> fluxd;
 //    Matrix<Double> fluxderr;
     Vector<Int> tranidx;
+
+    String oListFile( toCasaString(listfile) );
+    oListFile.ltrim( ' ' );
+    oListFile.ltrim( '\t' );
+    oListFile.ltrim( '\n' );
+    oListFile.ltrim( '\r' );
+    oListFile.rtrim( ' ' );
+    oListFile.rtrim( '\t' );
+    oListFile.rtrim( '\n' );
+    oListFile.rtrim( '\r' );
+
     itsCalibrater->fluxscale(tablein,tableout,
 			     toCasaString(reference),
 			     refspwmap,
 			     toCasaString(transfer),
 			     append,
 			     oFluxD,
-			     tranidx);
+			     tranidx,
+			     oListFile);
 
 /*    
     // Do something about output

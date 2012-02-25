@@ -648,49 +648,52 @@ def getNumPar(cmdlist):
                         xval = xval.strip("'")
                     if xval.count('"') > 0:
                         xval = xval.strip('"')
+                    # Remove blanks
+                    xval=xval.replace(' ','');
 
-                # Check which parameter
-                if xkey == "scan":
-                    si += 1
-                    npars['scan'] = si
-
-                elif xkey == "field":
-                    fi += 1
-                    npars['field'] = fi
-
-                elif xkey == "antenna":
-                    ai += 1
-                    npars['antenna'] = ai
-
-                elif xkey == "timerange":
-                    ti += 1
-                    npars['timerange'] = ti
-
-                elif xkey == "correlation":
-                    coi += 1
-                    npars['correlation'] = coi
-
-                elif xkey == "intent":
-                    ii += 1
-                    npars['intent'] = ii
-
-                elif xkey == "feed":
-                    fei += 1
-                    npars['feed'] = fei
-
-                elif xkey == "array":
-                    ari += 1
-                    npars['array'] = ari
-                    arrays += xval + ','
-
-                elif xkey == "uvrange":
-                    ui += 1
-                    npars['uvrange'] = ui
-
-                elif xkey == "spw":
-                    pi += 1
-                    npars['spw'] = pi
-
+                # Check which parameter, if not empty
+                if xval != "":
+                    if xkey == "scan":
+                        si += 1
+                        npars['scan'] = si
+                        
+                    elif xkey == "field":
+                        fi += 1
+                        npars['field'] = fi
+                        
+                    elif xkey == "antenna":
+                        ai += 1
+                        npars['antenna'] = ai
+                        
+                    elif xkey == "timerange":
+                        ti += 1
+                        npars['timerange'] = ti
+                        
+                    elif xkey == "correlation":
+                        coi += 1
+                        npars['correlation'] = coi
+                        
+                    elif xkey == "intent":
+                        ii += 1
+                        npars['intent'] = ii
+                        
+                    elif xkey == "feed":
+                        fei += 1
+                        npars['feed'] = fei
+                        
+                    elif xkey == "array":
+                        ari += 1
+                        npars['array'] = ari
+                        arrays += xval + ','
+                        
+                    elif xkey == "uvrange":
+                        ui += 1
+                        npars['uvrange'] = ui
+                        
+                    elif xkey == "spw":
+                        pi += 1
+                        npars['spw'] = pi
+                        
     return npars
 
 def compressSelectionList(mslocal=None, vis='',dicpars={}):
@@ -706,13 +709,18 @@ def compressSelectionList(mslocal=None, vis='',dicpars={}):
     from numpy import unique;
     indices = mslocal.msseltoindex(vis=vis,field=dicpars['field'], spw=dicpars['spw'],baseline=dicpars['antenna']);
 
-    c_field = str(list(indices['field'])).strip('[]');
+    c_field = str(list(unique(indices['field']))).strip('[]');
     c_spw = str(list(unique(indices['spw']))).strip('[]');
     c_antenna = str(list( unique( list(indices['antenna1']) + list(indices['antenna2']) ) ) ).strip('[]');
 
     dicpars['field'] = c_field;
     dicpars['spw'] = c_spw;
     dicpars['antenna'] = c_antenna;
+
+    # Programmer note : Other selection parameters that can be compressed accurately
+    # from MS subtable information alone (no need to parse the main table) are 
+    # 'array', 'observationid', 'state(or intent)'. They are currently un-available 
+    # via ms.msseltoindex() and therefore not used here yet.
 
     return;
 

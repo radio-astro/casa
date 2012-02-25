@@ -768,7 +768,272 @@ class sdbaseline_functest(unittest.TestCase):
         self.assertTrue((rms <= max_rms), msg = "CSpline fitting failed.")
 
 
+class sdbaseline_multi_IF_test(unittest.TestCase):
+    """
+    Unit tests for task sdbaseline. No interactive testing.
+
+    This test intends to check whether sdbaseline task works fine
+    for data that has multiple IFs whose nchan differ each other. 
+
+    The list of tests:
+    test0 --- test multi IF data input
+
+    created 24/02/2012 by Takeshi Nakazato
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
+    # Input and output names
+    infile = 'testMultiIF.asap'
+    blparamfile_suffix = '_blparam.txt'
+    outroot = 'sdbaseline_test'
+    refblparamfile = 'refblparam_multiIF'
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(sdbaseline)
+
+    def tearDown(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+
+    def test01multi(self):
+        """test01multi: Test the task works with multi IF data"""
+        infile = self.infile
+        mode = "list"
+        blfunc = "poly"
+        order = 1
+        outfile = self.outroot+".asap"
+        blparamfile = outfile+self.blparamfile_suffix
+        
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._compareBLparam(blparamfile,self.datapath+self.refblparamfile)
+        reference = {5: {'rms': 1.4250789880752563,
+                         'min': -4.2702846527099609,
+                         'max': 5.5566844940185547,
+                         'max_abscissa': {'value': 823.0,
+                                          'unit': 'channel'},
+                         'median': 0.017315864562988281,
+                         'min_abscissa': {'value': 520.0,
+                                          'unit': 'channel'},
+                         'stddev': 1.425775408744812},
+                     7: {'rms': 1.4971292018890381,
+                         'min': -4.7103700637817383,
+                         'max': 5.4820127487182617,
+                         'max_abscissa': {'value': 1335.0,
+                                          'unit': 'channel'},
+                         'median': 0.027227401733398438,
+                         'min_abscissa': {'value': 1490.0,
+                                          'unit': 'channel'},
+                         'stddev': 1.4974949359893799}}
+        # sdstat must run each IF separately
+        for ifno in [5,7]:
+            self._compareStats(outfile,ifno,reference[ifno])
+        
+    def _compareBLparam(self,out,reference):
+        # test if baseline parameters are equal to the reference values
+        # currently comparing every lines in the files
+        # TO DO: compare only "Fitter range" and "Baseline parameters"
+        self.assertTrue(os.path.exists(out))
+        self.assertTrue(os.path.exists(reference),
+                        msg="Reference file doesn't exist: "+reference)
+        blparse_out = BlparamFileParser( out )
+        blparse_out.parse()
+        coeffs_out = blparse_out.coeff()
+        rms_out = blparse_out.rms()
+        blparse_ref = BlparamFileParser( reference )
+        blparse_ref.parse()
+        coeffs_ref = blparse_ref.coeff()
+        rms_ref = blparse_ref.rms()
+        allowdiff = 0.01
+        print 'Check baseline parameters:'
+        for irow in xrange(len(rms_out)):
+            print 'Row %s:'%(irow)
+            print '   Reference rms  = %s'%(rms_ref[irow])
+            print '   Calculated rms = %s'%(rms_out[irow])
+            print '   Reference coeffs  = %s'%(coeffs_ref[irow])
+            print '   Calculated coeffs = %s'%(coeffs_out[irow])
+            r0 = rms_ref[irow]
+            r1 = rms_out[irow]
+            rdiff = ( r1 - r0 ) / r0
+            self.assertTrue((abs(rdiff)<allowdiff),
+                            msg='row %s: rms is different'%(irow))
+            c0 = coeffs_ref[irow]
+            c1 = coeffs_out[irow]
+            for ic in xrange(len(c1)):
+                rdiff = ( c1[ic] - c0[ic] ) / c0[ic]
+                self.assertTrue((abs(rdiff)<allowdiff),
+                                msg='row %s: coefficient for order %s is different'%(irow,ic))
+        print ''
+#         self.assertTrue(listing.compare(out,reference),
+#                         'New and reference files are different. %s != %s. '
+#                         %(out,reference))
+
+    def _compareStats(self,outfile,ifno,reference):
+        # test if the statistics of baselined spectra are equal to
+        # the reference values
+        self.assertTrue(os.path.exists(outfile))
+        currstat = sdstat(infile=outfile,iflist=ifno)
+        self.assertTrue(isinstance(currstat,dict),
+                        msg="Failed to calculate statistics.")
+
+        #self.assertTrue(os.path.exists(reference),
+        #                msg="Reference file doesn't exist: "+reference)
+        refstat = reference
+
+        print "Statistics of baselined spectra:\n",currstat
+        print "Reference values:\n",refstat
+        # compare statistic values
+        #compstats = ['max','min','mean','sum','rms']
+        compstats = ['max','min','rms','median','stddev']
+        allowdiff = 0.01
+        self.assertEqual(currstat['max_abscissa']['unit'],
+                         refstat['max_abscissa']['unit'],
+                         msg="The units of max_abscissa are different")
+        self.assertEqual(currstat['min_abscissa']['unit'],
+                         refstat['min_abscissa']['unit'],
+                         msg="The units of min_abscissa are different")
+        if isinstance(refstat['max'],list):
+            for i in xrange(len(refstat['max'])):
+                for stat in compstats:
+                    rdiff = (currstat[stat][i]-refstat[stat][i])/refstat[stat][i]
+                    self.assertTrue((abs(rdiff)<allowdiff),
+                                    msg="'%s' of spectrum %s are different." % (stat, str(i)))
+                self.assertEqual(currstat['max_abscissa']['value'][i],
+                                 refstat['max_abscissa']['value'][i],
+                                 msg="The max channels/frequencies/velocities of spectrum %s are different" % str(i))
+                self.assertEqual(currstat['min_abscissa']['value'][i],
+                                 refstat['min_abscissa']['value'][i],
+                                 msg="The min channels/frequencies/velocities of spectrum %s are different" % str(i))
+        else:
+            for stat in compstats:
+                rdiff = (currstat[stat]-refstat[stat])/refstat[stat]
+                self.assertTrue((abs(rdiff)<allowdiff),
+                                msg="'%s' of spectrum %s are different." % (stat, str(0)))
+            self.assertEqual(currstat['max_abscissa']['value'],
+                             refstat['max_abscissa']['value'],
+                             msg="The max channels/frequencies/velocities of spectrum %s are different" % str(0))
+            self.assertEqual(currstat['min_abscissa']['value'],
+                             refstat['min_abscissa']['value'],
+                             msg="The min channels/frequencies/velocities of spectrum %s are different" % str(0))
+    
 
 
 def suite():
-    return [sdbaseline_basictest, sdbaseline_masktest, sdbaseline_functest]
+    return [sdbaseline_basictest, sdbaseline_masktest, sdbaseline_functest,
+            sdbaseline_multi_IF_test]
+
+### Utilities for reading blparam file
+class FileReader( object ):
+    def __init__( self, filename ):
+        self.__filename = filename
+        self.__data = None
+        self.__nline = None
+
+    def read( self ):
+        if self.__data is None:
+            f = open(self.__filename, 'r')
+            self.__data = f.readlines()
+            f.close()
+            self.__nline = len( self.__data )
+        return
+
+    def nline( self ):
+        self.read()
+        return self.__nline
+
+    def index( self, txt, start ):
+        return self.__data[start:].index( txt ) + 1 + start
+
+    def getline( self, idx ):
+        return self.__data[idx]
+
+class BlparamFileParser( FileReader ):
+    def __init__( self, blfile ):
+        FileReader.__init__( self, blfile )
+        self.__nrow = None
+        self.__coeff = None
+        self.__rms = None
+        self.__ctxt = 'Baseline parameters\n'
+        self.__rtxt = 'Results of baseline fit\n'
+
+    def nrow( self ):
+        self.read()
+        if self.__nrow is None:
+            return self._nrow()
+        else:
+            return self.__nrow
+
+    def coeff( self ):
+        self.read()
+        if self.__coeff is None:
+            self.parseCoeff()
+        return self.__coeff
+
+    def rms( self ):
+        self.read()
+        if self.__rms is None:
+            self.parseRms()
+        return self.__rms
+
+    def _nrow( self ):
+        self.__nrow = 0
+        for i in xrange(self.nline()):
+            if self.getline( i ) == self.__ctxt:
+                self.__nrow += 1
+        return self.__nrow
+
+    def parse( self ):
+        self.read()
+        self.parseCoeff()
+        self.parseRms()
+        return
+        
+    def parseCoeff( self ):
+        self.__coeff = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__coeff) < nrow ):
+            try:
+                idx = self.index( self.__ctxt, idx )
+                coeffs = []
+                while( self.getline( idx ) != self.__rtxt ):
+                    coeff = self.__parseCoeff( idx )
+                    coeffs += coeff
+                    idx += 1
+                self.__coeff.append( coeffs )
+            except:
+                break
+        return
+
+    def parseRms( self ):
+        self.__rms = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__rms) < nrow ):
+            try:
+                idx = self.index( self.__rtxt, idx )
+                self.__rms.append( self.__parseRms( idx ) )
+            except:
+                break   
+        return
+
+    def __parseCoeff( self, idx ):
+        return parseCoeff( self.getline( idx ) )
+
+    def __parseRms( self, idx ):
+        return parseRms( self.getline( idx ) )
+
+def parseCoeff( txt ):
+    clist = txt.rstrip( '\n' ).split(',')
+    ret = []
+    for c in clist:
+        ret.append( float( c.split('=')[1] ) )
+    return ret
+    
+def parseRms( txt ):
+    t = txt.lstrip().rstrip( '\n' )[6:]
+    return float( t )
+
