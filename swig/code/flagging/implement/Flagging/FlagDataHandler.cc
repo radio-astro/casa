@@ -68,7 +68,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 		slurp_p = false;
 	}
 
-	*logger_p << LogIO::NORMAL 
+	*logger_p << LogIO::DEBUG1
 		  << " Asyncio activated: " << asyncio_enabled_p
 		  << " Slurp activated: "<< slurp_p <<  LogIO::POST;
 
@@ -224,7 +224,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 	{
 		case COMPLETE_SCAN_MAPPED:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMPLETE_SCAN_MAPPED" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMPLETE_SCAN_MAPPED" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -243,7 +243,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -261,7 +261,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -279,7 +279,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case COMPLETE_SCAN_UNMAPPED:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMPLETE_SCAN_UNMAPPED" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMPLETE_SCAN_UNMAPPED" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -296,7 +296,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case COMBINE_SCANS_MAPPED:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMBINE_SCANS_MAPPED" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMBINE_SCANS_MAPPED" << LogIO::POST;
 			sortOrder_p = Block<int>(5);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -314,7 +314,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case COMBINE_SCANS_MAP_SUB_INTEGRATIONS_ONLY:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMBINE_SCANS_MAP_SUB_INTEGRATIONS_ONLY" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMBINE_SCANS_MAP_SUB_INTEGRATIONS_ONLY" << LogIO::POST;
 			sortOrder_p = Block<int>(5);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -331,7 +331,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY" << LogIO::POST;
 			sortOrder_p = Block<int>(5);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -348,7 +348,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case COMBINE_SCANS_UNMAPPED:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMBINE_SCANS_UNMAPPED" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMBINE_SCANS_UNMAPPED" << LogIO::POST;
 			sortOrder_p = Block<int>(5);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -364,7 +364,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case ANTENNA_PAIR:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: ANTENNA_PAIR" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: ANTENNA_PAIR" << LogIO::POST;
 			sortOrder_p = Block<int>(8);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -386,7 +386,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case  SUB_INTEGRATION:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: SUB_INTEGRATION" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: SUB_INTEGRATION" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -403,7 +403,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		case  ARRAY_FIELD:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: ARRAY_FIELD" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: ARRAY_FIELD" << LogIO::POST;
 			sortOrder_p = Block<int>(4);
 			sortOrder_p[0] = MS::ARRAY_ID;
 			sortOrder_p[1] = MS::FIELD_ID;
@@ -418,7 +418,7 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 		default:
 		{
-			*logger_p << LogIO::NORMAL << " Iteration mode: COMPLETE_SCAN_UNMAPPED" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " Iteration mode: COMPLETE_SCAN_UNMAPPED" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -778,7 +778,7 @@ FlagDataHandler::setTimeInterval(Double timeInterval)
 	if (timeInterval >= 0)
 	{
 		timeInterval_p = timeInterval;
-		*logger_p << LogIO::NORMAL << "Set time interval to " << timeInterval_p << "s"<<LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "Set time interval to " << timeInterval_p << "s"<<LogIO::POST;
 	}
 	else
 	{
@@ -829,56 +829,56 @@ FlagDataHandler::selectData()
 	// More debugging information from MS-Selection
 	if (!arraySelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected array ids are " << measurementSetSelection_p->getSubArrayList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected array ids are " << measurementSetSelection_p->getSubArrayList() << LogIO::POST;
 	}
 
 	if (!observationSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected observation ids are " << measurementSetSelection_p->getObservationList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected observation ids are " << measurementSetSelection_p->getObservationList() << LogIO::POST;
 	}
 
 	if (!fieldSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected field ids are " << measurementSetSelection_p->getFieldList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected field ids are " << measurementSetSelection_p->getFieldList() << LogIO::POST;
 	}
 
 	if (!scanSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected scan ids are " << measurementSetSelection_p->getScanList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected scan ids are " << measurementSetSelection_p->getScanList() << LogIO::POST;
 	}
 
 	if (!scanIntentSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected scan intent ids are " << measurementSetSelection_p->getStateObsModeList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected scan intent ids are " << measurementSetSelection_p->getStateObsModeList() << LogIO::POST;
 	}
 
 	if (!timeSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected time range is " << measurementSetSelection_p->getTimeList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected time range is " << measurementSetSelection_p->getTimeList() << LogIO::POST;
 	}
 
 	if (!spwSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
 	}
 
 	if (!baselineSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
-		*logger_p << LogIO::NORMAL << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
-		*logger_p << LogIO::NORMAL << " Selected baselines are " << measurementSetSelection_p->getBaselineList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected baselines are " << measurementSetSelection_p->getBaselineList() << LogIO::POST;
 	}
 
 	if (!uvwSelection_p.empty())
 	{
-		*logger_p << LogIO::NORMAL << " Selected uv range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected uv range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
 	}
 
 	if (!polarizationSelection_p.empty())
 	{
 		ostringstream polarizationListToPrint (ios::in | ios::out);
 		polarizationListToPrint << measurementSetSelection_p->getPolMap();
-		*logger_p << LogIO::NORMAL << " Selected correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Selected correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
 	}
 
 	return true;
@@ -1637,15 +1637,16 @@ FlagDataHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
 	// Apply channel selection (in row selection cannot be done with MSSelection)
 	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
 	Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
-	Vector<Int> spwlist = measurementSetSelection_p->getSpwList();
+    IPosition shape = spwchan.shape();
+    uInt nSelections = shape[0];
 	Int spw,channelStart,channelStop,channelStep,channelWidth;
-	for(uInt spw_i=0;spw_i<spwlist.nelements();spw_i++ )
+	for(uInt selection_i=0;selection_i<nSelections;selection_i++)
 	{
 		// NOTE: selectChannel needs channelStart,channelWidth,channelStep
-		spw = spwlist[spw_i];
-		channelStart = spwchan(spw_i,1);
-		channelStop = spwchan(spw_i,2);
-		channelStep = spwchan(spw_i,3);
+		spw = spwchan(selection_i,0);
+		channelStart = spwchan(selection_i,1);
+		channelStop = spwchan(selection_i,2);
+		channelStep = spwchan(selection_i,3);
 		channelWidth = channelStop-channelStart+1;
 		roVisIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
 	}

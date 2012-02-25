@@ -137,8 +137,8 @@ protected:
   Bool modifyModelVis(VisBuffer &vb);
   // Restore vb.imagingweights to the original
   Bool restoreImagingWeights(VisBuffer &vb);
-
- 
+  // have to call the initmaps of subftm
+  virtual void initMaps(const VisBuffer& vb);
   //// New MTFT specific internal parameters and functions
   CountedPtr<FTMachine> subftm_p; 
   String  subFTMname_p;

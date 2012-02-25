@@ -104,17 +104,14 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	backgroundMode_p = false;
 	AipsrcValue<Bool>::find (backgroundMode_p,"FlagAgent.background", false);
 
-	/*
 	if (backgroundMode_p)
 	{
-		*logger_p << logLevel_p << " Background mode enabled" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Background mode enabled" << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << logLevel_p << " Background mode disabled" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " Background mode disabled" << LogIO::POST;
 	}
-	*/
-
 }
 
 FlagAgentBase::~FlagAgentBase()
@@ -539,8 +536,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load ArrayId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
 
-			*logger_p << logLevel_p << " array selection is " << arraySelection_p << LogIO::POST;
-			*logger_p << logLevel_p << " array ids are " << arrayList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " array selection is " << arraySelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " array ids are " << arrayList_p << LogIO::POST;
 		}
 	}
 	else
@@ -568,8 +565,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load FieldId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
 
-			*logger_p << logLevel_p << " field selection is " << fieldSelection_p << LogIO::POST;
-			*logger_p << logLevel_p << " field ids are " << fieldList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " field selection is " << fieldSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " field ids are " << fieldList_p << LogIO::POST;
 		}
 	}
 	else
@@ -596,8 +593,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load scan
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
 
-			*logger_p << logLevel_p << " scan selection is " << scanSelection_p << LogIO::POST;
-			*logger_p << logLevel_p << " scan ids are " << scanList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " scan selection is " << scanSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " scan ids are " << scanList_p << LogIO::POST;
 		}
 	}
 	else
@@ -655,8 +652,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load spw
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
 
-			*logger_p << logLevel_p << " spw selection is " << spwSelection_p << LogIO::POST;
-			*logger_p << logLevel_p << " channel selection are " << channelList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " spw selection is " << spwSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " channel selection are " << channelList_p << LogIO::POST;
 		}
 	}
 	else
@@ -724,8 +721,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load uvw
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
 
-			*logger_p << logLevel_p << " uvrange selection is " << uvwSelection_p << LogIO::POST;
-			*logger_p << logLevel_p << " uvrange ids are " << uvwList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " uvrange ids are " << uvwList_p << LogIO::POST;
 		}
 	}
 	else
@@ -762,8 +759,8 @@ FlagAgentBase::setDataSelection(Record config)
 			ostringstream polarizationListToPrint (ios::in | ios::out);
 			polarizationListToPrint << polarizationList_p;
 
-			*logger_p << logLevel_p << " correlation selection is " << polarizationSelection_p << LogIO::POST;
-			*logger_p << logLevel_p << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
 		}
 	}
 	else
@@ -790,8 +787,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load ObservationId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
 
-			*logger_p << logLevel_p << " observation selection is " << observationList_p << LogIO::POST;
-			*logger_p << logLevel_p << " observation ids are " << observationList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " observation selection is " << observationList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " observation ids are " << observationList_p << LogIO::POST;
 		}
 	}
 	else
@@ -818,8 +815,8 @@ FlagAgentBase::setDataSelection(Record config)
 			// Request to pre-load StateId
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::StateId);
 
-			*logger_p << logLevel_p << " scan intent selection is " << scanIntentList_p << LogIO::POST;
-			*logger_p << logLevel_p << " scan intent ids are " << scanIntentList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " scan intent selection is " << scanIntentList_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " scan intent ids are " << scanIntentList_p << LogIO::POST;
 		}
 	}
 	else
@@ -1088,16 +1085,11 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 				channelStart = channelList_p(spw_i,1);
 				channelStop = channelList_p(spw_i,2);
 				spwFound = true;
+				for (uInt channel_i=0;channel_i<nChannels;channel_i++)
+				{
+					if ((channel_i>=channelStart) and (channel_i<=channelStop)) channelIndex_p.push_back(channel_i);
+				}
 			}
-		}
-
-		// If the spw is not found we return w/o adding any channels
-		if (!spwFound) return;
-
-		// Finally check what channels are within the range
-		for (uInt channel_i=0;channel_i<nChannels;channel_i++)
-		{
-			if ((channel_i>=channelStart) and (channel_i<=channelStop)) channelIndex_p.push_back(channel_i);
 		}
 	}
 	else
