@@ -718,6 +718,11 @@ def compressSelectionList(mslocal=None, vis='',dicpars={}):
     dicpars['spw'] = c_spw;
     dicpars['antenna'] = c_antenna;
 
+    # Programmer note : Other selection parameters that can be compressed accurately
+    # from MS subtable information alone (no need to parse the main table) are 
+    # 'array', 'observationid', 'state(or intent)'. They are currently un-available 
+    # via ms.msseltoindex() and therefore not used here yet.
+
     return;
 
 
