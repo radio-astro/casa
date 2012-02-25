@@ -244,6 +244,10 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
     time_get=0.0;
   }
   
+void MultiTermFT::initMaps(const VisBuffer& vb){
+  subftm_p->initMaps(vb);
+}
+
   void MultiTermFT::get(VisBuffer& vb, Int row)
   {
     if(dotime_p) tmr_p.mark();
