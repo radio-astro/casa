@@ -96,6 +96,9 @@ bool componentlist::open(const std::string& filename, const bool nomodify,
 
   bool rstat(false);
   try {
+    if(!(Table::isReadable(filename)) || !(Table(filename).tableDesc().isColumn("Shape_Parameters"))){
+      throw(AipsError(String(filename)+" is non existant or is not a componentlist table"));
+    }
     if(itsList !=0) 
       delete itsList;
     if(itsBin !=0) 
