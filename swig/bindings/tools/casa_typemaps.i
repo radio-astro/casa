@@ -63,6 +63,29 @@ using namespace casac;
   }
 }
 
+%typemap(in) std::vector<std::string> & {
+  /* Check if is a list */
+  if (PyList_Check($input)) {
+    int size = PyList_Size($input);
+    for (int i = 0; i < size; i++) {
+      PyObject *o = PyList_GetItem($input,i);
+      if (PyString_Check(o))
+        $1->push_back(PyString_AsString(PyList_GetItem($input,i)));
+      else {
+        PyErr_SetString(PyExc_TypeError,"list must contain strings");
+        return NULL;
+      }
+    }
+  } else {
+    if(PyString_Check($input)){
+       $1->push_back(PyString_AsString($input));
+    } else {
+       PyErr_SetString(PyExc_TypeError,"not a list");
+       return NULL;
+    }
+  }
+}
+
 %typemap(in) complex {
    if(PyComplex_Check($input)){
       Py_complex c = PyComplex_AsCComplex($input);
@@ -203,6 +226,27 @@ using namespace casac;
       casac::pylist2vector($input,  *$1, shape);
    }
 }
+%typemap(in) std::vector<int> & {
+   $1 = new std::vector<int>(0);
+   std::vector<int> shape;
+   PyObject *mytype = PyObject_Str(PyObject_Type($input));
+
+   if(casac::pyarray_check($input)){
+      casac::numpy2vector($input, *$1, shape);
+   } else if (PyString_Check($input)){
+      //$1->push_back(PyInt_AsLong(PyInt_FromString(PyString_AsString($input))));
+      $1->push_back(-1);
+   } else if (PyInt_Check($input)){
+      $1->push_back(int(PyInt_AsLong($input)));
+   } else if (PyLong_Check($input)){
+      $1->push_back(PyLong_AsLong($input));
+   } else if (PyFloat_Check($input)){
+      $1->push_back(PyInt_AsLong(PyNumber_Int($input)));
+   } else {
+      casac::pylist2vector($input,  *$1, shape);
+   }
+}
+
 
 %typemap(in) ComplexVec {
    $1 = new casac::ComplexAry;
@@ -262,6 +306,10 @@ using namespace casac;
    for(int i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
 */
+}
+
+%typemap(out) std::vector<std::string> {
+   $result = casac::map_vector($1);
 }
 
 %typemap(out) RecordVec {
