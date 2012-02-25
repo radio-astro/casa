@@ -553,7 +553,8 @@ def getUnion(mslocal, vis, cmdlist):
     dicpars['scan'] = scans
     dicpars['field'] = fields
     dicpars['antenna'] = ants
-    dicpars['timerange'] = times
+    # Times are handled better within the framework.
+    dicpars['timerange'] = '' #times 
     # Correlations should be handled only by the agents
     dicpars['correlation'] = ''
     dicpars['intent'] = ints
