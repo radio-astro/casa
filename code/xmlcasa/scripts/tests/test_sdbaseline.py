@@ -839,6 +839,34 @@ class sdbaseline_multi_IF_test(unittest.TestCase):
         self.assertTrue(os.path.exists(out))
         self.assertTrue(os.path.exists(reference),
                         msg="Reference file doesn't exist: "+reference)
+        blparse_out = BlparamFileParser( out )
+        blparse_out.parse()
+        coeffs_out = blparse_out.coeff()
+        rms_out = blparse_out.rms()
+        blparse_ref = BlparamFileParser( reference )
+        blparse_ref.parse()
+        coeffs_ref = blparse_ref.coeff()
+        rms_ref = blparse_ref.rms()
+        allowdiff = 0.01
+        print 'Check baseline parameters:'
+        for irow in xrange(len(rms_out)):
+            print 'Row %s:'%(irow)
+            print '   Reference rms  = %s'%(rms_ref[irow])
+            print '   Calculated rms = %s'%(rms_out[irow])
+            print '   Reference coeffs  = %s'%(coeffs_ref[irow])
+            print '   Calculated coeffs = %s'%(coeffs_out[irow])
+            r0 = rms_ref[irow]
+            r1 = rms_out[irow]
+            rdiff = ( r1 - r0 ) / r0
+            self.assertTrue((abs(rdiff)<allowdiff),
+                            msg='row %s: rms is different'%(irow))
+            c0 = coeffs_ref[irow]
+            c1 = coeffs_out[irow]
+            for ic in xrange(len(c1)):
+                rdiff = ( c1[ic] - c0[ic] ) / c0[ic]
+                self.assertTrue((abs(rdiff)<allowdiff),
+                                msg='row %s: coefficient for order %s is different'%(irow,ic))
+        print ''
 #         self.assertTrue(listing.compare(out,reference),
 #                         'New and reference files are different. %s != %s. '
 #                         %(out,reference))
@@ -896,3 +924,116 @@ class sdbaseline_multi_IF_test(unittest.TestCase):
 def suite():
     return [sdbaseline_basictest, sdbaseline_masktest, sdbaseline_functest,
             sdbaseline_multi_IF_test]
+
+### Utilities for reading blparam file
+class FileReader( object ):
+    def __init__( self, filename ):
+        self.__filename = filename
+        self.__data = None
+        self.__nline = None
+
+    def read( self ):
+        if self.__data is None:
+            f = open(self.__filename, 'r')
+            self.__data = f.readlines()
+            f.close()
+            self.__nline = len( self.__data )
+        return
+
+    def nline( self ):
+        self.read()
+        return self.__nline
+
+    def index( self, txt, start ):
+        return self.__data[start:].index( txt ) + 1 + start
+
+    def getline( self, idx ):
+        return self.__data[idx]
+
+class BlparamFileParser( FileReader ):
+    def __init__( self, blfile ):
+        FileReader.__init__( self, blfile )
+        self.__nrow = None
+        self.__coeff = None
+        self.__rms = None
+        self.__ctxt = 'Baseline parameters\n'
+        self.__rtxt = 'Results of baseline fit\n'
+
+    def nrow( self ):
+        self.read()
+        if self.__nrow is None:
+            return self._nrow()
+        else:
+            return self.__nrow
+
+    def coeff( self ):
+        self.read()
+        if self.__coeff is None:
+            self.parseCoeff()
+        return self.__coeff
+
+    def rms( self ):
+        self.read()
+        if self.__rms is None:
+            self.parseRms()
+        return self.__rms
+
+    def _nrow( self ):
+        self.__nrow = 0
+        for i in xrange(self.nline()):
+            if self.getline( i ) == self.__ctxt:
+                self.__nrow += 1
+        return self.__nrow
+
+    def parse( self ):
+        self.read()
+        self.parseCoeff()
+        self.parseRms()
+        return
+        
+    def parseCoeff( self ):
+        self.__coeff = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__coeff) < nrow ):
+            try:
+                idx = self.index( self.__ctxt, idx )
+                coeffs = []
+                while( self.getline( idx ) != self.__rtxt ):
+                    coeff = self.__parseCoeff( idx )
+                    coeffs += coeff
+                    idx += 1
+                self.__coeff.append( coeffs )
+            except:
+                break
+        return
+
+    def parseRms( self ):
+        self.__rms = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__rms) < nrow ):
+            try:
+                idx = self.index( self.__rtxt, idx )
+                self.__rms.append( self.__parseRms( idx ) )
+            except:
+                break   
+        return
+
+    def __parseCoeff( self, idx ):
+        return parseCoeff( self.getline( idx ) )
+
+    def __parseRms( self, idx ):
+        return parseRms( self.getline( idx ) )
+
+def parseCoeff( txt ):
+    clist = txt.rstrip( '\n' ).split(',')
+    ret = []
+    for c in clist:
+        ret.append( float( c.split('=')[1] ) )
+    return ret
+    
+def parseRms( txt ):
+    t = txt.lstrip().rstrip( '\n' )[6:]
+    return float( t )
+
