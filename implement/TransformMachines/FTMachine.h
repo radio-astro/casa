@@ -266,6 +266,7 @@ public:
 protected:
 
   friend class VisModelData;
+  friend class MultiTermFT;
   LogIO logIO_p;
 
   LogIO& logIO();
@@ -297,7 +298,7 @@ protected:
   //Use douple precision grid in gridding process
   Bool useDoubleGrid_p;
 
-  void initMaps(const VisBuffer& vb);
+  virtual void initMaps(const VisBuffer& vb);
   virtual void initPolInfo(const VisBuffer& vb);
 
 
