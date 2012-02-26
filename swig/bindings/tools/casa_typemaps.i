@@ -21,6 +21,18 @@ using casac::variant;
 using namespace casac;
 
 %}
+%typemap(in) int {
+   $1 = PyInt_AsLong($input);
+}
+
+%typemap(in) float {
+   $1 = PyFloat_AsDouble($input);
+}
+
+%typemap(in) double {
+   $1 = PyFloat_AsDouble($input);
+}
+
 %typemap(in) string {
    $1 = string(PyString_AsString($input));
 }
@@ -70,7 +82,10 @@ using namespace casac;
     for (int i = 0; i < size; i++) {
       PyObject *o = PyList_GetItem($input,i);
       if (PyString_Check(o))
-        $1->push_back(PyString_AsString(PyList_GetItem($input,i)));
+        if(i < $1->size())
+          (*$1)[i] = PyString_AsString(PyList_GetItem($input,i));
+        else
+          $1->push_back(PyString_AsString(PyList_GetItem($input,i)));
       else {
         PyErr_SetString(PyExc_TypeError,"list must contain strings");
         return NULL;
@@ -78,7 +93,10 @@ using namespace casac;
     }
   } else {
     if(PyString_Check($input)){
-       $1->push_back(PyString_AsString($input));
+       if(!$1->size())
+         $1->push_back(PyString_AsString($input));
+       else
+          (*$1)[0] = PyString_AsString($input);
     } else {
        PyErr_SetString(PyExc_TypeError,"not a list");
        return NULL;
