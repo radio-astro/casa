@@ -25,7 +25,30 @@ class sdtpimaging_unittest_base:
     """
     taskname='sdtpimaging'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
+    allowance=0.01
+    
+    def _compare(self, refdata, outdata):
+        self._checkfile(outdata)
+        refstat = imstat( imagename=refdata )
+        outstat = imstat( imagename=outdata )
+        keys = ['max', 'min', 'mean', 'maxpos', 'minpos', 'rms' ]
+        for key in keys:
+            ref = refstat[key]
+            out = outstat[key]
+            print 'stat %s: ref %s, out %s'%(key,ref,out)
+            for i in xrange( len(ref) ):
+                if ref[i] != 0.0:
+                    diff = (out[i]-ref[i])/ref[i]
+                    self.assertTrue( all( abs(diff.flatten()) < self.allowance ),
+                                     msg='statistics %s differ: reference %s, output %s'%(key,ref,out) )
+                else:
+                    self.assertTrue( out[i] == 0.0,
+                                     msg='statistics %s differ: reference %s, output %s'%(key,ref,out) )
 
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
 
 
 ###
@@ -135,29 +158,12 @@ class sdtpimaging_test1(unittest.TestCase,sdtpimaging_unittest_base):
         os.system( 'rm -rf '+self.prefix+'*' )
         os.system( 'rm -rf '+self.infile+'*' )
 
-    def _compare(self):
-        self._checkfile(self.outimage)
-        default(imval)
-        refval=imval(imagename=self.refimage,box='-1,-1',stokes='XX')
-        val=imval(imagename=self.outimage,box='-1,-1',stokes='XX')
-        refdata=refval['data']
-        data=val['data']
-        diff=refdata-data
-        maxdiff=abs(diff).max()/data.max()
-        casalog.post( 'maxdiff=%s'%maxdiff )
-        return maxdiff
-
     def test100(self):
         """Test 100: test to image data without spatial baseline subtraction"""
         self.res=sdtpimaging(infile=self.infile,calmode='none',stokes='XX',spw=2,createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
-        self.assertTrue(self._compare() < 0.001)
-        
-    def _checkfile( self, name ):
-        isthere=os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='output file %s was not created because of the task failure'%(name))
-        
+        self._compare(self.refimage,self.outimage)
+                
         
 ###
 # Test to image data with spatial baseline subtraction
@@ -190,30 +196,12 @@ class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
         os.system( 'rm -rf '+self.prefix+'*' )
         os.system( 'rm -rf '+self.infile+'*' )
 
-    def _compare(self):
-        self._checkfile(self.outimage)
-        default(imval)
-        refval=imval(imagename=self.refimage,box='-1,-1',stokes='XX')
-        val=imval(imagename=self.outimage,box='-1,-1',stokes='XX')
-        refdata=refval['data']
-        data=val['data']
-        diff=refdata-data
-        casalog.post( 'diff.shape=%s'%(list(diff.shape)) )
-        maxdiff=abs(diff).max()/data.max()
-        casalog.post( 'maxdiff=%s'%maxdiff )
-        return maxdiff
-
     def test200(self):
         """Test 200: test to image data with spatial baseline subtraction"""
         self.res=sdtpimaging(infile=self.infile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',spw=2,createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
-        self.assertTrue(self._compare() < 0.001)
+        self._compare(self.refimage,self.outimage)
         
-    def _checkfile( self, name ):
-        isthere=os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='output file %s was not created because of the task failure'%(name))
-
 
 def suite():
     return [sdtpimaging_test0,sdtpimaging_test1,sdtpimaging_test2]
