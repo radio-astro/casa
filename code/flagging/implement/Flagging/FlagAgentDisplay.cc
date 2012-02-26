@@ -33,7 +33,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	nPolarizations_p(1), freqList_p(Vector<Double>()),
 	antenna1_p(""),antenna2_p(""),
         dataDisplay_p(False), reportDisplay_p(False),showPlots_p(False),reportFormat_p("screen"),
-	stopAndExit_p(False),reportReturn_p(False)
+	stopAndExit_p(False),reportReturn_p(False),showBandpass_p(False)
   {
     // Parse parameters and set base variables.
     setAgentParameters(config);
@@ -383,36 +383,40 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 	    dataplotter_p->setlabel(" ",pl?" ":"Time",ostr1.str(),panels_p[pl].getInt());
 	    DisplayRaster(nChannels,nTimes,vecflagdat,panels_p[pl+nPolarizations_p].getInt());
 	    dataplotter_p->setlabel("Frequency",pl?" ":"Time",ostr2.str(),panels_p[pl+nPolarizations_p].getInt());
-	    
-	    // Make the Before/After bandpass plots
-	    for(uInt ch=0;ch<nChannels;ch++)
+
+	    if(showBandpass_p==True)
 	      {
-		if(precountspec[ch]==0) {origspectrum[ch]=0.0; precountspec[ch]=1.0;}
-		if(countspec[ch]==0) {flagspectrum[ch]=0.0; countspec[ch]=1.0;}
-	      }
-	    
-	    origspectrum = (origspectrum/precountspec);
-	    flagspectrum = (flagspectrum/countspec);
-	    AlwaysAssert( freqList_p.nelements()==nChannels , AipsError); 
-	    
-	    DisplayLine(nChannels, freqList_p, origspectrum, String("before:")+corrTypes[pl], 
-			String("red"), False, panels_p[pl+(2*nPolarizations_p)].getInt());
-	    DisplayScatter(nChannels, freqList_p, flagspectrum, String("after:")+corrTypes[pl], 
-			   String("blue"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
-	    
-	    //// TODO : Can I query the tfcrop agent for a "view" to overlay here. 
-	    // If available, get a plot from the agents
-	    /*
-	      for (uInt fmeth=0; fmeth<flagmethods.nelements(); fmeth++)
-	      {
-	      if(flagmethods[fmeth]->getMonitorSpectrum(flagspectrum,pl,bs))
-	      {
-	      //		    flagspectrum = log10(flagspectrum);
-	      DisplayLine(nChannels, freqlist_p, flagspectrum, flagmethods[fmeth]->methodName(), 
-	      String("green"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
-	      }
-	      }
-	    */
+		
+		// Make the Before/After bandpass plots
+		for(uInt ch=0;ch<nChannels;ch++)
+		  {
+		    if(precountspec[ch]==0) {origspectrum[ch]=0.0; precountspec[ch]=1.0;}
+		    if(countspec[ch]==0) {flagspectrum[ch]=0.0; countspec[ch]=1.0;}
+		  }
+		
+		origspectrum = (origspectrum/precountspec);
+		flagspectrum = (flagspectrum/countspec);
+		AlwaysAssert( freqList_p.nelements()==nChannels , AipsError); 
+		
+		DisplayLine(nChannels, freqList_p, origspectrum, String("before:")+corrTypes[pl], 
+			    String("red"), False, panels_p[pl+(2*nPolarizations_p)].getInt());
+		DisplayScatter(nChannels, freqList_p, flagspectrum, String("after:")+corrTypes[pl], 
+			       String("blue"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
+		
+		//// TODO : Can I query the tfcrop agent for a "view" to overlay here. 
+		// If available, get a plot from the agents
+		/*
+		  for (uInt fmeth=0; fmeth<flagmethods.nelements(); fmeth++)
+		  {
+		  if(flagmethods[fmeth]->getMonitorSpectrum(flagspectrum,pl,bs))
+		  {
+		  //		    flagspectrum = log10(flagspectrum);
+		  DisplayLine(nChannels, freqlist_p, flagspectrum, flagmethods[fmeth]->methodName(), 
+		  String("green"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
+		  }
+		  }
+		*/
+	      }// end of if (showBandPass_p)
 	    
 	  }//End Correlation Loop
 	
@@ -452,13 +456,14 @@ FlagReport
        FlagReport dispRep("list");
 
        /*
+       
        // Make sample arrays/vectors
        Int N=10;
        Array<Float> sample( IPosition(2, N, N) );
        sample = 0.0;
        sample( IPosition(2,N/2,N/2)) = 1.0;
-       Vector<Float> xdata( N ), ydata( N );
-       for(Int i=0;i<N;i++) xdata[i]=i;
+       Vector<Float> xdata( N ), ydata( N ), error ( N );
+       for(Int i=0;i<N;i++) {xdata[i]=i;}
        ydata = 1.0;
 
        // (1) Make a raster plot. Only one set of data is allowed here.
@@ -469,26 +474,31 @@ FlagReport
        dispRep.addReport( subRep0 ); 
 
        // (2) Make a line plot. Can give multiple lines to overlay on the same panel.
-       FlagReport subRep1 = FlagReport("plotline",agentName_p,"example line", "xaxis", "yaxis");
-       subRep1.addData(xdata,ydata,"line 1"); // add first set of line data
+       FlagReport subRep1 = FlagReport("plotpoints",agentName_p,"example line", "xaxis", "yaxis");
+       subRep1.addData("line", xdata,ydata,"",Vector<Float>(),"line 1"); // add first set of line data
        ydata[N/2]=2.0;
-       subRep1.addData(xdata,ydata,"line 2"); // add second set of line data to overlay
+       subRep1.addData("scatter", xdata,ydata,"",Vector<Float>(),"scatter 2"); // add second set of line data to overlay
 
        // Add this line FlagReport to the list
        dispRep.addReport( subRep1 ); 
        
-       // (3) Make another raster plot. Only one set of data is allowed here.
-       FlagReport subRep2 = FlagReport("plotraster",agentName_p,"example raster", "xaxis", "yaxis");
-       sample( IPosition(2,N/4,N/2)) = 5.0;
-       subRep2.addData(sample); // add 2D data
+       // (3) Make an overlay of a line with errorbar, scatter with errorbar, and scatter with circle
+       FlagReport subRep2 = FlagReport("plotpoints",agentName_p,"example line", "xaxis", "yaxis");
+       for(Int i=0;i<N;i++) {error[i]=i;}
+       subRep2.addData("line", xdata,ydata,"bar",error,"line+bar"); // add first set of line data, with errorbars
+       for(Int i=0;i<N;i++) {xdata[i] += 0.3; error[i]=i; ydata[i]+=2.0;}
+       subRep2.addData("scatter", xdata, ydata,"bar",error,"scatter+bar"); // add second set of scatter data to overlay, with error bars
+       for(Int i=0;i<N;i++) {xdata[i] += 0.3; error[i]=i*10; ydata[i]+=2.0;}
+       subRep2.addData("scatter", xdata, ydata,"circle",error,"scatter+circle"); // add third set, scatter data with circles.
 
-       // Add this raster FlagReport to the list.
+       // Add this line FlagReport to the list
        dispRep.addReport( subRep2 ); 
-
 
        if( ! dispRep.verifyFields() )
 	 cout << "Problem ! " << endl;
+       
        */
+
 
        return dispRep;
  }// end of getReport()
@@ -524,7 +534,7 @@ FlagReport
                         if(valid)
 			  {
 			    String type = oneRep.reportType();
-			    if( type=="plotraster" || type=="plotline" || type=="plotscatter" )
+			    if( type=="plotraster" || type=="plotpoints" )
 			      {
 				previd=rep; break;
 			      }
@@ -551,7 +561,7 @@ FlagReport
 		    oneRep.get( RecordFieldId("name") , agentName );
 		    String type = oneRep.reportType();
 		    
-		    if( type=="plotraster" || type=="plotline" || type=="plotscatter" )
+		    if( type=="plotraster" || type=="plotpoints" )
 		      {
 			
                             *logger_p << reportid << " : " << type << " with " << oneRep.nData() << " layer(s) " << " from " << agentName << LogIO::POST;
@@ -572,7 +582,7 @@ FlagReport
 				reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
 				
 			      }
-			    else if( type == "plotline" || type == "plotscatter") 
+			    else if( type == "plotpoints") 
 			      {
 				oneRep.get( RecordFieldId("title") , title );
 				oneRep.get( RecordFieldId("xlabel") , xlabel );
@@ -583,18 +593,28 @@ FlagReport
 				Int ndata = oneRep.nData();
 				for(Int datid=0;datid<ndata;datid++)
 				  {
-				    Vector<Float> xdata,ydata;
-				    String legendlabel;
+				    Vector<Float> xdata,ydata,error;
+				    String legendlabel,plottype="line",errortype="";
 				    oneRep.get( RecordFieldId("xdata"+String::toString(datid)) , xdata );
 				    oneRep.get( RecordFieldId("ydata"+String::toString(datid)) , ydata );
 				    oneRep.get( RecordFieldId("label"+String::toString(datid)) , legendlabel );
+				    oneRep.get( RecordFieldId("plottype"+String::toString(datid)) , plottype );
 				    
-				    reportplotter_p->line(dbus::af(xdata), dbus::af(ydata),(datid%2)?String("red"):String("blue"),legendlabel, report_panels_p[0].getInt());
+				    ///reportplotter_p->line(dbus::af(xdata), dbus::af(ydata),(datid%2)?String("red"):String("blue"),legendlabel, report_panels_p[0].getInt());
+
+				    if ( oneRep.isDefined( "error"+String::toString(datid)  ) )
+				      {
+					oneRep.get( RecordFieldId("error"+String::toString(datid)) , error );
+					oneRep.get( RecordFieldId("errortype"+String::toString(datid)) , errortype );
+				      }
+
+				    DisplayLineScatterError(reportplotter_p , plottype, xdata, ydata, errortype, error, legendlabel, (datid%2)?String("red"):String("blue"), report_panels_p[0].getInt() );
+
 				  }// end of for datid
 				
 				reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
 				
-			      }// end of plotline or plotscatter
+			      }// end of plotpoints
 				
 			    getReportUserInput();
 
@@ -652,6 +672,12 @@ FlagReport
   /******************     Plot Functions      ******************************/  
   /***********************************************************************/  
   
+  // Note : By default, only two rows of plots are created. 
+  // The third row, for bandpass plots (before and after) are turned off
+  // by the private variable 'showBandPass_p'. This can be later
+  // enabled when we get per-chunk 'extra info' displays/reports from 
+  // the agents. Right now, it's redundant info, and takes up too much
+  // space on small laptop screens.
   Bool FlagAgentDisplay::buildDataPlotWindow()
   {
     
@@ -660,12 +686,16 @@ FlagReport
     
     dataplotter_p = dbus::launch<FlagPlotServerProxy>();
     
-    panels_p.resize(nPolarizations_p*3);
+    Int nrows;
+    if(showBandpass_p==True) nrows=3;
+    else nrows=2;
+    panels_p.resize(nPolarizations_p*nrows);
     string zoomloc="";
     string legendloc="bottom";
+
+    // First row : Data with no flags
     panels_p[0] = dataplotter_p->panel( "", "", "", "",
 				    std::vector<int>( ),legendloc,zoomloc,0,false,false);
-    
     if(nPolarizations_p>1)
       {
 	for(Int i=1;i<nPolarizations_p;i++)
@@ -675,9 +705,10 @@ FlagReport
 	  }
       }
     
+
+    // Second row : Data with flags
     panels_p[nPolarizations_p] = dataplotter_p->panel( "", "", "", "",
 						   std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
-    
     if(nPolarizations_p>1)
       {
 	for(int i=nPolarizations_p+1;i<2*nPolarizations_p;i++)
@@ -686,16 +717,23 @@ FlagReport
 					    std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
 	  }
       }
-    panels_p[2*nPolarizations_p] = dataplotter_p->panel( "", "", "", "",
-						     std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
-    if(nPolarizations_p>1)
+
+    // Third row : Average Bandpass
+    if(showBandpass_p==True)
       {
-	for(int i=2*nPolarizations_p+1;i<3*nPolarizations_p;i++)
+	panels_p[2*nPolarizations_p] = dataplotter_p->panel( "", "", "", "",
+						     std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
+
+	if(nPolarizations_p>1)
 	  {
-	    panels_p[i] = dataplotter_p->panel( "", "", "", "",
-					    std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
+	    for(int i=2*nPolarizations_p+1;i<3*nPolarizations_p;i++)
+	      {
+		panels_p[i] = dataplotter_p->panel( "", "", "", "",
+						    std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
+	      }
 	  }
-      }
+      }// if showbandpass
+
     /*
     // Misc panel
     panels_p[8] = dataplotter_p->panel( "BandPass", "Frequency", "Amp", "",
@@ -821,9 +859,19 @@ FlagReport
     
     return;
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////   Plot functions
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
   
   void FlagAgentDisplay::DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame)
   {
+    if(data.nelements() != xdim*ydim)
+      {
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	*logger_p << LogIO::WARN << "Error in data XY dimensions. Not plotting" << LogIO::POST;
+	return;
+      }
     //    cout << "panel id : " << frame << endl;;
     
     // dataplotter_p->release( panel_p.getInt( ) );
@@ -833,142 +881,233 @@ FlagReport
     dataplotter_p->raster(dbus::af(data), xdim,ydim, "Hot Metal 1", frame);
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
   void FlagAgentDisplay::DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
+    if(xdata.nelements() != ydata.nelements())
+      {
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	*logger_p << LogIO::WARN << "X and Y plot data have different sizes. Not plotting " << LogIO::POST;
+	return;
+      }
     if( hold==False ) dataplotter_p->erase( frame );
     dataplotter_p->line(dbus::af(xdata), dbus::af(ydata),color,label,frame);
   }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
   
   void FlagAgentDisplay::DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
+    if(xdata.nelements() != ydata.nelements())
+      {
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	*logger_p << LogIO::WARN << "X and Y plot data have different sizes. Not plotting " << LogIO::POST;
+	return;
+      }
     if( hold==False ) dataplotter_p->erase( frame );
     dataplotter_p->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"dot",1,4,frame);
   }
-  
-  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Display scatter dots, with optional vertical error-bars, or circles or text labels, or all together.
+  // Send in vectors of size 0 for radii and pointlabels and error to disable them. 
+  void FlagAgentDisplay::DisplayLineScatterError(FlagPlotServerProxy *&plotter, String &plottype, Vector<Float> &xdata, Vector<Float> &ydata, String &errortype, Vector<Float> &error, String label, String color, uInt frame)
+  {
+    // Check X and Y shapes
+    if(xdata.nelements() != ydata.nelements())
+      {
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	*logger_p << LogIO::WARN << "X, Y plot data have different sizes. Not plotting." << LogIO::POST;
+	return;
+      }
+
+    ///    if( hold==False ) plotter->erase( frame );
+    
+    if(plottype==String("scatter"))
+      {
+	// Scatter-plot of X and Y
+	plotter->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"dot",1,4,frame);
+      }
+    else if (plottype==String("line"))
+      {
+	// Line plot of X and Y
+	plotter->line(dbus::af(xdata), dbus::af(ydata),color,label,frame);
+      }
+    else
+      {
+	return;
+      }
+
+    // Check Error shape ( if not zero, must match xdata,ydata)
+    if(error.nelements()>0)
+      {
+	if(error.nelements()!=xdata.nelements())
+	  {
+	    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	    *logger_p << LogIO::WARN << "Number of Error elements is different from data. Not plotting." << LogIO::POST;
+	    return;
+	  }
+
+	if(errortype == "bar")
+	  {
+	    Vector<Double>pointerror(2);
+	    Vector<Double>xval(2);
+	    for ( Int onepoint=0; onepoint<error.nelements(); onepoint++)
+	      {
+		xval[0]=xdata[onepoint];
+		xval[1]=xdata[onepoint];
+		pointerror[0]=ydata[onepoint] + error[onepoint];
+		pointerror[1]=ydata[onepoint] - error[onepoint];
+		plotter->line(dbus::af(xval), dbus::af(pointerror), color,"",frame);
+	      }
+	  }
+	else if(errortype == "circle")
+	  {
+	    // Check Circle shape ( if not zero, must match xdata,ydata)
+	    Vector<Double>xval(1),yval(1);
+	    for ( Int onepoint=0; onepoint<error.nelements(); onepoint++)
+	      {
+		xval[0]=xdata[onepoint];
+		yval[0]=ydata[onepoint];
+		plotter->scatter(dbus::af(xval), dbus::af(yval),color,"","ellipse",error[onepoint],4,frame);
+		// Note : I think this plots the centre point too. If so, it's a repeat....
+	      }
+	  }
+	else
+	  {
+	    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	    *logger_p << LogIO::WARN << "Unknown error-plot type. Not plotting." << LogIO::POST;
+	  }
+      }// if error
+
+    // Do a similar thing for labels. 
+    // NOTE : Cannot plot point-labels or text strings yet.
+
+  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////     GUI Layout Functions
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
   
   Bool FlagAgentDisplay :: setDataLayout()
   {
-    
+
     dock_xml_p = "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>	\
-<ui version=\"4.0\">				\
- <class>dock01</class>				\
- <widget class=\"QDockWidget\" name=\"dock01\">	\
-  <property name=\"geometry\">			\
-   <rect>					\
-    <x>0</x>					\
-    <y>0</y>					\
-    <width>770</width>				\
-    <height>80</height>				\
-   </rect>					\
-  </property>					\
-  <property name=\"sizePolicy\">				\
-   <sizepolicy hsizetype=\"Preferred\" vsizetype=\"Preferred\">	\
-    <horstretch>0</horstretch>					\
-    <verstretch>0</verstretch>					\
-   </sizepolicy>						\
-  </property>							\
-  <property name=\"minimumSize\">				\
-   <size>							\
-    <width>770</width>						\
-    <height>80</height>						\
-   </size>							\
-  </property>							\
-  <property name=\"windowTitle\">				\
-   <string/>							\
-  </property>							\
-  <widget class=\"QWidget\" name=\"dockWidgetContents\">	\
-   <widget class=\"QWidget\" name=\"\">				\
-    <property name=\"geometry\">				\
-     <rect>							\
-      <x>13</x>							\
-      <y>14</y>							\
-      <width>735</width>					\
-      <height>46</height>					\
-     </rect>							\
-    </property>							\
-    <layout class=\"QGridLayout\" name=\"gridLayout\">		\
-     <item row=\"0\" column=\"0\">				\
-      <widget class=\"QPushButton\" name=\"PrevBaseline\">	\
-       <property name=\"text\">					\
-        <string>Prev Baseline</string>				\
-       </property>						\
-      </widget>							\
-     </item>							\
-     <item row=\"0\" column=\"1\">				\
-      <widget class=\"QPushButton\" name=\"NextBaseline\">	\
-       <property name=\"text\">					\
-        <string>Next Baseline</string>				\
-       </property>						\
-      </widget>							\
-     </item>							\
-     <item row=\"0\" column=\"2\">				\
-      <layout class=\"QVBoxLayout\" name=\"verticalLayout\">	\
-       <property name=\"spacing\">				\
-        <number>0</number>					\
-       </property>						\
-       <property name=\"sizeConstraint\">			\
-        <enum>QLayout::SetMinimumSize</enum>			\
-       </property>						\
-       <item>							\
-        <widget class=\"QCheckBox\" name=\"FixAntenna1\">	\
-         <property name=\"text\">				\
-          <string>Fix Antenna1</string>				\
-         </property>						\
-        </widget>						\
-       </item>							\
-       <item>							\
-        <widget class=\"QCheckBox\" name=\"FixAntenna2\">	\
-         <property name=\"text\">				\
-          <string>Fix Antenna2</string>				\
-         </property>						\
-        </widget>						\
-       </item>							\
-      </layout>							\
-     </item>							\
-     <item row=\"0\" column=\"3\">				\
-      <widget class=\"QPushButton\" name=\"NextSpw\">		\
-       <property name=\"text\">					\
-        <string>Next SPW</string>				\
-       </property>						\
-      </widget>							\
-     </item>							\
-     <item row=\"0\" column=\"4\">				\
-      <widget class=\"QPushButton\" name=\"NextScan\">		\
-       <property name=\"text\">					\
-        <string>Next Scan</string>				\
-       </property>						\
-      </widget>							\
-     </item>							\
-     <item row=\"0\" column=\"5\">				\
-      <widget class=\"QPushButton\" name=\"NextField\">		\
-       <property name=\"text\">					\
-        <string>Next Field</string>				\
-       </property>						\
-      </widget>							\
-     </item>							\
-     <item row=\"0\" column=\"6\">				\
-      <widget class=\"QPushButton\" name=\"StopDisplay\">	\
-       <property name=\"text\">					\
-        <string>Stop Display</string>				\
-       </property>						\
-      </widget>							\
-     </item>							\
-     <item row=\"0\" column=\"7\">				\
-      <widget class=\"QPushButton\" name=\"Quit\">		\
-       <property name=\"text\">					\
-        <string>Quit</string>					\
-       </property>						\
-      </widget>							\
-     </item>							\
-    </layout>							\
-   </widget>							\
-  </widget>							\
- </widget>							\
- <resources/>							\
- <connections/>							\
-</ui>								\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+<ui version=\"4.0\">\
+ <class>dock01</class>\
+ <widget class=\"QDockWidget\" name=\"dock01\">\
+  <property name=\"geometry\">\
+   <rect>\
+    <x>0</x>\
+    <y>0</y>\
+    <width>770</width>\
+    <height>120</height>\
+   </rect>\
+  </property>\
+  <property name=\"sizePolicy\">\
+   <sizepolicy hsizetype=\"Preferred\" vsizetype=\"Preferred\">\
+    <horstretch>0</horstretch>\
+    <verstretch>0</verstretch>\
+   </sizepolicy>\
+  </property>\
+  <property name=\"minimumSize\">\
+   <size>\
+    <width>770</width>\
+    <height>87</height>\
+   </size>\
+  </property>\
+  <property name=\"windowTitle\">\
+   <string/>\
+  </property>\
+  <widget class=\"QWidget\" name=\"dockWidgetContents\">\
+   <layout class=\"QGridLayout\" name=\"gridLayout_2\">\
+    <item row=\"0\" column=\"0\">\
+     <layout class=\"QGridLayout\" name=\"gridLayout\">\
+      <item row=\"0\" column=\"0\">\
+       <widget class=\"QPushButton\" name=\"PrevBaseline\">\
+        <property name=\"text\">\
+         <string>Prev Baseline</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item row=\"0\" column=\"1\">\
+       <widget class=\"QPushButton\" name=\"NextBaseline\">\
+        <property name=\"text\">\
+         <string>Next Baseline</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item row=\"0\" column=\"2\">\
+       <layout class=\"QVBoxLayout\" name=\"verticalLayout\">\
+        <property name=\"spacing\">\
+         <number>0</number>\
+        </property>\
+        <property name=\"sizeConstraint\">\
+         <enum>QLayout::SetMinimumSize</enum>\
+        </property>\
+        <item>\
+         <widget class=\"QCheckBox\" name=\"FixAntenna1\">\
+          <property name=\"text\">\
+           <string>Fix Antenna1</string>\
+          </property>\
+         </widget>\
+        </item>\
+        <item>\
+         <widget class=\"QCheckBox\" name=\"FixAntenna2\">\
+          <property name=\"text\">\
+           <string>Fix Antenna2</string>\
+          </property>\
+         </widget>\
+        </item>\
+       </layout>\
+      </item>\
+      <item row=\"0\" column=\"3\">\
+       <widget class=\"QPushButton\" name=\"NextSpw\">\
+        <property name=\"text\">\
+         <string>Next SPW</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item row=\"0\" column=\"4\">\
+       <widget class=\"QPushButton\" name=\"NextScan\">\
+        <property name=\"text\">\
+         <string>Next Scan</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item row=\"0\" column=\"5\">\
+       <widget class=\"QPushButton\" name=\"NextField\">\
+        <property name=\"text\">\
+         <string>Next Field</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item row=\"0\" column=\"6\">\
+       <widget class=\"QPushButton\" name=\"StopDisplay\">\
+        <property name=\"text\">\
+         <string>Stop Display</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item row=\"0\" column=\"7\">\
+       <widget class=\"QPushButton\" name=\"Quit\">\
+        <property name=\"text\">\
+         <string>Quit</string>\
+        </property>\
+       </widget>\
+      </item>\
+     </layout>\
+    </item>\
+   </layout>\
+  </widget>\
+ </widget>\
+ <resources/>\
+ <connections/>\
+</ui>\
 ";
     
     
@@ -1007,51 +1146,49 @@ FlagReport
    <string/>\
   </property>\
   <widget class=\"QWidget\" name=\"dockWidgetContents\">\
-   <widget class=\"QPushButton\" name=\"Prev\">\
-    <property name=\"geometry\">\
-     <rect>\
-      <x>14</x>\
-      <y>20</y>\
-      <width>91</width>\
-      <height>26</height>\
-     </rect>\
-    </property>\
-    <property name=\"text\">\
-     <string>Prev</string>\
-    </property>\
-   </widget>\
-   <widget class=\"QPushButton\" name=\"Next\">\
-    <property name=\"geometry\">\
-     <rect>\
-      <x>111</x>\
-      <y>20</y>\
-      <width>92</width>\
-      <height>26</height>\
-     </rect>\
-    </property>\
-    <property name=\"text\">\
-     <string>Next</string>\
-    </property>\
-   </widget>\
-   <widget class=\"QPushButton\" name=\"Quit\">\
-    <property name=\"geometry\">\
-     <rect>\
-      <x>210</x>\
-      <y>20</y>\
-      <width>80</width>\
-      <height>26</height>\
-     </rect>\
-    </property>\
-    <property name=\"text\">\
-     <string>Quit</string>\
-    </property>\
-   </widget>\
+   <property name=\"enabled\">\
+    <bool>true</bool>\
+   </property>\
+   <property name=\"sizePolicy\">\
+    <sizepolicy hsizetype=\"Preferred\" vsizetype=\"Preferred\">\
+     <horstretch>0</horstretch>\
+     <verstretch>0</verstretch>\
+    </sizepolicy>\
+   </property>\
+   <layout class=\"QGridLayout\" name=\"gridLayout\">\
+    <item row=\"0\" column=\"0\">\
+     <layout class=\"QHBoxLayout\" name=\"horizontalLayout\">\
+      <item>\
+       <widget class=\"QPushButton\" name=\"Prev\">\
+        <property name=\"text\">\
+         <string>Prev</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item>\
+       <widget class=\"QPushButton\" name=\"Next\">\
+        <property name=\"text\">\
+         <string>Next</string>\
+        </property>\
+       </widget>\
+      </item>\
+      <item>\
+       <widget class=\"QPushButton\" name=\"Quit\">\
+        <property name=\"text\">\
+         <string>Quit</string>\
+        </property>\
+       </widget>\
+      </item>\
+     </layout>\
+    </item>\
+   </layout>\
   </widget>\
  </widget>\
  <resources/>\
  <connections/>\
-</ui>\					
+</ui>\
 ";
+
 
   }
 
