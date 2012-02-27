@@ -1300,7 +1300,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             # No mode means manual
             mode = 'manual'
             cmdline = cmdline+' mode=manual'
-            modepars = fh.getLinePars(cmdline,manualpars)   
+            modepars = getLinePars(cmdline,manualpars)   
                 
                 
         # Read ntime
