@@ -31,6 +31,7 @@
 //# Includes
 #include <ms/MeasurementSets/MSParse.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
+#include <ms/MeasurementSets/MSSelectableTable.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -92,6 +93,7 @@ public:
   //  ~MSFieldParse() {idList.resize(0);};
     // Associate the ms and the shorthand.
     MSFieldParse (const MeasurementSet* ms);
+    MSFieldParse (MSSelectableTable* msLike);
   //~MSFieldParse() {if (node_p) delete node_p;node_p=0x0;};
 
   const TableExprNode *selectFieldIds(const Vector<Int>& fieldIds);

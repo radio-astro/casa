@@ -52,7 +52,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Mesg << messageList[0];
 	for (uInt i=0;i<tokenList.size();i++)
+	  {
 	    Mesg << tokenList[i] << " ";
+	  }
       }
     String casaMesg(Mesg.str());
     return casaMesg;

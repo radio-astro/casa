@@ -525,6 +525,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw(x);
       }	
 
+    runErrorHandler();
     deleteNodes();
     return condition;
   }

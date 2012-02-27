@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Mesg << "Field Expression: Invalid regular expression \"" << pattern << "\"";
 	throw(MSSelectionFieldParseError(Mesg.str().c_str()));
       }
-    //cerr << "Pattern = " << strippedPattern << "  Regex = " << reg.regexp() << endl;
+    //    cerr << "Pattern = " << strippedPattern << "  Regex = " << reg.regexp() << endl;
     IPosition sh(msFieldCols_p.name().getColumn().shape());
     LogicalArray maskArray(sh,False);
     IPosition i=sh;
