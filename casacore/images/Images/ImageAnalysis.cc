@@ -299,7 +299,7 @@ ImageInterface<Float> *
 ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 		const Bool overwrite) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "imagecalc");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Record regions;
 
@@ -334,10 +334,12 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 	// Get the CoordinateSystem of the expression
 	const LELAttribute attr = node.getAttribute();
 	const LELLattCoordBase* lattCoord = &(attr.coordinates().coordinates());
-	if (!lattCoord->hasCoordinates() || lattCoord->classname()
-			!= "LELImageCoord") {
+	if (
+		!lattCoord->hasCoordinates()
+		|| lattCoord->classname() != "LELImageCoord"
+	) {
 		*itsLog << "Images in expression have no coordinates"
-				<< LogIO::EXCEPTION;
+			<< LogIO::EXCEPTION;
 	}
 	const LELImageCoord* imCoord =
 			dynamic_cast<const LELImageCoord*> (lattCoord);
@@ -354,10 +356,22 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 		if (pImage_p == 0) {
 			*itsLog << "Failed to create ImageExpr" << LogIO::EXCEPTION;
 		}
-	} else {
+	}
+	else {
 		*itsLog << LogIO::NORMAL << "Creating image `" << outfile
-				<< "' of shape " << shapeOut << LogIO::POST;
-		pImage_p = new PagedImage<Float> (shapeOut, cSysOut, outfile);
+			<< "' of shape " << shapeOut << LogIO::POST;
+		try {
+			pImage_p = new PagedImage<Float> (shapeOut, cSysOut, outfile);
+		}
+		catch (TableError te) {
+			if (overwrite) {
+				*itsLog << LogIO::SEVERE << "Caught TableError. This often means "
+					<< "the table you are trying to overwrite has been opened by "
+					<< "another method and so cannot be overwritten at this time. "
+					<< "Try closing it and rerunning" << LogIO::POST;
+				RETHROW(te);
+			}
+		}
 		if (pImage_p == 0) {
 			*itsLog << "Failed to create PagedImage" << LogIO::EXCEPTION;
 		}
@@ -373,10 +387,10 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 	// Copy miscellaneous stuff over
 	pImage_p->setMiscInfo(imCoord->miscInfo());
 	pImage_p->setImageInfo(imCoord->imageInfo());
-	//
 	if (expr.contains("spectralindex")) {
 		pImage_p->setUnits("");
-	} else if (expr.contains(Regex("pa\\(*"))) {
+	}
+	else if (expr.contains(Regex("pa\\(*"))) {
 		pImage_p->setUnits("deg");
 		Vector<Int> newstokes(1);
 		newstokes = Stokes::Pangle;
@@ -385,7 +399,8 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 		Int iStokes = cSys.findCoordinate(Coordinate::STOKES, -1);
 		cSys.replaceCoordinate(scOut, iStokes);
 		pImage_p->setCoordinateInfo(cSys);
-	} else {
+	}
+	else {
 		pImage_p->setUnits(imCoord->unit());
 	}
 
