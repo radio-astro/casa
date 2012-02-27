@@ -386,7 +386,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     pair<Int,Int> current_field_spw;
     Double spwStd = 0;
     Double avg,sumSquare,variance = 0;
-    FlagReport thresholdStd = FlagReport("plotline",agentName_p,label, "xaxis", "yaxis");
+    FlagReport thresholdStd = FlagReport("plotpoints",agentName_p,label, "xaxis", "yaxis");
 
     // Extract data from all spws and put them in one single Array
     vector<Double> total_threshold;
@@ -425,6 +425,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     Vector<Float> threshold_avg(total_threshold_counts.size(),0);
     Vector<Float> threshold_up(total_threshold_counts.size(),0);
     Vector<Float> threshold_down(total_threshold_counts.size(),0);
+    Vector<Float> threshold_variance(total_threshold_counts.size(),0); // New
     size_t idx = 0;
     for (vector<Double>::iterator iter = total_threshold.begin();iter != total_threshold.end();iter++)
     {
@@ -436,13 +437,24 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     	variance = sqrt(sumSquare - avg*avg);
     	threshold_up(idx) = avg+variance;
     	threshold_down(idx) = avg-variance;
+	threshold_variance(idx) = variance; // New
     	idx++;
     }
 
-    thresholdStd.addData(threshold_index,threshold_avg,"threshold std (field-spw:timestep average over baselines)");
-    thresholdStd.addData(threshold_index,threshold_up,"threshold std+var (field-spw:timestep average over baselines)");
-    thresholdStd.addData(threshold_index,total_threshold_spw_average,"threshold std (field-spw average over baselines and timesteps)");
-    thresholdStd.addData(threshold_index,threshold_down,"threshold std-var  (field-spw:timestep average over baselines)");
+
+    ///// OPTION 1 for mean/rms : Scatter Plot with vertical Error-Bars (pretty, but slow)
+    /*
+    thresholdStd.addData("scatter", threshold_index, threshold_avg, "bar", threshold_variance, "median deviation and variance");
+    */
+
+    ////// Plot the scaled threshold
+    thresholdStd.addData("line", threshold_index,total_threshold_spw_average,"",Vector<Float>(),"rflag threshold");
+
+    ///// OPTION 2 for mean/rms : "avg" is a scatter plot, "up" and "down" are lines (not so pretty, but fast). 
+    thresholdStd.addData("line",threshold_index,threshold_up,"",Vector<Float>(),"threshold std+var (field-spw:timestep average over baselines)");
+    thresholdStd.addData("scatter",threshold_index,threshold_avg,"",Vector<Float>(),"threshold std (field-spw average over baselines and timesteps)");
+    thresholdStd.addData("line", threshold_index,threshold_down,"",Vector<Float>(),"threshold std-var  (field-spw:timestep average over baselines)");
+    
 
     return thresholdStd;
 }

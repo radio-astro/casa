@@ -35,9 +35,9 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 {
         logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
 
-        // Type of report. Options : none, list, plotraster, plotline, plotscatter
+        // Type of report. Options : none, list, plotraster, plotpoints
         if( ! ( type == "list" || type == "none" || type == "plotraster" 
-             || type == "plotline"|| type == "plotscatter") )
+             || type == "plotpoints") )
 	{
 	       logger_p << LogIO::WARN << "Invalid FlagReport type : " << type << ". Setting to 'none' " << LogIO::POST;
 	       type="none";
@@ -55,7 +55,7 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 	}
 
         // One report of type "plot"
-        if( type == "plotraster" ||  type == "plotline"|| type == "plotscatter")
+        if( type == "plotraster" ||  type == "plotpoints")
 	{
 	       define( RecordFieldId("title") , title );
 	       define( RecordFieldId("xlabel") , xlabel );
@@ -190,23 +190,31 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
   
   //----------------------------------------------------------------------------------------------
   Bool
-  FlagReport::addData(Vector<Float> xdata, Vector<Float> ydata, String label)
+  FlagReport::addData(String plottype, Vector<Float> xdata, Vector<Float> ydata, String errortype, Vector<Float> error, String label)
   {
     logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
     
     String thisType = reportType();
-    if( thisType != "plotline" && thisType != "plotscatter" )
+    if( thisType != "plotpoints" )
       {
-	logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotline' or 'plotscatter' " << LogIO::POST; 
+	logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotpoints' " << LogIO::POST; 
 	return False;
       }
     else
       {
 	Int numData = nData();
+	define( RecordFieldId(String("plottype")+String::toString(numData)) , plottype );
 	define( RecordFieldId(String("xdata")+String::toString(numData)) , xdata );
 	define( RecordFieldId(String("ydata")+String::toString(numData)) , ydata );
 	define( RecordFieldId(String("label")+String::toString(numData)) , label );
 	define( RecordFieldId("ndata") , (Int)(numData+1) );
+	
+	if( error.nelements() > 0 )
+	  {
+	    define( RecordFieldId(String("error")+String::toString(numData)) , error );
+	    define( RecordFieldId(String("errortype")+String::toString(numData)) , errortype );
+	  }
+	
       }
   }
   
@@ -247,7 +255,7 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
   {
     String thisType = reportType();
     
-    if( thisType != "plotraster" &&  thisType != "plotline" && thisType != "plotscatter" )
+    if( thisType != "plotraster" &&  thisType != "plotpoints" )
       {
 	return -1;
       }
@@ -334,7 +342,7 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 	      }
 	  }
       }
-    else if(thisType=="plotraster" || thisType=="plotline" || thisType=="plotscatter" )
+    else if(thisType=="plotraster" || thisType=="plotpoints")
       {
 	if( !isDefined("name") || !isDefined("title") || 
 	    !isDefined("xlabel") || !isDefined("ylabel") ||
@@ -350,7 +358,7 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 	for(Int dat=0;dat<numData;dat++)
 	  {
 	    if(  (thisType=="plotraster" && ! isDefined(String("data")+String::toString(dat)) )  ||
-		 ( (thisType=="plotline" || thisType=="plotscatter")  && (!isDefined(String("xdata")+String::toString(dat)) || !isDefined(String("ydata")+String::toString(dat)) ) ) )
+		 ( (thisType=="plotpoints")  && (!isDefined(String("xdata")+String::toString(dat)) || !isDefined(String("ydata")+String::toString(dat)) ) ) )
 	      {
 		logger_p << LogIO::WARN << "Data for  " << dat << " is not defined" << LogIO::POST;
 		return False; // Does not contain data.
