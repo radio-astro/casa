@@ -108,7 +108,9 @@ fieldstatement: indexcombexpr
 indexcombexpr  : indexlist 
                  {
 		   ostringstream m;
-	           MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+	           //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->msInterface()->field());
+	           //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+	           MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->subTable());
 		   Vector<Int> selectedIDs(myMSFI.maskFieldIDs(myMSFI.validateIndices(*($1))));
                    $$ = MSFieldParse().selectFieldIds(selectedIDs);
 		   m << "Partial or no match for Field ID list " << (*($1));
@@ -129,78 +131,88 @@ fieldid: IDENTIFIER
 	    //
 	    // Convert name to index
 	    //
-	  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
-	  if (!($$)) delete $$;
-	  $$=new Vector<Int>(myMSFI.matchFieldNameOrCode($1));
-	  //$$=new Vector<Int>(myMSAI.matchFieldRegexOrPattern($1));
-
-	  ostringstream m; m << "No match found for name \"" << $1 << "\"";
-	  checkFieldError(*($$), m);
-
-	  free($1);
-	}
+	    //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->msInterface()->field());
+	    //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+	    MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->subTable());
+	    //	    cerr << "ID: " << $1 << endl;
+	    if (!($$)) delete $$;
+	    $$=new Vector<Int>(myMSFI.matchFieldNameOrCode($1));
+	    //$$=new Vector<Int>(myMSAI.matchFieldRegexOrPattern($1));
+	    
+	    ostringstream m; m << "No match found for name \"" << $1 << "\"";
+	    checkFieldError(*($$), m);
+	    
+	    free($1);
+	  }
        | QSTRING 
-        { //
-	  // Quoted string: This is a pattern which will be converted
-	  // to regex internally.  E.g. "VLA{20,21}*" becomes
-	  // "VLA((20)|(21)).*" regex.  This can include any character
-	  // string.
-	  //
-	  // Convert name to index
-	  //
-	  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
-	  if (!$$) delete $$;
-	  $$ = new Vector<Int>(myMSFI.matchFieldRegexOrPattern($1));
+          { //
+	    // Quoted string: This is a pattern which will be converted
+	    // to regex internally.  E.g. "VLA{20,21}*" becomes
+	    // "VLA((20)|(21)).*" regex.  This can include any character
+	    // string.
+	    //
+	    // Convert name to index
+	    //
+	    //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->msInterface()->field());
+	    //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+	    MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->subTable());
+	    //	    cerr << "QS: " << $1 << endl;
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(myMSFI.matchFieldRegexOrPattern($1));
+	    
+	    ostringstream m; m << "No match found for name \"" << $1 << "\"";
+	    checkFieldError(*($$), m);
+	    String s(m.str());
 
-	  ostringstream m; m << "No match found for name \"" << $1 << "\"";
-	  checkFieldError(*($$), m);
-	  String s(m.str());
-
-	  free($1);
-	}
+	    free($1);
+	  }
        | REGEX
-        { //
-	  // A string delimited by a pair of '/': This will be treated
-	  // as a regular expression internally.
-	  //
-	  // Convert name to index
-	  //
-	  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
-	  if (!$$) delete $$;
-	  $$ = new Vector<Int>(myMSFI.matchFieldRegexOrPattern($1,True));
-
-	  ostringstream m; m << "No match found for \"" << $1 << "\"";
-	  checkFieldError(*($$), m);
-
-	  free($1);
-	}
+          { //
+	    // A string delimited by a pair of '/': This will be treated
+	    // as a regular expression internally.
+	    //
+	    // Convert name to index
+	    //
+	    //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->msInterface()->field());
+	    //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+	    MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->subTable());
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(myMSFI.matchFieldRegexOrPattern($1,True));
+	    
+	    ostringstream m; m << "No match found for \"" << $1 << "\"";
+	    checkFieldError(*($$), m);
+	    
+	    free($1);
+	  }
        ;
 
 fieldidrange: INT // A single field index
-            {
-	      if (!($$)) delete $$;
-	      $$ = new Vector<Int>(1);
-	      (*($$))(0) = atoi($1);
-	      free($1);
-	    }
-           | INT DASH INT // A range of integer field indices
-            {
-              Int start = atoi($1);
-              Int end   = atoi($3);
-              Int len = end - start + 1;
-              Vector<Int> fieldids(len);
-              for(Int i = 0; i < len; i++) {
-                fieldids[i] = start + i;
-              }
-	      if (!($$)) delete $$;
-              $$ = new Vector<Int>(fieldids);	   
-	      free($1); free($3);
-            }
-          ;
+               {
+		 if (!($$)) delete $$;
+		 $$ = new Vector<Int>(1);
+		 (*($$))(0) = atoi($1);
+		 free($1);
+	       }
+            | INT DASH INT // A range of integer field indices
+               {
+		 Int start = atoi($1);
+		 Int end   = atoi($3);
+		 Int len = end - start + 1;
+		 Vector<Int> fieldids(len);
+		 for(Int i = 0; i < len; i++) 
+		   fieldids[i] = start + i;
+
+		 if (!($$)) delete $$;
+		 $$ = new Vector<Int>(fieldids);	   
+		 free($1); free($3);
+	       }
+            ;
 
 fieldidbounds: LT INT // <ID
                 {
-		  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+		  //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->msInterface()->field());
+		  //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+		  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->subTable());
 		  if (!($$)) delete $$;
 		  Int n=atoi($2);
 		  $$ = new Vector<Int>(myMSFI.matchFieldIDLT(n));
@@ -211,9 +223,11 @@ fieldidbounds: LT INT // <ID
 
 		  free($2);
 		}
-              | GT INT // >ID
+             | GT INT // >ID
                 {
-		  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+		  //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->msInterface()->field());
+		  //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+		  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->subTable());
 		  if (!($$)) delete $$;
 		  Int n=atoi($2);
 		  $$ = new Vector<Int>(myMSFI.matchFieldIDGT(n));
@@ -223,9 +237,11 @@ fieldidbounds: LT INT // <ID
 
 		  free($2);
 		}
-              | GT INT AMPERSAND LT INT // >ID & <ID
+             | GT INT AMPERSAND LT INT // >ID & <ID
                 {
-		  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+		  //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->msInterface()->field());
+		  //MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
+		  MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->subTable());
 		  if (!($$)) delete $$;
 		  Int n0=atoi($2), n1=atoi($5);
 		  $$ = new Vector<Int>(myMSFI.matchFieldIDGTAndLT(n0,n1));
@@ -238,25 +254,25 @@ fieldidbounds: LT INT // <ID
 		}
              ;
 fieldidlist: fieldid // A singe field ID
-            {
-	      $$ = $1;
-            }
-          | fieldidrange // ID range ( n0-n1 )
-            {
-	      $$ = $1;
-	    }
-          | fieldidbounds  // >ID, <ID, >ID & <ID
-            {
-	      $$ = $1;
-            }
-          ;
-indexlist : fieldidlist
+               {
+		 $$ = $1;
+	       }
+           | fieldidrange // ID range ( n0-n1 )
+              {
+		$$ = $1;
+	      }
+           | fieldidbounds  // >ID, <ID, >ID & <ID
+              {
+		$$ = $1;
+	      }
+           ;
+indexlist: fieldidlist
             {
 	      if (!($$)) delete $$;
 	      $$ = new Vector<Int>(*$1);
 	      delete $1;
 	    }
-          | indexlist COMMA fieldidlist  
+         | indexlist COMMA fieldidlist  
             {
 	      Int N0=(*($1)).nelements(), 
 		N1 = (*($3)).nelements();

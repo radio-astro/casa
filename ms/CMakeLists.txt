@@ -82,7 +82,9 @@ MeasurementSets/MSFeedIndex.cc
 MeasurementSets/MSUvDistGram.cc
 MeasurementSets/MSFieldIndex.cc
 MeasurementSets/MSStateIndex.cc
+MeasurementSets/MSSelectableTable.cc
 MeasurementSets/MSSelectionError.cc
+MeasurementSets/MSSelectionErrorHandler.cc
 MeasurementSets/MSObservation.cc
 MeasurementSets/MSSelectionTools.cc
 MeasurementSets/MSSelectionKeywords.cc
@@ -117,7 +119,7 @@ MeasurementSets/MSLister.cc
 MeasurementSets/MSSpwIndex.cc
 MeasurementSets/MSTimeGram.cc
 MeasurementSets/MSDataDescription.cc
-MeasurementSets/MSFieldParse.cc
+MeasurementSets/MSFieldParse2.cc
 MeasurementSets/MSStateParse.cc
 MeasurementSets/MSTileLayout.cc
 MeasurementSets/MSFreqOffColumns.cc
@@ -196,7 +198,7 @@ MeasurementSets/MSFieldColumns.h
 MeasurementSets/MSFieldEnums.h
 MeasurementSets/MSFieldGram.h
 MeasurementSets/MSFieldIndex.h
-MeasurementSets/MSFieldParse.h
+MeasurementSets/MSFieldParse2.h
 MeasurementSets/MSFlagCmd.h
 MeasurementSets/MSFlagCmdColumns.h
 MeasurementSets/MSFlagCmdEnums.h
@@ -242,7 +244,9 @@ MeasurementSets/MSSelUtil.tcc
 MeasurementSets/MSSelUtil2.h
 MeasurementSets/MSSelUtil2.tcc
 MeasurementSets/MSSelection.h
+MeasurementSets/MSSelectableTable.h
 MeasurementSets/MSSelectionError.h
+MeasurementSets/MSSelectionErrorHandler.h
 MeasurementSets/MSSelectionKeywords.h
 MeasurementSets/MSSelectionTools.h
 MeasurementSets/MSSelector.h
