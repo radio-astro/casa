@@ -83,6 +83,7 @@ install (FILES
 	implement/ImageAnalysis/ImageInputProcessor.h
 	implement/ImageAnalysis/ImagePrimaryBeamCorrector.h
 	implement/ImageAnalysis/ImageProfileFitter.h
+	implement/ImageAnalysis/ImageStatsCalculator.h
 	implement/ImageAnalysis/ImageTask.h
 	implement/ImageAnalysis/ImageTransposer.h
 	implement/ImageAnalysis/SpectralCollapser.h
