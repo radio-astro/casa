@@ -39,6 +39,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
+#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
+#include <ms/MeasurementSets/MSSelectableTable.h>
 #include <casa/Containers/OrderedMap.h>
 #include <casa/Containers/MapIO.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -318,8 +320,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Convey to the various parsers to delete the TENs they hold
     void deleteNodes();
 
+    // Delete error hanlders (mostly the internally allocated ones).
+    void deleteErrorHandlers();
+
     // Convert to TableExprNode format (C++ interface to TaQL)
     TableExprNode toTableExprNode(const MeasurementSet* ms);
+    // Convert to TableExprNode format (C++ interface to TaQL)
+    TableExprNode toTableExprNode(MSSelectableTable* msLike);
     
     // Return the selected MS.  The selected MS reflects only row
     // selections (as against in-row selections).  If outMSName != "",
@@ -336,22 +343,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void resetTEN() {fullTEN_p=TableExprNode();};
     
     void reset(const MeasurementSet& ms,
-	       const MSSMode& mode=PARSE_NOW,
-	       const String& timeExpr="",
-	       const String& antennaExpr="",
-	       const String& fieldExpr="",
-	       const String& spwExpr="",
-	       const String& uvDistExpr="",
-	       const String& taqlExpr="",
-	       const String& polnExpr="",
-	       const String& scanExpr="",
-	       const String& arrayExpr="",
-	       const String& stateExpr="",
-	       const String& observationExpr="");
+	       const MSSMode& mode           = PARSE_NOW,
+	       const String& timeExpr        = "",
+	       const String& antennaExpr     = "",
+	       const String& fieldExpr       = "",
+	       const String& spwExpr         = "",
+	       const String& uvDistExpr      = "",
+	       const String& taqlExpr        = "",
+	       const String& polnExpr        = "",
+	       const String& scanExpr        = "",
+	       const String& arrayExpr       = "",
+	       const String& stateExpr       = "",
+	       const String& observationExpr = "");
+    void reset(MSSelectableTable& msLike,
+	       const MSSMode& mode           = PARSE_NOW,
+	       const String& timeExpr        = "",
+	       const String& antennaExpr     = "",
+	       const String& fieldExpr       = "",
+	       const String& spwExpr         = "",
+	       const String& uvDistExpr      = "",
+	       const String& taqlExpr        = "",
+	       const String& polnExpr        = "",
+	       const String& scanExpr        = "",
+	       const String& arrayExpr       = "",
+	       const String& stateExpr       = "",
+	       const String& observationExpr = "");
     
     void setMaxScans(const Int& n) {maxScans_p=n;};
     void setMaxObs(const Int& n) {maxObs_p=n;};
     
+    void setErrorHandler(const MSExprType type, MSSelectionErrorHandler* mssEH,
+			 const Bool overRide=False);
+
+    void runErrorHandler();
   private:
     // Set into the order of the selection expression
     Bool setOrder(MSSelection::MSExprType type);
@@ -368,6 +392,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     TableExprNode fullTEN_p;
     const MeasurementSet *ms_p;
+    MSInterface msFace_p;
     // Selection expressions
     String antennaExpr_p;
     String fieldExpr_p;
@@ -392,6 +417,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     OrderedMap<Int, Vector<Int> > selectedPolMap_p;
     OrderedMap<Int, Vector<Vector<Int> > > selectedSetupMap_p;
     Int maxScans_p, maxObs_p, maxArray_p;
+    MSSelectionErrorHandler* mssErrHandler_p;
   };
   
 } //# NAMESPACE CASA - END
