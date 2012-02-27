@@ -527,7 +527,7 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
                    <xsl:choose>
                     <xsl:when test="string-length(@xsi:type)=0">void </xsl:when>
                     <xsl:otherwise>
-                                      <xsl:value-of select='@xsi:type'/><xsl:text>* </xsl:text>
+                                      casac::<xsl:value-of select='@xsi:type'/><xsl:text>* </xsl:text>
                    </xsl:otherwise>
                     </xsl:choose>
                     </xsl:otherwise>
