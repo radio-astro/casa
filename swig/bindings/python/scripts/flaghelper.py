@@ -52,7 +52,7 @@ def readFile(inputfile):
     
     return cmdlist
 
-def makeDict(cmdlist, myreason=''):
+def makeDict(cmdlist, myreason='any'):
     '''Make a dictionary compatible with a FLAG_CMD table structure
        and select by reason if any is given
     
@@ -79,7 +79,7 @@ def makeDict(cmdlist, myreason=''):
     # select by these reasons
     myreaslist = []
     if type(myreason) == str:
-        if myreason != '':
+        if myreason != 'any':
             myreaslist.append(myreason)
     elif type(myreason) == list:
         myreaslist = myreason
@@ -552,7 +552,8 @@ def getUnion(mslocal, vis, cmdlist):
     dicpars['scan'] = scans
     dicpars['field'] = fields
     dicpars['antenna'] = ants
-    dicpars['timerange'] = times
+    # Times are handled better within the framework.
+    dicpars['timerange'] = '' #times 
     # Correlations should be handled only by the agents
     dicpars['correlation'] = ''
     dicpars['intent'] = ints
@@ -1298,7 +1299,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             # No mode means manual
             mode = 'manual'
             cmdline = cmdline+' mode=manual'
-            modepars = fh.getLinePars(cmdline,manualpars)   
+            modepars = getLinePars(cmdline,manualpars)   
                 
                 
         # Read ntime

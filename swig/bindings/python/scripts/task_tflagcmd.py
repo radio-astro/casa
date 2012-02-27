@@ -521,7 +521,7 @@ def readFromTable(
     msfile,
     myflagrows=[],
     useapplied=True,
-    myreason='',
+    myreason='any',
     ):
     
     '''Read flag commands from rows of the FLAG_CMD table of msfile
@@ -574,7 +574,7 @@ def readFromTable(
     
     # Parse myreason
     if type(myreason) == str:
-        if myreason != '':
+        if myreason != 'any':
             myreaslist.append(myreason)
     elif type(myreason) == list:
         myreaslist = myreason
@@ -1378,7 +1378,7 @@ def backupCmd(tflocal, cmdlist):
 def selectFlags(
     myflags=None,
     myantenna='',
-    myreason='Any',
+    myreason='any',
     myflagsort='',
     ):
     #
@@ -1449,7 +1449,7 @@ def selectFlags(
                 print 'WARNING: reason= is treated as selection on a blank REASON!'
                 casalog.post('WARNING: reason= is treated as selection on a blank REASON!'
                              , 'WARN')
-            if myreason != 'Any':
+            if myreason != 'any':
                 myreaslist.append(myreason)
         elif type(myreason) == list:
             myreaslist = myreason

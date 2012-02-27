@@ -123,7 +123,7 @@ def makeMS(choice='RL_all',stokesvals=[1.0,1.0,0.0,0.0],parentpath='.'):
      tb.close();
 
   os.system('rm -rf '+clname);
-  cl.open();
+  ###cl.open();
   refRA = qa.unit(ra0);
   refDEC = qa.unit(dec0);
   cl.addcomponent(flux=stokesvals,fluxunit="Jy", 
