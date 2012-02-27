@@ -5,6 +5,7 @@ import math
 import pdb
 import shutil
 import string
+import time
 from taskinit import *
 
 ###some helper tools
@@ -1372,7 +1373,7 @@ def backupFlags(tflocal, prename):
         #
         # Generally  before_<mode>_<i>, where i is the smallest
         # integer giving a name, which does not already exist
-
+        
     prefix = prename
     existing = tflocal.getflagversionlist(printflags=True)
 
@@ -1394,6 +1395,8 @@ def backupFlags(tflocal, prename):
 
     tflocal.saveflagversion(versionname=versionname,
                             comment='Flags autosave on ' + time_string, merge='replace')
+    
+    return
 
 
 ####
