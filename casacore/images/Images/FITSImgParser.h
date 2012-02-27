@@ -161,6 +161,9 @@ private:
   // Get the mask extension name for the given data extension.
   String get_maskext(const Int &ext_index);
 
+  // Check the keywords with fixed values
+  Bool confirm_fix_keywords(const Int &ext_index);
+
   // Check whether the extension has a certain HDU type.
   Bool index_is_HDUtype(const Int &ext_index, const String &hdutype);
 

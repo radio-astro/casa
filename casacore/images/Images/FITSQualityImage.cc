@@ -196,8 +196,16 @@ Bool FITSQualityImage::qualFITSInfo(String &error, TableRecord &dataExtMiscInfo,
 	dataExtMiscInfo.setComment("extname", "name of data extension");
 
 	// set the data HDU type
-	dataExtMiscInfo.define("hdutype", Quality::name(Quality::DATA));
-	dataExtMiscInfo.setComment("hdutype", "extension type");
+	dataExtMiscInfo.define("hduclass", "ESO");
+	dataExtMiscInfo.setComment("hduclass", "class name");
+	dataExtMiscInfo.define("hdudoc", "DICD");
+	dataExtMiscInfo.setComment("hdudoc", "document with class description");
+	dataExtMiscInfo.define("hduvers", "DICD version 6");
+	dataExtMiscInfo.setComment("hduvers", "version number");
+	dataExtMiscInfo.define("hduclas1", "IMAGE");
+	dataExtMiscInfo.setComment("hduclas1", "the FITS type described");
+	dataExtMiscInfo.define("hduclas2", Quality::name(Quality::DATA));
+	dataExtMiscInfo.setComment("hduclas2", "extension type");
 
 	// check for a dedicated extension name in the record "errextname"
 	if (miscInfo.fieldNumber("errextname")>-1 && miscInfo.type(miscInfo.fieldNumber("errextname")==TpString)){
@@ -207,9 +215,9 @@ Bool FITSQualityImage::qualFITSInfo(String &error, TableRecord &dataExtMiscInfo,
 		errorExtMiscInfo.define("extname", tmpString);
 
 		// check for a dedicated extension name in the record "errextname"
-		if (miscInfo.fieldNumber("errtype")>-1 && miscInfo.type(miscInfo.fieldNumber("errtype")==TpString)){
+		if (miscInfo.fieldNumber("hduclas3")>-1 && miscInfo.type(miscInfo.fieldNumber("hduclas3")==TpString)){
 			// read the string
-			miscInfo.get(String("errtype"), tmpString);
+			miscInfo.get(String("hduclas3"), tmpString);
 
 			// make sure the chosen error type does exist
 			if (FITSErrorImage::stringToErrorType(tmpString)==FITSErrorImage::UNKNOWN){
@@ -217,23 +225,31 @@ Bool FITSQualityImage::qualFITSInfo(String &error, TableRecord &dataExtMiscInfo,
 				return False;
 			}
 			// set the given extension name
-			errorExtMiscInfo.define("errtype", tmpString);
+			errorExtMiscInfo.define("hduclas3", tmpString);
 		} else {
 			// set the default error type
-			errorExtMiscInfo.define("errtype", FITSErrorImage::errorTypeToString(FITSErrorImage::MSE));
+			errorExtMiscInfo.define("hduclas3", FITSErrorImage::errorTypeToString(FITSErrorImage::MSE));
 		}
 	}
 	else {
 		// set the default extension name and error type
 		errorExtMiscInfo.define("extname", "ERROR");
-		errorExtMiscInfo.define("errtype", FITSErrorImage::errorTypeToString(FITSErrorImage::MSE));
+		errorExtMiscInfo.define("hduclas3", FITSErrorImage::errorTypeToString(FITSErrorImage::MSE));
 	}
 	errorExtMiscInfo.setComment("extname", "name of data extension");
-	errorExtMiscInfo.setComment("errtype", "error type");
+	errorExtMiscInfo.setComment("hduclas3", "error type");
 
 	// set the error HDU type
-	errorExtMiscInfo.define("hdutype", Quality::name(Quality::ERROR));
-	errorExtMiscInfo.setComment ("hdutype", "extension type");
+	errorExtMiscInfo.define("hduclass", "ESO");
+	errorExtMiscInfo.setComment("hduclass", "class name");
+	errorExtMiscInfo.define("hdudoc", "DICD");
+	errorExtMiscInfo.setComment("hdudoc", "document with class description");
+	errorExtMiscInfo.define("hduvers", "DICD version 6");
+	errorExtMiscInfo.setComment("hduvers", "version number");
+	errorExtMiscInfo.define("hduclas1", "IMAGE");
+	errorExtMiscInfo.setComment("hduclas1", "the FITS type described");
+	errorExtMiscInfo.define("hduclas2", Quality::name(Quality::ERROR));
+	errorExtMiscInfo.setComment ("hduclas2", "extension type");
 
 	// cross-reference between the data and the error extension
 	errorExtMiscInfo.get(String("extname"), tmpString);

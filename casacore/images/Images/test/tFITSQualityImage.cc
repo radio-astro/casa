@@ -130,7 +130,7 @@ try {
    	String error;
    	miscInfo.define("sciextname", sciHDU);
    	miscInfo.define("errextname", errHDU);
-   	miscInfo.define("errtype", errType);
+   	miscInfo.define("hduclas3", errType);
 
    	// get the data-info and error-info default values
    	if (!FITSQualityImage::qualFITSInfo(error, dataInfo, errorInfo, miscInfo)){
@@ -153,7 +153,7 @@ try {
    	String errType("WHATEVER");
    	miscInfo.define("sciextname", sciHDU);
    	miscInfo.define("errextname", errHDU);
-   	miscInfo.define("errtype", errType);
+   	miscInfo.define("hduclas3", errType);
 
    	// this one HAS to bark!
    	if (FITSQualityImage::qualFITSInfo(error, dataInfo, errorInfo, miscInfo)){
@@ -230,7 +230,7 @@ Bool checkRecFieldString(String &error, const RecordInterface &theRec, const Str
 	// check the value of the field
 	theRec.get(String(theField), tmpString);
 	if (tmpString.compare(theValue)){
-		error = String("Field "+theField+" has NOT the value: "+theValue);
+		error = String("Field "+theField+" has NOT the value: "+theValue+ " but: "+tmpString);
         return False;
 	}
 
@@ -241,13 +241,34 @@ Bool testQualFITSInfo(const TableRecord &dataInfo, const TableRecord &errorInfo,
 		const String &sciHDU, const String &errHDU, const String &errType){
 	String error;
 
+
+	// check the data-info for "HDUCLASS"
+	if (!checkRecFieldString(error, dataInfo, String("hduclass"), String("ESO"))){
+        throw(AipsError(error));
+	}
+
+	// check the data-info for "HDUDOC"
+	if (!checkRecFieldString(error, dataInfo, String("hdudoc"), String("DICD"))){
+        throw(AipsError(error));
+	}
+
+	// check the data-info for "HDUVERS"
+	if (!checkRecFieldString(error, dataInfo, String("hduvers"), String("DICD version 6"))){
+        throw(AipsError(error));
+	}
+
+	// check the data-info for "HDUCLAS1"
+	if (!checkRecFieldString(error, dataInfo, String("hduclas1"), String("IMAGE"))){
+        throw(AipsError(error));
+	}
+
 	// check the data-info for "EXTNAME"
 	if (!checkRecFieldString(error, dataInfo, String("extname"), sciHDU)){
         throw(AipsError(error));
 	}
 
 	// check the data-info for "HDUTYPE"
-	if (!checkRecFieldString(error, dataInfo, String("hdutype"), Quality::name(Quality::DATA))){
+	if (!checkRecFieldString(error, dataInfo, String("hduclas2"), Quality::name(Quality::DATA))){
         throw(AipsError(error));
 	}
 
@@ -262,7 +283,7 @@ Bool testQualFITSInfo(const TableRecord &dataInfo, const TableRecord &errorInfo,
 	}
 
 	// check the error-info for "HDUTYPE"
-	if (!checkRecFieldString(error, errorInfo, String("hdutype"), Quality::name(Quality::ERROR))){
+	if (!checkRecFieldString(error, errorInfo, String("hduclas2"), Quality::name(Quality::ERROR))){
         throw(AipsError(error));
 	}
 
@@ -272,7 +293,7 @@ Bool testQualFITSInfo(const TableRecord &dataInfo, const TableRecord &errorInfo,
 	}
 
 	// check the error-info for "ERRTYPE"
-	if (!checkRecFieldString(error, errorInfo, String("errtype"), errType)){
+	if (!checkRecFieldString(error, errorInfo, String("hduclas3"), errType)){
         throw(AipsError(error));
 	}
 
