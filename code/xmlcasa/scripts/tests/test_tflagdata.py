@@ -175,24 +175,6 @@ class test_shadow(test_base):
     def setUp(self):
         self.setUp_shadowdata2()
 
-#    def test1(self):
-#        '''tflagdata:: Test1 of mode = shadow'''
-#        tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
-#        res = tflagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['flagged'], 5252)
-#
-#    def test2(self):
-#        """tflagdata:: Test2 of mode = shadow"""
-#        tflagdata(vis=self.vis, mode='shadow', savepars=False)
-#        res = tflagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['flagged'], 2912)
-#
-#    def test3(self):
-#        """tflagdata:: Test3 of mode = shadow"""
-#        tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
-#        res = tflagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['flagged'], 1456)
-
     def test_CAS2399(self):
         '''tflagdata: shadow by antennas not present in MS'''
         
@@ -777,7 +759,15 @@ class test_selections_alma(test_base):
         tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
-        
+
+    def test_spw(self):
+        '''tflagdata: flag various spw'''
+        tflagdata(vis=self.vis, mode='manual', spw='1,3,4', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
+        self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
+        self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
+        self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
 
 class test_selections2(test_base):
     '''Test other selections'''
