@@ -330,6 +330,14 @@ using namespace casac;
    $result = casac::map_vector($1);
 }
 
+%typemap(out) std::vector<int> {
+   $result = casac::map_vector($1);
+}
+
+%typemap(out) std::vector<double> {
+   $result = casac::map_vector($1);
+}
+
 %typemap(out) RecordVec {
    $result = PyList_New($1.size());
    for(int i=0;i<$1.size();i++){
