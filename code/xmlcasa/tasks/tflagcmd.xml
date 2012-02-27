@@ -46,7 +46,7 @@
                 <param type="any" name="reason" subparam="true">
                         <description>Select by REASON types</description>
                         <any type="variant" limittypes="string stringArray"/>
-                        <value type="string"></value>
+                        <value type="string">any</value>
                 </param>
 
                 <param type="any" name="command" subparam="true">
@@ -123,11 +123,11 @@
                             <equals value="table">
                                     <default param="inpfile"><value type="string"></value></default>
                                     <default param="tablerows"><value type="vector"></value></default>
-                                    <default param="reason"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
                             </equals>
                             <equals value="file">
                                     <default param="inpfile"><value type="string"></value></default>
-                                    <default param="reason"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
                             </equals>
                             <equals value="cmd">
                                     <default param="command"><value>['']</value></default>
@@ -135,7 +135,7 @@
                             <equals value="xml">
                                     <default param="tbuff"><value>1.0</value></default>
                                     <default param="ants"><value type="string"></value></default>
-                                    <default param="reason"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
                             </equals>
                     </when>
 

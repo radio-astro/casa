@@ -53,7 +53,7 @@ def readFile(inputfile):
     
     return cmdlist
 
-def makeDict(cmdlist, myreason=''):
+def makeDict(cmdlist, myreason='any'):
     '''Make a dictionary compatible with a FLAG_CMD table structure
        and select by reason if any is given
     
@@ -80,7 +80,7 @@ def makeDict(cmdlist, myreason=''):
     # select by these reasons
     myreaslist = []
     if type(myreason) == str:
-        if myreason != '':
+        if myreason != 'any':
             myreaslist.append(myreason)
     elif type(myreason) == list:
         myreaslist = myreason
