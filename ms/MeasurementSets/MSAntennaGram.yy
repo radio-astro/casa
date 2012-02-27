@@ -97,22 +97,26 @@
   Bool MSAntennaGramNegate=False;
   void reportError(char *token,String source=String(""))
   {
-    ostringstream Mesg;
+    LogIO logIO;
+    ostringstream Mesg,tok;
     if (source != "") Mesg << source; else Mesg << "Antenna Expression";
 
-    Mesg << ": No match found for \"";
-    if (MSAntennaGramNegate) Mesg << "!" << token << "\"";
-    else Mesg << token << "\"";
+    Mesg << ": No match found for token(s) ";
+    tok << "\"";
+    if (MSAntennaGramNegate) tok << "!";
+    tok << token << "\"";
 
-    if (MSAntennaGramNegate)
-      {
-	LogIO logIO;
-	logIO << Mesg.str() 
-	      << " (just a helpful message (from your friendly MSAntennaSelection object))" 
-	      << LogIO::WARN;
-      }
-    else
-      throw(MSSelectionAntennaParseError(Mesg.str()));
+    MSAntennaParse::thisMSAErrorHandler->reportError(tok.str().c_str(), Mesg.str());
+    Mesg << tok.str();
+    // if (MSAntennaGramNegate)
+    //   {
+    // 	logIO << Mesg.str() 
+    // 	      << " (just a helpful message (from your friendly MSAntennaSelection object))" 
+    // 	      << LogIO::WARN;
+    //   }
+    // else
+    //   //      throw(MSSelectionAntennaParseError(Mesg.str()));
+    //   logIO << Mesg.str() << LogIO::WARN;
   }
   //
   // Keep life from getting too computer-like (encouragement may be a
@@ -128,12 +132,12 @@
     Bool level3=(level2 & complexity.test(MSAntennaParse::STATIONREGEX)
 		 & complexity.test(MSAntennaParse::ANTATSTATIONLIST));
     if (level3)
-      logIO << "Oh the brave one!  "
-	"You successfully passed the deepest abyss of parsing in baseline selection without error. "
+      logIO << "Oh the brave one!\n  "
+	"You successfully passed the deepest abyss of parsing in baseline selection without error.\n "
 	"May The Force (or the CASA User Support Group) be with you.  Good luck."
 	    << LogIO::POST;
     else if (level2)
-      logIO << "Many congratulations.  You are using an expert level of complexity in baseline selection.  "
+      logIO << "Many congratulations.  You are using an expert level of complexity in baseline selection.\n  "
 	//	"Tread carefully at this level (easy to go wrong)." 
 	    << LogIO::POST;
     else if (level1)
@@ -224,7 +228,7 @@ identstr: IDENTIFIER { $$ = $1; }
           
 // A single station name (this could be a regex and hence produce a
 // list of indices)
-stationid: IDENTIFIER  
+stationid: identstr // IDENTIFIER
             { // Use the string as-is.  This cannot include patterns/regex
 	      // which has characters that are part of range or list
 	      // syntax (',', '-') (that's all I think).
@@ -266,7 +270,8 @@ stationid: IDENTIFIER
 	      MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::STATIONREGEX);
 	    }
 
-// A single antenna name (this could be a regex and hence produce a list inf indices)
+// A single antenna name (this could be a regex and hence produce a
+// list of indices)
 antid: identstr
         { // Use the string as-is.  This cannot include patterns/regex
 	  // which has characters that are part of range or list
@@ -395,7 +400,8 @@ antcomp: antid {$$=$1;}
        | LPAREN antlist RPAREN {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
 
 stationcomp: stationid {$$=$1;}
-           | LPAREN stationlist RPAREN {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
+           | LPAREN stationlist RPAREN 
+              {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
 
 antatstation: antcomp AT stationcomp
                {

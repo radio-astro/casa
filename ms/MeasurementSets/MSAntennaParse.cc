@@ -33,10 +33,12 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Logging/LogIO.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
  // Global pointer to the parser object
   MSAntennaParse* MSAntennaParse::thisMSAParser = 0;
+  MSSelectionErrorHandler* MSAntennaParse::thisMSAErrorHandler = 0;
   
   //# Constructor
   MSAntennaParse::MSAntennaParse ()
@@ -123,11 +125,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       Bool negate)
   {
     Vector<Int> a2;
-    if (negate) {
-      a2=-thisList;
-    } else {
-      a2=thisList;
-    }
+    if (negate) a2=-thisList;
+    else        a2=thisList;
+
     Vector<Int> tmp1(set_union(a2,antList));
     antList.resize(tmp1.nelements());antList = tmp1;
   }

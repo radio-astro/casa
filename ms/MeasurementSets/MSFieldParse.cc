@@ -39,16 +39,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //# Constructor
   MSFieldParse::MSFieldParse ()
-    : MSParse(), colName(MS::columnName(MS::FIELD_ID))
-  {
-    if (MSFieldParse::node_p!=0x0) delete MSFieldParse::node_p;
-    MSFieldParse::node_p=0x0;
-    node_p = new TableExprNode();
-  }
+    : MSParse(), colName(MS::columnName(MS::FIELD_ID))  {reset();}
   
   //# Constructor with given ms name.
   MSFieldParse::MSFieldParse (const MeasurementSet* ms)
-    : MSParse(ms, "Field"), colName(MS::columnName(MS::FIELD_ID))
+    : MSParse(ms, "Field"), colName(MS::columnName(MS::FIELD_ID))  {reset();}
+  
+  
+  const void reset()
   {
     if (MSFieldParse::node_p!=0x0) delete MSFieldParse::node_p;
     MSFieldParse::node_p=0x0;
@@ -57,7 +55,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     idList.resize(0);
     //    setMS(ms);
   }
-  
   const TableExprNode *MSFieldParse::selectFieldIds(const Vector<Int>& fieldIds)
   {
     {
@@ -65,7 +62,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       idList.resize(tmp.nelements());
       idList = tmp;
     }
-    TableExprNode condition = (ms()->col(colName).in(fieldIds));
+    //    TableExprNode condition = (ms()->col(colName).in(fieldIds));
+    //    TableExprNode condition = (msInterface()->asMS()->col(colName).in(fieldIds));
+    TableExprNode condition = (msInterface()->col(colName).in(fieldIds));
     
     if(node_p->isNull())
       *node_p = condition;
