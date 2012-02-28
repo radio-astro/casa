@@ -331,7 +331,6 @@ install (FILES
 	implement/CalTables/GJonesTable.h
 	implement/CalTables/MJonesDesc.h
 	implement/CalTables/MJonesMRec.h
-	implement/CalTables/PlotCalHooks.h
 	implement/CalTables/ROCalMainColumns2.h
 	implement/CalTables/SkyJonesDesc.h
 	implement/CalTables/SolvableCalSetMCol.h

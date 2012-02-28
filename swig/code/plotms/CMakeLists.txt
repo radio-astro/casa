@@ -145,7 +145,7 @@ INSTALL (FILES
         implement/Actions/PlotMSDrawThread.qo.h
         implement/Actions/PlotMSExportThread.qo.h
         implement/Actions/PlotMSThread.qo.h
-	DESTINATION include/plotms/Actions )
+	DESTINATION include/casacode/plotms/Actions )
 
 INSTALL (FILES
         implement/Data/PlotCalCache.h
@@ -155,7 +155,7 @@ INSTALL (FILES
         implement/Data/PlotMSData.h
         implement/Data/PlotMSIndexer.h
         implement/Data/PlotMSVBAverager.h
-	DESTINATION include/plotms/Data )
+	DESTINATION include/casacode/plotms/Data )
 
 INSTALL (FILES
         implement/Gui/PlotMSAnnotator.h
@@ -167,7 +167,7 @@ INSTALL (FILES
         implement/Gui/PlotMSSelectionWidget.qo.h
         implement/Gui/PlotMSTransformationsWidget.qo.h
         implement/Gui/PlotRangeWidget.qo.h
-	DESTINATION include/plotms/Gui )
+	DESTINATION include/casacode/plotms/Gui )
 
 INSTALL (FILES
         implement/GuiTabs/PlotMSAnnotatorTab.qo.h
@@ -185,7 +185,7 @@ INSTALL (FILES
         implement/GuiTabs/PlotMSTab.qo.h
         implement/GuiTabs/PlotMSToolsTab.qo.h
         implement/GuiTabs/PlotMSTransformationsTab.qo.h
-	DESTINATION include/plotms/GuiTabs )
+	DESTINATION include/casacode/plotms/GuiTabs )
 
 INSTALL (FILES
         implement/PlotMS/PlotMS.h
@@ -200,7 +200,7 @@ INSTALL (FILES
         implement/PlotMS/PlotMSSelection.h
         implement/PlotMS/PlotMSTransformations.h
         implement/PlotMS/PlotMSWatchedParameters.h
-	DESTINATION include/plotms/PlotMS )
+	DESTINATION include/casacode/plotms/PlotMS )
 
 INSTALL (FILES
         implement/Plots/PlotMSIterPlot.h
@@ -211,7 +211,7 @@ INSTALL (FILES
         implement/Plots/PlotMSPlotParameterGroups.h
         implement/Plots/PlotMSPlotParameters.h
         implement/Plots/PlotMSSinglePlot.h
-	DESTINATION include/plotms/Plots )
+	DESTINATION include/casacode/plotms/Plots )
 
 
 casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )

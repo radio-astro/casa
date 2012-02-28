@@ -63,7 +63,7 @@ install (FILES
 	implement/Graphics/PGPLOT.h
 	implement/Graphics/PGPlotterLocal.h
 	implement/Graphics/X11Intrinsic.h
-	DESTINATION include/casacode/graphics/Grpaphics
+	DESTINATION include/casacode/graphics/Graphics
 	)
 install (FILES
 	implement/X11/X11Util.h
