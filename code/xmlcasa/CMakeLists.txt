@@ -171,6 +171,7 @@ casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
   scripts/assignmentFilter.py
+  scripts/caltab_convert2.py
   scripts/casa_in_py.py
   scripts/casa.py
   scripts/casapy.py
@@ -213,6 +214,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_boxit.py
   scripts/task_browsetable.py
   scripts/task_calstat.py
+  scripts/task_caltab_convert.py
   scripts/task_clean.py
   scripts/task_clearcal.py
   scripts/task_clearplot.py
@@ -346,6 +348,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/boxit.xml
   tasks/browsetable.xml
   tasks/calstat.xml
+  tasks/caltab_convert.xml
   tasks/clean.xml
   tasks/clearcal.xml
   tasks/clearplot.xml
