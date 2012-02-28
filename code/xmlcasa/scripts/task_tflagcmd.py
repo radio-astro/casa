@@ -12,11 +12,11 @@ def tflagcmd(
     inpfile=None,
     tablerows=None,
     reason=None,
+    useapplied=None,
     command=None,
     tbuff=None,
     ants=None,
     action=None,
-    useapplied=None,
     flagbackup=None,
     clearall=None,
     rowlist=None,
@@ -129,6 +129,7 @@ def tflagcmd(
 
                 # Make a FLAG_CMD compatible dictionary and select by reason
                 myflagcmd = fh.makeDict(cmdlist, reason)
+                print myflagcmd
                 
                 # Number of commands in dictionary
                 vrows = myflagcmd.keys()
@@ -259,7 +260,8 @@ def tflagcmd(
             if action == 'unapply':
                 apply = False
                 
-            list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
+#            list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
+            list2save = fh.setupAgent(tflocal, myflagcmd, tablerows, apply)
             
             # Initialize the Agents
             tflocal.init()

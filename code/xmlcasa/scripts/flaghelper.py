@@ -128,6 +128,9 @@ def makeDict(cmdlist, myreason='any'):
             command = cmdlist[i]
             reason = reaslist[i]
                                 
+            # Skip comment lines
+            if command.startswith('#'):
+                break
             if command == '':
                 casalog.post('Ignoring empty command line', 'WARN')
                 continue
@@ -482,6 +485,11 @@ def getUnion(mslocal, vis, cmdlist):
     for i in range(nrows):
         cmdline = cmdlist[i]
         
+        # Skip if it is a comment line
+        if cmdline.startswith('#'):
+            print "skipping this line with keyv=%s"%keyv
+            break
+        
         # split by white space
         keyvlist = cmdline.split()
         if keyvlist.__len__() > 0:  
@@ -491,8 +499,9 @@ def getUnion(mslocal, vis, cmdlist):
 
                 # Skip if it is a comment character #
 #                if keyv.count('#') > 0:
-                if keyv.startswith('#'):
-                    break
+#                if keyv.startswith('#'):
+#                    print "skipping this line with keyv=%s"%keyv
+#                    break
                     
                 (xkey,xval) = keyv.split('=')
 
@@ -961,15 +970,16 @@ def getLinePars(cmdline, mlist=[]):
     # Dictionary of parameters to return
     dicpars = {}
         
+    # Skip comment lines
+    if cmdline.startswith('#'):
+        return dicpars    
+    
     # split by white space
     keyvlist = cmdline.split()
     if keyvlist.__len__() > 0:  
         
         # Split by '='
         for keyv in keyvlist:
-            # Skip if it is a comment character #
-            if keyv.count('#') > 0:
-                break
 
             (xkey,xval) = keyv.split('=')
 
@@ -1244,6 +1254,12 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     for key in myflagcmd.keys():
         cmdline = myflagcmd[key]['command']
         applied = myflagcmd[key]['applied']
+        interval = myflagcmd[key]['interval']
+        level = myflagcmd[key]['level']
+        reason = myflagcmd[key]['reason']
+        severity = myflagcmd[key]['severity']
+        coltime = myflagcmd[key]['time']
+        coltype = myflagcmd[key]['type']
         casalog.post('cmdline for key%s'%key, 'DEBUG')
         casalog.post('%s'%cmdline, 'DEBUG')
         casalog.post('applied is %s'%applied, 'DEBUG')
@@ -1353,6 +1369,13 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             # add this command line to list to save in outfile
             parslist['row'] = key
             parslist['command'] = cmdline
+            parslist['applied'] = applied
+            parslist['interval'] = interval
+            parslist['level'] = level
+            parslist['reason'] = reason
+            parslist['severity'] = severity
+            parslist['time'] = coltime
+            parslist['type'] = coltype
             savelist[key] = parslist
         
         # FIXME: Backup the flags

@@ -94,20 +94,6 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
-    def setUp_shadowdata1(self):
-        self.vis = "shadowtest.ms"
-
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-        else:
-            print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
-
-        os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
-
     def setUp_shadowdata2(self):
         self.vis = "shadowtest_part.ms"
 
@@ -461,49 +447,6 @@ class test_msselection(test_base):
         s = tflagdata(vis = self.vis, mode="summary")
         self.assertEqual(s['flagged'], 7560)
 
-#class test_autoflag(test_base):
-#
-#    def setUp(self):
-#        self.setUp_ngc5921()
-#
-#    def test_CAS1979(self):
-#        """Test that autoflagging does not clear flags"""
-#        s0 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s1 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s2 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s3 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s4 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s5 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s6 = flagdata(vis=self.vis, mode="summary")['flagged']
-#
-#        assert s0 == 0
-#        assert s0 <= s1
-#        assert s1 <= s2
-#        assert s2 <= s3
-#        assert s3 <= s4
-#        assert s4 <= s5
-#        assert s5 <= s6
-#
-#    def test_auto1(self):
-#        print "Test of autoflag, algorithm=timemed"
-#        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
-#        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 4725)
-#
-#    def test2(self):
-#        print "Test of autoflag, algorithm=freqmed"
-#        flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
-#        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 29101)
-#
-#    def test_CAS2410(self):
-#        flagdata(vis=self.vis, scan='3')
-#        flagdata(vis=self.vis, scan='6', mode='autoflag', algorithm='timemed', window=3)
-#        test_eq(flagdata(vis=self.vis, mode="summary"), 2854278, 763371)
 
 class test_statistics_queries(test_base):
 
@@ -846,11 +789,12 @@ class test_list(test_base):
     def test_list1(self):
         '''tflagdata: apply flags from a list and do not save'''
         # creat input list
-        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"\
+                "#scan='4'"
         filename = 'list1.txt'
         create_input(input, filename)
         
-        # apply and don't save to MS
+        # apply and don't save to MS. Ignore comment line
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, run=True)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 0)
