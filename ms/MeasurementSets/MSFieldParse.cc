@@ -45,8 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   MSFieldParse::MSFieldParse (const MeasurementSet* ms)
     : MSParse(ms, "Field"), colName(MS::columnName(MS::FIELD_ID))  {reset();}
   
-  
-  const void reset()
+  const void MSFieldParse::reset()
   {
     if (MSFieldParse::node_p!=0x0) delete MSFieldParse::node_p;
     MSFieldParse::node_p=0x0;
