@@ -25,7 +25,7 @@
 //#
 //# $Id$
 //----------------------------------------------------------------------------
-#include <tableplot/TablePlot/TablePlot.h>
+#include <tools/tables/TablePlot/TablePlot.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -64,8 +64,8 @@
 #include <synthesis/CalTables/GJonesTable.h>
 #include <synthesis/CalTables/GJonesMBuf.h>
 #include <synthesis/CalTables/CalIter.h>
-#include <synthesis/CalTables/PlotCal.h>
-#include <synthesis/CalTables/PlotCalHooks.h>
+#include <tools/synthesis/CalTables/PlotCal.h>
+#include <tools/synthesis/CalTables/PlotCalHooks.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>

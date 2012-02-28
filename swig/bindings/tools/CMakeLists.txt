@@ -95,6 +95,7 @@ casa_add_library( tools
  synthesis/deconvolver_cmpt.cc
  synthesis/imager_cmpt.cc
  synthesis/imagertask_cmpt.cc
+ synthesis/CalTables/PlotCal.cc
  synthesis/simulator_cmpt.cc
  synthesis/vpmanager_cmpt.cc
  tables/table_cmpt.cc

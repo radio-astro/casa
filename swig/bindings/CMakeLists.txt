@@ -683,7 +683,6 @@ else()
   endif()
   set( casacode_libs
        alma 
-       calibration
        casadbus
        casaqt
        dish
@@ -692,9 +691,7 @@ else()
        graphics
        imageanalysis
        miriad
-       msvis
        nrao
-       oldalma
        plotms
        spectrallines
        stdcasa
