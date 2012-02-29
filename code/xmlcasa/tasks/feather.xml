@@ -27,6 +27,14 @@ two images must have the same flux density normalization scale.
 			<description>Name of low resolution (single dish) image</description>
 			<value></value>
 		</param>
+		<param type="double" name="sdscale">
+			<description>Scale factor to apply to Single Dish image</description>
+			<value>1.0</value>
+		</param>
+		<param type="bool" name="showplot">
+			<description>Show plot of feather function</description>
+			<value>False</value>
+		</param>
 	</input>
 
 <example>
@@ -62,6 +70,10 @@ two images must have the same flux density normalization scale.
 	     This image is often a image from a single-dish observations
 	        or a clean image obtained from lower resolution synthesis
 		observations.
+         sdscale -- value by which to scale the Single Dish image. Default is 1.0
+	 
+	 showplot -- If True will plot the cuts across the feathring function
+
 
         Comments:
 

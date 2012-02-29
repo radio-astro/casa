@@ -373,12 +373,12 @@ imager::exprmask(const std::string& mask, const double expr)
 }
 
 bool
-imager::feather(const std::string& image, const std::string& highres, const std::string& lowres, const std::string& lowpsf, const bool async)
+imager::feather(const std::string& image, const std::string& highres, const std::string& lowres, const std::string& lowpsf, const bool showplot, const bool async)
 {
 
   Bool rstat(False);
    try {
-      rstat = itsImager->feather(String(image), String(highres), String(lowres), String(lowpsf));
+     rstat = itsImager->feather(String(image), String(highres), String(lowres), String(lowpsf), showplot);
    } catch  (AipsError x) {
      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);
@@ -1663,18 +1663,15 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
 {
 
    Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-	casa::String pcolToUse(pointingcolumntouse);
-	
-	rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
-      } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+   try {
+     casa::String pcolToUse(pointingcolumntouse);
+     
+     rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
+   } catch  (AipsError x) {
+     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+     RETHROW(x);
    }
+
    return rstat;
 }
 
