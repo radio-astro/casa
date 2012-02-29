@@ -74,18 +74,18 @@ def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
 	# Check the inputs
 
 	if not os.path.exists( caltab_old ):
-		throw( 'Invalid old-format caltable.' )
+		raise IOError( 'Invalid old-format caltable.' )
 
 	if not os.path.exists( ms ):
-		throw( 'Invalid visibility file (MS).' )
+		raise IOError( 'Invalid visibility file (MS).' )
 
 	pTypeTemp = pType.strip().lower()
 	if ( pTypeTemp != 'complex' and pTypeTemp != 'float' ):
-		throw( 'Invalid parameter type ("complex" or "float").' )
+		raise Exception( 'Invalid parameter type ("complex" or "float").' )
 
   	if caltab_new == '': caltab_new = caltab_old + '.new'
 	if os.path.exists( caltab_new ):
-		throw( 'New-format caltable already exists.' )
+		raise IOError( 'New-format caltable already exists.' )
 
 
 	# Open the old-format caltable and get the number of rows
