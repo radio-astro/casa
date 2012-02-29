@@ -291,7 +291,7 @@ Record CasacRegionManager::fromBCS(
 			}
 		}
 	}
-	return regionRecord;
+    return regionRecord;
 }
 
 void CasacRegionManager::_setRegion(
@@ -650,7 +650,19 @@ String CasacRegionManager::_stokesFromRecord(
 	Bool oneRelAccountedFor = False;
 	if (imreg->isLCSlicer()) {
 		blc = imreg->asLCSlicer().blc();
+        if (blc.size() <= polAxis) {
+            *itsLog << LogIO::WARN << "Cannot determine stokes. "
+               << "blc of input region does not include the polarization coordinate."
+               << LogIO::POST;
+            return stokes;
+        }
 		trc = imreg->asLCSlicer().trc();
+        if (trc.size() <= polAxis) {
+            *itsLog << LogIO::WARN << "Cannot determine stokes. "
+               << "trc of input region does not include the polarization coordinate."
+               << LogIO::POST;
+            return stokes;
+        } 
 		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
 		oneRelAccountedFor = True;
