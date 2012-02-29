@@ -145,6 +145,11 @@ public:
    // list robust statistics? Should be called before display()
    void showRobust(const Bool show);
 
+   inline void recordMessages(const Bool rm) { _recordMessages = rm; }
+
+   inline vector<String> getMessages() { return _messages; }
+
+   inline void clearMessages() { _messages.resize(0); }
 private:
 
 // Data
@@ -153,7 +158,8 @@ private:
    const ImageInterface<T>* pInImage_p;
    IPosition blc_;
    Int precision_;
-   Bool _showRobust;
+   Bool _showRobust, _recordMessages;
+   vector<String> _messages;
 
 // Virtual functions.  See LatticeStatistics for more information
 // about these, or see the implementation.
