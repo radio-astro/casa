@@ -260,6 +260,7 @@ casa_add_library( synthesis
  implement/MeasurementEquations/CubeSkyEquation.cc
  implement/MeasurementEquations/Deconvolver.cc
  implement/MeasurementEquations/Entropy.cc
+ implement/MeasurementEquations/Feather.cc
  implement/MeasurementEquations/Imager.cc
  implement/MeasurementEquations/Imager2.cc
  implement/MeasurementEquations/ImagerMultiMS.cc
