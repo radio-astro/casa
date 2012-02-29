@@ -66,7 +66,7 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 //
 : LatticeStatistics<T>(image, os, showProgress, forceDisk),
   pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)),
-  precision_(-1), _showRobust(False)
+  precision_(-1), _showRobust(False), _recordMessages(False), _messages(vector<String>(0))
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
@@ -82,7 +82,7 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 //
 : LatticeStatistics<T>(image, showProgress, forceDisk),
   pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)),
-  precision_(-1), _showRobust(False)
+  precision_(-1), _showRobust(False), _recordMessages(False), _messages(vector<String>(0))
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
@@ -397,15 +397,21 @@ void ImageStatistics<T>::displayStats(
 	///////////////////////////////////////////////////////////////////////
 	//                 Do Values Section
 	///////////////////////////////////////////////////////////////////////
-	os_p << "Values --- " << LogIO::POST;
+	vector<String> messages;
+	messages.push_back("Values --- ");
+	// os_p << "Values --- " << LogIO::POST;
+	ostringstream oss;
 	if ( hasBeam ) {
 		// normalisation of units with "beam" in them is not (well) implemented, so brute force it
 		Int iBeam = sbunit.find("/beam");
 		String fUnit = (iBeam >= 0)
 			? sbunit.substr(0, iBeam) + sbunit.substr(iBeam+5)
 			: "Jy";
-		os_p << "         -- flux density [flux]:     " << sum/beamArea
-			<< " " << fUnit << LogIO::POST;
+		oss << "         -- flux density [flux]:     " << sum/beamArea
+			<< " " << fUnit;
+		messages.push_back(oss.str());
+		oss.str("");
+
 	}
 
 	IPosition myMaxPos = maxPos_p;
@@ -414,16 +420,34 @@ void ImageStatistics<T>::displayStats(
 	myMinPos += blc_;
 
 	if (LattStatsSpecialize::hasSomePoints(nPts)) {
-		os_p << "         -- number of points [npts]:                " << nPts << LogIO::POST;
-		os_p << "         -- maximum value [max]:                    " << dMax << " " << sbunit << LogIO::POST;
-		os_p << "         -- minimum value [min]:                    " << dMin << " " << sbunit << LogIO::POST;
-		os_p << "         -- position of max value (pixel) [maxpos]: " << myMaxPos << LogIO::POST;
-		os_p << "         -- position of min value (pixel) [minpos]: " << myMinPos << LogIO::POST;
-		os_p << "         -- position of max value (world) [maxposf]: " << maxPosString << LogIO::POST;
-		os_p << "         -- position of min value (world) [maxposf]: " << minPosString << LogIO::POST;
-		os_p << "         -- Sum of pixel values [sum]:               " << sum << " " << sbunit << LogIO::POST;
-		os_p << "         -- Sum of squared pixel values [sumsq]:     " << sumSq
-				<< " " << bunitSquared << LogIO::POST;
+		oss << "         -- number of points [npts]:                " << nPts;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- maximum value [max]:                    " << dMax << " " << sbunit;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- minimum value [min]:                    " << dMin << " " << sbunit;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- position of max value (pixel) [maxpos]: " << myMaxPos;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- position of min value (pixel) [minpos]: " << myMinPos;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- position of max value (world) [maxposf]: " << maxPosString;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- position of min value (world) [maxposf]: " << minPosString;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- Sum of pixel values [sum]:               " << sum << " " << sbunit;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "         -- Sum of squared pixel values [sumsq]:     " << sumSq
+				<< " " << bunitSquared;
+		messages.push_back(oss.str());
+		oss.str("");
 	}
 
 
@@ -431,26 +455,57 @@ void ImageStatistics<T>::displayStats(
 	///////////////////////////////////////////////////////////////////////
 	//                 Do Statistical Section
 	///////////////////////////////////////////////////////////////////////
-	os_p << "\nStatistics --- " << LogIO::POST;
+	messages.push_back("Statistics --- ");
+	Vector<LogIO::Command> priorities(0);
 	if (LattStatsSpecialize::hasSomePoints(nPts)) {
-		os_p << "        -- Mean of the pixel values [mean]:         " << mean << " "
+		oss << "        -- Mean of the pixel values [mean]:         " << mean << " "
+				<< sbunit;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "        -- Variance of the pixel values :           " << var << " "
 				<< sbunit << LogIO::POST;
-		os_p << "        -- Variance of the pixel values :           " << var << " "
-				<< sbunit << LogIO::POST;
-		os_p << "        -- Standard deviation of the Mean [sigma]:  " << sigma << " "
-				<< sbunit <<  LogIO::POST;
-		os_p << "        -- Root mean square [rms]:                  " << rms << " "
-				<< sbunit << LogIO::POST;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "        -- Standard deviation of the Mean [sigma]:  " << sigma << " "
+				<< sbunit;
+		messages.push_back(oss.str());
+		oss.str("");
+		oss << "        -- Root mean square [rms]:                  " << rms << " "
+				<< sbunit;
+		messages.push_back(oss.str());
+		oss.str("");
 		if (_showRobust) {
-			os_p << "        -- Median of the pixel values [median]:     " << median <<
-				" " << sbunit << LogIO::POST;
-			os_p << "        -- Median of the deviations [medabsdevmed]: " << medAbsDevMed
-				<< " " << sbunit << LogIO::POST;
-			os_p << "        -- Quartile [quartile]:                     " << quartile << " " <<
-				sbunit <<LogIO::POST;
+			oss << "        -- Median of the pixel values [median]:     " << median <<
+				" " << sbunit;
+			messages.push_back(oss.str());
+			oss.str("");
+			oss << "        -- Median of the deviations [medabsdevmed]: " << medAbsDevMed
+				<< " " << sbunit;
+			messages.push_back(oss.str());
+			oss.str("");
+			oss << "        -- Quartile [quartile]:                     " << quartile << " " <<
+				sbunit;
+			messages.push_back(oss.str());
+			oss.str("");
 		}
-	} else {
-		os_p << LogIO::WARN << "No valid points found " << LogIO::POST;
+		priorities.resize(messages.size());
+		priorities = LogIO::NORMAL;
+	}
+	else {
+		messages.push_back("No valid points found ");
+		priorities.resize(messages.size());
+		priorities = LogIO::NORMAL;
+		priorities[priorities.size()-1] = LogIO::WARN;
+	}
+	Vector<LogIO::Command>::const_iterator jiter = priorities.begin();
+	for (
+		vector<String>::const_iterator iter=messages.begin();
+		iter!=messages.end(); iter++, jiter++
+	) {
+		os_p << *jiter << *iter << LogIO::POST;
+		if (_recordMessages) {
+			_messages.push_back(*iter);
+		}
 	}
 }
 
