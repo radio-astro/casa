@@ -135,12 +135,16 @@ class test_alma(test_base):
     def test_intent(self):
         '''tflagcmd: test scan intent selection'''
         
-        input = "intent='CAL*POINT*'"
+        input = "intent='CAL*POINT*'\n"\
+                "#scan=3,4"
         filename = create_input(input)
         
-        # flag POINTING CALIBRATION scans 
+        # flag POINTING CALIBRATION scans and ignore comment line
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+        res = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
+        self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
         
     def test_extract(self):
         '''tflagcmd: action = extract and apply clip on WVR'''

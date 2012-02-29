@@ -25,6 +25,7 @@ scripts/assignmentFilter.py
 scripts/casa_in_py.py
 scripts/casa.py
 scripts/casapy.py
+scripts/caltab_convert2.py
 scripts/check_exceptionhandling.py
 scripts/check_input_saverestore.py
 scripts/cleanhelper.py
@@ -63,6 +64,7 @@ scripts/task_blcal.py
 scripts/task_boxit.py
 scripts/task_browsetable.py
 scripts/task_calstat.py
+scripts/task_caltab_convert.py
 scripts/task_clean.py
 scripts/task_clearcal.py
 scripts/task_clearplot.py

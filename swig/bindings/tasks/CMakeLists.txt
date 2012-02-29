@@ -8,6 +8,7 @@ blcal.xml
 boxit.xml
 browsetable.xml
 calstat.xml
+caltab_convert.xml
 clean.xml
 clearcal.xml
 clearplot.xml

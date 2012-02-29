@@ -66,7 +66,7 @@ table = casac.table()
 flagger = casac.flagger()
 testflagger = casac.testflagger()
 image = casac.image()
-imagepol = casac.imagepol`()
+imagepol = casac.imagepol()
 simulator = casac.simulator()
 componentlist = casac.componentlist()
 coordsys = casac.coordsys()
@@ -115,7 +115,6 @@ from immoments import  immoments
 from importasdm import  importasdm
 from importfits import  importfits
 from importgmrt import  importgmrt
-from importoldasdm import  importoldasdm
 from importuvfits import  importuvfits
 from importvla import  importvla
 from imregrid import  imregrid

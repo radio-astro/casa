@@ -355,7 +355,8 @@ def tflagdata(vis,
             tflocal.selectdata(unionpars);
             
             # Parse the parameters for each agent in the list
-            list2save = setupAgent(tflocal, flagcmd, [], apply)
+#            list2save = setupAgent(tflocal, flagcmd, [], apply)
+            list2save = fh.setupAgent(tflocal, flagcmd, [], apply)
 
         # Do display if requested
         if display != '':
@@ -576,8 +577,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         level = myflagcmd[key]['level']
         reason = myflagcmd[key]['reason']
         severity = myflagcmd[key]['severity']
-        time = myflagcmd[key]['time']
-        type = myflagcmd[key]['type']
+        coltime = myflagcmd[key]['time']
+        coltype = myflagcmd[key]['type']
 
         casalog.post('cmdline for key%s'%key, 'DEBUG')
         casalog.post('%s'%cmdline, 'DEBUG')
@@ -694,8 +695,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             parslist['level'] = level
             parslist['reason'] = reason
             parslist['severity'] = severity
-            parslist['time'] = time
-            parslist['type'] = type
+            parslist['time'] = coltime
+            parslist['type'] = coltype
             savelist[key] = parslist
                 
     casalog.post('Dictionary of valid commands to save','DEBUG')
