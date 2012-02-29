@@ -32,13 +32,14 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 	#Vers8.4 (3.2.0) STM 2011-03-24 fix casalog.post line-length bug
 	#Vers8.5 (3.4.0) STM 2011-12-08 new readflagxml for new Flag.xml format
 	#Vers8.6 (3.4.0) STM 2011-02-22 full handling of new Flag.xml ant+spw+pol flags
+	#Vers8.6 (3.4.0) STM 2011-02-27 bug fix
 	#
 	if applyflags:
 		fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
 	#
 	try:
                 casalog.origin('importevla')
-		casalog.post('You are using importevla v8.5 STM Updated 2012-02-22')
+		casalog.post('You are using importevla v8.5 STM Updated 2012-02-27')
 		viso = ''
                 casalog.post('corr_mode is forcibly set to all.')
 		if(len(vis) > 0) :
@@ -219,13 +220,25 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 		        #
 			# First sort the flags by antenna to compress
 			# Needed to avoid error "too many agents"
+			myantenna = ''
+			myreason = 'Any'
 			myflagsort = 'antpol'
-			myflagsd = sortflags(myflagd,myflagsort)
+			myflagsd = sortflags(myflagd,myantenna,myreason,myflagsort)
 		        #
 			# Now flag the data
 			#
 			reset = False
 			nappl = applyflagcmd(fglocal, viso, False, myflagsd, reset)
+		        #
+			# Set APPLIED=T for those flags
+			# NOTE: do this in the unsorted list to writeflagcmd
+			if nappl>0:
+			    myrowlist = myflagd.keys()
+			    napprows = myrowlist.__len__()
+			    print 'Updating APPLIED status in FLAG_CMD for '+str(napprows)+' rows'
+			    casalog.post('Updating APPLIED status in FLAG_CMD for '+str(napprows)+' rows')
+			    if napprows>0:
+			        updateflagcmd(viso,mycol='APPLIED',myval=True,myrowlist=myrowlist)
 		    else:
 		        print 'No flagging found in Flag.xml'
 			casalog.post('No flagging found in Flag.xml')
@@ -289,7 +302,7 @@ def getmsmjds(vis):
 
 #===============================================================================
 # Flag dictionary manipulation routines
-# Same versions as flagcmd v4.2 2012-02-21
+# Same versions as flagcmd v4.2 2012-02-27
 #===============================================================================
 
 def readflagxml(sdmfile, mytbuff):
@@ -314,6 +327,9 @@ def readflagxml(sdmfile, mytbuff):
 #         'applied' (bool)        set to True here on read-in
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
+#      Optional keys:
+#         'spw' (string)
+#         'poln' (string)
 #
 #   Updated STM 2011-11-02 handle new SDM Flag.xml format from ALMA
 #   Updated STM 2012-02-14 handle spectral window indices, names, IDs
@@ -581,14 +597,19 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
     #         'applied' (bool)        set to True here on read-in
     #         'level' (int)           set to 0 here on read-in
     #         'severity' (int)        set to 0 here on read-in
+    # Optional keys:
+    #         'spw' (string)
+    #         'poln' (string)
     #
     # NOTE: flag sorting is possibly needed to avoid error "Too many flagging agents
     # instantiated" and will generally speed up flagging in any event
     # If myflagsort=''              keep individual flags separate
     #              ='antenna'       combine all flags with a particular antenna
     #              ='antspw'        combine antenna+spw flags
+    #              ='antpol'        combine antenna+spw+poln flags
     #
     # Updated STM 2012-02-21 handle poln flags, myflagsort='antspw'
+    # Updated STM 2012-02-27 small cleanup
     #
     # Check if any operation is needed
     if myantenna=='' and myreason=='' and myflagsort=='':
@@ -690,11 +711,11 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
 		# check if we can sort this by antenna
 		antsort = False
 		# can only sort mode manualflag together
-		if mymode=='online':
-		    antsort = nselect==1
-		elif mymode=='' or mymode=='manualflag':
-		    # must have non-blank antenna selection
-		    if ant!='':
+		# must have non-blank antenna selection
+		if ant!='':
+		    if mymode=='online':
+		        antsort = nselect==1
+		    elif mymode=='' or mymode=='manualflag':
 		        # exclude flags with multiple/no selection
 			if myd.has_key('timerange'):
 			    antsort = myd['timerange']!='' and nselect==1
@@ -994,6 +1015,62 @@ def writeflagcmd(msfile,myflags,tag=''):
 	casalog.post('Added zero rows to FLAG_CMD, no flags found')
 
     return nadd
+# Done
+
+def updateflagcmd(msfile,mycol='',myval=None,myrowlist=[]):
+    #
+    # Update commands in myrowlist of the FLAG_CMD table of msfile
+    #
+    # Usage: updateflagcmd(msfile,myrow,mycol,myval)
+    # Example:
+    #
+    #    updateflagcmd(msfile,mycol='APPLIED',myval=True)
+    #       Mark all rows as APPLIED=True
+    #
+    #    updateflagcmd(msfile,mycol='APPLIED',myval=True,myrowlist=[0,1,2])
+    #       Mark rows 0,1,2 as APPLIED=True
+    #
+    if mycol=='':
+	    print 'WARNING: No column to specified for updateflagcmd, doing nothing'
+	    casalog.post('WARNING: No column to specified for updateflagcmd, doing nothing','WARN')
+	    return
+
+    # Open and read columns from FLAG_CMD
+    mstable = msfile+'/FLAG_CMD'
+    try:
+	    tb.open(mstable,nomodify=False)
+    except:
+	    raise Exception, "Error opening table "+mstable
+    nrows = int(tb.nrows())
+    #casalog.post('There were '+str(nrows)+' rows in FLAG_CMD')
+    #
+    # Check against allowed colnames
+    colnames = tb.colnames()
+    if colnames.count(mycol)<1:
+	    print 'Error: column mycol='+mycol+' not one of: '+str(colnames)
+	    casalog.post('Error: column mycol='+mycol+' not one of: '+str(colnames))
+	    return
+    
+    nlist = myrowlist.__len__()
+    if nlist>0:
+	    rowlist = myrowlist
+	    #casalog.post('Will update column '+mycol+' for rows '+str(rowlist))
+	    casalog.post('Will update column '+mycol+' for '+str(nlist)+' rows')
+    else:
+	    rowlist = range(nrows)
+	    nlist = nrows
+	    casalog.post('Will update column '+mycol+' for all rows')
+	    
+    if nlist>0:
+	    try:
+		    tb.putcell(mycol,rowlist,myval)
+	    except:
+		    raise Exception, "Error updating FLAG_CMD column "+mycol+" to value "+str(myval)
+	    
+	    print 'Updated '+str(nlist)+' rows of FLAG_CMD table in MS'
+	    casalog.post('Updated '+str(nlist)+' rows of FLAG_CMD table in MS')
+    tb.close()
+    
 # Done
 
 #===============================================================================
