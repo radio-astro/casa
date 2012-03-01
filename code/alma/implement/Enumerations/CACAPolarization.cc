@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CACAPolarization::version() {
 	return ACAPolarizationMod::version;
 	}
@@ -149,5 +148,25 @@ string CACAPolarization::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'ACAPolarization'.";
 	return oss.str();
+}
+
+namespace ACAPolarizationMod {
+	std::ostream & operator << ( std::ostream & out, const ACAPolarization& value) {
+		out << CACAPolarization::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , ACAPolarization& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CACAPolarization::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

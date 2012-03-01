@@ -69,6 +69,7 @@ using asdm::SpectralWindowRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -92,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::FlagRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -855,7 +859,8 @@ namespace asdm {
 		eoss.writeInt((int) polarizationType.size());
 		for (unsigned int i = 0; i < polarizationType.size(); i++)
 				
-			eoss.writeInt(polarizationType.at(i));
+			eoss.writeString(CPolarizationType::name(polarizationType.at(i)));
+			/* eoss.writeInt(polarizationType.at(i)); */
 				
 				
 						
@@ -890,68 +895,68 @@ namespace asdm {
 
 	}
 	
-void FlagRow::flagIdFromBin(EndianISStream& eiss) {
+void FlagRow::flagIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		flagId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FlagRow::startTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		startTime =  ArrayTime::fromBin(eiss);
+		flagId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FlagRow::endTimeFromBin(EndianISStream& eiss) {
+void FlagRow::startTimeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		endTime =  ArrayTime::fromBin(eiss);
+		startTime =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void FlagRow::reasonFromBin(EndianISStream& eiss) {
+void FlagRow::endTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void FlagRow::reasonFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		reason =  eiss.readString();
+		reason =  eis.readString();
 			
 		
 	
 	
 }
-void FlagRow::numAntennaFromBin(EndianISStream& eiss) {
+void FlagRow::numAntennaFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numAntenna =  eiss.readInt();
+		numAntenna =  eis.readInt();
 			
 		
 	
 	
 }
-void FlagRow::antennaIdFromBin(EndianISStream& eiss) {
+void FlagRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	antennaId = Tag::from1DBin(eiss);	
+	antennaId = Tag::from1DBin(eis);	
 	
 
 		
@@ -959,16 +964,16 @@ void FlagRow::antennaIdFromBin(EndianISStream& eiss) {
 	
 }
 
-void FlagRow::numPolarizationTypeFromBin(EndianISStream& eiss) {
+void FlagRow::numPolarizationTypeFromBin(EndianIStream& eis) {
 		
-	numPolarizationTypeExists = eiss.readBoolean();
+	numPolarizationTypeExists = eis.readBoolean();
 	if (numPolarizationTypeExists) {
 		
 	
 	
 		
 			
-		numPolarizationType =  eiss.readInt();
+		numPolarizationType =  eis.readInt();
 			
 		
 	
@@ -976,16 +981,16 @@ void FlagRow::numPolarizationTypeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FlagRow::numSpectralWindowFromBin(EndianISStream& eiss) {
+void FlagRow::numSpectralWindowFromBin(EndianIStream& eis) {
 		
-	numSpectralWindowExists = eiss.readBoolean();
+	numSpectralWindowExists = eis.readBoolean();
 	if (numSpectralWindowExists) {
 		
 	
 	
 		
 			
-		numSpectralWindow =  eiss.readInt();
+		numSpectralWindow =  eis.readInt();
 			
 		
 	
@@ -993,16 +998,16 @@ void FlagRow::numSpectralWindowFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FlagRow::numPairedAntennaFromBin(EndianISStream& eiss) {
+void FlagRow::numPairedAntennaFromBin(EndianIStream& eis) {
 		
-	numPairedAntennaExists = eiss.readBoolean();
+	numPairedAntennaExists = eis.readBoolean();
 	if (numPairedAntennaExists) {
 		
 	
 	
 		
 			
-		numPairedAntenna =  eiss.readInt();
+		numPairedAntenna =  eis.readInt();
 			
 		
 	
@@ -1010,9 +1015,9 @@ void FlagRow::numPairedAntennaFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FlagRow::polarizationTypeFromBin(EndianISStream& eiss) {
+void FlagRow::polarizationTypeFromBin(EndianIStream& eis) {
 		
-	polarizationTypeExists = eiss.readBoolean();
+	polarizationTypeExists = eis.readBoolean();
 	if (polarizationTypeExists) {
 		
 	
@@ -1022,10 +1027,10 @@ void FlagRow::polarizationTypeFromBin(EndianISStream& eiss) {
 	
 		polarizationType.clear();
 		
-		unsigned int polarizationTypeDim1 = eiss.readInt();
+		unsigned int polarizationTypeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypeDim1; i++)
 			
-			polarizationType.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationType.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1035,9 +1040,9 @@ void FlagRow::polarizationTypeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FlagRow::pairedAntennaIdFromBin(EndianISStream& eiss) {
+void FlagRow::pairedAntennaIdFromBin(EndianIStream& eis) {
 		
-	pairedAntennaIdExists = eiss.readBoolean();
+	pairedAntennaIdExists = eis.readBoolean();
 	if (pairedAntennaIdExists) {
 		
 	
@@ -1045,7 +1050,7 @@ void FlagRow::pairedAntennaIdFromBin(EndianISStream& eiss) {
 		
 			
 	
-	pairedAntennaId = Tag::from1DBin(eiss);	
+	pairedAntennaId = Tag::from1DBin(eis);	
 	
 
 		
@@ -1054,9 +1059,9 @@ void FlagRow::pairedAntennaIdFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FlagRow::spectralWindowIdFromBin(EndianISStream& eiss) {
+void FlagRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
-	spectralWindowIdExists = eiss.readBoolean();
+	spectralWindowIdExists = eis.readBoolean();
 	if (spectralWindowIdExists) {
 		
 	
@@ -1064,7 +1069,7 @@ void FlagRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
 			
 	
-	spectralWindowId = Tag::from1DBin(eiss);	
+	spectralWindowId = Tag::from1DBin(eis);	
 	
 
 		
@@ -1075,23 +1080,146 @@ void FlagRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 }
 	
 	
-	FlagRow* FlagRow::fromBin(EndianISStream& eiss, FlagTable& table, const vector<string>& attributesSeq) {
+	FlagRow* FlagRow::fromBin(EndianIStream& eis, FlagTable& table, const vector<string>& attributesSeq) {
 		FlagRow* row = new  FlagRow(table);
 		
 		map<string, FlagAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FlagTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FlagTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FlagRow::flagIdFromText(const string & s) {
+		 
+		flagId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void FlagRow::startTimeFromText(const string & s) {
+		 
+		startTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void FlagRow::endTimeFromText(const string & s) {
+		 
+		endTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FlagRow::reasonFromText(const string & s) {
+		 
+		reason = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FlagRow::numAntennaFromText(const string & s) {
+		 
+		numAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FlagRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void FlagRow::numPolarizationTypeFromText(const string & s) {
+		numPolarizationTypeExists = true;
+		 
+		numPolarizationType = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FlagRow::numSpectralWindowFromText(const string & s) {
+		numSpectralWindowExists = true;
+		 
+		numSpectralWindow = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FlagRow::numPairedAntennaFromText(const string & s) {
+		numPairedAntennaExists = true;
+		 
+		numPairedAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void FlagRow::polarizationTypeFromText(const string & s) {
+		polarizationTypeExists = true;
+		 
+		polarizationType = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FlagRow::pairedAntennaIdFromText(const string & s) {
+		pairedAntennaIdExists = true;
+		 
+		pairedAntennaId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FlagRow::spectralWindowIdFromText(const string & s) {
+		spectralWindowIdExists = true;
+		 
+		spectralWindowId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	
+	void FlagRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FlagAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FlagTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1446,9 +1574,9 @@ void FlagRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1576,9 +1704,10 @@ void FlagRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 	}
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
  		
@@ -1888,6 +2017,59 @@ void FlagRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 	 fromBinMethods["pairedAntennaId"] = &FlagRow::pairedAntennaIdFromBin; 
 	 fromBinMethods["spectralWindowId"] = &FlagRow::spectralWindowIdFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["flagId"] = &FlagRow::flagIdFromText;
+		 
+	
+				 
+	fromTextMethods["startTime"] = &FlagRow::startTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endTime"] = &FlagRow::endTimeFromText;
+		 
+	
+				 
+	fromTextMethods["reason"] = &FlagRow::reasonFromText;
+		 
+	
+				 
+	fromTextMethods["numAntenna"] = &FlagRow::numAntennaFromText;
+		 
+	
+				 
+	fromTextMethods["antennaId"] = &FlagRow::antennaIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["numPolarizationType"] = &FlagRow::numPolarizationTypeFromText;
+		 	
+	 
+				
+	fromTextMethods["numSpectralWindow"] = &FlagRow::numSpectralWindowFromText;
+		 	
+	 
+				
+	fromTextMethods["numPairedAntenna"] = &FlagRow::numPairedAntennaFromText;
+		 	
+	 
+				
+	fromTextMethods["polarizationType"] = &FlagRow::polarizationTypeFromText;
+		 	
+	 
+				
+	fromTextMethods["pairedAntennaId"] = &FlagRow::pairedAntennaIdFromText;
+		 	
+	 
+				
+	fromTextMethods["spectralWindowId"] = &FlagRow::spectralWindowIdFromText;
+		 	
+		
 	}
 	
 	FlagRow::FlagRow (FlagTable &t, FlagRow &row) : table(t) {

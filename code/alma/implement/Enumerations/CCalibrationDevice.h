@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace CalibrationDeviceMod
   //! CalibrationDevice.
   //! Devices that may be inserted in the optical path in front of the receiver.
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum CalibrationDevice
@@ -79,7 +80,10 @@ namespace CalibrationDeviceMod
 } 
 #endif
 
-using namespace std;
+namespace CalibrationDeviceMod {
+	std::ostream & operator << ( std::ostream & out, const CalibrationDevice& value);
+	std::istream & operator >> ( std::istream & in , CalibrationDevice& value );
+}
 
 /** 
   * A helper class for the enumeration CalibrationDevice.
@@ -119,7 +123,7 @@ class CCalibrationDevice {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -173,8 +177,8 @@ class CCalibrationDevice {
     CCalibrationDevice(const CCalibrationDevice&);
     CCalibrationDevice& operator=(const CCalibrationDevice&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

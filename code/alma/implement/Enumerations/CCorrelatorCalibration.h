@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace CorrelatorCalibrationMod
   //! CorrelatorCalibration.
   //!  Internal correlator calibrations performed duting this subscan
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum CorrelatorCalibration
@@ -71,7 +72,10 @@ namespace CorrelatorCalibrationMod
 } 
 #endif
 
-using namespace std;
+namespace CorrelatorCalibrationMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelatorCalibration& value);
+	std::istream & operator >> ( std::istream & in , CorrelatorCalibration& value );
+}
 
 /** 
   * A helper class for the enumeration CorrelatorCalibration.
@@ -103,7 +107,7 @@ class CCorrelatorCalibration {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CCorrelatorCalibration {
     CCorrelatorCalibration(const CCorrelatorCalibration&);
     CCorrelatorCalibration& operator=(const CCorrelatorCalibration&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

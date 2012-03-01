@@ -1122,10 +1122,16 @@ class cleanhelper:
         self.im.weight(type=weighting,rmode=rmode,robust=robust, 
                          npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
      
+        if((uvtaper==True) and (type(outertaper) in (str, int, float, long))):
+            outertaper=[outertaper]
         if((uvtaper==True) and (type(outertaper)==list) and (len(outertaper) > 0)):
             if(len(outertaper)==1):
                 outertaper.append(outertaper[0])
                 outertaper.append('0deg')
+            if(qa.quantity(outertaper[0])['unit']==''):
+                outertaper[0]=qa.quantity(qa.quantity(outertaper[0])['value'],'lambda')
+            if(qa.quantity(outertaper[1])['unit']==''):
+                outertaper[1]=qa.quantity(qa.quantity(outertaper[1])['value'],'lambda')
             if(qa.quantity(outertaper[0])['value'] > 0.0):
                 self.im.filter(type='gaussian', bmaj=outertaper[0],
                                bmin=outertaper[1], bpa=outertaper[2])
@@ -1193,9 +1199,18 @@ class cleanhelper:
                 ia.removefile('__temp_model2')
 
             modelos.append(modelosname)
+
+            
             if( (ia.brightnessunit().count('/beam')) > 0):
+                ##single dish-style model
                 maskelos.append(modelos[k]+'.sdmask')
                 self.im.makemodelfromsd(sdimage=modim,modelimage=modelos[k],maskimage=maskelos[k])
+                ia.open(maskelos[k])
+                ##sd mask cover whole image...delete it as it is not needed
+                if((ia.statistics()['min']) >0):
+                    ia.remove(done=True, verbose=False)
+                    maskelos.remove(maskelos[k])
+                ia.done()
             else:
                 ##assuming its a model image already then just regrid it
                 #self.im.make(modelos[k])

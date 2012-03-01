@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace AccumModeMod
   //! AccumMode.
   //!  Accumulation modes for the Correlator
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AccumMode
@@ -71,7 +72,10 @@ namespace AccumModeMod
 } 
 #endif
 
-using namespace std;
+namespace AccumModeMod {
+	std::ostream & operator << ( std::ostream & out, const AccumMode& value);
+	std::istream & operator >> ( std::istream & in , AccumMode& value );
+}
 
 /** 
   * A helper class for the enumeration AccumMode.
@@ -103,7 +107,7 @@ class CAccumMode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CAccumMode {
     CAccumMode(const CAccumMode&);
     CAccumMode& operator=(const CAccumMode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalAmpliRowIDL;
 #endif
 
 
@@ -51,14 +47,17 @@ using asdmIDL::CalAmpliRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
@@ -67,19 +66,20 @@ using  asdm::Frequency;
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
+	
+
+	
+#include "CBasebandName.h"
 	
 
 	
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -100,9 +100,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalAmpli.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -118,16 +120,19 @@ class CalReductionRow;
 	
 
 class CalAmpliRow;
-typedef void (CalAmpliRow::*CalAmpliAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalAmpliRow::*CalAmpliAttributeFromBin) (EndianIStream& eis);
+typedef void (CalAmpliRow::*CalAmpliAttributeFromText) (const string& s);
 
 /**
  * The CalAmpliRow class is a row of a CalAmpliTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalAmpliRow {
 friend class asdm::CalAmpliTable;
+friend class asdm::RowTransformer<CalAmpliRow>;
+//friend class asdm::TableStreamReader<CalAmpliTable, CalAmpliRow>;
 
 public:
 
@@ -238,6 +243,38 @@ public:
  	 		
  	 */
  	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute basebandName
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get basebandName.
+ 	 * @return basebandName as BasebandNameMod::BasebandName
+ 	 */
+ 	BasebandNameMod::BasebandName getBasebandName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set basebandName with the specified BasebandNameMod::BasebandName.
+ 	 * @param basebandName The BasebandNameMod::BasebandName value to which basebandName is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setBasebandName (BasebandNameMod::BasebandName basebandName);
   		
 	
 	
@@ -610,6 +647,8 @@ public:
 	    
 	 * @param receiverBand
 	    
+	 * @param basebandName
+	    
 	 * @param calDataId
 	    
 	 * @param calReductionId
@@ -629,7 +668,7 @@ public:
 	 * @param apertureEfficiencyError
 	    
 	 */ 
-	bool compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError);
+	bool compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, BasebandNameMod::BasebandName basebandName, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError);
 	
 	
 
@@ -671,7 +710,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalAmpliRowIDL struct.
 	 */
-	CalAmpliRowIDL *toIDL() const;
+	asdmIDL::CalAmpliRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -680,14 +719,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalAmpliRowIDL x) ;
+	void setFromIDL (asdmIDL::CalAmpliRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -695,7 +734,40 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalAmpliAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void apertureEfficiencyFromBin( EndianIStream& eis);
+void apertureEfficiencyErrorFromBin( EndianIStream& eis);
+
+void correctionValidityFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalAmpliTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalAmpliRow* fromBin(EndianIStream& eis, CalAmpliTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -772,6 +844,17 @@ private:
 	
 
 	ReceiverBandMod::ReceiverBand receiverBand;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute basebandName
+	
+	
+
+	BasebandNameMod::BasebandName basebandName;
 
 	
 	
@@ -912,25 +995,79 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalAmpliAttributeFromBin> fromBinMethods;
-void antennaNameFromBin( EndianISStream& eiss);
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void apertureEfficiencyFromBin( EndianISStream& eiss);
-void apertureEfficiencyErrorFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalAmpliAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void basebandNameFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void apertureEfficiencyFromBin( EndianIStream& eis);
+void apertureEfficiencyErrorFromBin( EndianIStream& eis);
 
-void correctionValidityFromBin( EndianISStream& eiss);
+void correctionValidityFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalAmpliAttributeFromText> fromTextMethods;
+	
+void antennaNameFromText (const string & s);
+	
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void basebandNameFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void apertureEfficiencyFromText (const string & s);
+	
+	
+void apertureEfficiencyErrorFromText (const string & s);
+	
+
+	
+void correctionValidityFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -939,14 +1076,14 @@ void correctionValidityFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalAmpliTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalAmpliRow* fromBin(EndianISStream& eiss, CalAmpliTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalAmpliRow* fromBin(EndianIStream& eis, CalAmpliTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

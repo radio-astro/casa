@@ -51,6 +51,9 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/Timer.h>
 
+#include <iostream>
+#include <fstream>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -63,6 +66,13 @@ class VisEquation;
 
 class SolvableVisCal : virtual public VisCal {
 public:
+
+  typedef struct fluxScaleStruct {
+    Matrix<Double> fd;
+    Matrix<Double> fderr;
+    Matrix<Int> numSol;
+    Matrix<Double> freq;
+  } fluxScaleStruct;
 
   SolvableVisCal(VisSet& vs);
   
@@ -278,7 +288,8 @@ public:
 			 const Vector<Int>& tranFieldIn,
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
-			 Matrix<Double>& fluxScaleFactor)=0;
+			 fluxScaleStruct& oFluxScaleStruct,
+			 const String& oListFile)=0;
 
   // Tell the CalSet to write a CalTable
   virtual void store();
@@ -550,7 +561,9 @@ public:
 			 const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
-			 Matrix<Double>& ) { throw(AipsError("NYI")); };
+			 SolvableVisCal::fluxScaleStruct&,
+			 const String&)
+	{ throw(AipsError("NYI")); };
 
   // Report state:
   inline virtual void state() { stateSVM(True); };
@@ -680,7 +693,8 @@ public:
 		 const Vector<Int>& tranFieldIn,
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
-		 Matrix<Double>& fluxScaleFactor);
+		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
+		 const String& oListFile);
 			     
   // Report state:
   inline virtual void state() { stateSVJ(True); };

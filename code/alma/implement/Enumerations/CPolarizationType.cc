@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CPolarizationType::version() {
 	return PolarizationTypeMod::version;
 	}
@@ -47,7 +46,7 @@ string CPolarizationType::revision () {
 }
 
 unsigned int CPolarizationType::size() {
-	return 4;
+	return 5;
 	}
 	
 	
@@ -59,6 +58,8 @@ const std::string& CPolarizationType::sX = "X";
 	
 const std::string& CPolarizationType::sY = "Y";
 	
+const std::string& CPolarizationType::sBOTH = "BOTH";
+	
 const std::vector<std::string> CPolarizationType::names() {
     std::vector<std::string> enumSet;
     
@@ -69,6 +70,8 @@ const std::vector<std::string> CPolarizationType::names() {
     enumSet.insert(enumSet.end(), CPolarizationType::sX);
     
     enumSet.insert(enumSet.end(), CPolarizationType::sY);
+    
+    enumSet.insert(enumSet.end(), CPolarizationType::sBOTH);
         
     return enumSet;
 }
@@ -87,6 +90,9 @@ std::string CPolarizationType::name(const PolarizationTypeMod::PolarizationType&
     
     case PolarizationTypeMod::Y:
       return CPolarizationType::sY;
+    
+    case PolarizationTypeMod::BOTH:
+      return CPolarizationType::sBOTH;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -110,6 +116,10 @@ PolarizationTypeMod::PolarizationType CPolarizationType::newPolarizationType(con
     if (name == CPolarizationType::sY) {
         return PolarizationTypeMod::Y;
     }
+    	
+    if (name == CPolarizationType::sBOTH) {
+        return PolarizationTypeMod::BOTH;
+    }
     
     throw badString(name);
 }
@@ -131,6 +141,10 @@ PolarizationTypeMod::PolarizationType CPolarizationType::literal(const std::stri
     if (name == CPolarizationType::sY) {
         return PolarizationTypeMod::Y;
     }
+    	
+    if (name == CPolarizationType::sBOTH) {
+        return PolarizationTypeMod::BOTH;
+    }
     
     throw badString(name);
 }
@@ -149,5 +163,25 @@ string CPolarizationType::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'PolarizationType'.";
 	return oss.str();
+}
+
+namespace PolarizationTypeMod {
+	std::ostream & operator << ( std::ostream & out, const PolarizationType& value) {
+		out << CPolarizationType::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , PolarizationType& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CPolarizationType::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

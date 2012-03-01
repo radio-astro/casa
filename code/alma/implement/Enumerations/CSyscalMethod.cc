@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSyscalMethod::version() {
 	return SyscalMethodMod::version;
 	}
@@ -47,7 +46,7 @@ string CSyscalMethod::revision () {
 }
 
 unsigned int CSyscalMethod::size() {
-	return 2;
+	return 3;
 	}
 	
 	
@@ -55,12 +54,16 @@ const std::string& CSyscalMethod::sTEMPERATURE_SCALE = "TEMPERATURE_SCALE";
 	
 const std::string& CSyscalMethod::sSKYDIP = "SKYDIP";
 	
+const std::string& CSyscalMethod::sSIDEBAND_RATIO = "SIDEBAND_RATIO";
+	
 const std::vector<std::string> CSyscalMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CSyscalMethod::sTEMPERATURE_SCALE);
     
     enumSet.insert(enumSet.end(), CSyscalMethod::sSKYDIP);
+    
+    enumSet.insert(enumSet.end(), CSyscalMethod::sSIDEBAND_RATIO);
         
     return enumSet;
 }
@@ -73,6 +76,9 @@ std::string CSyscalMethod::name(const SyscalMethodMod::SyscalMethod& f) {
     
     case SyscalMethodMod::SKYDIP:
       return CSyscalMethod::sSKYDIP;
+    
+    case SyscalMethodMod::SIDEBAND_RATIO:
+      return CSyscalMethod::sSIDEBAND_RATIO;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -88,6 +94,10 @@ SyscalMethodMod::SyscalMethod CSyscalMethod::newSyscalMethod(const std::string& 
     if (name == CSyscalMethod::sSKYDIP) {
         return SyscalMethodMod::SKYDIP;
     }
+    	
+    if (name == CSyscalMethod::sSIDEBAND_RATIO) {
+        return SyscalMethodMod::SIDEBAND_RATIO;
+    }
     
     throw badString(name);
 }
@@ -100,6 +110,10 @@ SyscalMethodMod::SyscalMethod CSyscalMethod::literal(const std::string& name) {
     	
     if (name == CSyscalMethod::sSKYDIP) {
         return SyscalMethodMod::SKYDIP;
+    }
+    	
+    if (name == CSyscalMethod::sSIDEBAND_RATIO) {
+        return SyscalMethodMod::SIDEBAND_RATIO;
     }
     
     throw badString(name);
@@ -119,5 +133,25 @@ string CSyscalMethod::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SyscalMethod'.";
 	return oss.str();
+}
+
+namespace SyscalMethodMod {
+	std::ostream & operator << ( std::ostream & out, const SyscalMethod& value) {
+		out << CSyscalMethod::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SyscalMethod& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSyscalMethod::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

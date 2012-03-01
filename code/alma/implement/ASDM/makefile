@@ -1,7 +1,7 @@
 # $Id$
 EXTRA_C++FLAGS=-fPIC
 #XLIBLIST := CFITSIO WCSLIB KLUDGEASDM ANTLR
-XLIBLIST := CFITSIO WCSLIB KLUDGEASDM XML2 BOOST
+XLIBLIST := CFITSIO WCSLIB KLUDGEASDM_V3 XML2 BOOST
 
 # Use the generic AIPS++ class implementation makefile.
 #------------------------------------------------------

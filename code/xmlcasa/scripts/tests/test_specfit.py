@@ -78,6 +78,7 @@ twogauss = "specfit_multipix_2gauss.fits"
 polyim = "specfit_multipix_poly_2gauss.fits"
 gauss_triplet = "gauss_triplet.fits"
 two_lorentzians = "two_lorentzians.fits"
+invalid_fits = "invalid_fits.im"
 solims = [
     "amp", "ampErr", "center", "centerErr",
     "fwhm", "fwhmErr", "integral", "integralErr"
@@ -92,10 +93,11 @@ def run_fitprofile (
     axis, mask, ngauss, poly, multifit, model="",
     residual="", amp="", amperr="", center="", centererr="",
     fwhm="", fwhmerr="", integral="", integralerr="",
-    estimates="",pampest="", pcenterest="", pfwhmest="",
+    estimates="", logresults=True, pampest="", pcenterest="", pfwhmest="",
     pfix="", gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix="", logfile="", pfunc=""
+    gmfwhmest=[0], gmfix="", logfile="", pfunc="",
+    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0]
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -110,13 +112,15 @@ def run_fitprofile (
         model=model, residual=residual, amp=amp,
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
-        integralerr=integralerr, pampest=pampest,
+        integralerr=integralerr, logresults=logresults, pampest=pampest,
         pcenterest=pcenterest, pfwhmest=pfwhmest, pfix=pfix,
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
         gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
-        pfunc=pfunc
+        pfunc=pfunc, goodamprange=goodamprange,
+        goodcenterrange=goodcenterrange,
+        goodfwhmrange=goodfwhmrange
     )
     myia.close()
     myia.done()
@@ -127,11 +131,12 @@ def run_specfit(
     axis, mask, ngauss, poly, multifit, model="",
     residual="", amp="", amperr="", center="", centererr="",
     fwhm="", fwhmerr="", integral="", integralerr="",
-    wantreturn=True, estimates="",
+    wantreturn=True, estimates="", logresults=None,
     pampest="", pcenterest="", pfwhmest="", pfix="",
     gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
-    gmfwhmest=[0], gmfix="", logfile="", pfunc=""
+    gmfwhmest=[0], gmfix="", logfile="", pfunc="",
+    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0]
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
@@ -142,13 +147,16 @@ def run_specfit(
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr, integral=integral,
         integralerr=integralerr,
-        wantreturn=wantreturn, pampest=pampest,
+        wantreturn=wantreturn, logresults=logresults, pampest=pampest,
         pcenterest=pcenterest, pfwhmest=pfwhmest, pfix=pfix,
         gmncomps=gmncomps, gmampcon=gmampcon,
         gmcentercon=gmcentercon, gmfwhmcon=gmfwhmcon,
         gmampest=gmampest, gmcenterest=gmcenterest,
         gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
-        pfunc=pfunc
+        pfunc=pfunc,
+        goodamprange=goodamprange,
+        goodcenterrange=goodcenterrange,
+        goodfwhmrange=goodfwhmrange
     )
 
 class specfit_test(unittest.TestCase):
@@ -599,6 +607,7 @@ class specfit_test(unittest.TestCase):
         myim.open(residname)
         pixels = myim.getchunk()
         self.assertTrue(pixels.shape == tuple(shape))
+        print str(pixels)
         self.assertTrue((pixels == 0).all())
         myim.done()
         
@@ -735,6 +744,27 @@ class specfit_test(unittest.TestCase):
             # appending, second time through size should double
             self.assertTrue(os.path.getsize(logfile) > 2e4*i)
             i = i+1
+            
+    def test_13(self):
+        """test setting solution parameter validities """
+        imagename=datapath+invalid_fits
+        i = 0
+        goodfwhmrange= [[0], [2,20]]
+        for gfr in goodfwhmrange:
+            for code in [run_fitprofile, run_specfit]:
+                res = code(
+                    imagename=imagename, box="", region="", chans="",
+                    stokes="", axis=3, mask="", ngauss=2, poly=-1,
+                    multifit=True, logresults=False, goodfwhmrange=gfr
+                )
+                print "**** " + str(res["valid"].sum())
+                if i == 0:
+                    exp = 16
+                else:
+                    exp = 7
+                self.assertTrue(res["valid"].sum() == exp)
+            i = i+1
+           
 
 
 def suite():

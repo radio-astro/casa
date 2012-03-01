@@ -69,6 +69,7 @@ using asdm::FieldRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -92,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::FieldRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -121,18 +125,6 @@ namespace asdm {
 			
 				
 		x->fieldName = CORBA::string_dup(fieldName.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->code = CORBA::string_dup(code.c_str());
 				
  			
 		
@@ -219,6 +211,20 @@ namespace asdm {
 			
 		x->time = time.toIDLArrayTime();
 			
+		
+	
+
+	
+  		
+		
+		x->codeExists = codeExists;
+		
+		
+			
+				
+		x->code = CORBA::string_dup(code.c_str());
+				
+ 			
 		
 	
 
@@ -358,16 +364,6 @@ namespace asdm {
 		
 		
 			
-		setCode(string (x.code));
-			
- 		
-		
-	
-
-	
-		
-		
-			
 		setNumPoly(x.numPoly);
   			
  		
@@ -442,6 +438,21 @@ namespace asdm {
 		
 			
 		setTime(ArrayTime (x.time));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		codeExists = x.codeExists;
+		if (x.codeExists) {
+		
+		
+			
+		setCode(string (x.code));
 			
  		
 		
@@ -585,14 +596,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(code, "code", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(numPoly, "numPoly", buf);
 		
 		
@@ -628,6 +631,18 @@ namespace asdm {
 		
 		
 		Parser::toXML(time, "time", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (codeExists) {
+		
+		
+		Parser::toXML(code, "code", buf);
 		
 		
 		}
@@ -752,14 +767,6 @@ namespace asdm {
 	
   		
 			
-	  	setCode(Parser::getString("code","Field",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 	  	setNumPoly(Parser::getInteger("numPoly","Field",rowDoc));
 			
 		
@@ -800,6 +807,16 @@ namespace asdm {
         if (row.isStr("<time>")) {
 			
 	  		setTime(Parser::getArrayTime("time","Field",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<code>")) {
+			
+	  		setCode(Parser::getString("code","Field",rowDoc));
 			
 		}
  		
@@ -909,15 +926,6 @@ namespace asdm {
 	
 		
 						
-			eoss.writeString(code);
-				
-		
-	
-
-	
-	
-		
-						
 			eoss.writeInt(numPoly);
 				
 		
@@ -959,6 +967,20 @@ namespace asdm {
 
 	}
 
+	eoss.writeBoolean(codeExists);
+	if (codeExists) {
+	
+	
+	
+		
+						
+			eoss.writeString(code);
+				
+		
+	
+
+	}
+
 	eoss.writeBoolean(directionCodeExists);
 	if (directionCodeExists) {
 	
@@ -966,7 +988,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(directionCode);
+			eoss.writeString(CDirectionReferenceCode::name(directionCode));
+			/* eoss.writeInt(directionCode); */
 				
 		
 	
@@ -1039,88 +1062,76 @@ namespace asdm {
 
 	}
 	
-void FieldRow::fieldIdFromBin(EndianISStream& eiss) {
+void FieldRow::fieldIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		fieldId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FieldRow::fieldNameFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		fieldName =  eiss.readString();
-			
+		fieldId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FieldRow::codeFromBin(EndianISStream& eiss) {
+void FieldRow::fieldNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		code =  eiss.readString();
+		fieldName =  eis.readString();
 			
 		
 	
 	
 }
-void FieldRow::numPolyFromBin(EndianISStream& eiss) {
+void FieldRow::numPolyFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numPoly =  eiss.readInt();
+		numPoly =  eis.readInt();
 			
 		
 	
 	
 }
-void FieldRow::delayDirFromBin(EndianISStream& eiss) {
+void FieldRow::delayDirFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	delayDir = Angle::from2DBin(eiss);		
+	delayDir = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void FieldRow::phaseDirFromBin(EndianISStream& eiss) {
+void FieldRow::phaseDirFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	phaseDir = Angle::from2DBin(eiss);		
+	phaseDir = Angle::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void FieldRow::referenceDirFromBin(EndianISStream& eiss) {
+void FieldRow::referenceDirFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	referenceDir = Angle::from2DBin(eiss);		
+	referenceDir = Angle::from2DBin(eis);		
 	
 
 		
@@ -1128,31 +1139,48 @@ void FieldRow::referenceDirFromBin(EndianISStream& eiss) {
 	
 }
 
-void FieldRow::timeFromBin(EndianISStream& eiss) {
+void FieldRow::timeFromBin(EndianIStream& eis) {
 		
-	timeExists = eiss.readBoolean();
+	timeExists = eis.readBoolean();
 	if (timeExists) {
 		
 	
 		
 		
-		time =  ArrayTime::fromBin(eiss);
+		time =  ArrayTime::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void FieldRow::directionCodeFromBin(EndianISStream& eiss) {
+void FieldRow::codeFromBin(EndianIStream& eis) {
 		
-	directionCodeExists = eiss.readBoolean();
+	codeExists = eis.readBoolean();
+	if (codeExists) {
+		
+	
+	
+		
+			
+		code =  eis.readString();
+			
+		
+	
+
+	}
+	
+}
+void FieldRow::directionCodeFromBin(EndianIStream& eis) {
+		
+	directionCodeExists = eis.readBoolean();
 	if (directionCodeExists) {
 		
 	
 	
 		
 			
-		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		directionCode = CDirectionReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -1160,31 +1188,31 @@ void FieldRow::directionCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FieldRow::directionEquinoxFromBin(EndianISStream& eiss) {
+void FieldRow::directionEquinoxFromBin(EndianIStream& eis) {
 		
-	directionEquinoxExists = eiss.readBoolean();
+	directionEquinoxExists = eis.readBoolean();
 	if (directionEquinoxExists) {
 		
 	
 		
 		
-		directionEquinox =  ArrayTime::fromBin(eiss);
+		directionEquinox =  ArrayTime::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void FieldRow::assocNatureFromBin(EndianISStream& eiss) {
+void FieldRow::assocNatureFromBin(EndianIStream& eis) {
 		
-	assocNatureExists = eiss.readBoolean();
+	assocNatureExists = eis.readBoolean();
 	if (assocNatureExists) {
 		
 	
 	
 		
 			
-		assocNature =  eiss.readString();
+		assocNature =  eis.readString();
 			
 		
 	
@@ -1192,31 +1220,31 @@ void FieldRow::assocNatureFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FieldRow::ephemerisIdFromBin(EndianISStream& eiss) {
+void FieldRow::ephemerisIdFromBin(EndianIStream& eis) {
 		
-	ephemerisIdExists = eiss.readBoolean();
+	ephemerisIdExists = eis.readBoolean();
 	if (ephemerisIdExists) {
 		
 	
 		
 		
-		ephemerisId =  Tag::fromBin(eiss);
+		ephemerisId =  Tag::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void FieldRow::sourceIdFromBin(EndianISStream& eiss) {
+void FieldRow::sourceIdFromBin(EndianIStream& eis) {
 		
-	sourceIdExists = eiss.readBoolean();
+	sourceIdExists = eis.readBoolean();
 	if (sourceIdExists) {
 		
 	
 	
 		
 			
-		sourceId =  eiss.readInt();
+		sourceId =  eis.readInt();
 			
 		
 	
@@ -1224,15 +1252,15 @@ void FieldRow::sourceIdFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
+void FieldRow::assocFieldIdFromBin(EndianIStream& eis) {
 		
-	assocFieldIdExists = eiss.readBoolean();
+	assocFieldIdExists = eis.readBoolean();
 	if (assocFieldIdExists) {
 		
 	
 		
 		
-		assocFieldId =  Tag::fromBin(eiss);
+		assocFieldId =  Tag::fromBin(eis);
 		
 	
 
@@ -1241,23 +1269,164 @@ void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
 }
 	
 	
-	FieldRow* FieldRow::fromBin(EndianISStream& eiss, FieldTable& table, const vector<string>& attributesSeq) {
+	FieldRow* FieldRow::fromBin(EndianIStream& eis, FieldTable& table, const vector<string>& attributesSeq) {
 		FieldRow* row = new  FieldRow(table);
 		
 		map<string, FieldAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FieldTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FieldTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FieldRow::fieldIdFromText(const string & s) {
+		 
+		fieldId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FieldRow::fieldNameFromText(const string & s) {
+		 
+		fieldName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FieldRow::numPolyFromText(const string & s) {
+		 
+		numPoly = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FieldRow::delayDirFromText(const string & s) {
+		 
+		delayDir = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FieldRow::phaseDirFromText(const string & s) {
+		 
+		phaseDir = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FieldRow::referenceDirFromText(const string & s) {
+		 
+		referenceDir = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an ArrayTime 
+	void FieldRow::timeFromText(const string & s) {
+		timeExists = true;
+		 
+		time = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FieldRow::codeFromText(const string & s) {
+		codeExists = true;
+		 
+		code = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an DirectionReferenceCode 
+	void FieldRow::directionCodeFromText(const string & s) {
+		directionCodeExists = true;
+		 
+		directionCode = ASDMValuesParser::parse<DirectionReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void FieldRow::directionEquinoxFromText(const string & s) {
+		directionEquinoxExists = true;
+		 
+		directionEquinox = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void FieldRow::assocNatureFromText(const string & s) {
+		assocNatureExists = true;
+		 
+		assocNature = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FieldRow::ephemerisIdFromText(const string & s) {
+		ephemerisIdExists = true;
+		 
+		ephemerisId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FieldRow::sourceIdFromText(const string & s) {
+		sourceIdExists = true;
+		 
+		sourceId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FieldRow::assocFieldIdFromText(const string & s) {
+		assocFieldIdExists = true;
+		 
+		assocFieldId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	
+	void FieldRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FieldAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FieldTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1322,38 +1491,6 @@ void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
   		}
   	
  		this->fieldName = fieldName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get code.
- 	 * @return code as string
- 	 */
- 	string FieldRow::getCode() const {
-	
-  		return code;
- 	}
-
- 	/**
- 	 * Set code with the specified string.
- 	 * @param code The string value to which code is to be set.
- 	 
- 	
- 		
- 	 */
- 	void FieldRow::setCode (string code)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->code = code;
 	
  	}
 	
@@ -1536,6 +1673,53 @@ void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
 
 	
 	/**
+	 * The attribute code is optional. Return true if this attribute exists.
+	 * @return true if and only if the code attribute exists. 
+	 */
+	bool FieldRow::isCodeExists() const {
+		return codeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get code, which is optional.
+ 	 * @return code as string
+ 	 * @throw IllegalAccessException If code does not exist.
+ 	 */
+ 	string FieldRow::getCode() const  {
+		if (!codeExists) {
+			throw IllegalAccessException("code", "Field");
+		}
+	
+  		return code;
+ 	}
+
+ 	/**
+ 	 * Set code with the specified string.
+ 	 * @param code The string value to which code is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FieldRow::setCode (string code) {
+	
+ 		this->code = code;
+	
+		codeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark code, which is an optional field, as non-existent.
+	 */
+	void FieldRow::clearCode () {
+		codeExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute directionCode is optional. Return true if this attribute exists.
 	 * @return true if and only if the directionCode attribute exists. 
 	 */
@@ -1676,9 +1860,9 @@ void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 	/**
@@ -1821,9 +2005,10 @@ void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
 	}
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1922,9 +2107,11 @@ void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
 	
 
 	
+		timeExists = false;
+	
 
 	
-		timeExists = false;
+		codeExists = false;
 	
 
 	
@@ -1984,7 +2171,6 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	
 	 fromBinMethods["fieldId"] = &FieldRow::fieldIdFromBin; 
 	 fromBinMethods["fieldName"] = &FieldRow::fieldNameFromBin; 
-	 fromBinMethods["code"] = &FieldRow::codeFromBin; 
 	 fromBinMethods["numPoly"] = &FieldRow::numPolyFromBin; 
 	 fromBinMethods["delayDir"] = &FieldRow::delayDirFromBin; 
 	 fromBinMethods["phaseDir"] = &FieldRow::phaseDirFromBin; 
@@ -1992,6 +2178,7 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		
 	
 	 fromBinMethods["time"] = &FieldRow::timeFromBin; 
+	 fromBinMethods["code"] = &FieldRow::codeFromBin; 
 	 fromBinMethods["directionCode"] = &FieldRow::directionCodeFromBin; 
 	 fromBinMethods["directionEquinox"] = &FieldRow::directionEquinoxFromBin; 
 	 fromBinMethods["assocNature"] = &FieldRow::assocNatureFromBin; 
@@ -1999,6 +2186,67 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	 fromBinMethods["sourceId"] = &FieldRow::sourceIdFromBin; 
 	 fromBinMethods["assocFieldId"] = &FieldRow::assocFieldIdFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["fieldId"] = &FieldRow::fieldIdFromText;
+		 
+	
+				 
+	fromTextMethods["fieldName"] = &FieldRow::fieldNameFromText;
+		 
+	
+				 
+	fromTextMethods["numPoly"] = &FieldRow::numPolyFromText;
+		 
+	
+				 
+	fromTextMethods["delayDir"] = &FieldRow::delayDirFromText;
+		 
+	
+				 
+	fromTextMethods["phaseDir"] = &FieldRow::phaseDirFromText;
+		 
+	
+				 
+	fromTextMethods["referenceDir"] = &FieldRow::referenceDirFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["time"] = &FieldRow::timeFromText;
+		 	
+	 
+				
+	fromTextMethods["code"] = &FieldRow::codeFromText;
+		 	
+	 
+				
+	fromTextMethods["directionCode"] = &FieldRow::directionCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["directionEquinox"] = &FieldRow::directionEquinoxFromText;
+		 	
+	 
+				
+	fromTextMethods["assocNature"] = &FieldRow::assocNatureFromText;
+		 	
+	 
+				
+	fromTextMethods["ephemerisId"] = &FieldRow::ephemerisIdFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceId"] = &FieldRow::sourceIdFromText;
+		 	
+	 
+				
+	fromTextMethods["assocFieldId"] = &FieldRow::assocFieldIdFromText;
+		 	
+		
 	}
 	
 	FieldRow::FieldRow (FieldTable &t, FieldRow &row) : table(t) {
@@ -2020,9 +2268,11 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
+		timeExists = false;
+	
 
 	
-		timeExists = false;
+		codeExists = false;
 	
 
 	
@@ -2061,8 +2311,6 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		
 			fieldName = row.fieldName;
 		
-			code = row.code;
-		
 			numPoly = row.numPoly;
 		
 			delayDir = row.delayDir;
@@ -2080,6 +2328,13 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		}
 		else
 			timeExists = false;
+		
+		if (row.codeExists) {
+			code = row.code;		
+			codeExists = true;
+		}
+		else
+			codeExists = false;
 		
 		if (row.directionCodeExists) {
 			directionCode = row.directionCode;		
@@ -2127,7 +2382,6 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		
 		 fromBinMethods["fieldId"] = &FieldRow::fieldIdFromBin; 
 		 fromBinMethods["fieldName"] = &FieldRow::fieldNameFromBin; 
-		 fromBinMethods["code"] = &FieldRow::codeFromBin; 
 		 fromBinMethods["numPoly"] = &FieldRow::numPolyFromBin; 
 		 fromBinMethods["delayDir"] = &FieldRow::delayDirFromBin; 
 		 fromBinMethods["phaseDir"] = &FieldRow::phaseDirFromBin; 
@@ -2135,6 +2389,7 @@ directionCode = CDirectionReferenceCode::from_int(0);
 			
 	
 		 fromBinMethods["time"] = &FieldRow::timeFromBin; 
+		 fromBinMethods["code"] = &FieldRow::codeFromBin; 
 		 fromBinMethods["directionCode"] = &FieldRow::directionCodeFromBin; 
 		 fromBinMethods["directionEquinox"] = &FieldRow::directionEquinoxFromBin; 
 		 fromBinMethods["assocNature"] = &FieldRow::assocNatureFromBin; 
@@ -2145,20 +2400,13 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	}
 
 	
-	bool FieldRow::compareNoAutoInc(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
+	bool FieldRow::compareNoAutoInc(string fieldName, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->fieldName == fieldName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->code == code);
 		
 		if (!result) return false;
 	
@@ -2196,16 +2444,12 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	
 	
 	
-	bool FieldRow::compareRequiredValue(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
+	bool FieldRow::compareRequiredValue(string fieldName, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
 		bool result;
 		result = true;
 		
 	
 		if (!(this->fieldName == fieldName)) return false;
-	
-
-	
-		if (!(this->code == code)) return false;
 	
 
 	
@@ -2241,8 +2485,6 @@ directionCode = CDirectionReferenceCode::from_int(0);
 			
 		if (this->fieldName != x->fieldName) return false;
 			
-		if (this->code != x->code) return false;
-			
 		if (this->numPoly != x->numPoly) return false;
 			
 		if (this->delayDir != x->delayDir) return false;
@@ -2261,7 +2503,6 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		
 		result["fieldId"] = &FieldRow::fieldIdFromBin;
 		result["fieldName"] = &FieldRow::fieldNameFromBin;
-		result["code"] = &FieldRow::codeFromBin;
 		result["numPoly"] = &FieldRow::numPolyFromBin;
 		result["delayDir"] = &FieldRow::delayDirFromBin;
 		result["phaseDir"] = &FieldRow::phaseDirFromBin;
@@ -2269,6 +2510,7 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		
 		
 		result["time"] = &FieldRow::timeFromBin;
+		result["code"] = &FieldRow::codeFromBin;
 		result["directionCode"] = &FieldRow::directionCodeFromBin;
 		result["directionEquinox"] = &FieldRow::directionEquinoxFromBin;
 		result["assocNature"] = &FieldRow::assocNatureFromBin;

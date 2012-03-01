@@ -635,7 +635,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.147
+           VERSION 1.0.149
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -666,7 +666,7 @@ endif()
 # ALMAWVR
 if( USE_ALMAWVR )
   casa_find( ALMAWVR
-             VERSION 0.23.2
+             VERSION 1.0.2
              PREFIX_HINTS ${ALMWVR_ROOT_DIR}
              LIBS almawvr
            )
@@ -1082,9 +1082,9 @@ casa_add_module( flagging CASACORE Boost casadbus tableplot synthesis casaqt QT4
 casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost casadbus )
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis )
-casa_add_module( alma CASACORE LIBXML2 Boost )
-casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
-casa_add_module( oldalma CASACORE LIBXML2 Boost )
+casa_add_module( alma CASACORE LIBXML2  LIBXSLT Boost synthesis)
+#casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
+#casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( spectrallines CASACORE imageanalysis )

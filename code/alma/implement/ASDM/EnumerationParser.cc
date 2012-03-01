@@ -134,7 +134,7 @@ ReceiverBandMod::ReceiverBand EnumerationParser::getReceiverBand(const string &n
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a ReceiverBand.", tableName);
 	}
-	return CReceiverBand::newReceiverBand(s);
+	return result;
 }
 
 vector<ReceiverBandMod::ReceiverBand> EnumerationParser::getReceiverBand1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -414,7 +414,7 @@ SBTypeMod::SBType EnumerationParser::getSBType(const string &name, const string 
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SBType.", tableName);
 	}
-	return CSBType::newSBType(s);
+	return result;
 }
 
 vector<SBTypeMod::SBType> EnumerationParser::getSBType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -694,7 +694,7 @@ DirectionReferenceCodeMod::DirectionReferenceCode EnumerationParser::getDirectio
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a DirectionReferenceCode.", tableName);
 	}
-	return CDirectionReferenceCode::newDirectionReferenceCode(s);
+	return result;
 }
 
 vector<DirectionReferenceCodeMod::DirectionReferenceCode> EnumerationParser::getDirectionReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -974,7 +974,7 @@ CorrelationModeMod::CorrelationMode EnumerationParser::getCorrelationMode(const 
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CorrelationMode.", tableName);
 	}
-	return CCorrelationMode::newCorrelationMode(s);
+	return result;
 }
 
 vector<CorrelationModeMod::CorrelationMode> EnumerationParser::getCorrelationMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -1254,7 +1254,7 @@ AtmPhaseCorrectionMod::AtmPhaseCorrection EnumerationParser::getAtmPhaseCorrecti
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AtmPhaseCorrection.", tableName);
 	}
-	return CAtmPhaseCorrection::newAtmPhaseCorrection(s);
+	return result;
 }
 
 vector<AtmPhaseCorrectionMod::AtmPhaseCorrection> EnumerationParser::getAtmPhaseCorrection1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -1534,7 +1534,7 @@ ProcessorTypeMod::ProcessorType EnumerationParser::getProcessorType(const string
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a ProcessorType.", tableName);
 	}
-	return CProcessorType::newProcessorType(s);
+	return result;
 }
 
 vector<ProcessorTypeMod::ProcessorType> EnumerationParser::getProcessorType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -1814,7 +1814,7 @@ SpectralResolutionTypeMod::SpectralResolutionType EnumerationParser::getSpectral
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SpectralResolutionType.", tableName);
 	}
-	return CSpectralResolutionType::newSpectralResolutionType(s);
+	return result;
 }
 
 vector<SpectralResolutionTypeMod::SpectralResolutionType> EnumerationParser::getSpectralResolutionType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -2094,7 +2094,7 @@ CalibrationDeviceMod::CalibrationDevice EnumerationParser::getCalibrationDevice(
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CalibrationDevice.", tableName);
 	}
-	return CCalibrationDevice::newCalibrationDevice(s);
+	return result;
 }
 
 vector<CalibrationDeviceMod::CalibrationDevice> EnumerationParser::getCalibrationDevice1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -2374,7 +2374,7 @@ AntennaMakeMod::AntennaMake EnumerationParser::getAntennaMake(const string &name
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AntennaMake.", tableName);
 	}
-	return CAntennaMake::newAntennaMake(s);
+	return result;
 }
 
 vector<AntennaMakeMod::AntennaMake> EnumerationParser::getAntennaMake1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -2654,7 +2654,7 @@ AntennaTypeMod::AntennaType EnumerationParser::getAntennaType(const string &name
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AntennaType.", tableName);
 	}
-	return CAntennaType::newAntennaType(s);
+	return result;
 }
 
 vector<AntennaTypeMod::AntennaType> EnumerationParser::getAntennaType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -2934,7 +2934,7 @@ SourceModelMod::SourceModel EnumerationParser::getSourceModel(const string &name
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SourceModel.", tableName);
 	}
-	return CSourceModel::newSourceModel(s);
+	return result;
 }
 
 vector<SourceModelMod::SourceModel> EnumerationParser::getSourceModel1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -3214,7 +3214,7 @@ FrequencyReferenceCodeMod::FrequencyReferenceCode EnumerationParser::getFrequenc
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a FrequencyReferenceCode.", tableName);
 	}
-	return CFrequencyReferenceCode::newFrequencyReferenceCode(s);
+	return result;
 }
 
 vector<FrequencyReferenceCodeMod::FrequencyReferenceCode> EnumerationParser::getFrequencyReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -3494,7 +3494,7 @@ StokesParameterMod::StokesParameter EnumerationParser::getStokesParameter(const 
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a StokesParameter.", tableName);
 	}
-	return CStokesParameter::newStokesParameter(s);
+	return result;
 }
 
 vector<StokesParameterMod::StokesParameter> EnumerationParser::getStokesParameter1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -3715,6 +3715,286 @@ vector<vector<vector<StokesParameterMod::StokesParameter> > > EnumerationParser:
 
 
 		
+string EnumerationParser::toXML(const string& elementName, RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode e) {
+	return "<"+elementName+">"+CRadialVelocityReferenceCode::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CRadialVelocityReferenceCode::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CRadialVelocityReferenceCode::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CRadialVelocityReferenceCode::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode EnumerationParser::getRadialVelocityReferenceCode(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	RadialVelocityReferenceCode result;
+	try {
+		result = CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a RadialVelocityReferenceCode.", tableName);
+	}
+	return result;
+}
+
+vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> EnumerationParser::getRadialVelocityReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a RadialVelocityReferenceCode.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > EnumerationParser::getRadialVelocityReferenceCode2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a RadialVelocityReferenceCode.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > > EnumerationParser::getRadialVelocityReferenceCode3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> v_aux;
+		vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a RadialVelocityReferenceCode.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
 string EnumerationParser::toXML(const string& elementName, PolarizationTypeMod::PolarizationType e) {
 	return "<"+elementName+">"+CPolarizationType::name(e)+"</"+elementName+">";
 }
@@ -3774,7 +4054,7 @@ PolarizationTypeMod::PolarizationType EnumerationParser::getPolarizationType(con
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a PolarizationType.", tableName);
 	}
-	return CPolarizationType::newPolarizationType(s);
+	return result;
 }
 
 vector<PolarizationTypeMod::PolarizationType> EnumerationParser::getPolarizationType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -4054,7 +4334,7 @@ BasebandNameMod::BasebandName EnumerationParser::getBasebandName(const string &n
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a BasebandName.", tableName);
 	}
-	return CBasebandName::newBasebandName(s);
+	return result;
 }
 
 vector<BasebandNameMod::BasebandName> EnumerationParser::getBasebandName1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -4334,7 +4614,7 @@ NetSidebandMod::NetSideband EnumerationParser::getNetSideband(const string &name
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a NetSideband.", tableName);
 	}
-	return CNetSideband::newNetSideband(s);
+	return result;
 }
 
 vector<NetSidebandMod::NetSideband> EnumerationParser::getNetSideband1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -4614,7 +4894,7 @@ SidebandProcessingModeMod::SidebandProcessingMode EnumerationParser::getSideband
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SidebandProcessingMode.", tableName);
 	}
-	return CSidebandProcessingMode::newSidebandProcessingMode(s);
+	return result;
 }
 
 vector<SidebandProcessingModeMod::SidebandProcessingMode> EnumerationParser::getSidebandProcessingMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -4894,7 +5174,7 @@ WindowFunctionMod::WindowFunction EnumerationParser::getWindowFunction(const str
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a WindowFunction.", tableName);
 	}
-	return CWindowFunction::newWindowFunction(s);
+	return result;
 }
 
 vector<WindowFunctionMod::WindowFunction> EnumerationParser::getWindowFunction1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -5174,7 +5454,7 @@ CorrelationBitMod::CorrelationBit EnumerationParser::getCorrelationBit(const str
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CorrelationBit.", tableName);
 	}
-	return CCorrelationBit::newCorrelationBit(s);
+	return result;
 }
 
 vector<CorrelationBitMod::CorrelationBit> EnumerationParser::getCorrelationBit1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -5454,7 +5734,7 @@ ReceiverSidebandMod::ReceiverSideband EnumerationParser::getReceiverSideband(con
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a ReceiverSideband.", tableName);
 	}
-	return CReceiverSideband::newReceiverSideband(s);
+	return result;
 }
 
 vector<ReceiverSidebandMod::ReceiverSideband> EnumerationParser::getReceiverSideband1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -5734,7 +6014,7 @@ DopplerReferenceCodeMod::DopplerReferenceCode EnumerationParser::getDopplerRefer
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a DopplerReferenceCode.", tableName);
 	}
-	return CDopplerReferenceCode::newDopplerReferenceCode(s);
+	return result;
 }
 
 vector<DopplerReferenceCodeMod::DopplerReferenceCode> EnumerationParser::getDopplerReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -6014,7 +6294,7 @@ ProcessorSubTypeMod::ProcessorSubType EnumerationParser::getProcessorSubType(con
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a ProcessorSubType.", tableName);
 	}
-	return CProcessorSubType::newProcessorSubType(s);
+	return result;
 }
 
 vector<ProcessorSubTypeMod::ProcessorSubType> EnumerationParser::getProcessorSubType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -6294,7 +6574,7 @@ AccumModeMod::AccumMode EnumerationParser::getAccumMode(const string &name, cons
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AccumMode.", tableName);
 	}
-	return CAccumMode::newAccumMode(s);
+	return result;
 }
 
 vector<AccumModeMod::AccumMode> EnumerationParser::getAccumMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -6574,7 +6854,7 @@ AxisNameMod::AxisName EnumerationParser::getAxisName(const string &name, const s
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AxisName.", tableName);
 	}
-	return CAxisName::newAxisName(s);
+	return result;
 }
 
 vector<AxisNameMod::AxisName> EnumerationParser::getAxisName1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -6854,7 +7134,7 @@ FilterModeMod::FilterMode EnumerationParser::getFilterMode(const string &name, c
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a FilterMode.", tableName);
 	}
-	return CFilterMode::newFilterMode(s);
+	return result;
 }
 
 vector<FilterModeMod::FilterMode> EnumerationParser::getFilterMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -7134,7 +7414,7 @@ CorrelatorNameMod::CorrelatorName EnumerationParser::getCorrelatorName(const str
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CorrelatorName.", tableName);
 	}
-	return CCorrelatorName::newCorrelatorName(s);
+	return result;
 }
 
 vector<CorrelatorNameMod::CorrelatorName> EnumerationParser::getCorrelatorName1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -7414,7 +7694,7 @@ WVRMethodMod::WVRMethod EnumerationParser::getWVRMethod(const string &name, cons
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a WVRMethod.", tableName);
 	}
-	return CWVRMethod::newWVRMethod(s);
+	return result;
 }
 
 vector<WVRMethodMod::WVRMethod> EnumerationParser::getWVRMethod1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -7694,7 +7974,7 @@ ScanIntentMod::ScanIntent EnumerationParser::getScanIntent(const string &name, c
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a ScanIntent.", tableName);
 	}
-	return CScanIntent::newScanIntent(s);
+	return result;
 }
 
 vector<ScanIntentMod::ScanIntent> EnumerationParser::getScanIntent1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -7974,7 +8254,7 @@ CalDataOriginMod::CalDataOrigin EnumerationParser::getCalDataOrigin(const string
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CalDataOrigin.", tableName);
 	}
-	return CCalDataOrigin::newCalDataOrigin(s);
+	return result;
 }
 
 vector<CalDataOriginMod::CalDataOrigin> EnumerationParser::getCalDataOrigin1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -8254,7 +8534,7 @@ CalibrationFunctionMod::CalibrationFunction EnumerationParser::getCalibrationFun
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CalibrationFunction.", tableName);
 	}
-	return CCalibrationFunction::newCalibrationFunction(s);
+	return result;
 }
 
 vector<CalibrationFunctionMod::CalibrationFunction> EnumerationParser::getCalibrationFunction1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -8534,7 +8814,7 @@ CalibrationSetMod::CalibrationSet EnumerationParser::getCalibrationSet(const str
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CalibrationSet.", tableName);
 	}
-	return CCalibrationSet::newCalibrationSet(s);
+	return result;
 }
 
 vector<CalibrationSetMod::CalibrationSet> EnumerationParser::getCalibrationSet1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -8814,7 +9094,7 @@ AntennaMotionPatternMod::AntennaMotionPattern EnumerationParser::getAntennaMotio
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AntennaMotionPattern.", tableName);
 	}
-	return CAntennaMotionPattern::newAntennaMotionPattern(s);
+	return result;
 }
 
 vector<AntennaMotionPatternMod::AntennaMotionPattern> EnumerationParser::getAntennaMotionPattern1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -9094,7 +9374,7 @@ SubscanIntentMod::SubscanIntent EnumerationParser::getSubscanIntent(const string
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SubscanIntent.", tableName);
 	}
-	return CSubscanIntent::newSubscanIntent(s);
+	return result;
 }
 
 vector<SubscanIntentMod::SubscanIntent> EnumerationParser::getSubscanIntent1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -9374,7 +9654,7 @@ SwitchingModeMod::SwitchingMode EnumerationParser::getSwitchingMode(const string
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SwitchingMode.", tableName);
 	}
-	return CSwitchingMode::newSwitchingMode(s);
+	return result;
 }
 
 vector<SwitchingModeMod::SwitchingMode> EnumerationParser::getSwitchingMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -9654,7 +9934,7 @@ CorrelatorCalibrationMod::CorrelatorCalibration EnumerationParser::getCorrelator
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CorrelatorCalibration.", tableName);
 	}
-	return CCorrelatorCalibration::newCorrelatorCalibration(s);
+	return result;
 }
 
 vector<CorrelatorCalibrationMod::CorrelatorCalibration> EnumerationParser::getCorrelatorCalibration1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -9934,7 +10214,7 @@ TimeSamplingMod::TimeSampling EnumerationParser::getTimeSampling(const string &n
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a TimeSampling.", tableName);
 	}
-	return CTimeSampling::newTimeSampling(s);
+	return result;
 }
 
 vector<TimeSamplingMod::TimeSampling> EnumerationParser::getTimeSampling1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -10214,7 +10494,7 @@ CalTypeMod::CalType EnumerationParser::getCalType(const string &name, const stri
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CalType.", tableName);
 	}
-	return CCalType::newCalType(s);
+	return result;
 }
 
 vector<CalTypeMod::CalType> EnumerationParser::getCalType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -10494,7 +10774,7 @@ AssociatedCalNatureMod::AssociatedCalNature EnumerationParser::getAssociatedCalN
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AssociatedCalNature.", tableName);
 	}
-	return CAssociatedCalNature::newAssociatedCalNature(s);
+	return result;
 }
 
 vector<AssociatedCalNatureMod::AssociatedCalNature> EnumerationParser::getAssociatedCalNature1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -10774,7 +11054,7 @@ InvalidatingConditionMod::InvalidatingCondition EnumerationParser::getInvalidati
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a InvalidatingCondition.", tableName);
 	}
-	return CInvalidatingCondition::newInvalidatingCondition(s);
+	return result;
 }
 
 vector<InvalidatingConditionMod::InvalidatingCondition> EnumerationParser::getInvalidatingCondition1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -11054,7 +11334,7 @@ PositionMethodMod::PositionMethod EnumerationParser::getPositionMethod(const str
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a PositionMethod.", tableName);
 	}
-	return CPositionMethod::newPositionMethod(s);
+	return result;
 }
 
 vector<PositionMethodMod::PositionMethod> EnumerationParser::getPositionMethod1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -11334,7 +11614,7 @@ PointingModelModeMod::PointingModelMode EnumerationParser::getPointingModelMode(
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a PointingModelMode.", tableName);
 	}
-	return CPointingModelMode::newPointingModelMode(s);
+	return result;
 }
 
 vector<PointingModelModeMod::PointingModelMode> EnumerationParser::getPointingModelMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -11614,7 +11894,7 @@ PointingMethodMod::PointingMethod EnumerationParser::getPointingMethod(const str
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a PointingMethod.", tableName);
 	}
-	return CPointingMethod::newPointingMethod(s);
+	return result;
 }
 
 vector<PointingMethodMod::PointingMethod> EnumerationParser::getPointingMethod1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -11894,7 +12174,7 @@ SyscalMethodMod::SyscalMethod EnumerationParser::getSyscalMethod(const string &n
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SyscalMethod.", tableName);
 	}
-	return CSyscalMethod::newSyscalMethod(s);
+	return result;
 }
 
 vector<SyscalMethodMod::SyscalMethod> EnumerationParser::getSyscalMethod1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -12174,7 +12454,7 @@ CalCurveTypeMod::CalCurveType EnumerationParser::getCalCurveType(const string &n
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CalCurveType.", tableName);
 	}
-	return CCalCurveType::newCalCurveType(s);
+	return result;
 }
 
 vector<CalCurveTypeMod::CalCurveType> EnumerationParser::getCalCurveType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -12454,7 +12734,7 @@ StationTypeMod::StationType EnumerationParser::getStationType(const string &name
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a StationType.", tableName);
 	}
-	return CStationType::newStationType(s);
+	return result;
 }
 
 vector<StationTypeMod::StationType> EnumerationParser::getStationType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -12734,7 +13014,7 @@ DetectorBandTypeMod::DetectorBandType EnumerationParser::getDetectorBandType(con
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a DetectorBandType.", tableName);
 	}
-	return CDetectorBandType::newDetectorBandType(s);
+	return result;
 }
 
 vector<DetectorBandTypeMod::DetectorBandType> EnumerationParser::getDetectorBandType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -13014,7 +13294,7 @@ FocusMethodMod::FocusMethod EnumerationParser::getFocusMethod(const string &name
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a FocusMethod.", tableName);
 	}
-	return CFocusMethod::newFocusMethod(s);
+	return result;
 }
 
 vector<FocusMethodMod::FocusMethod> EnumerationParser::getFocusMethod1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -13294,7 +13574,7 @@ HolographyChannelTypeMod::HolographyChannelType EnumerationParser::getHolography
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a HolographyChannelType.", tableName);
 	}
-	return CHolographyChannelType::newHolographyChannelType(s);
+	return result;
 }
 
 vector<HolographyChannelTypeMod::HolographyChannelType> EnumerationParser::getHolographyChannelType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -13574,7 +13854,7 @@ FluxCalibrationMethodMod::FluxCalibrationMethod EnumerationParser::getFluxCalibr
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a FluxCalibrationMethod.", tableName);
 	}
-	return CFluxCalibrationMethod::newFluxCalibrationMethod(s);
+	return result;
 }
 
 vector<FluxCalibrationMethodMod::FluxCalibrationMethod> EnumerationParser::getFluxCalibrationMethod1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -13795,6 +14075,1126 @@ vector<vector<vector<FluxCalibrationMethodMod::FluxCalibrationMethod> > > Enumer
 
 
 		
+string EnumerationParser::toXML(const string& elementName, PrimaryBeamDescriptionMod::PrimaryBeamDescription e) {
+	return "<"+elementName+">"+CPrimaryBeamDescription::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CPrimaryBeamDescription::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CPrimaryBeamDescription::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CPrimaryBeamDescription::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+PrimaryBeamDescriptionMod::PrimaryBeamDescription EnumerationParser::getPrimaryBeamDescription(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	PrimaryBeamDescription result;
+	try {
+		result = CPrimaryBeamDescription::newPrimaryBeamDescription(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a PrimaryBeamDescription.", tableName);
+	}
+	return result;
+}
+
+vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> EnumerationParser::getPrimaryBeamDescription1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CPrimaryBeamDescription::newPrimaryBeamDescription(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a PrimaryBeamDescription.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > EnumerationParser::getPrimaryBeamDescription2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CPrimaryBeamDescription::newPrimaryBeamDescription(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a PrimaryBeamDescription.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > > EnumerationParser::getPrimaryBeamDescription3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> v_aux;
+		vector<vector<PrimaryBeamDescriptionMod::PrimaryBeamDescription> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CPrimaryBeamDescription::newPrimaryBeamDescription(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a PrimaryBeamDescription.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
+string EnumerationParser::toXML(const string& elementName, TimeScaleMod::TimeScale e) {
+	return "<"+elementName+">"+CTimeScale::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<TimeScaleMod::TimeScale>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CTimeScale::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<TimeScaleMod::TimeScale> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CTimeScale::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<TimeScaleMod::TimeScale> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CTimeScale::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+TimeScaleMod::TimeScale EnumerationParser::getTimeScale(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	TimeScale result;
+	try {
+		result = CTimeScale::newTimeScale(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a TimeScale.", tableName);
+	}
+	return result;
+}
+
+vector<TimeScaleMod::TimeScale> EnumerationParser::getTimeScale1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<TimeScaleMod::TimeScale>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CTimeScale::newTimeScale(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a TimeScale.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<TimeScaleMod::TimeScale> > EnumerationParser::getTimeScale2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<TimeScaleMod::TimeScale> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<TimeScaleMod::TimeScale> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CTimeScale::newTimeScale(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a TimeScale.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<TimeScaleMod::TimeScale> > > EnumerationParser::getTimeScale3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<TimeScaleMod::TimeScale> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<TimeScaleMod::TimeScale> v_aux;
+		vector<vector<TimeScaleMod::TimeScale> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CTimeScale::newTimeScale(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a TimeScale.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
+string EnumerationParser::toXML(const string& elementName, DataScaleMod::DataScale e) {
+	return "<"+elementName+">"+CDataScale::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<DataScaleMod::DataScale>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CDataScale::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<DataScaleMod::DataScale> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CDataScale::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<DataScaleMod::DataScale> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CDataScale::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+DataScaleMod::DataScale EnumerationParser::getDataScale(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	DataScale result;
+	try {
+		result = CDataScale::newDataScale(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a DataScale.", tableName);
+	}
+	return result;
+}
+
+vector<DataScaleMod::DataScale> EnumerationParser::getDataScale1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<DataScaleMod::DataScale>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CDataScale::newDataScale(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a DataScale.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<DataScaleMod::DataScale> > EnumerationParser::getDataScale2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<DataScaleMod::DataScale> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<DataScaleMod::DataScale> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CDataScale::newDataScale(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a DataScale.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<DataScaleMod::DataScale> > > EnumerationParser::getDataScale3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<DataScaleMod::DataScale> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<DataScaleMod::DataScale> v_aux;
+		vector<vector<DataScaleMod::DataScale> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CDataScale::newDataScale(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a DataScale.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
+string EnumerationParser::toXML(const string& elementName, WeightTypeMod::WeightType e) {
+	return "<"+elementName+">"+CWeightType::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<WeightTypeMod::WeightType>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CWeightType::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<WeightTypeMod::WeightType> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CWeightType::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<WeightTypeMod::WeightType> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CWeightType::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+WeightTypeMod::WeightType EnumerationParser::getWeightType(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	WeightType result;
+	try {
+		result = CWeightType::newWeightType(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a WeightType.", tableName);
+	}
+	return result;
+}
+
+vector<WeightTypeMod::WeightType> EnumerationParser::getWeightType1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<WeightTypeMod::WeightType>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CWeightType::newWeightType(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a WeightType.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<WeightTypeMod::WeightType> > EnumerationParser::getWeightType2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<WeightTypeMod::WeightType> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<WeightTypeMod::WeightType> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CWeightType::newWeightType(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a WeightType.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<WeightTypeMod::WeightType> > > EnumerationParser::getWeightType3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<WeightTypeMod::WeightType> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<WeightTypeMod::WeightType> v_aux;
+		vector<vector<WeightTypeMod::WeightType> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CWeightType::newWeightType(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a WeightType.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
 string EnumerationParser::toXML(const string& elementName, CalibrationModeMod::CalibrationMode e) {
 	return "<"+elementName+">"+CCalibrationMode::name(e)+"</"+elementName+">";
 }
@@ -13854,7 +15254,7 @@ CalibrationModeMod::CalibrationMode EnumerationParser::getCalibrationMode(const 
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CalibrationMode.", tableName);
 	}
-	return CCalibrationMode::newCalibrationMode(s);
+	return result;
 }
 
 vector<CalibrationModeMod::CalibrationMode> EnumerationParser::getCalibrationMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -14134,7 +15534,7 @@ AssociatedFieldNatureMod::AssociatedFieldNature EnumerationParser::getAssociated
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a AssociatedFieldNature.", tableName);
 	}
-	return CAssociatedFieldNature::newAssociatedFieldNature(s);
+	return result;
 }
 
 vector<AssociatedFieldNatureMod::AssociatedFieldNature> EnumerationParser::getAssociatedFieldNature1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -14414,7 +15814,7 @@ DataContentMod::DataContent EnumerationParser::getDataContent(const string &name
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a DataContent.", tableName);
 	}
-	return CDataContent::newDataContent(s);
+	return result;
 }
 
 vector<DataContentMod::DataContent> EnumerationParser::getDataContent1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -14694,7 +16094,7 @@ PrimitiveDataTypeMod::PrimitiveDataType EnumerationParser::getPrimitiveDataType(
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a PrimitiveDataType.", tableName);
 	}
-	return CPrimitiveDataType::newPrimitiveDataType(s);
+	return result;
 }
 
 vector<PrimitiveDataTypeMod::PrimitiveDataType> EnumerationParser::getPrimitiveDataType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -14974,7 +16374,7 @@ SchedulerModeMod::SchedulerMode EnumerationParser::getSchedulerMode(const string
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a SchedulerMode.", tableName);
 	}
-	return CSchedulerMode::newSchedulerMode(s);
+	return result;
 }
 
 vector<SchedulerModeMod::SchedulerMode> EnumerationParser::getSchedulerMode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -15254,7 +16654,7 @@ FieldCodeMod::FieldCode EnumerationParser::getFieldCode(const string &name, cons
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a FieldCode.", tableName);
 	}
-	return CFieldCode::newFieldCode(s);
+	return result;
 }
 
 vector<FieldCodeMod::FieldCode> EnumerationParser::getFieldCode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -15534,7 +16934,7 @@ ACAPolarizationMod::ACAPolarization EnumerationParser::getACAPolarization(const 
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a ACAPolarization.", tableName);
 	}
-	return CACAPolarization::newACAPolarization(s);
+	return result;
 }
 
 vector<ACAPolarizationMod::ACAPolarization> EnumerationParser::getACAPolarization1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -15814,7 +17214,7 @@ PositionReferenceCodeMod::PositionReferenceCode EnumerationParser::getPositionRe
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a PositionReferenceCode.", tableName);
 	}
-	return CPositionReferenceCode::newPositionReferenceCode(s);
+	return result;
 }
 
 vector<PositionReferenceCodeMod::PositionReferenceCode> EnumerationParser::getPositionReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -16094,7 +17494,7 @@ BaselineReferenceCodeMod::BaselineReferenceCode EnumerationParser::getBaselineRe
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a BaselineReferenceCode.", tableName);
 	}
-	return CBaselineReferenceCode::newBaselineReferenceCode(s);
+	return result;
 }
 
 vector<BaselineReferenceCodeMod::BaselineReferenceCode> EnumerationParser::getBaselineReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -16315,286 +17715,6 @@ vector<vector<vector<BaselineReferenceCodeMod::BaselineReferenceCode> > > Enumer
 
 
 		
-string EnumerationParser::toXML(const string& elementName, RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode e) {
-	return "<"+elementName+">"+CRadialVelocityReferenceCode::name(e)+"</"+elementName+">";
-}
-
-string EnumerationParser::toXML(const string& elementName, const vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>& v_e) {
-	ostringstream oss;
-	oss << "<" << elementName << ">" 
-		<< " 1" 
-		<< " " << v_e.size();
-
-	for (unsigned int i = 0; i < v_e.size(); i++) 
-		oss << " " << CRadialVelocityReferenceCode::name(v_e.at(i));
-	oss << "</" << elementName << ">";
-	return oss.str();
-}
-
-string EnumerationParser::toXML(const string& elementName, const vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >& vv_e) {
-	ostringstream oss;
-	oss << "<" << elementName << ">"  
-		<< " 2"
-		<< " " <<vv_e.size()
-		<< " " <<vv_e.at(0).size();
-		
-	for (unsigned int i = 0; i < vv_e.size(); i++)
-		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
-			oss << " " << CRadialVelocityReferenceCode::name(vv_e.at(i).at(j));
-	oss << "</" << elementName << ">";
-	return oss.str();
-}
-
-string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > >& vvv_e) {
-	ostringstream oss;
-	oss << "<" << elementName << ">"  
-		<< " 3"
-		<< " " <<vvv_e.size()
-		<< " " <<vvv_e.at(0).size()
-		<< " " <<vvv_e.at(0).at(0).size();
-		
-	for (unsigned int i = 0; i < vvv_e.size(); i++)
-		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
-			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
-				oss << " " << CRadialVelocityReferenceCode::name(vvv_e.at(i).at(j).at(k));
-	oss << "</" << elementName << ">";
-	return oss.str();
-}
-
-RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode EnumerationParser::getRadialVelocityReferenceCode(const string &name, const string &tableName, const string &xmlDoc) {
-	string s = getField(xmlDoc,name);
-		if (s.length() == 0)
-			throw ConversionException("Error: Missing field \"" + 
-				name + "\" or invalid syntax",tableName);
-				
-	RadialVelocityReferenceCode result;
-	try {
-		result = CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(s);
-	}
-	catch (...) {
-			throw ConversionException("Error: could not convert '"+s+"' into a RadialVelocityReferenceCode.", tableName);
-	}
-	return CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(s);
-}
-
-vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> EnumerationParser::getRadialVelocityReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
-	vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode>	result;
-	
-	string s = getField(xmlDoc,name);
-		if (s.length() == 0)
-			throw ConversionException("Error: Missing field \"" + 
-				name + "\" or invalid syntax",tableName);
-	
-	istringstream iss;
-	iss.str(s);
-	vector<string> tokens;
-	
-	// Tokenize.
-	string buf;
-	while (iss >> buf) {
-		tokens.push_back(buf);
-	}
-	
-	// The length must be 2 at the minimum (there may be an empty array)
-	if (tokens.size() < 2) 
-		throw ConversionException("Error: missing values in field \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);
-
-	
-	
-	// The number of dimension should be 1.
-	if (tokens.at(0) != "1")
-		throw ConversionException("Error: wrong dimensionality in field \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);
-		
-	// Then parse the size of the unique dimension
-	errno = 0;
-	int size1 = atoi(tokens.at(1).c_str());
-	if (errno != 0) throw ConversionException("Error: Field \"" + 
-					name + "\": Invalid XML syntax ('" + s +"')", tableName);
-	
-	if (size1 < 0)
-		throw ConversionException("Error: wrong size for the unique dimension \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);
-		
-	if (tokens.size() != (unsigned int) (size1 + 2))
-		throw ConversionException("Error: incorrect number of values in field \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);
-		
-	int k = 2;
-	try {
-		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
-			 result.push_back(CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(tokens.at(k).c_str()));
-			 k++;
-		}
-	} 
-	catch (...) {
-			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a RadialVelocityReferenceCode.", tableName);
-	}
-
-	return result;
-}
-
-vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > EnumerationParser::getRadialVelocityReferenceCode2D(const string &name, const string &tableName, const string &xmlDoc) {
-	vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >	result;
-	
-	string s = getField(xmlDoc,name);
-	if (s.length() == 0)
-		throw ConversionException("Error: Missing field \"" + 
-				name + "\" or invalid syntax",tableName);
-	
-	istringstream iss;
-	iss.str(s);
-	vector<string> tokens;
-
-	// Tokenize.
-	string buf;
-	while (iss >> buf) {
-		tokens.push_back(buf);
-	}
-	
-	// The length must be 3 at the minimum (there may be an empty array)
-	if (tokens.size() < 3) 
-		throw ConversionException("Error: missing values in field \"" + 
-				name + "\" or invalid syntax(" + s +"')",tableName);	
-		
-		
-	// The number of dimension should be 2.
-	if (tokens.at(0) != "2")
-		throw ConversionException("Error: wrong dimensionality in field \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);
-	
-	// Then parse the size of the two dimensions
-	errno = 0;
-	int size1 = atoi(tokens.at(1).c_str());
-	if (errno != 0) throw ConversionException("Error: Field \"" + 
-					name + "\": Invalid XML syntax ('" + s +"')", tableName);
-	
-	if (size1 <= 0)
-		throw ConversionException("Error: wrong size for the first dimension \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName); 
-	errno = 0;
-	int size2 = atoi(tokens.at(2).c_str());
-	if (errno != 0) throw ConversionException("Error: Field \"" + 
-					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
-	
-	if (size2 < 0)
-		throw ConversionException("Error: wrong size for the second dimension \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName); 
-		
-	if (tokens.size() != (unsigned int) (size1*size2 + 3))
-		throw ConversionException("Error: incorrect number of values in field \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);
-		
-	int k = 3;
-	try {
-		vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> v_aux;
-		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
-			v_aux.clear();
-			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
-				v_aux.push_back(CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(tokens.at(k).c_str()));
-				k++;
-			}
-			result.push_back(v_aux);
-		}
-	}
-	catch (...) {
-		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a RadialVelocityReferenceCode.", tableName);
-	}	
-	return result;	
-}
-
-
-vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > > EnumerationParser::getRadialVelocityReferenceCode3D(const string &name, const string &tableName, const string &xmlDoc) {
-	vector<vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> >	>result;
-		
-	string s = getField(xmlDoc,name);
-	if (s.length() == 0)
-		throw ConversionException("Error: Missing field \"" + 
-				name + "\" or invalid syntax",tableName);
-	
-	istringstream iss;
-	iss.str(s);
-	vector<string> tokens;
-
-	// Tokenize.
-	string buf;
-	while (iss >> buf) {
-		tokens.push_back(buf);
-	}
-	
-	// The length must be 4 at the minimum (there may be an empty array)
-	if (tokens.size() < 4)
-		throw ConversionException("Error: missing values in field \"" + 
-				name + "\" or invalid syntax(" + s +"')",tableName);	 
-
-		
-	// The number of dimension should be 3.
-	if (tokens.at(0) != "3")
-		throw ConversionException("Error: wrong dimensionality in field \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);	
-	
-	// Then parse the size of the three dimensions
-	errno = 0;
-	int size1 = atoi(tokens.at(1).c_str());
-	if (errno != 0) throw ConversionException("Error: Field \"" + 
-					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
-	
-	if (size1 <= 0)
-		throw ConversionException("Error: wrong size for the first dimension \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName); 
-
-	errno = 0;		
-	int size2 = atoi(tokens.at(2).c_str());
-	if (errno != 0) throw ConversionException("Error: Field \"" + 
-					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
-	
-	if (size2 <= 0)
-		throw ConversionException("Error: wrong size for the first dimension \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName); 
-
-	errno = 0;
-	int size3 = atoi(tokens.at(3).c_str());
-	if (errno != 0) throw ConversionException("Error: Field \"" + 
-					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
-	
-	
-	if (size3 < 0)
-		throw ConversionException("Error: wrong size for the second dimension \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName); 
-		
-	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
-		throw ConversionException("Error: incorrect number of values in field \"" + 
-				name + "\" or invalid syntax('" + s +"')",tableName);
-				
-	int k = 4;
-	try {
-		vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> v_aux;
-		vector<vector<RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode> > vv_aux;	
-		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
-			vv_aux.clear();
-			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
-				v_aux.clear();
-				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
-					v_aux.push_back(CRadialVelocityReferenceCode::newRadialVelocityReferenceCode(tokens.at(k).c_str()));
-					k++;
-				}
-				vv_aux.push_back(v_aux);
-			}
-			result.push_back(vv_aux);
-		}
-	}
-	catch (...) {
-		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a RadialVelocityReferenceCode.", tableName);
-	}
-	
-	return result;	
-}					
-
-
-
-
-		
 string EnumerationParser::toXML(const string& elementName, CorrelatorTypeMod::CorrelatorType e) {
 	return "<"+elementName+">"+CCorrelatorType::name(e)+"</"+elementName+">";
 }
@@ -16654,7 +17774,7 @@ CorrelatorTypeMod::CorrelatorType EnumerationParser::getCorrelatorType(const str
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a CorrelatorType.", tableName);
 	}
-	return CCorrelatorType::newCorrelatorType(s);
+	return result;
 }
 
 vector<CorrelatorTypeMod::CorrelatorType> EnumerationParser::getCorrelatorType1D(const string &name, const string &tableName, const string &xmlDoc) {
@@ -16866,6 +17986,286 @@ vector<vector<vector<CorrelatorTypeMod::CorrelatorType> > > EnumerationParser::g
 	}
 	catch (...) {
 		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a CorrelatorType.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
+string EnumerationParser::toXML(const string& elementName, DopplerTrackingModeMod::DopplerTrackingMode e) {
+	return "<"+elementName+">"+CDopplerTrackingMode::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<DopplerTrackingModeMod::DopplerTrackingMode>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CDopplerTrackingMode::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CDopplerTrackingMode::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CDopplerTrackingMode::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+DopplerTrackingModeMod::DopplerTrackingMode EnumerationParser::getDopplerTrackingMode(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	DopplerTrackingMode result;
+	try {
+		result = CDopplerTrackingMode::newDopplerTrackingMode(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a DopplerTrackingMode.", tableName);
+	}
+	return result;
+}
+
+vector<DopplerTrackingModeMod::DopplerTrackingMode> EnumerationParser::getDopplerTrackingMode1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<DopplerTrackingModeMod::DopplerTrackingMode>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CDopplerTrackingMode::newDopplerTrackingMode(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a DopplerTrackingMode.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > EnumerationParser::getDopplerTrackingMode2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<DopplerTrackingModeMod::DopplerTrackingMode> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CDopplerTrackingMode::newDopplerTrackingMode(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a DopplerTrackingMode.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > > EnumerationParser::getDopplerTrackingMode3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<DopplerTrackingModeMod::DopplerTrackingMode> v_aux;
+		vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CDopplerTrackingMode::newDopplerTrackingMode(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a DopplerTrackingMode.", tableName);
 	}
 	
 	return result;	

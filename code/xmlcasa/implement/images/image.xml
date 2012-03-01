@@ -1307,34 +1307,33 @@ in this case.  It is evaluated each time it is needed.
     </input>
     <returns type="casaimage"/>
     <description>
-        This method collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
-        specified axis. It computes the specified aggregate function for pixel values along the specified axes
-        and places those values in the single remaining plane of those axes in the output image. The method returns
-        an image analysis tool containing the newly created collapsed image. Choices of aggregate functions are:
-        max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is supported for the function
-        parameter (eg, function="r" will compute the rms of the pixel values, "med" will compute the median).
+This method collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
+specified axis. It computes the specified aggregate function for pixel values along the specified axes
+and places those values in the single remaining plane of those axes in the output image. The method returns
+an image analysis tool containing the newly created collapsed image. Choices of aggregate functions are:
+max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is supported for the function
+parameter (eg, function="r" will compute the rms of the pixel values, "med" will compute the median).
         
-        Axes can be specified as a single integer or array of integers indicating the zero-based axes along
-        which to collapse the image. Axes may also be specified as a single or array of strings which minimally
-        and uniquely match (ignoring case) world axes names in the image (eg "dec" or ["ri, "d"] for
-        collapsing along the declination axis or along the right ascension and declination axes, respectively).
+Axes can be specified as a single integer or array of integers indicating the zero-based axes along
+which to collapse the image. Axes may also be specified as a single or array of strings which minimally
+and uniquely match (ignoring case) world axes names in the image (eg "dec" or ["ri, "d"] for
+collapsing along the declination axis or along the right ascension and declination axes, respectively).
         
-        If outfile is not specified (or contains only white spaces), no image is written but the
-        collapsed image is still able to be accessed via the image analysis tool this method always
-        returns which references the collpased image. If the returned object is not wanted it should
-        still be captured and deleted via its done() method. If this is not done, there is no gaurantee
-        for when the python garbage collector will delete it. If the returned object is wanted, it
-        should be deleted as soon as possible for the same reasons, eg
+If outfile is not specified (or contains only white spaces), no image is written but the
+collapsed image is still able to be accessed via the image analysis tool this method always
+returns which references the collpased image. If the returned object is not wanted it should
+still be captured and deleted via its done() method. If this is not done, there is no gaurantee
+for when the python garbage collector will delete it. If the returned object is wanted, it
+should be deleted as soon as possible for the same reasons, eg
         
-        collapsed_image = ia.collapse(...)
-        # do things (or not) with collapsed_image and when done with object, do
-        collapsed_image.done()
+collapsed_image = ia.collapse(...)
+# do things (or not) with collapsed_image and when done with object, do
+collapsed_image.done()
 
-        The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
-        of the the first and last values of that axis in the specified region of the input image.
+The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
+of the the first and last values of that axis in the specified region of the input image.
     </description>
-        <example>
-
+    <example>
 """
 # myimage.im is a 512x512x128x4 (ra,dec,freq,stokes) image
 ia.open("myimage.im")
@@ -1346,8 +1345,7 @@ collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2
 collapsed.done()
 
 """
-
-        </example>
+    </example>
 </method>
 
    <method type="function" name="imageconcat">
@@ -3873,7 +3871,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value></value>
         </param>
         <param type="any" direction="in" name="region">
-            <any type="variant"/>
+            <any type="variant" limittypes="string record"/>
             <description>Region name, Default: no region ("").</description>
             <value type="string"/>
         </param>
@@ -3890,7 +3888,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value>-1</value>
         </param>
         <param type="any" direction="in" name="mask">
-            <any type="variant"/>
+            <any type="variant" limittypes="string stringArray"/>
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
@@ -3963,42 +3961,42 @@ We use the Componentlist GUI to look at the strongest component.
             <value>true</value>
         </param>
         <param type="any" direction="in" name="pampest">
-            <any type="variant"/>
+            <any type="variant" limittypes="double doubleArray"/>
             <description>Initial estimate PCF profile amplitudes.</description>
             <value type="string"/>
         </param>
         <param type="any" direction="in" name="pcenterest">
-            <any type="variant"/>
+            <any type="variant" limittypes="double doubleArray"/>
             <description>Initial estimate PCF profile centers, in pixels.</description>
             <value type="string"/>
         </param>
         <param type="any" direction="in" name="pfwhmest">
-            <any type="variant"/>
+            <any type="variant" limittypes="double doubleArray"/>
             <description>Initial estimate PCF profile FWHMs, in pixels.</description>
             <value type="string"/>
         </param>
         <param type="any" direction="in" name="pfix">
-            <any type="variant"/>
+            <any type="variant" limittypes="string stringArray"/>
             <description>PCF parameters to fix during fit. Any combination of "p", "c", or "f".</description>
             <value type="string"/>
         </param>
         <param type="any" direction="in" name="gmncomps">
-            <any type="variant"/>
+            <any type="variant" limittypes="int intArray"/>
             <description>Number of components in each gaussian multiplet to fit</description>
             <value type="int">0</value>
         </param>
         <param type="any" direction="in" name="gmampcon">
-            <any type="variant"/>
+            <any type="variant" limittypes="double doubleArray"/>
             <description>The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
             <value type="string"/>
         </param>
         <param type="any" direction="in" name="gmcentercon">
-            <any type="variant"/>
+            <any type="variant" limittypes="double doubleArray"/>
             <description>The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.</description>
             <value type="string"/>
         </param>
         <param type="any" direction="in" name="gmfwhmcon">
-            <any type="variant"/>
+            <any type="variant" limittypes="double doubleArray"/>
             <description>The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
             <value type="string"/>
         </param>
@@ -4015,7 +4013,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value>0.0</value>
         </param>
         <param type="any" direction="in" name="gmfix">
-            <any type="variant"/>
+            <any type="variant" limittypes="string stringArray"/>
             <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
             <value type="string"/>
         </param>
@@ -4028,11 +4026,22 @@ We use the Componentlist GUI to look at the strongest component.
             <value>true</value>
         </param>
         <param type="any" direction="in" name="pfunc">
-            <any type="variant"/>
+            <any type="variant" limittypes="string stringArray"/>
             <description>PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.</description>
             <value type="string"/>
         </param>
-        
+        <param type="doubleArray" direction="in" name="goodamprange">
+            <description>Acceptable amplitude solution range. [0.0] => all amplitude solutions are acceptable.</description>
+            <value>0.0</value>
+        </param>
+        <param type="doubleArray" direction="in" name="goodcenterrange">
+            <description>Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.</description>
+            <value>0.0</value>
+        </param>
+        <param type="doubleArray" direction="in" name="goodfwhmrange">
+            <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
+            <value>0.0</value>
+        </param>
     </input>
 <returns type="any"><any type="record"/></returns>
 
@@ -4210,6 +4219,18 @@ be silently held fixed as well).
 
 The same rules that apply to singlets when multifit=True apply to multiplets.
 
+LIMITING RANGES FOR SOLUTION PARAMETERS
+In cases of low (or no) signal to noise spectra, it is still possible for the fit to converge, but often to a
+nonsensical solution. The astronomer can use her knowledge of the source to filter out obviously bogus solutions.
+One can limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
+parameters. Any combination can be specified and the limit constraints will be ANDed together. The ranges apply to all PCF components
+that might be fit; choosing ranges on a component by component basis is not supported. If specified,
+an array of exactly two numerical values must be given to indicate the range of acceptable solution values for
+that parameter.  goodamprange is expressed in terms of image brightness units. goodcenterrange is expressed in terms of pixels
+from the zeroth pixel in the specified region. goodfwhmrange is expressed in terms of pixels (only non-negative values should be
+given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
+ranges, the entire solution is considered to be invalid.
+
 RETURNED DICTIONARY STRUCTURE
 The returned dictionary has a (necessarily) complex structure. First, there are keys "xUnit" and "yUnit" whose values are
 the abscissa unit and the ordinate unit described by simple strings. Next there are arrays giving a broad overview of the
@@ -4218,6 +4239,7 @@ axis having length of 1:
 
 attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
+valid: a boolean array indicating which solutions fall within the specified valid ranges of parameter space
 niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
 ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
         &lt;0 if the fit did not converge

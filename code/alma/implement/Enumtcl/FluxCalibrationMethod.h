@@ -25,10 +25,10 @@
 using namespace FluxCalibrationMethodMod;
 
 template<>
- struct enum_set_traits<FluxCalibrationMethod> : public enum_set_traiter<FluxCalibrationMethod,3,FluxCalibrationMethodMod::EFFICIENCY> {};
+ struct enum_set_traits<FluxCalibrationMethodMod::FluxCalibrationMethod> : public enum_set_traiter<FluxCalibrationMethodMod::FluxCalibrationMethod,3,FluxCalibrationMethodMod::EFFICIENCY> {};
 
 template<>
-class enum_map_traits<FluxCalibrationMethod,void> : public enum_map_traiter<FluxCalibrationMethod,void> {
+class enum_map_traits<FluxCalibrationMethodMod::FluxCalibrationMethod,void> : public enum_map_traiter<FluxCalibrationMethodMod::FluxCalibrationMethod,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,15 +37,15 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<FluxCalibrationMethod,EnumPar<void> >
+    m_.insert(pair<FluxCalibrationMethodMod::FluxCalibrationMethod,EnumPar<void> >
      (FluxCalibrationMethodMod::ABSOLUTE,ep((int)FluxCalibrationMethodMod::ABSOLUTE,"ABSOLUTE","un-documented")));
-    m_.insert(pair<FluxCalibrationMethod,EnumPar<void> >
+    m_.insert(pair<FluxCalibrationMethodMod::FluxCalibrationMethod,EnumPar<void> >
      (FluxCalibrationMethodMod::RELATIVE,ep((int)FluxCalibrationMethodMod::RELATIVE,"RELATIVE","un-documented")));
-    m_.insert(pair<FluxCalibrationMethod,EnumPar<void> >
+    m_.insert(pair<FluxCalibrationMethodMod::FluxCalibrationMethod,EnumPar<void> >
      (FluxCalibrationMethodMod::EFFICIENCY,ep((int)FluxCalibrationMethodMod::EFFICIENCY,"EFFICIENCY","un-documented")));
     return true;
   }
-  static map<FluxCalibrationMethod,EnumPar<void> > m_;
+  static map<FluxCalibrationMethodMod::FluxCalibrationMethod,EnumPar<void> > m_;
 };
 #define _FLUXCALIBRATIONMETHOD_HH
 #endif

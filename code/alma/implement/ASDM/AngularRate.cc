@@ -25,7 +25,7 @@
  */
 
 #include <AngularRate.h>
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Double;
 using asdm::NumberFormatException;
@@ -77,36 +77,36 @@ void AngularRate::toBin(const vector< vector<vector<AngularRate> > >& angularRat
 					eoss.writeDouble(angularRate.at(i).at(j).at(k).value);
 }
 
-AngularRate AngularRate::fromBin(EndianISStream & eiss) {
-	return AngularRate(eiss.readDouble());
+AngularRate AngularRate::fromBin(EndianIStream & eis) {
+	return AngularRate(eis.readDouble());
 }
 
-vector<AngularRate> AngularRate::from1DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
+vector<AngularRate> AngularRate::from1DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
 	vector<AngularRate> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(AngularRate(eiss.readDouble()));
+		result.push_back(AngularRate(eis.readDouble()));
 	return result;	
 }
 
-vector<vector<AngularRate > > AngularRate::from2DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
+vector<vector<AngularRate > > AngularRate::from2DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
 	vector< vector<AngularRate> >result;
 	vector <AngularRate> aux;
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(AngularRate(eiss.readDouble()));
+			aux.push_back(AngularRate(eis.readDouble()));
 		result.push_back(aux);
 	}
 	return result;	
 }
 
-vector<vector<vector<AngularRate > > > AngularRate::from3DBin(EndianISStream & eiss) {
-	int dim1 = eiss.readInt();
-	int dim2 = eiss.readInt();
-	int dim3 = eiss.readInt();
+vector<vector<vector<AngularRate > > > AngularRate::from3DBin(EndianIStream & eis) {
+	int dim1 = eis.readInt();
+	int dim2 = eis.readInt();
+	int dim3 = eis.readInt();
 	vector<vector< vector<AngularRate> > >result;
 	vector < vector<AngularRate> >aux1;
 	vector <AngularRate> aux2;
@@ -115,7 +115,7 @@ vector<vector<vector<AngularRate > > > AngularRate::from3DBin(EndianISStream & e
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(AngularRate(eiss.readDouble()));
+				aux2.push_back(AngularRate(eis.readDouble()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

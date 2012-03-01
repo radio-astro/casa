@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace SBTypeMod
   //! SBType.
   //!  [ASDM.SBSummary] Types of Scheduling Block
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum SBType
@@ -71,7 +72,10 @@ namespace SBTypeMod
 } 
 #endif
 
-using namespace std;
+namespace SBTypeMod {
+	std::ostream & operator << ( std::ostream & out, const SBType& value);
+	std::istream & operator >> ( std::istream & in , SBType& value );
+}
 
 /** 
   * A helper class for the enumeration SBType.
@@ -103,7 +107,7 @@ class CSBType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CSBType {
     CSBType(const CSBType&);
     CSBType& operator=(const CSBType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

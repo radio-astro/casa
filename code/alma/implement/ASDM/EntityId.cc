@@ -97,11 +97,11 @@ namespace asdm {
 	}
 #endif
 	
-	void EntityId::toBin(EndianOSStream& eoss) {
+	void EntityId::toBin(EndianOSStream& eoss) const {
 		eoss.writeString(id);
 	}
 	
-	EntityId EntityId::fromBin(EndianISStream& eiss) {
-		return EntityId(eiss.readString());		
+	EntityId EntityId::fromBin(EndianIStream& eis) {
+		return EntityId(eis.readString());		
 	}
 } // End namespace asdm

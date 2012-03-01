@@ -4606,7 +4606,8 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 				 const Vector<Int>& tranFieldIn,
 				 const Vector<Int>& inRefSpwMap,
 				 const Vector<String>& fldNames,
-				 Matrix<Double>& fd) {
+				 fluxScaleStruct& oFluxScaleStruct,
+				 const String& oListFile) {
 
   //  cout << "REVISED FLUXSCALE" << endl;
 
@@ -4924,15 +4925,22 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     } // nRef > 1
 
     // Scale factor calculation, per trans fld, per spw
-    fd.resize(nSpw(),nFld);
-    fd.set(-1.0);
+    Matrix<Double> fd( nSpw(), nFld, -1.0 );
+    Matrix<Double> fderr( nSpw(), nFld, -1.0 );
+    Matrix<Int> numSol( nSpw(), nFld, -1 );
+//    fd.resize(nSpw(),nFld);
+//    fd.set(-1.0);
+//    fderr.resize( nSpw(), nFld );
+//    fderr.set( -1.0 );
+//    numSol.resize( nSpw() );
+//    numSol.set( -1 );
 
     Matrix<Bool> scaleOK(nSpw(),nFld,False);
     Matrix<Double> mgratio(nSpw(),nFld,-1.0);
     Matrix<Double> mgrms(nSpw(),nFld,-1.0);
     Matrix<Double> mgerr(nSpw(),nFld,-1.0);
     Matrix<Double> fdrms(nSpw(),nFld,-1.0);
-    Matrix<Double> fderr(nSpw(),nFld,-1.0);
+//    Matrix<Double> fderr(nSpw(),nFld,-1.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
       Int tranidx=tranField(iTran);
@@ -4984,8 +4992,61 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 	  fd(ispw,tranidx)=mgratio(ispw,tranidx)*mgratio(ispw,tranidx);
 	  fdrms(ispw,tranidx)=2.0*mgrms(ispw,tranidx);
 	  fderr(ispw,tranidx)=fdrms(ispw,tranidx)/sqrt(Double(nPA-1));
+	  numSol(ispw,tranidx) = nPA;
 	}
-	  
+
+	// Compose the fit message for the list file and the log
+
+	String oMsg( "" );
+
+	oMsg += " Flux density for ";
+	oMsg += fldNames(tranidx);
+	oMsg += " in SpW=";
+	oMsg += String::toString<Int>( ispw );
+
+	if ( refSpw != ispw ) {
+	  oMsg += " (ref SpW=";
+	  oMsg += String::toString<Int>( refSpw );
+	  oMsg += ")";
+	}
+
+	oMsg += " is: ";
+
+	if ( scaleOK(ispw,tranidx) ) {
+	  oMsg += String::toString<Double>( fd(ispw,tranidx) );
+	  oMsg += " +/- ";
+	  oMsg += String::toString<Double>( fderr(ispw,tranidx) );
+	  oMsg += " (SNR = ";
+	  oMsg += String::toString<Double>( fd(ispw,tranidx)/fderr(ispw,tranidx) );
+	  oMsg += ", N = ";
+	  oMsg += String::toString<Int>( nPA );
+	  oMsg += ")";
+	} else {
+	  oMsg += " INSUFFICIENT DATA ";
+	}
+
+	// Write the fit message to the output list file if the file name is
+	// non-null.  In the first iteration (first transfer field and spw),
+	// open the list file and truncate any previous version.  In subsequent
+	// iterations, append the messages.
+
+	if ( oListFile != "" ) {
+	  ofstream oStream;
+	  if ( iTran == 0 && ispw == 0 ) {
+	    oStream.open( oListFile.chars(), ios::out|ios::trunc );
+	  } else {
+	    oStream.open( oListFile.chars(), ios::out|ios::app );
+	  }
+	  oStream << "#" << oMsg << endl << flush;
+	  oStream.close();
+	}
+
+
+	// Write the fit message to the logger
+
+	logSink() << oMsg << LogIO::POST;
+
+/*
 	// Report flux densities to logger
 	logSink() << " Flux density for " << fldNames(tranidx)
 		  << " in SpW=" << ispw;
@@ -5003,10 +5064,15 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 	  logSink() << " INSUFFICIENT DATA ";
 
 	logSink() << LogIO::POST;
+*/
 
       } // ispw
 		  
     } // iTran
+
+    oFluxScaleStruct.fd = fd.copy();
+    oFluxScaleStruct.fderr = fderr.copy();
+    oFluxScaleStruct.numSol = numSol.copy();
 
     // quit if no scale factors found
     if (ntrue(scaleOK) == 0) throw(AipsError("No scale factors determined!"));
@@ -5085,6 +5151,8 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     throw(x);
 
   }
+
+  return;
 
 }
 

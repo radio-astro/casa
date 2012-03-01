@@ -25,10 +25,10 @@
 using namespace ReceiverSidebandMod;
 
 template<>
- struct enum_set_traits<ReceiverSideband> : public enum_set_traiter<ReceiverSideband,4,ReceiverSidebandMod::TSB> {};
+ struct enum_set_traits<ReceiverSidebandMod::ReceiverSideband> : public enum_set_traiter<ReceiverSidebandMod::ReceiverSideband,4,ReceiverSidebandMod::TSB> {};
 
 template<>
-class enum_map_traits<ReceiverSideband,void> : public enum_map_traiter<ReceiverSideband,void> {
+class enum_map_traits<ReceiverSidebandMod::ReceiverSideband,void> : public enum_map_traiter<ReceiverSidebandMod::ReceiverSideband,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,17 +37,17 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<ReceiverSideband,EnumPar<void> >
+    m_.insert(pair<ReceiverSidebandMod::ReceiverSideband,EnumPar<void> >
      (ReceiverSidebandMod::NOSB,ep((int)ReceiverSidebandMod::NOSB,"NOSB","un-documented")));
-    m_.insert(pair<ReceiverSideband,EnumPar<void> >
+    m_.insert(pair<ReceiverSidebandMod::ReceiverSideband,EnumPar<void> >
      (ReceiverSidebandMod::DSB,ep((int)ReceiverSidebandMod::DSB,"DSB","un-documented")));
-    m_.insert(pair<ReceiverSideband,EnumPar<void> >
+    m_.insert(pair<ReceiverSidebandMod::ReceiverSideband,EnumPar<void> >
      (ReceiverSidebandMod::SSB,ep((int)ReceiverSidebandMod::SSB,"SSB","un-documented")));
-    m_.insert(pair<ReceiverSideband,EnumPar<void> >
+    m_.insert(pair<ReceiverSidebandMod::ReceiverSideband,EnumPar<void> >
      (ReceiverSidebandMod::TSB,ep((int)ReceiverSidebandMod::TSB,"TSB","un-documented")));
     return true;
   }
-  static map<ReceiverSideband,EnumPar<void> > m_;
+  static map<ReceiverSidebandMod::ReceiverSideband,EnumPar<void> > m_;
 };
 #define _RECEIVERSIDEBAND_HH
 #endif

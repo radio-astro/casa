@@ -38,14 +38,14 @@
  
 #include <OutOfBoundsException.h>
 #include <NumberFormatException.h>
-#include <Boolean.h>
-#include <Byte.h>
-#include <Character.h>
-#include <Double.h>
-#include <Float.h>
-#include <Integer.h>
-#include <Long.h>
-#include <Short.h>
+#include <BooleanWrapper.h>
+#include <ByteWrapper.h>
+#include <CharacterWrapper.h>
+#include <DoubleWrapper.h>
+#include <FloatWrapper.h>
+#include <IntegerWrapper.h>
+#include <LongWrapper.h>
+#include <ShortWrapper.h>
 using asdm::OutOfBoundsException;
 using asdm::NumberFormatException;
 using asdm::Boolean;
@@ -3941,7 +3941,8 @@ namespace asdm {
 	void Parser::toXML(ArrayTimeInterval data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
 	
-		buf.append(data.getStart().toString()+" "+data.getDuration().toString());	
+		//buf.append(data.getStart().toString()+" "+data.getDuration().toString());	
+		buf.append(data.getMidPoint().toString()+" "+data.getDuration().toString());
 		
 		buf.append(" </" + name + "> ");
 	}
@@ -3956,7 +3957,8 @@ namespace asdm {
 		buf.append(" ");
 		for (unsigned int i = 0; i < data.size(); ++i) {
 	
-		buf.append(data[i].getStart().toString()+" "+data[i].getDuration().toString()+" ");		
+		//buf.append(data[i].getStart().toString()+" "+data[i].getDuration().toString()+" ");	
+		buf.append(data[i].getMidPoint().toString()+" "+data[i].getDuration().toString()+" ");	
 		
 			buf.append(" ");
 		}
@@ -3973,7 +3975,8 @@ namespace asdm {
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			for (unsigned int j = 0; j < data[i].size(); ++j) {
 	
-				buf.append(data[i][j].getStart().toString()+" "+data[i][j].getDuration().toString()+" ");				
+				//buf.append(data[i][j].getStart().toString()+" "+data[i][j].getDuration().toString()+" ");	
+				buf.append(data[i][j].getMidPoint().toString()+" "+data[i][j].getDuration().toString()+" ");				
 		
 				buf.append(" ");
 			}
@@ -3994,7 +3997,8 @@ namespace asdm {
 			for (unsigned int j = 0; j < data[i].size(); ++j) {
 				for (unsigned int k = 0; k < data[i][j].size(); ++k) {
 	
-					buf.append(data[i][j][k].getStart().toString()+" "+data[i][j][k].getDuration().toString()+" ");		
+					//buf.append(data[i][j][k].getStart().toString()+" "+data[i][j][k].getDuration().toString()+" ");	
+					buf.append(data[i][j][k].getMidPoint().toString()+" "+data[i][j][k].getDuration().toString()+" ");	
 		
 					buf.append(" ");
 				}
@@ -4019,7 +4023,8 @@ namespace asdm {
 				for (unsigned int k = 0; k < data[i][j].size(); ++k) {
 					for (unsigned int l = 0; l < data[i][j][k].size(); l++) {
 	
-						buf.append(data[i][j][k][l].getStart().toString()+" "+data[i][j][k][l].getDuration().toString()+" ");		
+						//buf.append(data[i][j][k][l].getStart().toString()+" "+data[i][j][k][l].getDuration().toString()+" ");
+						buf.append(data[i][j][k][l].getMidPoint().toString()+" "+data[i][j][k][l].getDuration().toString()+" ");		
 		
 						buf.append(" ");
 					}
@@ -4042,9 +4047,13 @@ namespace asdm {
 				name + "\" or invalid syntax",tableName);
 	
 		StringTokenizer t(xmlField," ");
-		int64_t start = Long::parseLong(t.nextToken());
-		int64_t duration = Long::parseLong(t.nextToken());
-		return ArrayTimeInterval (start, duration);
+		//int64_t start = Long::parseLong(t.nextToken());
+		int64_t l1 = Long::parseLong(t.nextToken());
+		int64_t l2 = Long::parseLong(t.nextToken());
+		if ( ArrayTimeInterval::readStartTimeDurationInXML() ) 
+			return ArrayTimeInterval (l1, l2);
+		else 
+			return ArrayTimeInterval (l1 - l2 / 2, l2);
 		
 	}
 
@@ -4068,9 +4077,13 @@ namespace asdm {
 				return value;
 			for (int i = 0; i < dim0; ++i) {
 	
-				int64_t start = Long::parseLong(t.nextToken());
-				int64_t duration = Long::parseLong(t.nextToken());
-				value[i] = ArrayTimeInterval (start, duration);
+				int64_t l1 = Long::parseLong(t.nextToken());
+				int64_t l2 = Long::parseLong(t.nextToken());
+				if ( ArrayTimeInterval::readStartTimeDurationInXML() ) 
+					value[i] = ArrayTimeInterval (l1, l2);
+				else 
+					value[i] = ArrayTimeInterval (l1 - l2 / 2, l2);
+
 	
 			}
 			if (t.hasMoreTokens()) {
@@ -4116,9 +4129,13 @@ namespace asdm {
 				v_aux.clear();
 				for (int j = 0; j < dim1; ++j) {
 	
-					int64_t start = Long::parseLong(t.nextToken());
-					int64_t duration = Long::parseLong(t.nextToken());
-					v_aux.push_back(ArrayTimeInterval (start, duration));					
+					int64_t l1 = Long::parseLong(t.nextToken());
+					int64_t l2 = Long::parseLong(t.nextToken());
+					if ( ArrayTimeInterval::readStartTimeDurationInXML() ) 
+						v_aux.push_back(ArrayTimeInterval (l1, l2));
+					else 
+						v_aux.push_back(ArrayTimeInterval (l1 - l2 / 2, l2));
+											
 	
 				}
 				value.push_back(v_aux);
@@ -4169,9 +4186,12 @@ namespace asdm {
 					v_aux.clear();
 					for (int k = 0; k < dim2; ++k) {
 	
-						int64_t start = Long::parseLong(t.nextToken());
-						int64_t duration = Long::parseLong(t.nextToken());
-						v_aux.push_back( ArrayTimeInterval (start, duration));
+						int64_t l1 = Long::parseLong(t.nextToken());
+						int64_t l2 = Long::parseLong(t.nextToken());
+						if ( ArrayTimeInterval::readStartTimeDurationInXML() ) 
+							v_aux.push_back(ArrayTimeInterval (l1, l2));
+						else 
+							v_aux.push_back(ArrayTimeInterval (l1 - l2 / 2, l2));						
 	
 					}
 					vv_aux.push_back(v_aux);
@@ -4228,9 +4248,12 @@ namespace asdm {
 						v_aux.clear();
 						for (int l = 0; l < dim3; l++) {
 	
-							int64_t start = Long::parseLong(t.nextToken());
-							int64_t duration = Long::parseLong(t.nextToken());
-							v_aux.push_back( ArrayTimeInterval (start, duration));
+							int64_t l1 = Long::parseLong(t.nextToken());
+							int64_t l2 = Long::parseLong(t.nextToken());
+							if ( ArrayTimeInterval::readStartTimeDurationInXML() ) 
+								v_aux.push_back(ArrayTimeInterval (l1, l2));
+							else 
+								v_aux.push_back(ArrayTimeInterval (l1 - l2 / 2, l2));	
 	
 						}
 						vv_aux.push_back(v_aux);

@@ -80,12 +80,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame);
     void DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
     void DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
+    void DisplayLineScatterError(FlagPlotServerProxy *&plotter, String &plottype, Vector<Float> &xdata, Vector<Float> &ydata, String &errortype, Vector<Float> &error, String label, String color, uInt frame);
 
     // Plotter members
-    FlagPlotServerProxy *dataplotter_p;  // UUU Make this a CountedPtr
+    FlagPlotServerProxy *dataplotter_p;  
     FlagPlotServerProxy *reportplotter_p;
     Vector<dbus::variant> panels_p, report_panels_p;
     char *dock_xml_p, *report_dock_xml_p;
+    Bool showBandpass_p;
 
     // Control parameters
     Bool showPlots_p, stopAndExit_p;

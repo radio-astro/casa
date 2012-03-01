@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::DopplerRowIDL;
 #endif
 
 
@@ -60,7 +56,6 @@ using asdmIDL::DopplerRowIDL;
 
 	
 #include "CDopplerReferenceCode.h"
-using namespace DopplerReferenceCodeMod;
 	
 
 
@@ -69,9 +64,11 @@ using namespace DopplerReferenceCodeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Doppler.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -84,16 +81,19 @@ class SourceRow;
 	
 
 class DopplerRow;
-typedef void (DopplerRow::*DopplerAttributeFromBin) (EndianISStream& eiss);
+typedef void (DopplerRow::*DopplerAttributeFromBin) (EndianIStream& eis);
+typedef void (DopplerRow::*DopplerAttributeFromText) (const string& s);
 
 /**
  * The DopplerRow class is a row of a DopplerTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class DopplerRow {
 friend class asdm::DopplerTable;
+friend class asdm::RowTransformer<DopplerRow>;
+//friend class asdm::TableStreamReader<DopplerTable, DopplerRow>;
 
 public:
 
@@ -297,7 +297,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a DopplerRowIDL struct.
 	 */
-	DopplerRowIDL *toIDL() const;
+	asdmIDL::DopplerRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -306,14 +306,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (DopplerRowIDL x) ;
+	void setFromIDL (asdmIDL::DopplerRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -321,7 +321,30 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, DopplerAttributeFromBin> fromBinMethods;
+void dopplerIdFromBin( EndianIStream& eis);
+void sourceIdFromBin( EndianIStream& eis);
+void transitionIndexFromBin( EndianIStream& eis);
+void velDefFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the DopplerTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static DopplerRow* fromBin(EndianIStream& eis, DopplerTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -441,16 +464,39 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, DopplerAttributeFromBin> fromBinMethods;
-void dopplerIdFromBin( EndianISStream& eiss);
-void sourceIdFromBin( EndianISStream& eiss);
-void transitionIndexFromBin( EndianISStream& eiss);
-void velDefFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, DopplerAttributeFromBin> fromBinMethods;
+void dopplerIdFromBin( EndianIStream& eis);
+void sourceIdFromBin( EndianIStream& eis);
+void transitionIndexFromBin( EndianIStream& eis);
+void velDefFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, DopplerAttributeFromText> fromTextMethods;
+	
+void dopplerIdFromText (const string & s);
+	
+	
+void sourceIdFromText (const string & s);
+	
+	
+void transitionIndexFromText (const string & s);
+	
+	
+void velDefFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -459,14 +505,14 @@ void velDefFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the DopplerTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static DopplerRow* fromBin(EndianISStream& eiss, DopplerTable& table, const vector<string>& attributesSeq);	 
 
+	 static DopplerRow* fromBin(EndianIStream& eis, DopplerTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

@@ -57,6 +57,7 @@ using asdm::SpectralWindowRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -80,6 +81,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::ReceiverRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -587,7 +591,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(frequencyBand);
+			eoss.writeString(CReceiverBand::name(frequencyBand));
+			/* eoss.writeInt(frequencyBand); */
 				
 		
 	
@@ -603,7 +608,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(receiverSideband);
+			eoss.writeString(CReceiverSideband::name(receiverSideband));
+			/* eoss.writeInt(receiverSideband); */
 				
 		
 	
@@ -616,7 +622,8 @@ namespace asdm {
 		eoss.writeInt((int) sidebandLO.size());
 		for (unsigned int i = 0; i < sidebandLO.size(); i++)
 				
-			eoss.writeInt(sidebandLO.at(i));
+			eoss.writeString(CNetSideband::name(sidebandLO.at(i)));
+			/* eoss.writeInt(sidebandLO.at(i)); */
 				
 				
 						
@@ -628,101 +635,101 @@ namespace asdm {
 	
 	}
 	
-void ReceiverRow::receiverIdFromBin(EndianISStream& eiss) {
+void ReceiverRow::receiverIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverId =  eiss.readInt();
-			
-		
-	
-	
-}
-void ReceiverRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void ReceiverRow::timeIntervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-	
-}
-void ReceiverRow::nameFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		name =  eiss.readString();
+		receiverId =  eis.readInt();
 			
 		
 	
 	
 }
-void ReceiverRow::numLOFromBin(EndianISStream& eiss) {
+void ReceiverRow::spectralWindowIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		spectralWindowId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void ReceiverRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void ReceiverRow::nameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numLO =  eiss.readInt();
+		name =  eis.readString();
 			
 		
 	
 	
 }
-void ReceiverRow::frequencyBandFromBin(EndianISStream& eiss) {
+void ReceiverRow::numLOFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		frequencyBand = CReceiverBand::from_int(eiss.readInt());
+		numLO =  eis.readInt();
 			
 		
 	
 	
 }
-void ReceiverRow::freqLOFromBin(EndianISStream& eiss) {
+void ReceiverRow::frequencyBandFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		frequencyBand = CReceiverBand::literal(eis.readString());
+			
+		
+	
+	
+}
+void ReceiverRow::freqLOFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	freqLO = Frequency::from1DBin(eiss);	
+	freqLO = Frequency::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void ReceiverRow::receiverSidebandFromBin(EndianISStream& eiss) {
+void ReceiverRow::receiverSidebandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		receiverSideband = CReceiverSideband::from_int(eiss.readInt());
+		receiverSideband = CReceiverSideband::literal(eis.readString());
 			
 		
 	
 	
 }
-void ReceiverRow::sidebandLOFromBin(EndianISStream& eiss) {
+void ReceiverRow::sidebandLOFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -731,10 +738,10 @@ void ReceiverRow::sidebandLOFromBin(EndianISStream& eiss) {
 	
 		sidebandLO.clear();
 		
-		unsigned int sidebandLODim1 = eiss.readInt();
+		unsigned int sidebandLODim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < sidebandLODim1; i++)
 			
-			sidebandLO.push_back(CNetSideband::from_int(eiss.readInt()));
+			sidebandLO.push_back(CNetSideband::literal(eis.readString()));
 			
 	
 
@@ -745,23 +752,116 @@ void ReceiverRow::sidebandLOFromBin(EndianISStream& eiss) {
 
 		
 	
-	ReceiverRow* ReceiverRow::fromBin(EndianISStream& eiss, ReceiverTable& table, const vector<string>& attributesSeq) {
+	ReceiverRow* ReceiverRow::fromBin(EndianIStream& eis, ReceiverTable& table, const vector<string>& attributesSeq) {
 		ReceiverRow* row = new  ReceiverRow(table);
 		
 		map<string, ReceiverAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ReceiverTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ReceiverTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an int 
+	void ReceiverRow::receiverIdFromText(const string & s) {
+		 
+		receiverId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void ReceiverRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void ReceiverRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void ReceiverRow::nameFromText(const string & s) {
+		 
+		name = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void ReceiverRow::numLOFromText(const string & s) {
+		 
+		numLO = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void ReceiverRow::frequencyBandFromText(const string & s) {
+		 
+		frequencyBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void ReceiverRow::freqLOFromText(const string & s) {
+		 
+		freqLO = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverSideband 
+	void ReceiverRow::receiverSidebandFromText(const string & s) {
+		 
+		receiverSideband = ASDMValuesParser::parse<ReceiverSideband>(s);
+		
+	}
+	
+	
+	// Convert a string into an NetSideband 
+	void ReceiverRow::sidebandLOFromText(const string & s) {
+		 
+		sidebandLO = ASDMValuesParser::parse1D<NetSideband>(s);
+		
+	}
+	
+
+		
+	
+	void ReceiverRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, ReceiverAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "ReceiverTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1028,9 +1128,9 @@ void ReceiverRow::sidebandLOFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1068,9 +1168,10 @@ void ReceiverRow::sidebandLOFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1162,6 +1263,47 @@ receiverSideband = CReceiverSideband::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["receiverId"] = &ReceiverRow::receiverIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &ReceiverRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &ReceiverRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["name"] = &ReceiverRow::nameFromText;
+		 
+	
+				 
+	fromTextMethods["numLO"] = &ReceiverRow::numLOFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyBand"] = &ReceiverRow::frequencyBandFromText;
+		 
+	
+				 
+	fromTextMethods["freqLO"] = &ReceiverRow::freqLOFromText;
+		 
+	
+				 
+	fromTextMethods["receiverSideband"] = &ReceiverRow::receiverSidebandFromText;
+		 
+	
+				 
+	fromTextMethods["sidebandLO"] = &ReceiverRow::sidebandLOFromText;
+		 
+	
+
+		
 	}
 	
 	ReceiverRow::ReceiverRow (ReceiverTable &t, ReceiverRow &row) : table(t) {

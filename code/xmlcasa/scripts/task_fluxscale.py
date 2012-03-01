@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None,append=None,refspwmap=None):
+def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None,listfile=None,append=None,refspwmap=None):
        """Bootstrap the flux density scale from standard calibrators:
 
        After running gaincal on standard flux density calibrators (with or
@@ -40,6 +40,13 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                NOTE: All fields in reference and transfer must have solutions
                in the caltable.
 
+       listfile -- Fit listfile name
+               The list file contains the flux density, flux density error,
+                 S/N, and number of solutions (all antennas and feeds) for each
+                 spectral window.  NOTE: The nominal spectral window frequencies
+                 will be included in the future.
+               default: '' = no fit listfile will be created.
+
        append -- Append fluxscaled solutions to the fluxtable.
                default: False; (will overwrite if already existing)
                example: append=True
@@ -61,8 +68,9 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
 
                mycb = cbtool.create()
                mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
-               mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
-                              transfer=transfer,append=append,refspwmap=refspwmap)
+               output = mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
+                              transfer=transfer,listfile=listfile,append=append,
+			      refspwmap=refspwmap)
                mycb.close()
 
                #write history
@@ -79,3 +87,5 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                print '*** Error ***',instance
                mycb.close()
                raise Exception, instance
+
+       return output

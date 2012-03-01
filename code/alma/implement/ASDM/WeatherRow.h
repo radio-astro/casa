@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::WeatherRowIDL;
 #endif
 
 
@@ -51,26 +47,37 @@ using asdmIDL::WeatherRowIDL;
 
 
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Speed.h>
-using  asdm::Speed;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
+#include <Length.h>
+	
+
+	 
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	 
 #include <Humidity.h>
-using  asdm::Humidity;
+	
 
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
+	 
 #include <Pressure.h>
-using  asdm::Pressure;
+	
 
 
 
@@ -111,9 +118,11 @@ using  asdm::Pressure;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Weather.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -126,16 +135,19 @@ class StationRow;
 	
 
 class WeatherRow;
-typedef void (WeatherRow::*WeatherAttributeFromBin) (EndianISStream& eiss);
+typedef void (WeatherRow::*WeatherAttributeFromBin) (EndianIStream& eis);
+typedef void (WeatherRow::*WeatherAttributeFromText) (const string& s);
 
 /**
  * The WeatherRow class is a row of a WeatherTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class WeatherRow {
 friend class asdm::WeatherTable;
+friend class asdm::RowTransformer<WeatherRow>;
+//friend class asdm::TableStreamReader<WeatherTable, WeatherRow>;
 
 public:
 
@@ -189,15 +201,22 @@ public:
 
 
 	
-	// ===> Attribute pressure
+	// ===> Attribute pressure, which is optional
 	
 	
+	
+	/**
+	 * The attribute pressure is optional. Return true if this attribute exists.
+	 * @return true if and only if the pressure attribute exists. 
+	 */
+	bool isPressureExists() const;
 	
 
 	
  	/**
- 	 * Get pressure.
+ 	 * Get pressure, which is optional.
  	 * @return pressure as Pressure
+ 	 * @throws IllegalAccessException If pressure does not exist.
  	 */
  	Pressure getPressure() const;
 	
@@ -209,55 +228,36 @@ public:
  	 * @param pressure The Pressure value to which pressure is to be set.
  	 
  		
- 			
  	 */
  	void setPressure (Pressure pressure);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute pressureFlag
-	
-	
-	
-
-	
- 	/**
- 	 * Get pressureFlag.
- 	 * @return pressureFlag as bool
- 	 */
- 	bool getPressureFlag() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set pressureFlag with the specified bool.
- 	 * @param pressureFlag The bool value to which pressureFlag is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPressureFlag (bool pressureFlag);
-  		
-	
-	
+	/**
+	 * Mark pressure, which is an optional field, as non-existent.
+	 */
+	void clearPressure ();
 	
 
 
 	
-	// ===> Attribute relHumidity
+	// ===> Attribute relHumidity, which is optional
 	
 	
+	
+	/**
+	 * The attribute relHumidity is optional. Return true if this attribute exists.
+	 * @return true if and only if the relHumidity attribute exists. 
+	 */
+	bool isRelHumidityExists() const;
 	
 
 	
  	/**
- 	 * Get relHumidity.
+ 	 * Get relHumidity, which is optional.
  	 * @return relHumidity as Humidity
+ 	 * @throws IllegalAccessException If relHumidity does not exist.
  	 */
  	Humidity getRelHumidity() const;
 	
@@ -269,55 +269,36 @@ public:
  	 * @param relHumidity The Humidity value to which relHumidity is to be set.
  	 
  		
- 			
  	 */
  	void setRelHumidity (Humidity relHumidity);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute relHumidityFlag
-	
-	
-	
-
-	
- 	/**
- 	 * Get relHumidityFlag.
- 	 * @return relHumidityFlag as bool
- 	 */
- 	bool getRelHumidityFlag() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set relHumidityFlag with the specified bool.
- 	 * @param relHumidityFlag The bool value to which relHumidityFlag is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setRelHumidityFlag (bool relHumidityFlag);
-  		
-	
-	
+	/**
+	 * Mark relHumidity, which is an optional field, as non-existent.
+	 */
+	void clearRelHumidity ();
 	
 
 
 	
-	// ===> Attribute temperature
+	// ===> Attribute temperature, which is optional
 	
 	
+	
+	/**
+	 * The attribute temperature is optional. Return true if this attribute exists.
+	 * @return true if and only if the temperature attribute exists. 
+	 */
+	bool isTemperatureExists() const;
 	
 
 	
  	/**
- 	 * Get temperature.
+ 	 * Get temperature, which is optional.
  	 * @return temperature as Temperature
+ 	 * @throws IllegalAccessException If temperature does not exist.
  	 */
  	Temperature getTemperature() const;
 	
@@ -329,55 +310,36 @@ public:
  	 * @param temperature The Temperature value to which temperature is to be set.
  	 
  		
- 			
  	 */
  	void setTemperature (Temperature temperature);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute temperatureFlag
-	
-	
-	
-
-	
- 	/**
- 	 * Get temperatureFlag.
- 	 * @return temperatureFlag as bool
- 	 */
- 	bool getTemperatureFlag() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set temperatureFlag with the specified bool.
- 	 * @param temperatureFlag The bool value to which temperatureFlag is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setTemperatureFlag (bool temperatureFlag);
-  		
-	
-	
+	/**
+	 * Mark temperature, which is an optional field, as non-existent.
+	 */
+	void clearTemperature ();
 	
 
 
 	
-	// ===> Attribute windDirection
+	// ===> Attribute windDirection, which is optional
 	
 	
+	
+	/**
+	 * The attribute windDirection is optional. Return true if this attribute exists.
+	 * @return true if and only if the windDirection attribute exists. 
+	 */
+	bool isWindDirectionExists() const;
 	
 
 	
  	/**
- 	 * Get windDirection.
+ 	 * Get windDirection, which is optional.
  	 * @return windDirection as Angle
+ 	 * @throws IllegalAccessException If windDirection does not exist.
  	 */
  	Angle getWindDirection() const;
 	
@@ -389,55 +351,36 @@ public:
  	 * @param windDirection The Angle value to which windDirection is to be set.
  	 
  		
- 			
  	 */
  	void setWindDirection (Angle windDirection);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute windDirectionFlag
-	
-	
-	
-
-	
- 	/**
- 	 * Get windDirectionFlag.
- 	 * @return windDirectionFlag as bool
- 	 */
- 	bool getWindDirectionFlag() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set windDirectionFlag with the specified bool.
- 	 * @param windDirectionFlag The bool value to which windDirectionFlag is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setWindDirectionFlag (bool windDirectionFlag);
-  		
-	
-	
+	/**
+	 * Mark windDirection, which is an optional field, as non-existent.
+	 */
+	void clearWindDirection ();
 	
 
 
 	
-	// ===> Attribute windSpeed
+	// ===> Attribute windSpeed, which is optional
 	
 	
+	
+	/**
+	 * The attribute windSpeed is optional. Return true if this attribute exists.
+	 * @return true if and only if the windSpeed attribute exists. 
+	 */
+	bool isWindSpeedExists() const;
 	
 
 	
  	/**
- 	 * Get windSpeed.
+ 	 * Get windSpeed, which is optional.
  	 * @return windSpeed as Speed
+ 	 * @throws IllegalAccessException If windSpeed does not exist.
  	 */
  	Speed getWindSpeed() const;
 	
@@ -449,55 +392,36 @@ public:
  	 * @param windSpeed The Speed value to which windSpeed is to be set.
  	 
  		
- 			
  	 */
  	void setWindSpeed (Speed windSpeed);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute windSpeedFlag
-	
-	
-	
-
-	
- 	/**
- 	 * Get windSpeedFlag.
- 	 * @return windSpeedFlag as bool
- 	 */
- 	bool getWindSpeedFlag() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set windSpeedFlag with the specified bool.
- 	 * @param windSpeedFlag The bool value to which windSpeedFlag is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setWindSpeedFlag (bool windSpeedFlag);
-  		
-	
-	
+	/**
+	 * Mark windSpeed, which is an optional field, as non-existent.
+	 */
+	void clearWindSpeed ();
 	
 
 
 	
-	// ===> Attribute windMax
+	// ===> Attribute windMax, which is optional
 	
 	
+	
+	/**
+	 * The attribute windMax is optional. Return true if this attribute exists.
+	 * @return true if and only if the windMax attribute exists. 
+	 */
+	bool isWindMaxExists() const;
 	
 
 	
  	/**
- 	 * Get windMax.
+ 	 * Get windMax, which is optional.
  	 * @return windMax as Speed
+ 	 * @throws IllegalAccessException If windMax does not exist.
  	 */
  	Speed getWindMax() const;
 	
@@ -509,42 +433,16 @@ public:
  	 * @param windMax The Speed value to which windMax is to be set.
  	 
  		
- 			
  	 */
  	void setWindMax (Speed windMax);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute windMaxFlag
-	
-	
-	
-
-	
- 	/**
- 	 * Get windMaxFlag.
- 	 * @return windMaxFlag as bool
- 	 */
- 	bool getWindMaxFlag() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set windMaxFlag with the specified bool.
- 	 * @param windMaxFlag The bool value to which windMaxFlag is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setWindMaxFlag (bool windMaxFlag);
-  		
-	
-	
+	/**
+	 * Mark windMax, which is an optional field, as non-existent.
+	 */
+	void clearWindMax ();
 	
 
 
@@ -590,43 +488,289 @@ public:
 
 
 	
-	// ===> Attribute dewPointFlag, which is optional
+	// ===> Attribute numLayer, which is optional
 	
 	
 	
 	/**
-	 * The attribute dewPointFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewPointFlag attribute exists. 
+	 * The attribute numLayer is optional. Return true if this attribute exists.
+	 * @return true if and only if the numLayer attribute exists. 
 	 */
-	bool isDewPointFlagExists() const;
+	bool isNumLayerExists() const;
 	
 
 	
  	/**
- 	 * Get dewPointFlag, which is optional.
- 	 * @return dewPointFlag as bool
- 	 * @throws IllegalAccessException If dewPointFlag does not exist.
+ 	 * Get numLayer, which is optional.
+ 	 * @return numLayer as int
+ 	 * @throws IllegalAccessException If numLayer does not exist.
  	 */
- 	bool getDewPointFlag() const;
+ 	int getNumLayer() const;
 	
  
  	
  	
  	/**
- 	 * Set dewPointFlag with the specified bool.
- 	 * @param dewPointFlag The bool value to which dewPointFlag is to be set.
+ 	 * Set numLayer with the specified int.
+ 	 * @param numLayer The int value to which numLayer is to be set.
  	 
  		
  	 */
- 	void setDewPointFlag (bool dewPointFlag);
+ 	void setNumLayer (int numLayer);
 		
 	
 	
 	
 	/**
-	 * Mark dewPointFlag, which is an optional field, as non-existent.
+	 * Mark numLayer, which is an optional field, as non-existent.
 	 */
-	void clearDewPointFlag ();
+	void clearNumLayer ();
+	
+
+
+	
+	// ===> Attribute layerHeight, which is optional
+	
+	
+	
+	/**
+	 * The attribute layerHeight is optional. Return true if this attribute exists.
+	 * @return true if and only if the layerHeight attribute exists. 
+	 */
+	bool isLayerHeightExists() const;
+	
+
+	
+ 	/**
+ 	 * Get layerHeight, which is optional.
+ 	 * @return layerHeight as vector<Length >
+ 	 * @throws IllegalAccessException If layerHeight does not exist.
+ 	 */
+ 	vector<Length > getLayerHeight() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set layerHeight with the specified vector<Length >.
+ 	 * @param layerHeight The vector<Length > value to which layerHeight is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setLayerHeight (vector<Length > layerHeight);
+		
+	
+	
+	
+	/**
+	 * Mark layerHeight, which is an optional field, as non-existent.
+	 */
+	void clearLayerHeight ();
+	
+
+
+	
+	// ===> Attribute temperatureProfile, which is optional
+	
+	
+	
+	/**
+	 * The attribute temperatureProfile is optional. Return true if this attribute exists.
+	 * @return true if and only if the temperatureProfile attribute exists. 
+	 */
+	bool isTemperatureProfileExists() const;
+	
+
+	
+ 	/**
+ 	 * Get temperatureProfile, which is optional.
+ 	 * @return temperatureProfile as vector<Temperature >
+ 	 * @throws IllegalAccessException If temperatureProfile does not exist.
+ 	 */
+ 	vector<Temperature > getTemperatureProfile() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set temperatureProfile with the specified vector<Temperature >.
+ 	 * @param temperatureProfile The vector<Temperature > value to which temperatureProfile is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTemperatureProfile (vector<Temperature > temperatureProfile);
+		
+	
+	
+	
+	/**
+	 * Mark temperatureProfile, which is an optional field, as non-existent.
+	 */
+	void clearTemperatureProfile ();
+	
+
+
+	
+	// ===> Attribute cloudMonitor, which is optional
+	
+	
+	
+	/**
+	 * The attribute cloudMonitor is optional. Return true if this attribute exists.
+	 * @return true if and only if the cloudMonitor attribute exists. 
+	 */
+	bool isCloudMonitorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get cloudMonitor, which is optional.
+ 	 * @return cloudMonitor as Temperature
+ 	 * @throws IllegalAccessException If cloudMonitor does not exist.
+ 	 */
+ 	Temperature getCloudMonitor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set cloudMonitor with the specified Temperature.
+ 	 * @param cloudMonitor The Temperature value to which cloudMonitor is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setCloudMonitor (Temperature cloudMonitor);
+		
+	
+	
+	
+	/**
+	 * Mark cloudMonitor, which is an optional field, as non-existent.
+	 */
+	void clearCloudMonitor ();
+	
+
+
+	
+	// ===> Attribute numWVR, which is optional
+	
+	
+	
+	/**
+	 * The attribute numWVR is optional. Return true if this attribute exists.
+	 * @return true if and only if the numWVR attribute exists. 
+	 */
+	bool isNumWVRExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numWVR, which is optional.
+ 	 * @return numWVR as int
+ 	 * @throws IllegalAccessException If numWVR does not exist.
+ 	 */
+ 	int getNumWVR() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numWVR with the specified int.
+ 	 * @param numWVR The int value to which numWVR is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumWVR (int numWVR);
+		
+	
+	
+	
+	/**
+	 * Mark numWVR, which is an optional field, as non-existent.
+	 */
+	void clearNumWVR ();
+	
+
+
+	
+	// ===> Attribute wvrTemp, which is optional
+	
+	
+	
+	/**
+	 * The attribute wvrTemp is optional. Return true if this attribute exists.
+	 * @return true if and only if the wvrTemp attribute exists. 
+	 */
+	bool isWvrTempExists() const;
+	
+
+	
+ 	/**
+ 	 * Get wvrTemp, which is optional.
+ 	 * @return wvrTemp as vector<Temperature >
+ 	 * @throws IllegalAccessException If wvrTemp does not exist.
+ 	 */
+ 	vector<Temperature > getWvrTemp() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set wvrTemp with the specified vector<Temperature >.
+ 	 * @param wvrTemp The vector<Temperature > value to which wvrTemp is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setWvrTemp (vector<Temperature > wvrTemp);
+		
+	
+	
+	
+	/**
+	 * Mark wvrTemp, which is an optional field, as non-existent.
+	 */
+	void clearWvrTemp ();
+	
+
+
+	
+	// ===> Attribute water, which is optional
+	
+	
+	
+	/**
+	 * The attribute water is optional. Return true if this attribute exists.
+	 * @return true if and only if the water attribute exists. 
+	 */
+	bool isWaterExists() const;
+	
+
+	
+ 	/**
+ 	 * Get water, which is optional.
+ 	 * @return water as double
+ 	 * @throws IllegalAccessException If water does not exist.
+ 	 */
+ 	double getWater() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set water with the specified double.
+ 	 * @param water The double value to which water is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setWater (double water);
+		
+	
+	
+	
+	/**
+	 * Mark water, which is an optional field, as non-existent.
+	 */
+	void clearWater ();
 	
 
 
@@ -696,66 +840,11 @@ public:
 	    
 	 * @param timeInterval
 	    
-	 * @param pressure
-	    
-	 * @param pressureFlag
-	    
-	 * @param relHumidity
-	    
-	 * @param relHumidityFlag
-	    
-	 * @param temperature
-	    
-	 * @param temperatureFlag
-	    
-	 * @param windDirection
-	    
-	 * @param windDirectionFlag
-	    
-	 * @param windSpeed
-	    
-	 * @param windSpeedFlag
-	    
-	 * @param windMax
-	    
-	 * @param windMaxFlag
-	    
 	 */ 
-	bool compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag);
+	bool compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval);
 	
 	
 
-	
-	/**
-	 * Compare each mandatory value (i.e. not in the key) attribute  with 
-	 * the corresponding parameters and return true if there is a match and false otherwise.
-	 	
-	 * @param pressure
-	    
-	 * @param pressureFlag
-	    
-	 * @param relHumidity
-	    
-	 * @param relHumidityFlag
-	    
-	 * @param temperature
-	    
-	 * @param temperatureFlag
-	    
-	 * @param windDirection
-	    
-	 * @param windDirectionFlag
-	    
-	 * @param windSpeed
-	    
-	 * @param windSpeedFlag
-	    
-	 * @param windMax
-	    
-	 * @param windMaxFlag
-	    
-	 */ 
-	bool compareRequiredValue(Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag); 
 		 
 	
 	/**
@@ -773,7 +862,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a WeatherRowIDL struct.
 	 */
-	WeatherRowIDL *toIDL() const;
+	asdmIDL::WeatherRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -782,14 +871,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (WeatherRowIDL x) ;
+	void setFromIDL (asdmIDL::WeatherRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -797,7 +886,42 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, WeatherAttributeFromBin> fromBinMethods;
+void stationIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+
+void pressureFromBin( EndianIStream& eis);
+void relHumidityFromBin( EndianIStream& eis);
+void temperatureFromBin( EndianIStream& eis);
+void windDirectionFromBin( EndianIStream& eis);
+void windSpeedFromBin( EndianIStream& eis);
+void windMaxFromBin( EndianIStream& eis);
+void dewPointFromBin( EndianIStream& eis);
+void numLayerFromBin( EndianIStream& eis);
+void layerHeightFromBin( EndianIStream& eis);
+void temperatureProfileFromBin( EndianIStream& eis);
+void cloudMonitorFromBin( EndianIStream& eis);
+void numWVRFromBin( EndianIStream& eis);
+void wvrTempFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the WeatherTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static WeatherRow* fromBin(EndianIStream& eis, WeatherTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -858,8 +982,10 @@ private:
  	
 
 	
-	// ===> Attribute pressure
+	// ===> Attribute pressure, which is optional
 	
+	
+	bool pressureExists;
 	
 
 	Pressure pressure;
@@ -869,19 +995,10 @@ private:
  	
 
 	
-	// ===> Attribute pressureFlag
+	// ===> Attribute relHumidity, which is optional
 	
 	
-
-	bool pressureFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute relHumidity
-	
+	bool relHumidityExists;
 	
 
 	Humidity relHumidity;
@@ -891,19 +1008,10 @@ private:
  	
 
 	
-	// ===> Attribute relHumidityFlag
+	// ===> Attribute temperature, which is optional
 	
 	
-
-	bool relHumidityFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute temperature
-	
+	bool temperatureExists;
 	
 
 	Temperature temperature;
@@ -913,19 +1021,10 @@ private:
  	
 
 	
-	// ===> Attribute temperatureFlag
+	// ===> Attribute windDirection, which is optional
 	
 	
-
-	bool temperatureFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windDirection
-	
+	bool windDirectionExists;
 	
 
 	Angle windDirection;
@@ -935,19 +1034,10 @@ private:
  	
 
 	
-	// ===> Attribute windDirectionFlag
+	// ===> Attribute windSpeed, which is optional
 	
 	
-
-	bool windDirectionFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windSpeed
-	
+	bool windSpeedExists;
 	
 
 	Speed windSpeed;
@@ -957,33 +1047,13 @@ private:
  	
 
 	
-	// ===> Attribute windSpeedFlag
+	// ===> Attribute windMax, which is optional
 	
 	
-
-	bool windSpeedFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windMax
-	
+	bool windMaxExists;
 	
 
 	Speed windMax;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windMaxFlag
-	
-	
-
-	bool windMaxFlag;
 
 	
 	
@@ -1003,13 +1073,91 @@ private:
  	
 
 	
-	// ===> Attribute dewPointFlag, which is optional
+	// ===> Attribute numLayer, which is optional
 	
 	
-	bool dewPointFlagExists;
+	bool numLayerExists;
 	
 
-	bool dewPointFlag;
+	int numLayer;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute layerHeight, which is optional
+	
+	
+	bool layerHeightExists;
+	
+
+	vector<Length > layerHeight;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute temperatureProfile, which is optional
+	
+	
+	bool temperatureProfileExists;
+	
+
+	vector<Temperature > temperatureProfile;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute cloudMonitor, which is optional
+	
+	
+	bool cloudMonitorExists;
+	
+
+	Temperature cloudMonitor;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numWVR, which is optional
+	
+	
+	bool numWVRExists;
+	
+
+	int numWVR;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute wvrTemp, which is optional
+	
+	
+	bool wvrTempExists;
+	
+
+	vector<Temperature > wvrTemp;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute water, which is optional
+	
+	
+	bool waterExists;
+	
+
+	double water;
 
 	
 	
@@ -1042,28 +1190,87 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, WeatherAttributeFromBin> fromBinMethods;
-void stationIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void pressureFromBin( EndianISStream& eiss);
-void pressureFlagFromBin( EndianISStream& eiss);
-void relHumidityFromBin( EndianISStream& eiss);
-void relHumidityFlagFromBin( EndianISStream& eiss);
-void temperatureFromBin( EndianISStream& eiss);
-void temperatureFlagFromBin( EndianISStream& eiss);
-void windDirectionFromBin( EndianISStream& eiss);
-void windDirectionFlagFromBin( EndianISStream& eiss);
-void windSpeedFromBin( EndianISStream& eiss);
-void windSpeedFlagFromBin( EndianISStream& eiss);
-void windMaxFromBin( EndianISStream& eiss);
-void windMaxFlagFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, WeatherAttributeFromBin> fromBinMethods;
+void stationIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
 
-void dewPointFromBin( EndianISStream& eiss);
-void dewPointFlagFromBin( EndianISStream& eiss);
+void pressureFromBin( EndianIStream& eis);
+void relHumidityFromBin( EndianIStream& eis);
+void temperatureFromBin( EndianIStream& eis);
+void windDirectionFromBin( EndianIStream& eis);
+void windSpeedFromBin( EndianIStream& eis);
+void windMaxFromBin( EndianIStream& eis);
+void dewPointFromBin( EndianIStream& eis);
+void numLayerFromBin( EndianIStream& eis);
+void layerHeightFromBin( EndianIStream& eis);
+void temperatureProfileFromBin( EndianIStream& eis);
+void cloudMonitorFromBin( EndianIStream& eis);
+void numWVRFromBin( EndianIStream& eis);
+void wvrTempFromBin( EndianIStream& eis);
+void waterFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, WeatherAttributeFromText> fromTextMethods;
+	
+void stationIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+
+	
+void pressureFromText (const string & s);
+	
+	
+void relHumidityFromText (const string & s);
+	
+	
+void temperatureFromText (const string & s);
+	
+	
+void windDirectionFromText (const string & s);
+	
+	
+void windSpeedFromText (const string & s);
+	
+	
+void windMaxFromText (const string & s);
+	
+	
+void dewPointFromText (const string & s);
+	
+	
+void numLayerFromText (const string & s);
+	
+	
+void layerHeightFromText (const string & s);
+	
+	
+void temperatureProfileFromText (const string & s);
+	
+	
+void cloudMonitorFromText (const string & s);
+	
+	
+void numWVRFromText (const string & s);
+	
+	
+void wvrTempFromText (const string & s);
+	
+	
+void waterFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1072,14 +1279,14 @@ void dewPointFlagFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the WeatherTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static WeatherRow* fromBin(EndianISStream& eiss, WeatherTable& table, const vector<string>& attributesSeq);	 
 
+	 static WeatherRow* fromBin(EndianIStream& eis, WeatherTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

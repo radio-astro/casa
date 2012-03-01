@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace SourceModelMod
   //! SourceModel.
   //!  [CalDM.CalFlux] Source Model
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum SourceModel
@@ -71,7 +72,10 @@ namespace SourceModelMod
 } 
 #endif
 
-using namespace std;
+namespace SourceModelMod {
+	std::ostream & operator << ( std::ostream & out, const SourceModel& value);
+	std::istream & operator >> ( std::istream & in , SourceModel& value );
+}
 
 /** 
   * A helper class for the enumeration SourceModel.
@@ -103,7 +107,7 @@ class CSourceModel {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +161,8 @@ class CSourceModel {
     CSourceModel(const CSourceModel&);
     CSourceModel& operator=(const CSourceModel&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

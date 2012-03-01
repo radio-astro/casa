@@ -69,6 +69,7 @@ using asdm::FeedRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -92,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalDeviceRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -810,7 +814,8 @@ namespace asdm {
 		eoss.writeInt((int) calLoadNames.size());
 		for (unsigned int i = 0; i < calLoadNames.size(); i++)
 				
-			eoss.writeInt(calLoadNames.at(i));
+			eoss.writeString(CCalibrationDevice::name(calLoadNames.at(i)));
+			/* eoss.writeInt(calLoadNames.at(i)); */
 				
 				
 						
@@ -912,61 +917,61 @@ namespace asdm {
 
 	}
 	
-void CalDeviceRow::antennaIdFromBin(EndianISStream& eiss) {
+void CalDeviceRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalDeviceRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalDeviceRow::timeIntervalFromBin(EndianISStream& eiss) {
+void CalDeviceRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalDeviceRow::feedIdFromBin(EndianISStream& eiss) {
+void CalDeviceRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void CalDeviceRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void CalDeviceRow::numCalloadFromBin(EndianISStream& eiss) {
+void CalDeviceRow::numCalloadFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numCalload =  eiss.readInt();
+		numCalload =  eis.readInt();
 			
 		
 	
 	
 }
-void CalDeviceRow::calLoadNamesFromBin(EndianISStream& eiss) {
+void CalDeviceRow::calLoadNamesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -975,10 +980,10 @@ void CalDeviceRow::calLoadNamesFromBin(EndianISStream& eiss) {
 	
 		calLoadNames.clear();
 		
-		unsigned int calLoadNamesDim1 = eiss.readInt();
+		unsigned int calLoadNamesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < calLoadNamesDim1; i++)
 			
-			calLoadNames.push_back(CCalibrationDevice::from_int(eiss.readInt()));
+			calLoadNames.push_back(CCalibrationDevice::literal(eis.readString()));
 			
 	
 
@@ -987,16 +992,16 @@ void CalDeviceRow::calLoadNamesFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalDeviceRow::numReceptorFromBin(EndianISStream& eiss) {
+void CalDeviceRow::numReceptorFromBin(EndianIStream& eis) {
 		
-	numReceptorExists = eiss.readBoolean();
+	numReceptorExists = eis.readBoolean();
 	if (numReceptorExists) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
@@ -1004,9 +1009,9 @@ void CalDeviceRow::numReceptorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDeviceRow::calEffFromBin(EndianISStream& eiss) {
+void CalDeviceRow::calEffFromBin(EndianIStream& eis) {
 		
-	calEffExists = eiss.readBoolean();
+	calEffExists = eis.readBoolean();
 	if (calEffExists) {
 		
 	
@@ -1016,14 +1021,14 @@ void CalDeviceRow::calEffFromBin(EndianISStream& eiss) {
 	
 		calEff.clear();
 		
-		unsigned int calEffDim1 = eiss.readInt();
-		unsigned int calEffDim2 = eiss.readInt();
+		unsigned int calEffDim1 = eis.readInt();
+		unsigned int calEffDim2 = eis.readInt();
 		vector <float> calEffAux1;
 		for (unsigned int i = 0; i < calEffDim1; i++) {
 			calEffAux1.clear();
 			for (unsigned int j = 0; j < calEffDim2 ; j++)			
 			
-			calEffAux1.push_back(eiss.readFloat());
+			calEffAux1.push_back(eis.readFloat());
 			
 			calEff.push_back(calEffAux1);
 		}
@@ -1036,9 +1041,9 @@ void CalDeviceRow::calEffFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDeviceRow::noiseCalFromBin(EndianISStream& eiss) {
+void CalDeviceRow::noiseCalFromBin(EndianIStream& eis) {
 		
-	noiseCalExists = eiss.readBoolean();
+	noiseCalExists = eis.readBoolean();
 	if (noiseCalExists) {
 		
 	
@@ -1048,10 +1053,10 @@ void CalDeviceRow::noiseCalFromBin(EndianISStream& eiss) {
 	
 		noiseCal.clear();
 		
-		unsigned int noiseCalDim1 = eiss.readInt();
+		unsigned int noiseCalDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < noiseCalDim1; i++)
 			
-			noiseCal.push_back(eiss.readDouble());
+			noiseCal.push_back(eis.readDouble());
 			
 	
 
@@ -1061,9 +1066,9 @@ void CalDeviceRow::noiseCalFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDeviceRow::coupledNoiseCalFromBin(EndianISStream& eiss) {
+void CalDeviceRow::coupledNoiseCalFromBin(EndianIStream& eis) {
 		
-	coupledNoiseCalExists = eiss.readBoolean();
+	coupledNoiseCalExists = eis.readBoolean();
 	if (coupledNoiseCalExists) {
 		
 	
@@ -1073,14 +1078,14 @@ void CalDeviceRow::coupledNoiseCalFromBin(EndianISStream& eiss) {
 	
 		coupledNoiseCal.clear();
 		
-		unsigned int coupledNoiseCalDim1 = eiss.readInt();
-		unsigned int coupledNoiseCalDim2 = eiss.readInt();
+		unsigned int coupledNoiseCalDim1 = eis.readInt();
+		unsigned int coupledNoiseCalDim2 = eis.readInt();
 		vector <float> coupledNoiseCalAux1;
 		for (unsigned int i = 0; i < coupledNoiseCalDim1; i++) {
 			coupledNoiseCalAux1.clear();
 			for (unsigned int j = 0; j < coupledNoiseCalDim2 ; j++)			
 			
-			coupledNoiseCalAux1.push_back(eiss.readFloat());
+			coupledNoiseCalAux1.push_back(eis.readFloat());
 			
 			coupledNoiseCal.push_back(coupledNoiseCalAux1);
 		}
@@ -1093,9 +1098,9 @@ void CalDeviceRow::coupledNoiseCalFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
+void CalDeviceRow::temperatureLoadFromBin(EndianIStream& eis) {
 		
-	temperatureLoadExists = eiss.readBoolean();
+	temperatureLoadExists = eis.readBoolean();
 	if (temperatureLoadExists) {
 		
 	
@@ -1103,7 +1108,7 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 		
 			
 	
-	temperatureLoad = Temperature::from1DBin(eiss);	
+	temperatureLoad = Temperature::from1DBin(eis);	
 	
 
 		
@@ -1114,23 +1119,137 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalDeviceRow* CalDeviceRow::fromBin(EndianISStream& eiss, CalDeviceTable& table, const vector<string>& attributesSeq) {
+	CalDeviceRow* CalDeviceRow::fromBin(EndianIStream& eis, CalDeviceTable& table, const vector<string>& attributesSeq) {
 		CalDeviceRow* row = new  CalDeviceRow(table);
 		
 		map<string, CalDeviceAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalDeviceTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalDeviceTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void CalDeviceRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalDeviceRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void CalDeviceRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalDeviceRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalDeviceRow::numCalloadFromText(const string & s) {
+		 
+		numCalload = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an CalibrationDevice 
+	void CalDeviceRow::calLoadNamesFromText(const string & s) {
+		 
+		calLoadNames = ASDMValuesParser::parse1D<CalibrationDevice>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void CalDeviceRow::numReceptorFromText(const string & s) {
+		numReceptorExists = true;
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalDeviceRow::calEffFromText(const string & s) {
+		calEffExists = true;
+		 
+		calEff = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalDeviceRow::noiseCalFromText(const string & s) {
+		noiseCalExists = true;
+		 
+		noiseCal = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void CalDeviceRow::coupledNoiseCalFromText(const string & s) {
+		coupledNoiseCalExists = true;
+		 
+		coupledNoiseCal = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void CalDeviceRow::temperatureLoadFromText(const string & s) {
+		temperatureLoadExists = true;
+		 
+		temperatureLoad = ASDMValuesParser::parse1D<Temperature>(s);
+		
+	}
+	
+	
+	
+	void CalDeviceRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalDeviceAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalDeviceTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1468,9 +1587,9 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1580,9 +1699,10 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1722,6 +1842,55 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 	 fromBinMethods["coupledNoiseCal"] = &CalDeviceRow::coupledNoiseCalFromBin; 
 	 fromBinMethods["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &CalDeviceRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &CalDeviceRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &CalDeviceRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &CalDeviceRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["numCalload"] = &CalDeviceRow::numCalloadFromText;
+		 
+	
+				 
+	fromTextMethods["calLoadNames"] = &CalDeviceRow::calLoadNamesFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["numReceptor"] = &CalDeviceRow::numReceptorFromText;
+		 	
+	 
+				
+	fromTextMethods["calEff"] = &CalDeviceRow::calEffFromText;
+		 	
+	 
+				
+	fromTextMethods["noiseCal"] = &CalDeviceRow::noiseCalFromText;
+		 	
+	 
+				
+	fromTextMethods["coupledNoiseCal"] = &CalDeviceRow::coupledNoiseCalFromText;
+		 	
+	 
+				
+	fromTextMethods["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromText;
+		 	
+		
 	}
 	
 	CalDeviceRow::CalDeviceRow (CalDeviceTable &t, CalDeviceRow &row) : table(t) {

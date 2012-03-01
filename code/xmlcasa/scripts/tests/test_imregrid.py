@@ -266,6 +266,25 @@ class imregrid_test(unittest.TestCase):
             zz.done()
 
         yy.done()
+        
+    def test_axes(self):
+        imagename = "test_axes.im"
+        templatename = "test_axes.tmp"
+        output = "test_axes.out"
+        myia = iatool.create()
+        myia.fromshape(imagename, [10, 10, 10])
+        exp = myia.coordsys().increment()["numeric"]
+        myia.fromshape(templatename, [10, 10, 10])
+        mycsys = myia.coordsys()
+        mycsys.setincrement(mycsys.increment()["numeric"]/2)
+        myia.setcoordsys(mycsys.torecord())
+        exp[2] = mycsys.increment()["numeric"][2]
+        zz = imregrid(imagename, template=templatename, output=output, axes=2)
+        myia.open(output)
+        got = myia.coordsys().increment()["numeric"]
+        self.assertTrue((got == exp).all())
+        myia.done()
+        
             
 def suite():
     return [imregrid_test]

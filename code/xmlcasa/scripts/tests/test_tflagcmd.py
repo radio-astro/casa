@@ -84,6 +84,35 @@ class test_base(unittest.TestCase):
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
         
+    def setUp_evla(self):
+        self.vis = "tosr0001_scan3_noonline.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        
+    def setUp_shadowdata(self):
+        self.vis = "shadowtest_part.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        
+        
 class test_manual(test_base):
     '''Test manual selections'''
     
@@ -106,12 +135,16 @@ class test_alma(test_base):
     def test_intent(self):
         '''tflagcmd: test scan intent selection'''
         
-        input = "intent='CAL*POINT*'"
+        input = "intent='CAL*POINT*'\n"\
+                "#scan=3,4"
         filename = create_input(input)
         
-        # flag POINTING CALIBRATION scans 
+        # flag POINTING CALIBRATION scans and ignore comment line
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+        res = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
+        self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
         
     def test_extract(self):
         '''tflagcmd: action = extract and apply clip on WVR'''
@@ -247,7 +280,7 @@ class test_savepars(test_base):
         
         ########## TEST 1 
         # create text file called tflagcmd.txt
-        input = " scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
+        input = "scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
         filename = create_input(input)
         filename1 = 'filename1.txt'
         os.system('cp '+filename+' '+filename1)
@@ -264,7 +297,7 @@ class test_savepars(test_base):
         
         ########## TEST 2 
         # create another input
-        input = " scan=1~3 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"
         filename = create_input(input)
         
         # apply and don't save to MS
@@ -294,21 +327,92 @@ class test_savepars(test_base):
         # Only cmd form TEST 1 should be in MS
         os.system('rm -rf myflags.txt')
         tflagcmd(vis=self.vis, action='list', outfile='myflags.txt', useapplied=True, savepars=True)
-        self.assertTrue(filecmp.cmp(filename1, 'myflags.txt', 1), 'Files should be equal')
+        self.assertTrue(filecmp.cmp(filename1, 'myflags.txt', 1), 'Files should be equal')        
+
+
+class test_XML(test_base):
+    
+    def setUp(self):
+        self.setUp_evla()
         
-    def test_writeflags(self):
-        '''tflagcmd: writeflags = False'''
-        # Remove any cmd from table
-        tflagcmd(vis=self.vis, action='clear', clearall=True)
+    def test_xml1(self):
+        '''tflagcmd: list xml file and save in outfile'''
         
-        # Save the parameters to FLAG_CMD but do not write the flags
-        input = " scan=4 mode=clip correlation=ABS_ALL clipminmax=[0,4]\n"
-        tflagcmd(vis=self.vis, inpmode='cmd', command=[input], writeflags=False, savepars=True)
+        # The MS only contains clip and shadow commands
+        # The XML contain the online flags
+        tflagcmd(vis=self.vis, action='list', inpmode='xml', savepars=True, outfile='origxml.txt')
         
-        # No flags should be in the MS
+        # Now save the online flags to the FLAG_CMD without applying
+        tflagcmd(vis=self.vis, action='list', inpmode='xml', savepars=True)
+        
+        # Now apply them by selecting the reasons and save in another file
+        # 507 cmds crash on my computer.
+        reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
+        tflagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt',
+                 sequential=True)
+                
+        # Compare with original XML
+        self.assertTrue(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
+        
+        # Check that APPLIED column has been updated to TRUE
+        
+        
+    def test_xml2(self):
+        '''tflagcmd: list xml file and save in outfile'''
+        
+        # The MS only contains clip and shadow commands
+        
+        # Apply the shadow command
+        tflagcmd(vis=self.vis, action='apply', reason='SHADOW')
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 0, 'Should not write flags when writeflags=False')
+        self.assertEqual(res['flagged'], 240640)
+
+class test_shadow(test_base):
+    def setUp(self):
+        self.setUp_shadowdata()
+
+    def test_CAS2399(self):
+        '''tflagcmd: shadow by antennas not present in MS'''
         
+        # Create antennafile in disk
+        input = 'name=VLA01\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
+                'name=VLA02\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]\n'+\
+                'name=VLA09\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601197.2182404203, -5041974.3604805721, 3554875.1995636248]\n'+\
+                'name=VLA10\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
+
+#        antfile = 'myants.txt'
+#        if os.path.exists(antfile):
+#            os.system('rm -rf myants.txt')
+
+        filename = create_input(input)
+
+        # Create command line
+        input = ['mode=shadow tolerance=10.0 antennafile=tflagcmd.txt']
+#        filename = 'cmdfile.txt'
+#        if os.path.exists(filename):
+#            os.system('rm -rf cmdfile.txt')
+        
+#        create_input(input, filename)
+        
+        # Flag
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+#        tflagcmd(vis=self.vis, action='apply', inpmode='file', inpfile=filename)
+        tflagcmd(vis=self.vis, action='apply', inpmode='cmd', command=input)
+        
+        # Check flags
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
+        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
+        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
+         
         
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -329,6 +433,8 @@ def suite():
             test_alma,
             test_unapply,
             test_savepars,
+            test_XML,
+            test_shadow,
             cleanup]
         
         

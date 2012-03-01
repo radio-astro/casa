@@ -56,13 +56,6 @@ class TagType {
 	
 
 	
-	/**
-	  * The TagType for a Beam Tag.
-	  */
-	static const TagType*  Beam ;
-	
-
-	
 
 	
 
@@ -246,6 +239,13 @@ class TagType {
 	
 
 	
+	/**
+	  * The TagType for a Scale Tag.
+	  */
+	static const TagType*  Scale ;
+	
+
+	
 
 	
 
@@ -328,10 +328,6 @@ class TagType {
 
 	
 	if (TagType:: Antenna) { delete TagType::Antenna; TagType::Antenna = 0; }
-	
-
-	
-	if (TagType:: Beam) { delete TagType::Beam; TagType::Beam = 0; }
 	
 
 	
@@ -458,6 +454,10 @@ class TagType {
 
 	
 	if (TagType:: SBSummary) { delete TagType::SBSummary; TagType::SBSummary = 0; }
+	
+
+	
+	if (TagType:: Scale) { delete TagType::Scale; TagType::Scale = 0; }
 	
 
 	

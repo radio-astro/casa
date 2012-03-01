@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace ReceiverBandMod
   //! ReceiverBand.
   //!  [ASDM.Receiver] Receiver band names
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum ReceiverBand
@@ -119,7 +120,10 @@ namespace ReceiverBandMod
 } 
 #endif
 
-using namespace std;
+namespace ReceiverBandMod {
+	std::ostream & operator << ( std::ostream & out, const ReceiverBand& value);
+	std::istream & operator >> ( std::istream & in , ReceiverBand& value );
+}
 
 /** 
   * A helper class for the enumeration ReceiverBand.
@@ -199,7 +203,7 @@ class CReceiverBand {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -253,8 +257,8 @@ class CReceiverBand {
     CReceiverBand(const CReceiverBand&);
     CReceiverBand& operator=(const CReceiverBand&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

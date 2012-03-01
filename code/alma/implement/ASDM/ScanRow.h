@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::ScanRowIDL;
 #endif
 
 
@@ -51,11 +47,13 @@ using asdmIDL::ScanRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
 
 
@@ -72,31 +70,24 @@ using  asdm::Tag;
 
 	
 #include "CScanIntent.h"
-using namespace ScanIntentMod;
 	
 
 	
 #include "CCalDataOrigin.h"
-using namespace CalDataOriginMod;
 	
 
 	
 
 	
 #include "CCalibrationFunction.h"
-using namespace CalibrationFunctionMod;
 	
 
 	
 #include "CCalibrationSet.h"
-using namespace CalibrationSetMod;
 	
 
 	
 #include "CAntennaMotionPattern.h"
-using namespace AntennaMotionPatternMod;
-	
-
 	
 
 	
@@ -111,9 +102,11 @@ using namespace AntennaMotionPatternMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Scan.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -126,16 +119,19 @@ class ExecBlockRow;
 	
 
 class ScanRow;
-typedef void (ScanRow::*ScanAttributeFromBin) (EndianISStream& eiss);
+typedef void (ScanRow::*ScanAttributeFromBin) (EndianIStream& eis);
+typedef void (ScanRow::*ScanAttributeFromText) (const string& s);
 
 /**
  * The ScanRow class is a row of a ScanTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class ScanRow {
 friend class asdm::ScanTable;
+friend class asdm::RowTransformer<ScanRow>;
+//friend class asdm::TableStreamReader<ScanTable, ScanRow>;
 
 public:
 
@@ -279,29 +275,29 @@ public:
 
 
 	
-	// ===> Attribute numSubScan
+	// ===> Attribute numSubscan
 	
 	
 	
 
 	
  	/**
- 	 * Get numSubScan.
- 	 * @return numSubScan as int
+ 	 * Get numSubscan.
+ 	 * @return numSubscan as int
  	 */
- 	int getNumSubScan() const;
+ 	int getNumSubscan() const;
 	
  
  	
  	
  	/**
- 	 * Set numSubScan with the specified int.
- 	 * @param numSubScan The int value to which numSubScan is to be set.
+ 	 * Set numSubscan with the specified int.
+ 	 * @param numSubscan The int value to which numSubscan is to be set.
  	 
  		
  			
  	 */
- 	void setNumSubScan (int numSubScan);
+ 	void setNumSubscan (int numSubscan);
   		
 	
 	
@@ -644,36 +640,6 @@ public:
 	
 
 
-	
-	// ===> Attribute flagRow
-	
-	
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool getFlagRow() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFlagRow (bool flagRow);
-  		
-	
-	
-	
-
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -746,7 +712,7 @@ public:
 	    
 	 * @param numIntent
 	    
-	 * @param numSubScan
+	 * @param numSubscan
 	    
 	 * @param scanIntent
 	    
@@ -754,10 +720,8 @@ public:
 	    
 	 * @param calibrationOnLine
 	    
-	 * @param flagRow
-	    
 	 */ 
-	bool compareNoAutoInc(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow);
+	bool compareNoAutoInc(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubscan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine);
 	
 	
 
@@ -772,7 +736,7 @@ public:
 	    
 	 * @param numIntent
 	    
-	 * @param numSubScan
+	 * @param numSubscan
 	    
 	 * @param scanIntent
 	    
@@ -780,10 +744,8 @@ public:
 	    
 	 * @param calibrationOnLine
 	    
-	 * @param flagRow
-	    
 	 */ 
-	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow); 
+	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubscan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine); 
 		 
 	
 	/**
@@ -801,7 +763,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a ScanRowIDL struct.
 	 */
-	ScanRowIDL *toIDL() const;
+	asdmIDL::ScanRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -810,14 +772,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (ScanRowIDL x) ;
+	void setFromIDL (asdmIDL::ScanRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -825,7 +787,41 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, ScanAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void numIntentFromBin( EndianIStream& eis);
+void numSubscanFromBin( EndianIStream& eis);
+void scanIntentFromBin( EndianIStream& eis);
+void calDataTypeFromBin( EndianIStream& eis);
+void calibrationOnLineFromBin( EndianIStream& eis);
+
+void calibrationFunctionFromBin( EndianIStream& eis);
+void calibrationSetFromBin( EndianIStream& eis);
+void calPatternFromBin( EndianIStream& eis);
+void numFieldFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void sourceNameFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the ScanTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ScanRow* fromBin(EndianIStream& eis, ScanTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -919,11 +915,11 @@ private:
  	
 
 	
-	// ===> Attribute numSubScan
+	// ===> Attribute numSubscan
 	
 	
 
-	int numSubScan;
+	int numSubscan;
 
 	
 	
@@ -1040,17 +1036,6 @@ private:
 	
  	
 
-	
-	// ===> Attribute flagRow
-	
-	
-
-	bool flagRow;
-
-	
-	
- 	
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1078,28 +1063,83 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, ScanAttributeFromBin> fromBinMethods;
-void execBlockIdFromBin( EndianISStream& eiss);
-void scanNumberFromBin( EndianISStream& eiss);
-void startTimeFromBin( EndianISStream& eiss);
-void endTimeFromBin( EndianISStream& eiss);
-void numIntentFromBin( EndianISStream& eiss);
-void numSubScanFromBin( EndianISStream& eiss);
-void scanIntentFromBin( EndianISStream& eiss);
-void calDataTypeFromBin( EndianISStream& eiss);
-void calibrationOnLineFromBin( EndianISStream& eiss);
-void flagRowFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, ScanAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void numIntentFromBin( EndianIStream& eis);
+void numSubscanFromBin( EndianIStream& eis);
+void scanIntentFromBin( EndianIStream& eis);
+void calDataTypeFromBin( EndianIStream& eis);
+void calibrationOnLineFromBin( EndianIStream& eis);
 
-void calibrationFunctionFromBin( EndianISStream& eiss);
-void calibrationSetFromBin( EndianISStream& eiss);
-void calPatternFromBin( EndianISStream& eiss);
-void numFieldFromBin( EndianISStream& eiss);
-void fieldNameFromBin( EndianISStream& eiss);
-void sourceNameFromBin( EndianISStream& eiss);
+void calibrationFunctionFromBin( EndianIStream& eis);
+void calibrationSetFromBin( EndianIStream& eis);
+void calPatternFromBin( EndianIStream& eis);
+void numFieldFromBin( EndianIStream& eis);
+void fieldNameFromBin( EndianIStream& eis);
+void sourceNameFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, ScanAttributeFromText> fromTextMethods;
+	
+void execBlockIdFromText (const string & s);
+	
+	
+void scanNumberFromText (const string & s);
+	
+	
+void startTimeFromText (const string & s);
+	
+	
+void endTimeFromText (const string & s);
+	
+	
+void numIntentFromText (const string & s);
+	
+	
+void numSubscanFromText (const string & s);
+	
+	
+void scanIntentFromText (const string & s);
+	
+	
+void calDataTypeFromText (const string & s);
+	
+	
+void calibrationOnLineFromText (const string & s);
+	
+
+	
+void calibrationFunctionFromText (const string & s);
+	
+	
+void calibrationSetFromText (const string & s);
+	
+	
+void calPatternFromText (const string & s);
+	
+	
+void numFieldFromText (const string & s);
+	
+	
+void fieldNameFromText (const string & s);
+	
+	
+void sourceNameFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1108,14 +1148,14 @@ void sourceNameFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the ScanTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static ScanRow* fromBin(EndianISStream& eiss, ScanTable& table, const vector<string>& attributesSeq);	 
 
+	 static ScanRow* fromBin(EndianIStream& eis, ScanTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

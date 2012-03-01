@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::WVMCalRowIDL;
 #endif
 
 
@@ -51,14 +47,21 @@ using asdmIDL::WVMCalRowIDL;
 
 
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
+#include <Temperature.h>
+	
+
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
 
 
@@ -67,7 +70,6 @@ using  asdm::ArrayTimeInterval;
 
 	
 #include "CWVRMethod.h"
-using namespace WVRMethodMod;
 	
 
 	
@@ -86,9 +88,11 @@ using namespace WVRMethodMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file WVMCal.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -104,16 +108,19 @@ class AntennaRow;
 	
 
 class WVMCalRow;
-typedef void (WVMCalRow::*WVMCalAttributeFromBin) (EndianISStream& eiss);
+typedef void (WVMCalRow::*WVMCalAttributeFromBin) (EndianIStream& eis);
+typedef void (WVMCalRow::*WVMCalAttributeFromText) (const string& s);
 
 /**
  * The WVMCalRow class is a row of a WVMCalTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class WVMCalRow {
 friend class asdm::WVMCalTable;
+friend class asdm::RowTransformer<WVMCalRow>;
+//friend class asdm::TableStreamReader<WVMCalTable, WVMCalRow>;
 
 public:
 
@@ -295,21 +302,21 @@ public:
 	
  	/**
  	 * Get pathCoeff.
- 	 * @return pathCoeff as vector<vector<double > >
+ 	 * @return pathCoeff as vector<vector<float > >
  	 */
- 	vector<vector<double > > getPathCoeff() const;
+ 	vector<vector<float > > getPathCoeff() const;
 	
  
  	
  	
  	/**
- 	 * Set pathCoeff with the specified vector<vector<double > >.
- 	 * @param pathCoeff The vector<vector<double > > value to which pathCoeff is to be set.
+ 	 * Set pathCoeff with the specified vector<vector<float > >.
+ 	 * @param pathCoeff The vector<vector<float > > value to which pathCoeff is to be set.
  	 
  		
  			
  	 */
- 	void setPathCoeff (vector<vector<double > > pathCoeff);
+ 	void setPathCoeff (vector<vector<float > > pathCoeff);
   		
 	
 	
@@ -325,21 +332,21 @@ public:
 	
  	/**
  	 * Get refTemp.
- 	 * @return refTemp as vector<double >
+ 	 * @return refTemp as vector<Temperature >
  	 */
- 	vector<double > getRefTemp() const;
+ 	vector<Temperature > getRefTemp() const;
 	
  
  	
  	
  	/**
- 	 * Set refTemp with the specified vector<double >.
- 	 * @param refTemp The vector<double > value to which refTemp is to be set.
+ 	 * Set refTemp with the specified vector<Temperature >.
+ 	 * @param refTemp The vector<Temperature > value to which refTemp is to be set.
  	 
  		
  			
  	 */
- 	void setRefTemp (vector<double > refTemp);
+ 	void setRefTemp (vector<Temperature > refTemp);
   		
 	
 	
@@ -474,7 +481,7 @@ public:
 	 * @param refTemp
 	    
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp);
 	
 	
 
@@ -496,7 +503,7 @@ public:
 	 * @param refTemp
 	    
 	 */ 
-	bool compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp); 
+	bool compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp); 
 		 
 	
 	/**
@@ -514,7 +521,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a WVMCalRowIDL struct.
 	 */
-	WVMCalRowIDL *toIDL() const;
+	asdmIDL::WVMCalRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -523,14 +530,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (WVMCalRowIDL x) ;
+	void setFromIDL (asdmIDL::WVMCalRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -538,7 +545,35 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, WVMCalAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void wvrMethodFromBin( EndianIStream& eis);
+void polyFreqLimitsFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void pathCoeffFromBin( EndianIStream& eis);
+void refTempFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the WVMCalTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static WVMCalRow* fromBin(EndianIStream& eis, WVMCalTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -647,7 +682,7 @@ private:
 	
 	
 
-	vector<vector<double > > pathCoeff;
+	vector<vector<float > > pathCoeff;
 
 	
 	
@@ -658,7 +693,7 @@ private:
 	
 	
 
-	vector<double > refTemp;
+	vector<Temperature > refTemp;
 
 	
 	
@@ -709,21 +744,59 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, WVMCalAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void wvrMethodFromBin( EndianISStream& eiss);
-void polyFreqLimitsFromBin( EndianISStream& eiss);
-void numChanFromBin( EndianISStream& eiss);
-void numPolyFromBin( EndianISStream& eiss);
-void pathCoeffFromBin( EndianISStream& eiss);
-void refTempFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, WVMCalAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void wvrMethodFromBin( EndianIStream& eis);
+void polyFreqLimitsFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void numPolyFromBin( EndianIStream& eis);
+void pathCoeffFromBin( EndianIStream& eis);
+void refTempFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, WVMCalAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void wvrMethodFromText (const string & s);
+	
+	
+void polyFreqLimitsFromText (const string & s);
+	
+	
+void numChanFromText (const string & s);
+	
+	
+void numPolyFromText (const string & s);
+	
+	
+void pathCoeffFromText (const string & s);
+	
+	
+void refTempFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -732,14 +805,14 @@ void refTempFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the WVMCalTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static WVMCalRow* fromBin(EndianISStream& eiss, WVMCalTable& table, const vector<string>& attributesSeq);	 
 
+	 static WVMCalRow* fromBin(EndianIStream& eis, WVMCalTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

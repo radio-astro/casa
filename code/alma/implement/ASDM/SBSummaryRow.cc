@@ -51,6 +51,7 @@ using asdm::SBSummaryTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::SBSummaryRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -121,7 +125,7 @@ namespace asdm {
 		
 		
 			
-		x->obsUnitSetId = obsUnitSetId.toIDLEntityRef();
+		x->obsUnitSetUID = obsUnitSetUID.toIDLEntityRef();
 			
 		
 	
@@ -168,21 +172,6 @@ namespace asdm {
 		
 			
 		x->sbDuration = sbDuration.toIDLInterval();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->centerDirection.length(centerDirection.size());
-		for (unsigned int i = 0; i < centerDirection.size(); ++i) {
-			
-			x->centerDirection[i] = centerDirection.at(i).toIDLAngle();
-			
-	 	}
 			
 		
 	
@@ -289,6 +278,23 @@ namespace asdm {
 	
   		
 		
+		x->centerDirectionExists = centerDirectionExists;
+		
+		
+			
+		x->centerDirection.length(centerDirection.size());
+		for (unsigned int i = 0; i < centerDirection.size(); ++i) {
+			
+			x->centerDirection[i] = centerDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
 		x->centerDirectionCodeExists = centerDirectionCodeExists;
 		
 		
@@ -366,7 +372,7 @@ namespace asdm {
 		
 		
 			
-		setObsUnitSetId(EntityRef (x.obsUnitSetId));
+		setObsUnitSetUID(EntityRef (x.obsUnitSetUID));
 			
  		
 		
@@ -409,21 +415,6 @@ namespace asdm {
 		setSbDuration(Interval (x.sbDuration));
 			
  		
-		
-	
-
-	
-		
-		
-			
-		centerDirection .clear();
-		for (unsigned int i = 0; i <x.centerDirection.length(); ++i) {
-			
-			centerDirection.push_back(Angle (x.centerDirection[i]));
-			
-		}
-			
-  		
 		
 	
 
@@ -514,6 +505,26 @@ namespace asdm {
 
 	
 		
+		centerDirectionExists = x.centerDirectionExists;
+		if (x.centerDirectionExists) {
+		
+		
+			
+		centerDirection .clear();
+		for (unsigned int i = 0; i <x.centerDirection.length(); ++i) {
+			
+			centerDirection.push_back(Angle (x.centerDirection[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
 		centerDirectionCodeExists = x.centerDirectionCodeExists;
 		if (x.centerDirectionCodeExists) {
 		
@@ -588,7 +599,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(obsUnitSetId, "obsUnitSetId", buf);
+		Parser::toXML(obsUnitSetUID, "obsUnitSetUID", buf);
 		
 		
 	
@@ -621,14 +632,6 @@ namespace asdm {
  		
 		
 		Parser::toXML(sbDuration, "sbDuration", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(centerDirection, "centerDirection", buf);
 		
 		
 	
@@ -686,6 +689,18 @@ namespace asdm {
 		
 		Parser::toXML(weatherConstraint, "weatherConstraint", buf);
 		
+		
+	
+
+  	
+ 		
+		if (centerDirectionExists) {
+		
+		
+		Parser::toXML(centerDirection, "centerDirection", buf);
+		
+		
+		}
 		
 	
 
@@ -759,7 +774,7 @@ namespace asdm {
 	
   		
 			
-	  	setObsUnitSetId(Parser::getEntityRef("obsUnitSetId","SBSummary",rowDoc));
+	  	setObsUnitSetUID(Parser::getEntityRef("obsUnitSetUID","SBSummary",rowDoc));
 			
 		
 	
@@ -797,16 +812,6 @@ namespace asdm {
 			
 	  	setSbDuration(Parser::getInterval("sbDuration","SBSummary",rowDoc));
 			
-		
-	
-
-	
-  		
-			
-					
-	  	setCenterDirection(Parser::get1DAngle("centerDirection","SBSummary",rowDoc));
-	  			
-	  		
 		
 	
 
@@ -873,6 +878,18 @@ namespace asdm {
 	
 
 	
+  		
+        if (row.isStr("<centerDirection>")) {
+			
+								
+	  		setCenterDirection(Parser::get1DAngle("centerDirection","SBSummary",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
 		
 	if (row.isStr("<centerDirectionCode>")) {
 		
@@ -932,7 +949,7 @@ namespace asdm {
 	
 	
 		
-	obsUnitSetId.toBin(eoss);
+	obsUnitSetUID.toBin(eoss);
 		
 	
 
@@ -949,7 +966,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(frequencyBand);
+			eoss.writeString(CReceiverBand::name(frequencyBand));
+			/* eoss.writeInt(frequencyBand); */
 				
 		
 	
@@ -958,7 +976,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(sbType);
+			eoss.writeString(CSBType::name(sbType));
+			/* eoss.writeInt(sbType); */
 				
 		
 	
@@ -967,13 +986,6 @@ namespace asdm {
 	
 		
 	sbDuration.toBin(eoss);
-		
-	
-
-	
-	
-		
-	Angle::toBin(centerDirection, eoss);
 		
 	
 
@@ -1061,6 +1073,18 @@ namespace asdm {
 
 	
 	
+	eoss.writeBoolean(centerDirectionExists);
+	if (centerDirectionExists) {
+	
+	
+	
+		
+	Angle::toBin(centerDirection, eoss);
+		
+	
+
+	}
+
 	eoss.writeBoolean(centerDirectionCodeExists);
 	if (centerDirectionCodeExists) {
 	
@@ -1068,7 +1092,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(centerDirectionCode);
+			eoss.writeString(CDirectionReferenceCode::name(centerDirectionCode));
+			/* eoss.writeInt(centerDirectionCode); */
 				
 		
 	
@@ -1089,119 +1114,105 @@ namespace asdm {
 
 	}
 	
-void SBSummaryRow::sBSummaryIdFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sBSummaryIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		sBSummaryId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void SBSummaryRow::sbSummaryUIDFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		sbSummaryUID =  EntityRef::fromBin(eiss);
+		sBSummaryId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SBSummaryRow::projectUIDFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sbSummaryUIDFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		projectUID =  EntityRef::fromBin(eiss);
-		
-	
-	
-}
-void SBSummaryRow::obsUnitSetIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		obsUnitSetId =  EntityRef::fromBin(eiss);
+		sbSummaryUID =  EntityRef::fromBin(eis);
 		
 	
 	
 }
-void SBSummaryRow::frequencyFromBin(EndianISStream& eiss) {
+void SBSummaryRow::projectUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		projectUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void SBSummaryRow::obsUnitSetUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		obsUnitSetUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void SBSummaryRow::frequencyFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		frequency =  eiss.readDouble();
+		frequency =  eis.readDouble();
 			
 		
 	
 	
 }
-void SBSummaryRow::frequencyBandFromBin(EndianISStream& eiss) {
+void SBSummaryRow::frequencyBandFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		frequencyBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-	
-}
-void SBSummaryRow::sbTypeFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		sbType = CSBType::from_int(eiss.readInt());
+		frequencyBand = CReceiverBand::literal(eis.readString());
 			
 		
 	
 	
 }
-void SBSummaryRow::sbDurationFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		sbDuration =  Interval::fromBin(eiss);
-		
-	
-	
-}
-void SBSummaryRow::centerDirectionFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-			
-	
-	centerDirection = Angle::from1DBin(eiss);	
-	
-
-		
-	
-	
-}
-void SBSummaryRow::numObservingModeFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sbTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numObservingMode =  eiss.readInt();
+		sbType = CSBType::literal(eis.readString());
 			
 		
 	
 	
 }
-void SBSummaryRow::observingModeFromBin(EndianISStream& eiss) {
+void SBSummaryRow::sbDurationFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		sbDuration =  Interval::fromBin(eis);
+		
+	
+	
+}
+void SBSummaryRow::numObservingModeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numObservingMode =  eis.readInt();
+			
+		
+	
+	
+}
+void SBSummaryRow::observingModeFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1210,10 +1221,10 @@ void SBSummaryRow::observingModeFromBin(EndianISStream& eiss) {
 	
 		observingMode.clear();
 		
-		unsigned int observingModeDim1 = eiss.readInt();
+		unsigned int observingModeDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < observingModeDim1; i++)
 			
-			observingMode.push_back(eiss.readString());
+			observingMode.push_back(eis.readString());
 			
 	
 
@@ -1221,31 +1232,31 @@ void SBSummaryRow::observingModeFromBin(EndianISStream& eiss) {
 	
 	
 }
-void SBSummaryRow::numberRepeatsFromBin(EndianISStream& eiss) {
+void SBSummaryRow::numberRepeatsFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numberRepeats =  eiss.readInt();
-			
-		
-	
-	
-}
-void SBSummaryRow::numScienceGoalFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numScienceGoal =  eiss.readInt();
+		numberRepeats =  eis.readInt();
 			
 		
 	
 	
 }
-void SBSummaryRow::scienceGoalFromBin(EndianISStream& eiss) {
+void SBSummaryRow::numScienceGoalFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numScienceGoal =  eis.readInt();
+			
+		
+	
+	
+}
+void SBSummaryRow::scienceGoalFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1254,10 +1265,10 @@ void SBSummaryRow::scienceGoalFromBin(EndianISStream& eiss) {
 	
 		scienceGoal.clear();
 		
-		unsigned int scienceGoalDim1 = eiss.readInt();
+		unsigned int scienceGoalDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < scienceGoalDim1; i++)
 			
-			scienceGoal.push_back(eiss.readString());
+			scienceGoal.push_back(eis.readString());
 			
 	
 
@@ -1265,19 +1276,19 @@ void SBSummaryRow::scienceGoalFromBin(EndianISStream& eiss) {
 	
 	
 }
-void SBSummaryRow::numWeatherConstraintFromBin(EndianISStream& eiss) {
+void SBSummaryRow::numWeatherConstraintFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numWeatherConstraint =  eiss.readInt();
+		numWeatherConstraint =  eis.readInt();
 			
 		
 	
 	
 }
-void SBSummaryRow::weatherConstraintFromBin(EndianISStream& eiss) {
+void SBSummaryRow::weatherConstraintFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1286,10 +1297,10 @@ void SBSummaryRow::weatherConstraintFromBin(EndianISStream& eiss) {
 	
 		weatherConstraint.clear();
 		
-		unsigned int weatherConstraintDim1 = eiss.readInt();
+		unsigned int weatherConstraintDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < weatherConstraintDim1; i++)
 			
-			weatherConstraint.push_back(eiss.readString());
+			weatherConstraint.push_back(eis.readString());
 			
 	
 
@@ -1298,16 +1309,35 @@ void SBSummaryRow::weatherConstraintFromBin(EndianISStream& eiss) {
 	
 }
 
-void SBSummaryRow::centerDirectionCodeFromBin(EndianISStream& eiss) {
+void SBSummaryRow::centerDirectionFromBin(EndianIStream& eis) {
 		
-	centerDirectionCodeExists = eiss.readBoolean();
+	centerDirectionExists = eis.readBoolean();
+	if (centerDirectionExists) {
+		
+	
+		
+		
+			
+	
+	centerDirection = Angle::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void SBSummaryRow::centerDirectionCodeFromBin(EndianIStream& eis) {
+		
+	centerDirectionCodeExists = eis.readBoolean();
 	if (centerDirectionCodeExists) {
 		
 	
 	
 		
 			
-		centerDirectionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		centerDirectionCode = CDirectionReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -1315,15 +1345,15 @@ void SBSummaryRow::centerDirectionCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
+void SBSummaryRow::centerDirectionEquinoxFromBin(EndianIStream& eis) {
 		
-	centerDirectionEquinoxExists = eiss.readBoolean();
+	centerDirectionEquinoxExists = eis.readBoolean();
 	if (centerDirectionEquinoxExists) {
 		
 	
 		
 		
-		centerDirectionEquinox =  ArrayTime::fromBin(eiss);
+		centerDirectionEquinox =  ArrayTime::fromBin(eis);
 		
 	
 
@@ -1332,23 +1362,170 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 }
 	
 	
-	SBSummaryRow* SBSummaryRow::fromBin(EndianISStream& eiss, SBSummaryTable& table, const vector<string>& attributesSeq) {
+	SBSummaryRow* SBSummaryRow::fromBin(EndianIStream& eis, SBSummaryTable& table, const vector<string>& attributesSeq) {
 		SBSummaryRow* row = new  SBSummaryRow(table);
 		
 		map<string, SBSummaryAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SBSummaryTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SBSummaryTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void SBSummaryRow::sBSummaryIdFromText(const string & s) {
+		 
+		sBSummaryId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	
+	
+	
+	// Convert a string into an double 
+	void SBSummaryRow::frequencyFromText(const string & s) {
+		 
+		frequency = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an ReceiverBand 
+	void SBSummaryRow::frequencyBandFromText(const string & s) {
+		 
+		frequencyBand = ASDMValuesParser::parse<ReceiverBand>(s);
+		
+	}
+	
+	
+	// Convert a string into an SBType 
+	void SBSummaryRow::sbTypeFromText(const string & s) {
+		 
+		sbType = ASDMValuesParser::parse<SBType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void SBSummaryRow::sbDurationFromText(const string & s) {
+		 
+		sbDuration = ASDMValuesParser::parse<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numObservingModeFromText(const string & s) {
+		 
+		numObservingMode = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SBSummaryRow::observingModeFromText(const string & s) {
+		 
+		observingMode = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numberRepeatsFromText(const string & s) {
+		 
+		numberRepeats = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numScienceGoalFromText(const string & s) {
+		 
+		numScienceGoal = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SBSummaryRow::scienceGoalFromText(const string & s) {
+		 
+		scienceGoal = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SBSummaryRow::numWeatherConstraintFromText(const string & s) {
+		 
+		numWeatherConstraint = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SBSummaryRow::weatherConstraintFromText(const string & s) {
+		 
+		weatherConstraint = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Angle 
+	void SBSummaryRow::centerDirectionFromText(const string & s) {
+		centerDirectionExists = true;
+		 
+		centerDirection = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an DirectionReferenceCode 
+	void SBSummaryRow::centerDirectionCodeFromText(const string & s) {
+		centerDirectionCodeExists = true;
+		 
+		centerDirectionCode = ASDMValuesParser::parse<DirectionReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void SBSummaryRow::centerDirectionEquinoxFromText(const string & s) {
+		centerDirectionEquinoxExists = true;
+		 
+		centerDirectionEquinox = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	
+	void SBSummaryRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SBSummaryAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SBSummaryTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1454,29 +1631,29 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get obsUnitSetId.
- 	 * @return obsUnitSetId as EntityRef
+ 	 * Get obsUnitSetUID.
+ 	 * @return obsUnitSetUID as EntityRef
  	 */
- 	EntityRef SBSummaryRow::getObsUnitSetId() const {
+ 	EntityRef SBSummaryRow::getObsUnitSetUID() const {
 	
-  		return obsUnitSetId;
+  		return obsUnitSetUID;
  	}
 
  	/**
- 	 * Set obsUnitSetId with the specified EntityRef.
- 	 * @param obsUnitSetId The EntityRef value to which obsUnitSetId is to be set.
+ 	 * Set obsUnitSetUID with the specified EntityRef.
+ 	 * @param obsUnitSetUID The EntityRef value to which obsUnitSetUID is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setObsUnitSetId (EntityRef obsUnitSetId)  {
+ 	void SBSummaryRow::setObsUnitSetUID (EntityRef obsUnitSetUID)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->obsUnitSetId = obsUnitSetId;
+ 		this->obsUnitSetUID = obsUnitSetUID;
 	
  	}
 	
@@ -1605,38 +1782,6 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
   		}
   	
  		this->sbDuration = sbDuration;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get centerDirection.
- 	 * @return centerDirection as vector<Angle >
- 	 */
- 	vector<Angle > SBSummaryRow::getCenterDirection() const {
-	
-  		return centerDirection;
- 	}
-
- 	/**
- 	 * Set centerDirection with the specified vector<Angle >.
- 	 * @param centerDirection The vector<Angle > value to which centerDirection is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SBSummaryRow::setCenterDirection (vector<Angle > centerDirection)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->centerDirection = centerDirection;
 	
  	}
 	
@@ -1868,6 +2013,53 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 
 	
 	/**
+	 * The attribute centerDirection is optional. Return true if this attribute exists.
+	 * @return true if and only if the centerDirection attribute exists. 
+	 */
+	bool SBSummaryRow::isCenterDirectionExists() const {
+		return centerDirectionExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get centerDirection, which is optional.
+ 	 * @return centerDirection as vector<Angle >
+ 	 * @throw IllegalAccessException If centerDirection does not exist.
+ 	 */
+ 	vector<Angle > SBSummaryRow::getCenterDirection() const  {
+		if (!centerDirectionExists) {
+			throw IllegalAccessException("centerDirection", "SBSummary");
+		}
+	
+  		return centerDirection;
+ 	}
+
+ 	/**
+ 	 * Set centerDirection with the specified vector<Angle >.
+ 	 * @param centerDirection The vector<Angle > value to which centerDirection is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SBSummaryRow::setCenterDirection (vector<Angle > centerDirection) {
+	
+ 		this->centerDirection = centerDirection;
+	
+		centerDirectionExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark centerDirection, which is an optional field, as non-existent.
+	 */
+	void SBSummaryRow::clearCenterDirection () {
+		centerDirectionExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute centerDirectionCode is optional. Return true if this attribute exists.
 	 * @return true if and only if the centerDirectionCode attribute exists. 
 	 */
@@ -1961,13 +2153,14 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -2012,6 +2205,8 @@ void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
 
 	
 
+	
+		centerDirectionExists = false;
 	
 
 	
@@ -2076,12 +2271,11 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	 fromBinMethods["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromBin; 
 	 fromBinMethods["sbSummaryUID"] = &SBSummaryRow::sbSummaryUIDFromBin; 
 	 fromBinMethods["projectUID"] = &SBSummaryRow::projectUIDFromBin; 
-	 fromBinMethods["obsUnitSetId"] = &SBSummaryRow::obsUnitSetIdFromBin; 
+	 fromBinMethods["obsUnitSetUID"] = &SBSummaryRow::obsUnitSetUIDFromBin; 
 	 fromBinMethods["frequency"] = &SBSummaryRow::frequencyFromBin; 
 	 fromBinMethods["frequencyBand"] = &SBSummaryRow::frequencyBandFromBin; 
 	 fromBinMethods["sbType"] = &SBSummaryRow::sbTypeFromBin; 
 	 fromBinMethods["sbDuration"] = &SBSummaryRow::sbDurationFromBin; 
-	 fromBinMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromBin; 
 	 fromBinMethods["numObservingMode"] = &SBSummaryRow::numObservingModeFromBin; 
 	 fromBinMethods["observingMode"] = &SBSummaryRow::observingModeFromBin; 
 	 fromBinMethods["numberRepeats"] = &SBSummaryRow::numberRepeatsFromBin; 
@@ -2091,9 +2285,81 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	 fromBinMethods["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromBin; 
 		
 	
+	 fromBinMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromBin; 
 	 fromBinMethods["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromBin; 
 	 fromBinMethods["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromText;
+		 
+	
+		 
+	
+		 
+	
+		 
+	
+				 
+	fromTextMethods["frequency"] = &SBSummaryRow::frequencyFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyBand"] = &SBSummaryRow::frequencyBandFromText;
+		 
+	
+				 
+	fromTextMethods["sbType"] = &SBSummaryRow::sbTypeFromText;
+		 
+	
+				 
+	fromTextMethods["sbDuration"] = &SBSummaryRow::sbDurationFromText;
+		 
+	
+				 
+	fromTextMethods["numObservingMode"] = &SBSummaryRow::numObservingModeFromText;
+		 
+	
+				 
+	fromTextMethods["observingMode"] = &SBSummaryRow::observingModeFromText;
+		 
+	
+				 
+	fromTextMethods["numberRepeats"] = &SBSummaryRow::numberRepeatsFromText;
+		 
+	
+				 
+	fromTextMethods["numScienceGoal"] = &SBSummaryRow::numScienceGoalFromText;
+		 
+	
+				 
+	fromTextMethods["scienceGoal"] = &SBSummaryRow::scienceGoalFromText;
+		 
+	
+				 
+	fromTextMethods["numWeatherConstraint"] = &SBSummaryRow::numWeatherConstraintFromText;
+		 
+	
+				 
+	fromTextMethods["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromText;
+		 	
+	 
+				
+	fromTextMethods["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromText;
+		 	
+		
 	}
 	
 	SBSummaryRow::SBSummaryRow (SBSummaryTable &t, SBSummaryRow &row) : table(t) {
@@ -2133,6 +2399,8 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
+		centerDirectionExists = false;
+	
 
 	
 		centerDirectionCodeExists = false;
@@ -2156,7 +2424,7 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		
 			projectUID = row.projectUID;
 		
-			obsUnitSetId = row.obsUnitSetId;
+			obsUnitSetUID = row.obsUnitSetUID;
 		
 			frequency = row.frequency;
 		
@@ -2165,8 +2433,6 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 			sbType = row.sbType;
 		
 			sbDuration = row.sbDuration;
-		
-			centerDirection = row.centerDirection;
 		
 			numObservingMode = row.numObservingMode;
 		
@@ -2184,6 +2450,13 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		
 		
 		
+		
+		if (row.centerDirectionExists) {
+			centerDirection = row.centerDirection;		
+			centerDirectionExists = true;
+		}
+		else
+			centerDirectionExists = false;
 		
 		if (row.centerDirectionCodeExists) {
 			centerDirectionCode = row.centerDirectionCode;		
@@ -2204,12 +2477,11 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		 fromBinMethods["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromBin; 
 		 fromBinMethods["sbSummaryUID"] = &SBSummaryRow::sbSummaryUIDFromBin; 
 		 fromBinMethods["projectUID"] = &SBSummaryRow::projectUIDFromBin; 
-		 fromBinMethods["obsUnitSetId"] = &SBSummaryRow::obsUnitSetIdFromBin; 
+		 fromBinMethods["obsUnitSetUID"] = &SBSummaryRow::obsUnitSetUIDFromBin; 
 		 fromBinMethods["frequency"] = &SBSummaryRow::frequencyFromBin; 
 		 fromBinMethods["frequencyBand"] = &SBSummaryRow::frequencyBandFromBin; 
 		 fromBinMethods["sbType"] = &SBSummaryRow::sbTypeFromBin; 
 		 fromBinMethods["sbDuration"] = &SBSummaryRow::sbDurationFromBin; 
-		 fromBinMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromBin; 
 		 fromBinMethods["numObservingMode"] = &SBSummaryRow::numObservingModeFromBin; 
 		 fromBinMethods["observingMode"] = &SBSummaryRow::observingModeFromBin; 
 		 fromBinMethods["numberRepeats"] = &SBSummaryRow::numberRepeatsFromBin; 
@@ -2219,13 +2491,14 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		 fromBinMethods["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromBin; 
 			
 	
+		 fromBinMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromBin; 
 		 fromBinMethods["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromBin; 
 		 fromBinMethods["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromBin; 
 			
 	}
 
 	
-	bool SBSummaryRow::compareNoAutoInc(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
+	bool SBSummaryRow::compareNoAutoInc(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetUID, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
 		bool result;
 		result = true;
 		
@@ -2245,7 +2518,7 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 
 	
 		
-		result = result && (this->obsUnitSetId == obsUnitSetId);
+		result = result && (this->obsUnitSetUID == obsUnitSetUID);
 		
 		if (!result) return false;
 	
@@ -2274,13 +2547,6 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	
 		
 		result = result && (this->sbDuration == sbDuration);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->centerDirection == centerDirection);
 		
 		if (!result) return false;
 	
@@ -2339,7 +2605,7 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	
 	
 	
-	bool SBSummaryRow::compareRequiredValue(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
+	bool SBSummaryRow::compareRequiredValue(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetUID, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
 		bool result;
 		result = true;
 		
@@ -2352,7 +2618,7 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
-		if (!(this->obsUnitSetId == obsUnitSetId)) return false;
+		if (!(this->obsUnitSetUID == obsUnitSetUID)) return false;
 	
 
 	
@@ -2369,10 +2635,6 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 
 	
 		if (!(this->sbDuration == sbDuration)) return false;
-	
-
-	
-		if (!(this->centerDirection == centerDirection)) return false;
 	
 
 	
@@ -2422,7 +2684,7 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 			
 		if (this->projectUID != x->projectUID) return false;
 			
-		if (this->obsUnitSetId != x->obsUnitSetId) return false;
+		if (this->obsUnitSetUID != x->obsUnitSetUID) return false;
 			
 		if (this->frequency != x->frequency) return false;
 			
@@ -2431,8 +2693,6 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		if (this->sbType != x->sbType) return false;
 			
 		if (this->sbDuration != x->sbDuration) return false;
-			
-		if (this->centerDirection != x->centerDirection) return false;
 			
 		if (this->numObservingMode != x->numObservingMode) return false;
 			
@@ -2459,12 +2719,11 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		result["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromBin;
 		result["sbSummaryUID"] = &SBSummaryRow::sbSummaryUIDFromBin;
 		result["projectUID"] = &SBSummaryRow::projectUIDFromBin;
-		result["obsUnitSetId"] = &SBSummaryRow::obsUnitSetIdFromBin;
+		result["obsUnitSetUID"] = &SBSummaryRow::obsUnitSetUIDFromBin;
 		result["frequency"] = &SBSummaryRow::frequencyFromBin;
 		result["frequencyBand"] = &SBSummaryRow::frequencyBandFromBin;
 		result["sbType"] = &SBSummaryRow::sbTypeFromBin;
 		result["sbDuration"] = &SBSummaryRow::sbDurationFromBin;
-		result["centerDirection"] = &SBSummaryRow::centerDirectionFromBin;
 		result["numObservingMode"] = &SBSummaryRow::numObservingModeFromBin;
 		result["observingMode"] = &SBSummaryRow::observingModeFromBin;
 		result["numberRepeats"] = &SBSummaryRow::numberRepeatsFromBin;
@@ -2474,6 +2733,7 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		result["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromBin;
 		
 		
+		result["centerDirection"] = &SBSummaryRow::centerDirectionFromBin;
 		result["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromBin;
 		result["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromBin;
 			

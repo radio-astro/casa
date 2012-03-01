@@ -94,20 +94,6 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
-    def setUp_shadowdata1(self):
-        self.vis = "shadowtest.ms"
-
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-        else:
-            print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
-
-        os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
-
     def setUp_shadowdata2(self):
         self.vis = "shadowtest_part.ms"
 
@@ -175,27 +161,11 @@ class test_shadow(test_base):
     def setUp(self):
         self.setUp_shadowdata2()
 
-#    def test1(self):
-#        '''tflagdata:: Test1 of mode = shadow'''
-#        tflagdata(vis=self.vis, mode='shadow', diameter=40, savepars=False)
-#        res = tflagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['flagged'], 5252)
-#
-#    def test2(self):
-#        """tflagdata:: Test2 of mode = shadow"""
-#        tflagdata(vis=self.vis, mode='shadow', savepars=False)
-#        res = tflagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['flagged'], 2912)
-#
-#    def test3(self):
-#        """tflagdata:: Test3 of mode = shadow"""
-#        tflagdata(vis=self.vis, mode='shadow', correlation='LL', savepars=False)
-#        res = tflagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['flagged'], 1456)
-
     def test_CAS2399(self):
         '''tflagdata: shadow by antennas not present in MS'''
         
+        if os.path.exists("cas2399.txt"):
+            os.system('rm -rf cas2399.txt')
         
         input = 'name=VLA01\n'+\
                 'diameter=25.0\n'+\
@@ -219,9 +189,41 @@ class test_shadow(test_base):
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
         
+    def test_addantenna(self):
+        '''tflagdata: use antennafile in list mode'''
+        if os.path.exists("myants.txt"):
+            os.system('rm -rf myants.txt')
         
+        # Create antennafile in disk
+        input = 'name=VLA01\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
+                'name=VLA02\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]\n'+\
+                'name=VLA09\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601197.2182404203, -5041974.3604805721, 3554875.1995636248]\n'+\
+                'name=VLA10\n'+\
+                'diameter=25.0\n'+\
+                'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
 
-
+        antfile = 'myants.txt'
+        create_input(input, antfile)
+        
+        # Create list file
+        input = 'mode=shadow tolerance=10.0 antennafile=myants.txt'
+        filename = 'listfile.txt'
+        create_input(input, filename)
+        
+        # Flag
+        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        
+        # Check flags
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
+        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
+        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
 
 #        # This MS seems to give wrong results with the old flagdata
 #        # compared to tflagdata. Will remove this test and use a different
@@ -445,49 +447,6 @@ class test_msselection(test_base):
         s = tflagdata(vis = self.vis, mode="summary")
         self.assertEqual(s['flagged'], 7560)
 
-#class test_autoflag(test_base):
-#
-#    def setUp(self):
-#        self.setUp_ngc5921()
-#
-#    def test_CAS1979(self):
-#        """Test that autoflagging does not clear flags"""
-#        s0 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s1 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s2 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s3 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s4 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s5 = flagdata(vis=self.vis, mode="summary")['flagged']
-#        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
-#        s6 = flagdata(vis=self.vis, mode="summary")['flagged']
-#
-#        assert s0 == 0
-#        assert s0 <= s1
-#        assert s1 <= s2
-#        assert s2 <= s3
-#        assert s3 <= s4
-#        assert s4 <= s5
-#        assert s5 <= s6
-#
-#    def test_auto1(self):
-#        print "Test of autoflag, algorithm=timemed"
-#        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
-#        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 4725)
-#
-#    def test2(self):
-#        print "Test of autoflag, algorithm=freqmed"
-#        flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
-#        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 29101)
-#
-#    def test_CAS2410(self):
-#        flagdata(vis=self.vis, scan='3')
-#        flagdata(vis=self.vis, scan='6', mode='autoflag', algorithm='timemed', window=3)
-#        test_eq(flagdata(vis=self.vis, mode="summary"), 2854278, 763371)
 
 class test_statistics_queries(test_base):
 
@@ -743,7 +702,15 @@ class test_selections_alma(test_base):
         tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
-        
+
+    def test_spw(self):
+        '''tflagdata: flag various spw'''
+        tflagdata(vis=self.vis, mode='manual', spw='1,3,4', savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
+        self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
+        self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
+        self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
 
 class test_selections2(test_base):
     '''Test other selections'''
@@ -822,11 +789,12 @@ class test_list(test_base):
     def test_list1(self):
         '''tflagdata: apply flags from a list and do not save'''
         # creat input list
-        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"\
+                "#scan='4'"
         filename = 'list1.txt'
         create_input(input, filename)
         
-        # apply and don't save to MS
+        # apply and don't save to MS. Ignore comment line
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, run=True)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 0)
@@ -835,7 +803,7 @@ class test_list(test_base):
     def test_list2(self):
         '''tflagdata: only save parameters without running the tool'''
         # creat input list
-        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
         filename = 'list2.txt'
         create_input(input, filename)
 
@@ -852,7 +820,7 @@ class test_list(test_base):
     def test_list3(self):
         '''tflagdata: flag and save list to FLAG_CMD'''
         # creat input list
-        input = " scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
         filename = 'list3.txt'
         create_input(input, filename)
 
@@ -881,16 +849,20 @@ class test_list(test_base):
         self.assertEqual(res['flagged'], 2524284)
 
     def test_list5(self):
-        '''tflagdata: clip only zero data in mode=list'''
+        '''tflagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
         # get the correct data, by passing the previous setUp()
         self.setUp_data4tfcrop()
         
         # creat input list
-        input = "mode=clip clipzeros=true"
-        filename = 'lsit5.txt'
+        input = "mode=clip clipzeros=true reason=\'CLIP_ZERO\'"
+        filename = 'list5.txt'
         create_input(input, filename)
 
-        tflagdata(vis=self.vis, mode='list',  inpfile=filename, run=True, savepars=False)
+        # Save to FLAG_CMD
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, run=False, savepars=True)
+        
+        # Run in tflagcmd and select by reason
+        tflagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
         
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')

@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CSwitchingMode::version() {
 	return SwitchingModeMod::version;
 	}
@@ -194,5 +193,25 @@ string CSwitchingMode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'SwitchingMode'.";
 	return oss.str();
+}
+
+namespace SwitchingModeMod {
+	std::ostream & operator << ( std::ostream & out, const SwitchingMode& value) {
+		out << CSwitchingMode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , SwitchingMode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CSwitchingMode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

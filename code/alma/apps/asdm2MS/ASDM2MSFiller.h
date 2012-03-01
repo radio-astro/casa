@@ -61,12 +61,12 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/OrderedMap.h>
-#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/Muvw.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/Stokes.h>
+#include <measures/Measures/MeasConvert.h>
 #include <measures/TableMeasures/TableMeasValueDesc.h>
 #include <measures/TableMeasures/TableMeasOffsetDesc.h>
 #include <measures/TableMeasures/TableMeasRefDesc.h>
@@ -192,19 +192,28 @@ class ASDM2MSFiller
   ddMgr    itsDDMgr;
 
          
-  int createMS(const string& msName, bool complexData, bool withCompression, bool withCorrectedData=false);
+  int createMS(const string& msName, 
+               bool complexData, 
+               bool withCompression, 
+               const string& telName, 
+               int maxNumCorr,
+               int maxNumChan,
+               bool withCorrectedData=false);
 
   const char** getPolCombinations(int numCorr);
     
   static map<string, MDirection::Types> string2MDirection;
   static map<string, MDirection::Types> string2MDirectionInit();
-  
+   
  public:  
   ASDM2MSFiller (const string&	name_,
 		 double		creation_time_,
 		 bool		withRadioMeters,
 		 bool		complexData,
 		 bool		withCompression,
+                 const string&  telName, 
+                 int            intintmaxNumCorr,
+                 int            maxNumChan,
 		 bool		withCorrectedData=false);
   
   // Destructor
@@ -296,6 +305,7 @@ class ASDM2MSFiller
 		 vector<double>&   delay_dir_,
 		 vector<double>&   phase_dir_,
 		 vector<double>&   reference_dir_,
+		 const string&     direction_code_,
 		 int               source_id_);
 
   void addFlagCmd(double	time_,
@@ -363,6 +373,7 @@ class ASDM2MSFiller
 		 int             calibration_group_,
 		 string&         code_,
 		 vector<double>& direction_,
+		 string&         direction_code_,
 		 vector<double>& position_,
 		 vector<double>& proper_motion_,
 		 vector<string>& transition_,
@@ -423,24 +434,17 @@ class ASDM2MSFiller
 		 pair<bool, vector<float> >& tant_tsys_spectrum_pair,
 		 pair<bool, bool>&           tant_tsys_flag_pair);
 
-  void addWeather(int             antennaId_,
-		  double          time_,
-		  double          interval_,
-		  float           pressure_,
-		  bool            pressure_flag_,
-		  float           rel_humidity_,
-		  bool            rel_humidity_flag_,
-		  float           temperature_,
-		  bool            temperature_flag_,
-		  float           wind_direction_,
-		  bool            wind_direction_flag_,
-		  float           wind_speed_,
-		  bool            wind_speed_flag_,
-		  bool            has_dew_point_,
-		  float           dew_point_,
-		  bool            dew_point_flag_,
-		  int             wx_station_id_,
-		  vector<double>& wx_station_position_);
+ void addWeather(int				antenna_id_,
+		  double			time_,
+		  double			interval_,
+		  const pair<bool, float>&	pressure_opt_,
+		  const pair<bool, float>&	relHumidity_opt_,
+		  const pair<bool, float>&	temperature_opt_,
+		  const pair<bool, float>&	windDirection_opt_,
+		  const pair<bool, float>&	windSpeed_opt_,
+		  const pair<bool, float>&	dewPoint_opt_,
+		  int				wx_station_id_,
+		  vector<double>&		wx_station_position_);
 
   /**
    * Add one row in the MS CALDEVICE table.

@@ -25,10 +25,10 @@
 using namespace AccumModeMod;
 
 template<>
- struct enum_set_traits<AccumMode> : public enum_set_traiter<AccumMode,3,AccumModeMod::UNDEFINED> {};
+ struct enum_set_traits<AccumModeMod::AccumMode> : public enum_set_traiter<AccumModeMod::AccumMode,3,AccumModeMod::UNDEFINED> {};
 
 template<>
-class enum_map_traits<AccumMode,void> : public enum_map_traiter<AccumMode,void> {
+class enum_map_traits<AccumModeMod::AccumMode,void> : public enum_map_traiter<AccumModeMod::AccumMode,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,15 +37,15 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<AccumMode,EnumPar<void> >
+    m_.insert(pair<AccumModeMod::AccumMode,EnumPar<void> >
      (AccumModeMod::FAST,ep((int)AccumModeMod::FAST,"FAST","un-documented")));
-    m_.insert(pair<AccumMode,EnumPar<void> >
+    m_.insert(pair<AccumModeMod::AccumMode,EnumPar<void> >
      (AccumModeMod::NORMAL,ep((int)AccumModeMod::NORMAL,"NORMAL","un-documented")));
-    m_.insert(pair<AccumMode,EnumPar<void> >
+    m_.insert(pair<AccumModeMod::AccumMode,EnumPar<void> >
      (AccumModeMod::UNDEFINED,ep((int)AccumModeMod::UNDEFINED,"UNDEFINED","un-documented")));
     return true;
   }
-  static map<AccumMode,EnumPar<void> > m_;
+  static map<AccumModeMod::AccumMode,EnumPar<void> > m_;
 };
 #define _ACCUMMODE_HH
 #endif

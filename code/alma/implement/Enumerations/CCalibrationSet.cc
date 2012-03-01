@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CCalibrationSet::version() {
 	return CalibrationSetMod::version;
 	}
@@ -209,5 +208,25 @@ string CCalibrationSet::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'CalibrationSet'.";
 	return oss.str();
+}
+
+namespace CalibrationSetMod {
+	std::ostream & operator << ( std::ostream & out, const CalibrationSet& value) {
+		out << CCalibrationSet::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , CalibrationSet& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CCalibrationSet::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

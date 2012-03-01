@@ -28,7 +28,7 @@
 #define ArrayTimeInterval_CLASS
 
 #include <stdint.h>
-#include <Long.h>
+#include <LongWrapper.h>
 #include <ArrayTime.h>
 #include <Interval.h>
 
@@ -46,270 +46,320 @@ using asdmIDLTypes::IDLArrayTimeInterval;
 
 namespace asdm {
 	
-	/**
-	 * The ArrayTimeInterval class aggregates an instance of ArrayTime
-	 * and an instance of Interval. Instances of ArrayTimeInterval are
-	 * used in many ASDM tables whose rows contain information relevant
-	 * during a certain laps of time and starting at a given date.
-	 */
-class ArrayTimeInterval {
-friend ostream & operator << ( ostream &, ArrayTimeInterval& );
+  /**
+   * The ArrayTimeInterval class aggregates an instance of ArrayTime
+   * and an instance of Interval. Instances of ArrayTimeInterval are
+   * used in many ASDM tables whose rows contain information relevant
+   * during a certain laps of time and starting at a given date.
+   */
+  class ArrayTimeInterval {
+    friend ostream & operator << ( ostream &, ArrayTimeInterval& );
+    friend istream & operator >> ( istream &, ArrayTimeInterval& );
+  private:
+    
+    ArrayTime start;
+    Interval duration;
+  
+    static bool readStartTimeDurationInBin_;
+    static bool readStartTimeDurationInXML_;
+  
+  public:
 
-private:
-	ArrayTime start;
-	Interval duration;
 
-public:
-
-
-	// Constructors
-	ArrayTimeInterval();
-	ArrayTimeInterval(ArrayTime  start,
-					  Interval  duration);
+    // Constructors
+    ArrayTimeInterval();
+    ArrayTimeInterval(ArrayTime  start,
+		      Interval  duration);
 					  
-	ArrayTimeInterval(double startInMJD,
-			  double durationInDays);
+    ArrayTimeInterval(double startInMJD,
+		      double durationInDays);
 			  
-	ArrayTimeInterval(int64_t startInNanoSeconds,
-			  int64_t durationInNanoSeconds);
+    ArrayTimeInterval(int64_t startInNanoSeconds,
+		      int64_t durationInNanoSeconds);
 					  
-	ArrayTimeInterval(ArrayTime start);
-	ArrayTimeInterval(double startInMJD);
-	ArrayTimeInterval(int64_t startInNanoSeconds);
+    ArrayTimeInterval(ArrayTime start);
+    ArrayTimeInterval(double startInMJD);
+    ArrayTimeInterval(int64_t startInNanoSeconds);
 	
 #ifndef WITHOUT_ACS
-	ArrayTimeInterval (IDLArrayTimeInterval t); 
+    ArrayTimeInterval (IDLArrayTimeInterval t); 
 #endif	
-	// Setters
-	void setStart(ArrayTime start);
-	void setStart(double start);
-	void setStart(int64_t start);
+    // Setters
+    void setStart(ArrayTime start);
+    void setStart(double start);
+    void setStart(int64_t start);
 	
-	void setDuration(Interval duration);
-	void setDuration(int64_t nanoSeconds);
-	void setDuration(double days);
+    void setDuration(Interval duration);
+    void setDuration(int64_t nanoSeconds);
+    void setDuration(double days);
 		
-	// Getters	
-	ArrayTime getStart() const ;
-	double getStartInMJD() const ;
-	int64_t getStartInNanoSeconds() const ;
+    // Getters	
+    ArrayTime getStart() const ;
+    ArrayTime getMidPoint() const ;
+    double getStartInMJD() const ;
+    int64_t getStartInNanoSeconds() const ;
 	
-	Interval getDuration() const ;
-	int64_t getDurationInNanoSeconds() const ;
-	double getDurationInDays() const ;
+    Interval getDuration() const ;
+    int64_t getDurationInNanoSeconds() const ;
+    double getDurationInDays() const ;
 	
-	// Checkers
-	bool equals(ArrayTimeInterval ati);
-	bool overlaps(ArrayTimeInterval ati);
-	bool contains(ArrayTimeInterval ati);
-	bool contains(ArrayTime at);
+    // Checkers
+    bool equals(ArrayTimeInterval ati);
+    bool overlaps(ArrayTimeInterval ati);
+    bool contains(ArrayTimeInterval ati);
+    bool contains(ArrayTime at);
 
-	// Operators
-	bool operator == (ArrayTimeInterval&);
-	bool operator != (ArrayTimeInterval&);
+    // Operators
+    bool operator == (ArrayTimeInterval&);
+    bool operator != (ArrayTimeInterval&);
 	 	
 #ifndef WITHOUT_ACS
-	// To IDL conversion
-	const asdmIDLTypes::IDLArrayTimeInterval toIDLArrayTimeInterval() const; 
+    // To IDL conversion
+    const asdmIDLTypes::IDLArrayTimeInterval toIDLArrayTimeInterval() const; 
 #endif
+    /**
+     * Defines how the representation of an ArrayTimeInterval found in subsequent reads of
+     * a document containing table exported in binary  must be interpreted. The interpretation depends on the value of the argument b :
+     * b == true means that it must be interpreted as (startTime, duration)
+     * b == false means that it must be interpreted as (midPoint, duration)
+     *
+     * @param b a boolean value.
+     */
+    static void readStartTimeDurationInBin(bool b);
 
-	/**
-	 * Write the binary representation of this to a EndianOSStream.
-	 */		
-	void toBin(EndianOSStream& eoss);
+    /**
+     * Returns a boolean value whose meaning is defined as follows:
+     * true <=> the representation of ArrayTimeInterval object found in any binary table will be considered as (startTime, duration).
+     * false <=> the representation of ArrayTimeInterval object found in any binary table will be considered as (midPoint, duration).
+     *
+     */
+    static bool readStartTimeDurationInBin();
 
-	/**
-	 * Write the binary representation of a vector of ArrayTime to a EndianOSStream.
-	 * @param arrayTimeInterval the vector of ArrayTime to be written
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	static void toBin(const vector<ArrayTimeInterval>& arrayTimeInterval,  EndianOSStream& eoss);
-	
-	/**
-	 * Write the binary representation of a vector of vector of ArrayTimeInterval to a EndianOSStream.
-	 * @param arrayTimeInterval the vector of vector of ArrayTimeInterval to be written
-	 * @param eoss the EndianOSStream to be written to
-	 */	
-	static void toBin(const vector<vector<ArrayTimeInterval> >& arrayTimeInterval,  EndianOSStream& eoss);
-	
-	/**
-	 * Write the binary representation of a vector of vector of vector of ArrayTimeInterval to a EndianOSStream.
-	 * @param arrayTimeInterval the vector of vector of vector of ArrayTimeInterval to be written
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	static void toBin(const vector<vector<vector<ArrayTimeInterval> > >& arrayTimeInterval,  EndianOSStream& eoss);
+    /**
+     * Defines how the representation of an ArrayTimeInterval found in subsequent reads of
+     * a document containing table exported in XML  must be interpreted. The interpretation depends on the value of the argument b :
+     * b == true means that it must be interpreted as (startTime, duration)
+     * b == false means that it must be interpreted as (midPoint, duration)
+     *
+     * @param b a boolean value.
+     */
+    static void readStartTimeDurationInXML(bool b);
 
-	/**
-	 * Read the binary representation of an ArrayTimeInterval from a EndianISStream
-	 * and use the read value to set an  ArrayTimeInterval.
-	 * @param eiss the EndianStream to be read
-	 * @return an ArrayTimeInterval
-	 */
-	static ArrayTimeInterval fromBin(EndianISStream& eiss);
+    /**
+     * Returns a boolean value whose meaning is defined as follows:
+     * true <=> the representation of ArrayTimeInterval object found in any binary table will be considered as (startTime, duration).
+     * false <=> the representation of ArrayTimeInterval object found in any binary table will be considered as (midPoint, duration).
+     *
+     */
+    static bool readStartTimeDurationInXML();
+
+    /**
+     * Write the binary representation of this to a EndianOSStream.
+     * It writes successively the midpoint , the duration.
+     */		
+    void toBin(EndianOSStream& eoss) const ;
+
+    /**
+     * Write the binary representation of a vector of ArrayTime to a EndianOSStream.
+     * @param arrayTimeInterval the vector of ArrayTime to be written
+     * @param eoss the EndianOSStream to be written to
+     */
+    static void toBin(const vector<ArrayTimeInterval>& arrayTimeInterval,  EndianOSStream& eoss);
 	
-	/**
-	 * Read the binary representation of  a vector of  ArrayTimeInterval from an EndianISStream
-	 * and use the read value to set a vector of  ArrayTimeInterval.
-	 * @param dis the EndianISStream to be read
-	 * @return a vector of ArrayTimeInterval
-	 */	 
-	 static vector<ArrayTimeInterval> from1DBin(EndianISStream & eiss);
+    /**
+     * Write the binary representation of a vector of vector of ArrayTimeInterval to a EndianOSStream.
+     * @param arrayTimeInterval the vector of vector of ArrayTimeInterval to be written
+     * @param eoss the EndianOSStream to be written to
+     */	
+    static void toBin(const vector<vector<ArrayTimeInterval> >& arrayTimeInterval,  EndianOSStream& eoss);
+	
+    /**
+     * Write the binary representation of a vector of vector of vector of ArrayTimeInterval to a EndianOSStream.
+     * @param arrayTimeInterval the vector of vector of vector of ArrayTimeInterval to be written
+     * @param eoss the EndianOSStream to be written to
+     */
+    static void toBin(const vector<vector<vector<ArrayTimeInterval> > >& arrayTimeInterval,  EndianOSStream& eoss);
+
+    /**
+     * Read the binary representation of an ArrayTimeInterval from a EndianIStream
+     * and use the read value to set an  ArrayTimeInterval.
+     * @param eis the EndianStream to be read
+     * @return an ArrayTimeInterval
+     */
+    static ArrayTimeInterval fromBin(EndianIStream& eis);
+	
+    /**
+     * Read the binary representation of  a vector of  ArrayTimeInterval from an EndianIStream
+     * and use the read value to set a vector of  ArrayTimeInterval.
+     * @param dis the EndianIStream to be read
+     * @return a vector of ArrayTimeInterval
+     */	 
+    static vector<ArrayTimeInterval> from1DBin(EndianIStream & eis);
 	 
-	/**
-	 * Read the binary representation of  a vector of vector of ArrayTimeInterval from an EndianISStream
-	 * and use the read value to set a vector of  vector of ArrayTimeInterval.
-	 * @param eiis the EndianISStream to be read
-	 * @return a vector of vector of ArrayTimeInterval
-	 */	 
-	 static vector<vector<ArrayTimeInterval> > from2DBin(EndianISStream & eiss);
+    /**
+     * Read the binary representation of  a vector of vector of ArrayTimeInterval from an EndianIStream
+     * and use the read value to set a vector of  vector of ArrayTimeInterval.
+     * @param eiis the EndianIStream to be read
+     * @return a vector of vector of ArrayTimeInterval
+     */	 
+    static vector<vector<ArrayTimeInterval> > from2DBin(EndianIStream & eis);
 	 
-	/**
-	 * Read the binary representation of  a vector of vector of vector of ArrayTimeInterval from an EndianISStream
-	 * and use the read value to set a vector of  vector of vector of ArrayTimeInterval.
-	 * @param eiss the EndianISStream to be read
-	 * @return a vector of vector of vector of ArrayTimeInterval
-	 */	 
-	 static vector<vector<vector<ArrayTimeInterval> > > from3DBin(EndianISStream & eiss);
+    /**
+     * Read the binary representation of  a vector of vector of vector of ArrayTimeInterval from an EndianIStream
+     * and use the read value to set a vector of  vector of vector of ArrayTimeInterval.
+     * @param eis the EndianIStream to be read
+     * @return a vector of vector of vector of ArrayTimeInterval
+     */	 
+    static vector<vector<vector<ArrayTimeInterval> > > from3DBin(EndianIStream & eis);
 
-	 /**
-	  * Returns a string representation of this.
-	  */
-	 string toString() const ;
-};
+    /**
+     * Returns a string representation of this.
+     */
+    string toString() const ;
+  };
 
 
-// inline constructors
+  // inline constructors
 
- inline ArrayTimeInterval::ArrayTimeInterval(): start((int64_t)0), duration(0) {}
- inline ArrayTimeInterval::ArrayTimeInterval(ArrayTime start_, Interval duration_) {
-   start = start_;
-   duration = Interval(min(duration_.get(), Long::MAX_VALUE - start.get()));
- }
+  inline ArrayTimeInterval::ArrayTimeInterval(): start((int64_t)0), duration(0) {}
+  inline ArrayTimeInterval::ArrayTimeInterval(ArrayTime start_, Interval duration_) {
+    start = start_;
+    duration = Interval(min(duration_.get(), Long::MAX_VALUE - start.get()));
+  }
  
- inline ArrayTimeInterval::ArrayTimeInterval(double startInMJD, double durationInDays) :
-   start(startInMJD), 
-   duration((int64_t) (ArrayTime::unitsInADay * durationInDays)){}
+  inline ArrayTimeInterval::ArrayTimeInterval(double startInMJD, double durationInDays) :
+    start(startInMJD), 
+    duration((int64_t) (ArrayTime::unitsInADay * durationInDays)){}
  
- inline ArrayTimeInterval::ArrayTimeInterval(int64_t startInNanoSeconds,
-					     int64_t durationInNanoSeconds){
-   start = startInNanoSeconds;
-   duration = min(durationInNanoSeconds, Long::MAX_VALUE - startInNanoSeconds);
- }				
+  inline ArrayTimeInterval::ArrayTimeInterval(int64_t startInNanoSeconds,
+					      int64_t durationInNanoSeconds){
+    start = startInNanoSeconds;
+    duration = min(durationInNanoSeconds, Long::MAX_VALUE - startInNanoSeconds);
+  }				
  
- inline ArrayTimeInterval::ArrayTimeInterval(ArrayTime  start_):
-   start(start_) {
-   duration = Interval(Long::MAX_VALUE - start.get());
- }
+  inline ArrayTimeInterval::ArrayTimeInterval(ArrayTime  start_):
+    start(start_) {
+    duration = Interval(Long::MAX_VALUE - start.get());
+  }
  
- inline ArrayTimeInterval::ArrayTimeInterval(double startInMJD):
-   start(startInMJD) {
-   this->duration = Interval(Long::MAX_VALUE - start.get());
- }
+  inline ArrayTimeInterval::ArrayTimeInterval(double startInMJD):
+    start(startInMJD) {
+    this->duration = Interval(Long::MAX_VALUE - start.get());
+  }
  
- inline	ArrayTimeInterval::ArrayTimeInterval(int64_t startInNanoSeconds):
-   start(startInNanoSeconds) {
-   this->duration = Interval(Long::MAX_VALUE - start.get());
- }
+  inline	ArrayTimeInterval::ArrayTimeInterval(int64_t startInNanoSeconds):
+    start(startInNanoSeconds) {
+    this->duration = Interval(Long::MAX_VALUE - start.get());
+  }
  
- // Inline setters
- inline void ArrayTimeInterval::setStart(ArrayTime start) {
-   this->start = ArrayTime(start);
- }
+  // Inline setters
+  inline void ArrayTimeInterval::setStart(ArrayTime start) {
+    this->start = ArrayTime(start);
+  }
  
- inline void ArrayTimeInterval::setStart(double start) {
-   this->start = ArrayTime(start);
- }
+  inline void ArrayTimeInterval::setStart(double start) {
+    this->start = ArrayTime(start);
+  }
  
- inline void ArrayTimeInterval::setStart(int64_t start) {
-   this->start = ArrayTime(start);
- }
+  inline void ArrayTimeInterval::setStart(int64_t start) {
+    this->start = ArrayTime(start);
+  }
  
- inline void ArrayTimeInterval::setDuration(Interval duration) {
-   this->duration = Interval(duration);	
- }
+  inline void ArrayTimeInterval::setDuration(Interval duration) {
+    this->duration = Interval(duration);	
+  }
  
  
- inline void ArrayTimeInterval::setDuration(double duration) {
-   this->duration = Interval((int64_t) (ArrayTime::unitsInADay * duration));
- }
+  inline void ArrayTimeInterval::setDuration(double duration) {
+    this->duration = Interval((int64_t) (ArrayTime::unitsInADay * duration));
+  }
  
- inline void ArrayTimeInterval::setDuration(int64_t duration) {
-   this->duration = Interval(duration);	
- }
+  inline void ArrayTimeInterval::setDuration(int64_t duration) {
+    this->duration = Interval(duration);	
+  }
  
- // inline getters
- inline ArrayTime ArrayTimeInterval::getStart() const {
-   return start;	
- }
+  // inline getters
+  inline ArrayTime ArrayTimeInterval::getStart() const {
+    return start;	
+  }
  
- inline double ArrayTimeInterval::getStartInMJD() const {
-   return start.getMJD();	
- }
+  inline ArrayTime ArrayTimeInterval::getMidPoint() const {
+    return ArrayTime(start.get() + duration.get() / 2);
+  }
+
+  inline double ArrayTimeInterval::getStartInMJD() const {
+    return start.getMJD();	
+  }
  
- inline int64_t ArrayTimeInterval::getStartInNanoSeconds() const  {
-   return start.get();	
- }
+  inline int64_t ArrayTimeInterval::getStartInNanoSeconds() const  {
+    return start.get();	
+  }
  
- inline Interval ArrayTimeInterval::getDuration() const {
-   return duration;	
- }
+  inline Interval ArrayTimeInterval::getDuration() const {
+    return duration;	
+  }
  
- inline double ArrayTimeInterval::getDurationInDays() const {
-   return (((double) duration.get()) / ArrayTime::unitsInADay);	
- }
+  inline double ArrayTimeInterval::getDurationInDays() const {
+    return (((double) duration.get()) / ArrayTime::unitsInADay);	
+  }
  
- inline int64_t ArrayTimeInterval::getDurationInNanoSeconds() const {
-   return duration.get();	
- }
+  inline int64_t ArrayTimeInterval::getDurationInNanoSeconds() const {
+    return duration.get();	
+  }
  
- // inline checkers
- inline bool ArrayTimeInterval::equals(ArrayTimeInterval ati) {
-   return ((start.get() == ati.getStart().get()) && 
-	   (duration.get() == ati.getDuration().get()));
- }
+  // inline checkers
+  inline bool ArrayTimeInterval::equals(ArrayTimeInterval ati) {
+    return ((start.get() == ati.getStart().get()) && 
+	    (duration.get() == ati.getDuration().get()));
+  }
  
- inline bool ArrayTimeInterval::overlaps(ArrayTimeInterval ati) {
-   int64_t start1 = start.get();
-   int64_t end1 = start1 + duration.get();
+  inline bool ArrayTimeInterval::overlaps(ArrayTimeInterval ati) {
+    int64_t start1 = start.get();
+    int64_t end1 = start1 + duration.get();
    
    
-   int64_t start2 = ati.getStart().get();
-   int64_t end2   = start2 + ati.getDuration().get();
+    int64_t start2 = ati.getStart().get();
+    int64_t end2   = start2 + ati.getDuration().get();
    
-   return (start2 <= start1 && end2 >= start1) ||
-     (start2 >= start1 && start2 <= end1);
- }
+    return (start2 <= start1 && end2 >= start1) ||
+      (start2 >= start1 && start2 <= end1);
+  }
  
- inline bool ArrayTimeInterval::contains(ArrayTimeInterval ati) {
-   int64_t start1 = start.get();;
-   int64_t end1 = start1 + duration.get();
+  inline bool ArrayTimeInterval::contains(ArrayTimeInterval ati) {
+    int64_t start1 = start.get();;
+    int64_t end1 = start1 + duration.get();
    
-   int64_t start2 = ati.getStart().get();
-   int64_t end2   = start2 + ati.getDuration().get();
+    int64_t start2 = ati.getStart().get();
+    int64_t end2   = start2 + ati.getDuration().get();
    
-   return (start2>=start1 && end2<=end1);
- }
+    return (start2>=start1 && end2<=end1);
+  }
  
- inline bool ArrayTimeInterval::contains(ArrayTime ati) {
-   int64_t start1 = start.get();
-   int64_t end1 = start1 + duration.get();
+  inline bool ArrayTimeInterval::contains(ArrayTime ati) {
+    int64_t start1 = start.get();
+    int64_t end1 = start1 + duration.get();
    
-   int64_t time = ati.get();
-   return (time >= start1 && time < end1);
- }
+    int64_t time = ati.get();
+    return (time >= start1 && time < end1);
+  }
  
- inline bool ArrayTimeInterval::operator == (ArrayTimeInterval &ati){
-   return (start == ati.start) && (duration == ati.duration);
- }
+  inline bool ArrayTimeInterval::operator == (ArrayTimeInterval &ati){
+    return (start == ati.start) && (duration == ati.duration);
+  }
  
- inline bool ArrayTimeInterval::operator != (ArrayTimeInterval &ati){
-   return (start != ati.start) || (duration != ati.duration);
- }
+  inline bool ArrayTimeInterval::operator != (ArrayTimeInterval &ati){
+    return (start != ati.start) || (duration != ati.duration);
+  }
  
- inline ostream & operator << ( ostream &o, ArrayTimeInterval &ati ) {
-   o << "(start=" << ati.getStart().get() << ",duration=" << ati.getDuration().get() << ")";
-   return o;
-	
- } // End namespace asdm
-} // ArrayTimeInterval_CLASS
-#endif
+  inline ostream & operator << ( ostream &o, ArrayTimeInterval &ati ) {
+    o << "(start=" << ati.getStart().get() << ",duration=" << ati.getDuration().get() << ")";
+    return o;	
+  } 
+
+  inline istream & operator >> ( istream &i, ArrayTimeInterval &ati) {
+    i >> ati.start;
+    i >> ati.duration;
+    return i;
+  }
+} // End namespace asdm
+#endif // ArrayTimeInterval_CLASS

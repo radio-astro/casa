@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace WindowFunctionMod
   //! WindowFunction.
   //! [APDM; ASDM.ALmaCorrelatorMode] Windowing functions for spectral data apodization 
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum WindowFunction
@@ -79,7 +80,10 @@ namespace WindowFunctionMod
 } 
 #endif
 
-using namespace std;
+namespace WindowFunctionMod {
+	std::ostream & operator << ( std::ostream & out, const WindowFunction& value);
+	std::istream & operator >> ( std::istream & in , WindowFunction& value );
+}
 
 /** 
   * A helper class for the enumeration WindowFunction.
@@ -119,7 +123,7 @@ class CWindowFunction {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -173,8 +177,8 @@ class CWindowFunction {
     CWindowFunction(const CWindowFunction&);
     CWindowFunction& operator=(const CWindowFunction&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

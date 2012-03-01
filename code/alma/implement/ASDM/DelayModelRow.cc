@@ -43,6 +43,12 @@ using std::set;
 
 #include <AntennaTable.h>
 #include <AntennaRow.h>
+
+#include <SpectralWindowTable.h>
+#include <SpectralWindowRow.h>
+
+#include <FieldTable.h>
+#include <FieldRow.h>
 	
 
 using asdm::ASDM;
@@ -52,11 +58,18 @@ using asdm::DelayModelTable;
 using asdm::AntennaTable;
 using asdm::AntennaRow;
 
+using asdm::SpectralWindowTable;
+using asdm::SpectralWindowRow;
+
+using asdm::FieldTable;
+using asdm::FieldRow;
+
 
 #include <Parser.h>
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -80,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::DelayModelRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -107,16 +123,6 @@ namespace asdm {
 		
 		
 			
-		x->timeOrigin = timeOrigin.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
 				
 		x->numPoly = numPoly;
  				
@@ -129,11 +135,11 @@ namespace asdm {
 		
 		
 			
-		x->atmDryDelay.length(atmDryDelay.size());
-		for (unsigned int i = 0; i < atmDryDelay.size(); ++i) {
+		x->phaseDelay.length(phaseDelay.size());
+		for (unsigned int i = 0; i < phaseDelay.size(); ++i) {
 			
 				
-			x->atmDryDelay[i] = atmDryDelay.at(i);
+			x->phaseDelay[i] = phaseDelay.at(i);
 	 			
 	 		
 	 	}
@@ -146,11 +152,11 @@ namespace asdm {
 		
 		
 			
-		x->atmWetDelay.length(atmWetDelay.size());
-		for (unsigned int i = 0; i < atmWetDelay.size(); ++i) {
+		x->phaseDelayRate.length(phaseDelayRate.size());
+		for (unsigned int i = 0; i < phaseDelayRate.size(); ++i) {
 			
 				
-			x->atmWetDelay[i] = atmWetDelay.at(i);
+			x->phaseDelayRate[i] = phaseDelayRate.at(i);
 	 			
 	 		
 	 	}
@@ -160,61 +166,6 @@ namespace asdm {
 
 	
   		
-		
-		
-			
-		x->clockDelay.length(clockDelay.size());
-		for (unsigned int i = 0; i < clockDelay.size(); ++i) {
-			
-				
-			x->clockDelay[i] = clockDelay.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->geomDelay.length(geomDelay.size());
-		for (unsigned int i = 0; i < geomDelay.size(); ++i) {
-			
-				
-			x->geomDelay[i] = geomDelay.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->dispDelayExists = dispDelayExists;
-		
-		
-			
-		x->dispDelay.length(dispDelay.size());
-		for (unsigned int i = 0; i < dispDelay.size(); ++i) {
-			
-				
-			x->dispDelay[i] = dispDelay.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->groupDelayExists = groupDelayExists;
 		
 		
 			
@@ -233,19 +184,359 @@ namespace asdm {
 	
   		
 		
-		x->phaseDelayExists = phaseDelayExists;
-		
 		
 			
-		x->phaseDelay.length(phaseDelay.size());
-		for (unsigned int i = 0; i < phaseDelay.size(); ++i) {
+		x->groupDelayRate.length(groupDelayRate.size());
+		for (unsigned int i = 0; i < groupDelayRate.size(); ++i) {
 			
 				
-			x->phaseDelay[i] = phaseDelay.at(i);
+			x->groupDelayRate[i] = groupDelayRate.at(i);
 	 			
 	 		
 	 	}
 			
+		
+	
+
+	
+  		
+		
+		x->timeOriginExists = timeOriginExists;
+		
+		
+			
+		x->timeOrigin = timeOrigin.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x->atmosphericGroupDelayExists = atmosphericGroupDelayExists;
+		
+		
+			
+				
+		x->atmosphericGroupDelay = atmosphericGroupDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->atmosphericGroupDelayRateExists = atmosphericGroupDelayRateExists;
+		
+		
+			
+				
+		x->atmosphericGroupDelayRate = atmosphericGroupDelayRate;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->geometricDelayExists = geometricDelayExists;
+		
+		
+			
+				
+		x->geometricDelay = geometricDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->geometricDelayRateExists = geometricDelayRateExists;
+		
+		
+			
+				
+		x->geometricDelayRate = geometricDelayRate;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->numLOExists = numLOExists;
+		
+		
+			
+				
+		x->numLO = numLO;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->LOOffsetExists = LOOffsetExists;
+		
+		
+			
+		x->LOOffset.length(LOOffset.size());
+		for (unsigned int i = 0; i < LOOffset.size(); ++i) {
+			
+			x->LOOffset[i] = LOOffset.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->LOOffsetRateExists = LOOffsetRateExists;
+		
+		
+			
+		x->LOOffsetRate.length(LOOffsetRate.size());
+		for (unsigned int i = 0; i < LOOffsetRate.size(); ++i) {
+			
+			x->LOOffsetRate[i] = LOOffsetRate.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->dispersiveDelayExists = dispersiveDelayExists;
+		
+		
+			
+				
+		x->dispersiveDelay = dispersiveDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->dispersiveDelayRateExists = dispersiveDelayRateExists;
+		
+		
+			
+				
+		x->dispersiveDelayRate = dispersiveDelayRate;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->atmosphericDryDelayExists = atmosphericDryDelayExists;
+		
+		
+			
+				
+		x->atmosphericDryDelay = atmosphericDryDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->atmosphericWetDelayExists = atmosphericWetDelayExists;
+		
+		
+			
+				
+		x->atmosphericWetDelay = atmosphericWetDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->padDelayExists = padDelayExists;
+		
+		
+			
+				
+		x->padDelay = padDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->antennaDelayExists = antennaDelayExists;
+		
+		
+			
+				
+		x->antennaDelay = antennaDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->numReceptorExists = numReceptorExists;
+		
+		
+			
+				
+		x->numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->polarizationTypeExists = polarizationTypeExists;
+		
+		
+			
+		x->polarizationType.length(polarizationType.size());
+		for (unsigned int i = 0; i < polarizationType.size(); ++i) {
+			
+				
+			x->polarizationType[i] = polarizationType.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->electronicDelayExists = electronicDelayExists;
+		
+		
+			
+		x->electronicDelay.length(electronicDelay.size());
+		for (unsigned int i = 0; i < electronicDelay.size(); ++i) {
+			
+				
+			x->electronicDelay[i] = electronicDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->electronicDelayRateExists = electronicDelayRateExists;
+		
+		
+			
+		x->electronicDelayRate.length(electronicDelayRate.size());
+		for (unsigned int i = 0; i < electronicDelayRate.size(); ++i) {
+			
+				
+			x->electronicDelayRate[i] = electronicDelayRate.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->receiverDelayExists = receiverDelayExists;
+		
+		
+			
+		x->receiverDelay.length(receiverDelay.size());
+		for (unsigned int i = 0; i < receiverDelay.size(); ++i) {
+			
+				
+			x->receiverDelay[i] = receiverDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->IFDelayExists = IFDelayExists;
+		
+		
+			
+		x->IFDelay.length(IFDelay.size());
+		for (unsigned int i = 0; i < IFDelay.size(); ++i) {
+			
+				
+			x->IFDelay[i] = IFDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->LODelayExists = LODelayExists;
+		
+		
+			
+		x->LODelay.length(LODelay.size());
+		for (unsigned int i = 0; i < LODelay.size(); ++i) {
+			
+				
+			x->LODelay[i] = LODelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->crossPolarizationDelayExists = crossPolarizationDelayExists;
+		
+		
+			
+				
+		x->crossPolarizationDelay = crossPolarizationDelay;
+ 				
+ 			
 		
 	
 
@@ -264,7 +555,33 @@ namespace asdm {
   	
 
 	
+  	
+ 		
 		
+	 	
+			
+		x->fieldId = fieldId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x->spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
 	
 
 		
@@ -298,16 +615,6 @@ namespace asdm {
 		
 		
 			
-		setTimeOrigin(ArrayTime (x.timeOrigin));
-			
- 		
-		
-	
-
-	
-		
-		
-			
 		setNumPoly(x.numPoly);
   			
  		
@@ -318,10 +625,10 @@ namespace asdm {
 		
 		
 			
-		atmDryDelay .clear();
-		for (unsigned int i = 0; i <x.atmDryDelay.length(); ++i) {
+		phaseDelay .clear();
+		for (unsigned int i = 0; i <x.phaseDelay.length(); ++i) {
 			
-			atmDryDelay.push_back(x.atmDryDelay[i]);
+			phaseDelay.push_back(x.phaseDelay[i]);
   			
 		}
 			
@@ -333,10 +640,10 @@ namespace asdm {
 		
 		
 			
-		atmWetDelay .clear();
-		for (unsigned int i = 0; i <x.atmWetDelay.length(); ++i) {
+		phaseDelayRate .clear();
+		for (unsigned int i = 0; i <x.phaseDelayRate.length(); ++i) {
 			
-			atmWetDelay.push_back(x.atmWetDelay[i]);
+			phaseDelayRate.push_back(x.phaseDelayRate[i]);
   			
 		}
 			
@@ -345,59 +652,6 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		clockDelay .clear();
-		for (unsigned int i = 0; i <x.clockDelay.length(); ++i) {
-			
-			clockDelay.push_back(x.clockDelay[i]);
-  			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		geomDelay .clear();
-		for (unsigned int i = 0; i <x.geomDelay.length(); ++i) {
-			
-			geomDelay.push_back(x.geomDelay[i]);
-  			
-		}
-			
-  		
-		
-	
-
-	
-		
-		dispDelayExists = x.dispDelayExists;
-		if (x.dispDelayExists) {
-		
-		
-			
-		dispDelay .clear();
-		for (unsigned int i = 0; i <x.dispDelay.length(); ++i) {
-			
-			dispDelay.push_back(x.dispDelay[i]);
-  			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		groupDelayExists = x.groupDelayExists;
-		if (x.groupDelayExists) {
 		
 		
 			
@@ -410,25 +664,388 @@ namespace asdm {
 			
   		
 		
+	
+
+	
+		
+		
+			
+		groupDelayRate .clear();
+		for (unsigned int i = 0; i <x.groupDelayRate.length(); ++i) {
+			
+			groupDelayRate.push_back(x.groupDelayRate[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		timeOriginExists = x.timeOriginExists;
+		if (x.timeOriginExists) {
+		
+		
+			
+		setTimeOrigin(ArrayTime (x.timeOrigin));
+			
+ 		
+		
 		}
 		
 	
 
 	
 		
-		phaseDelayExists = x.phaseDelayExists;
-		if (x.phaseDelayExists) {
+		atmosphericGroupDelayExists = x.atmosphericGroupDelayExists;
+		if (x.atmosphericGroupDelayExists) {
 		
 		
 			
-		phaseDelay .clear();
-		for (unsigned int i = 0; i <x.phaseDelay.length(); ++i) {
+		setAtmosphericGroupDelay(x.atmosphericGroupDelay);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		atmosphericGroupDelayRateExists = x.atmosphericGroupDelayRateExists;
+		if (x.atmosphericGroupDelayRateExists) {
+		
+		
 			
-			phaseDelay.push_back(x.phaseDelay[i]);
+		setAtmosphericGroupDelayRate(x.atmosphericGroupDelayRate);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		geometricDelayExists = x.geometricDelayExists;
+		if (x.geometricDelayExists) {
+		
+		
+			
+		setGeometricDelay(x.geometricDelay);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		geometricDelayRateExists = x.geometricDelayRateExists;
+		if (x.geometricDelayRateExists) {
+		
+		
+			
+		setGeometricDelayRate(x.geometricDelayRate);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		numLOExists = x.numLOExists;
+		if (x.numLOExists) {
+		
+		
+			
+		setNumLO(x.numLO);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		LOOffsetExists = x.LOOffsetExists;
+		if (x.LOOffsetExists) {
+		
+		
+			
+		LOOffset .clear();
+		for (unsigned int i = 0; i <x.LOOffset.length(); ++i) {
+			
+			LOOffset.push_back(Frequency (x.LOOffset[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		LOOffsetRateExists = x.LOOffsetRateExists;
+		if (x.LOOffsetRateExists) {
+		
+		
+			
+		LOOffsetRate .clear();
+		for (unsigned int i = 0; i <x.LOOffsetRate.length(); ++i) {
+			
+			LOOffsetRate.push_back(Frequency (x.LOOffsetRate[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		dispersiveDelayExists = x.dispersiveDelayExists;
+		if (x.dispersiveDelayExists) {
+		
+		
+			
+		setDispersiveDelay(x.dispersiveDelay);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		dispersiveDelayRateExists = x.dispersiveDelayRateExists;
+		if (x.dispersiveDelayRateExists) {
+		
+		
+			
+		setDispersiveDelayRate(x.dispersiveDelayRate);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		atmosphericDryDelayExists = x.atmosphericDryDelayExists;
+		if (x.atmosphericDryDelayExists) {
+		
+		
+			
+		setAtmosphericDryDelay(x.atmosphericDryDelay);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		atmosphericWetDelayExists = x.atmosphericWetDelayExists;
+		if (x.atmosphericWetDelayExists) {
+		
+		
+			
+		setAtmosphericWetDelay(x.atmosphericWetDelay);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		padDelayExists = x.padDelayExists;
+		if (x.padDelayExists) {
+		
+		
+			
+		setPadDelay(x.padDelay);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		antennaDelayExists = x.antennaDelayExists;
+		if (x.antennaDelayExists) {
+		
+		
+			
+		setAntennaDelay(x.antennaDelay);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		numReceptorExists = x.numReceptorExists;
+		if (x.numReceptorExists) {
+		
+		
+			
+		setNumReceptor(x.numReceptor);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		polarizationTypeExists = x.polarizationTypeExists;
+		if (x.polarizationTypeExists) {
+		
+		
+			
+		polarizationType .clear();
+		for (unsigned int i = 0; i <x.polarizationType.length(); ++i) {
+			
+			polarizationType.push_back(x.polarizationType[i]);
   			
 		}
 			
   		
+		
+		}
+		
+	
+
+	
+		
+		electronicDelayExists = x.electronicDelayExists;
+		if (x.electronicDelayExists) {
+		
+		
+			
+		electronicDelay .clear();
+		for (unsigned int i = 0; i <x.electronicDelay.length(); ++i) {
+			
+			electronicDelay.push_back(x.electronicDelay[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		electronicDelayRateExists = x.electronicDelayRateExists;
+		if (x.electronicDelayRateExists) {
+		
+		
+			
+		electronicDelayRate .clear();
+		for (unsigned int i = 0; i <x.electronicDelayRate.length(); ++i) {
+			
+			electronicDelayRate.push_back(x.electronicDelayRate[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		receiverDelayExists = x.receiverDelayExists;
+		if (x.receiverDelayExists) {
+		
+		
+			
+		receiverDelay .clear();
+		for (unsigned int i = 0; i <x.receiverDelay.length(); ++i) {
+			
+			receiverDelay.push_back(x.receiverDelay[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		IFDelayExists = x.IFDelayExists;
+		if (x.IFDelayExists) {
+		
+		
+			
+		IFDelay .clear();
+		for (unsigned int i = 0; i <x.IFDelay.length(); ++i) {
+			
+			IFDelay.push_back(x.IFDelay[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		LODelayExists = x.LODelayExists;
+		if (x.LODelayExists) {
+		
+		
+			
+		LODelay .clear();
+		for (unsigned int i = 0; i <x.LODelay.length(); ++i) {
+			
+			LODelay.push_back(x.LODelay[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		crossPolarizationDelayExists = x.crossPolarizationDelayExists;
+		if (x.crossPolarizationDelayExists) {
+		
+		
+			
+		setCrossPolarizationDelay(x.crossPolarizationDelay);
+  			
+ 		
 		
 		}
 		
@@ -449,6 +1066,30 @@ namespace asdm {
 
 	
 		
+		
+			
+		setFieldId(Tag (x.fieldId));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setSpectralWindowId(Tag (x.spectralWindowId));
+			
+ 		
+		
+	
+
+	
+		
+	
+
+	
+
 	
 
 		} catch (IllegalAccessException err) {
@@ -478,14 +1119,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(timeOrigin, "timeOrigin", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(numPoly, "numPoly", buf);
 		
 		
@@ -494,7 +1127,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(atmDryDelay, "atmDryDelay", buf);
+		Parser::toXML(phaseDelay, "phaseDelay", buf);
 		
 		
 	
@@ -502,57 +1135,285 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(atmWetDelay, "atmWetDelay", buf);
+		Parser::toXML(phaseDelayRate, "phaseDelayRate", buf);
 		
 		
 	
 
   	
  		
-		
-		Parser::toXML(clockDelay, "clockDelay", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(geomDelay, "geomDelay", buf);
-		
-		
-	
-
-  	
- 		
-		if (dispDelayExists) {
-		
-		
-		Parser::toXML(dispDelay, "dispDelay", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (groupDelayExists) {
-		
 		
 		Parser::toXML(groupDelay, "groupDelay", buf);
 		
 		
+	
+
+  	
+ 		
+		
+		Parser::toXML(groupDelayRate, "groupDelayRate", buf);
+		
+		
+	
+
+  	
+ 		
+		if (timeOriginExists) {
+		
+		
+		Parser::toXML(timeOrigin, "timeOrigin", buf);
+		
+		
 		}
 		
 	
 
   	
  		
-		if (phaseDelayExists) {
+		if (atmosphericGroupDelayExists) {
 		
 		
-		Parser::toXML(phaseDelay, "phaseDelay", buf);
+		Parser::toXML(atmosphericGroupDelay, "atmosphericGroupDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (atmosphericGroupDelayRateExists) {
+		
+		
+		Parser::toXML(atmosphericGroupDelayRate, "atmosphericGroupDelayRate", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (geometricDelayExists) {
+		
+		
+		Parser::toXML(geometricDelay, "geometricDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (geometricDelayRateExists) {
+		
+		
+		Parser::toXML(geometricDelayRate, "geometricDelayRate", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (numLOExists) {
+		
+		
+		Parser::toXML(numLO, "numLO", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (LOOffsetExists) {
+		
+		
+		Parser::toXML(LOOffset, "LOOffset", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (LOOffsetRateExists) {
+		
+		
+		Parser::toXML(LOOffsetRate, "LOOffsetRate", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (dispersiveDelayExists) {
+		
+		
+		Parser::toXML(dispersiveDelay, "dispersiveDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (dispersiveDelayRateExists) {
+		
+		
+		Parser::toXML(dispersiveDelayRate, "dispersiveDelayRate", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (atmosphericDryDelayExists) {
+		
+		
+		Parser::toXML(atmosphericDryDelay, "atmosphericDryDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (atmosphericWetDelayExists) {
+		
+		
+		Parser::toXML(atmosphericWetDelay, "atmosphericWetDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (padDelayExists) {
+		
+		
+		Parser::toXML(padDelay, "padDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (antennaDelayExists) {
+		
+		
+		Parser::toXML(antennaDelay, "antennaDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (numReceptorExists) {
+		
+		
+		Parser::toXML(numReceptor, "numReceptor", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (polarizationTypeExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("polarizationType", polarizationType));
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (electronicDelayExists) {
+		
+		
+		Parser::toXML(electronicDelay, "electronicDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (electronicDelayRateExists) {
+		
+		
+		Parser::toXML(electronicDelayRate, "electronicDelayRate", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (receiverDelayExists) {
+		
+		
+		Parser::toXML(receiverDelay, "receiverDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (IFDelayExists) {
+		
+		
+		Parser::toXML(IFDelay, "IFDelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (LODelayExists) {
+		
+		
+		Parser::toXML(LODelay, "LODelay", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (crossPolarizationDelayExists) {
+		
+		
+		Parser::toXML(crossPolarizationDelay, "crossPolarizationDelay", buf);
 		
 		
 		}
@@ -570,8 +1431,28 @@ namespace asdm {
 		
 	
 
+  	
+ 		
+		
+		Parser::toXML(fieldId, "fieldId", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(spectralWindowId, "spectralWindowId", buf);
+		
+		
+	
+
 	
 		
+	
+
+	
+
 	
 
 		
@@ -601,14 +1482,6 @@ namespace asdm {
 	
   		
 			
-	  	setTimeOrigin(Parser::getArrayTime("timeOrigin","DelayModel",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 	  	setNumPoly(Parser::getInteger("numPoly","DelayModel",rowDoc));
 			
 		
@@ -618,7 +1491,7 @@ namespace asdm {
   		
 			
 					
-	  	setAtmDryDelay(Parser::get1DDouble("atmDryDelay","DelayModel",rowDoc));
+	  	setPhaseDelay(Parser::get1DDouble("phaseDelay","DelayModel",rowDoc));
 	  			
 	  		
 		
@@ -628,7 +1501,7 @@ namespace asdm {
   		
 			
 					
-	  	setAtmWetDelay(Parser::get1DDouble("atmWetDelay","DelayModel",rowDoc));
+	  	setPhaseDelayRate(Parser::get1DDouble("phaseDelayRate","DelayModel",rowDoc));
 	  			
 	  		
 		
@@ -638,7 +1511,7 @@ namespace asdm {
   		
 			
 					
-	  	setClockDelay(Parser::get1DDouble("clockDelay","DelayModel",rowDoc));
+	  	setGroupDelay(Parser::get1DDouble("groupDelay","DelayModel",rowDoc));
 	  			
 	  		
 		
@@ -648,7 +1521,7 @@ namespace asdm {
   		
 			
 					
-	  	setGeomDelay(Parser::get1DDouble("geomDelay","DelayModel",rowDoc));
+	  	setGroupDelayRate(Parser::get1DDouble("groupDelayRate","DelayModel",rowDoc));
 	  			
 	  		
 		
@@ -656,10 +1529,70 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<dispDelay>")) {
+        if (row.isStr("<timeOrigin>")) {
+			
+	  		setTimeOrigin(Parser::getArrayTime("timeOrigin","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<atmosphericGroupDelay>")) {
+			
+	  		setAtmosphericGroupDelay(Parser::getDouble("atmosphericGroupDelay","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<atmosphericGroupDelayRate>")) {
+			
+	  		setAtmosphericGroupDelayRate(Parser::getDouble("atmosphericGroupDelayRate","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<geometricDelay>")) {
+			
+	  		setGeometricDelay(Parser::getDouble("geometricDelay","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<geometricDelayRate>")) {
+			
+	  		setGeometricDelayRate(Parser::getDouble("geometricDelayRate","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<numLO>")) {
+			
+	  		setNumLO(Parser::getInteger("numLO","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<LOOffset>")) {
 			
 								
-	  		setDispDelay(Parser::get1DDouble("dispDelay","DelayModel",rowDoc));
+	  		setLOOffset(Parser::get1DFrequency("LOOffset","DelayModel",rowDoc));
 	  			
 	  		
 		}
@@ -668,10 +1601,10 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<groupDelay>")) {
+        if (row.isStr("<LOOffsetRate>")) {
 			
 								
-	  		setGroupDelay(Parser::get1DDouble("groupDelay","DelayModel",rowDoc));
+	  		setLOOffsetRate(Parser::get1DFrequency("LOOffsetRate","DelayModel",rowDoc));
 	  			
 	  		
 		}
@@ -680,12 +1613,155 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<phaseDelay>")) {
+        if (row.isStr("<dispersiveDelay>")) {
+			
+	  		setDispersiveDelay(Parser::getDouble("dispersiveDelay","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<dispersiveDelayRate>")) {
+			
+	  		setDispersiveDelayRate(Parser::getDouble("dispersiveDelayRate","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<atmosphericDryDelay>")) {
+			
+	  		setAtmosphericDryDelay(Parser::getDouble("atmosphericDryDelay","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<atmosphericWetDelay>")) {
+			
+	  		setAtmosphericWetDelay(Parser::getDouble("atmosphericWetDelay","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<padDelay>")) {
+			
+	  		setPadDelay(Parser::getDouble("padDelay","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<antennaDelay>")) {
+			
+	  		setAntennaDelay(Parser::getDouble("antennaDelay","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<numReceptor>")) {
+			
+	  		setNumReceptor(Parser::getInteger("numReceptor","DelayModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+		
+	if (row.isStr("<polarizationType>")) {
+		
+		
+		
+		polarizationType = EnumerationParser::getPolarizationType1D("polarizationType","DelayModel",rowDoc);			
+		
+		
+		
+		polarizationTypeExists = true;
+	}
+		
+	
+
+	
+  		
+        if (row.isStr("<electronicDelay>")) {
 			
 								
-	  		setPhaseDelay(Parser::get1DDouble("phaseDelay","DelayModel",rowDoc));
+	  		setElectronicDelay(Parser::get1DDouble("electronicDelay","DelayModel",rowDoc));
 	  			
 	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<electronicDelayRate>")) {
+			
+								
+	  		setElectronicDelayRate(Parser::get1DDouble("electronicDelayRate","DelayModel",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<receiverDelay>")) {
+			
+								
+	  		setReceiverDelay(Parser::get1DDouble("receiverDelay","DelayModel",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<IFDelay>")) {
+			
+								
+	  		setIFDelay(Parser::get1DDouble("IFDelay","DelayModel",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<LODelay>")) {
+			
+								
+	  		setLODelay(Parser::get1DDouble("LODelay","DelayModel",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<crossPolarizationDelay>")) {
+			
+	  		setCrossPolarizationDelay(Parser::getDouble("crossPolarizationDelay","DelayModel",rowDoc));
+			
 		}
  		
 	
@@ -702,7 +1778,27 @@ namespace asdm {
 	
 
 	
+  		
+			
+	  	setFieldId(Parser::getTag("fieldId","DelayModel",rowDoc));
+			
 		
+	
+
+	
+  		
+			
+	  	setSpectralWindowId(Parser::getTag("spectralWindowId","SpectralWindow",rowDoc));
+			
+		
+	
+
+	
+		
+	
+
+	
+
 	
 
 		} catch (IllegalAccessException err) {
@@ -723,14 +1819,14 @@ namespace asdm {
 	
 	
 		
-	timeInterval.toBin(eoss);
+	spectralWindowId.toBin(eoss);
 		
 	
 
 	
 	
 		
-	timeOrigin.toBin(eoss);
+	timeInterval.toBin(eoss);
 		
 	
 
@@ -748,25 +1844,10 @@ namespace asdm {
 		
 		
 			
-		eoss.writeInt((int) atmDryDelay.size());
-		for (unsigned int i = 0; i < atmDryDelay.size(); i++)
+		eoss.writeInt((int) phaseDelay.size());
+		for (unsigned int i = 0; i < phaseDelay.size(); i++)
 				
-			eoss.writeDouble(atmDryDelay.at(i));
-				
-				
-						
-		
-	
-
-	
-	
-		
-		
-			
-		eoss.writeInt((int) atmWetDelay.size());
-		for (unsigned int i = 0; i < atmWetDelay.size(); i++)
-				
-			eoss.writeDouble(atmWetDelay.at(i));
+			eoss.writeDouble(phaseDelay.at(i));
 				
 				
 						
@@ -778,57 +1859,16 @@ namespace asdm {
 		
 		
 			
-		eoss.writeInt((int) clockDelay.size());
-		for (unsigned int i = 0; i < clockDelay.size(); i++)
+		eoss.writeInt((int) phaseDelayRate.size());
+		for (unsigned int i = 0; i < phaseDelayRate.size(); i++)
 				
-			eoss.writeDouble(clockDelay.at(i));
-				
-				
-						
-		
-	
-
-	
-	
-		
-		
-			
-		eoss.writeInt((int) geomDelay.size());
-		for (unsigned int i = 0; i < geomDelay.size(); i++)
-				
-			eoss.writeDouble(geomDelay.at(i));
+			eoss.writeDouble(phaseDelayRate.at(i));
 				
 				
 						
 		
 	
 
-
-	
-	
-	eoss.writeBoolean(dispDelayExists);
-	if (dispDelayExists) {
-	
-	
-	
-		
-		
-			
-		eoss.writeInt((int) dispDelay.size());
-		for (unsigned int i = 0; i < dispDelay.size(); i++)
-				
-			eoss.writeDouble(dispDelay.at(i));
-				
-				
-						
-		
-	
-
-	}
-
-	eoss.writeBoolean(groupDelayExists);
-	if (groupDelayExists) {
-	
 	
 	
 		
@@ -844,20 +1884,248 @@ namespace asdm {
 		
 	
 
+	
+	
+		
+		
+			
+		eoss.writeInt((int) groupDelayRate.size());
+		for (unsigned int i = 0; i < groupDelayRate.size(); i++)
+				
+			eoss.writeDouble(groupDelayRate.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	fieldId.toBin(eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(timeOriginExists);
+	if (timeOriginExists) {
+	
+	
+	
+		
+	timeOrigin.toBin(eoss);
+		
+	
+
 	}
 
-	eoss.writeBoolean(phaseDelayExists);
-	if (phaseDelayExists) {
+	eoss.writeBoolean(atmosphericGroupDelayExists);
+	if (atmosphericGroupDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(atmosphericGroupDelay);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(atmosphericGroupDelayRateExists);
+	if (atmosphericGroupDelayRateExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(atmosphericGroupDelayRate);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(geometricDelayExists);
+	if (geometricDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(geometricDelay);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(geometricDelayRateExists);
+	if (geometricDelayRateExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(geometricDelayRate);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(numLOExists);
+	if (numLOExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numLO);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(LOOffsetExists);
+	if (LOOffsetExists) {
+	
+	
+	
+		
+	Frequency::toBin(LOOffset, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(LOOffsetRateExists);
+	if (LOOffsetRateExists) {
+	
+	
+	
+		
+	Frequency::toBin(LOOffsetRate, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(dispersiveDelayExists);
+	if (dispersiveDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(dispersiveDelay);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(dispersiveDelayRateExists);
+	if (dispersiveDelayRateExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(dispersiveDelayRate);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(atmosphericDryDelayExists);
+	if (atmosphericDryDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(atmosphericDryDelay);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(atmosphericWetDelayExists);
+	if (atmosphericWetDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(atmosphericWetDelay);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(padDelayExists);
+	if (padDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(padDelay);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(antennaDelayExists);
+	if (antennaDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(antennaDelay);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(numReceptorExists);
+	if (numReceptorExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(polarizationTypeExists);
+	if (polarizationTypeExists) {
 	
 	
 	
 		
 		
 			
-		eoss.writeInt((int) phaseDelay.size());
-		for (unsigned int i = 0; i < phaseDelay.size(); i++)
+		eoss.writeInt((int) polarizationType.size());
+		for (unsigned int i = 0; i < polarizationType.size(); i++)
 				
-			eoss.writeDouble(phaseDelay.at(i));
+			eoss.writeString(CPolarizationType::name(polarizationType.at(i)));
+			/* eoss.writeInt(polarizationType.at(i)); */
 				
 				
 						
@@ -866,185 +2134,165 @@ namespace asdm {
 
 	}
 
-	}
-	
-void DelayModelRow::antennaIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		antennaId =  Tag::fromBin(eiss);
-		
+	eoss.writeBoolean(electronicDelayExists);
+	if (electronicDelayExists) {
 	
 	
-}
-void DelayModelRow::timeIntervalFromBin(EndianISStream& eiss) {
-		
 	
 		
-		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-	
-}
-void DelayModelRow::timeOriginFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeOrigin =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void DelayModelRow::numPolyFromBin(EndianISStream& eiss) {
-		
-	
-	
 		
 			
-		numPoly =  eiss.readInt();
-			
-		
-	
-	
-}
-void DelayModelRow::atmDryDelayFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-	
-		atmDryDelay.clear();
-		
-		unsigned int atmDryDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < atmDryDelayDim1; i++)
-			
-			atmDryDelay.push_back(eiss.readDouble());
-			
-	
-
-		
-	
-	
-}
-void DelayModelRow::atmWetDelayFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-	
-		atmWetDelay.clear();
-		
-		unsigned int atmWetDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < atmWetDelayDim1; i++)
-			
-			atmWetDelay.push_back(eiss.readDouble());
-			
-	
-
-		
-	
-	
-}
-void DelayModelRow::clockDelayFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-	
-		clockDelay.clear();
-		
-		unsigned int clockDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < clockDelayDim1; i++)
-			
-			clockDelay.push_back(eiss.readDouble());
-			
-	
-
-		
-	
-	
-}
-void DelayModelRow::geomDelayFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-	
-		geomDelay.clear();
-		
-		unsigned int geomDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < geomDelayDim1; i++)
-			
-			geomDelay.push_back(eiss.readDouble());
-			
-	
-
-		
-	
-	
-}
-
-void DelayModelRow::dispDelayFromBin(EndianISStream& eiss) {
-		
-	dispDelayExists = eiss.readBoolean();
-	if (dispDelayExists) {
-		
-	
-	
-		
-			
-	
-		dispDelay.clear();
-		
-		unsigned int dispDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < dispDelayDim1; i++)
-			
-			dispDelay.push_back(eiss.readDouble());
-			
-	
-
+		eoss.writeInt((int) electronicDelay.size());
+		for (unsigned int i = 0; i < electronicDelay.size(); i++)
+				
+			eoss.writeDouble(electronicDelay.at(i));
+				
+				
+						
 		
 	
 
 	}
-	
-}
-void DelayModelRow::groupDelayFromBin(EndianISStream& eiss) {
-		
-	groupDelayExists = eiss.readBoolean();
-	if (groupDelayExists) {
-		
-	
-	
-		
-			
-	
-		groupDelay.clear();
-		
-		unsigned int groupDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < groupDelayDim1; i++)
-			
-			groupDelay.push_back(eiss.readDouble());
-			
-	
 
+	eoss.writeBoolean(electronicDelayRateExists);
+	if (electronicDelayRateExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) electronicDelayRate.size());
+		for (unsigned int i = 0; i < electronicDelayRate.size(); i++)
+				
+			eoss.writeDouble(electronicDelayRate.at(i));
+				
+				
+						
 		
 	
 
 	}
+
+	eoss.writeBoolean(receiverDelayExists);
+	if (receiverDelayExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) receiverDelay.size());
+		for (unsigned int i = 0; i < receiverDelay.size(); i++)
+				
+			eoss.writeDouble(receiverDelay.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(IFDelayExists);
+	if (IFDelayExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) IFDelay.size());
+		for (unsigned int i = 0; i < IFDelay.size(); i++)
+				
+			eoss.writeDouble(IFDelay.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(LODelayExists);
+	if (LODelayExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) LODelay.size());
+		for (unsigned int i = 0; i < LODelay.size(); i++)
+				
+			eoss.writeDouble(LODelay.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(crossPolarizationDelayExists);
+	if (crossPolarizationDelayExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(crossPolarizationDelay);
+				
+		
+	
+
+	}
+
+	}
+	
+void DelayModelRow::antennaIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		antennaId =  Tag::fromBin(eis);
+		
+	
 	
 }
-void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
+void DelayModelRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
-	phaseDelayExists = eiss.readBoolean();
-	if (phaseDelayExists) {
+	
+		
+		
+		spectralWindowId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void DelayModelRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void DelayModelRow::numPolyFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numPoly =  eis.readInt();
+			
+		
+	
+	
+}
+void DelayModelRow::phaseDelayFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1053,10 +2301,361 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 		phaseDelay.clear();
 		
-		unsigned int phaseDelayDim1 = eiss.readInt();
+		unsigned int phaseDelayDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < phaseDelayDim1; i++)
 			
-			phaseDelay.push_back(eiss.readDouble());
+			phaseDelay.push_back(eis.readDouble());
+			
+	
+
+		
+	
+	
+}
+void DelayModelRow::phaseDelayRateFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+	
+		phaseDelayRate.clear();
+		
+		unsigned int phaseDelayRateDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < phaseDelayRateDim1; i++)
+			
+			phaseDelayRate.push_back(eis.readDouble());
+			
+	
+
+		
+	
+	
+}
+void DelayModelRow::groupDelayFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+	
+		groupDelay.clear();
+		
+		unsigned int groupDelayDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < groupDelayDim1; i++)
+			
+			groupDelay.push_back(eis.readDouble());
+			
+	
+
+		
+	
+	
+}
+void DelayModelRow::groupDelayRateFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+	
+		groupDelayRate.clear();
+		
+		unsigned int groupDelayRateDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < groupDelayRateDim1; i++)
+			
+			groupDelayRate.push_back(eis.readDouble());
+			
+	
+
+		
+	
+	
+}
+void DelayModelRow::fieldIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		fieldId =  Tag::fromBin(eis);
+		
+	
+	
+}
+
+void DelayModelRow::timeOriginFromBin(EndianIStream& eis) {
+		
+	timeOriginExists = eis.readBoolean();
+	if (timeOriginExists) {
+		
+	
+		
+		
+		timeOrigin =  ArrayTime::fromBin(eis);
+		
+	
+
+	}
+	
+}
+void DelayModelRow::atmosphericGroupDelayFromBin(EndianIStream& eis) {
+		
+	atmosphericGroupDelayExists = eis.readBoolean();
+	if (atmosphericGroupDelayExists) {
+		
+	
+	
+		
+			
+		atmosphericGroupDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::atmosphericGroupDelayRateFromBin(EndianIStream& eis) {
+		
+	atmosphericGroupDelayRateExists = eis.readBoolean();
+	if (atmosphericGroupDelayRateExists) {
+		
+	
+	
+		
+			
+		atmosphericGroupDelayRate =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::geometricDelayFromBin(EndianIStream& eis) {
+		
+	geometricDelayExists = eis.readBoolean();
+	if (geometricDelayExists) {
+		
+	
+	
+		
+			
+		geometricDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::geometricDelayRateFromBin(EndianIStream& eis) {
+		
+	geometricDelayRateExists = eis.readBoolean();
+	if (geometricDelayRateExists) {
+		
+	
+	
+		
+			
+		geometricDelayRate =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::numLOFromBin(EndianIStream& eis) {
+		
+	numLOExists = eis.readBoolean();
+	if (numLOExists) {
+		
+	
+	
+		
+			
+		numLO =  eis.readInt();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::LOOffsetFromBin(EndianIStream& eis) {
+		
+	LOOffsetExists = eis.readBoolean();
+	if (LOOffsetExists) {
+		
+	
+		
+		
+			
+	
+	LOOffset = Frequency::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void DelayModelRow::LOOffsetRateFromBin(EndianIStream& eis) {
+		
+	LOOffsetRateExists = eis.readBoolean();
+	if (LOOffsetRateExists) {
+		
+	
+		
+		
+			
+	
+	LOOffsetRate = Frequency::from1DBin(eis);	
+	
+
+		
+	
+
+	}
+	
+}
+void DelayModelRow::dispersiveDelayFromBin(EndianIStream& eis) {
+		
+	dispersiveDelayExists = eis.readBoolean();
+	if (dispersiveDelayExists) {
+		
+	
+	
+		
+			
+		dispersiveDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::dispersiveDelayRateFromBin(EndianIStream& eis) {
+		
+	dispersiveDelayRateExists = eis.readBoolean();
+	if (dispersiveDelayRateExists) {
+		
+	
+	
+		
+			
+		dispersiveDelayRate =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::atmosphericDryDelayFromBin(EndianIStream& eis) {
+		
+	atmosphericDryDelayExists = eis.readBoolean();
+	if (atmosphericDryDelayExists) {
+		
+	
+	
+		
+			
+		atmosphericDryDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::atmosphericWetDelayFromBin(EndianIStream& eis) {
+		
+	atmosphericWetDelayExists = eis.readBoolean();
+	if (atmosphericWetDelayExists) {
+		
+	
+	
+		
+			
+		atmosphericWetDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::padDelayFromBin(EndianIStream& eis) {
+		
+	padDelayExists = eis.readBoolean();
+	if (padDelayExists) {
+		
+	
+	
+		
+			
+		padDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::antennaDelayFromBin(EndianIStream& eis) {
+		
+	antennaDelayExists = eis.readBoolean();
+	if (antennaDelayExists) {
+		
+	
+	
+		
+			
+		antennaDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::numReceptorFromBin(EndianIStream& eis) {
+		
+	numReceptorExists = eis.readBoolean();
+	if (numReceptorExists) {
+		
+	
+	
+		
+			
+		numReceptor =  eis.readInt();
+			
+		
+	
+
+	}
+	
+}
+void DelayModelRow::polarizationTypeFromBin(EndianIStream& eis) {
+		
+	polarizationTypeExists = eis.readBoolean();
+	if (polarizationTypeExists) {
+		
+	
+	
+		
+			
+	
+		polarizationType.clear();
+		
+		unsigned int polarizationTypeDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypeDim1; i++)
+			
+			polarizationType.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1066,25 +2665,458 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	}
 	
 }
+void DelayModelRow::electronicDelayFromBin(EndianIStream& eis) {
+		
+	electronicDelayExists = eis.readBoolean();
+	if (electronicDelayExists) {
+		
 	
 	
-	DelayModelRow* DelayModelRow::fromBin(EndianISStream& eiss, DelayModelTable& table, const vector<string>& attributesSeq) {
+		
+			
+	
+		electronicDelay.clear();
+		
+		unsigned int electronicDelayDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < electronicDelayDim1; i++)
+			
+			electronicDelay.push_back(eis.readDouble());
+			
+	
+
+		
+	
+
+	}
+	
+}
+void DelayModelRow::electronicDelayRateFromBin(EndianIStream& eis) {
+		
+	electronicDelayRateExists = eis.readBoolean();
+	if (electronicDelayRateExists) {
+		
+	
+	
+		
+			
+	
+		electronicDelayRate.clear();
+		
+		unsigned int electronicDelayRateDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < electronicDelayRateDim1; i++)
+			
+			electronicDelayRate.push_back(eis.readDouble());
+			
+	
+
+		
+	
+
+	}
+	
+}
+void DelayModelRow::receiverDelayFromBin(EndianIStream& eis) {
+		
+	receiverDelayExists = eis.readBoolean();
+	if (receiverDelayExists) {
+		
+	
+	
+		
+			
+	
+		receiverDelay.clear();
+		
+		unsigned int receiverDelayDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < receiverDelayDim1; i++)
+			
+			receiverDelay.push_back(eis.readDouble());
+			
+	
+
+		
+	
+
+	}
+	
+}
+void DelayModelRow::IFDelayFromBin(EndianIStream& eis) {
+		
+	IFDelayExists = eis.readBoolean();
+	if (IFDelayExists) {
+		
+	
+	
+		
+			
+	
+		IFDelay.clear();
+		
+		unsigned int IFDelayDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < IFDelayDim1; i++)
+			
+			IFDelay.push_back(eis.readDouble());
+			
+	
+
+		
+	
+
+	}
+	
+}
+void DelayModelRow::LODelayFromBin(EndianIStream& eis) {
+		
+	LODelayExists = eis.readBoolean();
+	if (LODelayExists) {
+		
+	
+	
+		
+			
+	
+		LODelay.clear();
+		
+		unsigned int LODelayDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < LODelayDim1; i++)
+			
+			LODelay.push_back(eis.readDouble());
+			
+	
+
+		
+	
+
+	}
+	
+}
+void DelayModelRow::crossPolarizationDelayFromBin(EndianIStream& eis) {
+		
+	crossPolarizationDelayExists = eis.readBoolean();
+	if (crossPolarizationDelayExists) {
+		
+	
+	
+		
+			
+		crossPolarizationDelay =  eis.readDouble();
+			
+		
+	
+
+	}
+	
+}
+	
+	
+	DelayModelRow* DelayModelRow::fromBin(EndianIStream& eis, DelayModelTable& table, const vector<string>& attributesSeq) {
 		DelayModelRow* row = new  DelayModelRow(table);
 		
 		map<string, DelayModelAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DelayModelTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DelayModelTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void DelayModelRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void DelayModelRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void DelayModelRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DelayModelRow::numPolyFromText(const string & s) {
+		 
+		numPoly = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::phaseDelayFromText(const string & s) {
+		 
+		phaseDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::phaseDelayRateFromText(const string & s) {
+		 
+		phaseDelayRate = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::groupDelayFromText(const string & s) {
+		 
+		groupDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::groupDelayRateFromText(const string & s) {
+		 
+		groupDelayRate = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void DelayModelRow::fieldIdFromText(const string & s) {
+		 
+		fieldId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an ArrayTime 
+	void DelayModelRow::timeOriginFromText(const string & s) {
+		timeOriginExists = true;
+		 
+		timeOrigin = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericGroupDelayFromText(const string & s) {
+		atmosphericGroupDelayExists = true;
+		 
+		atmosphericGroupDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericGroupDelayRateFromText(const string & s) {
+		atmosphericGroupDelayRateExists = true;
+		 
+		atmosphericGroupDelayRate = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::geometricDelayFromText(const string & s) {
+		geometricDelayExists = true;
+		 
+		geometricDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::geometricDelayRateFromText(const string & s) {
+		geometricDelayRateExists = true;
+		 
+		geometricDelayRate = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DelayModelRow::numLOFromText(const string & s) {
+		numLOExists = true;
+		 
+		numLO = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void DelayModelRow::LOOffsetFromText(const string & s) {
+		LOOffsetExists = true;
+		 
+		LOOffset = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void DelayModelRow::LOOffsetRateFromText(const string & s) {
+		LOOffsetRateExists = true;
+		 
+		LOOffsetRate = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::dispersiveDelayFromText(const string & s) {
+		dispersiveDelayExists = true;
+		 
+		dispersiveDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::dispersiveDelayRateFromText(const string & s) {
+		dispersiveDelayRateExists = true;
+		 
+		dispersiveDelayRate = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericDryDelayFromText(const string & s) {
+		atmosphericDryDelayExists = true;
+		 
+		atmosphericDryDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::atmosphericWetDelayFromText(const string & s) {
+		atmosphericWetDelayExists = true;
+		 
+		atmosphericWetDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::padDelayFromText(const string & s) {
+		padDelayExists = true;
+		 
+		padDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::antennaDelayFromText(const string & s) {
+		antennaDelayExists = true;
+		 
+		antennaDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DelayModelRow::numReceptorFromText(const string & s) {
+		numReceptorExists = true;
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void DelayModelRow::polarizationTypeFromText(const string & s) {
+		polarizationTypeExists = true;
+		 
+		polarizationType = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::electronicDelayFromText(const string & s) {
+		electronicDelayExists = true;
+		 
+		electronicDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::electronicDelayRateFromText(const string & s) {
+		electronicDelayRateExists = true;
+		 
+		electronicDelayRate = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::receiverDelayFromText(const string & s) {
+		receiverDelayExists = true;
+		 
+		receiverDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::IFDelayFromText(const string & s) {
+		IFDelayExists = true;
+		 
+		IFDelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::LODelayFromText(const string & s) {
+		LODelayExists = true;
+		 
+		LODelay = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void DelayModelRow::crossPolarizationDelayFromText(const string & s) {
+		crossPolarizationDelayExists = true;
+		 
+		crossPolarizationDelay = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	
+	void DelayModelRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, DelayModelAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "DelayModelTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1126,38 +3158,6 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get timeOrigin.
- 	 * @return timeOrigin as ArrayTime
- 	 */
- 	ArrayTime DelayModelRow::getTimeOrigin() const {
-	
-  		return timeOrigin;
- 	}
-
- 	/**
- 	 * Set timeOrigin with the specified ArrayTime.
- 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
- 	 
- 	
- 		
- 	 */
- 	void DelayModelRow::setTimeOrigin (ArrayTime timeOrigin)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->timeOrigin = timeOrigin;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get numPoly.
  	 * @return numPoly as int
  	 */
@@ -1190,244 +3190,10 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get atmDryDelay.
- 	 * @return atmDryDelay as vector<double >
- 	 */
- 	vector<double > DelayModelRow::getAtmDryDelay() const {
-	
-  		return atmDryDelay;
- 	}
-
- 	/**
- 	 * Set atmDryDelay with the specified vector<double >.
- 	 * @param atmDryDelay The vector<double > value to which atmDryDelay is to be set.
- 	 
- 	
- 		
- 	 */
- 	void DelayModelRow::setAtmDryDelay (vector<double > atmDryDelay)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->atmDryDelay = atmDryDelay;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get atmWetDelay.
- 	 * @return atmWetDelay as vector<double >
- 	 */
- 	vector<double > DelayModelRow::getAtmWetDelay() const {
-	
-  		return atmWetDelay;
- 	}
-
- 	/**
- 	 * Set atmWetDelay with the specified vector<double >.
- 	 * @param atmWetDelay The vector<double > value to which atmWetDelay is to be set.
- 	 
- 	
- 		
- 	 */
- 	void DelayModelRow::setAtmWetDelay (vector<double > atmWetDelay)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->atmWetDelay = atmWetDelay;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get clockDelay.
- 	 * @return clockDelay as vector<double >
- 	 */
- 	vector<double > DelayModelRow::getClockDelay() const {
-	
-  		return clockDelay;
- 	}
-
- 	/**
- 	 * Set clockDelay with the specified vector<double >.
- 	 * @param clockDelay The vector<double > value to which clockDelay is to be set.
- 	 
- 	
- 		
- 	 */
- 	void DelayModelRow::setClockDelay (vector<double > clockDelay)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->clockDelay = clockDelay;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get geomDelay.
- 	 * @return geomDelay as vector<double >
- 	 */
- 	vector<double > DelayModelRow::getGeomDelay() const {
-	
-  		return geomDelay;
- 	}
-
- 	/**
- 	 * Set geomDelay with the specified vector<double >.
- 	 * @param geomDelay The vector<double > value to which geomDelay is to be set.
- 	 
- 	
- 		
- 	 */
- 	void DelayModelRow::setGeomDelay (vector<double > geomDelay)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->geomDelay = geomDelay;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute dispDelay is optional. Return true if this attribute exists.
-	 * @return true if and only if the dispDelay attribute exists. 
-	 */
-	bool DelayModelRow::isDispDelayExists() const {
-		return dispDelayExists;
-	}
-	
-
-	
- 	/**
- 	 * Get dispDelay, which is optional.
- 	 * @return dispDelay as vector<double >
- 	 * @throw IllegalAccessException If dispDelay does not exist.
- 	 */
- 	vector<double > DelayModelRow::getDispDelay() const  {
-		if (!dispDelayExists) {
-			throw IllegalAccessException("dispDelay", "DelayModel");
-		}
-	
-  		return dispDelay;
- 	}
-
- 	/**
- 	 * Set dispDelay with the specified vector<double >.
- 	 * @param dispDelay The vector<double > value to which dispDelay is to be set.
- 	 
- 	
- 	 */
- 	void DelayModelRow::setDispDelay (vector<double > dispDelay) {
-	
- 		this->dispDelay = dispDelay;
-	
-		dispDelayExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark dispDelay, which is an optional field, as non-existent.
-	 */
-	void DelayModelRow::clearDispDelay () {
-		dispDelayExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute groupDelay is optional. Return true if this attribute exists.
-	 * @return true if and only if the groupDelay attribute exists. 
-	 */
-	bool DelayModelRow::isGroupDelayExists() const {
-		return groupDelayExists;
-	}
-	
-
-	
- 	/**
- 	 * Get groupDelay, which is optional.
- 	 * @return groupDelay as vector<double >
- 	 * @throw IllegalAccessException If groupDelay does not exist.
- 	 */
- 	vector<double > DelayModelRow::getGroupDelay() const  {
-		if (!groupDelayExists) {
-			throw IllegalAccessException("groupDelay", "DelayModel");
-		}
-	
-  		return groupDelay;
- 	}
-
- 	/**
- 	 * Set groupDelay with the specified vector<double >.
- 	 * @param groupDelay The vector<double > value to which groupDelay is to be set.
- 	 
- 	
- 	 */
- 	void DelayModelRow::setGroupDelay (vector<double > groupDelay) {
-	
- 		this->groupDelay = groupDelay;
-	
-		groupDelayExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark groupDelay, which is an optional field, as non-existent.
-	 */
-	void DelayModelRow::clearGroupDelay () {
-		groupDelayExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute phaseDelay is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseDelay attribute exists. 
-	 */
-	bool DelayModelRow::isPhaseDelayExists() const {
-		return phaseDelayExists;
-	}
-	
-
-	
- 	/**
- 	 * Get phaseDelay, which is optional.
+ 	 * Get phaseDelay.
  	 * @return phaseDelay as vector<double >
- 	 * @throw IllegalAccessException If phaseDelay does not exist.
  	 */
- 	vector<double > DelayModelRow::getPhaseDelay() const  {
-		if (!phaseDelayExists) {
-			throw IllegalAccessException("phaseDelay", "DelayModel");
-		}
+ 	vector<double > DelayModelRow::getPhaseDelay() const {
 	
   		return phaseDelay;
  	}
@@ -1437,28 +3203,1155 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
  	 * @param phaseDelay The vector<double > value to which phaseDelay is to be set.
  	 
  	
+ 		
  	 */
- 	void DelayModelRow::setPhaseDelay (vector<double > phaseDelay) {
-	
+ 	void DelayModelRow::setPhaseDelay (vector<double > phaseDelay)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->phaseDelay = phaseDelay;
 	
-		phaseDelayExists = true;
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get phaseDelayRate.
+ 	 * @return phaseDelayRate as vector<double >
+ 	 */
+ 	vector<double > DelayModelRow::getPhaseDelayRate() const {
+	
+  		return phaseDelayRate;
+ 	}
+
+ 	/**
+ 	 * Set phaseDelayRate with the specified vector<double >.
+ 	 * @param phaseDelayRate The vector<double > value to which phaseDelayRate is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void DelayModelRow::setPhaseDelayRate (vector<double > phaseDelayRate)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->phaseDelayRate = phaseDelayRate;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get groupDelay.
+ 	 * @return groupDelay as vector<double >
+ 	 */
+ 	vector<double > DelayModelRow::getGroupDelay() const {
+	
+  		return groupDelay;
+ 	}
+
+ 	/**
+ 	 * Set groupDelay with the specified vector<double >.
+ 	 * @param groupDelay The vector<double > value to which groupDelay is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void DelayModelRow::setGroupDelay (vector<double > groupDelay)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->groupDelay = groupDelay;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get groupDelayRate.
+ 	 * @return groupDelayRate as vector<double >
+ 	 */
+ 	vector<double > DelayModelRow::getGroupDelayRate() const {
+	
+  		return groupDelayRate;
+ 	}
+
+ 	/**
+ 	 * Set groupDelayRate with the specified vector<double >.
+ 	 * @param groupDelayRate The vector<double > value to which groupDelayRate is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void DelayModelRow::setGroupDelayRate (vector<double > groupDelayRate)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->groupDelayRate = groupDelayRate;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute timeOrigin is optional. Return true if this attribute exists.
+	 * @return true if and only if the timeOrigin attribute exists. 
+	 */
+	bool DelayModelRow::isTimeOriginExists() const {
+		return timeOriginExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get timeOrigin, which is optional.
+ 	 * @return timeOrigin as ArrayTime
+ 	 * @throw IllegalAccessException If timeOrigin does not exist.
+ 	 */
+ 	ArrayTime DelayModelRow::getTimeOrigin() const  {
+		if (!timeOriginExists) {
+			throw IllegalAccessException("timeOrigin", "DelayModel");
+		}
+	
+  		return timeOrigin;
+ 	}
+
+ 	/**
+ 	 * Set timeOrigin with the specified ArrayTime.
+ 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setTimeOrigin (ArrayTime timeOrigin) {
+	
+ 		this->timeOrigin = timeOrigin;
+	
+		timeOriginExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark phaseDelay, which is an optional field, as non-existent.
+	 * Mark timeOrigin, which is an optional field, as non-existent.
 	 */
-	void DelayModelRow::clearPhaseDelay () {
-		phaseDelayExists = false;
+	void DelayModelRow::clearTimeOrigin () {
+		timeOriginExists = false;
 	}
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	/**
+	 * The attribute atmosphericGroupDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the atmosphericGroupDelay attribute exists. 
+	 */
+	bool DelayModelRow::isAtmosphericGroupDelayExists() const {
+		return atmosphericGroupDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get atmosphericGroupDelay, which is optional.
+ 	 * @return atmosphericGroupDelay as double
+ 	 * @throw IllegalAccessException If atmosphericGroupDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getAtmosphericGroupDelay() const  {
+		if (!atmosphericGroupDelayExists) {
+			throw IllegalAccessException("atmosphericGroupDelay", "DelayModel");
+		}
+	
+  		return atmosphericGroupDelay;
+ 	}
+
+ 	/**
+ 	 * Set atmosphericGroupDelay with the specified double.
+ 	 * @param atmosphericGroupDelay The double value to which atmosphericGroupDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setAtmosphericGroupDelay (double atmosphericGroupDelay) {
+	
+ 		this->atmosphericGroupDelay = atmosphericGroupDelay;
+	
+		atmosphericGroupDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark atmosphericGroupDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearAtmosphericGroupDelay () {
+		atmosphericGroupDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute atmosphericGroupDelayRate is optional. Return true if this attribute exists.
+	 * @return true if and only if the atmosphericGroupDelayRate attribute exists. 
+	 */
+	bool DelayModelRow::isAtmosphericGroupDelayRateExists() const {
+		return atmosphericGroupDelayRateExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get atmosphericGroupDelayRate, which is optional.
+ 	 * @return atmosphericGroupDelayRate as double
+ 	 * @throw IllegalAccessException If atmosphericGroupDelayRate does not exist.
+ 	 */
+ 	double DelayModelRow::getAtmosphericGroupDelayRate() const  {
+		if (!atmosphericGroupDelayRateExists) {
+			throw IllegalAccessException("atmosphericGroupDelayRate", "DelayModel");
+		}
+	
+  		return atmosphericGroupDelayRate;
+ 	}
+
+ 	/**
+ 	 * Set atmosphericGroupDelayRate with the specified double.
+ 	 * @param atmosphericGroupDelayRate The double value to which atmosphericGroupDelayRate is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setAtmosphericGroupDelayRate (double atmosphericGroupDelayRate) {
+	
+ 		this->atmosphericGroupDelayRate = atmosphericGroupDelayRate;
+	
+		atmosphericGroupDelayRateExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark atmosphericGroupDelayRate, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearAtmosphericGroupDelayRate () {
+		atmosphericGroupDelayRateExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute geometricDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the geometricDelay attribute exists. 
+	 */
+	bool DelayModelRow::isGeometricDelayExists() const {
+		return geometricDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get geometricDelay, which is optional.
+ 	 * @return geometricDelay as double
+ 	 * @throw IllegalAccessException If geometricDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getGeometricDelay() const  {
+		if (!geometricDelayExists) {
+			throw IllegalAccessException("geometricDelay", "DelayModel");
+		}
+	
+  		return geometricDelay;
+ 	}
+
+ 	/**
+ 	 * Set geometricDelay with the specified double.
+ 	 * @param geometricDelay The double value to which geometricDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setGeometricDelay (double geometricDelay) {
+	
+ 		this->geometricDelay = geometricDelay;
+	
+		geometricDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark geometricDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearGeometricDelay () {
+		geometricDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute geometricDelayRate is optional. Return true if this attribute exists.
+	 * @return true if and only if the geometricDelayRate attribute exists. 
+	 */
+	bool DelayModelRow::isGeometricDelayRateExists() const {
+		return geometricDelayRateExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get geometricDelayRate, which is optional.
+ 	 * @return geometricDelayRate as double
+ 	 * @throw IllegalAccessException If geometricDelayRate does not exist.
+ 	 */
+ 	double DelayModelRow::getGeometricDelayRate() const  {
+		if (!geometricDelayRateExists) {
+			throw IllegalAccessException("geometricDelayRate", "DelayModel");
+		}
+	
+  		return geometricDelayRate;
+ 	}
+
+ 	/**
+ 	 * Set geometricDelayRate with the specified double.
+ 	 * @param geometricDelayRate The double value to which geometricDelayRate is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setGeometricDelayRate (double geometricDelayRate) {
+	
+ 		this->geometricDelayRate = geometricDelayRate;
+	
+		geometricDelayRateExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark geometricDelayRate, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearGeometricDelayRate () {
+		geometricDelayRateExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute numLO is optional. Return true if this attribute exists.
+	 * @return true if and only if the numLO attribute exists. 
+	 */
+	bool DelayModelRow::isNumLOExists() const {
+		return numLOExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numLO, which is optional.
+ 	 * @return numLO as int
+ 	 * @throw IllegalAccessException If numLO does not exist.
+ 	 */
+ 	int DelayModelRow::getNumLO() const  {
+		if (!numLOExists) {
+			throw IllegalAccessException("numLO", "DelayModel");
+		}
+	
+  		return numLO;
+ 	}
+
+ 	/**
+ 	 * Set numLO with the specified int.
+ 	 * @param numLO The int value to which numLO is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setNumLO (int numLO) {
+	
+ 		this->numLO = numLO;
+	
+		numLOExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numLO, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearNumLO () {
+		numLOExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute LOOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the LOOffset attribute exists. 
+	 */
+	bool DelayModelRow::isLOOffsetExists() const {
+		return LOOffsetExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get LOOffset, which is optional.
+ 	 * @return LOOffset as vector<Frequency >
+ 	 * @throw IllegalAccessException If LOOffset does not exist.
+ 	 */
+ 	vector<Frequency > DelayModelRow::getLOOffset() const  {
+		if (!LOOffsetExists) {
+			throw IllegalAccessException("LOOffset", "DelayModel");
+		}
+	
+  		return LOOffset;
+ 	}
+
+ 	/**
+ 	 * Set LOOffset with the specified vector<Frequency >.
+ 	 * @param LOOffset The vector<Frequency > value to which LOOffset is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setLOOffset (vector<Frequency > LOOffset) {
+	
+ 		this->LOOffset = LOOffset;
+	
+		LOOffsetExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark LOOffset, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearLOOffset () {
+		LOOffsetExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute LOOffsetRate is optional. Return true if this attribute exists.
+	 * @return true if and only if the LOOffsetRate attribute exists. 
+	 */
+	bool DelayModelRow::isLOOffsetRateExists() const {
+		return LOOffsetRateExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get LOOffsetRate, which is optional.
+ 	 * @return LOOffsetRate as vector<Frequency >
+ 	 * @throw IllegalAccessException If LOOffsetRate does not exist.
+ 	 */
+ 	vector<Frequency > DelayModelRow::getLOOffsetRate() const  {
+		if (!LOOffsetRateExists) {
+			throw IllegalAccessException("LOOffsetRate", "DelayModel");
+		}
+	
+  		return LOOffsetRate;
+ 	}
+
+ 	/**
+ 	 * Set LOOffsetRate with the specified vector<Frequency >.
+ 	 * @param LOOffsetRate The vector<Frequency > value to which LOOffsetRate is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setLOOffsetRate (vector<Frequency > LOOffsetRate) {
+	
+ 		this->LOOffsetRate = LOOffsetRate;
+	
+		LOOffsetRateExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark LOOffsetRate, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearLOOffsetRate () {
+		LOOffsetRateExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute dispersiveDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the dispersiveDelay attribute exists. 
+	 */
+	bool DelayModelRow::isDispersiveDelayExists() const {
+		return dispersiveDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get dispersiveDelay, which is optional.
+ 	 * @return dispersiveDelay as double
+ 	 * @throw IllegalAccessException If dispersiveDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getDispersiveDelay() const  {
+		if (!dispersiveDelayExists) {
+			throw IllegalAccessException("dispersiveDelay", "DelayModel");
+		}
+	
+  		return dispersiveDelay;
+ 	}
+
+ 	/**
+ 	 * Set dispersiveDelay with the specified double.
+ 	 * @param dispersiveDelay The double value to which dispersiveDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setDispersiveDelay (double dispersiveDelay) {
+	
+ 		this->dispersiveDelay = dispersiveDelay;
+	
+		dispersiveDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark dispersiveDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearDispersiveDelay () {
+		dispersiveDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute dispersiveDelayRate is optional. Return true if this attribute exists.
+	 * @return true if and only if the dispersiveDelayRate attribute exists. 
+	 */
+	bool DelayModelRow::isDispersiveDelayRateExists() const {
+		return dispersiveDelayRateExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get dispersiveDelayRate, which is optional.
+ 	 * @return dispersiveDelayRate as double
+ 	 * @throw IllegalAccessException If dispersiveDelayRate does not exist.
+ 	 */
+ 	double DelayModelRow::getDispersiveDelayRate() const  {
+		if (!dispersiveDelayRateExists) {
+			throw IllegalAccessException("dispersiveDelayRate", "DelayModel");
+		}
+	
+  		return dispersiveDelayRate;
+ 	}
+
+ 	/**
+ 	 * Set dispersiveDelayRate with the specified double.
+ 	 * @param dispersiveDelayRate The double value to which dispersiveDelayRate is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setDispersiveDelayRate (double dispersiveDelayRate) {
+	
+ 		this->dispersiveDelayRate = dispersiveDelayRate;
+	
+		dispersiveDelayRateExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark dispersiveDelayRate, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearDispersiveDelayRate () {
+		dispersiveDelayRateExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute atmosphericDryDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the atmosphericDryDelay attribute exists. 
+	 */
+	bool DelayModelRow::isAtmosphericDryDelayExists() const {
+		return atmosphericDryDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get atmosphericDryDelay, which is optional.
+ 	 * @return atmosphericDryDelay as double
+ 	 * @throw IllegalAccessException If atmosphericDryDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getAtmosphericDryDelay() const  {
+		if (!atmosphericDryDelayExists) {
+			throw IllegalAccessException("atmosphericDryDelay", "DelayModel");
+		}
+	
+  		return atmosphericDryDelay;
+ 	}
+
+ 	/**
+ 	 * Set atmosphericDryDelay with the specified double.
+ 	 * @param atmosphericDryDelay The double value to which atmosphericDryDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setAtmosphericDryDelay (double atmosphericDryDelay) {
+	
+ 		this->atmosphericDryDelay = atmosphericDryDelay;
+	
+		atmosphericDryDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark atmosphericDryDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearAtmosphericDryDelay () {
+		atmosphericDryDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute atmosphericWetDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the atmosphericWetDelay attribute exists. 
+	 */
+	bool DelayModelRow::isAtmosphericWetDelayExists() const {
+		return atmosphericWetDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get atmosphericWetDelay, which is optional.
+ 	 * @return atmosphericWetDelay as double
+ 	 * @throw IllegalAccessException If atmosphericWetDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getAtmosphericWetDelay() const  {
+		if (!atmosphericWetDelayExists) {
+			throw IllegalAccessException("atmosphericWetDelay", "DelayModel");
+		}
+	
+  		return atmosphericWetDelay;
+ 	}
+
+ 	/**
+ 	 * Set atmosphericWetDelay with the specified double.
+ 	 * @param atmosphericWetDelay The double value to which atmosphericWetDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setAtmosphericWetDelay (double atmosphericWetDelay) {
+	
+ 		this->atmosphericWetDelay = atmosphericWetDelay;
+	
+		atmosphericWetDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark atmosphericWetDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearAtmosphericWetDelay () {
+		atmosphericWetDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute padDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the padDelay attribute exists. 
+	 */
+	bool DelayModelRow::isPadDelayExists() const {
+		return padDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get padDelay, which is optional.
+ 	 * @return padDelay as double
+ 	 * @throw IllegalAccessException If padDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getPadDelay() const  {
+		if (!padDelayExists) {
+			throw IllegalAccessException("padDelay", "DelayModel");
+		}
+	
+  		return padDelay;
+ 	}
+
+ 	/**
+ 	 * Set padDelay with the specified double.
+ 	 * @param padDelay The double value to which padDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setPadDelay (double padDelay) {
+	
+ 		this->padDelay = padDelay;
+	
+		padDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark padDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearPadDelay () {
+		padDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute antennaDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the antennaDelay attribute exists. 
+	 */
+	bool DelayModelRow::isAntennaDelayExists() const {
+		return antennaDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get antennaDelay, which is optional.
+ 	 * @return antennaDelay as double
+ 	 * @throw IllegalAccessException If antennaDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getAntennaDelay() const  {
+		if (!antennaDelayExists) {
+			throw IllegalAccessException("antennaDelay", "DelayModel");
+		}
+	
+  		return antennaDelay;
+ 	}
+
+ 	/**
+ 	 * Set antennaDelay with the specified double.
+ 	 * @param antennaDelay The double value to which antennaDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setAntennaDelay (double antennaDelay) {
+	
+ 		this->antennaDelay = antennaDelay;
+	
+		antennaDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark antennaDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearAntennaDelay () {
+		antennaDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute numReceptor is optional. Return true if this attribute exists.
+	 * @return true if and only if the numReceptor attribute exists. 
+	 */
+	bool DelayModelRow::isNumReceptorExists() const {
+		return numReceptorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numReceptor, which is optional.
+ 	 * @return numReceptor as int
+ 	 * @throw IllegalAccessException If numReceptor does not exist.
+ 	 */
+ 	int DelayModelRow::getNumReceptor() const  {
+		if (!numReceptorExists) {
+			throw IllegalAccessException("numReceptor", "DelayModel");
+		}
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setNumReceptor (int numReceptor) {
+	
+ 		this->numReceptor = numReceptor;
+	
+		numReceptorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numReceptor, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearNumReceptor () {
+		numReceptorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute polarizationType is optional. Return true if this attribute exists.
+	 * @return true if and only if the polarizationType attribute exists. 
+	 */
+	bool DelayModelRow::isPolarizationTypeExists() const {
+		return polarizationTypeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get polarizationType, which is optional.
+ 	 * @return polarizationType as vector<PolarizationTypeMod::PolarizationType >
+ 	 * @throw IllegalAccessException If polarizationType does not exist.
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > DelayModelRow::getPolarizationType() const  {
+		if (!polarizationTypeExists) {
+			throw IllegalAccessException("polarizationType", "DelayModel");
+		}
+	
+  		return polarizationType;
+ 	}
+
+ 	/**
+ 	 * Set polarizationType with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationType The vector<PolarizationTypeMod::PolarizationType > value to which polarizationType is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setPolarizationType (vector<PolarizationTypeMod::PolarizationType > polarizationType) {
+	
+ 		this->polarizationType = polarizationType;
+	
+		polarizationTypeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark polarizationType, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearPolarizationType () {
+		polarizationTypeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute electronicDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the electronicDelay attribute exists. 
+	 */
+	bool DelayModelRow::isElectronicDelayExists() const {
+		return electronicDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get electronicDelay, which is optional.
+ 	 * @return electronicDelay as vector<double >
+ 	 * @throw IllegalAccessException If electronicDelay does not exist.
+ 	 */
+ 	vector<double > DelayModelRow::getElectronicDelay() const  {
+		if (!electronicDelayExists) {
+			throw IllegalAccessException("electronicDelay", "DelayModel");
+		}
+	
+  		return electronicDelay;
+ 	}
+
+ 	/**
+ 	 * Set electronicDelay with the specified vector<double >.
+ 	 * @param electronicDelay The vector<double > value to which electronicDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setElectronicDelay (vector<double > electronicDelay) {
+	
+ 		this->electronicDelay = electronicDelay;
+	
+		electronicDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark electronicDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearElectronicDelay () {
+		electronicDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute electronicDelayRate is optional. Return true if this attribute exists.
+	 * @return true if and only if the electronicDelayRate attribute exists. 
+	 */
+	bool DelayModelRow::isElectronicDelayRateExists() const {
+		return electronicDelayRateExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get electronicDelayRate, which is optional.
+ 	 * @return electronicDelayRate as vector<double >
+ 	 * @throw IllegalAccessException If electronicDelayRate does not exist.
+ 	 */
+ 	vector<double > DelayModelRow::getElectronicDelayRate() const  {
+		if (!electronicDelayRateExists) {
+			throw IllegalAccessException("electronicDelayRate", "DelayModel");
+		}
+	
+  		return electronicDelayRate;
+ 	}
+
+ 	/**
+ 	 * Set electronicDelayRate with the specified vector<double >.
+ 	 * @param electronicDelayRate The vector<double > value to which electronicDelayRate is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setElectronicDelayRate (vector<double > electronicDelayRate) {
+	
+ 		this->electronicDelayRate = electronicDelayRate;
+	
+		electronicDelayRateExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark electronicDelayRate, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearElectronicDelayRate () {
+		electronicDelayRateExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute receiverDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the receiverDelay attribute exists. 
+	 */
+	bool DelayModelRow::isReceiverDelayExists() const {
+		return receiverDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get receiverDelay, which is optional.
+ 	 * @return receiverDelay as vector<double >
+ 	 * @throw IllegalAccessException If receiverDelay does not exist.
+ 	 */
+ 	vector<double > DelayModelRow::getReceiverDelay() const  {
+		if (!receiverDelayExists) {
+			throw IllegalAccessException("receiverDelay", "DelayModel");
+		}
+	
+  		return receiverDelay;
+ 	}
+
+ 	/**
+ 	 * Set receiverDelay with the specified vector<double >.
+ 	 * @param receiverDelay The vector<double > value to which receiverDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setReceiverDelay (vector<double > receiverDelay) {
+	
+ 		this->receiverDelay = receiverDelay;
+	
+		receiverDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark receiverDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearReceiverDelay () {
+		receiverDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute IFDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the IFDelay attribute exists. 
+	 */
+	bool DelayModelRow::isIFDelayExists() const {
+		return IFDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get IFDelay, which is optional.
+ 	 * @return IFDelay as vector<double >
+ 	 * @throw IllegalAccessException If IFDelay does not exist.
+ 	 */
+ 	vector<double > DelayModelRow::getIFDelay() const  {
+		if (!IFDelayExists) {
+			throw IllegalAccessException("IFDelay", "DelayModel");
+		}
+	
+  		return IFDelay;
+ 	}
+
+ 	/**
+ 	 * Set IFDelay with the specified vector<double >.
+ 	 * @param IFDelay The vector<double > value to which IFDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setIFDelay (vector<double > IFDelay) {
+	
+ 		this->IFDelay = IFDelay;
+	
+		IFDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark IFDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearIFDelay () {
+		IFDelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute LODelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the LODelay attribute exists. 
+	 */
+	bool DelayModelRow::isLODelayExists() const {
+		return LODelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get LODelay, which is optional.
+ 	 * @return LODelay as vector<double >
+ 	 * @throw IllegalAccessException If LODelay does not exist.
+ 	 */
+ 	vector<double > DelayModelRow::getLODelay() const  {
+		if (!LODelayExists) {
+			throw IllegalAccessException("LODelay", "DelayModel");
+		}
+	
+  		return LODelay;
+ 	}
+
+ 	/**
+ 	 * Set LODelay with the specified vector<double >.
+ 	 * @param LODelay The vector<double > value to which LODelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setLODelay (vector<double > LODelay) {
+	
+ 		this->LODelay = LODelay;
+	
+		LODelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark LODelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearLODelay () {
+		LODelayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute crossPolarizationDelay is optional. Return true if this attribute exists.
+	 * @return true if and only if the crossPolarizationDelay attribute exists. 
+	 */
+	bool DelayModelRow::isCrossPolarizationDelayExists() const {
+		return crossPolarizationDelayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get crossPolarizationDelay, which is optional.
+ 	 * @return crossPolarizationDelay as double
+ 	 * @throw IllegalAccessException If crossPolarizationDelay does not exist.
+ 	 */
+ 	double DelayModelRow::getCrossPolarizationDelay() const  {
+		if (!crossPolarizationDelayExists) {
+			throw IllegalAccessException("crossPolarizationDelay", "DelayModel");
+		}
+	
+  		return crossPolarizationDelay;
+ 	}
+
+ 	/**
+ 	 * Set crossPolarizationDelay with the specified double.
+ 	 * @param crossPolarizationDelay The double value to which crossPolarizationDelay is to be set.
+ 	 
+ 	
+ 	 */
+ 	void DelayModelRow::setCrossPolarizationDelay (double crossPolarizationDelay) {
+	
+ 		this->crossPolarizationDelay = crossPolarizationDelay;
+	
+		crossPolarizationDelayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark crossPolarizationDelay, which is an optional field, as non-existent.
+	 */
+	void DelayModelRow::clearCrossPolarizationDelay () {
+		crossPolarizationDelayExists = false;
+	}
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1496,9 +4389,78 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+	
+
+	
+ 	/**
+ 	 * Get fieldId.
+ 	 * @return fieldId as Tag
+ 	 */
+ 	Tag DelayModelRow::getFieldId() const {
+	
+  		return fieldId;
+ 	}
+
+ 	/**
+ 	 * Set fieldId with the specified Tag.
+ 	 * @param fieldId The Tag value to which fieldId is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void DelayModelRow::setFieldId (Tag fieldId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->fieldId = fieldId;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get spectralWindowId.
+ 	 * @return spectralWindowId as Tag
+ 	 */
+ 	Tag DelayModelRow::getSpectralWindowId() const {
+	
+  		return spectralWindowId;
+ 	}
+
+ 	/**
+ 	 * Set spectralWindowId with the specified Tag.
+ 	 * @param spectralWindowId The Tag value to which spectralWindowId is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void DelayModelRow::setSpectralWindowId (Tag spectralWindowId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("spectralWindowId", "DelayModel");
+		
+  		}
+  	
+ 		this->spectralWindowId = spectralWindowId;
+	
+ 	}
+	
+	
+
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1514,6 +4476,44 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	 AntennaRow* DelayModelRow::getAntennaUsingAntennaId() {
 	 
 	 	return table.getContainer().getAntenna().getRowByKey(antennaId);
+	 }
+	 
+
+	
+
+	
+	
+	
+		
+
+	/**
+	 * Returns the pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
+	 * @return a SpectralWindowRow*
+	 * 
+	 
+	 */
+	 SpectralWindowRow* DelayModelRow::getSpectralWindowUsingSpectralWindowId() {
+	 
+	 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
+	 }
+	 
+
+	
+
+	
+	
+	
+		
+
+	/**
+	 * Returns the pointer to the row in the Field table having Field.fieldId == fieldId
+	 * @return a FieldRow*
+	 * 
+	 
+	 */
+	 FieldRow* DelayModelRow::getFieldUsingFieldId() {
+	 
+	 	return table.getContainer().getField().getRowByKey(fieldId);
 	 }
 	 
 
@@ -1545,25 +4545,139 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
-		dispDelayExists = false;
+		timeOriginExists = false;
 	
 
 	
-		groupDelayExists = false;
+		atmosphericGroupDelayExists = false;
 	
 
 	
-		phaseDelayExists = false;
+		atmosphericGroupDelayRateExists = false;
+	
+
+	
+		geometricDelayExists = false;
+	
+
+	
+		geometricDelayRateExists = false;
+	
+
+	
+		numLOExists = false;
+	
+
+	
+		LOOffsetExists = false;
+	
+
+	
+		LOOffsetRateExists = false;
+	
+
+	
+		dispersiveDelayExists = false;
+	
+
+	
+		dispersiveDelayRateExists = false;
+	
+
+	
+		atmosphericDryDelayExists = false;
+	
+
+	
+		atmosphericWetDelayExists = false;
+	
+
+	
+		padDelayExists = false;
+	
+
+	
+		antennaDelayExists = false;
+	
+
+	
+		numReceptorExists = false;
+	
+
+	
+		polarizationTypeExists = false;
+	
+
+	
+		electronicDelayExists = false;
+	
+
+	
+		electronicDelayRateExists = false;
+	
+
+	
+		receiverDelayExists = false;
+	
+
+	
+		IFDelayExists = false;
+	
+
+	
+		LODelayExists = false;
+	
+
+	
+		crossPolarizationDelayExists = false;
 	
 
 	
 	
 
 	
+
+	
+
 	
 	
+	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1587,19 +4701,168 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 	
 	 fromBinMethods["antennaId"] = &DelayModelRow::antennaIdFromBin; 
+	 fromBinMethods["spectralWindowId"] = &DelayModelRow::spectralWindowIdFromBin; 
 	 fromBinMethods["timeInterval"] = &DelayModelRow::timeIntervalFromBin; 
-	 fromBinMethods["timeOrigin"] = &DelayModelRow::timeOriginFromBin; 
 	 fromBinMethods["numPoly"] = &DelayModelRow::numPolyFromBin; 
-	 fromBinMethods["atmDryDelay"] = &DelayModelRow::atmDryDelayFromBin; 
-	 fromBinMethods["atmWetDelay"] = &DelayModelRow::atmWetDelayFromBin; 
-	 fromBinMethods["clockDelay"] = &DelayModelRow::clockDelayFromBin; 
-	 fromBinMethods["geomDelay"] = &DelayModelRow::geomDelayFromBin; 
+	 fromBinMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromBin; 
+	 fromBinMethods["phaseDelayRate"] = &DelayModelRow::phaseDelayRateFromBin; 
+	 fromBinMethods["groupDelay"] = &DelayModelRow::groupDelayFromBin; 
+	 fromBinMethods["groupDelayRate"] = &DelayModelRow::groupDelayRateFromBin; 
+	 fromBinMethods["fieldId"] = &DelayModelRow::fieldIdFromBin; 
 		
 	
-	 fromBinMethods["dispDelay"] = &DelayModelRow::dispDelayFromBin; 
-	 fromBinMethods["groupDelay"] = &DelayModelRow::groupDelayFromBin; 
-	 fromBinMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromBin; 
+	 fromBinMethods["timeOrigin"] = &DelayModelRow::timeOriginFromBin; 
+	 fromBinMethods["atmosphericGroupDelay"] = &DelayModelRow::atmosphericGroupDelayFromBin; 
+	 fromBinMethods["atmosphericGroupDelayRate"] = &DelayModelRow::atmosphericGroupDelayRateFromBin; 
+	 fromBinMethods["geometricDelay"] = &DelayModelRow::geometricDelayFromBin; 
+	 fromBinMethods["geometricDelayRate"] = &DelayModelRow::geometricDelayRateFromBin; 
+	 fromBinMethods["numLO"] = &DelayModelRow::numLOFromBin; 
+	 fromBinMethods["LOOffset"] = &DelayModelRow::LOOffsetFromBin; 
+	 fromBinMethods["LOOffsetRate"] = &DelayModelRow::LOOffsetRateFromBin; 
+	 fromBinMethods["dispersiveDelay"] = &DelayModelRow::dispersiveDelayFromBin; 
+	 fromBinMethods["dispersiveDelayRate"] = &DelayModelRow::dispersiveDelayRateFromBin; 
+	 fromBinMethods["atmosphericDryDelay"] = &DelayModelRow::atmosphericDryDelayFromBin; 
+	 fromBinMethods["atmosphericWetDelay"] = &DelayModelRow::atmosphericWetDelayFromBin; 
+	 fromBinMethods["padDelay"] = &DelayModelRow::padDelayFromBin; 
+	 fromBinMethods["antennaDelay"] = &DelayModelRow::antennaDelayFromBin; 
+	 fromBinMethods["numReceptor"] = &DelayModelRow::numReceptorFromBin; 
+	 fromBinMethods["polarizationType"] = &DelayModelRow::polarizationTypeFromBin; 
+	 fromBinMethods["electronicDelay"] = &DelayModelRow::electronicDelayFromBin; 
+	 fromBinMethods["electronicDelayRate"] = &DelayModelRow::electronicDelayRateFromBin; 
+	 fromBinMethods["receiverDelay"] = &DelayModelRow::receiverDelayFromBin; 
+	 fromBinMethods["IFDelay"] = &DelayModelRow::IFDelayFromBin; 
+	 fromBinMethods["LODelay"] = &DelayModelRow::LODelayFromBin; 
+	 fromBinMethods["crossPolarizationDelay"] = &DelayModelRow::crossPolarizationDelayFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &DelayModelRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &DelayModelRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &DelayModelRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["numPoly"] = &DelayModelRow::numPolyFromText;
+		 
+	
+				 
+	fromTextMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromText;
+		 
+	
+				 
+	fromTextMethods["phaseDelayRate"] = &DelayModelRow::phaseDelayRateFromText;
+		 
+	
+				 
+	fromTextMethods["groupDelay"] = &DelayModelRow::groupDelayFromText;
+		 
+	
+				 
+	fromTextMethods["groupDelayRate"] = &DelayModelRow::groupDelayRateFromText;
+		 
+	
+				 
+	fromTextMethods["fieldId"] = &DelayModelRow::fieldIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["timeOrigin"] = &DelayModelRow::timeOriginFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericGroupDelay"] = &DelayModelRow::atmosphericGroupDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericGroupDelayRate"] = &DelayModelRow::atmosphericGroupDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["geometricDelay"] = &DelayModelRow::geometricDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["geometricDelayRate"] = &DelayModelRow::geometricDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["numLO"] = &DelayModelRow::numLOFromText;
+		 	
+	 
+				
+	fromTextMethods["LOOffset"] = &DelayModelRow::LOOffsetFromText;
+		 	
+	 
+				
+	fromTextMethods["LOOffsetRate"] = &DelayModelRow::LOOffsetRateFromText;
+		 	
+	 
+				
+	fromTextMethods["dispersiveDelay"] = &DelayModelRow::dispersiveDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["dispersiveDelayRate"] = &DelayModelRow::dispersiveDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericDryDelay"] = &DelayModelRow::atmosphericDryDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["atmosphericWetDelay"] = &DelayModelRow::atmosphericWetDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["padDelay"] = &DelayModelRow::padDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["antennaDelay"] = &DelayModelRow::antennaDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["numReceptor"] = &DelayModelRow::numReceptorFromText;
+		 	
+	 
+				
+	fromTextMethods["polarizationType"] = &DelayModelRow::polarizationTypeFromText;
+		 	
+	 
+				
+	fromTextMethods["electronicDelay"] = &DelayModelRow::electronicDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["electronicDelayRate"] = &DelayModelRow::electronicDelayRateFromText;
+		 	
+	 
+				
+	fromTextMethods["receiverDelay"] = &DelayModelRow::receiverDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["IFDelay"] = &DelayModelRow::IFDelayFromText;
+		 	
+	 
+				
+	fromTextMethods["LODelay"] = &DelayModelRow::LODelayFromText;
+		 	
+	 
+				
+	fromTextMethods["crossPolarizationDelay"] = &DelayModelRow::crossPolarizationDelayFromText;
+		 	
+		
 	}
 	
 	DelayModelRow::DelayModelRow (DelayModelTable &t, DelayModelRow &row) : table(t) {
@@ -1621,20 +4884,98 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
-		dispDelayExists = false;
+		timeOriginExists = false;
 	
 
 	
-		groupDelayExists = false;
+		atmosphericGroupDelayExists = false;
 	
 
 	
-		phaseDelayExists = false;
+		atmosphericGroupDelayRateExists = false;
 	
 
 	
+		geometricDelayExists = false;
+	
+
+	
+		geometricDelayRateExists = false;
+	
+
+	
+		numLOExists = false;
+	
+
+	
+		LOOffsetExists = false;
+	
+
+	
+		LOOffsetRateExists = false;
+	
+
+	
+		dispersiveDelayExists = false;
+	
+
+	
+		dispersiveDelayRateExists = false;
+	
+
+	
+		atmosphericDryDelayExists = false;
+	
+
+	
+		atmosphericWetDelayExists = false;
+	
+
+	
+		padDelayExists = false;
+	
+
+	
+		antennaDelayExists = false;
+	
+
+	
+		numReceptorExists = false;
+	
+
+	
+		polarizationTypeExists = false;
+	
+
+	
+		electronicDelayExists = false;
+	
+
+	
+		electronicDelayRateExists = false;
+	
+
+	
+		receiverDelayExists = false;
+	
+
+	
+		IFDelayExists = false;
+	
+
+	
+		LODelayExists = false;
+	
+
+	
+		crossPolarizationDelayExists = false;
+	
+
+	
+	
+
+	
+
 	
 		
 		}
@@ -1643,73 +4984,235 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 		
 			antennaId = row.antennaId;
 		
+			spectralWindowId = row.spectralWindowId;
+		
 			timeInterval = row.timeInterval;
 		
 		
 		
 		
-			timeOrigin = row.timeOrigin;
-		
 			numPoly = row.numPoly;
 		
-			atmDryDelay = row.atmDryDelay;
+			phaseDelay = row.phaseDelay;
 		
-			atmWetDelay = row.atmWetDelay;
+			phaseDelayRate = row.phaseDelayRate;
 		
-			clockDelay = row.clockDelay;
+			groupDelay = row.groupDelay;
 		
-			geomDelay = row.geomDelay;
+			groupDelayRate = row.groupDelayRate;
+		
+			fieldId = row.fieldId;
 		
 		
 		
 		
-		if (row.dispDelayExists) {
-			dispDelay = row.dispDelay;		
-			dispDelayExists = true;
+		if (row.timeOriginExists) {
+			timeOrigin = row.timeOrigin;		
+			timeOriginExists = true;
 		}
 		else
-			dispDelayExists = false;
+			timeOriginExists = false;
 		
-		if (row.groupDelayExists) {
-			groupDelay = row.groupDelay;		
-			groupDelayExists = true;
+		if (row.atmosphericGroupDelayExists) {
+			atmosphericGroupDelay = row.atmosphericGroupDelay;		
+			atmosphericGroupDelayExists = true;
 		}
 		else
-			groupDelayExists = false;
+			atmosphericGroupDelayExists = false;
 		
-		if (row.phaseDelayExists) {
-			phaseDelay = row.phaseDelay;		
-			phaseDelayExists = true;
+		if (row.atmosphericGroupDelayRateExists) {
+			atmosphericGroupDelayRate = row.atmosphericGroupDelayRate;		
+			atmosphericGroupDelayRateExists = true;
 		}
 		else
-			phaseDelayExists = false;
+			atmosphericGroupDelayRateExists = false;
+		
+		if (row.geometricDelayExists) {
+			geometricDelay = row.geometricDelay;		
+			geometricDelayExists = true;
+		}
+		else
+			geometricDelayExists = false;
+		
+		if (row.geometricDelayRateExists) {
+			geometricDelayRate = row.geometricDelayRate;		
+			geometricDelayRateExists = true;
+		}
+		else
+			geometricDelayRateExists = false;
+		
+		if (row.numLOExists) {
+			numLO = row.numLO;		
+			numLOExists = true;
+		}
+		else
+			numLOExists = false;
+		
+		if (row.LOOffsetExists) {
+			LOOffset = row.LOOffset;		
+			LOOffsetExists = true;
+		}
+		else
+			LOOffsetExists = false;
+		
+		if (row.LOOffsetRateExists) {
+			LOOffsetRate = row.LOOffsetRate;		
+			LOOffsetRateExists = true;
+		}
+		else
+			LOOffsetRateExists = false;
+		
+		if (row.dispersiveDelayExists) {
+			dispersiveDelay = row.dispersiveDelay;		
+			dispersiveDelayExists = true;
+		}
+		else
+			dispersiveDelayExists = false;
+		
+		if (row.dispersiveDelayRateExists) {
+			dispersiveDelayRate = row.dispersiveDelayRate;		
+			dispersiveDelayRateExists = true;
+		}
+		else
+			dispersiveDelayRateExists = false;
+		
+		if (row.atmosphericDryDelayExists) {
+			atmosphericDryDelay = row.atmosphericDryDelay;		
+			atmosphericDryDelayExists = true;
+		}
+		else
+			atmosphericDryDelayExists = false;
+		
+		if (row.atmosphericWetDelayExists) {
+			atmosphericWetDelay = row.atmosphericWetDelay;		
+			atmosphericWetDelayExists = true;
+		}
+		else
+			atmosphericWetDelayExists = false;
+		
+		if (row.padDelayExists) {
+			padDelay = row.padDelay;		
+			padDelayExists = true;
+		}
+		else
+			padDelayExists = false;
+		
+		if (row.antennaDelayExists) {
+			antennaDelay = row.antennaDelay;		
+			antennaDelayExists = true;
+		}
+		else
+			antennaDelayExists = false;
+		
+		if (row.numReceptorExists) {
+			numReceptor = row.numReceptor;		
+			numReceptorExists = true;
+		}
+		else
+			numReceptorExists = false;
+		
+		if (row.polarizationTypeExists) {
+			polarizationType = row.polarizationType;		
+			polarizationTypeExists = true;
+		}
+		else
+			polarizationTypeExists = false;
+		
+		if (row.electronicDelayExists) {
+			electronicDelay = row.electronicDelay;		
+			electronicDelayExists = true;
+		}
+		else
+			electronicDelayExists = false;
+		
+		if (row.electronicDelayRateExists) {
+			electronicDelayRate = row.electronicDelayRate;		
+			electronicDelayRateExists = true;
+		}
+		else
+			electronicDelayRateExists = false;
+		
+		if (row.receiverDelayExists) {
+			receiverDelay = row.receiverDelay;		
+			receiverDelayExists = true;
+		}
+		else
+			receiverDelayExists = false;
+		
+		if (row.IFDelayExists) {
+			IFDelay = row.IFDelay;		
+			IFDelayExists = true;
+		}
+		else
+			IFDelayExists = false;
+		
+		if (row.LODelayExists) {
+			LODelay = row.LODelay;		
+			LODelayExists = true;
+		}
+		else
+			LODelayExists = false;
+		
+		if (row.crossPolarizationDelayExists) {
+			crossPolarizationDelay = row.crossPolarizationDelay;		
+			crossPolarizationDelayExists = true;
+		}
+		else
+			crossPolarizationDelayExists = false;
 		
 		}
 		
 		 fromBinMethods["antennaId"] = &DelayModelRow::antennaIdFromBin; 
+		 fromBinMethods["spectralWindowId"] = &DelayModelRow::spectralWindowIdFromBin; 
 		 fromBinMethods["timeInterval"] = &DelayModelRow::timeIntervalFromBin; 
-		 fromBinMethods["timeOrigin"] = &DelayModelRow::timeOriginFromBin; 
 		 fromBinMethods["numPoly"] = &DelayModelRow::numPolyFromBin; 
-		 fromBinMethods["atmDryDelay"] = &DelayModelRow::atmDryDelayFromBin; 
-		 fromBinMethods["atmWetDelay"] = &DelayModelRow::atmWetDelayFromBin; 
-		 fromBinMethods["clockDelay"] = &DelayModelRow::clockDelayFromBin; 
-		 fromBinMethods["geomDelay"] = &DelayModelRow::geomDelayFromBin; 
+		 fromBinMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromBin; 
+		 fromBinMethods["phaseDelayRate"] = &DelayModelRow::phaseDelayRateFromBin; 
+		 fromBinMethods["groupDelay"] = &DelayModelRow::groupDelayFromBin; 
+		 fromBinMethods["groupDelayRate"] = &DelayModelRow::groupDelayRateFromBin; 
+		 fromBinMethods["fieldId"] = &DelayModelRow::fieldIdFromBin; 
 			
 	
-		 fromBinMethods["dispDelay"] = &DelayModelRow::dispDelayFromBin; 
-		 fromBinMethods["groupDelay"] = &DelayModelRow::groupDelayFromBin; 
-		 fromBinMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromBin; 
+		 fromBinMethods["timeOrigin"] = &DelayModelRow::timeOriginFromBin; 
+		 fromBinMethods["atmosphericGroupDelay"] = &DelayModelRow::atmosphericGroupDelayFromBin; 
+		 fromBinMethods["atmosphericGroupDelayRate"] = &DelayModelRow::atmosphericGroupDelayRateFromBin; 
+		 fromBinMethods["geometricDelay"] = &DelayModelRow::geometricDelayFromBin; 
+		 fromBinMethods["geometricDelayRate"] = &DelayModelRow::geometricDelayRateFromBin; 
+		 fromBinMethods["numLO"] = &DelayModelRow::numLOFromBin; 
+		 fromBinMethods["LOOffset"] = &DelayModelRow::LOOffsetFromBin; 
+		 fromBinMethods["LOOffsetRate"] = &DelayModelRow::LOOffsetRateFromBin; 
+		 fromBinMethods["dispersiveDelay"] = &DelayModelRow::dispersiveDelayFromBin; 
+		 fromBinMethods["dispersiveDelayRate"] = &DelayModelRow::dispersiveDelayRateFromBin; 
+		 fromBinMethods["atmosphericDryDelay"] = &DelayModelRow::atmosphericDryDelayFromBin; 
+		 fromBinMethods["atmosphericWetDelay"] = &DelayModelRow::atmosphericWetDelayFromBin; 
+		 fromBinMethods["padDelay"] = &DelayModelRow::padDelayFromBin; 
+		 fromBinMethods["antennaDelay"] = &DelayModelRow::antennaDelayFromBin; 
+		 fromBinMethods["numReceptor"] = &DelayModelRow::numReceptorFromBin; 
+		 fromBinMethods["polarizationType"] = &DelayModelRow::polarizationTypeFromBin; 
+		 fromBinMethods["electronicDelay"] = &DelayModelRow::electronicDelayFromBin; 
+		 fromBinMethods["electronicDelayRate"] = &DelayModelRow::electronicDelayRateFromBin; 
+		 fromBinMethods["receiverDelay"] = &DelayModelRow::receiverDelayFromBin; 
+		 fromBinMethods["IFDelay"] = &DelayModelRow::IFDelayFromBin; 
+		 fromBinMethods["LODelay"] = &DelayModelRow::LODelayFromBin; 
+		 fromBinMethods["crossPolarizationDelay"] = &DelayModelRow::crossPolarizationDelayFromBin; 
 			
 	}
 
 	
-	bool DelayModelRow::compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay) {
+	bool DelayModelRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, vector<double > phaseDelay, vector<double > phaseDelayRate, vector<double > groupDelay, vector<double > groupDelayRate, Tag fieldId) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->antennaId == antennaId);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->spectralWindowId == spectralWindowId);
 		
 		if (!result) return false;
 	
@@ -1723,13 +5226,6 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 
 	
 		
-		result = result && (this->timeOrigin == timeOrigin);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->numPoly == numPoly);
 		
 		if (!result) return false;
@@ -1737,28 +5233,35 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 
 	
 		
-		result = result && (this->atmDryDelay == atmDryDelay);
+		result = result && (this->phaseDelay == phaseDelay);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->atmWetDelay == atmWetDelay);
+		result = result && (this->phaseDelayRate == phaseDelayRate);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->clockDelay == clockDelay);
+		result = result && (this->groupDelay == groupDelay);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->geomDelay == geomDelay);
+		result = result && (this->groupDelayRate == groupDelayRate);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->fieldId == fieldId);
 		
 		if (!result) return false;
 	
@@ -1768,32 +5271,32 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	
 	
 	
-	bool DelayModelRow::compareRequiredValue(ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay) {
+	bool DelayModelRow::compareRequiredValue(int numPoly, vector<double > phaseDelay, vector<double > phaseDelayRate, vector<double > groupDelay, vector<double > groupDelayRate, Tag fieldId) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->timeOrigin == timeOrigin)) return false;
-	
-
 	
 		if (!(this->numPoly == numPoly)) return false;
 	
 
 	
-		if (!(this->atmDryDelay == atmDryDelay)) return false;
+		if (!(this->phaseDelay == phaseDelay)) return false;
 	
 
 	
-		if (!(this->atmWetDelay == atmWetDelay)) return false;
+		if (!(this->phaseDelayRate == phaseDelayRate)) return false;
 	
 
 	
-		if (!(this->clockDelay == clockDelay)) return false;
+		if (!(this->groupDelay == groupDelay)) return false;
 	
 
 	
-		if (!(this->geomDelay == geomDelay)) return false;
+		if (!(this->groupDelayRate == groupDelayRate)) return false;
+	
+
+	
+		if (!(this->fieldId == fieldId)) return false;
 	
 
 		return result;
@@ -1811,17 +5314,17 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 	bool DelayModelRow::equalByRequiredValue(DelayModelRow* x) {
 		
 			
-		if (this->timeOrigin != x->timeOrigin) return false;
-			
 		if (this->numPoly != x->numPoly) return false;
 			
-		if (this->atmDryDelay != x->atmDryDelay) return false;
+		if (this->phaseDelay != x->phaseDelay) return false;
 			
-		if (this->atmWetDelay != x->atmWetDelay) return false;
+		if (this->phaseDelayRate != x->phaseDelayRate) return false;
 			
-		if (this->clockDelay != x->clockDelay) return false;
+		if (this->groupDelay != x->groupDelay) return false;
 			
-		if (this->geomDelay != x->geomDelay) return false;
+		if (this->groupDelayRate != x->groupDelayRate) return false;
+			
+		if (this->fieldId != x->fieldId) return false;
 			
 		
 		return true;
@@ -1832,18 +5335,38 @@ void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
 		map<string, DelayModelAttributeFromBin> result;
 		
 		result["antennaId"] = &DelayModelRow::antennaIdFromBin;
+		result["spectralWindowId"] = &DelayModelRow::spectralWindowIdFromBin;
 		result["timeInterval"] = &DelayModelRow::timeIntervalFromBin;
-		result["timeOrigin"] = &DelayModelRow::timeOriginFromBin;
 		result["numPoly"] = &DelayModelRow::numPolyFromBin;
-		result["atmDryDelay"] = &DelayModelRow::atmDryDelayFromBin;
-		result["atmWetDelay"] = &DelayModelRow::atmWetDelayFromBin;
-		result["clockDelay"] = &DelayModelRow::clockDelayFromBin;
-		result["geomDelay"] = &DelayModelRow::geomDelayFromBin;
-		
-		
-		result["dispDelay"] = &DelayModelRow::dispDelayFromBin;
-		result["groupDelay"] = &DelayModelRow::groupDelayFromBin;
 		result["phaseDelay"] = &DelayModelRow::phaseDelayFromBin;
+		result["phaseDelayRate"] = &DelayModelRow::phaseDelayRateFromBin;
+		result["groupDelay"] = &DelayModelRow::groupDelayFromBin;
+		result["groupDelayRate"] = &DelayModelRow::groupDelayRateFromBin;
+		result["fieldId"] = &DelayModelRow::fieldIdFromBin;
+		
+		
+		result["timeOrigin"] = &DelayModelRow::timeOriginFromBin;
+		result["atmosphericGroupDelay"] = &DelayModelRow::atmosphericGroupDelayFromBin;
+		result["atmosphericGroupDelayRate"] = &DelayModelRow::atmosphericGroupDelayRateFromBin;
+		result["geometricDelay"] = &DelayModelRow::geometricDelayFromBin;
+		result["geometricDelayRate"] = &DelayModelRow::geometricDelayRateFromBin;
+		result["numLO"] = &DelayModelRow::numLOFromBin;
+		result["LOOffset"] = &DelayModelRow::LOOffsetFromBin;
+		result["LOOffsetRate"] = &DelayModelRow::LOOffsetRateFromBin;
+		result["dispersiveDelay"] = &DelayModelRow::dispersiveDelayFromBin;
+		result["dispersiveDelayRate"] = &DelayModelRow::dispersiveDelayRateFromBin;
+		result["atmosphericDryDelay"] = &DelayModelRow::atmosphericDryDelayFromBin;
+		result["atmosphericWetDelay"] = &DelayModelRow::atmosphericWetDelayFromBin;
+		result["padDelay"] = &DelayModelRow::padDelayFromBin;
+		result["antennaDelay"] = &DelayModelRow::antennaDelayFromBin;
+		result["numReceptor"] = &DelayModelRow::numReceptorFromBin;
+		result["polarizationType"] = &DelayModelRow::polarizationTypeFromBin;
+		result["electronicDelay"] = &DelayModelRow::electronicDelayFromBin;
+		result["electronicDelayRate"] = &DelayModelRow::electronicDelayRateFromBin;
+		result["receiverDelay"] = &DelayModelRow::receiverDelayFromBin;
+		result["IFDelay"] = &DelayModelRow::IFDelayFromBin;
+		result["LODelay"] = &DelayModelRow::LODelayFromBin;
+		result["crossPolarizationDelay"] = &DelayModelRow::crossPolarizationDelayFromBin;
 			
 		
 		return result;	

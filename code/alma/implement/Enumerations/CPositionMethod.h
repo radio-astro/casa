@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace PositionMethodMod
   //! PositionMethod.
   //!  [CalDM.CalPositions] Method used for measuring antenna positions
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum PositionMethod
@@ -69,7 +70,10 @@ namespace PositionMethodMod
 } 
 #endif
 
-using namespace std;
+namespace PositionMethodMod {
+	std::ostream & operator << ( std::ostream & out, const PositionMethod& value);
+	std::istream & operator >> ( std::istream & in , PositionMethod& value );
+}
 
 /** 
   * A helper class for the enumeration PositionMethod.
@@ -99,7 +103,7 @@ class CPositionMethod {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -153,8 +157,8 @@ class CPositionMethod {
     CPositionMethod(const CPositionMethod&);
     CPositionMethod& operator=(const CPositionMethod&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

@@ -69,6 +69,7 @@ using asdm::SpectralWindowRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -92,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::SysCalRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -1555,83 +1559,83 @@ namespace asdm {
 
 	}
 	
-void SysCalRow::antennaIdFromBin(EndianISStream& eiss) {
+void SysCalRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void SysCalRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SysCalRow::timeIntervalFromBin(EndianISStream& eiss) {
+void SysCalRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void SysCalRow::feedIdFromBin(EndianISStream& eiss) {
+void SysCalRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void SysCalRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void SysCalRow::numReceptorFromBin(EndianISStream& eiss) {
+void SysCalRow::numReceptorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
 	
 }
-void SysCalRow::numChanFromBin(EndianISStream& eiss) {
+void SysCalRow::numChanFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numChan =  eiss.readInt();
+		numChan =  eis.readInt();
 			
 		
 	
 	
 }
 
-void SysCalRow::tcalFlagFromBin(EndianISStream& eiss) {
+void SysCalRow::tcalFlagFromBin(EndianIStream& eis) {
 		
-	tcalFlagExists = eiss.readBoolean();
+	tcalFlagExists = eis.readBoolean();
 	if (tcalFlagExists) {
 		
 	
 	
 		
 			
-		tcalFlag =  eiss.readBoolean();
+		tcalFlag =  eis.readBoolean();
 			
 		
 	
@@ -1639,9 +1643,9 @@ void SysCalRow::tcalFlagFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tcalSpectrumFromBin(EndianISStream& eiss) {
+void SysCalRow::tcalSpectrumFromBin(EndianIStream& eis) {
 		
-	tcalSpectrumExists = eiss.readBoolean();
+	tcalSpectrumExists = eis.readBoolean();
 	if (tcalSpectrumExists) {
 		
 	
@@ -1649,7 +1653,7 @@ void SysCalRow::tcalSpectrumFromBin(EndianISStream& eiss) {
 		
 			
 	
-	tcalSpectrum = Temperature::from2DBin(eiss);		
+	tcalSpectrum = Temperature::from2DBin(eis);		
 	
 
 		
@@ -1658,16 +1662,16 @@ void SysCalRow::tcalSpectrumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::trxFlagFromBin(EndianISStream& eiss) {
+void SysCalRow::trxFlagFromBin(EndianIStream& eis) {
 		
-	trxFlagExists = eiss.readBoolean();
+	trxFlagExists = eis.readBoolean();
 	if (trxFlagExists) {
 		
 	
 	
 		
 			
-		trxFlag =  eiss.readBoolean();
+		trxFlag =  eis.readBoolean();
 			
 		
 	
@@ -1675,9 +1679,9 @@ void SysCalRow::trxFlagFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::trxSpectrumFromBin(EndianISStream& eiss) {
+void SysCalRow::trxSpectrumFromBin(EndianIStream& eis) {
 		
-	trxSpectrumExists = eiss.readBoolean();
+	trxSpectrumExists = eis.readBoolean();
 	if (trxSpectrumExists) {
 		
 	
@@ -1685,7 +1689,7 @@ void SysCalRow::trxSpectrumFromBin(EndianISStream& eiss) {
 		
 			
 	
-	trxSpectrum = Temperature::from2DBin(eiss);		
+	trxSpectrum = Temperature::from2DBin(eis);		
 	
 
 		
@@ -1694,16 +1698,16 @@ void SysCalRow::trxSpectrumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tskyFlagFromBin(EndianISStream& eiss) {
+void SysCalRow::tskyFlagFromBin(EndianIStream& eis) {
 		
-	tskyFlagExists = eiss.readBoolean();
+	tskyFlagExists = eis.readBoolean();
 	if (tskyFlagExists) {
 		
 	
 	
 		
 			
-		tskyFlag =  eiss.readBoolean();
+		tskyFlag =  eis.readBoolean();
 			
 		
 	
@@ -1711,9 +1715,9 @@ void SysCalRow::tskyFlagFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tskySpectrumFromBin(EndianISStream& eiss) {
+void SysCalRow::tskySpectrumFromBin(EndianIStream& eis) {
 		
-	tskySpectrumExists = eiss.readBoolean();
+	tskySpectrumExists = eis.readBoolean();
 	if (tskySpectrumExists) {
 		
 	
@@ -1721,7 +1725,7 @@ void SysCalRow::tskySpectrumFromBin(EndianISStream& eiss) {
 		
 			
 	
-	tskySpectrum = Temperature::from2DBin(eiss);		
+	tskySpectrum = Temperature::from2DBin(eis);		
 	
 
 		
@@ -1730,16 +1734,16 @@ void SysCalRow::tskySpectrumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tsysFlagFromBin(EndianISStream& eiss) {
+void SysCalRow::tsysFlagFromBin(EndianIStream& eis) {
 		
-	tsysFlagExists = eiss.readBoolean();
+	tsysFlagExists = eis.readBoolean();
 	if (tsysFlagExists) {
 		
 	
 	
 		
 			
-		tsysFlag =  eiss.readBoolean();
+		tsysFlag =  eis.readBoolean();
 			
 		
 	
@@ -1747,9 +1751,9 @@ void SysCalRow::tsysFlagFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tsysSpectrumFromBin(EndianISStream& eiss) {
+void SysCalRow::tsysSpectrumFromBin(EndianIStream& eis) {
 		
-	tsysSpectrumExists = eiss.readBoolean();
+	tsysSpectrumExists = eis.readBoolean();
 	if (tsysSpectrumExists) {
 		
 	
@@ -1757,7 +1761,7 @@ void SysCalRow::tsysSpectrumFromBin(EndianISStream& eiss) {
 		
 			
 	
-	tsysSpectrum = Temperature::from2DBin(eiss);		
+	tsysSpectrum = Temperature::from2DBin(eis);		
 	
 
 		
@@ -1766,16 +1770,16 @@ void SysCalRow::tsysSpectrumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tantFlagFromBin(EndianISStream& eiss) {
+void SysCalRow::tantFlagFromBin(EndianIStream& eis) {
 		
-	tantFlagExists = eiss.readBoolean();
+	tantFlagExists = eis.readBoolean();
 	if (tantFlagExists) {
 		
 	
 	
 		
 			
-		tantFlag =  eiss.readBoolean();
+		tantFlag =  eis.readBoolean();
 			
 		
 	
@@ -1783,9 +1787,9 @@ void SysCalRow::tantFlagFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tantSpectrumFromBin(EndianISStream& eiss) {
+void SysCalRow::tantSpectrumFromBin(EndianIStream& eis) {
 		
-	tantSpectrumExists = eiss.readBoolean();
+	tantSpectrumExists = eis.readBoolean();
 	if (tantSpectrumExists) {
 		
 	
@@ -1795,14 +1799,14 @@ void SysCalRow::tantSpectrumFromBin(EndianISStream& eiss) {
 	
 		tantSpectrum.clear();
 		
-		unsigned int tantSpectrumDim1 = eiss.readInt();
-		unsigned int tantSpectrumDim2 = eiss.readInt();
+		unsigned int tantSpectrumDim1 = eis.readInt();
+		unsigned int tantSpectrumDim2 = eis.readInt();
 		vector <float> tantSpectrumAux1;
 		for (unsigned int i = 0; i < tantSpectrumDim1; i++) {
 			tantSpectrumAux1.clear();
 			for (unsigned int j = 0; j < tantSpectrumDim2 ; j++)			
 			
-			tantSpectrumAux1.push_back(eiss.readFloat());
+			tantSpectrumAux1.push_back(eis.readFloat());
 			
 			tantSpectrum.push_back(tantSpectrumAux1);
 		}
@@ -1815,16 +1819,16 @@ void SysCalRow::tantSpectrumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tantTsysFlagFromBin(EndianISStream& eiss) {
+void SysCalRow::tantTsysFlagFromBin(EndianIStream& eis) {
 		
-	tantTsysFlagExists = eiss.readBoolean();
+	tantTsysFlagExists = eis.readBoolean();
 	if (tantTsysFlagExists) {
 		
 	
 	
 		
 			
-		tantTsysFlag =  eiss.readBoolean();
+		tantTsysFlag =  eis.readBoolean();
 			
 		
 	
@@ -1832,9 +1836,9 @@ void SysCalRow::tantTsysFlagFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::tantTsysSpectrumFromBin(EndianISStream& eiss) {
+void SysCalRow::tantTsysSpectrumFromBin(EndianIStream& eis) {
 		
-	tantTsysSpectrumExists = eiss.readBoolean();
+	tantTsysSpectrumExists = eis.readBoolean();
 	if (tantTsysSpectrumExists) {
 		
 	
@@ -1844,14 +1848,14 @@ void SysCalRow::tantTsysSpectrumFromBin(EndianISStream& eiss) {
 	
 		tantTsysSpectrum.clear();
 		
-		unsigned int tantTsysSpectrumDim1 = eiss.readInt();
-		unsigned int tantTsysSpectrumDim2 = eiss.readInt();
+		unsigned int tantTsysSpectrumDim1 = eis.readInt();
+		unsigned int tantTsysSpectrumDim2 = eis.readInt();
 		vector <float> tantTsysSpectrumAux1;
 		for (unsigned int i = 0; i < tantTsysSpectrumDim1; i++) {
 			tantTsysSpectrumAux1.clear();
 			for (unsigned int j = 0; j < tantTsysSpectrumDim2 ; j++)			
 			
-			tantTsysSpectrumAux1.push_back(eiss.readFloat());
+			tantTsysSpectrumAux1.push_back(eis.readFloat());
 			
 			tantTsysSpectrum.push_back(tantTsysSpectrumAux1);
 		}
@@ -1864,16 +1868,16 @@ void SysCalRow::tantTsysSpectrumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::phaseDiffFlagFromBin(EndianISStream& eiss) {
+void SysCalRow::phaseDiffFlagFromBin(EndianIStream& eis) {
 		
-	phaseDiffFlagExists = eiss.readBoolean();
+	phaseDiffFlagExists = eis.readBoolean();
 	if (phaseDiffFlagExists) {
 		
 	
 	
 		
 			
-		phaseDiffFlag =  eiss.readBoolean();
+		phaseDiffFlag =  eis.readBoolean();
 			
 		
 	
@@ -1881,9 +1885,9 @@ void SysCalRow::phaseDiffFlagFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SysCalRow::phaseDiffSpectrumFromBin(EndianISStream& eiss) {
+void SysCalRow::phaseDiffSpectrumFromBin(EndianIStream& eis) {
 		
-	phaseDiffSpectrumExists = eiss.readBoolean();
+	phaseDiffSpectrumExists = eis.readBoolean();
 	if (phaseDiffSpectrumExists) {
 		
 	
@@ -1893,14 +1897,14 @@ void SysCalRow::phaseDiffSpectrumFromBin(EndianISStream& eiss) {
 	
 		phaseDiffSpectrum.clear();
 		
-		unsigned int phaseDiffSpectrumDim1 = eiss.readInt();
-		unsigned int phaseDiffSpectrumDim2 = eiss.readInt();
+		unsigned int phaseDiffSpectrumDim1 = eis.readInt();
+		unsigned int phaseDiffSpectrumDim2 = eis.readInt();
 		vector <float> phaseDiffSpectrumAux1;
 		for (unsigned int i = 0; i < phaseDiffSpectrumDim1; i++) {
 			phaseDiffSpectrumAux1.clear();
 			for (unsigned int j = 0; j < phaseDiffSpectrumDim2 ; j++)			
 			
-			phaseDiffSpectrumAux1.push_back(eiss.readFloat());
+			phaseDiffSpectrumAux1.push_back(eis.readFloat());
 			
 			phaseDiffSpectrum.push_back(phaseDiffSpectrumAux1);
 		}
@@ -1915,23 +1919,218 @@ void SysCalRow::phaseDiffSpectrumFromBin(EndianISStream& eiss) {
 }
 	
 	
-	SysCalRow* SysCalRow::fromBin(EndianISStream& eiss, SysCalTable& table, const vector<string>& attributesSeq) {
+	SysCalRow* SysCalRow::fromBin(EndianIStream& eis, SysCalTable& table, const vector<string>& attributesSeq) {
 		SysCalRow* row = new  SysCalRow(table);
 		
 		map<string, SysCalAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SysCalTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SysCalTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void SysCalRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void SysCalRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void SysCalRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SysCalRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SysCalRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SysCalRow::numChanFromText(const string & s) {
+		 
+		numChan = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an boolean 
+	void SysCalRow::tcalFlagFromText(const string & s) {
+		tcalFlagExists = true;
+		 
+		tcalFlag = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void SysCalRow::tcalSpectrumFromText(const string & s) {
+		tcalSpectrumExists = true;
+		 
+		tcalSpectrum = ASDMValuesParser::parse2D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void SysCalRow::trxFlagFromText(const string & s) {
+		trxFlagExists = true;
+		 
+		trxFlag = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void SysCalRow::trxSpectrumFromText(const string & s) {
+		trxSpectrumExists = true;
+		 
+		trxSpectrum = ASDMValuesParser::parse2D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void SysCalRow::tskyFlagFromText(const string & s) {
+		tskyFlagExists = true;
+		 
+		tskyFlag = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void SysCalRow::tskySpectrumFromText(const string & s) {
+		tskySpectrumExists = true;
+		 
+		tskySpectrum = ASDMValuesParser::parse2D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void SysCalRow::tsysFlagFromText(const string & s) {
+		tsysFlagExists = true;
+		 
+		tsysFlag = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an Temperature 
+	void SysCalRow::tsysSpectrumFromText(const string & s) {
+		tsysSpectrumExists = true;
+		 
+		tsysSpectrum = ASDMValuesParser::parse2D<Temperature>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void SysCalRow::tantFlagFromText(const string & s) {
+		tantFlagExists = true;
+		 
+		tantFlag = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SysCalRow::tantSpectrumFromText(const string & s) {
+		tantSpectrumExists = true;
+		 
+		tantSpectrum = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void SysCalRow::tantTsysFlagFromText(const string & s) {
+		tantTsysFlagExists = true;
+		 
+		tantTsysFlag = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SysCalRow::tantTsysSpectrumFromText(const string & s) {
+		tantTsysSpectrumExists = true;
+		 
+		tantTsysSpectrum = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void SysCalRow::phaseDiffFlagFromText(const string & s) {
+		phaseDiffFlagExists = true;
+		 
+		phaseDiffFlag = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void SysCalRow::phaseDiffSpectrumFromText(const string & s) {
+		phaseDiffSpectrumExists = true;
+		 
+		phaseDiffSpectrum = ASDMValuesParser::parse2D<float>(s);
+		
+	}
+	
+	
+	
+	void SysCalRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SysCalAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SysCalTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2692,9 +2891,9 @@ void SysCalRow::phaseDiffSpectrumFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2804,9 +3003,10 @@ void SysCalRow::phaseDiffSpectrumFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -3009,6 +3209,91 @@ void SysCalRow::phaseDiffSpectrumFromBin(EndianISStream& eiss) {
 	 fromBinMethods["phaseDiffFlag"] = &SysCalRow::phaseDiffFlagFromBin; 
 	 fromBinMethods["phaseDiffSpectrum"] = &SysCalRow::phaseDiffSpectrumFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &SysCalRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &SysCalRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &SysCalRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &SysCalRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &SysCalRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["numChan"] = &SysCalRow::numChanFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["tcalFlag"] = &SysCalRow::tcalFlagFromText;
+		 	
+	 
+				
+	fromTextMethods["tcalSpectrum"] = &SysCalRow::tcalSpectrumFromText;
+		 	
+	 
+				
+	fromTextMethods["trxFlag"] = &SysCalRow::trxFlagFromText;
+		 	
+	 
+				
+	fromTextMethods["trxSpectrum"] = &SysCalRow::trxSpectrumFromText;
+		 	
+	 
+				
+	fromTextMethods["tskyFlag"] = &SysCalRow::tskyFlagFromText;
+		 	
+	 
+				
+	fromTextMethods["tskySpectrum"] = &SysCalRow::tskySpectrumFromText;
+		 	
+	 
+				
+	fromTextMethods["tsysFlag"] = &SysCalRow::tsysFlagFromText;
+		 	
+	 
+				
+	fromTextMethods["tsysSpectrum"] = &SysCalRow::tsysSpectrumFromText;
+		 	
+	 
+				
+	fromTextMethods["tantFlag"] = &SysCalRow::tantFlagFromText;
+		 	
+	 
+				
+	fromTextMethods["tantSpectrum"] = &SysCalRow::tantSpectrumFromText;
+		 	
+	 
+				
+	fromTextMethods["tantTsysFlag"] = &SysCalRow::tantTsysFlagFromText;
+		 	
+	 
+				
+	fromTextMethods["tantTsysSpectrum"] = &SysCalRow::tantTsysSpectrumFromText;
+		 	
+	 
+				
+	fromTextMethods["phaseDiffFlag"] = &SysCalRow::phaseDiffFlagFromText;
+		 	
+	 
+				
+	fromTextMethods["phaseDiffSpectrum"] = &SysCalRow::phaseDiffSpectrumFromText;
+		 	
+		
 	}
 	
 	SysCalRow::SysCalRow (SysCalTable &t, SysCalRow &row) : table(t) {

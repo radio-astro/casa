@@ -86,7 +86,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 
 	   showversion -- report the version of the asdm2MS being used.
 
-	   useversion -- Selects the version of asdm2MS to be used (\'v3\' (default) or \'v2\' (version before May 2011))
+	   useversion -- Selects the version of asdm2MS to be used (presently only \'v3\' is available).
                      default: v3
         """
 	#Python script
@@ -103,8 +103,8 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                 # -----------------------------------------
                 if singledish:
                         theexecutable = 'asdm2ASAP'
-                        if useversion == 'v2':
-                                theexecutable = 'oldasdm2ASAP'
+                        #if useversion == 'v2':
+                        #        theexecutable = 'oldasdm2ASAP'
                         if compression:
                                 casalog.post('compression=True has no effect for single-dish format.')
                         cmd = 'which %s > /dev/null 2>&1'%(theexecutable)
@@ -133,7 +133,8 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                 ret = os.system( execute_string )
                                 if ret != 0 and not showversion:
                                         casalog.post(theexecutable+' terminated with exit code '+str(ret),'SEVERE')
-                                        raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
+                                        #raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
+                                        raise Exception, "ASDM conversion error, please check if it is a valid ASDM."
                         else:
                                 casalog.post( 'You have to build ASAP to be able to create single-dish data.','SEVERE' )
                         # implementation of asis option using tb.fromASDM
@@ -193,9 +194,8 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                       viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
                       vis = asdm.rstrip('/') + '.asap'
 
+		useversion = 'v3'
 		theexecutable = 'asdm2MS'
-		if(useversion == 'v3'):
-			theexecutable = 'asdm2MS_v3'
 
 		execute_string = theexecutable+' --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' \
 				 + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' \
@@ -212,13 +212,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 				execute_string = execute_string +' --no-caldevice'
 			if (not process_pointing) :
 				execute_string = execute_string +' --no-pointing'
-		else:
-			if (process_syspower):
-				execute_string = execute_string +' --process-syspower'
-			if (process_caldevice) :
-				execute_string = execute_string +' --process-caldevice'
-			if (not process_pointing) :
-				raise Exception, "You have set parameter \"process_pointing\" to False. This only works together with useversion=\"v3\"."
+
 		if(compression) :
 		   execute_string= execute_string +' --compression'
 		if(verbose) :

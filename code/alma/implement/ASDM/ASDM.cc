@@ -40,8 +40,6 @@
 
 #include <AntennaTable.h>
 
-#include <BeamTable.h>
-
 #include <CalAmpliTable.h>
 
 #include <CalAtmosphereTable.h>
@@ -130,6 +128,8 @@
 
 #include <SBSummaryTable.h>
 
+#include <ScaleTable.h>
+
 #include <ScanTable.h>
 
 #include <SeeingTable.h>
@@ -168,8 +168,6 @@ using asdm::AlmaRadiometerTable;
 using asdm::AnnotationTable;
 
 using asdm::AntennaTable;
-
-using asdm::BeamTable;
 
 using asdm::CalAmpliTable;
 
@@ -259,6 +257,8 @@ using asdm::ReceiverTable;
 
 using asdm::SBSummaryTable;
 
+using asdm::ScaleTable;
+
 using asdm::ScanTable;
 
 using asdm::SeeingTable;
@@ -314,6 +314,8 @@ namespace asdm {
 	
 	string ASDM::getDirectory() const { return directory ; }
 	
+	XSLTransformer & ASDM::getXSLTransformer() { return xslTransformer; }
+	
 	/**
 	 * Create an instance of the tables that belong to this model.
 	 */
@@ -335,10 +337,6 @@ namespace asdm {
 		antenna = new AntennaTable (*this);
 		table.push_back(antenna);
 		tableEntity["Antenna"] = emptyEntity;
-
-		beam = new BeamTable (*this);
-		table.push_back(beam);
-		tableEntity["Beam"] = emptyEntity;
 
 		calAmpli = new CalAmpliTable (*this);
 		table.push_back(calAmpli);
@@ -516,6 +514,10 @@ namespace asdm {
 		table.push_back(sBSummary);
 		tableEntity["SBSummary"] = emptyEntity;
 
+		scale = new ScaleTable (*this);
+		table.push_back(scale);
+		tableEntity["Scale"] = emptyEntity;
+
 		scan = new ScanTable (*this);
 		table.push_back(scan);
 		tableEntity["Scan"] = emptyEntity;
@@ -600,7 +602,8 @@ namespace asdm {
 		
 		// So far it's created ex nihilo.
 		origin = EX_NIHILO;
-		loadTablesOnDemand = false;
+		loadTablesOnDemand_ = false;
+		checkRowUniqueness_ = true;
 	}
 	
 	ASDM::~ASDM () {
@@ -641,14 +644,6 @@ namespace asdm {
 	 */
 	AntennaTable & ASDM::getAntenna () const {
 		return *antenna;
-	}
-
-	/**
-	 * Get the table Beam.
-	 * @return The table Beam as a BeamTable.
-	 */
-	BeamTable & ASDM::getBeam () const {
-		return *beam;
 	}
 
 	/**
@@ -1004,6 +999,14 @@ namespace asdm {
 	}
 
 	/**
+	 * Get the table Scale.
+	 * @return The table Scale as a ScaleTable.
+	 */
+	ScaleTable & ASDM::getScale () const {
+		return *scale;
+	}
+
+	/**
 	 * Get the table Scan.
 	 * @return The table Scan as a ScanTable.
 	 */
@@ -1120,7 +1123,7 @@ namespace asdm {
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\"> ");
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/3/ASDM.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\"> ");
 
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");
@@ -1173,6 +1176,16 @@ namespace asdm {
 		ArrayTime t(s);
 		//setTimeOfCreation(t);
 		timeOfCreation = t;
+		
+		// Do we have an element startTimeDurationInXML
+		s = xml.getElement("<startTimeDurationInXML","/>");
+		if (s.length() != 0) 
+			ArrayTimeInterval::readStartTimeDurationInXML(true);
+			
+		// Do we have an element startTimeDurationInBin
+		s = xml.getElement("<startTimeDurationInBin","/>");
+		if (s.length() != 0) 
+			ArrayTimeInterval::readStartTimeDurationInBin(true);			 		 
 
 		// Get each table in the dataset.
 		s = xml.getElementContent("<Table>","</Table>");
@@ -1214,7 +1227,9 @@ namespace asdm {
 	}
 
 	
-
+#ifndef WITHOUT_ACS
+	using namespace asdmIDL;
+#endif
 
 #ifndef WITHOUT_ACS	
 	ASDMDataSetIDL* ASDM::toIDL() {
@@ -1227,8 +1242,6 @@ namespace asdm {
 		result->annotation = *(this->annotation->toIDL());
 		
 		result->antenna = *(this->antenna->toIDL());
-		
-		result->beam = *(this->beam->toIDL());
 		
 		result->calAmpli = *(this->calAmpli->toIDL());
 		
@@ -1318,6 +1331,8 @@ namespace asdm {
 		
 		result->sBSummary = *(this->sBSummary->toIDL());
 		
+		result->scale = *(this->scale->toIDL());
+		
 		result->scan = *(this->scan->toIDL());
 		
 		result->seeing = *(this->seeing->toIDL());
@@ -1358,8 +1373,6 @@ namespace asdm {
 		this->annotation->fromIDL(x->annotation);
 		
 		this->antenna->fromIDL(x->antenna);
-		
-		this->beam->fromIDL(x->beam);
 		
 		this->calAmpli->fromIDL(x->calAmpli);
 		
@@ -1449,6 +1462,8 @@ namespace asdm {
 		
 		this->sBSummary->fromIDL(x->sBSummary);
 		
+		this->scale->fromIDL(x->scale);
+		
 		this->scan->fromIDL(x->scan);
 		
 		this->seeing->fromIDL(x->seeing);
@@ -1477,7 +1492,6 @@ namespace asdm {
 		
 		this->weather->fromIDL(x->weather);
 		
-		this->beam->fromIDL(x->beam);
 	}
 #endif
 		
@@ -1704,43 +1718,6 @@ namespace asdm {
 			
 			// And finally parse the XML document to populate the table.	
 			dataset->getAntenna().fromXML(tableDoc);						
-		}
-
-		entity = dataset->tableEntity["Beam"];
-		if (entity.getEntityId().getId().length()  != 0) {
-			// Which file must we read ?
-			string tablename = xmlDirectory + "/Beam.xml";
-
-			// Determine the file size
-			ifstream::pos_type size;	
-			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
-  			if (tablein.is_open()) { 
-  				size = tablein.tellg(); 
-  			}
-			else {
-				throw ConversionException("Could not open file " + tablename, "Beam");
-			}
-			
-			// Read the file in a string
-			string tableDoc;
-
-			tableDoc.reserve(size);
-			tablein.seekg (0);	
-			int nread = BLOCKSIZE;	
-			while (nread == BLOCKSIZE) {
-				tablein.read(c, BLOCKSIZE);
-				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
-					throw ConversionException("Error reading file " + tablename,"ASDM");
-				}
-				nread = tablein.gcount();
-				tableDoc.append(c, nread);
-			}
-			tablein.close();
-			if (tablein.rdstate() == istream::failbit)
-				throw ConversionException("Could not close file " + tablename,"ASDM");
-			
-			// And finally parse the XML document to populate the table.	
-			dataset->getBeam().fromXML(tableDoc);						
 		}
 
 		entity = dataset->tableEntity["CalAmpli"];
@@ -3371,6 +3348,43 @@ namespace asdm {
 			dataset->getSBSummary().fromXML(tableDoc);						
 		}
 
+		entity = dataset->tableEntity["Scale"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			// Which file must we read ?
+			string tablename = xmlDirectory + "/Scale.xml";
+
+			// Determine the file size
+			ifstream::pos_type size;	
+			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
+  			if (tablein.is_open()) { 
+  				size = tablein.tellg(); 
+  			}
+			else {
+				throw ConversionException("Could not open file " + tablename, "Scale");
+			}
+			
+			// Read the file in a string
+			string tableDoc;
+
+			tableDoc.reserve(size);
+			tablein.seekg (0);	
+			int nread = BLOCKSIZE;	
+			while (nread == BLOCKSIZE) {
+				tablein.read(c, BLOCKSIZE);
+				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
+					throw ConversionException("Error reading file " + tablename,"ASDM");
+				}
+				nread = tablein.gcount();
+				tableDoc.append(c, nread);
+			}
+			tablein.close();
+			if (tablein.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + tablename,"ASDM");
+			
+			// And finally parse the XML document to populate the table.	
+			dataset->getScale().fromXML(tableDoc);						
+		}
+
 		entity = dataset->tableEntity["Scan"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			// Which file must we read ?
@@ -3952,10 +3966,6 @@ namespace asdm {
 			getAntenna().toFile(directory);
 		}
 	
-		if (getBeam().size() > 0) {
-			getBeam().toFile(directory);
-		}
-	
 		if (getCalAmpli().size() > 0) {
 			getCalAmpli().toFile(directory);
 		}
@@ -4132,6 +4142,10 @@ namespace asdm {
 			getSBSummary().toFile(directory);
 		}
 	
+		if (getScale().size() > 0) {
+			getScale().toFile(directory);
+		}
+	
 		if (getScan().size() > 0) {
 			getScan().toFile(directory);
 		}
@@ -4194,51 +4208,92 @@ namespace asdm {
 	
 
 	void ASDM::setFromFile(string directory, bool loadTablesOnDemand) {
-		this->loadTablesOnDemand = loadTablesOnDemand;
-		this->setFromFile(directory);
+		this->setFromFile(directory, ASDMParseOptions().loadTablesOnDemand(loadTablesOnDemand));
 	}
 	
-	void ASDM::setFromFile(string directory) {
+	void ASDM::setFromFile(string directory, const ASDMParseOptions& parse) {
+
+		this->loadTablesOnDemand_ = parse.loadTablesOnDemand_;
+		this->checkRowUniqueness_ = parse.checkRowUniqueness_;
+		
 		string fileName;
-		if (fileAsBin)
+		if (fileAsBin) {
 			fileName = directory + "/ASDM.bin";
-		else
-			fileName = directory + "/ASDM.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream theFile(fileName.c_str(), ios::in|ios::binary|ios::ate);
+			// Determine the file size.
+			ifstream::pos_type size;
+			ifstream theFile(fileName.c_str(), ios::in|ios::binary|ios::ate);
 
- 		if (theFile.is_open()) { 
+ 			if (theFile.is_open()) { 
   				size = theFile.tellg(); 
-  		}
-		else {
+  			}
+			else {
 				throw ConversionException("Could not open file " + fileName, "ASDM");
-		}
+			}
 		
-		// Re position to the beginning.
-		theFile.seekg(0);
+			// Re position to the beginning.
+			theFile.seekg(0);
 		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << theFile.rdbuf();
+			// Read in a stringstream.
+			stringstream ss;
+			ss << theFile.rdbuf();
 
-		if (theFile.rdstate() == istream::failbit || theFile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + fileName,"ASDM");
-		}
+			if (theFile.rdstate() == istream::failbit || theFile.rdstate() == istream::badbit) {
+				throw ConversionException("Error reading file " + fileName,"ASDM");
+			}
 
-		// And close
-		theFile.close();
-		if (theFile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + fileName,"ASDM");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
+			// And close
+			theFile.close();
+			if (theFile.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + fileName,"ASDM");
+				
 			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+		}
+		else {
+			fileName = directory + "/ASDM.xml";
+			string version ;
+			ASDMUtils::Origin origin;
+			
+			try { 
+				version = parse.detectVersion_ ? ASDMUtils::version(directory) : parse.version_;
+				origin = parse.detectOrigin_ ? ASDMUtils::origin(ASDMUtils::telescopeNames(directory)) : parse.origin_;
+			}
+			catch (ASDMUtilsException e) {
+				throw ConversionException ("Caught an exception whose message is '" + e.getMessage() + "'.", "ASDM");
+			}
+			
+    		if ((version == "UNKNOWN") && (origin == ASDMUtils::UNKNOWN))
+    			throw ConversionException("I cannot read this dataset with version='UNKNOWN' and origin='UNKNOWN'", "ASDM");
+ 		
+    		string xsltPath;
+ 			bool proceed = (origin == ASDMUtils::EVLA)   // For the time being an EVLA dataset can be ONLY in version 2 so we must convert it
+    						|| ((version.compare("3")) && ( origin == ASDMUtils::ALMA)); // If it's an ALMA then we must check its version.
+			string xmlDoc;
+ 			try {
+ 				if (proceed) {
+    				if (origin == ASDMUtils::EVLA)
+						xsltPath = ASDMUtils::pathToV2V3EVLAxslTransform();
+					else 
+						xsltPath = ASDMUtils::pathToV2V3ALMAxslTransform();
+				
+					if (xsltPath.size() == 0)
+						throw ConversionException("An XSL transformation must be done on this '" + ((origin==ASDMUtils::EVLA) ? string("EVLA") : string("ALMA")) + "' dataset, but its file , '" + ASDMUtils::nameOfV2V3xslTransform(origin) + "' cannot be found.", "ASDM");
+					 
+					xslTransformer.setTransformation(xsltPath);
+					cout << "An XSL transformation will be done on this dataset using '" << xsltPath << "'." << endl;
+				}
+				else {
+					cout << "No transformation will be applied on this dataset." << endl;
+				}
+				 
+				xmlDoc = getXSLTransformer()(fileName);
+			}
+			catch (XSLTransformerException e) {
+				throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "ASDM");
+			}
+			fromXML(xmlDoc);
+		}
 		
-		if (!loadTablesOnDemand) {
+		if (!loadTablesOnDemand_) {
 			// Now read and parse all files for the tables whose number of rows appear as
 			// non null in the container just built.
 			Entity entity;
@@ -4261,11 +4316,6 @@ namespace asdm {
 			entity = tableEntity["Antenna"];
 			if (entity.getEntityId().getId().length()  != 0) {
 				getAntenna().setFromFile(directory);
-			}
-	
-			entity = tableEntity["Beam"];
-			if (entity.getEntityId().getId().length()  != 0) {
-				getBeam().setFromFile(directory);
 			}
 	
 			entity = tableEntity["CalAmpli"];
@@ -4488,6 +4538,11 @@ namespace asdm {
 				getSBSummary().setFromFile(directory);
 			}
 	
+			entity = tableEntity["Scale"];
+			if (entity.getEntityId().getId().length()  != 0) {
+				getScale().setFromFile(directory);
+			}
+	
 			entity = tableEntity["Scan"];
 			if (entity.getEntityId().getId().length()  != 0) {
 				getScan().setFromFile(directory);
@@ -4568,8 +4623,6 @@ namespace asdm {
 			getAnnotation().presentInMemory = tableEntity["Annotation"].getEntityId().getId().length() == 0;	
 	
 			getAntenna().presentInMemory = tableEntity["Antenna"].getEntityId().getId().length() == 0;	
-	
-			getBeam().presentInMemory = tableEntity["Beam"].getEntityId().getId().length() == 0;	
 	
 			getCalAmpli().presentInMemory = tableEntity["CalAmpli"].getEntityId().getId().length() == 0;	
 	
@@ -4659,6 +4712,8 @@ namespace asdm {
 	
 			getSBSummary().presentInMemory = tableEntity["SBSummary"].getEntityId().getId().length() == 0;	
 	
+			getScale().presentInMemory = tableEntity["Scale"].getEntityId().getId().length() == 0;	
+	
 			getScan().presentInMemory = tableEntity["Scan"].getEntityId().getId().length() == 0;	
 	
 			getSeeing().presentInMemory = tableEntity["Seeing"].getEntityId().getId().length() == 0;	
@@ -4692,6 +4747,8 @@ namespace asdm {
 		origin = FILE;
 		this->directory = directory;			
 	}
+	
+	bool ASDM::checkRowUniqueness() const { return checkRowUniqueness_; } 
 	
 
 	
@@ -4762,13 +4819,6 @@ namespace asdm {
 			container->getAntenna().setEntity(entity);
 			xml = getXMLEntity(entity.getEntityId());
 			container->getAntenna().fromXML(xml);
-		}
-			
-		entity = container->tableEntity["Beam"];
-		if (entity.getEntityId().getId().size() != 0) {
-			container->getBeam().setEntity(entity);
-			xml = getXMLEntity(entity.getEntityId());
-			container->getBeam().fromXML(xml);
 		}
 			
 		entity = container->tableEntity["CalAmpli"];
@@ -5077,6 +5127,13 @@ namespace asdm {
 			container->getSBSummary().setEntity(entity);
 			xml = getXMLEntity(entity.getEntityId());
 			container->getSBSummary().fromXML(xml);
+		}
+			
+		entity = container->tableEntity["Scale"];
+		if (entity.getEntityId().getId().size() != 0) {
+			container->getScale().setEntity(entity);
+			xml = getXMLEntity(entity.getEntityId());
+			container->getScale().fromXML(xml);
 		}
 			
 		entity = container->tableEntity["Scan"];

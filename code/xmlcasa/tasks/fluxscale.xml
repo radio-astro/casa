@@ -51,6 +51,11 @@
 			<value></value>
 		</param>
 
+     		<param type="string" direction="in" name="listfile">
+  		   <description>Name of listfile that contains the fit information.  Default is '' (no file).</description>
+   		   <value></value>
+    		</param>
+
 		<param type="bool" name="append">
 			<description>Append solutions?</description>
 			<value>False</value>
@@ -62,6 +67,13 @@
 		</param>
 
 	</input>
+    <output>
+    <param type="any" name="fluxd">
+    	<description>Dictionary containing the transfer fluxes and their errors.</description>
+	<any type="variant"/>
+	<value>{}</value>
+    </param>
+    </output>
 <returns type="void"/>
 
 <example>
@@ -128,6 +140,13 @@
 
                NOTE: All fields in reference and transfer must have solutions
                in the caltable.
+
+       listfile -- Fit listfile name
+               The list file contains the flux density, flux density error,
+                 S/N, and number of solutions (all antennas and feeds) for each
+                 spectral window.  NOTE: The nominal spectral window frequencies
+                 will be included in the future.
+               default: '' = no fit listfile will be created.
 
        append -- Append fluxscaled solutions to the fluxtable.
                default: False; (will overwrite if already existing)

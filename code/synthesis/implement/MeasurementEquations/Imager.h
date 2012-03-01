@@ -450,7 +450,7 @@ class Imager
   Bool feather(const String& image,
 	       const String& highres,
 	       const String& lowres,
-	       const String& lowpsf);
+	       const String& lowpsf, const Bool showPlot=False);
   
   // Apply or correct for Primary Beam or Voltage Pattern
   Bool pb(const String& inimage,

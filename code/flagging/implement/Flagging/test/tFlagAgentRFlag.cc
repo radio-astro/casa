@@ -677,19 +677,27 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-noisescale"))
 		{
-			agentParameters.define ("noisescale", casa::Bool(atoi(argv[i+1])));
+			agentParameters.define ("noisescale", casa::Double(atof(argv[i+1])));
 		}
 		else if (parameter == string("-scutofscale"))
 		{
-			agentParameters.define ("scutofscale", casa::Bool(atoi(argv[i+1])));
+			agentParameters.define ("scutofscale", casa::Double(atof(argv[i+1])));
 		}
 		else if (parameter == string("-noise"))
 		{
-			noise.push_back(atof(argv[i+1]));
+			Record spwRecord;
+			spwRecord.define("spw=13",atof(argv[i+1]));
+			Record fieldRecord;
+			fieldRecord.defineRecord("field=1",spwRecord);
+			agentParameters.defineRecord ("noise", fieldRecord);
 		}
 		else if (parameter == string("-scutof"))
 		{
-			scutof.push_back(atof(argv[i+1]));
+			Record spwRecord;
+			spwRecord.define("spw=13",atof(argv[i+1]));
+			Record fieldRecord;
+			fieldRecord.defineRecord("field=1",spwRecord);
+			agentParameters.defineRecord ("scutof", fieldRecord);
 		}
 		else if (parameter == string("-spectralmin"))
 		{

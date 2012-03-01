@@ -75,6 +75,7 @@ using asdm::ExecBlockRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -98,6 +99,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::MainRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -207,22 +211,8 @@ namespace asdm {
 		
 		
 			
-		x->dataOid = dataOid.toIDLEntityRef();
+		x->dataUID = dataUID.toIDLEntityRef();
 			
-		
-	
-
-	
-  		
-		
-		x->flagRowExists = flagRowExists;
-		
-		
-			
-				
-		x->flagRow = flagRow;
- 				
- 			
 		
 	
 
@@ -387,24 +377,9 @@ namespace asdm {
 		
 		
 			
-		setDataOid(EntityRef (x.dataOid));
+		setDataUID(EntityRef (x.dataUID));
 			
  		
-		
-	
-
-	
-		
-		flagRowExists = x.flagRowExists;
-		if (x.flagRowExists) {
-		
-		
-			
-		setFlagRow(x.flagRow);
-  			
- 		
-		
-		}
 		
 	
 
@@ -545,20 +520,8 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(dataOid, "dataOid", buf);
+		Parser::toXML(dataUID, "dataUID", buf);
 		
-		
-	
-
-  	
- 		
-		if (flagRowExists) {
-		
-		
-		Parser::toXML(flagRow, "flagRow", buf);
-		
-		
-		}
 		
 	
 
@@ -684,7 +647,7 @@ namespace asdm {
 	
   		
 			
-	  	setDataSize(Parser::getInteger("dataSize","Main",rowDoc));
+	  	setDataSize(Parser::getLong("dataSize","Main",rowDoc));
 			
 		
 	
@@ -692,19 +655,9 @@ namespace asdm {
 	
   		
 			
-	  	setDataOid(Parser::getEntityRef("dataOid","Main",rowDoc));
+	  	setDataUID(Parser::getEntityRef("dataUID","Main",rowDoc));
 			
 		
-	
-
-	
-  		
-        if (row.isStr("<flagRow>")) {
-			
-	  		setFlagRow(Parser::getBoolean("flagRow","Main",rowDoc));
-			
-		}
- 		
 	
 
 	
@@ -792,7 +745,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(timeSampling);
+			eoss.writeString(CTimeSampling::name(timeSampling));
+			/* eoss.writeInt(timeSampling); */
 				
 		
 	
@@ -835,7 +789,7 @@ namespace asdm {
 	
 		
 						
-			eoss.writeInt(dataSize);
+			eoss.writeLong(dataSize);
 				
 		
 	
@@ -843,7 +797,7 @@ namespace asdm {
 	
 	
 		
-	dataOid.toBin(eoss);
+	dataUID.toBin(eoss);
 		
 	
 
@@ -864,205 +818,292 @@ namespace asdm {
 
 	
 	
-	eoss.writeBoolean(flagRowExists);
-	if (flagRowExists) {
-	
-	
-	
-		
-						
-			eoss.writeBoolean(flagRow);
-				
-		
-	
-
-	}
-
 	}
 	
-void MainRow::timeFromBin(EndianISStream& eiss) {
+void MainRow::timeFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		time =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void MainRow::configDescriptionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		configDescriptionId =  Tag::fromBin(eiss);
+		time =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void MainRow::fieldIdFromBin(EndianISStream& eiss) {
+void MainRow::configDescriptionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		fieldId =  Tag::fromBin(eiss);
+		configDescriptionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void MainRow::numAntennaFromBin(EndianISStream& eiss) {
+void MainRow::fieldIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		fieldId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void MainRow::numAntennaFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numAntenna =  eiss.readInt();
-			
-		
-	
-	
-}
-void MainRow::timeSamplingFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		timeSampling = CTimeSampling::from_int(eiss.readInt());
+		numAntenna =  eis.readInt();
 			
 		
 	
 	
 }
-void MainRow::intervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		interval =  Interval::fromBin(eiss);
-		
-	
-	
-}
-void MainRow::numIntegrationFromBin(EndianISStream& eiss) {
+void MainRow::timeSamplingFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numIntegration =  eiss.readInt();
+		timeSampling = CTimeSampling::literal(eis.readString());
 			
 		
 	
 	
 }
-void MainRow::scanNumberFromBin(EndianISStream& eiss) {
+void MainRow::intervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		interval =  Interval::fromBin(eis);
+		
+	
+	
+}
+void MainRow::numIntegrationFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		scanNumber =  eiss.readInt();
+		numIntegration =  eis.readInt();
 			
 		
 	
 	
 }
-void MainRow::subscanNumberFromBin(EndianISStream& eiss) {
+void MainRow::scanNumberFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		subscanNumber =  eiss.readInt();
-			
-		
-	
-	
-}
-void MainRow::dataSizeFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		dataSize =  eiss.readInt();
+		scanNumber =  eis.readInt();
 			
 		
 	
 	
 }
-void MainRow::dataOidFromBin(EndianISStream& eiss) {
+void MainRow::subscanNumberFromBin(EndianIStream& eis) {
 		
 	
+	
 		
-		
-		dataOid =  EntityRef::fromBin(eiss);
+			
+		subscanNumber =  eis.readInt();
+			
 		
 	
 	
 }
-void MainRow::stateIdFromBin(EndianISStream& eiss) {
+void MainRow::dataSizeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		dataSize =  eis.readLong();
+			
+		
+	
+	
+}
+void MainRow::dataUIDFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		dataUID =  EntityRef::fromBin(eis);
+		
+	
+	
+}
+void MainRow::stateIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	stateId = Tag::from1DBin(eiss);	
+	stateId = Tag::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void MainRow::execBlockIdFromBin(EndianISStream& eiss) {
+void MainRow::execBlockIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		execBlockId =  Tag::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eis);
 		
 	
 	
 }
 
-void MainRow::flagRowFromBin(EndianISStream& eiss) {
-		
-	flagRowExists = eiss.readBoolean();
-	if (flagRowExists) {
 		
 	
-	
-		
-			
-		flagRow =  eiss.readBoolean();
-			
-		
-	
-
-	}
-	
-}
-	
-	
-	MainRow* MainRow::fromBin(EndianISStream& eiss, MainTable& table, const vector<string>& attributesSeq) {
+	MainRow* MainRow::fromBin(EndianIStream& eis, MainTable& table, const vector<string>& attributesSeq) {
 		MainRow* row = new  MainRow(table);
 		
 		map<string, MainAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "MainTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "MainTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an ArrayTime 
+	void MainRow::timeFromText(const string & s) {
+		 
+		time = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::configDescriptionIdFromText(const string & s) {
+		 
+		configDescriptionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::fieldIdFromText(const string & s) {
+		 
+		fieldId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::numAntennaFromText(const string & s) {
+		 
+		numAntenna = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an TimeSampling 
+	void MainRow::timeSamplingFromText(const string & s) {
+		 
+		timeSampling = ASDMValuesParser::parse<TimeSampling>(s);
+		
+	}
+	
+	
+	// Convert a string into an Interval 
+	void MainRow::intervalFromText(const string & s) {
+		 
+		interval = ASDMValuesParser::parse<Interval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::numIntegrationFromText(const string & s) {
+		 
+		numIntegration = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::scanNumberFromText(const string & s) {
+		 
+		scanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void MainRow::subscanNumberFromText(const string & s) {
+		 
+		subscanNumber = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an long 
+	void MainRow::dataSizeFromText(const string & s) {
+		 
+		dataSize = ASDMValuesParser::parse<int64_t>(s);
+		
+	}
+	
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::stateIdFromText(const string & s) {
+		 
+		stateId = ASDMValuesParser::parse1D<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void MainRow::execBlockIdFromText(const string & s) {
+		 
+		execBlockId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+
+		
+	
+	void MainRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, MainAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "MainTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1297,21 +1338,21 @@ void MainRow::flagRowFromBin(EndianISStream& eiss) {
 	
  	/**
  	 * Get dataSize.
- 	 * @return dataSize as int
+ 	 * @return dataSize as int64_t
  	 */
- 	int MainRow::getDataSize() const {
+ 	int64_t MainRow::getDataSize() const {
 	
   		return dataSize;
  	}
 
  	/**
- 	 * Set dataSize with the specified int.
- 	 * @param dataSize The int value to which dataSize is to be set.
+ 	 * Set dataSize with the specified int64_t.
+ 	 * @param dataSize The int64_t value to which dataSize is to be set.
  	 
  	
  		
  	 */
- 	void MainRow::setDataSize (int dataSize)  {
+ 	void MainRow::setDataSize (int64_t dataSize)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1328,85 +1369,38 @@ void MainRow::flagRowFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get dataOid.
- 	 * @return dataOid as EntityRef
+ 	 * Get dataUID.
+ 	 * @return dataUID as EntityRef
  	 */
- 	EntityRef MainRow::getDataOid() const {
+ 	EntityRef MainRow::getDataUID() const {
 	
-  		return dataOid;
+  		return dataUID;
  	}
 
  	/**
- 	 * Set dataOid with the specified EntityRef.
- 	 * @param dataOid The EntityRef value to which dataOid is to be set.
+ 	 * Set dataUID with the specified EntityRef.
+ 	 * @param dataUID The EntityRef value to which dataUID is to be set.
  	 
  	
  		
  	 */
- 	void MainRow::setDataOid (EntityRef dataOid)  {
+ 	void MainRow::setDataUID (EntityRef dataUID)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->dataOid = dataOid;
+ 		this->dataUID = dataUID;
 	
  	}
 	
 	
 
 	
-	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
-	 */
-	bool MainRow::isFlagRowExists() const {
-		return flagRowExists;
-	}
-	
-
-	
- 	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throw IllegalAccessException If flagRow does not exist.
- 	 */
- 	bool MainRow::getFlagRow() const  {
-		if (!flagRowExists) {
-			throw IllegalAccessException("flagRow", "Main");
-		}
-	
-  		return flagRow;
- 	}
-
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 	
- 	 */
- 	void MainRow::setFlagRow (bool flagRow) {
-	
- 		this->flagRow = flagRow;
-	
-		flagRowExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
-	 */
-	void MainRow::clearFlagRow () {
-		flagRowExists = false;
-	}
-	
-
-	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1544,9 +1538,10 @@ void MainRow::flagRowFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -1713,10 +1708,6 @@ void MainRow::flagRowFromBin(EndianISStream& eiss) {
 	
 
 	
-		flagRowExists = false;
-	
-
-	
 	
 
 	
@@ -1750,8 +1741,6 @@ timeSampling = CTimeSampling::from_int(0);
 	
 
 	
-
-	
 	
 	 fromBinMethods["time"] = &MainRow::timeFromBin; 
 	 fromBinMethods["configDescriptionId"] = &MainRow::configDescriptionIdFromBin; 
@@ -1763,13 +1752,67 @@ timeSampling = CTimeSampling::from_int(0);
 	 fromBinMethods["scanNumber"] = &MainRow::scanNumberFromBin; 
 	 fromBinMethods["subscanNumber"] = &MainRow::subscanNumberFromBin; 
 	 fromBinMethods["dataSize"] = &MainRow::dataSizeFromBin; 
-	 fromBinMethods["dataOid"] = &MainRow::dataOidFromBin; 
+	 fromBinMethods["dataUID"] = &MainRow::dataUIDFromBin; 
 	 fromBinMethods["stateId"] = &MainRow::stateIdFromBin; 
 	 fromBinMethods["execBlockId"] = &MainRow::execBlockIdFromBin; 
 		
 	
-	 fromBinMethods["flagRow"] = &MainRow::flagRowFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["time"] = &MainRow::timeFromText;
+		 
+	
+				 
+	fromTextMethods["configDescriptionId"] = &MainRow::configDescriptionIdFromText;
+		 
+	
+				 
+	fromTextMethods["fieldId"] = &MainRow::fieldIdFromText;
+		 
+	
+				 
+	fromTextMethods["numAntenna"] = &MainRow::numAntennaFromText;
+		 
+	
+				 
+	fromTextMethods["timeSampling"] = &MainRow::timeSamplingFromText;
+		 
+	
+				 
+	fromTextMethods["interval"] = &MainRow::intervalFromText;
+		 
+	
+				 
+	fromTextMethods["numIntegration"] = &MainRow::numIntegrationFromText;
+		 
+	
+				 
+	fromTextMethods["scanNumber"] = &MainRow::scanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["subscanNumber"] = &MainRow::subscanNumberFromText;
+		 
+	
+				 
+	fromTextMethods["dataSize"] = &MainRow::dataSizeFromText;
+		 
+	
+		 
+	
+				 
+	fromTextMethods["stateId"] = &MainRow::stateIdFromText;
+		 
+	
+				 
+	fromTextMethods["execBlockId"] = &MainRow::execBlockIdFromText;
+		 
+	
+
+		
 	}
 	
 	MainRow::MainRow (MainTable &t, MainRow &row) : table(t) {
@@ -1794,10 +1837,6 @@ timeSampling = CTimeSampling::from_int(0);
 
 	
 
-	
-
-	
-		flagRowExists = false;
 	
 
 	
@@ -1836,7 +1875,7 @@ timeSampling = CTimeSampling::from_int(0);
 		
 			dataSize = row.dataSize;
 		
-			dataOid = row.dataOid;
+			dataUID = row.dataUID;
 		
 			stateId = row.stateId;
 		
@@ -1844,13 +1883,6 @@ timeSampling = CTimeSampling::from_int(0);
 		
 		
 		
-		
-		if (row.flagRowExists) {
-			flagRow = row.flagRow;		
-			flagRowExists = true;
-		}
-		else
-			flagRowExists = false;
 		
 		}
 		
@@ -1864,17 +1896,16 @@ timeSampling = CTimeSampling::from_int(0);
 		 fromBinMethods["scanNumber"] = &MainRow::scanNumberFromBin; 
 		 fromBinMethods["subscanNumber"] = &MainRow::subscanNumberFromBin; 
 		 fromBinMethods["dataSize"] = &MainRow::dataSizeFromBin; 
-		 fromBinMethods["dataOid"] = &MainRow::dataOidFromBin; 
+		 fromBinMethods["dataUID"] = &MainRow::dataUIDFromBin; 
 		 fromBinMethods["stateId"] = &MainRow::stateIdFromBin; 
 		 fromBinMethods["execBlockId"] = &MainRow::execBlockIdFromBin; 
 			
 	
-		 fromBinMethods["flagRow"] = &MainRow::flagRowFromBin; 
 			
 	}
 
 	
-	bool MainRow::compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId) {
+	bool MainRow::compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int64_t dataSize, EntityRef dataUID, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
@@ -1950,7 +1981,7 @@ timeSampling = CTimeSampling::from_int(0);
 
 	
 		
-		result = result && (this->dataOid == dataOid);
+		result = result && (this->dataUID == dataUID);
 		
 		if (!result) return false;
 	
@@ -1974,7 +2005,7 @@ timeSampling = CTimeSampling::from_int(0);
 	
 	
 	
-	bool MainRow::compareRequiredValue(int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId) {
+	bool MainRow::compareRequiredValue(int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int64_t dataSize, EntityRef dataUID, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
@@ -2007,7 +2038,7 @@ timeSampling = CTimeSampling::from_int(0);
 	
 
 	
-		if (!(this->dataOid == dataOid)) return false;
+		if (!(this->dataUID == dataUID)) return false;
 	
 
 	
@@ -2047,7 +2078,7 @@ timeSampling = CTimeSampling::from_int(0);
 			
 		if (this->dataSize != x->dataSize) return false;
 			
-		if (this->dataOid != x->dataOid) return false;
+		if (this->dataUID != x->dataUID) return false;
 			
 		if (this->stateId != x->stateId) return false;
 			
@@ -2071,12 +2102,11 @@ timeSampling = CTimeSampling::from_int(0);
 		result["scanNumber"] = &MainRow::scanNumberFromBin;
 		result["subscanNumber"] = &MainRow::subscanNumberFromBin;
 		result["dataSize"] = &MainRow::dataSizeFromBin;
-		result["dataOid"] = &MainRow::dataOidFromBin;
+		result["dataUID"] = &MainRow::dataUIDFromBin;
 		result["stateId"] = &MainRow::stateIdFromBin;
 		result["execBlockId"] = &MainRow::execBlockIdFromBin;
 		
 		
-		result["flagRow"] = &MainRow::flagRowFromBin;
 			
 		
 		return result;	

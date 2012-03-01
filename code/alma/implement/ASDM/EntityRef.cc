@@ -160,14 +160,29 @@ namespace asdm {
 		}
 	}
 	
-	void EntityRef::toBin(EndianOSStream& eoss) {
+	void EntityRef::toBin(EndianOSStream& eoss) const {
 		entityId.toBin(eoss);
 		partId.toBin(eoss);
 		eoss.writeString(entityTypeName);
 		eoss.writeString(instanceVersion);
 	}	
 
-	EntityRef EntityRef::fromBin(EndianISStream& eiss) {
-		return EntityRef(eiss.readString(), eiss.readString(), eiss.readString(), eiss.readString());
+	void EntityRef::toBin(const vector<EntityRef>& entityRef,  EndianOSStream& eoss) {
+		eoss.writeInt((int) entityRef.size());
+		for (unsigned int i = 0; i < entityRef.size(); i++)
+			entityRef.at(i).toBin(eoss);
 	}
+
+	EntityRef EntityRef::fromBin(EndianIStream& eis) {
+		return EntityRef(eis.readString(), eis.readString(), eis.readString(), eis.readString());
+	}
+
+	vector<EntityRef> EntityRef::from1DBin(EndianIStream & eis) {
+		int dim1 = eis.readInt();
+		vector<EntityRef> result;
+		for (int i = 0; i < dim1; i++)
+			result.push_back(EntityRef(eis.readString(), eis.readString(), eis.readString(), eis.readString()));
+		return result;
+	}
+
 } // End namespace asdm

@@ -63,6 +63,7 @@ using asdm::CalReductionRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -86,6 +87,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalFluxRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -1309,7 +1313,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(fluxMethod);
+			eoss.writeString(CFluxCalibrationMethod::name(fluxMethod));
+			/* eoss.writeInt(fluxMethod); */
 				
 		
 	
@@ -1356,7 +1361,8 @@ namespace asdm {
 		eoss.writeInt((int) stokes.size());
 		for (unsigned int i = 0; i < stokes.size(); i++)
 				
-			eoss.writeInt(stokes.at(i));
+			eoss.writeString(CStokesParameter::name(stokes.at(i)));
+			/* eoss.writeInt(stokes.at(i)); */
 				
 				
 						
@@ -1385,7 +1391,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(directionCode);
+			eoss.writeString(CDirectionReferenceCode::name(directionCode));
+			/* eoss.writeInt(directionCode); */
 				
 		
 	
@@ -1459,7 +1466,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(sourceModel);
+			eoss.writeString(CSourceModel::name(sourceModel));
+			/* eoss.writeInt(sourceModel); */
 				
 		
 	
@@ -1468,109 +1476,109 @@ namespace asdm {
 
 	}
 	
-void CalFluxRow::sourceNameFromBin(EndianISStream& eiss) {
+void CalFluxRow::sourceNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		sourceName =  eiss.readString();
+		sourceName =  eis.readString();
 			
 		
 	
 	
 }
-void CalFluxRow::calDataIdFromBin(EndianISStream& eiss) {
+void CalFluxRow::calDataIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calDataId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void CalFluxRow::calReductionIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		calReductionId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalFluxRow::startValidTimeFromBin(EndianISStream& eiss) {
+void CalFluxRow::calReductionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalFluxRow::endValidTimeFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		endValidTime =  ArrayTime::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalFluxRow::numFrequencyRangesFromBin(EndianISStream& eiss) {
+void CalFluxRow::startValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalFluxRow::endValidTimeFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void CalFluxRow::numFrequencyRangesFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numFrequencyRanges =  eiss.readInt();
+		numFrequencyRanges =  eis.readInt();
 			
 		
 	
 	
 }
-void CalFluxRow::numStokesFromBin(EndianISStream& eiss) {
+void CalFluxRow::numStokesFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numStokes =  eiss.readInt();
+		numStokes =  eis.readInt();
 			
 		
 	
 	
 }
-void CalFluxRow::frequencyRangesFromBin(EndianISStream& eiss) {
+void CalFluxRow::frequencyRangesFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	frequencyRanges = Frequency::from2DBin(eiss);		
+	frequencyRanges = Frequency::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void CalFluxRow::fluxMethodFromBin(EndianISStream& eiss) {
+void CalFluxRow::fluxMethodFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		fluxMethod = CFluxCalibrationMethod::from_int(eiss.readInt());
+		fluxMethod = CFluxCalibrationMethod::literal(eis.readString());
 			
 		
 	
 	
 }
-void CalFluxRow::fluxFromBin(EndianISStream& eiss) {
+void CalFluxRow::fluxFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1579,14 +1587,14 @@ void CalFluxRow::fluxFromBin(EndianISStream& eiss) {
 	
 		flux.clear();
 		
-		unsigned int fluxDim1 = eiss.readInt();
-		unsigned int fluxDim2 = eiss.readInt();
+		unsigned int fluxDim1 = eis.readInt();
+		unsigned int fluxDim2 = eis.readInt();
 		vector <double> fluxAux1;
 		for (unsigned int i = 0; i < fluxDim1; i++) {
 			fluxAux1.clear();
 			for (unsigned int j = 0; j < fluxDim2 ; j++)			
 			
-			fluxAux1.push_back(eiss.readDouble());
+			fluxAux1.push_back(eis.readDouble());
 			
 			flux.push_back(fluxAux1);
 		}
@@ -1597,7 +1605,7 @@ void CalFluxRow::fluxFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalFluxRow::fluxErrorFromBin(EndianISStream& eiss) {
+void CalFluxRow::fluxErrorFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1606,14 +1614,14 @@ void CalFluxRow::fluxErrorFromBin(EndianISStream& eiss) {
 	
 		fluxError.clear();
 		
-		unsigned int fluxErrorDim1 = eiss.readInt();
-		unsigned int fluxErrorDim2 = eiss.readInt();
+		unsigned int fluxErrorDim1 = eis.readInt();
+		unsigned int fluxErrorDim2 = eis.readInt();
 		vector <double> fluxErrorAux1;
 		for (unsigned int i = 0; i < fluxErrorDim1; i++) {
 			fluxErrorAux1.clear();
 			for (unsigned int j = 0; j < fluxErrorDim2 ; j++)			
 			
-			fluxErrorAux1.push_back(eiss.readDouble());
+			fluxErrorAux1.push_back(eis.readDouble());
 			
 			fluxError.push_back(fluxErrorAux1);
 		}
@@ -1624,7 +1632,7 @@ void CalFluxRow::fluxErrorFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalFluxRow::stokesFromBin(EndianISStream& eiss) {
+void CalFluxRow::stokesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1633,10 +1641,10 @@ void CalFluxRow::stokesFromBin(EndianISStream& eiss) {
 	
 		stokes.clear();
 		
-		unsigned int stokesDim1 = eiss.readInt();
+		unsigned int stokesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < stokesDim1; i++)
 			
-			stokes.push_back(CStokesParameter::from_int(eiss.readInt()));
+			stokes.push_back(CStokesParameter::literal(eis.readString()));
 			
 	
 
@@ -1645,9 +1653,9 @@ void CalFluxRow::stokesFromBin(EndianISStream& eiss) {
 	
 }
 
-void CalFluxRow::directionFromBin(EndianISStream& eiss) {
+void CalFluxRow::directionFromBin(EndianIStream& eis) {
 		
-	directionExists = eiss.readBoolean();
+	directionExists = eis.readBoolean();
 	if (directionExists) {
 		
 	
@@ -1655,7 +1663,7 @@ void CalFluxRow::directionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	direction = Angle::from1DBin(eiss);	
+	direction = Angle::from1DBin(eis);	
 	
 
 		
@@ -1664,16 +1672,16 @@ void CalFluxRow::directionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalFluxRow::directionCodeFromBin(EndianISStream& eiss) {
+void CalFluxRow::directionCodeFromBin(EndianIStream& eis) {
 		
-	directionCodeExists = eiss.readBoolean();
+	directionCodeExists = eis.readBoolean();
 	if (directionCodeExists) {
 		
 	
 	
 		
 			
-		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		directionCode = CDirectionReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -1681,24 +1689,24 @@ void CalFluxRow::directionCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalFluxRow::directionEquinoxFromBin(EndianISStream& eiss) {
+void CalFluxRow::directionEquinoxFromBin(EndianIStream& eis) {
 		
-	directionEquinoxExists = eiss.readBoolean();
+	directionEquinoxExists = eis.readBoolean();
 	if (directionEquinoxExists) {
 		
 	
 		
 		
-		directionEquinox =  Angle::fromBin(eiss);
+		directionEquinox =  Angle::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void CalFluxRow::PAFromBin(EndianISStream& eiss) {
+void CalFluxRow::PAFromBin(EndianIStream& eis) {
 		
-	PAExists = eiss.readBoolean();
+	PAExists = eis.readBoolean();
 	if (PAExists) {
 		
 	
@@ -1706,7 +1714,7 @@ void CalFluxRow::PAFromBin(EndianISStream& eiss) {
 		
 			
 	
-	PA = Angle::from2DBin(eiss);		
+	PA = Angle::from2DBin(eis);		
 	
 
 		
@@ -1715,9 +1723,9 @@ void CalFluxRow::PAFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalFluxRow::PAErrorFromBin(EndianISStream& eiss) {
+void CalFluxRow::PAErrorFromBin(EndianIStream& eis) {
 		
-	PAErrorExists = eiss.readBoolean();
+	PAErrorExists = eis.readBoolean();
 	if (PAErrorExists) {
 		
 	
@@ -1725,7 +1733,7 @@ void CalFluxRow::PAErrorFromBin(EndianISStream& eiss) {
 		
 			
 	
-	PAError = Angle::from2DBin(eiss);		
+	PAError = Angle::from2DBin(eis);		
 	
 
 		
@@ -1734,9 +1742,9 @@ void CalFluxRow::PAErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalFluxRow::sizeFromBin(EndianISStream& eiss) {
+void CalFluxRow::sizeFromBin(EndianIStream& eis) {
 		
-	sizeExists = eiss.readBoolean();
+	sizeExists = eis.readBoolean();
 	if (sizeExists) {
 		
 	
@@ -1744,7 +1752,7 @@ void CalFluxRow::sizeFromBin(EndianISStream& eiss) {
 		
 			
 	
-	size = Angle::from3DBin(eiss);		
+	size = Angle::from3DBin(eis);		
 	
 
 		
@@ -1753,9 +1761,9 @@ void CalFluxRow::sizeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalFluxRow::sizeErrorFromBin(EndianISStream& eiss) {
+void CalFluxRow::sizeErrorFromBin(EndianIStream& eis) {
 		
-	sizeErrorExists = eiss.readBoolean();
+	sizeErrorExists = eis.readBoolean();
 	if (sizeErrorExists) {
 		
 	
@@ -1763,7 +1771,7 @@ void CalFluxRow::sizeErrorFromBin(EndianISStream& eiss) {
 		
 			
 	
-	sizeError = Angle::from3DBin(eiss);		
+	sizeError = Angle::from3DBin(eis);		
 	
 
 		
@@ -1772,16 +1780,16 @@ void CalFluxRow::sizeErrorFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void CalFluxRow::sourceModelFromBin(EndianISStream& eiss) {
+void CalFluxRow::sourceModelFromBin(EndianIStream& eis) {
 		
-	sourceModelExists = eiss.readBoolean();
+	sourceModelExists = eis.readBoolean();
 	if (sourceModelExists) {
 		
 	
 	
 		
 			
-		sourceModel = CSourceModel::from_int(eiss.readInt());
+		sourceModel = CSourceModel::literal(eis.readString());
 			
 		
 	
@@ -1791,23 +1799,212 @@ void CalFluxRow::sourceModelFromBin(EndianISStream& eiss) {
 }
 	
 	
-	CalFluxRow* CalFluxRow::fromBin(EndianISStream& eiss, CalFluxTable& table, const vector<string>& attributesSeq) {
+	CalFluxRow* CalFluxRow::fromBin(EndianIStream& eis, CalFluxTable& table, const vector<string>& attributesSeq) {
 		CalFluxRow* row = new  CalFluxRow(table);
 		
 		map<string, CalFluxAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalFluxTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalFluxTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an String 
+	void CalFluxRow::sourceNameFromText(const string & s) {
+		 
+		sourceName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalFluxRow::calDataIdFromText(const string & s) {
+		 
+		calDataId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void CalFluxRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalFluxRow::startValidTimeFromText(const string & s) {
+		 
+		startValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalFluxRow::endValidTimeFromText(const string & s) {
+		 
+		endValidTime = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalFluxRow::numFrequencyRangesFromText(const string & s) {
+		 
+		numFrequencyRanges = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalFluxRow::numStokesFromText(const string & s) {
+		 
+		numStokes = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void CalFluxRow::frequencyRangesFromText(const string & s) {
+		 
+		frequencyRanges = ASDMValuesParser::parse2D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an FluxCalibrationMethod 
+	void CalFluxRow::fluxMethodFromText(const string & s) {
+		 
+		fluxMethod = ASDMValuesParser::parse<FluxCalibrationMethod>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalFluxRow::fluxFromText(const string & s) {
+		 
+		flux = ASDMValuesParser::parse2D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void CalFluxRow::fluxErrorFromText(const string & s) {
+		 
+		fluxError = ASDMValuesParser::parse2D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an StokesParameter 
+	void CalFluxRow::stokesFromText(const string & s) {
+		 
+		stokes = ASDMValuesParser::parse1D<StokesParameter>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an Angle 
+	void CalFluxRow::directionFromText(const string & s) {
+		directionExists = true;
+		 
+		direction = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an DirectionReferenceCode 
+	void CalFluxRow::directionCodeFromText(const string & s) {
+		directionCodeExists = true;
+		 
+		directionCode = ASDMValuesParser::parse<DirectionReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalFluxRow::directionEquinoxFromText(const string & s) {
+		directionEquinoxExists = true;
+		 
+		directionEquinox = ASDMValuesParser::parse<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalFluxRow::PAFromText(const string & s) {
+		PAExists = true;
+		 
+		PA = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalFluxRow::PAErrorFromText(const string & s) {
+		PAErrorExists = true;
+		 
+		PAError = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalFluxRow::sizeFromText(const string & s) {
+		sizeExists = true;
+		 
+		size = ASDMValuesParser::parse3D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void CalFluxRow::sizeErrorFromText(const string & s) {
+		sizeErrorExists = true;
+		 
+		sizeError = ASDMValuesParser::parse3D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an SourceModel 
+	void CalFluxRow::sourceModelFromText(const string & s) {
+		sourceModelExists = true;
+		 
+		sourceModel = ASDMValuesParser::parse<SourceModel>(s);
+		
+	}
+	
+	
+	
+	void CalFluxRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalFluxAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalFluxTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -2510,9 +2707,9 @@ void CalFluxRow::sourceModelFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2586,9 +2783,10 @@ void CalFluxRow::sourceModelFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2771,6 +2969,91 @@ sourceModel = CSourceModel::from_int(0);
 	 fromBinMethods["sizeError"] = &CalFluxRow::sizeErrorFromBin; 
 	 fromBinMethods["sourceModel"] = &CalFluxRow::sourceModelFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["sourceName"] = &CalFluxRow::sourceNameFromText;
+		 
+	
+				 
+	fromTextMethods["calDataId"] = &CalFluxRow::calDataIdFromText;
+		 
+	
+				 
+	fromTextMethods["calReductionId"] = &CalFluxRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["startValidTime"] = &CalFluxRow::startValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["endValidTime"] = &CalFluxRow::endValidTimeFromText;
+		 
+	
+				 
+	fromTextMethods["numFrequencyRanges"] = &CalFluxRow::numFrequencyRangesFromText;
+		 
+	
+				 
+	fromTextMethods["numStokes"] = &CalFluxRow::numStokesFromText;
+		 
+	
+				 
+	fromTextMethods["frequencyRanges"] = &CalFluxRow::frequencyRangesFromText;
+		 
+	
+				 
+	fromTextMethods["fluxMethod"] = &CalFluxRow::fluxMethodFromText;
+		 
+	
+				 
+	fromTextMethods["flux"] = &CalFluxRow::fluxFromText;
+		 
+	
+				 
+	fromTextMethods["fluxError"] = &CalFluxRow::fluxErrorFromText;
+		 
+	
+				 
+	fromTextMethods["stokes"] = &CalFluxRow::stokesFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["direction"] = &CalFluxRow::directionFromText;
+		 	
+	 
+				
+	fromTextMethods["directionCode"] = &CalFluxRow::directionCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["directionEquinox"] = &CalFluxRow::directionEquinoxFromText;
+		 	
+	 
+				
+	fromTextMethods["PA"] = &CalFluxRow::PAFromText;
+		 	
+	 
+				
+	fromTextMethods["PAError"] = &CalFluxRow::PAErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["size"] = &CalFluxRow::sizeFromText;
+		 	
+	 
+				
+	fromTextMethods["sizeError"] = &CalFluxRow::sizeErrorFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceModel"] = &CalFluxRow::sourceModelFromText;
+		 	
+		
 	}
 	
 	CalFluxRow::CalFluxRow (CalFluxTable &t, CalFluxRow &row) : table(t) {

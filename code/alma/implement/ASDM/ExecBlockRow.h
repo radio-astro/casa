@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::ExecBlockRowIDL;
 #endif
 
 
@@ -51,23 +47,30 @@ using asdmIDL::ExecBlockRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <EntityRef.h>
-using  asdm::EntityRef;
+	
 
 
 
+
+	
 
 	
 
@@ -125,9 +128,11 @@ using  asdm::EntityRef;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file ExecBlock.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -140,19 +145,25 @@ class AntennaRow;
 
 // class asdm::SBSummaryRow;
 class SBSummaryRow;
+
+// class asdm::ScaleRow;
+class ScaleRow;
 	
 
 class ExecBlockRow;
-typedef void (ExecBlockRow::*ExecBlockAttributeFromBin) (EndianISStream& eiss);
+typedef void (ExecBlockRow::*ExecBlockAttributeFromBin) (EndianIStream& eis);
+typedef void (ExecBlockRow::*ExecBlockAttributeFromText) (const string& s);
 
 /**
  * The ExecBlockRow class is a row of a ExecBlockTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class ExecBlockRow {
 friend class asdm::ExecBlockTable;
+friend class asdm::RowTransformer<ExecBlockRow>;
+//friend class asdm::TableStreamReader<ExecBlockTable, ExecBlockRow>;
 
 public:
 
@@ -314,29 +325,29 @@ public:
 
 
 	
-	// ===> Attribute projectId
+	// ===> Attribute projectUID
 	
 	
 	
 
 	
  	/**
- 	 * Get projectId.
- 	 * @return projectId as EntityRef
+ 	 * Get projectUID.
+ 	 * @return projectUID as EntityRef
  	 */
- 	EntityRef getProjectId() const;
+ 	EntityRef getProjectUID() const;
 	
  
  	
  	
  	/**
- 	 * Set projectId with the specified EntityRef.
- 	 * @param projectId The EntityRef value to which projectId is to be set.
+ 	 * Set projectUID with the specified EntityRef.
+ 	 * @param projectUID The EntityRef value to which projectUID is to be set.
  	 
  		
  			
  	 */
- 	void setProjectId (EntityRef projectId);
+ 	void setProjectUID (EntityRef projectUID);
   		
 	
 	
@@ -434,6 +445,36 @@ public:
 
 
 	
+	// ===> Attribute numObservingLog
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numObservingLog.
+ 	 * @return numObservingLog as int
+ 	 */
+ 	int getNumObservingLog() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numObservingLog with the specified int.
+ 	 * @param numObservingLog The int value to which numObservingLog is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumObservingLog (int numObservingLog);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute observingLog
 	
 	
@@ -442,21 +483,21 @@ public:
 	
  	/**
  	 * Get observingLog.
- 	 * @return observingLog as string
+ 	 * @return observingLog as vector<string >
  	 */
- 	string getObservingLog() const;
+ 	vector<string > getObservingLog() const;
 	
  
  	
  	
  	/**
- 	 * Set observingLog with the specified string.
- 	 * @param observingLog The string value to which observingLog is to be set.
+ 	 * Set observingLog with the specified vector<string >.
+ 	 * @param observingLog The vector<string > value to which observingLog is to be set.
  	 
  		
  			
  	 */
- 	void setObservingLog (string observingLog);
+ 	void setObservingLog (vector<string > observingLog);
   		
 	
 	
@@ -472,81 +513,21 @@ public:
 	
  	/**
  	 * Get sessionReference.
- 	 * @return sessionReference as string
+ 	 * @return sessionReference as EntityRef
  	 */
- 	string getSessionReference() const;
+ 	EntityRef getSessionReference() const;
 	
  
  	
  	
  	/**
- 	 * Set sessionReference with the specified string.
- 	 * @param sessionReference The string value to which sessionReference is to be set.
+ 	 * Set sessionReference with the specified EntityRef.
+ 	 * @param sessionReference The EntityRef value to which sessionReference is to be set.
  	 
  		
  			
  	 */
- 	void setSessionReference (string sessionReference);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute sbSummary
-	
-	
-	
-
-	
- 	/**
- 	 * Get sbSummary.
- 	 * @return sbSummary as EntityRef
- 	 */
- 	EntityRef getSbSummary() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set sbSummary with the specified EntityRef.
- 	 * @param sbSummary The EntityRef value to which sbSummary is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setSbSummary (EntityRef sbSummary);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute schedulerMode
-	
-	
-	
-
-	
- 	/**
- 	 * Get schedulerMode.
- 	 * @return schedulerMode as string
- 	 */
- 	string getSchedulerMode() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set schedulerMode with the specified string.
- 	 * @param schedulerMode The string value to which schedulerMode is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setSchedulerMode (string schedulerMode);
+ 	void setSessionReference (EntityRef sessionReference);
   		
 	
 	
@@ -704,96 +685,6 @@ public:
 
 
 	
-	// ===> Attribute siteAltitude
-	
-	
-	
-
-	
- 	/**
- 	 * Get siteAltitude.
- 	 * @return siteAltitude as Length
- 	 */
- 	Length getSiteAltitude() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set siteAltitude with the specified Length.
- 	 * @param siteAltitude The Length value to which siteAltitude is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setSiteAltitude (Length siteAltitude);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute siteLongitude
-	
-	
-	
-
-	
- 	/**
- 	 * Get siteLongitude.
- 	 * @return siteLongitude as Angle
- 	 */
- 	Angle getSiteLongitude() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set siteLongitude with the specified Angle.
- 	 * @param siteLongitude The Angle value to which siteLongitude is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setSiteLongitude (Angle siteLongitude);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute siteLatitude
-	
-	
-	
-
-	
- 	/**
- 	 * Get siteLatitude.
- 	 * @return siteLatitude as Angle
- 	 */
- 	Angle getSiteLatitude() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set siteLatitude with the specified Angle.
- 	 * @param siteLatitude The Angle value to which siteLatitude is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setSiteLatitude (Angle siteLatitude);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute aborted
 	
 	
@@ -895,43 +786,248 @@ public:
 
 
 	
-	// ===> Attribute flagRow, which is optional
+	// ===> Attribute schedulerMode, which is optional
 	
 	
 	
 	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
+	 * The attribute schedulerMode is optional. Return true if this attribute exists.
+	 * @return true if and only if the schedulerMode attribute exists. 
 	 */
-	bool isFlagRowExists() const;
+	bool isSchedulerModeExists() const;
 	
 
 	
  	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throws IllegalAccessException If flagRow does not exist.
+ 	 * Get schedulerMode, which is optional.
+ 	 * @return schedulerMode as string
+ 	 * @throws IllegalAccessException If schedulerMode does not exist.
  	 */
- 	bool getFlagRow() const;
+ 	string getSchedulerMode() const;
 	
  
  	
  	
  	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 * Set schedulerMode with the specified string.
+ 	 * @param schedulerMode The string value to which schedulerMode is to be set.
  	 
  		
  	 */
- 	void setFlagRow (bool flagRow);
+ 	void setSchedulerMode (string schedulerMode);
 		
 	
 	
 	
 	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
+	 * Mark schedulerMode, which is an optional field, as non-existent.
 	 */
-	void clearFlagRow ();
+	void clearSchedulerMode ();
+	
+
+
+	
+	// ===> Attribute siteAltitude, which is optional
+	
+	
+	
+	/**
+	 * The attribute siteAltitude is optional. Return true if this attribute exists.
+	 * @return true if and only if the siteAltitude attribute exists. 
+	 */
+	bool isSiteAltitudeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get siteAltitude, which is optional.
+ 	 * @return siteAltitude as Length
+ 	 * @throws IllegalAccessException If siteAltitude does not exist.
+ 	 */
+ 	Length getSiteAltitude() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set siteAltitude with the specified Length.
+ 	 * @param siteAltitude The Length value to which siteAltitude is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSiteAltitude (Length siteAltitude);
+		
+	
+	
+	
+	/**
+	 * Mark siteAltitude, which is an optional field, as non-existent.
+	 */
+	void clearSiteAltitude ();
+	
+
+
+	
+	// ===> Attribute siteLongitude, which is optional
+	
+	
+	
+	/**
+	 * The attribute siteLongitude is optional. Return true if this attribute exists.
+	 * @return true if and only if the siteLongitude attribute exists. 
+	 */
+	bool isSiteLongitudeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get siteLongitude, which is optional.
+ 	 * @return siteLongitude as Angle
+ 	 * @throws IllegalAccessException If siteLongitude does not exist.
+ 	 */
+ 	Angle getSiteLongitude() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set siteLongitude with the specified Angle.
+ 	 * @param siteLongitude The Angle value to which siteLongitude is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSiteLongitude (Angle siteLongitude);
+		
+	
+	
+	
+	/**
+	 * Mark siteLongitude, which is an optional field, as non-existent.
+	 */
+	void clearSiteLongitude ();
+	
+
+
+	
+	// ===> Attribute siteLatitude, which is optional
+	
+	
+	
+	/**
+	 * The attribute siteLatitude is optional. Return true if this attribute exists.
+	 * @return true if and only if the siteLatitude attribute exists. 
+	 */
+	bool isSiteLatitudeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get siteLatitude, which is optional.
+ 	 * @return siteLatitude as Angle
+ 	 * @throws IllegalAccessException If siteLatitude does not exist.
+ 	 */
+ 	Angle getSiteLatitude() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set siteLatitude with the specified Angle.
+ 	 * @param siteLatitude The Angle value to which siteLatitude is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSiteLatitude (Angle siteLatitude);
+		
+	
+	
+	
+	/**
+	 * Mark siteLatitude, which is an optional field, as non-existent.
+	 */
+	void clearSiteLatitude ();
+	
+
+
+	
+	// ===> Attribute observingScript, which is optional
+	
+	
+	
+	/**
+	 * The attribute observingScript is optional. Return true if this attribute exists.
+	 * @return true if and only if the observingScript attribute exists. 
+	 */
+	bool isObservingScriptExists() const;
+	
+
+	
+ 	/**
+ 	 * Get observingScript, which is optional.
+ 	 * @return observingScript as string
+ 	 * @throws IllegalAccessException If observingScript does not exist.
+ 	 */
+ 	string getObservingScript() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set observingScript with the specified string.
+ 	 * @param observingScript The string value to which observingScript is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setObservingScript (string observingScript);
+		
+	
+	
+	
+	/**
+	 * Mark observingScript, which is an optional field, as non-existent.
+	 */
+	void clearObservingScript ();
+	
+
+
+	
+	// ===> Attribute observingScriptUID, which is optional
+	
+	
+	
+	/**
+	 * The attribute observingScriptUID is optional. Return true if this attribute exists.
+	 * @return true if and only if the observingScriptUID attribute exists. 
+	 */
+	bool isObservingScriptUIDExists() const;
+	
+
+	
+ 	/**
+ 	 * Get observingScriptUID, which is optional.
+ 	 * @return observingScriptUID as EntityRef
+ 	 * @throws IllegalAccessException If observingScriptUID does not exist.
+ 	 */
+ 	EntityRef getObservingScriptUID() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set observingScriptUID with the specified EntityRef.
+ 	 * @param observingScriptUID The EntityRef value to which observingScriptUID is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setObservingScriptUID (EntityRef observingScriptUID);
+		
+	
+	
+	
+	/**
+	 * Mark observingScriptUID, which is an optional field, as non-existent.
+	 */
+	void clearObservingScriptUID ();
 	
 
 
@@ -996,6 +1092,47 @@ public:
   		
 	
 	
+	
+
+
+	
+	// ===> Attribute scaleId, which is optional
+	
+	
+	
+	/**
+	 * The attribute scaleId is optional. Return true if this attribute exists.
+	 * @return true if and only if the scaleId attribute exists. 
+	 */
+	bool isScaleIdExists() const;
+	
+
+	
+ 	/**
+ 	 * Get scaleId, which is optional.
+ 	 * @return scaleId as Tag
+ 	 * @throws IllegalAccessException If scaleId does not exist.
+ 	 */
+ 	Tag getScaleId() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set scaleId with the specified Tag.
+ 	 * @param scaleId The Tag value to which scaleId is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setScaleId (Tag scaleId);
+		
+	
+	
+	
+	/**
+	 * Mark scaleId, which is an optional field, as non-existent.
+	 */
+	void clearScaleId ();
 	
 
 
@@ -1072,6 +1209,23 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * scaleId pointer to the row in the Scale table having Scale.scaleId == scaleId
+	 * @return a ScaleRow*
+	 * 
+	 
+	 * throws IllegalAccessException
+	 
+	 */
+	 ScaleRow* getScaleUsingScaleId();
+	 
+
+	
+
+	
 	
 	
 	/**
@@ -1086,7 +1240,7 @@ public:
 	    
 	 * @param execBlockUID
 	    
-	 * @param projectId
+	 * @param projectUID
 	    
 	 * @param configName
 	    
@@ -1094,13 +1248,11 @@ public:
 	    
 	 * @param observerName
 	    
+	 * @param numObservingLog
+	    
 	 * @param observingLog
 	    
 	 * @param sessionReference
-	    
-	 * @param sbSummary
-	    
-	 * @param schedulerMode
 	    
 	 * @param baseRangeMin
 	    
@@ -1112,12 +1264,6 @@ public:
 	    
 	 * @param basePa
 	    
-	 * @param siteAltitude
-	    
-	 * @param siteLongitude
-	    
-	 * @param siteLatitude
-	    
 	 * @param aborted
 	    
 	 * @param numAntenna
@@ -1127,7 +1273,7 @@ public:
 	 * @param sBSummaryId
 	    
 	 */ 
-	bool compareNoAutoInc(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId);
+	bool compareNoAutoInc(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectUID, string configName, string telescopeName, string observerName, int numObservingLog, vector<string > observingLog, EntityRef sessionReference, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId);
 	
 	
 
@@ -1144,7 +1290,7 @@ public:
 	    
 	 * @param execBlockUID
 	    
-	 * @param projectId
+	 * @param projectUID
 	    
 	 * @param configName
 	    
@@ -1152,13 +1298,11 @@ public:
 	    
 	 * @param observerName
 	    
+	 * @param numObservingLog
+	    
 	 * @param observingLog
 	    
 	 * @param sessionReference
-	    
-	 * @param sbSummary
-	    
-	 * @param schedulerMode
 	    
 	 * @param baseRangeMin
 	    
@@ -1170,12 +1314,6 @@ public:
 	    
 	 * @param basePa
 	    
-	 * @param siteAltitude
-	    
-	 * @param siteLongitude
-	    
-	 * @param siteLatitude
-	    
 	 * @param aborted
 	    
 	 * @param numAntenna
@@ -1185,7 +1323,7 @@ public:
 	 * @param sBSummaryId
 	    
 	 */ 
-	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId); 
+	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectUID, string configName, string telescopeName, string observerName, int numObservingLog, vector<string > observingLog, EntityRef sessionReference, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId); 
 		 
 	
 	/**
@@ -1203,7 +1341,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a ExecBlockRowIDL struct.
 	 */
-	ExecBlockRowIDL *toIDL() const;
+	asdmIDL::ExecBlockRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1212,14 +1350,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (ExecBlockRowIDL x) ;
+	void setFromIDL (asdmIDL::ExecBlockRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1227,7 +1365,55 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, ExecBlockAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void execBlockNumFromBin( EndianIStream& eis);
+void execBlockUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void configNameFromBin( EndianIStream& eis);
+void telescopeNameFromBin( EndianIStream& eis);
+void observerNameFromBin( EndianIStream& eis);
+void numObservingLogFromBin( EndianIStream& eis);
+void observingLogFromBin( EndianIStream& eis);
+void sessionReferenceFromBin( EndianIStream& eis);
+void baseRangeMinFromBin( EndianIStream& eis);
+void baseRangeMaxFromBin( EndianIStream& eis);
+void baseRmsMinorFromBin( EndianIStream& eis);
+void baseRmsMajorFromBin( EndianIStream& eis);
+void basePaFromBin( EndianIStream& eis);
+void abortedFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
+void sBSummaryIdFromBin( EndianIStream& eis);
+
+void releaseDateFromBin( EndianIStream& eis);
+void schedulerModeFromBin( EndianIStream& eis);
+void siteAltitudeFromBin( EndianIStream& eis);
+void siteLongitudeFromBin( EndianIStream& eis);
+void siteLatitudeFromBin( EndianIStream& eis);
+void observingScriptFromBin( EndianIStream& eis);
+void observingScriptUIDFromBin( EndianIStream& eis);
+void scaleIdFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the ExecBlockTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ExecBlockRow* fromBin(EndianIStream& eis, ExecBlockTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1344,11 +1530,11 @@ private:
  	
 
 	
-	// ===> Attribute projectId
+	// ===> Attribute projectUID
 	
 	
 
-	EntityRef projectId;
+	EntityRef projectUID;
 
 	
 	
@@ -1388,11 +1574,22 @@ private:
  	
 
 	
+	// ===> Attribute numObservingLog
+	
+	
+
+	int numObservingLog;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute observingLog
 	
 	
 
-	string observingLog;
+	vector<string > observingLog;
 
 	
 	
@@ -1403,29 +1600,7 @@ private:
 	
 	
 
-	string sessionReference;
-
-	
-	
- 	
-
-	
-	// ===> Attribute sbSummary
-	
-	
-
-	EntityRef sbSummary;
-
-	
-	
- 	
-
-	
-	// ===> Attribute schedulerMode
-	
-	
-
-	string schedulerMode;
+	EntityRef sessionReference;
 
 	
 	
@@ -1487,39 +1662,6 @@ private:
  	
 
 	
-	// ===> Attribute siteAltitude
-	
-	
-
-	Length siteAltitude;
-
-	
-	
- 	
-
-	
-	// ===> Attribute siteLongitude
-	
-	
-
-	Angle siteLongitude;
-
-	
-	
- 	
-
-	
-	// ===> Attribute siteLatitude
-	
-	
-
-	Angle siteLatitude;
-
-	
-	
- 	
-
-	
 	// ===> Attribute aborted
 	
 	
@@ -1555,13 +1697,78 @@ private:
  	
 
 	
-	// ===> Attribute flagRow, which is optional
+	// ===> Attribute schedulerMode, which is optional
 	
 	
-	bool flagRowExists;
+	bool schedulerModeExists;
 	
 
-	bool flagRow;
+	string schedulerMode;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute siteAltitude, which is optional
+	
+	
+	bool siteAltitudeExists;
+	
+
+	Length siteAltitude;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute siteLongitude, which is optional
+	
+	
+	bool siteLongitudeExists;
+	
+
+	Angle siteLongitude;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute siteLatitude, which is optional
+	
+	
+	bool siteLatitudeExists;
+	
+
+	Angle siteLatitude;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute observingScript, which is optional
+	
+	
+	bool observingScriptExists;
+	
+
+	string observingScript;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute observingScriptUID, which is optional
+	
+	
+	bool observingScriptUIDExists;
+	
+
+	EntityRef observingScriptUID;
 
 	
 	
@@ -1593,6 +1800,19 @@ private:
 	
  	
 
+	
+	// ===> Attribute scaleId, which is optional
+	
+	
+	bool scaleIdExists;
+	
+
+	Tag scaleId;
+
+	
+	
+ 	
+
 	///////////
 	// Links //
 	///////////
@@ -1611,39 +1831,138 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, ExecBlockAttributeFromBin> fromBinMethods;
-void execBlockIdFromBin( EndianISStream& eiss);
-void startTimeFromBin( EndianISStream& eiss);
-void endTimeFromBin( EndianISStream& eiss);
-void execBlockNumFromBin( EndianISStream& eiss);
-void execBlockUIDFromBin( EndianISStream& eiss);
-void projectIdFromBin( EndianISStream& eiss);
-void configNameFromBin( EndianISStream& eiss);
-void telescopeNameFromBin( EndianISStream& eiss);
-void observerNameFromBin( EndianISStream& eiss);
-void observingLogFromBin( EndianISStream& eiss);
-void sessionReferenceFromBin( EndianISStream& eiss);
-void sbSummaryFromBin( EndianISStream& eiss);
-void schedulerModeFromBin( EndianISStream& eiss);
-void baseRangeMinFromBin( EndianISStream& eiss);
-void baseRangeMaxFromBin( EndianISStream& eiss);
-void baseRmsMinorFromBin( EndianISStream& eiss);
-void baseRmsMajorFromBin( EndianISStream& eiss);
-void basePaFromBin( EndianISStream& eiss);
-void siteAltitudeFromBin( EndianISStream& eiss);
-void siteLongitudeFromBin( EndianISStream& eiss);
-void siteLatitudeFromBin( EndianISStream& eiss);
-void abortedFromBin( EndianISStream& eiss);
-void numAntennaFromBin( EndianISStream& eiss);
-void antennaIdFromBin( EndianISStream& eiss);
-void sBSummaryIdFromBin( EndianISStream& eiss);
+		
 
-void releaseDateFromBin( EndianISStream& eiss);
-void flagRowFromBin( EndianISStream& eiss);
+	 
+
 	
+
+	
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, ExecBlockAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianIStream& eis);
+void startTimeFromBin( EndianIStream& eis);
+void endTimeFromBin( EndianIStream& eis);
+void execBlockNumFromBin( EndianIStream& eis);
+void execBlockUIDFromBin( EndianIStream& eis);
+void projectUIDFromBin( EndianIStream& eis);
+void configNameFromBin( EndianIStream& eis);
+void telescopeNameFromBin( EndianIStream& eis);
+void observerNameFromBin( EndianIStream& eis);
+void numObservingLogFromBin( EndianIStream& eis);
+void observingLogFromBin( EndianIStream& eis);
+void sessionReferenceFromBin( EndianIStream& eis);
+void baseRangeMinFromBin( EndianIStream& eis);
+void baseRangeMaxFromBin( EndianIStream& eis);
+void baseRmsMinorFromBin( EndianIStream& eis);
+void baseRmsMajorFromBin( EndianIStream& eis);
+void basePaFromBin( EndianIStream& eis);
+void abortedFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void antennaIdFromBin( EndianIStream& eis);
+void sBSummaryIdFromBin( EndianIStream& eis);
+
+void releaseDateFromBin( EndianIStream& eis);
+void schedulerModeFromBin( EndianIStream& eis);
+void siteAltitudeFromBin( EndianIStream& eis);
+void siteLongitudeFromBin( EndianIStream& eis);
+void siteLatitudeFromBin( EndianIStream& eis);
+void observingScriptFromBin( EndianIStream& eis);
+void observingScriptUIDFromBin( EndianIStream& eis);
+void scaleIdFromBin( EndianIStream& eis);
+
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, ExecBlockAttributeFromText> fromTextMethods;
+	
+void execBlockIdFromText (const string & s);
+	
+	
+void startTimeFromText (const string & s);
+	
+	
+void endTimeFromText (const string & s);
+	
+	
+void execBlockNumFromText (const string & s);
+	
+	
+	
+	
+void configNameFromText (const string & s);
+	
+	
+void telescopeNameFromText (const string & s);
+	
+	
+void observerNameFromText (const string & s);
+	
+	
+void numObservingLogFromText (const string & s);
+	
+	
+void observingLogFromText (const string & s);
+	
+	
+	
+void baseRangeMinFromText (const string & s);
+	
+	
+void baseRangeMaxFromText (const string & s);
+	
+	
+void baseRmsMinorFromText (const string & s);
+	
+	
+void baseRmsMajorFromText (const string & s);
+	
+	
+void basePaFromText (const string & s);
+	
+	
+void abortedFromText (const string & s);
+	
+	
+void numAntennaFromText (const string & s);
+	
+	
+void antennaIdFromText (const string & s);
+	
+	
+void sBSummaryIdFromText (const string & s);
+	
+
+	
+void releaseDateFromText (const string & s);
+	
+	
+void schedulerModeFromText (const string & s);
+	
+	
+void siteAltitudeFromText (const string & s);
+	
+	
+void siteLongitudeFromText (const string & s);
+	
+	
+void siteLatitudeFromText (const string & s);
+	
+	
+void observingScriptFromText (const string & s);
+	
+	
+	
+void scaleIdFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1652,14 +1971,14 @@ void flagRowFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the ExecBlockTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static ExecBlockRow* fromBin(EndianISStream& eiss, ExecBlockTable& table, const vector<string>& attributesSeq);	 
 
+	 static ExecBlockRow* fromBin(EndianIStream& eis, ExecBlockTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

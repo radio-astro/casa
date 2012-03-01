@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -56,7 +57,7 @@ namespace PolarizationTypeMod
   //! The polarizations a single receptor can detect
 
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum PolarizationType
@@ -68,13 +69,18 @@ namespace PolarizationTypeMod
     X /*!< X linear */
      ,
     Y /*!< Y linear */
+     ,
+    BOTH /*!< The receptor responds to both polarizations. */
      
   };
   typedef PolarizationType &PolarizationType_out;
 } 
 #endif
 
-using namespace std;
+namespace PolarizationTypeMod {
+	std::ostream & operator << ( std::ostream & out, const PolarizationType& value);
+	std::istream & operator >> ( std::istream & in , PolarizationType& value );
+}
 
 /** 
   * A helper class for the enumeration PolarizationType.
@@ -95,6 +101,8 @@ class CPolarizationType {
 	
 	static const std::string& sY; /*!< A const string equal to "Y".*/
 	
+	static const std::string& sBOTH; /*!< A const string equal to "BOTH".*/
+	
 
 	/**
 	  * Return the major version number as an int.
@@ -108,7 +116,7 @@ class CPolarizationType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -162,8 +170,8 @@ class CPolarizationType {
     CPolarizationType(const CPolarizationType&);
     CPolarizationType& operator=(const CPolarizationType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

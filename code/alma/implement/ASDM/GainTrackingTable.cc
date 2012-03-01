@@ -49,8 +49,11 @@ using asdm::GainTrackingRow;
 using asdm::Parser;
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 #include <Misc.h>
@@ -60,13 +63,16 @@ using namespace asdm;
 #include <libxml/tree.h>
 
 #include "boost/filesystem/operations.hpp"
-
+#include <boost/algorithm/string.hpp>
+using namespace boost;
 
 namespace asdm {
 
-	string GainTrackingTable::tableName = "GainTracking";
-	const vector<string> GainTrackingTable::attributesNames = initAttributesNames();
-		
+	string GainTrackingTable::itsName = "GainTracking";
+	vector<string> GainTrackingTable::attributesNames; 
+	vector<string> GainTrackingTable::attributesNamesInBin; 
+	bool GainTrackingTable::initAttributesNamesDone = GainTrackingTable::initAttributesNames();
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -145,14 +151,20 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string GainTrackingTable::getName() const {
-		return tableName;
+		return itsName;
+	}
+	
+	/**
+	 * Return the name of this table.
+	 */
+	string GainTrackingTable::name() {
+		return itsName;
 	}
 	
 	/**
 	 * Build the vector of attributes names.
 	 */
-	vector<string> GainTrackingTable::initAttributesNames() {
-		vector<string> attributesNames;
+	bool GainTrackingTable::initAttributesNames() {
 
 		attributesNames.push_back("antennaId");
 
@@ -163,28 +175,12 @@ namespace asdm {
 		attributesNames.push_back("feedId");
 
 
-		attributesNames.push_back("attenuator");
-
-		attributesNames.push_back("numLO");
-
 		attributesNames.push_back("numReceptor");
 
-		attributesNames.push_back("cableDelay");
+		attributesNames.push_back("attenuator");
 
-		attributesNames.push_back("crossPolarizationDelay");
+		attributesNames.push_back("polarizationType");
 
-		attributesNames.push_back("loPropagationDelay");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("receiverDelay");
-
-
-		attributesNames.push_back("delayOffset");
-
-		attributesNames.push_back("freqOffset");
-
-		attributesNames.push_back("phaseOffset");
 
 		attributesNames.push_back("samplingLevel");
 
@@ -194,13 +190,40 @@ namespace asdm {
 
 		attributesNames.push_back("attSpectrum");
 
-		return attributesNames;
+
+    
+    	 
+    	attributesNamesInBin.push_back("antennaId") ; 
+    	 
+    	attributesNamesInBin.push_back("spectralWindowId") ; 
+    	 
+    	attributesNamesInBin.push_back("timeInterval") ; 
+    	 
+    	attributesNamesInBin.push_back("feedId") ; 
+    	 
+    	attributesNamesInBin.push_back("numReceptor") ; 
+    	 
+    	attributesNamesInBin.push_back("attenuator") ; 
+    	 
+    	attributesNamesInBin.push_back("polarizationType") ; 
+    	
+    	 
+    	attributesNamesInBin.push_back("samplingLevel") ; 
+    	 
+    	attributesNamesInBin.push_back("numAttFreq") ; 
+    	 
+    	attributesNamesInBin.push_back("attFreq") ; 
+    	 
+    	attributesNamesInBin.push_back("attSpectrum") ; 
+    	
+    
+    	return true; 
 	}
 	
-	/**
-	 * Return the names of the attributes.
-	 */
+
 	const vector<string>& GainTrackingTable::getAttributesNames() { return attributesNames; }
+	
+	const vector<string>& GainTrackingTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
 
 	/**
 	 * Return this table's Entity.
@@ -240,24 +263,14 @@ namespace asdm {
 	
  	 * @param feedId 
 	
- 	 * @param attenuator 
-	
- 	 * @param numLO 
-	
  	 * @param numReceptor 
 	
- 	 * @param cableDelay 
+ 	 * @param attenuator 
 	
- 	 * @param crossPolarizationDelay 
-	
- 	 * @param loPropagationDelay 
-	
- 	 * @param polarizationTypes 
-	
- 	 * @param receiverDelay 
+ 	 * @param polarizationType 
 	
      */
-	GainTrackingRow* GainTrackingTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay){
+	GainTrackingRow* GainTrackingTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, vector<float > attenuator, vector<PolarizationTypeMod::PolarizationType > polarizationType){
 		GainTrackingRow *row = new GainTrackingRow(*this);
 			
 		row->setAntennaId(antennaId);
@@ -268,21 +281,11 @@ namespace asdm {
 			
 		row->setFeedId(feedId);
 			
-		row->setAttenuator(attenuator);
-			
-		row->setNumLO(numLO);
-			
 		row->setNumReceptor(numReceptor);
 			
-		row->setCableDelay(cableDelay);
+		row->setAttenuator(attenuator);
 			
-		row->setCrossPolarizationDelay(crossPolarizationDelay);
-			
-		row->setLoPropagationDelay(loPropagationDelay);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
-		row->setReceiverDelay(receiverDelay);
+		row->setPolarizationType(polarizationType);
 	
 		return row;		
 	}	
@@ -344,17 +347,21 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
 	
-
+		
+	void GainTrackingTable::addWithoutCheckingUnique(GainTrackingRow * x) {
+		GainTrackingRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -387,6 +394,16 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void GainTrackingTable::append(GainTrackingRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -410,6 +427,9 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 	
 		
 	 vector<GainTrackingRow *> *GainTrackingTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "GainTrackingTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -500,6 +520,9 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::GainTrackingTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -533,7 +556,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/2/GainTrackingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
+		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/3/GainTrackingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -552,8 +575,31 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 	}
 
 	
-	void GainTrackingTable::fromXML(string& xmlDoc)  {
-		Parser xml(xmlDoc);
+	string GainTrackingTable::getVersion() const {
+		return version;
+	}
+	
+
+	void GainTrackingTable::fromXML(string& tableInXML)  {
+		//
+		// Look for a version information in the schemaVersion of the XML
+		//
+		xmlDoc *doc;
+		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+		if ( doc == NULL )
+			throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "GainTracking");
+		
+		xmlNode* root_element = xmlDocGetRootElement(doc);
+   		if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      		throw ConversionException("Failed to retrieve the root element in the DOM structure.", "GainTracking");
+      		
+      	xmlChar * propValue = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	if ( propValue != 0 ) {
+      		version = string( (const char*) propValue);
+      		xmlFree(propValue);   		
+      	}
+      		     							
+		Parser xml(tableInXML);
 		if (!xml.isStr("<GainTrackingTable")) 
 			error();
 		// cout << "Parsing a GainTrackingTable" << endl;
@@ -573,12 +619,17 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		GainTrackingRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"GainTrackingTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -587,10 +638,27 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in GainTrackingTable::checkAndAdd called from GainTrackingTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"GainTrackingTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in GainTrackingTable::addWithoutCheckingUnique called from GainTrackingTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</GainTrackingTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -610,7 +678,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/2/GainTrackingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
+		oss << "<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/3/GainTrackingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='GainTrackingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -620,18 +688,10 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		oss << "<spectralWindowId/>\n"; 
 		oss << "<timeInterval/>\n"; 
 		oss << "<feedId/>\n"; 
-		oss << "<attenuator/>\n"; 
-		oss << "<numLO/>\n"; 
 		oss << "<numReceptor/>\n"; 
-		oss << "<cableDelay/>\n"; 
-		oss << "<crossPolarizationDelay/>\n"; 
-		oss << "<loPropagationDelay/>\n"; 
-		oss << "<polarizationTypes/>\n"; 
-		oss << "<receiverDelay/>\n"; 
+		oss << "<attenuator/>\n"; 
+		oss << "<polarizationType/>\n"; 
 
-		oss << "<delayOffset/>\n"; 
-		oss << "<freqOffset/>\n"; 
-		oss << "<phaseOffset/>\n"; 
 		oss << "<samplingLevel/>\n"; 
 		oss << "<numAttFreq/>\n"; 
 		oss << "<attFreq/>\n"; 
@@ -749,46 +809,36 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
  	 //
     // Let's consider a  default order for the sequence of attributes.
     //
-     
-    attributesSeq.push_back("antennaId") ; 
-     
-    attributesSeq.push_back("spectralWindowId") ; 
-     
-    attributesSeq.push_back("timeInterval") ; 
-     
-    attributesSeq.push_back("feedId") ; 
-     
-    attributesSeq.push_back("attenuator") ; 
-     
-    attributesSeq.push_back("numLO") ; 
-     
-    attributesSeq.push_back("numReceptor") ; 
-     
-    attributesSeq.push_back("cableDelay") ; 
-     
-    attributesSeq.push_back("crossPolarizationDelay") ; 
-     
-    attributesSeq.push_back("loPropagationDelay") ; 
-     
-    attributesSeq.push_back("polarizationTypes") ; 
-     
-    attributesSeq.push_back("receiverDelay") ; 
     
-     
-    attributesSeq.push_back("delayOffset") ; 
-     
-    attributesSeq.push_back("freqOffset") ; 
-     
-    attributesSeq.push_back("phaseOffset") ; 
-     
+    	 
+    attributesSeq.push_back("antennaId") ; 
+    	 
+    attributesSeq.push_back("spectralWindowId") ; 
+    	 
+    attributesSeq.push_back("timeInterval") ; 
+    	 
+    attributesSeq.push_back("feedId") ; 
+    	 
+    attributesSeq.push_back("numReceptor") ; 
+    	 
+    attributesSeq.push_back("attenuator") ; 
+    	 
+    attributesSeq.push_back("polarizationType") ; 
+    	
+    	 
     attributesSeq.push_back("samplingLevel") ; 
-     
+    	 
     attributesSeq.push_back("numAttFreq") ; 
-     
+    	 
     attributesSeq.push_back("attFreq") ; 
-     
+    	 
     attributesSeq.push_back("attSpectrum") ; 
-              
+    	
+     
+    
+    
+    // And decide that it has version == "2"
+    version = "2";         
      }
     else if (string("GainTrackingTable").compare((const char*) root_element->name) == 0) {
       // It's a new (and correct) MIME file for tables.
@@ -797,6 +847,12 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
       //
       xmlNode* bulkStoreRef = 0;
       xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
       
       // Skip the two first children (Entity and ContainerEntity).
       bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
@@ -836,13 +892,13 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
     // Create an EndianISStream from the substring containing the binary part.
     EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
     
-    entity = Entity::fromBin(eiss);
+    entity = Entity::fromBin((EndianIStream&) eiss);
     
     // We do nothing with that but we have to read it.
-    Entity containerEntity = Entity::fromBin(eiss);
+    Entity containerEntity = Entity::fromBin((EndianIStream&) eiss);
 
 	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
-    int numRows = eiss.readInt();
+    int numRows = ((EndianIStream&) eiss).readInt();
     if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
     	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
     	                                       // written into the binary representation of the table.
@@ -854,22 +910,48 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	GainTrackingRow* aRow = GainTrackingRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				GainTrackingRow* aRow = GainTrackingRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "GainTracking");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "GainTracking");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			GainTrackingRow* aRow = GainTrackingRow::fromBin((EndianIStream&) eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
+	}
+	
+	void GainTrackingTable::setUnknownAttributeBinaryReader(const string& attributeName, BinaryAttributeReaderFunctor* barFctr) {
+		//
+		// Is this attribute really unknown ?
+		//
+		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+			if ((*iter).compare(attributeName) == 0) 
+				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "GainTracking"); 
+		}
+		
+		// Ok then register the functor to activate when an unknown attribute is met during the reading of a binary table?
+		unknownAttributes2Functors[attributeName] = barFctr;
+	}
+	
+	BinaryAttributeReaderFunctor* GainTrackingTable::getUnknownAttributeBinaryReader(const string& attributeName) const {
+		map<string, BinaryAttributeReaderFunctor*>::const_iterator iter = unknownAttributes2Functors.find(attributeName);
+		return (iter == unknownAttributes2Functors.end()) ? 0 : iter->second;
 	}
 
 	
@@ -937,12 +1019,140 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
     
     setFromMIME(ss.str());
   }	
+/* 
+  void GainTrackingTable::openMIMEFile (const string& directory) {
+  		
+  	// Open the file.
+  	string tablePath ;
+    tablePath = directory + "/GainTracking.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open())
+      throw ConversionException("Could not open file " + tablePath, "GainTracking");
+      
+	// Locate the xmlPartMIMEHeader.
+    string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
+    CharComparator comparator;
+    istreambuf_iterator<char> BEGIN(tablefile.rdbuf());
+    istreambuf_iterator<char> END;
+    istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+    if (it == END) 
+    	throw ConversionException("failed to detect the beginning of the XML header", "GainTracking");
+    
+    // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
+    string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
+    string xmlHeader;
+   	CharCompAccumulator compaccumulator(&xmlHeader, 100000);
+   	++it;
+   	it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+   	if (it == END) 
+   		throw ConversionException("failed to detect the beginning of the binary part", "GainTracking");
+   	
+	cout << xmlHeader << endl;
+	//
+	// We have the xmlHeader , let's parse it.
+	//
+	xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "GainTracking");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq(attributesNamesInBin);
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "GainTracking");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+        
+      // And decide that it has version == "2"
+    version = "2";         
+     }
+    else if (string("GainTrackingTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      if (xmlHasProp(root_element, (const xmlChar*) "schemaVersion")) {
+      	xmlChar * value = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	version = string ((const char *) value);
+      	xmlFree(value);	
+      }
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/GainTrackingTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "GainTracking");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/GainTrackingTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "GainTracking");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/GainTrackingTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "GainTracking");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/GainTrackingTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "GainTracking");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianIFStream eifs(&tablefile, byteOrder);
+    
+    entity = Entity::fromBin((EndianIStream &) eifs);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin((EndianIStream &) eifs);
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
+    int numRows = eifs.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }    
+  } 
+ */
 
 	
 void GainTrackingTable::setFromXMLFile(const string& directory) {
     string tablePath ;
     
     tablePath = directory + "/GainTracking.xml";
+    
+    /*
     ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
     if (!tablefile.is_open()) { 
       throw ConversionException("Could not open file " + tablePath, "GainTracking");
@@ -962,10 +1172,21 @@ void GainTrackingTable::setFromXMLFile(const string& directory) {
 
     // Let's make a string out of the stringstream content and empty the stringstream.
     string xmlDocument = ss.str(); ss.str("");
-
+	
     // Let's make a very primitive check to decide
     // whether the XML content represents the table
     // or refers to it via a <BulkStoreRef element.
+    */
+    
+    string xmlDocument;
+    try {
+    	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
+    }
+    catch (XSLTransformerException e) {
+    	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "GainTracking");
+    }
+    
     if (xmlDocument.find("<BulkStoreRef") != string::npos)
       setFromMIMEFile(directory);
     else

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace WVRMethodMod
   //! WVRMethod.
   //! [CalDM.CalWVR] Methods for WVR Data processing in TelCal
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum WVRMethod
@@ -69,7 +70,10 @@ namespace WVRMethodMod
 } 
 #endif
 
-using namespace std;
+namespace WVRMethodMod {
+	std::ostream & operator << ( std::ostream & out, const WVRMethod& value);
+	std::istream & operator >> ( std::istream & in , WVRMethod& value );
+}
 
 /** 
   * A helper class for the enumeration WVRMethod.
@@ -99,7 +103,7 @@ class CWVRMethod {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -153,8 +157,8 @@ class CWVRMethod {
     CWVRMethod(const CWVRMethod&);
     CWVRMethod& operator=(const CWVRMethod&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace SwitchingModeMod
   //! SwitchingMode.
   //!  Switching modes: there are two categories of switching modes, those at high rate (chopper wheel, nutator and frequency switch) which involve the BIN axis and those at low  rate (frequency, position, load and phase switching) unrelated to the bin axis. Note that in case of  frequency switching mode it is the context which tells in which of these two categories it is used.
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum SwitchingMode
@@ -79,7 +80,10 @@ namespace SwitchingModeMod
 } 
 #endif
 
-using namespace std;
+namespace SwitchingModeMod {
+	std::ostream & operator << ( std::ostream & out, const SwitchingMode& value);
+	std::istream & operator >> ( std::istream & in , SwitchingMode& value );
+}
 
 /** 
   * A helper class for the enumeration SwitchingMode.
@@ -119,7 +123,7 @@ class CSwitchingMode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -173,8 +177,8 @@ class CSwitchingMode {
     CSwitchingMode(const CSwitchingMode&);
     CSwitchingMode& operator=(const CSwitchingMode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

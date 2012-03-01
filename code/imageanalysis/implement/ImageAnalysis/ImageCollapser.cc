@@ -38,6 +38,8 @@
 
 namespace casa {
 
+map<uInt, Float (*)(const Array<Float>&)> ImageCollapser::_funcMap;
+
 map<uInt, String> *ImageCollapser::_funcNameMap = 0;
 map<uInt, String> *ImageCollapser::_minMatchMap = 0;
 
@@ -146,82 +148,97 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		_doMedian(subImage, outImage);
 	}
 	else {
-		LatticeStatsBase::StatisticsTypes lattStatType;
-		switch(_aggType) {
-		case MAX:
-			lattStatType = LatticeStatsBase::MAX;
-			break;
-		case MEAN:
-			lattStatType = LatticeStatsBase::MEAN;
-			break;
-		case MIN:
-			lattStatType = LatticeStatsBase::MIN;
-			break;
-		case RMS:
-			lattStatType = LatticeStatsBase::RMS;
-			break;
-		case STDDEV:
-			lattStatType = LatticeStatsBase::SIGMA;
-			break;
-		case SUM:
-			lattStatType = LatticeStatsBase::SUM;
-			break;
-		case VARIANCE:
-			lattStatType = LatticeStatsBase::VARIANCE;
-			break;
-		case MEDIAN:
-		case ZERO:
-		case UNKNOWN:
-		default:
-			*_getLog() << "Logic error. Should never have gotten the the bottom of the switch statement"
-			<< LogIO::EXCEPTION;
-		}
-		Array<Float> data;
-		Array<Bool> mask;
-		IPosition x;
-		LatticeUtilities::collapse(
-			data, mask, _axes, subImage, False,
-			True, True, lattStatType
-		);
-		Array<Float> dataCopy = (_axes.size() <= 1) ? data : data.addDegenerate(_axes.size() - 1);
-		IPosition newOrder(outImage->ndim(), -1);
-		uInt nAltered = _axes.size();
-		uInt nUnaltered = outImage->ndim() - nAltered;
-		uInt alteredCount = nUnaltered;
-		uInt unAlteredCount = 0;
-		for (uInt i=0; i<outImage->ndim(); i++) {
-			for (uInt j=0; j<_axes.size(); j++) {
-				if (i == _axes[j]) {
-					newOrder[i] = alteredCount;
-					alteredCount++;
+		if (subImage.getMask().size() > 0) {
+			LatticeStatsBase::StatisticsTypes lattStatType;
+			switch(_aggType) {
+			case MAX:
+				lattStatType = LatticeStatsBase::MAX;
+				break;
+			case MEAN:
+				lattStatType = LatticeStatsBase::MEAN;
+				break;
+			case MIN:
+				lattStatType = LatticeStatsBase::MIN;
+				break;
+			case RMS:
+				lattStatType = LatticeStatsBase::RMS;
+				break;
+			case STDDEV:
+				lattStatType = LatticeStatsBase::SIGMA;
+				break;
+			case SUM:
+				lattStatType = LatticeStatsBase::SUM;
+				break;
+			case VARIANCE:
+				lattStatType = LatticeStatsBase::VARIANCE;
+				break;
+			case MEDIAN:
+			case ZERO:
+			case UNKNOWN:
+			default:
+				*_getLog() << "Logic error. Should never have gotten the the bottom of the switch statement"
+					<< LogIO::EXCEPTION;
+			}
+			Array<Float> data;
+			Array<Bool> mask;
+			IPosition x;
+			LatticeUtilities::collapse(
+				data, mask, _axes, subImage, False,
+				True, True, lattStatType
+			);
+			Array<Float> dataCopy = (_axes.size() <= 1) ? data : data.addDegenerate(_axes.size() - 1);
+			IPosition newOrder(outImage->ndim(), -1);
+			uInt nAltered = _axes.size();
+			uInt nUnaltered = outImage->ndim() - nAltered;
+			uInt alteredCount = nUnaltered;
+			uInt unAlteredCount = 0;
+			for (uInt i=0; i<outImage->ndim(); i++) {
+				for (uInt j=0; j<_axes.size(); j++) {
+					if (i == _axes[j]) {
+						newOrder[i] = alteredCount;
+						alteredCount++;
+						break;
+					}
+				}
+				if (newOrder[i] < 0) {
+					newOrder[i] = unAlteredCount;
+					unAlteredCount++;
+				}
+			}
+			outImage->put(reorderArray(dataCopy, newOrder));
+			Bool needsMask = False;
+			for (
+				Array<Bool>::const_iterator iter = mask.begin();
+				iter != mask.end(); iter++
+			) {
+				if (! *iter) {
+					needsMask = True;
 					break;
 				}
 			}
-			if (newOrder[i] < 0) {
-				newOrder[i] = unAlteredCount;
-				unAlteredCount++;
+			if (needsMask) {
+				Array<Bool> maskCopy = (
+					_axes.size() <= 1)
+					? mask
+					: mask.addDegenerate(_axes.size() - 1
+				);
+				Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
+				_attachOutputMask(outImage, mCopy);
 			}
 		}
-		outImage->put(reorderArray(dataCopy, newOrder));
-		Bool needsMask = False;
-		for (
-			Array<Bool>::const_iterator iter = mask.begin();
-			iter != mask.end(); iter++
-		) {
-			if (! *iter) {
-				needsMask = True;
-				break;
+		else {
+			// no mask, can use higher performance method
+			Float (*function)(const Array<Float>&) = _getFuncMap().find(_aggType)->second;
+			Array<Float> data = subImage.get(False);
+			for (uInt i=0; i<outShape.product(); i++) {
+				IPosition start = toIPositionInArray(i, outShape);
+				IPosition end = start + shape - 1;
+				Slicer s(start, end, Slicer::endIsLast);
+				outImage->putAt(function(data(s)), start);
 			}
 		}
-		if (needsMask) {
-			Array<Bool> maskCopy = (
-				_axes.size() <= 1)
-				? mask
-				: mask.addDegenerate(_axes.size() - 1
-			);
-			Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
-			_attachOutputMask(outImage, mCopy);
-		}
+
+
 	}
 	ImageUtilities::copyMiscellaneous(*outImage, subImage);
 	if (! _getOutname().empty()) {
@@ -408,6 +425,22 @@ void ImageCollapser::_attachOutputMask(
 		(&outImage->pixelMask())->put(outMask);
 	}
 }
+
+const map<uInt, Float (*)(const Array<Float>&)>& ImageCollapser::_getFuncMap() {
+	if (_funcMap.size() == 0) {
+		_funcMap[(uInt)MAX] = casa::max;
+		_funcMap[(uInt)MEAN] = casa::mean;
+		_funcMap[(uInt)MEDIAN] = casa::median;
+		_funcMap[(uInt)MIN] = casa::min;
+		_funcMap[(uInt)RMS] = casa::rms;
+		_funcMap[(uInt)STDDEV] = casa::stddev;
+		_funcMap[(uInt)SUM] = casa::sum;
+		_funcMap[(uInt)VARIANCE] = casa::variance;
+	}
+	return _funcMap;
+}
+
+
 
 }
 

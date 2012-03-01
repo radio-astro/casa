@@ -59,14 +59,12 @@ ASDM_MAIN::ASDM_MAIN() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("dataSize", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("dataOid", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<String>("dataUID", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("stateId", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("execBlockId", "blabla"));
   		
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("flagRow", "blabla"));
   		  		
 }
 
@@ -80,6 +78,28 @@ const TableDesc& ASDM_MAIN::tableDesc() const {
 #include "MainTable.h"
 #include "MainRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace TimeSamplingMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_MAIN::fill(const ASDM& asdm) {
 	vector<MainRow*> rows = asdm.getMain().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -106,14 +126,12 @@ void ASDM_MAIN::fill(const ASDM& asdm) {
   		
     ScalarColumn<int> dataSize(*table_p_, "dataSize");             
   		
-    ScalarColumn<String> dataOid(*table_p_, "dataOid");             
+    ScalarColumn<String> dataUID(*table_p_, "dataUID");             
   		
     ArrayColumn<String> stateId(*table_p_, "stateId");             
   		
     ScalarColumn<String> execBlockId(*table_p_, "execBlockId");             
   		
-  		
-    ScalarColumn<bool> flagRow(*table_p_, "flagRow");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -160,7 +178,7 @@ void ASDM_MAIN::fill(const ASDM& asdm) {
 	
 
 	
-	dataOid.put(rowIndex, rows.at(i)->getDataOid().toString());
+	dataUID.put(rowIndex, rows.at(i)->getDataUID().toString());
 	
 
 	
@@ -172,11 +190,6 @@ void ASDM_MAIN::fill(const ASDM& asdm) {
 	
 
 		
-	
-	if (rows.at(i)->isFlagRowExists())
-		flagRow.put(rowIndex, rows.at(i)->getFlagRow());
-	
-
 		rowIndex++;		
 	}
 	table_p_->flush();
@@ -206,6 +219,12 @@ const TableDesc& ASDM_ALMARADIOMETER::tableDesc() const {
 #include "AlmaRadiometerTable.h"
 #include "AlmaRadiometerRow.h"
 
+		
+			
+		
+			
+		
+	
 void ASDM_ALMARADIOMETER::fill(const ASDM& asdm) {
 	vector<AlmaRadiometerRow*> rows = asdm.getAlmaRadiometer().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -291,6 +310,38 @@ const TableDesc& ASDM_ANNOTATION::tableDesc() const {
 #include "AnnotationTable.h"
 #include "AnnotationRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_ANNOTATION::fill(const ASDM& asdm) {
 	vector<AnnotationRow*> rows = asdm.getAnnotation().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -447,6 +498,28 @@ const TableDesc& ASDM_ANTENNA::tableDesc() const {
 #include "AntennaTable.h"
 #include "AntennaRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+using namespace AntennaTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_ANTENNA::fill(const ASDM& asdm) {
 	vector<AntennaRow*> rows = asdm.getAntenna().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -525,49 +598,6 @@ void ASDM_ANTENNA::fill(const ASDM& asdm) {
 	table_p_->flush();
 }
 	 
-ASDM_BEAM::ASDM_BEAM() {
-  name_ = "ASDM_BEAM";
-  tableDesc_.comment() = "The verbatim copy of the ASDM's dataset Beam table";
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("beamId", "blabla"));
-  		
-  		
-  		  		
-}
-
-ASDM_BEAM::~ASDM_BEAM() {
-}
-
-const TableDesc& ASDM_BEAM::tableDesc() const {
-  return tableDesc_;
-}
-
-#include "BeamTable.h"
-#include "BeamRow.h"
-
-void ASDM_BEAM::fill(const ASDM& asdm) {
-	vector<BeamRow*> rows = asdm.getBeam().get();
-	unsigned int rowIndex = table_p_->nrow();
-	table_p_->addRow(rows.size());
-  		
-    ScalarColumn<String> beamId(*table_p_, "beamId");             
-  		
-  		
-  		  	
-
-	for (unsigned int i = 0; i < rows.size(); i++) {
-		
-	
-	beamId.put(rowIndex, rows.at(i)->getBeamId().toString());
-	
-
-		
-		
-		rowIndex++;		
-	}
-	table_p_->flush();
-}
-	 
 ASDM_CALAMPLI::ASDM_CALAMPLI() {
   name_ = "ASDM_CALAMPLI";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset CalAmpli table";
@@ -577,6 +607,8 @@ ASDM_CALAMPLI::ASDM_CALAMPLI() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("atmPhaseCorrection", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("receiverBand", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("basebandName", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("calDataId", "blabla"));
   		
@@ -612,6 +644,40 @@ const TableDesc& ASDM_CALAMPLI::tableDesc() const {
 #include "CalAmpliTable.h"
 #include "CalAmpliRow.h"
 
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALAMPLI::fill(const ASDM& asdm) {
 	vector<CalAmpliRow*> rows = asdm.getCalAmpli().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -622,6 +688,8 @@ void ASDM_CALAMPLI::fill(const ASDM& asdm) {
     ScalarColumn<String> atmPhaseCorrection(*table_p_, "atmPhaseCorrection");             
   		
     ScalarColumn<String> receiverBand(*table_p_, "receiverBand");             
+  		
+    ScalarColumn<String> basebandName(*table_p_, "basebandName");             
   		
     ScalarColumn<String> calDataId(*table_p_, "calDataId");             
   		
@@ -658,6 +726,10 @@ void ASDM_CALAMPLI::fill(const ASDM& asdm) {
 
 	
 	receiverBand.put(rowIndex, CReceiverBand::name(rows.at(i)->getReceiverBand()));
+	
+
+	
+	basebandName.put(rowIndex, CBasebandName::name(rows.at(i)->getBasebandName()));
 	
 
 	
@@ -715,6 +787,8 @@ ASDM_CALATMOSPHERE::ASDM_CALATMOSPHERE() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaName", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("receiverBand", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("basebandName", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("calDataId", "blabla"));
   		
@@ -796,6 +870,84 @@ const TableDesc& ASDM_CALATMOSPHERE::tableDesc() const {
 #include "CalAtmosphereTable.h"
 #include "CalAtmosphereRow.h"
 
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace SyscalMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALATMOSPHERE::fill(const ASDM& asdm) {
 	vector<CalAtmosphereRow*> rows = asdm.getCalAtmosphere().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -804,6 +956,8 @@ void ASDM_CALATMOSPHERE::fill(const ASDM& asdm) {
     ScalarColumn<String> antennaName(*table_p_, "antennaName");             
   		
     ScalarColumn<String> receiverBand(*table_p_, "receiverBand");             
+  		
+    ScalarColumn<String> basebandName(*table_p_, "basebandName");             
   		
     ScalarColumn<String> calDataId(*table_p_, "calDataId");             
   		
@@ -882,6 +1036,10 @@ void ASDM_CALATMOSPHERE::fill(const ASDM& asdm) {
 
 	
 	receiverBand.put(rowIndex, CReceiverBand::name(rows.at(i)->getReceiverBand()));
+	
+
+	
+	basebandName.put(rowIndex, CBasebandName::name(rows.at(i)->getBasebandName()));
 	
 
 	
@@ -1087,6 +1245,56 @@ const TableDesc& ASDM_CALBANDPASS::tableDesc() const {
 #include "CalBandpassTable.h"
 #include "CalBandpassRow.h"
 
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace NetSidebandMod;
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace CalCurveTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALBANDPASS::fill(const ASDM& asdm) {
 	vector<CalBandpassRow*> rows = asdm.getCalBandpass().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1280,6 +1488,48 @@ const TableDesc& ASDM_CALCURVE::tableDesc() const {
 #include "CalCurveTable.h"
 #include "CalCurveRow.h"
 
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace CalCurveTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALCURVE::fill(const ASDM& asdm) {
 	vector<CalCurveRow*> rows = asdm.getCalCurve().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1453,6 +1703,44 @@ const TableDesc& ASDM_CALDATA::tableDesc() const {
 #include "CalDataTable.h"
 #include "CalDataRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace CalDataOriginMod;
+			
+		
+			
+using namespace CalTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace AssociatedCalNatureMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ScanIntentMod;
+			
+		
+	
 void ASDM_CALDATA::fill(const ASDM& asdm) {
 	vector<CalDataRow*> rows = asdm.getCalData().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1593,6 +1881,8 @@ ASDM_CALDELAY::ASDM_CALDELAY() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("reducedChiSquared", "blabla"));
   		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("appliedDelay", "blabla"));
+  		
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("crossDelayOffset", "blabla"));
   		
@@ -1618,6 +1908,56 @@ const TableDesc& ASDM_CALDELAY::tableDesc() const {
 #include "CalDelayTable.h"
 #include "CalDelayRow.h"
 
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverSidebandMod;
+			
+		
+	
 void ASDM_CALDELAY::fill(const ASDM& asdm) {
 	vector<CalDelayRow*> rows = asdm.getCalDelay().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1651,6 +1991,8 @@ void ASDM_CALDELAY::fill(const ASDM& asdm) {
     ArrayColumn<String> polarizationTypes(*table_p_, "polarizationTypes");             
   		
     ArrayColumn<double> reducedChiSquared(*table_p_, "reducedChiSquared");             
+  		
+    ArrayColumn<double> appliedDelay(*table_p_, "appliedDelay");             
   		
   		
     ScalarColumn<double> crossDelayOffset(*table_p_, "crossDelayOffset");             
@@ -1723,6 +2065,10 @@ void ASDM_CALDELAY::fill(const ASDM& asdm) {
 
 	
 	reducedChiSquared.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getReducedChiSquared()));
+	
+
+	
+	appliedDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getAppliedDelay()));
 	
 
 		
@@ -1801,6 +2147,26 @@ const TableDesc& ASDM_CALDEVICE::tableDesc() const {
 #include "CalDeviceTable.h"
 #include "CalDeviceRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace CalibrationDeviceMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALDEVICE::fill(const ASDM& asdm) {
 	vector<CalDeviceRow*> rows = asdm.getCalDevice().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1947,6 +2313,52 @@ const TableDesc& ASDM_CALFLUX::tableDesc() const {
 #include "CalFluxTable.h"
 #include "CalFluxRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace FluxCalibrationMethodMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace StokesParameterMod;
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SourceModelMod;
+			
+		
+	
 void ASDM_CALFLUX::fill(const ASDM& asdm) {
 	vector<CalFluxRow*> rows = asdm.getCalFlux().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2133,6 +2545,8 @@ ASDM_CALFOCUS::ASDM_CALFOCUS() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("reducedChiSquared", "blabla"));
   		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("position", "blabla"));
+  		
   		
   tableDesc_.addColumn(ScalarColumnDesc<bool>("polarizationsAveraged", "blabla"));
   		
@@ -2166,6 +2580,70 @@ const TableDesc& ASDM_CALFOCUS::tableDesc() const {
 #include "CalFocusTable.h"
 #include "CalFocusRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace FocusMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALFOCUS::fill(const ASDM& asdm) {
 	vector<CalFocusRow*> rows = asdm.getCalFocus().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2207,6 +2685,8 @@ void ASDM_CALFOCUS::fill(const ASDM& asdm) {
     ArrayColumn<bool> offsetWasTied(*table_p_, "offsetWasTied");             
   		
     ArrayColumn<double> reducedChiSquared(*table_p_, "reducedChiSquared");             
+  		
+    ArrayColumn<double> position(*table_p_, "position");             
   		
   		
     ScalarColumn<bool> polarizationsAveraged(*table_p_, "polarizationsAveraged");             
@@ -2303,6 +2783,10 @@ void ASDM_CALFOCUS::fill(const ASDM& asdm) {
 
 	
 	reducedChiSquared.put(rowIndex, basic2CASA2D<double,double>(rows.at(i)->getReducedChiSquared()));
+	
+
+	
+	position.put(rowIndex, ext2CASA2D<Length,double>(rows.at(i)->getPosition()));
 	
 
 		
@@ -2415,6 +2899,46 @@ const TableDesc& ASDM_CALFOCUSMODEL::tableDesc() const {
 #include "CalFocusModelTable.h"
 #include "CalFocusModelRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALFOCUSMODEL::fill(const ASDM& asdm) {
 	vector<CalFocusModelRow*> rows = asdm.getCalFocusModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2580,6 +3104,26 @@ const TableDesc& ASDM_CALGAIN::tableDesc() const {
 #include "CalGainTable.h"
 #include "CalGainRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALGAIN::fill(const ASDM& asdm) {
 	vector<CalGainRow*> rows = asdm.getCalGain().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2735,6 +3279,64 @@ const TableDesc& ASDM_CALHOLOGRAPHY::tableDesc() const {
 #include "CalHolographyTable.h"
 #include "CalHolographyRow.h"
 
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALHOLOGRAPHY::fill(const ASDM& asdm) {
 	vector<CalHolographyRow*> rows = asdm.getCalHolography().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2982,6 +3584,54 @@ const TableDesc& ASDM_CALPHASE::tableDesc() const {
 #include "CalPhaseTable.h"
 #include "CalPhaseRow.h"
 
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPHASE::fill(const ASDM& asdm) {
 	vector<CalPhaseRow*> rows = asdm.getCalPhase().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3210,6 +3860,82 @@ const TableDesc& ASDM_CALPOINTING::tableDesc() const {
 #include "CalPointingTable.h"
 #include "CalPointingRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace PointingModelModeMod;
+			
+		
+			
+using namespace PointingMethodMod;
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPOINTING::fill(const ASDM& asdm) {
 	vector<CalPointingRow*> rows = asdm.getCalPointing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3496,6 +4222,52 @@ const TableDesc& ASDM_CALPOINTINGMODEL::tableDesc() const {
 #include "CalPointingModelTable.h"
 #include "CalPointingModelRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+using namespace PointingModelModeMod;
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPOINTINGMODEL::fill(const ASDM& asdm) {
 	vector<CalPointingModelRow*> rows = asdm.getCalPointingModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3695,6 +4467,52 @@ const TableDesc& ASDM_CALPOSITION::tableDesc() const {
 #include "CalPositionTable.h"
 #include "CalPositionRow.h"
 
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PositionMethodMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPOSITION::fill(const ASDM& asdm) {
 	vector<CalPositionRow*> rows = asdm.getCalPosition().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3859,6 +4677,8 @@ ASDM_CALPRIMARYBEAM::ASDM_CALPRIMARYBEAM() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaMake", "blabla"));
   		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numSubband", "blabla"));
+  		
   tableDesc_.addColumn(ArrayColumnDesc<double>("frequencyRange", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numReceptor", "blabla"));
@@ -3867,9 +4687,21 @@ ASDM_CALPRIMARYBEAM::ASDM_CALPRIMARYBEAM() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("mainBeamEfficiency", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("beamMapUID", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<String>("beamDescriptionUID", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<float>("relativeAmplitudeRms", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("direction", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("minValidDirection", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("maxValidDirection", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("descriptionType", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<int>("imageChannelNumber", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("imageNominalFrequency", "blabla"));
   		
   		  		
 }
@@ -3884,6 +4716,52 @@ const TableDesc& ASDM_CALPRIMARYBEAM::tableDesc() const {
 #include "CalPrimaryBeamTable.h"
 #include "CalPrimaryBeamRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PrimaryBeamDescriptionMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
 	vector<CalPrimaryBeamRow*> rows = asdm.getCalPrimaryBeam().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3904,6 +4782,8 @@ void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> antennaMake(*table_p_, "antennaMake");             
   		
+    ScalarColumn<int> numSubband(*table_p_, "numSubband");             
+  		
     ArrayColumn<double> frequencyRange(*table_p_, "frequencyRange");             
   		
     ScalarColumn<int> numReceptor(*table_p_, "numReceptor");             
@@ -3912,9 +4792,21 @@ void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
   		
     ArrayColumn<double> mainBeamEfficiency(*table_p_, "mainBeamEfficiency");             
   		
-    ScalarColumn<String> beamMapUID(*table_p_, "beamMapUID");             
+    ScalarColumn<String> beamDescriptionUID(*table_p_, "beamDescriptionUID");             
   		
     ScalarColumn<float> relativeAmplitudeRms(*table_p_, "relativeAmplitudeRms");             
+  		
+    ArrayColumn<double> direction(*table_p_, "direction");             
+  		
+    ArrayColumn<double> minValidDirection(*table_p_, "minValidDirection");             
+  		
+    ArrayColumn<double> maxValidDirection(*table_p_, "maxValidDirection");             
+  		
+    ScalarColumn<String> descriptionType(*table_p_, "descriptionType");             
+  		
+    ArrayColumn<int> imageChannelNumber(*table_p_, "imageChannelNumber");             
+  		
+    ArrayColumn<double> imageNominalFrequency(*table_p_, "imageNominalFrequency");             
   		
   		  	
 
@@ -3950,7 +4842,11 @@ void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
 	
 
 	
-	frequencyRange.put(rowIndex, ext2CASA1D<Frequency,double>(rows.at(i)->getFrequencyRange()));
+	numSubband.put(rowIndex, rows.at(i)->getNumSubband());
+	
+
+	
+	frequencyRange.put(rowIndex, ext2CASA2D<Frequency,double>(rows.at(i)->getFrequencyRange()));
 	
 
 	
@@ -3966,11 +4862,35 @@ void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
 	
 
 	
-	beamMapUID.put(rowIndex, rows.at(i)->getBeamMapUID().toString());
+	beamDescriptionUID.put(rowIndex, rows.at(i)->getBeamDescriptionUID().toString());
 	
 
 	
 	relativeAmplitudeRms.put(rowIndex, rows.at(i)->getRelativeAmplitudeRms());
+	
+
+	
+	direction.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getDirection()));
+	
+
+	
+	minValidDirection.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getMinValidDirection()));
+	
+
+	
+	maxValidDirection.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getMaxValidDirection()));
+	
+
+	
+	descriptionType.put(rowIndex, CPrimaryBeamDescription::name(rows.at(i)->getDescriptionType()));
+	
+
+	
+	imageChannelNumber.put(rowIndex, basic2CASA1D<int,int>(rows.at(i)->getImageChannelNumber()));
+	
+
+	
+	imageNominalFrequency.put(rowIndex, ext2CASA1D<Frequency,double>(rows.at(i)->getImageNominalFrequency()));
 	
 
 		
@@ -4019,6 +4939,32 @@ const TableDesc& ASDM_CALREDUCTION::tableDesc() const {
 #include "CalReductionTable.h"
 #include "CalReductionRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace InvalidatingConditionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALREDUCTION::fill(const ASDM& asdm) {
 	vector<CalReductionRow*> rows = asdm.getCalReduction().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4150,6 +5096,36 @@ const TableDesc& ASDM_CALSEEING::tableDesc() const {
 #include "CalSeeingTable.h"
 #include "CalSeeingRow.h"
 
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALSEEING::fill(const ASDM& asdm) {
 	vector<CalSeeingRow*> rows = asdm.getCalSeeing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4314,6 +5290,42 @@ const TableDesc& ASDM_CALWVR::tableDesc() const {
 #include "CalWVRTable.h"
 #include "CalWVRRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace WVRMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALWVR::fill(const ASDM& asdm) {
 	vector<CalWVRRow*> rows = asdm.getCalWVR().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4493,6 +5505,42 @@ const TableDesc& ASDM_CONFIGDESCRIPTION::tableDesc() const {
 #include "ConfigDescriptionTable.h"
 #include "ConfigDescriptionRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace CorrelationModeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace ProcessorTypeMod;
+			
+		
+			
+		
+			
+using namespace SpectralResolutionTypeMod;
+			
+		
+			
+		
+			
+using namespace SpectralResolutionTypeMod;
+			
+		
+	
 void ASDM_CONFIGDESCRIPTION::fill(const ASDM& asdm) {
 	vector<ConfigDescriptionRow*> rows = asdm.getConfigDescription().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4660,6 +5708,38 @@ const TableDesc& ASDM_CORRELATORMODE::tableDesc() const {
 #include "CorrelatorModeTable.h"
 #include "CorrelatorModeRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+using namespace AccumModeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AxisNameMod;
+			
+		
+			
+using namespace FilterModeMod;
+			
+		
+			
+using namespace CorrelatorNameMod;
+			
+		
+	
 void ASDM_CORRELATORMODE::fill(const ASDM& asdm) {
 	vector<CorrelatorModeRow*> rows = asdm.getCorrelatorMode().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4761,6 +5841,10 @@ const TableDesc& ASDM_DATADESCRIPTION::tableDesc() const {
 #include "DataDescriptionTable.h"
 #include "DataDescriptionRow.h"
 
+		
+			
+		
+	
 void ASDM_DATADESCRIPTION::fill(const ASDM& asdm) {
 	vector<DataDescriptionRow*> rows = asdm.getDataDescription().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4802,27 +5886,67 @@ ASDM_DELAYMODEL::ASDM_DELAYMODEL() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaId", "blabla"));
   		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
+  		
   tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPoly", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("phaseDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("phaseDelayRate", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("groupDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("groupDelayRate", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("fieldId", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("timeOrigin", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<int>("numPoly", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("atmosphericGroupDelay", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("atmDryDelay", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("atmosphericGroupDelayRate", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("atmWetDelay", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("geometricDelay", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("clockDelay", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("geometricDelayRate", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("geomDelay", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numLO", "blabla"));
   		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("LOOffset", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("dispDelay", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("LOOffsetRate", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("groupDelay", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("dispersiveDelay", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("phaseDelay", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("dispersiveDelayRate", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("atmosphericDryDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("atmosphericWetDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("padDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("antennaDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numReceptor", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("polarizationType", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("electronicDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("electronicDelayRate", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("receiverDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("IFDelay", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("LODelay", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("crossPolarizationDelay", "blabla"));
   		  		
 }
 
@@ -4836,6 +5960,66 @@ const TableDesc& ASDM_DELAYMODEL::tableDesc() const {
 #include "DelayModelTable.h"
 #include "DelayModelRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_DELAYMODEL::fill(const ASDM& asdm) {
 	vector<DelayModelRow*> rows = asdm.getDelayModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4843,27 +6027,67 @@ void ASDM_DELAYMODEL::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> antennaId(*table_p_, "antennaId");             
   		
+    ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
+  		
     ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
+  		
+  		
+    ScalarColumn<int> numPoly(*table_p_, "numPoly");             
+  		
+    ArrayColumn<double> phaseDelay(*table_p_, "phaseDelay");             
+  		
+    ArrayColumn<double> phaseDelayRate(*table_p_, "phaseDelayRate");             
+  		
+    ArrayColumn<double> groupDelay(*table_p_, "groupDelay");             
+  		
+    ArrayColumn<double> groupDelayRate(*table_p_, "groupDelayRate");             
+  		
+    ScalarColumn<String> fieldId(*table_p_, "fieldId");             
   		
   		
     ScalarColumn<double> timeOrigin(*table_p_, "timeOrigin");             
   		
-    ScalarColumn<int> numPoly(*table_p_, "numPoly");             
+    ScalarColumn<double> atmosphericGroupDelay(*table_p_, "atmosphericGroupDelay");             
   		
-    ArrayColumn<double> atmDryDelay(*table_p_, "atmDryDelay");             
+    ScalarColumn<double> atmosphericGroupDelayRate(*table_p_, "atmosphericGroupDelayRate");             
   		
-    ArrayColumn<double> atmWetDelay(*table_p_, "atmWetDelay");             
+    ScalarColumn<double> geometricDelay(*table_p_, "geometricDelay");             
   		
-    ArrayColumn<double> clockDelay(*table_p_, "clockDelay");             
+    ScalarColumn<double> geometricDelayRate(*table_p_, "geometricDelayRate");             
   		
-    ArrayColumn<double> geomDelay(*table_p_, "geomDelay");             
+    ScalarColumn<int> numLO(*table_p_, "numLO");             
   		
+    ArrayColumn<double> LOOffset(*table_p_, "LOOffset");             
   		
-    ArrayColumn<double> dispDelay(*table_p_, "dispDelay");             
+    ArrayColumn<double> LOOffsetRate(*table_p_, "LOOffsetRate");             
   		
-    ArrayColumn<double> groupDelay(*table_p_, "groupDelay");             
+    ScalarColumn<double> dispersiveDelay(*table_p_, "dispersiveDelay");             
   		
-    ArrayColumn<double> phaseDelay(*table_p_, "phaseDelay");             
+    ScalarColumn<double> dispersiveDelayRate(*table_p_, "dispersiveDelayRate");             
+  		
+    ScalarColumn<double> atmosphericDryDelay(*table_p_, "atmosphericDryDelay");             
+  		
+    ScalarColumn<double> atmosphericWetDelay(*table_p_, "atmosphericWetDelay");             
+  		
+    ScalarColumn<double> padDelay(*table_p_, "padDelay");             
+  		
+    ScalarColumn<double> antennaDelay(*table_p_, "antennaDelay");             
+  		
+    ScalarColumn<int> numReceptor(*table_p_, "numReceptor");             
+  		
+    ArrayColumn<String> polarizationType(*table_p_, "polarizationType");             
+  		
+    ArrayColumn<double> electronicDelay(*table_p_, "electronicDelay");             
+  		
+    ArrayColumn<double> electronicDelayRate(*table_p_, "electronicDelayRate");             
+  		
+    ArrayColumn<double> receiverDelay(*table_p_, "receiverDelay");             
+  		
+    ArrayColumn<double> IFDelay(*table_p_, "IFDelay");             
+  		
+    ArrayColumn<double> LODelay(*table_p_, "LODelay");             
+  		
+    ScalarColumn<double> crossPolarizationDelay(*table_p_, "crossPolarizationDelay");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -4873,48 +6097,147 @@ void ASDM_DELAYMODEL::fill(const ASDM& asdm) {
 	
 
 	
+	spectralWindowId.put(rowIndex, rows.at(i)->getSpectralWindowId().toString());
+	
+
+	
 	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
 	
-	timeOrigin.put(rowIndex, rows.at(i)->getTimeOrigin().get()/(1.0e9));
-	
-
-	
 	numPoly.put(rowIndex, rows.at(i)->getNumPoly());
 	
 
 	
-	atmDryDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getAtmDryDelay()));
+	phaseDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getPhaseDelay()));
 	
 
 	
-	atmWetDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getAtmWetDelay()));
+	phaseDelayRate.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getPhaseDelayRate()));
 	
 
 	
-	clockDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getClockDelay()));
+	groupDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getGroupDelay()));
 	
 
 	
-	geomDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getGeomDelay()));
+	groupDelayRate.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getGroupDelayRate()));
+	
+
+	
+	fieldId.put(rowIndex, rows.at(i)->getFieldId().toString());
 	
 
 		
 	
-	if (rows.at(i)->isDispDelayExists())
-		dispDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getDispDelay()));
+	if (rows.at(i)->isTimeOriginExists())
+		timeOrigin.put(rowIndex, rows.at(i)->getTimeOrigin().get()/(1.0e9));
 	
 
 	
-	if (rows.at(i)->isGroupDelayExists())
-		groupDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getGroupDelay()));
+	if (rows.at(i)->isAtmosphericGroupDelayExists())
+		atmosphericGroupDelay.put(rowIndex, rows.at(i)->getAtmosphericGroupDelay());
 	
 
 	
-	if (rows.at(i)->isPhaseDelayExists())
-		phaseDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getPhaseDelay()));
+	if (rows.at(i)->isAtmosphericGroupDelayRateExists())
+		atmosphericGroupDelayRate.put(rowIndex, rows.at(i)->getAtmosphericGroupDelayRate());
+	
+
+	
+	if (rows.at(i)->isGeometricDelayExists())
+		geometricDelay.put(rowIndex, rows.at(i)->getGeometricDelay());
+	
+
+	
+	if (rows.at(i)->isGeometricDelayRateExists())
+		geometricDelayRate.put(rowIndex, rows.at(i)->getGeometricDelayRate());
+	
+
+	
+	if (rows.at(i)->isNumLOExists())
+		numLO.put(rowIndex, rows.at(i)->getNumLO());
+	
+
+	
+	if (rows.at(i)->isLOOffsetExists())
+		LOOffset.put(rowIndex, ext2CASA1D<Frequency,double>(rows.at(i)->getLOOffset()));
+	
+
+	
+	if (rows.at(i)->isLOOffsetRateExists())
+		LOOffsetRate.put(rowIndex, ext2CASA1D<Frequency,double>(rows.at(i)->getLOOffsetRate()));
+	
+
+	
+	if (rows.at(i)->isDispersiveDelayExists())
+		dispersiveDelay.put(rowIndex, rows.at(i)->getDispersiveDelay());
+	
+
+	
+	if (rows.at(i)->isDispersiveDelayRateExists())
+		dispersiveDelayRate.put(rowIndex, rows.at(i)->getDispersiveDelayRate());
+	
+
+	
+	if (rows.at(i)->isAtmosphericDryDelayExists())
+		atmosphericDryDelay.put(rowIndex, rows.at(i)->getAtmosphericDryDelay());
+	
+
+	
+	if (rows.at(i)->isAtmosphericWetDelayExists())
+		atmosphericWetDelay.put(rowIndex, rows.at(i)->getAtmosphericWetDelay());
+	
+
+	
+	if (rows.at(i)->isPadDelayExists())
+		padDelay.put(rowIndex, rows.at(i)->getPadDelay());
+	
+
+	
+	if (rows.at(i)->isAntennaDelayExists())
+		antennaDelay.put(rowIndex, rows.at(i)->getAntennaDelay());
+	
+
+	
+	if (rows.at(i)->isNumReceptorExists())
+		numReceptor.put(rowIndex, rows.at(i)->getNumReceptor());
+	
+
+	
+	if (rows.at(i)->isPolarizationTypeExists())
+		polarizationType.put(rowIndex, enum2CASA1D<PolarizationType,CPolarizationType>(rows.at(i)->getPolarizationType()));
+	
+
+	
+	if (rows.at(i)->isElectronicDelayExists())
+		electronicDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getElectronicDelay()));
+	
+
+	
+	if (rows.at(i)->isElectronicDelayRateExists())
+		electronicDelayRate.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getElectronicDelayRate()));
+	
+
+	
+	if (rows.at(i)->isReceiverDelayExists())
+		receiverDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getReceiverDelay()));
+	
+
+	
+	if (rows.at(i)->isIFDelayExists())
+		IFDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getIFDelay()));
+	
+
+	
+	if (rows.at(i)->isLODelayExists())
+		LODelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getLODelay()));
+	
+
+	
+	if (rows.at(i)->isCrossPolarizationDelayExists())
+		crossPolarizationDelay.put(rowIndex, rows.at(i)->getCrossPolarizationDelay());
 	
 
 		rowIndex++;		
@@ -4948,6 +6271,16 @@ const TableDesc& ASDM_DOPPLER::tableDesc() const {
 #include "DopplerTable.h"
 #include "DopplerRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace DopplerReferenceCodeMod;
+			
+		
+	
 void ASDM_DOPPLER::fill(const ASDM& asdm) {
 	vector<DopplerRow*> rows = asdm.getDoppler().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5009,6 +6342,10 @@ const TableDesc& ASDM_EPHEMERIS::tableDesc() const {
 #include "EphemerisTable.h"
 #include "EphemerisRow.h"
 
+		
+			
+		
+	
 void ASDM_EPHEMERIS::fill(const ASDM& asdm) {
 	vector<EphemerisRow*> rows = asdm.getEphemeris().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5047,7 +6384,7 @@ ASDM_EXECBLOCK::ASDM_EXECBLOCK() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("execBlockUID", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("projectId", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<String>("projectUID", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("configName", "blabla"));
   		
@@ -5055,13 +6392,11 @@ ASDM_EXECBLOCK::ASDM_EXECBLOCK() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("observerName", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("observingLog", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numObservingLog", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("observingLog", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("sessionReference", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("sbSummary", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("schedulerMode", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("baseRangeMin", "blabla"));
   		
@@ -5072,12 +6407,6 @@ ASDM_EXECBLOCK::ASDM_EXECBLOCK() {
   tableDesc_.addColumn(ScalarColumnDesc<double>("baseRmsMajor", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("basePa", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<double>("siteAltitude", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<double>("siteLongitude", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<double>("siteLatitude", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<bool>("aborted", "blabla"));
   		
@@ -5090,7 +6419,19 @@ ASDM_EXECBLOCK::ASDM_EXECBLOCK() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("releaseDate", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("flagRow", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<String>("schedulerMode", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("siteAltitude", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("siteLongitude", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("siteLatitude", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("observingScript", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("observingScriptUID", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("scaleId", "blabla"));
   		  		
 }
 
@@ -5104,6 +6445,60 @@ const TableDesc& ASDM_EXECBLOCK::tableDesc() const {
 #include "ExecBlockTable.h"
 #include "ExecBlockRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 	vector<ExecBlockRow*> rows = asdm.getExecBlock().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5120,7 +6515,7 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> execBlockUID(*table_p_, "execBlockUID");             
   		
-    ScalarColumn<String> projectId(*table_p_, "projectId");             
+    ScalarColumn<String> projectUID(*table_p_, "projectUID");             
   		
     ScalarColumn<String> configName(*table_p_, "configName");             
   		
@@ -5128,13 +6523,11 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> observerName(*table_p_, "observerName");             
   		
-    ScalarColumn<String> observingLog(*table_p_, "observingLog");             
+    ScalarColumn<int> numObservingLog(*table_p_, "numObservingLog");             
+  		
+    ArrayColumn<String> observingLog(*table_p_, "observingLog");             
   		
     ScalarColumn<String> sessionReference(*table_p_, "sessionReference");             
-  		
-    ScalarColumn<String> sbSummary(*table_p_, "sbSummary");             
-  		
-    ScalarColumn<String> schedulerMode(*table_p_, "schedulerMode");             
   		
     ScalarColumn<double> baseRangeMin(*table_p_, "baseRangeMin");             
   		
@@ -5145,12 +6538,6 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
     ScalarColumn<double> baseRmsMajor(*table_p_, "baseRmsMajor");             
   		
     ScalarColumn<double> basePa(*table_p_, "basePa");             
-  		
-    ScalarColumn<double> siteAltitude(*table_p_, "siteAltitude");             
-  		
-    ScalarColumn<double> siteLongitude(*table_p_, "siteLongitude");             
-  		
-    ScalarColumn<double> siteLatitude(*table_p_, "siteLatitude");             
   		
     ScalarColumn<bool> aborted(*table_p_, "aborted");             
   		
@@ -5163,7 +6550,19 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
   		
     ScalarColumn<double> releaseDate(*table_p_, "releaseDate");             
   		
-    ScalarColumn<bool> flagRow(*table_p_, "flagRow");             
+    ScalarColumn<String> schedulerMode(*table_p_, "schedulerMode");             
+  		
+    ScalarColumn<double> siteAltitude(*table_p_, "siteAltitude");             
+  		
+    ScalarColumn<double> siteLongitude(*table_p_, "siteLongitude");             
+  		
+    ScalarColumn<double> siteLatitude(*table_p_, "siteLatitude");             
+  		
+    ScalarColumn<String> observingScript(*table_p_, "observingScript");             
+  		
+    ScalarColumn<String> observingScriptUID(*table_p_, "observingScriptUID");             
+  		
+    ScalarColumn<String> scaleId(*table_p_, "scaleId");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -5190,7 +6589,7 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 	
 
 	
-	projectId.put(rowIndex, rows.at(i)->getProjectId().toString());
+	projectUID.put(rowIndex, rows.at(i)->getProjectUID().toString());
 	
 
 	
@@ -5206,19 +6605,15 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 	
 
 	
-	observingLog.put(rowIndex, rows.at(i)->getObservingLog());
+	numObservingLog.put(rowIndex, rows.at(i)->getNumObservingLog());
 	
 
 	
-	sessionReference.put(rowIndex, rows.at(i)->getSessionReference());
+	observingLog.put(rowIndex, basic2CASA1D<string,String>(rows.at(i)->getObservingLog()));
 	
 
 	
-	sbSummary.put(rowIndex, rows.at(i)->getSbSummary().toString());
-	
-
-	
-	schedulerMode.put(rowIndex, rows.at(i)->getSchedulerMode());
+	sessionReference.put(rowIndex, rows.at(i)->getSessionReference().toString());
 	
 
 	
@@ -5239,18 +6634,6 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 
 	
 	basePa.put(rowIndex, rows.at(i)->getBasePa().get());
-	
-
-	
-	siteAltitude.put(rowIndex, rows.at(i)->getSiteAltitude().get());
-	
-
-	
-	siteLongitude.put(rowIndex, rows.at(i)->getSiteLongitude().get());
-	
-
-	
-	siteLatitude.put(rowIndex, rows.at(i)->getSiteLatitude().get());
 	
 
 	
@@ -5276,8 +6659,38 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 	
 
 	
-	if (rows.at(i)->isFlagRowExists())
-		flagRow.put(rowIndex, rows.at(i)->getFlagRow());
+	if (rows.at(i)->isSchedulerModeExists())
+		schedulerMode.put(rowIndex, rows.at(i)->getSchedulerMode());
+	
+
+	
+	if (rows.at(i)->isSiteAltitudeExists())
+		siteAltitude.put(rowIndex, rows.at(i)->getSiteAltitude().get());
+	
+
+	
+	if (rows.at(i)->isSiteLongitudeExists())
+		siteLongitude.put(rowIndex, rows.at(i)->getSiteLongitude().get());
+	
+
+	
+	if (rows.at(i)->isSiteLatitudeExists())
+		siteLatitude.put(rowIndex, rows.at(i)->getSiteLatitude().get());
+	
+
+	
+	if (rows.at(i)->isObservingScriptExists())
+		observingScript.put(rowIndex, rows.at(i)->getObservingScript());
+	
+
+	
+	if (rows.at(i)->isObservingScriptUIDExists())
+		observingScriptUID.put(rowIndex, rows.at(i)->getObservingScriptUID().toString());
+	
+
+	
+	if (rows.at(i)->isScaleIdExists())
+		scaleId.put(rowIndex, rows.at(i)->getScaleId().toString());
 	
 
 		rowIndex++;		
@@ -5318,8 +6731,6 @@ ASDM_FEED::ASDM_FEED() {
   tableDesc_.addColumn(ArrayColumnDesc<double>("illumOffset", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("position", "blabla"));
-  		
-  tableDesc_.addColumn(ArrayColumnDesc<String>("beamId", "blabla"));
   		  		
 }
 
@@ -5333,6 +6744,32 @@ const TableDesc& ASDM_FEED::tableDesc() const {
 #include "FeedTable.h"
 #include "FeedRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FEED::fill(const ASDM& asdm) {
 	vector<FeedRow*> rows = asdm.getFeed().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5367,8 +6804,6 @@ void ASDM_FEED::fill(const ASDM& asdm) {
     ArrayColumn<double> illumOffset(*table_p_, "illumOffset");             
   		
     ArrayColumn<double> position(*table_p_, "position");             
-  		
-    ArrayColumn<String> beamId(*table_p_, "beamId");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -5434,11 +6869,6 @@ void ASDM_FEED::fill(const ASDM& asdm) {
 		position.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getPosition()));
 	
 
-	
-	if (rows.at(i)->isBeamIdExists())
-		beamId.put(rowIndex, _2CASAString1D<Tag,String>(rows.at(i)->getBeamId()));
-	
-
 		rowIndex++;		
 	}
 	table_p_->flush();
@@ -5453,8 +6883,6 @@ ASDM_FIELD::ASDM_FIELD() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("fieldName", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("code", "blabla"));
-  		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numPoly", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("delayDir", "blabla"));
@@ -5465,6 +6893,8 @@ ASDM_FIELD::ASDM_FIELD() {
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("code", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("directionCode", "blabla"));
   		
@@ -5490,6 +6920,32 @@ const TableDesc& ASDM_FIELD::tableDesc() const {
 #include "FieldTable.h"
 #include "FieldRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FIELD::fill(const ASDM& asdm) {
 	vector<FieldRow*> rows = asdm.getField().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5499,8 +6955,6 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
   		
   		
     ScalarColumn<String> fieldName(*table_p_, "fieldName");             
-  		
-    ScalarColumn<String> code(*table_p_, "code");             
   		
     ScalarColumn<int> numPoly(*table_p_, "numPoly");             
   		
@@ -5512,6 +6966,8 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
   		
   		
     ScalarColumn<double> time(*table_p_, "time");             
+  		
+    ScalarColumn<String> code(*table_p_, "code");             
   		
     ScalarColumn<String> directionCode(*table_p_, "directionCode");             
   		
@@ -5538,10 +6994,6 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
 	
 
 	
-	code.put(rowIndex, rows.at(i)->getCode());
-	
-
-	
 	numPoly.put(rowIndex, rows.at(i)->getNumPoly());
 	
 
@@ -5561,6 +7013,11 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
 	
 	if (rows.at(i)->isTimeExists())
 		time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
+	
+
+	
+	if (rows.at(i)->isCodeExists())
+		code.put(rowIndex, rows.at(i)->getCode());
 	
 
 	
@@ -5640,6 +7097,28 @@ const TableDesc& ASDM_FLAG::tableDesc() const {
 #include "FlagTable.h"
 #include "FlagRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+	
 void ASDM_FLAG::fill(const ASDM& asdm) {
 	vector<FlagRow*> rows = asdm.getFlag().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5767,6 +7246,22 @@ const TableDesc& ASDM_FLAGCMD::tableDesc() const {
 #include "FlagCmdTable.h"
 #include "FlagCmdRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FLAGCMD::fill(const ASDM& asdm) {
 	vector<FlagCmdRow*> rows = asdm.getFlagCmd().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5839,10 +7334,14 @@ ASDM_FOCUS::ASDM_FOCUS() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("focusOffset", "blabla"));
   		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("focusRotationOffset", "blabla"));
+  		
   tableDesc_.addColumn(ScalarColumnDesc<int>("focusModelId", "blabla"));
   		
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("measuredFocusPosition", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("measuredFocusRotation", "blabla"));
   		  		
 }
 
@@ -5856,6 +7355,20 @@ const TableDesc& ASDM_FOCUS::tableDesc() const {
 #include "FocusTable.h"
 #include "FocusRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FOCUS::fill(const ASDM& asdm) {
 	vector<FocusRow*> rows = asdm.getFocus().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5870,10 +7383,14 @@ void ASDM_FOCUS::fill(const ASDM& asdm) {
   		
     ArrayColumn<double> focusOffset(*table_p_, "focusOffset");             
   		
+    ArrayColumn<double> focusRotationOffset(*table_p_, "focusRotationOffset");             
+  		
     ScalarColumn<int> focusModelId(*table_p_, "focusModelId");             
   		
   		
     ArrayColumn<double> measuredFocusPosition(*table_p_, "measuredFocusPosition");             
+  		
+    ArrayColumn<double> measuredFocusRotation(*table_p_, "measuredFocusRotation");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -5896,6 +7413,10 @@ void ASDM_FOCUS::fill(const ASDM& asdm) {
 	
 
 	
+	focusRotationOffset.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getFocusRotationOffset()));
+	
+
+	
 	focusModelId.put(rowIndex, rows.at(i)->getFocusModelId());
 	
 
@@ -5903,6 +7424,11 @@ void ASDM_FOCUS::fill(const ASDM& asdm) {
 	
 	if (rows.at(i)->isMeasuredFocusPositionExists())
 		measuredFocusPosition.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getMeasuredFocusPosition()));
+	
+
+	
+	if (rows.at(i)->isMeasuredFocusRotationExists())
+		measuredFocusRotation.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getMeasuredFocusRotation()));
 	
 
 		rowIndex++;		
@@ -5948,6 +7474,28 @@ const TableDesc& ASDM_FOCUSMODEL::tableDesc() const {
 #include "FocusModelTable.h"
 #include "FocusModelRow.h"
 
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FOCUSMODEL::fill(const ASDM& asdm) {
 	vector<FocusModelRow*> rows = asdm.getFocusModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6053,6 +7601,12 @@ const TableDesc& ASDM_FREQOFFSET::tableDesc() const {
 #include "FreqOffsetTable.h"
 #include "FreqOffsetRow.h"
 
+		
+			
+		
+			
+		
+	
 void ASDM_FREQOFFSET::fill(const ASDM& asdm) {
 	vector<FreqOffsetRow*> rows = asdm.getFreqOffset().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6113,28 +7667,12 @@ ASDM_GAINTRACKING::ASDM_GAINTRACKING() {
   tableDesc_.addColumn(ScalarColumnDesc<int>("feedId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<float>("attenuator", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<int>("numLO", "blabla"));
-  		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numReceptor", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("cableDelay", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<float>("attenuator", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<double>("crossPolarizationDelay", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<String>("polarizationType", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("loPropagationDelay", "blabla"));
-  		
-  tableDesc_.addColumn(ArrayColumnDesc<String>("polarizationTypes", "blabla"));
-  		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("receiverDelay", "blabla"));
-  		
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<double>("delayOffset", "blabla"));
-  		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("freqOffset", "blabla"));
-  		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("phaseOffset", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<float>("samplingLevel", "blabla"));
   		
@@ -6156,6 +7694,26 @@ const TableDesc& ASDM_GAINTRACKING::tableDesc() const {
 #include "GainTrackingTable.h"
 #include "GainTrackingRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_GAINTRACKING::fill(const ASDM& asdm) {
 	vector<GainTrackingRow*> rows = asdm.getGainTracking().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6170,28 +7728,12 @@ void ASDM_GAINTRACKING::fill(const ASDM& asdm) {
     ScalarColumn<int> feedId(*table_p_, "feedId");             
   		
   		
-    ScalarColumn<float> attenuator(*table_p_, "attenuator");             
-  		
-    ScalarColumn<int> numLO(*table_p_, "numLO");             
-  		
     ScalarColumn<int> numReceptor(*table_p_, "numReceptor");             
   		
-    ArrayColumn<double> cableDelay(*table_p_, "cableDelay");             
+    ArrayColumn<float> attenuator(*table_p_, "attenuator");             
   		
-    ScalarColumn<double> crossPolarizationDelay(*table_p_, "crossPolarizationDelay");             
+    ArrayColumn<String> polarizationType(*table_p_, "polarizationType");             
   		
-    ArrayColumn<double> loPropagationDelay(*table_p_, "loPropagationDelay");             
-  		
-    ArrayColumn<String> polarizationTypes(*table_p_, "polarizationTypes");             
-  		
-    ArrayColumn<double> receiverDelay(*table_p_, "receiverDelay");             
-  		
-  		
-    ScalarColumn<double> delayOffset(*table_p_, "delayOffset");             
-  		
-    ArrayColumn<double> freqOffset(*table_p_, "freqOffset");             
-  		
-    ArrayColumn<double> phaseOffset(*table_p_, "phaseOffset");             
   		
     ScalarColumn<float> samplingLevel(*table_p_, "samplingLevel");             
   		
@@ -6222,53 +7764,18 @@ void ASDM_GAINTRACKING::fill(const ASDM& asdm) {
 
 		
 	
-	attenuator.put(rowIndex, rows.at(i)->getAttenuator());
-	
-
-	
-	numLO.put(rowIndex, rows.at(i)->getNumLO());
-	
-
-	
 	numReceptor.put(rowIndex, rows.at(i)->getNumReceptor());
 	
 
 	
-	cableDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getCableDelay()));
+	attenuator.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getAttenuator()));
 	
 
 	
-	crossPolarizationDelay.put(rowIndex, rows.at(i)->getCrossPolarizationDelay());
-	
-
-	
-	loPropagationDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getLoPropagationDelay()));
-	
-
-	
-	polarizationTypes.put(rowIndex, enum2CASA1D<PolarizationType,CPolarizationType>(rows.at(i)->getPolarizationTypes()));
-	
-
-	
-	receiverDelay.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getReceiverDelay()));
+	polarizationType.put(rowIndex, enum2CASA1D<PolarizationType,CPolarizationType>(rows.at(i)->getPolarizationType()));
 	
 
 		
-	
-	if (rows.at(i)->isDelayOffsetExists())
-		delayOffset.put(rowIndex, rows.at(i)->getDelayOffset());
-	
-
-	
-	if (rows.at(i)->isFreqOffsetExists())
-		freqOffset.put(rowIndex, ext2CASA1D<Frequency,double>(rows.at(i)->getFreqOffset()));
-	
-
-	
-	if (rows.at(i)->isPhaseOffsetExists())
-		phaseOffset.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getPhaseOffset()));
-	
-
 	
 	if (rows.at(i)->isSamplingLevelExists())
 		samplingLevel.put(rowIndex, rows.at(i)->getSamplingLevel());
@@ -6330,6 +7837,24 @@ const TableDesc& ASDM_HISTORY::tableDesc() const {
 #include "HistoryTable.h"
 #include "HistoryRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_HISTORY::fill(const ASDM& asdm) {
 	vector<HistoryRow*> rows = asdm.getHistory().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6429,6 +7954,20 @@ const TableDesc& ASDM_HOLOGRAPHY::tableDesc() const {
 #include "HolographyTable.h"
 #include "HolographyRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace HolographyChannelTypeMod;
+			
+		
+	
 void ASDM_HOLOGRAPHY::fill(const ASDM& asdm) {
 	vector<HolographyRow*> rows = asdm.getHolography().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6496,6 +8035,10 @@ const TableDesc& ASDM_OBSERVATION::tableDesc() const {
 #include "ObservationTable.h"
 #include "ObservationRow.h"
 
+		
+			
+		
+	
 void ASDM_OBSERVATION::fill(const ASDM& asdm) {
 	vector<ObservationRow*> rows = asdm.getObservation().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6571,6 +8114,40 @@ const TableDesc& ASDM_POINTING::tableDesc() const {
 #include "PointingTable.h"
 #include "PointingRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_POINTING::fill(const ASDM& asdm) {
 	vector<PointingRow*> rows = asdm.getPointing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6733,6 +8310,28 @@ const TableDesc& ASDM_POINTINGMODEL::tableDesc() const {
 #include "PointingModelTable.h"
 #include "PointingModelRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_POINTINGMODEL::fill(const ASDM& asdm) {
 	vector<PointingModelRow*> rows = asdm.getPointingModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6824,8 +8423,6 @@ ASDM_POLARIZATION::ASDM_POLARIZATION() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("corrProduct", "blabla"));
   		
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("flagRow", "blabla"));
   		  		
 }
 
@@ -6839,6 +8436,20 @@ const TableDesc& ASDM_POLARIZATION::tableDesc() const {
 #include "PolarizationTable.h"
 #include "PolarizationRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace StokesParameterMod;
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+	
 void ASDM_POLARIZATION::fill(const ASDM& asdm) {
 	vector<PolarizationRow*> rows = asdm.getPolarization().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6853,8 +8464,6 @@ void ASDM_POLARIZATION::fill(const ASDM& asdm) {
   		
     ArrayColumn<String> corrProduct(*table_p_, "corrProduct");             
   		
-  		
-    ScalarColumn<bool> flagRow(*table_p_, "flagRow");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -6877,11 +8486,6 @@ void ASDM_POLARIZATION::fill(const ASDM& asdm) {
 	
 
 		
-	
-	if (rows.at(i)->isFlagRowExists())
-		flagRow.put(rowIndex, rows.at(i)->getFlagRow());
-	
-
 		rowIndex++;		
 	}
 	table_p_->flush();
@@ -6913,6 +8517,20 @@ const TableDesc& ASDM_PROCESSOR::tableDesc() const {
 #include "ProcessorTable.h"
 #include "ProcessorRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace ProcessorTypeMod;
+			
+		
+			
+using namespace ProcessorSubTypeMod;
+			
+		
+	
 void ASDM_PROCESSOR::fill(const ASDM& asdm) {
 	vector<ProcessorRow*> rows = asdm.getProcessor().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6990,6 +8608,30 @@ const TableDesc& ASDM_RECEIVER::tableDesc() const {
 #include "ReceiverTable.h"
 #include "ReceiverRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+using namespace ReceiverSidebandMod;
+			
+		
+			
+using namespace NetSidebandMod;
+			
+		
+	
 void ASDM_RECEIVER::fill(const ASDM& asdm) {
 	vector<ReceiverRow*> rows = asdm.getReceiver().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7072,7 +8714,7 @@ ASDM_SBSUMMARY::ASDM_SBSUMMARY() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("projectUID", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("obsUnitSetId", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<String>("obsUnitSetUID", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("frequency", "blabla"));
   		
@@ -7081,8 +8723,6 @@ ASDM_SBSUMMARY::ASDM_SBSUMMARY() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("sbType", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("sbDuration", "blabla"));
-  		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("centerDirection", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numObservingMode", "blabla"));
   		
@@ -7098,6 +8738,8 @@ ASDM_SBSUMMARY::ASDM_SBSUMMARY() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("weatherConstraint", "blabla"));
   		
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("centerDirection", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("centerDirectionCode", "blabla"));
   		
@@ -7115,6 +8757,50 @@ const TableDesc& ASDM_SBSUMMARY::tableDesc() const {
 #include "SBSummaryTable.h"
 #include "SBSummaryRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace SBTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+	
 void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
 	vector<SBSummaryRow*> rows = asdm.getSBSummary().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7127,7 +8813,7 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> projectUID(*table_p_, "projectUID");             
   		
-    ScalarColumn<String> obsUnitSetId(*table_p_, "obsUnitSetId");             
+    ScalarColumn<String> obsUnitSetUID(*table_p_, "obsUnitSetUID");             
   		
     ScalarColumn<double> frequency(*table_p_, "frequency");             
   		
@@ -7136,8 +8822,6 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
     ScalarColumn<String> sbType(*table_p_, "sbType");             
   		
     ScalarColumn<double> sbDuration(*table_p_, "sbDuration");             
-  		
-    ArrayColumn<double> centerDirection(*table_p_, "centerDirection");             
   		
     ScalarColumn<int> numObservingMode(*table_p_, "numObservingMode");             
   		
@@ -7153,6 +8837,8 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
   		
     ArrayColumn<String> weatherConstraint(*table_p_, "weatherConstraint");             
   		
+  		
+    ArrayColumn<double> centerDirection(*table_p_, "centerDirection");             
   		
     ScalarColumn<String> centerDirectionCode(*table_p_, "centerDirectionCode");             
   		
@@ -7175,7 +8861,7 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
 	
 
 	
-	obsUnitSetId.put(rowIndex, rows.at(i)->getObsUnitSetId().toString());
+	obsUnitSetUID.put(rowIndex, rows.at(i)->getObsUnitSetUID().toString());
 	
 
 	
@@ -7192,10 +8878,6 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
 
 	
 	sbDuration.put(rowIndex, rows.at(i)->getSbDuration().get()/(1.0e9));
-	
-
-	
-	centerDirection.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getCenterDirection()));
 	
 
 	
@@ -7228,6 +8910,11 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
 
 		
 	
+	if (rows.at(i)->isCenterDirectionExists())
+		centerDirection.put(rowIndex, ext2CASA1D<Angle,double>(rows.at(i)->getCenterDirection()));
+	
+
+	
 	if (rows.at(i)->isCenterDirectionCodeExists())
 		centerDirectionCode.put(rowIndex, CDirectionReferenceCode::name(rows.at(i)->getCenterDirectionCode()));
 	
@@ -7237,6 +8924,101 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
 		centerDirectionEquinox.put(rowIndex, rows.at(i)->getCenterDirectionEquinox().get()/(1.0e9));
 	
 
+		rowIndex++;		
+	}
+	table_p_->flush();
+}
+	 
+ASDM_SCALE::ASDM_SCALE() {
+  name_ = "ASDM_SCALE";
+  tableDesc_.comment() = "The verbatim copy of the ASDM's dataset Scale table";
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("scaleId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("timeScale", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("crossDataScale", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("autoDataScale", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("weightType", "blabla"));
+  		
+  		  		
+}
+
+ASDM_SCALE::~ASDM_SCALE() {
+}
+
+const TableDesc& ASDM_SCALE::tableDesc() const {
+  return tableDesc_;
+}
+
+#include "ScaleTable.h"
+#include "ScaleRow.h"
+
+		
+			
+		
+			
+using namespace TimeScaleMod;
+			
+		
+			
+using namespace DataScaleMod;
+			
+		
+			
+using namespace DataScaleMod;
+			
+		
+			
+using namespace WeightTypeMod;
+			
+		
+	
+void ASDM_SCALE::fill(const ASDM& asdm) {
+	vector<ScaleRow*> rows = asdm.getScale().get();
+	unsigned int rowIndex = table_p_->nrow();
+	table_p_->addRow(rows.size());
+  		
+    ScalarColumn<String> scaleId(*table_p_, "scaleId");             
+  		
+  		
+    ScalarColumn<String> timeScale(*table_p_, "timeScale");             
+  		
+    ScalarColumn<String> crossDataScale(*table_p_, "crossDataScale");             
+  		
+    ScalarColumn<String> autoDataScale(*table_p_, "autoDataScale");             
+  		
+    ScalarColumn<String> weightType(*table_p_, "weightType");             
+  		
+  		  	
+
+	for (unsigned int i = 0; i < rows.size(); i++) {
+		
+	
+	scaleId.put(rowIndex, rows.at(i)->getScaleId().toString());
+	
+
+		
+	
+	timeScale.put(rowIndex, CTimeScale::name(rows.at(i)->getTimeScale()));
+	
+
+	
+	crossDataScale.put(rowIndex, CDataScale::name(rows.at(i)->getCrossDataScale()));
+	
+
+	
+	autoDataScale.put(rowIndex, CDataScale::name(rows.at(i)->getAutoDataScale()));
+	
+
+	
+	weightType.put(rowIndex, CWeightType::name(rows.at(i)->getWeightType()));
+	
+
+		
 		rowIndex++;		
 	}
 	table_p_->flush();
@@ -7257,15 +9039,13 @@ ASDM_SCAN::ASDM_SCAN() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numIntent", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<int>("numSubScan", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numSubscan", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("scanIntent", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("calDataType", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<bool>("calibrationOnLine", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("flagRow", "blabla"));
   		
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("calibrationFunction", "blabla"));
@@ -7292,6 +9072,46 @@ const TableDesc& ASDM_SCAN::tableDesc() const {
 #include "ScanTable.h"
 #include "ScanRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ScanIntentMod;
+			
+		
+			
+using namespace CalDataOriginMod;
+			
+		
+			
+		
+			
+using namespace CalibrationFunctionMod;
+			
+		
+			
+using namespace CalibrationSetMod;
+			
+		
+			
+using namespace AntennaMotionPatternMod;
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SCAN::fill(const ASDM& asdm) {
 	vector<ScanRow*> rows = asdm.getScan().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7308,15 +9128,13 @@ void ASDM_SCAN::fill(const ASDM& asdm) {
   		
     ScalarColumn<int> numIntent(*table_p_, "numIntent");             
   		
-    ScalarColumn<int> numSubScan(*table_p_, "numSubScan");             
+    ScalarColumn<int> numSubscan(*table_p_, "numSubscan");             
   		
     ArrayColumn<String> scanIntent(*table_p_, "scanIntent");             
   		
     ArrayColumn<String> calDataType(*table_p_, "calDataType");             
   		
     ArrayColumn<bool> calibrationOnLine(*table_p_, "calibrationOnLine");             
-  		
-    ScalarColumn<bool> flagRow(*table_p_, "flagRow");             
   		
   		
     ArrayColumn<String> calibrationFunction(*table_p_, "calibrationFunction");             
@@ -7356,7 +9174,7 @@ void ASDM_SCAN::fill(const ASDM& asdm) {
 	
 
 	
-	numSubScan.put(rowIndex, rows.at(i)->getNumSubScan());
+	numSubscan.put(rowIndex, rows.at(i)->getNumSubscan());
 	
 
 	
@@ -7369,10 +9187,6 @@ void ASDM_SCAN::fill(const ASDM& asdm) {
 
 	
 	calibrationOnLine.put(rowIndex, basic2CASA1D<bool,bool>(rows.at(i)->getCalibrationOnLine()));
-	
-
-	
-	flagRow.put(rowIndex, rows.at(i)->getFlagRow());
 	
 
 		
@@ -7441,6 +9255,20 @@ const TableDesc& ASDM_SEEING::tableDesc() const {
 #include "SeeingTable.h"
 #include "SeeingRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SEEING::fill(const ASDM& asdm) {
 	vector<SeeingRow*> rows = asdm.getSeeing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7561,6 +9389,8 @@ ASDM_SOURCE::ASDM_SOURCE() {
   tableDesc_.addColumn(ArrayColumnDesc<double>("size", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("sizeErr", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("velRefCode", "blabla"));
   		  		
 }
 
@@ -7574,6 +9404,80 @@ const TableDesc& ASDM_SOURCE::tableDesc() const {
 #include "SourceTable.h"
 #include "SourceRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SourceModelMod;
+			
+		
+			
+using namespace FrequencyReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace StokesParameterMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace RadialVelocityReferenceCodeMod;
+			
+		
+	
 void ASDM_SOURCE::fill(const ASDM& asdm) {
 	vector<SourceRow*> rows = asdm.getSource().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7642,6 +9546,8 @@ void ASDM_SOURCE::fill(const ASDM& asdm) {
     ArrayColumn<double> size(*table_p_, "size");             
   		
     ArrayColumn<double> sizeErr(*table_p_, "sizeErr");             
+  		
+    ScalarColumn<String> velRefCode(*table_p_, "velRefCode");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -7796,6 +9702,11 @@ void ASDM_SOURCE::fill(const ASDM& asdm) {
 		sizeErr.put(rowIndex, ext2CASA2D<Angle,double>(rows.at(i)->getSizeErr()));
 	
 
+	
+	if (rows.at(i)->isVelRefCodeExists())
+		velRefCode.put(rowIndex, CRadialVelocityReferenceCode::name(rows.at(i)->getVelRefCode()));
+	
+
 		rowIndex++;		
 	}
 	table_p_->flush();
@@ -7881,6 +9792,78 @@ const TableDesc& ASDM_SPECTRALWINDOW::tableDesc() const {
 #include "SpectralWindowTable.h"
 #include "SpectralWindowRow.h"
 
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace NetSidebandMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace SidebandProcessingModeMod;
+			
+		
+			
+		
+			
+using namespace WindowFunctionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace CorrelationBitMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace FrequencyReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SpectralResolutionTypeMod;
+			
+		
+	
 void ASDM_SPECTRALWINDOW::fill(const ASDM& asdm) {
 	vector<SpectralWindowRow*> rows = asdm.getSpectralWindow().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8131,6 +10114,16 @@ const TableDesc& ASDM_SQUARELAWDETECTOR::tableDesc() const {
 #include "SquareLawDetectorTable.h"
 #include "SquareLawDetectorRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace DetectorBandTypeMod;
+			
+		
+	
 void ASDM_SQUARELAWDETECTOR::fill(const ASDM& asdm) {
 	vector<SquareLawDetectorRow*> rows = asdm.getSquareLawDetector().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8196,6 +10189,22 @@ const TableDesc& ASDM_STATE::tableDesc() const {
 #include "StateTable.h"
 #include "StateRow.h"
 
+		
+			
+		
+			
+using namespace CalibrationDeviceMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_STATE::fill(const ASDM& asdm) {
 	vector<StateRow*> rows = asdm.getState().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8263,6 +10272,8 @@ ASDM_STATION::ASDM_STATION() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("type", "blabla"));
   		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
   		  		
 }
 
@@ -8276,6 +10287,20 @@ const TableDesc& ASDM_STATION::tableDesc() const {
 #include "StationTable.h"
 #include "StationRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace StationTypeMod;
+			
+		
+			
+		
+	
 void ASDM_STATION::fill(const ASDM& asdm) {
 	vector<StationRow*> rows = asdm.getStation().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8290,6 +10315,8 @@ void ASDM_STATION::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> type(*table_p_, "type");             
   		
+  		
+    ScalarColumn<double> time(*table_p_, "time");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -8312,6 +10339,11 @@ void ASDM_STATION::fill(const ASDM& asdm) {
 	
 
 		
+	
+	if (rows.at(i)->isTimeExists())
+		time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
+	
+
 		rowIndex++;		
 	}
 	table_p_->flush();
@@ -8336,11 +10368,9 @@ ASDM_SUBSCAN::ASDM_SUBSCAN() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("subscanIntent", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<int>("numberIntegration", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numIntegration", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<int>("numberSubintegration", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("flagRow", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<int>("numSubintegration", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("subscanMode", "blabla"));
@@ -8359,6 +10389,34 @@ const TableDesc& ASDM_SUBSCAN::tableDesc() const {
 #include "SubscanTable.h"
 #include "SubscanRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SubscanIntentMod;
+			
+		
+			
+using namespace SwitchingModeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace CorrelatorCalibrationMod;
+			
+		
+	
 void ASDM_SUBSCAN::fill(const ASDM& asdm) {
 	vector<SubscanRow*> rows = asdm.getSubscan().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8379,11 +10437,9 @@ void ASDM_SUBSCAN::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> subscanIntent(*table_p_, "subscanIntent");             
   		
-    ScalarColumn<int> numberIntegration(*table_p_, "numberIntegration");             
+    ScalarColumn<int> numIntegration(*table_p_, "numIntegration");             
   		
-    ArrayColumn<int> numberSubintegration(*table_p_, "numberSubintegration");             
-  		
-    ScalarColumn<bool> flagRow(*table_p_, "flagRow");             
+    ArrayColumn<int> numSubintegration(*table_p_, "numSubintegration");             
   		
   		
     ScalarColumn<String> subscanMode(*table_p_, "subscanMode");             
@@ -8423,15 +10479,11 @@ void ASDM_SUBSCAN::fill(const ASDM& asdm) {
 	
 
 	
-	numberIntegration.put(rowIndex, rows.at(i)->getNumberIntegration());
+	numIntegration.put(rowIndex, rows.at(i)->getNumIntegration());
 	
 
 	
-	numberSubintegration.put(rowIndex, basic2CASA1D<int,int>(rows.at(i)->getNumberSubintegration()));
-	
-
-	
-	flagRow.put(rowIndex, rows.at(i)->getFlagRow());
+	numSubintegration.put(rowIndex, basic2CASA1D<int,int>(rows.at(i)->getNumSubintegration()));
 	
 
 		
@@ -8484,6 +10536,26 @@ const TableDesc& ASDM_SWITCHCYCLE::tableDesc() const {
 #include "SwitchCycleTable.h"
 #include "SwitchCycleRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+	
 void ASDM_SWITCHCYCLE::fill(const ASDM& asdm) {
 	vector<SwitchCycleRow*> rows = asdm.getSwitchCycle().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8609,6 +10681,42 @@ const TableDesc& ASDM_SYSCAL::tableDesc() const {
 #include "SysCalTable.h"
 #include "SysCalRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SYSCAL::fill(const ASDM& asdm) {
 	vector<SysCalRow*> rows = asdm.getSysCal().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8794,6 +10902,18 @@ const TableDesc& ASDM_SYSPOWER::tableDesc() const {
 #include "SysPowerTable.h"
 #include "SysPowerRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SYSPOWER::fill(const ASDM& asdm) {
 	vector<SysPowerRow*> rows = asdm.getSysPower().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8891,8 +11011,6 @@ ASDM_TOTALPOWER::ASDM_TOTALPOWER() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<int>("flagPol", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("flagRow", "blabla"));
-  		
   tableDesc_.addColumn(ScalarColumnDesc<double>("interval", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("stateId", "blabla"));
@@ -8914,6 +11032,32 @@ const TableDesc& ASDM_TOTALPOWER::tableDesc() const {
 #include "TotalPowerTable.h"
 #include "TotalPowerRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
 	vector<TotalPowerRow*> rows = asdm.getTotalPower().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8943,8 +11087,6 @@ void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
     ArrayColumn<int> flagAnt(*table_p_, "flagAnt");             
   		
     ArrayColumn<int> flagPol(*table_p_, "flagPol");             
-  		
-    ScalarColumn<bool> flagRow(*table_p_, "flagRow");             
   		
     ScalarColumn<double> interval(*table_p_, "interval");             
   		
@@ -9008,10 +11150,6 @@ void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
 	
 
 	
-	flagRow.put(rowIndex, rows.at(i)->getFlagRow());
-	
-
-	
 	interval.put(rowIndex, rows.at(i)->getInterval().get()/(1.0e9));
 	
 
@@ -9053,7 +11191,7 @@ ASDM_WVMCAL::ASDM_WVMCAL() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numPoly", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<double>("pathCoeff", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<float>("pathCoeff", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("refTemp", "blabla"));
   		
@@ -9070,6 +11208,24 @@ const TableDesc& ASDM_WVMCAL::tableDesc() const {
 #include "WVMCalTable.h"
 #include "WVMCalRow.h"
 
+		
+			
+		
+			
+using namespace WVRMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_WVMCAL::fill(const ASDM& asdm) {
 	vector<WVMCalRow*> rows = asdm.getWVMCal().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -9090,7 +11246,7 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
   		
     ScalarColumn<int> numPoly(*table_p_, "numPoly");             
   		
-    ArrayColumn<double> pathCoeff(*table_p_, "pathCoeff");             
+    ArrayColumn<float> pathCoeff(*table_p_, "pathCoeff");             
   		
     ArrayColumn<double> refTemp(*table_p_, "refTemp");             
   		
@@ -9128,11 +11284,11 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
 	
 
 	
-	pathCoeff.put(rowIndex, basic2CASA2D<double,double>(rows.at(i)->getPathCoeff()));
+	pathCoeff.put(rowIndex, basic2CASA2D<float,float>(rows.at(i)->getPathCoeff()));
 	
 
 	
-	refTemp.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getRefTemp()));
+	refTemp.put(rowIndex, ext2CASA1D<Temperature,double>(rows.at(i)->getRefTemp()));
 	
 
 		
@@ -9150,34 +11306,34 @@ ASDM_WEATHER::ASDM_WEATHER() {
   tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<double>("pressure", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("pressureFlag", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("pressure", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("relHumidity", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("relHumidityFlag", "blabla"));
-  		
   tableDesc_.addColumn(ScalarColumnDesc<double>("temperature", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("temperatureFlag", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("windDirection", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("windDirectionFlag", "blabla"));
-  		
   tableDesc_.addColumn(ScalarColumnDesc<double>("windSpeed", "blabla"));
-  		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("windSpeedFlag", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("windMax", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("windMaxFlag", "blabla"));
-  		
-  		
   tableDesc_.addColumn(ScalarColumnDesc<double>("dewPoint", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<bool>("dewPointFlag", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numLayer", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("layerHeight", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("temperatureProfile", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("cloudMonitor", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numWVR", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("wvrTemp", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("water", "blabla"));
   		  		
 }
 
@@ -9191,6 +11347,38 @@ const TableDesc& ASDM_WEATHER::tableDesc() const {
 #include "WeatherTable.h"
 #include "WeatherRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_WEATHER::fill(const ASDM& asdm) {
 	vector<WeatherRow*> rows = asdm.getWeather().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -9201,34 +11389,34 @@ void ASDM_WEATHER::fill(const ASDM& asdm) {
     ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
-    ScalarColumn<double> pressure(*table_p_, "pressure");             
   		
-    ScalarColumn<bool> pressureFlag(*table_p_, "pressureFlag");             
+    ScalarColumn<double> pressure(*table_p_, "pressure");             
   		
     ScalarColumn<double> relHumidity(*table_p_, "relHumidity");             
   		
-    ScalarColumn<bool> relHumidityFlag(*table_p_, "relHumidityFlag");             
-  		
     ScalarColumn<double> temperature(*table_p_, "temperature");             
-  		
-    ScalarColumn<bool> temperatureFlag(*table_p_, "temperatureFlag");             
   		
     ScalarColumn<double> windDirection(*table_p_, "windDirection");             
   		
-    ScalarColumn<bool> windDirectionFlag(*table_p_, "windDirectionFlag");             
-  		
     ScalarColumn<double> windSpeed(*table_p_, "windSpeed");             
-  		
-    ScalarColumn<bool> windSpeedFlag(*table_p_, "windSpeedFlag");             
   		
     ScalarColumn<double> windMax(*table_p_, "windMax");             
   		
-    ScalarColumn<bool> windMaxFlag(*table_p_, "windMaxFlag");             
-  		
-  		
     ScalarColumn<double> dewPoint(*table_p_, "dewPoint");             
   		
-    ScalarColumn<bool> dewPointFlag(*table_p_, "dewPointFlag");             
+    ScalarColumn<int> numLayer(*table_p_, "numLayer");             
+  		
+    ArrayColumn<double> layerHeight(*table_p_, "layerHeight");             
+  		
+    ArrayColumn<double> temperatureProfile(*table_p_, "temperatureProfile");             
+  		
+    ScalarColumn<double> cloudMonitor(*table_p_, "cloudMonitor");             
+  		
+    ScalarColumn<int> numWVR(*table_p_, "numWVR");             
+  		
+    ArrayColumn<double> wvrTemp(*table_p_, "wvrTemp");             
+  		
+    ScalarColumn<double> water(*table_p_, "water");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -9242,63 +11430,75 @@ void ASDM_WEATHER::fill(const ASDM& asdm) {
 	
 
 		
-	
-	pressure.put(rowIndex, rows.at(i)->getPressure().get());
-	
-
-	
-	pressureFlag.put(rowIndex, rows.at(i)->getPressureFlag());
-	
-
-	
-	relHumidity.put(rowIndex, rows.at(i)->getRelHumidity().get());
-	
-
-	
-	relHumidityFlag.put(rowIndex, rows.at(i)->getRelHumidityFlag());
-	
-
-	
-	temperature.put(rowIndex, rows.at(i)->getTemperature().get());
-	
-
-	
-	temperatureFlag.put(rowIndex, rows.at(i)->getTemperatureFlag());
-	
-
-	
-	windDirection.put(rowIndex, rows.at(i)->getWindDirection().get());
-	
-
-	
-	windDirectionFlag.put(rowIndex, rows.at(i)->getWindDirectionFlag());
-	
-
-	
-	windSpeed.put(rowIndex, rows.at(i)->getWindSpeed().get());
-	
-
-	
-	windSpeedFlag.put(rowIndex, rows.at(i)->getWindSpeedFlag());
-	
-
-	
-	windMax.put(rowIndex, rows.at(i)->getWindMax().get());
-	
-
-	
-	windMaxFlag.put(rowIndex, rows.at(i)->getWindMaxFlag());
-	
-
 		
+	
+	if (rows.at(i)->isPressureExists())
+		pressure.put(rowIndex, rows.at(i)->getPressure().get());
+	
+
+	
+	if (rows.at(i)->isRelHumidityExists())
+		relHumidity.put(rowIndex, rows.at(i)->getRelHumidity().get());
+	
+
+	
+	if (rows.at(i)->isTemperatureExists())
+		temperature.put(rowIndex, rows.at(i)->getTemperature().get());
+	
+
+	
+	if (rows.at(i)->isWindDirectionExists())
+		windDirection.put(rowIndex, rows.at(i)->getWindDirection().get());
+	
+
+	
+	if (rows.at(i)->isWindSpeedExists())
+		windSpeed.put(rowIndex, rows.at(i)->getWindSpeed().get());
+	
+
+	
+	if (rows.at(i)->isWindMaxExists())
+		windMax.put(rowIndex, rows.at(i)->getWindMax().get());
+	
+
 	
 	if (rows.at(i)->isDewPointExists())
 		dewPoint.put(rowIndex, rows.at(i)->getDewPoint().get());
 	
 
 	
-	if (rows.at(i)->isDewPointFlagExists())
-		dewPointFlag.put(rowIndex, rows.at(i)->getDewPointFlag());
+	if (rows.at(i)->isNumLayerExists())
+		numLayer.put(rowIndex, rows.at(i)->getNumLayer());
+	
+
+	
+	if (rows.at(i)->isLayerHeightExists())
+		layerHeight.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getLayerHeight()));
+	
+
+	
+	if (rows.at(i)->isTemperatureProfileExists())
+		temperatureProfile.put(rowIndex, ext2CASA1D<Temperature,double>(rows.at(i)->getTemperatureProfile()));
+	
+
+	
+	if (rows.at(i)->isCloudMonitorExists())
+		cloudMonitor.put(rowIndex, rows.at(i)->getCloudMonitor().get());
+	
+
+	
+	if (rows.at(i)->isNumWVRExists())
+		numWVR.put(rowIndex, rows.at(i)->getNumWVR());
+	
+
+	
+	if (rows.at(i)->isWvrTempExists())
+		wvrTemp.put(rowIndex, ext2CASA1D<Temperature,double>(rows.at(i)->getWvrTemp()));
+	
+
+	
+	if (rows.at(i)->isWaterExists())
+		water.put(rowIndex, rows.at(i)->getWater());
 	
 
 		rowIndex++;		

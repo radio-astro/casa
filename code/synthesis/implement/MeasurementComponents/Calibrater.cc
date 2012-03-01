@@ -2050,7 +2050,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& refSpwMap, 
 			   const Vector<String>& tranFields,
 			   const Bool& append,
-			   Matrix<Double>& fluxScaleFactor) {
+			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			   const String& oListFile) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -2095,7 +2096,8 @@ void Calibrater::fluxscale(const String& infile,
   }
 
   // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,fluxScaleFactor);
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
+    oListFile);
 
 }
 
@@ -2105,7 +2107,9 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& refSpwMap, 
 			   const String& tranFields,
 			   const Bool& append,
-			   Matrix<Double>& fluxScaleFactor) {
+			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			   Vector<Int>& tranidx,
+			   const String& oListFile) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -2114,7 +2118,7 @@ void Calibrater::fluxscale(const String& infile,
 
   // Convert refFields/transFields to index lists
   Vector<Int> refidx(0);
-  Vector<Int> tranidx(0);
+//  Vector<Int> tranidx(0);
 
   if (refFields.length()>0)
     refidx=getFieldIdx(refFields);
@@ -2125,7 +2129,8 @@ void Calibrater::fluxscale(const String& infile,
     tranidx=getFieldIdx(tranFields);
 
   // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,fluxScaleFactor);
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
+    oListFile);
 
 }
 
@@ -2135,7 +2140,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& refSpwMap, 
 			   const Vector<Int>& tranField,
 			   const Bool& append,
-			   Matrix<Double>& fluxScaleFactor) {
+			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			   const String& oListFile) {
 
   //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
 
@@ -2201,7 +2207,8 @@ void Calibrater::fluxscale(const String& infile,
 
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
+      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
+        oListFile);
      
       // If no outfile specified, use infile (overwrite!)
       String out(outfile);

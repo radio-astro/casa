@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SysCalRowIDL;
 #endif
 
 
@@ -51,14 +47,17 @@ using asdmIDL::SysCalRowIDL;
 
 
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Temperature.h>
-using  asdm::Temperature;
+	
 
+	 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
+	
 
 
 
@@ -103,9 +102,11 @@ using  asdm::ArrayTimeInterval;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file SysCal.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -124,16 +125,19 @@ class SpectralWindowRow;
 	
 
 class SysCalRow;
-typedef void (SysCalRow::*SysCalAttributeFromBin) (EndianISStream& eiss);
+typedef void (SysCalRow::*SysCalAttributeFromBin) (EndianIStream& eis);
+typedef void (SysCalRow::*SysCalAttributeFromText) (const string& s);
 
 /**
  * The SysCalRow class is a row of a SysCalTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class SysCalRow {
 friend class asdm::SysCalTable;
+friend class asdm::RowTransformer<SysCalRow>;
+//friend class asdm::TableStreamReader<SysCalTable, SysCalRow>;
 
 public:
 
@@ -1023,7 +1027,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SysCalRowIDL struct.
 	 */
-	SysCalRowIDL *toIDL() const;
+	asdmIDL::SysCalRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1032,14 +1036,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SysCalRowIDL x) ;
+	void setFromIDL (asdmIDL::SysCalRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1047,7 +1051,46 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, SysCalAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+
+void tcalFlagFromBin( EndianIStream& eis);
+void tcalSpectrumFromBin( EndianIStream& eis);
+void trxFlagFromBin( EndianIStream& eis);
+void trxSpectrumFromBin( EndianIStream& eis);
+void tskyFlagFromBin( EndianIStream& eis);
+void tskySpectrumFromBin( EndianIStream& eis);
+void tsysFlagFromBin( EndianIStream& eis);
+void tsysSpectrumFromBin( EndianIStream& eis);
+void tantFlagFromBin( EndianIStream& eis);
+void tantSpectrumFromBin( EndianIStream& eis);
+void tantTsysFlagFromBin( EndianIStream& eis);
+void tantTsysSpectrumFromBin( EndianIStream& eis);
+void phaseDiffFlagFromBin( EndianIStream& eis);
+void phaseDiffSpectrumFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the SysCalTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SysCalRow* fromBin(EndianIStream& eis, SysCalTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1373,32 +1416,103 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, SysCalAttributeFromBin> fromBinMethods;
-void antennaIdFromBin( EndianISStream& eiss);
-void spectralWindowIdFromBin( EndianISStream& eiss);
-void timeIntervalFromBin( EndianISStream& eiss);
-void feedIdFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void numChanFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, SysCalAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+void timeIntervalFromBin( EndianIStream& eis);
+void feedIdFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
 
-void tcalFlagFromBin( EndianISStream& eiss);
-void tcalSpectrumFromBin( EndianISStream& eiss);
-void trxFlagFromBin( EndianISStream& eiss);
-void trxSpectrumFromBin( EndianISStream& eiss);
-void tskyFlagFromBin( EndianISStream& eiss);
-void tskySpectrumFromBin( EndianISStream& eiss);
-void tsysFlagFromBin( EndianISStream& eiss);
-void tsysSpectrumFromBin( EndianISStream& eiss);
-void tantFlagFromBin( EndianISStream& eiss);
-void tantSpectrumFromBin( EndianISStream& eiss);
-void tantTsysFlagFromBin( EndianISStream& eiss);
-void tantTsysSpectrumFromBin( EndianISStream& eiss);
-void phaseDiffFlagFromBin( EndianISStream& eiss);
-void phaseDiffSpectrumFromBin( EndianISStream& eiss);
+void tcalFlagFromBin( EndianIStream& eis);
+void tcalSpectrumFromBin( EndianIStream& eis);
+void trxFlagFromBin( EndianIStream& eis);
+void trxSpectrumFromBin( EndianIStream& eis);
+void tskyFlagFromBin( EndianIStream& eis);
+void tskySpectrumFromBin( EndianIStream& eis);
+void tsysFlagFromBin( EndianIStream& eis);
+void tsysSpectrumFromBin( EndianIStream& eis);
+void tantFlagFromBin( EndianIStream& eis);
+void tantSpectrumFromBin( EndianIStream& eis);
+void tantTsysFlagFromBin( EndianIStream& eis);
+void tantTsysSpectrumFromBin( EndianIStream& eis);
+void phaseDiffFlagFromBin( EndianIStream& eis);
+void phaseDiffSpectrumFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, SysCalAttributeFromText> fromTextMethods;
+	
+void antennaIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+	
+void timeIntervalFromText (const string & s);
+	
+	
+void feedIdFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void numChanFromText (const string & s);
+	
+
+	
+void tcalFlagFromText (const string & s);
+	
+	
+void tcalSpectrumFromText (const string & s);
+	
+	
+void trxFlagFromText (const string & s);
+	
+	
+void trxSpectrumFromText (const string & s);
+	
+	
+void tskyFlagFromText (const string & s);
+	
+	
+void tskySpectrumFromText (const string & s);
+	
+	
+void tsysFlagFromText (const string & s);
+	
+	
+void tsysSpectrumFromText (const string & s);
+	
+	
+void tantFlagFromText (const string & s);
+	
+	
+void tantSpectrumFromText (const string & s);
+	
+	
+void tantTsysFlagFromText (const string & s);
+	
+	
+void tantTsysSpectrumFromText (const string & s);
+	
+	
+void phaseDiffFlagFromText (const string & s);
+	
+	
+void phaseDiffSpectrumFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1407,14 +1521,14 @@ void phaseDiffSpectrumFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the SysCalTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static SysCalRow* fromBin(EndianISStream& eiss, SysCalTable& table, const vector<string>& attributesSeq);	 
 
+	 static SysCalRow* fromBin(EndianIStream& eis, SysCalTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

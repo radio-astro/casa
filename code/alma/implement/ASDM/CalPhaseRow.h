@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalPhaseRowIDL;
 #endif
 
 
@@ -51,40 +47,43 @@ using asdmIDL::CalPhaseRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Interval.h>
-using  asdm::Interval;
+	
 
+	 
 #include <Angle.h>
-using  asdm::Angle;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
+	 
 #include <Frequency.h>
-using  asdm::Frequency;
+	
 
 
 
 
 	
 #include "CBasebandName.h"
-using namespace BasebandNameMod;
 	
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
@@ -113,7 +112,6 @@ using namespace AtmPhaseCorrectionMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -128,9 +126,11 @@ using namespace PolarizationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalPhase.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -146,16 +146,19 @@ class CalReductionRow;
 	
 
 class CalPhaseRow;
-typedef void (CalPhaseRow::*CalPhaseAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalPhaseRow::*CalPhaseAttributeFromBin) (EndianIStream& eis);
+typedef void (CalPhaseRow::*CalPhaseAttributeFromText) (const string& s);
 
 /**
  * The CalPhaseRow class is a row of a CalPhaseTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalPhaseRow {
 friend class asdm::CalPhaseTable;
+friend class asdm::RowTransformer<CalPhaseRow>;
+//friend class asdm::TableStreamReader<CalPhaseTable, CalPhaseRow>;
 
 public:
 
@@ -971,7 +974,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalPhaseRowIDL struct.
 	 */
-	CalPhaseRowIDL *toIDL() const;
+	asdmIDL::CalPhaseRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -980,14 +983,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPhaseRowIDL x) ;
+	void setFromIDL (asdmIDL::CalPhaseRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -995,7 +998,47 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalPhaseAttributeFromBin> fromBinMethods;
+void basebandNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void numBaselineFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void ampliFromBin( EndianIStream& eis);
+void antennaNamesFromBin( EndianIStream& eis);
+void baselineLengthsFromBin( EndianIStream& eis);
+void decorrelationFactorFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void integrationTimeFromBin( EndianIStream& eis);
+void phaseFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void phaseRMSFromBin( EndianIStream& eis);
+void statPhaseRMSFromBin( EndianIStream& eis);
+
+void correctionValidityFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalPhaseTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalPhaseRow* fromBin(EndianIStream& eis, CalPhaseTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -1300,33 +1343,107 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalPhaseAttributeFromBin> fromBinMethods;
-void basebandNameFromBin( EndianISStream& eiss);
-void receiverBandFromBin( EndianISStream& eiss);
-void atmPhaseCorrectionFromBin( EndianISStream& eiss);
-void calDataIdFromBin( EndianISStream& eiss);
-void calReductionIdFromBin( EndianISStream& eiss);
-void startValidTimeFromBin( EndianISStream& eiss);
-void endValidTimeFromBin( EndianISStream& eiss);
-void numBaselineFromBin( EndianISStream& eiss);
-void numReceptorFromBin( EndianISStream& eiss);
-void ampliFromBin( EndianISStream& eiss);
-void antennaNamesFromBin( EndianISStream& eiss);
-void baselineLengthsFromBin( EndianISStream& eiss);
-void decorrelationFactorFromBin( EndianISStream& eiss);
-void directionFromBin( EndianISStream& eiss);
-void frequencyRangeFromBin( EndianISStream& eiss);
-void integrationTimeFromBin( EndianISStream& eiss);
-void phaseFromBin( EndianISStream& eiss);
-void polarizationTypesFromBin( EndianISStream& eiss);
-void phaseRMSFromBin( EndianISStream& eiss);
-void statPhaseRMSFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalPhaseAttributeFromBin> fromBinMethods;
+void basebandNameFromBin( EndianIStream& eis);
+void receiverBandFromBin( EndianIStream& eis);
+void atmPhaseCorrectionFromBin( EndianIStream& eis);
+void calDataIdFromBin( EndianIStream& eis);
+void calReductionIdFromBin( EndianIStream& eis);
+void startValidTimeFromBin( EndianIStream& eis);
+void endValidTimeFromBin( EndianIStream& eis);
+void numBaselineFromBin( EndianIStream& eis);
+void numReceptorFromBin( EndianIStream& eis);
+void ampliFromBin( EndianIStream& eis);
+void antennaNamesFromBin( EndianIStream& eis);
+void baselineLengthsFromBin( EndianIStream& eis);
+void decorrelationFactorFromBin( EndianIStream& eis);
+void directionFromBin( EndianIStream& eis);
+void frequencyRangeFromBin( EndianIStream& eis);
+void integrationTimeFromBin( EndianIStream& eis);
+void phaseFromBin( EndianIStream& eis);
+void polarizationTypesFromBin( EndianIStream& eis);
+void phaseRMSFromBin( EndianIStream& eis);
+void statPhaseRMSFromBin( EndianIStream& eis);
 
-void correctionValidityFromBin( EndianISStream& eiss);
+void correctionValidityFromBin( EndianIStream& eis);
+
+*/
 	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalPhaseAttributeFromText> fromTextMethods;
+	
+void basebandNameFromText (const string & s);
+	
+	
+void receiverBandFromText (const string & s);
+	
+	
+void atmPhaseCorrectionFromText (const string & s);
+	
+	
+void calDataIdFromText (const string & s);
+	
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void startValidTimeFromText (const string & s);
+	
+	
+void endValidTimeFromText (const string & s);
+	
+	
+void numBaselineFromText (const string & s);
+	
+	
+void numReceptorFromText (const string & s);
+	
+	
+void ampliFromText (const string & s);
+	
+	
+void antennaNamesFromText (const string & s);
+	
+	
+void baselineLengthsFromText (const string & s);
+	
+	
+void decorrelationFactorFromText (const string & s);
+	
+	
+void directionFromText (const string & s);
+	
+	
+void frequencyRangeFromText (const string & s);
+	
+	
+void integrationTimeFromText (const string & s);
+	
+	
+void phaseFromText (const string & s);
+	
+	
+void polarizationTypesFromText (const string & s);
+	
+	
+void phaseRMSFromText (const string & s);
+	
+	
+void statPhaseRMSFromText (const string & s);
+	
+
+	
+void correctionValidityFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1335,14 +1452,14 @@ void correctionValidityFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalPhaseTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalPhaseRow* fromBin(EndianISStream& eiss, CalPhaseTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalPhaseRow* fromBin(EndianIStream& eis, CalPhaseTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

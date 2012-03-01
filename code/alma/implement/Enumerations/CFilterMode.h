@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace FilterModeMod
   //! FilterMode.
   //!  [APDM.Correlator] Modes of correlator input filtering
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum FilterMode
@@ -73,7 +74,10 @@ namespace FilterModeMod
 } 
 #endif
 
-using namespace std;
+namespace FilterModeMod {
+	std::ostream & operator << ( std::ostream & out, const FilterMode& value);
+	std::istream & operator >> ( std::istream & in , FilterMode& value );
+}
 
 /** 
   * A helper class for the enumeration FilterMode.
@@ -107,7 +111,7 @@ class CFilterMode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -161,8 +165,8 @@ class CFilterMode {
     CFilterMode(const CFilterMode&);
     CFilterMode& operator=(const CFilterMode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

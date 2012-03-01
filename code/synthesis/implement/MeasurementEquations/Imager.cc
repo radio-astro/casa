@@ -99,8 +99,7 @@
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
-// Disabling Imager::correct() (gmoellen 06Nov20)
-//#include <synthesis/MeasurementEquations/VisEquation.h>
+#include <synthesis/MeasurementEquations/Feather.h>
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>
 #include <synthesis/MeasurementComponents/CEMemImageSkyModel.h>
 #include <synthesis/MeasurementComponents/MFCEMemImageSkyModel.h>
@@ -1892,7 +1891,7 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
   traceEvent(1,"Entering Imager::setsdoptions",28);
 #endif
 
-  if(!valid()) 
+  //if(!valid()) 
     {
 
 #ifdef PABLO_IO
@@ -2187,9 +2186,8 @@ Bool Imager::clipimage(const String& image, const Quantity& threshold)
 
 // Add together low and high resolution images in the Fourier plane
 Bool Imager::feather(const String& image, const String& highRes,
-		     const String& lowRes, const String& lowPSF)
+		     const String& lowRes, const String& lowPSF, const Bool showPlot)
 {
-  // if(!valid()) return False;
   
   LoggerHolder lh (False);
   LogIO os = lh.logio();
@@ -2249,316 +2247,8 @@ Bool Imager::feather(const String& image, const String& highRes,
       PagedImage<Float> high(outHighRes);
       PagedImage<Float> low0(outLowRes);
       
-      Vector<Quantum<Double> > hBeam, lBeam;
-      ImageInfo highInfo=high.imageInfo();
-      hBeam=highInfo.restoringBeam();
-      ImageInfo lowInfo=low0.imageInfo();
-      lBeam=lowInfo.restoringBeam();
-      if((hBeam.nelements()<3)||!((hBeam(0).get("arcsec").getValue()>0.0)
-				  &&(hBeam(1).get("arcsec").getValue()>0.0))) {
-	os << LogIO::WARN 
-	   << "High resolution image does not have any resolution information - will be unable to scale correctly.\n" 
-	   << LogIO::POST;
-      }
-      
-      PBMath * myPBp = 0;
-      if(lowPSF=="" &&((lBeam.nelements()==0) || 
-	   (lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) ) {
-	// create the low res's PBMath object, needed to apply PB 
-	// to make high res Fourier weight image
-	if (doDefaultVP_p) {
-	  // look up the telescope in ObsInfo
-	  ObsInfo oi = low0.coordinates().obsInfo();
-	  String myTelescope = oi.telescope();
-	  if (myTelescope == "") {
-	    this->unlock();
-	    os << LogIO::SEVERE << "No telescope imbedded in low res image" 
-	       << LogIO::POST;
-	    os << LogIO::SEVERE << "Create a PB description with the vpmanager"
-	       << LogIO::EXCEPTION;
-	    return False;
-	  }
-	  Quantity qFreq;
-	  {
-	    Int spectralIndex=low0.coordinates().findCoordinate(Coordinate::SPECTRAL);
-	    AlwaysAssert(spectralIndex>=0, AipsError);
-	    SpectralCoordinate
-	      spectralCoord=
-	      low0.coordinates().spectralCoordinate(spectralIndex);
-	    Vector<String> units(1); units = "Hz";
-	    spectralCoord.setWorldAxisUnits(units);	
-	    Vector<Double> spectralWorld(1);
-	    Vector<Double> spectralPixel(1);
-	    spectralPixel(0) = 0;
-	    spectralCoord.toWorld(spectralWorld, spectralPixel);  
-	    Double freq  = spectralWorld(0);
-	    qFreq = Quantity( freq, "Hz" );
-	  }
-	  String band;
-	  PBMath::CommonPB whichPB;
-	  String pbName;
-	  // get freq from coordinates
-	  PBMath::whichCommonPBtoUse (myTelescope, qFreq, band, whichPB, 
-				      pbName);
-	  if (whichPB  == PBMath::UNKNOWN) {
-	    this->unlock();
-	    os << LogIO::SEVERE << "Unknown telescope for PB type: " 
-	       << myTelescope << LogIO::EXCEPTION;
-	    return False;
-	  }
-	  myPBp = new PBMath(whichPB);
-	} else {
-	  // get the PB from the vpTable
-	  Table vpTable( vpTableStr_p );
-	  ROScalarColumn<TableRecord> recCol(vpTable, (String)"pbdescription");
-	  myPBp = new PBMath(recCol(0));
-	}
-	AlwaysAssert((myPBp != 0), AipsError);
-      }
 
-      // regrid the single dish image
-      TempImage<Float> low(high.shape(), high.coordinates());
-      {
-	IPosition axes(2,0,1);
-	if(high.shape().nelements() >2){
-	  Int spectralAxisIndex=high.coordinates().
-	    findCoordinate(Coordinate::SPECTRAL);
-	  if(spectralAxisIndex > -1){
-	    axes.resize(3);
-	    axes(0)=0;
-	    axes(1)=1;
-	    axes(2)=spectralAxisIndex+1;
-	  }
-	}
-	ImageRegrid<Float> ir;
-	ir.regrid(low, Interpolate2D::LINEAR, axes, low0);
-      }
-    
-      // get image center direction (needed for SD PB, which is needed for
-      // the high res Fourier weight image
-      MDirection wcenter;  
-      {
-	Int directionIndex=
-	  high.coordinates().findCoordinate(Coordinate::DIRECTION);
-	AlwaysAssert(directionIndex>=0, AipsError);
-	DirectionCoordinate
-	  directionCoord=high.coordinates().directionCoordinate(directionIndex);
-	Vector<Double> pcenter(2);
-	pcenter(0) = high.shape()(0)/2;
-	pcenter(1) = high.shape()(1)/2;    
-	directionCoord.toWorld( wcenter, pcenter );
-      }
-      
-      // make the weight image for high res Fourier plane:  1 - normalized(FT(sd_PB))
-      IPosition myshap(high.shape());
-      for( uInt k=2; k< myshap.nelements(); ++k){
-	myshap(k)=1;
-      }
-      
-      TempImage<Complex> cweight(myshap, high.coordinates());
-      if(lowPSF=="") {
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Using primary beam to determine weighting.\n" << LogIO::POST;
-	if((lBeam.nelements()==0) || 
-	   (lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) {
-	  cweight.set(1.0);
-	  if (myPBp != 0) {
-	    myPBp->applyPB(cweight, cweight, wcenter, Quantity(0.0, "deg"), 
-			   BeamSquint::NONE);
-	  
-	    TempImage<Float> lowpsf0(cweight.shape(), cweight.coordinates());
-	    
-	    os << LogIO::NORMAL // Loglevel INFO
-               << "Determining scaling from SD Primary Beam.\n"
-	       << LogIO::POST;
-	    lBeam.resize(3);
-	    StokesImageUtil::To(lowpsf0, cweight);
-	    StokesImageUtil::FitGaussianPSF(lowpsf0, 
-					    lBeam(0), lBeam(1), lBeam(2)); 
-	  }
-	  delete myPBp;
-	}
-	else{
-	  os << LogIO::NORMAL // Loglevel INFO
-             << "Determining scaling from SD restoring beam.\n"
-	     << LogIO::POST;
-	  TempImage<Float> lowpsf0(cweight.shape(), cweight.coordinates());
-	  lowpsf0.set(0.0);
-	  IPosition center(4, Int((cweight.shape()(0)/4)*2), 
-			   Int((cweight.shape()(1)/4)*2),0,0);
-	  lowpsf0.putAt(1.0, center);
-	  StokesImageUtil::Convolve(lowpsf0, lBeam(0), lBeam(1),
-				    lBeam(2), False);
-	  StokesImageUtil::From(cweight, lowpsf0);
-
-	}
-      }
-      else {
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Using specified low resolution PSF to determine weighting.\n" 
-	   << LogIO::POST;
-	// regrid the single dish psf
-	PagedImage<Float> lowpsfDisk(lowPSF);
-	IPosition lshape(lowpsfDisk.shape());
-	lshape.resize(4);
-	lshape(2)=1; lshape(3)=1;
-	TempImage<Float>lowpsf0(lshape,lowpsfDisk.coordinates());
-	IPosition blc(lowpsfDisk.shape());
-	IPosition trc(lowpsfDisk.shape());
-	blc(0)=0; blc(1)=0;
-	trc(0)=lowpsfDisk.shape()(0)-1;
-	trc(1)=lowpsfDisk.shape()(1)-1;
-	for( uInt k=2; k < lowpsfDisk.shape().nelements(); ++k){
-	  blc(k)=0; trc(k)=0;	  	  
-	}// taking first plane
-	Slicer sl(blc, trc, Slicer::endIsLast);
-	lowpsf0.copyData(SubImage<Float>(lowpsfDisk, sl, False));
-	TempImage<Float> lowpsf(myshap, high.coordinates());
-	{
-	  ImageRegrid<Float> ir;
-	  IPosition axes(2,0,1);   // if its a cube, regrid the spectral too
-	  ir.regrid(lowpsf, Interpolate2D::LINEAR, axes, lowpsf0);
-	}
-	if((lBeam.nelements()==0) || 
-	   (lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) {
-	  os << LogIO::NORMAL // Loglevel INFO
-             << "Determining scaling from low resolution PSF.\n" << LogIO::POST;
-	  lBeam.resize(3);
-	  StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam(0), lBeam(1), lBeam(2));
-	}
-	StokesImageUtil::From(cweight, lowpsf);
-      }
-      LatticeFFT::cfft2d( cweight );
-      LatticeExprNode node = max( cweight );
-      Float fmax = abs(node.getComplex());
-      cweight.copyData(  (LatticeExpr<Complex>)( 1.0f - cweight/fmax ) );
-      
-      // FT high res image
-      TempImage<Complex> cimagehigh(high.shape(), high.coordinates() );
-      StokesImageUtil::From(cimagehigh, high);
-      LatticeFFT::cfft2d( cimagehigh );
-      
-      // FT low res image
-      TempImage<Complex> cimagelow(high.shape(), high.coordinates() );
-      StokesImageUtil::From(cimagelow, low);
-      LatticeFFT::cfft2d( cimagelow );
-
-
-      // This factor comes from the beam volumes
-      if(sdScale_p!=1.0)
-        os << LogIO::NORMAL // Loglevel INFO
-           << "Multiplying single dish data by user specified factor"
-           << sdScale_p << ".\n" << LogIO::POST;
-      Float sdScaling  = sdScale_p;
-      if((hBeam(0).get("arcsec").getValue()>0.0)
-	 &&(hBeam(1).get("arcsec").getValue()>0.0)&&
-       (lBeam(0).get("arcsec").getValue()>0.0)&&
-	 (lBeam(1).get("arcsec").getValue()>0.0)) {
-	Float beamFactor=
-	  hBeam(0).get("arcsec").getValue()*hBeam(1).get("arcsec").getValue()/
-	  (lBeam(0).get("arcsec").getValue()*lBeam(1).get("arcsec").getValue());
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Applying additional scaling for ratio of the volumes of the high to the low resolution images : "
-	   <<  beamFactor << ".\n" << LogIO::POST;
-	sdScaling*=beamFactor;
-      }
-      else {
-	os << LogIO::WARN << "Insufficient information to scale correctly.\n" 
-	   << LogIO::POST;
-      }
-
-      // combine high and low res, appropriately normalized, in Fourier
-      // plane. The vital point to remember is that cimagelow is already
-      // multiplied by 1-cweight so we only need adjust for the ratio of beam
-      // volumes
-      Vector<Int> extraAxes(cimagehigh.shape().nelements()-2);
-      if(extraAxes.nelements() > 0){
-	
-	if(extraAxes.nelements() ==2){
-	  Int n3=cimagehigh.shape()(2);
-	  Int n4=cimagehigh.shape()(3);
-	  IPosition blc(cimagehigh.shape());
-	  IPosition trc(cimagehigh.shape());
-	  blc(0)=0; blc(1)=0;
-	  trc(0)=cimagehigh.shape()(0)-1;
-	  trc(1)=cimagehigh.shape()(1)-1;
-	  for (Int j=0; j < n3; ++j){
-	    for (Int k=0; k < n4 ; ++k){
-	      blc(2)=j; trc(2)=j;
-	      blc(3)=k; trc(3)=k;
-	      Slicer sl(blc, trc, Slicer::endIsLast);
-	      SubImage<Complex> cimagehighSub(cimagehigh, sl, True);
-	      SubImage<Complex> cimagelowSub(cimagelow, sl, True);
-	      cimagehighSub.copyData(  (LatticeExpr<Complex>)((cimagehighSub * cweight + cimagelowSub * sdScaling)));
-	    }
-	  }
-	}
-      }
-      else{
-	cimagehigh.copyData(  
-			    (LatticeExpr<Complex>)((cimagehigh * cweight 
-						    + cimagelow * sdScaling)));
-      }
-      // FT back to image plane
-      LatticeFFT::cfft2d( cimagehigh, False);
-    
-      // write to output image
-      PagedImage<Float> featherImage(high.shape(), high.coordinates(), image );
-      StokesImageUtil::To(featherImage, cimagehigh);
-      ImageUtilities::copyMiscellaneous(featherImage, high);
-
-      try{
-      { // write data processing history into image logtable
-	LoggerHolder imagelog (False);
-	LogSink& sink = imagelog.sink();
-	LogOrigin lor(String("imager"), String("feather()"));
-	LogMessage msg(lor);
-	if (!ms_p.null()) {
-	  String info = "MeasurementSet is " + ms_p->tableName() + "\n";
-	  sink.postLocally(msg.message(info));
-	  ROMSHistoryColumns msHis(ms_p->history());
-	  if (msHis.nrow()>0) {
-	    ostringstream oos;
-	    uInt nmessages = msHis.time().nrow();
-	    for (uInt i=0; i < nmessages; ++i) {
-	      oos << frmtTime((msHis.time())(i))
-		  << "  HISTORY " << (msHis.origin())(i);
-	      oos << (msHis.message())(i)
-		  << endl;
-	    }
-	    String historyline(oos);
-	    sink.postLocally(msg.message(historyline));
-	  }
-	}
-	ostringstream oos;
-	oos << endl << "Imager::feather() input paramaters:" << endl
-	    << "Feathered image =      '" << image   << "'" << endl
-	    << "High resolution image ='" << highRes << "'" << endl
-	    << "Low resolution image = '" << lowRes  << "'" << endl
-	    << "Low resolution PSF =   '" << lowPSF  << "'" << endl << endl;
-	String inputs(oos);
-	sink.postLocally(msg.message(inputs));
-	imagelog.flush();
-
-	LoggerHolder& log = featherImage.logger();
-	log.append(imagelog);
-	lh.flush();
-	log.append(lh);
-	log.flush();
-      }
-      }catch(exception& x){
-
-	os << LogIO::WARN << "Caught exception: " << x.what()
-       << LogIO::POST;
-	//os << LogIO::SEVERE << "Can it be that your MS/HISTORY table has gotten corrupted ? \n you may consider deleting all the rows from this table"
-	// <<LogIO::POST; 
-	//continue and wrap up
-
-      }
-      catch(...){
-	os << LogIO::SEVERE << "your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table" << LogIO::POST;
-
-      }
+      Feather::feather(image, high, low0, sdScale_p, lowPSF, doDefaultVP_p, vpTableStr_p, showPlot);
     }
   
     if(noStokes){
@@ -5913,10 +5603,10 @@ Bool Imager::plotuv(const Bool rotate)
 	return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
       plotter->scatter(dbus::af(u),dbus::af(v),"blue","unrotated","hexagon",6,-1,panel_id.getInt( ));
       plotter->scatter(dbus::af(uRotated),dbus::af(vRotated),"red","rotated","ellipse",6,-1,panel_id.getInt( ));
-
+      plotter->release( panel_id.getInt( ) );
     }
     else {
       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
@@ -5928,12 +5618,12 @@ Bool Imager::plotuv(const Bool rotate)
 	return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
       plotter->scatter(dbus::af(u),dbus::af(v),"blue","uv in data","rect",6,-1,panel_id.getInt( ));
       u=u*Float(-1.0);
       v=v*Float(-1.0);
       plotter->scatter(dbus::af(u),dbus::af(v),"red","conjugate","ellipse",6,-1,panel_id.getInt( ));
-
+      plotter->release( panel_id.getInt( ) );
     }
     
     this->unlock();
@@ -5972,7 +5662,14 @@ Bool Imager::plotvis(const String& type, const Int increment)
     
     ROMSColumns msc(*mssel_p);
     Bool hasCorrected=!(msc.correctedData().isNull());
-    Bool hasModel= !(msc.modelData().isNull());
+    Bool hasModel= True; //with virtual model data service model data is always there
+    //why bother if it is not requested
+    if((type != "all") || (type!="model") || (type != "residual"))
+      hasModel=False;
+    if((type != "all") || (type!="corrected") || (type != "residual"))
+      hasCorrected=False;
+    
+
 
     Bool twoPol=True;
     Vector<String> polType=msc.feed().polarizationType()(0);
@@ -6046,8 +5743,8 @@ Bool Imager::plotvis(const String& type, const Int increment)
     Int iVis=0;
     counter=0;
     vi.originChunks();
-     vi.origin();
-     uInt numCorrPol=vb.modelVisCube().shape()(0)-1;
+    vi.origin();
+    uInt numCorrPol=vb.nCorr();
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin();vi.more();vi++) {
 	Int nRow=vb.nRow();
@@ -6145,19 +5842,22 @@ Bool Imager::plotvis(const String& type, const Int increment)
 	if(hasModel && (maxModelAmp>Ymax))     Ymax = maxModelAmp;
 	if((hasModel && hasCorrected) && maxResidualAmp>Ymax)  Ymax = maxResidualAmp;
       }
+   
+
     PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
     dbus::variant panel_id = plotter->panel( "Stokes I Visibility for "+imageName(),"UVDistance (wavelengths)" , "Amplitude", "Vis-Plot",
-					     std::vector<int>( ), "right");
+					     std::vector<int>( ), "right", "bottom", 0, false, false);
     
     if ( panel_id.type( ) != dbus::variant::INT ) {
       os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
       return False;
     }
 
-    plotter->release( panel_id.getInt( ) );
+    
 
     if(type=="all"||type==""||type.contains("observed")) {
-      plotter->scatter(dbus::af(uvDistance),dbus::af(amp),"blue","observed","hexagon",6,-1,panel_id.getInt( ));
+      plotter->scatter(dbus::af(uvDistance),dbus::af(amp),"blue","observed","rect",6,-1,panel_id.getInt( ));
+      //plotter->scatter(dbus::af(u),dbus::af(v),"blue","uv in data","rect",6,-1,panel_id.getInt( ));
       
     }
     if((type=="all"||type==""||type.contains("corrected")) && hasCorrected) {
@@ -6169,7 +5869,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
     if((type=="all"||type==""||type.contains("residual")) && (hasCorrected && hasModel)) {
       plotter->scatter(dbus::af(uvDistance),dbus::af(residualAmp),"yellow","residual","cross",6,-1,panel_id.getInt( ));
     }
-
+    plotter->release( panel_id.getInt( ) );
    
 
 
@@ -6273,7 +5973,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	  return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
 
       gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
       IPosition shape = gwt.shape( );
@@ -6287,7 +5987,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
 
       plotter->raster( data, (int) shape[1], (int) shape[0] );
-
+      plotter->release( panel_id.getInt( ) );
 
     }
     else {
@@ -6375,9 +6075,9 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	return False;
       }
 
-      plotter->release( panel_id.getInt( ) );
+      
       plotter->scatter(dbus::af(uvDistance),dbus::af(weights),"blue","","hexagon",4,-1,panel_id.getInt( ));
-
+      plotter->release( panel_id.getInt( ) );
     }
     
 

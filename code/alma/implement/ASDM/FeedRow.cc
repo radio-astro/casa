@@ -49,9 +49,6 @@ using std::set;
 
 #include <ReceiverTable.h>
 #include <ReceiverRow.h>
-
-#include <BeamTable.h>
-#include <BeamRow.h>
 	
 
 using asdm::ASDM;
@@ -67,14 +64,12 @@ using asdm::SpectralWindowRow;
 using asdm::ReceiverTable;
 using asdm::ReceiverRow;
 
-using asdm::BeamTable;
-using asdm::BeamRow;
-
 
 #include <Parser.h>
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -98,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::FeedRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -303,23 +301,6 @@ namespace asdm {
 	
   	
  		
- 		
-		x->beamIdExists = beamIdExists;
-		
-		
-		
-		x->beamId.length(beamId.size());
-		for (unsigned int i = 0; i < beamId.size(); ++i) {
-			
-			x->beamId[i] = beamId.at(i).toIDLTag();
-			
-	 	}
-	 	 		
-  	
-
-	
-  	
- 		
 		
 		
 		x->receiverId.length(receiverId.size());
@@ -346,8 +327,6 @@ namespace asdm {
 
 	
 		
-	
-
 	
 
 	
@@ -561,22 +540,6 @@ namespace asdm {
 
 	
 		
-		beamIdExists = x.beamIdExists;
-		if (x.beamIdExists) {
-		
-		beamId .clear();
-		for (unsigned int i = 0; i <x.beamId.length(); ++i) {
-			
-			beamId.push_back(Tag (x.beamId[i]));
-			
-		}
-		
-		}
-		
-  	
-
-	
-		
 		receiverId .clear();
 		for (unsigned int i = 0; i <x.receiverId.length(); ++i) {
 			
@@ -598,8 +561,6 @@ namespace asdm {
 
 	
 		
-	
-
 	
 
 	
@@ -735,18 +696,6 @@ namespace asdm {
 
   	
  		
-		if (beamIdExists) {
-		
-		
-		Parser::toXML(beamId, "beamId", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
 		
 		Parser::toXML(receiverId, "receiverId", buf);
 		
@@ -763,8 +712,6 @@ namespace asdm {
 
 	
 		
-	
-
 	
 
 	
@@ -907,14 +854,6 @@ namespace asdm {
 	
 
 	
-  		
-  		if (row.isStr("<beamId>")) {
-  			setBeamId(Parser::get1DTag("beamId","Feed",rowDoc));  		
-  		}
-  		
-  	
-
-	
   		 
   		setReceiverId(Parser::get1DInteger("receiverId","Feed",rowDoc));
 		
@@ -930,8 +869,6 @@ namespace asdm {
 
 	
 		
-	
-
 	
 
 	
@@ -1017,7 +954,8 @@ namespace asdm {
 		eoss.writeInt((int) polarizationTypes.size());
 		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
 				
-			eoss.writeInt(polarizationTypes.at(i));
+			eoss.writeString(CPolarizationType::name(polarizationTypes.at(i)));
+			/* eoss.writeInt(polarizationTypes.at(i)); */
 				
 				
 						
@@ -1094,75 +1032,63 @@ namespace asdm {
 
 	}
 
-	eoss.writeBoolean(beamIdExists);
-	if (beamIdExists) {
-	
-	
-	
-		
-	Tag::toBin(beamId, eoss);
-		
-	
-
-	}
-
 	}
 	
-void FeedRow::antennaIdFromBin(EndianISStream& eiss) {
+void FeedRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void FeedRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FeedRow::timeIntervalFromBin(EndianISStream& eiss) {
+void FeedRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void FeedRow::feedIdFromBin(EndianISStream& eiss) {
+void FeedRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void FeedRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void FeedRow::numReceptorFromBin(EndianISStream& eiss) {
+void FeedRow::numReceptorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
 	
 }
-void FeedRow::beamOffsetFromBin(EndianISStream& eiss) {
+void FeedRow::beamOffsetFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1171,14 +1097,14 @@ void FeedRow::beamOffsetFromBin(EndianISStream& eiss) {
 	
 		beamOffset.clear();
 		
-		unsigned int beamOffsetDim1 = eiss.readInt();
-		unsigned int beamOffsetDim2 = eiss.readInt();
+		unsigned int beamOffsetDim1 = eis.readInt();
+		unsigned int beamOffsetDim2 = eis.readInt();
 		vector <double> beamOffsetAux1;
 		for (unsigned int i = 0; i < beamOffsetDim1; i++) {
 			beamOffsetAux1.clear();
 			for (unsigned int j = 0; j < beamOffsetDim2 ; j++)			
 			
-			beamOffsetAux1.push_back(eiss.readDouble());
+			beamOffsetAux1.push_back(eis.readDouble());
 			
 			beamOffset.push_back(beamOffsetAux1);
 		}
@@ -1189,21 +1115,21 @@ void FeedRow::beamOffsetFromBin(EndianISStream& eiss) {
 	
 	
 }
-void FeedRow::focusReferenceFromBin(EndianISStream& eiss) {
+void FeedRow::focusReferenceFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	focusReference = Length::from2DBin(eiss);		
+	focusReference = Length::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void FeedRow::polarizationTypesFromBin(EndianISStream& eiss) {
+void FeedRow::polarizationTypesFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1212,10 +1138,10 @@ void FeedRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 		polarizationTypes.clear();
 		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
+		unsigned int polarizationTypesDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1223,35 +1149,35 @@ void FeedRow::polarizationTypesFromBin(EndianISStream& eiss) {
 	
 	
 }
-void FeedRow::polResponseFromBin(EndianISStream& eiss) {
+void FeedRow::polResponseFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	polResponse = Complex::from2DBin(eiss);		
+	polResponse = Complex::from2DBin(eis);		
 	
 
 		
 	
 	
 }
-void FeedRow::receptorAngleFromBin(EndianISStream& eiss) {
+void FeedRow::receptorAngleFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	receptorAngle = Angle::from1DBin(eiss);	
+	receptorAngle = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void FeedRow::receiverIdFromBin(EndianISStream& eiss) {
+void FeedRow::receiverIdFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -1260,10 +1186,10 @@ void FeedRow::receiverIdFromBin(EndianISStream& eiss) {
 	
 		receiverId.clear();
 		
-		unsigned int receiverIdDim1 = eiss.readInt();
+		unsigned int receiverIdDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < receiverIdDim1; i++)
 			
-			receiverId.push_back(eiss.readInt());
+			receiverId.push_back(eis.readInt());
 			
 	
 
@@ -1272,16 +1198,16 @@ void FeedRow::receiverIdFromBin(EndianISStream& eiss) {
 	
 }
 
-void FeedRow::feedNumFromBin(EndianISStream& eiss) {
+void FeedRow::feedNumFromBin(EndianIStream& eis) {
 		
-	feedNumExists = eiss.readBoolean();
+	feedNumExists = eis.readBoolean();
 	if (feedNumExists) {
 		
 	
 	
 		
 			
-		feedNum =  eiss.readInt();
+		feedNum =  eis.readInt();
 			
 		
 	
@@ -1289,9 +1215,9 @@ void FeedRow::feedNumFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FeedRow::illumOffsetFromBin(EndianISStream& eiss) {
+void FeedRow::illumOffsetFromBin(EndianIStream& eis) {
 		
-	illumOffsetExists = eiss.readBoolean();
+	illumOffsetExists = eis.readBoolean();
 	if (illumOffsetExists) {
 		
 	
@@ -1299,7 +1225,7 @@ void FeedRow::illumOffsetFromBin(EndianISStream& eiss) {
 		
 			
 	
-	illumOffset = Length::from1DBin(eiss);	
+	illumOffset = Length::from1DBin(eis);	
 	
 
 		
@@ -1308,9 +1234,9 @@ void FeedRow::illumOffsetFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void FeedRow::positionFromBin(EndianISStream& eiss) {
+void FeedRow::positionFromBin(EndianIStream& eis) {
 		
-	positionExists = eiss.readBoolean();
+	positionExists = eis.readBoolean();
 	if (positionExists) {
 		
 	
@@ -1318,26 +1244,7 @@ void FeedRow::positionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	position = Length::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-	
-}
-void FeedRow::beamIdFromBin(EndianISStream& eiss) {
-		
-	beamIdExists = eiss.readBoolean();
-	if (beamIdExists) {
-		
-	
-		
-		
-			
-	
-	beamId = Tag::from1DBin(eiss);	
+	position = Length::from1DBin(eis);	
 	
 
 		
@@ -1348,23 +1255,159 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 }
 	
 	
-	FeedRow* FeedRow::fromBin(EndianISStream& eiss, FeedTable& table, const vector<string>& attributesSeq) {
+	FeedRow* FeedRow::fromBin(EndianIStream& eis, FeedTable& table, const vector<string>& attributesSeq) {
 		FeedRow* row = new  FeedRow(table);
 		
 		map<string, FeedAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FeedTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FeedTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void FeedRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void FeedRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void FeedRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FeedRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FeedRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void FeedRow::beamOffsetFromText(const string & s) {
+		 
+		beamOffset = ASDMValuesParser::parse2D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FeedRow::focusReferenceFromText(const string & s) {
+		 
+		focusReference = ASDMValuesParser::parse2D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void FeedRow::polarizationTypesFromText(const string & s) {
+		 
+		polarizationTypes = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+	
+	// Convert a string into an Complex 
+	void FeedRow::polResponseFromText(const string & s) {
+		 
+		polResponse = ASDMValuesParser::parse2D<Complex>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void FeedRow::receptorAngleFromText(const string & s) {
+		 
+		receptorAngle = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void FeedRow::receiverIdFromText(const string & s) {
+		 
+		receiverId = ASDMValuesParser::parse1D<int>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an int 
+	void FeedRow::feedNumFromText(const string & s) {
+		feedNumExists = true;
+		 
+		feedNum = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FeedRow::illumOffsetFromText(const string & s) {
+		illumOffsetExists = true;
+		 
+		illumOffset = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void FeedRow::positionFromText(const string & s) {
+		positionExists = true;
+		 
+		position = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	
+	void FeedRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, FeedAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "FeedTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1772,9 +1815,9 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -1810,53 +1853,6 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 	
  	}
 	
-	
-
-	
-	/**
-	 * The attribute beamId is optional. Return true if this attribute exists.
-	 * @return true if and only if the beamId attribute exists. 
-	 */
-	bool FeedRow::isBeamIdExists() const {
-		return beamIdExists;
-	}
-	
-
-	
- 	/**
- 	 * Get beamId, which is optional.
- 	 * @return beamId as vector<Tag> 
- 	 * @throw IllegalAccessException If beamId does not exist.
- 	 */
- 	vector<Tag>  FeedRow::getBeamId() const  {
-		if (!beamIdExists) {
-			throw IllegalAccessException("beamId", "Feed");
-		}
-	
-  		return beamId;
- 	}
-
- 	/**
- 	 * Set beamId with the specified vector<Tag> .
- 	 * @param beamId The vector<Tag>  value to which beamId is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setBeamId (vector<Tag>  beamId) {
-	
- 		this->beamId = beamId;
-	
-		beamIdExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark beamId, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearBeamId () {
-		beamIdExists = false;
-	}
 	
 
 	
@@ -1927,9 +1923,10 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2042,78 +2039,6 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 	
 
 	
- 		
- 	/**
- 	 * Set beamId[i] with the specified Tag.
- 	 * @param i The index in beamId where to set the Tag value.
- 	 * @param beamId The Tag value to which beamId[i] is to be set. 
- 	 * @throws OutOfBoundsException
-  	 */
-  	void FeedRow::setBeamId (int i, Tag beamId) {
-  		if ((i < 0) || (i > ((int) this->beamId.size())))
-  			throw OutOfBoundsException("Index out of bounds during a set operation on attribute beamId in table FeedTable");
-  		vector<Tag> ::iterator iter = this->beamId.begin();
-  		int j = 0;
-  		while (j < i) {
-  			j++; iter++;
-  		}
-  		this->beamId.insert(this->beamId.erase(iter), beamId); 	
-  	}
- 			
-	
-	
-	
-		
-/**
- * Append a Tag to beamId.
- * @param id the Tag to be appended to beamId
- */
- void FeedRow::addBeamId(Tag id){
- 	beamId.push_back(id);
-}
-
-/**
- * Append an array of Tag to beamId.
- * @param id an array of Tag to be appended to beamId
- */
- void FeedRow::addBeamId(const vector<Tag> & id) {
- 	for (unsigned int i=0; i < id.size(); i++)
- 		beamId.push_back(id.at(i));
- }
- 
-
- /**
-  * Returns the Tag stored in beamId at position i.
-  *
-  */
- const Tag FeedRow::getBeamId(int i) {
- 	return beamId.at(i);
- }
- 
- /**
-  * Returns the BeamRow linked to this row via the Tag stored in beamId
-  * at position i.
-  */
- BeamRow* FeedRow::getBeamUsingBeamId(int i) {
- 	return table.getContainer().getBeam().getRowByKey(beamId.at(i));
- } 
- 
- /**
-  * Returns the vector of BeamRow* linked to this row via the Tags stored in beamId
-  *
-  */
- vector<BeamRow *> FeedRow::getBeamsUsingBeamId() {
- 	vector<BeamRow *> result;
- 	for (unsigned int i = 0; i < beamId.size(); i++)
- 		result.push_back(table.getContainer().getBeam().getRowByKey(beamId.at(i)));
- 		
- 	return result;
- }
-  
-
-	
-
-	
 	/**
 	 * Create a FeedRow.
 	 * <p>
@@ -2155,10 +2080,6 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	
-
-	
-		beamIdExists = false;
 	
 
 	
@@ -2208,8 +2129,68 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 	 fromBinMethods["feedNum"] = &FeedRow::feedNumFromBin; 
 	 fromBinMethods["illumOffset"] = &FeedRow::illumOffsetFromBin; 
 	 fromBinMethods["position"] = &FeedRow::positionFromBin; 
-	 fromBinMethods["beamId"] = &FeedRow::beamIdFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &FeedRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &FeedRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &FeedRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &FeedRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &FeedRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["beamOffset"] = &FeedRow::beamOffsetFromText;
+		 
+	
+				 
+	fromTextMethods["focusReference"] = &FeedRow::focusReferenceFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationTypes"] = &FeedRow::polarizationTypesFromText;
+		 
+	
+				 
+	fromTextMethods["polResponse"] = &FeedRow::polResponseFromText;
+		 
+	
+				 
+	fromTextMethods["receptorAngle"] = &FeedRow::receptorAngleFromText;
+		 
+	
+				 
+	fromTextMethods["receiverId"] = &FeedRow::receiverIdFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["feedNum"] = &FeedRow::feedNumFromText;
+		 	
+	 
+				
+	fromTextMethods["illumOffset"] = &FeedRow::illumOffsetFromText;
+		 	
+	 
+				
+	fromTextMethods["position"] = &FeedRow::positionFromText;
+		 	
+		
 	}
 	
 	FeedRow::FeedRow (FeedTable &t, FeedRow &row) : table(t) {
@@ -2247,10 +2228,6 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 	
 
 	
-	
-
-	
-		beamIdExists = false;
 	
 
 	
@@ -2310,13 +2287,6 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 		else
 			positionExists = false;
 		
-		if (row.beamIdExists) {
-			beamId = row.beamId;		
-			beamIdExists = true;
-		}
-		else
-			beamIdExists = false;
-		
 		}
 		
 		 fromBinMethods["antennaId"] = &FeedRow::antennaIdFromBin; 
@@ -2335,7 +2305,6 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 		 fromBinMethods["feedNum"] = &FeedRow::feedNumFromBin; 
 		 fromBinMethods["illumOffset"] = &FeedRow::illumOffsetFromBin; 
 		 fromBinMethods["position"] = &FeedRow::positionFromBin; 
-		 fromBinMethods["beamId"] = &FeedRow::beamIdFromBin; 
 			
 	}
 
@@ -2504,7 +2473,6 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
 		result["feedNum"] = &FeedRow::feedNumFromBin;
 		result["illumOffset"] = &FeedRow::illumOffsetFromBin;
 		result["position"] = &FeedRow::positionFromBin;
-		result["beamId"] = &FeedRow::beamIdFromBin;
 			
 		
 		return result;	

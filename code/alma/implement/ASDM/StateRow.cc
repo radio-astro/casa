@@ -51,6 +51,7 @@ using asdm::StateTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::StateRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -407,7 +411,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(calDeviceName);
+			eoss.writeString(CCalibrationDevice::name(calDeviceName));
+			/* eoss.writeInt(calDeviceName); */
 				
 		
 	
@@ -458,75 +463,75 @@ namespace asdm {
 
 	}
 	
-void StateRow::stateIdFromBin(EndianISStream& eiss) {
+void StateRow::stateIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		stateId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void StateRow::calDeviceNameFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		calDeviceName = CCalibrationDevice::from_int(eiss.readInt());
-			
+		stateId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void StateRow::sigFromBin(EndianISStream& eiss) {
+void StateRow::calDeviceNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		sig =  eiss.readBoolean();
+		calDeviceName = CCalibrationDevice::literal(eis.readString());
 			
 		
 	
 	
 }
-void StateRow::refFromBin(EndianISStream& eiss) {
+void StateRow::sigFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		ref =  eiss.readBoolean();
+		sig =  eis.readBoolean();
 			
 		
 	
 	
 }
-void StateRow::onSkyFromBin(EndianISStream& eiss) {
+void StateRow::refFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		onSky =  eiss.readBoolean();
+		ref =  eis.readBoolean();
+			
+		
+	
+	
+}
+void StateRow::onSkyFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		onSky =  eis.readBoolean();
 			
 		
 	
 	
 }
 
-void StateRow::weightFromBin(EndianISStream& eiss) {
+void StateRow::weightFromBin(EndianIStream& eis) {
 		
-	weightExists = eiss.readBoolean();
+	weightExists = eis.readBoolean();
 	if (weightExists) {
 		
 	
 	
 		
 			
-		weight =  eiss.readFloat();
+		weight =  eis.readFloat();
 			
 		
 	
@@ -536,23 +541,93 @@ void StateRow::weightFromBin(EndianISStream& eiss) {
 }
 	
 	
-	StateRow* StateRow::fromBin(EndianISStream& eiss, StateTable& table, const vector<string>& attributesSeq) {
+	StateRow* StateRow::fromBin(EndianIStream& eis, StateTable& table, const vector<string>& attributesSeq) {
 		StateRow* row = new  StateRow(table);
 		
 		map<string, StateAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "StateTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "StateTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void StateRow::stateIdFromText(const string & s) {
+		 
+		stateId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an CalibrationDevice 
+	void StateRow::calDeviceNameFromText(const string & s) {
+		 
+		calDeviceName = ASDMValuesParser::parse<CalibrationDevice>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void StateRow::sigFromText(const string & s) {
+		 
+		sig = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void StateRow::refFromText(const string & s) {
+		 
+		ref = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+	
+	// Convert a string into an boolean 
+	void StateRow::onSkyFromText(const string & s) {
+		 
+		onSky = ASDMValuesParser::parse<bool>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an float 
+	void StateRow::weightFromText(const string & s) {
+		weightExists = true;
+		 
+		weight = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	
+	void StateRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, StateAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "StateTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -766,13 +841,14 @@ void StateRow::weightFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -831,6 +907,35 @@ calDeviceName = CCalibrationDevice::from_int(0);
 	
 	 fromBinMethods["weight"] = &StateRow::weightFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["stateId"] = &StateRow::stateIdFromText;
+		 
+	
+				 
+	fromTextMethods["calDeviceName"] = &StateRow::calDeviceNameFromText;
+		 
+	
+				 
+	fromTextMethods["sig"] = &StateRow::sigFromText;
+		 
+	
+				 
+	fromTextMethods["ref"] = &StateRow::refFromText;
+		 
+	
+				 
+	fromTextMethods["onSky"] = &StateRow::onSkyFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["weight"] = &StateRow::weightFromText;
+		 	
+		
 	}
 	
 	StateRow::StateRow (StateTable &t, StateRow &row) : table(t) {

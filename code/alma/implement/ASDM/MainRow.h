@@ -37,31 +37,33 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::MainRowIDL;
 #endif
 
 
 
+#include <stdint.h>
 
 
 
+
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Interval.h>
-using  asdm::Interval;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
+	 
 #include <EntityRef.h>
-using  asdm::EntityRef;
+	
 
 
 
@@ -72,9 +74,6 @@ using  asdm::EntityRef;
 
 	
 #include "CTimeSampling.h"
-using namespace TimeSamplingMod;
-	
-
 	
 
 	
@@ -95,9 +94,11 @@ using namespace TimeSamplingMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Main.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -119,16 +120,19 @@ class ExecBlockRow;
 	
 
 class MainRow;
-typedef void (MainRow::*MainAttributeFromBin) (EndianISStream& eiss);
+typedef void (MainRow::*MainAttributeFromBin) (EndianIStream& eis);
+typedef void (MainRow::*MainAttributeFromText) (const string& s);
 
 /**
  * The MainRow class is a row of a MainTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class MainRow {
 friend class asdm::MainTable;
+friend class asdm::RowTransformer<MainRow>;
+//friend class asdm::TableStreamReader<MainTable, MainRow>;
 
 public:
 
@@ -370,21 +374,21 @@ public:
 	
  	/**
  	 * Get dataSize.
- 	 * @return dataSize as int
+ 	 * @return dataSize as int64_t
  	 */
- 	int getDataSize() const;
+ 	int64_t getDataSize() const;
 	
  
  	
  	
  	/**
- 	 * Set dataSize with the specified int.
- 	 * @param dataSize The int value to which dataSize is to be set.
+ 	 * Set dataSize with the specified int64_t.
+ 	 * @param dataSize The int64_t value to which dataSize is to be set.
  	 
  		
  			
  	 */
- 	void setDataSize (int dataSize);
+ 	void setDataSize (int64_t dataSize);
   		
 	
 	
@@ -392,73 +396,32 @@ public:
 
 
 	
-	// ===> Attribute dataOid
+	// ===> Attribute dataUID
 	
 	
 	
 
 	
  	/**
- 	 * Get dataOid.
- 	 * @return dataOid as EntityRef
+ 	 * Get dataUID.
+ 	 * @return dataUID as EntityRef
  	 */
- 	EntityRef getDataOid() const;
+ 	EntityRef getDataUID() const;
 	
  
  	
  	
  	/**
- 	 * Set dataOid with the specified EntityRef.
- 	 * @param dataOid The EntityRef value to which dataOid is to be set.
+ 	 * Set dataUID with the specified EntityRef.
+ 	 * @param dataUID The EntityRef value to which dataUID is to be set.
  	 
  		
  			
  	 */
- 	void setDataOid (EntityRef dataOid);
+ 	void setDataUID (EntityRef dataUID);
   		
 	
 	
-	
-
-
-	
-	// ===> Attribute flagRow, which is optional
-	
-	
-	
-	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
-	 */
-	bool isFlagRowExists() const;
-	
-
-	
- 	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throws IllegalAccessException If flagRow does not exist.
- 	 */
- 	bool getFlagRow() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 		
- 	 */
- 	void setFlagRow (bool flagRow);
-		
-	
-	
-	
-	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
-	 */
-	void clearFlagRow ();
 	
 
 
@@ -719,14 +682,14 @@ public:
 	    
 	 * @param dataSize
 	    
-	 * @param dataOid
+	 * @param dataUID
 	    
 	 * @param stateId
 	    
 	 * @param execBlockId
 	    
 	 */ 
-	bool compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId);
+	bool compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int64_t dataSize, EntityRef dataUID, vector<Tag>  stateId, Tag execBlockId);
 	
 	
 
@@ -749,14 +712,14 @@ public:
 	    
 	 * @param dataSize
 	    
-	 * @param dataOid
+	 * @param dataUID
 	    
 	 * @param stateId
 	    
 	 * @param execBlockId
 	    
 	 */ 
-	bool compareRequiredValue(int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId); 
+	bool compareRequiredValue(int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int64_t dataSize, EntityRef dataUID, vector<Tag>  stateId, Tag execBlockId); 
 		 
 	
 	/**
@@ -774,7 +737,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a MainRowIDL struct.
 	 */
-	MainRowIDL *toIDL() const;
+	asdmIDL::MainRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -783,14 +746,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (MainRowIDL x) ;
+	void setFromIDL (asdmIDL::MainRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -798,7 +761,39 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, MainAttributeFromBin> fromBinMethods;
+void timeFromBin( EndianIStream& eis);
+void configDescriptionIdFromBin( EndianIStream& eis);
+void fieldIdFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void timeSamplingFromBin( EndianIStream& eis);
+void intervalFromBin( EndianIStream& eis);
+void numIntegrationFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void dataSizeFromBin( EndianIStream& eis);
+void dataUIDFromBin( EndianIStream& eis);
+void stateIdFromBin( EndianIStream& eis);
+void execBlockIdFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the MainTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static MainRow* fromBin(EndianIStream& eis, MainTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -929,31 +924,18 @@ private:
 	
 	
 
-	int dataSize;
+	int64_t dataSize;
 
 	
 	
  	
 
 	
-	// ===> Attribute dataOid
+	// ===> Attribute dataUID
 	
 	
 
-	EntityRef dataOid;
-
-	
-	
- 	
-
-	
-	// ===> Attribute flagRow, which is optional
-	
-	
-	bool flagRowExists;
-	
-
-	bool flagRow;
+	EntityRef dataUID;
 
 	
 	
@@ -1039,26 +1021,73 @@ private:
 	
 
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, MainAttributeFromBin> fromBinMethods;
-void timeFromBin( EndianISStream& eiss);
-void configDescriptionIdFromBin( EndianISStream& eiss);
-void fieldIdFromBin( EndianISStream& eiss);
-void numAntennaFromBin( EndianISStream& eiss);
-void timeSamplingFromBin( EndianISStream& eiss);
-void intervalFromBin( EndianISStream& eiss);
-void numIntegrationFromBin( EndianISStream& eiss);
-void scanNumberFromBin( EndianISStream& eiss);
-void subscanNumberFromBin( EndianISStream& eiss);
-void dataSizeFromBin( EndianISStream& eiss);
-void dataOidFromBin( EndianISStream& eiss);
-void stateIdFromBin( EndianISStream& eiss);
-void execBlockIdFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, MainAttributeFromBin> fromBinMethods;
+void timeFromBin( EndianIStream& eis);
+void configDescriptionIdFromBin( EndianIStream& eis);
+void fieldIdFromBin( EndianIStream& eis);
+void numAntennaFromBin( EndianIStream& eis);
+void timeSamplingFromBin( EndianIStream& eis);
+void intervalFromBin( EndianIStream& eis);
+void numIntegrationFromBin( EndianIStream& eis);
+void scanNumberFromBin( EndianIStream& eis);
+void subscanNumberFromBin( EndianIStream& eis);
+void dataSizeFromBin( EndianIStream& eis);
+void dataUIDFromBin( EndianIStream& eis);
+void stateIdFromBin( EndianIStream& eis);
+void execBlockIdFromBin( EndianIStream& eis);
 
-void flagRowFromBin( EndianISStream& eiss);
 	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, MainAttributeFromText> fromTextMethods;
+	
+void timeFromText (const string & s);
+	
+	
+void configDescriptionIdFromText (const string & s);
+	
+	
+void fieldIdFromText (const string & s);
+	
+	
+void numAntennaFromText (const string & s);
+	
+	
+void timeSamplingFromText (const string & s);
+	
+	
+void intervalFromText (const string & s);
+	
+	
+void numIntegrationFromText (const string & s);
+	
+	
+void scanNumberFromText (const string & s);
+	
+	
+void subscanNumberFromText (const string & s);
+	
+	
+void dataSizeFromText (const string & s);
+	
+	
+	
+void stateIdFromText (const string & s);
+	
+	
+void execBlockIdFromText (const string & s);
+	
+
+		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -1067,14 +1096,14 @@ void flagRowFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the MainTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static MainRow* fromBin(EndianISStream& eiss, MainTable& table, const vector<string>& attributesSeq);	 
 
+	 static MainRow* fromBin(EndianIStream& eis, MainTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

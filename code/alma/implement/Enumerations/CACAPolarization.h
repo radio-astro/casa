@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace ACAPolarizationMod
   //! ACAPolarization.
   //!  ACA-specific ways to store pre-processed data products
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum ACAPolarization
@@ -73,7 +74,10 @@ namespace ACAPolarizationMod
 } 
 #endif
 
-using namespace std;
+namespace ACAPolarizationMod {
+	std::ostream & operator << ( std::ostream & out, const ACAPolarization& value);
+	std::istream & operator >> ( std::istream & in , ACAPolarization& value );
+}
 
 /** 
   * A helper class for the enumeration ACAPolarization.
@@ -107,7 +111,7 @@ class CACAPolarization {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -161,8 +165,8 @@ class CACAPolarization {
     CACAPolarization(const CACAPolarization&);
     CACAPolarization& operator=(const CACAPolarization&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

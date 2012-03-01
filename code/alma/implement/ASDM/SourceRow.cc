@@ -57,6 +57,7 @@ using asdm::SpectralWindowRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -80,6 +81,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::SourceRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -563,6 +567,20 @@ namespace asdm {
 									
 		
 			
+		
+	
+
+	
+  		
+		
+		x->velRefCodeExists = velRefCodeExists;
+		
+		
+			
+				
+		x->velRefCode = velRefCode;
+ 				
+ 			
 		
 	
 
@@ -1122,6 +1140,21 @@ namespace asdm {
 	
 
 	
+		
+		velRefCodeExists = x.velRefCodeExists;
+		if (x.velRefCodeExists) {
+		
+		
+			
+		setVelRefCode(x.velRefCode);
+  			
+ 		
+		
+		}
+		
+	
+
+	
 	
 		
 	
@@ -1484,6 +1517,18 @@ namespace asdm {
 		
 		
 		Parser::toXML(sizeErr, "sizeErr", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (velRefCodeExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("velRefCode", velRefCode));
 		
 		
 		}
@@ -1860,6 +1905,21 @@ namespace asdm {
 	
 
 	
+		
+	if (row.isStr("<velRefCode>")) {
+		
+		
+		
+		velRefCode = EnumerationParser::getRadialVelocityReferenceCode("velRefCode","Source",rowDoc);
+		
+		
+		
+		velRefCodeExists = true;
+	}
+		
+	
+
+	
 	
 		
 	
@@ -1947,7 +2007,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(directionCode);
+			eoss.writeString(CDirectionReferenceCode::name(directionCode));
+			/* eoss.writeInt(directionCode); */
 				
 		
 	
@@ -2095,7 +2156,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(sourceModel);
+			eoss.writeString(CSourceModel::name(sourceModel));
+			/* eoss.writeInt(sourceModel); */
 				
 		
 	
@@ -2109,7 +2171,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(frequencyRefCode);
+			eoss.writeString(CFrequencyReferenceCode::name(frequencyRefCode));
+			/* eoss.writeInt(frequencyRefCode); */
 				
 		
 	
@@ -2179,7 +2242,8 @@ namespace asdm {
 		eoss.writeInt((int) stokesParameter.size());
 		for (unsigned int i = 0; i < stokesParameter.size(); i++)
 				
-			eoss.writeInt(stokesParameter.at(i));
+			eoss.writeString(CStokesParameter::name(stokesParameter.at(i)));
+			/* eoss.writeInt(stokesParameter.at(i)); */
 				
 				
 						
@@ -2260,103 +2324,118 @@ namespace asdm {
 
 	}
 
+	eoss.writeBoolean(velRefCodeExists);
+	if (velRefCodeExists) {
+	
+	
+	
+		
+					
+			eoss.writeString(CRadialVelocityReferenceCode::name(velRefCode));
+			/* eoss.writeInt(velRefCode); */
+				
+		
+	
+
+	}
+
 	}
 	
-void SourceRow::sourceIdFromBin(EndianISStream& eiss) {
+void SourceRow::sourceIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		sourceId =  eiss.readInt();
-			
-		
-	
-	
-}
-void SourceRow::timeIntervalFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-	
-}
-void SourceRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void SourceRow::codeFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		code =  eiss.readString();
+		sourceId =  eis.readInt();
 			
 		
 	
 	
 }
-void SourceRow::directionFromBin(EndianISStream& eiss) {
+void SourceRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void SourceRow::spectralWindowIdFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		spectralWindowId =  Tag::fromBin(eis);
+		
+	
+	
+}
+void SourceRow::codeFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		code =  eis.readString();
+			
+		
+	
+	
+}
+void SourceRow::directionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	direction = Angle::from1DBin(eiss);	
+	direction = Angle::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void SourceRow::properMotionFromBin(EndianISStream& eiss) {
+void SourceRow::properMotionFromBin(EndianIStream& eis) {
 		
 	
 		
 		
 			
 	
-	properMotion = AngularRate::from1DBin(eiss);	
+	properMotion = AngularRate::from1DBin(eis);	
 	
 
 		
 	
 	
 }
-void SourceRow::sourceNameFromBin(EndianISStream& eiss) {
+void SourceRow::sourceNameFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		sourceName =  eiss.readString();
+		sourceName =  eis.readString();
 			
 		
 	
 	
 }
 
-void SourceRow::directionCodeFromBin(EndianISStream& eiss) {
+void SourceRow::directionCodeFromBin(EndianIStream& eis) {
 		
-	directionCodeExists = eiss.readBoolean();
+	directionCodeExists = eis.readBoolean();
 	if (directionCodeExists) {
 		
 	
 	
 		
 			
-		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		directionCode = CDirectionReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -2364,31 +2443,31 @@ void SourceRow::directionCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::directionEquinoxFromBin(EndianISStream& eiss) {
+void SourceRow::directionEquinoxFromBin(EndianIStream& eis) {
 		
-	directionEquinoxExists = eiss.readBoolean();
+	directionEquinoxExists = eis.readBoolean();
 	if (directionEquinoxExists) {
 		
 	
 		
 		
-		directionEquinox =  ArrayTime::fromBin(eiss);
+		directionEquinox =  ArrayTime::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void SourceRow::calibrationGroupFromBin(EndianISStream& eiss) {
+void SourceRow::calibrationGroupFromBin(EndianIStream& eis) {
 		
-	calibrationGroupExists = eiss.readBoolean();
+	calibrationGroupExists = eis.readBoolean();
 	if (calibrationGroupExists) {
 		
 	
 	
 		
 			
-		calibrationGroup =  eiss.readInt();
+		calibrationGroup =  eis.readInt();
 			
 		
 	
@@ -2396,16 +2475,16 @@ void SourceRow::calibrationGroupFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::catalogFromBin(EndianISStream& eiss) {
+void SourceRow::catalogFromBin(EndianIStream& eis) {
 		
-	catalogExists = eiss.readBoolean();
+	catalogExists = eis.readBoolean();
 	if (catalogExists) {
 		
 	
 	
 		
 			
-		catalog =  eiss.readString();
+		catalog =  eis.readString();
 			
 		
 	
@@ -2413,24 +2492,24 @@ void SourceRow::catalogFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::deltaVelFromBin(EndianISStream& eiss) {
+void SourceRow::deltaVelFromBin(EndianIStream& eis) {
 		
-	deltaVelExists = eiss.readBoolean();
+	deltaVelExists = eis.readBoolean();
 	if (deltaVelExists) {
 		
 	
 		
 		
-		deltaVel =  Speed::fromBin(eiss);
+		deltaVel =  Speed::fromBin(eis);
 		
 	
 
 	}
 	
 }
-void SourceRow::positionFromBin(EndianISStream& eiss) {
+void SourceRow::positionFromBin(EndianIStream& eis) {
 		
-	positionExists = eiss.readBoolean();
+	positionExists = eis.readBoolean();
 	if (positionExists) {
 		
 	
@@ -2438,7 +2517,7 @@ void SourceRow::positionFromBin(EndianISStream& eiss) {
 		
 			
 	
-	position = Length::from1DBin(eiss);	
+	position = Length::from1DBin(eis);	
 	
 
 		
@@ -2447,16 +2526,16 @@ void SourceRow::positionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::numLinesFromBin(EndianISStream& eiss) {
+void SourceRow::numLinesFromBin(EndianIStream& eis) {
 		
-	numLinesExists = eiss.readBoolean();
+	numLinesExists = eis.readBoolean();
 	if (numLinesExists) {
 		
 	
 	
 		
 			
-		numLines =  eiss.readInt();
+		numLines =  eis.readInt();
 			
 		
 	
@@ -2464,9 +2543,9 @@ void SourceRow::numLinesFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::transitionFromBin(EndianISStream& eiss) {
+void SourceRow::transitionFromBin(EndianIStream& eis) {
 		
-	transitionExists = eiss.readBoolean();
+	transitionExists = eis.readBoolean();
 	if (transitionExists) {
 		
 	
@@ -2476,10 +2555,10 @@ void SourceRow::transitionFromBin(EndianISStream& eiss) {
 	
 		transition.clear();
 		
-		unsigned int transitionDim1 = eiss.readInt();
+		unsigned int transitionDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < transitionDim1; i++)
 			
-			transition.push_back(eiss.readString());
+			transition.push_back(eis.readString());
 			
 	
 
@@ -2489,9 +2568,9 @@ void SourceRow::transitionFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::restFrequencyFromBin(EndianISStream& eiss) {
+void SourceRow::restFrequencyFromBin(EndianIStream& eis) {
 		
-	restFrequencyExists = eiss.readBoolean();
+	restFrequencyExists = eis.readBoolean();
 	if (restFrequencyExists) {
 		
 	
@@ -2499,7 +2578,7 @@ void SourceRow::restFrequencyFromBin(EndianISStream& eiss) {
 		
 			
 	
-	restFrequency = Frequency::from1DBin(eiss);	
+	restFrequency = Frequency::from1DBin(eis);	
 	
 
 		
@@ -2508,9 +2587,9 @@ void SourceRow::restFrequencyFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::sysVelFromBin(EndianISStream& eiss) {
+void SourceRow::sysVelFromBin(EndianIStream& eis) {
 		
-	sysVelExists = eiss.readBoolean();
+	sysVelExists = eis.readBoolean();
 	if (sysVelExists) {
 		
 	
@@ -2518,7 +2597,7 @@ void SourceRow::sysVelFromBin(EndianISStream& eiss) {
 		
 			
 	
-	sysVel = Speed::from1DBin(eiss);	
+	sysVel = Speed::from1DBin(eis);	
 	
 
 		
@@ -2527,9 +2606,9 @@ void SourceRow::sysVelFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::rangeVelFromBin(EndianISStream& eiss) {
+void SourceRow::rangeVelFromBin(EndianIStream& eis) {
 		
-	rangeVelExists = eiss.readBoolean();
+	rangeVelExists = eis.readBoolean();
 	if (rangeVelExists) {
 		
 	
@@ -2537,7 +2616,7 @@ void SourceRow::rangeVelFromBin(EndianISStream& eiss) {
 		
 			
 	
-	rangeVel = Speed::from1DBin(eiss);	
+	rangeVel = Speed::from1DBin(eis);	
 	
 
 		
@@ -2546,16 +2625,16 @@ void SourceRow::rangeVelFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::sourceModelFromBin(EndianISStream& eiss) {
+void SourceRow::sourceModelFromBin(EndianIStream& eis) {
 		
-	sourceModelExists = eiss.readBoolean();
+	sourceModelExists = eis.readBoolean();
 	if (sourceModelExists) {
 		
 	
 	
 		
 			
-		sourceModel = CSourceModel::from_int(eiss.readInt());
+		sourceModel = CSourceModel::literal(eis.readString());
 			
 		
 	
@@ -2563,16 +2642,16 @@ void SourceRow::sourceModelFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::frequencyRefCodeFromBin(EndianISStream& eiss) {
+void SourceRow::frequencyRefCodeFromBin(EndianIStream& eis) {
 		
-	frequencyRefCodeExists = eiss.readBoolean();
+	frequencyRefCodeExists = eis.readBoolean();
 	if (frequencyRefCodeExists) {
 		
 	
 	
 		
 			
-		frequencyRefCode = CFrequencyReferenceCode::from_int(eiss.readInt());
+		frequencyRefCode = CFrequencyReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -2580,16 +2659,16 @@ void SourceRow::frequencyRefCodeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::numFreqFromBin(EndianISStream& eiss) {
+void SourceRow::numFreqFromBin(EndianIStream& eis) {
 		
-	numFreqExists = eiss.readBoolean();
+	numFreqExists = eis.readBoolean();
 	if (numFreqExists) {
 		
 	
 	
 		
 			
-		numFreq =  eiss.readInt();
+		numFreq =  eis.readInt();
 			
 		
 	
@@ -2597,16 +2676,16 @@ void SourceRow::numFreqFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::numStokesFromBin(EndianISStream& eiss) {
+void SourceRow::numStokesFromBin(EndianIStream& eis) {
 		
-	numStokesExists = eiss.readBoolean();
+	numStokesExists = eis.readBoolean();
 	if (numStokesExists) {
 		
 	
 	
 		
 			
-		numStokes =  eiss.readInt();
+		numStokes =  eis.readInt();
 			
 		
 	
@@ -2614,9 +2693,9 @@ void SourceRow::numStokesFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::frequencyFromBin(EndianISStream& eiss) {
+void SourceRow::frequencyFromBin(EndianIStream& eis) {
 		
-	frequencyExists = eiss.readBoolean();
+	frequencyExists = eis.readBoolean();
 	if (frequencyExists) {
 		
 	
@@ -2624,7 +2703,7 @@ void SourceRow::frequencyFromBin(EndianISStream& eiss) {
 		
 			
 	
-	frequency = Frequency::from1DBin(eiss);	
+	frequency = Frequency::from1DBin(eis);	
 	
 
 		
@@ -2633,9 +2712,9 @@ void SourceRow::frequencyFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::frequencyIntervalFromBin(EndianISStream& eiss) {
+void SourceRow::frequencyIntervalFromBin(EndianIStream& eis) {
 		
-	frequencyIntervalExists = eiss.readBoolean();
+	frequencyIntervalExists = eis.readBoolean();
 	if (frequencyIntervalExists) {
 		
 	
@@ -2643,7 +2722,7 @@ void SourceRow::frequencyIntervalFromBin(EndianISStream& eiss) {
 		
 			
 	
-	frequencyInterval = Frequency::from1DBin(eiss);	
+	frequencyInterval = Frequency::from1DBin(eis);	
 	
 
 		
@@ -2652,9 +2731,9 @@ void SourceRow::frequencyIntervalFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::stokesParameterFromBin(EndianISStream& eiss) {
+void SourceRow::stokesParameterFromBin(EndianIStream& eis) {
 		
-	stokesParameterExists = eiss.readBoolean();
+	stokesParameterExists = eis.readBoolean();
 	if (stokesParameterExists) {
 		
 	
@@ -2664,10 +2743,10 @@ void SourceRow::stokesParameterFromBin(EndianISStream& eiss) {
 	
 		stokesParameter.clear();
 		
-		unsigned int stokesParameterDim1 = eiss.readInt();
+		unsigned int stokesParameterDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < stokesParameterDim1; i++)
 			
-			stokesParameter.push_back(CStokesParameter::from_int(eiss.readInt()));
+			stokesParameter.push_back(CStokesParameter::literal(eis.readString()));
 			
 	
 
@@ -2677,9 +2756,9 @@ void SourceRow::stokesParameterFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::fluxFromBin(EndianISStream& eiss) {
+void SourceRow::fluxFromBin(EndianIStream& eis) {
 		
-	fluxExists = eiss.readBoolean();
+	fluxExists = eis.readBoolean();
 	if (fluxExists) {
 		
 	
@@ -2687,7 +2766,7 @@ void SourceRow::fluxFromBin(EndianISStream& eiss) {
 		
 			
 	
-	flux = Flux::from2DBin(eiss);		
+	flux = Flux::from2DBin(eis);		
 	
 
 		
@@ -2696,9 +2775,9 @@ void SourceRow::fluxFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::fluxErrFromBin(EndianISStream& eiss) {
+void SourceRow::fluxErrFromBin(EndianIStream& eis) {
 		
-	fluxErrExists = eiss.readBoolean();
+	fluxErrExists = eis.readBoolean();
 	if (fluxErrExists) {
 		
 	
@@ -2706,7 +2785,7 @@ void SourceRow::fluxErrFromBin(EndianISStream& eiss) {
 		
 			
 	
-	fluxErr = Flux::from2DBin(eiss);		
+	fluxErr = Flux::from2DBin(eis);		
 	
 
 		
@@ -2715,9 +2794,9 @@ void SourceRow::fluxErrFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::positionAngleFromBin(EndianISStream& eiss) {
+void SourceRow::positionAngleFromBin(EndianIStream& eis) {
 		
-	positionAngleExists = eiss.readBoolean();
+	positionAngleExists = eis.readBoolean();
 	if (positionAngleExists) {
 		
 	
@@ -2725,7 +2804,7 @@ void SourceRow::positionAngleFromBin(EndianISStream& eiss) {
 		
 			
 	
-	positionAngle = Angle::from1DBin(eiss);	
+	positionAngle = Angle::from1DBin(eis);	
 	
 
 		
@@ -2734,9 +2813,9 @@ void SourceRow::positionAngleFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::positionAngleErrFromBin(EndianISStream& eiss) {
+void SourceRow::positionAngleErrFromBin(EndianIStream& eis) {
 		
-	positionAngleErrExists = eiss.readBoolean();
+	positionAngleErrExists = eis.readBoolean();
 	if (positionAngleErrExists) {
 		
 	
@@ -2744,7 +2823,7 @@ void SourceRow::positionAngleErrFromBin(EndianISStream& eiss) {
 		
 			
 	
-	positionAngleErr = Angle::from1DBin(eiss);	
+	positionAngleErr = Angle::from1DBin(eis);	
 	
 
 		
@@ -2753,9 +2832,9 @@ void SourceRow::positionAngleErrFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::sizeFromBin(EndianISStream& eiss) {
+void SourceRow::sizeFromBin(EndianIStream& eis) {
 		
-	sizeExists = eiss.readBoolean();
+	sizeExists = eis.readBoolean();
 	if (sizeExists) {
 		
 	
@@ -2763,7 +2842,7 @@ void SourceRow::sizeFromBin(EndianISStream& eiss) {
 		
 			
 	
-	size = Angle::from2DBin(eiss);		
+	size = Angle::from2DBin(eis);		
 	
 
 		
@@ -2772,9 +2851,9 @@ void SourceRow::sizeFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void SourceRow::sizeErrFromBin(EndianISStream& eiss) {
+void SourceRow::sizeErrFromBin(EndianIStream& eis) {
 		
-	sizeErrExists = eiss.readBoolean();
+	sizeErrExists = eis.readBoolean();
 	if (sizeErrExists) {
 		
 	
@@ -2782,7 +2861,7 @@ void SourceRow::sizeErrFromBin(EndianISStream& eiss) {
 		
 			
 	
-	sizeErr = Angle::from2DBin(eiss);		
+	sizeErr = Angle::from2DBin(eis);		
 	
 
 		
@@ -2791,25 +2870,344 @@ void SourceRow::sizeErrFromBin(EndianISStream& eiss) {
 	}
 	
 }
+void SourceRow::velRefCodeFromBin(EndianIStream& eis) {
+		
+	velRefCodeExists = eis.readBoolean();
+	if (velRefCodeExists) {
+		
 	
 	
-	SourceRow* SourceRow::fromBin(EndianISStream& eiss, SourceTable& table, const vector<string>& attributesSeq) {
+		
+			
+		velRefCode = CRadialVelocityReferenceCode::literal(eis.readString());
+			
+		
+	
+
+	}
+	
+}
+	
+	
+	SourceRow* SourceRow::fromBin(EndianIStream& eis, SourceTable& table, const vector<string>& attributesSeq) {
 		SourceRow* row = new  SourceRow(table);
 		
 		map<string, SourceAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SourceTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SourceTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an int 
+	void SourceRow::sourceIdFromText(const string & s) {
+		 
+		sourceId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void SourceRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void SourceRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SourceRow::codeFromText(const string & s) {
+		 
+		code = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void SourceRow::directionFromText(const string & s) {
+		 
+		direction = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an AngularRate 
+	void SourceRow::properMotionFromText(const string & s) {
+		 
+		properMotion = ASDMValuesParser::parse1D<AngularRate>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SourceRow::sourceNameFromText(const string & s) {
+		 
+		sourceName = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an DirectionReferenceCode 
+	void SourceRow::directionCodeFromText(const string & s) {
+		directionCodeExists = true;
+		 
+		directionCode = ASDMValuesParser::parse<DirectionReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void SourceRow::directionEquinoxFromText(const string & s) {
+		directionEquinoxExists = true;
+		 
+		directionEquinox = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SourceRow::calibrationGroupFromText(const string & s) {
+		calibrationGroupExists = true;
+		 
+		calibrationGroup = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SourceRow::catalogFromText(const string & s) {
+		catalogExists = true;
+		 
+		catalog = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Speed 
+	void SourceRow::deltaVelFromText(const string & s) {
+		deltaVelExists = true;
+		 
+		deltaVel = ASDMValuesParser::parse<Speed>(s);
+		
+	}
+	
+	
+	// Convert a string into an Length 
+	void SourceRow::positionFromText(const string & s) {
+		positionExists = true;
+		 
+		position = ASDMValuesParser::parse1D<Length>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SourceRow::numLinesFromText(const string & s) {
+		numLinesExists = true;
+		 
+		numLines = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void SourceRow::transitionFromText(const string & s) {
+		transitionExists = true;
+		 
+		transition = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void SourceRow::restFrequencyFromText(const string & s) {
+		restFrequencyExists = true;
+		 
+		restFrequency = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Speed 
+	void SourceRow::sysVelFromText(const string & s) {
+		sysVelExists = true;
+		 
+		sysVel = ASDMValuesParser::parse1D<Speed>(s);
+		
+	}
+	
+	
+	// Convert a string into an Speed 
+	void SourceRow::rangeVelFromText(const string & s) {
+		rangeVelExists = true;
+		 
+		rangeVel = ASDMValuesParser::parse1D<Speed>(s);
+		
+	}
+	
+	
+	// Convert a string into an SourceModel 
+	void SourceRow::sourceModelFromText(const string & s) {
+		sourceModelExists = true;
+		 
+		sourceModel = ASDMValuesParser::parse<SourceModel>(s);
+		
+	}
+	
+	
+	// Convert a string into an FrequencyReferenceCode 
+	void SourceRow::frequencyRefCodeFromText(const string & s) {
+		frequencyRefCodeExists = true;
+		 
+		frequencyRefCode = ASDMValuesParser::parse<FrequencyReferenceCode>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SourceRow::numFreqFromText(const string & s) {
+		numFreqExists = true;
+		 
+		numFreq = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void SourceRow::numStokesFromText(const string & s) {
+		numStokesExists = true;
+		 
+		numStokes = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void SourceRow::frequencyFromText(const string & s) {
+		frequencyExists = true;
+		 
+		frequency = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an Frequency 
+	void SourceRow::frequencyIntervalFromText(const string & s) {
+		frequencyIntervalExists = true;
+		 
+		frequencyInterval = ASDMValuesParser::parse1D<Frequency>(s);
+		
+	}
+	
+	
+	// Convert a string into an StokesParameter 
+	void SourceRow::stokesParameterFromText(const string & s) {
+		stokesParameterExists = true;
+		 
+		stokesParameter = ASDMValuesParser::parse1D<StokesParameter>(s);
+		
+	}
+	
+	
+	// Convert a string into an Flux 
+	void SourceRow::fluxFromText(const string & s) {
+		fluxExists = true;
+		 
+		flux = ASDMValuesParser::parse2D<Flux>(s);
+		
+	}
+	
+	
+	// Convert a string into an Flux 
+	void SourceRow::fluxErrFromText(const string & s) {
+		fluxErrExists = true;
+		 
+		fluxErr = ASDMValuesParser::parse2D<Flux>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void SourceRow::positionAngleFromText(const string & s) {
+		positionAngleExists = true;
+		 
+		positionAngle = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void SourceRow::positionAngleErrFromText(const string & s) {
+		positionAngleErrExists = true;
+		 
+		positionAngleErr = ASDMValuesParser::parse1D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void SourceRow::sizeFromText(const string & s) {
+		sizeExists = true;
+		 
+		size = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an Angle 
+	void SourceRow::sizeErrFromText(const string & s) {
+		sizeErrExists = true;
+		 
+		sizeErr = ASDMValuesParser::parse2D<Angle>(s);
+		
+	}
+	
+	
+	// Convert a string into an RadialVelocityReferenceCode 
+	void SourceRow::velRefCodeFromText(const string & s) {
+		velRefCodeExists = true;
+		 
+		velRefCode = ASDMValuesParser::parse<RadialVelocityReferenceCode>(s);
+		
+	}
+	
+	
+	
+	void SourceRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, SourceAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "SourceTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -4140,9 +4538,56 @@ void SourceRow::sizeErrFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	/**
+	 * The attribute velRefCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the velRefCode attribute exists. 
+	 */
+	bool SourceRow::isVelRefCodeExists() const {
+		return velRefCodeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get velRefCode, which is optional.
+ 	 * @return velRefCode as RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode
+ 	 * @throw IllegalAccessException If velRefCode does not exist.
+ 	 */
+ 	RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode SourceRow::getVelRefCode() const  {
+		if (!velRefCodeExists) {
+			throw IllegalAccessException("velRefCode", "Source");
+		}
+	
+  		return velRefCode;
+ 	}
+
+ 	/**
+ 	 * Set velRefCode with the specified RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode.
+ 	 * @param velRefCode The RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode value to which velRefCode is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SourceRow::setVelRefCode (RadialVelocityReferenceCodeMod::RadialVelocityReferenceCode velRefCode) {
+	
+ 		this->velRefCode = velRefCode;
+	
+		velRefCodeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark velRefCode, which is an optional field, as non-existent.
+	 */
+	void SourceRow::clearVelRefCode () {
+		velRefCodeExists = false;
+	}
+	
+
+	
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -4180,9 +4625,10 @@ void SourceRow::sizeErrFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -4325,6 +4771,10 @@ void SourceRow::sizeErrFromBin(EndianISStream& eiss) {
 	
 
 	
+		velRefCodeExists = false;
+	
+
+	
 	
 
 	
@@ -4400,6 +4850,11 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 	
 
 	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+velRefCode = CRadialVelocityReferenceCode::from_int(0);
+	
+
+	
 	
 	 fromBinMethods["sourceId"] = &SourceRow::sourceIdFromBin; 
 	 fromBinMethods["timeInterval"] = &SourceRow::timeIntervalFromBin; 
@@ -4434,7 +4889,141 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 	 fromBinMethods["positionAngleErr"] = &SourceRow::positionAngleErrFromBin; 
 	 fromBinMethods["size"] = &SourceRow::sizeFromBin; 
 	 fromBinMethods["sizeErr"] = &SourceRow::sizeErrFromBin; 
+	 fromBinMethods["velRefCode"] = &SourceRow::velRefCodeFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["sourceId"] = &SourceRow::sourceIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &SourceRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &SourceRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["code"] = &SourceRow::codeFromText;
+		 
+	
+				 
+	fromTextMethods["direction"] = &SourceRow::directionFromText;
+		 
+	
+				 
+	fromTextMethods["properMotion"] = &SourceRow::properMotionFromText;
+		 
+	
+				 
+	fromTextMethods["sourceName"] = &SourceRow::sourceNameFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["directionCode"] = &SourceRow::directionCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["directionEquinox"] = &SourceRow::directionEquinoxFromText;
+		 	
+	 
+				
+	fromTextMethods["calibrationGroup"] = &SourceRow::calibrationGroupFromText;
+		 	
+	 
+				
+	fromTextMethods["catalog"] = &SourceRow::catalogFromText;
+		 	
+	 
+				
+	fromTextMethods["deltaVel"] = &SourceRow::deltaVelFromText;
+		 	
+	 
+				
+	fromTextMethods["position"] = &SourceRow::positionFromText;
+		 	
+	 
+				
+	fromTextMethods["numLines"] = &SourceRow::numLinesFromText;
+		 	
+	 
+				
+	fromTextMethods["transition"] = &SourceRow::transitionFromText;
+		 	
+	 
+				
+	fromTextMethods["restFrequency"] = &SourceRow::restFrequencyFromText;
+		 	
+	 
+				
+	fromTextMethods["sysVel"] = &SourceRow::sysVelFromText;
+		 	
+	 
+				
+	fromTextMethods["rangeVel"] = &SourceRow::rangeVelFromText;
+		 	
+	 
+				
+	fromTextMethods["sourceModel"] = &SourceRow::sourceModelFromText;
+		 	
+	 
+				
+	fromTextMethods["frequencyRefCode"] = &SourceRow::frequencyRefCodeFromText;
+		 	
+	 
+				
+	fromTextMethods["numFreq"] = &SourceRow::numFreqFromText;
+		 	
+	 
+				
+	fromTextMethods["numStokes"] = &SourceRow::numStokesFromText;
+		 	
+	 
+				
+	fromTextMethods["frequency"] = &SourceRow::frequencyFromText;
+		 	
+	 
+				
+	fromTextMethods["frequencyInterval"] = &SourceRow::frequencyIntervalFromText;
+		 	
+	 
+				
+	fromTextMethods["stokesParameter"] = &SourceRow::stokesParameterFromText;
+		 	
+	 
+				
+	fromTextMethods["flux"] = &SourceRow::fluxFromText;
+		 	
+	 
+				
+	fromTextMethods["fluxErr"] = &SourceRow::fluxErrFromText;
+		 	
+	 
+				
+	fromTextMethods["positionAngle"] = &SourceRow::positionAngleFromText;
+		 	
+	 
+				
+	fromTextMethods["positionAngleErr"] = &SourceRow::positionAngleErrFromText;
+		 	
+	 
+				
+	fromTextMethods["size"] = &SourceRow::sizeFromText;
+		 	
+	 
+				
+	fromTextMethods["sizeErr"] = &SourceRow::sizeErrFromText;
+		 	
+	 
+				
+	fromTextMethods["velRefCode"] = &SourceRow::velRefCodeFromText;
+		 	
+		
 	}
 	
 	SourceRow::SourceRow (SourceTable &t, SourceRow &row) : table(t) {
@@ -4549,6 +5138,10 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 
 	
 		sizeErrExists = false;
+	
+
+	
+		velRefCodeExists = false;
 	
 
 	
@@ -4746,6 +5339,13 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 		else
 			sizeErrExists = false;
 		
+		if (row.velRefCodeExists) {
+			velRefCode = row.velRefCode;		
+			velRefCodeExists = true;
+		}
+		else
+			velRefCodeExists = false;
+		
 		}
 		
 		 fromBinMethods["sourceId"] = &SourceRow::sourceIdFromBin; 
@@ -4781,6 +5381,7 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 		 fromBinMethods["positionAngleErr"] = &SourceRow::positionAngleErrFromBin; 
 		 fromBinMethods["size"] = &SourceRow::sizeFromBin; 
 		 fromBinMethods["sizeErr"] = &SourceRow::sizeErrFromBin; 
+		 fromBinMethods["velRefCode"] = &SourceRow::velRefCodeFromBin; 
 			
 	}
 
@@ -4920,6 +5521,7 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 		result["positionAngleErr"] = &SourceRow::positionAngleErrFromBin;
 		result["size"] = &SourceRow::sizeFromBin;
 		result["sizeErr"] = &SourceRow::sizeErrFromBin;
+		result["velRefCode"] = &SourceRow::velRefCodeFromBin;
 			
 		
 		return result;	

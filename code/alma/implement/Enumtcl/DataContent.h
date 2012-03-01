@@ -25,10 +25,10 @@
 using namespace DataContentMod;
 
 template<>
- struct enum_set_traits<DataContent> : public enum_set_traiter<DataContent,7,DataContentMod::FLAGS> {};
+ struct enum_set_traits<DataContentMod::DataContent> : public enum_set_traiter<DataContentMod::DataContent,7,DataContentMod::FLAGS> {};
 
 template<>
-class enum_map_traits<DataContent,void> : public enum_map_traiter<DataContent,void> {
+class enum_map_traits<DataContentMod::DataContent,void> : public enum_map_traiter<DataContentMod::DataContent,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,23 +37,23 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<DataContent,EnumPar<void> >
+    m_.insert(pair<DataContentMod::DataContent,EnumPar<void> >
      (DataContentMod::CROSS_DATA,ep((int)DataContentMod::CROSS_DATA,"CROSS_DATA","un-documented")));
-    m_.insert(pair<DataContent,EnumPar<void> >
+    m_.insert(pair<DataContentMod::DataContent,EnumPar<void> >
      (DataContentMod::AUTO_DATA,ep((int)DataContentMod::AUTO_DATA,"AUTO_DATA","un-documented")));
-    m_.insert(pair<DataContent,EnumPar<void> >
+    m_.insert(pair<DataContentMod::DataContent,EnumPar<void> >
      (DataContentMod::ZERO_LAGS,ep((int)DataContentMod::ZERO_LAGS,"ZERO_LAGS","un-documented")));
-    m_.insert(pair<DataContent,EnumPar<void> >
+    m_.insert(pair<DataContentMod::DataContent,EnumPar<void> >
      (DataContentMod::ACTUAL_TIMES,ep((int)DataContentMod::ACTUAL_TIMES,"ACTUAL_TIMES","un-documented")));
-    m_.insert(pair<DataContent,EnumPar<void> >
+    m_.insert(pair<DataContentMod::DataContent,EnumPar<void> >
      (DataContentMod::ACTUAL_DURATIONS,ep((int)DataContentMod::ACTUAL_DURATIONS,"ACTUAL_DURATIONS","un-documented")));
-    m_.insert(pair<DataContent,EnumPar<void> >
+    m_.insert(pair<DataContentMod::DataContent,EnumPar<void> >
      (DataContentMod::WEIGHTS,ep((int)DataContentMod::WEIGHTS,"WEIGHTS","un-documented")));
-    m_.insert(pair<DataContent,EnumPar<void> >
+    m_.insert(pair<DataContentMod::DataContent,EnumPar<void> >
      (DataContentMod::FLAGS,ep((int)DataContentMod::FLAGS,"FLAGS","un-documented")));
     return true;
   }
-  static map<DataContent,EnumPar<void> > m_;
+  static map<DataContentMod::DataContent,EnumPar<void> > m_;
 };
 #define _DATACONTENT_HH
 #endif

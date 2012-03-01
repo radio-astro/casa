@@ -69,6 +69,7 @@ using asdm::FeedRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -92,6 +93,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::GainTrackingRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -120,30 +124,6 @@ namespace asdm {
 		
 			
 				
-		x->attenuator = attenuator;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numLO = numLO;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
 		x->numReceptor = numReceptor;
  				
  			
@@ -155,11 +135,11 @@ namespace asdm {
 		
 		
 			
-		x->cableDelay.length(cableDelay.size());
-		for (unsigned int i = 0; i < cableDelay.size(); ++i) {
+		x->attenuator.length(attenuator.size());
+		for (unsigned int i = 0; i < attenuator.size(); ++i) {
 			
 				
-			x->cableDelay[i] = cableDelay.at(i);
+			x->attenuator[i] = attenuator.at(i);
 	 			
 	 		
 	 	}
@@ -172,107 +152,13 @@ namespace asdm {
 		
 		
 			
-				
-		x->crossPolarizationDelay = crossPolarizationDelay;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->loPropagationDelay.length(loPropagationDelay.size());
-		for (unsigned int i = 0; i < loPropagationDelay.size(); ++i) {
+		x->polarizationType.length(polarizationType.size());
+		for (unsigned int i = 0; i < polarizationType.size(); ++i) {
 			
 				
-			x->loPropagationDelay[i] = loPropagationDelay.at(i);
+			x->polarizationType[i] = polarizationType.at(i);
 	 			
 	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->polarizationTypes.length(polarizationTypes.size());
-		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
-			
-				
-			x->polarizationTypes[i] = polarizationTypes.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->receiverDelay.length(receiverDelay.size());
-		for (unsigned int i = 0; i < receiverDelay.size(); ++i) {
-			
-				
-			x->receiverDelay[i] = receiverDelay.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->delayOffsetExists = delayOffsetExists;
-		
-		
-			
-				
-		x->delayOffset = delayOffset;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->freqOffsetExists = freqOffsetExists;
-		
-		
-			
-		x->freqOffset.length(freqOffset.size());
-		for (unsigned int i = 0; i < freqOffset.size(); ++i) {
-			
-			x->freqOffset[i] = freqOffset.at(i).toIDLFrequency();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->phaseOffsetExists = phaseOffsetExists;
-		
-		
-			
-		x->phaseOffset.length(phaseOffset.size());
-		for (unsigned int i = 0; i < phaseOffset.size(); ++i) {
-			
-			x->phaseOffset[i] = phaseOffset.at(i).toIDLAngle();
-			
 	 	}
 			
 		
@@ -419,26 +305,6 @@ namespace asdm {
 		
 		
 			
-		setAttenuator(x.attenuator);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumLO(x.numLO);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
 		setNumReceptor(x.numReceptor);
   			
  		
@@ -449,10 +315,10 @@ namespace asdm {
 		
 		
 			
-		cableDelay .clear();
-		for (unsigned int i = 0; i <x.cableDelay.length(); ++i) {
+		attenuator .clear();
+		for (unsigned int i = 0; i <x.attenuator.length(); ++i) {
 			
-			cableDelay.push_back(x.cableDelay[i]);
+			attenuator.push_back(x.attenuator[i]);
   			
 		}
 			
@@ -464,109 +330,14 @@ namespace asdm {
 		
 		
 			
-		setCrossPolarizationDelay(x.crossPolarizationDelay);
-  			
- 		
-		
-	
-
-	
-		
-		
+		polarizationType .clear();
+		for (unsigned int i = 0; i <x.polarizationType.length(); ++i) {
 			
-		loPropagationDelay .clear();
-		for (unsigned int i = 0; i <x.loPropagationDelay.length(); ++i) {
-			
-			loPropagationDelay.push_back(x.loPropagationDelay[i]);
+			polarizationType.push_back(x.polarizationType[i]);
   			
 		}
 			
   		
-		
-	
-
-	
-		
-		
-			
-		polarizationTypes .clear();
-		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
-			
-			polarizationTypes.push_back(x.polarizationTypes[i]);
-  			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		receiverDelay .clear();
-		for (unsigned int i = 0; i <x.receiverDelay.length(); ++i) {
-			
-			receiverDelay.push_back(x.receiverDelay[i]);
-  			
-		}
-			
-  		
-		
-	
-
-	
-		
-		delayOffsetExists = x.delayOffsetExists;
-		if (x.delayOffsetExists) {
-		
-		
-			
-		setDelayOffset(x.delayOffset);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		freqOffsetExists = x.freqOffsetExists;
-		if (x.freqOffsetExists) {
-		
-		
-			
-		freqOffset .clear();
-		for (unsigned int i = 0; i <x.freqOffset.length(); ++i) {
-			
-			freqOffset.push_back(Frequency (x.freqOffset[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		phaseOffsetExists = x.phaseOffsetExists;
-		if (x.phaseOffsetExists) {
-		
-		
-			
-		phaseOffset .clear();
-		for (unsigned int i = 0; i <x.phaseOffset.length(); ++i) {
-			
-			phaseOffset.push_back(Angle (x.phaseOffset[i]));
-			
-		}
-			
-  		
-		
-		}
 		
 	
 
@@ -708,22 +479,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(attenuator, "attenuator", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numLO, "numLO", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(numReceptor, "numReceptor", buf);
 		
 		
@@ -732,7 +487,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(cableDelay, "cableDelay", buf);
+		Parser::toXML(attenuator, "attenuator", buf);
 		
 		
 	
@@ -740,68 +495,8 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(crossPolarizationDelay, "crossPolarizationDelay", buf);
+			buf.append(EnumerationParser::toXML("polarizationType", polarizationType));
 		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(loPropagationDelay, "loPropagationDelay", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(receiverDelay, "receiverDelay", buf);
-		
-		
-	
-
-  	
- 		
-		if (delayOffsetExists) {
-		
-		
-		Parser::toXML(delayOffset, "delayOffset", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (freqOffsetExists) {
-		
-		
-		Parser::toXML(freqOffset, "freqOffset", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (phaseOffsetExists) {
-		
-		
-		Parser::toXML(phaseOffset, "phaseOffset", buf);
-		
-		
-		}
 		
 	
 
@@ -915,22 +610,6 @@ namespace asdm {
 	
   		
 			
-	  	setAttenuator(Parser::getFloat("attenuator","GainTracking",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumLO(Parser::getInteger("numLO","GainTracking",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 	  	setNumReceptor(Parser::getInteger("numReceptor","GainTracking",rowDoc));
 			
 		
@@ -940,25 +619,7 @@ namespace asdm {
   		
 			
 					
-	  	setCableDelay(Parser::get1DDouble("cableDelay","GainTracking",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-	  	setCrossPolarizationDelay(Parser::getDouble("crossPolarizationDelay","GainTracking",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-					
-	  	setLoPropagationDelay(Parser::get1DDouble("loPropagationDelay","GainTracking",rowDoc));
+	  	setAttenuator(Parser::get1DFloat("attenuator","GainTracking",rowDoc));
 	  			
 	  		
 		
@@ -968,54 +629,10 @@ namespace asdm {
 		
 		
 		
-		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","GainTracking",rowDoc);			
+		polarizationType = EnumerationParser::getPolarizationType1D("polarizationType","GainTracking",rowDoc);			
 		
 		
 		
-	
-
-	
-  		
-			
-					
-	  	setReceiverDelay(Parser::get1DDouble("receiverDelay","GainTracking",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-        if (row.isStr("<delayOffset>")) {
-			
-	  		setDelayOffset(Parser::getDouble("delayOffset","GainTracking",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<freqOffset>")) {
-			
-								
-	  		setFreqOffset(Parser::get1DFrequency("freqOffset","GainTracking",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<phaseOffset>")) {
-			
-								
-	  		setPhaseOffset(Parser::get1DAngle("phaseOffset","GainTracking",rowDoc));
-	  			
-	  		
-		}
- 		
 	
 
 	
@@ -1139,24 +756,6 @@ namespace asdm {
 	
 		
 						
-			eoss.writeFloat(attenuator);
-				
-		
-	
-
-	
-	
-		
-						
-			eoss.writeInt(numLO);
-				
-		
-	
-
-	
-	
-		
-						
 			eoss.writeInt(numReceptor);
 				
 		
@@ -1167,34 +766,10 @@ namespace asdm {
 		
 		
 			
-		eoss.writeInt((int) cableDelay.size());
-		for (unsigned int i = 0; i < cableDelay.size(); i++)
+		eoss.writeInt((int) attenuator.size());
+		for (unsigned int i = 0; i < attenuator.size(); i++)
 				
-			eoss.writeDouble(cableDelay.at(i));
-				
-				
-						
-		
-	
-
-	
-	
-		
-						
-			eoss.writeDouble(crossPolarizationDelay);
-				
-		
-	
-
-	
-	
-		
-		
-			
-		eoss.writeInt((int) loPropagationDelay.size());
-		for (unsigned int i = 0; i < loPropagationDelay.size(); i++)
-				
-			eoss.writeDouble(loPropagationDelay.at(i));
+			eoss.writeFloat(attenuator.at(i));
 				
 				
 						
@@ -1206,25 +781,11 @@ namespace asdm {
 		
 		
 			
-		eoss.writeInt((int) polarizationTypes.size());
-		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+		eoss.writeInt((int) polarizationType.size());
+		for (unsigned int i = 0; i < polarizationType.size(); i++)
 				
-			eoss.writeInt(polarizationTypes.at(i));
-				
-				
-						
-		
-	
-
-	
-	
-		
-		
-			
-		eoss.writeInt((int) receiverDelay.size());
-		for (unsigned int i = 0; i < receiverDelay.size(); i++)
-				
-			eoss.writeDouble(receiverDelay.at(i));
+			eoss.writeString(CPolarizationType::name(polarizationType.at(i)));
+			/* eoss.writeInt(polarizationType.at(i)); */
 				
 				
 						
@@ -1234,44 +795,6 @@ namespace asdm {
 
 	
 	
-	eoss.writeBoolean(delayOffsetExists);
-	if (delayOffsetExists) {
-	
-	
-	
-		
-						
-			eoss.writeDouble(delayOffset);
-				
-		
-	
-
-	}
-
-	eoss.writeBoolean(freqOffsetExists);
-	if (freqOffsetExists) {
-	
-	
-	
-		
-	Frequency::toBin(freqOffset, eoss);
-		
-	
-
-	}
-
-	eoss.writeBoolean(phaseOffsetExists);
-	if (phaseOffsetExists) {
-	
-	
-	
-		
-	Angle::toBin(phaseOffset, eoss);
-		
-	
-
-	}
-
 	eoss.writeBoolean(samplingLevelExists);
 	if (samplingLevelExists) {
 	
@@ -1334,97 +857,73 @@ namespace asdm {
 
 	}
 	
-void GainTrackingRow::antennaIdFromBin(EndianISStream& eiss) {
+void GainTrackingRow::antennaIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		antennaId =  Tag::fromBin(eiss);
-		
-	
-	
-}
-void GainTrackingRow::spectralWindowIdFromBin(EndianISStream& eiss) {
-		
-	
-		
-		
-		spectralWindowId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void GainTrackingRow::timeIntervalFromBin(EndianISStream& eiss) {
+void GainTrackingRow::spectralWindowIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void GainTrackingRow::feedIdFromBin(EndianISStream& eiss) {
+void GainTrackingRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
+void GainTrackingRow::feedIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		feedId =  eiss.readInt();
-			
-		
-	
-	
-}
-void GainTrackingRow::attenuatorFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		attenuator =  eiss.readFloat();
+		feedId =  eis.readInt();
 			
 		
 	
 	
 }
-void GainTrackingRow::numLOFromBin(EndianISStream& eiss) {
+void GainTrackingRow::numReceptorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numLO =  eiss.readInt();
-			
-		
-	
-	
-}
-void GainTrackingRow::numReceptorFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		numReceptor =  eiss.readInt();
+		numReceptor =  eis.readInt();
 			
 		
 	
 	
 }
-void GainTrackingRow::cableDelayFromBin(EndianISStream& eiss) {
+void GainTrackingRow::attenuatorFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
 	
-		cableDelay.clear();
+		attenuator.clear();
 		
-		unsigned int cableDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < cableDelayDim1; i++)
+		unsigned int attenuatorDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < attenuatorDim1; i++)
 			
-			cableDelay.push_back(eiss.readDouble());
+			attenuator.push_back(eis.readFloat());
 			
 	
 
@@ -1432,71 +931,19 @@ void GainTrackingRow::cableDelayFromBin(EndianISStream& eiss) {
 	
 	
 }
-void GainTrackingRow::crossPolarizationDelayFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		crossPolarizationDelay =  eiss.readDouble();
-			
-		
-	
-	
-}
-void GainTrackingRow::loPropagationDelayFromBin(EndianISStream& eiss) {
+void GainTrackingRow::polarizationTypeFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
 	
-		loPropagationDelay.clear();
+		polarizationType.clear();
 		
-		unsigned int loPropagationDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < loPropagationDelayDim1; i++)
+		unsigned int polarizationTypeDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypeDim1; i++)
 			
-			loPropagationDelay.push_back(eiss.readDouble());
-			
-	
-
-		
-	
-	
-}
-void GainTrackingRow::polarizationTypesFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-	
-		polarizationTypes.clear();
-		
-		unsigned int polarizationTypesDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
-			
-			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
-			
-	
-
-		
-	
-	
-}
-void GainTrackingRow::receiverDelayFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-	
-		receiverDelay.clear();
-		
-		unsigned int receiverDelayDim1 = eiss.readInt();
-		for (unsigned int  i = 0 ; i < receiverDelayDim1; i++)
-			
-			receiverDelay.push_back(eiss.readDouble());
+			polarizationType.push_back(CPolarizationType::literal(eis.readString()));
 			
 	
 
@@ -1505,71 +952,16 @@ void GainTrackingRow::receiverDelayFromBin(EndianISStream& eiss) {
 	
 }
 
-void GainTrackingRow::delayOffsetFromBin(EndianISStream& eiss) {
+void GainTrackingRow::samplingLevelFromBin(EndianIStream& eis) {
 		
-	delayOffsetExists = eiss.readBoolean();
-	if (delayOffsetExists) {
-		
-	
-	
-		
-			
-		delayOffset =  eiss.readDouble();
-			
-		
-	
-
-	}
-	
-}
-void GainTrackingRow::freqOffsetFromBin(EndianISStream& eiss) {
-		
-	freqOffsetExists = eiss.readBoolean();
-	if (freqOffsetExists) {
-		
-	
-		
-		
-			
-	
-	freqOffset = Frequency::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-	
-}
-void GainTrackingRow::phaseOffsetFromBin(EndianISStream& eiss) {
-		
-	phaseOffsetExists = eiss.readBoolean();
-	if (phaseOffsetExists) {
-		
-	
-		
-		
-			
-	
-	phaseOffset = Angle::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-	
-}
-void GainTrackingRow::samplingLevelFromBin(EndianISStream& eiss) {
-		
-	samplingLevelExists = eiss.readBoolean();
+	samplingLevelExists = eis.readBoolean();
 	if (samplingLevelExists) {
 		
 	
 	
 		
 			
-		samplingLevel =  eiss.readFloat();
+		samplingLevel =  eis.readFloat();
 			
 		
 	
@@ -1577,16 +969,16 @@ void GainTrackingRow::samplingLevelFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void GainTrackingRow::numAttFreqFromBin(EndianISStream& eiss) {
+void GainTrackingRow::numAttFreqFromBin(EndianIStream& eis) {
 		
-	numAttFreqExists = eiss.readBoolean();
+	numAttFreqExists = eis.readBoolean();
 	if (numAttFreqExists) {
 		
 	
 	
 		
 			
-		numAttFreq =  eiss.readInt();
+		numAttFreq =  eis.readInt();
 			
 		
 	
@@ -1594,9 +986,9 @@ void GainTrackingRow::numAttFreqFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void GainTrackingRow::attFreqFromBin(EndianISStream& eiss) {
+void GainTrackingRow::attFreqFromBin(EndianIStream& eis) {
 		
-	attFreqExists = eiss.readBoolean();
+	attFreqExists = eis.readBoolean();
 	if (attFreqExists) {
 		
 	
@@ -1606,10 +998,10 @@ void GainTrackingRow::attFreqFromBin(EndianISStream& eiss) {
 	
 		attFreq.clear();
 		
-		unsigned int attFreqDim1 = eiss.readInt();
+		unsigned int attFreqDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < attFreqDim1; i++)
 			
-			attFreq.push_back(eiss.readDouble());
+			attFreq.push_back(eis.readDouble());
 			
 	
 
@@ -1619,9 +1011,9 @@ void GainTrackingRow::attFreqFromBin(EndianISStream& eiss) {
 	}
 	
 }
-void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
+void GainTrackingRow::attSpectrumFromBin(EndianIStream& eis) {
 		
-	attSpectrumExists = eiss.readBoolean();
+	attSpectrumExists = eis.readBoolean();
 	if (attSpectrumExists) {
 		
 	
@@ -1629,7 +1021,7 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 		
 			
 	
-	attSpectrum = Complex::from1DBin(eiss);	
+	attSpectrum = Complex::from1DBin(eis);	
 	
 
 		
@@ -1640,23 +1032,136 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 }
 	
 	
-	GainTrackingRow* GainTrackingRow::fromBin(EndianISStream& eiss, GainTrackingTable& table, const vector<string>& attributesSeq) {
+	GainTrackingRow* GainTrackingRow::fromBin(EndianIStream& eis, GainTrackingTable& table, const vector<string>& attributesSeq) {
 		GainTrackingRow* row = new  GainTrackingRow(table);
 		
 		map<string, GainTrackingAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "GainTrackingTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "GainTrackingTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void GainTrackingRow::antennaIdFromText(const string & s) {
+		 
+		antennaId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an Tag 
+	void GainTrackingRow::spectralWindowIdFromText(const string & s) {
+		 
+		spectralWindowId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTimeInterval 
+	void GainTrackingRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void GainTrackingRow::feedIdFromText(const string & s) {
+		 
+		feedId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void GainTrackingRow::numReceptorFromText(const string & s) {
+		 
+		numReceptor = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an float 
+	void GainTrackingRow::attenuatorFromText(const string & s) {
+		 
+		attenuator = ASDMValuesParser::parse1D<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an PolarizationType 
+	void GainTrackingRow::polarizationTypeFromText(const string & s) {
+		 
+		polarizationType = ASDMValuesParser::parse1D<PolarizationType>(s);
+		
+	}
+	
+
+	
+	// Convert a string into an float 
+	void GainTrackingRow::samplingLevelFromText(const string & s) {
+		samplingLevelExists = true;
+		 
+		samplingLevel = ASDMValuesParser::parse<float>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void GainTrackingRow::numAttFreqFromText(const string & s) {
+		numAttFreqExists = true;
+		 
+		numAttFreq = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void GainTrackingRow::attFreqFromText(const string & s) {
+		attFreqExists = true;
+		 
+		attFreq = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an Complex 
+	void GainTrackingRow::attSpectrumFromText(const string & s) {
+		attSpectrumExists = true;
+		 
+		attSpectrum = ASDMValuesParser::parse1D<Complex>(s);
+		
+	}
+	
+	
+	
+	void GainTrackingRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, GainTrackingAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "GainTrackingTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1698,70 +1203,6 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get attenuator.
- 	 * @return attenuator as float
- 	 */
- 	float GainTrackingRow::getAttenuator() const {
-	
-  		return attenuator;
- 	}
-
- 	/**
- 	 * Set attenuator with the specified float.
- 	 * @param attenuator The float value to which attenuator is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setAttenuator (float attenuator)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->attenuator = attenuator;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numLO.
- 	 * @return numLO as int
- 	 */
- 	int GainTrackingRow::getNumLO() const {
-	
-  		return numLO;
- 	}
-
- 	/**
- 	 * Set numLO with the specified int.
- 	 * @param numLO The int value to which numLO is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setNumLO (int numLO)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numLO = numLO;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get numReceptor.
  	 * @return numReceptor as int
  	 */
@@ -1794,29 +1235,29 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get cableDelay.
- 	 * @return cableDelay as vector<double >
+ 	 * Get attenuator.
+ 	 * @return attenuator as vector<float >
  	 */
- 	vector<double > GainTrackingRow::getCableDelay() const {
+ 	vector<float > GainTrackingRow::getAttenuator() const {
 	
-  		return cableDelay;
+  		return attenuator;
  	}
 
  	/**
- 	 * Set cableDelay with the specified vector<double >.
- 	 * @param cableDelay The vector<double > value to which cableDelay is to be set.
+ 	 * Set attenuator with the specified vector<float >.
+ 	 * @param attenuator The vector<float > value to which attenuator is to be set.
  	 
  	
  		
  	 */
- 	void GainTrackingRow::setCableDelay (vector<double > cableDelay)  {
+ 	void GainTrackingRow::setAttenuator (vector<float > attenuator)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->cableDelay = cableDelay;
+ 		this->attenuator = attenuator;
 	
  	}
 	
@@ -1826,269 +1267,32 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 
 	
  	/**
- 	 * Get crossPolarizationDelay.
- 	 * @return crossPolarizationDelay as double
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as vector<PolarizationTypeMod::PolarizationType >
  	 */
- 	double GainTrackingRow::getCrossPolarizationDelay() const {
+ 	vector<PolarizationTypeMod::PolarizationType > GainTrackingRow::getPolarizationType() const {
 	
-  		return crossPolarizationDelay;
+  		return polarizationType;
  	}
 
  	/**
- 	 * Set crossPolarizationDelay with the specified double.
- 	 * @param crossPolarizationDelay The double value to which crossPolarizationDelay is to be set.
+ 	 * Set polarizationType with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationType The vector<PolarizationTypeMod::PolarizationType > value to which polarizationType is to be set.
  	 
  	
  		
  	 */
- 	void GainTrackingRow::setCrossPolarizationDelay (double crossPolarizationDelay)  {
+ 	void GainTrackingRow::setPolarizationType (vector<PolarizationTypeMod::PolarizationType > polarizationType)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->crossPolarizationDelay = crossPolarizationDelay;
+ 		this->polarizationType = polarizationType;
 	
  	}
 	
-	
-
-	
-
-	
- 	/**
- 	 * Get loPropagationDelay.
- 	 * @return loPropagationDelay as vector<double >
- 	 */
- 	vector<double > GainTrackingRow::getLoPropagationDelay() const {
-	
-  		return loPropagationDelay;
- 	}
-
- 	/**
- 	 * Set loPropagationDelay with the specified vector<double >.
- 	 * @param loPropagationDelay The vector<double > value to which loPropagationDelay is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setLoPropagationDelay (vector<double > loPropagationDelay)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->loPropagationDelay = loPropagationDelay;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > GainTrackingRow::getPolarizationTypes() const {
-	
-  		return polarizationTypes;
- 	}
-
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->polarizationTypes = polarizationTypes;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get receiverDelay.
- 	 * @return receiverDelay as vector<double >
- 	 */
- 	vector<double > GainTrackingRow::getReceiverDelay() const {
-	
-  		return receiverDelay;
- 	}
-
- 	/**
- 	 * Set receiverDelay with the specified vector<double >.
- 	 * @param receiverDelay The vector<double > value to which receiverDelay is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setReceiverDelay (vector<double > receiverDelay)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->receiverDelay = receiverDelay;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute delayOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the delayOffset attribute exists. 
-	 */
-	bool GainTrackingRow::isDelayOffsetExists() const {
-		return delayOffsetExists;
-	}
-	
-
-	
- 	/**
- 	 * Get delayOffset, which is optional.
- 	 * @return delayOffset as double
- 	 * @throw IllegalAccessException If delayOffset does not exist.
- 	 */
- 	double GainTrackingRow::getDelayOffset() const  {
-		if (!delayOffsetExists) {
-			throw IllegalAccessException("delayOffset", "GainTracking");
-		}
-	
-  		return delayOffset;
- 	}
-
- 	/**
- 	 * Set delayOffset with the specified double.
- 	 * @param delayOffset The double value to which delayOffset is to be set.
- 	 
- 	
- 	 */
- 	void GainTrackingRow::setDelayOffset (double delayOffset) {
-	
- 		this->delayOffset = delayOffset;
-	
-		delayOffsetExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark delayOffset, which is an optional field, as non-existent.
-	 */
-	void GainTrackingRow::clearDelayOffset () {
-		delayOffsetExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute freqOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the freqOffset attribute exists. 
-	 */
-	bool GainTrackingRow::isFreqOffsetExists() const {
-		return freqOffsetExists;
-	}
-	
-
-	
- 	/**
- 	 * Get freqOffset, which is optional.
- 	 * @return freqOffset as vector<Frequency >
- 	 * @throw IllegalAccessException If freqOffset does not exist.
- 	 */
- 	vector<Frequency > GainTrackingRow::getFreqOffset() const  {
-		if (!freqOffsetExists) {
-			throw IllegalAccessException("freqOffset", "GainTracking");
-		}
-	
-  		return freqOffset;
- 	}
-
- 	/**
- 	 * Set freqOffset with the specified vector<Frequency >.
- 	 * @param freqOffset The vector<Frequency > value to which freqOffset is to be set.
- 	 
- 	
- 	 */
- 	void GainTrackingRow::setFreqOffset (vector<Frequency > freqOffset) {
-	
- 		this->freqOffset = freqOffset;
-	
-		freqOffsetExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark freqOffset, which is an optional field, as non-existent.
-	 */
-	void GainTrackingRow::clearFreqOffset () {
-		freqOffsetExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute phaseOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseOffset attribute exists. 
-	 */
-	bool GainTrackingRow::isPhaseOffsetExists() const {
-		return phaseOffsetExists;
-	}
-	
-
-	
- 	/**
- 	 * Get phaseOffset, which is optional.
- 	 * @return phaseOffset as vector<Angle >
- 	 * @throw IllegalAccessException If phaseOffset does not exist.
- 	 */
- 	vector<Angle > GainTrackingRow::getPhaseOffset() const  {
-		if (!phaseOffsetExists) {
-			throw IllegalAccessException("phaseOffset", "GainTracking");
-		}
-	
-  		return phaseOffset;
- 	}
-
- 	/**
- 	 * Set phaseOffset with the specified vector<Angle >.
- 	 * @param phaseOffset The vector<Angle > value to which phaseOffset is to be set.
- 	 
- 	
- 	 */
- 	void GainTrackingRow::setPhaseOffset (vector<Angle > phaseOffset) {
-	
- 		this->phaseOffset = phaseOffset;
-	
-		phaseOffsetExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark phaseOffset, which is an optional field, as non-existent.
-	 */
-	void GainTrackingRow::clearPhaseOffset () {
-		phaseOffsetExists = false;
-	}
 	
 
 	
@@ -2280,9 +1484,9 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -2392,9 +1596,10 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -2475,28 +1680,6 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-		delayOffsetExists = false;
-	
-
-	
-		freqOffsetExists = false;
-	
-
-	
-		phaseOffsetExists = false;
-	
-
-	
 		samplingLevelExists = false;
 	
 
@@ -2539,45 +1722,70 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 	
 	 fromBinMethods["antennaId"] = &GainTrackingRow::antennaIdFromBin; 
 	 fromBinMethods["spectralWindowId"] = &GainTrackingRow::spectralWindowIdFromBin; 
 	 fromBinMethods["timeInterval"] = &GainTrackingRow::timeIntervalFromBin; 
 	 fromBinMethods["feedId"] = &GainTrackingRow::feedIdFromBin; 
-	 fromBinMethods["attenuator"] = &GainTrackingRow::attenuatorFromBin; 
-	 fromBinMethods["numLO"] = &GainTrackingRow::numLOFromBin; 
 	 fromBinMethods["numReceptor"] = &GainTrackingRow::numReceptorFromBin; 
-	 fromBinMethods["cableDelay"] = &GainTrackingRow::cableDelayFromBin; 
-	 fromBinMethods["crossPolarizationDelay"] = &GainTrackingRow::crossPolarizationDelayFromBin; 
-	 fromBinMethods["loPropagationDelay"] = &GainTrackingRow::loPropagationDelayFromBin; 
-	 fromBinMethods["polarizationTypes"] = &GainTrackingRow::polarizationTypesFromBin; 
-	 fromBinMethods["receiverDelay"] = &GainTrackingRow::receiverDelayFromBin; 
+	 fromBinMethods["attenuator"] = &GainTrackingRow::attenuatorFromBin; 
+	 fromBinMethods["polarizationType"] = &GainTrackingRow::polarizationTypeFromBin; 
 		
 	
-	 fromBinMethods["delayOffset"] = &GainTrackingRow::delayOffsetFromBin; 
-	 fromBinMethods["freqOffset"] = &GainTrackingRow::freqOffsetFromBin; 
-	 fromBinMethods["phaseOffset"] = &GainTrackingRow::phaseOffsetFromBin; 
 	 fromBinMethods["samplingLevel"] = &GainTrackingRow::samplingLevelFromBin; 
 	 fromBinMethods["numAttFreq"] = &GainTrackingRow::numAttFreqFromBin; 
 	 fromBinMethods["attFreq"] = &GainTrackingRow::attFreqFromBin; 
 	 fromBinMethods["attSpectrum"] = &GainTrackingRow::attSpectrumFromBin; 
 	
+	
+	
+	
+				 
+	fromTextMethods["antennaId"] = &GainTrackingRow::antennaIdFromText;
+		 
+	
+				 
+	fromTextMethods["spectralWindowId"] = &GainTrackingRow::spectralWindowIdFromText;
+		 
+	
+				 
+	fromTextMethods["timeInterval"] = &GainTrackingRow::timeIntervalFromText;
+		 
+	
+				 
+	fromTextMethods["feedId"] = &GainTrackingRow::feedIdFromText;
+		 
+	
+				 
+	fromTextMethods["numReceptor"] = &GainTrackingRow::numReceptorFromText;
+		 
+	
+				 
+	fromTextMethods["attenuator"] = &GainTrackingRow::attenuatorFromText;
+		 
+	
+				 
+	fromTextMethods["polarizationType"] = &GainTrackingRow::polarizationTypeFromText;
+		 
+	
+
+	 
+				
+	fromTextMethods["samplingLevel"] = &GainTrackingRow::samplingLevelFromText;
+		 	
+	 
+				
+	fromTextMethods["numAttFreq"] = &GainTrackingRow::numAttFreqFromText;
+		 	
+	 
+				
+	fromTextMethods["attFreq"] = &GainTrackingRow::attFreqFromText;
+		 	
+	 
+				
+	fromTextMethods["attSpectrum"] = &GainTrackingRow::attSpectrumFromText;
+		 	
+		
 	}
 	
 	GainTrackingRow::GainTrackingRow (GainTrackingTable &t, GainTrackingRow &row) : table(t) {
@@ -2592,28 +1800,6 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-		delayOffsetExists = false;
-	
-
-	
-		freqOffsetExists = false;
-	
-
-	
-		phaseOffsetExists = false;
 	
 
 	
@@ -2654,45 +1840,14 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 		
 		
 		
-			attenuator = row.attenuator;
-		
-			numLO = row.numLO;
-		
 			numReceptor = row.numReceptor;
 		
-			cableDelay = row.cableDelay;
+			attenuator = row.attenuator;
 		
-			crossPolarizationDelay = row.crossPolarizationDelay;
-		
-			loPropagationDelay = row.loPropagationDelay;
-		
-			polarizationTypes = row.polarizationTypes;
-		
-			receiverDelay = row.receiverDelay;
+			polarizationType = row.polarizationType;
 		
 		
 		
-		
-		if (row.delayOffsetExists) {
-			delayOffset = row.delayOffset;		
-			delayOffsetExists = true;
-		}
-		else
-			delayOffsetExists = false;
-		
-		if (row.freqOffsetExists) {
-			freqOffset = row.freqOffset;		
-			freqOffsetExists = true;
-		}
-		else
-			freqOffsetExists = false;
-		
-		if (row.phaseOffsetExists) {
-			phaseOffset = row.phaseOffset;		
-			phaseOffsetExists = true;
-		}
-		else
-			phaseOffsetExists = false;
 		
 		if (row.samplingLevelExists) {
 			samplingLevel = row.samplingLevel;		
@@ -2728,19 +1883,11 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 		 fromBinMethods["spectralWindowId"] = &GainTrackingRow::spectralWindowIdFromBin; 
 		 fromBinMethods["timeInterval"] = &GainTrackingRow::timeIntervalFromBin; 
 		 fromBinMethods["feedId"] = &GainTrackingRow::feedIdFromBin; 
-		 fromBinMethods["attenuator"] = &GainTrackingRow::attenuatorFromBin; 
-		 fromBinMethods["numLO"] = &GainTrackingRow::numLOFromBin; 
 		 fromBinMethods["numReceptor"] = &GainTrackingRow::numReceptorFromBin; 
-		 fromBinMethods["cableDelay"] = &GainTrackingRow::cableDelayFromBin; 
-		 fromBinMethods["crossPolarizationDelay"] = &GainTrackingRow::crossPolarizationDelayFromBin; 
-		 fromBinMethods["loPropagationDelay"] = &GainTrackingRow::loPropagationDelayFromBin; 
-		 fromBinMethods["polarizationTypes"] = &GainTrackingRow::polarizationTypesFromBin; 
-		 fromBinMethods["receiverDelay"] = &GainTrackingRow::receiverDelayFromBin; 
+		 fromBinMethods["attenuator"] = &GainTrackingRow::attenuatorFromBin; 
+		 fromBinMethods["polarizationType"] = &GainTrackingRow::polarizationTypeFromBin; 
 			
 	
-		 fromBinMethods["delayOffset"] = &GainTrackingRow::delayOffsetFromBin; 
-		 fromBinMethods["freqOffset"] = &GainTrackingRow::freqOffsetFromBin; 
-		 fromBinMethods["phaseOffset"] = &GainTrackingRow::phaseOffsetFromBin; 
 		 fromBinMethods["samplingLevel"] = &GainTrackingRow::samplingLevelFromBin; 
 		 fromBinMethods["numAttFreq"] = &GainTrackingRow::numAttFreqFromBin; 
 		 fromBinMethods["attFreq"] = &GainTrackingRow::attFreqFromBin; 
@@ -2749,7 +1896,7 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	}
 
 	
-	bool GainTrackingRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay) {
+	bool GainTrackingRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, vector<float > attenuator, vector<PolarizationTypeMod::PolarizationType > polarizationType) {
 		bool result;
 		result = true;
 		
@@ -2783,20 +1930,6 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 
 	
 		
-		result = result && (this->attenuator == attenuator);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numLO == numLO);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
@@ -2804,35 +1937,14 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 
 	
 		
-		result = result && (this->cableDelay == cableDelay);
+		result = result && (this->attenuator == attenuator);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->crossPolarizationDelay == crossPolarizationDelay);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->loPropagationDelay == loPropagationDelay);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->polarizationTypes == polarizationTypes);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->receiverDelay == receiverDelay);
+		result = result && (this->polarizationType == polarizationType);
 		
 		if (!result) return false;
 	
@@ -2842,40 +1954,20 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	
 	
 	
-	bool GainTrackingRow::compareRequiredValue(float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay) {
+	bool GainTrackingRow::compareRequiredValue(int numReceptor, vector<float > attenuator, vector<PolarizationTypeMod::PolarizationType > polarizationType) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->attenuator == attenuator)) return false;
-	
-
-	
-		if (!(this->numLO == numLO)) return false;
-	
-
 	
 		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
-		if (!(this->cableDelay == cableDelay)) return false;
+		if (!(this->attenuator == attenuator)) return false;
 	
 
 	
-		if (!(this->crossPolarizationDelay == crossPolarizationDelay)) return false;
-	
-
-	
-		if (!(this->loPropagationDelay == loPropagationDelay)) return false;
-	
-
-	
-		if (!(this->polarizationTypes == polarizationTypes)) return false;
-	
-
-	
-		if (!(this->receiverDelay == receiverDelay)) return false;
+		if (!(this->polarizationType == polarizationType)) return false;
 	
 
 		return result;
@@ -2893,21 +1985,11 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 	bool GainTrackingRow::equalByRequiredValue(GainTrackingRow* x) {
 		
 			
-		if (this->attenuator != x->attenuator) return false;
-			
-		if (this->numLO != x->numLO) return false;
-			
 		if (this->numReceptor != x->numReceptor) return false;
 			
-		if (this->cableDelay != x->cableDelay) return false;
+		if (this->attenuator != x->attenuator) return false;
 			
-		if (this->crossPolarizationDelay != x->crossPolarizationDelay) return false;
-			
-		if (this->loPropagationDelay != x->loPropagationDelay) return false;
-			
-		if (this->polarizationTypes != x->polarizationTypes) return false;
-			
-		if (this->receiverDelay != x->receiverDelay) return false;
+		if (this->polarizationType != x->polarizationType) return false;
 			
 		
 		return true;
@@ -2921,19 +2003,11 @@ void GainTrackingRow::attSpectrumFromBin(EndianISStream& eiss) {
 		result["spectralWindowId"] = &GainTrackingRow::spectralWindowIdFromBin;
 		result["timeInterval"] = &GainTrackingRow::timeIntervalFromBin;
 		result["feedId"] = &GainTrackingRow::feedIdFromBin;
-		result["attenuator"] = &GainTrackingRow::attenuatorFromBin;
-		result["numLO"] = &GainTrackingRow::numLOFromBin;
 		result["numReceptor"] = &GainTrackingRow::numReceptorFromBin;
-		result["cableDelay"] = &GainTrackingRow::cableDelayFromBin;
-		result["crossPolarizationDelay"] = &GainTrackingRow::crossPolarizationDelayFromBin;
-		result["loPropagationDelay"] = &GainTrackingRow::loPropagationDelayFromBin;
-		result["polarizationTypes"] = &GainTrackingRow::polarizationTypesFromBin;
-		result["receiverDelay"] = &GainTrackingRow::receiverDelayFromBin;
+		result["attenuator"] = &GainTrackingRow::attenuatorFromBin;
+		result["polarizationType"] = &GainTrackingRow::polarizationTypeFromBin;
 		
 		
-		result["delayOffset"] = &GainTrackingRow::delayOffsetFromBin;
-		result["freqOffset"] = &GainTrackingRow::freqOffsetFromBin;
-		result["phaseOffset"] = &GainTrackingRow::phaseOffsetFromBin;
 		result["samplingLevel"] = &GainTrackingRow::samplingLevelFromBin;
 		result["numAttFreq"] = &GainTrackingRow::numAttFreqFromBin;
 		result["attFreq"] = &GainTrackingRow::attFreqFromBin;

@@ -25,10 +25,10 @@
 using namespace FieldCodeMod;
 
 template<>
- struct enum_set_traits<FieldCode> : public enum_set_traiter<FieldCode,1,FieldCodeMod::NONE> {};
+ struct enum_set_traits<FieldCodeMod::FieldCode> : public enum_set_traiter<FieldCodeMod::FieldCode,1,FieldCodeMod::NONE> {};
 
 template<>
-class enum_map_traits<FieldCode,void> : public enum_map_traiter<FieldCode,void> {
+class enum_map_traits<FieldCodeMod::FieldCode,void> : public enum_map_traiter<FieldCodeMod::FieldCode,void> {
 public:
   static bool   init_;
   static string typeName_;
@@ -37,11 +37,11 @@ public:
   static string xsdBaseType_;
   static bool   init(){
     EnumPar<void> ep;
-    m_.insert(pair<FieldCode,EnumPar<void> >
+    m_.insert(pair<FieldCodeMod::FieldCode,EnumPar<void> >
      (FieldCodeMod::NONE,ep((int)FieldCodeMod::NONE,"NONE","un-documented")));
     return true;
   }
-  static map<FieldCode,EnumPar<void> > m_;
+  static map<FieldCodeMod::FieldCode,EnumPar<void> > m_;
 };
 #define _FIELDCODE_HH
 #endif

@@ -201,9 +201,6 @@ def tflagdata(vis,
             
         elif mode == 'shadow':
             agent_pars['tolerance'] = tolerance
-            # ONce this is implemented in the agent, uncomment next line
-#            agent_pars['addantenna'] = antennafile
-
             if antennafile != '':
             # Get a dictionary with the antenna names, positions and diameters
                 addantenna = fh.readAntennaList(antennafile)                
@@ -346,12 +343,20 @@ def tflagdata(vis,
             # Select the union of the data selection from the list
             if vrows.__len__() == 0:
                 raise Exception, 'There are no valid commands in list'
-            
-            unionpars = fh.getUnion(flaglist)
-            tflocal.selectdata(unionpars)
+           
+            unionpars = fh.getUnion(mslocal, vis, flaglist)
+
+            if( len( unionpars.keys() ) > 0 ):
+                casalog.post('Pre-selecting a subset of the MS : ');
+                casalog.post('%s'%unionpars);
+            else:
+                casalog.post('Iterating through the entire MS');
+
+            tflocal.selectdata(unionpars);
             
             # Parse the parameters for each agent in the list
-            list2save = setupAgent(tflocal, flagcmd, [], apply)
+#            list2save = setupAgent(tflocal, flagcmd, [], apply)
+            list2save = fh.setupAgent(tflocal, flagcmd, [], apply)
 
         # Do display if requested
         if display != '':
@@ -372,6 +377,11 @@ def tflagdata(vis,
                 agent_pars['reportdisplay'] = True
                 
             tflocal.parseagentparameters(agent_pars)
+            
+            # Disable saving the parameters to avoid inconsistencies
+            if savepars:
+                casalog.post('Disabling savepars for the display', 'WARN')
+                savepars = False
                     
         # Initialize the agents
         casalog.post('Initializing the agents')
@@ -381,7 +391,8 @@ def tflagdata(vis,
         # TODO: backup for the list
         if flagbackup and writeflags:
             casalog.post('Backup original flags before applying new flags')
-            backupFlags(tflocal, mode, flaglist)
+#            backupFlags(tflocal, mode)
+            fh.backupFlags(tflocal, mode)
         
         # Run the tool
         casalog.post('Running the testflagger tool')
@@ -390,6 +401,7 @@ def tflagdata(vis,
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  
+
             if outfile == '':
                 casalog.post('Saving parameters to FLAG_CMD')        
             else:
@@ -459,7 +471,7 @@ def tflagdata(vis,
 
 
 
-def backupFlags(tflocal, mode, flagcmd):
+def backupFlags(tflocal, mode):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
@@ -498,7 +510,7 @@ def backupFlags(tflocal, mode, flagcmd):
 #                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
 #                           merge='replace')
     tflocal.saveflagversion(versionname=versionname,
-                           comment='backup before applying\"'+flagcmd+'\"on ' + time_string,
+                           comment='backup flags before applying\"on ' + time_string,
                            merge='replace')
 
     # Save flagcmd to flagbackup
@@ -546,7 +558,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     manualpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['tolerance','recalcuvw','addantenna']
+    shadowpars = ['tolerance','recalcuvw','antennafile']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
@@ -565,8 +577,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         level = myflagcmd[key]['level']
         reason = myflagcmd[key]['reason']
         severity = myflagcmd[key]['severity']
-        time = myflagcmd[key]['time']
-        type = myflagcmd[key]['type']
+        coltime = myflagcmd[key]['time']
+        coltype = myflagcmd[key]['type']
 
         casalog.post('cmdline for key%s'%key, 'DEBUG')
         casalog.post('%s'%cmdline, 'DEBUG')
@@ -593,7 +605,14 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 modepars = fh.getLinePars(cmdline,quackpars)
             elif cmdline.__contains__('shadow'):
                 mode = 'shadow'
+                antennafile = ''
                 modepars = fh.getLinePars(cmdline,shadowpars)
+                # Get antennafile
+                if (modepars.__contains__('antennafile') and 
+                    modepars['antennafile'] != ''):
+                    antennafile = modepars['antennafile']
+                    addantenna = fh.readAntennaList(antennafile)
+                    modepars['addantenna'] = addantenna
             elif cmdline.__contains__('elevation'):
                 mode = 'elevation'
                 modepars = fh.getLinePars(cmdline,elevationpars)
@@ -676,8 +695,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             parslist['level'] = level
             parslist['reason'] = reason
             parslist['severity'] = severity
-            parslist['time'] = time
-            parslist['type'] = type
+            parslist['time'] = coltime
+            parslist['type'] = coltype
             savelist[key] = parslist
                 
     casalog.post('Dictionary of valid commands to save','DEBUG')

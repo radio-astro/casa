@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace StokesParameterMod
   //! StokesParameter.
   //!  Stokes parameters (CASA definition)
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum StokesParameter
@@ -129,7 +130,10 @@ namespace StokesParameterMod
 } 
 #endif
 
-using namespace std;
+namespace StokesParameterMod {
+	std::ostream & operator << ( std::ostream & out, const StokesParameter& value);
+	std::istream & operator >> ( std::istream & in , StokesParameter& value );
+}
 
 /** 
   * A helper class for the enumeration StokesParameter.
@@ -219,7 +223,7 @@ class CStokesParameter {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -273,8 +277,8 @@ class CStokesParameter {
     CStokesParameter(const CStokesParameter&);
     CStokesParameter& operator=(const CStokesParameter&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

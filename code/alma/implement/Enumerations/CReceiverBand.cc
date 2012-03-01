@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CReceiverBand::version() {
 	return ReceiverBandMod::version;
 	}
@@ -494,5 +493,25 @@ string CReceiverBand::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'ReceiverBand'.";
 	return oss.str();
+}
+
+namespace ReceiverBandMod {
+	std::ostream & operator << ( std::ostream & out, const ReceiverBand& value) {
+		out << CReceiverBand::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , ReceiverBand& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CReceiverBand::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

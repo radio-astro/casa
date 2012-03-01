@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CDirectionReferenceCode::version() {
 	return DirectionReferenceCodeMod::version;
 	}
@@ -569,5 +568,25 @@ string CDirectionReferenceCode::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'DirectionReferenceCode'.";
 	return oss.str();
+}
+
+namespace DirectionReferenceCodeMod {
+	std::ostream & operator << ( std::ostream & out, const DirectionReferenceCode& value) {
+		out << CDirectionReferenceCode::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , DirectionReferenceCode& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CDirectionReferenceCode::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

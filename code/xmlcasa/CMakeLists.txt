@@ -171,6 +171,7 @@ casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
   scripts/assignmentFilter.py
+  scripts/caltab_convert2.py
   scripts/casa_in_py.py
   scripts/casa.py
   scripts/casapy.py
@@ -213,6 +214,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_boxit.py
   scripts/task_browsetable.py
   scripts/task_calstat.py
+  scripts/task_caltab_convert.py
   scripts/task_clean.py
   scripts/task_clearcal.py
   scripts/task_clearplot.py
@@ -253,7 +255,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_importfits.py
   scripts/task_importfitsidi.py
   scripts/task_importgmrt.py
-  scripts/task_importoldasdm.py
   scripts/task_importuvfits.py
   scripts/task_importvla.py
   scripts/task_imregrid.py
@@ -333,6 +334,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/simple_cluster.py
   scripts/simple_summary.py
   scripts/parallelSplit.py
+  scripts/filltsys.py
   scripts/task_msmoments.py )
 
 casa_add_tasks( xmlcasa xmlcasa_tasks 
@@ -346,6 +348,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/boxit.xml
   tasks/browsetable.xml
   tasks/calstat.xml
+  tasks/caltab_convert.xml
   tasks/clean.xml
   tasks/clearcal.xml
   tasks/clearplot.xml
@@ -385,7 +388,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/importfits.xml
   tasks/importfitsidi.xml
   tasks/importgmrt.xml
-  tasks/importoldasdm.xml
   tasks/importuvfits.xml
   tasks/importvla.xml
   tasks/imregrid.xml

@@ -33,7 +33,7 @@
 
 #include <alma/ASDM/ASDM.h>
 #include <alma/ASDM/Tag.h>
-#include <alma/ASDM/Complex.h>
+#include <alma/ASDM/ComplexWrapper.h>
 #include <alma/ASDM/Frequency.h>
 #include <alma/ASDM/Angle.h>
 #include <alma/ASDM/AngularRate.h>
@@ -155,6 +155,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // convert MDirection to a vector of Angles
   vector< asdm::Angle > ASDMAngleV(const MDirection mDir);
+
+  // convert MDirection type to ASDM DirectionReferenceCode
+  DirectionReferenceCodeMod::DirectionReferenceCode ASDMDirRefCode(const MDirection::Types type);
 
   // convert a base band converter number to an ASDM base band name
   BasebandNameMod::BasebandName ASDMBBName( const Int bbcNo );

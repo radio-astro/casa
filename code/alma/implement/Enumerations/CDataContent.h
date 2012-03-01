@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace DataContentMod
   //! DataContent.
   //!  [ASDM.Binaries] Contents of binary data attachment
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum DataContent
@@ -79,7 +80,10 @@ namespace DataContentMod
 } 
 #endif
 
-using namespace std;
+namespace DataContentMod {
+	std::ostream & operator << ( std::ostream & out, const DataContent& value);
+	std::istream & operator >> ( std::istream & in , DataContent& value );
+}
 
 /** 
   * A helper class for the enumeration DataContent.
@@ -119,7 +123,7 @@ class CDataContent {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -173,8 +177,8 @@ class CDataContent {
     CDataContent(const CDataContent&);
     CDataContent& operator=(const CDataContent&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

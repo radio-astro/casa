@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalReductionRowIDL;
 #endif
 
 
@@ -51,11 +47,13 @@ using asdmIDL::CalReductionRowIDL;
 
 
 
+	 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
+	
 
+	 
 #include <Tag.h>
-using  asdm::Tag;
+	
 
 
 
@@ -74,7 +72,6 @@ using  asdm::Tag;
 
 	
 #include "CInvalidatingCondition.h"
-using namespace InvalidatingConditionMod;
 	
 
 	
@@ -91,9 +88,11 @@ using namespace InvalidatingConditionMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file CalReduction.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -103,16 +102,19 @@ namespace asdm {
 	
 
 class CalReductionRow;
-typedef void (CalReductionRow::*CalReductionAttributeFromBin) (EndianISStream& eiss);
+typedef void (CalReductionRow::*CalReductionAttributeFromBin) (EndianIStream& eis);
+typedef void (CalReductionRow::*CalReductionAttributeFromText) (const string& s);
 
 /**
  * The CalReductionRow class is a row of a CalReductionTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class CalReductionRow {
 friend class asdm::CalReductionTable;
+friend class asdm::RowTransformer<CalReductionRow>;
+//friend class asdm::TableStreamReader<CalReductionTable, CalReductionRow>;
 
 public:
 
@@ -537,7 +539,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalReductionRowIDL struct.
 	 */
-	CalReductionRowIDL *toIDL() const;
+	asdmIDL::CalReductionRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -546,14 +548,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalReductionRowIDL x) ;
+	void setFromIDL (asdmIDL::CalReductionRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -561,7 +563,37 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, CalReductionAttributeFromBin> fromBinMethods;
+void calReductionIdFromBin( EndianIStream& eis);
+void numAppliedFromBin( EndianIStream& eis);
+void appliedCalibrationsFromBin( EndianIStream& eis);
+void numParamFromBin( EndianIStream& eis);
+void paramSetFromBin( EndianIStream& eis);
+void numInvalidConditionsFromBin( EndianIStream& eis);
+void invalidConditionsFromBin( EndianIStream& eis);
+void timeReducedFromBin( EndianIStream& eis);
+void messagesFromBin( EndianIStream& eis);
+void softwareFromBin( EndianIStream& eis);
+void softwareVersionFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the CalReductionTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalReductionRow* fromBin(EndianIStream& eis, CalReductionTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -752,23 +784,67 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, CalReductionAttributeFromBin> fromBinMethods;
-void calReductionIdFromBin( EndianISStream& eiss);
-void numAppliedFromBin( EndianISStream& eiss);
-void appliedCalibrationsFromBin( EndianISStream& eiss);
-void numParamFromBin( EndianISStream& eiss);
-void paramSetFromBin( EndianISStream& eiss);
-void numInvalidConditionsFromBin( EndianISStream& eiss);
-void invalidConditionsFromBin( EndianISStream& eiss);
-void timeReducedFromBin( EndianISStream& eiss);
-void messagesFromBin( EndianISStream& eiss);
-void softwareFromBin( EndianISStream& eiss);
-void softwareVersionFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, CalReductionAttributeFromBin> fromBinMethods;
+void calReductionIdFromBin( EndianIStream& eis);
+void numAppliedFromBin( EndianIStream& eis);
+void appliedCalibrationsFromBin( EndianIStream& eis);
+void numParamFromBin( EndianIStream& eis);
+void paramSetFromBin( EndianIStream& eis);
+void numInvalidConditionsFromBin( EndianIStream& eis);
+void invalidConditionsFromBin( EndianIStream& eis);
+void timeReducedFromBin( EndianIStream& eis);
+void messagesFromBin( EndianIStream& eis);
+void softwareFromBin( EndianIStream& eis);
+void softwareVersionFromBin( EndianIStream& eis);
+
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, CalReductionAttributeFromText> fromTextMethods;
+	
+void calReductionIdFromText (const string & s);
+	
+	
+void numAppliedFromText (const string & s);
+	
+	
+void appliedCalibrationsFromText (const string & s);
+	
+	
+void numParamFromText (const string & s);
+	
+	
+void paramSetFromText (const string & s);
+	
+	
+void numInvalidConditionsFromText (const string & s);
+	
+	
+void invalidConditionsFromText (const string & s);
+	
+	
+void timeReducedFromText (const string & s);
+	
+	
+void messagesFromText (const string & s);
+	
+	
+void softwareFromText (const string & s);
+	
+	
+void softwareVersionFromText (const string & s);
+	
 
 		
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -777,14 +853,14 @@ void softwareVersionFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the CalReductionTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static CalReductionRow* fromBin(EndianISStream& eiss, CalReductionTable& table, const vector<string>& attributesSeq);	 
 
+	 static CalReductionRow* fromBin(EndianIStream& eis, CalReductionTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

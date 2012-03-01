@@ -42,7 +42,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MSVis/SimpleSubMS.h>
 #include <synthesis/MSVis/SubMS.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -248,9 +248,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       //if you want to use scratch col...make sure they are there
       if(useModelCol_p){
-	Block<Int> sort(0);
-	Matrix<Int> noselection;
-	VisSet(thisms,sort,noselection);
+	VisSetUtil::addScrCols(thisms, True, False, True, False);
+	VisModelData::clearModel(thisms);
       }
       //MeasurementSet sorted=thisms.keywordSet().asTable("SORTED_TABLE");
       

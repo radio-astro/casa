@@ -37,7 +37,6 @@
 #include <string>
 using namespace std;
 
-
 int CCorrelatorName::version() {
 	return CorrelatorNameMod::version;
 	}
@@ -239,5 +238,25 @@ string CCorrelatorName::badInt(unsigned int i) {
 	ostringstream oss ;
 	oss << "'" << i << "' is out of range for the enumeration 'CorrelatorName'.";
 	return oss.str();
+}
+
+namespace CorrelatorNameMod {
+	std::ostream & operator << ( std::ostream & out, const CorrelatorName& value) {
+		out << CCorrelatorName::name(value);
+		return out;
+	}
+
+	std::istream & operator >> ( std::istream & in , CorrelatorName& value ) {
+		in.clear();
+		string s ; 
+  		in >> s;
+  		try {
+    		value = CCorrelatorName::literal(s);
+  		}
+  		catch (string & m) {
+    		in.setstate(ios::failbit);
+  		}
+  		return in;
+  	}
 }
 

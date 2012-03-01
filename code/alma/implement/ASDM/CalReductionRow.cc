@@ -51,6 +51,7 @@ using asdm::CalReductionTable;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -74,6 +75,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalReductionRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -677,7 +681,8 @@ namespace asdm {
 		eoss.writeInt((int) invalidConditions.size());
 		for (unsigned int i = 0; i < invalidConditions.size(); i++)
 				
-			eoss.writeInt(invalidConditions.at(i));
+			eoss.writeString(CInvalidatingCondition::name(invalidConditions.at(i)));
+			/* eoss.writeInt(invalidConditions.at(i)); */
 				
 				
 						
@@ -723,29 +728,29 @@ namespace asdm {
 	
 	}
 	
-void CalReductionRow::calReductionIdFromBin(EndianISStream& eiss) {
+void CalReductionRow::calReductionIdFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		calReductionId =  Tag::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eis);
 		
 	
 	
 }
-void CalReductionRow::numAppliedFromBin(EndianISStream& eiss) {
+void CalReductionRow::numAppliedFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numApplied =  eiss.readInt();
+		numApplied =  eis.readInt();
 			
 		
 	
 	
 }
-void CalReductionRow::appliedCalibrationsFromBin(EndianISStream& eiss) {
+void CalReductionRow::appliedCalibrationsFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -754,10 +759,10 @@ void CalReductionRow::appliedCalibrationsFromBin(EndianISStream& eiss) {
 	
 		appliedCalibrations.clear();
 		
-		unsigned int appliedCalibrationsDim1 = eiss.readInt();
+		unsigned int appliedCalibrationsDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < appliedCalibrationsDim1; i++)
 			
-			appliedCalibrations.push_back(eiss.readString());
+			appliedCalibrations.push_back(eis.readString());
 			
 	
 
@@ -765,19 +770,19 @@ void CalReductionRow::appliedCalibrationsFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalReductionRow::numParamFromBin(EndianISStream& eiss) {
+void CalReductionRow::numParamFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numParam =  eiss.readInt();
+		numParam =  eis.readInt();
 			
 		
 	
 	
 }
-void CalReductionRow::paramSetFromBin(EndianISStream& eiss) {
+void CalReductionRow::paramSetFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -786,10 +791,10 @@ void CalReductionRow::paramSetFromBin(EndianISStream& eiss) {
 	
 		paramSet.clear();
 		
-		unsigned int paramSetDim1 = eiss.readInt();
+		unsigned int paramSetDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < paramSetDim1; i++)
 			
-			paramSet.push_back(eiss.readString());
+			paramSet.push_back(eis.readString());
 			
 	
 
@@ -797,19 +802,19 @@ void CalReductionRow::paramSetFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalReductionRow::numInvalidConditionsFromBin(EndianISStream& eiss) {
+void CalReductionRow::numInvalidConditionsFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		numInvalidConditions =  eiss.readInt();
+		numInvalidConditions =  eis.readInt();
 			
 		
 	
 	
 }
-void CalReductionRow::invalidConditionsFromBin(EndianISStream& eiss) {
+void CalReductionRow::invalidConditionsFromBin(EndianIStream& eis) {
 		
 	
 	
@@ -818,10 +823,10 @@ void CalReductionRow::invalidConditionsFromBin(EndianISStream& eiss) {
 	
 		invalidConditions.clear();
 		
-		unsigned int invalidConditionsDim1 = eiss.readInt();
+		unsigned int invalidConditionsDim1 = eis.readInt();
 		for (unsigned int  i = 0 ; i < invalidConditionsDim1; i++)
 			
-			invalidConditions.push_back(CInvalidatingCondition::from_int(eiss.readInt()));
+			invalidConditions.push_back(CInvalidatingCondition::literal(eis.readString()));
 			
 	
 
@@ -829,47 +834,47 @@ void CalReductionRow::invalidConditionsFromBin(EndianISStream& eiss) {
 	
 	
 }
-void CalReductionRow::timeReducedFromBin(EndianISStream& eiss) {
+void CalReductionRow::timeReducedFromBin(EndianIStream& eis) {
 		
 	
 		
 		
-		timeReduced =  ArrayTime::fromBin(eiss);
-		
-	
-	
-}
-void CalReductionRow::messagesFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		messages =  eiss.readString();
-			
+		timeReduced =  ArrayTime::fromBin(eis);
 		
 	
 	
 }
-void CalReductionRow::softwareFromBin(EndianISStream& eiss) {
+void CalReductionRow::messagesFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		software =  eiss.readString();
+		messages =  eis.readString();
 			
 		
 	
 	
 }
-void CalReductionRow::softwareVersionFromBin(EndianISStream& eiss) {
+void CalReductionRow::softwareFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		softwareVersion =  eiss.readString();
+		software =  eis.readString();
+			
+		
+	
+	
+}
+void CalReductionRow::softwareVersionFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		softwareVersion =  eis.readString();
 			
 		
 	
@@ -878,23 +883,132 @@ void CalReductionRow::softwareVersionFromBin(EndianISStream& eiss) {
 
 		
 	
-	CalReductionRow* CalReductionRow::fromBin(EndianISStream& eiss, CalReductionTable& table, const vector<string>& attributesSeq) {
+	CalReductionRow* CalReductionRow::fromBin(EndianIStream& eis, CalReductionTable& table, const vector<string>& attributesSeq) {
 		CalReductionRow* row = new  CalReductionRow(table);
 		
 		map<string, CalReductionAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalReductionTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalReductionTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an Tag 
+	void CalReductionRow::calReductionIdFromText(const string & s) {
+		 
+		calReductionId = ASDMValuesParser::parse<Tag>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalReductionRow::numAppliedFromText(const string & s) {
+		 
+		numApplied = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalReductionRow::appliedCalibrationsFromText(const string & s) {
+		 
+		appliedCalibrations = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalReductionRow::numParamFromText(const string & s) {
+		 
+		numParam = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalReductionRow::paramSetFromText(const string & s) {
+		 
+		paramSet = ASDMValuesParser::parse1D<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void CalReductionRow::numInvalidConditionsFromText(const string & s) {
+		 
+		numInvalidConditions = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an InvalidatingCondition 
+	void CalReductionRow::invalidConditionsFromText(const string & s) {
+		 
+		invalidConditions = ASDMValuesParser::parse1D<InvalidatingCondition>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void CalReductionRow::timeReducedFromText(const string & s) {
+		 
+		timeReduced = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalReductionRow::messagesFromText(const string & s) {
+		 
+		messages = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalReductionRow::softwareFromText(const string & s) {
+		 
+		software = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void CalReductionRow::softwareVersionFromText(const string & s) {
+		 
+		softwareVersion = ASDMValuesParser::parse<string>(s);
+		
+	}
+	
+
+		
+	
+	void CalReductionRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, CalReductionAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "CalReductionTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -1253,13 +1367,14 @@ void CalReductionRow::softwareVersionFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	/**
@@ -1338,6 +1453,55 @@ void CalReductionRow::softwareVersionFromBin(EndianISStream& eiss) {
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["calReductionId"] = &CalReductionRow::calReductionIdFromText;
+		 
+	
+				 
+	fromTextMethods["numApplied"] = &CalReductionRow::numAppliedFromText;
+		 
+	
+				 
+	fromTextMethods["appliedCalibrations"] = &CalReductionRow::appliedCalibrationsFromText;
+		 
+	
+				 
+	fromTextMethods["numParam"] = &CalReductionRow::numParamFromText;
+		 
+	
+				 
+	fromTextMethods["paramSet"] = &CalReductionRow::paramSetFromText;
+		 
+	
+				 
+	fromTextMethods["numInvalidConditions"] = &CalReductionRow::numInvalidConditionsFromText;
+		 
+	
+				 
+	fromTextMethods["invalidConditions"] = &CalReductionRow::invalidConditionsFromText;
+		 
+	
+				 
+	fromTextMethods["timeReduced"] = &CalReductionRow::timeReducedFromText;
+		 
+	
+				 
+	fromTextMethods["messages"] = &CalReductionRow::messagesFromText;
+		 
+	
+				 
+	fromTextMethods["software"] = &CalReductionRow::softwareFromText;
+		 
+	
+				 
+	fromTextMethods["softwareVersion"] = &CalReductionRow::softwareVersionFromText;
+		 
+	
+
+		
 	}
 	
 	CalReductionRow::CalReductionRow (CalReductionTable &t, CalReductionRow &row) : table(t) {

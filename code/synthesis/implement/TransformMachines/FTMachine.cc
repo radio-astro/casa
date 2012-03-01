@@ -814,22 +814,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void FTMachine::locateuvw(const Double*& uvw, const Double*& dphase,
 			    const Double*& freq, const Int& nvchan,
-			    const Double*& scale, const Double*& offset,  const Int& sampling, Int*& loc, Int*& off, Complex*& phasor, const Int& row){
+			    const Double*& scale, const Double*& offset,  const Int& sampling, Int*& loc, Int*& off, Complex*& phasor, const Int& row, const bool& doW){
     
-    //Int nvischan=freq.shape()[0];
     Int rowoff=row*nvchan;
     Double phase;
-    Vector<Double> pos(2);
+    Double pos;
+    Int nel= doW ? 3 : 2;
     for (Int f=0; f<nvchan; ++f){
       for (Int k=0; k <2; ++k){
-	pos(k)=(scale[k])*uvw[3*row+k]*(freq[f])/C::c+((offset[k])+1.0);
-	loc[(rowoff+f)*2+k]=boost::math::iround(pos(k));
-	off[(rowoff+f)*2+k]=boost::math::iround((Double(loc[(rowoff+f)*2+k])-pos(k))*Double(sampling));
+	pos=(scale[k])*uvw[3*row+k]*(freq[f])/C::c+((offset[k])+1.0);
+	loc[(rowoff+f)*nel+k]=boost::math::iround(pos);
+	off[(rowoff+f)*nel+k]=boost::math::iround((Double(loc[(rowoff+f)*nel+k])-pos)*Double(sampling));
 	//off[(rowoff+f)*2+k]=(loc[(rowoff+f)*2+k]-pos(k))*sampling;	
       }
       phase=-Double(2.0)*C::pi*dphase[row]*(freq[f])/C::c;
       phasor[rowoff+f]=Complex(cos(phase), sin(phase));
-	
+     
+      ///This is for W-Projection
+      if(doW){
+	pos=sqrt(fabs(scale[2]*uvw[3*row+2]*(freq[f])/C::c))+offset[2]+1.0;
+	loc[(rowoff+f)*nel+2]=boost::math::iround(pos);
+	off[(rowoff+f)*nel+2]=0;
+      }
     }
 
     

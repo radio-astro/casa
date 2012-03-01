@@ -57,6 +57,7 @@ using asdm::SourceRow;
 using asdm::Parser;
 
 #include <EnumerationParser.h>
+#include <ASDMValuesParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -80,6 +81,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::DopplerRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**
@@ -363,7 +367,8 @@ namespace asdm {
 	
 		
 					
-			eoss.writeInt(velDef);
+			eoss.writeString(CDopplerReferenceCode::name(velDef));
+			/* eoss.writeInt(velDef); */
 				
 		
 	
@@ -373,49 +378,49 @@ namespace asdm {
 	
 	}
 	
-void DopplerRow::dopplerIdFromBin(EndianISStream& eiss) {
+void DopplerRow::dopplerIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		dopplerId =  eiss.readInt();
-			
-		
-	
-	
-}
-void DopplerRow::sourceIdFromBin(EndianISStream& eiss) {
-		
-	
-	
-		
-			
-		sourceId =  eiss.readInt();
+		dopplerId =  eis.readInt();
 			
 		
 	
 	
 }
-void DopplerRow::transitionIndexFromBin(EndianISStream& eiss) {
+void DopplerRow::sourceIdFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		transitionIndex =  eiss.readInt();
+		sourceId =  eis.readInt();
 			
 		
 	
 	
 }
-void DopplerRow::velDefFromBin(EndianISStream& eiss) {
+void DopplerRow::transitionIndexFromBin(EndianIStream& eis) {
 		
 	
 	
 		
 			
-		velDef = CDopplerReferenceCode::from_int(eiss.readInt());
+		transitionIndex =  eis.readInt();
+			
+		
+	
+	
+}
+void DopplerRow::velDefFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		velDef = CDopplerReferenceCode::literal(eis.readString());
 			
 		
 	
@@ -424,23 +429,76 @@ void DopplerRow::velDefFromBin(EndianISStream& eiss) {
 
 		
 	
-	DopplerRow* DopplerRow::fromBin(EndianISStream& eiss, DopplerTable& table, const vector<string>& attributesSeq) {
+	DopplerRow* DopplerRow::fromBin(EndianIStream& eis, DopplerTable& table, const vector<string>& attributesSeq) {
 		DopplerRow* row = new  DopplerRow(table);
 		
 		map<string, DopplerAttributeFromBin>::iterator iter ;
 		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
 			iter = row->fromBinMethods.find(attributesSeq.at(i));
-			if (iter == row->fromBinMethods.end()) {
-				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DopplerTable");
+			if (iter != row->fromBinMethods.end()) {
+				(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eis);			
 			}
-			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+			else {
+				BinaryAttributeReaderFunctor* functorP = table.getUnknownAttributeBinaryReader(attributesSeq.at(i));
+				if (functorP)
+					(*functorP)(eis);
+				else
+					throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DopplerTable");
+			}
+				
 		}				
 		return row;
 	}
+
+	//
+	// A collection of methods to set the value of the attributes from their textual value in the XML representation
+	// of one row.
+	//
 	
-	////////////////////////////////
-	// Intrinsic Table Attributes //
-	////////////////////////////////
+	// Convert a string into an int 
+	void DopplerRow::dopplerIdFromText(const string & s) {
+		 
+		dopplerId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DopplerRow::sourceIdFromText(const string & s) {
+		 
+		sourceId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void DopplerRow::transitionIndexFromText(const string & s) {
+		 
+		transitionIndex = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an DopplerReferenceCode 
+	void DopplerRow::velDefFromText(const string & s) {
+		 
+		velDef = ASDMValuesParser::parse<DopplerReferenceCode>(s);
+		
+	}
+	
+
+		
+	
+	void DopplerRow::fromText(const std::string& attributeName, const std::string&  t) {
+		map<string, DopplerAttributeFromText>::iterator iter;
+		if ((iter = fromTextMethods.find(attributeName)) == fromTextMethods.end())
+			throw ConversionException("I do not know what to do with '"+attributeName+"' and its content '"+t+"' (while parsing an XML document)", "DopplerTable");
+		(this->*(iter->second))(t);
+	}
+			
+	////////////////////////////////////////////////
+	// Intrinsic Table Attributes getters/setters //
+	////////////////////////////////////////////////
 	
 	
 
@@ -543,9 +601,9 @@ void DopplerRow::velDefFromBin(EndianISStream& eiss) {
 	
 
 	
-	////////////////////////////////
-	// Extrinsic Table Attributes //
-	////////////////////////////////
+	///////////////////////////////////////////////
+	// Extrinsic Table Attributes getters/setters//
+	///////////////////////////////////////////////
 	
 	
 
@@ -583,9 +641,10 @@ void DopplerRow::velDefFromBin(EndianISStream& eiss) {
 	
 	
 
-	///////////
-	// Links //
-	///////////
+
+	//////////////////////////////////////
+	// Links Attributes getters/setters //
+	//////////////////////////////////////
 	
 	
 	
@@ -649,6 +708,27 @@ velDef = CDopplerReferenceCode::from_int(0);
 		
 	
 	
+	
+	
+	
+				 
+	fromTextMethods["dopplerId"] = &DopplerRow::dopplerIdFromText;
+		 
+	
+				 
+	fromTextMethods["sourceId"] = &DopplerRow::sourceIdFromText;
+		 
+	
+				 
+	fromTextMethods["transitionIndex"] = &DopplerRow::transitionIndexFromText;
+		 
+	
+				 
+	fromTextMethods["velDef"] = &DopplerRow::velDefFromText;
+		 
+	
+
+		
 	}
 	
 	DopplerRow::DopplerRow (DopplerTable &t, DopplerRow &row) : table(t) {

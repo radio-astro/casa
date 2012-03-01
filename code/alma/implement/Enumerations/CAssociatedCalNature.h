@@ -40,6 +40,7 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 /**
@@ -55,7 +56,7 @@ namespace AssociatedCalNatureMod
   //! AssociatedCalNature.
   //! These are the associated calibration natures
   
-  const char *const revision = "1.9";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AssociatedCalNature
@@ -67,7 +68,10 @@ namespace AssociatedCalNatureMod
 } 
 #endif
 
-using namespace std;
+namespace AssociatedCalNatureMod {
+	std::ostream & operator << ( std::ostream & out, const AssociatedCalNature& value);
+	std::istream & operator >> ( std::istream & in , AssociatedCalNature& value );
+}
 
 /** 
   * A helper class for the enumeration AssociatedCalNature.
@@ -95,7 +99,7 @@ class CAssociatedCalNature {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -149,8 +153,8 @@ class CAssociatedCalNature {
     CAssociatedCalNature(const CAssociatedCalNature&);
     CAssociatedCalNature& operator=(const CAssociatedCalNature&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

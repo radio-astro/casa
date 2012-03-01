@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::StationRowIDL;
 #endif
 
 
@@ -51,11 +47,17 @@ using asdmIDL::StationRowIDL;
 
 
 
-#include <Tag.h>
-using  asdm::Tag;
+	 
+#include <ArrayTime.h>
+	
 
+	 
+#include <Tag.h>
+	
+
+	 
 #include <Length.h>
-using  asdm::Length;
+	
 
 
 
@@ -68,7 +70,8 @@ using  asdm::Length;
 
 	
 #include "CStationType.h"
-using namespace StationTypeMod;
+	
+
 	
 
 
@@ -77,9 +80,11 @@ using namespace StationTypeMod;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
 
 /*\file Station.h
-    \brief Generated from model's revision "1.58", branch "HEAD"
+    \brief Generated from model's revision "1.61", branch "HEAD"
 */
 
 namespace asdm {
@@ -89,16 +94,19 @@ namespace asdm {
 	
 
 class StationRow;
-typedef void (StationRow::*StationAttributeFromBin) (EndianISStream& eiss);
+typedef void (StationRow::*StationAttributeFromBin) (EndianIStream& eis);
+typedef void (StationRow::*StationAttributeFromText) (const string& s);
 
 /**
  * The StationRow class is a row of a StationTable.
  * 
- * Generated from model's revision "1.58", branch "HEAD"
+ * Generated from model's revision "1.61", branch "HEAD"
  *
  */
 class StationRow {
 friend class asdm::StationTable;
+friend class asdm::RowTransformer<StationRow>;
+//friend class asdm::TableStreamReader<StationTable, StationRow>;
 
 public:
 
@@ -229,6 +237,47 @@ public:
 	
 
 
+	
+	// ===> Attribute time, which is optional
+	
+	
+	
+	/**
+	 * The attribute time is optional. Return true if this attribute exists.
+	 * @return true if and only if the time attribute exists. 
+	 */
+	bool isTimeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get time, which is optional.
+ 	 * @return time as ArrayTime
+ 	 * @throws IllegalAccessException If time does not exist.
+ 	 */
+ 	ArrayTime getTime() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set time with the specified ArrayTime.
+ 	 * @param time The ArrayTime value to which time is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTime (ArrayTime time);
+		
+	
+	
+	
+	/**
+	 * Mark time, which is an optional field, as non-existent.
+	 */
+	void clearTime ();
+	
+
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -285,7 +334,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a StationRowIDL struct.
 	 */
-	StationRowIDL *toIDL() const;
+	asdmIDL::StationRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -294,14 +343,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (StationRowIDL x) ;
+	void setFromIDL (asdmIDL::StationRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -309,7 +358,31 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, StationAttributeFromBin> fromBinMethods;
+void stationIdFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void typeFromBin( EndianIStream& eis);
+
+void timeFromBin( EndianIStream& eis);
+
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the StationTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static StationRow* fromBin(EndianIStream& eis, StationTable& table, const std::vector<std::string>& attributesSeq);	 
+     /// @endcond			
 
 private:
 	/**
@@ -414,6 +487,19 @@ private:
 	
  	
 
+	
+	// ===> Attribute time, which is optional
+	
+	
+	bool timeExists;
+	
+
+	ArrayTime time;
+
+	
+	
+ 	
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -423,16 +509,43 @@ private:
 	///////////
 	
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////
-	map<string, StationAttributeFromBin> fromBinMethods;
-void stationIdFromBin( EndianISStream& eiss);
-void nameFromBin( EndianISStream& eiss);
-void positionFromBin( EndianISStream& eiss);
-void typeFromBin( EndianISStream& eiss);
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, StationAttributeFromBin> fromBinMethods;
+void stationIdFromBin( EndianIStream& eis);
+void nameFromBin( EndianIStream& eis);
+void positionFromBin( EndianIStream& eis);
+void typeFromBin( EndianIStream& eis);
 
-		
+void timeFromBin( EndianIStream& eis);
+
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, StationAttributeFromText> fromTextMethods;
+	
+void stationIdFromText (const string & s);
+	
+	
+void nameFromText (const string & s);
+	
+	
+void positionFromText (const string & s);
+	
+	
+void typeFromText (const string & s);
+	
+
+	
+void timeFromText (const string & s);
+	
+	
+	
+	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -441,14 +554,14 @@ void typeFromBin( EndianISStream& eiss);
 	 void toBin(EndianOSStream& eoss);
 	 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
 	  * @param table the StationTable to which the row built by deserialization will be parented.
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
-	  */
-	 static StationRow* fromBin(EndianISStream& eiss, StationTable& table, const vector<string>& attributesSeq);	 
 
+	 static StationRow* fromBin(EndianIStream& eis, StationTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

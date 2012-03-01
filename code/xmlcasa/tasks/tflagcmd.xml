@@ -43,15 +43,10 @@
                         <value type="vector"></value>
                 </param>
 
-                <param type="bool" name="useapplied" subparam="true">
-                        <description>Select by APPLIED column (True will select all)</description>
-                        <value>False</value>
-                </param>
-
                 <param type="any" name="reason" subparam="true">
                         <description>Select by REASON types</description>
                         <any type="variant" limittypes="string stringArray"/>
-                        <value type="string"></value>
+                        <value type="string">any</value>
                 </param>
 
                 <param type="any" name="command" subparam="true">
@@ -83,9 +78,14 @@
                         </allowed>
                 </param>
 
+                <param type="bool" name="useapplied" subparam="true">
+                        <description>Apply commands also to rows that have APPLIED column set to True</description>
+                        <value>False</value>
+                </param>
+
                 <param type="bool" name="flagbackup" subparam="true">
                         <description>Automatically backup the FLAG column before execution</description>
-                        <value>True</value>
+                        <value>False</value>
                 </param>
 
                 <param type="bool" name="clearall" subparam="true">
@@ -102,16 +102,6 @@
                     <description>Name of output file to save plot</description>
                     <value></value>
             </param>
-
-            <param type="string" name="display">
-                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
-                <value type="string"></value>
-            </param>
-
-            <param type="bool" name="writeflags">
-                <description>Write flags to the MS</description>
-                <value>True</value>
-             </param>
 
             <param type="bool" name="sequential">
                 <description>Run the task in sequential or in parallel.</description>
@@ -133,11 +123,11 @@
                             <equals value="table">
                                     <default param="inpfile"><value type="string"></value></default>
                                     <default param="tablerows"><value type="vector"></value></default>
-                                    <default param="useapplied"><value type="bool">False</value></default>
-                                    <default param="reason"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
                             </equals>
                             <equals value="file">
                                     <default param="inpfile"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
                             </equals>
                             <equals value="cmd">
                                     <default param="command"><value>['']</value></default>
@@ -145,13 +135,14 @@
                             <equals value="xml">
                                     <default param="tbuff"><value>1.0</value></default>
                                     <default param="ants"><value type="string"></value></default>
-                                    <default param="reason"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
                             </equals>
                     </when>
 
                     <when param="action">
                             <equals value="list"></equals>
                             <equals value="apply">
+                                    <default param="useapplied"><value type="bool">False</value></default>
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="unapply">
@@ -229,14 +220,7 @@
                       tablerows = range(0,30) + range(50,55)
                    instead of '0~29,50~54' for now.
        
-              useapplied -- read flag commands based on APPLIED column values:
-                   options: True,False
-                   default: False   
-
-                   If useapplied=True it will read in both applied and
-                   unapplied flags
-
-              reason -- select flags commands based on REASON(s) 
+              reason -- select flag commands based on REASON(s) 
                    default: '' (all flags regardless of reason)
                             can be a string, or list of strings
                    example: reason='FOCUS_ERROR'
@@ -251,6 +235,17 @@
        
               inpfile -- name of ASCII flagging command file
                    default: '' (read from FlagCMD.txt in MS)
+
+              reason -- select flag commands based on REASON(s) 
+                   default: '' (all flags regardless of reason)
+                            can be a string, or list of strings
+                   example: reason='FOCUS_ERROR'
+                            reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
+
+                   NOTE: what is within the string is literally
+                   mateched, e.g. reason='' matches only blank reasons, 
+                   and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
+                   matches this compound reason string only
        
            inpmode "cmd" -- input commands via list of strings
        
@@ -265,7 +260,7 @@
                         e.g. antenna='ea01'
                    default: '' (all flags regardless of antenna)
        
-              reason -- select flags based on REASONs, 
+              reason -- select flag commands based on REASON(s), 
                    default: 'Any' (all flags regardless of reason)
                             can be a string, or list of strings
                    example: reason='FOCUS_ERROR'
@@ -285,6 +280,13 @@
               This operation will apply the commands chosen by inpmode.       
               If inpmode='table' it will set the APPLIED column to True.
               
+              useapplied -- apply the flag commands on the rows that have APPLIED=True
+                   options: True,False
+                   default: False   
+
+                   If useapplied=True it will read in both applied and
+                   unapplied flags
+
               flagbackup -- Automatically backup MS FLAG column before applying?
                    options: True,False
                    default: False
@@ -362,31 +364,6 @@
               This option will return the internal flagging dictionary to
               python.
 
-        display -- Display data and/or end-of-MS reports at runtime.
-        
-               default: 'none'
-               options: 'none', 'data', 'report', 'both'
-                  'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
-                      This option opens a GUI to show the 2D time-freq planes of
-                      the data with old and new flags, for all correlations per baseline.
-                      -- The GUI allows stepping through all baselines (prev/next) in
-                      the current chunk (set by 'ntime'), and stepping to the next-chunk.
-                      -- The 'testautoflag' task can be quit from the GUI, in case it becomes
-                      obvious that the current set of parameters is just wrong.
-                      -- There is an option to stop the display but continue flagging.
-
-                  'report' --> displays enf-of-MS reports on the screen.
-                                
-                  'both' --> displays data per chunk and end-of-MS reports on the screen.
-
-        writeflags -- Choose whether or not to write flags to the MS 
-                 default: True
-                 options: True/False
-                    The tflagcmd task can be run in 'writeflags=False' mode just to inspect the data,
-                    or to try different parameters and converge on a set that works for a particular
-                    dataset.
-                    Note: this parameter is disabled when mode='summary'.
-
 
         sequential -- Run the task in sequential or in parallel. If you want to preserve the
                       order in which the commands appear in the list, set sequential to True.
@@ -414,7 +391,6 @@
         
           inpmode = 'table'
           action = 'list'
-          useapplied = ''
 
         To apply the flags stored in the FLAG_CMD table in the MS,
         simply set inpmode='table' and action='apply', e.g.
@@ -547,10 +523,6 @@
           
           If inpmode='table' and inpfile='' then the APPLIED column in FLAG_CMD
           will be set to True.
-
-          NOTE: this can happen even if there was a failure in application, so 
-          to (re)apply you may need to rerun with useapplied=True to pick these
-          up. I will try to better engineer this in a later version.
 
         * action = 'unapply'
 

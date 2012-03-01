@@ -5,6 +5,7 @@ import math
 import pdb
 import shutil
 import string
+import time
 from taskinit import *
 
 ###some helper tools
@@ -53,12 +54,15 @@ def readFile(inputfile):
     
     return cmdlist
 
-def makeDict(cmdlist):
+def makeDict(cmdlist, myreason='any'):
     '''Make a dictionary compatible with a FLAG_CMD table structure
+       and select by reason if any is given
     
        cmdlist --> list of parameters to go into the COMMAND column
        
-       Returns a dictionary with the following structure and default values
+       Returns a dictionary with the the selected rows with the following 
+       structure and default values:
+       
         flagd['row']      =
         flagd['applied']  = False
         flagd['command']  = ''
@@ -70,43 +74,85 @@ def makeDict(cmdlist):
         flagd['type']     = 'FLAG'
 
     '''
-
+    
     if cmdlist.__len__() == 0:
         raise Exception, 'Empty list of commands'
+
+    # select by these reasons
+    myreaslist = []
+    if type(myreason) == str:
+        if myreason != 'any':
+            myreaslist.append(myreason)
+    elif type(myreason) == list:
+        myreaslist = myreason
+    else:
+        casalog.post('Cannot read reason; it contains unknown variable types',
+                     'ERROR')
+        return
+
+    # List of reasons in input file
+    nrows = cmdlist.__len__()
+    reaslist = []
+    for i in range(nrows):            
+        command = cmdlist[i]
+        if command.__contains__('reason'):
+            reaslist.append(getReason(command))
+        else:
+            # so that cmdlist and reaslist have the same sizes
+            reaslist.append('')
+            
     
     # Defaults for columns
     applied = False
     interval = 0.0
     level = 0
-    reason = ''
     severity = 0
-    time = 0.0
-    type = 'FLAG'
+    coltime = 0.0
+    coltype = 'FLAG'
     
     myflagd = {}
     ncmds = 0
-    nrows = cmdlist.__len__()
+    rowlist = range(nrows)
+
+    # If select by reason is requested
+    if myreaslist.__len__() > 0:
+        rowl = []
+        for i in range(nrows):
+            # If selection matches what is in input line
+            if myreaslist.count(reaslist[i]) > 0:
+                rowl.append(i)
+        rowlist = rowl
+
     try:
-        for i in range(nrows):            
+        for i in rowlist:            
             command = cmdlist[i]
+            reason = reaslist[i]
                                 
+            # Skip comment lines
+            if command.startswith('#'):
+                break
             if command == '':
                 casalog.post('Ignoring empty command line', 'WARN')
                 continue
             if command.__contains__('summary'):
                 casalog.post('Mode summary is not allowed in list operation', 'WARN')
                 continue
-                
+
             flagd = {}
+                        
             flagd['row'] = str(i)
             flagd['applied'] = applied
+            flagd['reason'] = reason 
+            
+            # Remove reason from command line               
+            newline = command
+            command = purgeParameter(newline, 'reason')
             flagd['command'] = command
             flagd['interval'] = interval
             flagd['level'] = level
-            flagd['reason'] = reason
             flagd['severity'] = severity
-            flagd['time'] = time
-            flagd['type'] = type
+            flagd['time'] = coltime
+            flagd['type'] = coltype
             # Insert into main dictionary
             myflagd[ncmds] = flagd
             ncmds += 1
@@ -117,14 +163,15 @@ def makeDict(cmdlist):
     return myflagd
 
 
-def readXML(sdmfile, mytbuff=1.0):    
-    '''Reads Antenna.xml and Flag.xml SDM tables and parses
-       into returned dictionary as flag command strings.
-       sdmfile (string) -->  path to SDM containing Antenna.xml and Flag.xml
-       mytbuff (float)  -->  time interval (start and end) padding (seconds)
-       
-       Returns a dictionary with a FLAG_CMD structure'''
+
+def readXML(sdmfile, mytbuff):
 #
+#   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
+#                into returned dictionary as flag command strings
+#      sdmfile (string)  path to SDM containing Antenna.xml and Flag.xml
+#      mytbuff (float)   time interval (start and end) padding (seconds)
+#
+#   Usage: myflags = readflagxml(sdmfile,tbuff)
 #
 #   Dictionary structure:
 #   fid : 'id' (string)
@@ -134,13 +181,30 @@ def readXML(sdmfile, mytbuff=1.0):
 #         'reason' (string)
 #         'time' (float)          in mjd seconds
 #         'interval' (float)      in mjd seconds
-#         'cmd' (string)          string (for COMMAND col in FLAG_CMD)
+#         'command' (string)          string (for COMMAND col in FLAG_CMD)
 #         'type' (string)         'FLAG' / 'UNFLAG'
 #         'applied' (bool)        set to True here on read-in
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
 #
+#   Updated STM 2011-11-02 handle new SDM Flag.xml format from ALMA
+#   Updated STM 2012-02-14 handle spectral window indices, names, IDs
+#   Updated STM 2012-02-21 handle polarization types
+#
+#   Mode to use for spectral window selection in commands:
+#   spwmode =  0 none (flag all spw)
+#   spwmode =  1 use name
+#   spwmode = -1 use index (counting rows in SpectralWindow.xml)
+#
+#   Mode to use for polarization selection in commands:
+#   polmode =  0 none (flag all pols/corrs)
+#   polmode =  1 use polarization type
+#
+#   CURRENT DEFAULT: Use spw names, flag pols
+    spwmode = 1
+    polmode = 1
 
+#
     try:
         from xml.dom import minidom
     except ImportError, e:
@@ -148,9 +212,26 @@ def readXML(sdmfile, mytbuff=1.0):
         exit(1)
 
     if type(mytbuff) != float:
-        casalog.post('Incorrect type for tbuff, found "'
-                     + str(mytbuff) + '", setting to 1.0', 'WARN')
+        casalog.post('Warning: incorrect type for tbuff, found "'
+                     + str(mytbuff) + '", setting to 1.0')
         mytbuff = 1.0
+
+    # make sure Flag.xml and Antenna.xml are available (SpectralWindow.xml depends)
+    flagexist = os.access(sdmfile + '/Flag.xml', os.F_OK)
+    antexist = os.access(sdmfile + '/Antenna.xml', os.F_OK)
+    spwexist = os.access(sdmfile + '/SpectralWindow.xml', os.F_OK)
+    if not flagexist:
+        print 'ERROR: Cannot open ' + sdmfile + '/Flag.xml'
+        casalog.post('Cannot open ' + sdmfile + '/Flag.xml', 'SEVERE')
+        exit(1)
+    if not antexist:
+        print 'ERROR: Cannot open ' + sdmfile + '/Antenna.xml'
+        casalog.post('Cannot open ' + sdmfile + '/Antenna.xml', 'SEVERE'
+                     )
+        exit(1)
+    if not spwexist:
+        casalog.post('Cannot open ' + sdmfile + '/SpectralWindow.xml',
+                     'WARN')
 
     # construct look-up dictionary of name vs. id from Antenna.xml
     xmlants = minidom.parse(sdmfile + '/Antenna.xml')
@@ -162,14 +243,58 @@ def readXML(sdmfile, mytbuff=1.0):
         rowid = rownode.getElementsByTagName('antennaId')
         antid = str(rowid[0].childNodes[0].nodeValue)
         antdict[antid] = ant
+    print '  Found ' + str(rowlist.length) + ' antennas in Antenna.xml'
     casalog.post('Found ' + str(rowlist.length)
-                 + ' antennas in Antenna.xml', 'DEBUG')
+                 + ' antennas in Antenna.xml')
+
+    # construct look-up dictionary of name vs. id from SpectralWindow.xml
+    if spwexist:
+        xmlspws = minidom.parse(sdmfile + '/SpectralWindow.xml')
+        spwdict = {}
+        rowlist = xmlspws.getElementsByTagName('row')
+        ispw = 0
+        for rownode in rowlist:
+            rowname = rownode.getElementsByTagName('name')
+            spw = str(rowname[0].childNodes[0].nodeValue)
+            rowid = rownode.getElementsByTagName('spectralWindowId')
+            spwid = str(rowid[0].childNodes[0].nodeValue)
+            spwdict[spwid] = {}
+            spwdict[spwid]['name'] = spw
+            spwdict[spwid]['index'] = ispw
+            ispw += 1
+        print '  Found ' + str(rowlist.length) \
+            + ' spw in SpectralWindow.xml'
+        casalog.post('Found ' + str(rowlist.length)
+                     + ' spw in SpectralWindow.xml')
+
+    # report chosen spw and pol modes
+    if spwmode > 0:
+        print 'Will construct spw flags using Names'
+        casalog.post('Will construct spw flags using names')
+    elif spwmode < 0:
+        print 'Will construct spw flags using table indices'
+        casalog.post('Will construct spw flags using table indices')
+    else:
+        print 'Will not set spw dependent flags (flag all spws)'
+        casalog.post('')
+    #
+    if polmode == 0:
+        print 'Will not set polarization dependent flags (flag all corrs)'
+        casalog.post('Will not set polarization dependent flags (flag all corrs)'
+                     )
+    else:
+        print 'Will construct polarization flags using polarizationType'
+        casalog.post('Will construct polarization flags using polarizationType'
+                     )
 
     # now read Flag.xml into dictionary row by row
     xmlflags = minidom.parse(sdmfile + '/Flag.xml')
     flagdict = {}
     rowlist = xmlflags.getElementsByTagName('row')
     nrows = rowlist.length
+    newsdm = -1
+    newspw = -1
+    newpol = -1
     for fid in range(nrows):
         rownode = rowlist[fid]
         rowfid = rownode.getElementsByTagName('flagId')
@@ -177,8 +302,40 @@ def readXML(sdmfile, mytbuff=1.0):
         flagdict[fid] = {}
         flagdict[fid]['id'] = fidstr
         rowid = rownode.getElementsByTagName('antennaId')
-        antid = str(rowid[0].childNodes[0].nodeValue)
-        antname = antdict[antid]
+        antid = rowid[0].childNodes[0].nodeValue
+    # check if there is a numAntenna specified (new format)
+        rownant = rownode.getElementsByTagName('numAntenna')
+        antname = ''
+        if rownant.__len__() > 0:
+            xid = antid.split()
+            nant = int(rownant[0].childNodes[0].nodeValue)
+            if newsdm < 0:
+                print '  Found numAntenna=' + str(nant) \
+                    + ' must be a new style SDM'
+                casalog.post('Found numAntenna=' + str(nant)
+                             + ' must be a new style SDM')
+            newsdm = 1
+            if nant > 0:
+                for ia in range(nant):
+                    aid = xid[2 + ia]
+                    ana = antdict[aid]
+                    if antname == '':
+                        antname = ana
+                    else:
+                        antname += ',' + ana
+            else:
+            # numAntenna = 0 means flag all antennas
+                antname = ''
+        else:
+            if newsdm < 0:
+                print '  No numAntenna entry found, must be a old style SDM'
+                casalog.post('No numAntenna entry found, must be a old style SDM'
+                             )
+            newsdm = 0
+            nant = 1
+            aid = antid
+            ana = antdict[aid]
+            antname = ana
         # start and end times in mjd ns
         rowstart = rownode.getElementsByTagName('startTime')
         start = int(rowstart[0].childNodes[0].nodeValue)
@@ -198,6 +355,62 @@ def readXML(sdmfile, mytbuff=1.0):
         # reasons
         rowreason = rownode.getElementsByTagName('reason')
         reas = str(rowreason[0].childNodes[0].nodeValue)
+    # NEW SDM ADDITIONS 2011-11-01
+        rownspw = rownode.getElementsByTagName('numSpectralWindow')
+        spwstring = ''
+        if spwmode != 0 and rownspw.__len__() > 0:
+            nspw = int(rownspw[0].childNodes[0].nodeValue)
+        # has a new-style spw specification
+            if newspw < 0:
+                if not spwexist:
+                    print 'ERROR: Cannot open ' + sdmfile \
+                        + '/SpectralWindow.xml'
+                    casalog.post('Cannot open ' + sdmfile
+                                 + '/SpectralWindow.xml', 'SEVERE')
+                    exit(1)
+                print '  Found numSpectralWindow=' + str(nspw) \
+                    + ' must be a new style SDM'
+                casalog.post('Found SpectralWindow=' + str(nspw)
+                             + ' must be a new style SDM')
+            newspw = 1
+            if nspw > 0:
+                rowspwid = \
+                    rownode.getElementsByTagName('spectralWindowId')
+                spwids = rowspwid[0].childNodes[0].nodeValue
+                xspw = spwids.split()
+                for isp in range(nspw):
+                    spid = str(xspw[2 + isp])
+                    if spwmode > 0:
+                        spstr = spwdict[spid]['name']
+                    else:
+                        spstr = str(spwdict[spid]['index'])
+                    if spwstring == '':
+                        spwstring = spstr
+                    else:
+                        spwstring += ',' + spstr
+        polstring = ''
+        rownpol = rownode.getElementsByTagName('numPolarizationType')
+        if polmode != 0 and rownpol.__len__() > 0:
+            npol = int(rownpol[0].childNodes[0].nodeValue)
+        # has a new-style pol specification
+            if newpol < 0:
+                print '  Found numPolarizationType=' + str(npol) \
+                    + ' must be a new style SDM'
+                casalog.post('Found numPolarizationType=' + str(npol)
+                             + ' must be a new style SDM')
+            newpol = 1
+            if npol > 0:
+                rowpolid = \
+                    rownode.getElementsByTagName('polarizationType')
+                polids = rowpolid[0].childNodes[0].nodeValue
+                xpol = polids.split()
+                for ipol in range(npol):
+                    polid = str(xpol[2 + ipol])
+                    if polstring == '':
+                        polstring = polid
+                    else:
+                        polstring += ',' + polid
+    #
         # Construct antenna name and timerange and reason strings
         flagdict[fid]['antenna'] = antname
         timestr = starttime + '~' + endtime
@@ -205,6 +418,12 @@ def readXML(sdmfile, mytbuff=1.0):
         flagdict[fid]['reason'] = reas
         # Construct command strings (per input flag)
         cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
+        if spwstring != '':
+            cmd += " spw='" + spwstring + "'"
+            flagdict[fid]['spw'] = spwstring
+        if polstring != '':
+            cmd += " poln='" + polstring + "'"
+            flagdict[fid]['poln'] = polstring
         flagdict[fid]['command'] = cmd
     #
         flagdict[fid]['type'] = 'FLAG'
@@ -216,16 +435,19 @@ def readXML(sdmfile, mytbuff=1.0):
     flags = {}
     if rowlist.length > 0:
         flags = flagdict
+        print '  Found ' + str(rowlist.length) + ' flags in Flag.xml'
         casalog.post('Found ' + str(rowlist.length)
-                     + ' flags in Flag.xml', 'DEBUG')
+                     + ' flags in Flag.xml')
     else:
-        casalog.post('No valid flags found in Flag.xml', 'WARN')
+        print 'No valid flags found in Flag.xml'
+        casalog.post('No valid flags found in Flag.xml')
 
     # return the dictionary for later use
     return flags
 
 
-def getUnion(cmdlist):
+
+def getUnion(mslocal, vis, cmdlist):
     '''Get a dictionary of a union of all selection parameters from a list of lines:
        cmdlist --> list of strings with parameters and values (par=val)
     '''
@@ -263,6 +485,11 @@ def getUnion(cmdlist):
     for i in range(nrows):
         cmdline = cmdlist[i]
         
+        # Skip if it is a comment line
+        if cmdline.startswith('#'):
+            print "skipping this line with keyv=%s"%keyv
+            break
+        
         # split by white space
         keyvlist = cmdline.split()
         if keyvlist.__len__() > 0:  
@@ -272,8 +499,9 @@ def getUnion(cmdlist):
 
                 # Skip if it is a comment character #
 #                if keyv.count('#') > 0:
-                if keyv.startswith('#'):
-                    break
+#                if keyv.startswith('#'):
+#                    print "skipping this line with keyv=%s"%keyv
+#                    break
                     
                 (xkey,xval) = keyv.split('=')
 
@@ -292,7 +520,7 @@ def getUnion(cmdlist):
                     fields += xval + ','
 
                 elif xkey == "antenna":
-                    ants += xval + ','
+                    ants += xval + ';'
 
                 elif xkey == "timerange":
                     times += xval + ','
@@ -322,7 +550,7 @@ def getUnion(cmdlist):
     # Strip out the extra comma at the end
     scans = scans.rstrip(',')
     fields = fields.rstrip(',')
-    ants = ants.rstrip(',')
+    ants = ants.rstrip(';')
     times = times.rstrip(',')
     corrs = corrs.rstrip(',')
     ints = ints.rstrip(',')
@@ -335,7 +563,8 @@ def getUnion(cmdlist):
     dicpars['scan'] = scans
     dicpars['field'] = fields
     dicpars['antenna'] = ants
-    dicpars['timerange'] = times
+    # Times are handled better within the framework.
+    dicpars['timerange'] = '' #times 
     # Correlations should be handled only by the agents
     dicpars['correlation'] = ''
     dicpars['intent'] = ints
@@ -344,6 +573,10 @@ def getUnion(cmdlist):
     dicpars['uvrange'] = uvs
     dicpars['spw'] = spws
     dicpars['observation'] = obs
+
+    # Compress the selection list to reduce MSSelection parsing time.
+    # 'field','spw','antenna' strings in dicpars will be modified in-place.
+    compressSelectionList(mslocal,vis,dicpars);
 
     # Real number of input lines
     # Get the number of occurrences of each parameter
@@ -427,50 +660,81 @@ def getNumPar(cmdlist):
                         xval = xval.strip("'")
                     if xval.count('"') > 0:
                         xval = xval.strip('"')
+                    # Remove blanks
+                    xval=xval.replace(' ','');
 
-                # Check which parameter
-                if xkey == "scan":
-                    si += 1
-                    npars['scan'] = si
-
-                elif xkey == "field":
-                    fi += 1
-                    npars['field'] = fi
-
-                elif xkey == "antenna":
-                    ai += 1
-                    npars['antenna'] = ai
-
-                elif xkey == "timerange":
-                    ti += 1
-                    npars['timerange'] = ti
-
-                elif xkey == "correlation":
-                    coi += 1
-                    npars['correlation'] = coi
-
-                elif xkey == "intent":
-                    ii += 1
-                    npars['intent'] = ii
-
-                elif xkey == "feed":
-                    fei += 1
-                    npars['feed'] = fei
-
-                elif xkey == "array":
-                    ari += 1
-                    npars['array'] = ari
-                    arrays += xval + ','
-
-                elif xkey == "uvrange":
-                    ui += 1
-                    npars['uvrange'] = ui
-
-                elif xkey == "spw":
-                    pi += 1
-                    npars['spw'] = pi
-
+                # Check which parameter, if not empty
+                if xval != "":
+                    if xkey == "scan":
+                        si += 1
+                        npars['scan'] = si
+                        
+                    elif xkey == "field":
+                        fi += 1
+                        npars['field'] = fi
+                        
+                    elif xkey == "antenna":
+                        ai += 1
+                        npars['antenna'] = ai
+                        
+                    elif xkey == "timerange":
+                        ti += 1
+                        npars['timerange'] = ti
+                        
+                    elif xkey == "correlation":
+                        coi += 1
+                        npars['correlation'] = coi
+                        
+                    elif xkey == "intent":
+                        ii += 1
+                        npars['intent'] = ii
+                        
+                    elif xkey == "feed":
+                        fei += 1
+                        npars['feed'] = fei
+                        
+                    elif xkey == "array":
+                        ari += 1
+                        npars['array'] = ari
+                        arrays += xval + ','
+                        
+                    elif xkey == "uvrange":
+                        ui += 1
+                        npars['uvrange'] = ui
+                        
+                    elif xkey == "spw":
+                        pi += 1
+                        npars['spw'] = pi
+                        
     return npars
+
+def compressSelectionList(mslocal=None, vis='',dicpars={}):
+    """
+    - Find a loose union of data-selection parameters, to reduce the MSSelection parsing load.
+    - This compressed selection list is only meant to be used with tf.selectdata(), because
+      further selections are handled internally.
+    - Use MSSelection in its 'onlyparse=True' mode to gather a list of fields, spws, antennas
+      touched by the selection list. These are the only keys for which MSSelection does not 
+      need to parse the MS, and will cover the expensive cases where complicated antenna
+      and spw expressions can slow MSSelection down.   
+    """
+    from numpy import unique;
+    indices = mslocal.msseltoindex(vis=vis,field=dicpars['field'], spw=dicpars['spw'],baseline=dicpars['antenna']);
+
+    c_field = str(list(unique(indices['field']))).strip('[]');
+    c_spw = str(list(unique(indices['spw']))).strip('[]');
+    c_antenna = str(list( unique( list(indices['antenna1']) + list(indices['antenna2']) ) ) ).strip('[]');
+
+    dicpars['field'] = c_field;
+    dicpars['spw'] = c_spw;
+    dicpars['antenna'] = c_antenna;
+
+    # Programmer note : Other selection parameters that can be compressed accurately
+    # from MS subtable information alone (no need to parse the main table) are 
+    # 'array', 'observationid', 'state(or intent)'. They are currently un-available 
+    # via ms.msseltoindex() and therefore not used here yet.
+
+    return;
 
 
 def writeCMD(msfile, flagcmd, writeflags, outfile):
@@ -580,8 +844,13 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
         
         try:
             for key in myflags.keys():
-                cmdline = myflags[key]['command']
-                print >> ffout, '%s' % cmdline
+                # remove leading and trailing white spaces
+                cmdline = myflags[key]['command'].strip()
+                reason = myflags[key]['reason']
+                if reason != '':
+                    print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
+                else:
+                    print >> ffout, '%s' %cmdline
         except:
             raise Exception, 'Error writing lines to file ' \
                 + outfile
@@ -646,14 +915,49 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
                   nrow=nadd)
         tb.close()
     
-        casalog.post('Saved ' + str(nadd) + ' rows to FLAG_CMD', 'DEBUG')
+        casalog.post('Saved ' + str(nadd) + ' rows to FLAG_CMD')
         
     else:
-        casalog.post('Saved zero rows to FLAG_CMD; no flags found', 'DEBUG')
+        casalog.post('Saved zero rows to FLAG_CMD; no flags found')
 
     return nadd
 
 
+def getReason(cmdline):
+    '''Get the reason values from a line with strings
+       -> cmdline is a string with parameters
+          returns a string with reason values.
+    '''
+            
+    reason = ''
+    
+    # Split by white space
+    keyvlist = cmdline.split()
+    if keyvlist.__len__() > 0:  
+        
+        for keyv in keyvlist:            
+
+            # Skip if it is a comment character #
+            if keyv.count('#') > 0:
+                break
+
+            # Split by '='
+            (xkey,xval) = keyv.split('=')
+
+            # Remove quotes
+            if type(xval) == str:
+                if xval.count("'") > 0:
+                    xval = xval.strip("'")
+                if xval.count('"') > 0:
+                    xval = xval.strip('"')
+
+            # Check if reason is in
+            if xkey == "reason":
+                reason = xval
+                break;
+    
+                                    
+    return reason
 
 
 def getLinePars(cmdline, mlist=[]):
@@ -666,15 +970,16 @@ def getLinePars(cmdline, mlist=[]):
     # Dictionary of parameters to return
     dicpars = {}
         
+    # Skip comment lines
+    if cmdline.startswith('#'):
+        return dicpars    
+    
     # split by white space
     keyvlist = cmdline.split()
     if keyvlist.__len__() > 0:  
         
         # Split by '='
         for keyv in keyvlist:
-            # Skip if it is a comment character #
-            if keyv.count('#') > 0:
-                break
 
             (xkey,xval) = keyv.split('=')
 
@@ -721,7 +1026,7 @@ def getLinePars(cmdline, mlist=[]):
 
             elif xkey == "mode":
                 dicpars['mode'] = xval
-
+                
             elif mlist != []:
                 # Any parameters requested for this mode?
                 for m in mlist:
@@ -810,8 +1115,10 @@ def fixType(params):
             
             
     # shadow parameter
-    if params.has_key('diameter'):
-        params['diameter'] = float(params['diameter'])
+    if params.has_key('tolerance'):
+        params['tolerance'] = float(params['tolerance'])
+    if params.has_key('recalcuvw'):
+        params['recalcuvw'] = eval(params['recalcuvw'].capitalize())
            
     # elevation parameters
     if params.has_key('lowerlimit'):
@@ -880,6 +1187,240 @@ def purgeEmptyPars(cmdline):
         casalog.post('String of parameters is empty','WARN')   
          
     return newstr
+
+
+def purgeParameter(cmdline, par):
+    '''Remove parameter par from a string:
+       -> cmdline is a string with a parameter to be removed
+       returns a string containing the remaining parameters
+    '''
+               
+    newstr = ''
+    
+    # split by white space
+    keyvlist = cmdline.split()
+    if keyvlist.__len__() > 0:  
+        
+        # Split by '='
+        for keyv in keyvlist:
+
+            (xkey,xval) = keyv.split('=')
+
+            # Remove quotes
+            if type(xval) == str:
+                if xval.count("'") > 0:
+                    xval = xval.strip("'")
+                if xval.count('"') > 0:
+                    xval = xval.strip('"')
+            
+            # Write only parameters with values
+            if xkey == par:
+                continue
+            else:
+                newstr = newstr+xkey+'='+xval+' '
+            
+    else:
+        casalog.post('String of parameters is empty','WARN')   
+         
+    return newstr
+
+def setupAgent(tflocal, myflagcmd, myrows, apply):
+    ''' Setup the parameters of each agent and call the tflagger tool
+        myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
+        myrows --> selected rows to apply/unapply flags
+        apply --> it's a boolean to control whether to apply or unapply the flags'''
+
+
+    if not myflagcmd.__len__() >0:
+        casalog.post('There are no flag cmds in list', 'SEVERE')
+        return
+    
+    # Parameters for each mode
+    manualpars = []
+    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
+    quackpars = ['quackinterval','quackmode','quackincrement']
+    shadowpars = ['tolerance', 'recalcuvw', 'antennafile']
+    elevationpars = ['lowerlimit','upperlimit'] 
+    tfcroppars = ['ntime','combinescans','expression','datacolumn','timecutoff','freqcutoff',
+                  'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
+    extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
+                  'flagneartime','flagnearfreq']
+    
+        
+    # dictionary of successful command lines to save to outfile
+    savelist = {}
+
+    # Setup the agent for each input line    
+    for key in myflagcmd.keys():
+        cmdline = myflagcmd[key]['command']
+        applied = myflagcmd[key]['applied']
+        interval = myflagcmd[key]['interval']
+        level = myflagcmd[key]['level']
+        reason = myflagcmd[key]['reason']
+        severity = myflagcmd[key]['severity']
+        coltime = myflagcmd[key]['time']
+        coltype = myflagcmd[key]['type']
+        casalog.post('cmdline for key%s'%key, 'DEBUG')
+        casalog.post('%s'%cmdline, 'DEBUG')
+        casalog.post('applied is %s'%applied, 'DEBUG')
+        
+        if cmdline.startswith('#'):
+            continue
+    
+        modepars = {}
+        parslist = {}
+        mode = ''    
+        valid = True
+                
+        # Get the specific parameters for the mode
+        if cmdline.__contains__('mode'):                 
+            if cmdline.__contains__('manual'): 
+                mode = 'manual'
+                modepars = getLinePars(cmdline,manualpars)   
+            elif cmdline.__contains__('clip'):
+                mode = 'clip'
+                modepars = getLinePars(cmdline,clippars)
+            elif cmdline.__contains__('quack'):
+                mode = 'quack'
+                modepars = getLinePars(cmdline,quackpars)
+            elif cmdline.__contains__('shadow'):
+                mode = 'shadow'
+                antennafile = ''
+                modepars = getLinePars(cmdline,shadowpars)
+                # Get antennafile
+                if (modepars.__contains__('antennafile') and
+                    modepars['antennafile'] != ''):
+                    antennafile = modepars['antennafile']
+                    addantenna = readAntennaList(antennafile)
+                    modepars['addantenna'] = addantenna
+            elif cmdline.__contains__('elevation'):
+                mode = 'elevation'
+                modepars = getLinePars(cmdline,elevationpars)
+            elif cmdline.__contains__('tfcrop'):
+                mode = 'tfcrop'
+                modepars = getLinePars(cmdline,tfcroppars)
+            elif cmdline.__contains__('extend'):
+                mode = 'extend'
+                modepars = getLinePars(cmdline,extendpars)
+            elif cmdline.__contains__('unflag'):
+                mode = 'unflag'
+                modepars = getLinePars(cmdline,manualpars)
+            elif cmdline.__contains__('rflag'):
+                mode = 'rflag'
+                modepars = getLinePars(cmdline,rflagpars)
+            else:
+                # Unknown mode, ignore it
+                casalog.post('Ignoring unknown mode', 'WARN')
+                valid = False
+
+        else:
+            # No mode means manual
+            mode = 'manual'
+            cmdline = cmdline+' mode=manual'
+            modepars = getLinePars(cmdline,manualpars)   
+                
+                
+        # Read ntime
+        readNtime(modepars)
+        
+        # Cast the correct type to non-string parameters
+        fixType(modepars)
+        
+        # Add the apply/unapply parameter to dictionary            
+        modepars['apply'] = apply
+        
+        # Unapply selected rows only and re-apply the other rows with APPLIED=True
+        if not apply and myrows.__len__() > 0:
+            if key in myrows:
+                modepars['apply'] = False
+            elif not applied:
+                casalog.post("Skipping this %s"%modepars,"DEBUG")
+                continue
+            elif applied:
+                modepars['apply'] = True
+                valid = False
+        
+        # Keep only cmds that overlap with the unapply cmds
+        # TODO later
+        
+        # Hold the name of the agent and the cmd row number
+        agent_name = mode.capitalize()+'_'+str(key)
+        modepars['name'] = agent_name
+        
+        # Remove the data selection parameters if there is only one agent,
+        # for performance reasons
+        if myflagcmd.__len__() == 1:
+            sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
+                     'spw','observation']
+            for k in sellist:
+                if modepars.has_key(k):
+                    modepars.pop(k)
+
+        casalog.post('Parsing parameters of mode %s in row %s'%(mode,key), 'DEBUG')
+        casalog.post('%s'%modepars, 'DEBUG')
+
+        # Parse the dictionary of parameters to the tool
+        if (not tflocal.parseagentparameters(modepars)):
+            casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,key), 'WARN')
+            continue
+                            
+        # Save the dictionary of valid agents
+        if valid:               
+            # add this command line to list to save in outfile
+            parslist['row'] = key
+            parslist['command'] = cmdline
+            parslist['applied'] = applied
+            parslist['interval'] = interval
+            parslist['level'] = level
+            parslist['reason'] = reason
+            parslist['severity'] = severity
+            parslist['time'] = coltime
+            parslist['type'] = coltype
+            savelist[key] = parslist
+        
+        # FIXME: Backup the flags
+#        if (flagbackup):
+#            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
+    
+    casalog.post('Dictionary of valid commands to save','DEBUG')
+    casalog.post('%s'%savelist, 'DEBUG')
+    
+    return savelist
+
+
+def backupFlags(tflocal, prename):
+
+        # Create names like this:
+        # before_tflagcmd_1,
+        # before_tflagcmd_2,
+        #
+        # Generally  before_<mode>_<i>, where i is the smallest
+        # integer giving a name, which does not already exist
+        
+    prefix = prename
+    existing = tflocal.getflagversionlist(printflags=True)
+
+    # remove comments from strings
+    existing = [x[0:x.find(' : ')] for x in existing]
+    i = 1
+    while True:
+        versionname = prefix + '_' + str(i)
+
+        if not versionname in existing:
+            break
+        else:
+            i = i + 1
+
+    time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+
+    casalog.post('Saving current flags to ' + versionname
+                 + ' before applying new flags')
+
+    tflocal.saveflagversion(versionname=versionname,
+                            comment='Flags autosave on ' + time_string, merge='replace')
+    
+    return
+
 
 ####
 ####   Set of functions to handle antenna information for shadowing.
@@ -1011,15 +1552,17 @@ def readAntennaList(infile=''):
     
     """
 
-    try:
-        if(os.path.exists(infile)):
+    if (type(infile) == str) & os.path.exists(infile):
+        try:
             ifile = file(infile,'r');
-            thelist = ifile.readlines();
-            ifile.close();
-            
-    except:
+        except:
             raise Exception, 'Error opening file ' + infile
-    
+        
+        thelist = ifile.readlines();
+        ifile.close();
+    else:
+        raise Exception, \
+            'File %s not found - please verify the name'%infile
     
     cleanlist=[];
     for aline in thelist:

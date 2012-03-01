@@ -50,10 +50,6 @@ const TagType* TagType:: Antenna = new TagType("Antenna") ;
 	
 
 	
-const TagType* TagType:: Beam = new TagType("Beam") ;
-	
-
-	
 
 	
 
@@ -180,6 +176,10 @@ const TagType* TagType:: SBSummary = new TagType("SBSummary") ;
 	
 
 	
+const TagType* TagType:: Scale = new TagType("Scale") ;
+	
+
+	
 
 	
 
@@ -247,10 +247,6 @@ const TagType* TagType::getTagType(string name) {
 
 	
 	TagType::name2TagType["Antenna"] = TagType::Antenna ;
-	
-
-	
-	TagType::name2TagType["Beam"] = TagType::Beam ;
 	
 
 	
@@ -377,6 +373,10 @@ const TagType* TagType::getTagType(string name) {
 
 	
 	TagType::name2TagType["SBSummary"] = TagType::SBSummary ;
+	
+
+	
+	TagType::name2TagType["Scale"] = TagType::Scale ;
 	
 
 	

@@ -330,6 +330,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
    */ 
 
   class SDMDataObject {
+    friend class SDMDataObjectStreamReader;
     friend class SDMDataObjectReader;
     friend class SDMDataObjectWriter;
     friend class HeaderParser;
@@ -1073,7 +1074,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * 
      * @throw SDMDataObjectException.
      */
-    bool aborted();
+    bool aborted() const ;
 
     /**
      * Returns the time, as an unsigned long long, at which the observation has been aborted.
@@ -1085,7 +1086,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      *
      * @throw SDMDataObjectException
      */
-    unsigned long long abortTime();
+    unsigned long long abortTime() const ;
 
 
 
@@ -1099,7 +1100,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      *
      * @throw SDMDataObjectException
      */
-    string abortReason();
+    string abortReason() const ;
 
 
     /**
@@ -1229,6 +1230,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
   class SDMDataSubset {
     friend class SDMDataObject;
     friend class SDMDataObjectReader;
+    friend class SDMDataObjectStreamReader;
     friend class SDMDataObjectWriter;
     friend class CorrSubsetHeaderParser;
     friend class TPSubsetHeaderParser;
@@ -1245,6 +1247,19 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 		  unsigned long long interval,
 		  const vector<float>& autoData);
 
+    /*
+     * A copy constructor.
+     */
+    SDMDataSubset(const SDMDataSubset & sdmDataSubset);
+
+    /*
+     * Overloading = 
+     */
+    SDMDataSubset& operator= (const SDMDataSubset& sdmDataSubset);
+
+    /*
+     * The destructor.
+     */
     virtual ~SDMDataSubset();
 
     const SDMDataObject* owner() const;
