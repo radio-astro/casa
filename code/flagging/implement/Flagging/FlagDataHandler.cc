@@ -603,7 +603,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (arraySelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " array selection is " << arraySelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " array selection is " << arraySelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -620,7 +620,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (fieldSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " field selection is " << fieldSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " field selection is " << fieldSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -637,7 +637,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (scanSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " scan selection is " << scanSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " scan selection is " << scanSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -654,7 +654,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (timeSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " timerange selection is " << timeSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " timerange selection is " << timeSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -671,7 +671,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (spwSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " spw selection is " << spwSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " spw selection is " << spwSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -688,7 +688,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (baselineSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " antenna selection is " << baselineSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " antenna selection is " << baselineSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -705,7 +705,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (uvwSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " uvrange selection is " << uvwSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -722,7 +722,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (polarizationSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -739,7 +739,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (observationSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " observation selection is " << observationSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " observation selection is " << observationSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -756,7 +756,7 @@ FlagDataHandler::setDataSelection(Record record)
 
 		if (scanIntentSelection_p.size())
 		{
-			*logger_p << LogIO::NORMAL << " scan intent selection is " << scanIntentSelection_p << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << " scan intent selection is " << scanIntentSelection_p << LogIO::POST;
 		}
 	}
 	else
@@ -859,7 +859,7 @@ FlagDataHandler::selectData()
 
 	if (!spwSelection_p.empty())
 	{
-		*logger_p << LogIO::DEBUG1 << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
 	}
 
 	if (!baselineSelection_p.empty())
