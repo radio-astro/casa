@@ -127,7 +127,7 @@ def importevla2(
         os.system(execute_string)
         if compression:
             visover = viso
-            viso = visover.rstrip('.ms') + '.compressed.ms'
+            viso = visover.replace('.ms','.compressed.ms')
         if flagbackup:
             ok = tf.open(viso)
             ok = tf.saveflagversion('Original',
