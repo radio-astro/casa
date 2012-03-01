@@ -119,7 +119,7 @@ MeasurementSets/MSLister.cc
 MeasurementSets/MSSpwIndex.cc
 MeasurementSets/MSTimeGram.cc
 MeasurementSets/MSDataDescription.cc
-MeasurementSets/MSFieldParse2.cc
+MeasurementSets/MSFieldParse.cc
 MeasurementSets/MSStateParse.cc
 MeasurementSets/MSTileLayout.cc
 MeasurementSets/MSFreqOffColumns.cc
@@ -198,7 +198,7 @@ MeasurementSets/MSFieldColumns.h
 MeasurementSets/MSFieldEnums.h
 MeasurementSets/MSFieldGram.h
 MeasurementSets/MSFieldIndex.h
-MeasurementSets/MSFieldParse2.h
+MeasurementSets/MSFieldParse.h
 MeasurementSets/MSFlagCmd.h
 MeasurementSets/MSFlagCmdColumns.h
 MeasurementSets/MSFlagCmdEnums.h
