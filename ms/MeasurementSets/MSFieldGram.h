@@ -31,7 +31,7 @@
 
 //# Includes
 #include <casa/BasicSL/String.h>
-#include <ms/MeasurementSets/MSFieldParse2.h>
+#include <ms/MeasurementSets/MSFieldParse.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

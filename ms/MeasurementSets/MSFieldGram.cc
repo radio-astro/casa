@@ -37,7 +37,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <ms/MeasurementSets/MSFieldGram.h>
-#include <ms/MeasurementSets/MSFieldParse2.h>
+#include <ms/MeasurementSets/MSFieldParse.h>
 #include <ms/MeasurementSets/MSFieldIndex.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 
