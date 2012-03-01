@@ -60,18 +60,29 @@ Record ImageStatsCalculator::calculate() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	Record retval;
 	Record region = *_getRegion();
+	std::auto_ptr<vector<String> > messageStore(
+		_getLogfile().empty() ? 0 : new vector<String>()
+	);
 	if (
 		! _ia->statistics(
 			retval, _axes, region, _getMask(),
 			_plotStats, _includepix, _excludepix, _plotter,
 			_nx, _ny, _list, _force, _disk, _robust, False,
-			_getStretch()
+			_getStretch(), messageStore.get()
 		)
 	) {
 		*_getLog() << "Unable to determine statistics" << LogIO::EXCEPTION;
 	}
 	Bool writeFile = _openLogfile();
 	if (_verbose || writeFile) {
+		if (writeFile) {
+			for (
+				vector<String>::const_iterator iter=messageStore->begin();
+				iter != messageStore->end(); iter++
+			) {
+				_writeLogfile("# " + *iter, False, False);
+			}
+		}
 		ImageCollapser collapsed(
 			_getImage(),
 			_axes.nelements() == 0
@@ -151,13 +162,15 @@ Record ImageStatsCalculator::calculate() {
 			}
 		}
 		ostringstream oss;
+		oss << "# ";
 		for (uInt i=0; i<reportAxes.nelements(); i++) {
 			String gg = worldAxes[reportAxes[i]];
 			gg.upcase();
 			uInt width = gg == "STOKES" ? 6 : gg == "FREQUENCY"?  16: 15;
 			colwidth.push_back(width);
-			oss << setw(width) << worldAxes[reportAxes[i]] << "(Pixel)" << " ";
-			width = 6;
+			oss << setw(width) << worldAxes[reportAxes[i]] << "  "
+				<< worldAxes[reportAxes[i]] << "(Plane)" << " ";
+			width = worldAxes[reportAxes[i]].size() + 9;
 			colwidth.push_back(width);
 		}
 		Vector<Int> axesMap = reportAxes.asVector();

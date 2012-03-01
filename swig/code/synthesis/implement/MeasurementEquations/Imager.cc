@@ -4758,9 +4758,11 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           PointShape point(fieldDir);
           SpectralIndex siModel;
           if(reffreq.getValue().getValue() > 0.0){
+	    MeasFrame mFrame(MEpoch(msc.timeMeas()(0)), mLocation_p, fieldDir);
+	    MFrequency::Convert cvt(mfreqs[selspw][0].getRef(), MFrequency::Ref(MFrequency::castType(reffreq.getRef().getType()), mFrame));
             siModel.setRefFrequency(reffreq);
             siModel.setIndex(spix);
-            returnFluxes[selspw][0].setValue(fluxUsed[0] * siModel.sample(mfreqs[selspw][0]));
+            returnFluxes[selspw][0].setValue(fluxUsed[0] * siModel.sample(cvt(mfreqs[selspw][0])));
           }
           else{
             if(spix != 0.0){            // If not the default, complain and quit.

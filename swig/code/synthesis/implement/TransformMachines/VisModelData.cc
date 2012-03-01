@@ -82,6 +82,76 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 
 }
 
+  Bool VisModelData::addToRec(Record& therec, const Vector<Int>& spws){
+
+    Int numft=0;
+    Int numcl=0;
+    Vector<Bool> hasSpw(spws.nelements(), False);
+    if(therec.isDefined("numft")){
+      numft=therec.asInt("numft");
+      Vector<Int> ft_toremove(numft, 0);
+      for(Int k=0; k < numft; ++k){
+	const Record& ftrec=therec.asRecord("ft_"+String::toString(k));
+	const Vector<Int>& ftspws=ftrec.asArrayInt("spws");
+	for (uInt i=0; i<spws.nelements(); ++i){
+	  for (uInt j=0; j<ftspws.nelements(); ++j){
+	    if(spws[i]==ftspws[j]){
+	      hasSpw[i]=True;	   
+	      ft_toremove[k]=1;
+	    }
+	  }	
+	}
+      }
+      if(sum(ft_toremove) >0){
+	for(Int k=0; k < numft; ++k){
+	  if(ft_toremove[k]==1)
+	    therec.removeField("ft_"+String::toString(k));
+	}
+	numft=numft-sum(ft_toremove);
+	therec.define("numft", numft);
+	Int id=0;
+	for(uInt k=0; k < therec.nfields(); ++k){
+	  if(therec.name(k).contains("ft_")){
+	    therec.renameField("ft_"+String::toString(id), k);
+	    ++id;
+	  }
+	}
+      }
+    }
+    if(therec.isDefined("numcl")){
+      numcl=therec.asInt("numcl");
+      Vector<Int> cl_toremove(numcl, 0);
+      for(Int k=0; k < numcl; ++k){
+	const Record& clrec=therec.asRecord("cl_"+String::toString(k));
+	const Vector<Int>& clspws=clrec.asArrayInt("spws");
+	for (uInt i=0; i<spws.nelements(); ++i){
+	  for (uInt j=0; j<clspws.nelements(); ++j){
+	    if(spws[i]==clspws[j]){
+	      hasSpw[i]=True;	    
+	      cl_toremove[k]=1;
+	    }
+	  }	
+	}
+      }
+      if(sum(cl_toremove) >0){
+	for(Int k=0; k < numcl; ++k){
+	  if(cl_toremove[k]==1)
+	    therec.removeField("cl_"+String::toString(k));
+	}
+	numcl=numcl-sum(cl_toremove);
+	therec.define("numcl", numcl);
+	Int id=0;
+	for(uInt k=0; k < therec.nfields(); ++k){
+	  if(therec.name(k).contains("cl_")){
+	    therec.renameField("cl_"+String::toString(id), k);
+	    ++id;
+	  }
+	}
+      }
+    }
+    return (!allTrue(hasSpw) || ((numft+numcl)>0));
+  }
+
 void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfieldids, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist, Bool incremental){
 
     //A field can have multiple FTmachines and ComponentList associated with it 
@@ -101,12 +171,16 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     for (uInt k=0; k < validfieldids.nelements();  ++k){
       elkey=elkey+"_"+String::toString(validfieldids[k]);
     }
+    Record outRec; 
+    Bool addtorec=False;
     Table newTab(thems);
-    Record outRec;
-    if(incremental){
-      if(newTab.rwKeywordSet().isDefined(elkey))
-	outRec=newTab.rwKeywordSet().asRecord(elkey); 
+    if(newTab.rwKeywordSet().isDefined(elkey)){
+      outRec=newTab.rwKeywordSet().asRecord(elkey); 
+      //if incremental no need to check & remove what is in the record
+      if(!incremental)
+	addtorec=addToRec(outRec, spws);
     }
+    incremental=incremental || addtorec;
     if(iscomponentlist){
       modrec.define("type", "componentlist");
       if(outRec.isDefined("numcl"))

@@ -112,6 +112,7 @@ class VisModelData {
   void initializeToVis();
   Vector<CountedPtr<ComponentList> >getCL(const Int msId, const Int fieldId, Int spw);
   Vector<CountedPtr<FTMachine> >getFT(const Int msId, const Int fieldId, Int spw);
+  static Bool addToRec(Record& therec, const Vector<Int>& spws);
   Block<Vector<CountedPtr<ComponentList> > > clholder_p;
   Block<Vector<CountedPtr<FTMachine> > > ftholder_p;
   Block<Vector<Double> > flatholder_p;

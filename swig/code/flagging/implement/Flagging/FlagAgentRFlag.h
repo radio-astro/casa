@@ -43,6 +43,12 @@ protected:
 	// Compute flags for a given (time,freq) map
 	bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
+	// Extract automatically computed thresholds to use them in the next pass
+	void passIntermediate(const VisBuffer &visBuffer);
+
+	// Remove automatically computed thresholds for the following scans
+	void passFinal(const VisBuffer &visBuffer);
+
 	// Convenience function to get simple averages
 	Double mean(vector<Double> &data,vector<Double> &counts);
 
@@ -75,6 +81,7 @@ protected:
 private:
 
 	// General parameters
+	Bool doflag_p;
 	Bool doplot_p;
 	uInt nTimeSteps_p;
 	Double noiseScale_p;
@@ -87,14 +94,12 @@ private:
 	Double spectralmax_p;
 
 	// Time-direction analysis
-	Record noise_p;
 	map< pair<Int,Int>,Double > field_spw_noise_map_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_squares_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_counts_p;
 
 	// Spectral analysis
-	Record scutof_p;
 	map< pair<Int,Int>,Double > field_spw_scutof_map_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_squares_p;

@@ -61,18 +61,6 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 
 	int exists;
 
-	// AIPS DOPLOT
-	exists = config.fieldNumber ("doplot");
-	if (exists >= 0)
-	{
-		doplot_p = config.asBool("doplot");
-		*logger_p << logLevel_p << " doplot is " << doplot_p << LogIO::POST;
-	}
-	else
-	{
-		doplot_p = False;
-	}
-
 	// AIPS RFlag FPARM(1)
 	exists = config.fieldNumber ("ntimesteps");
 	if (exists >= 0)
@@ -83,20 +71,6 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	else
 	{
 		nTimeSteps_p = 3;
-	}
-
-	// AIPS RFlag FPARM(3)/NOISE
-	exists = config.fieldNumber ("noise");
-	if (exists >= 0)
-	{
-		noise_p = config.asrwRecord("noise");
-	}
-
-	// AIPS RFlag FPARM(4)/SCUTOF
-	exists = config.fieldNumber ("scutof");
-	if (exists >= 0)
-	{
-		scutof_p = config.asrwRecord("scutof");
 	}
 
 	// AIPS RFlag FPARM(5)
@@ -147,92 +121,109 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 		scutofScale_p = 5;
 	}
 
-
-	// Read in "display" and "writeflags" and decide the value of "doplot"
-	// DEMO code
+	// Determine if we have to apply the flags in the modified flag cube
 	String display("none");
 	exists = config.fieldNumber ("display");
 	if (exists >= 0)
 	{
-	        display = config.asString("display");
+		display = config.asString("display");
 	}
+
 	Bool writeflags(True);
 	exists = config.fieldNumber ("writeflags");
 	if (exists >= 0)
 	{
-	        writeflags = config.asBool("writeflags");
+		writeflags = config.asBool("writeflags");
 	}
 
-	if(display != String("none") && writeflags==False)
-	  {
-	        doplot_p = True;
-	        *logger_p << logLevel_p << " Changing 'doplot' to " << doplot_p << LogIO::POST;
-	  }
+	if( (writeflags == True) or (display == String("data")) or (display == String("both")) )
+	{
+		doflag_p = true;
+		*logger_p << logLevel_p << " (writeflags,display)=(" <<  writeflags << "," << display << "), will apply flags on modified flag cube " << LogIO::POST;
+	}
+	else
+	{
+		doflag_p = false;
+	}
 
-	// FOR DEMO : 'timedev' is a local variable....
+	// timedev - Matrix for time analysis deviation thresholds - (old AIPS RFlag FPARM(3)/NOISE)
 	exists = config.fieldNumber ("timedev");
 	if (exists >= 0)
 	{
-	  if( config.type( config.type(exists) ) == casa::TpFloat ||  config.type( config.type(exists) ) == casa::TpDouble )
-	    {
-	           Double timedev = config.asDouble("timedev");
-	           *logger_p << logLevel_p << " timedev (same for all fields and spws) is " << timedev << LogIO::POST;
-	    }
-	  else if( config.type(exists) == casa::TpArrayDouble )
-	    {
-	      Matrix<Double> timedev = config.asArrayDouble( RecordFieldId("timedev") );
-	      if(timedev.ncolumn()==3)
+		if ( config.type( config.type(exists) ) == casa::TpFloat ||  config.type( config.type(exists) ) == casa::TpDouble )
 		{
-		        *logger_p << logLevel_p << " timedev [field,spw,dev] is " << timedev << LogIO::POST;
-	      // Justo, here, step through the matrix, and fill in your map for time thresholds for each field and spw. Fields and spws for which this is not specified, must default to 'auto' (or 1E5).
+			Double timedev = config.asDouble("timedev");
+			*logger_p << logLevel_p << " timedev (same for all fields and spws) is " << timedev << LogIO::POST;
 		}
-	      else
+		else if( config.type(exists) == casa::TpArrayDouble )
 		{
-		  cout << "RFLAG::setAgentPar : The timedev matrix needs to have 3 columns. Setting to Automatic thresholds" << endl;
+			Matrix<Double> timedev = config.asArrayDouble( RecordFieldId("timedev") );
+			if(timedev.ncolumn()==3)
+			{
+				*logger_p << logLevel_p << " timedev [field,spw,dev] is " << timedev << LogIO::POST;
+
+			    IPosition shape = timedev.shape();
+			    uInt nDevs = shape[0];
+			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
+			    {
+			    	field_spw_noise_map_p[std::make_pair(timedev(dev_i,0),timedev(dev_i,1))] = timedev(dev_i,2);
+			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << endl;
+			    }
+			}
+			else
+			{
+				*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (timedev) must have 3 columns ([field,spw,dev]), using automatically computed values" << endl;
+			}
 		}
-	    }
-	  else
-	    {
-	      cout << "RFLAG::setAgentPar : Automatic thresholds for timedev. " << endl;
+		else
+		{
+			*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (timedev) does not have proper type (Float or Double), using automatically computed values" << endl;
 	    }
 	}
 	else
 	{
-          cout << "RFLAG::setAgentPar : Automatic thresholds for timedev ! " << endl;
+		*logger_p << LogIO::DEBUG1 << " Matrix for time analysis deviation thresholds (timedev) not provided, using automatically computed values" << endl;
 	}
 
-	// FOR DEMO : 'freqdev' is a local variable....
+
+	// freqdev - Matrix for time analysis deviation thresholds (freqdev) - (old AIPS RFlag FPARM(4)/SCUTOF)
 	exists = config.fieldNumber ("freqdev");
 	if (exists >= 0)
 	{
-	  if( config.type( config.type(exists) ) == casa::TpFloat ||  config.type( config.type(exists) ) == casa::TpDouble )
-	    {
-	           Double freqdev = config.asDouble("freqdev");
-	           *logger_p << logLevel_p << " freqdev (same for all fields and spws) is " << freqdev << LogIO::POST;
-	    }
-	  else if( config.type(exists) == casa::TpArrayDouble )
-	    {
-	      Matrix<Double> freqdev = config.asArrayDouble( RecordFieldId("freqdev") );
-	      if(freqdev.ncolumn()==3)
+		if ( config.type( config.type(exists) ) == casa::TpFloat ||  config.type( config.type(exists) ) == casa::TpDouble )
 		{
-		        *logger_p << logLevel_p << " freqdev [field,spw,dev] is " << freqdev << LogIO::POST;
-	      // Justo, here, step through the matrix, and fill in your map for freq thresholds for each field and spw. Fields and spws for which this is not specified, must default to 'auto' (or 1E5).
+			Double freqdev = config.asDouble("freqdev");
+			*logger_p << logLevel_p << " freqdev (same for all fields and spws) is " << freqdev << LogIO::POST;
 		}
-	      else
+		else if ( config.type(exists) == casa::TpArrayDouble )
 		{
-		  cout << "RFLAG::setAgentPar : The freqdev matrix needs to have 3 columns. Setting to Automatic thresholds" << endl;
+			Matrix<Double> freqdev = config.asArrayDouble( RecordFieldId("freqdev") );
+			if(freqdev.ncolumn()==3)
+			{
+				*logger_p << logLevel_p << " freqdev [field,spw,dev] is " << freqdev << LogIO::POST;
+
+			    IPosition shape = freqdev.shape();
+			    uInt nDevs = shape[0];
+			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
+			    {
+			    	field_spw_noise_map_p[std::make_pair(freqdev(dev_i,0),freqdev(dev_i,1))] = freqdev(dev_i,2);
+			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << endl;
+			    }
+			}
+			else
+			{
+				*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (freqdev) must have 3 columns ([field,spw,dev]), using automatically computed values" << endl;
+			}
 		}
-	    }
-	  else
-	    {
-	      cout << "RFLAG::setAgentPar : Automatic thresholds for freqdev. " << endl;
-	    }
+		else
+		{
+			*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (freqdev) does not have proper type (Float or Double), using automatically computed values" << endl;
+		}
 	}
 	else
 	{
-          cout << "RFLAG::setAgentPar : Automatic thresholds for freqdev ! " << endl;
+		*logger_p << LogIO::DEBUG1 << " Matrix for spectral analysis deviation thresholds (freqdev) not provided, using automatically computed values" << endl;
 	}
-
 
 	return;
 }
@@ -298,6 +289,7 @@ FlagReport FlagAgentRFlag::getReport()
 {
 	FlagReport dispRep("list");
 
+	// Plot reports (should be returned if params were calculated and display is activated)
 	FlagReport noiseStd = getReportCore(	field_spw_noise_histogram_sum_p,
 											field_spw_noise_histogram_sum_squares_p,
 											field_spw_noise_histogram_counts_p,
@@ -314,63 +306,37 @@ FlagReport FlagAgentRFlag::getReport()
 											scutofScale_p);
     dispRep.addReport(scutofStd);
 
-    if (doplot_p)
-    {
-    	Record threshList;
 
-	/*
-    	Int threshCount = 0;
-    	pair<Int,Int> field_spw;
-        for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
-        		spw_field_iter != field_spw_noise_map_p.end();
-        		spw_field_iter++)
-        {
-        	Record thresh_i;
-        	field_spw = spw_field_iter->first;
-        	thresh_i.define(RecordFieldId("field"),field_spw.first);
-        	thresh_i.define(RecordFieldId("spw"),field_spw.second);
-        	thresh_i.define(RecordFieldId("timecutoff"),field_spw_noise_map_p[field_spw]);
-        	thresh_i.define(RecordFieldId("freqcutoff"),field_spw_scutof_map_p[field_spw]);
-
-        	stringstream threshCount_stringStream;
-        	threshCount_stringStream << threshCount;
-        	String threshStr = String("thresh_") + String(threshCount_stringStream.str());
-        	threshList.defineRecord( RecordFieldId(threshStr) , thresh_i );
-        	threshCount++;
-        }
-	*/
-
-	// Start new code
-        Int nEntries = field_spw_noise_map_p.size();
-        Matrix<Double> timedev(nEntries,3), freqdev(nEntries,3);
-    	Int threshCount = 0;
-    	pair<Int,Int> field_spw;
-        for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
-        		spw_field_iter != field_spw_noise_map_p.end();
-        		spw_field_iter++)
+    // Threshold reports (should be returned if params were calculated)
+    Record threshList;
+	Int nEntries = field_spw_noise_map_p.size();
+	Matrix<Double> timedev(nEntries,3), freqdev(nEntries,3);
+ 	Int threshCount = 0;
+	pair<Int,Int> field_spw;
+	for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
+			spw_field_iter != field_spw_noise_map_p.end();
+			spw_field_iter++)
 	{
-                field_spw = spw_field_iter->first;
+		field_spw = spw_field_iter->first;
 
-                timedev(threshCount,0) = field_spw.first;
-                timedev(threshCount,1) = field_spw.second;
-                timedev(threshCount,2) = field_spw_noise_map_p[field_spw];
-                freqdev(threshCount,0) = field_spw.first;
-                freqdev(threshCount,1) = field_spw.second;
-                freqdev(threshCount,2) = field_spw_scutof_map_p[field_spw];
+		timedev(threshCount,0) = field_spw.first;
+		timedev(threshCount,1) = field_spw.second;
+		timedev(threshCount,2) = field_spw_noise_map_p[field_spw];
+		freqdev(threshCount,0) = field_spw.first;
+		freqdev(threshCount,1) = field_spw.second;
+		freqdev(threshCount,2) = field_spw_scutof_map_p[field_spw];
 
-                threshCount++;
+		threshCount++;
 	}
 	threshList.define( RecordFieldId("timedev") , timedev );
 	threshList.define( RecordFieldId("freqdev") , freqdev );
-	// End new code
 
-    	FlagReport returnThresh("rflag",agentName_p, threshList);
-    	dispRep.addReport(returnThresh);
+	FlagReport returnThresh("rflag",agentName_p, threshList);
+	dispRep.addReport(returnThresh);
 
-    }
-    
 	return dispRep;
 }
+
 
 FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &data,
 											map< pair<Int,Int>,vector<Double> > &dataSquared,
@@ -410,9 +376,9 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     	total_threshold_squared.insert(total_threshold_squared.end(),current_spw_threshold_squared.begin(),current_spw_threshold_squared.end());
     	total_threshold_counts.insert(total_threshold_counts.end(),current_spw_threshold_counts.begin(),current_spw_threshold_counts.end());
 
-    	// Display average (over baeline/channels) std per spw
+    	// Display average (over baseline/channels) std per spw
     	spwStd = scale*computeThreshold(current_spw_threshold,current_spw_threshold_squared,current_spw_threshold_counts);
-    	*logger_p << LogIO::NORMAL << label.c_str() << " - Field " << current_field_spw.first << " - Spw " << current_field_spw.second <<
+    	*logger_p << logLevel_p << label.c_str() << " - Field " << current_field_spw.first << " - Spw " << current_field_spw.second <<
     			" threshold (over baselines/timesteps) avg: " << spwStd << LogIO::POST;
     	threshold[current_field_spw] = spwStd;
 
@@ -437,20 +403,17 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     	variance = sqrt(sumSquare - avg*avg);
     	threshold_up(idx) = avg+variance;
     	threshold_down(idx) = avg-variance;
-	threshold_variance(idx) = variance; // New
+    	threshold_variance(idx) = variance; // New
     	idx++;
     }
 
-
-    ///// OPTION 1 for mean/rms : Scatter Plot with vertical Error-Bars (pretty, but slow)
-    /*
-    thresholdStd.addData("scatter", threshold_index, threshold_avg, "bar", threshold_variance, "median deviation and variance");
-    */
-
-    ////// Plot the scaled threshold
+    // Plot the scaled threshold
     thresholdStd.addData("line", threshold_index,total_threshold_spw_average,"",Vector<Float>(),"rflag threshold");
 
-    ///// OPTION 2 for mean/rms : "avg" is a scatter plot, "up" and "down" are lines (not so pretty, but fast). 
+    // OPTION 1 for mean/rms : Scatter Plot with vertical Error-Bars (pretty, but slow)
+    // thresholdStd.addData("scatter", threshold_index, threshold_avg, "bar", threshold_variance, "median deviation and variance");
+
+    // OPTION 2 for mean/rms : "avg" is a scatter plot, "up" and "down" are lines (not so pretty, but fast).
     thresholdStd.addData("line",threshold_index,threshold_up,"",Vector<Float>(),"threshold std+var (field-spw:timestep average over baselines)");
     thresholdStd.addData("scatter",threshold_index,threshold_avg,"",Vector<Float>(),"threshold std (field-spw average over baselines and timesteps)");
     thresholdStd.addData("line", threshold_index,threshold_down,"",Vector<Float>(),"threshold std-var  (field-spw:timestep average over baselines)");
@@ -491,68 +454,68 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 
 	// Time-Direction analysis: Fix channel/polarization and compute stats with all time-steps
 	// NOTE: It is better to operate in channel/polarization sequence for data contiguity
-	for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+	if ( (noise == 0) or ((noise > 0) and (doflag_p == true) and (prepass_p == false)) )
 	{
-		// Compute variance
-		for (uInt pol_k=0;pol_k<nPols;pol_k++)
+		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
 		{
-			SumWeight = 0;
-			StdTotal = 0;
-		    SumReal = 0;
-			SumRealSquare = 0;
-			AverageReal = 0;
-			StdReal = 0;
-			SumImag = 0;
-			SumImagSquare = 0;
-			AverageImag = 0;
-			StdImag = 0;
-
-			for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
+			// Compute variance
+			for (uInt pol_k=0;pol_k<nPols;pol_k++)
 			{
-				// Ignore data point if it is already flagged
-				// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
-				if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
+				SumWeight = 0;
+				StdTotal = 0;
+				SumReal = 0;
+				SumRealSquare = 0;
+				AverageReal = 0;
+				StdReal = 0;
+				SumImag = 0;
+				SumImagSquare = 0;
+				AverageImag = 0;
+				StdImag = 0;
 
-				visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
-				SumWeight += 1;
-				SumReal += visibility.real();
-				SumRealSquare += visibility.real()*visibility.real();
-				SumImag += visibility.imag();
-				SumImagSquare += visibility.imag()*visibility.imag();
-			}
+				for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
+				{
+					// Ignore data point if it is already flagged
+					// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
+					if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
 
-			// Now flag all timesteps if variance is greater than threshold
-			// NOTE: In our case, SumWeight is zero when all the data is already flagged so we don't need to re-flag it
-			if (SumWeight > 0)
-			{
-	            AverageReal = SumReal / SumWeight;
-	            SumRealSquare = SumRealSquare / SumWeight;
-	            StdReal = SumRealSquare - AverageReal * AverageReal;
+					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+					SumWeight += 1;
+					SumReal += visibility.real();
+					SumRealSquare += visibility.real()*visibility.real();
+					SumImag += visibility.imag();
+					SumImagSquare += visibility.imag()*visibility.imag();
+				}
 
-	            AverageImag = SumImag / SumWeight;
-	            SumImagSquare = SumImagSquare / SumWeight;
-	            StdImag = SumImagSquare - AverageImag * AverageImag;
+				// Now flag all timesteps if variance is greater than threshold
+				// NOTE: In our case, SumWeight is zero when all the data is already flagged so we don't need to re-flag it
+				if (SumWeight > 0)
+				{
+					AverageReal = SumReal / SumWeight;
+					SumRealSquare = SumRealSquare / SumWeight;
+					StdReal = SumRealSquare - AverageReal * AverageReal;
 
-	            // NOTE: It it not necessary to extract the square root if then we are going to pow2
-	            // StdReal = sqrt (StdReal > 0?  StdReal:0);
-	            // StdImag = sqrt (StdImag > 0?  StdImag:0);
-	            // StdTotal = sqrt (StdReal*StdReal + StdImag*StdImag);
-	            StdReal = StdReal > 0?  StdReal:0;
-	            StdImag = StdImag > 0?  StdImag:0;
-	            StdTotal = sqrt(StdReal + StdImag);
+					AverageImag = SumImag / SumWeight;
+					SumImagSquare = SumImagSquare / SumWeight;
+					StdImag = SumImagSquare - AverageImag * AverageImag;
 
-	            // Apply flags or generate histogram?
-	            // NOTE: AIPS RFlag has the previous code duplicated in two separated
-	            // routines, but I don't see a reason to do this, performance-wise
-	            if (doplot_p)
-	            {
-	            	field_spw_noise_histogram_counts_p[spw_field][chan_j] += 1;
-	            	field_spw_noise_histogram_sum_p[spw_field][chan_j]  += StdTotal;
-	            	field_spw_noise_histogram_sum_squares_p[spw_field][chan_j]  += StdTotal*StdTotal;
-	            }
-	            else
-	            {
-	            	if (StdTotal > noise)
+					// NOTE: It it not necessary to extract the square root if then we are going to pow2
+					// StdReal = sqrt (StdReal > 0?  StdReal:0);
+					// StdImag = sqrt (StdImag > 0?  StdImag:0);
+					// StdTotal = sqrt (StdReal*StdReal + StdImag*StdImag);
+					StdReal = StdReal > 0?  StdReal:0;
+	            	StdImag = StdImag > 0?  StdImag:0;
+	            	StdTotal = sqrt(StdReal + StdImag);
+
+	            	// Apply flags or generate histogram?
+	            	// NOTE: AIPS RFlag has the previous code duplicated in two separated
+	            	// routines, but I don't see a reason to do this, performance-wise
+	            	if (noise==0)
+	            	{
+	            		field_spw_noise_histogram_counts_p[spw_field][chan_j] += 1;
+	            		field_spw_noise_histogram_sum_p[spw_field][chan_j]  += StdTotal;
+	            		field_spw_noise_histogram_sum_squares_p[spw_field][chan_j]  += StdTotal*StdTotal;
+	            	}
+	            	else if (StdTotal > noise)
 	            	{
 	            		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 	            		{
@@ -560,134 +523,137 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 	            			visBufferFlags_p += 1;
 	            		}
 	            	}
-	            }
+				}
 			}
 		}
 	}
 
 	// Spectral analysis: Fix timestep/polarization and compute stats with all channels
-	for (uInt timestep_i=centralTime;timestep_i<=centralTime;timestep_i++)
+	if ( (scutof == 0) or ((scutof > 0) and (doflag_p == true) and (prepass_p == false)) )
 	{
-		for (uInt pol_k=0;pol_k<nPols;pol_k++)
+		for (uInt timestep_i=centralTime;timestep_i<=centralTime;timestep_i++)
 		{
-			// NOTE: To apply the robust coefficients we need some initial values of avg/std
-			//       In AIPS they simply use Std=1000 for the first iteration
-			//       I'm not very convinced with this but if we have to cross-validate...
-			AverageReal = 0;
-			AverageImag = 0;
-			StdReal = 1000.0;
-			StdImag = 1000.0;
-
-			for (uInt robustIter=0;robustIter<nIterationsRobust_p;robustIter++)
+			for (uInt pol_k=0;pol_k<nPols;pol_k++)
 			{
-				SumWeightReal = 0;
-				SumWeightImag = 0;
-			    SumReal = 0;
-				SumRealSquare = 0;
-				SumImag = 0;
-				SumImagSquare = 0;
+				// NOTE: To apply the robust coefficients we need some initial values of avg/std
+				//       In AIPS they simply use Std=1000 for the first iteration
+				//       I'm not very convinced with this but if we have to cross-validate...
+				AverageReal = 0;
+				AverageImag = 0;
+				StdReal = 1000.0;
+				StdImag = 1000.0;
 
-				for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+				for (uInt robustIter=0;robustIter<nIterationsRobust_p;robustIter++)
 				{
-					// Ignore data point if it is already flagged or weight is <= 0
-					// NOTE: In our case visibilities come w/o weights, so we check only vs flags
-					if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
+					SumWeightReal = 0;
+					SumWeightImag = 0;
+					SumReal = 0;
+					SumRealSquare = 0;
+					SumImag = 0;
+					SumImagSquare = 0;
 
-					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
-					if (abs(visibility.real()-AverageReal)<thresholdRobust_p[robustIter]*StdReal)
+					for (uInt chan_j=0;chan_j<nChannels;chan_j++)
 					{
-						SumWeightReal += 1;
-						SumReal += visibility.real();
-						SumRealSquare += visibility.real()*visibility.real();
+						// Ignore data point if it is already flagged or weight is <= 0
+						// NOTE: In our case visibilities come w/o weights, so we check only vs flags
+						if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
+
+						visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+						if (abs(visibility.real()-AverageReal)<thresholdRobust_p[robustIter]*StdReal)
+						{
+							SumWeightReal += 1;
+							SumReal += visibility.real();
+							SumRealSquare += visibility.real()*visibility.real();
+						}
+
+						if (abs(visibility.imag()-AverageImag)<thresholdRobust_p[robustIter]*StdImag)
+						{
+							SumWeightImag += 1;
+							SumImag += visibility.imag();
+							SumImagSquare += visibility.imag()*visibility.imag();
+						}
 					}
-
-					if (abs(visibility.imag()-AverageImag)<thresholdRobust_p[robustIter]*StdImag)
-					{
-						SumWeightImag += 1;
-						SumImag += visibility.imag();
-						SumImagSquare += visibility.imag()*visibility.imag();
-					}
-				}
-
-				if (SumWeightReal > 0)
-				{
-					AverageReal = SumReal / SumWeightReal;
-					SumRealSquare = SumRealSquare / SumWeightReal;
-					StdReal = SumRealSquare - AverageReal * AverageReal;
-		            StdReal = sqrt(StdReal > 0?  StdReal:0);
-				}
-
-				if (SumWeightImag > 0)
-				{
-					AverageImag = SumImag / SumWeightImag;
-	            	SumImagSquare = SumImagSquare / SumWeightImag;
-	            	StdImag = SumImagSquare - AverageImag * AverageImag;
-		            StdImag = sqrt(StdImag > 0?  StdImag:0);
-				}
-			}
-
-            if (doplot_p)
-            {
-        		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
-        		{
-					// Ignore data point if it is already flagged
-					// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
-					if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
-
-					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 
 					if (SumWeightReal > 0)
 					{
-						deviationReal = abs(visibility.real()-AverageReal);
-						field_spw_scutof_histogram_counts_p[spw_field][chan_j]  += 1;
-						field_spw_scutof_histogram_sum_p[spw_field][chan_j]  += deviationReal;
-						field_spw_scutof_histogram_sum_squares_p[spw_field][chan_j]  += deviationReal*deviationReal;
-							
+						AverageReal = SumReal / SumWeightReal;
+						SumRealSquare = SumRealSquare / SumWeightReal;
+						StdReal = SumRealSquare - AverageReal * AverageReal;
+						StdReal = sqrt(StdReal > 0?  StdReal:0);
 					}
 
 					if (SumWeightImag > 0)
 					{
-						deviationImag = abs(visibility.imag()-AverageImag);
-						field_spw_scutof_histogram_counts_p[spw_field][chan_j]  += 1;
-						field_spw_scutof_histogram_sum_p[spw_field][chan_j]  += deviationImag;
-						field_spw_scutof_histogram_sum_squares_p[spw_field][chan_j]  += deviationImag*deviationImag;
+						AverageImag = SumImag / SumWeightImag;
+						SumImagSquare = SumImagSquare / SumWeightImag;
+						StdImag = SumImagSquare - AverageImag * AverageImag;
+						StdImag = sqrt(StdImag > 0?  StdImag:0);
 					}
-        		}
-            }
-            else
-            {
-            	// Flag all channels?
-            	if (	(StdReal > spectralmax_p) or
-            			(StdImag > spectralmax_p) or
-            			(StdReal < spectralmin_p) or
-            			(StdImag < spectralmin_p)		)
-            	{
-            		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
-            		{
-            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-            			visBufferFlags_p += 1;
-            		}
-            	}
-            	// Check each channel separately vs the scutof level
-            	else
-            	{
-            		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
-            		{
-    					visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
-    					if (	(abs(visibility.real()-AverageReal)>scutof) or
-    							(abs(visibility.imag()-AverageImag)>scutof)	)
-    					{
-                			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-                			visBufferFlags_p += 1;
-    					}
-            		}
-            	}
-            }
+				}
+
+				if (scutof==0)
+				{
+					for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+					{
+						// Ignore data point if it is already flagged
+						// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
+						if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
+
+						visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+
+						if (SumWeightReal > 0)
+						{
+							deviationReal = abs(visibility.real()-AverageReal);
+							field_spw_scutof_histogram_counts_p[spw_field][chan_j]  += 1;
+							field_spw_scutof_histogram_sum_p[spw_field][chan_j]  += deviationReal;
+							field_spw_scutof_histogram_sum_squares_p[spw_field][chan_j]  += deviationReal*deviationReal;
+						}
+
+						if (SumWeightImag > 0)
+						{
+							deviationImag = abs(visibility.imag()-AverageImag);
+							field_spw_scutof_histogram_counts_p[spw_field][chan_j]  += 1;
+							field_spw_scutof_histogram_sum_p[spw_field][chan_j]  += deviationImag;
+							field_spw_scutof_histogram_sum_squares_p[spw_field][chan_j]  += deviationImag*deviationImag;
+						}
+					}
+				}
+				else
+				{
+					// Flag all channels?
+					if (	(StdReal > spectralmax_p) or
+							(StdImag > spectralmax_p) or
+							(StdReal < spectralmin_p) or
+							(StdImag < spectralmin_p)		)
+					{
+						for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+						{
+							flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+							visBufferFlags_p += 1;
+						}
+					}
+					// Check each channel separately vs the scutof level
+					else
+					{
+						for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+						{
+							visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+							if (	(abs(visibility.real()-AverageReal)>scutof) or
+									(abs(visibility.imag()-AverageImag)>scutof)	)
+							{
+								flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+								visBufferFlags_p += 1;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
 	// Extend flags across polarizations (AIPS 'compress stokes')
-	if (!doplot_p)
+	if ( 	(doflag_p == true) and (prepass_p == false) and
+			(noise > 0) or (scutof > 0)						 )
 	{
 		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 		{
@@ -725,81 +691,37 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	Int nPols,nChannels,nTimesteps;
 	visibilities.shape(nPols, nChannels, nTimesteps);
 
-	// Get current chunk field
-	Int field = visBuffer.fieldId();
-	stringstream field_stringStream;
-	field_stringStream << field;
-	String fieldstr = "field=" + field_stringStream.str();
-
-	// Get current chunk spw
-	Int spw = visBuffer.spectralWindow();
-	stringstream spw_stringStream;
-	spw_stringStream << spw;
-	String spwstr = "spw=" + spw_stringStream.str();
-
 	// Make field-spw pair
+	Int field = visBuffer.fieldId();
+	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
 	// Get noise and scutoff levels
-	Double noise;
-	if (noise_p.fieldNumber (fieldstr) >= 0)
+	Double noise = 0;
+	if (field_spw_noise_map_p.find(field_spw) != field_spw_noise_map_p.end())
 	{
-		Record fieldRecord = noise_p.asrwRecord(fieldstr);
-
-		if (fieldRecord.fieldNumber (spwstr) >= 0)
-		{
-			noise = fieldRecord.asDouble(spwstr);
-		}
-		else
-		{
-			noise = 1E6;
-		}
+		noise = field_spw_noise_map_p[field_spw];
 	}
-	else
+	else if (field_spw_noise_histogram_sum_p.find(field_spw) == field_spw_noise_histogram_sum_p.end())
 	{
-		noise = 1E6;
+		field_spw_noise_histogram_sum_p[field_spw] = vector<Double>(nChannels,0);
+		field_spw_noise_histogram_counts_p[field_spw] = vector<Double>(nChannels,0);
+		field_spw_noise_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
+		if (doflag_p) prepass_p = true;
 	}
 
 	// Get cutoff level
-	Double scutof;
-	if (scutof_p.fieldNumber (fieldstr) >= 0)
+	Double scutof = 0;
+	if (field_spw_scutof_map_p.find(field_spw) != field_spw_scutof_map_p.end())
 	{
-		Record fieldRecord = scutof_p.asrwRecord(fieldstr);
-
-		if (fieldRecord.fieldNumber (spwstr) >= 0)
-		{
-			scutof = fieldRecord.asDouble(spwstr);
-		}
-		else
-		{
-			scutof = 1E6;
-		}
+		scutof = field_spw_scutof_map_p[field_spw];
 	}
-	else
+	else if (field_spw_scutof_histogram_sum_p.find(field_spw) == field_spw_scutof_histogram_sum_p.end())
 	{
-		scutof = 1E6;
-	}
-
-	// Produce time analysis histogram for each spw
-	if (doplot_p)
-	{
-		if (field_spw_noise_histogram_sum_p.find(field_spw) == field_spw_noise_histogram_sum_p.end())
-		{
-			field_spw_noise_histogram_sum_p[field_spw] = vector<Double>(nChannels,0);
-			field_spw_noise_histogram_counts_p[field_spw] = vector<Double>(nChannels,0);
-			field_spw_noise_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
-		}
-	}
-
-	// Produce time analysis histogram for each spw
-	if (doplot_p)
-	{
-		if (field_spw_scutof_histogram_sum_p.find(field_spw) == field_spw_scutof_histogram_sum_p.end())
-		{
-			field_spw_scutof_histogram_sum_p[field_spw] = vector<Double>(nChannels,0);
-			field_spw_scutof_histogram_counts_p[field_spw] = vector<Double>(nChannels,0);
-			field_spw_scutof_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
-		}
+		field_spw_scutof_histogram_sum_p[field_spw] = vector<Double>(nChannels,0);
+		field_spw_scutof_histogram_counts_p[field_spw] = vector<Double>(nChannels,0);
+		field_spw_scutof_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
+		if (doflag_p) prepass_p = true;
 	}
 
 	uInt effectiveNTimeSteps;
@@ -836,6 +758,55 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	}
 
 	return false;
+}
+
+void
+FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
+{
+	// Set logger origin
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+	// Make field-spw pair
+	Int field = visBuffer.fieldId();
+	Int spw = visBuffer.spectralWindow();
+	pair<Int,Int> field_spw = std::make_pair(field,spw);
+
+	Double noise = noiseScale_p*computeThreshold(	field_spw_noise_histogram_sum_p[field_spw],
+													field_spw_noise_histogram_sum_squares_p[field_spw],
+													field_spw_noise_histogram_counts_p[field_spw]		);
+
+	field_spw_noise_map_p[field_spw] = noise;
+
+	Double scutof = scutofScale_p*computeThreshold(	field_spw_scutof_histogram_sum_p[field_spw],
+													field_spw_scutof_histogram_sum_squares_p[field_spw],
+													field_spw_scutof_histogram_counts_p[field_spw]		);
+
+	field_spw_scutof_map_p[field_spw] = scutof;
+
+	*logger_p << logLevel_p << " field=" << field << " spw=" <<  spw << " noise=" << noise << " scutof=" << scutof << LogIO::POST;
+
+
+	return;
+}
+
+void
+FlagAgentRFlag::passFinal(const VisBuffer &visBuffer)
+{
+
+	// Make field-spw pair
+	Int field = visBuffer.fieldId();
+	Int spw = visBuffer.spectralWindow();
+	pair<Int,Int> field_spw = std::make_pair(field,spw);
+	field_spw_noise_map_p.erase(field_spw);
+	field_spw_noise_histogram_sum_p.erase(field_spw);
+	field_spw_noise_histogram_sum_squares_p.erase(field_spw);
+	field_spw_noise_histogram_counts_p.erase(field_spw);
+	field_spw_scutof_map_p.erase(field_spw);
+	field_spw_scutof_histogram_sum_p.erase(field_spw);
+	field_spw_scutof_histogram_sum_squares_p.erase(field_spw);
+	field_spw_scutof_histogram_counts_p.erase(field_spw);
+
+	return;
 }
 
 } //# NAMESPACE CASA - END

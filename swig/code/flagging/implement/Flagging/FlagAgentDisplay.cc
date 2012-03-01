@@ -39,6 +39,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     setAgentParameters(config);
     // Request loading polarization map to FlagDataHandler
     flagDataHandler_p->setMapPolarizations(true);
+    // Make the list of colours (these are almost all predefined ones for Qt.
+    // Can add more later, based on RGB values.
+    plotColours_p.resize(13);
+    plotColours_p[0]="blue";
+    plotColours_p[1]="red";
+    plotColours_p[2]="green";
+    plotColours_p[3]="cyan";
+    plotColours_p[4]="darkGray";
+    plotColours_p[5]="magenta";
+    plotColours_p[6]="yellow";
+    plotColours_p[7]="darkBlue";
+    plotColours_p[8]="darkRed";
+    plotColours_p[9]="darkGreen";
+    plotColours_p[10]="darkCyan";
+    plotColours_p[11]="black";
+    plotColours_p[12]="darkMagenta";
+
   }
 
   
@@ -321,7 +338,9 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     Vector<String> corrTypes(nPolarizations_p);
     for(uInt pol=0;pol<nPolarizations_p;pol++)
       corrTypes[pol] = (*polMap)[polarizations[pol]];
-    
+
+    ///cout << "Selected Correlations : " << polarizations << endl;
+ 
     // Print where we are...
     //    *logger_p << LogIO::NORMAL  << " Baseline : " << baselineName << " Field : " << fieldName_p << " Spw : " << spwName << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
     
@@ -455,7 +474,7 @@ FlagReport
        // Make empty list
        FlagReport dispRep("list");
 
-       /*
+       /*       
        
        // Make sample arrays/vectors
        Int N=10;
@@ -497,8 +516,8 @@ FlagReport
        if( ! dispRep.verifyFields() )
 	 cout << "Problem ! " << endl;
        
+       
        */
-
 
        return dispRep;
  }// end of getReport()
@@ -608,8 +627,8 @@ FlagReport
 					oneRep.get( RecordFieldId("errortype"+String::toString(datid)) , errortype );
 				      }
 
-				    DisplayLineScatterError(reportplotter_p , plottype, xdata, ydata, errortype, error, legendlabel, (datid%2)?String("red"):String("blue"), report_panels_p[0].getInt() );
-
+				    DisplayLineScatterError(reportplotter_p , plottype, xdata, ydata, errortype, error, legendlabel, plotColours_p[datid%plotColours_p.nelements()], report_panels_p[0].getInt() );
+				    /// (datid%2)?String("red"):String("blue")
 				  }// end of for datid
 				
 				reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
@@ -640,13 +659,14 @@ FlagReport
 				  --reportid;
 				stepback=True;
 			      }
-			    else if(userChoice_p=="Continue")
+			    else if(userChoice_p=="Continue" || userChoice_p=="Next")
 			      {
 				cout << "Next Plot " << endl; 
-				//if( reportid==nReports-1 )
-				//  cout << "Already on last plot..." << endl;
-                                //else
-				//  --reportid;
+				if( reportid==nReports-1 )
+				  {
+				     cout << "Already on last plot..." << endl;
+				     --reportid;
+				  }
 			      }
 
 		      }// if valid plot type
@@ -827,8 +847,8 @@ FlagReport
 	    userFixA2_p=(returnvalue.lastchar()=='0')?String(""):antenna2_p; 
 	    exitEventLoop=False;
 	  }
-	else cout << "Unknown GUI choice" << endl;
-	
+	else *logger_p << LogIO::DEBUG2 << "Unknown GUI choice : " << returnvalue << LogIO::POST;
+
 	//    cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p << "  userFixA1 : " << userFixA1_p << "  userFixA2 : " << userFixA2_p << endl;
 	
       }
@@ -855,7 +875,7 @@ FlagReport
 	    userChoice_p = returnvalue; 
 	    exitEventLoop=True;
 	  }
-	else cout << "Unknown GUI choice" << endl;
+	else *logger_p << LogIO::DEBUG2 << "Unknown GUI choice (Not sure why eventloop is exiting without user-click... re-entering... )" << returnvalue << LogIO::POST;
 	
 	cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p  << endl;
 	
