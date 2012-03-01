@@ -1158,21 +1158,21 @@ void STGrid::mapExtent( Double &xmin, Double &xmax,
 void STGrid::selectData()
 {
   LogIO os( LogOrigin("STGrid","selectData",WHERE) ) ;    
-  Int ifno = ifno_ ;
+  //Int ifno = ifno_ ;
   tableList_.resize( nfile_ ) ;
-  if ( ifno == -1 ) {
+  if ( ifno_ == -1 ) {
     Table taborg( infileList_[0] ) ;
     ROScalarColumn<uInt> ifnoCol( taborg, "IFNO" ) ;
-    ifno = ifnoCol( 0 ) ;
+    ifno_ = ifnoCol( 0 ) ;
     os << LogIO::WARN
-       << "IFNO is not given. Using default IFNO: " << ifno << LogIO::POST ;
+       << "IFNO is not given. Using default IFNO: " << ifno_ << LogIO::POST ;
   }
   for ( uInt i = 0 ; i < nfile_ ; i++ ) {
     Table taborg( infileList_[i] ) ;
     TableExprNode node ;
     if ( isMultiIF( taborg ) ) {
       os << "apply selection on IFNO" << LogIO::POST ;
-      node = taborg.col("IFNO") == ifno ;
+      node = taborg.col("IFNO") == ifno_ ;
     }
     if ( scanlist_.size() > 0 ) {
       os << "apply selection on SCANNO" << LogIO::POST ;
@@ -1187,7 +1187,7 @@ void STGrid::selectData()
     os << "tableList_[" << i << "].nrow()=" << tableList_[i].nrow() << LogIO::POST ;
     if ( tableList_[i].nrow() == 0 ) {
       os << LogIO::SEVERE
-         << "No corresponding rows for given selection: IFNO " << ifno ;
+         << "No corresponding rows for given selection: IFNO " << ifno_ ;
       if ( scanlist_.size() > 0 )
         os << " SCANNO " << scanlist_ ;
       os << LogIO::EXCEPTION ;

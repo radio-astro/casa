@@ -286,7 +286,9 @@ class _SDGridPlotter:
             opt = 'averaged over pol'
         else:
             opt = 'pol %s'%(pol)
-        if chan < 0:
+        if type(chan) is list:
+            opt += ', averaged over channel %s-%s'%(chan[0],chan[1])
+        elif chan < 0:
             opt += ', averaged over channel'
         else:
             opt += ', channel %s'%(chan)
@@ -358,7 +360,9 @@ class _SDGridPlotter:
         return v
 
     def getData( self, chan=-1, pol=-1 ):
-        if chan == -1:
+        if type(chan) == list:
+            spectra = self.__chanAverage(start=chan[0],end=chan[1])
+        elif chan == -1:
             spectra = self.__chanAverage()
         else:
             spectra = self.__chanIndex( chan )
@@ -369,17 +373,22 @@ class _SDGridPlotter:
             retval = data[pol]
         return retval
 
-    def __chanAverage( self ):
+    def __chanAverage( self, start=-1, end=-1 ):
         s = scantable( self.outfile, average=False )
         nrow = s.nrow() 
         spectra = numpy.zeros( (self.npol,nrow/self.npol), dtype=float )
         irow = 0
         sp = [0 for i in xrange(self.nchan)]
+        if start < 0:
+            start = 0
+        if end < 0:
+            end = self.nchan
         for i in xrange(nrow/self.npol):
             for ip in xrange(self.npol):
-                sp = s._getspectrum( irow )
+                sp = s._getspectrum( irow )[start:end]
                 spectra[ip,i] = numpy.mean( sp )
                 irow += 1
+            
         return spectra
 
     def __chanIndex( self, idx ):
