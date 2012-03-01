@@ -38,9 +38,12 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-const char *FITSImgParser::storeKwords_p[] = {"HDUTYPE", "SCIDATA", "ERRDATA", "QUALDATA",
-			"ERRTYPE", "QUALTYPE", "QUALMASK"};
-const int   FITSImgParser::nKwords_p=7;
+//const char *FITSImgParser::storeKwords_p[] = {"HDUTYPE", "SCIDATA", "ERRDATA", "QUALDATA",
+//			"ERRTYPE", "QUALTYPE", "QUALMASK"};
+//const int   FITSImgParser::nKwords_p=7;
+const char *FITSImgParser::storeKwords_p[] = {"HDUCLASS", "HDUDOC", "HDUVERS",
+		"HDUCLAS1", "HDUCLAS2", "HDUCLAS3","SCIDATA", "ERRDATA", "QUALDATA",	"QUALMASK"};
+const int   FITSImgParser::nKwords_p=10;
 
 FITSImgParser::FITSImgParser (const String& name)
 : name_p      (name),
@@ -282,8 +285,8 @@ Bool FITSImgParser::get_quality_data(const String &extexpr, Int &data_HDU, Int &
 			if (error_HDU > -1){
 				FitsKeyword *actkeyw;
 
-				// extract the keyword "ERRTYPE"
-				actkeyw = extensions_p[error_HDU].get_keyword(String("ERRTYPE"));
+				// extract the keyword "HDUCLAS3"
+				actkeyw = extensions_p[error_HDU].get_keyword(String("HDUCLAS3"));
 
 				// check whether the keyword exists
 				if (actkeyw){
@@ -320,8 +323,8 @@ Bool FITSImgParser::get_quality_data(const String &extexpr, Int &data_HDU, Int &
 			if (mask_HDU > -1){
 				FitsKeyword *actkeyw;
 
-				// extract the keyword "QUALTYPE"
-				actkeyw = extensions_p[mask_HDU].get_keyword(String("QUALTYPE"));
+				// extract the keyword "HDUCLAS3"
+				actkeyw = extensions_p[mask_HDU].get_keyword(String("HDUCLAS3"));
 
 				// check whether the keyword exists
 				if (actkeyw){
@@ -615,7 +618,7 @@ String FITSImgParser::get_errorext(const Int &ext_index){
 		throw (AipsError("FITSImgParser::get_errorext - Can not access extension: "+String(os)+" in image: " + fitsname(True)));
 	}
 
-	// extract the keyword "HDUTYPE"
+	// extract the keyword "ERRDATA"
 	actkeyw = extensions_p[ext_index].get_keyword(String("ERRDATA"));
 
 	// check whether the keyword exists
@@ -647,7 +650,7 @@ String FITSImgParser::get_maskext(const Int &ext_index){
 		throw (AipsError("FITSImgParser::get_maskext - Can not access extension: "+String(os)+" in image: " + fitsname(True)));
 	}
 
-	// extract the keyword "HDUTYPE"
+	// extract the keyword "QUALDATA"
 	actkeyw = extensions_p[ext_index].get_keyword(String("QUALDATA"));
 
 	// check whether the keyword exists
@@ -668,6 +671,35 @@ String FITSImgParser::get_maskext(const Int &ext_index){
 	return mask_ext;
 }
 
+Bool FITSImgParser::confirm_fix_keywords(const Int &ext_index){
+	FitsKeyword *actkeyw;
+
+	Vector<String> key_words(3), key_values(3);
+	key_words(0) =String("HDUCLASS");  key_words(1)  = String("HDUDOC"); key_words(2)  = String("HDUCLAS1");
+	key_values(0)=String("ESO");       key_values(1) = String("DICD");   key_values(2) = String("IMAGE");
+	//key_words(3) = String("HDUVERS");  key_values(3) = String("DICD version 6");
+
+	for (uInt index=0; index<key_words.size(); index++){
+		// extract the keyword
+		actkeyw = extensions_p[ext_index].get_keyword(key_words(index));
+
+		// check whether the keyword exists
+		if (actkeyw){
+			// convert the keyword to string
+			String kword_string = String(actkeyw->asString());
+			kword_string.trim();
+
+			// compare the keyword value and return true if they are identical
+			if (kword_string.size()<1 || kword_string.compare(key_values(index)))
+				return False;
+		}
+		else{
+			return False;
+		}
+	}
+	return True;
+}
+
 Bool FITSImgParser::index_is_HDUtype(const Int &ext_index, const String &hdutype){
 
 	FitsKeyword *actkeyw;
@@ -679,8 +711,12 @@ Bool FITSImgParser::index_is_HDUtype(const Int &ext_index, const String &hdutype
 		throw (AipsError("FITSImgParser::index_is_HDUtype - Can not access extension: "+String(os)+" in image: " + fitsname(True)));
 	}
 
-	// extract the keyword "HDUTYPE"
-	actkeyw = extensions_p[ext_index].get_keyword(String("HDUTYPE"));
+	// verify the mandatory, fixed keywords
+	if (!confirm_fix_keywords(ext_index))
+		return False;
+
+	// extract the keyword "HDUCLAS2"
+	actkeyw = extensions_p[ext_index].get_keyword(String("HDUCLAS2"));
 
 	// check whether the keyword exists
 	if (actkeyw){

@@ -47,7 +47,7 @@ ImageFit1D<T>::ImageFit1D()
  : itsImagePtr(0),
    itsWeightPtr(0),
    itsAxis(0),
-   _converged(False), _success(False)
+   _converged(False), _success(False), _isValid(True)
 {
    checkType();
 }
@@ -57,7 +57,7 @@ ImageFit1D<T>::ImageFit1D(const ImageInterface<T>& image, uInt pixelAxis)
  : itsImagePtr(0),
    itsWeightPtr(0),
    itsAxis(0), _converged(False),
-   _success(False)
+   _success(False), _isValid(True)
 {
    checkType();
    setImage(image, pixelAxis);
@@ -69,7 +69,7 @@ ImageFit1D<T>::ImageFit1D(const ImageInterface<T>& image,
                           uInt pixelAxis)
  : itsImagePtr(0),
    itsWeightPtr(0),
-   itsAxis(0), _converged(False), _success(False)
+   itsAxis(0), _converged(False), _success(False), _isValid(True)
 {
    checkType();
    setImage(image, pixelAxis);
@@ -81,7 +81,7 @@ template <class T>
 ImageFit1D<T>::ImageFit1D(const ImageFit1D<T>& other)
  : itsImagePtr(0),
    itsWeightPtr(0),
-   itsAxis(0), _converged(False), _success(False)
+   itsAxis(0), _converged(False), _success(False), _isValid(True)
 {
    checkType();
    copy(other);
@@ -409,6 +409,7 @@ void ImageFit1D<T>::copy(const ImageFit1D<T>& other)
 
    _converged = other._converged;
    _success = other._success;
+   _isValid = other._isValid;
 }
 
 
@@ -454,5 +455,15 @@ Vector<T> ImageFit1D<T>::getResidual(Int which, Bool fit) const
    convertArray (t, r);
    return t;
 }
+
+template <class T>  void ImageFit1D<T>::invalidate() {
+	_isValid = False;
+}
+
+template <class T>
+Bool ImageFit1D<T>::isValid() const {
+	return _isValid;
+}
+
 
 } //#End casa namespace

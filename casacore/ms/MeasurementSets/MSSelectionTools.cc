@@ -293,4 +293,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt i=0;i<tmp.size();i++) elems[i]=tmp[i];
     return elems;
   }
+
+  Bool getSelectedTable(Table& selectedTab,
+			const Table& baseTab,
+			TableExprNode& fullTEN,
+			const String& outName)
+  {
+    Bool newRefTab=False;
+    if ((!fullTEN.isNull()) && (fullTEN.nrow() > 0))
+      {
+	selectedTab = Table((baseTab)(fullTEN));
+	// If the TEN was not NULL and at least one expression was
+	// non-blank, and still resulted in a zero selected rows.
+	if (selectedTab.nrow() == 0) 
+	  throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected table has zero rows."));
+	if (outName!="") selectedTab.rename(outName,Table::New);
+	selectedTab.flush();
+	newRefTab=True;
+      }
+    
+    return newRefTab;
+  }
+
 }

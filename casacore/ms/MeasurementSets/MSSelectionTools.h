@@ -76,6 +76,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  MSSelection *mss=NULL
 		  );
   
+  Bool getSelectedTable(Table& selectedTab,     const Table& baseTab,
+			TableExprNode& fullTEN,	const String& outName);
+
   Record mssSelectedIndices(MSSelection& mss, const MeasurementSet *ms);
 
   String stripWhite(const String& str, Bool onlyends=True);

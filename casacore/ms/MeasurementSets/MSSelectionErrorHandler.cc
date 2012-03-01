@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# MSSelectionErrorHandler.cc: Error handler for the MSSelection classes
+//# Copyright (C) 1994,1995,1996,1997,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,53 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id$
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.149"
+#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
+#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casa/Arrays/Vector.h>
+#include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+  MSSelectionErrorHandler::MSSelectionErrorHandler()
+    :tokenList(), messageList()
+  {
+  }
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+  MSSelectionErrorHandler::~MSSelectionErrorHandler () {}
+  
+  void MSSelectionErrorHandler::reportError(const char *token,const String message)
+  {
+    tokenList.push_back(token);
+    messageList.push_back(message);
+  }
 
+  String MSSelectionErrorHandler::constructMessage()
+  {
+    ostringstream Mesg;
+    if (messageList.size() > 0)
+      {
+	Mesg << messageList[0];
+	for (uInt i=0;i<tokenList.size();i++)
+	  {
+	    Mesg << tokenList[i] << " ";
+	  }
+      }
+    String casaMesg(Mesg.str());
+    return casaMesg;
+  }
+
+  void MSSelectionErrorHandler::handleError(MSSelectionError& mssErrorType) 
+  {
+    if (messageList.size() > 0)
+      {
+	String mesg(constructMessage());
+	mssErrorType.addMessage(mesg);
+	throw(mssErrorType);
+	// LogIO logIO;
+	// logIO << mssErrorType.getMesg() << LogIO::WARN;
+      }
+  }
 } //# NAMESPACE CASA - END
 
-#endif
