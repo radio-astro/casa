@@ -1249,6 +1249,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         
     # dictionary of successful command lines to save to outfile
     savelist = {}
+#    print myflagcmd
 
     # Setup the agent for each input line    
     for key in myflagcmd.keys():
@@ -1260,9 +1261,10 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         severity = myflagcmd[key]['severity']
         coltime = myflagcmd[key]['time']
         coltype = myflagcmd[key]['type']
-        casalog.post('cmdline for key%s'%key, 'DEBUG')
-        casalog.post('%s'%cmdline, 'DEBUG')
-        casalog.post('applied is %s'%applied, 'DEBUG')
+        if debug:
+            print 'cmdline for key%s'%key
+            print '%s'%cmdline
+            print 'applied is %s'%applied
         
         if cmdline.startswith('#'):
             continue
@@ -1381,9 +1383,9 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         # FIXME: Backup the flags
 #        if (flagbackup):
 #            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
-    
-    casalog.post('Dictionary of valid commands to save','DEBUG')
-    casalog.post('%s'%savelist, 'DEBUG')
+    if debug:
+        casalog.post('Dictionary of valid commands to save')
+        casalog.post('%s'%savelist)
     
     return savelist
 
@@ -1398,10 +1400,13 @@ def backupFlags(tflocal, prename):
         # integer giving a name, which does not already exist
         
     prefix = prename
+    print prefix
     existing = tflocal.getflagversionlist(printflags=True)
+    print existing
 
     # remove comments from strings
     existing = [x[0:x.find(' : ')] for x in existing]
+    print existing
     i = 1
     while True:
         versionname = prefix + '_' + str(i)
