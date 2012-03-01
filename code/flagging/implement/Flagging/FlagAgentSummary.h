@@ -52,12 +52,15 @@ protected:
 
 private:
 
+        // Build simple plot-reports from the summary dictionary
+        FlagReport buildFlagCountPlots();
+        std::map<Int , std::vector<Double> > frequencyList;
+
 	Bool spwChannelCounts;
 	Bool spwPolarizationCounts;
 
     std::map<std::string, std::map<std::string, uInt64> > accumflags;
     std::map<std::string, std::map<std::string, uInt64> > accumtotal;
-
 
     std::map<Int, std::map<uInt, uInt64> > accumChannelflags;
     std::map<Int, std::map<uInt, uInt64> > accumChanneltotal;
