@@ -38,6 +38,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	# v4.2 Updated STM 2012-02-16 (3.4.0) newplotflags trim flag times to data times
 	# v4.2 Updated STM 2012-02-21 (3.4.0) update subroutines for ant+spw+sol sorting
 	# v4.2 Updated STM 2012-02-23 (3.4.0) final fixes
+	# v4.2 Updated STM 2012-02-27 (3.4.0) final final fixes
 	#
 	try:
 		from xml.dom import minidom
@@ -45,7 +46,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v4.2 Updated STM 2012-02-23')
+        casalog.post('You are using flagcmd v4.2 Updated STM 2012-02-27')
 
         fglocal = casac.flagger()
         mslocal = casac.ms()
@@ -199,6 +200,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			        if flagmode=='table' and flagfile=='':
 			            # These flags came from internal FLAG_CMD, update status
 				    print 'Updating APPLIED status in FLAG_CMD'
+				    casalog.post('Updating APPLIED status in FLAG_CMD')
 				    myrowlist = myflagcmd.keys()
 				    if myrowlist.__len__()>0:
 				        updateflagcmd(vis,mycol='APPLIED',myval=True,myrowlist=myrowlist)
@@ -764,6 +766,9 @@ def readflagxml(sdmfile, mytbuff):
 #         'applied' (bool)        set to True here on read-in
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
+# Optional keys:
+#         'spw' (string)
+#         'poln' (string)
 #
 #   Updated STM 2011-11-02 handle new SDM Flag.xml format from ALMA
 #   Updated STM 2012-02-14 handle spectral window indices, names, IDs
@@ -1031,14 +1036,19 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
     #         'applied' (bool)        set to True here on read-in
     #         'level' (int)           set to 0 here on read-in
     #         'severity' (int)        set to 0 here on read-in
+    # Optional keys:
+    #         'spw' (string)
+    #         'poln' (string)
     #
     # NOTE: flag sorting is possibly needed to avoid error "Too many flagging agents
     # instantiated" and will generally speed up flagging in any event
     # If myflagsort=''              keep individual flags separate
     #              ='antenna'       combine all flags with a particular antenna
     #              ='antspw'        combine antenna+spw flags
+    #              ='antpol'        combine antenna+spw+poln flags
     #
     # Updated STM 2012-02-21 handle poln flags, myflagsort='antspw'
+    # Updated STM 2012-02-27 small cleanup
     #
     # Check if any operation is needed
     if myantenna=='' and myreason=='' and myflagsort=='':
@@ -1140,11 +1150,11 @@ def sortflags(myflags=None,myantenna='',myreason='Any',myflagsort=''):
 		# check if we can sort this by antenna
 		antsort = False
 		# can only sort mode manualflag together
-		if mymode=='online':
-		    antsort = nselect==1
-		elif mymode=='' or mymode=='manualflag':
-		    # must have non-blank antenna selection
-		    if ant!='':
+		# must have non-blank antenna selection
+		if ant!='':
+		    if mymode=='online':
+		        antsort = nselect==1
+		    elif mymode=='' or mymode=='manualflag':
 		        # exclude flags with multiple/no selection
 			if myd.has_key('timerange'):
 			    antsort = myd['timerange']!='' and nselect==1
@@ -1446,6 +1456,62 @@ def writeflagcmd(msfile,myflags,tag=''):
     return nadd
 # Done
 
+def updateflagcmd(msfile,mycol='',myval=None,myrowlist=[]):
+    #
+    # Update commands in myrowlist of the FLAG_CMD table of msfile
+    #
+    # Usage: updateflagcmd(msfile,myrow,mycol,myval)
+    # Example:
+    #
+    #    updateflagcmd(msfile,mycol='APPLIED',myval=True)
+    #       Mark all rows as APPLIED=True
+    #
+    #    updateflagcmd(msfile,mycol='APPLIED',myval=True,myrowlist=[0,1,2])
+    #       Mark rows 0,1,2 as APPLIED=True
+    #
+    if mycol=='':
+	    print 'WARNING: No column to specified for updateflagcmd, doing nothing'
+	    casalog.post('WARNING: No column to specified for updateflagcmd, doing nothing','WARN')
+	    return
+
+    # Open and read columns from FLAG_CMD
+    mstable = msfile+'/FLAG_CMD'
+    try:
+	    tb.open(mstable,nomodify=False)
+    except:
+	    raise Exception, "Error opening table "+mstable
+    nrows = int(tb.nrows())
+    #casalog.post('There were '+str(nrows)+' rows in FLAG_CMD')
+    #
+    # Check against allowed colnames
+    colnames = tb.colnames()
+    if colnames.count(mycol)<1:
+	    print 'Error: column mycol='+mycol+' not one of: '+str(colnames)
+	    casalog.post('Error: column mycol='+mycol+' not one of: '+str(colnames))
+	    return
+    
+    nlist = myrowlist.__len__()
+    if nlist>0:
+	    rowlist = myrowlist
+	    #casalog.post('Will update column '+mycol+' for rows '+str(rowlist))
+	    casalog.post('Will update column '+mycol+' for '+str(nlist)+' rows')
+    else:
+	    rowlist = range(nrows)
+	    nlist = nrows
+	    casalog.post('Will update column '+mycol+' for all rows')
+	    
+    if nlist>0:
+	    try:
+		    tb.putcell(mycol,rowlist,myval)
+	    except:
+		    raise Exception, "Error updating FLAG_CMD column "+mycol+" to value "+str(myval)
+	    
+	    print 'Updated '+str(nlist)+' rows of FLAG_CMD table in MS'
+	    casalog.post('Updated '+str(nlist)+' rows of FLAG_CMD table in MS')
+    tb.close()
+    
+# Done
+
 def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 #
 #   Parse list of flag command strings and return dictionary of flagcmds
@@ -1469,12 +1535,16 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 #         'applied' (bool)        set to True here on read-in
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
+# Optional keys:
+#         'spw' (string)
+#         'poln' (string)
 #   
 # Updated STM 2010-12-03 (3.2.0) handle comments # again
 # Updated STM 2010-12-08 (3.2.0) bug fixes in flagsort use, parsing
 # Updated STM 2010-12-20 (3.2.0) bug fixes parsing errors
 # Updated STM 2012-02-21 (3.4.0) handle poln flags
 # Updated STM 2012-02-23 (3.4.0) handle spw,poln as optional keys
+# Updated STM 2012-02-27 (3.4.0) bug fix
 #
     myflagd={}
     nrows = cmdlist.__len__()
@@ -1581,9 +1651,9 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 				    elif xkey=='antenna':
 					    ant = xval
 				    elif xkey=='spw':
-					    poln = xval
+					    spw = xval
 				    elif xkey=='poln':
-					    ant = poln
+					    poln = poln
 				    elif xkey=='id':
 					    fid = xval
 				    elif xkey=='unflag':
@@ -1646,6 +1716,9 @@ def listflags(myflags=None,myantenna='',myreason='',myoutfile='',listmode=''):
     #         'applied' (bool)        
     #         'level' (int)           
     #         'severity' (int)        
+    # Optional keys:
+    #         'spw' (string)
+    #         'poln' (string)
     #
     useid = False
     doterm = False
@@ -1673,21 +1746,23 @@ def listflags(myflags=None,myantenna='',myreason='',myoutfile='',listmode=''):
     myreaslist = myreason.split(',')
 
     if listmode=='online':
-	    phdr = '%8s %12s %8s %32s %48s' % ('Key', 'FlagID', 'Antenna', 'Reason', 'Timerange')
+        # STM 2012-02-27 add spw poln
+        #phdr = '%8s %12s %8s %32s %48s' % ('Key', 'FlagID', 'Antenna', 'Reason', 'Timerange')
+	phdr = '%8s %12s %8s %32s %48s %4s %s' % ('Key', 'FlagID', 'Antenna', 'Reason', 'Timerange', 'Poln', 'Spw')
     elif listmode=='cmd':
-	    phdr = '%8s %45s %32s %6s %7s %3s %3s %s' % ('Row', 'Timerange', 'Reason', 'Type', 'Applied', 'Lev', 'Sev', 'Command')
+        phdr = '%8s %45s %32s %6s %7s %3s %3s %s' % ('Row', 'Timerange', 'Reason', 'Type', 'Applied', 'Lev', 'Sev', 'Command')
     else:
-	    phdr = '%8s %s' % ('Key', 'Command')
+        phdr = '%8s %s' % ('Key', 'Command')
     if myoutfile!='':
-	    # list to output file
-	    print >>lfout,phdr
+        # list to output file
+	print >>lfout,phdr
     else:
-	    # list to logger and screen
-	    if doterm:
-		    print phdr
-	    else:
-		    print 'Output will be in logger'
-	    casalog.post(phdr)
+        # list to logger and screen
+	if doterm:
+	    print phdr
+	else:
+	    print 'Output will be in logger'
+	casalog.post(phdr)
     # Loop over flags
     for key in keylist:
         fld = myflags[key]
@@ -1729,22 +1804,33 @@ def listflags(myflags=None,myantenna='',myreason='',myoutfile='',listmode=''):
 		appl = str( fld['applied'] )
 	else:
 		appl = 'Unset'
+	# STM 2012-02-27 add spw poln
+	if fld.has_key('spw'):
+		spw = fld['spw']
+	else:
+		spw = ''
+	if fld.has_key('poln'):
+		poln = fld['poln']
+	else:
+		poln = ''
 	# Print out listing
 	if myantenna=='' or myantlist.count(ant)>0:
-                if myreason=='' or myreaslist.count(reas)>0:
-			if listmode=='online':
-				pstr = '%8s %12s %8s %32s %48s' % (skey, fid, ant, reas, timr)
-			elif listmode=='cmd':
-				pstr = '%8s %45s %32s %6s %7s %3s %3s %s' % (skey, timr, reas, typ, appl, levl, sevr, cmd)
-			else:
-				pstr = '%8s %s' % (skey, cmd)
-			if myoutfile!='':
-				# list to output file
-				print >>lfout,pstr
-			else:
-				# list to logger and screen
-				if doterm: print pstr
-				casalog.post(pstr)
+	    if myreason=='' or myreaslist.count(reas)>0:
+	        if listmode=='online':
+		    #pstr = '%8s %12s %8s %32s %48s' % (skey, fid, ant, reas, timr)
+		    # STM 2012-02-27 add spw poln
+		    pstr = '%8s %12s %8s %32s %48s %4s %s' % (skey, fid, ant, reas, timr, poln, spw)
+		elif listmode=='cmd':
+		    pstr = '%8s %45s %32s %6s %7s %3s %3s %s' % (skey, timr, reas, typ, appl, levl, sevr, cmd)
+		else:
+		    pstr = '%8s %s' % (skey, cmd)
+		if myoutfile!='':
+		    # list to output file
+		    print >>lfout,pstr
+		else:
+		    # list to logger and screen
+		    if doterm: print pstr
+		    casalog.post(pstr)
     if myoutfile!='':
 	    lfout.close()
 
@@ -1773,7 +1859,11 @@ def readflagcmd(msfile,myflagrows=[],useapplied=True,myreason='Any'):
     #         'applied' (bool)        set to True here on read-in
     #         'level' (int)           set to 0 here on read-in
     #         'severity' (int)        set to 0 here on read-in
+    # Optional keys:
+    #         'spw' (string)
+    #         'poln' (string)
     #
+    # Updated STM 2012-02-27 (3.4.0) handle spw,poln as optional keys
     #
     # Open and read columns from FLAG_CMD
     mstable = msfile+'/FLAG_CMD'
@@ -1862,6 +1952,11 @@ def readflagcmd(msfile,myflagrows=[],useapplied=True,myreason='Any'):
 			        flagd['id'] = xval
 			    elif xkey=='mode':
 			        flagd['mode'] = xval
+			    # STM 2012-02-27 add spw and poln
+			    elif xkey=='spw':
+			        flagd['spw'] = xval
+			    elif xkey=='poln':
+			        flagd['poln'] = xval
 	            # STM 2010-12-08 Do not put timerange if not in command
 		    # if timstr=='':
 		    # 	    # Construct timerange from time,interval
@@ -1922,62 +2017,6 @@ def clearflagcmd(msfile,myrowlist=[]):
 	    casalog.post('No rows to clear')
     tb.close()
     
-def updateflagcmd(msfile,mycol='',myval=None,myrowlist=[]):
-    #
-    # Update commands in myrowlist of the FLAG_CMD table of msfile
-    #
-    # Usage: updateflagcmd(msfile,myrow,mycol,myval)
-    # Example:
-    #
-    #    updateflagcmd(msfile,mycol='APPLIED',myval=True)
-    #       Mark all rows as APPLIED=True
-    #
-    #    updateflagcmd(msfile,mycol='APPLIED',myval=True,myrowlist=[0,1,2])
-    #       Mark rows 0,1,2 as APPLIED=True
-    #
-    if mycol=='':
-	    print 'WARNING: No column to specified for updateflagcmd, doing nothing'
-	    casalog.post('WARNING: No column to specified for updateflagcmd, doing nothing','WARN')
-	    return
-
-    # Open and read columns from FLAG_CMD
-    mstable = msfile+'/FLAG_CMD'
-    try:
-	    tb.open(mstable,nomodify=False)
-    except:
-	    raise Exception, "Error opening table "+mstable
-    nrows = int(tb.nrows())
-    #casalog.post('There were '+str(nrows)+' rows in FLAG_CMD')
-    #
-    # Check against allowed colnames
-    colnames = tb.colnames()
-    if colnames.count(mycol)<1:
-	    print 'Error: column mycol='+mycol+' not one of: '+str(colnames)
-	    casalog.post('Error: column mycol='+mycol+' not one of: '+str(colnames))
-	    return
-    
-    nlist = myrowlist.__len__()
-    if nlist>0:
-	    rowlist = myrowlist
-	    #casalog.post('Will update column '+mycol+' for rows '+str(rowlist))
-	    casalog.post('Will update column '+mycol+' for '+str(nlist)+' rows')
-    else:
-	    rowlist = range(nrows)
-	    nlist = nrows
-	    casalog.post('Will update column '+mycol+' for all rows')
-	    
-    if nlist>0:
-	    try:
-		    tb.putcell(mycol,rowlist,myval)
-	    except:
-		    raise Exception, "Error updating FLAG_CMD column "+mycol+" to value "+str(myval)
-	    
-	    print 'Updated '+str(nlist)+' rows of FLAG_CMD table in MS'
-	    casalog.post('Updated '+str(nlist)+' rows of FLAG_CMD table in MS')
-    tb.close()
-    
-# Done
-
 def getmstimes(vis):
     # Get start and end times from MS
     # this might take too long for large MS
@@ -2015,12 +2054,13 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
     # Function to plot flagging dictionary
     # Adapted from J.Marvil
     # Updated STM v4.1 2011-11-02 to handle ALMA flags
-    try:
-        import casac
-    except ImportError, e:
-        print 'failed to load casa:\n', e
-        exit(1)
-    qa = casac.qa = casac.quanta()
+    # Updated STM v4.2 2012-02-16 trim flag times to data times
+    try: 
+        from casac import *
+    except ImportError, e: 
+        print "failed to load casa:\n", e 
+        exit(1) 
+    qa = casac.quanta()
     
     try:
         import pylab as pl

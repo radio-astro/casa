@@ -299,7 +299,7 @@ class imstat_test(unittest.TestCase):
             size = os.path.getsize(logfile)
             print "size " + str(size)
             # appending, second time through size should double
-            self.assertTrue(size > 9e3*i and size < 1e4*i )
+            self.assertTrue(size > 1.2e4*i and size < 1.3e4*i )
             i = i+1
 
 

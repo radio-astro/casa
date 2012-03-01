@@ -45,6 +45,7 @@ immoments.xml
 impbcor.xml
 importasdm.xml
 importevla.xml
+importevla2.xml
 importfits.xml
 importfitsidi.xml
 importgmrt.xml
