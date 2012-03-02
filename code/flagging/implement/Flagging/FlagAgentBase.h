@@ -152,6 +152,10 @@ protected:
 	void processAntennaPair(Int antenna1,Int antenna2);
 	virtual void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
 
+	// Iter-passes method
+	virtual void passIntermediate(const VisBuffer &visBuffer);
+	virtual void passFinal(const VisBuffer &visBuffer);
+
 	// Mapping functions as requested by Urvashi
 	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);
 	void setFlagsMap(std::vector<uInt> *rows, FlagMapper *flagMap);
@@ -186,6 +190,9 @@ protected:
 	Bool multiThreading_p;
 	Int nThreads_p;
 	Int threadId_p;
+
+	// Running configuration
+	Bool prepass_p;
 
 private:
 	

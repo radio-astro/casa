@@ -281,9 +281,11 @@ def log_test_result(test_results, testdesc, logfile):
 	reldiff = abs(1.0 - result / testdesc[2])
 	if reldiff < 0.05:
 		print >>logfile, '* Passed',
+		print '* Alright',
 		retval = True
 	else:
 		print >>logfile, '! FAILED',
+		print '#####FAILED'
 		retval = False
 
 	# RR 4/18/2009: I think this complication might stem from a bug in the
@@ -308,7 +310,9 @@ def log_test_result(test_results, testdesc, logfile):
 		title2 += testdesc[3]
 		
 	print >>logfile, title1, 'test'
+	print title1, 'test'
 	print >>logfile, '*--  ' + title2 + str(result) + ',' + str(testdesc[2])
+	print '*--  ' + title2 + str(result) + ',' + str(testdesc[2])
 	return retval
 
 regstate = True

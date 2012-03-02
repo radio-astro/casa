@@ -134,6 +134,12 @@ FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
 	observationId_stringStream << observationId;
 	observationId_str = observationId_stringStream.str();
 
+	// Read in channel-frequencies.
+	// RVU : I'm not sure if this should go here, or in the FlagDataHandler so that all agents get it.
+	Vector<Double> flist(visBuffer.frequency());
+	for(Int i=0;i<flist.nelements();i++)
+	  frequencyList[spw].push_back(flist[i]);
+
 	return;
 }
 
@@ -243,27 +249,157 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 FlagReport
 FlagAgentSummary::getReport()
 {
-  // // Later, this function should return 'views' if they have been asked for.
-  // // In this case, make a 'list' type FlagReport, and do an addReport().
-  //
-  //         // Make the flagreport list
-  //         FlagReport summarylist("list");  
-  //
-  //         // Add the standard summary dictionary as a report of type 'summary'
-  //         summarylist.addReport( FlagReport("summary", agentName_p, getResult())  );
-  //
-  //         // Make a report for a view, and add it to the list
+           // Make the flagreport list
+           FlagReport summarylist("list");  
+  
+           // Add the standard summary dictionary as a report of type 'summary'
+           summarylist.addReport( FlagReport("summary", agentName_p, getResult())  );
+
+	   //////// Note : Calculate extra views only if the user has asked for it.
+	   /////// If returning only summary report, do the following.
+	   ////////  return FlagReport("summary", agentName_p, getResult());
+	   
+	   // Add a list of reports from the flag-count dictionary
+	   summarylist.addReport ( buildFlagCountPlots() );
+  
+  //         // Make a report (or a list of them )for a view, and add it to the list
   //         FlagReport viewrep("plotline",agentName_p,"title","xaxis","yaxis")
   //         viewrep.addData(xdata,ydata,"label");
   //         summarylist.addReport( viewRep );        
   //
-  //         return summarylist;
-  //
-  // Note : Calculate these extra views only if the user has asked for it.
-  //
-
-  return FlagReport("summary", agentName_p, getResult());
+           return summarylist;
 }
+
+FlagReport
+FlagAgentSummary::buildFlagCountPlots()
+{
+       FlagReport countRepList("list");
+
+       // (1) Plot of fraction flagged vs frequency (only if spwchan==True)
+       if( spwChannelCounts )
+       {
+	        pair<string, double> freqUnit("GHz",1e+9);
+		
+	        FlagReport subRep1 = FlagReport("plotpoints",agentName_p,"Percentage Flagged", 
+                                                                    "Frequency ("+freqUnit.first+")", "% Flagged");
+		
+		for (map<Int, map<uInt, uInt64> >::iterator key1 = accumChanneltotal.begin();
+                       key1 != accumChanneltotal.end();
+                       key1++)
+		{
+			Int nCh=accumChanneltotal[key1->first].size();
+
+			Vector<Float> freqVals(nCh), flagPercent(nCh);
+			uInt chCount=0;
+			for (map<uInt, uInt64>::const_iterator key2 = key1->second.begin();
+                              key2 != key1->second.end();
+                              key2++)
+			{
+				// read the frequency value for this channel.
+				freqVals[chCount] = frequencyList[key1->first][key2->first] / freqUnit.second;
+
+				// calculate the percentage flagged for this channel
+				if( key2->second > 0 )
+				{
+				         flagPercent[chCount] = 100.0 * 
+                                                                            (Double) accumChannelflags[key1->first][key2->first] / 
+                                                                            (Double) key2->second;
+				}
+				else 
+ 			        {
+				         flagPercent[chCount] = 0.0;
+				}
+				
+				// Increment channel counter
+				chCount++;
+			}
+
+			subRep1.addData("line", freqVals,flagPercent,"",Vector<Float>(),
+                                                   "spw"+String::toString(key1->first)); 
+			
+		}
+		
+		countRepList.addReport( subRep1 );
+       }
+
+        // (2) Plot of fraction flagged vs antenna-position
+       Int nAnt=accumtotal["antenna"].size();
+       if(nAnt>0) // Perhaps put a parameter to control this ?
+	 {
+		 Vector<Float> antPosX(nAnt), antPosY(nAnt), radius(nAnt);
+		 Int antCount=0;
+		 const Vector<double> xyzOrigin = (flagDataHandler_p->antennaPositions_p->operator()(0))
+                                                                       .getValue().getValue();
+
+		 FlagReport subRep2 = FlagReport("plotpoints",agentName_p,"Percentage Flagged", 
+                                                                    "X meters (ITRF)", "Y meters (ITRF)");
+		 for (map<std::string, uInt64>::const_iterator antkey = accumtotal["antenna"].begin();
+                       antkey != accumtotal["antenna"].end();
+                       antkey++)
+		 {
+	                  Int antId = 0; //antCount; // this needs to find the antenna-id for the antenna name.... aaaaah.
+			  for(antId=0; antId<flagDataHandler_p->antennaNames_p->nelements(); antId++)
+			  {
+			          if( flagDataHandler_p->antennaNames_p->operator()(antId) 
+                                      == String(antkey->first) ) break;
+			  }
+	       
+			  const Vector<double> xyz = (flagDataHandler_p->antennaPositions_p->operator()(antId))
+                                                                        .getValue().getValue();
+			  antPosX[antCount] = xyz[0]-xyzOrigin[0];
+			  antPosY[antCount] = xyz[1]-xyzOrigin[1];
+			  radius[antCount] = 200.0 *  
+                                                       (Double) accumflags["antenna"][antkey->first]/
+                                                       (Double) antkey->second;
+			  antCount++;
+		 }
+		 subRep2.addData("scatter", antPosX,antPosY,"circle",radius,""); 
+		 countRepList.addReport( subRep2 );
+	 }
+
+        // (3) Plot of fraction flagged vs baseline-length
+        Int nBase=accumtotal["baseline"].size();
+        if(nBase>0) // Perhaps put a parameter to control this ?
+	 {
+       		 Vector<Float> baselineLength(nBase), flagFraction(nBase);
+		 Int baseCount=0;
+		 FlagReport subRep3 = FlagReport("plotpoints",agentName_p,"Percentage Flagged per baseline", 
+                                                                    "Baseline Length (m)", "% Flagged");
+		 for (map<std::string, uInt64>::const_iterator basekey = accumtotal["baseline"].begin();
+                       basekey != accumtotal["baseline"].end();
+                       basekey++)
+		 {
+		          Int antId1 = 0, antId2=0; 
+			  String antName1,antName2;
+			  antName1 = antName2 =  String(basekey->first);
+			  antName1 = antName1.before("&&");
+			  antName2 = antName2.after("&&");
+			  for(Int antId=0; antId<flagDataHandler_p->antennaNames_p->nelements(); antId++)
+			  {
+			          if( flagDataHandler_p->antennaNames_p->operator()(antId) == antName1 ) antId1 = antId;
+			          if( flagDataHandler_p->antennaNames_p->operator()(antId) == antName2 ) antId2 = antId;
+			  }
+	       
+			  const Vector<double> xyz1 = (flagDataHandler_p->antennaPositions_p->operator()(antId1))
+                                                                         .getValue().getValue();
+			  const Vector<double> xyz2 = (flagDataHandler_p->antennaPositions_p->operator()(antId2))
+                                                                         .getValue().getValue();
+			  baselineLength[baseCount] = sqrt( fabs( (xyz1[0]-xyz2[0])*(xyz1[0]-xyz2[0]) + 
+                                                                                       (xyz1[1]-xyz2[1])*(xyz1[1]-xyz2[1]) + 
+                                                                                       (xyz1[2]-xyz2[2])*(xyz1[2]-xyz2[2]) ) );
+			  flagFraction[baseCount] = 100.0 * 
+                                                                  (Double) accumflags["baseline"][basekey->first]/
+                                                                  (Double) basekey->second;
+			  baseCount++;
+		 }
+		 subRep3.addData("scatter", baselineLength,flagFraction,"",Vector<Float>(),""); 
+		 countRepList.addReport( subRep3 );
+	 }
+
+
+       return countRepList;
+}
+
 
 Record
 FlagAgentSummary::getResult()

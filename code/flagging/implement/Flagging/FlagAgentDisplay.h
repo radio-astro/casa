@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int skipScan_p, skipSpw_p, skipField_p;
 
-    // Accumulation arrays
+    Vector<String> plotColours_p;
     
     
   };

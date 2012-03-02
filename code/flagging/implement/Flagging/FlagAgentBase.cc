@@ -179,8 +179,10 @@ FlagAgentBase::initialize()
    backgroundMode_p = false;
    iterationApproach_p = ROWS;
    multiThreading_p = false;
+   prepass_p = false;
    nThreads_p = 0;
    threadId_p = 0;
+
    agentName_p = String("");
    /// Flag/Unflag config
    writePrivateFlagCube_p = false;
@@ -451,7 +453,19 @@ FlagAgentBase::runCore()
 			// tfcrop,rflag
 			case ANTENNA_PAIRS:
 			{
+				prepass_p = false;
+
 				iterateAntennaPairs();
+
+				// Do a second pass if the previous one was a pre-pass
+				if (prepass_p)
+				{
+					prepass_p = false;
+					passIntermediate(*(flagDataHandler_p->visibilityBuffer_p->get()));
+					iterateAntennaPairs();
+					passFinal(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				}
+
 				break;
 			}
 			// Iterate trough (time,freq) maps per antenna pair
@@ -1722,6 +1736,20 @@ FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
 }
 
 void
+FlagAgentBase::passIntermediate(const VisBuffer &visBuffer)
+{
+	// TODO: This method must be re-implemented in the derived classes
+	return;
+}
+
+void
+FlagAgentBase::passFinal(const VisBuffer &visBuffer)
+{
+	// TODO: This method must be re-implemented in the derived classes
+	return;
+}
+
+void
 FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 {
 	// First step: Get reference visibility cubes
@@ -2037,35 +2065,35 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 bool
 FlagAgentBase::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
-	// TODO: This class must be re-implemented in the derived classes
+	// TODO: This method must be re-implemented in the derived classes
 	return false;
 }
 
 bool
 FlagAgentBase::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
-	// TODO: This class must be re-implemented in the derived classes
+	// TODO: This method must be re-implemented in the derived classes
 	return false;
 }
 
 bool
 FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
-	// TODO: This class must be re-implemented in the derived classes
+	// TODO: This method must be re-implemented in the derived classes
 	return false;
 }
 
 bool
 FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
-	// TODO: This class must be re-implemented in the derived classes
+	// TODO: This method must be re-implemented in the derived classes
 	return false;
 }
 
 FlagReport
 FlagAgentBase::getReport()
 {
-	// TODO: This class must be re-implemented in the derived classes
+	// TODO: This method must be re-implemented in the derived classes
 	return FlagReport(String("none"),agentName_p);
 }
 

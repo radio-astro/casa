@@ -23,6 +23,7 @@
 #include <flagging/Flagging/FlagAgentRFlag.h>
 #include <flagging/Flagging/FlagAgentDisplay.h>
 #include <flagging/Flagging/FlagAgentManual.h>
+#include <boost/algorithm/string.hpp>
 #include <iostream>
 
 using namespace casa;
@@ -213,7 +214,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -241,7 +242,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		agentNumber++;
 	}
 
-	if (displayMode == 2)
+	if ((displayMode == 1) or (displayMode == 3))
 	{
 		Record diplayAgentConfig;
 		diplayAgentConfig.define("name","FlagAgentDisplay");
@@ -362,7 +363,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	cout << " Combined Report : " << endl << replist.str() << endl;
 
 	// Display report
-	if (displayMode == 1)
+	if ((displayMode == 2) or (displayMode == 3))
 	{
     	Record diplayAgentConfig;
     	diplayAgentConfig.define("name","FlagAgentDisplay");
@@ -542,10 +543,9 @@ int main(int argc, char **argv)
 	string expression,datacolumn,nThreadsParam,ntime;
 	Int nThreads = 0;
 
-	Bool doplot = false;
 	Double spectralmin,spectralmax;
-	vector<Float> noise;
-	vector<Float> scutof;
+	vector< vector<Float> > timedev;
+	vector< vector<Float> > freqdev;
 	bool display = false;
 	uShort displayMode = 0;
 
@@ -670,11 +670,6 @@ int main(int argc, char **argv)
 		{
 			agentParameters.define ("ntimesteps", casa::uInt(atoi(argv[i+1])));
 		}
-		else if (parameter == string("-doplot"))
-		{
-			doplot = casa::Bool(atoi(argv[i+1]));
-			agentParameters.define ("doplot", doplot);
-		}
 		else if (parameter == string("-noisescale"))
 		{
 			agentParameters.define ("noisescale", casa::Double(atof(argv[i+1])));
@@ -683,21 +678,29 @@ int main(int argc, char **argv)
 		{
 			agentParameters.define ("scutofscale", casa::Double(atof(argv[i+1])));
 		}
-		else if (parameter == string("-noise"))
+		else if (parameter == string("-timedev"))
 		{
-			Record spwRecord;
-			spwRecord.define("spw=13",atof(argv[i+1]));
-			Record fieldRecord;
-			fieldRecord.defineRecord("field=1",spwRecord);
-			agentParameters.defineRecord ("noise", fieldRecord);
+			string field_spw_dev = string(value);
+            vector<string> field_spw_dev_breakdown;
+            boost::split(field_spw_dev_breakdown, field_spw_dev, boost::is_any_of(":"));
+            cout << "timedev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
+            vector<Float> field_spw_dev_breakdown_converted(3);
+            field_spw_dev_breakdown_converted[0] = atof(field_spw_dev_breakdown[0].c_str());
+            field_spw_dev_breakdown_converted[1] = atof(field_spw_dev_breakdown[1].c_str());
+            field_spw_dev_breakdown_converted[2] = atof(field_spw_dev_breakdown[2].c_str());
+            timedev.push_back(field_spw_dev_breakdown_converted);
 		}
-		else if (parameter == string("-scutof"))
+		else if (parameter == string("-freqdev"))
 		{
-			Record spwRecord;
-			spwRecord.define("spw=13",atof(argv[i+1]));
-			Record fieldRecord;
-			fieldRecord.defineRecord("field=1",spwRecord);
-			agentParameters.defineRecord ("scutof", fieldRecord);
+			string field_spw_dev = string(value);
+            vector<string> field_spw_dev_breakdown;
+            boost::split(field_spw_dev_breakdown, field_spw_dev, boost::is_any_of(":"));
+            cout << "freqdev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
+            vector<Float> field_spw_dev_breakdown_converted(3);
+            field_spw_dev_breakdown_converted[0] = atof(field_spw_dev_breakdown[0].c_str());
+            field_spw_dev_breakdown_converted[1] = atof(field_spw_dev_breakdown[1].c_str());
+            field_spw_dev_breakdown_converted[2] = atof(field_spw_dev_breakdown[2].c_str());
+            freqdev.push_back(field_spw_dev_breakdown_converted);
 		}
 		else if (parameter == string("-spectralmin"))
 		{
@@ -711,56 +714,63 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-display"))
 		{
-			if (value.compare("True") == 0)
+			agentParameters.define ("display", String(value));
+
+			if (value == "data")
 			{
+				displayMode = 1;
 				display = true;
+			}
+			else if (value == "report")
+			{
+				displayMode = 2;
+				display = true;
+			}
+			else if (value == "both")
+			{
+				displayMode = 3;
+				display = true;
+			}
+		}
+		else if (parameter == string("-writeflags"))
+		{
+			agentParameters.define ("writeflags", True);
+			if (value == "True")
+			{
+				agentParameters.define ("writeflags", True);
+			}
+			else
+			{
+				agentParameters.define ("writeflags", False);
 			}
 		}
 	}
 
-	if (noise.size()>0)
+	if (timedev.size()>0)
 	{
-		casa::IPosition size(1);
-		size[0]=noise.size();
-		Array<Double> noiseArray(size);
-		for (size_t iter = 0;iter<noise.size();iter++)
+		Matrix<Double> timedevMatrix(timedev.size(),3);
+		for (uInt row_i=0;row_i<timedev.size();row_i++)
 		{
-			noiseArray[iter] = noise[iter];
+			timedevMatrix(row_i,0) = timedev[row_i][0];
+			timedevMatrix(row_i,1) = timedev[row_i][1];
+			timedevMatrix(row_i,2) = timedev[row_i][2];
 		}
-		agentParameters.define("noise",noiseArray);
-
-		doplot = false;
-		agentParameters.define ("doplot", doplot);
+		Array<Double> timedeArray = timedevMatrix;
+		agentParameters.define("timedev",timedeArray);
 	}
 
-	if (scutof.size()>0)
+	if (freqdev.size()>0)
 	{
-		casa::IPosition size(1);
-		size[0]=scutof.size();
-		Array<Double> scutofArray(size);
-		for (size_t iter = 0;iter<scutof.size();iter++)
+		Matrix<Double> freqdevMatrix(freqdev.size(),3);
+		for (uInt row_i=0;row_i<freqdev.size();row_i++)
 		{
-			scutofArray[iter] = scutof[iter];
+			freqdevMatrix(row_i,0) = freqdev[0][0];
+			freqdevMatrix(row_i,1) = freqdev[0][1];
+			freqdevMatrix(row_i,2) = freqdev[0][2];
 		}
-		agentParameters.define("scutof",scutofArray);
-
-		doplot = false;
-		agentParameters.define ("doplot", doplot);
+		Array<Double> freqdevArray = freqdevMatrix;
+		agentParameters.define("freqdev",freqdevArray);
 	}
-
-	if (display)
-	{
-		if (doplot)
-		{
-			displayMode = 1;
-		}
-		else
-		{
-			displayMode = 2;
-		}
-	}
-
-	cout << "Display mode:" << displayMode << endl;
 
 	Record agentParameters_i;
 	vector<Record> agentParamersList;

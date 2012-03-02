@@ -421,9 +421,28 @@ def readXML(sdmfile, mytbuff):
         if spwstring != '':
             cmd += " spw='" + spwstring + "'"
             flagdict[fid]['spw'] = spwstring
+#        if polstring != '':
+#            cmd += " poln='" + polstring + "'"
+#            flagdict[fid]['poln'] = polstring
         if polstring != '':
-            cmd += " poln='" + polstring + "'"
-            flagdict[fid]['poln'] = polstring
+            # Write the poln translation in correlation
+            if polstring.count('R')>0:
+                if polstring.count('L')>0:
+                    corr = 'RR,RL,LR,LL'
+                else:
+                    corr = 'RR,RL,LR'
+            elif polstring.count('L')>0:
+                corr = 'LL,LR,RL'
+            elif polstring.count('X')>0:
+                if polstring.count('Y')>0:
+                    corr = 'XX,XY,YX,YY'
+                else:
+                    corr = 'XX,XY,YX'
+            elif polstring.count('Y')>0:
+                corr = 'YY,YX,XY'
+
+            cmd += " correlation='" + corr + "'"
+#            flagdict[fid]['poln'] = polstring
         flagdict[fid]['command'] = cmd
     #
         flagdict[fid]['type'] = 'FLAG'
@@ -1249,6 +1268,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         
     # dictionary of successful command lines to save to outfile
     savelist = {}
+#    print myflagcmd
 
     # Setup the agent for each input line    
     for key in myflagcmd.keys():
@@ -1260,9 +1280,10 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         severity = myflagcmd[key]['severity']
         coltime = myflagcmd[key]['time']
         coltype = myflagcmd[key]['type']
-        casalog.post('cmdline for key%s'%key, 'DEBUG')
-        casalog.post('%s'%cmdline, 'DEBUG')
-        casalog.post('applied is %s'%applied, 'DEBUG')
+        if debug:
+            print 'cmdline for key%s'%key
+            print '%s'%cmdline
+            print 'applied is %s'%applied
         
         if cmdline.startswith('#'):
             continue
@@ -1349,12 +1370,12 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         
         # Remove the data selection parameters if there is only one agent,
         # for performance reasons
-        if myflagcmd.__len__() == 1:
-            sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
-                     'spw','observation']
-            for k in sellist:
-                if modepars.has_key(k):
-                    modepars.pop(k)
+#        if myflagcmd.__len__() == 1:
+#            sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
+#                     'spw','observation']
+#            for k in sellist:
+#                if modepars.has_key(k):
+#                    modepars.pop(k)
 
         casalog.post('Parsing parameters of mode %s in row %s'%(mode,key), 'DEBUG')
         casalog.post('%s'%modepars, 'DEBUG')
@@ -1381,9 +1402,9 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         # FIXME: Backup the flags
 #        if (flagbackup):
 #            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
-    
-    casalog.post('Dictionary of valid commands to save','DEBUG')
-    casalog.post('%s'%savelist, 'DEBUG')
+    if debug:
+        casalog.post('Dictionary of valid commands to save')
+        casalog.post('%s'%savelist)
     
     return savelist
 
@@ -1398,10 +1419,13 @@ def backupFlags(tflocal, prename):
         # integer giving a name, which does not already exist
         
     prefix = prename
+    print prefix
     existing = tflocal.getflagversionlist(printflags=True)
+    print existing
 
     # remove comments from strings
     existing = [x[0:x.find(' : ')] for x in existing]
+    print existing
     i = 1
     while True:
         versionname = prefix + '_' + str(i)

@@ -15,8 +15,8 @@
         The flagging command syntax is currently defined in CAS-2405.
 
         HISTORY: Task created v1.0 S.T. Myers 2010-08-31 (3.1.0)
-                 Last updated v4.2 S.T. Myers 2012-02-23 (3.4.0) code
-                 Last updated v4.2 S.T. Myers 2012-02-23 (3.4.0) docs
+                 Last updated v4.2 S.T. Myers 2012-02-27 (3.4.0) code
+                 Last updated v4.2 S.T. Myers 2012-02-27 (3.4.0) docs
 
         </description>
         <input>
@@ -89,13 +89,13 @@
                 </param>
 
                 <param type="string" name="flagsort" subparam="true">
-                        <description>combine/sort flags by (antenna/id/reason)</description>
+                        <description>combine/sort flags by (antpol/antenna/id/reason)</description>
                         <value></value>
                         <allowed kind="enum">
                         <value></value>
-                        <value>antenna</value>
-                        <value>antspw</value>
                         <value>antpol</value>
+                        <value>antspw</value>
+                        <value>antenna</value>
                         <value>id</value>
                         <value>reason</value>
                         </allowed>
@@ -171,12 +171,12 @@
                         <when param="optype">
                                 <equals value="apply">
                                         <default param="outfile"><value type="string"></value></default>
-                                        <default param="flagsort"><value type="string">antenna</value></default>
+                                        <default param="flagsort"><value type="string">antpol</value></default>
                                         <default param="flagbackup"><value>True</value></default>
                                         <default param="reset"><value>False</value></default>
                                 </equals>
                                 <equals value="unapply">
-                                        <default param="flagsort"><value type="string">antenna</value></default>
+                                        <default param="flagsort"><value type="string">antpol</value></default>
                                         <default param="flagbackup"><value>True</value></default>
                                 </equals>
                                 <equals value="list">
@@ -307,7 +307,7 @@
                    matches this compound reason string only
 
         optype -- operation to perform using flags
-                options: 'apply','clear','list','plot','save','set','unapply'
+                options: 'apply','clear','list','plot','save','set','unapply','extract'
                 default: 'apply'
 
            optype "apply" --  apply flags to MS
@@ -328,11 +328,13 @@
                    default: True
 
               flagsort -- combine/flags (to reduce number of flag ops) 
-                        e.g. flagsort='antenna' or flagsort='reason'
+                        e.g. flagsort='antpol' (sort by antenna/spw/pol)
+                             flagsort='antenna' (sort by antenna)
+                             flagsort='reason' (sort by REASON)
                              flagsort='id' (keep individual XML flags)
-                   default: 'antenna'
+                   default: 'antpol'
 
-                   NOTE: use flagsort='antenna' or 'reason' to reduce
+                   NOTE: use flagsort='antpol' or 'reason' to reduce
                    number of individual flags that need to be processed
 
                    If you have too many flags, you will get an error
@@ -483,7 +485,8 @@
            optype "extract" -- extract internal flag dictionary
 
               This option will return the internal flagging dictionary to
-              python.
+              python. Useful for debugging or if you want to do
+              something yourself with the flags.
 
      ===========================================================================
 
@@ -802,8 +805,8 @@
         NOTE: we do not support syntax for use of mode='rfi' or mode='autoflag' at
         this time
 
-HISTORY: Task last updated v4.2 S.T. Myers 2012-02-23 (3.4.0)
-         Docs last updated v4.2 S.T. Myers 2012-02-23 (3.4.0)
+HISTORY: Task last updated v4.2 S.T. Myers 2012-02-27 (3.4.0)
+         Docs last updated v4.2 S.T. Myers 2012-02-27 (3.4.0)
 
 </example>
 </task>
