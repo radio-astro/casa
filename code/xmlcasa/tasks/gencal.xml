@@ -91,9 +91,13 @@
      calibration tables must also be present, if applicable.
 
      For antenna position corrections (caltype='antpos'), the antenna 
-     position offsets are specified in the ITRF frame.  For VLA position
-     corrections in the VLA-centric frame, use caltype='antposvla', and gencal
-     will rotate them to ITRF before storing them in the output caltable.
+     position offsets are specified in the ITRF frame. For EVLA, automated 
+     lookup of the antenna position corrections is enabled when antenna is 
+     unspecified (antenna='') for this caltype. Note that this requires 
+     internet connection to access the EVLA antenna position correction 
+     site. For VLA position corrections in the VLA-centric frame, use 
+     caltype='antposvla', and gencal will rotate them to ITRF before 
+     storing them in the output caltable.
 
      Keyword arguments:
 
@@ -214,6 +218,12 @@
               antenna ea10 by -130 nsec in spw 2 and 145 nsec in spw
               3.  See the above example for caltype='ph' for details
               of the sign convention adopted when applying delay corrections.
+
+       gencal(vis='test.ms',caltable='test.G',caltype='antpos')
+     
+         --> *** Currently EVLA observations only ***
+             Antenna position corrections will be retrieved automatically
+             over internet to generate the caltable.
 
        gencal(vis='test.ms',caltable='test.G',caltype='antpos',
               antenna='ea09,ea10',
