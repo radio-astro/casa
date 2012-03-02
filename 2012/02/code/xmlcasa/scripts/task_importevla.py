@@ -53,10 +53,10 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 		srt='all'
 		time_sampling='all'
 		showversion=True
-		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --scans \"' + scans + '\" --logfile \"' +casalog.logfile() +'\"'
+		execute_string='asdm2MS_xl  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --scans \"' + scans + '\" --logfile \"' +casalog.logfile() +'\"'
 		if(showversion) :
-		   casalog.post('asdm2MS --revision --logfile \"' +casalog.logfile() +'\"')
-		   os.system('asdm2MS --revision --logfile \"' +casalog.logfile() +'\"')
+		   casalog.post('asdm2MS_xl --revision --logfile \"' +casalog.logfile() +'\"')
+		   os.system('asdm2MS_xl --revision --logfile \"' +casalog.logfile() +'\"')
 		if(compression) :
 		   execute_string= execute_string +' --compression'
 		if (switchedpower) :
@@ -78,7 +78,7 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 				raise Exception, "Found '%s' but can't overwrite it."%dotFlagversion
 
 		execute_string = execute_string + ' ' + asdm + ' ' + viso
-		casalog.post('Running the asdm2MS standalone invoked as:')
+		casalog.post('Running the asdm2MS_xl standalone invoked as:')
 		#print execute_string
 		casalog.post(execute_string)
         	os.system(execute_string)
