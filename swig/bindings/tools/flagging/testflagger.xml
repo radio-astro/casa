@@ -62,7 +62,7 @@ tf.done()
 
      <param type="string" name="msname">
      <description>Measurement set to be processed. Default:  </description>
-     <value>''</value>
+     <value></value>
      </param>
      <param type="double" name="ntime">
      <description>Time interval. If not given, the default will be used. Default: </description>

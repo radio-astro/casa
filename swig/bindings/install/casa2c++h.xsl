@@ -198,9 +198,9 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
             <xsl:for-each select="aps:value">
 		<xsl:if test="position()=last()">
 		      <xsl:text disable-output-escaping="yes">=</xsl:text>
-	              <xsl:if test="$mytype='string'">"</xsl:if>
+	              <xsl:if test="$mytype='string'">string("</xsl:if>
 	              <xsl:value-of select="normalize-space(.)"/>
-	              <xsl:if test="$mytype='string'">"</xsl:if>
+	              <xsl:if test="$mytype='string'">")</xsl:if>
 	        </xsl:if>
 	</xsl:for-each>
    </xsl:template>
@@ -225,7 +225,7 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
 			           </xsl:when>
 				   <xsl:otherwise>
 					   <xsl:text disable-output-escaping="yes">string&amp; </xsl:text><xsl:value-of select="@name"/>
-					   <xsl:if test="aps:value">="<xsl:value-of select="aps:value"/>"</xsl:if>
+					   <xsl:if test="aps:value">=string("<xsl:value-of select="aps:value"/>")</xsl:if>
 			                   <xsl:if test="$defdirection='out'">=<xsl:value-of select="../../../@name"/>::<xsl:value-of select="@name"/>_<xsl:value-of select="$myname"/></xsl:if>
 					   <xsl:if test="position()&lt;last()">, </xsl:if>
 				   </xsl:otherwise>

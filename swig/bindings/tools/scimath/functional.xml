@@ -1434,7 +1434,7 @@ T
 <input>
      <param type="string" direction="in" name="code">
      <description>programmable expression string</description>
-     <value>''</value>
+     <value></value>
      </param>
 
      <param type="doubleArray" direction="in" name="params">
