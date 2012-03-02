@@ -4332,11 +4332,10 @@ Bool ImageAnalysis::statistics(
 	const Vector<Float>& includepix, const Vector<Float>& excludepix,
 	const String&, const Int nx, const Int ny, const Bool list,
 	const Bool force, const Bool disk, const Bool robust,
-	const Bool verbose, const Bool extendMask
+	const Bool verbose, const Bool extendMask, vector<String> *const &messageStore
 ) {
 	String pgdevice("/NULL");
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
-
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	String mtmp = mask;
@@ -4443,25 +4442,36 @@ Bool ImageAnalysis::statistics(
 
 	if (list) {
 		// Only write to the logger if the user wants it displayed.
+		Vector<String> x(5);
 		*itsLog << LogOrigin("ImageAnalysis", "statistics") << LogIO::NORMAL;
-		*itsLog << "Regions --- " << LogIO::POST;
-		*itsLog << "         -- bottom-left corner (pixel) [blc]:  " << blc
-				<< LogIO::POST;
-		*itsLog << "         -- top-right corner (pixel) [trc]:    " << trc
-				<< LogIO::POST;
-		*itsLog << "         -- bottom-left corner (world) [blcf]: " << blcf
-				<< LogIO::POST;
-		*itsLog << "         -- top-right corner (world) [trcf]:   " << trcf
-				<< LogIO::POST;
-
+		ostringstream y;
+		x[0] = "Regions --- ";
+		y << "         -- bottom-left corner (pixel) [blc]:  " << blc;
+		x[1] = y.str();
+		y.str("");
+		y << "         -- top-right corner (pixel) [trc]:    " << trc;
+		x[2] = y.str();
+		y.str("");
+		y << "         -- bottom-left corner (world) [blcf]: " << blcf;
+		x[3] = y.str();
+		y.str("");
+		y << "         -- top-right corner (world) [trcf]:   " << trcf;
+		x[4] = y.str();
+		for (uInt i=0; i<x.size(); i++) {
+			*itsLog << x[i] << LogIO::POST;
+			if (messageStore != 0) {
+				messageStore->push_back(x[i] + "\n");
+			}
+		}
 	}
 
 	// Make new statistics object only if we need to.    This code is getting
 	// a bit silly. I should rework it somewhen.
 	Bool forceNewStorage = force;
 	if (pStatistics_p != 0) {
-		if (disk != oldStatsStorageForce_p)
+		if (disk != oldStatsStorageForce_p) {
 			forceNewStorage = True;
+		}
 	}
 
 	if (forceNewStorage) {
@@ -4470,10 +4480,12 @@ Bool ImageAnalysis::statistics(
 		if (verbose) {
 			pStatistics_p = new ImageStatistics<Float> (subImage, *itsLog,
 					True, disk);
-		} else {
+		}
+		else {
 			pStatistics_p = new ImageStatistics<Float> (subImage, True, disk);
 		}
-	} else {
+	}
+	else {
 		if (pStatistics_p == 0) {
 			// We are here if this is the first time or the image has
 			// changed (pStatistics_p is deleted then)
@@ -4518,7 +4530,9 @@ Bool ImageAnalysis::statistics(
 			}
 		}
 	}
-
+	if (messageStore != 0) {
+		pStatistics_p->recordMessages(True);
+	}
 	pStatistics_p->setPrecision(precis);
 	pStatistics_p->setBlc(blc);
 
@@ -4658,7 +4672,16 @@ Bool ImageAnalysis::statistics(
 		}
 	}
 	pStatistics_p->closePlotting();
-
+	if (messageStore != 0) {
+		vector<String> messages = pStatistics_p->getMessages();
+		for (
+			vector<String>::const_iterator iter=messages.begin();
+			iter!=messages.end(); iter++
+		) {
+			messageStore->push_back(*iter + "\n");
+		}
+		pStatistics_p->clearMessages();
+	}
 	return True;
 }
 

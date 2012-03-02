@@ -220,7 +220,6 @@ fieldidbounds: LT INT // <ID
 		  ostringstream m; m << "No field ID found <" << n;
 		  checkFieldError(*($$), m);
 
-
 		  free($2);
 		}
              | GT INT // >ID

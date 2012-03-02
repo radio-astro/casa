@@ -255,11 +255,12 @@ namespace casa {
 
 
     protected:
-      LogIO *itsLog;
-      CoordinateSystem* itsCSys;
+      inline LogIO* _getLog() const { return itsLog; }
+      inline CoordinateSystem* _getCsys() const { return itsCSys; }
 
     private:
-
+      LogIO *itsLog;
+      CoordinateSystem* itsCSys;
       // Function to return the internal Table object to the RegionHandler.
       static Table& getTable (void* ptr, Bool writable);
       //Convert a string to Quantity

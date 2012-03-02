@@ -414,6 +414,8 @@ class ImageAnalysis
                           const Quantity& pa, const Record& beam, 
                           const Bool remove = False, const Bool log = True);
 
+    // if messageStore != 0, log messages, stripped of time stampe and priority, will also be placed in this parameter and
+    // returned to caller for eg logging to file.
     Bool statistics(
     	Record& statsout, const Vector<Int>& axes, Record& region,
         const String& mask, const Vector<String>& plotstats,
@@ -422,7 +424,7 @@ class ImageAnalysis
         const Int ny=1, const Bool list=True,
         const Bool force=False, const Bool disk=False,
         const Bool robust=False, const Bool verbose=True,
-        const Bool extendMask=False
+        const Bool extendMask=False, vector<String> *const &messageStore=0
     );
 
     bool twopointcorrelation(
