@@ -2508,7 +2508,7 @@ VisMapper::setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis
 	reducedLength_p = IPosition(3);
 	reducedLength_p(0) = leftVisSize(1); // chan
 	reducedLength_p(1) = leftVisSize(2); // row
-	if (selectedCorrelations_p.size() > 0)
+	if (selectedCorrelationProducts_p.size() > 0)
 	{
 		reducedLength_p(2) = selectedCorrelations_p.size(); //pols
 	}
@@ -2533,7 +2533,9 @@ VisMapper::setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis
 void
 VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 {
+	selectedCorrelationProducts_p.clear();
 	selectedCorrelations_p.clear();
+	selectedCorrelationStrings_p.clear();
 	expression_p = expression;
 	polMap_p = polMap;
 	bool matchExpression = false;
@@ -2569,8 +2571,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::I) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::I]);
-			getCorr_p = &VisMapper::stokes_i;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::I]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_i);
+			selectedCorrelationStrings_p.push_back(string("I"));
 			matchExpression = true;
 		}
 		else
@@ -2582,8 +2587,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::XX) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XX]);
-			getCorr_p = &VisMapper::linear_xx;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::XX]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::linear_xx);
+			selectedCorrelationStrings_p.push_back(string("XX"));
 			matchExpression = true;
 		}
 		else
@@ -2595,8 +2603,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::YY) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YY]);
-			getCorr_p = &VisMapper::linear_yy;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::YY]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::linear_yy);
+			selectedCorrelationStrings_p.push_back(string("YY"));
 			matchExpression = true;
 		}
 		else
@@ -2608,8 +2619,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::XY) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XY]);
-			getCorr_p = &VisMapper::linear_xy;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::XY]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::linear_xy);
+			selectedCorrelationStrings_p.push_back(string("XY"));
 			matchExpression = true;
 		}
 		else
@@ -2621,8 +2635,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::YX) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YX]);
-			getCorr_p = &VisMapper::linear_yx;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::YX]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::linear_yx);
+			selectedCorrelationStrings_p.push_back(string("YX"));
 			matchExpression = true;
 		}
 		else
@@ -2634,8 +2651,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::RR) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RR]);
-			getCorr_p = &VisMapper::circular_rr;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::RR]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::circular_rr);
+			selectedCorrelationStrings_p.push_back(string("RR"));
 			matchExpression = true;
 		}
 		else
@@ -2647,8 +2667,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::LL) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LL]);
-			getCorr_p = &VisMapper::circular_ll;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::LL]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::circular_ll);
+			selectedCorrelationStrings_p.push_back(string("LL"));
 			matchExpression = true;
 		}
 		else
@@ -2660,8 +2683,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::LR) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LR]);
-			getCorr_p = &VisMapper::circular_lr;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::LR]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::circular_lr);
+			selectedCorrelationStrings_p.push_back(string("LR"));
 			matchExpression = true;
 		}
 		else
@@ -2673,8 +2699,11 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::RL) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RL]);
-			getCorr_p = &VisMapper::circular_rl;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::RL]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::circular_rl);
+			selectedCorrelationStrings_p.push_back(string("RL"));
 			matchExpression = true;
 		}
 		else
@@ -2686,22 +2715,31 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::I) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::I]);
-			getCorr_p = &VisMapper::stokes_i;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::I]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_i);
+			selectedCorrelationStrings_p.push_back(string("I"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XX) != polMap_p->end()) and (polMap_p->find(Stokes::YY) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XX]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YY]);
-			getCorr_p = &VisMapper::stokes_i_from_linear;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::XX]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::YY]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_i_from_linear);
+			selectedCorrelationStrings_p.push_back(string("I = (XX+YY)/2"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RR) != polMap_p->end()) and (polMap_p->find(Stokes::LL) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RR]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LL]);
-			getCorr_p = &VisMapper::stokes_i_from_circular;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::RR]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::LL]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_i_from_circular);
+			selectedCorrelationStrings_p.push_back(string("I = (RR+LL)/2"));
 			matchExpression = true;
 		}
 		else
@@ -2713,22 +2751,31 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::Q) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::Q]);
-			getCorr_p = &VisMapper::stokes_q;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::Q]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_q);
+			selectedCorrelationStrings_p.push_back(string("Q"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XX) != polMap_p->end()) and (polMap_p->find(Stokes::YY) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XX]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YY]);
-			getCorr_p = &VisMapper::stokes_q_from_linear;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::XX]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::YY]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_q_from_linear);
+			selectedCorrelationStrings_p.push_back(string("Q = (XX-YY)/2"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RL) != polMap_p->end()) and (polMap_p->find(Stokes::LR) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RL]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LR]);
-			getCorr_p = &VisMapper::stokes_q_from_circular;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::RL]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::LR]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_q_from_circular);
+			selectedCorrelationStrings_p.push_back(string("Q = (RL-LR)/2"));
 			matchExpression = true;
 		}
 		else
@@ -2740,22 +2787,31 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::U) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::U]);
-			getCorr_p = &VisMapper::stokes_u;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::U]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_u);
+			selectedCorrelationStrings_p.push_back(string("U"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XY) != polMap_p->end()) and (polMap_p->find(Stokes::YX) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XY]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YX]);
-			getCorr_p = &VisMapper::stokes_u_from_linear;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::XY]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::YX]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_u_from_linear);
+			selectedCorrelationStrings_p.push_back(string("U = (XY-YX)/2"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RL) != polMap_p->end()) and (polMap_p->find(Stokes::LR) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RL]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LR]);
-			getCorr_p = &VisMapper::stokes_u_from_circular;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::RL]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::LR]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_u_from_circular);
+			selectedCorrelationStrings_p.push_back(string(" U = (RL-LR)/2i"));
 			matchExpression = true;
 		}
 		else
@@ -2767,22 +2823,31 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	{
 		if (polMap_p->find(Stokes::V) != polMap_p->end())
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::V]);
-			getCorr_p = &VisMapper::stokes_v;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::V]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_v);
+			selectedCorrelationStrings_p.push_back(string("V"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::XY) != polMap_p->end()) and (polMap_p->find(Stokes::YX) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::XY]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::YX]);
-			getCorr_p = &VisMapper::stokes_v_from_linear;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::XY]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::YX]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_v_from_linear);
+			selectedCorrelationStrings_p.push_back(string("V = (XY-YX)/2i"));
 			matchExpression = true;
 		}
 		else if ((polMap_p->find(Stokes::RR) != polMap_p->end()) and (polMap_p->find(Stokes::LL) != polMap_p->end()))
 		{
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::RR]);
-			selectedCorrelations_p.push_back((*polMap_p)[Stokes::LL]);
-			getCorr_p = &VisMapper::stokes_v_from_circular;
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[Stokes::RR]);
+			selectedPolarizations.push_back((*polMap_p)[Stokes::LL]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::stokes_v_from_circular);
+			selectedCorrelationStrings_p.push_back(string("V = (RR-LL)/2"));
 			matchExpression = true;
 		}
 		else
@@ -2807,23 +2872,22 @@ VisMapper::~VisMapper()
 Float
 VisMapper::operator()(uInt chan, uInt row)
 {
-	Complex val = (*this.*getCorr_p)(chan,row);
+	Complex val = (*this.*selectedCorrelationProducts_p[0])(chan,row);
 	return (*this.*applyVisExpr_p)(val);
 }
 
 Float
 VisMapper::operator()(uInt pol, uInt chan, uInt row)
 {
-	Complex val = (*this.*getVis_p)(selectedCorrelations_p[pol],chan,row);
+	Complex val = (*this.*selectedCorrelationProducts_p[pol])(chan,row);
 	return (*this.*applyVisExpr_p)(val);
 }
 
 Complex
 VisMapper::correlationProduct(uInt pol, uInt chan, uInt row)
 {
-	return (*this.*getVis_p)(selectedCorrelations_p[pol],chan,row);
+	return (*this.*selectedCorrelationProducts_p[pol])(chan,row);
 }
-
 
 Complex
 VisMapper::leftVis(uInt pol, uInt chan, uInt row)
@@ -2968,7 +3032,7 @@ VisMapper::stokes_v_from_circular(uInt chan, uInt row)
 //////////////////////////////////////
 /// FlagMapper implementation ////////
 //////////////////////////////////////
-FlagMapper::FlagMapper(Bool flag, 	vector<uInt> selectedCorrelations,
+FlagMapper::FlagMapper(Bool flag, 	vector< vector<uInt> > selectedCorrelations,
 									CubeView<Bool> *commonFlagsView,
 									CubeView<Bool> *originalFlagsView,
 									CubeView<Bool> *privateFlagsView,
@@ -2989,7 +3053,7 @@ FlagMapper::FlagMapper(Bool flag, 	vector<uInt> selectedCorrelations,
 	flag_p = flag;
 }
 
-FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations)
+FlagMapper::FlagMapper(Bool flag, vector< vector<uInt> > selectedCorrelations)
 {
 	commonFlagsView_p = NULL;
 	originalFlagsView_p = NULL;
@@ -3062,7 +3126,7 @@ FlagMapper::setParentFlagRow(VectorView<Bool> *commonFlagRowView,VectorView<Bool
 
 
 void
-FlagMapper::setExpressionMapping(vector<uInt> selectedCorrelations)
+FlagMapper::setExpressionMapping(vector< vector<uInt> > selectedCorrelations)
 {
 	selectedCorrelations_p = selectedCorrelations;
 	if (selectedCorrelations_p.empty())
@@ -3085,7 +3149,7 @@ Bool
 FlagMapper::getOriginalFlags(uInt channel, uInt row)
 {
 	Bool combinedFlag = False;
-	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[0].begin();iter!=selectedCorrelations_p[0].end();iter++)
 	{
 		combinedFlag = combinedFlag | originalFlagsView_p->operator ()(*iter,channel,row);
 	}
@@ -3097,7 +3161,7 @@ Bool
 FlagMapper::getModifiedFlags(uInt channel, uInt row)
 {
 	Bool combinedFlag = False;
-	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[0].begin();iter!=selectedCorrelations_p[0].end();iter++)
 	{
 		combinedFlag = combinedFlag | commonFlagsView_p->operator ()(*iter,channel,row);
 	}
@@ -3109,7 +3173,7 @@ Bool
 FlagMapper::getPrivateFlags(uInt channel, uInt row)
 {
 	Bool combinedFlag = False;
-	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[0].begin();iter!=selectedCorrelations_p[0].end();iter++)
 	{
 		combinedFlag = combinedFlag | privateFlagsView_p->operator ()(*iter,channel,row);
 	}
@@ -3120,19 +3184,37 @@ FlagMapper::getPrivateFlags(uInt channel, uInt row)
 Bool
 FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 {
-	return originalFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row);
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
+	{
+		combinedFlag = combinedFlag | originalFlagsView_p->operator ()(*iter,channel,row);
+	}
+
+	return combinedFlag;
 }
 
 Bool
 FlagMapper::getModifiedFlags(uInt pol, uInt channel, uInt row)
 {
-	return commonFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row);
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
+	{
+		combinedFlag = combinedFlag | commonFlagsView_p->operator ()(*iter,channel,row);
+	}
+
+	return combinedFlag;
 }
 
 Bool
 FlagMapper::getPrivateFlags(uInt pol, uInt channel, uInt row)
 {
-	return privateFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row);
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
+	{
+		combinedFlag = combinedFlag | privateFlagsView_p->operator ()(*iter,channel,row);
+	}
+
+	return combinedFlag;
 }
 
 Bool
@@ -3156,19 +3238,34 @@ FlagMapper::getPrivateFlagRow(uInt row)
 void
 FlagMapper::setModifiedFlags(uInt pol, uInt channel, uInt row)
 {
-	commonFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row) = flag_p;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
+	{
+		commonFlagsView_p->operator ()(*iter,channel,row) = flag_p;
+	}
 }
 
 void
 FlagMapper::setPrivateFlags(uInt pol, uInt channel, uInt row)
 {
-	privateFlagsView_p->operator ()(selectedCorrelations_p[pol],channel,row) = flag_p;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
+	{
+		privateFlagsView_p->operator ()(*iter,channel,row) = flag_p;
+	}
 }
 
 void
 FlagMapper::applyFlag(uInt channel, uInt row)
 {
-	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[0].begin();iter!=selectedCorrelations_p[0].end();iter++)
+	{
+		(*this.*applyFlag_p)(*iter,channel,row);
+	}
+}
+
+void
+FlagMapper::applyFlag(uInt pol, uInt channel, uInt row)
+{
+	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
 	{
 		(*this.*applyFlag_p)(*iter,channel,row);
 	}
@@ -3180,9 +3277,12 @@ FlagMapper::applyFlagRow(uInt row)
 	// Flag cube
 	for (uInt chan_i=0;chan_i<reducedLength_p(0);chan_i++)
 	{
-		for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+		for (vector< vector<uInt> >::iterator correlations=selectedCorrelations_p.begin();correlations!=selectedCorrelations_p.end();correlations++)
 		{
-			(*this.*applyFlag_p)(*iter,chan_i,row);
+			for (vector<uInt>::iterator iter=correlations->begin();iter!=correlations->end();iter++)
+			{
+				(*this.*applyFlag_p)(*iter,chan_i,row);
+			}
 		}
 	}
 

@@ -57,6 +57,7 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Freq);
 }
 
 FlagAgentSummary::~FlagAgentSummary()
@@ -161,7 +162,7 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
     // Compute totals
 	Int nChannels,nRows;
 	flags.shape(nChannels,nRows);
-    vector<uInt> polarizations = flags.getSelectedCorrelations();
+    vector< vector<uInt> > polarizations = flags.getSelectedCorrelations();
 	Int nPolarizations = polarizations.size();
     uInt64 rowTotal = nChannels*nPolarizations;
 
@@ -201,7 +202,7 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 	String polarization_str;
 	for (pol_i=0;pol_i < nPolarizations;pol_i++)
 	{
-		polarization_str = (*toPolarizationIndexMap)[polarizations[pol_i]];
+		polarization_str = (*toPolarizationIndexMap)[polarizations[pol_i][0]];
 		accumtotal["correlation"][polarization_str] += nChannels;
 		accumflags["correlation"][polarization_str] += polarizationsBreakdownFlags[pol_i];
 

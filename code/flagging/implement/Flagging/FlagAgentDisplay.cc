@@ -332,12 +332,19 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     */
     
     // Get Polarization Maps
+    /*
     Vector<uInt> polarizations = flags.getSelectedCorrelations();
     nPolarizations_p = polarizations.size();
     polarizationIndexMap *polMap = flagDataHandler_p->getPolarizationIndexMap();
     Vector<String> corrTypes(nPolarizations_p);
     for(uInt pol=0;pol<nPolarizations_p;pol++)
       corrTypes[pol] = (*polMap)[polarizations[pol]];
+      */
+
+    // Get Polarization Maps
+    // jagonzal: Migrated to new implementation of multiple expressions handling
+    vector<string> corrTypes = visibilities.getSelectedCorrelationStrings();
+    nPolarizations_p = corrTypes.size();
 
     ///cout << "Selected Correlations : " << polarizations << endl;
  
@@ -417,9 +424,9 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 		flagspectrum = (flagspectrum/countspec);
 		AlwaysAssert( freqList_p.nelements()==nChannels , AipsError); 
 		
-		DisplayLine(nChannels, freqList_p, origspectrum, String("before:")+corrTypes[pl], 
+		DisplayLine(nChannels, freqList_p, origspectrum, String("before:")+String(corrTypes[pl]),
 			    String("red"), False, panels_p[pl+(2*nPolarizations_p)].getInt());
-		DisplayScatter(nChannels, freqList_p, flagspectrum, String("after:")+corrTypes[pl], 
+		DisplayScatter(nChannels, freqList_p, flagspectrum, String("after:")+String(corrTypes[pl]),
 			       String("blue"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
 		
 		//// TODO : Can I query the tfcrop agent for a "view" to overlay here. 
