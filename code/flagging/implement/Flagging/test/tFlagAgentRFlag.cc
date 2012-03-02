@@ -683,24 +683,38 @@ int main(int argc, char **argv)
 			string field_spw_dev = string(value);
             vector<string> field_spw_dev_breakdown;
             boost::split(field_spw_dev_breakdown, field_spw_dev, boost::is_any_of(":"));
-            cout << "timedev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
-            vector<Float> field_spw_dev_breakdown_converted(3);
-            field_spw_dev_breakdown_converted[0] = atof(field_spw_dev_breakdown[0].c_str());
-            field_spw_dev_breakdown_converted[1] = atof(field_spw_dev_breakdown[1].c_str());
-            field_spw_dev_breakdown_converted[2] = atof(field_spw_dev_breakdown[2].c_str());
-            timedev.push_back(field_spw_dev_breakdown_converted);
+            if (field_spw_dev_breakdown.size() == 3)
+            {
+            	cout << "timedev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
+            	vector<Float> field_spw_dev_breakdown_converted(3);
+            	field_spw_dev_breakdown_converted[0] = atof(field_spw_dev_breakdown[0].c_str());
+            	field_spw_dev_breakdown_converted[1] = atof(field_spw_dev_breakdown[1].c_str());
+            	field_spw_dev_breakdown_converted[2] = atof(field_spw_dev_breakdown[2].c_str());
+            	timedev.push_back(field_spw_dev_breakdown_converted);
+            }
+            else
+            {
+            	agentParameters.define ("timedev",  Double(atof(value.c_str())));
+            }
 		}
 		else if (parameter == string("-freqdev"))
 		{
 			string field_spw_dev = string(value);
             vector<string> field_spw_dev_breakdown;
             boost::split(field_spw_dev_breakdown, field_spw_dev, boost::is_any_of(":"));
-            cout << "freqdev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
-            vector<Float> field_spw_dev_breakdown_converted(3);
-            field_spw_dev_breakdown_converted[0] = atof(field_spw_dev_breakdown[0].c_str());
-            field_spw_dev_breakdown_converted[1] = atof(field_spw_dev_breakdown[1].c_str());
-            field_spw_dev_breakdown_converted[2] = atof(field_spw_dev_breakdown[2].c_str());
-            freqdev.push_back(field_spw_dev_breakdown_converted);
+            if (field_spw_dev_breakdown.size() == 3)
+            {
+            	cout << "freqdev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
+            	vector<Float> field_spw_dev_breakdown_converted(3);
+            	field_spw_dev_breakdown_converted[0] = atof(field_spw_dev_breakdown[0].c_str());
+            	field_spw_dev_breakdown_converted[1] = atof(field_spw_dev_breakdown[1].c_str());
+            	field_spw_dev_breakdown_converted[2] = atof(field_spw_dev_breakdown[2].c_str());
+            	freqdev.push_back(field_spw_dev_breakdown_converted);
+            }
+            else
+            {
+            	agentParameters.define ("freqdev",  Double(atof(value.c_str())));
+            }
 		}
 		else if (parameter == string("-spectralmin"))
 		{
