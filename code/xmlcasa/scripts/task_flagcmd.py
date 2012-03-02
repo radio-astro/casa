@@ -39,6 +39,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	# v4.2 Updated STM 2012-02-21 (3.4.0) update subroutines for ant+spw+sol sorting
 	# v4.2 Updated STM 2012-02-23 (3.4.0) final fixes
 	# v4.2 Updated STM 2012-02-27 (3.4.0) final final fixes
+	# v4.2 Updated STM 2012-03-01 (3.4.0) allow multiple timeranges in cmd mode
 	#
 	try:
 		from xml.dom import minidom
@@ -46,7 +47,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v4.2 Updated STM 2012-02-27')
+	casalog.post('You are using flagcmd v4.2 Updated STM 2012-03-01')
 
         fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
         mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -1545,6 +1546,7 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 # Updated STM 2012-02-21 (3.4.0) handle poln flags
 # Updated STM 2012-02-23 (3.4.0) handle spw,poln as optional keys
 # Updated STM 2012-02-27 (3.4.0) bug fix
+# Updated STM 2012-02-29 (3.4.0) allow multiple timeranges
 #
     myflagd={}
     nrows = cmdlist.__len__()
@@ -1620,33 +1622,49 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 				    if xkey=='timerange':
 					    timstr = xval
 					    # Extract TIME,INTERVAL
-					    try:
-					        (startstr,endstr) = timstr.split('~')
-					    except:
-						if timstr.count('~')==0:
-						    #print 'Assuming a single start time '
-						    startstr = timstr
-						    endstr = timstr
-						else:
-						    print 'Not a start~end range: '+timstr
-						    print "ERROR: too may ~'s "
-						    raise Exception, "Error parsing "+timstr
-                                            t = qa.totime(startstr)
-					    starts = qa.convert(t,'s')
-					    if starts['value']<1.E6:
-						    # assume a time offset from ref
-						    starts = qa.add(t0s,starts)
-					    startmjds = starts['value']
-					    if endstr=='':
-					       endstr = startstr
-				            t = qa.totime(endstr)
-					    ends = qa.convert(t,'s')
-					    if ends['value']<1.E6:
-						    # assume a time offset from ref
-						    ends = qa.add(t0s,ends)
-					    endmjds = ends['value']
-					    tim = 0.5*(startmjds+endmjds)
-					    intvl = endmjds - startmjds
+					    # STM 2012-03-01 Allow for comma-separated ranges
+					    if timstr!='':
+						    startmjds = 0.0
+						    endmjds = 0.0
+						    timlist = timstr.split(',')
+						    
+						    for timr in timlist:
+							    try:
+								    (startstr,endstr) = timr.split('~')
+							    except:
+								    if timr.count('~')==0:
+									    # print 'Assuming a single start time '
+									    startstr = timr
+									    endstr = timr
+								    else:
+									    print 'Not a start~end range: '+timr
+									    print "ERROR: too may ~'s "
+									    raise Exception, "Error parsing "+timr
+							    t = qa.totime(startstr)
+							    starts = qa.convert(t,'s')
+							    if starts['value']<1.E6:
+								    # assume a time offset from ref
+								    starts = qa.add(t0s,starts)
+							    startm = starts['value']
+							    if endstr=='':
+								    endstr = startstr
+							    t = qa.totime(endstr)
+							    ends = qa.convert(t,'s')
+							    if ends['value']<1.E6:
+								    # assume a time offset from ref
+								    ends = qa.add(t0s,ends)
+							    endm = ends['value']
+							    if startmjds==0.0 or startm<startmjds:
+								    startmjds = startm
+							    if endm>endmjds:
+								    endmjds = endm
+						    if startmjds==0.0:
+							    startmjds = ms_startmjds
+						    if endmjds==0.0:
+							    endmjds = ms_endmjds
+						    # Use the span of the timeranges
+						    tim = 0.5*(startmjds+endmjds)
+						    intvl = endmjds - startmjds
 					    
 				    elif xkey=='antenna':
 					    ant = xval

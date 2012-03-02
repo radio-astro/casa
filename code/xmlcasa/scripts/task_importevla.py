@@ -32,14 +32,14 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 	#Vers8.4 (3.2.0) STM 2011-03-24 fix casalog.post line-length bug
 	#Vers8.5 (3.4.0) STM 2011-12-08 new readflagxml for new Flag.xml format
 	#Vers8.6 (3.4.0) STM 2011-02-22 full handling of new Flag.xml ant+spw+pol flags
-	#Vers8.6 (3.4.0) STM 2011-02-27 bug fix
+	#Vers8.6 (3.4.0) STM 2011-03-01 bug fix for compression
 	#
 	if applyflags:
 		fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
 	#
 	try:
                 casalog.origin('importevla')
-		casalog.post('You are using importevla v8.5 STM Updated 2012-02-27')
+		casalog.post('You are using importevla v8.6 STM Updated 2012-03-01')
 		viso = ''
                 casalog.post('corr_mode is forcibly set to all.')
 		if(len(vis) > 0) :
@@ -84,7 +84,7 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
         	os.system(execute_string)
 		if compression :
                     #viso = viso + '.compressed'
-                    viso = visover.rstrip('.ms') + '.compressed.ms'
+                    viso = viso.rstrip('.ms') + '.compressed.ms'
 		if flagbackup:
 		    ok=fg.open(viso);
 		    ok=fg.saveflagversion('Original',comment='Original flags on import',merge='save')
