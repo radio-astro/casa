@@ -6068,13 +6068,57 @@ Bool ImageAnalysis::getFreqProfile(
 		return False;
 	}
 
+	Double np=1.; // the number of pixels in the synth beam, needed for flux or eflux
+	if(combineType==7 || combineType==8){ // flux or eflux
+	    // determine number of pixels in synth beam
+	    const Unit& brightnessUnit = pImage_p->units();
+	    String bUName = brightnessUnit.getName();
+	    bUName.downcase();
+	    if(bUName.contains("/beam")){
+		
+		ImageMetaData md(*pImage_p);
+		if(!md.hasDirectionCoordinate()){
+		    *itsLog << LogIO::WARN << "No DirectionCoordinate - cannot convert flux density"
+			    << LogIO::POST;
+		    return False;
+		}
+		
+		Quantity pixArea; 
+		if(!md.getDirectionPixelArea(pixArea)){
+		    *itsLog << LogIO::WARN << "Cannot determine solid angle of direction pixel"
+			    << LogIO::POST;
+		    return False;
+		}
+		Quantity beamArea;
+		if(!md.getBeamArea(beamArea)){
+		    *itsLog << LogIO::WARN << "Cannot determine solid angle of beam. Will assume beam==1 pixel"
+			    << LogIO::POST;
+		    beamArea = pixArea;
+		}
+		
+		np = (beamArea/pixArea).getValue();
+		if(np<=0.){
+		    *itsLog << LogIO::WARN << "Restoring beam area is zero! Cannot correctly calculate flux." 
+			    << LogIO::POST;
+		    return False;
+		}
+	    }
+	    else{
+		np = 1.;
+	    }
+	}
+
 	// for a point extraction,
 	// call the another method
 	if (n == 1) {
 		xy[0] = x[0];
 		xy[1] = y[0];
-		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
-				whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality, restValue);
+		Bool ok =  getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
+					  whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality, restValue);
+		if(ok && (combineType==7 || combineType==8)){
+		    zyaxisval = zyaxisval/np;
+		}
+		return ok;
 	}
 
 	// n > 1, i.e. region to average over is a rectangle or polygon
@@ -6262,76 +6306,31 @@ Bool ImageAnalysis::getFreqProfile(
 			}
 			break;
 		case 7: // combine with flux (== sum / number of pixels in synth beam)
+		        for (Int k = 0; k < nchan; ++k) {
+			    blc(pixSpecAx) = k;
+			    trc(pixSpecAx) = k;
+			    MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+			    if (planedat.nelementsValid() >0){
+				zyaxisval(k) = sum(planedat)/np;
+			    }
+			}
+			break;
+
 		case 8:	// combine with the square root of the sum of squares / number of pixels in synth beam			
-
-		        // determine number of pixels in synth beam
-		        Double np;
-			{
-			    const Unit& brightnessUnit = pImage_p->units();
-			    String bUName = brightnessUnit.getName();
-			    bUName.downcase();
-			    if(bUName.contains("/beam")){
-
-				ImageMetaData md(*pImage_p);
-				if(!md.hasDirectionCoordinate()){
-				    *itsLog << "No DirectionCoordinate - cannot convert flux density"
-                                            << LogIO::EXCEPTION;
+			for (Int k = 0; k < nchan; ++k) {
+			    blc(pixSpecAx) = k;
+			    trc(pixSpecAx) = k;
+			    MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+			    if (planedat.nelementsValid() >0){
+				zyaxisval(k) = sum(planedat);
+				if (zyaxisval(k) < 0.0) {
+				    zyaxisval(k) = 0.0;
+				    *itsLog << LogIO::WARN << "Value set to 0.0, sqrt(<0.0) not allowed!" << LogIO::POST;
 				}
-
-				Quantity pixArea; 
-				if(!md.getDirectionPixelArea(pixArea)){
-				    *itsLog << "Cannot determine solid angle of direction pixel"
-                                            << LogIO::EXCEPTION;
-				}
-				Quantity beamArea;
-				if(!md.getBeamArea(beamArea)){
-				    *itsLog << "Cannot determine solid angle of beam. Will assume beam==1 pixel"
-                                            << LogIO::WARN;
-				    beamArea = pixArea;
-				}
-				
-				np = (beamArea/pixArea).getValue();
-				if(np<=0.){
-				    *itsLog << "Restoring beam area is zero! Cannot correctly calculate flux." 
-					    << LogIO::EXCEPTION;
+				else {
+				    zyaxisval(k) = sqrt(zyaxisval(k)/np);
 				}
 			    }
-			    else{
-				np = 1.;
-			    }
-			}
-			
-                        // calculate y axis values
-			if(combineType==7){ // flux
-			    
-			    for (Int k = 0; k < nchan; ++k) {
-				blc(pixSpecAx) = k;
-				trc(pixSpecAx) = k;
-				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				if (planedat.nelementsValid() >0){
-				    zyaxisval(k) = sum(planedat)/np;
-				}
-			    }
-
-			}
-			else if(combineType==8){ // flux error
-
-			    for (Int k = 0; k < nchan; ++k) {
-				blc(pixSpecAx) = k;
-				trc(pixSpecAx) = k;
-				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				if (planedat.nelementsValid() >0){
-				    zyaxisval(k) = sum(planedat);
-				    if (zyaxisval(k) < 0.0) {
-					zyaxisval(k) = 0.0;
-					*itsLog << LogIO::WARN << "Value set to 0.0, sqrt(<0.0) not allowed!" << LogIO::POST;
-				    }
-				    else {
-					zyaxisval(k) = sqrt(zyaxisval(k)/np);
-				    }
-				}
-			    }
-			    
 			}
 			break;
 		default:
