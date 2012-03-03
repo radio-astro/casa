@@ -103,7 +103,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="cell">
-      <description>x and y cell size. default unit arcmin</description>
+      <description>x and y cell size. default unit arcsec</description>
       <any type="variant" limittype="string stringArray double doubleArray"/>
       <value type="string"></value>
     </param>
@@ -198,12 +198,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: -1 (automatically calculated from cell size and 
                              the data)
                 example: npix=200 (equivalent to [200,200])
-        cell -- x and y cell size. default unit arcmin
+        cell -- x and y cell size. default unit arcsec
                 default: '' (automatically calculated from npix if it is 
                              set, otherwise '1.0arcmin')
                 example: cell=['0.2arcmin, 0.2arcmin']
                          cell='0.2arcmin' (equivalent to example above)
-                         cell=0.2 (interpreted as '0.2arcmin')
+                         cell=12.0 (interpreted as '12.0arcsec'='0.2arcmin')
         center -- grid center
                 default: '' (automatically calculated from the data)
                 example: 'J2000 13h44m00 -17d02m00'
