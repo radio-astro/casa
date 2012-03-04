@@ -137,7 +137,7 @@ FlagAgentElevation::preProcessBufferCore(const VisBuffer &visBuffer)
 	{
 		Vector<MDirection> azimuth_elevation = visBuffer.azel(time[row_i]);
 		Int ant1 = visBuffer.antenna1()[row_i];
-		Int ant2 = visBuffer.antenna1()[row_i];
+		Int ant2 = visBuffer.antenna2()[row_i];
 
 		double antenna1_elevation = azimuth_elevation[ant1].getAngle("deg").getValue()[1];
 		double antenna2_elevation = azimuth_elevation[ant2].getAngle("deg").getValue()[1];

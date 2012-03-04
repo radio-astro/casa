@@ -82,7 +82,6 @@ private:
 
 	// General parameters
 	Bool doflag_p;
-	Bool doplot_p;
 	uInt nTimeSteps_p;
 	Double noiseScale_p;
 	Double scutofScale_p;
@@ -94,12 +93,14 @@ private:
 	Double spectralmax_p;
 
 	// Time-direction analysis
+	Double noise_p;
 	map< pair<Int,Int>,Double > field_spw_noise_map_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_squares_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_counts_p;
 
 	// Spectral analysis
+	Double scutof_p;
 	map< pair<Int,Int>,Double > field_spw_scutof_map_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_squares_p;
