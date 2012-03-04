@@ -6097,6 +6097,7 @@ Bool ImageAnalysis::getFreqProfile(
 		}
 		
 		np = (beamArea/pixArea).getValue();
+
 		if(np<=0.){
 		    *itsLog << LogIO::WARN << "Restoring beam area is zero! Cannot correctly calculate flux." 
 			    << LogIO::POST;
@@ -6109,7 +6110,7 @@ Bool ImageAnalysis::getFreqProfile(
 	}
 
 	// for a point extraction,
-	// call the another method
+	// call another method
 	if (n == 1) {
 		xy[0] = x[0];
 		xy[1] = y[0];
@@ -6235,8 +6236,8 @@ Bool ImageAnalysis::getFreqProfile(
 					zyaxisval(k) = median(planedat);
 			}
 			break;
-		case 2:
-			// combine with sum
+		case 2: // combine with sum
+		case 7:	// combine with flux (== sum / number of pixels in synth beam)
 			for (Int k = 0; k < nchan; ++k) {
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
@@ -6244,6 +6245,11 @@ Bool ImageAnalysis::getFreqProfile(
 				if (planedat.nelementsValid() >0)
 					zyaxisval(k) = sum(planedat);
 			}
+
+			if(combineType==7){
+			    zyaxisval = zyaxisval/np;
+			}
+
 			break;
 		case 3:
 			// combine with variance
@@ -6265,9 +6271,9 @@ Bool ImageAnalysis::getFreqProfile(
 					zyaxisval(k) = stddev(planedat);
 			}
 			break;
-		case 5:
-			// combine with the square root of the sum of squares
-			for (Int k = 0; k < nchan; ++k) {
+		case 5:	// combine with the square root of the sum of squares
+		case 8: // combine with the square root of the sum of squares / number of pixels in synth beam
+		        for (Int k = 0; k < nchan; ++k) {
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
@@ -6283,6 +6289,11 @@ Bool ImageAnalysis::getFreqProfile(
 					//zyaxisval(k) = sqrt(sum(planedat));
 				}
 			}
+
+			if(combineType==8){
+			    zyaxisval = zyaxisval/np;
+			}
+
 			break;
 		case 6:
 			// combine with the average square root of the sum of squares
@@ -6303,34 +6314,6 @@ Bool ImageAnalysis::getFreqProfile(
 					}
 					//zyaxisval(k) = sqrt(sum(planedat)) / fnpix;
 				}
-			}
-			break;
-		case 7: // combine with flux (== sum / number of pixels in synth beam)
-		        for (Int k = 0; k < nchan; ++k) {
-			    blc(pixSpecAx) = k;
-			    trc(pixSpecAx) = k;
-			    MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-			    if (planedat.nelementsValid() >0){
-				zyaxisval(k) = sum(planedat)/np;
-			    }
-			}
-			break;
-
-		case 8:	// combine with the square root of the sum of squares / number of pixels in synth beam			
-			for (Int k = 0; k < nchan; ++k) {
-			    blc(pixSpecAx) = k;
-			    trc(pixSpecAx) = k;
-			    MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-			    if (planedat.nelementsValid() >0){
-				zyaxisval(k) = sum(planedat);
-				if (zyaxisval(k) < 0.0) {
-				    zyaxisval(k) = 0.0;
-				    *itsLog << LogIO::WARN << "Value set to 0.0, sqrt(<0.0) not allowed!" << LogIO::POST;
-				}
-				else {
-				    zyaxisval(k) = sqrt(zyaxisval(k)/np);
-				}
-			    }
 			}
 			break;
 		default:
