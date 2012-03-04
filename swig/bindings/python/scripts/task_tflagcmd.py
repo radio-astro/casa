@@ -129,7 +129,6 @@ def tflagcmd(
 
                 # Make a FLAG_CMD compatible dictionary and select by reason
                 myflagcmd = fh.makeDict(cmdlist, reason)
-                print myflagcmd
                 
                 # Number of commands in dictionary
                 vrows = myflagcmd.keys()

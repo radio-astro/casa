@@ -352,11 +352,13 @@ def listsdm(sdm=None):
     casalog.post("  Timerange (UTC)           Scan FldID  FieldName       SpwIDs         Intent(s)")
 
     i = 0
-    SPWs = []
+    #SPWs = []
     for scan in scandict:
+        SPWs = []
         for spw in scandict[scan]['spws']:
             SPWs += spw
-        printSPWs = sorted(SPWs)
+        #printSPWs = sorted(SPWs)
+        printSPWs = list(set(SPWs))
         casalog.post("  %s - %s %s %s  %s %s  %s" % (startTimeShort[i], endTimeShort[i], str(scandict.keys()[i]).rjust(4), str(scandict[scan]['field']).rjust(5), scandict[scan]['source'].ljust(15), str(printSPWs), scandict[scan]['intent']))
         i = i + 1
 

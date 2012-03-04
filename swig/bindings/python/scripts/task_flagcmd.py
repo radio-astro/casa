@@ -2055,11 +2055,7 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
     # Adapted from J.Marvil
     # Updated STM v4.1 2011-11-02 to handle ALMA flags
     # Updated STM v4.2 2012-02-16 trim flag times to data times
-    try: 
-        from casac import *
-    except ImportError, e: 
-        print "failed to load casa:\n", e 
-        exit(1) 
+
     qa = casac.quanta()
     
     try:

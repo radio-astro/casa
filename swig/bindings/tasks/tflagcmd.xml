@@ -37,16 +37,18 @@
                         <description>Name of flag command file to input</description>
                         <value></value>
                 </param>
-
                 <param type="intArray" name="tablerows" subparam="true">
                         <description>Rows of inpfile to read</description>
                         <value type="vector"></value>
                 </param>
-
                 <param type="any" name="reason" subparam="true">
                         <description>Select by REASON types</description>
                         <any type="variant" limittypes="string stringArray"/>
                         <value type="string">any</value>
+                </param>
+                <param type="bool" name="useapplied" subparam="true">
+                        <description>Select commands whose rows have APPLIED column set to True</description>
+                        <value>False</value>
                 </param>
 
                 <param type="any" name="command" subparam="true">
@@ -76,11 +78,6 @@
                         <value>clear</value>
                         <value>extract</value>
                         </allowed>
-                </param>
-
-                <param type="bool" name="useapplied" subparam="true">
-                        <description>Apply commands also to rows that have APPLIED column set to True</description>
-                        <value>False</value>
                 </param>
 
                 <param type="bool" name="flagbackup" subparam="true">
@@ -124,6 +121,7 @@
                                     <default param="inpfile"><value type="string"></value></default>
                                     <default param="tablerows"><value type="vector"></value></default>
                                     <default param="reason"><value type="string">any</value></default>
+                                    <default param="useapplied"><value type="bool">False</value></default>
                             </equals>
                             <equals value="file">
                                     <default param="inpfile"><value type="string"></value></default>
@@ -142,7 +140,6 @@
                     <when param="action">
                             <equals value="list"></equals>
                             <equals value="apply">
-                                    <default param="useapplied"><value type="bool">False</value></default>
                                     <default param="flagbackup"><value>False</value></default>
                             </equals>
                             <equals value="unapply">
@@ -231,6 +228,13 @@
                    and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
                    matches this compound reason string only
 
+              useapplied -- select the flag commands of rows that have APPLIED=True
+                   options: True,False
+                   default: False   
+
+                   If useapplied=True it will read in both applied and
+                   unapplied flags
+
            inpmode "file" --  input commands from ASCII file
        
               inpfile -- name of ASCII flagging command file
@@ -280,13 +284,6 @@
               This operation will apply the commands chosen by inpmode.       
               If inpmode='table' it will set the APPLIED column to True.
               
-              useapplied -- apply the flag commands on the rows that have APPLIED=True
-                   options: True,False
-                   default: False   
-
-                   If useapplied=True it will read in both applied and
-                   unapplied flags
-
               flagbackup -- Automatically backup MS FLAG column before applying?
                    options: True,False
                    default: False
