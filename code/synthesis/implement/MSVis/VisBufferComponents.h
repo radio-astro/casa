@@ -35,9 +35,12 @@ public:
 
     typedef enum {
         Unknown=-1,
+        AllBeamOffsetsZero,  // VisBufferAsync use only
+        AntennaMounts,       // VisBufferAsync use only
         Ant1,
         Ant2,
         ArrayId,
+        BeamOffsets,         // VisBufferAsync use only
         Channel,
         Cjones,
         CorrType,
@@ -69,6 +72,7 @@ public:
         PhaseCenter,
         PolFrame,
         ProcessorId,
+        ReceptorAngles,       // VisBufferAsync use only
         Scan,
         Sigma,
         SigmaMat,

@@ -982,12 +982,19 @@ endif()
 # Note, find_package( Boost ... ) must be called for every cmake invocation
 # in order to setup non-cached variables
 #
+message ( STATUS "BOOST_ROOT=${BOOST_ROOT} (first)" )
+
 if( NOT BOOST_ROOT )
   set( BOOST_ROOT ${casa_packages} )
 endif()
 
+message ( STATUS "BOOST_ROOT=${BOOST_ROOT} (second)" )
+message ( STATUS "casa_packages=${casa_packages} (second)" )
+
 set( boost_components regex program_options filesystem thread)
 find_package( Boost REQUIRED ${boost_components} )
+
+message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")
 
 if( NOT Boost_FOUND )
   message( FATAL_ERROR "Boost could not be found. Please check!" )
