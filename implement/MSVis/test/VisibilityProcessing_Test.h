@@ -26,6 +26,17 @@ namespace casa {
 
 namespace vpf {
 
+class ErrorTest {
+public:
+
+    void reset ();
+
+private:
+
+    static bool x;
+};
+
+
 class VpTests {
 
     friend int ::main (int argc, char * args []);
@@ -200,14 +211,14 @@ private:
 };
 
 
-class  VpSimpleNoop : public SimpleVp {
-
-protected:
-
-    SimpleResult doProcessing (ProcessingType processType,
-                               VisBuffer * vb,
-                               const SubchunkIndex & subchunkIndex);
-};
+//class  VpSimpleNoop : public SimpleVp {
+//
+//protected:
+//
+//    SimpleResult doProcessing (ProcessingType processType,
+//                               VisBuffer * vb,
+//                               const SubchunkIndex & subchunkIndex);
+//};
 
 class VpEngine_Test : public CppUnit::TestFixture {
 

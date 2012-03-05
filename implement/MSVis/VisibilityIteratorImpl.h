@@ -373,7 +373,7 @@ public:
     Bool existsFlagCategory() const;
 
     // Return flags for each polarization, channel, category, and row.
-    Array<Bool> & flagCategory (Array<Bool> & flagCategories) const;
+    virtual Array<Bool> & flagCategory (Array<Bool> & flagCategories) const;
 
     // Return row flag
     virtual Vector<Bool> & flagRow (Vector<Bool> & rowflags) const;
@@ -382,13 +382,13 @@ public:
     virtual Vector<Int> & scan (Vector<Int> & scans) const;
 
     // Return the OBSERVATION_IDs
-    Vector<Int> & observationId (Vector<Int> & obsids) const;
+    virtual Vector<Int> & observationId (Vector<Int> & obsids) const;
 
     // Return the PROCESSOR_IDs
-    Vector<Int> & processorId (Vector<Int> & procids) const;
+    virtual Vector<Int> & processorId (Vector<Int> & procids) const;
 
     // Return the STATE_IDs
-    Vector<Int> & stateId (Vector<Int> & stateids) const;
+    virtual Vector<Int> & stateId (Vector<Int> & stateids) const;
 
     // Return current frequencies (in Hz, acc. to the MS def'n v.2)
     virtual Vector<Double> & frequency (Vector<Double> & freq) const;
@@ -435,7 +435,7 @@ public:
     virtual Vector<Double> & time (Vector<Double> & t) const;
 
     // Return MJD centroid of interval.
-    Vector<Double> & timeCentroid (Vector<Double> & t) const;
+    virtual Vector<Double> & timeCentroid (Vector<Double> & t) const;
 
     // Return nominal time interval
     virtual Vector<Double> & timeInterval (Vector<Double> & ti) const;
@@ -648,7 +648,7 @@ public:
     const MeasurementSet & getMeasurementSet () const;;
     Int getMeasurementSetId () const;
     Int getNAntennas () const;
-    MEpoch getMEpoch () const;
+    virtual MEpoch getEpoch () const;
     MFrequency::Types getObservatoryFrequencyType () const; //???
     MPosition getObservatoryPosition () const;
     MDirection getPhaseCenter () const;
