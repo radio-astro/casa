@@ -131,14 +131,14 @@ class test_tfcrop(test_base):
         
     def test_tfcrop1(self):
         '''tflagdata:: Test1 of mode = tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
+        tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS_RR',ntime=51.0,spw='9', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 4489)
         self.assertEqual(res['antenna']['ea19']['flagged'], 2294)
         self.assertEqual(res['spw']['7']['flagged'], 0)
         
     def test_tfcrop2(self):
-        '''tflagdata:: Test2 of mode = tfcrop ABS ALL'''
+        '''tflagdata:: Test2 of mode = tfcrop ABS_ALL'''
         tflagdata(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 18696)
@@ -149,12 +149,12 @@ class test_tfcrop(test_base):
 
     def test_extend1(self):
         '''tflagdata:: Extend the flags created by tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', correlation='ABS RR',ntime=51.0,spw='9', savepars=False)
+        tflagdata(vis=self.vis, mode='tfcrop', correlation='abs_rr',ntime=51.0,spw='9', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['correlation']['RR']['flagged'], 4489)
         self.assertEqual(res['correlation']['LL']['flagged'], 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='LL'), 1099776, 4489)
+        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 4489)
 
 
 class test_shadow(test_base):
@@ -314,86 +314,88 @@ class test_shadow(test_base):
 
 
 #class test_flagmanager(test_base):
+    
 #    def setUp(self):
 #        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
 #        self.setUp_flagdatatest()
-#        
-#    def test1(self):
-#        print "Test of flagmanager mode=list, flagbackup=True/False"
+        
+#    def test1m(self):
+#        '''flagmanager test1m: mode=list, flagbackup=True/False'''
 #        flagmanager(vis=self.vis, mode='list')
-#        fg.open(self.vis)
-#        self.assertEqual(len(fg.getflagversionlist()), 3)
-#        fg.done()
+#        tf.open(self.vis)
+#        self.assertEqual(len(tf.getflagversionlist()), 2)
+#        tf.done()
 #
-#        flagdata(vis=self.vis, unflag=True, flagbackup=False)
-#        flagmanager(vis=self.vis, mode='list')
-#        fg.open(self.vis)
-#        self.assertEqual(len(fg.getflagversionlist()), 3)
-#        fg.done()
 #
-#        flagdata(vis=self.vis, unflag=True, flagbackup=True)
+#        tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
 #        flagmanager(vis=self.vis, mode='list')
-#        fg.open(self.vis)
-#        self.assertEqual(len(fg.getflagversionlist()), 4)
-#        fg.done()
+#        tf.open(self.vis)
+#        self.assertEqual(len(tf.getflagversionlist()), 2)
+#        tf.done()
+#
+#        tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
+#        flagmanager(vis=self.vis, mode='list')
+#        tf.open(self.vis)
+#        self.assertEqual(len(tf.getflagversionlist()), 3)
+#        tf.done()
 #
 #        print "Test of flagmanager mode=rename"
-#        flagmanager(vis=self.vis, mode='rename', oldname='manualflag_2', versionname='Ha! The best version ever!', comment='This is a *much* better name')
+#        flagmanager(vis=self.vis, mode='rename', oldname='manualflag_2', versionname='Ha! The best version ever!', 
+#                    comment='This is a *much* better name')
 #        flagmanager(vis=self.vis, mode='list')
-#        fg.open(self.vis)
-#        self.assertEqual(len(fg.getflagversionlist()), 4)
-#        fg.done()
+#        tf.open(self.vis)
+#        self.assertEqual(len(tf.getflagversionlist()), 3)
+#        tf.done()
+
+#    def test2m(self):
+#        """flagmanager test2m: Create, then restore autoflag"""
 #
-#    def test2(self):
-#        """Create, then restore autoflag"""
-#
-#        flagdata(vis = self.vis, mode='summary')
-#        flagmanager(vis = self.vis)
+#        tflagdata(vis=self.vis, mode='summary')
+#        flagmanager(vis=self.vis)
 #        
-#        flagdata(vis = self.vis, antenna="2")
+#        tflagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
 #        
-#        flagmanager(vis = self.vis)
-#        ant2 = flagdata(vis = self.vis, mode='summary')['flagged']
+#        flagmanager(vis=self.vis)
+#        ant2 = tflagdata(vis=self.vis, mode='summary')['flagged']
 #
 #        print "After flagging antenna 2 there were", ant2, "flags"
 #
 #        # Change flags, then restore
-#        flagdata(vis = self.vis, antenna="3")
+#        tflagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
 #        flagmanager(vis = self.vis)
-#        ant3 = flagdata(vis = self.vis, mode='summary')['flagged']
+#        ant3 = tflagdata(vis=self.vis, mode='summary')['flagged']
 #
 #        print "After flagging antenna 2 and 3 there were", ant3, "flags"
 #
-#        flagmanager(vis = self.vis, mode='restore', versionname='manualflag_3')
-#        restore2 = flagdata(vis = self.vis, mode='summary')['flagged']
+#        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
+#        restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
 #
-#        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags, should be", ant2
+#        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
 #
-#        assert restore2 == ant2
-#
+#        self.assertEqual(restore2, ant2)
+
 #    def test_CAS2701(self):
-#        """Do not allow flagversion=''"""
-#
+#        """flagmanager: Do not allow flagversion=''"""
 #        
-#        fg.open(self.vis)
-#        l = len(fg.getflagversionlist())
-#        fg.done()
+#        tf.open(self.vis)
+#        l = len(tf.getflagversionlist())
+#        tf.done()
 #        
 #        flagmanager(vis = self.vis,
 #                    mode = "save",
 #                    versionname = "non-empty-string")
 #
-#        fg.open(self.vis)
-#        self.assertEqual(len(fg.getflagversionlist()), l+1)
-#        fg.done()
+#        tf.open(self.vis)
+#        self.assertEqual(len(tf.getflagversionlist()), l+1)
+#        tf.done()
 #
 #        flagmanager(vis = self.vis,
 #                    mode = "save",
 #                    versionname = "non-empty-string")
 #
-#        fg.open(self.vis)
-#        self.assertEqual(len(fg.getflagversionlist()), l+1)
-#        fg.done()
+#        tf.open(self.vis)
+#        self.assertEqual(len(tf.getflagversionlist()), l+1)
+#        tf.done()
 
 
 class test_msselection(test_base):
@@ -489,7 +491,7 @@ class test_statistics_queries(test_base):
 
     def test_CAS2212(self):
         '''tflagdata: Clipping scan selection, CAS-2212, CAS-3496'''
-        # By default correlation='ABS ALL'
+        # By default correlation='ABS_ALL'
         tflagdata(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3], savepars=False) 
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 85404)
         s = tflagdata(vis=self.vis, mode='summary')['scan']
@@ -527,26 +529,26 @@ class test_statistics_queries(test_base):
 
     def test_chanavg0(self):
         print "Test of channel average"
-        tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], correlation='ABS RR',
+        tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], correlation='ABS_RR',
                  savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1414186)
 
     def test_chanavg1(self):
-        tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], correlation='ABS RR',
+        tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], correlation='ABS_RR',
                  savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1347822)
 
     def test_chanavg2(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
-                 correlation='ABS RR', savepars=False)
+                 correlation='ABS_RR', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 242053)
 
     def test_chanavg3(self):
         tflagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], spw='0:0~10',
-                 correlation='ABS RR', savepars=False)
+                 correlation='ABS_RR', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 231374)
                
@@ -689,17 +691,17 @@ class test_selections_alma(test_base):
 
     def test_abs_wvr(self):
         '''tflagdata: clip ABS WVR'''
-        tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS WVR', savepars=False)
+        tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 22752)
         
     def test_abs_i(self):
         '''tflagdata: clip ABS I. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS I', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 0)
 
     def test_abs_all(self):
         '''tflagdata: clip ABS ALL. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS_ALL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
 
@@ -718,7 +720,7 @@ class test_selections2(test_base):
     def setUp(self):
         self.setUp_multi()
         
-    def test_observation(self):
+    def test_observation1(self):
         '''tflagdata: observation ID selections'''
         # string
         tflagdata(vis=self.vis, observation='1', savepars=False)
@@ -733,6 +735,19 @@ class test_selections2(test_base):
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         tflagdata(vis=self.vis, observation='10', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 0)
+
+    def test_observation2(self):
+        '''tflagdata: observation ID selections in list mode'''
+        # creat input list
+        input = "observation='0' mode='manual'"
+        filename = 'obs2.txt'
+        create_input(input, filename)
+        
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['observation']['0']['flagged'], 2854278.0)
+        self.assertEqual(res['observation']['1']['flagged'], 0, 'Only observation 0 should be flagged')
+        
                 
 class test_elevation(test_base):
     """Test of mode = 'elevation'"""
@@ -904,6 +919,7 @@ class cleanup(test_base):
 def suite():
     return [test_tfcrop,
             test_shadow,
+#            test_flagmanager,
             test_selections,
             test_selections2,
             test_selections_alma,

@@ -94,7 +94,7 @@ def tflagcmd(
         
         myflagcmd = {}
         cmdlist = []
-        unionpars = {}
+
         if action == 'clear':
             casalog.post('Action "clear" will disregard inpmode (no reading)')
             
@@ -130,7 +130,7 @@ def tflagcmd(
                 # Make a FLAG_CMD compatible dictionary and select by reason
                 myflagcmd = fh.makeDict(cmdlist, reason)
                 
-                # Number of commands in dictionary
+                # List of command keys in dictionary
                 vrows = myflagcmd.keys()
 
             except:
@@ -173,7 +173,15 @@ def tflagcmd(
                          + ' lines from input list')
 
             if cmdlist.__len__() > 0:
-                myflagcmd = readFromCmd(cmdlist, ms_startmjds, ms_endmjds)
+#                myflagcmd = readFromCmd(cmdlist, ms_startmjds, ms_endmjds)
+                # Need to rewrite correlation values
+#                for i in cmdlist:
+#                    cmdline = cmdlist[i]
+#                    if cmdline.__contains__('correlation'):
+#                        ind = cmdline.find('correlation')
+#                        corr = cmdline[ind+12:]
+#                        
+                myflagcmd = fh.makeDict(cmdlist, 'any')
 
             listmode = ''
 
@@ -212,7 +220,7 @@ def tflagcmd(
         # TODO: check row selection
         # List the flag commands from inpfile on the screen 
         # and save them or not to outfile
-        if (action == 'list'):
+        if action == 'list':
             
             # List the flag cmds on the screen
 #            listFlagCmd(myflagcmd, myantenna=ants, myreason=reason, myoutfile='', 
@@ -234,7 +242,7 @@ def tflagcmd(
                     fh.writeFlagCmd(vis, myflagcmd, vrows=keylist, applied=False, outfile=outfile)                                     
 
         # Apply/Unapply the flag commands to the data
-        elif action == 'apply' or action == 'unapply':
+        elif (action == 'apply' or action == 'unapply'):
             apply = True
 
             # Get the list of parameters
@@ -243,23 +251,33 @@ def tflagcmd(
                 cmdline = myflagcmd[key]['command']
                 cmdlist.append(cmdline)
                     
-            # Get the union of all selection parameters
-            unionpars = fh.getUnion(mslocal, vis, cmdlist)
-            if( len( unionpars.keys() ) > 0 ):
-                casalog.post('Pre-selecting a subset of the MS : ');
-                casalog.post('%s'%unionpars);
-            else:
-                casalog.post('Iterating through the entire MS');
-
             # Select the data
-            # Correlation will not go in here            
+                      
+            # Select a loose union of the data selection from the list.
+            # The loose union will be calculated for field and spw only.
+            # Antenna, correlation and timerange should be handled by the agent
+            unionpars = {}
+            if cmdlist.__len__() > 1:
+                unionpars = fh.getUnion(mslocal, vis, cmdlist)
+                if( len( unionpars.keys() ) > 0 ):
+                    casalog.post('Pre-selecting a subset of the MS: ');
+                    casalog.post('%s'%unionpars);
+                else:
+                    casalog.post('Iterating through the entire MS');
+                  
+            # Get all the selection parameters, but set correlation to ''  
+            elif cmdlist.__len__() == 1:
+                unionpars = fh.getSelectionPars(cmdlist[0], [])
+                casalog.post('The selected subset of the MS will be: ');
+                casalog.post('%s'%unionpars);
+
+
             tflocal.selectdata(unionpars)   
 
             # Parse the agents parameters
             if action == 'unapply':
                 apply = False
                 
-#            list2save = setupAgent(tflocal, myflagcmd, tablerows, apply)
             list2save = fh.setupAgent(tflocal, myflagcmd, tablerows, apply)
             
             # Initialize the Agents
@@ -267,7 +285,6 @@ def tflagcmd(
      
             # Backup the flags before running
             if flagbackup:
-#                backupCmd(tflocal, list2save)
                 fh.backupFlags(tflocal, 'tflagcmd')
                 
                 
@@ -365,156 +382,6 @@ def tflagcmd(
 # ************************************************************************
 #                    Helper Functions
 # ************************************************************************
-
-def setupAgent(tflocal, myflagcmd, myrows, apply):
-    ''' Setup the parameters of each agent and call the tflagger tool
-        myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
-        myrows --> selected rows to apply/unapply flags
-        apply --> it's a boolean to control whether to apply or unapply the flags'''
-
-
-    if not myflagcmd.__len__() >0:
-        casalog.post('There are no flag cmds in list', 'SEVERE')
-        return
-    
-    # Parameters for each mode
-    manualpars = []
-    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
-    quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['tolerance', 'recalcuvw', 'antennafile']
-    elevationpars = ['lowerlimit','upperlimit'] 
-    tfcroppars = ['ntime','combinescans','expression','datacolumn','timecutoff','freqcutoff',
-                  'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
-    extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
-                  'flagneartime','flagnearfreq']
-    
-        
-    # dictionary of successful command lines to save to outfile
-    savelist = {}
-
-    # Setup the agent for each input line    
-    for key in myflagcmd.keys():
-        cmdline = myflagcmd[key]['command']
-        applied = myflagcmd[key]['applied']
-        casalog.post('cmdline for key%s'%key, 'DEBUG')
-        casalog.post('%s'%cmdline, 'DEBUG')
-        casalog.post('applied is %s'%applied, 'DEBUG')
-        
-        if cmdline.startswith('#'):
-            continue
-    
-        modepars = {}
-        parslist = {}
-        mode = ''    
-        valid = True
-                
-        # Get the specific parameters for the mode
-        if cmdline.__contains__('mode'):                 
-            if cmdline.__contains__('manual'): 
-                mode = 'manual'
-                modepars = fh.getLinePars(cmdline,manualpars)   
-            elif cmdline.__contains__('clip'):
-                mode = 'clip'
-                modepars = fh.getLinePars(cmdline,clippars)
-            elif cmdline.__contains__('quack'):
-                mode = 'quack'
-                modepars = fh.getLinePars(cmdline,quackpars)
-            elif cmdline.__contains__('shadow'):
-                mode = 'shadow'
-                antennafile = ''
-                modepars = fh.getLinePars(cmdline,shadowpars)
-                # Get antennafile
-                if (modepars.__contains__('antennafile') and
-                    modepars['antennafile'] != ''):
-                    antennafile = modepars['antennafile']
-                    addantenna = fh.readAntennaList(antennafile)
-                    modepars['addantenna'] = addantenna
-            elif cmdline.__contains__('elevation'):
-                mode = 'elevation'
-                modepars = fh.getLinePars(cmdline,elevationpars)
-            elif cmdline.__contains__('tfcrop'):
-                mode = 'tfcrop'
-                modepars = fh.getLinePars(cmdline,tfcroppars)
-            elif cmdline.__contains__('extend'):
-                mode = 'extend'
-                modepars = fh.getLinePars(cmdline,extendpars)
-            elif cmdline.__contains__('unflag'):
-                mode = 'unflag'
-                modepars = fh.getLinePars(cmdline,manualpars)
-            elif cmdline.__contains__('rflag'):
-                mode = 'rflag'
-                modepars = fh.getLinePars(cmdline,rflagpars)
-            else:
-                # Unknown mode, ignore it
-                casalog.post('Ignoring unknown mode', 'WARN')
-                valid = False
-
-        else:
-            # No mode means manual
-            mode = 'manual'
-            cmdline = cmdline+' mode=manual'
-            modepars = fh.getLinePars(cmdline,manualpars)   
-                
-                
-        # Read ntime
-        fh.readNtime(modepars)
-        
-        # Cast the correct type to non-string parameters
-        fh.fixType(modepars)
-        
-        # Add the apply/unapply parameter to dictionary            
-        modepars['apply'] = apply
-        
-        # Unapply selected rows only and re-apply the other rows with APPLIED=True
-        if not apply and myrows.__len__() > 0:
-            if key in myrows:
-                modepars['apply'] = False
-            elif not applied:
-                casalog.post("Skipping this %s"%modepars,"DEBUG")
-                continue
-            elif applied:
-                modepars['apply'] = True
-                valid = False
-        
-        # Keep only cmds that overlap with the unapply cmds
-        # TODO later
-        
-        # Hold the name of the agent and the cmd row number
-        agent_name = mode.capitalize()+'_'+str(key)
-        modepars['name'] = agent_name
-        
-        # Remove the data selection parameters if there is only one agent,
-        # for performance reasons
-        if myflagcmd.__len__() == 1:
-            sellist=['scan','field','antenna','timerange','intent','feed','array','uvrange',
-                     'spw','observation']
-            for k in sellist:
-                if modepars.has_key(k):
-                    modepars.pop(k)
-
-        casalog.post('Parsing parameters of mode %s in row %s'%(mode,key), 'DEBUG')
-        casalog.post('%s'%modepars, 'DEBUG')
-
-        # Parse the dictionary of parameters to the tool
-        if (not tflocal.parseagentparameters(modepars)):
-            casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,key), 'WARN')
-            continue
-                            
-        # Save the dictionary of valid agents
-        if valid:               
-            # add this command line to list to save in outfile
-            parslist['row'] = key
-            parslist['command'] = cmdline
-            savelist[key] = parslist
-        
-        # FIXME: Backup the flags
-#        if (flagbackup):
-#            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
-    
-    casalog.post('Dictionary of valid commands to save','DEBUG')
-    casalog.post('%s'%savelist, 'DEBUG')
-    
-    return savelist
 
 
             

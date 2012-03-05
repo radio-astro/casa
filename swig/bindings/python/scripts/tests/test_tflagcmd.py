@@ -293,7 +293,7 @@ class test_savepars(test_base):
         tflagcmd(vis=self.vis, action='list', outfile='myflags.txt', savepars=True)
         
         # compare saved file with original input file
-        self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
+        self.assertTrue(filecmp.cmp(filename1, 'myflags.txt', 1), 'Files should be equal')
         
         ########## TEST 2 
         # create another input
