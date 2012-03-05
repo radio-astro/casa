@@ -131,16 +131,22 @@ def checktable(msname, thename, theexpectation):
 
 ###########################
 # beginning of actual test 
-myname = 'importevla2_ut'
+
+# Name space all test files
+pre = 'importevla2_'
+
+myname = pre+'ut'
 
 # default ASDM dataset name
-origname = 'TOSR0001_sb1308595_1.55294.83601028935'
+#origname = 'TOSR0001_sb1308595_1.55294.83601028935'
+origname = 'X_osro_013.55979.93803716435'
 
-asdmname = 'tosr0001'
+#asdmname = 'tosr0001'
+asdmname = pre+'xosro'
 
 # Copy SDM locally only once for all tests
 if(not os.path.exists(asdmname)):
-    datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/evla/'
+    datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/flagdata/'
     shutil.copytree(datapath + origname, asdmname)
 
 
@@ -158,24 +164,17 @@ class importevla2_test(unittest.TestCase):
         
     def tearDown(self):
         pass
-        
+        visname = self.asdm+'.ms'
+        if os.path.exists(visname):
+            os.system('rm -rf '+visname+'*')
+                
     def test1(self):
-        '''Importevla2 test1: Default values'''
-        self.res = importevla2()
-        self.assertFalse(self.res)
-
-    def test2(self):
-        '''Importevla2 test2: Bad input asdm'''
-        name = 'TOSR0001'
-        self.res = importevla2(asdm=name)
-        self.assertFalse(self.res)
-        
-    def test3(self):
-        '''Importevla2 test3: Good input asdm'''
+        '''Importevla2 test1: Good input asdm'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
         msname = self.asdm+'.ms'
-        self.res = importevla2(asdm=self.asdm, scans='3')
+#        self.res = importevla2(asdm=self.asdm, scans='3')
+        self.res = importevla2(asdm=self.asdm, scans='2')
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
                             "table.f0",
@@ -243,7 +242,7 @@ class importevla2_test(unittest.TestCase):
             name = ""
             #             col name, row number, expected value, tolerance
             expected = [
-                         ['UVW',       42, [  47.48869115, 61.71087706 , -142.06903012], 1E-8],
+                         ['UVW',       42, [  1607.50778695, -1241.40287976 , 584.50368163], 1E-8],
                          ['EXPOSURE',  42, 1.0, 0]
 #                         ['DATA',      42, [ [10.5526886+0.0j] ], 1E-7]
                          ]
@@ -256,7 +255,7 @@ class importevla2_test(unittest.TestCase):
     
             expected = [
     # old values using TAI     ['UVW',       638, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
-                         ['UVW',       638, [-75.8725283, 239.64747061 , -154.46854611], 1E-8],
+                         ['UVW',       638, [14.20193237, 722.59606805 , 57.57988905], 1E-8],
                          ['EXPOSURE',  638, 1.0, 0]
 #                         ['DATA',      638, [ [0.00362284+0.00340279j] ], 1E-8]
                          ]
@@ -268,8 +267,8 @@ class importevla2_test(unittest.TestCase):
                 retValue['success']=True
             
             name = "ANTENNA"
-            expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
-                         ['POSITION',     1, [-1601150.0595, -5042000.6198, 3554860.7294], 0.0001],
+            expected = [ ['OFFSET',       1, [ -4.80000000e-12,  0.,  0.], 0],
+                         ['POSITION',     1, [-1599644.8611, -5042953.6623, 3554197.0332], 0.0001],
                          ['DISH_DIAMETER',1, 25.0, 0]
                          ]
             results = checktable(msname, name, expected)
@@ -279,40 +278,42 @@ class importevla2_test(unittest.TestCase):
             else:
                 retValue['success']=True
             
-            name = "POINTING"
-            expected = [ ['DIRECTION',       10, [[ 0.],[0.]], 1E-8],
-                         ['INTERVAL',        10, 4.7672238080000007, 0],
-                         ['TARGET',          10, [[ 0.], [ 0.]], 1E-8],
-                         ['TIME',            10, 4777473953.6163883, 0],
-                         ['TIME_ORIGIN',     10, 0., 0],
-                         ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
-                         ['ENCODER',         10, [ 0.,  0.], 1E-8 ]
-                         ]
-            results = checktable(msname, name, expected)
-            if not results:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table POINTING failed'
-            else:
-                retValue['success']=True
+#            name = "POINTING"
+#            expected = [ ['DIRECTION',       10, [[ 0.],[0.]], 1E-8],
+#                         ['INTERVAL',        10, 4.7672238080000007, 0],
+#                         ['TARGET',          10, [[ 0.], [ 0.]], 1E-8],
+#                         ['TIME',            10, 4777473953.6163883, 0],
+#                         ['TIME_ORIGIN',     10, 0., 0],
+#                         ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
+#                         ['ENCODER',         10, [ 0.,  0.], 1E-8 ]
+#                         ]
+#            results = checktable(msname, name, expected)
+#            if not results:
+#                retValue['success']=False
+#                retValue['error_msgs']=retValue['error_msgs']+'Check of table POINTING failed'
+#            else:
+#                retValue['success']=True
                 
         self.assertTrue(results)
 
 
     def test_apply1(self):
         '''importevla2: apply all flags and save to file'''
-        msname = 'online.ms'
+        msname = pre+'online.ms'
+        cmdfile = pre+'online_cmd.txt'
         if os.path.exists(msname):
-            os.system('rm -rf online.ms*')
+            os.system('rm -rf '+msname)
+        if os.path.exists(cmdfile):
+            os.system('rm -rf '+cmdfile)
             
-        importevla2(asdm=self.asdm, vis=msname, scans='3',online=True, applyflags=True,
+        importevla2(asdm=self.asdm, vis=msname, scans='2',online=True, applyflags=True,
                     shadow=True,flagzero=True,flagbackup=False)
         
         # Check flags
         res = tflagdata(vis=msname, mode='summary')
-        self.assertEqual(res['flagged'],294400)
+        self.assertEqual(res['flagged'],2446080)
         
         # Check output file existence
-        cmdfile='online_cmd.txt'
         self.assertTrue(os.path.exists(cmdfile))
         
         # Check file content
@@ -324,20 +325,21 @@ class importevla2_test(unittest.TestCase):
         
     def test_apply2(self):
         '''importevla2: apply flags and save also online flags to file'''
-        msname = 'applied.ms'
-        cmdfile = 'mycmds.txt'
+        msname = pre+'applied.ms'
+        cmdfile = pre+'mycmds.txt'
         if os.path.exists(msname):
             os.system('rm -rf '+msname)
         if os.path.exists(cmdfile):
             os.system('rm -rf '+cmdfile)
             
         # Save to different file
-        importevla2(asdm=self.asdm, vis=msname, scans='3',online=True, shadow=True, flagzero=True,
+        importevla2(asdm=self.asdm, vis=msname, scans='2',online=True, shadow=True, flagzero=True,
                     applyflags=True,savetofile=True, savecmds=True, outfile=cmdfile, flagbackup=False)
         
         # Check flags only in RR and LL
         res = tflagdata(vis=msname, mode='summary')
-        self.assertEqual(res['flagged'],294400)
+        self.assertEqual(res['flagged'],2446080)
+        self.assertEqual(res['scan']['2']['flagged'],2446080)
         
         # Check output file existence
         self.assertTrue(os.path.exists(cmdfile))
@@ -347,50 +349,106 @@ class importevla2_test(unittest.TestCase):
         cmdlist = ff.readlines()
         ncmds = cmdlist.__len__()
         ff.close()
-        self.assertEqual(ncmds, 509, 'Online, shadow and clip zeros should be saved to file')
+        self.assertEqual(ncmds, 216, 'Online, shadow and clip zeros should be saved to file')
 
     def test_apply3(self):
-        '''importevla2: apply clip zeros on RR and save to file'''
-        msname = 'zeros.ms'
+        '''importevla2: apply clip zeros on RR and LL and save to file'''
+        msname = pre+'zeros.ms'
+        cmdfile = pre+'zeros_cmd.txt'
         if os.path.exists(msname):
-            os.system('rm -rf zeros.ms*')
+            os.system('rm -rf '+msname)
+        if os.path.exists(cmdfile):
+            os.system('rm -rf '+cmdfile)
             
-        importevla2(asdm=self.asdm, vis=msname, scans='3',online=False, applyflags=True,
+            
+        importevla2(asdm=self.asdm, vis=msname, scans='2,13',online=False, applyflags=True,
                     shadow=False,flagzero=True,flagpol=False, flagbackup=False)
         
         # Check flags
         res = tflagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0,'There are no zeros in this data set')
+        self.assertEqual(res['scan']['2']['flagged'],0,'No flags should have been applied')
+        self.assertEqual(res['scan']['13']['flagged'],0,'No flags should have been applied')
         
         # Check output file existence
-        self.assertTrue(os.path.exists('zeros_cmd.txt'))
+        self.assertTrue(os.path.exists(cmdfile))
 
         # Check output file existence
-        cmdfile='zeros_cmd.txt'
         self.assertTrue(os.path.exists(cmdfile))
         
         # Check file content
         ff = open(cmdfile,'r')
         cmdlist = ff.readlines()
         ncmds = cmdlist.__len__()
-        self.assertEqual(ncmds, 1, 'Only clip zeros should be saved to file')
+        self.assertEqual(ncmds, 2, 'Only clip zeros should be saved to file')
         
+    def test_apply4(self):
+        '''importevla2: Save online flags to FLAG_CMD and file; do not apply'''
+
+        # Use default msname and outfile
+        msname = self.asdm+'.ms'
+        cmdfile = msname.replace('.ms','_cmd.txt')
+        if os.path.exists(msname):
+            os.system('rm -rf '+msname)
+        if os.path.exists(cmdfile):
+            os.system('rm -rf '+cmdfile)
+            
+        importevla2(asdm=self.asdm, scans='2',online=True, savetofile=True, shadow=False, flagzero=False,
+                    applyflags=False,savecmds=True, flagbackup=False)
+
+        # No flags were applied
+        res = tflagdata(vis=msname, mode='summary')
+        self.assertEqual(res['flagged'],0)
+        
+        # Apply only row 213 using tflagcmd
+        # The command in row 213 is the following:
+        # antenna='ea06' timerange='2012/02/22/22:30:55.200~2012/02/22/22:35:08.199' 
+        # spw='EVLA_X#A0C0#0' correlation='LL,LR,RL
+        tflagcmd(vis=msname, action='apply', tablerows=213)
+        
+        # Check flags. RR should no be flagged
+        res = tflagdata(vis=msname, mode='summary')
+        self.assertEqual(res['correlation']['RR']['flagged'],0,'RR should not be flagged')
+        self.assertEqual(res['correlation']['LL']['flagged'],29440)
+        self.assertEqual(res['correlation']['LR']['flagged'],29440)
+        self.assertEqual(res['correlation']['RL']['flagged'],29440)
+        self.assertEqual(res['antenna']['ea06']['flagged'],88320)
+        self.assertEqual(res['antenna']['ea07']['flagged'],3840,'Only a few baselines should be flagged')
+        self.assertEqual(res['antenna']['ea08']['flagged'],3840,'Only a few baselines should be flagged')
+        
+        # Check output file existence       
+        self.assertTrue(os.path.exists(cmdfile))
+        
+        # Check file content
+        ff = open(cmdfile,'r')
+        cmdlist = ff.readlines()
+        ncmds = cmdlist.__len__()
+        ff.close()
+        self.assertEqual(ncmds, 214, 'Only Online cmds should have been saved to file')
+        
+        # Unapply row 213 and apply it in tflagdata using the file
+        # TO DO : after row selection is available in file
         
     def test_savepars(self):
         '''importevla2: save the flag commands and do not apply'''
-        msname = 'notapplied.ms'
+        msname = pre+'notapplied.ms'
+        cmdfile = pre+'notapplied_cmd.txt'
         if os.path.exists(msname):
             os.system('rm -rf '+msname)
+        if os.path.exists(cmdfile):
+            os.system('rm -rf '+cmdfile)
 
-        importevla2(asdm=self.asdm, vis=msname,scans='3',online=True,flagzero=True,shadow=True,savecmds=True,
+        importevla2(asdm=self.asdm, vis=msname,scans='11~13',online=True,flagzero=True,shadow=True,savecmds=True,
                     applyflags=False,flagbackup=False)
         
         # Check flags
         res = tflagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0,'No flags should have been applied')
+        self.assertEqual(res['scan']['11']['flagged'],0,'No flags should have been applied')
+        self.assertEqual(res['scan']['12']['flagged'],0,'No flags should have been applied')
+        self.assertEqual(res['scan']['13']['flagged'],0,'No flags should have been applied')
 
         # Check output file existence
-        cmdfile = 'notapplied_cmd.txt'
         self.assertTrue(os.path.exists(cmdfile))
         
         # Check file content
@@ -404,7 +462,7 @@ class importevla2_test(unittest.TestCase):
         tflagdata(vis=msname, mode='list', inpfile=cmdfile)
         
         res = tflagdata(vis=msname, mode='summary')
-        self.assertEqual(res['flagged'],240640)
+        self.assertEqual(res['flagged'],0)
 
         
 
@@ -414,12 +472,12 @@ class cleanup(unittest.TestCase):
         pass
     
     def tearDown(self):
-        shutil.rmtree(asdmname, ignore_errors=True)
-#        shutil.rmtree(msname,ignore_errors=True)
-#        shutil.rmtree('*_cmd.txt', ignore_errors=True)
+        os.system('rm -rf '+pre+'*ms*')
+        os.system('rm -rf '+pre+'*txt*')
+        os.system('rm -rf '+asdmname)
         
     def test1a(self):
-        '''Importevla: Cleanup'''
+        '''Importevla2: Cleanup'''
         pass
                     
 def suite():

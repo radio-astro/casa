@@ -29,6 +29,7 @@ scripts/caltab_convert2.py
 scripts/check_exceptionhandling.py
 scripts/check_input_saverestore.py
 scripts/cleanhelper.py
+scripts/correct_ant_posns.py
 scripts/dbusutil.py
 scripts/dict_to_table.py
 scripts/filecatalog.py

@@ -88,19 +88,19 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
                     if type(cell[0])==str:
                         cellx=cell[0]
                     else:
-                        cellx='%sarcmin'%(cell[0])
+                        cellx='%sarcsec'%(cell[0])
                     celly=cell[0]
                 else:
                     if type(cell[0])==str:
                         cellx=cell[0]
                     else:
-                        cellx='%sarcmin'%(cell[0])
+                        cellx='%sarcsec'%(cell[0])
                     if type(cell[1])==str:
                         celly=cell[1]
                     else:
-                        celly='%sarcmin'%(cell[1])
+                        celly='%sarcsec'%(cell[1])
             else:
-                cellx='%sarcmin'%(cell)
+                cellx='%sarcsec'%(cell)
                 celly=cellx
 
             # center
