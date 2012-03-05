@@ -30,6 +30,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/HostInfo.h>
+#include <casa/Exceptions/Error.h>
 #include <flagging/Flagging/TestFlagger.h>
 #include <flagging/Flagging/FlagVersion.h>
 #include <casa/stdio.h>
@@ -116,6 +117,7 @@ TestFlagger::done()
 
 	mode_p = "";
 	agents_config_list_p.clear();
+	agents_config_list_copy_p.clear();
 	agents_list_p.clear();
 
 	return;
@@ -175,6 +177,7 @@ TestFlagger::selectData(Record selrec)
 		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
 		return false;
 	}
+
 
 	if (! selrec.empty()) {
 
@@ -420,6 +423,9 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		}
 	}
 
+	// Keep a copy of the vector of Agents parameters
+	agents_config_list_copy_p = agents_config_list_p;
+
 	return true;
 }
 
@@ -481,77 +487,82 @@ TestFlagger::initAgents()
 	// as we are only interested in seeing the unapply action
 	uChar loglevel = LogIO::DEBUGGING;
 
-	// loop through the vector of agents
-	for (size_t i=0; i < list_size; i++) {
+		// Loop through the vector of agents
+		for (size_t i=0; i < list_size; i++) {
 
-		// get agent record
-		Record agent_rec = agents_config_list_p[i];
-		if (dbg){
-			os<< LogIO::NORMAL<< "Record["<<i<<"].nfields()="<<agent_rec.nfields()<<LogIO::POST;
-			ostringstream os;
-			agent_rec.print(os);
-			String str(os.str());
-			cout << str << endl;
+			// Get agent record
+			Record agent_rec = agents_config_list_p[i];
+			if (dbg){
+				os<< LogIO::NORMAL<< "Record["<<i<<"].nfields()="<<agent_rec.nfields()<<LogIO::POST;
+				ostringstream os;
+				agent_rec.print(os);
+				String str(os.str());
+				cout << str << endl;
+
+			}
+
+			// Change the log level if apply=True in a mixed state
+			Bool apply = true;;
+			if (agent_rec.isDefined("apply")) {
+				agent_rec.get("apply", apply);
+			}
+
+			if (mixed and apply){
+				agent_rec.define("loglevel", loglevel);
+			}
+
+			// Get the mode
+			String mode;
+			agent_rec.get("mode", mode);
+
+			// Set the new time interval only once
+			if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or
+					mode.compare("rflag") == 0)) {
+				fdh_p->setTimeInterval(max_p);
+				timeset_p = true;
+			}
+
+			// Change the new iteration approach only once
+			if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
+				or mode.compare("rflag") == 0 or mode.compare("display") == 0)) {
+				if (combinescans_p)
+					fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
+				else
+					fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
+
+				iterset_p = true;
+			}
+
+				// Create this agent
+				FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
+
+				if (fa == NULL){
+					String name;
+					agent_rec.get("name",name);
+					os << LogIO::WARN << "Agent "<< name<< " is NULL. Skipping it."<<LogIO::POST;
+					continue;
+				}
+
+
+				// Get the last summary agent to list the results back to the task
+				if (mode.compare("summary") == 0) {
+					summaryAgent_p = (FlagAgentSummary *) fa;
+				}
+
+				// Get the display agent.
+				if (mode.compare("display") == 0){
+					displayAgent_p = (FlagAgentDisplay *) fa;
+				}
+
+				// Add the agent to the FlagAgentList
+				agents_list_p.push_back(fa);
 
 		}
+		os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
+				LogIO::POST;
 
-		// Change the log level if apply=True in a mixed state
-		Bool apply = true;;
-		if (agent_rec.isDefined("apply")) {
-			agent_rec.get("apply", apply);
-		}
-
-		if (mixed and apply){
-			agent_rec.define("loglevel", loglevel);
-		}
-
-		// Get the mode
-		String mode;
-		agent_rec.get("mode", mode);
-
-		// Set the new time interval only once
-		if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or mode.compare("rflag") == 0)) {
-			fdh_p->setTimeInterval(max_p);
-			timeset_p = true;
-		}
-
-		// Change the new iteration approach only once
-		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
-			or mode.compare("rflag") == 0 or mode.compare("display") == 0)) {
-			if (combinescans_p)
-				fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
-			else
-				fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
-
-			iterset_p = true;
-		}
-
-		// Create this agent
-		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
-		if (fa == NULL){
-			String name;
-			agent_rec.get("name",name);
-			os << LogIO::WARN << "Agent "<< name<< " is NULL. Skipping it."<<LogIO::POST;
-			continue;
-		}
-
-		// Get the last summary agent to list the results back to the task
-		if (mode.compare("summary") == 0) {
-			summaryAgent_p = (FlagAgentSummary *) fa;
-		}
-
-		// Get the display agent. There can be two display agents!
-		if (mode.compare("display") == 0){
-			displayAgent_p = (FlagAgentDisplay *) fa;
-		}
-
-		// add the agent to the FlagAgentList
-		agents_list_p.push_back(fa);
-
-	}
-
-	os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
-			LogIO::POST;
+	// Clear the list so that this method cannot be called twice
+	agents_config_list_p.clear();
 
 	return true;
 }
@@ -582,6 +593,10 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	// Use the maximum ntime of the list
 	os << LogIO::DEBUGGING << "ntime for all agents will be "<< max_p << LogIO::POST;
 	os << LogIO::DEBUGGING << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
+
+	// Report to return
+	FlagReport combinedReport;
+
 
 	// Generate the iterators
 	// It will iterate through the data to evaluate the necessary memory
@@ -622,7 +637,8 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	agents_list_p.join();
 
 	// Gather the display reports from all agents
-	FlagReport combinedReport = agents_list_p.gatherReports();
+//	FlagReport combinedReport = agents_list_p.gatherReports();
+	combinedReport = agents_list_p.gatherReports();
 
 	// Send reports to display agent
 	if (displayAgent_p)
@@ -721,24 +737,32 @@ TestFlagger::getFlagVersionList(Vector<String> &verlist)
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
-	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
-		return false;
+	try
+	{
+
+		if (! fdh_p){
+			os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+			return false;
+		}
+
+		verlist.resize(0);
+		Int num;
+
+		FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
+		Vector<String> vlist = fv.getVersionList();
+
+		num = verlist.nelements();
+		verlist.resize( num + vlist.nelements() + 1, True );
+		verlist[num] = String("\nMS : ") + fdh_p->originalMeasurementSet_p->tableName() + String("\n");
+
+		for(Int j=0; j<(Int)vlist.nelements(); j++)
+			verlist[num+j+1] = vlist[j];
 	}
-
-	verlist.resize(0);
-	Int num;
-
-	FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
-	Vector<String> vlist = fv.getVersionList();
-
-	num = verlist.nelements();
-	verlist.resize( num + vlist.nelements() + 1, True );
-	verlist[num] = String("\nMS : ") + fdh_p->originalMeasurementSet_p->tableName() + String("\n");
-
-	for(Int j=0; j<(Int)vlist.nelements(); j++)
-		verlist[num+j+1] = vlist[j];
-
+	catch (AipsError x)
+	{
+		os << LogIO::SEVERE << "Could not get Flag Version List : " << x.getMesg() << LogIO::POST;
+		return False;
+	}
 
 	return true;
 }
@@ -755,21 +779,23 @@ TestFlagger::printFlagSelections()
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
-	if (! agents_config_list_p.empty())
+	// Use the copy of the agent records list because the original
+	// was deallocated in the init() method.
+	if (! agents_config_list_copy_p.empty())
 	{
-//		os << "Current list of agents : " << agents_config_list_p << LogIO::POST;
+		os << "Current list of agents : "  << LogIO::POST;
 
 		// TODO: loop through list
 		// Duplicate the vector... ???
-		for (size_t i=0; i < agents_config_list_p.size(); i++) {
+		for (size_t i=0; i < agents_config_list_copy_p.size(); i++) {
 			ostringstream out;
 			Record agent_rec;
-			agent_rec = agents_config_list_p.at(i);
+			agent_rec = agents_config_list_copy_p.at(i);
 			agent_rec.print(out);
 			os << out.str() << LogIO::POST;
 		}
 		if (dbg)
-			cout << "size of original list " << agents_config_list_p.size() << endl;
+			cout << "Size of original list " << agents_config_list_copy_p.size() << endl;
 
 	}
 	else os << " No current agents " << LogIO::POST;
