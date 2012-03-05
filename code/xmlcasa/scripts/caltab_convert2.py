@@ -55,12 +55,12 @@ import casa
 
 # Inputs:
 # -------
-# caltab_old - The name of the old-format caltable.
-# ms         - The name of the MS associated with the old-format caltable.
-# pType      - The type of data in the PARAM column of the new-format caltable.
-#              The allowed types are 'float' and 'complex'.
-# caltab_new - The name of the new-format caltable.  It is optional.  The
-#              default is caltab_old + '.new'.
+# caltabold - The name of the old-format caltable.
+# ms        - The name of the MS associated with the old-format caltable.
+# pType     - The type of data in the PARAM column of the new-format caltable.
+#             The allowed types are 'float' and 'complex'.
+# caltabnew - The name of the new-format caltable.  It is optional.  The
+#             default is caltabold + '.new'.
 
 # Modification history:
 # ---------------------
@@ -69,11 +69,11 @@ import casa
 
 # ------------------------------------------------------------------------------
 
-def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
+def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 
 	# Check the inputs
 
-	if not os.path.exists( caltab_old ):
+	if not os.path.exists( caltabold ):
 		raise IOError( 'Invalid old-format caltable.' )
 
 	if not os.path.exists( ms ):
@@ -83,15 +83,15 @@ def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
 	if ( pTypeTemp != 'complex' and pTypeTemp != 'float' ):
 		raise Exception( 'Invalid parameter type ("complex" or "float").' )
 
-  	if caltab_new == '': caltab_new = caltab_old + '.new'
-	if os.path.exists( caltab_new ):
+  	if caltabnew == '': caltabnew = caltabold + '.new'
+	if os.path.exists( caltabnew ):
 		raise IOError( 'New-format caltable already exists.' )
 
 
 	# Open the old-format caltable and get the number of rows
 
 	tbOld = casa.__tablehome__.create()
-	tbOld.open( caltab_old )
+	tbOld.open( caltabold )
 
 	nRow = tbOld.nrows()
 
@@ -99,7 +99,7 @@ def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
   	# Create the empty new-format caltable with the correct number of rows
 
   	tbNew = casa.__tablehome__.create()
-  	tbNew.create( caltab_new, desc_new( pTypeTemp ) )
+  	tbNew.create( caltabnew, desc_new( pTypeTemp ) )
 
   	tbNew.addrows( nRow )
 
@@ -168,16 +168,16 @@ def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
 	# Copy the appropriate subcaltables from the MS to the new-format
 	# caltable
 
-	arg = 'cp -r ' + ms + '/ANTENNA ' + caltab_new
+	arg = 'cp -r ' + ms + '/ANTENNA ' + caltabnew
 	os.system( arg )
 
-	arg = 'cp -r ' + ms + '/FIELD ' + caltab_new
+	arg = 'cp -r ' + ms + '/FIELD ' + caltabnew
 	os.system( arg )
 
-	arg = 'cp -r ' + caltab_old + '/CAL_HISTORY ' + caltab_new + '/HISTORY'
+	arg = 'cp -r ' + caltabold + '/CAL_HISTORY ' + caltabnew + '/HISTORY'
 	os.system( arg )
 
-	arg = 'cp -r ' + ms + '/SPECTRAL_WINDOW ' + caltab_new \
+	arg = 'cp -r ' + ms + '/SPECTRAL_WINDOW ' + caltabnew \
 		+ '/SPECTRAL_WINDOW'
 	os.system( arg )
 
@@ -190,11 +190,11 @@ def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
 	polBasis = get_polbasis( ms )
 	tbNew.putkeyword( 'PolBasis', polBasis )
 
-	tbNew.putkeyword( 'ANTENNA', 'Table: ' + caltab_new + '/ANTENNA' )
-	tbNew.putkeyword( 'FIELD', 'Table: ' + caltab_new + '/FIELD' )
-	tbNew.putkeyword( 'HISTORY', 'Table: ' + caltab_new + '/HISTORY' )
+	tbNew.putkeyword( 'ANTENNA', 'Table: ' + caltabnew + '/ANTENNA' )
+	tbNew.putkeyword( 'FIELD', 'Table: ' + caltabnew + '/FIELD' )
+	tbNew.putkeyword( 'HISTORY', 'Table: ' + caltabnew + '/HISTORY' )
 	tbNew.putkeyword( 'SPECTRAL_WINDOW',
-		'Table: ' + caltab_new + '/SPECTRAL_WINDOW' )
+		'Table: ' + caltabnew + '/SPECTRAL_WINDOW' )
 
 
 	# Add the column keywords to the main table of the new-format caltable
@@ -219,7 +219,7 @@ def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
 	# caltable
 
 	tbDesc = casa.__tablehome__.create()
-	tbDesc.open( caltab_old + '/CAL_DESC' )
+	tbDesc.open( caltabold + '/CAL_DESC' )
 
 	nDesc = tbDesc.nrows()
 	rDesc = range( nDesc )
@@ -247,7 +247,7 @@ def caltab_convert2( caltab_old, ms, pType, caltab_new='' ):
 	# channel ranges
 
 	tbSPW = casa.__tablehome__.create()
-	tbSPW.open( caltab_new + '/SPECTRAL_WINDOW', nomodify=False )
+	tbSPW.open( caltabnew + '/SPECTRAL_WINDOW', nomodify=False )
 
 	for d in rDesc:
 
