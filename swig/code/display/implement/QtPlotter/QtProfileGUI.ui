@@ -186,6 +186,11 @@
           <string>sum</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>flux</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>

@@ -87,6 +87,8 @@ public:
 		RMSE     =4,
 		SQRTSUM  =5,
 		NSQRTSUM =6,
+		FLUX     =7,
+		EFLUX    =8,
 	};
 
 	enum PlotType {
@@ -94,6 +96,7 @@ public:
 		PMEDIAN,
 		PSUM,
 		//PVRMSE,
+		PFLUX=7,
 	};
 
 	enum ErrorType {

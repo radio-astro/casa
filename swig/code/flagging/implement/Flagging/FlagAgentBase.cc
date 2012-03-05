@@ -900,6 +900,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
 			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
 	{
+		// Check if user provided an expression
 		exists = config.fieldNumber ("correlation");
 		if (exists >= 0)
 		{
@@ -907,14 +908,10 @@ FlagAgentBase::setAgentParameters(Record config)
 		}
 		else
 		{
-			expression_p = "ABS " + flagDataHandler_p->corrProducts_p->at(0);
+			expression_p = "ABS ALL";
 		}
 
 		expression_p.upcase();
-
-		// Request to pre-load spw and corrType
-		flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
-		flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
 		// Check if expression is one of the supported operators
 		if ((expression_p.find("REAL") == string::npos) and
@@ -923,17 +920,51 @@ FlagAgentBase::setAgentParameters(Record config)
 				(expression_p.find("ABS") == string::npos) and
 				(expression_p.find("NORM") == string::npos))
 		{
-			expression_p = "ABS " + flagDataHandler_p->corrProducts_p->at(0);
+			expression_p = "ABS ALL";
 			*logger_p 	<< LogIO::WARN
 						<< " Unsupported visibility expression: " << expression_p
-						<< ", selecting " << expression_p
-						<< " by default. Supported expressions: REAL,IMAG,ARG,ABS,NORM."
+						<< ", selecting ABS ALL by default. "
+						<< " Supported expressions: REAL,IMAG,ARG,ABS,NORM."
 						<< LogIO::POST;
 		}
-		else
+
+		// Replace "ALL" by applicable correlations
+		if (expression_p.find("ALL") != string::npos)
 		{
-			*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
+			if (expression_p.find("REAL") != string::npos)
+			{
+				expression_p = String("REAL ");
+			}
+			else if (expression_p.find("IMAG") != string::npos)
+			{
+				expression_p = String("IMAG ");
+			}
+			else if (expression_p.find("ARG") != string::npos)
+			{
+				expression_p = String("ARG ");
+			}
+			else if (expression_p.find("ABS") != string::npos)
+			{
+				expression_p = String("ABS ");
+			}
+			else if (expression_p.find("NORM") != string::npos)
+			{
+				expression_p = String("NORM ");
+			}
+
+			expression_p += flagDataHandler_p->corrProducts_p->at(0);
+
+			for (uInt corr_i=1;corr_i<flagDataHandler_p->corrProducts_p->size();corr_i++)
+			{
+				expression_p += String(",") + flagDataHandler_p->corrProducts_p->at(corr_i);
+			}
 		}
+
+		*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
+
+		// Request to pre-load spw and corrType
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
 		exists = config.fieldNumber ("datacolumn");
 		if (exists >= 0)
@@ -1367,7 +1398,14 @@ FlagAgentBase::iterateRows()
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	// Create FlagMapper objects and parse the correlation selection
-	FlagMapper flagsMap = FlagMapper(flag_p,polarizationIndex_p);
+	vector< vector<uInt> > selectedCorrelations;
+	for (uInt pol_i=0;pol_i<polarizationIndex_p.size();pol_i++)
+	{
+		vector<uInt> correlationProduct;
+		correlationProduct.push_back(polarizationIndex_p[pol_i]);
+		selectedCorrelations.push_back(correlationProduct);
+	}
+	FlagMapper flagsMap = FlagMapper(flag_p,selectedCorrelations);
 
 	// Set CubeViews in FlagMapper
 	setFlagsMap(NULL,&flagsMap);
@@ -1592,7 +1630,14 @@ FlagAgentBase::iterateAntennaPairsFlags()
 	IPosition cubeShape;
 
 	// Create VisMapper and FlagMapper objects and parse the polarization expression
-	FlagMapper flagsMap = FlagMapper(flag_p,polarizationIndex_p);
+	vector< vector<uInt> > selectedCorrelations;
+	for (uInt pol_i=0;pol_i<polarizationIndex_p.size();pol_i++)
+	{
+		vector<uInt> correlationProduct;
+		correlationProduct.push_back(polarizationIndex_p[pol_i]);
+		selectedCorrelations.push_back(correlationProduct);
+	}
+	FlagMapper flagsMap = FlagMapper(flag_p,selectedCorrelations);
 
 	// Activate check mode
 	if (checkFlags_p) flagsMap.activateCheckMode();
@@ -2257,11 +2302,11 @@ void FlagAgentList::setCheckMode(bool enable)
 
 FlagReport FlagAgentList::gatherReports()
 {
-        FlagReport combinedReport("list");
+	FlagReport combinedReport("list");
 
 	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-                combinedReport.addReport( (*iterator_p)->getReport() );
+		combinedReport.addReport( (*iterator_p)->getReport() );
 	}
 
 	return combinedReport;

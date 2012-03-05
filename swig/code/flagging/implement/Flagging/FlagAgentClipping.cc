@@ -107,12 +107,12 @@ FlagAgentClipping::setAgentParameters(Record config)
 			if (clipzeros_p)
 			{
 				checkVis_p = &FlagAgentClipping::checkVisForClipOutsideAndZeros;
-				*logger_p << logLevel_p << " Clipping outside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs and zeros" << LogIO::POST;
+				*logger_p << logLevel_p << " Clipping outside [" <<  clipmin_p << "," <<  clipmax_p << "], plus NaNs and zeros" << LogIO::POST;
 			}
 			else
 			{
 				checkVis_p = &FlagAgentClipping::checkVisForClipOutside;
-				*logger_p << logLevel_p << " Clipping outside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs" << LogIO::POST;
+				*logger_p << logLevel_p << " Clipping outside [" <<  clipmin_p << "," <<  clipmax_p << "], plus NaNs" << LogIO::POST;
 			}
 		}
 		else
@@ -120,12 +120,12 @@ FlagAgentClipping::setAgentParameters(Record config)
 			if (clipzeros_p)
 			{
 				checkVis_p = &FlagAgentClipping::checkVisForClipInsideAndZeros;
-				*logger_p << logLevel_p << " Clipping inside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs and zeros" << LogIO::POST;
+				*logger_p << logLevel_p << " Clipping inside [" <<  clipmin_p << "," <<  clipmax_p << "], plus NaNs and zeros" << LogIO::POST;
 			}
 			else
 			{
 				checkVis_p = &FlagAgentClipping::checkVisForClipInside;
-				*logger_p << logLevel_p << " Clipping inside [" <<  clipmin_p << "'" <<  clipmax_p << "], plus NaNs" << LogIO::POST;
+				*logger_p << logLevel_p << " Clipping inside [" <<  clipmin_p << "," <<  clipmax_p << "], plus NaNs" << LogIO::POST;
 			}
 		}
 	}
@@ -164,25 +164,27 @@ FlagAgentClipping::setAgentParameters(Record config)
 bool
 FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
-	IPosition flagCubeShape= flags.shape();
-	uInt nChannels,chan_i;
-	nChannels = flagCubeShape(0);
+	// Get flag cube size
 	Float visExpression;
-	uInt nAverage;
+	Int nPols,nChannels,nTimesteps,nAverage;
+	visibilities.shape(nPols, nChannels, nTimesteps);
 
 	if (channelavg_p)
 	{
 		visExpression = 0;
 		nAverage = 0;
 
-		for (chan_i=0;chan_i<nChannels;chan_i++)
+		for (uInt chan_i=0;chan_i<nChannels;chan_i++)
 		{
-			// If none of the correlations involved in the expression
-			// are flagged, then take into account this channel
-			if (!flags.getModifiedFlags(chan_i,row))
+			for (uInt pol_i=0;pol_i<nPols;pol_i++)
 			{
-				visExpression += visibilities(chan_i,row);
-				nAverage += 1;
+				// If none of the correlations involved in the expression
+				// are flagged, then take into account this channel
+				if (!flags.getModifiedFlags(pol_i,chan_i,row))
+				{
+					visExpression += visibilities(pol_i,chan_i,row);
+					nAverage += 1;
+				}
 			}
 		}
 
@@ -192,9 +194,12 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 			visExpression /= nAverage;
 			if ((*this.*checkVis_p)(visExpression))
 			{
-				for (chan_i=0;chan_i<nChannels;chan_i++)
+				for (uInt chan_i=0;chan_i<nChannels;chan_i++)
 				{
-					flags.applyFlag(chan_i,row);
+					for (uInt pol_i=0;pol_i<nPols;pol_i++)
+					{
+						flags.applyFlag(pol_i,chan_i,row);
+					}
 				}
 				visBufferFlags_p += flags.flagsPerRow();
 			}
@@ -202,21 +207,16 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 	}
 	else
 	{
-		for (chan_i=0;chan_i<nChannels;chan_i++)
+		for (uInt chan_i=0;chan_i<nChannels;chan_i++)
 		{
-			visExpression = visibilities(chan_i,row);
-			if ((*this.*checkVis_p)(visExpression))
+			for (uInt pol_i=0;pol_i<nPols;pol_i++)
 			{
-				/*
-				Complex complexVis = visibilities.correlationProduct(0,chan_i,row);
-				cout 	<< " row=" << row
-						<< " chan=" << chan_i
-						<< " vis.real=" << complexVis.real()
-						<< " vis.imag=" << complexVis.imag()
-						<< " visExpression=" << visExpression << endl;
-						*/
-				flags.applyFlag(chan_i,row);
-				visBufferFlags_p += flags.nSelectedCorrelations();
+				visExpression = visibilities(pol_i,chan_i,row);
+				if ((*this.*checkVis_p)(visExpression))
+				{
+					flags.applyFlag(pol_i,chan_i,row);
+					visBufferFlags_p += 1;
+				}
 			}
 		}
 	}
