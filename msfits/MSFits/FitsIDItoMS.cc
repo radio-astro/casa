@@ -1670,12 +1670,14 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
   // Set up the subtables for the UVFITS MS
   ms.createDefaultSubtables(option);
  
-  // add the optional Source sub table to allow for 
-  // specification of the rest frequency
-  TableDesc sourceTD=MSSource::requiredTableDesc();
-  SetupNewTable sourceSetup(ms.sourceTableName(),sourceTD,option);
-  ms.rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
- 				 Table(sourceSetup,0));
+// Since the MS SOURCE table is presently not filled,
+// its creation is commented out here.
+//   // add the optional Source sub table to allow for 
+//   // specification of the rest frequency
+//   TableDesc sourceTD=MSSource::requiredTableDesc();
+//   SetupNewTable sourceSetup(ms.sourceTableName(),sourceTD,option);
+//   ms.rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
+//  				 Table(sourceSetup,0));
 
   // update the references to the subtable keywords
   ms.initRefs();
