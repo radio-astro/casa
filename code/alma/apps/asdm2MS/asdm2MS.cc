@@ -21,6 +21,8 @@ using namespace boost;
 #include <boost/filesystem/convenience.hpp>
 #include <boost/regex.hpp> 
 
+#include <boost/foreach.hpp>
+
 #include <ASDMAll.h>
 
 #include "SDMBinData.h"
@@ -451,6 +453,20 @@ public :
     for (typename vector<vector<T> >::const_iterator iter = vv.begin(); iter != vv.end(); ++iter)
       for (typename vector<T>::const_iterator iiter = iter->begin(); iiter != iter->end(); ++iiter)
 	result.push_back(iiter->get());
+    return result;
+  }
+
+  template<class T>
+  static vector<vector<double> > toMatrixD(const vector<vector<T> >& vv) {
+    vector<vector<double> > result;
+    vector<double> vD;
+    BOOST_FOREACH(vector<T> v, vv) {
+      vD.clear();
+      BOOST_FOREACH(T x, v) {
+	vD.push_back(x.get());
+      }
+      result.push_back(vD);
+    }
     return result;
   }
 };
@@ -1189,11 +1205,92 @@ public:
 };
 
 /** 
+ * This function fills the MS Field table.
+ * given :
+ * @parameter ds_p a pointer to the ASDM dataset.
+ */
+void fillField(ASDM* ds_p) {
+  if (debug) cout << "fillField : entering" << endl;
+  try {
+    FieldTable& fieldT = ds_p->getField();
+    FieldRow* r = 0;
+    int nField = fieldT.size();
+    infostream.str("");
+    infostream << "The dataset has " << nField << " field(s)...";
+    info(infostream.str());
+    
+    for (int i = 0; i < nField; i++) {
+      if ((r=fieldT.getRowByKey(Tag(i, TagType::Field))) == 0) {
+	errstream.str("");
+	(errstream << "Problem while reading the Field table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
+	error(errstream.str());
+      }
+      
+      string fieldName = r->getFieldName();
+      string code = r->getCode();
+      DirectionReferenceCodeMod::DirectionReferenceCode dirRefCode = DirectionReferenceCodeMod::J2000;
+      if(r->isDirectionCodeExists()){
+	dirRefCode = r->getDirectionCode();
+	//cout << "found directionCode for field " << fieldName << ": ";
+      }
+      //       else{
+      // 	cout << "No directionCode in input table. Assuming ";
+      //       }
+      string directionCode = CDirectionReferenceCode::name(dirRefCode);
+      //cout << directionCode << endl;
+      
+      vector<vector<double> > delayDir     = DConverter::toMatrixD<Angle>(r->getDelayDir());
+      vector<vector<double> > phaseDir     = DConverter::toMatrixD<Angle>(r->getPhaseDir());
+      vector<vector<double> > referenceDir = DConverter::toMatrixD<Angle>(r->getReferenceDir());
+      
+      int sourceId = -1;
+      if (r->isSourceIdExists()) sourceId = r->getSourceId();
+      
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addField( fieldName,
+				code,
+				r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
+				r->getNumPoly(),
+				delayDir,
+				phaseDir,
+				referenceDir,
+				directionCode,
+				r->isSourceIdExists()?r->getSourceId():0);
+      }
+    }
+    if (nField) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
+      info(infostream.str());
+    }
+  }
+  catch (IllegalAccessException& e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+  if (debug) cout << "fillField : exiting" << endl;
+}
+
+/** 
  * This function fills the MS Spectral Window table.
  * given :
  * @parameter ds_p a pointer to the ASDM dataset.
  */
 void fillSpectralWindow(ASDM* ds_p) {
+  if (debug) cout << "fillSpectralWindow : entering" << endl;
   try {
     SpectralWindowTable& spwT = ds_p->getSpectralWindow();      
     vector<Tag> reorderedSwIds = reorderSwIds(*ds_p); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
@@ -1471,13 +1568,13 @@ void fillSpectralWindow(ASDM* ds_p) {
     errstream << e.what();
     error(errstream.str());      
   }
+  if (debug) cout << "fillSpectralWindow : exiting" << endl;
 }  
 
 /**
  * This function fills the MS State table.
  * given :
  * @parameter r_p a pointer on the row of the ASDM Main table being processed.
- * @parameter vmsData_p a pointer on a VMSData structure containing the data of the last slice of BDF being processed.
  *
  */
 
@@ -2849,6 +2946,9 @@ int main(int argc, char *argv[]) {
   // Issues :
   // - only processes the case with numPoly == 0 at the moment.
 
+#if 1
+  fillField(ds);
+#else
   FieldTable& fieldT = ds->getField();
   
   try {
@@ -2919,6 +3019,7 @@ int main(int argc, char *argv[]) {
     errstream << e.what();
     error(errstream.str());      
   }
+#endif
 
   //
   // Process the FlagCmd table.
