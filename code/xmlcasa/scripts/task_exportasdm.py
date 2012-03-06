@@ -88,6 +88,96 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		ms.timesort(vis+'-tsorted')
 		ms.close()
 
+		tsortvis = vis+'-tsorted'
+
+		# Prepare for actual exportasdm
+		casalog.post("Checking timesorted MS for potential problems ... ")
+		tb.open(tsortvis)
+		a = tb.getcol('PROCESSOR_ID')
+		a0 = a[0]
+		candoit = True
+		for i in xrange(0,len(a)-1):
+			if(a[i]!=a[i+1]):
+				candoit = False
+				break
+		tb.close()
+
+		if candoit:
+			casalog.post("   Checking if PROCESSOR and MAIN need modifications ...")
+			tb.open(tsortvis+'/PROCESSOR')
+			nprocrows = tb.nrows()
+			tb.close()
+			if ((nprocrows>0) and (a0>-1)):
+				tb.open(tsortvis+'/PROCESSOR')
+				mode0 = tb.getcell('MODE_ID',a0)
+				tb.close()
+				offset = 1
+				if nprocrows>1:
+					casalog.post("   Modifying PROCESSOR subtable ...")
+					while (nprocrows>1):
+						tb.open(tsortvis+'/PROCESSOR', nomodify=False)
+						therow = tb.nrows()-offset
+						if(tb.getcell('MODE_ID',therow)!=mode0):
+							tb.removerows([therow])
+						else:
+							offset = 2
+						nprocrows = tb.nrows()
+					casalog.post("... done.")
+
+					casalog.post("   Modifying processor ids in main table ...")
+					a = a - a # set all precessor ids to zero
+					tb.open(tsortvis, nomodify=False)
+					tb.putcol('PROCESSOR_ID', a)
+					tb.close()
+					casalog.post(" ... done.")
+				else:
+					casalog.post("   No modifications to proc id in PROCESSOR and MAIN necessary.")
+			casalog.post("   Checking if SYSCAL needs modifications ...")
+			if(os.path.exists(tsortvis+'/SYSCAL')):
+				for cname in ['TANT_SPECTRUM',
+					      'TSYS_SPECTRUM',
+					      'TANT_TSYS_SPECTRUM',
+					      'TCAL_SPECTRUM',
+					      'TRX_SPECTRUM',
+					      'TSKY_SPECTRUM',
+					      'PHASE_DIFF_SPECTRUM']:
+					tb.open(tsortvis+'/SYSCAL', nomodify=False)
+					if(cname in tb.colnames()):
+						cdesc = tb.getcoldesc(cname)
+						if cdesc.has_key('ndim') and (cdesc['ndim']==-1):
+							tb.removecols([cname])
+							casalog.post('   Removed empty array column '+cname+' from table SYSCAL.')
+					tb.close()
+
+			casalog.post("   Checking if OBSERVATION needs modifications ...")
+			tb.open(tsortvis+'/OBSERVATION')
+			nobsrows = tb.nrows()
+			tb.close()
+			if(nobsrows>0):
+				tb.open(tsortvis+'/OBSERVATION', nomodify=False)
+				cdesc = tb.getcoldesc('LOG')
+				if cdesc.has_key('ndim') and (cdesc['ndim']>0):
+					b = tb.getvarcol('LOG')
+					if not (type(b['r1'])==bool):
+						kys = b.keys()
+						modified = False
+						b2 = []
+						for i in xrange(0,len(kys)):
+							k = 'r'+str(i+1)
+							if (b[k][0] == [''])[0]:
+								b[k][0] = ["-"]
+								modified = True
+							b2.append([b[k][0][0]])
+						if modified:
+							tb.putcol('LOG',b2)
+							casalog.post("   Modified log column in OBSERVATION table.")
+				tb.close()
+			casalog.post("Done.")
+		else:
+			raise Exception, "More than one processor id in use in the main table. Cannot proceed."		    
+		
+		# generate call to ms2ASDM executable
+
 		execute_string=  '--datacolumn \"' + datacolumn 
 		execute_string+= '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid
 		execute_string+= '\" --subscanduration \"' + str(ssdur_secs)
@@ -112,7 +202,8 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if(verbose):
 			casalog.post('Running '+theexecutable+' standalone invoked as:')
 			casalog.post(execute_string)
-		print execute_string
+		else:
+			print execute_string
 
         	rval = os.system(execute_string)
 
