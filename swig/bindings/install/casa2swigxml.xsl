@@ -4,7 +4,7 @@
 	xmlns:aps="http://casa.nrao.edu/schema/psetTypes.html"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"     
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-
+<xsl:output omit-xml-declaration="yes"/>
 <xsl:param name="label"></xsl:param>
 <xsl:param name="hasunits"></xsl:param>
 <xsl:template match="*">

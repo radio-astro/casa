@@ -4,7 +4,7 @@
           xmlns:aps="http://casa.nrao.edu/schema/psetTypes.html"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"     
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-   
+<xsl:output omit-xml-declaration="yes"/>   
 <xsl:param name="needscomma"></xsl:param>
 <xsl:template match="*">
 <xsl:apply-templates select="aps:interface"/>
