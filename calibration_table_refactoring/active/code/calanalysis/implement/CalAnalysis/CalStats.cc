@@ -108,6 +108,11 @@ data          - This member function returns the input data.
 dataErr       - This member function returns the input data errors.
 flag          - This member function returns the input flags.
 
+Class static public member functions:
+-------------------------------------
+axisName - This function returns the string corresponding to the CalStats::AXIS
+           enum.
+
 Class template public stats member functions:
 ---------------------------------------------
 stats<T> - This member function is the main user interface for calculating the
@@ -179,6 +184,8 @@ Modification history:
 2012 Jan 25 - Nick Elias, NRAO
               Created working versions of CalStats() (copy) and operator=() and
               turned them into public member functions.
+2012 Mar 05 - Nick Elias, NRAO
+              Static public member function axisName() added.
 
 */
 
@@ -871,6 +878,64 @@ Cube<Bool>& CalStats::flag( void ) const {
 
 // -----------------------------------------------------------------------------
 // End of CalStats public state member functions
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Start of static public member functions
+// -----------------------------------------------------------------------------
+
+/*
+
+CalStats::axisName
+
+Description:
+------------
+This function returns the string corresponding to the CalStats::AXIS enum.
+
+Inputs:
+-------
+eAxis - This reference to the CalStats::AXIS enum.
+
+Outputs:
+--------
+The String reference to the axis string, returned via the function value.
+
+Modification history:
+---------------------
+2012 Mar 05 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalStats::axisName( const CalStats::AXIS& eAxis ) {
+
+  // Return the string corresponding to the CalStats::AXIS enum
+
+  String* poAxisName;
+
+  switch ((uInt) eAxis) {
+    case (uInt) CalStats::FEED:
+      poAxisName = new String( "FEED" );
+      break;
+    case (uInt) CalStats::FREQUENCY:
+      poAxisName = new String( "FREQUENCY" );
+      break;
+    case (uInt) CalStats::TIME:
+      poAxisName = new String( "TIME" );
+      break;
+    default:
+      throw( AipsError( "Invalid axis" ) );
+      break;
+  }
+
+  return( *poAxisName );
+
+}
+
+// -----------------------------------------------------------------------------
+// End of static public member functions
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------

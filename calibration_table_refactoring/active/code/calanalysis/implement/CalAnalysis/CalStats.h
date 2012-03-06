@@ -135,6 +135,11 @@ data          - This member function returns the input data.
 dataErr       - This member function returns the input data errors.
 flag          - This member function returns the input flags.
 
+Class static public member functions:
+-------------------------------------
+axisName - This function returns the string corresponding to the CalStats::AXIS
+           enum.
+
 Class template public stats member functions:
 ---------------------------------------------
 stats<T> - This member function is the main user interface for calculating the
@@ -206,6 +211,8 @@ Modification history:
 2012 Jan 25 - Nick Elias, NRAO
               Created working versions of CalStats() (copy) and operator=() and
               turned them into public member functions.
+2012 Mar 05 - Nick Elias, NRAO
+              Static public member function axisName() added.
 
 */
 
@@ -218,7 +225,9 @@ class CalStats {
     // Axis enums.  There are always two iteration axes.  The FEED axis is
     // always the first interation axis.  Either the FREQUENCY or TIME axis is
     // the other (user-defined) iteration axis.  The remaining axis (TIME or
-    // FREQUENCY) is therefore the non-iteration axis.
+    // FREQUENCY) is therefore the non-iteration axis.  NB: If additional enums
+    // are added, additional names must be added to the axisName() static
+    // private member function.
     typedef enum AXIS {
       INIT=-1, FEED=0, FREQUENCY, TIME
     } AXIS;
@@ -303,6 +312,9 @@ class CalStats {
     Cube<Double>& data( void ) const;
     Cube<Double>& dataErr( void ) const;
     Cube<Bool>& flag( void ) const;
+
+    // The axis names
+    static String& axisName( const AXIS& eAxis );
 
     // Calculate statistics (allowed T: CalStats::NONE gets data without
     // calculating statistics, CalStatsFitter::FIT calculates fits, and
