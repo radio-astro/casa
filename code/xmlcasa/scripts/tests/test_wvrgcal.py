@@ -89,7 +89,7 @@ class wvrgcal_test(unittest.TestCase):
                             nsol=2,segsource=False,
                             reversespw="0~3",disperse=True,cont=False,
                             wvrflag=['DV02', 'DV03'],
-                            sourceflag=['0', '1'],statfield="0",statsource="1",tie=[0, 1],
+                            sourceflag=['0', '1'],statfield="0",statsource="1",tie=['0,1','2,3'],
                             smooth=3,scale=3.5)
         print "Expected error ..."
         self.assertFalse(self.rval)
