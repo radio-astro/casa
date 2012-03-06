@@ -55,7 +55,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("time_amp_cutoff");
 	if (exists >= 0)
 	{
-		time_cutoff_p = atof(config.asString("time_amp_cutoff").c_str());
+		time_cutoff_p = config.asDouble("time_amp_cutoff");
 	}
 	else
 	{
@@ -67,7 +67,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("freq_amp_cutoff");
 	if (exists >= 0)
 	{
-		freq_cutoff_p = atof(config.asString("freq_amp_cutoff").c_str());
+		freq_cutoff_p = config.asDouble("freq_amp_cutoff");
 	}
 	else
 	{
@@ -79,7 +79,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("maxnpieces");
 	if (exists >= 0)
 	{
-		maxNPieces_p = atoi(config.asString("maxnpieces").c_str());
+		maxNPieces_p = config.asInt("maxnpieces");
 
 		if ((maxNPieces_p<1) or (maxNPieces_p>9))
 		{
@@ -158,7 +158,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("halfwin");
 	if (exists >= 0)
 	{
-		halfWin_p = atoi(config.asString("halfwin").c_str());
+		halfWin_p = config.asInt("halfwin");
 		if ((halfWin_p < 1) or (halfWin_p > 3))
 		{
 			*logger_p << LogIO::WARN 
