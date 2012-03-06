@@ -34,11 +34,5 @@ void throw_Null_CountedPtr_dereference_error() {
   throw (AipsError("CountedPtr: null dereference error"));
 }
 
-#if defined (USE_BOOST_SHARED_PTR)
-
-#warning "****** Using boost::shared_ptr implementation in CountedPtr."
-
-#endif
-
 } //# NAMESPACE CASA - END
 
