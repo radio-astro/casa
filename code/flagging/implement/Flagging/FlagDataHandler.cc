@@ -1567,7 +1567,7 @@ FlagDataHandler::generateIterator()
 	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator in sync mode)
 	applyChannelSelection(rwVisibilityIterator_p);
 
-	if (mapScanStartStop_p)
+	if ((mapScanStartStop_p) or (groupTimeSteps_p and asyncio_enabled_p)) 
 	{
 		checkMaxMemory();
 	}
@@ -1586,7 +1586,11 @@ FlagDataHandler::generateIterator()
 
 
 		// Then create and initialize RO Async iterator
-		if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+		if (rwVisibilityIterator_p)
+		{
+			cout << "Deleting " << rwVisibilityIterator_p << endl;
+			delete rwVisibilityIterator_p;
+		}
 		rwVisibilityIterator_p = new VisibilityIterator(&prefetchColumns_p,*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
 		// Cast RW conventional iterator into RO conventional iterator
