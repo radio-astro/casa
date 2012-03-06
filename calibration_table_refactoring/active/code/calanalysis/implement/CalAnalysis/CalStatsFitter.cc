@@ -55,7 +55,13 @@ CalStatsFitter - This class contains the fit statistics enums and functions.
 
 Class public static member functions:
 -------------------------------------
-init - This member function initializes a CalStatsFitter::FIT structure.
+fit        - This member function is the fitting interface of this class.
+orderName  - This function returns the string corresponding to the
+             CalStatsFitter::ORDER enum.
+typeName   - This function returns the string corresponding to the
+             CalStatsFitter::TYPE enum.
+weightName - This function returns the string corresponding to the
+             CalStatsFitter::WEIGHT enum.
 
 Class private static member functions (least-squares fitting):
 --------------------------------------------------------------
@@ -84,14 +90,17 @@ Modification history:
               Added dealloc() (pointer) and dealloc() (reference) public static
               member functions.
 2011 Dec 21 - Nick Elias, NRAO
-              Public static member functions init() and dealloc() removed because
-              all of their duties are subsumed by the nested class FIT (it used
-              used to be a structure).
+              Public static member functions init() and dealloc() removed
+              because all of their duties are subsumed by the nested class
+              FIT (it used used to be a structure).
 2012 Jan 24 - Nick Elias, NRAO
               Private static member function theil() added.  Private static
               member function numDataWeight() removed because initial robust
-              estimates of fit parameters (before final "trimmed" least-squares
-              fit parameters are calculated) no longer employ weighting.
+              estimates of fit parameters (before final "trimmed" least squares)
+              no longer employ weighting.
+2012 Mar 06 - Nick Elias, NRAO
+              Static public member functions orderName(), typeName(), and
+              weightName() added.
 
 */
 
@@ -203,6 +212,158 @@ CalStatsFitter::FIT& CalStatsFitter::fit( const Vector<Double>& oAbs,
   // Return the reference to the FIT structure
 
   return( *poFit );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalStats::orderName
+
+Description:
+------------
+This function returns the string corresponding to the CalStatsFitter::ORDER
+enum.
+
+Inputs:
+-------
+eOrder - This reference to the CalStatsFitter::ORDER enum.
+
+Outputs:
+--------
+The String reference to the order string, returned via the function value.
+
+Modification history:
+---------------------
+2012 Mar 06 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalStatsFitter::orderName( const CalStatsFitter::ORDER& eOrder ) {
+
+  // Return the string corresponding to the CalStatsFitter::ORDER enum
+
+  String* poOrderName;
+
+  switch ((uInt) eOrder) {
+    case (uInt) CalStatsFitter::AVERAGE:
+      poOrderName = new String( "AVERAGE" );
+      break;
+    case (uInt) CalStatsFitter::LINEAR:
+      poOrderName = new String( "LINEAR" );
+      break;
+    case (uInt) CalStatsFitter::QUADRATIC:
+      poOrderName = new String( "QUADRATIC" );
+      break;
+    default:
+      throw( AipsError( "Invalid order" ) );
+      break;
+  }
+
+  return( *poOrderName );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalStats::typeName
+
+Description:
+------------
+This function returns the string corresponding to the CalStatsFitter::TYPE enum.
+
+Inputs:
+-------
+eType - This reference to the CalStatsFitter::TYPE enum.
+
+Outputs:
+--------
+The String reference to the type string, returned via the function value.
+
+Modification history:
+---------------------
+2012 Mar 06 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalStatsFitter::typeName( const CalStatsFitter::TYPE& eType ) {
+
+  // Return the string corresponding to the CalStatsFitter::TYPE enum
+
+  String* poTypeName;
+
+  switch ((uInt) eType) {
+    case (uInt) CalStatsFitter::LSQ:
+      poTypeName = new String( "LSQ" );
+      break;
+    case (uInt) CalStatsFitter::ROBUST:
+      poTypeName = new String( "ROBUST" );
+      break;
+    default:
+      throw( AipsError( "Invalid type" ) );
+      break;
+  }
+
+  return( *poTypeName );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalStats::weightName
+
+Description:
+------------
+This function returns the string corresponding to the CalStatsFitter::WEIGHT
+enum.
+
+Inputs:
+-------
+eWeight - This reference to the CalStatsFitter::WEIGHT enum.
+
+Outputs:
+--------
+The String reference to the weight string, returned via the function value.
+
+Modification history:
+---------------------
+2012 Mar 06 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalStatsFitter::weightName( const CalStatsFitter::WEIGHT& eWeight ) {
+
+  // Return the string corresponding to the CalStatsFitter::WEIGHT enum
+
+  String* poWeightName;
+
+  switch ((uInt) eWeight) {
+    case (uInt) CalStatsFitter::NO:
+      poWeightName = new String( "NO" );
+      break;
+    case (uInt) CalStatsFitter::YES:
+      poWeightName = new String( "YES" );
+      break;
+    default:
+      throw( AipsError( "Invalid weight" ) );
+      break;
+  }
+
+  return( *poWeightName );
 
 }
 

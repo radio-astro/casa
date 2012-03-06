@@ -75,7 +75,13 @@ CalStatsFitter - This class contains the fit statistics enums and functions.
 
 Class public static member functions:
 -------------------------------------
-init - This member function initializes a CalStatsFitter::FIT structure.
+fit        - This member function is the fitting interface of this class.
+orderName  - This function returns the string corresponding to the
+             CalStatsFitter::ORDER enum.
+typeName   - This function returns the string corresponding to the
+             CalStatsFitter::TYPE enum.
+weightName - This function returns the string corresponding to the
+             CalStatsFitter::WEIGHT enum.
 
 Class private static member functions (least-squares fitting):
 --------------------------------------------------------------
@@ -104,14 +110,17 @@ Modification history:
               Added dealloc() (pointer) and dealloc() (reference) public static
               member functions.
 2011 Dec 21 - Nick Elias, NRAO
-              Public static member functions init() and dealloc() removed because
-              all of their duties are subsumed by the nested class FIT (it used
-              used to be a structure).
+              Public static member functions init() and dealloc() removed
+              because all of their duties are subsumed by the nested class
+              FIT (it used used to be a structure).
 2012 Jan 24 - Nick Elias, NRAO
               Private static member function theil() added.  Private static
               member function numDataWeight() removed because initial robust
               estimates of fit parameters (before final "trimmed" least squares)
               no longer employ weighting.
+2012 Mar 06 - Nick Elias, NRAO
+              Static public member functions orderName(), typeName(), and
+              weightName() added.
 
 */
 
@@ -128,12 +137,12 @@ class CalStatsFitter {
 
     // Type enums
     typedef enum TYPE {
-      TYPE_INIT=-1,LSQ=0, ROBUST
+      TYPE_INIT=-1, LSQ=0, ROBUST
     } TYPE;
 
     // Weight enums
     typedef enum WEIGHT {
-      WEIGHT_INIT=-1,NO=False, YES=True
+      WEIGHT_INIT=-1, NO=False, YES=True
     } WEIGHT;
 
     // FIT nested class
@@ -158,6 +167,11 @@ class CalStatsFitter {
     static FIT& fit( const Vector<Double>& oAbs, const Vector<Double>& oData,
         const Vector<Double>& oDataErr, Vector<Bool>& oFlag,
         const ORDER& eOrder, const TYPE& eType, const WEIGHT& eWeight );
+
+    // The enum names
+    static String& orderName( const ORDER& eOrder );
+    static String& typeName( const TYPE& eOrder );
+    static String& weightName( const WEIGHT& eOrder );
 
   private:
 
