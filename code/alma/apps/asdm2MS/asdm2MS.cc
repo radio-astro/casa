@@ -1199,7 +1199,7 @@ template<typename T>
 struct negateFunctor {
 public:
   T operator() (const T& v) {
-    if ( v > 0.0 ) return v;
+    if ( v < 0.0 ) return v;
     else return -v;
   }
 };
@@ -2943,83 +2943,8 @@ int main(int argc, char *argv[]) {
   }
   
   // Process the Field table.
-  // Issues :
-  // - only processes the case with numPoly == 0 at the moment.
-
-#if 1
+  // Now it respects the degree of the polynomials.
   fillField(ds);
-#else
-  FieldTable& fieldT = ds->getField();
-  
-  try {
-    FieldRow* r = 0;
-    int nField = fieldT.size();
-    infostream.str("");
-    infostream << "The dataset has " << nField << " field(s)...";
-    info(infostream.str());
-
-    for (int i = 0; i < nField; i++) {
-      if ((r=fieldT.getRowByKey(Tag(i, TagType::Field))) == 0) {
-	errstream.str("");
-	(errstream << "Problem while reading the Field table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
-	error(errstream.str());
-      }
-
-      string fieldName = r->getFieldName();
-      string code = r->getCode();
-      DirectionReferenceCodeMod::DirectionReferenceCode dirRefCode = DirectionReferenceCodeMod::J2000;
-      if(r->isDirectionCodeExists()){
-	dirRefCode = r->getDirectionCode();
-	//cout << "found directionCode for field " << fieldName << ": ";
-      }
-      //       else{
-      // 	cout << "No directionCode in input table. Assuming ";
-      //       }
-      string directionCode = CDirectionReferenceCode::name(dirRefCode);
-      //cout << directionCode << endl;
-
-      vector<double> delayDir     = DConverter::toVectorD<Angle>(r->getDelayDir());
-      vector<double> phaseDir     = DConverter::toVectorD<Angle>(r->getPhaseDir());
-      vector<double> referenceDir = DConverter::toVectorD<Angle>(r->getReferenceDir());
-
-      int sourceId = -1;
-      if (r->isSourceIdExists()) sourceId = r->getSourceId();
-
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addField( fieldName,
-				code,
-				r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
-				delayDir,
-				phaseDir,
-				referenceDir,
-				directionCode,
-				r->isSourceIdExists()?r->getSourceId():0);
-      }
-    }
-    if (nField) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
-      info(infostream.str());
-    }
-  }
-  catch (IllegalAccessException& e) {
-    errstream.str("");
-    errstream << e.getMessage();
-    error(errstream.str());
-  }
-  catch (ConversionException e) {
-    errstream.str("");
-    errstream << e.getMessage();
-    error(errstream.str());
-  }
-  catch ( std::exception & e) {
-    errstream.str("");
-    errstream << e.what();
-    error(errstream.str());      
-  }
-#endif
 
   //
   // Process the FlagCmd table.
