@@ -23,38 +23,6 @@
 #include <set>
 #include <vector>
 
-
-/*
-
-Visibility Processing Framework Class Summary
-=============================================
-
-SubchunkIndex - Index of a subchunk.  Consists of the chunk number,
-                the subchunk number and the iteration number.  All three
-                are zero-based.  The interation number is nonzero if a chunk
-                is reprocessed. A subchunk is used to identify a VisBuffer
-                relative to the VisibilityIterator managed by the VpEngine.
-VbPtr - Smart pointer of a VisBuffer.
-VisibilityProcessor - A visibility processing node in data flow graph
-    VisibilityProcessorStub - A do-nothing node used for unit testing
-    VpContainer - A VP which contains a graph of VPs.  It handles moving
-                  data between its input and output ports to the appropriate
-                  input and output ports of the data flow graph it contains.
-    SplitterVp - Has a single input port and outputs identical copies of it
-                 through its output ports.
-    WriterVp - Takes an input and writes it out to the VisibilityIterator provided
-               when it was constructed.  Optionally passes the input data to its
-               output port.
-VpEngine - Object that executes a data flow graph of VisibilityProcessors on data
-           accessed via a VisibilityIterator.
-
-VpPort - A data port into or out of (or both) a VisibiltyProcessor
-VpPorts - A collection of VpPort objects
-VpData - A collection of visibility data; it works like an associative array
-         pairing a VpPort with a VisBuffer.
-
-*/
-
 namespace casa {
 
 namespace asyncio {
@@ -76,10 +44,6 @@ public:
     enum {Invalid = -1};
 
     SubchunkIndex (Int chunkNumber = Invalid, Int subChunkNumber = Invalid, Int iteration = Invalid);
-
-    // Comparison Operators
-    //
-    // Comparison is in lexicographic order by chunk, subchunk and iteration.
 
     Bool operator< (const SubchunkIndex & other) const;
     Bool operator== (const SubchunkIndex & other) const { return ! (* this < other || other < * this);}
@@ -105,9 +69,6 @@ public:
     VbPtr () : boost::shared_ptr<casa::VisBuffer> () {}
     explicit VbPtr (casa::VisBuffer * vb) : boost::shared_ptr<casa::VisBuffer> (vb) {}
 
-    // Assignment operator setting VbPtr to a normal pointer.  Ownership is passed to the
-    // VbPtr so caller must ensure that delete is not called on the VisBuffer.
-
     VbPtr & operator= (casa::VisBuffer * vb)
     {
         boost::shared_ptr<casa::VisBuffer>::operator= (VbPtr (vb));
@@ -122,11 +83,7 @@ class VpPort {
 
 public:
 
-    // Normally ports are either input or output ports.  However, the ports
-    // of a VpContainer do double duty serving as an input to the container and
-    // an outputted to the input of a contained VP, or vice versa.
-
-    typedef enum {Unknown, Input = 1, Output = 2, InOut = Input | Output} Type;
+    typedef enum {Unknown, Input = 1, Output = 2, InOutput = Input | Output} Type;
 
     VpPort ();
     VpPort (VisibilityProcessor * vp, const String & name, Type type);
@@ -136,17 +93,12 @@ public:
     Bool operator== (const VpPort & other) const;
 
     Bool empty () const;
-    String getFullName () const; // returns Vp0.Vp1...VpN.portName
-    String getName () const; // returns portName
-    Type getType () const; // Returns the port's type as something from the Type enum
-    Bool isConnectedInput () const; // True if port has been connected up as an input
-    Bool isConnectedOutput () const; // True if port has been connected up as an output
-
-    // Used to check the type of the port as defined in the Type enum.  InOut ports
-    // return true for both Input and Output types.
-
+    String getFullName () const;
+    String getName () const;
+    Type getType () const;
+    Bool isConnectedInput () const;
+    Bool isConnectedOutput () const;
     bool isType (Type t) const;
-
     //String toString() const;
 
 protected:
@@ -214,13 +166,9 @@ public:
     VpData ();
     VpData (const VpPort & port, VbPtr);
 
-    void add (const VpPort & port, VbPtr); // Adds a (port,VbPtr) to the collection
-
-    // Returns the (port,VbPtr) pairs for the requested set of ports.  An execption
-    // is thrown if a requested port is not present unless missingIsOk is set to True.
-
+    void add (const VpPort & port, VbPtr);
     VpData getSelection (const VpPorts &, bool missingIsOk = False) const;
-    String getNames () const; // Returns a comma-separated list of the port names.
+    String getNames () const;
 };
 
 
@@ -237,10 +185,17 @@ public:
     } ChunkCode;
 
     typedef enum {
-        Subchunk,    // Normal processing of a subchunk
-        EndOfChunk,  // Called after all subchunks of a chunk have been processed
-        EndOfData    // Called after all chunks have been processed
+        Subchunk,
+        EndOfChunk,
+        EndOfData
     } ProcessingType;
+
+//    typedef enum {
+//        Nominal,
+//        Averager,
+//        Outputter,
+//        MultiOut
+//    } Type;
 
     typedef boost::tuple <ChunkCode, VpData> ProcessingResult;
 
@@ -251,126 +206,48 @@ public:
                          Bool makeIoPorts = False);
     virtual ~VisibilityProcessor () {}
 
-    // chunkStart is called to inform the VP that a new chunk is starting.
-
     void chunkStart (const SubchunkIndex &);
-
-    // Called to cause the VP to process the provided inputs.  It will be called
-    // in three different contexts as indicated by the ProcessingType.
-
     ProcessingResult doProcessing (ProcessingType processingType,
                                    VpData & inputData,
                                    VpEngine * vpEngine,
                                    const SubchunkIndex & subChunkIndex);
-
-    // Returns a pointer to the containing VP or NULL if this VP is top-level.
-
     const VpContainer * getContainer () const { return NULL;}
-
-    // The full name of a VP is a dotted list of the names of all the containing
-    // VPs ending with the name of this VP (e.g., vp0.vp1...vpN.thisVp).
-
     String getFullName () const;
-
-    // Returns the input port having the specified name.  Exception if port is undefined.
-
     VpPort getInput (const String & name) const;
-
-    // Returns a collection of the input ports for this VP; optionally only the
-    // connected ports are returned.
-
+    VpPort & getInputRef (const String & name);
     VpPorts getInputs (Bool connectedOnly = False) const;
-
-    // Returns the name of this VP
-
     String getName () const;
-
-    // Returns the number of Subchunks processed (mainly for testing)
-
     Int getNSubchunksProcessed () const;
-
-    // Returns the number of unique Subchunks (i.e., iteration ignored) processed.
-    // (mainly for testing)
-
     Int getNSubchunksUniqueProcessed () const;
-
-    // Returns the output port having the specified name.  Exception if port is undefined.
-
     VpPort getOutput (const String & name) const;
-
-    // Returns a collection of the output ports for this VP; optionally only the
-    // connected ports are returned.
-
+    VpPort & getOutputRef (const String & name);
     VpPorts getOutputs (Bool connectedOnly = False) const;
-
-    // Returns the collection of columns that need to be prefetched if this node
-    // is used with async I/O.
-
     virtual casa::asyncio::PrefetchColumns getPrefetchColumns () const;
-
-    // Called by the framework when the processing is about to begin (i.e., prior
-    // to the first VisBuffer being fed into the graph.
-
     void processingStart ();
-
-    // Called to ask the VP to check its validity (i.e., are all needed inputs connected,
-    // etc.).
-
     void validate ();
 
 protected:
 
-    // The public API contains many methods that are not virtual.  However, where subclass-specific
-    // behavior is potentially useful, a corresponding xxxImpl method is provided.  This allows the
-    // framework to perform certain required housekeeping options while allowing the subclass
-    // to perform custom operations.
-
-    // Called on the object when a new chunk is about to be started.
 
     virtual void chunkStartImpl (const SubchunkIndex &) {}
-
-
-    // Defines the set of possible input ports for this VP
-
     VpPorts definePorts (const vector<String> & portNames, VpPort::Type type, const String & typeName);
-
-    // Requests processing of the provided (possibly empty) input data.  This is called on each
-    // subchunk (then inputData will be nonempty) and at the end of a chunk and the end of the
-    // entire data set.  These last two call types allow the VP to output any data that it might have
-    // been accumulating across multiple subchunks, etc.
-
     virtual ProcessingResult doProcessingImpl (ProcessingType processingType,
                                                VpData & inputData,
                                                const SubchunkIndex & subChunkIndex) = 0;
-
-    // Returns a collection of the ports that are not connected using the provided connection
-    // method; some ports may also be excluded from this list by name.
-
     VpPorts portsUnconnected (const VpPorts & ports, Bool (VpPort::* isConnected) () const,
                               const vector<String> & except = vector<String> ()) const;
-
-    // Called when data processing is about to beging; this allows the VP to perform any
-    // initialization that it desires now that it is completely connected into the graph.
-
     virtual void processingStartImpl () {}
-
-    // Methods to ease the validation process.
-
     void throwIfAnyInputsUnconnected (const vector<String> & exceptThese = vector<String> ()) const;
     void throwIfAnyInputsUnconnectedExcept (const String & exceptThisOne) const;
     void throwIfAnyOutputsUnconnected (const vector<String> & exceptThese = vector<String> ()) const;
     void throwIfAnyOutputsUnconnectedExcept (const String & exceptThisOne) const;
     void throwIfAnyPortsUnconnected () const;
-
-    // Called to allow the node to validate its initial state.  An AipsError should be thrown if
-    // this node decides that it is invalid.
-
     virtual void validateImpl () = 0;
 
 private:
 
-    VpPort & getInputRef (const String & name);
-    VpPort & getOutputRef (const String & name);
+    //VisibilityProcessor (Type t);
+
     void setContainer (const VpContainer *);
 
     // Prevent copying of existing objects
@@ -378,25 +255,23 @@ private:
     VisibilityProcessor (const VisibilityProcessor & other); // do not define
     VisibilityProcessor & operator=(const VisibilityProcessor & other); // do not define
 
-    ROVisibilityIterator * getVi (); // returns the VI used for this data set
-    VpEngine * getVpEngine(); // returns the engine executing this VP
+    ROVisibilityIterator * getVi ();
+    VpEngine * getVpEngine();
 
     const VpContainer * container_p; // [use]
-    String name_p; // name of this VP
-    Int nSubchunks_p; // number of subchunks processed
-    Int nSubchunksUnique_p; // number of unique subchunks processed
-    VpEngine * vpEngine_p; // pointer to VpEngine processing this VP (can be null)
-    VpPorts vpInputs_p; // collection of input ports
-    VpPorts vpOutputs_p; // collection of output ports
+    String name_p;
+    Int nSubchunks_p;
+    Int nSubchunksUnique_p;
+//    Type type_p;
+    VpEngine * vpEngine_p;
+    VpPorts vpInputs_p;
+    VpPorts vpOutputs_p;
 };
 
 ostream & operator<< (ostream & os, const VisibilityProcessor::ProcessingType & processingType);
 String toString (VisibilityProcessor::ProcessingType p);
 
 class VisibilityProcessorStub : public VisibilityProcessor {
-
-    // Used to allow definition of a VP variable for use in testing.
-    // Should never be actually operated on.
 
 public:
 
@@ -406,39 +281,44 @@ public:
 
     ProcessingResult doProcessingImpl (ProcessingType /*processingType*/,
                                        VpData & /*inputData*/,
-                                       const SubchunkIndex & /*subChunkIndex*/);
+                                       const SubchunkIndex & /*subChunkIndex*/)
+    {
+        return ProcessingResult (Normal, VpData());
+    }
 
-    void validateImpl ();
+    void validateImpl () {}
 
 
 };
 
-//class SimpleVp: public VisibilityProcessor {
-//
-//public:
-//
-//    SimpleVp (const String & name, const String & input = "In", const String & output = "");
-//    virtual ~SimpleVp ();
-//
-//protected:
-//
-//    class SimpleResult : public boost::tuple<ChunkCode, VisBuffer *> {};
-//
-//    virtual ProcessingResult doProcessingImpl (ProcessingType processingType,
-//                                               VpData & inputData,
-//                                               const SubchunkIndex & subChunkIndex);
-//    virtual void validateImpl ();
-//
-//private:
-//
-//};
+class SimpleVp: public VisibilityProcessor {
+
+public:
+
+    SimpleVp (const String & input = "In", const string & output = "");
+    virtual ~SimpleVp ();
+
+
+    void validateImpl ();
+
+protected:
+
+    class SimpleResult : public boost::tuple<ChunkCode, VisBuffer *> {};
+
+    ProcessingResult doProcessingImpl (ProcessingType processingType,
+                                       VpData & inputData,
+                                       const SubchunkIndex & subChunkIndex);
+
+private:
+
+};
 
 class SplitterVp : public VisibilityProcessor {
 
 public:
 
     SplitterVp (const String & name,
-                const String & inputName,
+                const vector<String> & inputNames,
                 const vector<String> & outputNames);
 
     ~SplitterVp () {}
@@ -449,28 +329,19 @@ protected:
                                        VpData & inputData,
                                        const SubchunkIndex & subChunkIndex);
 
-    void validateImpl ();
+    void validateImpl ()
+    {}
 };
 
 class WriterVp: public VisibilityProcessor {
 
 public:
 
-    // Creates a WriterVp node.  If the vi argument is NULL then the
-    // flow graph's VI is used.  The advanceVi argument is used to
-    // direct the node to advance the VI after each write (i.e., perform
-    // a vi++ operation); advancing the flow graph's VI will cause a
-    // run time exception.
-
     WriterVp (const String & name,
               VisibilityIterator * vi = NULL,
               Bool advanceVi = False,
               const String & input = "In",
               const String & output = "Out");
-
-    // This paradoxical method allows the user to create a single data flow graph
-    // and then programmatically decide at run time whether data should be actually
-    // output on this particular run.
 
     Bool setDisableOutput (Bool disableIt);
 
@@ -484,11 +355,20 @@ protected:
 
 private:
 
-    Bool advanceVi_p; // true is VI is to be advanced after each write.
-                      // N.B., advancing the flow graphs VI is prohibited
-    Bool disableOutput_p; // true if output is disabled.
-    VisibilityIterator * vi_p; // VI to use for output.
+    Bool advanceVi_p;
+    Bool disableOutput_p;
+    VisibilityIterator * vi_p;
 };
+
+//class VisibilityAverager : public VisibilityProcessor {
+//public:
+//
+//    VisibilityAverager () : VisibilityProcessor (Averager) {}
+//    virtual ~VisibilityAverager ();
+//
+//    Result doProcessing (VisibilityBuffer & vb, Bool isNewChunk, Bool isNewSubchunk);
+//
+//};
 
 class VpContainer : public VisibilityProcessor {
 
@@ -496,50 +376,25 @@ class VpContainer : public VisibilityProcessor {
 
 public:
 
-    // Creates a VpContainer object providing the specified inputs and outputs.
-    // These inputs and outputs will potentially be connected to the inputs and
-    // outputs of the VPs that are contained in the container.
-
-    VpContainer (const String & name,
-                 const vector<String> & inputs = vector<String> (1, "In"),
-                 const vector<String> & outputs = vector<String> ());
+    VpContainer (const String & name, const vector<String> & inputs = vector<String> (1, "In"), const vector<String> & outputs = vector<String> ());
 
     virtual ~VpContainer () {}
 
-    // Adds a VP to the container.  Exception if VP is already in the container.
-
     virtual void add (VisibilityProcessor * processor);
-
-    // Connects the specified output to the specified input.  The VP pointer may be
-    // omitted if the port belongs to the container.
-
-    virtual void connect (VisibilityProcessor * sourceVp, const String &  sourcePortName,
-                          VisibilityProcessor * sinkVp, const String &  sinkPortName);
-    virtual void connect (const String &  sourcePortName,
-                          VisibilityProcessor * sinkVp, const String &  sinkPortName);
-    virtual void connect (VisibilityProcessor * sourceVp, const String &  sourcePortName,
-                          const String &  sinkPortName);
-
+    virtual void connect (VpPort & sourcePort,
+                          VpPort & sinkPort);
     virtual void chunkStart (const SubchunkIndex & sci);
-
-    // Fills the container with the specified set of VPs.  The container must be
-    // empty prior to this call.
-
     virtual void fillWithSequence (VisibilityProcessor * first, ...); // Last one NULL
-
-    // Returns the columns that are required to be prefetched if async I/O is used.
-
     virtual casa::asyncio::PrefetchColumns getPrefetchColumns () const;
 
 protected:
 
-    typedef vector<VisibilityProcessor *> VPs; // VPs are used (not owned)
+    typedef vector<VisibilityProcessor *> VPs;
     typedef boost::indirect_iterator <VPs::const_iterator> const_iterator;
     typedef boost::indirect_iterator <VPs::iterator> iterator;
 
     iterator begin();
     const_iterator begin() const;
-
     Bool contains (const VisibilityProcessor *) const;
     virtual ProcessingResult doProcessingImpl (ProcessingType processingType,
                                                VpData & inputData,
@@ -555,8 +410,6 @@ private:
 
     typedef std::map<VpPort, VpPort> Network;
     typedef std::set<VpPort> NetworkReverse;
-    typedef boost::tuple<VisibilityProcessor *, VpData> ReadyVpAndData;
-
     class VpSet : public std::set<VisibilityProcessor *> {
     public:
 
@@ -565,10 +418,11 @@ private:
         String getNames () const;
     };
 
-    Network network_p; // connections between the ports of the connected nodes
-    NetworkReverse networkReverse_p; // connections of contets except indexed in
-                                     // backwards order.
-    VPs vps_p; // the VPs contained by this container.
+    typedef boost::tuple<VisibilityProcessor *, VpData> ReadyVpAndData;
+
+    Network network_p;
+    NetworkReverse networkReverse_p;
+    VPs vps_p;
 
     ReadyVpAndData findReadyVp (VpSet & vpsWaiting, VpData & inputs, bool flushing) const;
     ReadyVpAndData findReadyVpFlushing (VpSet & vpsWaiting, VpData & inputs) const;
@@ -577,10 +431,6 @@ private:
     bool followsSet (const VisibilityProcessor * a, const VpSet & vpSet) const;
     void orderContents ();
     void remapPorts (VpData & data, const VisibilityProcessor *);
-    pair<VpPort,VpPort> validateConnectionPorts (VisibilityProcessor * sourceVp,
-                                                 const String &  sourcePortName,
-                                                 VisibilityProcessor * sinkVp,
-                                                 const String &  sinkPortName);
 };
 
 class VpEngine {
@@ -591,17 +441,7 @@ public:
 
     VpEngine () : vi_p (NULL) {}
 
-    // Process the data set swept by the VisibilityIterator using the
-    // VisibilityProcessor provided with the optionally specified port
-    // as the input.
-
-    void process (VisibilityProcessor & processor,
-                  ROVisibilityIterator & vi,
-                  const String & inputPortName);
-
-    void process (VisibilityProcessor & processor,
-                  ROVisibilityIterator & vi,
-                  const VpPort & inputPort = VpPort ());
+    void process (VisibilityProcessor & processor, ROVisibilityIterator & vi, const VpPort & inputPort = VpPort ());
 
     static Int getLogLevel ();
     static void log (const String & format, ...);

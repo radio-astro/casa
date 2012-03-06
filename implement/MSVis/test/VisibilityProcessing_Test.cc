@@ -46,10 +46,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION (VpContainer_Test);
 
 const casa::String VpTests::Visibility = "visibility";
 
-void
-reset () {
-    ErrorTest::x = true;
-}
 
 VpTests::VpTests ()
 : vm_p (new po::variables_map())
@@ -66,7 +62,7 @@ VpTests::parseArguments (int argc, char * args [])
 {
     po::options_description desc("Allowed options");
     desc.add_options()
-            ("help,h", "Help me, help me!")
+            ("help", "Help me, help me!")
             (String (Visibility + ",v").c_str(), po::value<string>()->default_value(""),
              "visibility input file")
             ;
@@ -220,7 +216,7 @@ VpContainer_Test::testSweep (Int nRepeats)
                              vector<String> ());
 
     SplitterVp splitter ("Splitter",
-                         "In1",
+                         utilj::fillContainer<vector<String> > ("", "In1", ""),
                          utilj::fillContainer<vector<String> > ("", "Out1", ""));
 
     vector<String> inputs = utilj::fillContainer<vector<String> > ("", "In2", "");
@@ -230,8 +226,8 @@ VpContainer_Test::testSweep (Int nRepeats)
     vpContainer.add (& noop);
     vpContainer.add (& splitter);
 
-    vpContainer.connect (& splitter, "Out1", & noop, "In2");
-    vpContainer.connect ("ContainerIn", & splitter, "In1");
+    vpContainer.connect (splitter.getOutputRef ("Out1"), noop.getInputRef ("In2"));
+    vpContainer.connect (vpContainer.getInputRef ("ContainerIn"), splitter.getInputRef ("In1"));
 
     VpEngine vpEngine;
 
@@ -281,7 +277,7 @@ VpData_Test::testMethods ()
     CPPUNIT_ASSERT_NO_THROW (data->add (port2, vb2));
 
     VbPtr vb3 (new VisBuffer ());
-    VpPort port3 (vp1, "InOut", VpPort::InOut);
+    VpPort port3 (vp1, "InOut", VpPort::InOutput);
     CPPUNIT_ASSERT_NO_THROW (data->add (port3, vb3));
 
     // Pull out an empty selection
@@ -436,7 +432,7 @@ VpPort_Test::testConnection ()
     CPPUNIT_ASSERT_THROW (port2.setConnectedOutput (), AipsError);
 
 
-    VpPort port3 (vp1, "InOut", VpPort::InOut);
+    VpPort port3 (vp1, "InOut", VpPort::InOutput);
     port3.setConnectedInput();
     CPPUNIT_ASSERT (port3.isConnectedInput() && ! port3.isConnectedOutput());
 
@@ -470,8 +466,8 @@ VpPort_Test::testConstruction ()
     CPPUNIT_ASSERT (! port2.isConnectedInput());       // initially not connected
     CPPUNIT_ASSERT (! port2.isConnectedOutput());
 
-    VpPort port3 (vp1, "InOut", VpPort::InOut);
-    CPPUNIT_ASSERT (port3.getType () == VpPort::InOut);
+    VpPort port3 (vp1, "InOut", VpPort::InOutput);
+    CPPUNIT_ASSERT (port3.getType () == VpPort::InOutput);
     CPPUNIT_ASSERT (port3.isType (VpPort::Input));      // should be of both basic types
     CPPUNIT_ASSERT (port3.isType (VpPort::Output));
 

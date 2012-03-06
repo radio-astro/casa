@@ -716,7 +716,7 @@ public:
   const MeasurementSet & getMeasurementSet() const;;
   Int getMeasurementSetId() const;
   Int getNAntennas () const;
-  MEpoch getEpoch () const;
+  MEpoch getMEpoch () const;
   ///////////////MFrequency::Types getObservatoryFrequencyType () const; //???
   ///////////////MPosition getObservatoryPosition () const;
   ///////////////MDirection getPhaseCenter () const;

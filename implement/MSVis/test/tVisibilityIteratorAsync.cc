@@ -27,7 +27,6 @@
 
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisBufferAsync.h>
-#include <synthesis/MSVis/VisBufferComponents.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <tables/Tables.h>
 #include <casa/Exceptions/Error.h>
@@ -54,43 +53,6 @@ using namespace boost;
 #include <casa/namespace.h>
 
 namespace casa {
-
-
-//class Accessor2 : public Accessor {
-//public:
-//
-//    typedef T (VisBuffer:: * Func) (int) const;
-//
-//    Accessor2 (Func func, int i) : func_p (func), i_p (i) {}
-//
-//    void operator () (const VisBuffer * c)
-//    {
-//        return c->*func_p (i_p);
-//    }
-//
-//private:
-//
-//    Func func_p;
-//    int i_p;
-//};
-//
-//template <typename T>
-//Accessor * accessor2 (T (VisBuffer::* f) (int) const, int i)
-//{ return new Accessor1 <T> (f, i);}
-
-class Rovia_Test_Configuration;
-
-class Accessor {
-public:
-
-    virtual ~Accessor () {}
-
-    virtual void operator () (const VisBuffer *) = 0;
-    virtual String operator () (int, int, Rovia_Test_Configuration &) = 0;
-
-};
-
-typedef map<VisBufferComponents::EnumType, Accessor *> AccessorDictionary;
 
 class BufferInfo {
 public:
@@ -119,7 +81,6 @@ public:
 Double BufferInfo::tolerance_p = 0;
 
 typedef vector<BufferInfo> Buffers;
-typedef map <int, String> Names;
 
 class Rovia_Test_Configuration;
 
@@ -127,27 +88,10 @@ class Rovia_Test {
 
 public:
 
-    static pair<AccessorDictionary, Names> accessDictionaryCreator ();
-    static Bool accessNonprefetchedData (const String & msName1, const String & msName2);
-    static Bool accessNonprefetchedDatum (const String & msNameSync, const String & msNameAsync);
-    template<typename CompareComponentSubchunk>
     static Bool compareComponents (const String & msNameSync,
                                    const String & msNameAsync,
                                    const String & componentName,
-                                   CompareComponentSubchunk & compareComponentSubchunk,
-                                   const PrefetchColumns & prefetchColumns = PrefetchColumns ());
-    static String compareDirections (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc);
-    static String compareDirectionN (int chunkNumber,
-                                     int subchunkNumber,
-                                     const Vector<MDirection> & directionSync,
-                                     const Vector<MDirection> & directionAsync,
-                                     int n);
-    static String compareFeedPas (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc);
-    static String compareFeedPaN (int chunkNumber,
-                                  int subchunkNumber,
-                                  const Vector<Float> & feedPaSync,
-                                  const Vector<Float> & feedPaAsync,
-                                  int n);
+                                   String (* compareComponentSubchunk) (int, int, Rovia_Test_Configuration &));
     static String compareFlagCubes (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc);
     static String compareImagingWeights (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc);
     static Bool compareTimesAsyncToSync (const String & msName);
@@ -186,7 +130,6 @@ public:
             prefetchColumns =
                     PrefetchColumns::prefetchColumns(VisBufferComponents::Ant1,
                                                      VisBufferComponents::Ant2,
-                                                     VisBufferComponents::FieldId,
                                                      VisBufferComponents::Freq,
                                                      VisBufferComponents::Time,
                                                      VisBufferComponents::ObservedCube,
@@ -223,101 +166,10 @@ public:
     ROVisibilityIterator * viSync;
 };
 
-template <typename CompareComponentSubchunk>
-Bool
-Rovia_Test::compareComponents (const String & msNameSync, const String & msNameAsync,
-                               const String & componentName,
-                               CompareComponentSubchunk & compareComponentSubchunk,
-                               const PrefetchColumns & prefetchColumnsOriginal)
-{
 
-    // String (* compareComponentSubchunk) (int, int, Rovia_Test_Configuration &),
 
-    cout << "---Comparing " << componentName << " ..." << endl;
 
-    PrefetchColumns prefetchColumns = prefetchColumnsOriginal;
-    if (prefetchColumns.empty()){
-        prefetchColumns =  PrefetchColumns::prefetchColumns(VisBufferComponents::Ant1,
-                                                            VisBufferComponents::Ant2,
-                                                            VisBufferComponents::FlagCube,
-                                                            VisBufferComponents::Time,
-                                                            VisBufferComponents::ObservedCube,
-                                                            VisBufferComponents::Sigma,
-                                                            VisBufferComponents::Flag,
-                                                            VisBufferComponents::Uvw,
-                                                            VisBufferComponents::Weight,
-                                                            -1);
-    }
-
-    Rovia_Test_Configuration rtc (msNameSync, msNameAsync, & prefetchColumns);
-
-    int chunkNumber, subchunkNumber;
-
-    for (rtc.viSync->originChunks(), rtc.viAsync->originChunks (), chunkNumber = 0;
-            rtc.viSync->moreChunks();
-            rtc.viSync->nextChunk(), rtc.viAsync->nextChunk(), chunkNumber ++){
-
-        for (rtc.viSync->origin (), rtc.viAsync->origin(), subchunkNumber = 0;
-                rtc.viSync->more();
-                (* rtc.viSync) ++, (* rtc.viAsync) ++, subchunkNumber ++){
-
-            String message = compareComponentSubchunk (chunkNumber, subchunkNumber, rtc);
-
-            if (! message.empty()){
-
-                cout << message << endl;
-                goto done;
-            }
-        }
-    }
-
-    cout << "... Passed " << componentName << " Test" << endl;
-
-    return True;
-
-done:
-
-    cout << "***" << endl;
-    cout << "*** Failed " << componentName << " Test" << endl;
-    cout << "***" << endl;
-
-    return False;
 }
-
-
-
-template <typename T, typename VB>
-class Accessor1 : public Accessor {
-public:
-
-    typedef T (VB:: * Func) () const;
-
-    Accessor1 (Func func) : func_p (func) {}
-
-    void operator() (const VisBuffer * c)
-    {
-        (c->*func_p) ();
-    }
-
-    String
-    operator () (int, int, Rovia_Test_Configuration & rtc)
-    {
-
-        (dynamic_cast<VB *> (rtc.vbAsync.get()) ->* func_p) ();
-
-        return "";
-    }
-
-private:
-
-    Func func_p;
-};
-
-template <typename T, typename VB>
-Accessor * accessor1 (T (VB::* f) () const)
-{ return new Accessor1 <T,VB> (f);}
-
-} // end namespace casa
 
 #define VIA ROVisibilityIteratorAsync
 int
@@ -330,10 +182,11 @@ main(int argc, char **argv)
     Aipsrc::set (vid, "True"); // force async enabled
 
     if (argc<2) {
-        cout <<"Usage: tVisibilityIterator ms-table-name ms-table-name-2"<<endl;
+        cout <<"Usage: tVisibilityIterator ms-table-name"<<endl;
         exit(1);
     }
     // try to iterate over a pre-existing MS table
+
 
     try {
 
@@ -344,18 +197,6 @@ main(int argc, char **argv)
         ok = Rovia_Test::compareTimesAsyncToSync (argv[1]) && ok;
         ok = Rovia_Test::compareComponents (argv[1], argv[2], "Flag Cubes", Rovia_Test::compareFlagCubes) && ok;
         ok = Rovia_Test::compareWeightsAsyncToSync (argv[1], argv[2]) && ok;
-
-        PrefetchColumns pc = PrefetchColumns::prefetchColumns (VisBufferComponents::Feed1_pa,
-                                                               VisBufferComponents::Feed2_pa,
-                                                               -1);
-        ok = Rovia_Test::compareComponents (argv[1], argv[2], "FeedN_pas", Rovia_Test::compareFeedPas, pc) && ok;
-
-        pc = PrefetchColumns::prefetchColumns (VisBufferComponents::Direction1,
-                                               VisBufferComponents::Direction2,
-                                               -1);
-        ok = Rovia_Test::compareComponents (argv[1], argv[2], "FeedN_pas", Rovia_Test::compareDirections, pc) && ok;
-
-        ok = Rovia_Test::accessNonprefetchedData (argv[1], argv[2]) && ok;
 
         if (ok){
             cout << "--- Passed all tests!" << endl;
@@ -378,298 +219,6 @@ main(int argc, char **argv)
 }
 
 namespace casa {
-
-Bool
-Rovia_Test::accessNonprefetchedData (const String & msNameSync, const String & msNameAsync)
-{
-
-    cout << "--- Starting test of error generation when accessing nonprefetched data." << endl;
-
-    pair<AccessorDictionary, Names> dictNames = accessDictionaryCreator();
-    AccessorDictionary dict = dictNames.first;
-    Names names = dictNames.second;
-
-    Bool result = True;
-
-    for (AccessorDictionary::iterator a = dict.begin(); a != dict.end(); a++){
-
-        int column = a->first != VisBufferComponents::Ant1 ? VisBufferComponents::Ant1
-                                                           : VisBufferComponents::Ant2;
-
-        PrefetchColumns pc = PrefetchColumns::prefetchColumns (column, -1);
-
-        try {
-            ostringstream os;
-            os << "prefetch failure of " << names [a->first] << endl;
-
-            compareComponents (msNameSync, msNameAsync, os.str(), * a->second, pc);
-
-            cout << "***> Failed to generate expected error for " << names [a->first] << endl;
-            result = False;
-        }
-        catch (AipsError & e){
-
-            String message = e.what();
-            if (message.find ("Column not prefetched") == String::npos){
-                int i = message.find ("\nStack trace");
-                message = message.substr (0, i);
-
-                cout << "***> Failed: caught unexpected error for " << names [a->first] << "; message=" << message << endl;
-
-                result = False;
-            }
-        }
-    }
-
-    if (result) {
-        cout << "--- ... Successfully completed test of error generation when accessing nonprefetched data." << endl;
-    }
-    else{
-        cout << "******* Failed to complete test of error generation when accessing nonprefetched data." << endl;
-    }
-
-
-    return result;
-}
-
-//Bool
-//Rovia_Test::accessNonprefetchedDatum (const String & msNameSync, const String & msNameAsync)
-//{
-//    //PrefetchColumns pc = ;
-//
-//    try {
-//
-//        compareComponents (msNameSync, msNameAsync, "", func, pc);
-//
-//        return False;
-//
-//    }
-//    catch (AipsError & e){
-//
-//    }
-//
-//    return True;
-//}
-
-
-pair<AccessorDictionary, Names>
-Rovia_Test::accessDictionaryCreator ()
-{
-    AccessorDictionary dict;
-    Names name;
-
-    dict [VisBufferComponents::Ant1] = accessor1 (& VisBuffer::antenna1);
-    name [VisBufferComponents::Ant1] = "antenna1";
-    dict [VisBufferComponents::Ant2] = accessor1 (& VisBuffer::antenna2);
-    name [VisBufferComponents::Ant2] = "antenna2";
-    dict [VisBufferComponents::ArrayId] = accessor1 (& VisBuffer::arrayId);
-    name [VisBufferComponents::ArrayId] = "arrayId";
-    //dict [VisBufferComponents::BeamOffsets] = accessor1 (& VisBuffer::beamOffsets);
-    dict [VisBufferComponents::Channel] = accessor1 (& VisBuffer::channel);
-    name [VisBufferComponents::Channel] = "channel";
-    dict [VisBufferComponents::Cjones] = accessor1 (& VisBuffer::CJones);
-    name [VisBufferComponents::Cjones] = "CJones";
-    dict [VisBufferComponents::CorrType] = accessor1 (& VisBuffer::corrType);
-    name [VisBufferComponents::CorrType] = "corrType";
-    //dict [VisBufferComponents::Corrected] = accessor1 (& VisBuffer::correctedVisibility);
-    //dict [VisBufferComponents::CorrectedCube] = accessor1 (& VisBuffer::correctedVisCube);
-    dict [VisBufferComponents::DataDescriptionId] = accessor1 (& VisBuffer::dataDescriptionId);
-    name [VisBufferComponents::DataDescriptionId] = "dataDescriptionId";
-    dict [VisBufferComponents::Direction1] = accessor1 (& VisBuffer::direction1);
-    name [VisBufferComponents::Direction1] = "direction1";
-    dict [VisBufferComponents::Direction2] = accessor1 (& VisBuffer::direction2);
-    name [VisBufferComponents::Direction2] = "direction2";
-    dict [VisBufferComponents::Exposure] = accessor1 (& VisBuffer::exposure);
-    name [VisBufferComponents::Exposure] = "exposure";
-    dict [VisBufferComponents::Feed1] = accessor1 (& VisBuffer::feed1);
-    name [VisBufferComponents::Feed1] = "feed1";
-    dict [VisBufferComponents::Feed1_pa] = accessor1 (& VisBuffer::feed1_pa);
-    name [VisBufferComponents::Feed1_pa] = "feed1_pa";
-    dict [VisBufferComponents::Feed2] = accessor1 (& VisBuffer::feed2);
-    name [VisBufferComponents::Feed2] = "feed2";
-    dict [VisBufferComponents::Feed2_pa] = accessor1 (& VisBuffer::feed2_pa);
-    name [VisBufferComponents::Feed2_pa] = "feed2_pa";
-    dict [VisBufferComponents::FieldId] = accessor1 (& VisBuffer::fieldId);
-    name [VisBufferComponents::FieldId] = "fieldId";
-    dict [VisBufferComponents::Flag] = accessor1 (& VisBuffer::flag);
-    name [VisBufferComponents::Flag] = "flag";
-    dict [VisBufferComponents::FlagCategory] = accessor1 (& VisBuffer::flagCategory);
-    name [VisBufferComponents::FlagCategory] = "flagCategory";
-    dict [VisBufferComponents::FlagCube] = accessor1 (& VisBuffer::flagCube);
-    name [VisBufferComponents::FlagCube] = "flagCube";
-    dict [VisBufferComponents::FlagRow] = accessor1 (& VisBuffer::flagRow);
-    name [VisBufferComponents::FlagRow] = "flagRow";
-    dict [VisBufferComponents::Freq] = accessor1 (& VisBuffer::frequency);
-    name [VisBufferComponents::Freq] = "frequency";
-    //dict [VisBufferComponents::ImagingWeight] = accessor1 (& VisBuffer::imagingWeight);
-    //name [VisBufferComponents::ImagingWeight] = "imagingWeight";
-    //dict [VisBufferComponents::Model] = accessor1 (& VisBuffer::modelVisibility);
-    //dict [VisBufferComponents::ModelCube] = accessor1 (& VisBuffer::modelVisCube);
-    dict [VisBufferComponents::NChannel] = accessor1 (& VisBuffer::nChannel);
-    name [VisBufferComponents::NChannel] = "nChannel";
-    dict [VisBufferComponents::NCorr] = accessor1 (& VisBuffer::nCorr);
-    name [VisBufferComponents::NCorr] = "nCorr";
-    dict [VisBufferComponents::NRow] = accessor1 (& VisBuffer::nRow);
-    name [VisBufferComponents::NRow] = "nRow";
-    dict [VisBufferComponents::ObservationId] = accessor1 (& VisBuffer::observationId);
-    name [VisBufferComponents::ObservationId] = "observationId";
-    dict [VisBufferComponents::Observed] = accessor1 (& VisBuffer::visibility);
-    name [VisBufferComponents::Observed] = "visibility";
-    dict [VisBufferComponents::ObservedCube] = accessor1 (& VisBuffer::visCube);
-    name [VisBufferComponents::ObservedCube] = "visCube";
-    dict [VisBufferComponents::PhaseCenter] = accessor1 (& VisBuffer::phaseCenter);
-    name [VisBufferComponents::PhaseCenter] = "phaseCenter";
-    dict [VisBufferComponents::PolFrame] = accessor1 (& VisBuffer::polFrame);
-    name [VisBufferComponents::PolFrame] = "polFrame";
-    dict [VisBufferComponents::ProcessorId] = accessor1 (& VisBuffer::processorId);
-    name [VisBufferComponents::ProcessorId] = "processorId";
-    //dict [VisBufferComponents::ReceptorAngles] = accessor1 (& VisBuffer::receptorAngles);
-    dict [VisBufferComponents::Scan] = accessor1 (& VisBuffer::scan);
-    name [VisBufferComponents::Scan] = "scan";
-    dict [VisBufferComponents::Sigma] = accessor1 (& VisBuffer::sigma);
-    name [VisBufferComponents::Sigma] = "sigma";
-    dict [VisBufferComponents::SigmaMat] = accessor1 (& VisBuffer::sigmaMat);
-    name [VisBufferComponents::SigmaMat] = "sigmaMat";
-    dict [VisBufferComponents::SpW] = accessor1 (& VisBuffer::spectralWindow);
-    name [VisBufferComponents::SpW] = "spectralWindow";
-    dict [VisBufferComponents::StateId] = accessor1 (& VisBuffer::stateId);
-    name [VisBufferComponents::StateId] = "stateId";
-    dict [VisBufferComponents::Time] = accessor1 (& VisBuffer::time);
-    name [VisBufferComponents::Time] = "time";
-    dict [VisBufferComponents::TimeCentroid] = accessor1 (& VisBuffer::timeCentroid);
-    name [VisBufferComponents::TimeCentroid] = "timeCentroid";
-    dict [VisBufferComponents::TimeInterval] = accessor1 (& VisBuffer::timeInterval);
-    name [VisBufferComponents::TimeInterval] = "timeInterval";
-    dict [VisBufferComponents::Weight] = accessor1 (& VisBuffer::weight);
-    name [VisBufferComponents::Weight] = "weight";
-    dict [VisBufferComponents::WeightMat] = accessor1 (& VisBuffer::weightMat);
-    name [VisBufferComponents::WeightMat] = "weightMat";
-    //dict [VisBufferComponents::WeightSpectrum] = accessor1 (& VisBuffer::weightSpectrum);
-    //name [VisBufferComponents::WeightSpectrum] = "weightSpectrum";
-    dict [VisBufferComponents::Uvw] = accessor1 (& VisBuffer::uvw);
-    name [VisBufferComponents::Uvw] = "uvw";
-    dict [VisBufferComponents::UvwMat] = accessor1 (& VisBuffer::uvwMat);
-    name [VisBufferComponents::UvwMat] = "uvwMat";
-
-    return make_pair (dict, name);
-}
-
-String
-Rovia_Test::compareDirections (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc)
-{
-    ostringstream out;
-
-    Vector<MDirection> directionSync = rtc.vbSync->direction1 ();
-    Vector<MDirection> directionAsync = rtc.vbAsync->direction1 ();
-
-    String s = compareDirectionN (chunkNumber, subchunkNumber, directionSync, directionAsync, 2);
-
-    if (! s.empty()){
-        return s;
-    }
-
-    directionSync = rtc.vbSync->direction2 ();
-    directionAsync = rtc.vbAsync->direction2 ();
-
-    s = compareDirectionN (chunkNumber, subchunkNumber, directionSync, directionAsync, 2);
-
-    if (! s.empty()){
-        return s;
-    }
-
-    return ""; // ok
-}
-
-String
-Rovia_Test::compareDirectionN (int chunkNumber,
-                               int subchunkNumber,
-                               const Vector<MDirection> & directionSync,
-                               const Vector<MDirection> & directionAsync,
-                               int n)
-{
-    ostringstream out;
-
-    if (directionSync.nelements() != directionAsync.nelements ()){
-        out << "Direction" << n << " size mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
-        out << "Sync size = " << directionSync.nelements () << endl;
-        out << "Async size = " << directionAsync.nelements () << endl;
-
-        return out.str();
-    }
-
-    for (int i = 0; i < (int) directionSync.nelements (); i ++){
-
-        Double separation = directionSync (i).getValue ().separation (directionAsync (i).getValue());
-        if (abs (separation) > .001 ){
-
-            out << "Direction" << n << " mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
-            out << "Sync value = " << directionSync (i) << "; Async value = " << directionAsync (i) << endl;
-
-            return out.str();
-        }
-    }
-
-    return "";
-}
-
-
-String
-Rovia_Test::compareFeedPas (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc)
-{
-    ostringstream out;
-
-    Vector<Float> feedPaSync = rtc.vbSync->feed1_pa ();
-    Vector<Float> feedPaAsync = rtc.vbAsync->feed1_pa ();
-
-    String s = compareFeedPaN (chunkNumber, subchunkNumber, feedPaSync, feedPaAsync, 1);
-
-    if (! s.empty()){
-        return s;
-    }
-
-    feedPaSync = rtc.vbSync->feed2_pa ();
-    feedPaAsync = rtc.vbAsync->feed2_pa ();
-
-    s = compareFeedPaN (chunkNumber, subchunkNumber, feedPaSync, feedPaAsync, 2);
-
-    if (! s.empty()){
-        return s;
-    }
-
-    return ""; // ok
-}
-
-
-String
-Rovia_Test::compareFeedPaN (int chunkNumber,
-                            int subchunkNumber,
-                            const Vector<Float> & feedPaSync,
-                            const Vector<Float> & feedPaAsync,
-                            int n)
-{
-    ostringstream out;
-
-    if (feedPaSync.nelements() != feedPaAsync.nelements ()){
-        out << "Feed" << n << "_pa size mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
-        out << "Sync size = " << feedPaSync.nelements () << endl;
-        out << "Async size = " << feedPaAsync.nelements () << endl;
-
-        return out.str();
-    }
-
-    for (int i = 0; i < (int) feedPaSync.nelements (); i ++){
-        if (feedPaSync (i) != feedPaAsync (i)){
-
-            out << "Feed" << n << "_pa mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
-            out << "Sync value = " << feedPaSync (i) << "; Async value = " << feedPaAsync (i) << endl;
-
-            return out.str();
-        }
-    }
-
-    return "";
-}
-
 
 String
 Rovia_Test::compareFlagCubes (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc)
@@ -941,6 +490,60 @@ Rovia_Test::compareTimesAsyncToSync (const String & msName)
 
 }
 
+Bool
+Rovia_Test::compareComponents (const String & msNameSync, const String & msNameAsync,
+                               const String & componentName,
+                               String (* compareComponentSubchunk) (int, int, Rovia_Test_Configuration &))
+{
+
+    cout << "---Comparing " << componentName << " ..." << endl;
+
+    PrefetchColumns prefetchColumns =
+            PrefetchColumns::prefetchColumns(VisBufferComponents::Ant1,
+                                             VisBufferComponents::Ant2,
+                                             VisBufferComponents::FlagCube,
+                                             VisBufferComponents::Time,
+                                             VisBufferComponents::ObservedCube,
+                                             VisBufferComponents::Sigma,
+                                             VisBufferComponents::Flag,
+                                             VisBufferComponents::Uvw,
+                                             VisBufferComponents::Weight,
+                                             -1);
+
+    Rovia_Test_Configuration rtc (msNameSync, msNameAsync, & prefetchColumns);
+
+    int chunkNumber, subchunkNumber;
+
+    for (rtc.viSync->originChunks(), rtc.viAsync->originChunks (), chunkNumber = 0;
+            rtc.viSync->moreChunks();
+            rtc.viSync->nextChunk(), rtc.viAsync->nextChunk(), chunkNumber ++){
+
+        for (rtc.viSync->origin (), rtc.viAsync->origin(), subchunkNumber = 0;
+                rtc.viSync->more();
+                (* rtc.viSync) ++, (* rtc.viAsync) ++, subchunkNumber ++){
+
+            String message = compareComponentSubchunk (chunkNumber, subchunkNumber, rtc);
+
+            if (! message.empty()){
+
+                cout << message << endl;
+                goto done;
+            }
+        }
+    }
+
+    cout << "... Passed " << componentName << " Test" << endl;
+
+    return True;
+
+done:
+
+    cout << "***" << endl;
+    cout << "*** Failed " << componentName << " Test" << endl;
+    cout << "***" << endl;
+
+    return False;
+}
 
 
 void
@@ -953,7 +556,6 @@ Rovia_Test::sweepAsync (const String & msName, Buffers & buffers)
     PrefetchColumns prefetchColumns =
         PrefetchColumns::prefetchColumns(VisBufferComponents::Ant1,
                                          VisBufferComponents::Ant2,
-                                         VisBufferComponents::FieldId,
                                          VisBufferComponents::Freq,
                                          VisBufferComponents::Time,
                                          VisBufferComponents::ObservedCube,
@@ -989,13 +591,10 @@ Rovia_Test::sweepVi (ROVisibilityIterator & vi, VisBuffer & vb, Buffers & buffer
 {
     buffers.clear();
 
-    int fid;
-
     Int chunkNumber, subchunkNumber;
     for (vi.originChunks(), chunkNumber = 0; vi.moreChunks(); vi.nextChunk(), chunkNumber ++){
         for (vi.origin (), subchunkNumber = 0; vi.more(); vi ++, subchunkNumber ++){
             buffers.push_back (BufferInfo (chunkNumber, subchunkNumber, vb.time()[0]));
-            fid = vb.fieldId();
         }
     }
 }

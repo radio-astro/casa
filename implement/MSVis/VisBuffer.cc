@@ -43,7 +43,6 @@
 
 #define CheckVisIter() checkVisIter (__func__, __FILE__, __LINE__)
 #define CheckVisIter1(s) checkVisIter (__func__, __FILE__, __LINE__,s)
-#define CheckVisIterBase() checkVisIterBase (__func__, __FILE__, __LINE__)
 
 
 // For debugging; remove/comment-out when working
@@ -134,7 +133,7 @@ void VisBuffer::copyCoordInfo(const VisBuffer& other, Bool force)
 {
   // Just do the nominally non-row-dep values
   cacheCopyNormal(arrayIdOK_p, other.arrayIdOK(), arrayId_p, other, &VisBuffer::arrayId, force);
-  cacheCopyNormal(dataDescriptionIdOK_p, other.dataDescriptionIdOK(), dataDescriptionId_p, other, &VisBuffer::dataDescriptionId, force);
+  cacheCopyNormal(ddidOK_p, other.ddidOK(), ddid_p, other, &VisBuffer::dataDescriptionId, force);
   cacheCopyNormal(fieldIdOK_p, other.fieldIdOK(), fieldId_p, other, &VisBuffer::fieldId, force);
   cacheCopyNormal(spectralWindowOK_p, other.spectralWindowOK(), spectralWindow_p, other,
                   &VisBuffer::spectralWindow, force);
@@ -163,7 +162,7 @@ VisBuffer::copyCache (const VisBuffer & other, Bool force)
     cacheCopyArray  (correctedVisibilityOK_p, other.correctedVisibilityOK (),
                      correctedVisibility_p, other, & VisBuffer::correctedVisibility, force);
     cacheCopyArray  (corrTypeOK_p, other.corrTypeOK (), corrType_p, other, & VisBuffer::corrType, force);
-    cacheCopyNormal (dataDescriptionIdOK_p, other.dataDescriptionIdOK(), dataDescriptionId_p, other, & VisBuffer::dataDescriptionId, force);
+    cacheCopyNormal (ddidOK_p, other.ddidOK(), ddid_p, other, & VisBuffer::dataDescriptionId, force);
     cacheCopyArray  (direction1OK_p, other.direction1OK (), direction1_p, other, & VisBuffer::direction1, force);
     cacheCopyArray  (direction2OK_p, other.direction2OK (), direction2_p, other, & VisBuffer::direction2, force);
     cacheCopyArray  (exposureOK_p, other.exposureOK (), exposure_p, other, & VisBuffer::exposure, force);
@@ -417,7 +416,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     correctedVisCubeOK_p = status;
     correctedVisibilityOK_p = status;
     corrTypeOK_p = status;
-    dataDescriptionIdOK_p = status;
+    ddidOK_p = status;
     direction1OK_p = status;
     direction2OK_p = status;
     exposureOK_p  = status;
@@ -1667,7 +1666,7 @@ VisBuffer::updateCoordInfo(const VisBuffer * vb, const  Bool dirDependent )
     updateCoord (vb, vb->antenna1OK (), & VisBuffer::antenna1, antenna1_p, antenna1OK_p);
     updateCoord (vb, vb->antenna2OK (), & VisBuffer::antenna2, antenna2_p, antenna2OK_p);
     updateCoordS (vb, vb->arrayIdOK (), & VisBuffer::arrayId, arrayId_p, arrayIdOK_p);
-    updateCoordS (vb, vb->dataDescriptionIdOK(), & VisBuffer::dataDescriptionId, dataDescriptionId_p, dataDescriptionIdOK_p);
+    updateCoordS (vb, vb->ddidOK(), & VisBuffer::dataDescriptionId, ddid_p, ddidOK_p);
     updateCoordS (vb, vb->fieldIdOK (), & VisBuffer::fieldId, fieldId_p, fieldIdOK_p);
     updateCoordS (vb, vb->spectralWindowOK (), & VisBuffer::spectralWindow, spectralWindow_p, spectralWindowOK_p);
     updateCoord (vb, vb->timeOK (), & VisBuffer::time, time_p, timeOK_p);
@@ -1824,18 +1823,11 @@ Int VisBuffer::numberCoh () const
 void
 VisBuffer::checkVisIter (const char * func, const char * file, int line, const char * extra) const
 {
-  checkVisIterBase (func, file, line, extra);
-}
-
-void
-VisBuffer::checkVisIterBase (const char * func, const char * file, int line, const char * extra) const
-{
   if (visIter_p == NULL) {
     throw AipsError (String ("No VisibilityIterator is available to fill this field in (") +
                      func + extra + ")", file, line);
   }
 }
-
 
 void VisBuffer::setCorrectedVisCube(const Cube<Complex>& vis)
 {
@@ -1973,8 +1965,7 @@ Vector<Int>& VisBuffer::fillCorrType()
 // and time caches automatically
 Vector<Float>& VisBuffer::fillFeed1_pa()
 {
-  CheckVisIterBase ();
-
+  CheckVisIter ();
   // fill feed, antenna and time caches, if not filled before
   feed1();
   antenna1();
@@ -2007,8 +1998,7 @@ Vector<Float>& VisBuffer::fillFeed1_pa()
 
 Vector<Float>& VisBuffer::fillFeed2_pa()
 {
-  CheckVisIterBase ();
-
+  CheckVisIter ();
   // fill feed, antenna and time caches, if not filled before
   feed2();
   antenna2();
@@ -2040,7 +2030,7 @@ Vector<Float>& VisBuffer::fillFeed2_pa()
 
 Vector<MDirection>& VisBuffer::fillDirection1()
 {
-  CheckVisIterBase ();
+  CheckVisIter ();
   // fill feed1_pa cache, antenna, feed and time will be filled automatically
   feed1_pa();
   direction1OK_p = True;
@@ -2094,7 +2084,7 @@ Vector<MDirection>& VisBuffer::fillDirection1()
 
 Vector<MDirection>& VisBuffer::fillDirection2()
 {
-  CheckVisIterBase ();
+  CheckVisIter ();
   // fill feed2_pa cache, antenna, feed and time will be filled automatically
   feed2_pa();
   direction2OK_p = True;
@@ -2159,12 +2149,12 @@ Int& VisBuffer::fillArrayId()
   return arrayId_p;
 }
 
-Int& VisBuffer::fillDataDescriptionId ()
+Int& VisBuffer::fillDDID()
 {
   CheckVisIter ();
-  dataDescriptionIdOK_p = True;
-  dataDescriptionId_p = visIter_p->dataDescriptionId();
-  return dataDescriptionId_p;
+  ddidOK_p = True;
+  ddid_p = visIter_p->dataDescriptionId();
+  return ddid_p;
 }
 
 Matrix<Bool>& VisBuffer::fillFlag()

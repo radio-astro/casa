@@ -272,28 +272,14 @@ ChannelSelection::operator= (const ChannelSelection & other)
 {
     if (this != & other){
 
-        copyBlock (other.blockNGroup_p, blockNGroup_p);
-        copyBlock (other.blockStart_p, blockStart_p);
-        copyBlock (other.blockWidth_p, blockWidth_p);
-        copyBlock (other.blockIncr_p, blockIncr_p);
-        copyBlock (other.blockSpw_p, blockSpw_p);
-
+        blockNGroup_p = other.blockNGroup_p;
+        blockStart_p = other.blockStart_p;
+        blockWidth_p = other.blockWidth_p;
+        blockIncr_p = other.blockIncr_p;
+        blockSpw_p = other.blockSpw_p;
     }
 
     return * this;
-}
-
-void
-ChannelSelection::copyBlock (const Block <Vector<Int> > & src,
-                             Block <Vector<Int> > & to) const
-{
-    // Since this is a Block of Vector, we need to wipe out
-    // the original contents of "to"; otherwise the semantics
-    // of Vector::operator= will generate an exception if there
-    // is a difference in length of any of the vector elements.
-
-    to.resize (0, True);
-    to = src;
 }
 
 
@@ -304,11 +290,11 @@ ChannelSelection::get (Block< Vector<Int> > & blockNGroup,
                        Block< Vector<Int> > & blockIncr,
                        Block< Vector<Int> > & blockSpw) const
 {
-    copyBlock (blockNGroup_p, blockNGroup);
-    copyBlock (blockStart_p, blockStart);
-    copyBlock (blockWidth_p, blockWidth);
-    copyBlock (blockIncr_p, blockIncr);
-    copyBlock (blockSpw_p, blockSpw);
+    blockNGroup=blockNGroup_p;
+    blockStart=blockStart_p;
+    blockWidth=blockWidth_p;
+    blockIncr=blockIncr_p;
+    blockSpw=blockSpw_p;
 }
 
 std::ostream &
