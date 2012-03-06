@@ -1240,6 +1240,33 @@ Bool Calibrater::correct() {
   return retval;
 }
 
+//Bool
+//Calibrater::correctUsingVpf ()
+//{
+//    Bool result = False;
+//
+//    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
+//
+//    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
+//
+//    VpEngine vpEngine;
+//
+//    try{
+//
+//        vpEngine.process (* correctorVp, * vi);
+//        result = True;
+//    }
+//    catch (AipsError & e){
+//
+//        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
+//                   << LogIO::NORMAL;
+//
+//    }
+//
+//    return result;
+//
+//}
+
 Bool
 Calibrater::correctUsingVpf ()
 {
@@ -1252,8 +1279,8 @@ Calibrater::correctUsingVpf ()
     vpContainer->add (correctorVp.get());
     vpContainer->add (writerVp.get());
 
-    vpContainer->connect (correctorVp.get(), "Out", writerVp.get(), "In");
-    vpContainer->connect ("In", correctorVp.get(), "In");
+    vpContainer->connect (correctorVp->getOutputRef ("Out"), writerVp->getInputRef ("In"));
+    vpContainer->connect (vpContainer->getInputRef ("In"), correctorVp->getInputRef ("In"));
 
     ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
 
@@ -3276,6 +3303,7 @@ CorrectorVp::doProcessingImpl (ProcessingType processingType,
         if (calculateWeights_p){
             inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
         }
+
 
         VpData output;
         VpPort outputPort = getOutputs () [0];

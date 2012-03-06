@@ -485,7 +485,7 @@ Bool item ## OK () const\
     CacheStatus (correctedVisCube);
     CacheStatus (correctedVisibility);
     CacheStatus (corrType);
-    CacheStatus (dataDescriptionId);
+    CacheStatus (ddid);
     CacheStatus (direction1);
     CacheStatus (direction2);
     CacheStatus (exposure);
@@ -535,7 +535,6 @@ private:
 
     // validate the cache
     void validate();
-    void attachWrappedVb (ROVisibilityIterator * iter);
 
     void setAllCacheStatuses (bool status);
 

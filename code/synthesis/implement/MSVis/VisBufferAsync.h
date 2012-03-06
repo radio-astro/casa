@@ -41,7 +41,7 @@ public:
     virtual Vector<MDirection> azel(Double time) const;
     virtual MDirection azel0(Double time) const;
     virtual VisBuffer * clone ();
-    //virtual Int dataDescriptionId() const;
+    virtual Int dataDescriptionId() const;
     virtual void detachFromVisIter ();
     virtual Vector<Float> feed_pa(Double time) const;
     virtual Double hourang(Double time) const;
@@ -97,17 +97,8 @@ protected:
     Vector<MDirection>& fillDirection2();
     void fillFrom (const VisBufferAsync & other);
     MDirection & fillPhaseCenter();
-    Bool getAllBeamOffsetsZero () const;
-    const Vector <String> & getAntennaMounts () const;
-    const Cube <RigidVector <Double, 2> > & getBeamOffsets () const;
     const MeasurementSet & getMs () const;
-    MDirection getPhaseCenter () const;
-    const Cube <Double> & getReceptorAngles () const;
-    void setAngleInfo (Bool allBeamOffsetsZero,
-                       const Vector<String> antennaMounts,
-                       Cube<RigidVector<Double, 2> > beamOffsets,
-                       const Cube<Double> & receptorAngles);
-    /////void setDataDescriptionId (Int id);
+    void setDataDescriptionId (Int id);
     void setFilling (Bool isFilling);
     void setLsrInfo (const Block <Int> & channelGroupNumber,
                      const Block <Int> & channelIncrement,
@@ -140,21 +131,13 @@ protected:
 
 private:
 
-    Bool fillAllBeamOffsetsZero ();
-    Vector <String> fillAntennaMounts ();
-    Cube <RigidVector <Double, 2> > fillBeamOffsets ();
-    Cube <Double> fillReceptorAngles ();
-
-    Bool                           allBeamOffsetsZero_p;
-    Vector<String>                 antennaMounts_p;
     mutable Vector<MDirection>     azelCached_p;      // mutable because it is a cached value
     mutable Double                 azelCachedTime_p;  // mutable because it is a cached value
-    Cube<RigidVector<Double, 2> >  beamOffsets_p;
     Block<Int>                     channelGroupNumber_p;
     Block<Int>                     channelIncrement_p;
     Block<Int>                     channelStart_p;
     Block<Int>                     channelWidth_p;
-    //Int                            dataDescriptionId_p;
+    Int                            dataDescriptionId_p;
     mutable Vector<Float>          feedpaCached_p;      // mutable because it is a cached value
     mutable Double                 feedpaCachedTime_p;  // mutable because it is a cached value
     Bool                           isFilling_p;
@@ -175,7 +158,6 @@ private:
     mutable Double                 parangCachedTime_p;  // mutable because it is a cached value
     Int                            polarizationId_p;
     Vector<Float>                  receptor0Angle_p;
-    Cube<Double>                   receptorAngles_p;
     Vector<Double>                 selFreq_p;
     Vector<Int>                    selectedNVisibilityChannels_p;
     Vector<Int>                    selectedSpectralWindows_p;

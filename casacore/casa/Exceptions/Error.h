@@ -33,7 +33,6 @@
 #include <sys/types.h>
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
-#include <casa/OS/Mutex.h>
 #include <exception>
 
 
@@ -139,9 +138,9 @@ protected:
   String message;
   Category category;
 
-  static String lastMessage;    // error message from last exception
-  static String lastStackTrace; // stack trace from last exception
-  static Mutex  lastErrorMutex; // protects the lastMessage and lastStackTrace statics
+  static String lastMessage;
+  static String lastStackTrace;
+
 };
 
 

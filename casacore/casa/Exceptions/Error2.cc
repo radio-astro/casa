@@ -46,8 +46,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 String AipsError::lastMessage = AipsError::noMessage ();
 String AipsError::lastStackTrace = AipsError::noStackTrace();
-Mutex  AipsError::lastErrorMutex;
-
 
 AipsError::AipsError (Category c)
 : message(), category(c)
@@ -85,24 +83,14 @@ AipsError::~AipsError() throw()
 void
 AipsError::addStackTrace ()
 {
-
-    // Always generate a stack trace and keep it around in a static
-    // for later retrieval via casapy
-
-    String trace = generateStackTrace();
-
-    {
-        ScopedMutexLock lock(lastErrorMutex);
-        lastMessage = message;
-        lastStackTrace = trace;
-    }
-
-    // See if the default is to tack on the stack trace on the exception
-    // message.  N.B.: Turning this on will break some of the low-level tests
-    // which simply compare expected to actual output.
+    lastMessage = message;
+    lastStackTrace = noStackTrace ();
 
     Bool enabled;
     AipsrcValue<Bool>::find (enabled, "AipsError.enableStackTrace", AipsError_StackTracing_Default);
+
+    String trace = generateStackTrace();
+    lastStackTrace = trace;
 
     if (enabled) {
 
@@ -147,7 +135,6 @@ AipsError::generateStackTrace()
 void
 AipsError::getLastInfo (String & message, String & stackTrace)
 {
-    ScopedMutexLock lock(lastErrorMutex);
     message = lastMessage;
     stackTrace = lastStackTrace;
 }
@@ -155,7 +142,6 @@ AipsError::getLastInfo (String & message, String & stackTrace)
 void
 AipsError::clearLastInfo ()
 {
-    ScopedMutexLock lock(lastErrorMutex);
     lastMessage = noMessage ();
     lastStackTrace = noStackTrace ();
 }
@@ -171,6 +157,9 @@ AipsError::noStackTrace ()
 {
     return "*no-stack-trace*";
 }
+
+
+
 
 AllocError::~AllocError() throw()
 {}

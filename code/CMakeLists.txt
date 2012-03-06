@@ -456,62 +456,13 @@ endif()
 # Perl
 find_package( Perl )
 
-#
-# Boost
-#
-# Use the Boost finder that ships with CMake. It needs to be told where boost is.
-# If the version is >= 1.35, require also boost-system.
-#
-# Note, find_package( Boost ... ) must be called for every cmake invocation
-# in order to setup non-cached variables
-#
-message ( STATUS "BOOST_ROOT=${BOOST_ROOT} (first)" )
-
-if( NOT BOOST_ROOT )
-  set( BOOST_ROOT ${casa_packages} )
-endif()
-
-message ( STATUS "BOOST_ROOT=${BOOST_ROOT} (second)" )
-message ( STATUS "casa_packages=${casa_packages} (second)" )
-
-set( boost_components regex program_options filesystem thread serialization)
-find_package( Boost REQUIRED ${boost_components} )
-
-message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")
-
-if( NOT Boost_FOUND )
-  message( FATAL_ERROR "Boost could not be found. Please check!" )
-endif()
-
-# For boost >= 1.35, we need to link also to boost-system
-if( Boost_VERSION GREATER 103499 )
-
-  # Force redetection by resetting these variables
-  if( NOT Boost_SYSTEM_FOUND )
-    message( STATUS "Boost version (${Boost_VERSION}) is 1.35.0 or newer" )
-    unset( Boost_FOUND )
-    unset( Boost_INCLUDE_DIR CACHE )
-  endif()
-  set( boost_components regex program_options filesystem system )
-  find_package( Boost REQUIRED ${boost_components} )
-
-  if( NOT Boost_FOUND )
-    message( FATAL_ERROR "Boost-system could not be found. Please check!" )
-  endif()
-endif() 
-
-if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
-  message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 104100 (1.41.0) or newer. Please check!" )
-endif()
-
-
 # CFITSIO
 casa_find( CFITSIO
   VERSION 3.006
   INCLUDES fitsio.h fitsio2.h
   INCLUDES_SUFFIXES cfitsio
   LIBS cfitsio
-  PREFIX_HINTS ${CFITSIO_ROOT_DIR} ${Boost_INCLUDE_DIRS}
+  PREFIX_HINTS ${CFITSIO_ROOT_DIR}
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
 
@@ -683,11 +634,9 @@ else()
        casa_tables )
 endif()
 
-
-
 casa_find( CASACORE
            VERSION 1.0.152
-           PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
+           PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -1025,6 +974,47 @@ if( XERCES_VERSION VERSION_EQUAL   3.0 OR
 endif()
 
 #
+# Boost
+#
+# Use the Boost finder that ships with CMake. It needs to be told where boost is.
+# If the version is >= 1.35, require also boost-system.
+#
+# Note, find_package( Boost ... ) must be called for every cmake invocation
+# in order to setup non-cached variables
+#
+if( NOT BOOST_ROOT )
+  set( BOOST_ROOT ${casa_packages} )
+endif()
+
+set( boost_components regex program_options filesystem thread)
+find_package( Boost REQUIRED ${boost_components} )
+
+if( NOT Boost_FOUND )
+  message( FATAL_ERROR "Boost could not be found. Please check!" )
+endif()
+
+# For boost >= 1.35, we need to link also to boost-system
+if( Boost_VERSION GREATER 103499 )
+
+  # Force redetection by resetting these variables
+  if( NOT Boost_SYSTEM_FOUND )
+    message( STATUS "Boost version (${Boost_VERSION}) is 1.35.0 or newer" )
+    unset( Boost_FOUND )
+    unset( Boost_INCLUDE_DIR CACHE )
+  endif()
+  set( boost_components regex program_options filesystem system )
+  find_package( Boost REQUIRED ${boost_components} )
+
+  if( NOT Boost_FOUND )
+    message( FATAL_ERROR "Boost-system could not be found. Please check!" )
+  endif()
+endif() 
+
+if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
+  message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 104100 (1.41.0) or newer. Please check!" )
+endif()
+
+#
 # RPFITS (Fortran)
 #
 casa_find( RPFITS
@@ -1074,37 +1064,37 @@ endif()
 
 # for linux RPM & binary distros libgraphics contains pgplot (linked in)...
 if( APPLE )
-  casa_add_module( graphics CASACORE PGPLOT WCSLIB Boost)
+  casa_add_module( graphics CASACORE PGPLOT WCSLIB )
 else()
   if( NOT SKIP_PGPLOT )
-    casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB Boost)
+    casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
   else()
-    casa_add_module( graphics CASACORE X11 WCSLIB Boost)
+    casa_add_module( graphics CASACORE X11 WCSLIB )
   endif()
 endif()
-casa_add_module( casadbus CASACORE DBUS Boost)
-casa_add_module( tableplot CASACORE PYTHON Boost)
-casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics Boost)
+casa_add_module( casadbus CASACORE DBUS )
+casa_add_module( tableplot CASACORE PYTHON )
+casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
 casa_add_module( imageanalysis CASACORE Boost)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( synthesis CASACORE ATM casadbus tableplot Boost )
-casa_add_module( flagging CASACORE Boost casadbus tableplot synthesis casaqt QT4 Boost)
+casa_add_module( flagging CASACORE Boost casadbus tableplot synthesis casaqt QT4)
 casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost casadbus )
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
-casa_add_module( calanalysis CASACORE synthesis Boost)
+casa_add_module( calanalysis CASACORE synthesis )
 casa_add_module( alma CASACORE LIBXML2  LIBXSLT Boost synthesis)
 #casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
 #casa_add_module( oldalma CASACORE LIBXML2 Boost )
-casa_add_module( dish CASACORE Boost)
-casa_add_module( nrao CASACORE Boost)
-casa_add_module( spectrallines CASACORE imageanalysis Boost)
-casa_add_module( miriad CASACORE Boost)
+casa_add_module( dish CASACORE )
+casa_add_module( nrao CASACORE )
+casa_add_module( spectrallines CASACORE imageanalysis )
+casa_add_module( miriad CASACORE )
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost tableplot synthesis WCSLIB CFITSIO LAPACK )
 else()
   message( WARNING "Will not build wvrgcal." )
 endif()
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis miriad Boost)
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis miriad )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.

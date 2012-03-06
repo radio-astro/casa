@@ -35,109 +35,88 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Constructors
+template<class Ms> MeasRef<Ms>::MeasRef() :
+  rep(0) {}
 
 template<class Ms>
-MeasRef<Ms>::MeasRef()
-: empty_p (True), rep_p ()
-{}
-
-template<class Ms>
-MeasRef<Ms>::MeasRef(const MeasRef<Ms> &other)
-: MRBase(other)
-{
-  empty_p = other.empty_p;
-
-  if (! other.empty_p){
-    rep_p = other.rep_p;
-  }
-  else{
-    rep_p = CountedPtr<RefRep> ();
-  }
+MeasRef<Ms>::MeasRef(const MeasRef<Ms> &other) :
+  MRBase(other) {
+  rep = other.rep;
+  if (rep) rep->cnt++;
 }
 
 template<class Ms>
-MeasRef<Ms> &
-MeasRef<Ms>::operator=(const MeasRef<Ms> &other) {
-
+MeasRef<Ms> &MeasRef<Ms>::operator=(const MeasRef<Ms> &other) {
   if (this != &other) {
-
-    empty_p = other.empty_p;
-
-    if (! other.empty_p){
-      rep_p = other.rep_p;
+    if (other.rep) other.rep->cnt++;
+    if (rep && --rep->cnt == 0) {
+      delete rep;
     }
-    else{
-      rep_p = CountedPtr<RefRep> ();
-    }
+    rep = other.rep;
   }
-
   return *this;
 }
 
 template<class Ms>
-MeasRef<Ms>::MeasRef(const uInt tp)
-: empty_p (True), rep_p ()
-{
+MeasRef<Ms>::MeasRef(const uInt tp) :
+  rep(0) {
   create();
-  rep_p->type = Ms::castType(tp);
+  rep->type = Ms::castType(tp);
 }
 
 template<class Ms>
-MeasRef<Ms>::MeasRef(const uInt tp, const Ms &ep)
-: empty_p (True), rep_p ()
-{
+MeasRef<Ms>::MeasRef(const uInt tp, const Ms &ep) :
+  rep(0) {
   create();
-  rep_p->type = Ms::castType(tp);
-  rep_p->offmp = new Ms(ep);
+  rep->type = Ms::castType(tp);
+  rep->offmp = new Ms(ep);
 }
 
 template<class Ms>
-MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf)
-: empty_p (True), rep_p ()
-{
+MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf) :
+  rep(0) {
   create();
-  rep_p->type = Ms::castType(tp);
-  rep_p->frame = mf;
+  rep->type = Ms::castType(tp);
+  rep->frame = mf;
 }
 
 template<class Ms>
-MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf, const Ms &ep)
-: empty_p (True), rep_p ()
-{
+MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf, const Ms &ep) :
+  rep(0) {
   create();
-  rep_p->type = Ms::castType(tp);
-  rep_p->offmp = new Ms(ep);
-  rep_p->frame = mf;
+  rep->type = Ms::castType(tp);
+  rep->offmp = new Ms(ep);
+  rep->frame = mf;
 }
 
 template<class Ms>
 void MeasRef<Ms>::create() {
-  if (empty_p){
-    rep_p = new RefRep();
-    empty_p = False;
-  }
+  if (!rep) rep = new RefRep();
 }
 
 //# Destructor
 template<class Ms>
-MeasRef<Ms>::~MeasRef()
-{}
+MeasRef<Ms>::~MeasRef() {
+  if (rep && --rep->cnt <= 0) {
+    delete rep;
+  }
+}
 
 //# Operators
 template<class Ms>
 Bool MeasRef<Ms>::operator==(const MeasRef<Ms> &other) const {
-  return (rep_p == other.rep_p);
+  return (rep == other.rep);
 }
 
 template<class Ms>
 Bool MeasRef<Ms>::operator!=(const MeasRef<Ms> &other) const {
-  return (rep_p != other.rep_p);
+  return (rep != other.rep);
 }
 
 //# Member functions
 template<class Ms>
 Bool MeasRef<Ms>::empty() const {
-  return (empty_p);
+  return (!rep);
 }
 
 template<class Ms>
@@ -147,13 +126,13 @@ const String &MeasRef<Ms>::showMe() {
 
 template<class Ms>
 uInt MeasRef<Ms>::getType() const{
-  return (! empty_p ? rep_p->type : 0);
+  return (rep ? rep->type : 0);
 }
 
 template<class Ms>
 MeasFrame &MeasRef<Ms>::getFrame() {
   create();
-  return (rep_p->frame);
+  return (rep->frame);
 }
 
 template<class Ms>
@@ -223,7 +202,7 @@ const MeasFrame &MeasRef<Ms>::frameComet(MRBase &ref1,
 
 template<class Ms>
 const Measure* MeasRef<Ms>::offset() const {
-  return ( ! empty_p ? rep_p->offmp : 0);
+  return ( rep ? rep->offmp : 0);
 }
 
 template<class Ms>
@@ -234,40 +213,40 @@ void MeasRef<Ms>::setType(uInt tp) {
 template<class Ms>
 void MeasRef<Ms>::set(uInt tp) {
   create();
-  rep_p->type = Ms::castType(tp);
+  rep->type = Ms::castType(tp);
 }
 
 template<class Ms>
 void MeasRef<Ms>::set(const Ms &ep) {
   create();
-  if (rep_p->offmp) {
-    delete rep_p->offmp; rep_p->offmp = 0;
+  if (rep->offmp) {
+    delete rep->offmp; rep->offmp = 0;
   }
-  rep_p->offmp = new Ms(ep);
+  rep->offmp = new Ms(ep);
 }
 
 template<class Ms>
 void MeasRef<Ms>::set(const Measure &ep) {
   create();
-  if (rep_p->offmp) {
-    delete rep_p->offmp; rep_p->offmp = 0;
+  if (rep->offmp) {
+    delete rep->offmp; rep->offmp = 0;
   }
-  rep_p->offmp = ep.clone();
+  rep->offmp = ep.clone();
 }
 
 template<class Ms>
 void MeasRef<Ms>::set(const MeasFrame &mf) {
   create();
-  rep_p->frame = mf;
+  rep->frame = mf;
 }
 
 template<class Ms>
 MeasRef<Ms> MeasRef<Ms>::copy() {
   MeasRef<Ms> tmp;
   tmp.create();
-  tmp.rep_p->type = rep_p->type;
-  if (rep_p->offmp) tmp.rep_p->offmp = rep_p->offmp->clone();
-  tmp.rep_p->frame = rep_p->frame;
+  tmp.rep->type = rep->type;
+  if (rep->offmp) tmp.rep->offmp = rep->offmp->clone();
+  tmp.rep->frame = rep->frame;
   return tmp;
 }
 

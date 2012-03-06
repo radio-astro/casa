@@ -79,11 +79,6 @@ public:
          Block< Vector<Int> > & blockIncr,
          Block< Vector<Int> > & blockSpw) const;
 
-protected:
-
-    void copyBlock (const Block <Vector<Int> > & src,
-                    Block <Vector<Int> > & to) const;
-
 private:
 
     Block< Vector<Int> > blockNGroup_p;

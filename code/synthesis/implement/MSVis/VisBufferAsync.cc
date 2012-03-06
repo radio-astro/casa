@@ -97,9 +97,8 @@ VisBufferAsync::~VisBufferAsync ()
 {
     Log (2, "Destroying VisBufferAsync; addr=0x%016x\n", this);
 
-    // Should never be attached at the synchronous level
-
-    Assert (visIter_p == NULL || ! twoWayConnection_p);
+    Assert (visIter_p == NULL); // Should never be attached at the
+                                // synchronous level
 
     delete msColumns_p;
     delete msd_p;
@@ -202,7 +201,7 @@ VisBufferAsync::checkVisIter (const char * func, const char * file, int line, co
     // This is called from a VisBuffer fill method.  Throw an error if the this is not
     // part of the VLAT filling operation or if there is not visibility iterator attached
 
-    if (visIter_p == NULL){
+    if (! isFilling_p || visIter_p == NULL){
         Log (1, "VisBufferAsync: request for column not in prefetched set (in call to %s (%s))\n)",
              func, extra);
         throw AipsErrorTrace ("VisBufferAsync: request for column not in prefetched set (in call to "
@@ -473,6 +472,13 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
 //    return result;
 //}
 
+
+Int
+VisBufferAsync::dataDescriptionId() const
+{
+    return dataDescriptionId_p;
+}
+
 void
 VisBufferAsync::detachFromVisIter ()
 {
@@ -511,39 +517,6 @@ VisBufferAsync::feed_pa(Double time) const
     return feedpaCached_p;
 }
 
-Bool
-VisBufferAsync::fillAllBeamOffsetsZero ()
-{
-    allBeamOffsetsZero_p = visIter_p->allBeamOffsetsZero();
-
-    return allBeamOffsetsZero_p;
-}
-
-Vector <String>
-VisBufferAsync::fillAntennaMounts ()
-{
-    antennaMounts_p = visIter_p->antennaMounts();
-
-    return antennaMounts_p;
-}
-
-Cube <RigidVector <Double, 2> >
-VisBufferAsync::fillBeamOffsets ()
-{
-    beamOffsets_p = visIter_p->getBeamOffsets ();
-
-    return beamOffsets_p;
-}
-
-Cube <Double>
-VisBufferAsync::fillReceptorAngles ()
-{
-    receptorAngles_p = visIter_p->receptorAngles();
-
-    return receptorAngles_p;
-}
-
-
 void
 VisBufferAsync::fillFrom (const VisBufferAsync & other)
 {
@@ -565,13 +538,9 @@ VisBufferAsync::fillDirection1()
 
     VisBuffer::fillDirection1();
 
-    if (isFilling_p) {
+    // Now install unshared copies of the direction objects
 
-        // Now install unshared copies of the direction objects
-
-        unsharedCopyDirectionVector (direction1_p);
-
-    }
+    unsharedCopyDirectionVector (direction1_p);
 
     return direction1_p;
 }
@@ -585,13 +554,9 @@ VisBufferAsync::fillDirection2()
 
     VisBuffer::fillDirection2();
 
-    if (isFilling_p){
+    // Now install unshared copies of the direction objects
 
-        // Now install unshared copies of the direction objects
-
-        unsharedCopyDirectionVector (direction2_p);
-
-    }
+    unsharedCopyDirectionVector (direction2_p);
 
     return direction2_p;
 }
@@ -606,29 +571,9 @@ VisBufferAsync::fillPhaseCenter()
     // Now convert the value to an unshared one.
 
     phaseCenter_p = unsharedCopyDirection (phaseCenter_p);
-    phaseCenterOK_p = True;
 
     return phaseCenter_p;
 }
-
-Bool
-VisBufferAsync::getAllBeamOffsetsZero () const
-{
-    return allBeamOffsetsZero_p;
-}
-
-const Vector <String> &
-VisBufferAsync::getAntennaMounts () const
-{
-    return antennaMounts_p;
-}
-
-const Cube <RigidVector <Double, 2> > &
-VisBufferAsync::getBeamOffsets () const
-{
-    return beamOffsets_p;
-}
-
 
 const MeasurementSet &
 VisBufferAsync::getMs () const
@@ -636,18 +581,6 @@ VisBufferAsync::getMs () const
     return * measurementSet_p;
 }
 
-MDirection
-VisBufferAsync::getPhaseCenter () const
-{
-    return phaseCenter_p;
-}
-
-
-const Cube <Double> &
-VisBufferAsync::getReceptorAngles () const
-{
-    return receptorAngles_p;
-}
 
 Double
 VisBufferAsync::hourang(Double time) const
@@ -790,6 +723,20 @@ Int
 VisBufferAsync::polarizationId() const
 {
     return polarizationId_p;
+}
+
+
+
+//Vector<uInt>&
+//VisBufferAsync::rowIds()
+//{
+//    return rowIds_p;
+//}
+
+void
+VisBufferAsync::setDataDescriptionId (Int id)
+{
+    dataDescriptionId_p = id;
 }
 
 void

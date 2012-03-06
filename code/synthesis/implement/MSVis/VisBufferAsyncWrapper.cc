@@ -161,23 +161,7 @@ VisBufferAsyncWrapper::attachToVisIterAsync (ROVisibilityIterator & iter)
 
     iter.attachVisBuffer (*this);
     wrappedVisIterAsync_p = & iter;
-
-    attachWrappedVb (& iter);
 }
-
-void
-VisBufferAsyncWrapper::attachWrappedVb (ROVisibilityIterator * iter)
-{
-    // Attach the wrapped VBA so that it can get needed information from
-    // the VisibilityIterator.  Make connetion 1-way so that the wrapped
-    // VB does not try to detach when destroyed.
-
-    if (wrappedVba_p != NULL){
-        wrappedVba_p->visIter_p = iter;
-        wrappedVba_p->twoWayConnection_p = False;
-    }
-}
-
 
 
 Vector<MDirection>
@@ -1628,7 +1612,6 @@ VisBufferAsyncWrapper::wrap (VisBufferAsync * vba)
     }
 
     wrappedVba_p = vba;
-    attachWrappedVb (wrappedVisIterAsync_p);
 }
 
 } // end namespace casa

@@ -804,10 +804,10 @@ ROVisibilityIterator::getLsrInfo (Block<Int> & channelGroupNumber,
 }
 
 MEpoch
-ROVisibilityIterator::getEpoch () const
+ROVisibilityIterator::getMEpoch () const
 {
     CheckImplementationPointerR ();
-    return readImpl_p->getEpoch ();
+    return readImpl_p->getMEpoch ();
 }
 
 const MSDerivedValues &
