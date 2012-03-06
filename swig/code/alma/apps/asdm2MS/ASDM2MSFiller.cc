@@ -56,10 +56,6 @@ void	timer( double *cpu_time ,		/* cpu timer */
   }
 }
 
-
-
-
-
 #include "ASDM2MSFiller.h"
 #include "synthesis/MSVis/SubMS.h"
 
@@ -1516,19 +1512,20 @@ void ASDM2MSFiller::addFeed(int      antenna_id_,
 	     
 
 // Adds a field record in the TABLE
-void ASDM2MSFiller::addField(const string&      name_,
-			     const string&      code_,
-			     double		time_,
-			     vector<double>&	delay_dir_,
-			     vector<double>&	phase_dir_,
-			     vector<double>&	reference_dir_,
-			     const string&      direction_code_,
-			     int                source_id_) {
-  uInt						crow;
+void ASDM2MSFiller::addField(const string&		name_,
+			     const string&		code_,
+			     double			time_,
+			     int                        num_poly_,
+			     vector<vector<double> >&	delay_dir_,
+			     vector<vector<double> >&	phase_dir_,
+			     vector<vector<double> >&	reference_dir_,
+			     const string&		direction_code_,
+			     int                        source_id_) {
+  uInt							crow;
   // cout << "\naddField : entering";
-  Vector<MDirection>                           delayDir(1);
-  Vector<MDirection>                           referenceDir(1);
-  Vector<MDirection>                           phaseDir(1);
+  Vector<MDirection>					delayDir(num_poly_);
+  Vector<MDirection>					referenceDir(num_poly_);
+  Vector<MDirection>					phaseDir(num_poly_);
 
   MSField msfield = itsMS -> field();
   MSFieldColumns msfieldCol(msfield);
@@ -1550,26 +1547,15 @@ void ASDM2MSFiller::addField(const string&      name_,
   s.trim(); s.upcase();
   map<string, MDirection::Types>::const_iterator iter = string2MDirection.find(s);
 
-  MDirection   delayDirMD;
-  MDirection   referenceDirMD;
-  MDirection   phaseDirMD;
-  
-  if (iter == string2MDirection.end()) {
-    //cout << "Could not determine directionCode. Assuming J2000 ..." << endl;
-    delayDirMD    = MDirection(Quantity(delay_dir_[0], "rad"), Quantity(delay_dir_[1], "rad"), MDirection::J2000);
-    referenceDirMD = MDirection(Quantity(reference_dir_[0], "rad"), Quantity(reference_dir_[1], "rad"), MDirection::J2000);
-    phaseDirMD    = MDirection(Quantity(phase_dir_[0], "rad"), Quantity(phase_dir_[1], "rad"), MDirection::J2000);
-  }
-  else {
-    //cout << "directionCode is " << s << endl;
-    delayDirMD    = MDirection(Quantity(delay_dir_[0], "rad"), Quantity(delay_dir_[1], "rad"), iter->second);
-    referenceDirMD = MDirection(Quantity(reference_dir_[0], "rad"), Quantity(reference_dir_[1], "rad"),  iter->second);
-    phaseDirMD    = MDirection(Quantity(phase_dir_[0], "rad"), Quantity(phase_dir_[1], "rad"), iter->second);
+  MDirection::Types directionReference = (iter == string2MDirection.end()) ? MDirection::J2000 : iter->second;
+
+  for (unsigned int i = 0; i < num_poly_; i++) {
+    delayDir(i)     = MDirection(Quantity(delay_dir_[i][0], "rad"), Quantity(delay_dir_[i][1], "rad"), directionReference);
+    referenceDir(i) = MDirection(Quantity(reference_dir_[i][0], "rad"), Quantity(reference_dir_[i][1], "rad"), directionReference);
+    phaseDir(i)     = MDirection(Quantity(phase_dir_[i][0], "rad"), Quantity(phase_dir_[i][1], "rad"), directionReference);
   }
   
-  delayDir(0)    = delayDirMD;
-  referenceDir(0) = referenceDirMD;
-  phaseDir(0)    = phaseDirMD;
+  msfieldCol.numPoly().put(crow,num_poly_ - 1);
 
   msfieldCol.delayDirMeasCol().put(crow, delayDir);
   

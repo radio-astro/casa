@@ -237,7 +237,7 @@ FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMappe
 		}
 
 		// Extend across time
-		if (growtime_p > 0)
+		if (growfreq_p > 0)
 		{
 			for (Int timestep_i=0;timestep_i<nTimesteps;timestep_i++)
 			{
@@ -257,7 +257,7 @@ FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMappe
 		}
 
 		// Extend across frequency
-		if (growfreq_p > 0)
+		if (growtime_p > 0)
 		{
 			for (Int chan_j=0;chan_j<nChannels;chan_j++)
 			{
