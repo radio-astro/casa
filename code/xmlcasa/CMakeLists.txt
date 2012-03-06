@@ -107,6 +107,7 @@ add_custom_command( OUTPUT version.cc
 )
 
 casa_add_library( xmlcasa
+  implement/calanalysis/calanalysis_cmpt.cc
   implement/atmosphere/atmosphere_cmpt.cc
   implement/calibrater/calplot_cmpt.cc
   implement/casa/logsink_cmpt.cc
@@ -464,6 +465,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
 
 casa_add_tools( tools_idl tools_sources 
   implement/atmosphere/atmosphere.xml
+  implement/calanalysis/calanalysis.xml
   implement/calibrater/calplot.xml
   implement/casa/logsink.xml
   implement/casa/quanta.xml
