@@ -241,10 +241,10 @@ def tflagdata(vis,
             agent_pars['freqcutoff'] = freqcutoff
             agent_pars['timefit'] = timefit
             agent_pars['freqfit'] = freqfit
-            agent_pars['maxnpieces'] = str(maxnpieces)
+            agent_pars['maxnpieces'] = maxnpieces
             agent_pars['flagdimension'] = flagdimension
             agent_pars['usewindowstats'] = usewindowstats
-            agent_pars['halfwin'] = str(halfwin)
+            agent_pars['halfwin'] = halfwin
             casalog.post('Time and Frequency (tfcrop) mode is active')
 
             expr = delspace(correlation, '_')

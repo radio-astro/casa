@@ -130,7 +130,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: '' (all)             
 
   tie -- Prioritise tieing the phase of these sources as well as possible
-                default: [] example: ['3C273']
+                default: [] example: ['3C273,NGC253', 'IC433,3C279']
 
   smooth -- Smooth WVR data by this many samples before applying the correction
              default: 1 (no smoothing) example: 3

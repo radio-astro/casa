@@ -44,7 +44,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
                default: '' (all)             
 
         tie -- Prioritise tieing the phase of these sources as well as possible
-                default: [] example: ['3C273']
+                default: [] example: ['3C273,NGC253', 'IC433,3C279']
 
         smooth -- Smooth WVR data by this many samples before applying the correction
              default: 1 (no smoothing) example: 3
@@ -125,11 +125,10 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 		if (len(tie)>0):
 			for i in xrange(0,len(tie)):
 				src = tie[i]
-				if not (type(src)==int or type(src)==str):
-					raise Exception, "List elements of parameter tie must be int or string."
+				if not (type(src)==str):
+					raise Exception, "List elements of parameter tie must be strings."
 				if (src != ''):
-					if(i==0):
-						execute_string += ' --tie '
+					execute_string += ' --tie '
 					execute_string += '\''+str(src)+'\''
 					if not (i==len(tie)-1):
 						execute_string += ','
