@@ -44,13 +44,14 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	profiling_p = false;
 
 	// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
-	asyncio_enabled_p = false;
-	AipsrcValue<Bool>::find (asyncio_enabled_p,"VisibilityIterator.async.enabled", true);
+	asyncio_enabled_p = ROVisibilityIterator::isAsynchronousIoEnabled();
+
 	if (asyncio_enabled_p)
 	{
 		// Check Flag Data Handler config
 		Bool tmp = false;
-		AipsrcValue<Bool>::find (tmp,"FlagDataHandler.asyncio", false);
+		Bool foundSetting = AipsrcValue<Bool>::find (tmp,"FlagDataHandler.asyncio", false);
+		tmp = ! foundSetting || tmp; // let global setting rule if no FlagDataHandler setting
 		if (!tmp)
 		{
 			asyncio_enabled_p = false;
