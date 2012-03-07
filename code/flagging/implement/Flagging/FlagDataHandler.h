@@ -561,6 +561,9 @@ public:
 	// Generate selected Measurement Set
 	bool selectData();
 
+	// Methods to switch on/off async i/o
+	void enableAsyncIO(Bool enable);
+
 	// Pre-Load columns (in order to avoid parallelism problems when not using
 	// async i/o, and also to know what columns to pre-fetch in async i/o mode)
 	void preLoadColumn(uInt column);
