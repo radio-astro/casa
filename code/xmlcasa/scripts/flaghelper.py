@@ -89,6 +89,10 @@ def makeDict(cmdlist, myreason='any'):
         casalog.post('Cannot read reason; it contains unknown variable types',
                      'ERROR')
         return
+    
+    if debug:
+        print "reason in selection"
+        print myreaslist
 
     # List of reasons in input file
     nrows = cmdlist.__len__()
@@ -100,6 +104,10 @@ def makeDict(cmdlist, myreason='any'):
         else:
             # so that cmdlist and reaslist have the same sizes
             reaslist.append('')
+            
+    if debug:
+        print "reason in input"
+        print reaslist
             
     
     # Defaults for columns
@@ -212,9 +220,9 @@ def readXML(sdmfile, mytbuff):
         exit(1)
 
     if type(mytbuff) != float:
-        casalog.post('Warning: incorrect type for tbuff, found "'
-                     + str(mytbuff) + '", setting to 1.0')
-        mytbuff = 1.0
+        casalog.post('Found incorrect type for tbuff','SEVERE')
+        exit(1)
+#        mytbuff = 1.0
 
     # make sure Flag.xml and Antenna.xml are available (SpectralWindow.xml depends)
     flagexist = os.access(sdmfile + '/Flag.xml', os.F_OK)
@@ -251,13 +259,22 @@ def readXML(sdmfile, mytbuff):
         rowlist = xmlspws.getElementsByTagName('row')
         ispw = 0
         for rownode in rowlist:
-            rowname = rownode.getElementsByTagName('name')
-            spw = str(rowname[0].childNodes[0].nodeValue)
             rowid = rownode.getElementsByTagName('spectralWindowId')
             spwid = str(rowid[0].childNodes[0].nodeValue)
             spwdict[spwid] = {}
-            spwdict[spwid]['name'] = spw
             spwdict[spwid]['index'] = ispw
+            # SMC: 6/3/2012 ALMA SDM does not have name
+            if rownode.getElementsByTagName('name'):
+                rowname = rownode.getElementsByTagName('name')
+                spw = str(rowname[0].childNodes[0].nodeValue)
+                spwdict[spwid]['name'] = spw
+            else:
+                spwmode = -1
+                
+#            rowid = rownode.getElementsByTagName('spectralWindowId')
+#            spwid = str(rowid[0].childNodes[0].nodeValue)
+#            spwdict[spwid] = {}
+#            spwdict[spwid]['index'] = ispw
             ispw += 1
         casalog.post('Found ' + str(rowlist.length)
                      + ' spw in SpectralWindow.xml')
@@ -1226,6 +1243,9 @@ def fixType(params):
         params['maxnpieces'] = int(params['maxnpieces'])        
     if params.has_key('halfwin'):
         params['halfwin'] = int(params['halfwin'])
+        
+    # rflag parameters
+    
 
 
 def purgeEmptyPars(cmdline):
@@ -1320,6 +1340,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
     extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
                   'flagneartime','flagnearfreq']
+    rflagpars = ['ntimesteps','spectralmax','spectralmin','noisescale','scutofscale',
+                 'timedev','freqdev']
     
         
     # dictionary of successful command lines to save to outfile
