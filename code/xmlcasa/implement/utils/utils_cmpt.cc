@@ -52,8 +52,8 @@ utils::verify(const ::casac::record& input, const ::casac::variant& xmldescripto
    switch(xmldescriptor.type()){
       case variant::STRING :
 	 constraints = torecord(xmldescriptor.getString());
-	 // std::cerr << "constraints record: ";
-	 // dumpRecord(std::cerr, *constraints);
+	  //std::cerr << "constraints record: ";
+	  //dumpRecord(std::cerr, *constraints);
          break;
       case variant::RECORD :
          constraints = new record(xmldescriptor.getRecord());
@@ -73,7 +73,7 @@ utils::verify(const ::casac::record& input, const ::casac::variant& xmldescripto
    }
    if(constraints)
 	   delete constraints;
-   // std::cerr << "return from verify is " << rstat << std::endl;
+   //std::cerr << "return from verify is " << rstat << std::endl;
    return rstat;
 }
 
@@ -107,17 +107,11 @@ utils::verifyparam(const ::casac::record& param)
 {
    bool rstat(true);
    if(myConstraints){
+      //dumpRecord(std::cerr, param);
       rec_map::iterator iter = myConstraints->begin(); // We need the underlying record...
+      // dumpRecord(std::cerr, (*iter).second.asRecord()["parameters"].asRecord()["logfile"].asRecord());
+
       rstat = stdBaseInterface::verifyOne(const_cast<record &>(param), (*iter).second.asRecord(), *itsLog);
-      /*
-      if(rstat){
-         *itsLog << LogOrigin("utils", "verifyparam") <<LogIO::INFO<< "verified." << LogIO::POST;
-      }else{
-         *itsLog << LogIO::POST;
-         *itsLog << LogOrigin("utils", "verifyparam") << LogIO::WARN 
-		 << "Some arguments failed to verify!" << LogIO::POST;
-      }
-      */
    } else {
          *itsLog << LogOrigin("utils", "verifyparam") << LogIO::WARN
 		 << "Contraints record not set, unable to verify parameter" << LogIO::POST;
@@ -134,9 +128,10 @@ utils::expandparam(const std::string& name , const ::casac::variant& value )
        rec_map::iterator iter = myConstraints->begin(); // We need the underlying record...
        //dumpRecord(std::cerr, (*iter).second.asRecord()["parameters"].asRecord()[name].asRecord());
        if((*iter).second.asRecord()["parameters"].asRecord().count(name) &&
-		       (*iter).second.asRecord()["parameters"].asRecord()[name].asRecord().count("allowed")){
+          (*iter).second.asRecord()["parameters"].asRecord()[name].asRecord().count("allowed")){
           rstat = stdBaseInterface::expandEnum((*iter).second.asRecord()["parameters"].asRecord()[name].asRecord()["allowed"], value, *itsLog);
-       }else{
+       }
+       else{
 	  rstat = new variant(value);
        }
    } else {
