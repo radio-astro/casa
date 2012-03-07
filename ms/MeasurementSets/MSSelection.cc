@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------------
   
   MSSelection::MSSelection() : 
-    fullTEN_p(),ms_p(NULL), msFace_p(), antennaExpr_p(""), fieldExpr_p(""),
+    fullTEN_p(),ms_p(NULL),  antennaExpr_p(""), fieldExpr_p(""),
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
     polnExpr_p(""), taqlExpr_p(""), stateExpr_p(""), observationExpr_p(""),
     exprOrder_p(MAX_EXPR, NO_EXPR), antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
@@ -91,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   const String& arrayExpr,
 			   const String& stateExpr,
 			   const String& observationExpr):
-    fullTEN_p(), ms_p(&ms), msFace_p(ms), antennaExpr_p(""), fieldExpr_p(""),
+    fullTEN_p(), ms_p(&ms), antennaExpr_p(""), fieldExpr_p(""),
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
     polnExpr_p(""),taqlExpr_p(""), stateExpr_p(""), observationExpr_p(""),
     exprOrder_p(MAX_EXPR, NO_EXPR), antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
@@ -177,9 +177,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // using the setExpr* methods to do that keeps that state of the
     // object consistent.
     //
-    msFace_p.setTable(ms);
-    ms_p = msFace_p.asMS();
-    //    ms_p = &ms;
+    //    msFace_p.setTable(ms);
+    //    ms_p = msFace_p.asMS();
+    ms_p = &ms;
     
     clear(); // Clear everything
     setAntennaExpr(antennaExpr);
@@ -373,6 +373,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     const MeasurementSet *ms=msLike->asMS();
     resetMS(*ms);
+    //    ms_p = msLike->asMS();
     TableExprNode condition;
     if (MSAntennaParse::thisMSAErrorHandler == NULL)
       {
@@ -403,12 +404,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      case FIELD_EXPR:
 		{
 		  fieldIDs_p.resize(0);
-
-		  TableExprNode colTEN = msLike->col(msLike->columnName(MS::FIELD_ID));
 		  //		  TableExprNode colTEN = msLike->col(String("FIELD_ID"));
 		  //		  TableExprNode colTEN = ms->col(MS::columnName(MS::FIELD_ID));
+
+		  TableExprNode colTEN = msLike->col(msLike->columnName(MS::FIELD_ID));
 		  if(fieldExpr_p != "")
 		    node = msFieldGramParseCommand(msLike->field(), colTEN, fieldExpr_p,fieldIDs_p);
+		  //		  colTEN.unlink();
 		  break;
 		}
 	      case SPW_EXPR:
@@ -1101,7 +1103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     
-    return chanIDList.copy();
+    return chanIDList;
   }
   //----------------------------------------------------------------------------
   // This function also optionally sorts the matrix of SPWIDs and
@@ -1131,7 +1133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	freqList_l(i,3) = avgChanWidth;
       }
     
-    return freqList_l.copy();
+    return freqList_l;
   }
   //----------------------------------------------------------------------------
   
