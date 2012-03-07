@@ -279,6 +279,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	StokesImageUtil::From(cweight, lowpsf);
       }
       if(effDiam >0.0){
+	//cerr << "in effdiam" << effDiam << endl;
+	cweight.set(1.0);
 	applyDishDiam(cweight, effDiam);
       }
       LatticeFFT::cfft2d( cweight );
