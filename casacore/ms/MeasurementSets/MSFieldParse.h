@@ -39,6 +39,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# Forward Declarations
 
 
+// <motivation>
+// It is necessary to be able to give a ms command in ASCII.
+// This can be used in a CLI or in the table browser to get a subset
+// of a table or to sort a table.
+// </motivation>
+
 // <summary>
 // Class to hold values from field grammar parser
 // </summary>
@@ -75,17 +81,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This is, in fact, the only function to be used by a user.
 // </synopsis>
 
-// <motivation>
-// It is necessary to be able to give a ms command in ASCII.
-// This can be used in a CLI or in the table browser to get a subset
-// of a table or to sort a table.
-// </motivation>
-
-//# <todo asof="$DATE:$">
-//# A List of bugs, limitations, extensions or planned refinements.
-//# </todo>
-
-
   class MSFieldParse : public MSParse
   {
     
@@ -94,7 +89,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MSFieldParse ();
     MSFieldParse (const MeasurementSet* ms);
     MSFieldParse (const MSField& fieldSubTable, const TableExprNode& columnAsTEN);
-    
+    ~MSFieldParse() {columnAsTEN_p=TableExprNode();};
+
     const TableExprNode *selectFieldIds(const Vector<Int>& fieldIds);
     
     // Get table expression node object.
@@ -102,7 +98,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static MSFieldParse* thisMSFParser;
     static Vector<Int> selectedIDs() {return idList;};
     static void reset();
-    static void cleanup() {if (node_p) delete node_p;node_p=0x0;}
+    static void cleanup() 
+    {if (node_p) delete node_p;node_p=0x0;}
     MSField& subTable() {return msFieldSubTable_p;}
   private:
     static TableExprNode* node_p;

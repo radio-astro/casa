@@ -195,27 +195,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Accessor for the list of the selected scan IDs.
     inline Vector<Int> getScanList(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return scanIDs_p.copy();}
+    {getTEN(ms); return scanIDs_p;}
 
     // Accessor for the list of the selected observation IDs.
     inline Vector<Int> getObservationList(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return observationIDs_p.copy();}
+    {getTEN(ms); return observationIDs_p;}
 
     // Accessor for the list of selected sub-array IDs.
     inline Vector<Int> getSubArrayList(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return arrayIDs_p.copy();}
+    {getTEN(ms); return arrayIDs_p;}
     
     // Accessor for the list of antenna-1 of the selected baselines.
     // Antennas affected by the baseline negation operator have the
     // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna1List(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return antenna1IDs_p.copy();}
+    {getTEN(ms); return antenna1IDs_p;}
     
     // Accessor for the list of antenna-2 of the selected baselines.
     // Antennas affected by the baseline negation operator have the
     // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna2List(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return antenna2IDs_p.copy();}
+    {getTEN(ms); return antenna2IDs_p;}
     
     // Accessor for the list of selected baselines.  The list is a Nx2
     // Matrix with one row per baseline containing the antenna IDs of
@@ -235,36 +235,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // -10].  Etc...
     //
     inline Matrix<Int> getBaselineList(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return baselineIDs_p.copy();}
+    {getTEN(ms); return baselineIDs_p;}
     
     // Accessor for the list of selected field IDs.
     inline Vector<Int> getFieldList(const MeasurementSet* ms=NULL) 
-    {if (fieldIDs_p.nelements() <= 0) getTEN(ms); return fieldIDs_p.copy();}
+    {if (fieldIDs_p.nelements() <= 0) getTEN(ms); return fieldIDs_p;}
 
     // Accessor for the list of selected state Obs_Modes.
     inline Vector<Int> getStateObsModeList(const MeasurementSet* ms=NULL) 
-    {if (stateObsModeIDs_p.nelements() <= 0) getTEN(ms); return stateObsModeIDs_p.copy();}
+    {if (stateObsModeIDs_p.nelements() <= 0) getTEN(ms); return stateObsModeIDs_p;}
     
     // Accessor for the list of the specified time range(s) as the
     // start and end MJD values.  The time ranges are stored as columns,
     // i.e. the output Matrix is 2 x n_ranges.
     inline Matrix<Double> getTimeList(const MeasurementSet* ms=NULL)
-    {getTEN(ms); return selectedTimesList_p.copy();}
+    {getTEN(ms); return selectedTimesList_p;}
     
     // Accessor for the list of the specified uv-range(s) as the start
     // and end values in units used in the MS.
     inline Matrix<Double> getUVList(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return selectedUVRange_p.copy();}
+    {getTEN(ms); return selectedUVRange_p;}
     
     // Accessor for the list of user defined units for the
     // uv-range(s).  The uv-range(s) return by getUVList is always in
     // the units used in the MS.
     inline Vector<Bool> getUVUnitsList(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return selectedUVUnits_p.copy();}
+    {getTEN(ms); return selectedUVUnits_p;}
 
     // Accessor for the list of the selected Spectral Window IDs.
     inline Vector<Int> getSpwList(const MeasurementSet* ms=NULL) 
-    {if (spwIDs_p.nelements() <= 0) getTEN(ms); return spwIDs_p.copy();}
+    {if (spwIDs_p.nelements() <= 0) getTEN(ms); return spwIDs_p;}
     
     // Accessor for the table (as a nx4 Matrix) of the selected
     // Spectral Windows and associated ranges of selected channels.
@@ -292,7 +292,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Accessor for the list of the selected Data Description IDs.
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
-    {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p.copy();}
+    {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p;}
     
     inline OrderedMap<Int, Vector<Int> > getPolMap(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedPolMap_p;};
@@ -392,7 +392,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     TableExprNode fullTEN_p;
     const MeasurementSet *ms_p;
-    MSInterface msFace_p;
     // Selection expressions
     String antennaExpr_p;
     String fieldExpr_p;

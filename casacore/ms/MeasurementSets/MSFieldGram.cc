@@ -103,8 +103,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 const String& command, Vector<Int>& selectedIDs)
   {
     //    MSFieldParse *thisParser = new MSFieldParse(ms);
+    TableExprNode fieldTEN;
     MSFieldParse *thisParser = new MSFieldParse(msFieldSubTable,ten);
-    TableExprNode fieldTEN=baseMSFieldGramParseCommand(thisParser, command, selectedIDs);
+    try
+      {
+	fieldTEN=baseMSFieldGramParseCommand(thisParser, command, selectedIDs);
+      }
+    catch(MSSelectionFieldError &x)
+      {
+	delete thisParser;
+	throw;
+      }
     delete thisParser;
     return fieldTEN;
   }

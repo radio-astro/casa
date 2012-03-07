@@ -52,7 +52,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   MSFieldParse::MSFieldParse (const MSField& msFieldSubTable,const TableExprNode& colAsTEN)
     : MSParse(), colName(MS::columnName(MS::FIELD_ID)), 
       msFieldSubTable_p(msFieldSubTable)
-  {reset();columnAsTEN_p=colAsTEN;}
+  {
+    reset(); 
+    columnAsTEN_p=colAsTEN;
+  }
 
   void MSFieldParse::reset()
   {
