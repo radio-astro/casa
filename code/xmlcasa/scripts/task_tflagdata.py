@@ -389,7 +389,7 @@ def tflagdata(vis,
                     
             # Get all the selection parameters, but set correlation to ''
             elif vrows.__len__() == 1:
-                unionpars = fh.getSelectionPars(flaglist[0], [])
+                unionpars = fh.getSelectionPars(flaglist[0])
                 casalog.post('The selected subset of the MS will be: ');
                 casalog.post('%s'%unionpars);
                 
