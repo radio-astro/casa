@@ -322,8 +322,13 @@ void PlotMSVBAverager::initialize(VisBuffer& vb)
     avBuf_p.visCube().set(czero);
   }
   if (doMVC_p) {
-    avBuf_p.modelVisCube().resize(nCorr_p,nChan_p, nBlnMax_p,False);
-    avBuf_p.modelVisCube().set(czero);
+    Cube<Complex> tmpmod(nCorr_p,nChan_p, nBlnMax_p);
+    tmpmod.set(czero);
+    //force the buffer to be this as avBuf_p internal state is 
+    //sometimes inconsistent with this size
+    avBuf_p.setModelVisCube(tmpmod);
+    //avBuf_p.modelVisCube().resize(nCorr_p,nChan_p, nBlnMax_p,False);
+    //avBuf_p.modelVisCube().set(czero);
   }
   if (doCVC_p) {
     avBuf_p.correctedVisCube().resize(nCorr_p,nChan_p, nBlnMax_p,False);

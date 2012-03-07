@@ -36,6 +36,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
+#include <scimath/Mathematics/MathFunc.h>
 #include <tables/Tables/ExprNode.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -59,9 +60,39 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
+  void Feather::applyDishDiam(ImageInterface<Complex>& image, Float effDiam){
+    /*
+    MathFunc<Float> dd(SPHEROIDAL);
+    Vector<Float> valsph(31);
+    for(Int k=0; k <31; ++k){
+      valsph(k)=dd.value((Float)(k)/10.0);
+    }
+    Quantity fulrad((52.3/2.0*3.0/1.1117),"arcsec");
+    Quantity lefreq(224.0/effDiam*9.0, "GHz");
+    
+    PBMath1DNumeric elpb(valsph, fulrad, lefreq);*/
+    PBMath1DAiry elpb( Quantity(effDiam,"m"), Quantity(0.01,"m"),
+				       Quantity(0.8564,"deg"), Quantity(1.0,"GHz"));
+
+    MDirection wcenter;  
+    {
+      Int directionIndex=
+	image.coordinates().findCoordinate(Coordinate::DIRECTION);
+      DirectionCoordinate
+	directionCoord=image.coordinates().directionCoordinate(directionIndex);
+      Vector<Double> pcenter(2);
+      pcenter(0) = image.shape()(directionIndex)/2;
+      pcenter(1) = image.shape()(directionIndex+1)/2;    
+      directionCoord.toWorld( wcenter, pcenter );
+    }
+    elpb.applyPB(image, image, wcenter, Quantity(0.0, "deg"), 
+			   BeamSquint::NONE);
 
 
-  void Feather::feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low0, const Float& sdScale, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, const Bool doPlot){
+  }
+
+
+  void Feather::feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low0, const Float& sdScale, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, Float effDiam, const Bool doPlot){
 
     LogIO os(LogOrigin("Feather", "feather()", WHERE));
    try {
@@ -247,6 +278,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	StokesImageUtil::From(cweight, lowpsf);
       }
+      if(effDiam >0.0){
+	//cerr << "in effdiam" << effDiam << endl;
+	cweight.set(1.0);
+	applyDishDiam(cweight, effDiam);
+      }
       LatticeFFT::cfft2d( cweight );
       LatticeExprNode node = max( cweight );
       Float fmax = abs(node.getComplex());
@@ -254,29 +290,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       /////////////////////////////
       if(doPlot){
 	CoordinateSystem ftCoords(cweight.coordinates());
+	///freq part
+	Int spectralIndex=ftCoords.findCoordinate(Coordinate::SPECTRAL);
+	SpectralCoordinate
+	  spectralCoord=
+	  ftCoords.spectralCoordinate(spectralIndex);
+	Vector<String> units(1); units = "Hz";
+	spectralCoord.setWorldAxisUnits(units);	
+	Vector<Double> spectralWorld(1);
+	Vector<Double> spectralPixel(1);
+	spectralPixel(0) = 0;
+	spectralCoord.toWorld(spectralWorld, spectralPixel);  
+	Double freq  = spectralWorld(0);
+	////
 	Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
 	Array<Complex> tmpval;
 	IPosition start=cweight.shape();
-	IPosition shape=cweight.shape();
+	IPosition shape=cweight.shape()/2;
 	for(uInt k=0; k < shape.nelements(); ++k){
 	  start[k]=0;
 	  if(k != uInt(directionIndex+1))
 	    shape[k]=1;
 	}
+	start[directionIndex+1]=cweight.shape()[directionIndex+1]/2;
 	start[directionIndex]=cweight.shape()[directionIndex]/2;
 	cerr << "start " << start << " shape " << shape << endl; 
 	cweight.getSlice(tmpval, start, shape, True);
 	Vector<Float> x=amplitude(tmpval);
+	Vector<Float> xdish=(Float(1.0) - x)*Float(sdScale);
 	tmpval.resize();
-	shape=cweight.shape();
+	shape=cweight.shape()/2;
 	for(uInt k=0; k < shape.nelements(); ++k){
 	  start[k]=0;
 	  if(k != uInt(directionIndex))
 	    shape[k]=1;
 	}
 	start[directionIndex+1]=cweight.shape()[directionIndex+1]/2;
+	start[directionIndex]=cweight.shape()[directionIndex]/2;
 	cweight.getSlice(tmpval, start, shape, True);
 	Vector<Float> y=amplitude(tmpval);
+	Vector<Float> ydish=(Float(1.0)-y)*Float(sdScale);
 	DirectionCoordinate dc=ftCoords.directionCoordinate(directionIndex);
 	Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
 	Vector<Int> elshape(2); 
@@ -285,6 +338,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Coordinate* ftdc=dc.makeFourierCoordinate(axes,elshape);	
 	Vector<Double> xpix(x.nelements());
 	indgen(xpix);
+	xpix +=Double(cweight.shape()[directionIndex])/2.0;
 	Matrix<Double> pix(2, xpix.nelements());
 	Matrix<Double> world(2, xpix.nelements());
 	Vector<Bool> failures;
@@ -292,16 +346,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pix.row(0)=xpix;
 	ftdc->toWorldMany(world, pix, failures);
 	xpix=world.row(0);
+	xpix=fabs(xpix)*(C::c)/freq;
 	Vector<Double> ypix(y.nelements());
 	indgen(ypix);
+	ypix +=Double(cweight.shape()[directionIndex+1])/2.0;
 	pix.resize(2, ypix.nelements());
 	world.resize();
 	pix.row(1)=ypix;
 	pix.row(0)=elshape(1)/2;
 	ftdc->toWorldMany(world, pix, failures);
 	ypix=world.row(1);
+	ypix=fabs(ypix)*(C::c/freq);
 	PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-	dbus::variant panel_id = plotter->panel( "Feather function slice cuts", "Distance in lambda", "Amp", "Feather",
+	dbus::variant panel_id = plotter->panel( "Feather function slice cuts", "Distance in m", "Amp", "Feather",
 					       std::vector<int>( ), "right");
 
 	if ( panel_id.type( ) != dbus::variant::INT ) {
@@ -310,9 +367,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
       
-	plotter->line(dbus::af(xpix),dbus::af(x),"blue","x-cut",panel_id.getInt( ));
+	plotter->line(dbus::af(xpix),dbus::af(x),"blue","x-interferometer weight",panel_id.getInt( ));
+	plotter->line(dbus::af(xpix),dbus::af(xdish),"cyan","x-singledish weight",panel_id.getInt( ));
 	
-	plotter->line(dbus::af(ypix),dbus::af(y),"green","y-cut",panel_id.getInt( ));
+	plotter->line(dbus::af(ypix),dbus::af(y),"green","y-interferometer weight",panel_id.getInt( ));
+	plotter->line(dbus::af(ypix),dbus::af(ydish),"purple","y-singledish weight",panel_id.getInt( ));
 
       }
       ////////////////////////////
