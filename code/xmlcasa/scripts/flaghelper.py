@@ -1051,12 +1051,9 @@ def getLinePars(cmdline, mlist=[]):
             
     return dicpars
 
-def getSelectionPars(cmdline, mlist=[]):
+def getSelectionPars(cmdline):
     '''Get a dictionary of all selection parameters from a line:
        -> cmdline is a string with parameters
-       -> mlist is a list of the mode parameters to add to the
-          returned dictionary.
-          The correlation will always be ''
     '''
             
     # Dictionary of parameters to return
@@ -1116,15 +1113,6 @@ def getSelectionPars(cmdline, mlist=[]):
                 
             elif xkey == "observation":
                 dicpars['observation'] = xval
-
-            elif xkey == "mode":
-                dicpars['mode'] = xval
-                
-            elif mlist != []:
-                # Any parameters requested for this mode?
-                for m in mlist:
-                    if xkey == m:
-                        dicpars[m] = xval
                         
             
     return dicpars
