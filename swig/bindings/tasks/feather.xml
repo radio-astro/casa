@@ -31,6 +31,10 @@ two images must have the same flux density normalization scale.
 			<description>Scale factor to apply to Single Dish image</description>
 			<value>1.0</value>
 		</param>
+		<param type="double" name="effdishdiam">
+			<description>New effective SingleDish diameter to use in m </description>
+			<value>-1.0</value>
+		</param>
 		<param type="bool" name="showplot">
 			<description>Show plot of feather function</description>
 			<value>False</value>
@@ -71,7 +75,7 @@ two images must have the same flux density normalization scale.
 	        or a clean image obtained from lower resolution synthesis
 		observations.
          sdscale -- value by which to scale the Single Dish image. Default is 1.0
-	 
+	 effdishdiam -- New effective SingleDish diameter to use in m. Obviously one can only reduce the dish effective dish diameter in feathering. Default -1.0 means leave as is.
 	 showplot -- If True will plot the cuts across the feathring function
 
 

@@ -512,7 +512,7 @@
      -- ACTIONs --
 
         The action parameter controls what tflagcmd will actually do with the
-        commands:
+        flag commands:
 
         * action = 'apply'
 
@@ -588,7 +588,6 @@
           being 'manual' if not given.
 
           Comment lines can start with '#' and will be ignored.
-          Parts of a command line after a ' # ' token are also ignored.
         
         
         1. Data selection parameters (used by all flagging modes)
@@ -619,7 +618,8 @@
               channelavg=False  
               
           2.2 Mode shadow.
-              diameter=-1
+              tolerance=0.0
+              recalcuvw=False
               
           2.3 Mode quack.
               quackinterval=0.0     
@@ -648,8 +648,8 @@
               ntime='scan'
               combinescans=False
               extendpols=False
-              growtime=50.0
-              growfreq=50.0
+              growtime=90.0
+              growfreq=90.0
               growaround=True
               flagneartime=False
               flagnearfreq=False

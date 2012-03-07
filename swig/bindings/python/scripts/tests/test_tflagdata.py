@@ -882,6 +882,27 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
 
+    def test_list6(self):
+        '''tflagdata: select by reason in list mode'''
+        # creat input list
+        input = "mode=\'manual\' scan=\'1\' reason=\'SCAN_1\'\n"\
+                "mode=\'manual\' scan=\'2\'\n"\
+                "scan=\'3\' reason=\'SCAN_3\'"
+        filename = 'list6.txt'
+        create_input(input, filename)
+        
+        # Select one reason
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, reason='SCAN_3')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['3']['flagged'], 762048, 'Should flag only reason=SCAN_3')
+        self.assertEqual(res['flagged'], 762048, 'Should flag only reason=SCAN_3')
+        
+        # Select list of reasons
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, reason=['','SCAN_1'])
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['2']['flagged'], 238140, 'Should flag reason=\'\'')
+        self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
+        
         
 class test_clip(test_base):
     """tflagdata:: Test of mode = 'clip'"""

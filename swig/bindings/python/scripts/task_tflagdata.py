@@ -10,6 +10,7 @@ debug = False
 def tflagdata(vis,
              mode,
              inpfile,       # mode list parameter
+             reason,
              spw,           # data selection parameters
              field,
              antenna,
@@ -44,6 +45,13 @@ def tflagdata(vis,
              flagdimension,
              usewindowstats,
              halfwin,
+             ntimesteps,    # rflag parameters
+             spectralmax,
+             spectralmin,
+             noisescale,
+             scutofscale,
+             timedev,
+             freqdev,
              extendpols,    # mode extend
              growtime,
              growfreq,
@@ -149,9 +157,15 @@ def tflagdata(vis,
                      
                 flaglist = fh.readFile(inpfile)
                 
-                # Make a FLAG_CMD compatible dictionary
-                flagcmd = fh.makeDict(flaglist)
+                # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                flagcmd = fh.makeDict(flaglist, reason)
                 
+                # Update the list of commands with the selection
+                flaglist = []
+                for k in flagcmd.keys():
+                    cmdline = flagcmd[k]['command']
+                    flaglist.append(cmdline)
+                                    
                 # List of command keys in dictionary
                 vrows = flagcmd.keys()
                 
@@ -256,6 +270,22 @@ def tflagdata(vis,
                       ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
                       ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
                       ' halfwin='+str(halfwin)
+                      
+        elif mode == 'rflag':
+            agent_pars['ntimesteps'] = ntimesteps
+            agent_pars['spectralmax'] = spectralmax
+            agent_pars['spectralmin'] = spectralmin
+            agent_pars['noisescale'] = noisescale
+            agent_pars['scutofscale'] = scutofscale
+            agent_pars['timedev'] = timedev
+            agent_pars['freqdev'] = freqdev
+            casalog.post('Rflag mode is active')
+            
+            sel_pars = sel_pars+' ntimesteps='+str(ntimesteps)+' spectralmax='+str(spectralmax)+\
+                    ' spectralmin='+str(spectralmin)+' noisescale='+str(noisescale)+\
+                    ' scutofscale='+str(scutofscale)+' timedev='+str(timedev)+\
+                    ' freqdev='+str(freqdev)
+            
 
         elif mode == 'extend':
             agent_pars['ntime'] = newtime
@@ -359,7 +389,7 @@ def tflagdata(vis,
                     
             # Get all the selection parameters, but set correlation to ''
             elif vrows.__len__() == 1:
-                unionpars = fh.getSelectionPars(flaglist[0], [])
+                unionpars = fh.getSelectionPars(flaglist[0])
                 casalog.post('The selected subset of the MS will be: ');
                 casalog.post('%s'%unionpars);
                 
@@ -425,6 +455,10 @@ def tflagdata(vis,
             
         # Destroy the tool
         tflocal.done()
+
+#        if mode == 'rflag' or mode == 'list':
+#            if type(summary_stats_list) is dict:
+#                extractRFlagOutput(summary_stats_list,outfile)
 
         # Pull out the 'summary' part of summary_stats_list.
         # (This is the task, and there will be only one such dictionary.)

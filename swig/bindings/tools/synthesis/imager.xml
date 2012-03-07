@@ -1228,6 +1228,11 @@ and composite numbers. You may use <link anchor="image:image.subimage.function">
      <value></value>
      </param>
      
+     <param type="double" name="effdishdiam">
+     <description>Optional new SD dish diameter in m to use in feathering; can be smaller than true dish size</description>
+     <value>-1.0</value>
+     </param>
+
      <param type="bool" name="showplot">
      <description>Plot the feather function</description>
      <value>false</value>
