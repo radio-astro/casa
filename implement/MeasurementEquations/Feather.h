@@ -29,6 +29,7 @@
 #define SYNTHESIS_FEATHER_H
 
 #include <casa/BasicSL/String.h>
+#include <casa/BasicSL.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //Forward declaration
@@ -38,12 +39,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class Feather{
 
   public:
-    static void feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low, const Float& sdScale=1.0, const String& lowPSF="", const Bool useDefault=True, const String& vpTable="" , const Bool doPlot=False);
+    static void feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low, const Float& sdScale=1.0, const String& lowPSF="", const Bool useDefault=True, const String& vpTable="" , Float effSDDiam=-1.0, const Bool doPlot=False);
+
+  private:
     
-
-
-
-
+    static void applyDishDiam(ImageInterface<Complex>& image, Float effDiam);
 
 
   };
