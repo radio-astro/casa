@@ -67,70 +67,6 @@ def checktable(msname, thename, theexpectation):
     print myname, ": table ", thename, " as expected."
     return True
 
-#########################
-
-#def verify_asdm(asdmname, withPointing):
-#    print "Verifying asdm ", asdmname
-#    if(not os.path.exists(asdmname)):
-#        print "asdm ", asdmname, " doesn't exist."
-#        raise Exception
-#    # test for the existence of all obligatory tables
-#    allTables = [ "Antenna.xml",
-#                  "ASDM.xml",
-#                 # "CalData.xml",
-#                 # "CalDelay.xml",
-#                 # "CalReduction.xml",
-#                  "ConfigDescription.xml",
-#                  "CorrelatorMode.xml",
-#                  "DataDescription.xml",
-#                  "ExecBlock.xml",
-#                  "Feed.xml",
-#                  "Field.xml",
-#                 #"FocusModel.xml",
-#                 #"Focus.xml",
-#                  "Main.xml",
-#                  "PointingModel.xml",
-#                  "Polarization.xml",
-#                  "Processor.xml",
-#                  "Receiver.xml",
-#                  "SBSummary.xml",
-#                  "Scan.xml",
-#                  "Source.xml",
-#                  "SpectralWindow.xml",
-#                  "State.xml",
-#                  "Station.xml",
-#                  "Subscan.xml",
-#                  "SwitchCycle.xml"
-#                  ]
-#    isOK = True
-#    for fileName in allTables:
-#        filePath = asdmname+'/'+fileName
-#        if(not os.path.exists(filePath)):
-#            print "ASDM table file ", filePath, " doesn't exist."
-#            isOK = False
-#        else:
-#            # test if well formed
-#            rval = os.system('xmllint --noout '+filePath)
-#            if(rval !=0):
-#                print "Table ", filePath, " is not a well formed XML document."
-#                isOK = False
-#
-#    print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
-#        
-#    if(not os.path.exists(asdmname+"/ASDMBinary")):
-#        print "ASDM binary directory "+asdmname+"/ASDMBinary doesn't exist."
-#        isOK = False
-#
-#    if(withPointing and not os.path.exists(asdmname+"/Pointing.bin")):
-#        print "ASDM binary file "+asdmname+"/Pointing.bin doesn't exist."
-#        isOK = False
-#
-#    if (not isOK):
-#        raise Exception
-
-
-###########################
-# beginning of actual test 
 
 myname = 'importevla2_ut'
 
@@ -141,10 +77,10 @@ origname = 'X_osro_013.55979.93803716435'
 #asdmname = 'tosr0001'
 asdmname = 'xosro'
 
-# Copy SDM locally only once for all tests
+# Link SDM to local directory
 if(not os.path.exists(asdmname)):
     datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importevla/'
-    shutil.copytree(datapath + origname, asdmname)
+    os.system('ln -s '+datapath+origname+' '+asdmname)
 
 
 class importevla2_test(unittest.TestCase):
@@ -152,9 +88,6 @@ class importevla2_test(unittest.TestCase):
     def setUp(self):
         res = None
 
-#        if(not os.path.exists(myasdm_dataset_name)):
-#            datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/evla/'
-#            shutil.copytree(datapath + myasdm_dataset_name, myasdm_dataset_name)
         self.asdm = asdmname
 
         default(importevla2)
@@ -171,7 +104,7 @@ class importevla2_test(unittest.TestCase):
 
         msname = self.asdm+'.ms'
 #        self.res = importevla2(asdm=self.asdm, scans='3')
-        self.res = importevla2(asdm=self.asdm, scans='2')
+        self.res = importevla2(asdm=self.asdm, vis=msname, scans='2')
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
                             "table.f0",
@@ -378,7 +311,7 @@ class importevla2_test(unittest.TestCase):
         if os.path.exists(cmdfile):
             os.system('rm -rf '+cmdfile)
             
-        importevla2(asdm=self.asdm, scans='2',online=True, shadow=False, flagzero=False,
+        importevla2(asdm=self.asdm, vis=msname, scans='2',online=True, shadow=False, flagzero=False,
                     applyflags=False,savecmds=True, flagbackup=False)
 
         # No flags were applied
