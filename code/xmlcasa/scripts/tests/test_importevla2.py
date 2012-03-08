@@ -346,6 +346,18 @@ class importevla2_test(unittest.TestCase):
         
         # Unapply row 213 and apply it in tflagdata using the file
         # TO DO : after row selection is available in file
+
+    def test_apply5(self):
+        '''importevla2: Apply only shadow flags'''
+        msname = 'xosro_shadow.ms'
+        importevla2(asdm=self.asdm, vis=msname,online=False, shadow=True, flagzero=False,
+                    applyflags=True,savecmds=False, flagbackup=False)
+        
+        # This data set doesn't have shadow. Maybe change later!
+        res = tflagdata(vis=msname, mode='summary')
+        self.assertEqual(res['flagged'],0,'There are shadowed antenna in this data set')
+
+
         
     def test_savepars(self):
         '''importevla2: save the flag commands and do not apply'''
@@ -362,9 +374,6 @@ class importevla2_test(unittest.TestCase):
         # Check flags
         res = tflagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0,'No flags should have been applied')
-        self.assertEqual(res['scan']['11']['flagged'],0,'No flags should have been applied')
-        self.assertEqual(res['scan']['12']['flagged'],0,'No flags should have been applied')
-        self.assertEqual(res['scan']['13']['flagged'],0,'No flags should have been applied')
 
         # Check output file existence
         self.assertTrue(os.path.exists(cmdfile))

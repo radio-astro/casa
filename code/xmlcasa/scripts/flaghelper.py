@@ -1331,7 +1331,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
     manualpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['tolerance', 'recalcuvw', 'antennafile']
+    shadowpars = ['tolerance', 'recalcuvw', 'addantenna']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
@@ -1380,14 +1380,19 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                 modepars = getLinePars(cmdline,quackpars)
             elif cmdline.__contains__('shadow'):
                 mode = 'shadow'
-                antennafile = ''
                 modepars = getLinePars(cmdline,shadowpars)
-                # Get antennafile
-                if (modepars.__contains__('antennafile') and
-                    modepars['antennafile'] != ''):
-                    antennafile = modepars['antennafile']
-                    addantenna = readAntennaList(antennafile)
-                    modepars['addantenna'] = addantenna
+                
+                # Get antenna dictionary
+                addantenna = {}
+                if (modepars.__contains__('addantenna')):
+                    ant_par = modepars['addantenna']
+                    if (type(ant_par) == str and ant_par != ''):
+                        antennafile = modepars['addantenna']
+                        addantenna = readAntennaList(antennafile)
+                    elif (type(ant_par) == dict and ant_par != {}):
+                        addantenna = ant_par
+                    
+                modepars['addantenna'] = addantenna
             elif cmdline.__contains__('elevation'):
                 mode = 'elevation'
                 modepars = getLinePars(cmdline,elevationpars)
