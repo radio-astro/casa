@@ -108,15 +108,16 @@ class CTEnums
   
   // Solution parameters and weights
   // cal solution params. 
-  PARAM = 100,
+  CPARAM = 100,
+  FPARAM = 101,
   // cal solution param errors
-  PARAMERR = 101,
+  PARAMERR = 102,
   // flag
-  FLAG = 102, 
+  FLAG = 103, 
   // Solution SNR
-  SNR = 103,
+  SNR = 104,
   // solution weight
-  WEIGHT = 104,
+  WEIGHT = 105,
   
   };
 

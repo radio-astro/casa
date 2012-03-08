@@ -133,12 +133,17 @@ class NewCalTable : public Table
    NewCalTable (const NewCalTable& other);
 
    // Create a vanilla NewCalTable from shapes (for testing purposes)
+   //  Default rTime is 2012/01/06/12:00:00
    NewCalTable(String tableName,String caltype,Int nFld=1, Int nAnt=1, Int nSpw=1, 
 	       Vector<Int> nChan=Vector<Int>(1,1), Int nTime=1,
+	       Double rTime=4832568000.0, Double tint=60.0,
 	       Bool disk=False, Bool verbose=False);
 
    // Assignment operator
    NewCalTable& operator= (const NewCalTable& other);
+
+   // Set the TableInfo record
+   void setTableInfo();
 
    // initialize reference to subtables
    void createSubTables();
@@ -175,17 +180,23 @@ class NewCalTable : public Table
    const CTSpectralWindow& spectralWindow() const {return spectralWindow_p;}
    const CTHistory& history() const {return history_p;}
 
+   // Provide RO access to 
+   //   inline ROCTMainColumns mcols() const {return ROCTMainColumns(*this);};
+
+   static Complex NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
+
  private:
 
    // Services for generic test table ctor
+   //  Default rTime is 2012/01/06/12:00:00
    void fillGenericContents(Int nFld=1, Int nAnt=1, Int nSpw=1, 
 			    Vector<Int> nChan=Vector<Int>(1,1), Int nTime=1,
+			    Double rTime=4832568000.0, Double tint=60.0,
 			    Bool verbose=False);
    void fillGenericField(Int nFld);
    void fillGenericAntenna(Int nAnt);
    void fillGenericSpw(Int nSpw,Vector<Int>& nChan);
      
-
    // The subtables
    CTAntenna antenna_p;
    CTField field_p;
