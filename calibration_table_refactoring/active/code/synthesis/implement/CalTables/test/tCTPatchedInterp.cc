@@ -138,7 +138,7 @@ void doTest2 (Bool verbose=False) {
 
   Vector<Double> f(40); indgen(f);
   f-=3.1;  
-  f*=0.5e6;  f+=60.e9;
+  f*=0.5e6;  f+=60.e9; f/=1e9;  // in GHz
   cout.precision(7);
   cout << "f=" << f << endl;
   cout << "new = " << ci.interpolate(0,0,4832568311.0,f) << endl;

@@ -316,16 +316,22 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     // Always use nearest on edges
     // TBD: trap cases where frequencies don't overlap at all
     //     (fout(hi)<mfin(0) || fout(lo)> mfin(ihi))
+    // TBD: optimize the following by forming Slices in the
+    //     while loops and doing Array assignment once afterwords
 
+    Int nfreq=fout.nelements();
     Int lo=0;
-    while (fout(lo)<=mfin(0))
+    while (lo<nfreq && fout(lo)<=mfin(0)) {
       fresi(lo++)=mtresi(0);
+    }
     Int hi=fresi.nelements()-1;
     Int ihi=mtresi.nelements()-1;
-    while (fout(hi)>=mfin(ihi))
+    while (hi>-1 && fout(hi)>=mfin(ihi)) {
       fresi(hi--)=mtresi(ihi);
-
+    }
     //    cout << "lo, hi = " << lo << ","<<hi << endl;
+
+    if (lo>hi) return; // Frequencies didn't overlap, nearest was used
 
     // Use InterpolateArray1D to fill in the middle
     IPosition blc(1,lo), trc(1,hi);
