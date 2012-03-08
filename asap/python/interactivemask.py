@@ -54,7 +54,7 @@ class interactivemask:
             msg = "Invalid scantable."
             raise TypeError(msg)
 
-        self.mask = _n_bools(self.scan.nchan(),True)
+        self.mask = _n_bools(self.scan.nchan(self.scan.getif(0)),True)
         self.callback = None
         self.event = None
         self.once = False
@@ -91,9 +91,9 @@ class interactivemask:
         if ( len(masklist) > 0 ):
             self.mask = self.scan.create_mask(masklist,invert=invert)
         elif invert == True:
-            self.mask = _n_bools(self.scan.nchan(),False)
+            self.mask = _n_bools(self.scan.nchan(self.scan.getif(0)),False)
         else:
-            self.mask = _n_bools(self.scan.nchan(),True)
+            self.mask = _n_bools(self.scan.nchan(self.scan.getif(0)),True)
 
 
     def set_startevent(self,event):

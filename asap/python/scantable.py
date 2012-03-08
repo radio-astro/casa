@@ -1425,8 +1425,8 @@ class scantable(Scantable):
         """
         if not (isinstance(mask,list) or isinstance(mask, tuple)):
             raise TypeError("The mask should be list or tuple.")
-        if len(mask) < 2:
-            raise TypeError("The mask elements should be > 1")
+        if len(mask) <= 0:
+            raise TypeError("The mask elements should be > 0")
         data = self._getabcissa(row)
         if len(data) != len(mask):
             msg = "Number of channels in scantable != number of mask elements"
@@ -1466,8 +1466,8 @@ class scantable(Scantable):
         """
         if not (isinstance(mask,list) or isinstance(mask, tuple)):
             raise TypeError("The mask should be list or tuple.")
-        if len(mask) < 2:
-            raise TypeError("The mask elements should be > 1")
+        if len(mask) <= 0:
+            raise TypeError("The mask elements should be > 0")
         istart = []
         iend = []
         if mask[0]: 

@@ -28,6 +28,7 @@
 #include <measures/Measures/MDirection.h>
 
 #include <MathUtils.h>
+#include <atnf/PKSIO/SrcType.h>
 
 #include "STGrid.h"
 
@@ -964,7 +965,7 @@ void STGrid::initPol( Int ipol )
     ptab_ = tab_ ;
   }
   else 
-    ptab_ = tab_( tab_.col("POLNO") == (uInt)ipol ) ;
+    ptab_ = tab_( tab_.col("POLNO") == pollist_[ipol] ) ;
 
   attach( ptab_ ) ;
 }
@@ -1115,7 +1116,10 @@ void STGrid::setupGrid( Int &nx,
     }
   }
   cellx_ = qcellx.getValue( "rad" ) ;
+  // DEC correction
+  cellx_ /= cos( center_[1] ) ;
   celly_ = qcelly.getValue( "rad" ) ;
+  //os << "cellx_=" << cellx_ << ", celly_=" << celly_ << ", cos("<<center_(1)<<")=" << cos(center_(1)) << LogIO::POST ;
   if ( nx_ < 0 ) {
     if ( wx == 0.0 ) {
       os << "Using default spatial extent (10arcmin) in x" << LogIO::POST ;
@@ -1681,22 +1685,63 @@ void STGrid::fillMainColumns( Table &tab )
   row.get( 0 ) ;
   const TableRecord &rec = row.record() ;
   uInt freqId = rec.asuInt( "FREQ_ID" ) ;
+  uInt molId = rec.asuInt( "MOLECULE_ID" ) ;
+  uInt tcalId = rec.asuInt( "TCAL_ID" ) ;
+  uInt focusId = rec.asuInt( "FOCUS_ID" ) ;
+  uInt weatherId = rec.asuInt( "WEATHER_ID" ) ;
+  String srcname = rec.asString( "SRCNAME" ) ;
+  String fieldname = rec.asString( "FIELDNAME" ) ;
   Vector<Float> defaultTsys( 1, 1.0 ) ;
   // @todo how to set flagtra for gridded spectra?
   Vector<uChar> flagtra = rec.asArrayuChar( "FLAGTRA" ) ;
   flagtra = (uChar)0 ;
+  Float opacity = rec.asFloat( "OPACITY" ) ;
+  Double srcvel = rec.asDouble( "SRCVELOCITY" ) ;
+  Vector<Double> srcpm = rec.asArrayDouble( "SRCPROPERMOTION" ) ;
+  Vector<Double> srcdir = rec.asArrayDouble( "SRCDIRECTION" ) ;
+  Vector<Double> scanrate = rec.asArrayDouble( "SCANRATE" ) ;
 
   // fill columns
   Int nrow = tab.nrow() ;
+  ScalarColumn<uInt> scannoCol( tab, "SCANNO" ) ;
   ScalarColumn<uInt> ifnoCol( tab, "IFNO" ) ;
   ScalarColumn<uInt> freqIdCol( tab, "FREQ_ID" ) ;
+  ScalarColumn<uInt> molIdCol( tab, "MOLECULE_ID" ) ;
+  ScalarColumn<uInt> tcalidCol( tab, "TCAL_ID" ) ;
+  ScalarColumn<Int> fitidCol( tab, "FIT_ID" ) ;
+  ScalarColumn<uInt> focusidCol( tab, "FOCUS_ID" ) ;
+  ScalarColumn<uInt> weatheridCol( tab, "WEATHER_ID" ) ;
   ArrayColumn<uChar> flagtraCol( tab, "FLAGTRA" ) ;
+  ScalarColumn<uInt> rflagCol( tab, "FLAGROW" ) ;
   ArrayColumn<Float> tsysCol( tab, "TSYS" ) ;
+  ScalarColumn<String> srcnameCol( tab, "SRCNAME" ) ;
+  ScalarColumn<String> fieldnameCol( tab, "FIELDNAME" ) ;
+  ScalarColumn<Int> srctypeCol( tab, "SRCTYPE" ) ;
+  ScalarColumn<Float> opacityCol( tab, "OPACITY" ) ;
+  ScalarColumn<Double> srcvelCol( tab, "SRCVELOCITY" ) ;
+  ArrayColumn<Double> srcpmCol( tab, "SRCPROPERMOTION" ) ;
+  ArrayColumn<Double> srcdirCol( tab, "SRCDIRECTION" ) ;
+  ArrayColumn<Double> scanrateCol( tab, "SCANRATE" ) ;
   for ( Int i = 0 ; i < nrow ; i++ ) {
+    scannoCol.put( i, (uInt)i ) ;
     ifnoCol.put( i, (uInt)ifno_ ) ;
     freqIdCol.put( i, freqId ) ;
+    molIdCol.put( i, molId ) ;
+    tcalidCol.put( i, tcalId ) ;
+    fitidCol.put( i, -1 ) ;
+    focusidCol.put( i, focusId ) ;
+    weatheridCol.put( i, weatherId ) ;
     flagtraCol.put( i, flagtra ) ;
+    rflagCol.put( i, 0 ) ;
     tsysCol.put( i, defaultTsys ) ;
+    srcnameCol.put( i, srcname ) ;
+    fieldnameCol.put( i, fieldname ) ;
+    srctypeCol.put( i, (Int)SrcType::PSON ) ;
+    opacityCol.put( i, opacity ) ;
+    srcvelCol.put( i, srcvel ) ;
+    srcpmCol.put( i, srcpm ) ;
+    srcdirCol.put( i, srcdir ) ;
+    scanrateCol.put( i, scanrate ) ;
   }
 }
 

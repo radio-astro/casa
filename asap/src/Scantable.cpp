@@ -3549,8 +3549,8 @@ bool Scantable::hasSameNchanOverIFs()
 
 std::string Scantable::getMaskRangeList(const std::vector<bool>& mask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, bool verbose)
 {
-  if (mask.size() < 2) {
-    throw(AipsError("The mask elements should be > 1"));
+  if (mask.size() <= 0) {
+    throw(AipsError("The mask elements should be > 0"));
   }
   int IF = getIF(whichrow);
   if (mask.size() != (uInt)nchan(IF)) {
@@ -3583,8 +3583,8 @@ std::string Scantable::getMaskRangeList(const std::vector<bool>& mask, int which
 
 std::vector<int> Scantable::getMaskEdgeIndices(const std::vector<bool>& mask)
 {
-  if (mask.size() < 2) {
-    throw(AipsError("The mask elements should be > 1"));
+  if (mask.size() <= 0) {
+    throw(AipsError("The mask elements should be > 0"));
   }
 
   std::vector<int> out, startIndices, endIndices;

@@ -885,6 +885,7 @@ bool LFLineListOperations::LaterThan::operator()(const std::pair<int,int> &line2
 
 STLineFinder::STLineFinder() throw() : edge(0,0)
 {
+  useScantable = true;
   setOptions();
 }
 
@@ -924,8 +925,6 @@ void STLineFinder::setOptions(const casa::Float &in_threshold,
   box_size=in_box_size;
   itsNoiseBox = in_noise_box;
   itsUseMedian = in_median;
-
-  useScantable = true;
 }
 
 STLineFinder::~STLineFinder() throw(AipsError) {}
@@ -935,6 +934,7 @@ void STLineFinder::setScan(const ScantableWrapper &in_scan) throw(AipsError)
 {
   scan=in_scan.getCP();
   AlwaysAssert(!scan.null(),AipsError);
+  useScantable = true;
 }
 
 // set spectrum data to work with. this is a method to allow linefinder work 
