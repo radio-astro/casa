@@ -276,7 +276,10 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				sel.set_ifs([int(sif)])
 				s.set_selection(sel)
 				del sel
-				casalog.post("working on IF"+sif)
+				msg = "Working on IF%s" % (sif)
+				casalog.post(msg)
+				if (maskmode == 'interact'): print "===%s===" % (msg)
+				del msg
 
 			msk = None
 			
@@ -347,7 +350,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			# reset selection
 			if len(sif) > 0: s.set_selection(basesel)
 
-		### END of IF for loop
+		### END of IF loop
 		del basesel
 
 		# Plot final spectrum
