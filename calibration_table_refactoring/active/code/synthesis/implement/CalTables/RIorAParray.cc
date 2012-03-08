@@ -25,7 +25,7 @@
 //#                                                                                           
 //#                                                                                           
 
-#include <synthesis/CalTables/RIorAPArray.h>
+#include <synthesis/CalTables/RIorAParray.h>
 
 #include <casa/aips.h>
 #include <casa/BasicSL/Constants.h>
