@@ -65,7 +65,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         <value type="string">any</value>
             </param>
             
-            <!-- SELECTION paramters -->
+            <!-- SELECTION parameters -->
             <param type="any" name="spw" subparam="true">
                 <description>spectral-window/frequency/channel</description>
                 <any type="variant" limittypes="string stringArray" />
@@ -121,7 +121,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value type="string" />
             </param>
 
-            <!-- CLIP paramters -->
+            <!-- CLIP parameters -->
             <param type="any" name="clipminmax" subparam="true">
                 <description>Range to use for clipping</description>
                 <any type="variant" limittypes="doubleArray doubleyArrayArray" />
@@ -147,7 +147,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value type="bool">False</value>
             </param>
 
-            <!-- QUACK paramters -->
+            <!-- QUACK parameters -->
             <param type="any" name="quackinterval" subparam="true">
                 <description>Quack n seconds from scan beginning or end</description>
                 <any type="variant" limittypes="double doubleArray" />
@@ -164,7 +164,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value type="bool">False</value>
             </param>
 
-            <!-- SHADOW paramters -->
+            <!-- SHADOW parameters -->
             <param type="double" name="tolerance" subparam="true">
                 <description>Amount of shadow allowed (in meters)</description>
                 <value>0.0</value>
@@ -178,7 +178,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value></value>
             </param>
             
-            <!-- ELEVATION paramters -->            
+            <!-- ELEVATION parameters -->            
             <param type="double" name="lowerlimit" subparam="true">
                 <description>Lower limiting elevation (in degrees)</description>
                 <value>0.0</value>
@@ -188,7 +188,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value>90.0</value>
             </param>
 
-             <!-- TFCROP paramters -->
+             <!-- TFCROP parameters -->
             <param type="any" name="ntime" subparam="true">
                 <description>Time-range to use for each chunk (in seconds or minutes)</description>
                 <any type="variant" limittypes="double string" />
@@ -231,7 +231,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value>1</value>
             </param>
 
-            <!-- RFLAG paramters -->
+            <!-- RFLAG parameters -->
             <param type="int" name="winsize" subparam="true">
                 <description>Size of sliding time window [aips:fparm(1)]</description>
                 <value>3</value>
@@ -264,7 +264,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
 
 
-            <!-- EXTEND paramters -->
+            <!-- EXTEND parameters -->
             <param type="any" name="extendpols" subparam="true">
                 <description>If any correlation is flagged, flag all correlations</description>
                 <value type="bool">True</value>
@@ -292,7 +292,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
 
 
-            <!-- SUMMARY paramters -->
+            <!-- SUMMARY parameters -->
              <param type="double" name="minrel" subparam="true">
                 <description>minimum number of flags (relative)</description>
                 <value type="double">0.0</value>
@@ -320,7 +320,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
 
 
-            <!-- RUN paramters -->
+            <!-- RUN parameters -->
             <param type="bool" name="run">
                 <description>Run and flag based on the parameters or the list given in inpfile</description>
                 <value>True</value>
@@ -343,7 +343,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
 
 
-            <!-- SAVEPARS paramter -->
+            <!-- SAVEPARS parameter -->
             <param type="bool" name="savepars">
                 <description>Save the current parameters to the MS or to a file</description>
                 <value>False</value>
