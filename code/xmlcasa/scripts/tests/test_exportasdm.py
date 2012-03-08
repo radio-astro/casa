@@ -12,7 +12,7 @@ class exportasdm_test(unittest.TestCase):
     
     #vis_a = 'ngc4826.ms'
     vis_b = 'test.ms'
-    #vis_c = 'jupiter6cm.demo.ms'
+    vis_c = 'M100-X220-shortened.ms'
     vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
     vis_e = 'g19_d2usb_targets_line-shortened.ms'
     vis_f = 'Itziar.ms'
@@ -26,8 +26,8 @@ class exportasdm_test(unittest.TestCase):
         #    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_a)
         if(not os.path.exists(self.vis_b)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/fits-import-export/input/test.ms .')
-        #if(not os.path.exists(vis_c)):
-        #    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/jupiter6cm/jupiter6cm.fits', vis=vis_c)
+        if(not os.path.exists(self.vis_c)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/exportasdm/input/M100-X220-shortened.ms .')
         if(not os.path.exists(self.vis_d)):
             importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', 
                          vis=self.vis_d)
@@ -112,6 +112,7 @@ class exportasdm_test(unittest.TestCase):
     def test1(self):
         '''Test 1: Testing default'''
         myvis = self.vis_b
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm()
         self.assertFalse(self.rval)
@@ -119,6 +120,7 @@ class exportasdm_test(unittest.TestCase):
     def test2(self):
         '''Test 2: small input MS, default output, v3'''
         myvis = self.vis_b
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
                 vis = 'myinput.ms',
@@ -136,6 +138,7 @@ class exportasdm_test(unittest.TestCase):
     def test3(self):
         '''Test 3: simulated input MS, default output, v3'''
         myvis = self.vis_f
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(vis = 'myinput.ms',asdm = self.out,archiveid="S1", useversion='v3')
         self.assertNotEqual(self.rval,False)
@@ -146,6 +149,7 @@ class exportasdm_test(unittest.TestCase):
     def test4(self):
         '''Test 4: real input MS, default output, v3'''
         myvis = self.vis_d
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
             vis = 'myinput.ms',
@@ -163,6 +167,7 @@ class exportasdm_test(unittest.TestCase):
     def test5(self):
         '''Test 5: real input MS, MS has several SPWs observed in parallel, v3 - not supported, expected error'''
         myvis = self.vis_e
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
             vis = 'myinput.ms',
@@ -177,6 +182,7 @@ class exportasdm_test(unittest.TestCase):
     def test6(self):
         '''Test 6: simulated input MS with pointing table, default output, v3'''
         myvis = self.vis_g
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
             vis = 'myinput.ms',
@@ -194,6 +200,7 @@ class exportasdm_test(unittest.TestCase):
     def test7(self):
         '''Test 7: v3, simulated input MS, default output'''
         myvis = self.vis_f
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(vis = 'myinput.ms',asdm = self.out,archiveid="S1", useversion='v3')
         self.assertNotEqual(self.rval,False)
@@ -204,6 +211,7 @@ class exportasdm_test(unittest.TestCase):
     def test8(self):
         '''Test 8: v3, real input MS, default output'''
         myvis = self.vis_d
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
             vis = 'myinput.ms',
@@ -221,6 +229,7 @@ class exportasdm_test(unittest.TestCase):
     def test9(self):
         '''Test 9: v3, simulated input MS with pointing table, default output'''
         myvis = self.vis_g
+        os.system('rm -rf myinput.ms')
         os.system('cp -R ' + myvis + ' myinput.ms')
         self.rval = exportasdm(
             vis = 'myinput.ms',
@@ -235,10 +244,29 @@ class exportasdm_test(unittest.TestCase):
         os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
         self.verify_asdm(omsname, True)
 
+    def test10(self):
+        '''Test 10: v3, ALMA input MS with pointing table and various shortcomings, default output'''
+        myvis = self.vis_c
+        os.system('rm -rf myinput.ms')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(
+            vis = 'myinput.ms',
+            asdm = self.out,
+            archiveid="S002",
+            apcorrected=False,
+            useversion='v3'
+            )
+
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(10)+self.out
+        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
+        self.verify_asdm(omsname, True)
+
 
 class exportasdm_test2(unittest.TestCase):
-    
+
     vis_b = 'test.ms'
+    vis_c = 'M100-X220-shortened.ms'
     vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
     vis_e = 'g19_d2usb_targets_line-shortened.ms'
     vis_f = 'Itziar.ms'
@@ -248,7 +276,7 @@ class exportasdm_test2(unittest.TestCase):
         pass
 
     def tearDown(self):
-        # It will ignore errors in case the files don't exist
+        shutil.rmtree(self.vis_c,ignore_errors=True)
         shutil.rmtree(self.vis_b,ignore_errors=True)
         shutil.rmtree(self.vis_d,ignore_errors=True)
         shutil.rmtree(self.vis_e,ignore_errors=True)

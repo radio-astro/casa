@@ -5993,31 +5993,49 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    // check that the intervals are the same
 	    if(fabs(intervalCol(nextRow)-theInterval) > 1E-5){
-	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
+	      os << LogIO::WARN << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
 		 << " but the two rows have different intervals: " << theInterval
 		 << " vs. " << intervalCol(nextRow)
 		 << LogIO::POST;
-	      return False;
+	      if(!flagRowCol(nextRow)){
+		os << LogIO::SEVERE << "You need to flag row " << nextRow << " to proceed." << LogIO::POST;
+		return False;
+	      }
+	      else{
+		os << LogIO::WARN << "Fortunately, row " << nextRow << " is flagged so this problem will be ignored." << LogIO::POST;
+	      }		
 	    }
 	    // check that the exposures are the same
 	    if(fabs(exposureCol(nextRow)-theExposure) > 1E-5){
-	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
+	      os << LogIO::WARN << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
 		 << " but the two rows have different exposures: " << theExposure
 		 << " vs. " << exposureCol(nextRow)
 		 << LogIO::POST;
-	      return False;
+	      if(!flagRowCol(nextRow)){
+		os << LogIO::SEVERE << "You need to flag row " << nextRow << " to proceed." << LogIO::POST;
+		return False;
+	      }
+	      else{
+		os << LogIO::WARN << "Fortunately row " << nextRow << " is flagged so this problem will be ignored." << LogIO::POST;
+	      }		
 	    }
 	    // found a matching row
 	    Int theSPWId = DDtoSPWIndex(DDIdCol(nextRow));
 	    if(SPWtoRowIndex.isDefined(theSPWId)){ // there should be a one-to-one relation: SPW <-> matching row
-	      os << LogIO::SEVERE << "Error: for time " << MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ","
+	      os << LogIO::WARN << "Error: for time " << MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ","
 		 << theAntenna2 << "), field "<< theField << " found more than one row for SPW "
 		 << theSPWId << LogIO::POST;
-	      return False;
+	      if(!flagRowCol(nextRow)){
+		os << LogIO::SEVERE << "You need to flag row " << nextRow << " to proceed." << LogIO::POST;
+		return False;
+	      }
+	      else{
+		os << LogIO::WARN << "Fortunately, row " << nextRow << " is flagged so this problem will be ignored." << LogIO::POST;
+	      }		
 	    }
 	    else{ // this SPW not yet covered, memorize SPWId, row number, and relation
 	      matchingRowSPWIds.push_back(theSPWId);

@@ -316,15 +316,26 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
           myf=self.__globals__
       else:
           myf=ipython_globals
-
+#      print 'param:', param, 'value:', value
       try :
          if str(type(value)) != "&lt;type &apos;instance&apos;&gt;" :
+            value0 = value
             value = myf['cu'].expandparam(param, value)
-            if(type(value) == numpy.ndarray) :
-               myf[param] = value.tolist()
+            matchtype = False
+            if(type(value) == numpy.ndarray):
+               if(type(value) == type(value0)):
+                  myf[param] = value.tolist()
+               else:
+                  #print 'value:', value, 'value0:', value0
+                  #print 'type(value):', type(value), 'type(value0):', type(value0)
+                  myf[param] = value0
+                  if type(value0) != list :
+                     matchtype = True
             else :
                myf[param] = value
             value = myf['cu'].verifyparam({param:value})
+            if matchtype:
+               value = False
       except Exception, instance:
          #ignore the exception and just return it unchecked
          myf[param] = value

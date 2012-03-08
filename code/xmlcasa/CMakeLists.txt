@@ -178,6 +178,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/check_exceptionhandling.py
   scripts/check_input_saverestore.py
   scripts/cleanhelper.py
+  scripts/correct_ant_posns.py
   scripts/dbusutil.py
   scripts/dict_to_table.py
   scripts/filecatalog.py

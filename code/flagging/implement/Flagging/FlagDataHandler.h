@@ -327,6 +327,7 @@ private:
 
 class VisMapper
 {
+	typedef Complex (casa::VisMapper::*corrProduct)(uInt,uInt);
 
 public:
 
@@ -336,7 +337,8 @@ public:
 
     void setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
 
-    vector<uInt> getSelectedCorrelations() { return selectedCorrelations_p;}
+    vector< vector<uInt> > getSelectedCorrelations() { return selectedCorrelations_p;}
+    vector< string > getSelectedCorrelationStrings() { return selectedCorrelationStrings_p;}
 
 	Float operator()(uInt chan, uInt row);
 	Float operator()(uInt pol, uInt chan, uInt row);
@@ -400,12 +402,14 @@ private:
 	Float (casa::VisMapper::*applyVisExpr_p)(Complex);
 	Complex (casa::VisMapper::*getVis_p)(uInt,uInt,uInt);
 	Complex (casa::VisMapper::*getCorr_p)(uInt,uInt);
+	vector<corrProduct> selectedCorrelationProducts_p;
+	vector< vector<uInt> > selectedCorrelations_p;
+	vector<string> selectedCorrelationStrings_p;
 	CubeView<Complex> *leftVis_p;
 	CubeView<Complex> *rightVis_p;
 	IPosition reducedLength_p;
 	polarizationMap *polMap_p;
 	String expression_p;
-	vector<uInt> selectedCorrelations_p;
 };
 
 class FlagMapper
@@ -413,20 +417,21 @@ class FlagMapper
 
 public:
 
-	FlagMapper(Bool flag,	vector<uInt> selectedCorrelations,
+	FlagMapper(Bool flag,	vector < vector<uInt> > selectedCorrelations,
 							CubeView<Bool> *commonFlagsView,
 							CubeView<Bool> *originalFlagsView,
 							CubeView<Bool> *privateFlagsView=NULL,
 							VectorView<Bool> *commonFlagRowView=NULL,
 							VectorView<Bool> *originalFlagRowView=NULL,
 							VectorView<Bool> *privateFlagRowView=NULL);
-	FlagMapper(Bool flag,vector<uInt> selectedCorrelations);
+	FlagMapper(Bool flag,vector< vector<uInt> > selectedCorrelations);
 	~FlagMapper();
 
 	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
 	void setParentFlagRow(VectorView<Bool> *commonFlagRowView,VectorView<Bool> *originalFlagRowView,VectorView<Bool> *privateFlagRowView=NULL);
 
 	void applyFlag(uInt chan, uInt row);
+	void applyFlag(uInt pol, uInt channel, uInt row);
 	void applyFlagRow(uInt row);
 
 	Bool getOriginalFlags(uInt chan, uInt row);
@@ -465,7 +470,7 @@ public:
     	return;
     }
 
-    vector<uInt> getSelectedCorrelations() {return selectedCorrelations_p;}
+	vector< vector<uInt> > getSelectedCorrelations() {return selectedCorrelations_p;}
 
     void activateCheckMode() {applyFlag_p = &FlagMapper::checkCommonFlags;}
 
@@ -474,7 +479,7 @@ public:
 
 protected:
 
-	void setExpressionMapping(vector<uInt> selectedCorrelations);
+	void setExpressionMapping(vector< vector<uInt> > selectedCorrelations);
 
 	// Apply flags to common flag cube
 	void applyCommonFlags(uInt pol, uInt channel, uInt row);
@@ -499,7 +504,7 @@ private:
 	VectorView<Bool> *commonFlagRowView_p;
 	VectorView<Bool> *originalFlagRowView_p;
 	VectorView<Bool> *privateFlagRowView_p;
-	vector<uInt> selectedCorrelations_p;
+	vector< vector<uInt> > selectedCorrelations_p;
 	uInt nSelectedCorrelations_p;
 	uInt flagsPerRow_p;
 	void (casa::FlagMapper::*applyFlag_p)(uInt,uInt,uInt);
@@ -555,6 +560,9 @@ public:
 
 	// Generate selected Measurement Set
 	bool selectData();
+
+	// Methods to switch on/off async i/o
+	void enableAsyncIO(Bool enable);
 
 	// Pre-Load columns (in order to avoid parallelism problems when not using
 	// async i/o, and also to know what columns to pre-fetch in async i/o mode)

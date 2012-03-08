@@ -734,6 +734,11 @@ void QtProfile::wcChanged( const String c,
 				 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 				 (Int)QtProfile::SUM, 0, cSysRval);
    	 break;
+    case QtProfile::PFLUX:
+		 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+				 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+				 (Int)QtProfile::FLUX, 0, cSysRval);
+   	 break;
     //case QtProfile::PVRMSE:
 	//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 	//			 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
@@ -809,6 +814,11 @@ void QtProfile::wcChanged( const String c,
 				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						"world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 						(Int)QtProfile::SQRTSUM, 1, cSysRval);
+				break;
+			case QtProfile::PFLUX:
+				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						"world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::EFLUX, 1, cSysRval);
 				break;
 		    default:
 		    	if (z_eval.size()> 0)
@@ -912,6 +922,14 @@ void QtProfile::wcChanged( const String c,
    	 yUnitPrefix = "";
     }
 
+    // remove the "/beam" in case of plotting flux
+    if(itsPlotType==QtProfile::PFLUX){
+      Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
+      if(pos>-1){
+	yUnit.remove(pos,5);
+      }
+    }
+
     pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
 
     // plot the graph
@@ -943,6 +961,11 @@ void QtProfile::wcChanged( const String c,
    		 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
    				 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
    				 (Int)QtProfile::PSUM, 0);
+   		 break;
+   	 case QtProfile::PFLUX:
+   		 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+   				 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+   				 (Int)QtProfile::PFLUX, 0);
    		 break;
    		 //case QtProfile::PVRMSE:
    		 //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
@@ -1041,6 +1064,7 @@ void QtProfile::changePlotType(const QString &text) {
 
 	// get the coo-sys
 	CoordinateSystem cSys = image->coordinates();
+	yUnit = QString(image->units().getName().chars());
 
 	switch (itsPlotType)
 	{
@@ -1061,6 +1085,7 @@ void QtProfile::changePlotType(const QString &text) {
 			errorMode->removeItem(errorMode->findText("propagated"));
 		break;
 	case QtProfile::PSUM:
+	case QtProfile::PFLUX:
 		if (errorMode->findText("rmse") > -1)
 			errorMode->removeItem(errorMode->findText("rmse"));
 		if (cSys.qualityAxisNumber() > -1 && errorMode->findText("propagated") < 0)
@@ -1680,6 +1705,11 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::SUM, 0);
 	    break;
+	case QtProfile::PFLUX:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					 (Int)QtProfile::FLUX, 0);
+	    break;
 	//case QtProfile::PVRMSE:
 	//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 	//			 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
@@ -1713,6 +1743,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 	    } else {
 		switch (itsPlotType) {
 		    case QtProfile::PSUM:
+		    case QtProfile::PFLUX:
 			*itsLog << LogIO::NORMAL << "Plotting RMSE as error of SUM makes no sense!" << LogIO::POST;
 			if (z_eval.size()> 0)
 			    z_eval.resize(0);
@@ -1751,6 +1782,11 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 						     (Int)QtProfile::SQRTSUM, 1);
+			break;
+		    case QtProfile::PFLUX:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						     (Int)QtProfile::EFLUX, 1);
 			break;
 		    default:
 			if (z_eval.size()> 0)
@@ -1877,6 +1913,11 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					"world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					(Int)QtProfile::PSUM, 0);
+		break;
+	    case QtProfile::PFLUX:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::PFLUX, 0);
 		break;
 	    //case QtProfile::PVRMSE:
 	    //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
@@ -2128,6 +2169,11 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::SUM, 0);
 	    break;
+	case QtProfile::PFLUX:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					 (Int)QtProfile::FLUX, 0);
+	    break;
 	//case QtProfile::PVRMSE:
 	//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 	//			 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
@@ -2199,6 +2245,11 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 						     (Int)QtProfile::SQRTSUM, 1);
+			break;
+		    case QtProfile::PFLUX:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						     (Int)QtProfile::EFLUX, 1);
 			break;
 		    default:
 			if (z_eval.size()> 0)
@@ -2325,6 +2376,11 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					"world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					(Int)QtProfile::PSUM, 0);
+		break;
+	    case QtProfile::PFLUX:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::PFLUX, 0);
 		break;
 	    //case QtProfile::PVRMSE:
 	    //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
@@ -2680,6 +2736,7 @@ void QtProfile::fillPlotTypes(){
 		plotMode->addItem("mean");
 		plotMode->addItem("median");
 		plotMode->addItem("sum");
+		plotMode->addItem("flux");
 		//plotMode->addItem("rmse");
 
 		// read the preferred plot mode from casarc
@@ -2725,6 +2782,7 @@ void QtProfile::fillPlotTypes(){
 			errorMode->addItem("rmse");
 		break;
 	case QtProfile::PSUM:
+	case QtProfile::PFLUX:
 		if (cSys.qualityAxisNumber() > -1)
 			errorMode->addItem("propagated");
 		break;
@@ -2756,6 +2814,8 @@ void QtProfile::stringToPlotType(const QString &text, QtProfile::PlotType &pType
 		pType = QtProfile::PMEDIAN;
 	else if (!text.compare(QString("sum")))
 		pType = QtProfile::PSUM;
+	else if (!text.compare(QString("flux")))
+		pType = QtProfile::PFLUX;
 	//else if (!text.compare(QString("rmse")))
 	//	pType = QtProfile::PVRMSE;
 	else

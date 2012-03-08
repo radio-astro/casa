@@ -34,6 +34,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
 #include <casa/Quanta/Quantum.h>
+#include <tableplot/TablePlot/FlagVersion.h>
 
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <flagging/Flagging/FlagAgentBase.h>
@@ -132,6 +133,7 @@ protected:
 	// variables for initFlagDataHandler and initAgents
 	FlagDataHandler *fdh_p;
 	std::vector<Record> agents_config_list_p;
+	std::vector<Record> agents_config_list_copy_p;
 	FlagAgentList agents_list_p;
 
 public:  
@@ -169,7 +171,7 @@ public:
 	bool saveFlagVersion(String versionname, String comment, String merge);
 	bool restoreFlagVersion(Vector<String> versionname, String merge);
 	bool deleteFlagVersion(Vector<String> versionname);
-	bool getFlagVersionList( Vector<String> &verlist);
+	bool getFlagVersionList(Vector<String> &verlist);
 
 	// Agent's specific parsing methods (for convenience only)
 	bool parseManualParameters(String field, String spw, String array, String feed, String scan,

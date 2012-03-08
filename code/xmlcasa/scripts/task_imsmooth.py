@@ -225,7 +225,7 @@ def _get_parms_for_targetres(myia, major, minor, pa):
         "Using convolution parameters of major=" + major
             + ", minor=" + minor + ", pa="
             + pa + " to achieve desired resolution",
-        'WARN'
+        'INFO'
     )
     return [major, minor, pa, True]
 

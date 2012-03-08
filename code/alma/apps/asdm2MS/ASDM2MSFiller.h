@@ -299,14 +299,15 @@ class ASDM2MSFiller
 	       vector<double>&   position_,  // Must be a 3 elements vector !!!
 	       vector<double>&   receptor_angle_);
   
-  void addField( const string&           name_,
-		 const string&           code_,
-		 double            time_,
-		 vector<double>&   delay_dir_,
-		 vector<double>&   phase_dir_,
-		 vector<double>&   reference_dir_,
-		 const string&     direction_code_,
-		 int               source_id_);
+  void addField( const string&			name_,
+		 const string&			code_,
+		 double				time_,
+		 int                            num_poly_,
+		 vector<vector<double> >&	delay_dir_,
+		 vector<vector<double> >&	phase_dir_,
+		 vector<vector<double> >&	reference_dir_,
+		 const string&			direction_code_,
+		 int				source_id_);
 
   void addFlagCmd(double	time_,
 		  double	interval_,

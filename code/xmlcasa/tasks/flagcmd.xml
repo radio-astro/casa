@@ -15,8 +15,8 @@
         The flagging command syntax is currently defined in CAS-2405.
 
         HISTORY: Task created v1.0 S.T. Myers 2010-08-31 (3.1.0)
-                 Last updated v4.2 S.T. Myers 2012-02-27 (3.4.0) code
-                 Last updated v4.2 S.T. Myers 2012-02-27 (3.4.0) docs
+                 Last updated v4.2 S.T. Myers 2012-03-01 (3.4.0) code
+                 Last updated v4.2 S.T. Myers 2012-03-01 (3.4.0) docs
 
         </description>
         <input>
@@ -757,7 +757,8 @@
 
           poln='' (for antenna polarization, e.g. R and L or X and Y)
           Note: this currently gets translated into correlations so it
-          over-flags the cross-pol products.
+          over-flags the cross-pol products, e.g. for poln='R' will
+          flag correlation='RR,RL,LR'.
         
         2. Basic elaboration options for online and interface use
         
@@ -805,8 +806,8 @@
         NOTE: we do not support syntax for use of mode='rfi' or mode='autoflag' at
         this time
 
-HISTORY: Task last updated v4.2 S.T. Myers 2012-02-27 (3.4.0)
-         Docs last updated v4.2 S.T. Myers 2012-02-27 (3.4.0)
+HISTORY: Task last updated v4.2 S.T. Myers 2012-03-01 (3.4.0)
+         Docs last updated v4.2 S.T. Myers 2012-03-01 (3.4.0)
 
 </example>
 </task>

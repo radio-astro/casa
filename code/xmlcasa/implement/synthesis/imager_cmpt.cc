@@ -373,12 +373,12 @@ imager::exprmask(const std::string& mask, const double expr)
 }
 
 bool
-imager::feather(const std::string& image, const std::string& highres, const std::string& lowres, const std::string& lowpsf, const bool showplot, const bool async)
+imager::feather(const std::string& image, const std::string& highres, const std::string& lowres, const std::string& lowpsf, const double dishdiam, const bool showplot, const bool async)
 {
 
   Bool rstat(False);
    try {
-     rstat = itsImager->feather(String(image), String(highres), String(lowres), String(lowpsf), showplot);
+     rstat = itsImager->feather(String(image), String(highres), String(lowres), String(lowpsf), Float(dishdiam), showplot);
    } catch  (AipsError x) {
      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);

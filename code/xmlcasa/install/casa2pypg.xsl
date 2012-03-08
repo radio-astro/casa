@@ -259,12 +259,31 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 	    break
       myf=sys._getframe(stacklevel).f_globals
 
-      value = myf['cu'].expandparam(param, value)
-      if(type(value) == numpy.ndarray) :
-         myf[param] = value.tolist()
-      else :
+#      print 'param:', param, 'value:', value
+      try :
+         if str(type(value)) != "&lt;type &apos;instance&apos;&gt;" :
+            value0 = value
+            value = myf['cu'].expandparam(param, value)
+            matchtype = False
+            if(type(value) == numpy.ndarray):
+               if(type(value) == type(value0)):
+                  myf[param] = value.tolist()
+               else:
+                  #print 'value:', value, 'value0:', value0
+                  #print 'type(value):', type(value), 'type(value0):', type(value0)
+                  myf[param] = value0
+                  if type(value0) != list :
+                     matchtype = True
+            else :
+               myf[param] = value
+            value = myf['cu'].verifyparam({param:value})
+            if matchtype:
+               value = False
+      except Exception, instance:
+         #ignore the exception and just return it unchecked
          myf[param] = value
-      return myf['cu'].verifyparam({param:value})
+      return value
+
 #
 #
     def description(self, key=&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;, subkey=None):

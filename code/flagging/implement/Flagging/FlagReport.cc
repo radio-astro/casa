@@ -140,10 +140,13 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
     Int numReport = nReport();
     
     // React to different types of input FlagReports
-    if( inpReport.reportType() != String("list")) // It's not a list. Add as a subRecord
+    if( inpReport.reportType() != String("list")) // It's not a list. 
       {
-	defineRecord( RecordFieldId(String("report")+String::toString(numReport)) , inpReport );
-	define( RecordFieldId("nreport") , (Int)(numReport+1) );
+	if ( inpReport.reportType() != String("none") ) // It's not empty either. Add as a subRecord.
+	  {
+	    defineRecord( RecordFieldId(String("report")+String::toString(numReport)) , inpReport );
+	    define( RecordFieldId("nreport") , (Int)(numReport+1) );
+	  }
       }
     else // It's a list. Append the input list to the current one, re-indexing appropriately
       {

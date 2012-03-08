@@ -667,6 +667,7 @@ def update_params(func, printtext=True, ipython_globals=None):
     itsdef=myf[myf['taskname']].defaults
     itsparams=myf[myf['taskname']].parameters
     params=a
+    #print 'itsparams:', itsparams
     for k in range(len(params)):
         paramval = obj.defaults(params[k], myf)
 
@@ -685,10 +686,13 @@ def update_params(func, printtext=True, ipython_globals=None):
                 myf.update({params[k]:paramval})
                 itsparams.update({params[k]:paramval})
             if(printtext):
+                #print 'params:', params[k], '; myf[params]:', myf[params[k]]
                 if(hascheck):
                     noerror = obj.check_params(params[k],myf[params[k]],myf)
                 # RI this doesn't work with numpy arrays anymore.  Noone seems
                 # interested, so I'll be the red hen and try to fix it.
+                
+                #print 'params:', params[k], '; noerror:', noerror, '; myf[params]:', myf[params[k]]
                 myfparamsk=myf[params[k]]
                 if(type(myf[params[k]])==pl.ndarray):
                     myfparamsk=myfparamsk.tolist()

@@ -238,6 +238,7 @@ def importevla2(
                     'mode=clip clipzeros=True correlation=ABS_RR'
                 flagz['id'] = 'ZERO_RR'
                 allflags[nflags] = flagz.copy()
+                savelist[nflags] = flagz.copy()
                 nflags += 1
             #
                 flagz['reason'] = 'CLIP_ZERO_LL'
@@ -256,11 +257,6 @@ def importevla2(
         if shadow:
             flagh = {}
             # flag shadowed data
-            addantenna = {}
-            if antennafile != '':
-                # Get a dictionary with the antenna names, positions and diameters
-                addantenna = fh.readAntennaList(antennafile)
-
             flagh['time'] = 0.5 * (ms_startmjds + ms_endmjds)
             flagh['interval'] = ms_endmjds - ms_startmjds
             flagh['level'] = 0
@@ -272,9 +268,14 @@ def importevla2(
             # Add to myflagz
             flagh['reason'] = 'SHADOW'
             #            flagh['cmd'] = "mode='shadow' diameter=" + str(diameter)
-            flagh['command'] = 'mode=shadow tolerance=' \
+            if antennafile != '':
+                flagh['command'] = 'mode=shadow tolerance=' \
                 + str(tolerance) + ' recalcuvw=' + str(recalcuvw) \
-                + ' addantenna=' + str(addantenna)
+                +' antennafile='+antennafile
+            else:
+                flagh['command'] = 'mode=shadow tolerance=' \
+                + str(tolerance) + ' recalcuvw=' + str(recalcuvw)
+                
             flagh['id'] = 'SHADOW'
             allflags[nflags] = flagh.copy()
             savelist[nflags] = flagh.copy()
