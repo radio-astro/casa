@@ -233,7 +233,6 @@ Bool ImageFITSConverter::ImageToFITS(
 	// get the coo-sys and check for a quality axis
 	CoordinateSystem cSys= image.coordinates();
 	if (cSys.hasQualityAxis()){
-
 		// put the image to the FITSOut
 		if (!ImageFITSConverter::QualImgToFITSOut(error, os, image, outfile, memoryInMB,
 				preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
@@ -642,7 +641,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 				" identical.";
 		return False;
 	}
-
 	//
 	// Make degenerate axes last if requested
 	// and make Stokes the very last if requested
@@ -650,13 +648,11 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	IPosition shape = image.shape();
 	IPosition newShape = shape;
 	const uInt ndim = shape.nelements();
-
 	IPosition cursorOrder(ndim); // to be used later in the actual data copying
 	for (uInt i=0; i<ndim; i++) {
 		cursorOrder(i) = i;
 	}
 	Bool needNonOptimalCursor = False; // the default value for the case no axis reordering is necessary
-
 	if(stokesLast || degenerateLast){
 		Vector<Int> order(ndim);
 		Vector<String> cNames = cSys.worldAxisNames();
@@ -701,7 +697,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 			}
 			cSys.transpose(order,order); // apply the degenerate reordering
 		}
-
 		for (uInt i=0; i<ndim; i++) {
 			cursorOrder(i) = order(i);
 			if(order(i)!=(Int)i){
@@ -726,6 +721,7 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	const Short minshort = -32768;
 	Bool hasBlanks = True;
 	if (BITPIX == -32) {
+
 		bscale = 1.0;
 		bzero = 0.0;
 		header.define("bitpix", BITPIX);
@@ -808,7 +804,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 				cursor.freeStorage(cptr, deletePtr);
 			}
 		}
-
 		// Make sure bscale does not come out to be zero
 
 		if (::casa::near(minPix, maxPix)) {
@@ -833,7 +828,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 				"BITPIX must be -32 (floating point) or 16 (short integer)";
 		return False;
 	}
-
 
 	// At this point, for 32 floating point, we must apply the given
 	// mask.  For 16bit, we may know that there are in fact no blanks
@@ -869,7 +863,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	if (!ii.toFITS (error, header)) return False;
 	//
 	header.define("COMMENT1", ""); // inserts spaces
-
 	// I should FITS-ize the units
 
 	header.define("BUNIT", upcase(image.units().getName()).chars());
@@ -880,7 +873,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	Bool ok = cSys.toFITSHeader(header, shapeCopy, True, 'c', True, // use WCS
 			preferVelocity, opticalVelocity,
 			preferWavelength, airWavelength);
-
 	if (!ok) {
 		os << LogIO::SEVERE << "Could not make a standard FITS header. Setting"
 				" a simple linear coordinate system." << LogIO::POST;
@@ -906,7 +898,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 			return False;
 		}
 	}
-
 	// When this if test is True, it means some pixel axes had been removed from
 	// the coordinate system and degenerate axes were added.
 
@@ -917,7 +908,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 		}
 		header.define("NAXIS", naxis);
 	}
-
 	//
 	// Add in the fields from miscInfo that we can
 	//
@@ -1061,7 +1051,7 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	//
 	LoggerHolder& logger = image.logger();
 	//
-	Vector<String> historyChunk;
+	vector<String> historyChunk;
 	uInt nstrings;
 	Bool aipsppFormat;
 	uInt firstLine = 0;
@@ -1079,7 +1069,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	// END
 	//
 	kw.end();
-
 	//
 	// Finally get around to copying the data
 	//
@@ -1089,7 +1078,6 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 			sizeof(Float),
 			sizeof(Float),
 			memoryInMB);
-
 	if(needNonOptimalCursor && newShape.nelements()>0){
 		// use cursor the size of one image row in order to enable axis re-ordering
 		newCursorShape.resize(1);
@@ -1106,9 +1094,7 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	//
 	AlwaysAssert(sizeof(Float) == sizeof(float), AipsError);
 	AlwaysAssert(sizeof(Short) == sizeof(short), AipsError);
-
 	try {
-
 		Int nIter = max(1,shape.product()/newCursorShape.product());
 		Int iUpdate = max(1,nIter/20);
 		//
@@ -1127,10 +1113,12 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 		PrimaryArray<Short>* fits16 = 0;
 
 		if (BITPIX == -32) {
-			if (primHead)
+			if (primHead) {
 				fits32 = new PrimaryArray<Float>(kw);
-			else
+			}
+			else {
 				fits32 = new ImageExtension<Float>(kw);
+			}
 			if (fits32==0 || fits32->err()) {
 				error = "Error creating FITS file from keywords";
 				return False;
@@ -1140,11 +1128,14 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 				delete outfile;
 				return False;
 			}
-		} else if (BITPIX == 16) {
-			if (primHead)
+		}
+		else if (BITPIX == 16) {
+			if (primHead) {
 				fits16 = new PrimaryArray<Short>(kw);
-			else
+			}
+			else {
 				fits16 = new ImageExtension<Short>(kw);
+			}
 			if (fits16==0 || fits16->err()) {
 				error = "Error creating FITS file from keywords";
 				return False;
@@ -1154,7 +1145,8 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 				error = "Error writing FITS header";
 				return False;
 			}
-		} else {
+		}
+		else {
 			AlwaysAssert(0, AipsError); // NOTREACHED
 		}
 
@@ -1192,14 +1184,16 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 					for (uInt j=0; j<nPts; j++) {
 						if (maskPtr[j]) {
 							ptr2[j] = ptr[j];
-						} else {
+						}
+						else {
 							ptr2[j] = ptr[j];
 							setNaN(ptr2[j]);
 						}
 					}
 					fits32->store(ptr2, bufferSize);
 					delete [] ptr2;
-				} else {
+				}
+				else {
 					fits32->store(ptr, bufferSize);
 				}
 				Int hduErr = 0;
@@ -1215,7 +1209,8 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 							+ String::toString(hduErr);
 					return False;
 				}
-			} else if (fits16) {
+			}
+			else if (fits16) {
 				short blankOffset = hasBlanks ? 1 : 0;
 				//
 				if (applyMask) {
@@ -1233,7 +1228,8 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 							}
 						}
 					}
-				} else {
+				}
+				else {
 					for (Int j=0; j<bufferSize; j++) {
 						//                    if (ptr[j] != ptr[j]) {
 						if (isNaN(ptr[j])) {
@@ -1258,12 +1254,14 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 						error = "Write failed (full disk or tape?";
 						return False;
 					}
-				} else {
+				}
+				else {
 					error = "ImageFITS2Converter: Storing FITS primary Short array failed with HDU error code "
 							+ String::toString(hduErr);
 					return False;
 				}
-			} else {
+			}
+			else {
 				AlwaysAssert(0, AipsError); // NOTREACHED
 			}
 			//

@@ -5991,7 +5991,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		trc(pixQualAx) = whichQuality;
 	}
 
-	// make sure the pixel is insed the mage
+	// make sure the pixel is inside the image
 	if ((xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
 		  || (xypix(1) > pImage_p->shape()(1))) {
 		return False;
@@ -6068,13 +6068,58 @@ Bool ImageAnalysis::getFreqProfile(
 		return False;
 	}
 
+	Double np=1.; // the number of pixels in the synth beam, needed for flux or eflux
+	if(combineType==7 || combineType==8){ // flux or eflux
+	    // determine number of pixels in synth beam
+	    const Unit& brightnessUnit = pImage_p->units();
+	    String bUName = brightnessUnit.getName();
+	    bUName.downcase();
+	    if(bUName.contains("/beam")){
+		
+		ImageMetaData md(*pImage_p);
+		if(!md.hasDirectionCoordinate()){
+		    *itsLog << LogIO::WARN << "No DirectionCoordinate - cannot convert flux density"
+			    << LogIO::POST;
+		    return False;
+		}
+		
+		Quantity pixArea; 
+		if(!md.getDirectionPixelArea(pixArea)){
+		    *itsLog << LogIO::WARN << "Cannot determine solid angle of direction pixel"
+			    << LogIO::POST;
+		    return False;
+		}
+		Quantity beamArea;
+		if(!md.getBeamArea(beamArea)){
+		    *itsLog << LogIO::WARN << "Cannot determine solid angle of beam. Will assume beam==1 pixel"
+			    << LogIO::POST;
+		    beamArea = pixArea;
+		}
+		
+		np = (beamArea/pixArea).getValue();
+
+		if(np<=0.){
+		    *itsLog << LogIO::WARN << "Restoring beam area is zero! Cannot correctly calculate flux." 
+			    << LogIO::POST;
+		    return False;
+		}
+	    }
+	    else{
+		np = 1.;
+	    }
+	}
+
 	// for a point extraction,
-	// call the another method
+	// call another method
 	if (n == 1) {
 		xy[0] = x[0];
 		xy[1] = y[0];
-		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
-				whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality, restValue);
+		Bool ok =  getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
+					  whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality, restValue);
+		if(ok && (combineType==7 || combineType==8)){
+		    zyaxisval = zyaxisval/np;
+		}
+		return ok;
 	}
 
 	// n > 1, i.e. region to average over is a rectangle or polygon
@@ -6191,8 +6236,8 @@ Bool ImageAnalysis::getFreqProfile(
 					zyaxisval(k) = median(planedat);
 			}
 			break;
-		case 2:
-			// combine with sum
+		case 2: // combine with sum
+		case 7:	// combine with flux (== sum / number of pixels in synth beam)
 			for (Int k = 0; k < nchan; ++k) {
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
@@ -6200,6 +6245,11 @@ Bool ImageAnalysis::getFreqProfile(
 				if (planedat.nelementsValid() >0)
 					zyaxisval(k) = sum(planedat);
 			}
+
+			if(combineType==7){
+			    zyaxisval = zyaxisval/np;
+			}
+
 			break;
 		case 3:
 			// combine with variance
@@ -6221,9 +6271,9 @@ Bool ImageAnalysis::getFreqProfile(
 					zyaxisval(k) = stddev(planedat);
 			}
 			break;
-		case 5:
-			// combine with the square root of the sum of squares
-			for (Int k = 0; k < nchan; ++k) {
+		case 5:	// combine with the square root of the sum of squares
+		case 8: // combine with the square root of the sum of squares / number of pixels in synth beam
+		        for (Int k = 0; k < nchan; ++k) {
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
@@ -6239,6 +6289,11 @@ Bool ImageAnalysis::getFreqProfile(
 					//zyaxisval(k) = sqrt(sum(planedat));
 				}
 			}
+
+			if(combineType==8){
+			    zyaxisval = zyaxisval/np;
+			}
+
 			break;
 		case 6:
 			// combine with the average square root of the sum of squares
@@ -6270,6 +6325,7 @@ Bool ImageAnalysis::getFreqProfile(
 				if (planedat.nelementsValid() >0)
 					zyaxisval(k) = mean(planedat);
 			}
+			break;
 		}
 	} catch (AipsError x) {
 		*itsLog << "Error in extraction: " << x.getMesg() << LogIO::POST;
