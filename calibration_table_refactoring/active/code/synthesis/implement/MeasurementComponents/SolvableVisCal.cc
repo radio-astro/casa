@@ -46,6 +46,7 @@
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <synthesis/CalTables/CTColumns.h>
+#include <synthesis/CalTables/CTIter.h>
 #include <casa/sstream.h>
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
@@ -92,12 +93,13 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   dataInterval_(0.0),
   fitWt_(0.0),
   fit_(0.0),
-  solveCPar_(vs.numberSpw(),NULL),
+  solveCPar_(vs.numberSpw(),NULL),  // TBD: move inflation into ctor body
   solveRPar_(vs.numberSpw(),NULL),
   solveParOK_(vs.numberSpw(),NULL),
   solveParErr_(vs.numberSpw(),NULL),
   solveParSNR_(vs.numberSpw(),NULL),
-  solveAllPar_(vs.numberSpw(),NULL),
+  solveAllCPar_(vs.numberSpw(),NULL),
+  solveAllRPar_(vs.numberSpw(),NULL),
   solveAllParOK_(vs.numberSpw(),NULL),
   solveAllParErr_(vs.numberSpw(),NULL),
   solveAllParSNR_(vs.numberSpw(),NULL),
@@ -292,6 +294,134 @@ void SolvableVisCal::setApply(const Record& apply) {
   //    apply           Record&       Contains application params
   //    
 
+  if (prtlev()>2) 
+    cout << "SVC::setApply(apply)" << endl;
+
+  // Call VisCal version for generic stuff
+  VisCal::setApply(apply);
+
+  // Collect Cal table parameters
+  if (apply.isDefined("table")) {
+    calTableName()=apply.asString("table");
+    // Verify that CalTable is of correct type
+    verifyCalTable(calTableName());
+  }
+
+  // Collect interpolation parameters
+  if (apply.isDefined("interp"))
+    tInterpType()=apply.asString("interp");
+
+  // Protect against non-specific interp
+  if (tInterpType()=="")
+    tInterpType()="linear";
+
+
+  /*  NEWCALTABLE: Tinker selection later
+  if (apply.isDefined("select"))
+    calTableSelect()=apply.asString("select");
+
+  else {
+    
+    calTableSelect()="";
+    //    String spwsel("");
+    //    if (apply.isDefined("spw")) {
+    //      ostringstream os;
+    //      os << Vector<Int>(apply.asArrayInt("spw"));
+    //      spwsel = os.str();
+    //    }
+    //    cout << "spwsel = " << spwsel << endl;
+
+    String fldsel("");
+    if (apply.isDefined("field")) {
+      ostringstream os;
+      os << Vector<Int>(apply.asArrayInt("field"));
+      if (os.str()!="[]")
+	fldsel = os.str();
+    }
+    //    cout << "fldsel = " << fldsel << endl;
+
+    if (fldsel.length()>0) {
+      ostringstream os;
+      os << "(FIELD_ID IN " << fldsel << ")";
+      calTableSelect() = os.str();
+    }
+    //   cout << "calTableSelect() = " << calTableSelect() << endl;
+  }
+  */
+
+  indgen(spwMap());
+  Bool autoFanOut(False);
+  if (apply.isDefined("spwmap")) {
+    Vector<Int> spwmap(apply.asArrayInt("spwmap"));
+    if (allGE(spwmap,0)) {
+      // User has specified a valid spwmap
+      if (spwmap.nelements()==1)
+	spwMap()=spwmap(0);
+      else
+	spwMap()(IPosition(1,0),IPosition(1,spwmap.nelements()-1))=spwmap;
+      // TBD: Report non-trivial spwmap to logger.
+      //      cout << "Note: spwMap() = " << spwMap() << endl;
+    }
+    else if (spwmap(0)==-999)
+      autoFanOut=True;
+  }
+
+  AlwaysAssert(allGE(spwMap(),0),AipsError);
+
+  // TBD: move interval to VisCal version?
+  // TBD: change to "reach"
+  if (apply.isDefined("t"))
+    interval()=apply.asFloat("t");
+
+  // This is apply context  
+  setApplied(True);
+  setSolved(False);
+
+  //  TBD:  "Arranging to apply...."
+
+  // TBD:  Move the following so as to be triggered
+  //       when actual application starts?  E.g., SVC::initApply()...
+
+  // Open the caltable
+  //  This loads the CalTable into a MemoryTable
+  ct_ = new NewCalTable(calTableName(),Table::Old,Table::Memory);
+
+  // Make the interpolation engine
+  // TBD: freq-axis interpolation (defaults to linear, for now)
+  // TBD: pass in spwmap
+  ci_ = new CTPatchedInterp(*ct_,nPar(),tInterpType());
+
+  // Handle possible global spw fan-out
+  if (autoFanOut) {
+    throw(AipsError("autoFanOut NYI for new CalTables"));
+    /* NEWCALTABLE
+    // Use first valid spw for all spws
+    Int ispw=0;
+    while (!cs().spwOK()(ispw)) ++ispw;
+    spwMap()=ispw;
+    logSink() << "Using automatic calibration fan-out of spw = " << ispw
+	      << " for " << typeName()
+	      << LogIO::POST;
+    */
+  }
+
+  // Channel counting info 
+  //  (soon will deprecate, I think, because there will be no need
+  //    to do channel registration in the apply)
+  nChanParList()=0;  // is this MSnchan?
+  startChanList()=0;  // all zero
+
+  //  cout << "End of SVC::setApply" << endl;
+
+}
+
+/* NEWCALTABLE
+// Setapply from a Cal Table, etc.
+void SolvableVisCal::setApply(const Record& apply) {
+  //  Inputs:
+  //    apply           Record&       Contains application params
+  //    
+
   if (prtlev()>2) cout << "SVC::setApply(apply)" << endl;
 
   // Call VisCal version for generic stuff
@@ -334,11 +464,6 @@ void SolvableVisCal::setApply(const Record& apply) {
     //   cout << "calTableSelect() = " << calTableSelect() << endl;
   }
   
- 
-  // Does this belong here?
-  if (apply.isDefined("append"))
-    append()=apply.asBool("append");
-
   // Collect interpolation parameters
   if (apply.isDefined("interp"))
     tInterpType()=apply.asString("interp");
@@ -442,7 +567,7 @@ void SolvableVisCal::setApply(const Record& apply) {
 
 }
 
-
+*/
 
 
 // ===================================================
@@ -2041,18 +2166,6 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 void SolvableVisCal::initSolve(VisSet& vs) {
 
   if (prtlev()>2) cout << "SVC::initSolve(vs)" << endl;
@@ -2812,13 +2925,20 @@ void SolvableVisCal::calcPar() {
 
   Bool newcal(False);
 
-  // Interpolate solution
-  newcal=ci().interpolate(currTime(),currSpw());
+  // Interpolate solution   (CTPatchedInterp)
+  if (freqDepPar()) {
+    //    cout << "currFreq() = " << currFreq().shape() << " " << currFreq() << endl;
+    // Call w/ freq-dep
+    newcal=ci_->interpolate(currField(),currSpw(),currTime(),currFreq());
+  }
+  else
+    // Don't bother to include freq
+    // TBD: will include fiducial freq, soon, to support phase delay
+    newcal=ci_->interpolate(currField(),currSpw(),currTime());
 
   // TBD: signal failure to find calibration??  (e.g., for a spw?)
 
-  // Parameters now valid (independent of newcal!!)
-  //  (TBD: should have ci() to tell us this?)
+  // Parameters now (or still) valid (independent of newcal!!)
   validateP();
 
   // If new cal parameters, use them 
@@ -2827,14 +2947,25 @@ void SolvableVisCal::calcPar() {
     //    cout << "Found new cal!" << endl;
     
     // Reference result
-    currCPar().reference(ci().result());
-    currParOK().reference(ci().resultOK());
+    if (parType()==VisCalEnum::COMPLEX) 
+      currCPar().reference(ci_->resultC(currField(),currSpw()));
+    else if (parType()==VisCalEnum::REAL) 
+      currRPar().reference(ci_->resultF(currField(),currSpw()));
+    else
+      throw(AipsError("Bad parType() in SVC::calcPar"));
 
-    // For now, assume all OK
-    //    currParOK().resize(nPar(),nChanPar(),nElem()); currParOK()=True;
+    // Assign _inverse_ of parameter flags
+    currParOK().reference(!ci_->rflag(currField(),currSpw()));
+
+    // Ensure shapes recorded correctly
+    // (New interpolation generates cal samples for all data channels...revisit?
+    IPosition ip=currCPar().shape();
+    nChanPar()=ip(1);
+    startChan()=0;
 
     // In case we need solution timestamp
-    refTime() = ci().slotTime();
+    // NB: w/ new caltables, we use currTime() here.
+    refTime() = currTime();
 
     // If new parameters, matrices (generically) are necessarily invalid now
     invalidateCalMat();
@@ -2878,23 +3009,13 @@ void SolvableVisCal::reportSolvedQU() {
 
 void SolvableVisCal::createMemCalTable() {
 
-
-  cout << "currCPar().shape()  = " << currCPar().shape() << endl;
-  cout << "solveCPar().shape() = " << solveCPar().shape() << endl;
-
-  CTDesc caltabdesc;
+  // Set up description
+  String partype = ((parType()==VisCalEnum::COMPLEX) ? "Complex" : "Float");
+  CTDesc caltabdesc(partype,msName(),typeName(),"unknown");
   ct_ = new NewCalTable("tempNCT.tab",caltabdesc,Table::Scratch,Table::Memory);
   ct_->setMetaInfo(msName());
 
   CTColumns ncc(*ct_);
-
-  cout << "currSpw() = " << currSpw() << endl;
-  cout << "nChanPar() = " << nChanPar() << endl;
-  cout << "nChanParList() = " << nChanParList() << endl;
-  cout << "startChan() = " << startChan() << endl;
-  cout << "ncc.spectralWindow().chanFreq().shape(0)         = " << ncc.spectralWindow().chanFreq().shape(0) << endl;
-  cout << boolalpha;
-  cout << "ncc.spectralWindow().chanFreq().canChangeShape() = " << ncc.spectralWindow().chanFreq().canChangeShape() << endl;
 
   // Revise SPW frequencies
   for (Int ispw=0;ispw<nSpw();++ispw) {
@@ -2911,7 +3032,7 @@ void SolvableVisCal::createMemCalTable() {
 
       if (freqDepPar()) { 
 	nchan=nChanPar();
-	if (nChanPar()<chfr.nelements())
+	if (nChanPar()<Int(chfr.nelements()))
 	  calfreq=chfr(Slice(startChan(),nChanPar()));
 	else
 	  calfreq.reference(chfr);
@@ -2922,10 +3043,10 @@ void SolvableVisCal::createMemCalTable() {
 	calfreq(0)=mean(chfr(Slice(startChan(),nChanPar())));
       }
     }
-    cout << "nchan=" << nchan << " calfreq.nelements() = " << calfreq.nelements() << " " << calfreq << endl;
+    //    cout << "nchan=" << nchan << " calfreq.nelements() = " << calfreq.nelements() << " " << calfreq << endl;
     if (nchan>0) {
       ncc.spectralWindow().chanFreq().setShape(ispw,IPosition(1,nchan));
-      cout << "ncc.spectralWindow().chanFreq().shape(ispw)         = " << ncc.spectralWindow().chanFreq().shape(ispw) << endl;
+      //      cout << "ncc.spectralWindow().chanFreq().shape(ispw)         = " << ncc.spectralWindow().chanFreq().shape(ispw) << endl;
       ncc.spectralWindow().chanFreq().put(ispw,calfreq);
       ncc.spectralWindow().numChan().put(ispw,nchan);
     }
@@ -2933,30 +3054,31 @@ void SolvableVisCal::createMemCalTable() {
       ncc.spectralWindow().flagRow().put(ispw,True);
   }
 
-  cout << "Done creating table." << endl;
-
 }
 
 // File a single-channel solved solution into the multi-channel space for it
 void SolvableVisCal::keep1(Int ichan) {
-  cout << "keep1..." << flush;
-  solveAllPar()(Slice(),Slice(ichan,1),Slice())=solveCPar();
+  cout << "keep1..." << flush; 
+  if (parType()==VisCalEnum::COMPLEX)
+    solveAllCPar()(Slice(),Slice(ichan,1),Slice())=solveCPar();
+  else if (parType()==VisCalEnum::REAL)
+    solveAllRPar()(Slice(),Slice(ichan,1),Slice())=solveRPar();
+
   solveAllParOK()(Slice(),Slice(ichan,1),Slice())=solveParOK();
   solveAllParErr()(Slice(),Slice(ichan,1),Slice())=solveParErr();
   solveAllParSNR()(Slice(),Slice(ichan,1),Slice())=solveParSNR();
   cout << "done." << endl;
 }
 
+
 // File a solved solution (and meta-data) into the in-memory Caltable
 void SolvableVisCal::keepNCT() {
 
-  //  if (prtlev()>4) 
-  cout << " SVC::keepNCT" << endl;
-
-  //  cout << "ct_->nrow() = " << ct_->nrow() << endl;
+  if (prtlev()>4) cout << " SVC::keepNCT" << endl;
 
   CTMainColumns ncmc(*ct_);
 
+  // TBD: baseline- vs. antenna-based!!  (via inheritance?)
   Int nAddRows=nAnt();
   RefRows rows(ct_->nrow(),ct_->nrow()+nAddRows-1,1); 
   ct_->addRow(nAddRows);
@@ -2970,7 +3092,14 @@ void SolvableVisCal::keepNCT() {
   ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant()));
   ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,-1));
 
-  ncmc.param().putColumnCells(rows,solveAllPar());
+  // Toggle param type
+  if (parType()==VisCalEnum::COMPLEX)
+    // Fill Complex column
+    ncmc.cparam().putColumnCells(rows,solveAllCPar());
+  else if (parType()==VisCalEnum::REAL)
+    // Fill Float column
+    ncmc.fparam().putColumnCells(rows,solveAllRPar());
+
   ncmc.paramerr().putColumnCells(rows,solveAllParErr());
   ncmc.snr().putColumnCells(rows,solveAllParSNR());
   ncmc.flag().putColumnCells(rows,!solveAllParOK());
@@ -3034,6 +3163,60 @@ void SolvableVisCal::globalPostSolveTinker() {
 // Divide all solutions by their amplitudes to make them "phase-only"
 void SolvableVisCal::enforceAPonSoln() {
 
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
+
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
+
+    logSink() << "Enforcing apmode on solutions." 
+	      << LogIO::POST;
+
+    // In this generic version, one normalization factor per spw
+    Block<String> col(3);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    CTIter ctiter(*ct_,col);
+
+    while (!ctiter.pastEnd()) {
+
+      Array<Complex> par(ctiter.cparam());
+      Array<Bool> fl(ctiter.flag());
+      Array<Float> amps(amplitude(par));
+      par(amps==0.0f)=Complex(1.0);
+      par(fl)=Complex(1.0);
+      amps(amps==0.0f)=1.0f;
+      amps(fl)=1.0f;
+
+      Array<Complex> cor(amps.shape());
+      if (apmode()=='P')
+	// we will scale solns by amp to make them phase-only
+	convertArray(cor,amps);
+      else if (apmode()=='A') {
+	// we will scale solns by "phase" to make them amp-only
+	cor=par;
+	cor/=amps;
+      }
+      
+      if (ntrue(amplitude(cor)==0.0f)==0)
+	par/=cor;
+      else
+	throw(AipsError("enforceAPonSoln divide-by-zero error."));
+      
+      // put result back
+      ctiter.setcparam(par);
+
+      // advance iterator
+      ctiter.next();
+    }
+
+
+  }
+  else 
+    throw(AipsError("Solution apmode enforcement not supported."));
+
+  /* NEWCALTABLE
+
   if (cs_) {    
 
     logSink() << "Enforcing apmode on solutions." 
@@ -3068,10 +3251,41 @@ void SolvableVisCal::enforceAPonSoln() {
   }
   else 
     throw(AipsError("Solution apmode enforcement not supported."));
+
+  */
+
+
 }
 
 void SolvableVisCal::normalize() {
 
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
+
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
+
+    logSink() << "Normalizing solution amplitudes per spw." 
+	      << LogIO::POST;
+
+    // In this generic version, one normalization factor per spw
+    Block<String> col(1);
+    col[0]="SPECTRAL_WINDOW_ID";
+    CTIter ctiter(*ct_,col);
+
+    while (!ctiter.pastEnd()) {
+      Cube<Complex> p(ctiter.cparam());
+      Cube<Bool> fl(ctiter.flag());
+      if (nfalse(fl)>0)
+	normSolnArray(p,!fl,False);  // don't do phase
+
+      // record result...
+      ctiter.setcparam(p);
+      ctiter.next();
+    }
+
+  }
+
+  /* NEWCALTABLE
   // Only if we have a CalSet...
   if (cs_) {
 
@@ -3086,7 +3300,7 @@ void SolvableVisCal::normalize() {
   }
   else 
     throw(AipsError("Solution normalization not supported."));
-	
+  */
 }
 
 void SolvableVisCal::storeNCT() {
@@ -3117,6 +3331,19 @@ void SolvableVisCal::store() {
 	      << LogIO::POST;
 
   cs().store(calTableName(),typeName(),append(),msName());
+
+}
+
+void SolvableVisCal::storeNCT(const String& table,const Bool& append) {
+
+  if (prtlev()>3) cout << " SVC::store(table,append)" << endl;
+
+  // Override tablename
+  calTableName()=table;
+  SolvableVisCal::append()=append;
+
+  // Call conventional store
+  storeNCT();
 
 }
 
@@ -3217,12 +3444,21 @@ void SolvableVisCal::initSVC() {
   if (prtlev()>2) cout << " SVC::initSVC()" << endl;
 
   for (Int ispw=0;ispw<nSpw(); ispw++) {
-    solveCPar_[ispw] = new Cube<Complex>();
-    solveRPar_[ispw] = new Cube<Float>();
+
+    // TBD: Would like to make this parType()-dependent,
+    //  but parType() isn't initialized yet...
+  
+    //    if (parType()==VisCalEnum::COMPLEX) {
+      solveCPar_[ispw] = new Cube<Complex>();
+      solveAllCPar_[ispw] = new Cube<Complex>();
+    //    }
+    //   else if (parType()==VisCalEnum::REAL) {
+      solveRPar_[ispw] = new Cube<Float>();
+      solveAllRPar_[ispw] = new Cube<Float>();
+    //    }
     solveParOK_[ispw] = new Cube<Bool>();
     solveParErr_[ispw] = new Cube<Float>();
     solveParSNR_[ispw] = new Cube<Float>();
-    solveAllPar_[ispw] = new Cube<Complex>();
     solveAllParOK_[ispw] = new Cube<Bool>();
     solveAllParErr_[ispw] = new Cube<Float>();
     solveAllParSNR_[ispw] = new Cube<Float>();
@@ -3242,7 +3478,8 @@ void SolvableVisCal::deleteSVC() {
     if (solveParOK_[ispw]) delete solveParOK_[ispw];
     if (solveParErr_[ispw]) delete solveParErr_[ispw];
     if (solveParSNR_[ispw]) delete solveParSNR_[ispw];
-    if (solveAllPar_[ispw])  delete solveAllPar_[ispw];
+    if (solveAllCPar_[ispw])  delete solveAllCPar_[ispw];
+    if (solveAllRPar_[ispw])  delete solveAllRPar_[ispw];
     if (solveAllParOK_[ispw]) delete solveAllParOK_[ispw];
     if (solveAllParErr_[ispw]) delete solveAllParErr_[ispw];
     if (solveAllParSNR_[ispw]) delete solveAllParSNR_[ispw];
@@ -3252,7 +3489,8 @@ void SolvableVisCal::deleteSVC() {
   solveParOK_=NULL;
   solveParErr_=NULL;
   solveParSNR_=NULL;
-  solveAllPar_=NULL;
+  solveAllCPar_=NULL;
+  solveAllRPar_=NULL;
   solveAllParOK_=NULL;
   solveAllParErr_=NULL;
   solveAllParSNR_=NULL;
@@ -3271,6 +3509,22 @@ void SolvableVisCal::verifyCalTable(const String& caltablename) {
     throw(AipsError(String(o)));
   }
 }
+
+/*
+void SolvableVisCal::verifyNEWCalTable(const String& caltablename) {
+
+  // Call external method to get type (will throw if bad table)
+  String calType=NEWcalTableType(caltablename);
+
+  // Check if proper Calibration type...
+  if (calType!=typeName()) {
+    ostringstream o;
+    o << "Table " << caltablename 
+      << " has wrong Calibration type: " << calType;
+    throw(AipsError(String(o)));
+  }
+}
+*/
 
 void SolvableVisCal::applyChanMask(VisBuffer& vb) {
 
@@ -3387,6 +3641,8 @@ SolvableVisMueller::~SolvableVisMueller() {
 // Setup solvePar shape (Mueller version)
 void SolvableVisMueller::initSolvePar() {
 
+  // TBD: NCT: attention to solveAllPar
+
   if (prtlev()>3) cout << " SVM::initSolvePar()" << endl;
   
   for (Int ispw=0;ispw<nSpw();++ispw) {
@@ -3403,8 +3659,6 @@ void SolvableVisMueller::initSolvePar() {
 	  solveParErr().resize(nPar(),nChanPar(),nBln());
 	  solveParSNR().resize(nPar(),nChanPar(),nBln());
 	  
-	  // TBD: solveRPar()?
-	  
 	  solveCPar()=Complex(1.0);
 	  solveParOK()=True;
 	  solveParErr()=0.0;
@@ -3418,8 +3672,6 @@ void SolvableVisMueller::initSolvePar() {
 	  solveParOK().resize(nPar(),nChanPar(),nBln());
 	  solveParErr().resize(nPar(),nChanPar(),nBln());
 	  solveParSNR().resize(nPar(),nChanPar(),nBln());
-	  
-	  // TBD: solveRPar()?
 	  
 	  solveRPar()=0.0;
 	  solveParOK()=True;
@@ -4238,10 +4490,10 @@ void SolvableVisJones::initSolvePar() {
 
     switch (parType()) {
     case VisCalEnum::COMPLEX: {
-      solveAllPar().resize(nPar(),nChanPar(),nAnt());
-      solveAllPar()=Complex(1.0);
+      solveAllCPar().resize(nPar(),nChanPar(),nAnt());
+      solveAllCPar()=Complex(1.0);
       if (nChanPar()==1)
-	solveCPar().reference(solveAllPar());
+	solveCPar().reference(solveAllCPar());
       else {
 	solveCPar().resize(nPar(),1,nAnt());
 	solveCPar()=Complex(1.0);
@@ -4249,8 +4501,14 @@ void SolvableVisJones::initSolvePar() {
       break;
     }
     case VisCalEnum::REAL: {
-      solveRPar().resize(nPar(),1,nAnt());
-      solveRPar()=0.0;
+      solveAllRPar().resize(nPar(),nChanPar(),nAnt());
+      solveAllRPar()=0.0;
+      if (nChanPar()==1)
+	solveRPar().reference(solveAllRPar());
+      else {
+	solveRPar().resize(nPar(),1,nAnt());
+	solveRPar()=0.0;
+      }
       break;
     }
     default:
@@ -4515,6 +4773,52 @@ void SolvableVisJones::applyRefAnt() {
 
   Bool usedaltrefant(False);
 
+  Block<String> cols(2);
+  cols[0]="SPECTRAL_WINDOW_ID";
+  cols[1]="TIME";
+  CTIter ctiter(*ct_,cols);
+
+  while (!ctiter.pastEnd()) {
+
+    // Access this timestamp's parameters
+    Vector<Int> ant1(ctiter.antenna1());
+    Vector<Int> ant2(ctiter.antenna2());
+    Cube<Complex> sol(ctiter.cparam());
+    IPosition ssh(sol.shape());
+
+    // Find the refant
+    // TBD: cope with flags, and exhaust choices
+    Int iref=0;
+    while (ant1(iref)!=refantchoices(0)) ++iref;
+
+    ant2=refantchoices(0);
+
+    // Divide out the refant phase (per par, chan)
+    // TBD: handle flags, d-b-0, etc...
+    IPosition blc(3,0,0,0), trc(3,0,0,ssh(2)-1);
+    for (Int ich=0;ich<ssh(1);++ich) {
+      for (Int ipar=0;ipar<ssh(0);++ipar) {
+	Complex cref=sol(ipar,ich,iref);
+	cref/=abs(cref);
+
+	blc(0)=trc(0)=ipar;
+	blc(1)=trc(1)=ich;
+	Array<Complex> solpc(sol(blc,trc));
+	solpc/=cref;
+      }
+    }
+    // put back 
+    ctiter.setcparam(sol);
+    ctiter.setantenna2(ant2);
+
+    // advance
+    ctiter.next();
+  }
+
+  return;  // NEWCALTABLE
+
+ /*
+
   for (Int ispw=0;ispw<nSpw();++ispw) {
 
     currSpw()=ispw;
@@ -4777,6 +5081,7 @@ void SolvableVisJones::applyRefAnt() {
 	      << "  the reference antenna; these are generally harmless."
 	      << LogIO::POST;
 
+ */
 }
 
 void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
@@ -5333,6 +5638,9 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
 
   //  cout << "REVISED FLUXSCALE" << endl;
 
+  if (!ct_ || ct_->nrow()<1)
+    throw(AipsError("SVJ:fluxscale: Empty or absent caltable specified"));
+
   // For updating the MS History Table
   //  LogSink logSink_p = LogSink(LogMessage::NORMAL, False);
   //  logSink_p.clearLocally();
@@ -5347,6 +5655,9 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
   PtrBlock< Cube<Int>* >    MGN;
 
   Int nMSFld; fldNames.shape(nMSFld);
+
+
+  /* NEWCALTABLE
 
   // assemble complete list of available fields
   Vector<Int> fldList;
@@ -5367,6 +5678,12 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
       }
     }
   }
+  */
+
+  // Assemble available field list from the NewCalTable
+  ROCTMainColumns mcols(*ct_);
+  Vector<Int> fldList;
+  mcols.fieldId().getColumn(fldList);
   Int nFldList=genSort(fldList,(Sort::QuickSort | Sort::NoDuplicates));
   fldList.resize(nFldList,True);
 
@@ -5510,6 +5827,71 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
 
     //    cout << "Filling mgnorms....";
 
+    { // make an inner scope
+    Block<String> cols(4);
+    cols[0]="SPECTRAL_WINDOW_ID";
+    cols[1]="TIME";
+    cols[2]="FIELD_ID"; // should usually be degenerate with TIME?
+    cols[3]="ANTENNA1";
+    ROCTIter ctiter(*ct_,cols);
+
+    // Loop over solutions and fill the calculation
+    Cube<Bool>   mgok;   // For referencing PtrBlocks...
+    Cube<Double> mg;  
+    Cube<Double> mg2; 
+    Cube<Double> mgwt;   
+    Cube<Int>    mgn;    
+    Int lastFld(-1);
+    while (!ctiter.pastEnd()) {
+      Int iSpw(ctiter.thisSpw());
+      Int iFld(ctiter.thisField());
+      Int iAnt(ctiter.thisAntenna1());
+
+      if (MGOK[iFld]==NULL) {
+	// First time this field, allocate ant/spw matrices
+	MGOK[iFld]   = new Cube<Bool>(nPar(),nElem(),nSpw(),False);
+	MG[iFld]     = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+	MG2[iFld]    = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+	MGWT[iFld]   = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+	MGVAR[iFld]  = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+	MGN[iFld]    = new Cube<Int>(nPar(),nElem(),nSpw(),0);
+	
+      }
+      // References to PBs for syntactical convenience
+      //  TBD: should need to do this for each iteration (nAnt times redundant!)
+      if (iFld!=lastFld) {
+	mgok.reference(*(MGOK[iFld]));
+	mg.reference(*(MG[iFld]));
+	mg2.reference(*(MG2[iFld]));
+	mgwt.reference(*(MGWT[iFld]));
+	mgn.reference(*(MGN[iFld]));
+      }
+
+      // TBD: Handle "iFitwt" from NewCalTable?
+      // Double wt=cs().iFitwt(iSpw)(iAnt,islot);
+      Double wt=1;
+	      
+      // amps, flags  [npar]  (one channel, one antenna)
+      Vector<Float> amp(amplitude(ctiter.cparam()));
+      Vector<Bool> fl(ctiter.flag());
+
+      for (Int ipar=0; ipar<nPar(); ipar++) {
+	if (!fl(ipar)) {
+	  Double gn=amp(ipar); // converts to Double
+	  mgok(ipar,iAnt,iSpw)=True;
+	  mg(ipar,iAnt,iSpw) += (wt*gn);
+	  mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
+	  mgn(ipar,iAnt,iSpw)++;
+	  mgwt(ipar,iAnt,iSpw)+=wt;
+	}
+      }
+      lastFld=iFld;
+      ctiter.next();
+    }
+    } // scope
+
+  /*
+
     // fill per-ant -fld, -spw  mean gain moduli
     for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
 
@@ -5554,6 +5936,8 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
         }
       }
     }
+  */
+
     //    cout << "done." << endl;
 
     //    cout << "Normalizing mgs...";
@@ -5692,12 +6076,10 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
 	// Form the mean gain ratio
 	Matrix<Double> mgTspw(mgT.xyPlane(ispw));
 	Matrix<Bool> mgokTspw(mgokT.xyPlane(ispw));
-
 	cout.precision(6);
 	cout.setf(ios::fixed,ios::floatfield);
 	Int nPA=ntrue(mgokTspw);
 	if (nPA>0) {
-	  //	  cout << "mgTspw = " << mgTspw << endl;
 	  scaleOK(ispw,tranidx)=True;
 	  mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
 	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
@@ -5739,6 +6121,27 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
     //    cout << "Adjusting gains...";
 
     // Adjust tran field's gains here
+    { // make an inner scope
+    Block<String> cols(3);
+    cols[0]="SPECTRAL_WINDOW_ID";
+    cols[1]="TIME";
+    cols[2]="FIELD_ID";
+    CTIter ctiter(*ct_,cols);
+
+    while (!ctiter.pastEnd()) {
+      Int iSpw(ctiter.thisSpw());
+      Int iFld(ctiter.thisField());
+
+      if (scaleOK(iSpw,iFld)) {
+	Cube<Complex> cpar(ctiter.cparam());
+	cpar/=Complex(Float(mgratio(iSpw,iFld)));
+	ctiter.setcparam(cpar);
+      }
+      ctiter.next();
+    }
+    } // scope
+
+    /*
     for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
       if (cs().nTime(iSpw)>0) {
         for (Int islot=0; islot<cs().nTime(iSpw); islot++) {
@@ -5756,7 +6159,7 @@ void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
         }
       }
     }
-
+    */
     //    cout << "done." << endl;
 
     //    cout << "Cleaning up...";
@@ -6263,5 +6666,35 @@ String calTableType(const String& tablename) {
 
 }
 
+/*
+String NEWcalTableType(const String& tablename) {
+
+  // Check existence...
+  if (!Table::isReadable(tablename)) {
+    ostringstream o;
+    o << "Table " << tablename
+      << " does not exist.";
+    throw(AipsError(String(o)));
+  }
+
+  // Table exists...
+  
+  // Get table keywords
+  Table tab(tablename,Table::Old);
+
+  // Is this a NewCalTable?
+  if (!tab.keywordSet().isDefined("VisCal")) {
+    ostringstream o;
+    o << "Table " << tablename
+      << " is not a valid Calibration table.";
+    throw(AipsError(String(o)));
+  }
+  
+  // If we get here, we have a calibration table,
+  //  so return its type
+  return tab.keywordSet().asString("VisCal");
+
+}
+*/
 
 } //# NAMESPACE CASA - END

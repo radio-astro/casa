@@ -1660,7 +1660,8 @@ Bool Calibrater::genericGatherAndSolve() {
 	svc_p->selfSolveOne(vbga);
 
 	// File this solution in the correct slot of the CalSet
-	svc_p->keep(slotidx(thisSpw));
+	//	svc_p->keep(slotidx(thisSpw));  NEWCALTABLE
+	svc_p->keepNCT();
 
 	nGood++;
       } 
@@ -1687,9 +1688,9 @@ Bool Calibrater::genericGatherAndSolve() {
     if (svc_p->typeName()!="BPOLY") {
       // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
 
-  /* NEWCALTABLE
+      //  /* NEWCALTABLE
       svc_p->globalPostSolveTinker();
-  */
+      //  */
       // write the table
       svc_p->storeNCT();
       //      svc_p->store();
@@ -2166,8 +2167,9 @@ void Calibrater::fluxscale(const String& infile,
 
   try {
     // If infile is Calibration table
-    if (Table::isReadable(infile) && 
-	Table::tableInfo(infile).type()=="Calibration") {
+    if (True ||
+	(Table::isReadable(infile) && 
+	 Table::tableInfo(infile).type()=="Calibration")) {
 
       // get calibration type
       String caltype;
@@ -2199,6 +2201,7 @@ void Calibrater::fluxscale(const String& infile,
 
       // Construct proper SVC object
       SolvableVisCal *fsvj_;
+      caltype="G Jones";
       if (caltype == "G Jones") {
 	fsvj_ = createSolvableVisCal("G",*vs_p);
       } else if (caltype == "T Jones") {
@@ -2240,7 +2243,7 @@ void Calibrater::fluxscale(const String& infile,
 	String message="Storing result in "+out;
 	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
       }
-      fsvj_->store(out,append);
+      fsvj_->storeNCT(out,append);
       
       // Clean up
       delete fsvj_;

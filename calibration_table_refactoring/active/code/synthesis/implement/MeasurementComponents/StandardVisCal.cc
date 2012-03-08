@@ -29,6 +29,7 @@
 
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/CalTables/CTIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <scimath/Fitting/LSQFit.h>
@@ -755,8 +756,50 @@ void BJones::setSolve(const Record& solve) {
 
 void BJones::normalize() {
 
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
+
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
+
+    logSink() << "Normalizing solutions per spw, pol, ant, time." 
+	      << LogIO::POST;
+
+    // In this generic version, one normalization factor per spw
+    Block<String> col(3);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    CTIter ctiter(*ct_,col);
+
+    // Cube iteration axes are pol and ant
+    IPosition itax(2,0,2);
+   
+    while (!ctiter.pastEnd()) {
+      Cube<Bool> fl(ctiter.flag());
+      
+      if (nfalse(fl)>0) {
+	Cube<Complex> p(ctiter.cparam());
+	ArrayIterator<Complex> soliter(p,itax,False);
+	ArrayIterator<Bool> fliter(fl,itax,False);
+	while (!soliter.pastEnd()) {
+	  normSolnArray(soliter.array(),!fliter.array(),True); // Do phase
+	  soliter.next();
+	  fliter.next();
+	}
+	
+	// record result...	
+	ctiter.setcparam(p);
+      }
+      ctiter.next();
+    }
+  }
+
+  cout << "End of BJones::normalize()" << endl;
+
+
+  /* NEWCALTABLE
   logSink() << "Normalizing solutions per spw, pol, ant, time." 
-	    << LogIO::POST;
+	      << LogIO::POST;
 
   // Iteration axes (norm per spw, pol, ant, timestamp)
   IPosition itax(3,0,2,3);
@@ -772,6 +815,9 @@ void BJones::normalize() {
       }
       
     }
+
+  */
+
 
 }
 

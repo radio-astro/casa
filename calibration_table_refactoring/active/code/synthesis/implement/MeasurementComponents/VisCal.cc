@@ -426,7 +426,8 @@ void VisCal::setCalChannelization(const Int& nChanDat) {
     if (freqDepPar())
       // follow parameter channelization
       //  (e.g., B)
-      nChanMat() = nChanPar();
+      //      nChanMat() = nChanPar();  
+      nChanMat() = nChanDat;   // NEWCALTABLE
     else
       // cal is f(freq) for each data channel:
       //  (e.g., fringe-fitting)
@@ -437,9 +438,11 @@ void VisCal::setCalChannelization(const Int& nChanDat) {
     //  (e.g., G)
     nChanMat()=1;
 
+    cout << "nChanPar() = " << nChanPar() << endl;
+
     // So must be parameters:
     AlwaysAssert((!freqDepPar()),AipsError);
-    AlwaysAssert((nChanPar()==1),AipsError);
+    // NCT    AlwaysAssert((nChanPar()==1),AipsError);
 
   }
 
@@ -462,7 +465,7 @@ void VisCal::checkCurrCal() {
   // ...timestamp has changed
   if (currTime() != lastTime() ) {
     lastTime()=currTime();
-    invalidateP();
+    invalidateP();  // merely signals need to check (doesn't break reference)
 
     // If matrices are time-dependent within solution interval,
     //   a time change ALWAYS invalidates them
@@ -1044,6 +1047,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 
   // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
 
+
   if (applyByMueller()) 
     VisMueller::applyCal(vb,Vout);
   else {
@@ -1065,6 +1069,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     // iterate rows
     Int& nRow(vb.nRow());
     Int& nChanDat(vb.nChannel());
+    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
     for (Int row=0; row<nRow; row++,flagR++,a1++,a2++,wt.next()) {
       
       // Avoid ACs
@@ -1081,10 +1086,12 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 	if (freqDepMat() && !freqDepPar())
 	  startChan()=(*dataChan);
 
+	/* NEWCALTABLE
 	if (freqDepMat() && freqDepPar()) {
 	  solCh0=(*dataChan)-startChan();
 	  if (solCh0 < 0) solCh0=0;
 	}
+	*/
 
 	// Solution and data array registration
 	J1().sync(currJElem()(0,solCh0,*a1),currJElemOK()(0,solCh0,*a1));
@@ -1103,9 +1110,9 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 	  }
 	  
 	  // inc soln ch axis if freq-dependent (and next dataChan within soln)
-	  if (freqDepMat() && 
+	  if (freqDepMat())  /* && 
 	      ( *dataChan+1>startChan() &&
-		(*dataChan+1)<(startChan()+nChanMat() ) ) ) {
+	      (*dataChan+1)<(startChan()+nChanMat() ) ) ) */ {
 	    J1()++; 
 	    J2()++; 
 	  }
@@ -1121,7 +1128,6 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 	flag+=nChanDat; 
       }
     }
-
     //    cout << Vout(0,0,1216) << endl;
 
   }
