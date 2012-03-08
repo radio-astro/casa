@@ -66,7 +66,6 @@ def tflagdata(vis,
              spwcorr,
              run,           # run or not the tool
              writeflags,
-             sequential,    # run in sequential or in parallel
              display,
              flagbackup,
              savepars,      # save the current parameters to FLAG_CMD  or
@@ -436,7 +435,7 @@ def tflagdata(vis,
         
         # Run the tool
         casalog.post('Running the testflagger tool')
-        summary_stats_list = tflocal.run(writeflags, sequential)
+        summary_stats_list = tflocal.run(writeflags, True)
 
 
         # Save the current parameters/list to FLAG_CMD or to output

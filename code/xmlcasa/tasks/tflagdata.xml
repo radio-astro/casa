@@ -329,10 +329,6 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <description>Write Flags to the MS</description>
                 <value>True</value>
             </param>
-            <param type="bool" name="sequential" subparam="true">
-                <description>Run the task in sequential or in parallel</description>
-                <value>True</value>
-            </param>
             <param type="string" name="display" subparam="true">
                 <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
                 <value type="string"></value>
@@ -539,7 +535,6 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <when param="run">
                     <equals type="bool" value="True">
                         <default param="writeflags"><value type="bool">True</value></default>
-                        <default param="sequential"><value type="bool">True</value></default>
                         <default param="display"><value type="string"></value></default>
                         <default param="flagbackup"><value type="bool">False</value></default>
                     </equals>
@@ -969,10 +964,6 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         or to try different parameters and converge on a set that works for a particular
                         dataset. Use the display parameter to inspect the data.
                     Note: this parameter is disabled when mode='summary'.
-
-              sequential -- Run the task in sequential or in parallel. 
-                   default: True
-                   options: True/False
                  
               display -- Display data and/or end-of-MS reports at runtime.        
                	   default: 'none'
