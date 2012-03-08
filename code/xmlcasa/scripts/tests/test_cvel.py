@@ -56,19 +56,26 @@ class cvel_test(unittest.TestCase):
 
     def setUp(self):    
         default('cvel')
+        forcereload=False
         
-        if(not os.path.exists(vis_a)):
+        if(forcereload or not os.path.exists(vis_a)):
+            shutil.rmtree(vis_a, ignore_errors=True)
             importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', # 10 MB
                          vis=vis_a)
-        if(not os.path.exists(vis_b)):
+        if(forcereload or not os.path.exists(vis_b)):
+            shutil.rmtree(vis_b, ignore_errors=True)
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/fits-import-export/input/test.ms .') # 27 MB
-        if(not os.path.exists(vis_c)):
+        if(forcereload or not os.path.exists(vis_c)):
+            shutil.rmtree(vis_c, ignore_errors=True)
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/jupiter6cm.demo-thinned.ms .') # 124 MB
-        if(not os.path.exists(vis_d)):
+        if(forcereload or not os.path.exists(vis_d)):
+            shutil.rmtree(vis_d, ignore_errors=True)
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened-thinned.ms .') # 48 MB
-        if(not os.path.exists(vis_e)):
+        if(forcereload or not os.path.exists(vis_e)):
+            shutil.rmtree(vis_e, ignore_errors=True)
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample-thinned.ms .') # 74 MB
-        if(not os.path.exists(vis_f)):
+        if(forcereload or not os.path.exists(vis_f)):
+            shutil.rmtree(vis_f, ignore_errors=True)
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/cvel/test_cvel1.ms .') # 39 MB
 
         self.assertTrue(os.path.exists(vis_a))
@@ -978,7 +985,7 @@ class cvel_test(unittest.TestCase):
         self.assertTrue(ret[0],ret[1])
 
     def test49(self):
-        '''Cvel 49: vopt mode with fftshit, expected error ...'''
+        '''Cvel 49: vopt mode with fftshift, expected error ...'''
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
         try:
