@@ -589,7 +589,6 @@ def getUnion(mslocal, vis, cmdlist):
     dicpars['spw'] = spws
     dicpars['observation'] = obs
     
-    print dicpars
 
     # Compress the selection list to reduce MSSelection parsing time.
     # 'field','spw','antenna' strings in dicpars will be modified in-place.

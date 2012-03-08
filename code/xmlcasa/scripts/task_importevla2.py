@@ -17,13 +17,11 @@ def importevla2(
     overwrite=None,
     online=None,
     tbuff=None,
-    savetofile=None,
     flagzero=None,
     flagpol=None,
     shadow=None,
     tolerance=None,
-    recalcuvw=None,
-    antennafile=None,
+    addantenna=None,
     applyflags=None,
     savecmds=None,
     outfile=None,
@@ -148,10 +146,7 @@ def importevla2(
         
         # All flag cmds
         allflags = {}
-        
-        # Flag cmds to save to file
-        savelist = {}
-        
+                
         if os.access(asdm + '/Flag.xml', os.F_OK):
                 # Find (and copy) Flag.xml
             print '  Found Flag.xml in SDM, copying to MS'
@@ -188,8 +183,6 @@ def importevla2(
 
                 casalog.post('Created %s commands for online flags'%str(nflags))
                 
-                if savetofile:
-                    savelist = flago.copy()
         else:
             if online:
                         # print 'ERROR: No Flag.xml in SDM'
@@ -226,7 +219,6 @@ def importevla2(
                     'mode=clip clipzeros=True correlation=ABS_ALL'
                 flagz['id'] = 'ZERO_ALL'
                 allflags[nflags] = flagz.copy()
-                savelist[nflags] = flagz.copy()
                 nflags += 1
                 nflagz = 1
             else:
@@ -238,7 +230,6 @@ def importevla2(
                     'mode=clip clipzeros=True correlation=ABS_RR'
                 flagz['id'] = 'ZERO_RR'
                 allflags[nflags] = flagz.copy()
-                savelist[nflags] = flagz.copy()
                 nflags += 1
             #
                 flagz['reason'] = 'CLIP_ZERO_LL'
@@ -248,7 +239,6 @@ def importevla2(
                     'mode=clip clipzeros=True correlation=ABS_LL'
                 flagz['id'] = 'ZERO_LL'
                 allflags[nflags] = flagz.copy()
-                savelist[nflags] = flagz.copy()
                 nflags += 1
                 nflagz = 2
 
@@ -267,24 +257,22 @@ def importevla2(
             flagh['mode'] = 'shadow'
             # Add to myflagz
             flagh['reason'] = 'SHADOW'
-            #            flagh['cmd'] = "mode='shadow' diameter=" + str(diameter)
-            if antennafile != '':
+            if addantenna != '':
                 flagh['command'] = 'mode=shadow tolerance=' \
-                + str(tolerance) + ' recalcuvw=' + str(recalcuvw) \
-                +' antennafile='+antennafile
+                + str(tolerance)  +' addantenna='+addantenna
             else:
                 flagh['command'] = 'mode=shadow tolerance=' \
-                + str(tolerance) + ' recalcuvw=' + str(recalcuvw)
+                + str(tolerance)
                 
             flagh['id'] = 'SHADOW'
             allflags[nflags] = flagh.copy()
-            savelist[nflags] = flagh.copy()
             nflags += 1
 
             casalog.post('Created 1 command to flag shadowed data')
-
-        # Number of online commands to save
-
+        
+        # List of rows to save
+        allkeys = allflags.keys()
+        
         # Apply the flags
         if applyflags:
             if nflags > 0:
@@ -320,9 +308,9 @@ def importevla2(
                 # Destroy the tool
                 tflocal.done()
                 
-                # Save the online flags and update the APPLIED column
-                if online:
-                    fh.writeFlagCmd(viso, flago, onlinekeys, True, '')
+                # Save the flags to FLAG_CMD and update the APPLIED column
+                fh.writeFlagCmd(viso, allflags, allkeys, True, '')
+                
             else:
 
                 casalog.post('There are no flags to apply')
@@ -330,12 +318,12 @@ def importevla2(
         else :
             casalog.post('Will not apply flags (applyflags=False), use tflagcmd to apply')
             if online:
-                fh.writeFlagCmd(viso, flago, onlinekeys, False, '')
+                fh.writeFlagCmd(viso, allflags, allkeys, False, '')
 
                
         # Save the flag commads to an ASCII file 
         if savecmds:
-            sflags = savelist.keys().__len__()
+            sflags = allkeys.__len__()
             if sflags > 0:          
                 # Save the cmds to a file
                 if outfile == '': 
@@ -345,8 +333,8 @@ def importevla2(
                 ffout = open(outfile, 'a')
     
                 try:                     
-                    for k in savelist.keys():
-                        cmdline = savelist[k]['command']
+                    for k in allflags.keys():
+                        cmdline = allflags[k]['command']
                         print >> ffout, '%s' %cmdline
                     
                     casalog.post('Saved %s flag commands to %s'%(sflags,outfile))

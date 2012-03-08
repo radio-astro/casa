@@ -132,21 +132,18 @@ def checktable(msname, thename, theexpectation):
 ###########################
 # beginning of actual test 
 
-# Name space all test files
-pre = 'importevla2_'
-
-myname = pre+'ut'
+myname = 'importevla2_ut'
 
 # default ASDM dataset name
 #origname = 'TOSR0001_sb1308595_1.55294.83601028935'
 origname = 'X_osro_013.55979.93803716435'
 
 #asdmname = 'tosr0001'
-asdmname = pre+'xosro'
+asdmname = 'xosro'
 
 # Copy SDM locally only once for all tests
 if(not os.path.exists(asdmname)):
-    datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/flagdata/'
+    datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importevla/'
     shutil.copytree(datapath + origname, asdmname)
 
 
@@ -299,15 +296,15 @@ class importevla2_test(unittest.TestCase):
 
     def test_apply1(self):
         '''importevla2: apply all flags and save to file'''
-        msname = pre+'online.ms'
-        cmdfile = pre+'online_cmd.txt'
+        msname = 'online.ms'
+        cmdfile = 'online_cmd.txt'
         if os.path.exists(msname):
             os.system('rm -rf '+msname)
         if os.path.exists(cmdfile):
             os.system('rm -rf '+cmdfile)
             
         importevla2(asdm=self.asdm, vis=msname, scans='2',online=True, applyflags=True,
-                    shadow=True,flagzero=True,flagbackup=False)
+                    shadow=True,flagzero=True,flagbackup=False, savecmds=True)
         
         # Check flags
         res = tflagdata(vis=msname, mode='summary')
@@ -320,41 +317,29 @@ class importevla2_test(unittest.TestCase):
         ff = open(cmdfile,'r')
         cmdlist = ff.readlines()
         ncmds = cmdlist.__len__()
-        self.assertEqual(ncmds, 2, 'Only shadow and clip zeros should be saved to file')
+        self.assertEqual(ncmds, 216)
         
         
     def test_apply2(self):
-        '''importevla2: apply flags and save also online flags to file'''
-        msname = pre+'applied.ms'
-        cmdfile = pre+'mycmds.txt'
+        '''importevla2: apply only online flags'''
+        msname = 'applied.ms'
         if os.path.exists(msname):
             os.system('rm -rf '+msname)
-        if os.path.exists(cmdfile):
-            os.system('rm -rf '+cmdfile)
             
         # Save to different file
-        importevla2(asdm=self.asdm, vis=msname, scans='2',online=True, shadow=True, flagzero=True,
-                    applyflags=True,savetofile=True, savecmds=True, outfile=cmdfile, flagbackup=False)
+        importevla2(asdm=self.asdm, vis=msname, scans='2',online=True, shadow=False, flagzero=False,
+                    applyflags=True, savecmds=False, flagbackup=False)
         
         # Check flags only in RR and LL
         res = tflagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],2446080)
         self.assertEqual(res['scan']['2']['flagged'],2446080)
         
-        # Check output file existence
-        self.assertTrue(os.path.exists(cmdfile))
-        
-        # Check file content
-        ff = open(cmdfile,'r')
-        cmdlist = ff.readlines()
-        ncmds = cmdlist.__len__()
-        ff.close()
-        self.assertEqual(ncmds, 216, 'Online, shadow and clip zeros should be saved to file')
 
     def test_apply3(self):
         '''importevla2: apply clip zeros on RR and LL and save to file'''
-        msname = pre+'zeros.ms'
-        cmdfile = pre+'zeros_cmd.txt'
+        msname = 'zeros.ms'
+        cmdfile = 'zeros_cmd.txt'
         if os.path.exists(msname):
             os.system('rm -rf '+msname)
         if os.path.exists(cmdfile):
@@ -362,7 +347,7 @@ class importevla2_test(unittest.TestCase):
             
             
         importevla2(asdm=self.asdm, vis=msname, scans='2,13',online=False, applyflags=True,
-                    shadow=False,flagzero=True,flagpol=False, flagbackup=False)
+                    shadow=False,flagzero=True,flagpol=False, flagbackup=False, savecmds=True)
         
         # Check flags
         res = tflagdata(vis=msname, mode='summary')
@@ -393,7 +378,7 @@ class importevla2_test(unittest.TestCase):
         if os.path.exists(cmdfile):
             os.system('rm -rf '+cmdfile)
             
-        importevla2(asdm=self.asdm, scans='2',online=True, savetofile=True, shadow=False, flagzero=False,
+        importevla2(asdm=self.asdm, scans='2',online=True, shadow=False, flagzero=False,
                     applyflags=False,savecmds=True, flagbackup=False)
 
         # No flags were applied
@@ -431,8 +416,8 @@ class importevla2_test(unittest.TestCase):
         
     def test_savepars(self):
         '''importevla2: save the flag commands and do not apply'''
-        msname = pre+'notapplied.ms'
-        cmdfile = pre+'notapplied_cmd.txt'
+        msname = 'notapplied.ms'
+        cmdfile = msname.replace('.ms','_cmd.txt')
         if os.path.exists(msname):
             os.system('rm -rf '+msname)
         if os.path.exists(cmdfile):
@@ -456,13 +441,13 @@ class importevla2_test(unittest.TestCase):
         cmdlist = ff.readlines()
         ncmds = cmdlist.__len__()
         ff.close()
-        self.assertEqual(ncmds, 2, 'Online, shadow and clip zeros should be saved to file')
+        self.assertEqual(ncmds, 216, 'Online, shadow and clip zeros should be saved to file')
         
         # Apply flags using tflagdata
         tflagdata(vis=msname, mode='list', inpfile=cmdfile)
         
         res = tflagdata(vis=msname, mode='summary')
-        self.assertEqual(res['flagged'],0)
+        self.assertEqual(res['flagged'],6090624)
 
         
 
@@ -472,10 +457,12 @@ class cleanup(unittest.TestCase):
         pass
     
     def tearDown(self):
-        os.system('rm -rf '+pre+'*ms*')
-        os.system('rm -rf '+pre+'*txt*')
         os.system('rm -rf '+asdmname)
-        
+        os.system('rm -rf *applied*ms*')
+        os.system('rm -rf *online*ms*')
+        os.system('rm -rf *zeros*ms*')
+        pass
+           
     def test1a(self):
         '''Importevla2: Cleanup'''
         pass
