@@ -45,11 +45,11 @@ def tflagdata(vis,
              flagdimension,
              usewindowstats,
              halfwin,
-             ntimesteps,    # rflag parameters
+             winsize,    # rflag parameters
              spectralmax,
              spectralmin,
-             noisescale,
-             scutofscale,
+             timedevscale,
+             freqdevscale,
              timedev,
              freqdev,
              extendpols,    # mode extend
@@ -272,18 +272,18 @@ def tflagdata(vis,
                       ' halfwin='+str(halfwin)
                       
         elif mode == 'rflag':
-            agent_pars['ntimesteps'] = ntimesteps
+            agent_pars['winsize'] = winsize
             agent_pars['spectralmax'] = spectralmax
             agent_pars['spectralmin'] = spectralmin
-            agent_pars['noisescale'] = noisescale
-            agent_pars['scutofscale'] = scutofscale
+            agent_pars['timedevscale'] = timedevscale
+            agent_pars['freqdevscale'] = freqdevscale
             agent_pars['timedev'] = timedev
             agent_pars['freqdev'] = freqdev
             casalog.post('Rflag mode is active')
             
-            sel_pars = sel_pars+' ntimesteps='+str(ntimesteps)+' spectralmax='+str(spectralmax)+\
-                    ' spectralmin='+str(spectralmin)+' noisescale='+str(noisescale)+\
-                    ' scutofscale='+str(scutofscale)+' timedev='+str(timedev)+\
+            sel_pars = sel_pars+' winsize='+str(winsize)+' spectralmax='+str(spectralmax)+\
+                    ' spectralmin='+str(spectralmin)+' timedevscale='+str(timedevscale)+\
+                    ' freqdevscale='+str(freqdevscale)+' timedev='+str(timedev)+\
                     ' freqdev='+str(freqdev)
             
 
