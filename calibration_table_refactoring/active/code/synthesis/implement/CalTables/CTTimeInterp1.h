@@ -31,7 +31,7 @@
 #include <casa/aips.h>
 
 #include <synthesis/CalTables/NewCalTable.h>
-#include <synthesis/CalTables/RIorAPArray.h>
+#include <synthesis/CalTables/RIorAParray.h>
 #include <casa/Arrays/Cube.h>
 #include <scimath/Functionals/Interpolate1D.h>
 #include <casa/Logging/LogMessage.h>
