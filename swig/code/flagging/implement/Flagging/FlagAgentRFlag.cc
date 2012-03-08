@@ -146,6 +146,12 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 		doflag_p = false;
 	}
 
+	// Determine if we have to store the plot reports in
+	if ( (display == String("report")) or (display == String("both")) )
+	{
+		doplot_p = true;
+	}
+
 	// timedev - Matrix for time analysis deviation thresholds - (old AIPS RFlag FPARM(3)/NOISE)
 	noise_p = 0;
 	exists = config.fieldNumber ("timedev");
@@ -289,54 +295,60 @@ Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &dat
 
 FlagReport FlagAgentRFlag::getReport()
 {
-	FlagReport dispRep("list");
+	FlagReport totalRep(String("list"),agentName_p);
 
-	// Plot reports (should be returned if params were calculated and display is activated)
-	FlagReport noiseStd = getReportCore(	field_spw_noise_histogram_sum_p,
-											field_spw_noise_histogram_sum_squares_p,
-											field_spw_noise_histogram_counts_p,
-											field_spw_noise_map_p,
-											"Time analysis",
-											noiseScale_p);
-    dispRep.addReport(noiseStd);
-
-	FlagReport scutofStd = getReportCore(	field_spw_scutof_histogram_sum_p,
-											field_spw_scutof_histogram_sum_squares_p,
-											field_spw_scutof_histogram_counts_p,
-											field_spw_scutof_map_p,
-											"Spectral analysis",
-											scutofScale_p);
-    dispRep.addReport(scutofStd);
-
-
-    // Threshold reports (should be returned if params were calculated)
-    Record threshList;
-	Int nEntries = field_spw_noise_map_p.size();
-	Matrix<Double> timedev(nEntries,3), freqdev(nEntries,3);
- 	Int threshCount = 0;
-	pair<Int,Int> field_spw;
-	for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
-			spw_field_iter != field_spw_noise_map_p.end();
-			spw_field_iter++)
+	if ((doflag_p==false) and (doplot_p==true))
 	{
-		field_spw = spw_field_iter->first;
+		// Plot reports (should be returned if params were calculated and display is activated)
+		FlagReport noiseStd = getReportCore(	field_spw_noise_histogram_sum_p,
+												field_spw_noise_histogram_sum_squares_p,
+												field_spw_noise_histogram_counts_p,
+												field_spw_noise_map_p,
+												"Time analysis",
+												noiseScale_p);
+		totalRep.addReport(noiseStd);
 
-		timedev(threshCount,0) = field_spw.first;
-		timedev(threshCount,1) = field_spw.second;
-		timedev(threshCount,2) = field_spw_noise_map_p[field_spw];
-		freqdev(threshCount,0) = field_spw.first;
-		freqdev(threshCount,1) = field_spw.second;
-		freqdev(threshCount,2) = field_spw_scutof_map_p[field_spw];
-
-		threshCount++;
+		FlagReport scutofStd = getReportCore(	field_spw_scutof_histogram_sum_p,
+												field_spw_scutof_histogram_sum_squares_p,
+												field_spw_scutof_histogram_counts_p,
+												field_spw_scutof_map_p,
+												"Spectral analysis",
+												scutofScale_p);
+		totalRep.addReport(scutofStd);
 	}
-	threshList.define( RecordFieldId("timedev") , timedev );
-	threshList.define( RecordFieldId("freqdev") , freqdev );
 
-	FlagReport returnThresh("rflag",agentName_p, threshList);
-	dispRep.addReport(returnThresh);
+	if (doflag_p==false)
+	{
+		// Threshold reports (should be returned if params were calculated)
+		Record threshList;
+		Int nEntries = field_spw_noise_map_p.size();
+		Matrix<Double> timedev(nEntries,3), freqdev(nEntries,3);
+		Int threshCount = 0;
+		pair<Int,Int> field_spw;
+		for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
+				spw_field_iter != field_spw_noise_map_p.end();
+				spw_field_iter++)
+		{
+			field_spw = spw_field_iter->first;
 
-	return dispRep;
+			timedev(threshCount,0) = field_spw.first;
+			timedev(threshCount,1) = field_spw.second;
+			timedev(threshCount,2) = field_spw_noise_map_p[field_spw];
+			freqdev(threshCount,0) = field_spw.first;
+			freqdev(threshCount,1) = field_spw.second;
+			freqdev(threshCount,2) = field_spw_scutof_map_p[field_spw];
+
+			threshCount++;
+		}
+		threshList.define( RecordFieldId("timedev") , timedev );
+		threshList.define( RecordFieldId("freqdev") , freqdev );
+
+		FlagReport returnThresh("rflag",agentName_p, threshList);
+		totalRep.addReport(returnThresh);
+	}
+
+
+	return totalRep;
 }
 
 
@@ -653,6 +665,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 		}
 	}
 
+	/*
 	// Extend flags across polarizations (AIPS 'compress stokes')
 	if ( 	(doflag_p == true) and (prepass_p == false) and
 			(noise > 0) or (scutof > 0)						 )
@@ -679,6 +692,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 			}
 		}
 	}
+	*/
 
 	return;
 }

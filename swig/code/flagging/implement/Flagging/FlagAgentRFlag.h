@@ -82,6 +82,7 @@ private:
 
 	// General parameters
 	Bool doflag_p;
+	Bool doplot_p;
 	uInt nTimeSteps_p;
 	Double noiseScale_p;
 	Double scutofScale_p;

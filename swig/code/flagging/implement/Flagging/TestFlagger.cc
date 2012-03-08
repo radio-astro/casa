@@ -360,8 +360,14 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	}
 
+	// Activate async i/o if tfcrop/clip/rflag is present
+	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0 or mode.compare("rflag") == 0)
+	{
+		fdh_p->enableAsyncIO(true);
+	}
+
 	// Create one agent for each polarization
-	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0) {
+	if (mode.compare("tfcrop") == 0) {
 
 		// Default for these modes
 		String correlation = "ABS ALL";

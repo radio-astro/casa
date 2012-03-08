@@ -43,19 +43,8 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// Deactivate profiling by default
 	profiling_p = false;
 
-	// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
-	asyncio_enabled_p = false;
-	AipsrcValue<Bool>::find (asyncio_enabled_p,"VisibilityIterator.async.enabled", true);
-	if (asyncio_enabled_p)
-	{
-		// Check Flag Data Handler config
-		Bool tmp = false;
-		AipsrcValue<Bool>::find (tmp,"FlagDataHandler.asyncio", false);
-		if (!tmp)
-		{
-			asyncio_enabled_p = false;
-		}
-	}
+	// Disable async I/O by default
+	enableAsyncIO(false);
 
 	// Check if slurp is enabled
 	if (!asyncio_enabled_p)
@@ -67,11 +56,6 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	{
 		slurp_p = false;
 	}
-
-	*logger_p << LogIO::DEBUG1
-		  << " Asyncio activated: " << asyncio_enabled_p
-		  << " Slurp activated: "<< slurp_p <<  LogIO::POST;
-
 
 	// WARNING: By default the visibility iterator adds the following
 	// default columns: ARRAY_ID and FIELD_ID,DATA_DESC_ID and TIME.
@@ -884,6 +868,50 @@ FlagDataHandler::selectData()
 	return true;
 }
 
+void
+FlagDataHandler::enableAsyncIO(Bool enable)
+{
+	if (enable)
+	{
+		// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
+		asyncio_enabled_p = ROVisibilityIterator::isAsynchronousIoEnabled();
+
+		if (asyncio_enabled_p)
+		{
+			// Check Flag Data Handler config
+			Bool tmp = false;
+			Bool foundSetting = AipsrcValue<Bool>::find (tmp,"FlagDataHandler.asyncio", false);
+			tmp = ! foundSetting || tmp; // let global setting rule if no FlagDataHandler setting
+			if (!tmp)
+			{
+				asyncio_enabled_p = false;
+				*logger_p << LogIO::WARN << " Asyncio disabled from FlagDataHandler .casarc settings" << LogIO::POST;
+			}
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << " Asyncio disabled from VisibilityIterator .casarc settings" << LogIO::POST;
+		}
+	}
+	else
+	{
+		asyncio_enabled_p = false;
+	}
+
+
+	if (!asyncio_enabled_p)
+	{
+		slurp_p = true;
+		AipsrcValue<Bool>::find (slurp_p,"FlagDataHandler.slurp", true);
+	}
+	else
+	{
+		slurp_p = false;
+	}
+
+	return;
+}
+
 // -----------------------------------------------------------------------
 // Function to handled columns pre-load (to avoid problems with parallelism)
 // -----------------------------------------------------------------------
@@ -1586,11 +1614,7 @@ FlagDataHandler::generateIterator()
 
 
 		// Then create and initialize RO Async iterator
-		if (rwVisibilityIterator_p)
-		{
-			cout << "Deleting " << rwVisibilityIterator_p << endl;
-			delete rwVisibilityIterator_p;
-		}
+		if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
 		rwVisibilityIterator_p = new VisibilityIterator(&prefetchColumns_p,*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
 		// Cast RW conventional iterator into RO conventional iterator
