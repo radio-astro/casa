@@ -35,19 +35,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="major" subparam="yes">
 	<description>Major axis for the kernels, default direction is along y-axis.</description>
- 	<any type='variant' limittype='string int float dict'/>
+ 	<any type='variant' limittype='string int float record'/>
     	<value type="string">2.0arcsec</value>
     </param>
 
     <param type="any" name="minor" subparam="yes">
 	<description>Minor axis in gaussian and boxcar kernels</description>
- 	<any type='variant' limmittype='string int float dict'/>
+ 	<any type='variant' limittype='string int float record'/>
     	<value type="string">2.0arcsec</value>
     </param>
 
     <param type="any" name="pa" subparam="yes">
 	<description>Position angle for gaussian kernel</description>
- 	<any type='variant' limmittype='string int float dict'/>
+ 	<any type='variant' limittype='string int float record'/>
     	<value type="string">0deg</value>
     </param>
 

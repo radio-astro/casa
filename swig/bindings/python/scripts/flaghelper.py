@@ -587,6 +587,7 @@ def getUnion(mslocal, vis, cmdlist):
     dicpars['uvrange'] = uvs
     dicpars['spw'] = spws
     dicpars['observation'] = obs
+    
 
     # Compress the selection list to reduce MSSelection parsing time.
     # 'field','spw','antenna' strings in dicpars will be modified in-place.
@@ -632,7 +633,8 @@ def getNumPar(cmdlist):
     'feed':0,
     'array':0,
     'uvrange':0,
-    'comment':0
+    'comment':0,
+    'observation':0
     }
 
     ci = 0  # count the number of lines with comments (starting with a #)
@@ -644,8 +646,9 @@ def getNumPar(cmdlist):
     ii = 0  # count the number of lines with intent
     fei = 0  # count the number of lines with feed
     ari = 0  # count the number of lines with array
-    ui = 0  # count the number of lines with yvrange
+    ui = 0  # count the number of lines with uvrange
     pi = 0  # count the number of lines with spw
+    oi = 0  # count the number of lines with observation
     
     for i in range(nrows):
         cmdline = cmdlist[i]
@@ -720,7 +723,13 @@ def getNumPar(cmdlist):
                         pi += 1
                         npars['spw'] = pi
                         
+                    elif xkey == "observation":
+                        oi += 1
+                        npars['observation'] = oi
+                        
+                        
     return npars
+
 
 def compressSelectionList(mslocal=None, vis='',dicpars={}):
     """

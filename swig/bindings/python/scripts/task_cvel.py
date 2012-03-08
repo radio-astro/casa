@@ -184,9 +184,7 @@ def cvel(vis, outputvis,
         casalog.post(parsummary,'INFO')
 
 	
-	if ((type(vis)==str) & (os.path.exists(vis))):
-	    ms.open(vis)
-	else:
+	if not ((type(vis)==str) & (os.path.exists(vis))):
 	    raise Exception, 'Visibility data set not found - please verify the name'
 
         if (outputvis == ""):
@@ -222,6 +220,9 @@ def cvel(vis, outputvis,
            ):
             doselection = False
 
+        # open input MS
+        ms.open(vis)
+
         if(type(phasecenter)==str):
             ### blank means take field 0
             if (phasecenter==''):
@@ -245,6 +246,7 @@ def cvel(vis, outputvis,
                 message = "Field id " + str(phasecenter)
                 message += " was selected as phasecenter but is not among the fields selected for output: "
                 message += str(ms.msseltoindex(vis,field=field)['field'])
+                ms.close()
                 raise Exception, message
 
             tb.open(vis+"/FIELD")
@@ -262,6 +264,7 @@ def cvel(vis, outputvis,
             except:
                 tb.close()
                 message = "phasecenter field id " + str(phasecenter) + " is not valid"
+                ms.close()
                 raise Exception, message
 
         if(mode=='frequency'):
@@ -273,8 +276,10 @@ def cvel(vis, outputvis,
             ##check that start and width have units if they are non-empty
             if not(start==""):
                 if (qa.quantity(start)['unit'].find('Hz') < 0):
+                    ms.close()
                     raise TypeError, "start parameter is not a valid frequency quantity " %start
             if(not(width=="") and (qa.quantity(width)['unit'].find('Hz') < 0)):
+                ms.close()
                 raise TypeError, "width parameter %s is not a valid frequency quantity " %width	
         elif(mode=='velocity'):
             ## reset the default values
@@ -285,13 +290,17 @@ def cvel(vis, outputvis,
             ##check that start and width have units if they are non-empty
             if not(start==""):
                 if (qa.quantity(start)['unit'].find('m/s') < 0):
+                    ms.close()
                     raise TypeError, "start parameter %s is not a valid velocity quantity " %start
             if(not(width=="") and (qa.quantity(width)['unit'].find('m/s') < 0)):
+                ms.close()
                 raise TypeError, "width parameter %s is not a valid velocity quantity " %width
         elif(mode=='channel' or mode=='channel_b'):
             if((type(width) != int) or (type(start) != int)):
+                ms.close()
                 raise TypeError, "start and width have to be integers with mode = %s" %mode            
 
+        ms.close()
         
         # determine parameter "datacolumn"
         tb.open(vis)
@@ -309,11 +318,11 @@ def cvel(vis, outputvis,
         elif (mpresent and not cpresent and not dpresent):
             datacolumn = 'model_data'
         else:
-            ms.close()
             raise Exception, "Can only handle MSs with all three data columns or just one."
 
         if(doselection):
             casalog.post("Creating selected SubMS ...", 'INFO')
+            ms.open(vis)
             ms.split(outputms=outputvis, field=field,
                      spw=spw,            step=[1],
                      baseline=antenna,   subarray=array,
@@ -346,10 +355,10 @@ def cvel(vis, outputvis,
         temp_suffix = ".deselected"
         if (passall):
             # determine range of fields
+            fieldsel = ms.msseltoindex(vis=vis, field=field)['field']
             tb.open(vis+"/FIELD")
             nfields = tb.nrows()
             tb.close()
-            fieldsel = ms.msseltoindex(vis=vis, field=field)['field']
             fielddesel = ""
             for i in xrange(0,nfields):
                 if not (i in fieldsel):
@@ -358,10 +367,10 @@ def cvel(vis, outputvis,
                     fielddesel += str(i)
 
             # determine range of SPWs
+            spwsel = ms.msseltoindex(vis=vis, spw=spw)['spw']
             tb.open(vis+"/SPECTRAL_WINDOW")
             nspws = tb.nrows()
             tb.close()
-            spwsel = ms.msseltoindex(vis=vis, spw=spw)['spw']
             spwdesel = ""
             for i in xrange(0,nspws):
                 if not (i in spwsel):
