@@ -373,7 +373,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 		}
 	      
 	      // Stop iterating if the deviation of the normalized data from the mean is less than 10%
-	      if(fabs(temp-sd) < 0.1)break;
+	      if(fabs(temp-sd) < (Double)0.1)break;
 	      // else go on for 5 iterations
 	      temp=sd;
 	    }//for loop
@@ -478,7 +478,7 @@ Float FlagAgentTimeFreqCrop :: calcVar(Vector<Float> &vect, Vector<Bool> &flag, 
     {
       if(flag[i]==False)
 	{
-	  validvals[cnt] = fit[i] < 1e-6 ? 0.0 : fabs( (vect[i] - fit[i])/fit[i] );
+	  validvals[cnt] = fit[i] < (Double)1e-6 ? (Double)0.0 : fabs( (vect[i] - fit[i])/fit[i] );
 	  cnt++;
 	}
     }
@@ -690,7 +690,6 @@ void FlagAgentTimeFreqCrop :: polyFit(Vector<Float> &data,Vector<Bool> &flag, Ve
   
   LinearFit<Double> fitter;
   Polynomial<Double> combination(deg);
-  
   
   combination.setCoefficient(0,0.0);
   if (deg >= 1) combination.setCoefficient(1, 0.0);
