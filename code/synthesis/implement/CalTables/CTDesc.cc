@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
-CTDesc::CTDesc() : itsCalMainDesc(defaultCalMain(""))
+CTDesc::CTDesc() : itsCalMainDesc(defaultCalMain())
 {
 // Default null constructor for new calibration table description (v1.0)
 // Output to private data:
@@ -57,8 +57,11 @@ CTDesc::CTDesc() : itsCalMainDesc(defaultCalMain(""))
 
 //----------------------------------------------------------------------------
 
-CTDesc::CTDesc (const String& type) : 
-  itsCalMainDesc(defaultCalMain(type))
+CTDesc::CTDesc (const String& partype,
+		const String& msname,
+		const String& viscal,
+		const String& polbasis) :
+  itsCalMainDesc(defaultCalMain(partype,msname,viscal,polbasis))
 {
 // Constructor for new calibration table description (v1.0)
 // Inputs:
@@ -92,7 +95,10 @@ TableDesc CalTableDesc::defaultCalHistory()
 ***/
 //----------------------------------------------------------------------------
 
-TableDesc CTDesc::defaultCalMain (const String& type)
+TableDesc CTDesc::defaultCalMain (const String& partype,
+				  const String& msname,
+				  const String& viscal,
+				  const String& polbasis)
 {
 // Generate the default table descriptor for the Cal Main sub-table
 // Input:
@@ -101,16 +107,17 @@ TableDesc CTDesc::defaultCalMain (const String& type)
 //    defaultCalMain   TableDesc          Default Cal Main descriptor
 //
   // Set up table descriptor and add comment field
-  TableDesc td (type, "1.0", TableDesc::Scratch);
+  TableDesc td (viscal, "1.0", TableDesc::Scratch);
   td.comment() = "New calibration table";
 
   // Define keywords
   Record keyWordRec;
   // Cal_desc and cal_history indices
   // calibration type
-  keyWordRec.define ("Type", "Complex");
-  keyWordRec.define ("MSName","dummy");
-  keyWordRec.define ("PolBasis", "lin");
+  keyWordRec.define ("ParType", partype);
+  keyWordRec.define ("MSName",msname);
+  keyWordRec.define ("VisCal",viscal);
+  keyWordRec.define ("PolBasis",polbasis);
   // Add to table descriptor
   td.rwKeywordSet().assign (keyWordRec);
 
@@ -134,7 +141,16 @@ TableDesc CTDesc::defaultCalMain (const String& type)
 					ColumnDesc::Direct));
 
   //Parameter columns
-  td.addColumn (ArrayColumnDesc <Complex>  (NCT::fieldName (NCT::PARAM)));
+  if (partype=="Complex")
+    td.addColumn (ArrayColumnDesc <Complex>  (NCT::fieldName (NCT::CPARAM)));
+  else if (partype=="Float")
+    td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::FPARAM)));
+
+  // TBD: we should handle improper partype better, but conformant() 
+  //  currently requires neither PARAM column in case of default defaultCalMain...
+  //  else
+  //    throw(AipsError("CTDesc(): Unknown ParType requested."));
+
   td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::PARAMERR)));
   td.addColumn (ArrayColumnDesc <Bool>  (NCT::fieldName (NCT::FLAG)));
   td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::SNR)));
