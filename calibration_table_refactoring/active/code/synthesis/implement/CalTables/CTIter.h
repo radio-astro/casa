@@ -78,7 +78,7 @@ class ROCTIter
 public:
   // Constructor/Destructor 
   ROCTIter(NewCalTable tab,const Block<String>& sortcol);
-  ~ROCTIter();
+  virtual ~ROCTIter();
   
   // Iteration operators
   inline void reset() { ti_->reset(); this->attach(); };
@@ -190,7 +190,7 @@ class CTIter : public ROCTIter
 public:
   // Constructor/Destructor 
   CTIter(NewCalTable tab,const Block<String>& sortcol);
-  ~CTIter();
+  virtual ~CTIter();
 
   // Set antenna2 (e.g., used for setting refant)
   void setantenna2(const Vector<Int>& a2);

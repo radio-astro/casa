@@ -194,7 +194,7 @@ void doTest2 (Bool verbose=False) {
 
     // Play with setable columns
     Cube<Bool> flag(nctiter.flag());
-    cout << boolalpha << " flag = " << flag << endl;
+    //    cout << boolalpha << " flag = " << flag << endl;
     if (thisant==Int(nAnt/2))
       flag=True;
     nctiter.setflag(flag);
@@ -225,8 +225,11 @@ void doTest2 (Bool verbose=False) {
 	   << endl;
     }
 
-    cout << boolalpha << " flag="<<mc.flag().getColumn() << endl;
 
+    if (thisant(0)==Int(nAnt/2)) {
+      Bool f(Cube<Bool>(mc.flag().getColumn())(0,0,0));
+      AlwaysAssert( (f), AipsError);
+    }
 
     // Tests
     AlwaysAssert( (tablist(i).nrow()==nFld*nTime) , AipsError);
