@@ -666,17 +666,17 @@ int main(int argc, char **argv)
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
 		}
-		else if (parameter == string("-ntimesteps"))
+		else if (parameter == string("-winsize"))
 		{
-			agentParameters.define ("ntimesteps", casa::uInt(atoi(argv[i+1])));
+			agentParameters.define ("winsize", casa::uInt(atoi(argv[i+1])));
 		}
-		else if (parameter == string("-noisescale"))
+		else if (parameter == string("-timedevscale"))
 		{
-			agentParameters.define ("noisescale", casa::Double(atof(argv[i+1])));
+			agentParameters.define ("timedevscale", casa::Double(atof(argv[i+1])));
 		}
-		else if (parameter == string("-scutofscale"))
+		else if (parameter == string("-freqdevscale"))
 		{
-			agentParameters.define ("scutofscale", casa::Double(atof(argv[i+1])));
+			agentParameters.define ("freqdevscale", casa::Double(atof(argv[i+1])));
 		}
 		else if (parameter == string("-timedev"))
 		{

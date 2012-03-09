@@ -62,11 +62,11 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	int exists;
 
 	// AIPS RFlag FPARM(1)
-	exists = config.fieldNumber ("ntimesteps");
+	exists = config.fieldNumber ("winsize");
 	if (exists >= 0)
 	{
-		nTimeSteps_p = config.asuInt("ntimesteps");
-		*logger_p << logLevel_p << " ntimesteps is " << nTimeSteps_p << LogIO::POST;
+		nTimeSteps_p = config.asuInt("winsize");
+		*logger_p << logLevel_p << " winsize is " << nTimeSteps_p << LogIO::POST;
 	}
 	else
 	{
@@ -77,6 +77,7 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("spectralmax");
 	if (exists >= 0)
 	{
+	  cout << "Type of spectralmax : " << config.type( exists ) << endl;
 		spectralmax_p = config.asDouble("spectralmax");
 		*logger_p << logLevel_p << " spectralmax is " << spectralmax_p << LogIO::POST;
 	}
@@ -98,11 +99,11 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	}
 
 	// AIPS RFlag FPARM(9)
-	exists = config.fieldNumber ("noisescale");
+	exists = config.fieldNumber ("timedevscale");
 	if (exists >= 0)
 	{
-		noiseScale_p = config.asDouble("noisescale");
-		*logger_p << logLevel_p << " noisescale is " << noiseScale_p << LogIO::POST;
+		noiseScale_p = config.asDouble("timedevscale");
+		*logger_p << logLevel_p << " timedevscale is " << noiseScale_p << LogIO::POST;
 	}
 	else
 	{
@@ -110,11 +111,11 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	}
 
 	// AIPS RFlag FPARM(10)
-	exists = config.fieldNumber ("scutofscale");
+	exists = config.fieldNumber ("freqdevscale");
 	if (exists >= 0)
 	{
-		scutofScale_p = config.asDouble("scutofscale");
-		*logger_p << logLevel_p << " scutofscale is " << scutofScale_p << LogIO::POST;
+		scutofScale_p = config.asDouble("freqdevscale");
+		*logger_p << logLevel_p << " freqdevscale is " << scutofScale_p << LogIO::POST;
 	}
 	else
 	{
