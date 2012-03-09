@@ -88,9 +88,6 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	// Set flag data handler
 	flagDataHandler_p = dh;
 
-	// Set (pre-selected) MS
-	selectedMeasurementSet_p = flagDataHandler_p->selectedMeasurementSet_p;
-
 	// Set vis buffer
 	visibilityBuffer_p = flagDataHandler_p->visibilityBuffer_p;
 
@@ -124,7 +121,6 @@ FlagAgentBase::initialize()
 {
    // Initialize members
    flagDataHandler_p = NULL;
-   selectedMeasurementSet_p = NULL;
    visibilityBuffer_p = NULL;
    privateFlagCube_p = NULL;
    commonFlagCube_p = NULL;
@@ -543,7 +539,7 @@ FlagAgentBase::setDataSelection(Record config)
 		{
 
 			parser.setArrayExpr(arraySelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			arrayList_p=parser.getSubArrayList();
 			filterRows_p=true;
 
@@ -572,7 +568,7 @@ FlagAgentBase::setDataSelection(Record config)
 		{
 
 			parser.setFieldExpr(fieldSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			fieldList_p=parser.getFieldList();
 			filterRows_p=true;
 
@@ -600,7 +596,7 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setScanExpr(scanSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			scanList_p=parser.getScanList();
 			filterRows_p=true;
 
@@ -628,7 +624,7 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setTimeExpr(timeSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			timeList_p=parser.getTimeList();
 			filterRows_p=true;
 
@@ -656,7 +652,7 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setSpwExpr(spwSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			spwList_p=parser.getSpwList();
 			filterRows_p=true;
 
@@ -698,7 +694,7 @@ FlagAgentBase::setDataSelection(Record config)
 			}
 
 			parser.setAntennaExpr(baselineSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			antenna1List_p=parser.getAntenna1List();
 			antenna2List_p=parser.getAntenna2List();
 			baselineList_p=parser.getBaselineList();
@@ -728,7 +724,7 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setUvDistExpr(uvwSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			uvwList_p=parser.getUVList();
 			filterRows_p=true;
 
@@ -762,7 +758,7 @@ FlagAgentBase::setDataSelection(Record config)
 		{
 
 			parser.setPolnExpr(polarizationSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			polarizationList_p=parser.getPolMap();
 			filterPols_p=true;
 
@@ -794,7 +790,7 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setObservationExpr(observationSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			observationList_p=parser.getObservationList();
 			filterRows_p=true;
 
@@ -822,7 +818,7 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setStateExpr(scanIntentSelection_p);
-			parser.toTableExprNode(selectedMeasurementSet_p);
+			flagDataHandler_p->parseExpression(parser);
 			scanIntentList_p=parser.getStateObsModeList();
 			filterRows_p=true;
 

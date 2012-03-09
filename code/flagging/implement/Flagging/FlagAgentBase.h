@@ -23,7 +23,8 @@
 #ifndef FlagAgentBase_H_
 #define FlagAgentBase_H_
 
-#include <flagging/Flagging/FlagDataHandler.h>
+#include <flagging/Flagging/FlagMSHandler.h>
+#include <flagging/Flagging/FlagCalTableHandler.h>
 #include <flagging/Flagging/FlagReport.h>
 #include <casa/Containers/OrdMapIO.h>
 #include <measures/Measures/Stokes.h>
@@ -199,7 +200,6 @@ private:
 	VisBufferAutoPtr *visibilityBuffer_p;
 
 	// MS-related objects
-	MeasurementSet *selectedMeasurementSet_p;
 	Cube<Bool> *commonFlagCube_p;
 	Cube<Bool> *originalFlagCube_p;
 	Cube<Bool> *privateFlagCube_p;

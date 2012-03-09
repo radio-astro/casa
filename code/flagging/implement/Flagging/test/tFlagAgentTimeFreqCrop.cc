@@ -49,7 +49,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
+	FlagDataHandler *dh = new FlagMSHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -213,7 +213,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,ntime);
+	FlagDataHandler *dh = new FlagMSHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -391,14 +391,14 @@ bool checkFlags(string targetFile,string referenceFile, Record dataSelection)
 	bool returnCode=true;
 
 	// Create data handler for target file
-	FlagDataHandler *targetFiledh = new FlagDataHandler(targetFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *targetFiledh = new FlagMSHandler(targetFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 	targetFiledh->open();
 	targetFiledh->setDataSelection(dataSelection);
 	targetFiledh->selectData();
 	targetFiledh->generateIterator();
 
 	// Create data handler for reference file
-	FlagDataHandler *referenceFiledh = new FlagDataHandler(referenceFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *referenceFiledh = new FlagMSHandler(referenceFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 	referenceFiledh->open();
 	referenceFiledh->setDataSelection(dataSelection);
 	referenceFiledh->selectData();

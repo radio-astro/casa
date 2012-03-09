@@ -539,27 +539,25 @@ public:
 	// Default destructor
 	~FlagDataHandler();
 
+	// Common MS/CalTables interface
+	virtual bool open() {return false;}
+	virtual bool close() {return false;}
+	virtual bool selectData() {return false;}
+	virtual bool generateIterator() {return false;}
+	virtual bool nextChunk() {return false;}
+	virtual bool nextBuffer() {return false;}
+	virtual bool flushFlags() {return false;}
+	virtual String getTableName() {return String("none");}
+	virtual void parseExpression(MSSelection &parser) {return;}
+
 	// Set the iteration approach
 	void setIterationApproach(uShort iterationApproach);
-
-	// Open Measurement Set
-	bool open();
-
-	// Close Measurement Set
-	bool close();
 
 	// Set Data Selection parameters
 	bool setDataSelection(Record record);
 
 	// Set time interval (also known as ntime)
 	void setTimeInterval(Double timeInterval);
-
-	// Apply channel selection for asyn or normal iterator
-	// NOTE: We always have to do this, even if there is no SPW:channel selection
-	void applyChannelSelection(ROVisibilityIterator *roVisIter);
-
-	// Generate selected Measurement Set
-	bool selectData();
 
 	// Methods to switch on/off async i/o
 	void enableAsyncIO(Bool enable);
@@ -569,29 +567,14 @@ public:
 	void preLoadColumn(uInt column);
 	void preFetchColumns();
 
-	// Swap MS to check what is the maximum RAM memory needed
-	void checkMaxMemory();
-
-	// Generate Visibility Iterator
-	bool generateIterator();
-
-	// Move to next chunk
-	bool nextChunk();
-
-	// Move to next buffer
-	bool nextBuffer();
-
 	// Stop iterating
 	void stopIteration() {stopIteration_p = true;};
 
-	// Write flag cube into MS
-	bool flushFlags();
-
 	// As requested by Urvashi R.V. provide access to the original and modified flag cubes
-	Cube<Bool> * getModifiedFlagCube();
-	Cube<Bool> * getOriginalFlagCube();
-	Vector<Bool> * getModifiedFlagRow();
-	Vector<Bool> * getOriginalFlagRow();
+	Cube<Bool> * getModifiedFlagCube() {return &modifiedFlagCube_p;}
+	Cube<Bool> * getOriginalFlagCube() {return &originalFlagCube_p;}
+	Vector<Bool> * getModifiedFlagRow() {return &modifiedFlagRow_p;}
+	Vector<Bool> * getOriginalFlagRow() {return &originalFlagRow_p;}
 
 	// Functions to switch on/off mapping functions
 	void setMapAntennaPairs(bool activated);
@@ -606,9 +589,8 @@ public:
 	void generateSubIntegrationMap();
 	void generatePolarizationsMap();
 	void generateAntennaPointingMap();
-	void generateScanStartStopMap();
 
-	// Accesors for the mapping functions
+	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
 	subIntegrationMap * getSubIntegrationMap() {return subIntegrationMap_p;}
 	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
@@ -616,37 +598,22 @@ public:
 	antennaPointingMap * getMapAntennaPointing() {return antennaPointingMap_p;}
 	scanStartStopMap * getMapScanStartStop() {return scanStartStopMap_p;}
 
-	// TODO: Remove old CubeView accessors and update tFlagDataHandler and tFlagAgentBase
-	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
-	CubeView<Bool> * getFlagsView(Double timestep);
-	CubeView<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
-	CubeView<Complex> * getVisibilitiesView(Double timestep);
-
-	// Dummy processBuffer function (it has to be implemented in the agents)
-	uShort processBuffer(bool write, uShort rotateMode, uShort rotateViews);
-	void fillBuffer(CubeView<Bool> &flagCube, bool write, uShort processBuffer);
-
-	// Set function to activate profiling
-	void setProfiling(bool enable) {profiling_p = enable;}
+	void setProfiling(Bool value) {profiling_p=value;}
 
 	// Make the logger public to that we can use it from FlagAgentBase::create
 	casa::LogIO *logger_p;
 
 	// Measurement set section
 	String msname_p;
-	MeasurementSet *selectedMeasurementSet_p;
-	MeasurementSet *originalMeasurementSet_p;
 	MSSelection *measurementSetSelection_p;
 	Vector<String> *antennaNames_p;
-        ROScalarMeasColumn<MPosition> *antennaPositions_p;
+	ROScalarMeasColumn<MPosition> *antennaPositions_p;
 	Vector<Double> *antennaDiameters_p;
 	Vector<String> *fieldNames_p;
 	std::vector<String> *corrProducts_p;
 
 	// RO Visibility Iterator
 	casa::asyncio::PrefetchColumns prefetchColumns_p;
-	VisibilityIterator *rwVisibilityIterator_p;
-	ROVisibilityIterator *roVisibilityIterator_p;
 	// Iteration counters
 	uLong maxChunkRows;
 	uShort chunkNo;
@@ -671,8 +638,6 @@ public:
 
 
 protected:
-
-private:
 
 	// Data Selection ranges
 	bool anySelection_p;

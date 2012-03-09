@@ -38,7 +38,7 @@ void deleteFlags(string inputFile,Record record,vector<Record> recordList)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *dh = new FlagMSHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -236,7 +236,7 @@ void writeFlags(string inputFile,Record record,vector<Record> recordList)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *dh = new FlagMSHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -438,7 +438,7 @@ void checkFlags(string inputFile,Record record,vector<Record> recordList)
 	gettimeofday(&start,0);
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *dh = new FlagMSHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
