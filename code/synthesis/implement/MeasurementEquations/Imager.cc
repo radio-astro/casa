@@ -6485,7 +6485,9 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
 
    if ( viewer_p == 0 ) {
-     viewer_p = dbus::launch<ViewerProxy>( );
+     std::list<std::string> args;
+     args.push_back("--oldregions");
+     viewer_p = dbus::launch<ViewerProxy>(args);
      if ( viewer_p == 0 ) {
        os << LogIO::WARN << "failed to launch viewer gui" << LogIO::POST;
        return False;

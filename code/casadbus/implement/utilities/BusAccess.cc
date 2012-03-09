@@ -71,12 +71,13 @@ namespace casa {
 
 
 	char *launch_casa_proxy( bool unique_name, const std::string &dbusname,
-				 const std::string &default_name,  const char **args ) {
+				 const std::string &default_name,  const std::list<std::string> &args ) {
 
-	    if ( ! args[0] ) { return 0; }
+	    int argc = args.size( );
+	    if ( argc == 0 ) return 0;
 
 	    // if we cannot locate the executable, return 0
-	    int arg0len = strlen(args[0]);
+	    int arg0len = args.front( ).size( );
 	    char *path=getenv("PATH");
 	    if ( ! path ) { return 0; }
 	    char *pathptr = path = strdup(path);
@@ -87,7 +88,7 @@ namespace casa {
 		    while ( (strlen(p) + arg0len + 4) > exe_path_len ) { exe_path_len *= 2; }
 		    exe_path = (char*) realloc(exe_path,exe_path_len);
 		}
-		sprintf(exe_path, "%s/%s", p, args[0]);
+		sprintf(exe_path, "%s/%s", p, args.front( ).c_str( ));
 		if ( access(exe_path, X_OK) == 0 ) break;
 		else *exe_path = '\0';
 	    }
@@ -97,21 +98,20 @@ namespace casa {
 	    free(exe_path);
 	    if ( ! found ) { return 0; }
 
-	    
-	    int argc = 0;
-	    while ( args[argc] ) ++argc;
-	    const char **arguments = (const char**) malloc(sizeof(char*) * (argc + 3));
-	    int count;
-	    for ( count=0; count < argc; ++count )
-		arguments[count] = args[count];
-	    arguments[count++] = "--dbusname";
+	    char **arguments = (char**) malloc(sizeof(char*) * (argc + 3));
+	    int count = 0;
+	    for ( std::list<std::string>::const_iterator it=args.begin(); it != args.end(); ++it )
+		arguments[count++] = strdup((*it).c_str( ));
+	    arguments[count++] = strdup("--dbusname");
 	    char *dbus_name = generate_casa_proxy_name(unique_name, dbusname, default_name);
-	    arguments[count++] = dbus_name;
+	    arguments[count++] = strdup(dbus_name);
 	    arguments[count] = '\0';
 	    if ( ! fork( ) ) {
-		execvp( args[0], (char* const*) arguments );
+		execvp( args.front( ).c_str( ), (char* const*) arguments );
 		perror( "launch<>(...) child process exec failed" );
 	    }
+	    for ( int i=0; i < count; ++i )
+		free(arguments[i]);
 	    free(arguments);
 	    return dbus_name;
 	}

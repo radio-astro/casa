@@ -370,11 +370,13 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
     }
 
     for ( int x = 1; x < argc; ++x ) {
-	if ( strncmp( argv[x], "--server", 8 ) &&
-	     strncmp( argv[x], "--nogui", 7 ) &&
-	     strcmp( argv[x], "--persist" ) &&
-	     strcmp( argv[x], "--casapy" ) &&
-	     strcmp( argv[x], "--eso3d" ))
+	if ( ! strcmp(argv[x], "--dbusname") ) { ++x; }
+	else if ( strncmp( argv[x], "--server", 8 ) &&
+		  strncmp( argv[x], "--nogui", 7 ) &&
+		  strcmp( argv[x], "--persist" ) &&
+		  strcmp( argv[x], "--casapy" ) &&
+		  strcmp( argv[x], "--eso3d" ) && 
+		  strncmp( argv[x],"--dbusname",10) )
 	    args[numargs++] = strdup(argv[x]);
     }
     args[numargs] = 0;

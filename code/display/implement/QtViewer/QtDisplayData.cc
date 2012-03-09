@@ -68,9 +68,35 @@
 #include <casa/Exceptions/Error.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
+#include <algorithm>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+template <typename T> class anylt {
+    public:
+	anylt( const T &r ) : rhs(r), tally_(false) { }
+	anylt( const anylt &o ) : rhs(o.rhs), tally_(o.tally_) { }
+	void operator(  )( const T &lhs ) { if ( lhs < rhs ) { tally_ = true; } }
+	operator bool( ) const { return tally_; }
+
+    private:
+	bool tally_;
+	T rhs;
+};
+
+template <typename T> class anyge {
+    public:
+	anyge( const T &r ) : rhs(r), tally_(false) { }
+	anyge( const anyge &o ) : rhs(o.rhs), tally_(o.tally_) { }
+	void operator(  )( const T &lhs ) { if ( lhs >= rhs ) { tally_ = true; } }
+	operator bool( ) const { return tally_; }
+
+    private:
+	bool tally_;
+	T rhs;
+};
+
 
 QtDisplayData::data_to_qtdata_map_type QtDisplayData::dd_source_map;
 
@@ -1203,23 +1229,25 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
   //Int zIndex = mouseRegion.asInt("zindex");  // (following is preferable).
     Int zIndex            = padd->activeZIndex();
     IPosition pos         = padd->fixedPosition();
-    Vector<Int> dispAxes  = padd->displayAxes();
+    std::vector<int> dispAxes  = padd->displayAxes();
 	// dispAxes[0] and [1] contain indices of axes on display X and Y;
 	// dispAxes[2] also initially contains animation axis (if it exists).
     
-    if(nAxes==2) dispAxes.resize(2, True);
+    if(nAxes==2) dispAxes.resize(2);
     
     if( nAxes<2 ||
-        Int(shp.nelements()) != nAxes ||
-        Int(pos.nelements()) != nAxes ||
-        anyLT(dispAxes, 0) ||
-	anyGE(dispAxes, nAxes) ) return 0;	// (shouldn't happen).
+        Int(shp.size()) != nAxes ||
+        Int(pos.size()) != nAxes ||
+	std::for_each(dispAxes.begin(),dispAxes.end(),anylt<int>(0)) ||
+	std::for_each(dispAxes.begin(),dispAxes.end(),anyge<int>(nAxes)) ) {
+	return 0;	// (shouldn't happen).
+    }
     
-    if(dispAxes.nelements()>2u) pos[dispAxes[2]] = zIndex;
+    if( dispAxes.size() > 2 ) pos[dispAxes[2]] = zIndex;
 	// (padd->fixedPosition() can't be trusted to have the correct
 	// zIndex value on the animation axis; at least, not yet).
     
-    dispAxes.resize(2, True);	// Now ensure that dispAxes is restricted
+    dispAxes.resize(2);		// Now ensure that dispAxes is restricted
 				// to just the axes on display X and Y,
 				// (for WCPolygon definition, below).
 
@@ -1394,7 +1422,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     if (padd == 0)
         return False;
 
-    Vector<Int> dispAxes = padd->displayAxes();
+    std::vector<int> dispAxes = padd->displayAxes();
     //cout << "dispAxes=" << dispAxes << endl;
 
     Vector<Int> cursorAxes(2);
@@ -2021,20 +2049,22 @@ ImageRegion* QtDisplayData::mouseToImageRegion(
 					   
     Int zIndex = padd->activeZIndex();
     IPosition pos = padd->fixedPosition();
-    Vector<Int> dispAxes = padd->displayAxes();
+    std::vector<int> dispAxes = padd->displayAxes();
 
     if (nAxes == 2) 
-       dispAxes.resize(2, True);
+       dispAxes.resize(2);
     
     if (nAxes < 2 || Int(shp.nelements()) != nAxes ||
         Int(pos.nelements()) != nAxes ||
-        anyLT(dispAxes, 0) || anyGE(dispAxes, nAxes)) 
-       return 0;
+	std::for_each(dispAxes.begin(),dispAxes.end(),anylt<int>(0)) ||
+	std::for_each(dispAxes.begin(),dispAxes.end(),anyge<int>(nAxes)) ) {
+	return 0;
+    }
     
-    if (dispAxes.nelements() > 2u) 
+    if ( dispAxes.size() > 2 ) 
        pos[dispAxes[2]] = zIndex;
     
-    dispAxes.resize(2, True);
+    dispAxes.resize(2);
     
     WCBox dummy;
     

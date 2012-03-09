@@ -71,11 +71,11 @@ namespace casa {
 
 
 
-    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent, "iclean" ),
-								       in_interact_mode(false), interact_id(0),
-								       maskdd_(0), imagedd_(0) {
+    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent, const std::list<std::string> &args ) :
+		QtDisplayPanelGui( v, parent, "iclean", args ), in_interact_mode(false), interact_id(0), maskdd_(0), imagedd_(0) {
 
-	resize(700,900);
+	std::string tmp;
+	if ( rc.get("viewer.iclean.dimensions",tmp) == false ) resize(700,900);
 
 	autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
 	setStatsPrint(False);			// Turns off statistics printing.

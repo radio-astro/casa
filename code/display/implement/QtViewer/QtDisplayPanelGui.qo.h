@@ -448,16 +448,15 @@ class QtDisplayPanelGui : public QtPanelBase,
   QWidget*    trkgWidget_;
   
      
- private:
-  bool use_new_regions;
-  unsigned int showdataoptionspanel_enter_count;
-  QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
-
   // connection to rc file
   Casarc &rc;
   // rc id for this panel type
   std::string rcid_;
 
+ private:
+  bool use_new_regions;
+  unsigned int showdataoptionspanel_enter_count;
+  QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
     
  public:
  
