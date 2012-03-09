@@ -44,6 +44,7 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageUtilities.h>
+#include <images/Images/Image2DConvolver.h>
 #include <synthesis/TransformMachines/PBMath.h>
 #include <lattices/Lattices/LatticeExpr.h> 
 #include <lattices/Lattices/LatticeFFT.h>
@@ -60,7 +61,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-  void Feather::applyDishDiam(ImageInterface<Complex>& image, Float effDiam){
+  void Feather::applyDishDiam(ImageInterface<Complex>& image, Float effDiam, ImageInterface<Float>& fftim, Vector<Quantity>& extraconv){
     /*
     MathFunc<Float> dd(SPHEROIDAL);
     Vector<Float> valsph(31);
@@ -71,9 +72,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity lefreq(224.0/effDiam*9.0, "GHz");
     
     PBMath1DNumeric elpb(valsph, fulrad, lefreq);*/
-    PBMath1DAiry elpb( Quantity(effDiam,"m"), Quantity(0.01,"m"),
-				       Quantity(0.8564,"deg"), Quantity(1.0,"GHz"));
-
+    ////////////////////////
+    /*{
+      PagedImage<Float> thisScreen(image.shape(), image.coordinates(), "Before_apply.image");
+      LatticeExpr<Float> le(abs(image));
+      thisScreen.copyData(le);
+      }*/
+    //////////////////////
+    Quantity halfpb=Quantity(1.22*C::c/1.0e9/effDiam, "rad");
+    //PBMath1DAiry elpb( Quantity(effDiam,"m"), Quantity(0.01,"m"),
+    //				       Quantity(0.8564,"deg"), Quantity(1.0,"GHz"));
+    PBMath1DGauss elpb(halfpb, Quantity(0.8564,"deg"), Quantity(1.0,"GHz"));
+    
+    TempImage<Complex> elbeamo(image.shape(), image.coordinates());
+    elbeamo.set(1.0);
     MDirection wcenter;  
     {
       Int directionIndex=
@@ -85,10 +97,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pcenter(1) = image.shape()(directionIndex+1)/2;    
       directionCoord.toWorld( wcenter, pcenter );
     }
-    elpb.applyPB(image, image, wcenter, Quantity(0.0, "deg"), 
+    elpb.applyPB(elbeamo, elbeamo, wcenter, Quantity(0.0, "deg"), 
 			   BeamSquint::NONE);
+    extraconv.resize(3);
+    StokesImageUtil::To(fftim, elbeamo);
+    StokesImageUtil::FitGaussianPSF(fftim, 
+				    extraconv(0), extraconv(1), extraconv(2)); 
 
-
+    LatticeFFT::cfft2d(elbeamo);
+    image.copyData((LatticeExpr<Complex>)( image*elbeamo) );
+    elbeamo.copyData(image);
+    LatticeFFT::cfft2d(elbeamo, False);
+    StokesImageUtil::To(fftim, elbeamo);
+    /////////
+    /*{
+      PagedImage<Float> thisScreen(image.shape(), image.coordinates(), "After_apply.image");
+      //LatticeExpr<Float> le(abs(image));
+      thisScreen.copyData(fftim);
+      }*/ 
+    ////////
   }
 
 
@@ -103,7 +130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
       
-      Vector<Quantum<Double> > hBeam, lBeam;
+     Vector<Quantum<Double> > hBeam, lBeam, extraconv;
       ImageInfo highInfo=high.imageInfo();
       hBeam=highInfo.restoringBeam();
       ImageInfo lowInfo=low0.imageInfo();
@@ -205,6 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	myshap(k)=1;
       }
       
+      TempImage<Float> lowpsf0;
       TempImage<Complex> cweight(myshap, high.coordinates());
       if(lowPSF=="") {
 	os << LogIO::NORMAL // Loglevel INFO
@@ -216,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    myPBp->applyPB(cweight, cweight, wcenter, Quantity(0.0, "deg"), 
 			   BeamSquint::NONE);
 	  
-	    TempImage<Float> lowpsf0(cweight.shape(), cweight.coordinates());
+	    lowpsf0=TempImage<Float>(cweight.shape(), cweight.coordinates());
 	    
 	    os << LogIO::NORMAL // Loglevel INFO
                << "Determining scaling from SD Primary Beam.\n"
@@ -232,7 +260,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  os << LogIO::NORMAL // Loglevel INFO
              << "Determining scaling from SD restoring beam.\n"
 	     << LogIO::POST;
-	  TempImage<Float> lowpsf0(cweight.shape(), cweight.coordinates());
+	  lowpsf0=TempImage<Float>(cweight.shape(), cweight.coordinates());
 	  lowpsf0.set(0.0);
 	  IPosition center(4, Int((cweight.shape()(0)/4)*2), 
 			   Int((cweight.shape()(1)/4)*2),0,0);
@@ -252,7 +280,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	IPosition lshape(lowpsfDisk.shape());
 	lshape.resize(4);
 	lshape(2)=1; lshape(3)=1;
-	TempImage<Float>lowpsf0(lshape,lowpsfDisk.coordinates());
+	TempImage<Float>lowpsf(lshape,lowpsfDisk.coordinates());
 	IPosition blc(lowpsfDisk.shape());
 	IPosition trc(lowpsfDisk.shape());
 	blc(0)=0; blc(1)=0;
@@ -262,32 +290,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  blc(k)=0; trc(k)=0;	  	  
 	}// taking first plane
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	lowpsf0.copyData(SubImage<Float>(lowpsfDisk, sl, False));
-	TempImage<Float> lowpsf(myshap, high.coordinates());
+	lowpsf.copyData(SubImage<Float>(lowpsfDisk, sl, False));
+	lowpsf0=TempImage<Float> (myshap, high.coordinates());
 	{
 	  ImageRegrid<Float> ir;
 	  IPosition axes(2,0,1);   // if its a cube, regrid the spectral too
-	  ir.regrid(lowpsf, Interpolate2D::LINEAR, axes, lowpsf0);
+	  ir.regrid(lowpsf0, Interpolate2D::LINEAR, axes, lowpsf);
 	}
 	if((lBeam.nelements()==0) || 
 	   ((lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0))) {
 	  os << LogIO::NORMAL // Loglevel INFO
              << "Determining scaling from low resolution PSF.\n" << LogIO::POST;
 	  lBeam.resize(3);
-	  StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam(0), lBeam(1), lBeam(2));
+	  StokesImageUtil::FitGaussianPSF(lowpsf, lBeam(0), lBeam(1), lBeam(2));
 	}
-	StokesImageUtil::From(cweight, lowpsf);
+	StokesImageUtil::From(cweight, lowpsf0);
       }
+ 
+      LatticeFFT::cfft2d( cweight );
       if(effDiam >0.0){
 	//cerr << "in effdiam" << effDiam << endl;
-	cweight.set(1.0);
-	applyDishDiam(cweight, effDiam);
+	applyDishDiam(cweight, effDiam, lowpsf0, extraconv);
+	lBeam.resize(3);
+	lowpsf0.copyData((LatticeExpr<Float>)(lowpsf0/max(lowpsf0)));
+	StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam(0), lBeam(1), lBeam(2));
+	Int directionIndex=
+	  cweight.coordinates().findCoordinate(Coordinate::DIRECTION);
+		Image2DConvolver<Float> ic;
+	ic.convolve(
+		    os, low, low, VectorKernel::toKernelType("gauss"), IPosition(2, directionIndex, directionIndex+1),
+		    extraconv, True, 1.0, True
+		    );
+
       }
-      LatticeFFT::cfft2d( cweight );
       LatticeExprNode node = max( cweight );
       Float fmax = abs(node.getComplex());
       cweight.copyData(  (LatticeExpr<Complex>)( 1.0f - cweight/fmax ) );
-      /////////////////////////////
+      //Plotting part
       if(doPlot){
 	CoordinateSystem ftCoords(cweight.coordinates());
 	///freq part
@@ -314,7 +353,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	start[directionIndex+1]=cweight.shape()[directionIndex+1]/2;
 	start[directionIndex]=cweight.shape()[directionIndex]/2;
-	cerr << "start " << start << " shape " << shape << endl; 
 	cweight.getSlice(tmpval, start, shape, True);
 	Vector<Float> x=amplitude(tmpval);
 	Vector<Float> xdish=(Float(1.0) - x)*Float(sdScale);
@@ -374,7 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	plotter->line(dbus::af(ypix),dbus::af(ydish),"purple","y-singledish weight",panel_id.getInt( ));
 
       }
-      ////////////////////////////
+      //End plotting part
       // FT high res image
       TempImage<Complex> cimagehigh(high.shape(), high.coordinates() );
       StokesImageUtil::From(cimagehigh, high);
@@ -389,7 +427,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // This factor comes from the beam volumes
       if(sdScale != 1.0)
         os << LogIO::NORMAL // Loglevel INFO
-           << "Multiplying single dish data by user specified factor"
+           << "Multiplying single dish data by user specified factor "
            << sdScale << ".\n" << LogIO::POST;
       Float sdScaling  = sdScale;
       if((hBeam(0).get("arcsec").getValue()>0.0)

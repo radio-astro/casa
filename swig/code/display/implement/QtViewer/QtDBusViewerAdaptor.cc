@@ -541,9 +541,8 @@ namespace casa {
         int result = 0;
 	if ( type == "clean" ) {
 
-	    // <drs> somehow it seems like we must be leaking this...
-	    //       probably need to mirror the createDD( ) functionality...
-	    QtCleanPanelGui *cpg_ = new QtCleanPanelGui(viewer_);
+	    // <drs> need to ensure that this is not leaked...
+	    QtCleanPanelGui *cpg_ = viewer_->createInteractiveCleanGui( );
 	    result = get_id( cpg_ );
 
 	    if ( hidden ) cpg_->hide( );

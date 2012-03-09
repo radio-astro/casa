@@ -106,7 +106,12 @@ void QtDataOptionsPanel::createDDTab_(QtDisplayData* qdd) {
 	// panel_->autoDDOptionsShow off to prevent this, if desired).
 
   tabs_->setTabToolTip(tabs_->indexOf(sca), qdd->nameChrs());
-  tabs_->show();  }
+  tabs_->show();
+
+  // set state for data loaded after clicking auto/manual apply...
+  emit setAutoApply(auto_apply->text( ) == "auto apply" ? true : false);
+
+}
 
 
   

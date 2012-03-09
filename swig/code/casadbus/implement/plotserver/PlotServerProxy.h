@@ -43,7 +43,7 @@ namespace casa {
 
     public:
 
-	static const char **execArgs( );
+	static std::list<std::string> execArgs( const std::list<std::string> &args );
 	static std::string dbusName( ) { return "plot_server"; }
 
 	PlotServerProxy( const std::string &name=dbusName( ) );

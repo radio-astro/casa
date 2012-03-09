@@ -23,6 +23,8 @@
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <iostream>
 
+#include <synthesis/CalTables/NewCalTable.h>
+
 using namespace casa;
 
 void writeFlags(string input_file,unsigned short test_mode,Record record)
@@ -76,7 +78,7 @@ void writeFlags(string input_file,unsigned short test_mode,Record record)
 	}
 
 	// Create Flag Data Handler object
-	FlagDataHandler *dh = new FlagDataHandler(input_file,iterationMode);
+	FlagDataHandler *dh = new FlagMSHandler(input_file,iterationMode);
 
 	// Enable profiling
 	dh->setProfiling(true);
@@ -280,7 +282,7 @@ void checkFlags(string input_file,unsigned short test_mode,Record record)
 	}
 
 	// Create Flag Data Handler object
-	FlagDataHandler *dh = new FlagDataHandler(input_file,iterationMode);
+	FlagDataHandler *dh = new FlagMSHandler(input_file,iterationMode);
 
 	// Enable profiling
 	dh->setProfiling(true);
@@ -448,7 +450,7 @@ Bool &access(Bool *storage,uInt x, uInt y, uInt z)
 void example()
 {
 	// Create a new flag data handler with (time,frequency) maps and sub-integration views
-	FlagDataHandler *dh = new FlagDataHandler("test.ms",FlagDataHandler::COMPLETE_SCAN_MAPPED,10);
+	FlagDataHandler *dh = new FlagMSHandler("test.ms",FlagDataHandler::COMPLETE_SCAN_MAPPED,10);
 
 	// Open Ms
 	dh->open();

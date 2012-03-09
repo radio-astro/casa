@@ -27,6 +27,7 @@
 
 #ifndef DBUS_BUSACCESS_H_
 #define DBUS_BUSACCESS_H_
+#include <list>
 #include <string>
 #include <cstdio>
 #include <unistd.h>
@@ -37,10 +38,11 @@ namespace casa {
 	std::string object( const std::string &name );
 	std::string path( const std::string &name );
 
-	char *launch_casa_proxy( bool unique_name, const std::string &dbusname, const std::string &default_name,  const char **args );
+	char *launch_casa_proxy( bool unique_name, const std::string &dbusname, const std::string &default_name,  const std::list<std::string> &args );
 
-	template<class proxy> proxy *launch( bool unique_name=true, const std::string &name="", int trys=60, unsigned long delay=500000 ) {
-	    char *dbname = launch_casa_proxy( unique_name, name, proxy::dbusName( ), proxy::execArgs( ) );
+	template<class proxy> proxy *launch( const std::list<std::string> &args=std::list<std::string>( ), bool unique_name=true,
+					     const std::string &name="", int trys=60, unsigned long delay=500000 ) {
+	    char *dbname = launch_casa_proxy( unique_name, name, proxy::dbusName( ), proxy::execArgs(args) );
 	    if ( dbname == 0 ) { throw AipsError("launch failed"); }
 	    proxy *result = 0;
 	    int count = trys;

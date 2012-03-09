@@ -153,7 +153,7 @@ TestFlagger::open(String msname, Double ntime)
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
-	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
+	fdh_p = new FlagMSHandler(msname_p, iterationApproach_p, timeInterval_p);
 
 	// Open the MS
 	fdh_p->open();
@@ -754,12 +754,12 @@ TestFlagger::getFlagVersionList(Vector<String> &verlist)
 		verlist.resize(0);
 		Int num;
 
-		FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
+		FlagVersion fv(fdh_p->getTableName(),"FLAG","FLAG_ROW");
 		Vector<String> vlist = fv.getVersionList();
 
 		num = verlist.nelements();
 		verlist.resize( num + vlist.nelements() + 1, True );
-		verlist[num] = String("\nMS : ") + fdh_p->originalMeasurementSet_p->tableName() + String("\n");
+		verlist[num] = String("\nMS : ") + fdh_p->getTableName() + String("\n");
 
 		for(Int j=0; j<(Int)vlist.nelements(); j++)
 			verlist[num+j+1] = vlist[j];
@@ -825,7 +825,7 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 		return false;
 	}
 
-	FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
+	FlagVersion fv(fdh_p->getTableName(),"FLAG","FLAG_ROW");
 	fv.saveFlagVersion(versionname, comment, merge);
 
 	return true;

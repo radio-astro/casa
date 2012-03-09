@@ -40,6 +40,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class QtDBusViewerAdaptor;
 class QtDisplayPanelGui;
+class QtCleanPanelGui;
 
 // <summary>
 // Qt implementation of main viewer supervisory object -- Gui level.
@@ -84,6 +85,7 @@ class QtViewer : public QtViewerBase {
  
   // create a main display panel Gui 
   virtual QtDisplayPanelGui *createDPG();
+  virtual QtCleanPanelGui *createInteractiveCleanGui( );
    
   // Exits Qt loop.  (Note that the loop can be restarted (and is, in
   // interactive clean, e.g.), with existing widgets intact.  This

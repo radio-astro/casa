@@ -51,6 +51,8 @@ casa_add_library( flagging
   implement/Flagging/LFExtendFlags.cc
   implement/Flagging/LFDisplayFlags.cc
   implement/Flagging/FlagDataHandler.cc
+  implement/Flagging/FlagMSHandler.cc
+  implement/Flagging/FlagCalTableHandler.cc
   implement/Flagging/FlagReport.cc
   implement/Flagging/FlagAgentBase.cc
   implement/Flagging/FlagAgentTimeFreqCrop.cc
@@ -81,7 +83,9 @@ install (FILES
 	implement/Flagging/FlagAgentShadow.h
 	implement/Flagging/FlagAgentSummary.h
 	implement/Flagging/FlagAgentTimeFreqCrop.h
+	implement/Flagging/FlagCalTableHandler.h
 	implement/Flagging/FlagDataHandler.h
+	implement/Flagging/FlagMSHandler.h
 	implement/Flagging/FlagReport.h
 	implement/Flagging/FlagVersion.h
 	implement/Flagging/Flagger.h

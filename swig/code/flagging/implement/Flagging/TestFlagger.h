@@ -37,6 +37,8 @@
 #include <flagging/Flagging/FlagVersion.h>
 
 #include <flagging/Flagging/FlagDataHandler.h>
+#include <flagging/Flagging/FlagMSHandler.h>
+#include <flagging/Flagging/FlagCalTableHandler.h>
 #include <flagging/Flagging/FlagAgentBase.h>
 #include <flagging/Flagging/FlagAgentSummary.h>
 #include <flagging/Flagging/FlagAgentDisplay.h>

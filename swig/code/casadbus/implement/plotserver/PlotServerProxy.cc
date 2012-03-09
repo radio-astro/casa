@@ -32,9 +32,10 @@
 namespace casa {
 
 
-    const char **PlotServerProxy::execArgs( ) {
-	static const char *args[] = { "casaplotserver", (char*) 0 };
-	return args;
+    std::list<std::string> PlotServerProxy::execArgs( const std::list<std::string> &args ) {
+	std::list<std::string> result(args);
+	result.push_front("casaplotserver");
+	return result;
     }
 
   PlotServerProxy::PlotServerProxy( const std::string &name ) : 

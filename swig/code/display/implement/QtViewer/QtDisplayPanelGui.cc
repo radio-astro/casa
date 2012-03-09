@@ -56,14 +56,14 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
 		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
-		   regionDock_(0), use_new_regions(false),
+		   regionDock_(0), use_new_regions(true),
 		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0) {
 
     // initialize the "pix" unit, et al...
     QtWCBox::unitInit( );
     
     setWindowTitle("Viewer Display Panel");
-    use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
+    use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
 
     std::string apos = rc.get("viewer." + rcid() + ".position.animator");
     if ( apos != "bottom" && apos != "right" && apos != "left" && apos != "top" ) {

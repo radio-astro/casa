@@ -31,10 +31,11 @@
 
 namespace casa {
 
-
-    const char **ViewerProxy::execArgs( ) {
-	static const char *args[] = { "casaviewer", "--server", (char*) 0 };
-	return args;
+    std::list<std::string> ViewerProxy::execArgs( const std::list<std::string> &args ) {
+	std::list<std::string> result(args);
+	result.push_front("--server");
+	result.push_front("casaviewer");
+	return result;
     }
 
     ViewerProxy::ViewerProxy( const std::string &name ) : 
