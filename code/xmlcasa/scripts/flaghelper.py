@@ -7,6 +7,7 @@ import shutil
 import string
 import time
 from taskinit import *
+import ast
 
 ###some helper tools
 #mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -1250,7 +1251,6 @@ def purgeEmptyPars(cmdline):
        -> cmdline is a string with parameters
        returns a string containing only parameters with values
     '''
-               
     newstr = ''
     
     # split by white space
@@ -1714,3 +1714,111 @@ def readAntennaList(infile=''):
     return antlist;
 
 ################################################
+#
+#  Function to pull out RFLAG thresholds from the returned report dictionary.
+#
+def extractRFlagOutput(summary_stats_list={},timedevfile='', freqdevfile=''):
+    """
+    Extract the RFLAG output thresholds from the output of tf.run()
+    Return them as arrays, and optionally, write them into a file.
+    """
+    rflag_result=[];
+
+    nreps = summary_stats_list['nreport'];
+    # check if any reports exist
+    if(nreps==0):
+         return;
+
+    # count number of rflag reports.
+    rflagcount=0;
+    for rep in range(0,nreps):
+         repname = "report"+str(rep);
+         if summary_stats_list[repname]['type'] == "rflag":
+             ##print summary_stats_list[repname];
+             if(summary_stats_list[repname]['timedev'].size > 0  or summary_stats_list[repname]['freqdev'].size > 0) :
+                 rflagcount = rflagcount+1;
+
+    # no rflag reports, return quietly.
+    if(rflagcount==0):
+         return;
+
+    # Decide the output file name.
+    if( type(timedevfile) == str and timedevfile != '' ):
+        toutfile = timedevfile
+    else:
+        toutfile = 'rflag_output_thresholds_timedev.txt'
+
+    # Decide the output file name.
+    if( type(freqdevfile) == str and freqdevfile != '' ):
+        foutfile = freqdevfile
+    else:
+        foutfile = 'rflag_output_thresholds_freqdev.txt'
+
+    # save rflag output in file, and print them everywhere.
+
+    ofiletime = file(toutfile, 'w');
+    ofilefreq = file(foutfile, 'w');
+    # Go though the list, and react to all rflag reports.
+    for rep in range(0,nreps):
+         repname = "report"+str(rep);
+         if summary_stats_list[repname]['type'] == "rflag":
+             # Construct dictionary from what needs to be stored.
+             timedict = {'name':summary_stats_list[repname]['name'] , 'timedev': (summary_stats_list[repname]['timedev']).tolist()}
+             freqdict = {'name':summary_stats_list[repname]['name'] , 'freqdev': (summary_stats_list[repname]['freqdev']).tolist()}
+              # Append to file, with timestamp. For user-records
+             ofiletime.write(convertDictToString(timedict) + '\n');
+             ofilefreq.write(convertDictToString(freqdict) + '\n');
+    ofiletime.write('\n');
+    ofiletime.close();
+    ofilefreq.write('\n');
+    ofilefreq.close();
+    return;
+
+##############################################
+
+##############################################
+def readRFlagThresholdFile(infile='',inkey=''):
+    """
+    Read the input RFlag threshold file, and return dictionaries.
+    """
+    print "Read RFlag Thresholds from : ", infile;
+
+    if(infile=='' or ( not os.path.exists(infile) ) ):
+        print 'Cannot find file : ', infile
+        return ''
+
+    ifile = file(infile,'r');
+    thelist = ifile.readlines();
+    ifile.close();
+
+    cleanlist=[];
+    for aline in thelist:
+        if(len(aline)>5 and aline[0] != '#'):
+            cleanlist.append(aline.rstrip().rstrip('\n'))
+              
+    threshlist={};
+    for aline in range(0,len(cleanlist)):
+        threshlist[str(aline)] = convertStringToDict(cleanlist[aline]);
+        if threshlist[str(aline)].has_key(inkey):
+            devthreshold = threshlist[str(aline)][inkey]
+
+    return devthreshold
+
+##############################################
+## Note - replace all arrays by lists before coming here.
+def convertDictToString(indict={}):
+    # Convert to string
+    thestr = str(indict);
+    # Remove newlines and spaces from this string.
+    thestr = thestr.replace('\n','');
+    thestr = thestr.replace(' ','');
+    return thestr;
+##############################################
+def convertStringToDict(instr=''):
+    instr = instr.replace('\n','');
+    try:
+        thedict = ast.literal_eval(instr)
+    except Exception, instance:
+        casalog.post("*** Error converting string %s to dictionary : \'%s\'" % (instr,instance),'ERROR');
+    return thedict;
+##############################################

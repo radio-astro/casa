@@ -124,7 +124,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             <!-- CLIP parameters -->
             <param type="any" name="clipminmax" subparam="true">
                 <description>Range to use for clipping</description>
-                <any type="variant" limittypes="doubleArray doubleyArrayArray" />
+                <any type="variant" limittypes="doubleArray doubleArrayArray" />
                 <value type="doubleArray"></value>
             </param>
             <param type="any" name="datacolumn" subparam="true">
@@ -238,13 +238,13 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
             <param type="any" name="timedev" subparam="true">
                 <description>Time-series noise estimate [aips:noise]</description>
-                <any type="variant" limittypes="double doubleArray" />
-                <value type="doubleArray"></value>
+                <any type="variant" />
+                <value type="string"></value>
             </param>
             <param type="any" name="freqdev" subparam="true">
                 <description>Spectral noise estimate [aips:scutoff]</description>
-                <any type="variant" limittypes="double doubleArray" />
-                <value type="doubleArray"></value>
+                <any type="variant" />
+                <value type="string"></value>
             </param>
             <param type="double" name="timedevscale" subparam="true">
                 <description>Threshold scaling for timedev [aips:fparm(9)]</description>
@@ -255,11 +255,11 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value>5.0</value>
             </param>
             <param type="double" name="spectralmax" subparam="true">
-                <description>Flag whole spectrum if freqdev is less than spectralmax [aips:fparm(5)]</description>
+                <description>Flag whole spectrum if freqdev is greater than spectralmax [aips:fparm(6)]</description>
                 <value>1E6</value>
             </param>
             <param type="double" name="spectralmin" subparam="true">
-                <description>Flag whole spectrum if freqdev is greater than spectralmin [aips:fparm(6)] </description>
+                <description>Flag whole spectrum if freqdev is less than spectralmin [aips:fparm(5)] </description>
                 <value>0.0</value>
             </param>
 
@@ -470,8 +470,8 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
                         <default param="winsize"><value type="int">3</value></default>
-                        <default param="timedev"><value type="doubleArray"></value></default>
-                        <default param="freqdev"><value type="doubleArray"></value></default>
+                        <default param="timedev"><value type="string"></value></default>
+                        <default param="freqdev"><value type="string"></value></default>
                         <default param="timedevscale"><value type="double">5.0</value></default>
                         <default param="freqdevscale"><value type="double">5.0</value></default>
                         <default param="spectralmax"><value type="double">1E6</value></default>
