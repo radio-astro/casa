@@ -5,9 +5,7 @@ import sys
 import string
 import commands
 
-print '--------------'
 from get_user import get_user
-print '22222-------'
 
 try:
     from  casac import *
@@ -144,7 +142,8 @@ from listcal_pg import listcal_pg as listcal
 #from plotxy_pg import plotxy_pg as plotxy
 from ft_pg import ft_pg as ft
 from importuvfits_pg import importuvfits_pg as importuvfits
-from setjy_pg import setjy_pg  as setjy
+#somebody contaminated setjy.py
+#from setjy_pg import setjy_pg  as setjy
 from clean_pg import clean_pg as clean
 from immath_pg import immath_pg as immath
 from imhead_pg import imhead_pg as imhead

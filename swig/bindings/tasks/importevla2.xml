@@ -90,9 +90,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <description>Amount of shadow allowed (in meters)</description>
                 <value>0.0</value>
     </param>
-    <param type="string" name="addantenna" subparam="true">
-                <description>File name with additional antenna names, positions and diameters</description>
-                <value></value>
+    <param type="any" name="addantenna" subparam="true">
+                <description>File name or dictionary with additional antenna names, positions and diameters</description>
+                <any type='variant' limittype='string record'/>
+                <value type="string"></value>
     </param>
 
     <param type="bool" name="applyflags">
@@ -239,6 +240,7 @@ shadow       -- create flags for antennas that are shadowed. The flag command wi
                  and diameters, or a Python dictionary with the same information. You can use the flaghelper
                  functions to create the dictionary, when needed. 
                    default: ''
+                   
  
 applyflags   -- apply the online and specified flags to the MS
                 default: False

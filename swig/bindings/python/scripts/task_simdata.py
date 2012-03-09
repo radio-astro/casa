@@ -293,7 +293,7 @@ def simdata(
                 maxbase=maxbase2
             # estimate the psf size from the minimum spatial scale            
             psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
-
+        
 
 
         # Search order is fileroot/ -> specified path -> repository
@@ -344,9 +344,11 @@ def simdata(
                 # size checks later.
                 psfsize = pb
                 maxbase = 0.
-            
+                
 
-
+        if not (os.path.exists(sdantlist) or os.path.exists(antennalist)):
+            msg("Can't find either antennalist or standlist",priority="error")
+            return False
 
 
 
