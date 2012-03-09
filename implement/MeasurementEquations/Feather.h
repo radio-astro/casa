@@ -30,10 +30,12 @@
 
 #include <casa/BasicSL/String.h>
 #include <casa/BasicSL.h>
+#include <casa/Quanta/Quantum.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //Forward declaration
   template<class T> class ImageInterface;
+  template<class T> class Vector;
   // <summary> Class that contains functions needed for feathering</summary>
 
   class Feather{
@@ -43,7 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   private:
     
-    static void applyDishDiam(ImageInterface<Complex>& image, Float effDiam);
+    static void applyDishDiam(ImageInterface<Complex>& image, Float effDiam, ImageInterface<Float>& newbeam, Vector<Quantity>& extraconv);
 
 
   };
