@@ -356,7 +356,7 @@ def tflagcmd(
             return myflagcmd
         
     except Exception, instance:
-
+        tflocal.done()
         casalog.post('%s' % instance, 'ERROR')
         raise
 

@@ -336,7 +336,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
             <param type="bool" name="flagbackup" subparam="true">
                 <description>Back up the state of flags before the run</description>
-                <value>False</value>
+                <value>True</value>
             </param>
 
 
@@ -537,7 +537,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                     <equals type="bool" value="True">
                         <default param="writeflags"><value type="bool">True</value></default>
                         <default param="display"><value type="string"></value></default>
-                        <default param="flagbackup"><value type="bool">False</value></default>
+                        <default param="flagbackup"><value type="bool">True</value></default>
                     </equals>
                 </when>
                                
@@ -1000,7 +1000,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                   	'both' --> displays data per chunk and end-of-MS reports on the screen
                                  
               flagbackup -- Automatically backup flags before running the tool.
-                   default: False
+                   default: True
                    options: True/False                    
 
         savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.

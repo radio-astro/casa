@@ -82,7 +82,7 @@
 
                 <param type="bool" name="flagbackup" subparam="true">
                         <description>Automatically backup the FLAG column before execution</description>
-                        <value>False</value>
+                        <value>True</value>
                 </param>
 
                 <param type="bool" name="clearall" subparam="true">
@@ -135,10 +135,10 @@
                     <when param="action">
                             <equals value="list"></equals>
                             <equals value="apply">
-                                    <default param="flagbackup"><value>False</value></default>
+                                    <default param="flagbackup"><value>True</value></default>
                             </equals>
                             <equals value="unapply">
-                                    <default param="flagbackup"><value>False</value></default>
+                                    <default param="flagbackup"><value>True</value></default>
                             </equals>
                             <equals value="plot">
                                     <default param="plotfile"><value type="string"></value></default>
@@ -281,7 +281,7 @@
               
               flagbackup -- Automatically backup MS FLAG column before applying?
                    options: True,False
-                   default: False
+                   default: True
 
        
            action "unapply" --  unapply flags in MS
