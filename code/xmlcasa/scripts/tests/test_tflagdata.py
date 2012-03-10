@@ -148,13 +148,13 @@ class test_tfcrop(test_base):
         self.assertEqual(res['correlation']['RR']['flagged'], 4489)
 
     def test_extend1(self):
-        '''tflagdata:: Extend the flags created by tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', correlation='abs_rr',ntime=51.0,spw='9', savepars=False)
+        '''tflagdata:: Extend the flags created by clip'''
+        tflagdata(vis=self.vis, mode='clip', correlation='abs_rr', clipminmax=[0,2])
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['correlation']['RR']['flagged'], 43)
         self.assertEqual(res['correlation']['LL']['flagged'], 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 4489)
+        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 43)
 
 class test_rflag(test_base):
     """tflagdata:: Test of mode = 'rflag'"""
@@ -965,7 +965,7 @@ class cleanup(test_base):
         os.system('rm -rf multiobs.ms')
         os.system('rm -rf flagdatatest-alma.ms')
         os.system('rm -rf Four_ants_3C286.ms')
-#        os.system('rm -rf list*txt')
+        os.system('rm -rf list*txt')
 
     def test1(self):
         '''tflagdata: Cleanup'''
