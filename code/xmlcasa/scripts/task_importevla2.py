@@ -294,13 +294,13 @@ def importevla2(
 #                	cmdline = myflagd[k]['command']
 #                	flaglist.append(cmdline)
 #                	
-#                unionpars = fh.getUnion(mslocal, viso, flaglist)
+#                unionpars = fh.getUnion(mslocal, viso, allflags)
                 
                 # Select the data
                 tflocal.selectdata()
 
                 # Setup the agent's parameters
-                saved_list = fh.setupAgent(tflocal, allflags, [], True)
+                saved_list = fh.setupAgent(tflocal, allflags, [], True, True)
 
                 # Initialize the agents
                 tflocal.init()

@@ -134,6 +134,8 @@ def makeDict(cmdlist, myreason='any'):
 
     try:
         for i in rowlist:            
+            flagd = {}
+
             command = cmdlist[i]
             reason = reaslist[i]
                                 
@@ -147,14 +149,25 @@ def makeDict(cmdlist, myreason='any'):
                 casalog.post('Mode summary is not allowed in list operation', 'WARN')
                 continue
 
-            flagd = {}
+            # If shadow, remove the addantenna dictionary
+            if command.__contains__('shadow') and command.__contains__('addantenna'):
+                i0 = command.rfind('addantenna')
+                if command[i0+11] == '{':
+                    # It is a dictionary. Remove it from line
+                    i1 = command.rfind('}')
+                    antpar = command[i0+11:i1+1]
+                    temp = command[i0:i1+1]
+                    newcmd = command.replace(temp,'')
+                    antpardict = convertStringToDict(antpar)
+                    flagd['addantenna'] = antpardict
+                    command = newcmd                                
                         
             flagd['row'] = str(i)
             flagd['applied'] = applied
             flagd['reason'] = reason 
             
             # Remove reason from command line   
-            newline = command
+            newline = command.rstrip()
             command = purgeParameter(newline, 'reason')
             flagd['command'] = command
             flagd['interval'] = interval
@@ -463,7 +476,7 @@ def readXML(sdmfile, mytbuff):
 
 
 
-def getUnion(mslocal, vis, cmdlist):
+def getUnion(mslocal, vis, cmddict):
     '''Get a dictionary of a union of all selection parameters from a list of lines:
        cmdlist --> list of strings with parameters and values (par=val)
     '''
@@ -495,11 +508,14 @@ def getUnion(mslocal, vis, cmdlist):
     uvs = ''
     spws = ''
     obs = ''
-        
-    nrows = cmdlist.__len__()
 
-    for i in range(nrows):
-        cmdline = cmdlist[i]
+    nrows = cmddict.keys().__len__()       
+#    nrows = cmdlist.__len__()
+
+#    for i in range(nrows):
+    for k in cmddict.keys():
+#        cmdline = cmdlist[i]
+        cmdline = cmddict[k]['command']
         
         # Skip if it is a comment line
         if cmdline.startswith('#'):
@@ -511,13 +527,7 @@ def getUnion(mslocal, vis, cmdlist):
 
             # Split by '='
             for keyv in keyvlist:
-
-                # Skip if it is a comment character #
-#                if keyv.count('#') > 0:
-#                if keyv.startswith('#'):
-#                    print "skipping this line with keyv=%s"%keyv
-#                    break
-                    
+                   
                 (xkey,xval) = keyv.split('=')
 
                 # Remove quotes
@@ -597,7 +607,7 @@ def getUnion(mslocal, vis, cmdlist):
 
     # Real number of input lines
     # Get the number of occurrences of each parameter
-    npars = getNumPar(cmdlist)
+    npars = getNumPar(cmddict)
     nlines = nrows - npars['comment']
         
     # Make the union. 
@@ -616,12 +626,12 @@ def getUnion(mslocal, vis, cmdlist):
     return uniondic
 
 
-def getNumPar(cmdlist):
+def getNumPar(cmddict):
     '''Get the number of occurrences of all parameter keys
        cmdlist --> list of strings with parameters and values
     '''
 
-    nrows = cmdlist.__len__()
+#    nrows = cmdlist.__len__()
             
     # Dictionary of number of occurrences to return
     npars = {
@@ -652,8 +662,10 @@ def getNumPar(cmdlist):
     pi = 0  # count the number of lines with spw
     oi = 0  # count the number of lines with observation
     
-    for i in range(nrows):
-        cmdline = cmdlist[i]
+#    for i in range(nrows):
+    for k in cmddict.keys():
+#        cmdline = cmdlist[i]
+        cmdline = cmddict[k]['command']
 
         if cmdline.startswith('#'):
             ci += 1
@@ -869,8 +881,14 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
         
         try:
             for key in myflags.keys():
-                # remove leading and trailing white spaces
+                # Remove leading and trailing white spaces
                 cmdline = myflags[key]['command'].strip()
+                
+                # Add addantenna parameter back
+                if myflags[key].__contains__('addantenna'):
+                    addantenna = myflags[key]['addantenna']
+                    cmdline = cmdline + ' addantenna=' + str(addantenna)
+                                                        
                 reason = myflags[key]['reason']
                 if reason != '':
                     print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
@@ -899,16 +917,24 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
         for key in vrows:
             # do not write line with summary mode
             command = myflags[key]['command']
-            if not command.__contains__('summary'):                   
-                cmd_list.append(myflags[key]['command'])
-                tim_list.append(myflags[key]['time'])
-                intv_list.append(myflags[key]['interval'])
-                reas_list.append(myflags[key]['reason'])
-                typ_list.append(myflags[key]['type'])
-                sev_list.append(myflags[key]['severity'])
-                lev_list.append(myflags[key]['level'])
-                app_list.append(applied)
+            if command.__contains__('summary'):
+                continue
+            
+            # Add addantenna back
+            if myflags[key].__contains__('addantenna'):
+                addantenna = myflags[key]['addantenna']
+                command = command + ' addantenna=' + str(addantenna)
+
+            cmd_list.append(command)
+            tim_list.append(myflags[key]['time'])
+            intv_list.append(myflags[key]['interval'])
+            reas_list.append(myflags[key]['reason'])
+            typ_list.append(myflags[key]['type'])
+            sev_list.append(myflags[key]['severity'])
+            lev_list.append(myflags[key]['level'])
+            app_list.append(applied)
     
+            
         # Save to FLAG_CMD table
         nadd = cmd_list.__len__()
 
@@ -1340,7 +1366,7 @@ def purgeParameter(cmdline, par):
          
     return newstr
 
-def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display):
+def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
     ''' Setup the parameters of each agent and call the tflagger tool
         myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
         myrows --> selected rows to apply/unapply flags
@@ -1389,6 +1415,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display):
         parslist = {}
         mode = ''    
         valid = True
+        addantenna = {}
                 
         # Get the specific parameters for the mode
         if cmdline.__contains__('mode'):                 
@@ -1405,17 +1432,21 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display):
                 mode = 'shadow'
                 modepars = getLinePars(cmdline,shadowpars)
                 
-                # Get antenna dictionary
-                addantenna = {}
-                if (modepars.__contains__('addantenna')):
-                    ant_par = modepars['addantenna']
-                    if (type(ant_par) == str and ant_par != ''):
-                        antennafile = modepars['addantenna']
-                        addantenna = readAntennaList(antennafile)
-                    elif (type(ant_par) == dict and ant_par != {}):
-                        addantenna = ant_par
-                    
-                modepars['addantenna'] = addantenna
+                # Get addantenna dictionary
+                if myflagcmd[key].__contains__('addantenna'):
+                    addantenna = myflagcmd[key]['addantenna']
+                    modepars['addantenna'] = addantenna                    
+                else:                                    
+                    # Get antenna filename
+                    if (modepars.__contains__('addantenna')):
+                        ant_par = modepars['addantenna']
+                        
+                        # It must be a string
+                        if (type(ant_par) == str and ant_par != ''):
+                            antennafile = modepars['addantenna']
+                            addantenna = readAntennaList(antennafile)
+                            modepars['addantenna'] = addantenna
+                                                           
             elif cmdline.__contains__('elevation'):
                 mode = 'elevation'
                 modepars = getLinePars(cmdline,elevationpars)
@@ -1432,8 +1463,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display):
                 mode = 'rflag'
                 modepars = getLinePars(cmdline,rflagpars)
                 # Add the writeflags and display parameters
-                modepars['writeflags']=writeflags
-                modepars['display']=display
+                modepars['writeflags'] = writeflags
+                modepars['display'] = display
             else:
                 # Unknown mode, ignore it
                 casalog.post('Ignoring unknown mode', 'WARN')
@@ -1505,6 +1536,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display):
             parslist['severity'] = severity
             parslist['time'] = coltime
             parslist['type'] = coltype
+            if addantenna != {}:
+                parslist['addantenna'] = addantenna
             savelist[key] = parslist
         
         # FIXME: Backup the flags

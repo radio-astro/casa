@@ -217,14 +217,14 @@ class test_shadow(test_base):
         filename = 'cas2399.txt'
         create_input(input, filename)
         
-        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, antennafile=filename)
+        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
         
     def test_addantenna(self):
-        '''tflagdata: use antennafile in list mode'''
+        '''tflagdata: use antenna file in list mode'''
         if os.path.exists("myants.txt"):
             os.system('rm -rf myants.txt')
         
@@ -246,12 +246,12 @@ class test_shadow(test_base):
         create_input(input, antfile)
         
         # Create list file
-        input = 'mode=shadow tolerance=10.0 antennafile=myants.txt'
+        input = "mode='shadow' tolerance=10.0 addantenna='myants.txt'"
         filename = 'listfile.txt'
         create_input(input, filename)
         
         # Flag
-        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='withdict.txt')
         
         # Check flags
         res = tflagdata(vis=self.vis, mode='summary')
@@ -859,6 +859,7 @@ class test_list(test_base):
         # save to another file
         if os.path.exists("myflags.txt"):
             os.system('rm -rf myflags.txt')
+            
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, run=False, outfile='myflags.txt')
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
         
@@ -964,7 +965,7 @@ class cleanup(test_base):
         os.system('rm -rf multiobs.ms')
         os.system('rm -rf flagdatatest-alma.ms')
         os.system('rm -rf Four_ants_3C286.ms')
-        os.system('rm -rf list*txt')
+#        os.system('rm -rf list*txt')
 
     def test1(self):
         '''tflagdata: Cleanup'''

@@ -152,11 +152,11 @@ class test_alma(test_base):
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Save cmd to FLAG_CMD
-        cmd = "mode=clip clipminmax=[0,50] correlation=ABS_WVR"
+        cmd = "mode='clip' clipminmax=[0,50] correlation='ABS_WVR'"
         tflagcmd(vis=self.vis, inpmode='cmd', command=[cmd], action='list', savepars=True)
         
         # Extract it
-        res = tflagcmd(vis=self.vis, action='extract')
+        res = tflagcmd(vis=self.vis, action='extract', useapplied=True)
         
         # Apply to clip only WVR
         tflagcmd(vis=self.vis, inpmode='cmd', command=[res[0]['command']], savepars=False, action='apply')
@@ -182,7 +182,7 @@ class test_unapply(test_base):
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
-        # Flag using tfcrop agent
+        # Flag using tfcrop agent from file
         input = "scan=3 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
@@ -348,8 +348,7 @@ class test_XML(test_base):
         # Now apply them by selecting the reasons and save in another file
         # 507 cmds crash on my computer.
         reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
-        tflagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt',
-                 sequential=True)
+        tflagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt')
                 
         # Compare with original XML
         self.assertTrue(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
@@ -395,7 +394,7 @@ class test_shadow(test_base):
         filename = create_input(input)
 
         # Create command line
-        input = ['mode=shadow tolerance=10.0 antennafile=tflagcmd.txt']
+        input = ["mode='shadow' tolerance=10.0 addantenna='tflagcmd.txt'"]
 #        filename = 'cmdfile.txt'
 #        if os.path.exists(filename):
 #            os.system('rm -rf cmdfile.txt')

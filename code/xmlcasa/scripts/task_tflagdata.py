@@ -32,7 +32,7 @@ def tflagdata(vis,
              quackincrement,
              tolerance,      # mode shadow parameter
              recalcuvw,
-             antennafile,
+             addantenna,
              lowerlimit,    # mode elevation parameters
              upperlimit,
              ntime,         # mode tfcrop
@@ -215,16 +215,22 @@ def tflagdata(vis,
             
         elif mode == 'shadow':
             agent_pars['tolerance'] = tolerance
-            if antennafile != '':
-            # Get a dictionary with the antenna names, positions and diameters
-                addantenna = fh.readAntennaList(antennafile)                
-                agent_pars['addantenna'] = addantenna
-                
+            
+            if type(addantenna) == str:
+                if addantenna != '':
+                    # it's a filename, create a dictionary
+                    antdict = fh.readAntennaList(addantenna)
+                    agent_pars['addantenna'] = antdict
+                    
+            elif type(addantenna) == dict:
+                if addantenna != {}:
+                    agent_pars['addantenna'] = addantenna
+                                                               
             agent_pars['recalcuvw'] = recalcuvw
             casalog.post('Shadow mode is active')
             
             sel_pars = sel_pars+' tolerance='+str(tolerance)+' recalcuvw='+str(recalcuvw)+\
-                        ' antennafile='+str(antennafile)
+                        ' addantenna='+str(addantenna).replace(' ','')
 
         elif mode == 'quack':
             agent_pars['quackmode'] = quackmode
@@ -351,6 +357,7 @@ def tflagdata(vis,
             sel_pars = sel_pars+' mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
                     ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
+                    
             flaglist = fh.purgeEmptyPars(sel_pars) 
             flagcmd = fh.makeDict([flaglist])
             
@@ -395,7 +402,7 @@ def tflagdata(vis,
             
             unionpars = {}
             if vrows.__len__() > 1:
-               unionpars = fh.getUnion(mslocal, vis, flaglist)
+               unionpars = fh.getUnion(mslocal, vis, flagcmd)
                
                if( len( unionpars.keys() ) > 0 ):
                     casalog.post('Pre-selecting a subset of the MS : ');
@@ -406,7 +413,8 @@ def tflagdata(vis,
                     
             # Get all the selection parameters, but set correlation to ''
             elif vrows.__len__() == 1:
-                unionpars = fh.getSelectionPars(flaglist[0])
+                cmd0 = flagcmd[vrows[0]]['command']
+                unionpars = fh.getSelectionPars(cmd0)
                 casalog.post('The selected subset of the MS will be: ');
                 casalog.post('%s'%unionpars);
                 
