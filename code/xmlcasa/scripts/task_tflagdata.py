@@ -555,6 +555,7 @@ def tflagdata(vis,
         return summary_stats;
     
     except Exception, instance:
+        tflocal.done()
         casalog.post('%s'%instance,'ERROR')
         raise
         
@@ -564,7 +565,10 @@ def tflagdata(vis,
             param_vals = [eval(p) for p in param_names]
             retval &= write_history(mslocal, vis, 'tflagdata', param_names,
                                     param_vals, casalog)
+            
+            mslocal.close()
     except Exception, instance:
+            mslocal.close()
             casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                          'WARN')
         
