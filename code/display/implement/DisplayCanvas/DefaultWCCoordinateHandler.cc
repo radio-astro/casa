@@ -62,14 +62,14 @@ Bool DefaultWCCoordinateHandler::worldToLin(Matrix<Double> & lin,
 }
 
 
-Vector<String> DefaultWCCoordinateHandler::worldAxisNames() {
+Vector<String> DefaultWCCoordinateHandler::worldAxisNames() const {
   Vector<String> axNames(2);
   axNames(0)  = "Pixel";
   axNames(1)  = "Pixel";
   return axNames;
 }
 
-Vector<String> DefaultWCCoordinateHandler::worldAxisUnits() {
+Vector<String> DefaultWCCoordinateHandler::worldAxisUnits() const {
   Vector<String> axNames(2);
   axNames(0) = "Pixel";
   axNames(1) = "Pixel";

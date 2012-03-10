@@ -67,7 +67,7 @@ NBody::~NBody() {
   delete itsGalaxyListIter;
 }
 
-Vector<String> NBody::worldAxisNames() {
+Vector<String> NBody::worldAxisNames() const {
   Vector<String> tmpVec;
   if (!turnedOff) {
     tmpVec.resize(2);
@@ -77,7 +77,7 @@ Vector<String> NBody::worldAxisNames() {
   return tmpVec;
 }
 
-Vector<String> NBody::worldAxisUnits() {
+Vector<String> NBody::worldAxisUnits() const {
   Vector<String> tmpVec;
   if (!turnedOff) {
     tmpVec.resize(2);

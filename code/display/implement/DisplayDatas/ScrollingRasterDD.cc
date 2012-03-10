@@ -296,12 +296,12 @@ const Unit ScrollingRasterDD::dataUnit() const {
   return JyPerBeam;
 }
 
-Vector<String> ScrollingRasterDD::worldAxisUnits(){
+Vector<String> ScrollingRasterDD::worldAxisUnits() const {
   Vector<String> tempvec = coordinateSystem().worldAxisUnits();
   return tempvec;
 }
 
-Vector<String> ScrollingRasterDD::worldAxisNames(){
+Vector<String> ScrollingRasterDD::worldAxisNames() const {
   Vector<String> tempvec = coordinateSystem().worldAxisNames();
   return tempvec;
 }

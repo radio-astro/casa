@@ -2882,13 +2882,13 @@ int WorldCanvas::zIndex( ) const {
     return result;
 }
 
-Vector<String> WorldCanvas::worldAxisNames() {
+Vector<String> WorldCanvas::worldAxisNames() const {
   Vector<String> axisNames;
   if (csMaster() != 0) axisNames = csMaster()->worldAxisNames();
   return axisNames;  }
 
   
-Vector<String> WorldCanvas::worldAxisUnits() {
+Vector<String> WorldCanvas::worldAxisUnits() const {
   Vector<String> axisUnits;
   if (csMaster() != 0) axisUnits = csMaster()->worldAxisUnits();
   return axisUnits;  }
