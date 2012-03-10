@@ -1051,7 +1051,7 @@ def getLinePars(cmdline, mlist=[]):
 
             elif xkey == "mode":
                 dicpars['mode'] = xval
-                
+
             elif mlist != []:
                 # Any parameters requested for this mode?
                 for m in mlist:
@@ -1243,6 +1243,30 @@ def fixType(params):
         params['halfwin'] = int(params['halfwin'])
         
     # rflag parameters
+    if params.has_key('winsize'):
+        params['winsize'] = int(params['winsize']);
+    if params.has_key('timedev'):
+        timepar = params['timedev']
+        try:
+            timepar = eval(timepar)
+        except Exception:
+            timepar = readRFlagThresholdFile(params['timedev'],'timedev');
+        params['timedev'] = timepar
+    if params.has_key('freqdev'):
+        freqpar = params['freqdev']
+        try:
+            freqpar = eval(freqpar)
+        except Exception:
+            freqpar = readRFlagThresholdFile(params['freqdev'],'freqdev');
+        params['freqdev'] = freqpar
+    if params.has_key('timedevscale'):
+        params['timedevscale'] = float(params['timedevscale']);
+    if params.has_key('freqdevscale'):
+        params['freqdevscale'] = float(params['freqdevscale']);
+    if params.has_key('spectralmin'):
+        params['spectralmin'] = float(params['spectralmin']);
+    if params.has_key('spectralmax'):
+        params['spectralmax'] = float(params['spectralmax']);
     
 
 
@@ -1316,7 +1340,7 @@ def purgeParameter(cmdline, par):
          
     return newstr
 
-def setupAgent(tflocal, myflagcmd, myrows, apply):
+def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display):
     ''' Setup the parameters of each agent and call the tflagger tool
         myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
         myrows --> selected rows to apply/unapply flags
@@ -1337,8 +1361,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
     extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
                   'flagneartime','flagnearfreq']
-    rflagpars = ['ntimesteps','spectralmax','spectralmin','noisescale','scutofscale',
-                 'timedev','freqdev']
+    rflagpars = ['winsize','timedev','freqdev','timedevscale','freqdevscale','spectralmax','spectralmin']
     
         
     # dictionary of successful command lines to save to outfile
@@ -1408,6 +1431,9 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
             elif cmdline.__contains__('rflag'):
                 mode = 'rflag'
                 modepars = getLinePars(cmdline,rflagpars)
+                # Add the writeflags and display parameters
+                modepars['writeflags']=writeflags
+                modepars['display']=display
             else:
                 # Unknown mode, ignore it
                 casalog.post('Ignoring unknown mode', 'WARN')
@@ -1425,7 +1451,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply):
         
         # Cast the correct type to non-string parameters
         fixType(modepars)
-        
+
         # Add the apply/unapply parameter to dictionary            
         modepars['apply'] = apply
         
@@ -1717,75 +1743,58 @@ def readAntennaList(infile=''):
 #
 #  Function to pull out RFLAG thresholds from the returned report dictionary.
 #
-def extractRFlagOutput(summary_stats_list={},timedevfile='', freqdevfile=''):
+def writeRFlagThresholdFile(rflag_thresholds={},timedevfile='', freqdevfile='',agent_id=0):
     """
-    Extract the RFLAG output thresholds from the output of tf.run()
+    Extract the RFLAG output thresholds from the threshold dictionary
     Return them as arrays, and optionally, write them into a file.
     """
-    rflag_result=[];
-
-    nreps = summary_stats_list['nreport'];
-    # check if any reports exist
-    if(nreps==0):
-         return;
-
-    # count number of rflag reports.
-    rflagcount=0;
-    for rep in range(0,nreps):
-         repname = "report"+str(rep);
-         if summary_stats_list[repname]['type'] == "rflag":
-             ##print summary_stats_list[repname];
-             if(summary_stats_list[repname]['timedev'].size > 0  or summary_stats_list[repname]['freqdev'].size > 0) :
-                 rflagcount = rflagcount+1;
-
-    # no rflag reports, return quietly.
-    if(rflagcount==0):
-         return;
-
     # Decide the output file name.
     if( type(timedevfile) == str and timedevfile != '' ):
         toutfile = timedevfile
     else:
-        toutfile = 'rflag_output_thresholds_timedev.txt'
+        toutfile = 'rflag_output_thresholds_timedev'+str(agent_id)+'.txt'
 
     # Decide the output file name.
     if( type(freqdevfile) == str and freqdevfile != '' ):
         foutfile = freqdevfile
     else:
-        foutfile = 'rflag_output_thresholds_freqdev.txt'
+        foutfile = 'rflag_output_thresholds_freqdev'+str(agent_id)+'.txt'
 
     # save rflag output in file, and print them everywhere.
+    casalog.post("Saving RFlag_"+str(agent_id)+" output in : " + toutfile + " and " + foutfile, 'INFO')
 
     ofiletime = file(toutfile, 'w');
     ofilefreq = file(foutfile, 'w');
-    # Go though the list, and react to all rflag reports.
-    for rep in range(0,nreps):
-         repname = "report"+str(rep);
-         if summary_stats_list[repname]['type'] == "rflag":
-             # Construct dictionary from what needs to be stored.
-             timedict = {'name':summary_stats_list[repname]['name'] , 'timedev': (summary_stats_list[repname]['timedev']).tolist()}
-             freqdict = {'name':summary_stats_list[repname]['name'] , 'freqdev': (summary_stats_list[repname]['freqdev']).tolist()}
-              # Append to file, with timestamp. For user-records
-             ofiletime.write(convertDictToString(timedict) + '\n');
-             ofilefreq.write(convertDictToString(freqdict) + '\n');
+    # Construct dictionary from what needs to be stored.
+    timedict = {'name':rflag_thresholds['name'] , 'timedev': (rflag_thresholds['timedev']).tolist()}
+    freqdict = {'name':rflag_thresholds['name'] , 'freqdev': (rflag_thresholds['freqdev']).tolist()}
+    timestr = convertDictToString(timedict)
+    freqstr = convertDictToString(freqdict)
+    # Write to file
+    ofiletime.write(timestr + '\n');
+    ofilefreq.write(freqstr + '\n');
+    # Send to logger
+    casalog.post("RFlag_"+str(agent_id)+" output timedev written to " + toutfile + " : " + timestr, 'INFO');
+    casalog.post("RFlag_"+str(agent_id)+" output freqdev written to " + foutfile + " : " + freqstr, 'INFO');
+    # End filed
     ofiletime.write('\n');
     ofiletime.close();
     ofilefreq.write('\n');
     ofilefreq.close();
-    return;
-
-##############################################
+    # Returne timedev, freqdev contents. This is for savepars later.
+    return timedict['timedev'], freqdict['freqdev']
 
 ##############################################
 def readRFlagThresholdFile(infile='',inkey=''):
     """
     Read the input RFlag threshold file, and return dictionaries.
     """
-    print "Read RFlag Thresholds from : ", infile;
+    if(infile==''):
+        return [];
 
-    if(infile=='' or ( not os.path.exists(infile) ) ):
+    if ( not os.path.exists(infile) ):
         print 'Cannot find file : ', infile
-        return ''
+        return [];
 
     ifile = file(infile,'r');
     thelist = ifile.readlines();
@@ -1802,6 +1811,7 @@ def readRFlagThresholdFile(infile='',inkey=''):
         if threshlist[str(aline)].has_key(inkey):
             devthreshold = threshlist[str(aline)][inkey]
 
+    # return only the last one. There should be only one anyway.
     return devthreshold
 
 ##############################################

@@ -156,6 +156,40 @@ class test_tfcrop(test_base):
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 4489)
 
+class test_rflag(test_base):
+    """tflagdata:: Test of mode = 'rflag'"""
+    
+    def setUp(self):
+        self.setUp_data4tfcrop()
+        
+    def test_rflag1(self):
+        '''tflagdata:: Test1 of mode = rflag'''
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], writeflags=True);
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 42866)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
+        self.assertEqual(res['spw']['7']['flagged'], 0)
+        
+    def test_rflag2(self):
+        '''tflagdata:: Test2 of mode = rflag : output/input'''
+        # (1) Test input/output files, through the task, mode='rflag'
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt', writeflags=False);
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt', writeflags=True);
+        res1 = tflagdata(vis=self.vis, mode='summary')
+        # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
+        #      and then read back in via list mode. 
+        tflagdata(vis=self.vis,mode='unflag');
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt',writeflags=False,savepars=True,outfile='outcmd.txt');
+        tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt',writeflags=True);
+        res2 = tflagdata(vis=self.vis, mode='summary')
+
+        #print res1['flagged'], res2['flagged']
+        self.assertEqual(res1['flagged'],res2['flagged']);
+        self.assertEqual(res1['flagged'], 39665)
+
 
 class test_shadow(test_base):
     def setUp(self):
@@ -902,7 +936,7 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['2']['flagged'], 238140, 'Should flag reason=\'\'')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
-        
+
         
 class test_clip(test_base):
     """tflagdata:: Test of mode = 'clip'"""
@@ -939,6 +973,7 @@ class cleanup(test_base):
 
 def suite():
     return [test_tfcrop,
+            test_rflag,
             test_shadow,
 #            test_flagmanager,
             test_selections,

@@ -284,15 +284,11 @@ def tflagdata(vis,
             # These can be double, doubleArray, or string.
             # writeflags=False : calculate and return thresholds.
             # writeflags=True : use given thresholds for this run.
-            #                            If string, then interpret as file 
-            #                            name, and construct doubleArray.
             if( type(timedev) == str and writeflags == True):
                 timedev = fh.readRFlagThresholdFile(timedev,'timedev')
             if( type(freqdev) == str and writeflags == True):
                 freqdev = fh.readRFlagThresholdFile(freqdev,'freqdev')
 
-            print timedev, freqdev
-                
             agent_pars['timedev'] = timedev
             agent_pars['freqdev'] = freqdev
             
@@ -417,7 +413,7 @@ def tflagdata(vis,
             tflocal.selectdata(unionpars);
             
             # Parse the parameters for each agent in the list
-            list2save = fh.setupAgent(tflocal, flagcmd, [], apply)
+            list2save = fh.setupAgent(tflocal, flagcmd, [], apply, writeflags, display)
 
         # Do display if requested
         if display != '':
@@ -464,29 +460,36 @@ def tflagdata(vis,
         # Summary : Currently, only one is allowed in the task
         # Rflag : There can be many 'rflags' in the list mode.
 
-        if mode == 'rflag': ## or mode == 'list':
-            if type(summary_stats_list) is dict and writeflags==False:
-                print "Call extractRFlagOutput ... write into file : ", timedev
-                fh.extractRFlagOutput(summary_stats_list,timedev,freqdev)
-            # Replace the flagcmd entries for timedev and freqdev with the contents of these files.
-            # Then, savepars can operate with no change.
-
-        ## Pull out a separated list of summaries and rflag outputs, and summary views.
-        if mode== 'list':  
-            # Extract all RFlag Outputs
-            rflag_thresholds={};
+        ## Pull out RFlag outputs. There will be outputs only if writeflags=False
+        if (mode == 'rflag' or mode== 'list') and (writeflags==False):  
             if type(summary_stats_list) is dict:
                 nreps = summary_stats_list['nreport']
                 for rep in range(0,nreps):
                     repname = 'report'+str(rep)
                     if summary_stats_list[repname]['type'] == "rflag":
-                        rflag_thresholds[summary_stats_list[repname]['name']] = summary_stats_list[repname]
-            if len(rflag_thresholds.keys()) > 0:
-                for rname in rflag_thresholds:
-                    print rname, rflag_thresholds[rname]
-            # Replace the flagcmd entries for timedev and freqdev with the contents of these files.
-            # Then, savepars can operate with no change.
-
+                        # Pull out the rflag threshold dictionary. This has a 'name' in it.
+                        rflag_thresholds = summary_stats_list[repname]
+                        # Get the rflag id, to later construct a 'name' from to match the above.
+                        rflagid = 0
+                        if mode=='list':
+                            rflagid = int( rflag_thresholds['name'].replace('Rflag_','') )
+                        # Go through the flagcmd list, to find the 'rflags'.....
+                        for key in flagcmd.keys():
+                            cmdline = flagcmd[key]['command'];
+                            if cmdline.__contains__('rflag'):
+                                # Check for match between input flagcmd and output threshold, via the rflag id
+                                if(key==rflagid):  
+                                    # Pull out timedev, freqdev strings from flagcmd
+                                    rflagpars = fh.getLinePars(flagcmd[key]['command'] , ['timedev','freqdev']);
+                                    # Write RFlag thresholds to these file names. 
+                                    newtimedev,newfreqdev = fh.writeRFlagThresholdFile(rflag_thresholds, rflagpars['timedev'], rflagpars['freqdev'], rflagid)
+                                    ## Modify the flagcmd string, so that savepars sees the contents of the file
+                                    oldstring = 'timedev='+str(rflagpars['timedev'])
+                                    newstring = 'timedev='+str(newtimedev).replace(' ','')
+                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
+                                    oldstring = 'freqdev='+str(rflagpars['freqdev'])
+                                    newstring = 'freqdev='+str(newfreqdev).replace(' ','')
+                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
 
 
         # Save the current parameters/list to FLAG_CMD or to output
