@@ -31,7 +31,6 @@ def tflagdata(vis,
              quackmode,
              quackincrement,
              tolerance,      # mode shadow parameter
-             recalcuvw,
              addantenna,
              lowerlimit,    # mode elevation parameters
              upperlimit,
@@ -226,10 +225,9 @@ def tflagdata(vis,
                 if addantenna != {}:
                     agent_pars['addantenna'] = addantenna
                                                                
-            agent_pars['recalcuvw'] = recalcuvw
             casalog.post('Shadow mode is active')
             
-            sel_pars = sel_pars+' tolerance='+str(tolerance)+' recalcuvw='+str(recalcuvw)+\
+            sel_pars = sel_pars+' tolerance='+str(tolerance)+\
                         ' addantenna='+str(addantenna).replace(' ','')
 
         elif mode == 'quack':

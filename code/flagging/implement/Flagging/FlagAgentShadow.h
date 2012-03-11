@@ -76,11 +76,12 @@ private:
         void calculateShadowedAntennas(const VisBuffer &visBuffer, Int rownr);
         // Function to decide if the 'behind' antenna is shadowed or not, for one baseline
         void decideBaselineShadow(Double uvDistance, Double w, Int antenna1, Int antenna2);
+        // Function to return baseline index.
+        uInt baselineIndex(uInt nAnt, uInt a1, uInt a2);
  
 	/// Input parameters ///
 	Double shadowTolerance_p;
         Record additionalAntennas_p;
-        Bool recalculateUVW_p;
 
         // Copies of antenna-information lists, containing extra antennas if specified.
         ///Vector<String> shadowAntennaNames_p;

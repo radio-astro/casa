@@ -1233,8 +1233,6 @@ def fixType(params):
     # shadow parameter
     if params.has_key('tolerance'):
         params['tolerance'] = float(params['tolerance'])
-    if params.has_key('recalcuvw'):
-        params['recalcuvw'] = eval(params['recalcuvw'].capitalize())
            
     # elevation parameters
     if params.has_key('lowerlimit'):
@@ -1381,7 +1379,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
     manualpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['tolerance', 'recalcuvw', 'addantenna']
+    shadowpars = ['tolerance', 'addantenna']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
