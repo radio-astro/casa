@@ -78,7 +78,7 @@ FlagMSHandler::open()
 	ROMSAntennaColumns *antennaSubTable = new ROMSAntennaColumns(originalMeasurementSet_p->antenna());
 	antennaNames_p = new Vector<String>(antennaSubTable->name().getColumn());
 	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
-        antennaPositions_p = new ROScalarMeasColumn<MPosition>(antennaSubTable->positionMeas());
+	antennaPositions_p = new ROScalarMeasColumn<MPosition>(antennaSubTable->positionMeas());
 
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
@@ -662,39 +662,6 @@ FlagMSHandler::nextBuffer()
 	return moreBuffers;
 }
 
-
-// -----------------------------------------------------------------------
-// Flush flags to MS
-// -----------------------------------------------------------------------
-bool
-FlagMSHandler::flushFlags()
-{
-	if (flushFlags_p)
-	{
-		rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
-		flushFlags_p = false;
-	}
-
-	if (flushFlagRow_p)
-	{
-		rwVisibilityIterator_p->setFlagRow(modifiedFlagRow_p);
-		flushFlagRow_p = false;
-	}
-
-	return true;
-}
-
-
-// -----------------------------------------------------------------------
-// Flush flags to MS
-// -----------------------------------------------------------------------
-String
-FlagMSHandler::getTableName()
-{
-	return originalMeasurementSet_p->tableName();
-}
-
-
 // -----------------------------------------------------------------------
 // Generate scan start stop map
 // -----------------------------------------------------------------------
@@ -806,6 +773,38 @@ FlagMSHandler::generateScanStartStopMap()
 	}
 
 	return;
+}
+
+
+// -----------------------------------------------------------------------
+// Flush flags to MS
+// -----------------------------------------------------------------------
+bool
+FlagMSHandler::flushFlags()
+{
+	if (flushFlags_p)
+	{
+		rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
+		flushFlags_p = false;
+	}
+
+	if (flushFlagRow_p)
+	{
+		rwVisibilityIterator_p->setFlagRow(modifiedFlagRow_p);
+		flushFlagRow_p = false;
+	}
+
+	return true;
+}
+
+
+// -----------------------------------------------------------------------
+// Flush flags to MS
+// -----------------------------------------------------------------------
+String
+FlagMSHandler::getTableName()
+{
+	return originalMeasurementSet_p->tableName();
 }
 
 } //# NAMESPACE CASA - END

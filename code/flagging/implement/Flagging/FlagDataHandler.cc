@@ -635,6 +635,16 @@ FlagDataHandler::generateAntennaPointingMap()
 
 
 // -----------------------------------------------------------------------
+// Generate scan start stop map
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::generateScanStartStopMap()
+{
+	return;
+}
+
+
+// -----------------------------------------------------------------------
 // Set Data Selection parameters
 // -----------------------------------------------------------------------
 bool

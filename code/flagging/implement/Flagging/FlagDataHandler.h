@@ -539,7 +539,7 @@ public:
 	// Default destructor
 	~FlagDataHandler();
 
-	// Common MS/CalTables interface
+	// Common MS/CalTables public interface
 	virtual bool open() {return false;}
 	virtual bool close() {return false;}
 	virtual bool selectData() {return false;}
@@ -583,12 +583,6 @@ public:
 	void setMapAntennaPointing(bool activated);
 	void setScanStartStopMap(bool activated);
 	void setScanStartStopFlaggedMap(bool activated);
-
-	// Mapping functions
-	void generateAntennaPairMap();
-	void generateSubIntegrationMap();
-	void generatePolarizationsMap();
-	void generateAntennaPointingMap();
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
@@ -638,6 +632,13 @@ public:
 
 
 protected:
+
+	// Common MS/CalTables private interface
+	virtual void generateAntennaPairMap();
+	virtual void generateSubIntegrationMap();
+	virtual void generatePolarizationsMap();
+	virtual void generateAntennaPointingMap();
+	virtual void generateScanStartStopMap();
 
 	// Data Selection ranges
 	bool anySelection_p;

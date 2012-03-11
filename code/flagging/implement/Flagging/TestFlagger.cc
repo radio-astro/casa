@@ -152,7 +152,21 @@ TestFlagger::open(String msname, Double ntime)
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
-	fdh_p = new FlagMSHandler(msname_p, iterationApproach_p, timeInterval_p);
+	Table table(msname_p,TableLock(TableLock::AutoNoReadLocking));
+	TableInfo& info = table.tableInfo();
+	String type=info.type();
+	table.flush();
+	table.relinquishAutoLocks(True);
+	table.unlock();
+	os << LogIO::NORMAL << "Table type is " << type << LogIO::POST;
+	if (type == "Measurement Set")
+	{
+		fdh_p = new FlagMSHandler(msname_p, iterationApproach_p, timeInterval_p);
+	}
+	else
+	{
+		fdh_p = new FlagCalTableHandler(msname_p, iterationApproach_p, timeInterval_p);
+	}
 
 	// Open the MS
 	fdh_p->open();

@@ -128,6 +128,7 @@ casa_add_library( synthesis
   implement/CalTables/CTColumns.cc
   implement/CalTables/CTDesc.cc
   implement/CalTables/CTEnums.cc
+  implement/CalTables/CTInterface.cc
   implement/CalTables/CTIter.cc
   implement/CalTables/CTMainColumns.cc
   implement/CalTables/CTMainRecord.cc
