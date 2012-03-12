@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist=None,incremental=None):
+def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist=None,incremental=None, usescratch=None):
        """ Insert a source model into the MODEL_DATA column of a visibility set:
 
        A source model (souce.model image) or components list is converted into a
@@ -48,12 +48,12 @@ def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist
        try:
                # Check if datafile exists and open it
                if ((type(vis)==str) & (os.path.exists(vis))):
-                       im.open(vis, usescratch=True)
+                       im.open(vis, usescratch=usescratch)
                else:
                        raise Exception, 'Visibility data set not found - please verify the name'
 	
                # Select data
-               im.selectvis(field=field,spw=spw, usescratch=True)
+               im.selectvis(field=field,spw=spw)
 	       
                # Define image co-ordinates (all defaults)
                im.defineimage()
@@ -131,3 +131,4 @@ def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist
 
        except Exception, instance:
                print '*** Error ***',instance
+               raise Exception, instance
