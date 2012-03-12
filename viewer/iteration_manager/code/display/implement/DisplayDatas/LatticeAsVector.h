@@ -150,9 +150,9 @@ template <class T> class LatticeAsVector : public LatticePADisplayData<T> {
   // and indicate the fixed axis values for axes in the data that are
   // not specified as xAxis, yAxis or mAxis.
   // <group>
-  LatticeAsVector(ImageInterface<T>* image, const uInt xAxis,
-                  const uInt yAxis, const uInt mAxis,
-                  const IPosition fixedPos);
+  LatticeAsVector( ImageInterface<T>* image, const uInt xAxis,
+		   const uInt yAxis, const uInt mAxis,
+		   const IPosition fixedPos, viewer::IterationClient *ic );
   LatticeAsVector(ImageInterface<T>* image, const uInt xAxis,
                   const uInt yAxis);
   // </group>
@@ -165,7 +165,8 @@ template <class T> class LatticeAsVector : public LatticePADisplayData<T> {
   // the display and/or movie axes are changed via a call to 
   // PrincipalAxesDD::setAxes.
   //virtual void setupElements(IPosition fixedPos = IPosition(2));
-  virtual void setupElements();
+  void setupElements( ) { setupElements((viewer::IterationClient*)0); }
+  void setupElements( viewer::IterationClient *ic );
 
   // install the default options for display
   virtual void setDefaultOptions();

@@ -129,8 +129,8 @@ template <class T> class LatticePADMContour : public LatticePADisplayMethod<T> {
   // <group>
   LatticePADMContour(const uInt xAxis,
 		     const uInt yAxis, const uInt mAxis,
-		     const IPosition fixedPos,
-		     LatticeAsContour<T> *arDat);
+		     const IPosition fixedPos, LatticeAsContour<T> *arDat,
+		     viewer::IterationClient *ic );
   LatticePADMContour(const uInt xAxis,
 		     const uInt yAxis, LatticeAsContour<T> *arDat);
   // </group>

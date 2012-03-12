@@ -116,6 +116,9 @@ public:
 		  const std::list<std::string> &args = std::list<std::string>( ) );
   ~QtDisplayPanel();
   
+  std::vector<std::string> worldAxisNames( ) const;
+  std::vector<std::string> worldAxisUnits( ) const;
+
   // True if DD is on our list.  (It may _not_ be on viewer's list
   // any longer, in particular when reacting to ddRemoved signal).
   // Either qdd pointer or its name can be given.

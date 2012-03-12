@@ -123,10 +123,9 @@ template <class T> class LatticePADMMarker : public LatticePADisplayMethod<T> {
   // indicates which pixel value along the movie axis that this
   // particular object looks after.
   // <group>
-  LatticePADMMarker(const uInt xAxis,
-                    const uInt yAxis, const uInt mAxis,
-                    const IPosition fixedPos,
-                    LatticePADisplayData<T>* arDat);
+  LatticePADMMarker( const uInt xAxis, const uInt yAxis, const uInt mAxis,
+		     const IPosition fixedPos, LatticePADisplayData<T>* arDat,
+		     viewer::IterationClient *ic );
   LatticePADMMarker(const uInt xAxis,
                     const uInt yAxis, LatticePADisplayData<T>* arDat);
   // </group>

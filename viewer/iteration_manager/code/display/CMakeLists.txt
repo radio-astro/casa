@@ -72,8 +72,10 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtPixelCanvas.qo.h
   implement/QtViewer/QtRegionManager.qo.h
   implement/QtViewer/QtViewerBase.qo.h
-  implement/QtViewer/QtViewerPrintGui.qo.h
   implement/QtViewer/QtViewer.qo.h
+  implement/QtViewer/QtViewerPrintGui.qo.h
+  implement/DisplayDatas/IterationManager.qo.h
+  implement/DisplayDatas/IterationClient.qo.h
   implement/RegionShapes/DS9FileWriter.qo.h
   implement/RegionShapes/QtNewRegionShape.qo.h
   implement/RegionShapes/QtRegionShapeManager.qo.h
@@ -198,6 +200,10 @@ casa_add_library( display
   implement/DisplayDatas/WedgeDM.cc
   implement/DisplayDatas/WorldAxesDD.cc
   implement/DisplayDatas/WorldAxesDM.cc
+  implement/DisplayDatas/IterationManager.cc
+  implement/DisplayDatas/IterationClient.cc
+  implement/DisplayDatas/IterationUnit.cc
+  implement/DisplayDatas/CsysAxisInfo.cc
   implement/Display/DisplayEnums.cc
   implement/Display/DisplayMarkerDefinitions.cc
   implement/Display/DisplayParameter.cc

@@ -67,12 +67,10 @@ LatticeAsRaster<T>::LatticeAsRaster(Array<T> *array, const uInt xAxis,
 
 // >2d image-based ctor
 template <class T>
-LatticeAsRaster<T>::LatticeAsRaster(ImageInterface<T> *image,
-				    const uInt xAxis, const uInt yAxis,
-				    const uInt mAxis,
-				    const IPosition fixedPos) :
+LatticeAsRaster<T>::LatticeAsRaster( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis,
+				     const IPosition fixedPos, viewer::IterationClient *ic ) :
   LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos) {
-  setupElements();
+  setupElements(ic);
   String attString("colormodel");
   Attribute attColor(attString, Int(Display::Index));
   setAttribute(attColor);
@@ -104,7 +102,7 @@ LatticeAsRaster<T>::~LatticeAsRaster() {
 
 // Ok, here we setup the elements using LatticePADMRaster
 template <class T>
-void LatticeAsRaster<T>::setupElements() {
+void LatticeAsRaster<T>::setupElements( viewer::IterationClient *ic ) {
 
   for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
     delete static_cast<LatticePADMRaster<T>*>(DDelement[i]);
@@ -120,7 +118,7 @@ void LatticeAsRaster<T>::setupElements() {
       fixedPos(dispAxes(2)) = index;
       DDelement[index] = (LatticePADisplayMethod<T> *)new 
 	LatticePADMRaster<T>(dispAxes(0), dispAxes(1), dispAxes(2),
-			     fixedPos, this);
+			     fixedPos, this, ic);
     }
   } else {
     setNumImages(1);

@@ -44,22 +44,19 @@ LatticePADisplayMethod<T>::LatticePADisplayMethod() :
 }
 
 template <class T>
-LatticePADisplayMethod<T>::LatticePADisplayMethod(const uInt xAxis, 
-						  const uInt yAxis,
-						  const uInt mAxis,
-						  const IPosition fixedPos,
-						  LatticePADisplayData<T> *arDat) :
-  PrincipalAxesDM(xAxis, yAxis, mAxis, (PrincipalAxesDD *)arDat) {
+LatticePADisplayMethod<T>::LatticePADisplayMethod( const uInt xAxis, const uInt yAxis, const uInt mAxis,
+						   const IPosition fixedPos, LatticePADisplayData<T> *arDat,
+						   viewer::IterationClient *ic ) :
+  PrincipalAxesDM(xAxis, yAxis, mAxis, (PrincipalAxesDD *)arDat), IterationUnit(ic) {
 
   // call setup which does things common to all PrincipalAxesDM objects
   setup(fixedPos);
 }
 
 template <class T>
-LatticePADisplayMethod<T>::LatticePADisplayMethod(const uInt xAxis,
-						  const uInt yAxis,
-						  LatticePADisplayData<T> *arDat) :
-  PrincipalAxesDM(xAxis, yAxis, 0, (PrincipalAxesDD *)arDat) {
+LatticePADisplayMethod<T>::LatticePADisplayMethod( const uInt xAxis, const uInt yAxis,
+						   LatticePADisplayData<T> *arDat, viewer::IterationClient *ic ) :
+  PrincipalAxesDM(xAxis, yAxis, 0, (PrincipalAxesDD *)arDat), IterationUnit(ic) {
 
   // call setup2d which does things common to all PrincipalAxesDM objects
   setup2d();

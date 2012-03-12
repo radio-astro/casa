@@ -34,6 +34,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/DParameterRange.h>
+#include <display/DisplayDatas/IterationClient.qo.h>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DisplayEnums.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
@@ -74,7 +75,7 @@ class QtDisplayData : public QObject {
 		 const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ) );
   ~QtDisplayData();
   
-  virtual std::string name() { return name_;  }
+  virtual std::string name() const { return name_;  }
   virtual const char* nameChrs() { return name_.c_str();  }
   virtual void setName(const std::string& name) { name_ = name;  }
  
@@ -345,6 +346,8 @@ class QtDisplayData : public QObject {
 
  private:
   
+  viewer::IterationClient itclient;
+
   // Not intended for use.
   QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0) {  }
 

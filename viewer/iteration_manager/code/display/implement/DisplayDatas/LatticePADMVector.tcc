@@ -54,11 +54,10 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T>
-LatticePADMVector<T>::LatticePADMVector(const uInt xAxis,
-                                        const uInt yAxis, const uInt mAxis,
-                                        const IPosition fixedPos,
-                                        LatticePADisplayData<T>* arDat)
- : LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat)
+LatticePADMVector<T>::LatticePADMVector( const uInt xAxis, const uInt yAxis, const uInt mAxis,
+					 const IPosition fixedPos, LatticePADisplayData<T>* arDat,
+					 viewer::IterationClient *ic )
+ : LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat, ic )
 {}
 
 template <class T>

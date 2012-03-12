@@ -43,13 +43,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // >2d array-based ctor
 template <class T>
-LatticeAsContour<T>::LatticeAsContour(Array<T> *array, const uInt xAxis,
-				      const uInt yAxis, const uInt mAxis,
-				      const IPosition fixedPos) :
+LatticeAsContour<T>::LatticeAsContour( Array<T> *array, const uInt xAxis, const uInt yAxis,
+				       const uInt mAxis, const IPosition fixedPos ) :
   LatticePADisplayData<T>(array, xAxis, yAxis, mAxis, fixedPos),
   itsBaseContour(0), itsUnitContour(0) {
   constructParameters_();
-  setupElements();
+  setupElements( );
   setDefaultOptions();
 }
 
@@ -66,14 +65,12 @@ LatticeAsContour<T>::LatticeAsContour(Array<T> *array, const uInt xAxis,
 
 // >2d image-based ctor
 template <class T>
-LatticeAsContour<T>::LatticeAsContour(ImageInterface<T> *image,
-				      const uInt xAxis, const uInt yAxis,
-				      const uInt mAxis,
-				      const IPosition fixedPos) :
+LatticeAsContour<T>::LatticeAsContour( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis,
+				       const uInt mAxis, const IPosition fixedPos, viewer::IterationClient *ic ) :
   LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos),
   itsBaseContour(0), itsUnitContour(0) {
   constructParameters_();
-  setupElements();
+  setupElements( ic );
   setDefaultOptions();
 }
 
@@ -99,7 +96,7 @@ LatticeAsContour<T>::~LatticeAsContour() {
 
 // Oke, here we setup the elements using LatticePADMContour
 template <class T>
-void LatticeAsContour<T>::setupElements() {
+void LatticeAsContour<T>::setupElements( viewer::IterationClient *ic ) {
 
   for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
     delete static_cast<LatticePADMContour<T>*>(DDelement[i]);
@@ -115,7 +112,7 @@ void LatticeAsContour<T>::setupElements() {
       fixedPos(dispAxes(2)) = index;
       DDelement[index] = (LatticePADisplayMethod<T> *)new
 	LatticePADMContour<T>(dispAxes(0), dispAxes(1), dispAxes(2),
-			      fixedPos, this);
+			      fixedPos, this, ic);
     }
   } else {
     setNumImages(1);

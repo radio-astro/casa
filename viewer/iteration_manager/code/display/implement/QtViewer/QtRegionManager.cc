@@ -428,14 +428,11 @@ QtRegionManager::QtRegionManager(
                throw(AipsError(String(
                  "Image has less than two dimensions"))); 
             } else if (ndim == 2) {
-              dd = (DisplayData *)(
-                   new LatticeAsRaster<Float>(pImage, 0, 1));
+              dd = (DisplayData *)(new LatticeAsRaster<Float>(pImage, (uInt) 0, (uInt) 1));
             } else {                                                         
                IPosition fixedPos(ndim); 
                fixedPos = 0;
-               dd = (DisplayData *)(
-                   new LatticeAsRaster<Float>(
-                       pImage, 0, 1, 2, fixedPos));
+               dd = (DisplayData *)(new LatticeAsRaster<Float>(pImage, 0, 1, 2, fixedPos,(viewer::IterationClient*)0));
             }
             //cout << "dd=" << dd <<  endl;
             regData[sName] = dd;
@@ -1130,7 +1127,7 @@ DisplayData* QtRegionManager::getImageData(QString regName){
         fixedPos = 0;
         dd = (DisplayData *)(
              new LatticeAsRaster<Float>(
-                 pImage, 0 , 1, 2, fixedPos));
+                 pImage, 0 , 1, 2, fixedPos,(viewer::IterationClient*)0));
      }
      regData[regName] = dd;
      return dd;

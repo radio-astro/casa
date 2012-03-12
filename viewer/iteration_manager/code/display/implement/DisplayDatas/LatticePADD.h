@@ -35,6 +35,8 @@
 #include <casa/Containers/Record.h>
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/DParameterRange.h>
+#include <display/DisplayDatas/IterationClient.qo.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

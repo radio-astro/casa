@@ -92,7 +92,7 @@ LatticeAsMarker<T>::~LatticeAsMarker()
 
 
 template <class T>
-void LatticeAsMarker<T>::setupElements()
+void LatticeAsMarker<T>::setupElements( viewer::IterationClient *ic )
 {
 
   for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
@@ -112,7 +112,7 @@ void LatticeAsMarker<T>::setupElements()
 //
       DDelement[index] = dynamic_cast<LatticePADisplayMethod<T>*>
           (new LatticePADMMarker<T>(dispAxes(0), dispAxes(1), dispAxes(2),
-                                    fixedPos, this));
+                                    fixedPos, this, ic ));
     }
   } else {
     setNumImages(1);

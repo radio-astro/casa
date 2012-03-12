@@ -64,14 +64,12 @@ LatticeAsVector<T>::LatticeAsVector(Array<T>* array, const uInt xAxis,
 }
 
 template <class T>
-LatticeAsVector<T>::LatticeAsVector(ImageInterface<T>* image,
-                                    const uInt xAxis, const uInt yAxis,
-                                    const uInt mAxis,
-                                    const IPosition fixedPos) 
+LatticeAsVector<T>::LatticeAsVector( ImageInterface<T>* image, const uInt xAxis, const uInt yAxis,
+                                     const uInt mAxis, const IPosition fixedPos, viewer::IterationClient *ic ) 
  : LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos),
    itsUnits(Unit())
 {
-  setupElements();
+  setupElements( ic );
   setDefaultOptions();
   itsUnits = image->units();
 }
@@ -99,7 +97,7 @@ LatticeAsVector<T>::~LatticeAsVector()
 
 
 template <class T>
-void LatticeAsVector<T>::setupElements()
+void LatticeAsVector<T>::setupElements( viewer::IterationClient *ic )
 {
   for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
     delete static_cast<LatticePADMVector<T>*>(DDelement[i]);
@@ -117,8 +115,8 @@ void LatticeAsVector<T>::setupElements()
       fixedPos(dispAxes(2)) = index;
 //
       DDelement[index] = dynamic_cast<LatticePADisplayMethod<T>*>
-          (new LatticePADMVector<T>(dispAxes(0), dispAxes(1), dispAxes(2),
-                                    fixedPos, this));
+          (new LatticePADMVector<T>( dispAxes(0), dispAxes(1), dispAxes(2),
+	                             fixedPos, this, ic ));
     }
   } else {
     setNumImages(1);

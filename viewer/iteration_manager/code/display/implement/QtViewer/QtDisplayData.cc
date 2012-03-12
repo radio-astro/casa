@@ -102,7 +102,7 @@ QtDisplayData::data_to_qtdata_map_type QtDisplayData::dd_source_map;
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
 			      String displayType, const viewer::DisplayDataOptions &ddo ) :
-	       panel_(panel), 
+	       panel_(panel), itclient(panel->iterationMgr( ),this),
 	       path_(path),
 	       dataType_(dataType),
 	       displayType_(displayType),
@@ -267,34 +267,34 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
       
         if(im_!=0) {
           if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
-          else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);}
+          else dd_ = new LatticeAsRaster<Float>( im_, axs[0], axs[1], axs[2],
+						 fixedPos, &itclient );}
 	else {
           if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
-          else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1],
-					          axs[2], fixedPos);  }  }
+          else dd_ = new LatticeAsRaster<Complex>( cim_, axs[0], axs[1], axs[2],
+					           fixedPos, &itclient );  }  }
     
       else if(displayType_=="contour") {
       
         if(im_!=0) {
           if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
-          else dd_ = new LatticeAsContour<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);  }
+          else dd_ = new LatticeAsContour<Float>( im_, axs[0], axs[1], axs[2],
+						  fixedPos, &itclient );  }
 	else {
           if(ndim ==2) dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
           else dd_ = new LatticeAsContour<Complex>(cim_, axs[0], axs[1],
-					          axs[2], fixedPos);  }  }
+						   axs[2], fixedPos, &itclient );  }  }
     
       else if(displayType_=="vector") {
       
         if(im_!=0) {
           if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
-          else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);  }
+          else dd_ = new LatticeAsVector<Float>( im_, axs[0], axs[1], axs[2],
+						 fixedPos, &itclient );  }
 	else {
           if(ndim ==2) dd_ = new LatticeAsVector<Complex>(cim_, 0, 1);
-          else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1],
-					          axs[2], fixedPos);  }  }
+          else dd_ = new LatticeAsVector<Complex>( cim_, axs[0], axs[1],
+						   axs[2], fixedPos, &itclient );  }  }
     
       else if(displayType_=="marker") {
       

@@ -39,11 +39,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor for the case of multiple slices
 template <class T>
-LatticePADMContour<T>::LatticePADMContour(const uInt xAxis,
-					  const uInt yAxis, const uInt mAxis,
-					  const IPosition fixedPos,
-					  LatticeAsContour<T> *arDat) :
-  LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat) {
+LatticePADMContour<T>::LatticePADMContour( const uInt xAxis, const uInt yAxis, const uInt mAxis,
+					   const IPosition fixedPos, LatticeAsContour<T> *arDat,
+					   viewer::IterationClient *ic ) :
+  LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat, ic) {
 }
 
 // Constructor for a single slice
@@ -64,7 +63,7 @@ template <class T>
 uInt LatticePADMContour<T>::dataDrawSelf(WorldCanvas *wCanvas,
 					 const Vector<Double> &blc,
 					 const Vector<Double> &trc,
-					 const IPosition &start,
+					 const IPosition &startx,
 					 const IPosition &shape,
 					 const IPosition &stride,
 					 const Bool usePixelEdges) {
@@ -98,6 +97,8 @@ uInt LatticePADMContour<T>::dataDrawSelf(WorldCanvas *wCanvas,
     wCanvas->setAttribute(dashPos);
     Matrix<T> datMatrix;
     Matrix<Bool> maskMatrix;
+    IPosition start(startx);
+    viewer::IterationUnit::locateFrame( PrincipalAxesDM::movieAxis( ), start );
     this->dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
     Vector<Float> levels; levels = lac->levels();
     if (maskMatrix.nelements() == datMatrix.nelements()) {

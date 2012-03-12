@@ -33,6 +33,7 @@
 
 //# display library includes:
 #include <display/DisplayDatas/PrincipalAxesDM.h>
+#include <display/DisplayDatas/IterationUnit.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -51,19 +52,16 @@ template <class T> class LatticePADisplayData;
 // which adds methods particular to handling Lattice-based data.
 // </synopsis>
 
-template <class T> class LatticePADisplayMethod : public PrincipalAxesDM {
+template <class T> class LatticePADisplayMethod : public PrincipalAxesDM, public viewer::IterationUnit {
 
  public:
 
-  // Constructor
-  // do I need the default constructor?
-  LatticePADisplayMethod();
   LatticePADisplayMethod(const uInt xAxis, const uInt yAxis, 
 			 const uInt mAxis, const IPosition fixedPos,
-			 LatticePADisplayData<T> *arDat);
+			 LatticePADisplayData<T> *arDat, viewer::IterationClient *ic );
   // 2d version
   LatticePADisplayMethod(const uInt xAxis, const uInt yAxis, 
-			 LatticePADisplayData<T> *arDat);
+			 LatticePADisplayData<T> *arDat, viewer::IterationClient *ic=0 );
 
   // Destructor
   virtual ~LatticePADisplayMethod();
@@ -89,6 +87,10 @@ template <class T> class LatticePADisplayMethod : public PrincipalAxesDM {
                             MaskedLattice<T>& latt);
  
  private:
+
+  // Constructor
+  // do I need the default constructor?
+  LatticePADisplayMethod();
 
 };
 

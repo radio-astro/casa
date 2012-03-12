@@ -162,11 +162,9 @@ template <class T> class LatticeAsRaster : public LatticePADisplayData<T> {
   // and indicate the fixed axis values for axes in the data that are
   // not specified as xAxis, yAxis or mAxis.
   // <group>
-  LatticeAsRaster(Array<T> *array, const uInt xAxis,
-		  const uInt yAxis, const uInt mAxis,
-		  const IPosition fixedPos);
-  LatticeAsRaster(Array<T> *array, const uInt xAxis,
-		  const uInt yAxis);
+  LatticeAsRaster( Array<T> *array, const uInt xAxis, const uInt yAxis,
+		   const uInt mAxis, const IPosition fixedPos );
+  LatticeAsRaster( Array<T> *array, const uInt xAxis, const uInt yAxis);
   // </group>
 
   // Image-based constructors: >2d and 2d.  xAxis and yAxis specify 
@@ -178,9 +176,8 @@ template <class T> class LatticeAsRaster : public LatticePADisplayData<T> {
   // and indicate the fixed axis values for axes in the data that are
   // not specified as xAxis, yAxis or mAxis.
   // <group>
-  LatticeAsRaster(ImageInterface<T> *image, const uInt xAxis,
-		  const uInt yAxis, const uInt mAxis,
-		  const IPosition fixedPos);
+  LatticeAsRaster( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis,
+		   const uInt mAxis, const IPosition fixedPos, viewer::IterationClient *ic );
   LatticeAsRaster(ImageInterface<T> *image, const uInt xAxis,
 		  const uInt yAxis);
   // </group>
@@ -193,7 +190,8 @@ template <class T> class LatticeAsRaster : public LatticePADisplayData<T> {
   // the display and/or movie axes are changed via a call to 
   // PrincipalAxesDD::setAxes.
   //virtual void setupElements(IPosition fixedPos = IPosition(uInt(2)));
-  virtual void setupElements();
+  void setupElements( ) { setupElements((viewer::IterationClient*)0); }
+  void setupElements( viewer::IterationClient *ic );
 
   // Install the default options for display.
   virtual void setDefaultOptions();

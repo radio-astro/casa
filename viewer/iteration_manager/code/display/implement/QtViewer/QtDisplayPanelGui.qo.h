@@ -42,6 +42,7 @@
 #  include <display/QtViewer/QtAnimatorGui.ui.h>
 #include <graphics/X11/X_exit.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
+#include <display/DisplayDatas/IterationManager.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/region/QtRegionDock.qo.h>
 #include <display/Utilities/Lowlevel.h>
@@ -180,6 +181,8 @@ class QtDisplayPanelGui : public QtPanelBase,
 
   bool useNewRegions( ) const { return use_new_regions; }
 
+  viewer::IterationManager *iterationMgr( ) { return &itmgr; }
+ 
  public slots:
  
   // At least for now, colorbars can only be placed horizontally or vertically,
@@ -360,9 +363,14 @@ class QtDisplayPanelGui : public QtPanelBase,
   // Responds to qdp_->restoring(QDomDocument*) signal.
   // Sets gui-specific state (most notably, overall window size).
   virtual void restoreGuiState_(QDomDocument*); 
- 
+
  protected:
     
+  // connection to rc file
+  Casarc &rc;
+  // rc id for this panel type
+  std::string rcid_;
+
   // Existing user-visible QDDs
   List<QtDisplayData*> qdds_;
   String errMsg_;
@@ -449,15 +457,14 @@ class QtDisplayPanelGui : public QtPanelBase,
   QWidget*    trkgWidget_;
   
      
-  // connection to rc file
-  Casarc &rc;
-  // rc id for this panel type
-  std::string rcid_;
-
  private:
+
+  viewer::IterationManager itmgr;
+
   bool use_new_regions;
   unsigned int showdataoptionspanel_enter_count;
-  QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
+  QtDisplayPanelGui() : itmgr(this), rc(viewer::getrc()) {  }		// (not intended for use)  
+
     
  public:
  

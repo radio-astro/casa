@@ -51,17 +51,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
 		   QtPanelBase(parent), qdm_(0),qem_(0),qdo_(0), qfb_(0),
-		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
+		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0),
 		   qsm_(0), qst_(0),
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
 		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
-		   regionDock_(0), use_new_regions(true),
+		   regionDock_(0), itmgr(this), use_new_regions(true),
 		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0) {
 
     // initialize the "pix" unit, et al...
     QtWCBox::unitInit( );
-    
+
     setWindowTitle("Viewer Display Panel");
     use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
 
@@ -88,9 +88,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
     qdp_ = new QtDisplayPanel(this,0,args);
 //  qdo_ = new QtDataOptionsPanel(this);
-  
+
     setCentralWidget(qdp_);
-  
+
     setFocusProxy(qdp_);	// Shifts panel kbd focus to qdp_, which
 				// in turn shifts it to PixelCanvas.
 				// PC/WC respond to some keystrokes
@@ -98,20 +98,20 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				// Note: this will not steal focus from,
 				// e.g., a text widget on the panel.
 
-  
-    qrm_ = new QtRegionManager(qdp_);
-  
-    qsm_ = new QtRegionShapeManager(qdp_);
-    qsm_->setVisible(false);  
-  
-    qdp_->setShapeManager(qsm_);
- 
 
-    
-    // SURROUNDING GUI LAYOUT  
+    qrm_ = new QtRegionManager(qdp_);
+
+    qsm_ = new QtRegionShapeManager(qdp_);
+    qsm_->setVisible(false);
+
+    qdp_->setShapeManager(qsm_);
+
+
+
+    // SURROUNDING GUI LAYOUT
 
     // Create the widgets (plus a little parenting and properties)
-  
+
     ddMenu_       = menuBar()->addMenu("&Data");
     ddOpenAct_    = ddMenu_->addAction("&Open...");
     ddRegAct_     = ddMenu_->addAction("&Register");
@@ -137,7 +137,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
                     dpMenu_->addAction(printAct_);
 		    dpMenu_->addSeparator();
                     dpMenu_->addAction(dpCloseAct_);
-  
+
     tlMenu_       = menuBar()->addMenu("&Tools");
     if ( ! use_new_regions ) {
 	fboxAct_      = tlMenu_->addAction("&Box in File");
@@ -157,10 +157,10 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
 	connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
     }
-  
+
     vwMenu_       = menuBar()->addMenu("&View");
 			// (populated after creation of toolbars/dockwidgets).
-  
+
     mainToolBar_  = addToolBar("Main Toolbar");
 		    mainToolBar_->setObjectName("Main Toolbar");
 		    mainToolBar_->addAction(ddOpenAct_);
@@ -187,7 +187,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     zoomInAct_    = mainToolBar_->addAction("Zoom &In");
     zoomOutAct_   = mainToolBar_->addAction("Zoom O&ut");
 
-  
+
     std::string mbpos = rc.get("viewer." + rcid() + ".position.mousetools");
     mouseToolBar_ = new QtMouseToolBar(v_->mouseBtns(), qdp_);
 		    mouseToolBar_->setObjectName("Mouse Toolbar");
@@ -227,7 +227,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		       customToolBar2->setObjectName("Custom Toolbar 2");
 		       customToolBar2->hide();
 		       customToolBar2->toggleViewAction()->setVisible(False);
-       
+
     std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
     animDockWidget_  = new QDockWidget();
 		       animDockWidget_->setObjectName("Animator");
@@ -235,16 +235,16 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				      animloc == "left" ? Qt::LeftDockWidgetArea :
 				      animloc == "top" ? Qt::TopDockWidgetArea :
 				      Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
-   
-    animWidget_      = new QFrame;	
+
+    animWidget_      = new QFrame;
 		       animDockWidget_->setWidget(animWidget_);
 
-    Ui::QtAnimatorGui::setupUi(animWidget_);  
+    Ui::QtAnimatorGui::setupUi(animWidget_);
 	// creates/inserts animator controls into animWidget_.
 	// These widgets (e.g. frameSlider_) are protected members
 	// of Ui::QtAnimatorGui, accessible to this derived class.
 	// They are declared/defined in QtAnimatorGui.ui[.h].
-   
+
     std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
     trkgDockWidget_  = new QDockWidget();
 		       trkgDockWidget_->setObjectName("Position Tracking");
@@ -252,19 +252,19 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				      trackloc == "left" ? Qt::LeftDockWidgetArea :
 				      trackloc == "top" ? Qt::TopDockWidgetArea :
 				      Qt::BottomDockWidgetArea, trkgDockWidget_, Qt::Vertical );
-   
+
     trkgWidget_      = new QWidget;
 		       trkgDockWidget_->setWidget(trkgWidget_);
 	// trkgDockWidget_->layout()->addWidget(trkgWidget_);  // <-- no!
 	// QDockWidgets create their own layout, and setWidget(trkgWidget_)
 	// automatically puts trkgWidget_ into it...
-	
+
 	// ..._but_: _must_ create layout for trkgWidget_:...
 		       new QVBoxLayout(trkgWidget_);
 	// ..._and_ explicitly add trkgWidget_'s children to it as needed.
 	// Note that parenting a TrackBox with trkgWidget_ does _not_
 	// automatically do this....  For generic widgets (which don't have
-	// methods like 'setWidget()' above, whose layout you create yourself) 
+	// methods like 'setWidget()' above, whose layout you create yourself)
 	// doing genericWidget->layout()->addWidget(childWidget) automatically
 	// makes genericWidget the parent of childWidget, but _not_ vice
 	// versa.  Also note: technically, the _layout_ is not the child
@@ -281,7 +281,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 			Qt::BottomDockWidgetArea, regionDock_, Qt::Vertical );
     }
 
-#if 0   
+#if 0
     if ( trackloc == "right" && animloc == "right" && rc.get("viewer." + rcid() + ".rightdock") == "tabbed" ) {
 	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
     } else if ( trackloc == "left" && animloc == "left" && rc.get("viewer." + rcid() + ".leftdock") == "tabbed" ) {
@@ -294,7 +294,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 #endif
 
 //  ------------------------------------------------------------------------------------------
-   
+
     // (This was going to be used for tracking....  May still be useful for
     // additions, or perhaps they should be in central widget, above QtPC).
     // bottomToolBar_   = new QToolBar();
@@ -302,47 +302,47 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //  bottomWidget_   = new QWidget;
     // 		         bottomToolBar_->addWidget(bottomWidget_);
     //   new QVBoxLayout(bottomWidget_);
-    
-  
-  
 
-     
-    // REST OF THE PROPERTY SETTING 
 
-  
+
+
+
+    // REST OF THE PROPERTY SETTING
+
+
     // The 'View' menu contains hide/show checkboxes for the tool bars
     // and dock widgets.  Thus it is populated here, after those tool
     // bars et. al. have been created.
-  
+
     QMenu* rawVwMenu = createPopupMenu();
-  
+
     if(rawVwMenu!=0) {
 	    // (Beware: createPopupMenu() returns 0 rather than an empty
 	    //  menu (<--as it should) if the window has no toolbars/dockwidgets.
 	    //  For safety only: the menu shouldn't be empty in this case...).
 
 	QList<QAction*> vwActions = rawVwMenu->actions();
-    
+
 	    // createPopupMenu() puts the dock widgets ahead of the tool bars by
 	    // default, with a separator in between.  Reversing this is more
 	    // intuitive for this application, since it puts them in the same order
 	    // as the widgets appear on the display panel itself.  (All this could
-	    // be replaced with the following if you didn't care about order): 
+	    // be replaced with the following if you didn't care about order):
 	    //
 	    //   vwMenu_->addActions(createPopupMenu()->actions());
-    
+
 	Int nActions = vwActions.size();
 	Int sep;	// Index of the separator 'action'.
 	for(sep=0; sep<nActions; sep++) if(vwActions[sep]->isSeparator()) break;
-    
+
 	for(Int i=sep+1; i<nActions; i++) vwMenu_->addAction(vwActions[i]);
 	if (0<sep && sep<nActions-1)      vwMenu_->addSeparator();
 	for(Int i=0; i<sep; i++)          vwMenu_->addAction(vwActions[i]);
-      
+
 	delete rawVwMenu;
     }
-    
-  
+
+
     if(vwMenu_->actions().size()==0)
 	vwMenu_->hide();
 
@@ -351,23 +351,23 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //## Cursor Position Tracking
     //######################################
 
-    trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea | 
+    trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea |
 							    Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
-  
+
 //  trkgDockWidget_->setFeatures( QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	// Prevents closing.  (Now that there's a 'View' menu making
 	// it obvious how to get it back, this is no longer needed).
-   
+
 //  trkgDockWidget_->setWindowTitle("Position Tracking");
     trkgDockWidget_->toggleViewAction()->setText("Position Tracking");
 	// Identifies this widget in the 'View' menu.
 	// Preferred to previous line, which also displays the title
 	// on the widget itself (not needed).
-  
+
     trkgDockWidget_->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum);
 
     trkgWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
-  
+
     trkgWidget_->layout()->setMargin(0);
 
 
@@ -375,62 +375,62 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //######################################
     //## Animation
     //######################################
-  
+
     animWidget_->setFrameShadow(QFrame::Plain);
     animWidget_->setFrameShape(QFrame::NoFrame);       // (invisible)
 //  animWidget_->setFrameShape(QFrame::StyledPanel);
 					// (to outline outer frame)
     animFrame_->setFrameShape(QFrame::StyledPanel);
 					// (to outline inner frame (in Ui))
-   
 
-    animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea | 
+
+    animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea |
 							    Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
-  
+
     animDockWidget_->toggleViewAction()->setText("Animator");
-  
+
     animDockWidget_->setSizePolicy( QSizePolicy::Minimum,	  // (horizontal)
 				    QSizePolicy::Minimum);	  // (vertical)
-    animWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum); 
+    animWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	//#dk  For bug submission, was 'min,fixed' 4 dockWidg; notSet 4 animWidg.
 	//# Main problem seems to be that dockWidget itself won't do 'fixed'
 	//# correctly -- won't size down (or, sometimes, up) to contained
 	//# widget's desired size (Qt task 94288, issue N93095).
-  
+
     revTB_ ->setCheckable(True);
     stopTB_->setCheckable(True);
     playTB_->setCheckable(True);
-  
+
     // rateEdit_ ->setReadOnly(True);
     // 	//#dk~ temporary only: no edits allowed here yet.
 
 //  frameEdit_->setReadOnly(True);
     frameEdit_->setValidator(new QIntValidator(frameEdit_));
 	// (Assures only validated Ints will signal editingFinished).
-  
+
     // animAuxButton_->setToolTip( "Press 'Full' for more animation controls.\n"
     // 			      "Press 'Compact' to hide the extra controls." );
 	// (...More animator widgets still need these help texts as well...)
-  
-    
+
+
     // Set interface according to the initial state of underlying animator.
-  
+
     updateAnimUi_();
-  
+
     // animAuxButton_->setText("Compact");
 	// Puts animator initially in 'Full' configuration.
 //  animAuxButton_->setText("Full");
 	// (This would put it in 'Compact' configuration).
-  
-  
+
+
     // setAnimExtrasVisibility_();
 	// Hides or shows extra animator widgets according to
 	// the 'Compact/Full' button.
-  
-  
+
+
     // Trying to make dock area give back space anim. doesn't need.
-    // Halleluia, this actually worked (Qt-4.1.3).  
-    // (Also needed: setFixedHeight() (or fixed size policies throughout) 
+    // Halleluia, this actually worked (Qt-4.1.3).
+    // (Also needed: setFixedHeight() (or fixed size policies throughout)
     // in underlying widget(s)).
     // (Un-hallelujia, the Trolls broke it again in Qt-4.2.0.  Awaiting
     // further fixes...).		dk 11/06
@@ -447,39 +447,39 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 
 /*    //#dg
-    cerr <<"anMSzH:"<<animWidget_->minimumSizeHint().width()	    
+    cerr <<"anMSzH:"<<animWidget_->minimumSizeHint().width()
          <<","<<animWidget_->minimumSizeHint().height()
-         <<"   SzH:"<<animWidget_->sizeHint().width()	    
-         <<","<<animWidget_->sizeHint().height()<<endl; 
-    cerr <<"trMSzH:"<<trkgWidget_->minimumSizeHint().width()	    
+         <<"   SzH:"<<animWidget_->sizeHint().width()
+         <<","<<animWidget_->sizeHint().height()<<endl;
+    cerr <<"trMSzH:"<<trkgWidget_->minimumSizeHint().width()
          <<","<<trkgWidget_->minimumSizeHint().height()
-         <<"   SzH:"<<trkgWidget_->sizeHint().width()	    
-         <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+         <<"   SzH:"<<trkgWidget_->sizeHint().width()
+         <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 /*    //#dg
-    cerr <<"anWszPol:"<<animWidget_->sizePolicy().horizontalPolicy()	    
-         <<","<<animWidget_->sizePolicy().verticalPolicy()<<endl; 
-    cerr <<"anDszPol:"<<animDockWidget_->sizePolicy().horizontalPolicy() 
+    cerr <<"anWszPol:"<<animWidget_->sizePolicy().horizontalPolicy()
+         <<","<<animWidget_->sizePolicy().verticalPolicy()<<endl;
+    cerr <<"anDszPol:"<<animDockWidget_->sizePolicy().horizontalPolicy()
          <<","<<animDockWidget_->sizePolicy().verticalPolicy()<<endl;
-    cerr <<"trEszPol:"<<trkgEdit_->sizePolicy().horizontalPolicy()	    
-         <<","<<trkgEdit_->sizePolicy().verticalPolicy()<<endl; 
-    cerr <<"trWszPol:"<<trkgWidget_->sizePolicy().horizontalPolicy()	    
-         <<","<<trkgWidget_->sizePolicy().verticalPolicy()<<endl; 
-    cerr <<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy() 
+    cerr <<"trEszPol:"<<trkgEdit_->sizePolicy().horizontalPolicy()
+         <<","<<trkgEdit_->sizePolicy().verticalPolicy()<<endl;
+    cerr <<"trWszPol:"<<trkgWidget_->sizePolicy().horizontalPolicy()
+         <<","<<trkgWidget_->sizePolicy().verticalPolicy()<<endl;
+    cerr <<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
          <<","<<trkgDockWidget_->sizePolicy().verticalPolicy()<<endl;
-//*/  //#dg  
+//*/  //#dg
 
-  
-   
+
+
     // menus / toolbars
-    
+
 //  mainToolBar_->setIconSize(QSize(22,22));
     setIconSize(QSize(22,22));
- 
+
     mainToolBar_->setMovable(False);
-  
+
     ddOpenAct_ ->setIcon(QIcon(":/icons/File_Open.png"));
     ddSaveAct_ ->setIcon(QIcon(":/icons/Save_Img.png"));
     ddRegAct_  ->setIcon(QIcon(":/icons/DD_Register.png"));
@@ -499,7 +499,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     zoomOutAct_->setIcon(QIcon(":/icons/Zoom2_Out.png"));
     dpCloseAct_->setIcon(QIcon(":/icons/File_Close.png"));
     dpQuitAct_ ->setIcon(QIcon(":/icons/File_Quit.png"));
-  
+
     ddOpenAct_ ->setToolTip("Open Data...");
     ddRegBtn_  ->setToolTip("[Un]register Data");
     ddCloseBtn_->setToolTip("Close Data");
@@ -526,7 +526,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     ddCloseBtn_->setPopupMode(QToolButton::InstantPopup);
     ddCloseBtn_->setAutoRaise(True);
     ddCloseBtn_->setIconSize(QSize(22,22));
-  
+
 //  bottomToolBar_->setMovable(False);
 //  bottomToolBar_->hide();
 //  (disabled unless/until something for it to contain).
@@ -566,13 +566,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 #endif
 
     //## user interface to animator
-  
+
     connect(frameSlider_, SIGNAL(valueChanged(int)), qdp_, SLOT(goTo(int)));
     connect(frameEdit_, SIGNAL(editingFinished()),  SLOT(frameNumberEdited_()));
     // connect(rateSlider_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
     connect(rateEdit_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
     connect(normalRB_,    SIGNAL(toggled(bool)),     qdp_, SLOT(setMode(bool)));
-  
+
     connect(toStartTB_, SIGNAL(clicked()),  qdp_, SLOT(toStart()));
     connect(revStepTB_, SIGNAL(clicked()),  qdp_, SLOT(revStep()));
     connect(revTB_, SIGNAL(clicked()),            SLOT(revPlay_()));
@@ -580,25 +580,25 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     connect(playTB_, SIGNAL(clicked()),           SLOT(fwdPlay_()));
     connect(fwdStep_, SIGNAL(clicked()),    qdp_, SLOT(fwdStep()));
     connect(toEndTB_, SIGNAL(clicked()),    qdp_, SLOT(toEnd()));
-    
-  
-    // Reaction to signals from the basic graphics panel, qdp_. 
+
+
+    // Reaction to signals from the basic graphics panel, qdp_.
     // (qdp_ doesn't know about, and needn't necessarily use, this gui).
-  
+
     // For tracking
-  
+
     connect( qdp_, SIGNAL(trackingInfo(Record)),
 		   SLOT(displayTrackingData_(Record)) );
-  
+
     connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
 		   SLOT(deleteTrackBox_(QtDisplayData*)) );
-    
-    
+
+
     // From animator
-  
+
     connect( qdp_, SIGNAL(animatorChange()),  SLOT(updateAnimUi_()) );
-  
-    
+
+
     // From registration
 
     connect( qdp_, SIGNAL(registrationChange()),  SLOT(ddRegChange_()), Qt::QueuedConnection );
@@ -607,18 +607,18 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 
     // From save-restore
-  
+
     connect( qdp_, SIGNAL(creatingRstrDoc(QDomDocument*)),
                    SLOT(addGuiState_(QDomDocument*)) );
 		// Adds gui state to QDomDocument qdp has created.
 		// (Recall that qdp_ is unaware of this gui).
-  
+
     connect( qdp_, SIGNAL(restoring(QDomDocument*)),
                    SLOT(restoreGuiState_(QDomDocument*)) );
 		// Sets gui state from QDomDocument (window size, esp.)
 
     // FINAL INITIALIZATIONS
-  
+
     connect(qdp_,  SIGNAL(registrationChange()),
 		   SLOT(hideImageMenus()));
     updateDDMenus_();
@@ -661,7 +661,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {
 
-    removeAllDDs();  
+    removeAllDDs();
     delete qdp_;	// (probably unnecessary because of Qt parenting...)
 			// (possibly wrong, for same reason?...).
 			// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
@@ -692,23 +692,23 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String
 					    Bool autoRegister, const viewer::DisplayDataOptions &ddo ) {
 
   QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo );
-  
+
   if(qdd->isEmpty()) {
     errMsg_ = qdd->errMsg();
     emit createDDFailed(errMsg_, path, dataType, displayType);
     return 0;  }
-    
+
   // Be sure name is unique by adding numerical suffix if necessary.
-  
+
   String name=qdd->name();
   for(Int i=2; dd(name)!=0; i++) {
     name=qdd->name() + " <" + viewer::to_string( i ) + ">";  }
   qdd->setName(name);
-  
+
   ListIter<QtDisplayData* > qdds(qdds_);
   qdds.toEnd();
   qdds.addRight(qdd);
-  
+
   emit ddCreated(qdd, autoRegister);
 
   return qdd;  }
@@ -740,28 +740,28 @@ void QtDisplayPanelGui::doSelectChannel( const Vector<float> &zvec, float zval )
 void QtDisplayPanelGui::removeAllDDs() {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
     QtDisplayData* qdd = qdds.getRight();
-    
+
     qdds.removeRight();
     emit ddRemoved(qdd);
     qdd->done();
     delete qdd;  }  }
-  
-    
+
+
 
 Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
     if(qdd == qdds.getRight()) {
-    
+
       qdds.removeRight();
       emit ddRemoved(qdd);
       qdd->done();
       delete qdd;
       return True;  }  }
-  
-  return False;  }
-      
 
-  
+  return False;  }
+
+
+
 Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
     if(qdd == qdds.getRight()) return True;  }
@@ -778,46 +778,46 @@ QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
     if( (qdd=qdds.getRight())->name() == name ) return qdd;  }
   return 0;  }
 
-  
-  
+
+
 List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
   // return a list of DDs that are registered on some panel.
   List<QtDisplayData*> rDDs(qdds_);
 #if 0
   List<QtDisplayPanelGui*> DPs(viewer()->openDPs());
-  
+
   for(ListIter<QtDisplayData*> rdds(rDDs); !rdds.atEnd();) {
     QtDisplayData* dd = rdds.getRight();
     Bool regd = False;
-    
+
     for(ListIter<QtDisplayPanel*> dps(DPs); !dps.atEnd(); dps++) {
       QtDisplayPanel* dp = dps.getRight();
       if(dp->isRegistered(dd)) { regd = True; break;  }  }
-    
+
     if(regd) rdds++;
     else rdds.removeRight();  }
 #endif
   return rDDs;  }
 
-  
+
 List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs(){
   // return a list of DDs that exist but are not registered on any panel.
   List<QtDisplayData*> uDDs(qdds_);
   List<QtDisplayPanelGui*> DPs(viewer()->openDPs());
-  
+
   for(ListIter<QtDisplayData*> udds(uDDs); !udds.atEnd(); ) {
     QtDisplayData* dd = udds.getRight();
     Bool regd = False;
-    
+
     for(ListIter<QtDisplayPanelGui*> dps(DPs); !dps.atEnd(); dps++) {
       QtDisplayPanelGui* dp = dps.getRight();
       if(dp->displayPanel()->isRegistered(dd)) { regd = True; break;  }  }
-    
+
     if(regd) udds.removeRight();
     else udds++;  }
-  
+
   return uDDs;  }
-  
+
 //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //# DisplayData functionality brought down from QtViewerBase
 //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -839,7 +839,7 @@ void QtDisplayPanelGui::updateAnimUi_() {
        brbSav = blinkRB_->blockSignals(True),
        // rslSav = rateSlider_->blockSignals(True),
        fslSav = frameSlider_->blockSignals(True);
-  
+
   // Current animator state.
   Int  frm   = qdp_->frame(),       len  = qdp_->nFrames(),
        strt  = qdp_->startFrame(),  lst  = qdp_->lastFrame(),
@@ -847,49 +847,49 @@ void QtDisplayPanelGui::updateAnimUi_() {
        minr  = qdp_->minRate(),     maxr = qdp_->maxRate(),
        play  = qdp_->animating();
   Bool modez = qdp_->modeZ();
-  
+
 
   frameEdit_->setText(QString::number(frm));
   nFrmsLbl_ ->setText(QString::number(len));
-  
+
   if(modez) normalRB_->setChecked(True);
   else blinkRB_->setChecked(True);
 	// NB: QRadioButton::setChecked(false)  doesn't work
 	// (not what we want here anyway).
-  
+
   // rateSlider_->setMinimum(minr);
   // rateSlider_->setMaximum(maxr);
   // rateSlider_->setValue(rate);
   rateEdit_->setMinimum(minr);
   rateEdit_->setMaximum(maxr);
   rateEdit_->setValue(rate);
-  
+
   frameSlider_->setMinimum(0);
   frameSlider_->setMaximum(len-1);
   //frameSlider_->setMinimum(strt);
   //frameSlider_->setMaximum(lst);
   frameSlider_->setValue(frm);
-  
+
   // stFrmEdit_ ->setText(QString::number(strt));
   // lstFrmEdit_->setText(QString::number(lst));
   // stepEdit_  ->setText(QString::number(stp));
-  
-  
-  
+
+
+
   // Enable interface according to number of frames.
-  
+
   // enabled in any case:
   modeGB_->setEnabled(True);		// Blink mode
   // animAuxButton_->setEnabled(True);	// 'Compact/Full' button.
-  
+
   // Enabled only if there is more than 1 frame to animate:
   Bool multiframe = (len > 1);
-  
-  rateLbl_->setEnabled(multiframe);	// 
+
+  rateLbl_->setEnabled(multiframe);	//
   // rateSlider_->setEnabled(multiframe);	// Rate controls.
   rateEdit_->setEnabled(multiframe);	//
   // perSecLbl_->setEnabled(multiframe);	//
-  
+
   toStartTB_->setEnabled(multiframe);	//
   revStepTB_->setEnabled(multiframe);	//
   revTB_->setEnabled(multiframe);	//
@@ -907,30 +907,30 @@ void QtDisplayPanelGui::updateAnimUi_() {
   // lstFrmEdit_->setEnabled(multiframe);	// and animation step.
   // stepLbl_->setEnabled(multiframe);	//
   // stepEdit_->setEnabled(multiframe);	//
-  
-  
+
+
   revTB_ ->setChecked(play<0);
   stopTB_->setChecked(play==0);
   playTB_->setChecked(play>0);
-  
-  
+
+
   //#dk  (For now, always disable the following animator
   //      interface, because it is not yet fully supported).
- 
-  // stFrmLbl_->setEnabled(False);		// 
-  // stFrmEdit_->setEnabled(False);	// 
+
+  // stFrmLbl_->setEnabled(False);		//
+  // stFrmEdit_->setEnabled(False);	//
   // lstFrmLbl_->setEnabled(False);	// first and last frames
   // lstFrmEdit_->setEnabled(False);	// to include in animation,
   // stepLbl_->setEnabled(False);		// and animation step.
-  // stepEdit_->setEnabled(False);		// 
-  
-  
+  // stepEdit_->setEnabled(False);		//
+
+
   // restore signal-blocking state (to 'unblocked', in all likelihood).
-  
+
   normalRB_->blockSignals(nrbSav),
   blinkRB_->blockSignals(brbSav),
   // rateSlider_->blockSignals(rslSav),
-  frameSlider_->blockSignals(fslSav);  
+  frameSlider_->blockSignals(fslSav);
 
 //cout << "updataAni============" << endl;
 }
@@ -953,9 +953,9 @@ void QtDisplayPanelGui::hideImageMenus() {
          //cout << "img=" << img << endl;
          //cout << "dataType=" << pdd->dataType() << endl;
          PanelDisplay* ppd = qdp_->panelDisplay();
-         //cout << "ppd->isCSmaster=" 
+         //cout << "ppd->isCSmaster="
          //      << ppd->isCSmaster(pdd->dd()) << endl;
-         if (ppd != 0 && ppd->isCSmaster(pdd->dd())) { 
+         if (ppd != 0 && ppd->isCSmaster(pdd->dd())) {
             if (pdd->dataType() == "image" && img !=0) {
 	       if ( fboxAct_ ) fboxAct_->setEnabled(True);
                if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
@@ -966,12 +966,12 @@ void QtDisplayPanelGui::hideImageMenus() {
                break;
             }
             if (pdd->dataType() == "ms" || img ==0) {
-               
+
                hideRegionManager();
                hideAnnotatorPanel();
                hideFileBoxPanel();
                hideMakeRegionPanel();
-               hideImageProfile();  
+               hideImageProfile();
                hideShapeManager();
                hideStats();
 
@@ -996,7 +996,7 @@ void QtDisplayPanelGui::hideAllSubwindows() {
   hideAnnotatorPanel();
   hideFileBoxPanel();
   hideMakeRegionPanel();
-  hideImageProfile();  
+  hideImageProfile();
   hideDataManager();
   hideExportManager();
   hideDataOptionsPanel();
@@ -1031,7 +1031,7 @@ void QtDisplayPanelGui::hideExportManager() {
   qem_->hide();  }
 
 
-    
+
 void QtDisplayPanelGui::showDataOptionsPanel() {
     //  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
     // prevent infinate recursion, due to loop:
@@ -1056,21 +1056,21 @@ void QtDisplayPanelGui::showDataOptionsPanel() {
 void QtDisplayPanelGui::hideDataOptionsPanel() {
   if(qdo_==0) return;
   qdo_->hide();  }
-  
-  
+
+
 void QtDisplayPanelGui::showPrintManager() {
   if(qpm_==0) qpm_ = new QtViewerPrintGui(qdp_);
   qpm_->showNormal();	// (Magic formula to bring a window up,
   qpm_->raise();  }	// normal size, whether 'closed' (hidden),
-			// iconified, or merely obscured by other 
+			// iconified, or merely obscured by other
 			// windows.  (Found through trial-and-error).
 
 void QtDisplayPanelGui::hidePrintManager() {
   if(qpm_==0) return;
   qpm_->hide();  }
 
-  
-    
+
+
 void QtDisplayPanelGui::showCanvasManager() {
   if(qcm_==0) qcm_ = new QtCanvasManager(qdp_);
   qcm_->showNormal();
@@ -1082,7 +1082,7 @@ void QtDisplayPanelGui::hideCanvasManager() {
 
 void QtDisplayPanelGui::showStats(const String& stats) {
   cout << stats << endl;
-  
+
   /* this print stats on to a panel
   QFont font("Monospace");
   if(qst_==0) {
@@ -1101,14 +1101,14 @@ void QtDisplayPanelGui::showStats(const String& stats) {
   int last = s.lastIndexOf('\n', len - 3);
   //cout << "length=" << len << " last=" << last << endl;
   QString lastLine=s.right(max(len - last,0));
-  //cout << "lastLine=" << lastLine.toStdString() 
+  //cout << "lastLine=" << lastLine.toStdString()
   //     << "<<<==========\n" << endl;
   int width=fm.width(lastLine);
   //cout << "width=" << width << endl;
   qst_->resize(width, qst_->size().height());
   qst_->append(s);
   qst_->showNormal();
-  qst_->raise();  
+  qst_->raise();
   */
 }
 
@@ -1171,13 +1171,13 @@ void QtDisplayPanelGui::showRegionManager() {
   for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
      QtDisplayData* pdd = qdds.getRight();
      if(pdd != 0 && pdd->dataType() == "image") {
-            
+
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
-           connect(pdd, 
+           connect(pdd,
                    SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-                   qrm_, 
+                   qrm_,
                    SLOT(changeAxis(String, String, String, std::vector<int> )));
         }
       }
@@ -1197,12 +1197,12 @@ void QtDisplayPanelGui::showShapeManager() {
   for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
      QtDisplayData* pdd = qdds.getRight();
      if(pdd != 0 && pdd->dataType() == "image") {
-            
+
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
            qsm_->showNormal();
-           qsm_->raise();  
+           qsm_->raise();
         }
       }
   }
@@ -1214,28 +1214,28 @@ void QtDisplayPanelGui::hideShapeManager() {
 
 void QtDisplayPanelGui::showFileBoxPanel() {
 
-  if (qfb_ == 0) 
+  if (qfb_ == 0)
      qfb_ = new FileBox(qdp_);
 
   List<QtDisplayData*> rdds = qdp_->registeredDDs();
   for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
      QtDisplayData* pdd = qdds.getRight();
      if(pdd != 0 && pdd->dataType() == "image") {
-            
+
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
            connect(qfb_,  SIGNAL(hideFileBox()),
                           SLOT(hideFileBoxPanel()));
-           connect(pdd, 
+           connect(pdd,
                    SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-                   qfb_, 
+                   qfb_,
                    SLOT(changeAxis(String, String, String, std::vector<int> )));
         }
       }
   }
   qfb_->showNormal();
-  qfb_->raise();  
+  qfb_->raise();
   if ( annotAct_ ) annotAct_->setEnabled(False);
   if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
   setUseRegion(True);
@@ -1243,38 +1243,38 @@ void QtDisplayPanelGui::showFileBoxPanel() {
 }
 
 void QtDisplayPanelGui::hideFileBoxPanel() {
-  if (qfb_==0) 
+  if (qfb_==0)
      return;
-  qfb_->hide();  
+  qfb_->hide();
   if ( annotAct_ ) annotAct_->setEnabled(True);
   if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
   setUseRegion(False);
 }
-    
+
 void QtDisplayPanelGui::showAnnotatorPanel() {
 
-  if (qap_ == 0) 
+  if (qap_ == 0)
      qap_ = new MakeMask(qdp_);
 
   List<QtDisplayData*> rdds = qdp_->registeredDDs();
   for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
      QtDisplayData* pdd = qdds.getRight();
      if(pdd != 0 && pdd->dataType() == "image") {
-            
+
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
            connect(qap_,  SIGNAL(hideRegionInFile()),
                           SLOT(hideAnnotatorPanel()));
-           connect(pdd, 
+           connect(pdd,
                    SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-                   qap_, 
+                   qap_,
                    SLOT(changeAxis(String, String, String, std::vector<int> )));
         }
       }
   }
   qap_->showNormal();
-  qap_->raise();  
+  qap_->raise();
   if ( fboxAct_ ) fboxAct_->setEnabled(False);
   if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
   setUseRegion(True);
@@ -1283,9 +1283,9 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
 
 void QtDisplayPanelGui::hideAnnotatorPanel() {
   //cout << "hide--------region in image" << endl;
-  if (qap_==0) 
+  if (qap_==0)
      return;
-  qap_->hide();  
+  qap_->hide();
   if ( fboxAct_ ) fboxAct_->setEnabled(True);
   if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
   setUseRegion(False);
@@ -1293,21 +1293,21 @@ void QtDisplayPanelGui::hideAnnotatorPanel() {
 
 void QtDisplayPanelGui::showMakeRegionPanel() {
 
-  if (qmr_ == 0) 
+  if (qmr_ == 0)
      qmr_ = new MakeRegion(qdp_);
 
   List<QtDisplayData*> rdds = qdp_->registeredDDs();
   for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
      QtDisplayData* pdd = qdds.getRight();
      if(pdd != 0 && pdd->dataType() == "image") {
-            
+
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
            connect(qmr_,  SIGNAL(hideRegionInImage()),
                           SLOT(hideMakeRegionPanel()));
            qmr_->showNormal();
-           qmr_->raise();  
+           qmr_->raise();
            break;
         }
       }
@@ -1320,9 +1320,9 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
 
 void QtDisplayPanelGui::hideMakeRegionPanel() {
   //cout << "hide--------region in file" << endl;
-  if (qmr_==0) 
+  if (qmr_==0)
      return;
-  qmr_->hide();  
+  qmr_->hide();
   if ( fboxAct_ ) fboxAct_->setEnabled(True);
   if ( annotAct_ ) annotAct_->setEnabled(True);
   setUseRegion(False);
@@ -1336,18 +1336,18 @@ void QtDisplayPanelGui::showImageProfile() {
 
 	QtDisplayData* pdd = qdds.getRight();
 	if(pdd != 0 && pdd->dataType() == "image") {
-            
+
 	    ImageInterface<float>* img = pdd->imageInterface();
 	    PanelDisplay* ppd = qdp_->panelDisplay();
 	    if (ppd != 0 && img != 0) {
- 
-		if (ppd->isCSmaster(pdd->dd())) { 
+
+		if (ppd->isCSmaster(pdd->dd())) {
 
 		    // pdd is a suitable QDD for profiling.
-              
+
 		    if (!profile_) {
 			// Set up profiler for first time.
-	        
+
 		    	profile_ = new QtProfile(img, pdd->name().c_str());
 			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
@@ -1398,7 +1398,7 @@ void QtDisplayPanelGui::showImageProfile() {
 				}
 			    }
 			}
-			
+
 			{
 			    QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 			    if (rect) {
@@ -1424,7 +1424,7 @@ void QtDisplayPanelGui::showImageProfile() {
 				connect( profile_, SIGNAL(coordinateChange(const String&)),
 					 rect, SLOT(setCoordType(const String&)));
 
-			    } else { 
+			    } else {
 				QtOldRectTool *rect = dynamic_cast<QtOldRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 				if (rect) {
 				    connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
@@ -1523,16 +1523,16 @@ void QtDisplayPanelGui::showImageProfile() {
 
 		    if (pdd->getAxisIndex(String("Spectral")) == -1) {
 			profileDD_ = 0;
-			hideImageProfile();  
+			hideImageProfile();
 		    } else {
 			profileDD_ = pdd;
 			profile_->show();
 			pdd->checkAxis();
 		    }
-	      
+
 		    //break;
 		} else {
-		    if (pdd->getAxisIndex(String("Spectral")) != -1) 
+		    if (pdd->getAxisIndex(String("Spectral")) != -1)
 		      overlap[pdd->name().c_str()] = img;
 		}
 	    }
@@ -1548,14 +1548,14 @@ void QtDisplayPanelGui::showImageProfile() {
 
 
 void QtDisplayPanelGui::hideImageProfile() {
-    
-    if(profile_) {    
+
+    if(profile_) {
       profile_->hide();
       delete profile_;
       profile_ = 0;
     }
     profileDD_ = 0;
-    
+
 }
 
 
@@ -1578,11 +1578,11 @@ void QtDisplayPanelGui::refreshImageProfile() {
 
 
 // Internal slots and methods.
-  
+
 
 // Position Tracking
 
-  
+
 void QtDisplayPanelGui::arrangeTrackBoxes_() {
   // Reacts to QDP registration change signal.  If necessary, changes
   // the set of cursor position tracking boxes being displayed in
@@ -1596,7 +1596,7 @@ void QtDisplayPanelGui::arrangeTrackBoxes_() {
   QList<TrackBox*> trkBoxes = trkgWidget_->findChildren<TrackBox*>();
   for(Int i=0; i<trkBoxes.size(); i++) {
     TrackBox* trkBox = trkBoxes[i];
-    if( trkBox->isVisibleTo(trkgWidget_) && 
+    if( trkBox->isVisibleTo(trkgWidget_) &&
         !qdp_->isRegistered(trkBox->dd()) ) {
       trkgWidget_->layout()->removeWidget(trkBox);
       trkBox->hide();  }  }
@@ -1605,20 +1605,20 @@ void QtDisplayPanelGui::arrangeTrackBoxes_() {
   List<QtDisplayData*> rDDs = qdp_->registeredDDs();
   for(ListIter<QtDisplayData*> rdds(&rDDs); !rdds.atEnd(); rdds++) {
     showTrackBox_(rdds.getRight());  }  }
-    
-    
+
+
 
 TrackBox* QtDisplayPanelGui::showTrackBox_(QtDisplayData* qdd) {
   // If qdd->usesTracking(), this method assures that a TrackBox for qdd
   // is visible in the trkgWidget_'s layout (creating the TrackBox if it
   // didn't exist).  Used by arrangeTrackBoxes_() above.  Returns the
   // TrackBox (or 0 if none, i.e., if !qdd->usesTracking()).
-  
+
   if(!qdd->usesTracking()) return 0;	// (track boxes N/A to qdd)
-  
+
   TrackBox* trkBox = trkBox_(qdd);
   Bool notShown = trkBox==0 || trkBox->isHidden();
-  
+
   if(trkBox==0) trkBox = new TrackBox(qdd);
   else if(notShown) trkBox->clear();	// (Clear old, hidden trackbox).
 
@@ -1627,15 +1627,15 @@ TrackBox* QtDisplayPanelGui::showTrackBox_(QtDisplayData* qdd) {
     trkBox->show();  }
 	// (trkBox will be added to the _bottom_ of trkgWidget_, assuring
 	// that track boxes are displayed in registration order).
-  
+
   return trkBox;  }
- 
-  
- 
-   
+
+
+
+
 void QtDisplayPanelGui::deleteTrackBox_(QtDisplayData* qdd) {
   // Deletes the TrackBox for the given QDD if it exists.  Deletion
-  // automatically removes it from the gui (trkgWidget_ and its layout). 
+  // automatically removes it from the gui (trkgWidget_ and its layout).
   // Connected to the ddRemoved() signal of QtViewerBase.
   if(hasTrackBox_(qdd)) delete trkBox_(qdd);  }
 
@@ -1644,36 +1644,36 @@ void QtDisplayPanelGui::deleteTrackBox_(QtDisplayData* qdd) {
 
 void QtDisplayPanelGui::displayTrackingData_(Record trackingRec) {
   // Display tracking data gathered by underlying panel.
-  
+
   for(uInt i=0; i<trackingRec.nfields(); i++) {
     TrackBox* trkBox = trkBox_(trackingRec.name(i));
     if(trkBox!=0) trkBox->setText(trackingRec.asString(i));  }  }
 
-  
+
 
 TrackBox* QtDisplayPanelGui::trkBox_(QtDisplayData* qdd) {
   return trkBox_(qdd->name());  }
-  
+
 TrackBox* QtDisplayPanelGui::trkBox_(String ddname) {
   return trkgWidget_->findChild<TrackBox*>(ddname.chars());  }
 
-    
-    
+
+
 TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
                    QGroupBox(parent), qdd_(qdd) {
 
   trkgEdit_ = new QTextEdit;
-  
+
   new QVBoxLayout(this);
   layout()->addWidget(trkgEdit_);
   layout()->setMargin(1);
-  
+
   connect( this, SIGNAL(toggled(bool)),  trkgEdit_, SLOT(setVisible(bool)) );
 	// (User can hide edit area with a checkbox by the track box title).
-  
-  
-  setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed); 
-  
+
+
+  setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+
   // (TrackBox as QroupBox)
   setFlat(True);
   setObjectName(qdd_->name().c_str());
@@ -1685,19 +1685,19 @@ TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
   String tltp="Uncheck if you do not need to see position tracking data for\n"
               + name() + "  (it will remain registered).";
   setToolTip(tltp.chars());
-    
-  
+
+
   trkgEdit_->setMinimumWidth(355);
   trkgEdit_->setFixedHeight( qdd->dataType() == "ms" ? 84 : 47 );
   // trkgEdit_->setFixedHeight(81);	// (obs.)
   //trkgEdit_->setPlainText("\n  ");	// (Doesn't work on init,
   //setTrackingHeight_();		// for some reason...).
-  
+
   QFont trkgFont;
   trkgFont.setFamily(QString::fromUtf8("Courier"));
   trkgFont.setBold(True);
   trkgEdit_->setFont(trkgFont);
-    
+
   trkgEdit_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   trkgEdit_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   trkgEdit_->setLineWrapMode(QTextEdit::NoWrap);
@@ -1705,13 +1705,13 @@ TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
   trkgEdit_->setAcceptRichText(True);  }
 
 
-    
+
 void TrackBox::setText(String trkgString) {
   trkgEdit_->setPlainText(trkgString.chars());
   setTrackingHeight_();  }
 
-  
-    
+
+
 void TrackBox::setTrackingHeight_() {
   // Set tracking edit height according to contents.
   // Note: setting a 'fixed' height is necessary to cause Dock Area
@@ -1729,26 +1729,26 @@ void TrackBox::setTrackingHeight_() {
   // I don't understand all these issues.  As usual with Qt sizing,
   // this kludgy routine was arrived at by laborious trial-and-error....
   // (dk  11/06)
-   
+
   trkgEdit_->setUpdatesEnabled(False);
 	// temporarily disables widget painting, avoiding flicker
 	// from next statement.
-  
+
   trkgEdit_->setFixedHeight(1000);	// (More than is ever needed.
 	// Necessary so that the cursorRect() call below will return the
 	// proper height needed for the text, without truncating to the
 	// widget's current height...).
-  
+
   QTextCursor c = trkgEdit_->textCursor();
   c.movePosition(QTextCursor::End);
   trkgEdit_->setTextCursor(c);
-  
+
   trkgEdit_->setFixedHeight(trkgEdit_->cursorRect().bottom()+10);
-  
+
   c.movePosition(QTextCursor::Start);
   trkgEdit_->setTextCursor(c);		// (assures left edge is visible
   trkgEdit_->ensureCursorVisible();	//  when tracking is updated).
-  
+
   trkgEdit_->setUpdatesEnabled(True);  }
 
 
@@ -1780,87 +1780,87 @@ void QtDisplayPanelGui::quit( ) {
 // void QtDisplayPanelGui::toggleAnimExtras_() {
 
 //   if(animAuxButton_->text()=="Full") animAuxButton_->setText("Compact");
-//   else				     animAuxButton_->setText("Full");  
+//   else				     animAuxButton_->setText("Full");
 //   setAnimExtrasVisibility_();  }
 
-   
-       
+
+
 // void QtDisplayPanelGui::setAnimExtrasVisibility_() {
-    
+
 // //#dg  ...of failure of dockWidgets/areas to downsize when needed.
 // // (also, of improper dependencies of szHints on event processing).
 // // (Leave these until promised Qt fixes arrive...).
-    
-// /*  //#dg
-// cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()	    
-//           <<","<<animWidget_->minimumSizeHint().height()
-//     <<"   SzHb:"<<animWidget_->sizeHint().width()	    
-//           <<","<<animWidget_->sizeHint().height()<<endl; 
-// cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()	    
-//           <<","<<trkgWidget_->minimumSizeHint().height()
-//     <<"   SzHb:"<<trkgWidget_->sizeHint().width()	    
-//           <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-// //*/  //#dg  
 
-  
-  
+// /*  //#dg
+// cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()
+//           <<","<<animWidget_->minimumSizeHint().height()
+//     <<"   SzHb:"<<animWidget_->sizeHint().width()
+//           <<","<<animWidget_->sizeHint().height()<<endl;
+// cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()
+//           <<","<<trkgWidget_->minimumSizeHint().height()
+//     <<"   SzHb:"<<trkgWidget_->sizeHint().width()
+//           <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+// //*/  //#dg
+
+
+
 //   if(animAuxButton_->text()=="Full") {
 //     animAuxFrame_->hide(); modeGB_->hide();  }
 //   else {
 //     animAuxFrame_->show(); modeGB_->show();
-//     animAuxButton_->setText("Compact");  }  
-    
-    
-/*  //#dg
-cerr<<"anMSzHa:"<<animWidget_->minimumSizeHint().width()	    
-          <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHa:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHa:"<<trkgWidget_->minimumSizeHint().width()	    
-          <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHa:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+//     animAuxButton_->setText("Compact");  }
 
 
 /*  //#dg
-  repaint();    //#dg 
-cerr<<"anMSzHr:"<<animWidget_->minimumSizeHint().width()	    
+cerr<<"anMSzHa:"<<animWidget_->minimumSizeHint().width()
           <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHr:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHr:"<<trkgWidget_->minimumSizeHint().width()	    
+    <<"   SzHa:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHa:"<<trkgWidget_->minimumSizeHint().width()
           <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHr:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+    <<"   SzHa:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 /*  //#dg
-  update();    //#dg 
-cerr<<"anMSzHu:"<<animWidget_->minimumSizeHint().width()	    
+  repaint();    //#dg
+cerr<<"anMSzHr:"<<animWidget_->minimumSizeHint().width()
           <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHu:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHu:"<<trkgWidget_->minimumSizeHint().width()	    
+    <<"   SzHr:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHr:"<<trkgWidget_->minimumSizeHint().width()
           <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHu:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+    <<"   SzHr:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
+
+
+/*  //#dg
+  update();    //#dg
+cerr<<"anMSzHu:"<<animWidget_->minimumSizeHint().width()
+          <<","<<animWidget_->minimumSizeHint().height()
+    <<"   SzHu:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHu:"<<trkgWidget_->minimumSizeHint().width()
+          <<","<<trkgWidget_->minimumSizeHint().height()
+    <<"   SzHu:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 /*  //#dg
   QtApp::app()->processEvents();  //#dg
 	// (NB: anSzH's don't usually decrease until this point(?!)...)
-cerr<<"anMSzHp:"<<animWidget_->minimumSizeHint().width()	    
+cerr<<"anMSzHp:"<<animWidget_->minimumSizeHint().width()
           <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHp:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHp:"<<trkgWidget_->minimumSizeHint().width()	    
+    <<"   SzHp:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHp:"<<trkgWidget_->minimumSizeHint().width()
           <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHp:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+    <<"   SzHp:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 // }
@@ -1875,54 +1875,54 @@ cerr<<"trMSzHp:"<<trkgWidget_->minimumSizeHint().width()
 void QtDisplayPanelGui::savePanelState_() {
   // Brings up dialog for saving display panel state: reg'd DDs, their
   // options, etc.  Triggered by dpSaveAct_.
-  
+
   QString         savedir = selectedDMDir.chars();
   if(savedir=="") savedir = QDir::currentPath();
-  
+
   QString suggpath = savedir + "/" + qdp_->suggestedRestoreFilename().chars();
-  
+
   String filename = QFileDialog::getSaveFileName(
-                    this, "Save State As", suggpath,  
+                    this, "Save State As", suggpath,
 		    ( "viewer restore files (*."
                       + v_->cvRestoreFileExt
 		      + ");;all files (*.*)" ).chars() ).toStdString();
-  
+
   if(filename=="") return;
-  
+
   if(!qdp_->savePanelState(filename)) {
-    
+
     cerr<<endl<<"**Unable to save "<<filename<<endl
               <<"  (check permissions)**"<<endl<<endl;  }
-  
+
   syncDataDir_(filename);  }
 	// Keeps current data directory in sync between
 	// DataManager window and save-restore dialogs.
 
-   
-  
-  
+
+
+
 void QtDisplayPanelGui::restorePanelState_() {
   // Brings up dialog for restore file, attempts restore.
   // Triggered by dpRstrAct_.
 
   QString            restoredir = selectedDMDir.chars();
   if(restoredir=="") restoredir = QDir::currentPath();
-  
+
   String filename = QFileDialog::getOpenFileName(
                     this, "Select File for Viewer Restore", restoredir,
                     ( "viewer restore files (*."
 		      +v_->cvRestoreFileExt
 		      +");;all files (*.*)" ).chars() ).toStdString();
-  
+
   if(filename=="") return;
-    
-  syncDataDir_(filename);  
+
+  syncDataDir_(filename);
 	// Keeps current data directory in sync between
 	// DataManager window and save-restore dialogs.
-    
+
   restorePanelState(filename);  }
 
-  
+
 
 
 Bool QtDisplayPanelGui::restorePanelState(String filename) {
@@ -1930,19 +1930,19 @@ Bool QtDisplayPanelGui::restorePanelState(String filename) {
   // 'clipboard' if filename=="").
 
   return qdp_->restorePanelState(filename);  }
- 
- 
-  
-        
+
+
+
+
 Bool QtDisplayPanelGui::syncDataDir_(String filename) {
   // Keeps current data directory in sync between
   // DataManager window and save-restore dialogs.
 
   QDir datadir = QFileInfo(filename.chars()).dir();
   if(!datadir.exists()) return False;
-  
+
   QString datadirname = datadir.path();
-  
+
   if(dataMgr()!=0) dataMgr()->updateDirectory(datadirname);
   else selectedDMDir = datadirname.toStdString();
   return True;  }
@@ -1953,51 +1953,51 @@ void QtDisplayPanelGui::addGuiState_(QDomDocument* restoredoc) {
   // Responds to qdp_->creatingRstrDoc(QDomDocument*) signal.
   // (Recall that qdp_ is unaware of this gui).
   // Adds gui state to the QDomDocument qdp_ has created.
-  
-  QDomElement restoreElem = 
+
+  QDomElement restoreElem =
               restoredoc->firstChildElement(v_->cvRestoreID.chars());
   if(restoreElem.isNull()) return;  // invalid rstr doc (shouldn't happen).
-  
+
   QDomElement dpgSettings = restoredoc->createElement("gui-settings");
   restoreElem.appendChild(dpgSettings);
-  
-  
+
+
   // QMainWindow settings (dock status of toolbars and dockwidgets, etc.)
-  
+
   QDomElement dockSettings = restoredoc->createElement("dock-settings");
   dpgSettings.appendChild(dockSettings);
   QByteArray docksettings = saveState().toBase64();
-  
+
   dockSettings.setAttribute("data", docksettings.constData());
-  
-  
+
+
   // Overall window size.
-  
+
   QDomElement winsize = restoredoc->createElement("window-size");
   dpgSettings.appendChild(winsize);
-  
+
   winsize.setAttribute("width",  size().width());
   winsize.setAttribute("height", size().height());
-    
+
   // RegionShapes
   qsm_->saveState(*restoredoc);  }
-  
-  
-  
-  
-void QtDisplayPanelGui::restoreGuiState_(QDomDocument* restoredoc) { 
+
+
+
+
+void QtDisplayPanelGui::restoreGuiState_(QDomDocument* restoredoc) {
   // Responds to qdp_->creatingRstrDoc(QDomDocument*) signal.
   // Sets gui-specific state (most notably, overall window size).
-  
+
   QDomElement dpgSettings =
               restoredoc->firstChildElement(v_->cvRestoreID.chars())
 			 .firstChildElement("gui-settings");
-  
+
   if(dpgSettings.isNull()) return;
 
-  
+
   // QMainWindow settings (dock status of toolbars and dockwidgets, etc.)
-  
+
   QDomElement dockSettings = dpgSettings.firstChildElement("dock-settings");
   QString dockstring = dockSettings.attribute("data");
   if(dockstring!="") {
@@ -2005,32 +2005,32 @@ void QtDisplayPanelGui::restoreGuiState_(QDomDocument* restoredoc) {
     docksettings.append(dockstring);	// between ascii QByteArrays and
 					// QStrings?...)
     restoreState(QByteArray::fromBase64(docksettings));  }
-  
-  
+
+
   // Overall window size
-  
+
   QDomElement winsize = dpgSettings.firstChildElement("window-size");
   QString wd = winsize.attribute("width", "#"),
           ht = winsize.attribute("height", "#");
   Bool w_ok = False, h_ok = False;
-  Int w = wd.toInt(&w_ok); 
+  Int w = wd.toInt(&w_ok);
   Int h = ht.toInt(&h_ok);
-  
+
   if(h_ok && w_ok) resize(w, h);
-  
-  
+
+
   // Other items (anim full/compact, chkboxes, trkgfontsize, etc...).
-    
+
     // (to implement).
-  
-  
+
+
   // RegionShapes state
-    
-  qsm_->restoreState(*restoredoc);  }  
+
+  qsm_->restoreState(*restoredoc);  }
 
 
 
-  
+
 // Reactors to QDP registration status changes.
 
 
@@ -2041,12 +2041,12 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
   // (For now, both menus are always recreated).
 
   ddRegMenu_->clear();  ddCloseMenu_->clear();
-  
+
   List<QtDisplayData*> regdDDs   = qdp_->registeredDDs();
   List<QtDisplayData*> unregdDDs = qdp_->unregisteredDDs();
-  
+
   Bool anyRdds = regdDDs.len()>0u,   anyUdds = unregdDDs.len()>0u,
-       manydds = regdDDs.len() + unregdDDs.len() > 1u; 
+       manydds = regdDDs.len() + unregdDDs.len() > 1u;
 
   QAction* action = 0;
 
@@ -2056,78 +2056,78 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
   // Also note the macro at the end of QtDisplayData.qo.h, which enables
   // QtDisplayData* to be a QVariant's value.
   QVariant ddv;		// QVariant wrapper for a QtDisplayData pointer.
-    
-  
+
+
   // For registered DDs:...
-  
+
   for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
     QtDisplayData* rdd = rdds.getRight();
-    
+
     ddv.setValue(rdd);
-    
-    
+
+
     // 'Unregister' menu item for dd.
-    
+
     // Note: the explicit parenting means that the Action will
     // be deleted on the next ddRegMenu_->clear().
-    
+
     action = new QAction(rdd->name().c_str(), ddRegMenu_);
-    
+
     action->setCheckable(True);
     action->setChecked(True);
     action->setData(ddv);	// Associate the dd with the action.
     ddRegMenu_->addAction(action);
     connect(action, SIGNAL(triggered()), SLOT(ddUnregClicked_()));
 
-    
+
     // 'Close' menu item.
-    
+
     action = new QAction( ("Close "+rdd->name()).c_str(), ddCloseMenu_ );
     action->setData(ddv);
     ddCloseMenu_->addAction(action);
     connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));  }
 
-  
+
   if(anyRdds && anyUdds) {
     ddRegMenu_->addSeparator();
-    ddCloseMenu_->addSeparator();  }  
+    ddCloseMenu_->addSeparator();  }
 
   // Enable/disable shape manager
   // That is not right, if dd is ms, crashes!
   //shpMgrAct_->setEnabled(anyRdds);
-  //if(qsm_->isVisible() && !anyRdds) qsm_->close();  
+  //if(qsm_->isVisible() && !anyRdds) qsm_->close();
 
-  
+
   // For unregistered DDs:...
-  
+
   for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); udds++) {
     QtDisplayData* udd = udds.getRight();
-    
+
     ddv.setValue(udd);
-    
-    
+
+
     // 'Unregister' menu item.
-    
+
     action = new QAction(udd->name().c_str(), ddRegMenu_);
     action->setCheckable(True);
     action->setChecked(False);
     action->setData(ddv);
     ddRegMenu_->addAction(action);
     connect(action, SIGNAL(triggered()), SLOT(ddRegClicked_()));
-    
-    
+
+
     // 'Close' menu item.
-    
+
     action = new QAction(("Close "+udd->name()).c_str(), ddCloseMenu_);
     action->setData(ddv);
     ddCloseMenu_->addAction(action);
     connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));  }
-  
-  
+
+
   // '[Un]Register All' / 'Close All'  menu items.
-  
+
   if(manydds) {
-    
+
     ddRegMenu_->addSeparator();
 
     if(anyUdds) {
@@ -2140,13 +2140,13 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
       ddRegMenu_->addAction(action);
       connect(action, SIGNAL(triggered()),  qdp_, SLOT(unregisterAll()));  }
 
-    
+
     ddCloseMenu_->addSeparator();
-    
+
     action = new QAction("Close All", ddCloseMenu_);
     ddCloseMenu_->addAction(action);
     connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));  }  }
-    
+
 
 
 
@@ -2214,20 +2214,20 @@ void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
 void QtDisplayPanelGui::ddRegClicked_() {
 
   // Retrieve the dd associated with the signal.
-  
+
   QAction* action = dynamic_cast<QAction*>(sender());
   if(action==0) return;		// (shouldn't happen).
   QtDisplayData* dd = action->data().value<QtDisplayData*>();
-  
-  qdp_->registerDD(dd);  }  
+
+  qdp_->registerDD(dd);  }
 
 
 void QtDisplayPanelGui::ddUnregClicked_() {
   QAction* action = dynamic_cast<QAction*>(sender());
   if(action==0) return;		// (shouldn't happen).
   QtDisplayData* dd = action->data().value<QtDisplayData*>();
-  
-  qdp_->unregisterDD(dd);  }  
+
+  qdp_->unregisterDD(dd);  }
 
 
 void QtDisplayPanelGui::ddCloseClicked_() {
@@ -2235,20 +2235,20 @@ void QtDisplayPanelGui::ddCloseClicked_() {
   if(action==0) return;		// (shouldn't happen).
   QtDisplayData* dd = action->data().value<QtDisplayData*>();
 
-  removeDD(dd);  }  
+  removeDD(dd);  }
 
- 
-void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {    
+
+void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
   // At least for now, colorbars can only be placed horizontally or vertically,
   // identically for all display panels.  This sets that state for everyone.
   // Sends out colorBarOrientationChange signal when the state changes.
-  
+
   if(colorBarsVertical_ == vertical) return;	// (already there).
-  
+
   colorBarsVertical_ = vertical;
-  
+
   // Tell QDPs and QDDs to rearrange color bars as necessary.
-  
+
   v_->hold();	// (avoid unnecessary extra refreshes).
   emit colorBarOrientationChange();
   v_->release();  }

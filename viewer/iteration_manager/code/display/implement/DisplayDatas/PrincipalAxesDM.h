@@ -136,6 +136,8 @@ class PrincipalAxesDM : public DisplayMethod {
 
   // (Required) copy assignment.
   void operator=(const PrincipalAxesDM &other);
+
+  uInt movieAxis( ) const { return itsZAxisNum; }
   
  private:
 

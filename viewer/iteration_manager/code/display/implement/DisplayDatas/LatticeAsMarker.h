@@ -163,7 +163,8 @@ template <class T> class LatticeAsMarker : public LatticePADisplayData<T> {
   // the display and/or movie axes are changed via a call to 
   // PrincipalAxesDD::setAxes.
   //virtual void setupElements(IPosition fixedPos = IPosition(2));
-  virtual void setupElements();
+  void setupElements( ) { setupElements((viewer::IterationClient*)0); }
+  void setupElements( viewer::IterationClient *ic );
 
   // install the default options for display
   virtual void setDefaultOptions();

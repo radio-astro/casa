@@ -41,11 +41,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor for the case of multiple slices
 template <class T>
-LatticePADMRaster<T>::LatticePADMRaster(const uInt xAxis,
-					const uInt yAxis, const uInt mAxis,
-					const IPosition fixedPos,
-					LatticePADisplayData<T> *arDat) :
-  LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat) {
+LatticePADMRaster<T>::LatticePADMRaster(const uInt xAxis, const uInt yAxis, const uInt mAxis,
+					const IPosition fixedPos, LatticePADisplayData<T> *arDat,
+					viewer::IterationClient *ic ) :
+  LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat, ic) {
 }
 
 // Constructor for a single slice
@@ -77,7 +76,7 @@ template <class T>
 uInt LatticePADMRaster<T>::dataDrawSelf(WorldCanvas *wCanvas,
 					const Vector<Double> &blc,
 					const Vector<Double> &trc,
-					const IPosition &start,
+					const IPosition &startx,
 					const IPosition &shape,
 					const IPosition &stride,
 					const Bool usePixelEdges) {
@@ -103,6 +102,8 @@ uInt LatticePADMRaster<T>::dataDrawSelf(WorldCanvas *wCanvas,
     wCanvas->setDataScaleHandler(lar->itsPowerScaleHandler);
     Matrix<T> datMatrix;
     Matrix<Bool> maskMatrix;
+    IPosition start(startx);
+    viewer::IterationUnit::locateFrame( PrincipalAxesDM::movieAxis( ), start );
     this->dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
     Bool useMask = (maskMatrix.nelements() == datMatrix.nelements());
     switch (wCanvas->pixelCanvas()->pcctbl()->colorModel()) {
