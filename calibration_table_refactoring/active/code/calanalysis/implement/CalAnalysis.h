@@ -1,4 +1,4 @@
-//# <CalAnalysis.h>:  a module for ....
+//# <CalAnalysis.h>:  a module for .... xx
 //# Copyright (C) 2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
