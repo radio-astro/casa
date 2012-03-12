@@ -169,10 +169,6 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <description>Amount of shadow allowed (in meters)</description>
                 <value>0.0</value>
             </param>
-            <param type="bool" name="recalcuvw" subparam="true">
-                <description>Recalculate U,V,W</description>
-                <value>False</value>
-            </param>
             <param type="any" name="addantenna" subparam="true">
                 <description>File name or dictionary with additional antenna names, positions and diameters</description>
                 <any type='variant' limittype='string record'/>
@@ -416,7 +412,6 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
                         <default param="tolerance"><value type="double">0.0</value></default>
-                        <default param="recalcuvw"><value type="bool">False</value></default>
                         <default param="addantenna"><value type="string"></value></default>
                     </equals>
                     <equals value="elevation">
@@ -727,9 +722,6 @@ tfcrop,rflag,extend,unflag,summary)</description>
                      
                 tolerance -- Amount of shadowing allowed...
                    default: 0.0
-
-                recalcuvw -- Recalculate U,V,W..........
-                   default: False
 
                 addantenna -- It can be either a file name with additional antenna names, positions 
                  and diameters, or a Python dictionary with the same information. You can use the flaghelper
