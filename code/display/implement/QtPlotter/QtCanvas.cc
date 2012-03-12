@@ -51,7 +51,7 @@ QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent), 
           title(), xLabel(), yLabel(), welcome()
 {    
-	
+    setMouseTracking(true);
     setAttribute(Qt::WA_NoBackground);
     setBackgroundRole(QPalette::Dark);
     setForegroundRole(QPalette::Light);
@@ -306,16 +306,21 @@ void QtCanvas::paintEvent(QPaintEvent *event)
 	for (int i = 0; i < (int)rects.size(); ++i)
 		painter.drawPixmap(rects[i], pixmap, rects[i]);
 
-	//painter.drawPixmap(0, 0, pixmap);
-	if (rubberBandIsShown)
-	{
-		painter.setPen(Qt::yellow);
-		painter.fillRect(rubberBandRect, Qt::transparent);
-		painter.drawRect(rubberBandRect.normalized());
-	}
-	if (xRangeIsShown)
-	{
-		painter.setPen(Qt::black);
+	 //painter.drawPixmap(0, 0, pixmap);
+    if (rubberBandIsShown)
+    {
+        painter.setPen(Qt::yellow);
+        painter.fillRect(rubberBandRect, Qt::transparent);
+        painter.drawRect(rubberBandRect.normalized());
+    }
+    if ( xcursor.isValid( ) ) {
+	painter.setPen(xcursor);
+	QLine line( (int) currentCursorPosition.x( ), MARGIN, (int) currentCursorPosition.x( ), height() - MARGIN );
+	painter.drawLine(line);
+    }
+    if (xRangeIsShown)
+    {
+        painter.setPen(Qt::black);
 
 		QtPlotSettings settings = zoomStack[curZoom];
 		QRect rect(MARGIN, MARGIN,
@@ -350,8 +355,16 @@ void QtCanvas::resizeEvent(QResizeEvent *)
 
 void QtCanvas::mousePressEvent(QMouseEvent *event)
 {
-	if (event->button() == Qt::LeftButton)
-	{
+	if ( xcursor.isValid( ) ){
+		QtPlotSettings currSettings = zoomStack[curZoom];
+		double dx = currSettings.spanX() / (width() - 2 * MARGIN);
+		double channelSelectValue = currSettings.minX + dx * (event->pos().x()-MARGIN);
+		emit channelSelect(channelSelectValue);
+		return;
+	}
+
+	if (event->button() == Qt::LeftButton) {
+
 		if (event->modifiers().testFlag(Qt::ShiftModifier)){
 			xRangeMode    = true;
 			xRangeIsShown = true;
@@ -362,8 +375,7 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 			xRectStart= event->pos().x();
 			xRectEnd  = event->pos().x();
 			updatexRangeBandRegion();
-		}
-		else {
+		} else {
 			xRangeIsShown     = false;
 			rubberBandIsShown = true;
 			rubberBandRect.setTopLeft(event->pos());
@@ -372,8 +384,8 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 		}
 		setCursor(Qt::CrossCursor);
 	}
-	if (event->button() == Qt::RightButton)
-	{
+
+	if (event->button() == Qt::RightButton) {
 		//cout << "Right button! " << endl;
 		int x = event->pos().x() - MARGIN;
 		int y = event->pos().y() - MARGIN;
@@ -408,6 +420,10 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 }
 void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 {
+	// save cursor position for xcursor setup...
+	currentCursorPosition = event->pos( );
+
+	//qDebug()  << "Mouse moved event" << event->pos() << " global: " << event->globalPos();
 	if (event->buttons() & Qt::LeftButton)
 	{
 		if (rubberBandIsShown){
@@ -434,6 +450,8 @@ void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 			updatexRangeBandRegion();
 		}
 	}
+
+	if ( xcursor.isValid( ) ) update( );
 }
 
 void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
@@ -569,8 +587,26 @@ void QtCanvas::keyPressEvent(QKeyEvent *event)
     		emit xRangeChanged(1.0,0.0);
     	}
         break;
+    case Qt::Key_Meta:
+    case Qt::Key_Control:
+	xcursor = QColor(Qt::gray);
+	update( );
+	break;
     default:
         QWidget::keyPressEvent(event);
+    }
+}
+
+void QtCanvas::keyReleaseEvent(QKeyEvent *event) {
+    if (!imageMode)
+    switch (event->key()) {
+	case Qt::Key_Meta:
+	case Qt::Key_Control:
+	    xcursor = QColor( );	// invalid color
+	    update( );
+	    break;
+	default:
+	    QWidget::keyPressEvent(event);
     }
 }
 

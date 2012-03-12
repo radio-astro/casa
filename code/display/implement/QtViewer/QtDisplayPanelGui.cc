@@ -722,6 +722,21 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 		dd->setDelTmpData(True);
 }
 
+void QtDisplayPanelGui::doSelectChannel( const Vector<float> &zvec, float zval ) {
+    unsigned int channel_num = 0;
+    unsigned int size = zvec.size( );
+    if ( size == 0 ) return;
+    for ( unsigned int i=0; i < size; ++i ) {
+	if ( zval > zvec[i] ) channel_num = i;
+    }
+    if ( size > 0 && channel_num > 0 && channel_num < (size-1) ) {
+	if ( (zval-zvec[channel_num]) > (zvec[channel_num+1]-zval) ) {
+	    channel_num += 1;
+	}
+    }
+    qdp_->goTo((int)channel_num);
+}
+
 void QtDisplayPanelGui::removeAllDDs() {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
     QtDisplayData* qdd = qdds.getRight();
@@ -1343,6 +1358,9 @@ void QtDisplayPanelGui::showImageProfile() {
 
 			connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool)),
 					this, SLOT(addDD(String, String, String, Bool, Bool)));
+			connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
+					this, SLOT(doSelectChannel(const Vector<float>&,float)));
+
 
 			{
 			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
