@@ -1,4 +1,4 @@
-//# tNewCalTableNick.cc: Test program for NewCalTable class
+ //# tNewCalTableNick.cc: Test program for NewCalTable class
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
