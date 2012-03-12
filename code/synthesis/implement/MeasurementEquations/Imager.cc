@@ -1887,19 +1887,10 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
 			  const Int convsupport, String pointCol)
 {
 
+
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::setsdoptions",28);
 #endif
-
-  //if(!valid()) 
-    {
-
-#ifdef PABLO_IO
-      traceEvent(1,"Exiting Imager::setsdoptions",27);
-#endif
-
-      return False;
-    }
 
   LogIO os(LogOrigin("imager", "setsdoptions()", WHERE));
   
@@ -1907,6 +1898,8 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
   
   sdScale_p=scale;
   sdWeight_p=weight;
+
+  
   sdConvSupport_p=convsupport;
   pointingDirCol_p=pointCol;
   pointingDirCol_p.upcase();
@@ -2248,7 +2241,6 @@ Bool Imager::feather(const String& image, const String& highRes,
       PagedImage<Float> high(outHighRes);
       PagedImage<Float> low0(outLowRes);
       
-
       Feather::feather(image, high, low0, sdScale_p, lowPSF, doDefaultVP_p, vpTableStr_p, effDiam, showPlot);
     }
   
@@ -6493,7 +6485,9 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
 
    if ( viewer_p == 0 ) {
-     viewer_p = dbus::launch<ViewerProxy>( );
+     std::list<std::string> args;
+     args.push_back("--oldregions");
+     viewer_p = dbus::launch<ViewerProxy>(args);
      if ( viewer_p == 0 ) {
        os << LogIO::WARN << "failed to launch viewer gui" << LogIO::POST;
        return False;

@@ -152,7 +152,7 @@ public slots:
 	void doLineFit();
 	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
-
+	void emitChannelSelect(float xval);
 
 	void overplot(QHash<QString, ImageInterface<float>*>);
 
@@ -168,6 +168,7 @@ signals:
    void hideProfile();
    void coordinateChange(const String&);
    void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData);
+   void channelSelect( const Vector<float> &zvec, float zval );
 
 private:
    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);

@@ -52,6 +52,8 @@ casa_add_library( flagging
   implement/Flagging/LFExtendFlags.cc
   implement/Flagging/LFDisplayFlags.cc
   implement/Flagging/FlagDataHandler.cc
+  implement/Flagging/FlagMSHandler.cc
+  implement/Flagging/FlagCalTableHandler.cc
   implement/Flagging/FlagReport.cc
   implement/Flagging/FlagAgentBase.cc
   implement/Flagging/FlagAgentTimeFreqCrop.cc

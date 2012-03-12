@@ -31,8 +31,7 @@ def tflagdata(vis,
              quackmode,
              quackincrement,
              tolerance,      # mode shadow parameter
-             recalcuvw,
-             antennafile,
+             addantenna,
              lowerlimit,    # mode elevation parameters
              upperlimit,
              ntime,         # mode tfcrop
@@ -46,12 +45,12 @@ def tflagdata(vis,
              usewindowstats,
              halfwin,
              winsize,    # rflag parameters
-             spectralmax,
-             spectralmin,
-             timedevscale,
-             freqdevscale,
              timedev,
              freqdev,
+             timedevscale,
+             freqdevscale,
+             spectralmax,
+             spectralmin,
              extendpols,    # mode extend
              growtime,
              growfreq,
@@ -66,7 +65,6 @@ def tflagdata(vis,
              spwcorr,
              run,           # run or not the tool
              writeflags,
-             sequential,    # run in sequential or in parallel
              display,
              flagbackup,
              savepars,      # save the current parameters to FLAG_CMD  or
@@ -216,16 +214,21 @@ def tflagdata(vis,
             
         elif mode == 'shadow':
             agent_pars['tolerance'] = tolerance
-            if antennafile != '':
-            # Get a dictionary with the antenna names, positions and diameters
-                addantenna = fh.readAntennaList(antennafile)                
-                agent_pars['addantenna'] = addantenna
-                
-            agent_pars['recalcuvw'] = recalcuvw
+            
+            if type(addantenna) == str:
+                if addantenna != '':
+                    # it's a filename, create a dictionary
+                    antdict = fh.readAntennaList(addantenna)
+                    agent_pars['addantenna'] = antdict
+                    
+            elif type(addantenna) == dict:
+                if addantenna != {}:
+                    agent_pars['addantenna'] = addantenna
+                                                               
             casalog.post('Shadow mode is active')
             
-            sel_pars = sel_pars+' tolerance='+str(tolerance)+' recalcuvw='+str(recalcuvw)+\
-                        ' antennafile='+str(antennafile)
+            sel_pars = sel_pars+' tolerance='+str(tolerance)+\
+                        ' addantenna='+str(addantenna).replace(' ','')
 
         elif mode == 'quack':
             agent_pars['quackmode'] = quackmode
@@ -272,20 +275,39 @@ def tflagdata(vis,
                       ' halfwin='+str(halfwin)
                       
         elif mode == 'rflag':
+            if correlation == '':
+                # default
+                correlation = "ABS_ALL"
+
             agent_pars['winsize'] = winsize
-            agent_pars['spectralmax'] = spectralmax
-            agent_pars['spectralmin'] = spectralmin
             agent_pars['timedevscale'] = timedevscale
             agent_pars['freqdevscale'] = freqdevscale
+            agent_pars['spectralmax'] = spectralmax
+            agent_pars['spectralmin'] = spectralmin
+
+            # These can be double, doubleArray, or string.
+            # writeflags=False : calculate and return thresholds.
+            # writeflags=True : use given thresholds for this run.
+            if( type(timedev) == str and writeflags == True):
+                timedev = fh.readRFlagThresholdFile(timedev,'timedev')
+            if( type(freqdev) == str and writeflags == True):
+                freqdev = fh.readRFlagThresholdFile(freqdev,'freqdev')
+
             agent_pars['timedev'] = timedev
             agent_pars['freqdev'] = freqdev
+            
+            agent_pars['writeflags'] = writeflags
+            agent_pars['display'] = display
+
             casalog.post('Rflag mode is active')
-            
-            sel_pars = sel_pars+' winsize='+str(winsize)+' spectralmax='+str(spectralmax)+\
-                    ' spectralmin='+str(spectralmin)+' timedevscale='+str(timedevscale)+\
-                    ' freqdevscale='+str(freqdevscale)+' timedev='+str(timedev)+\
-                    ' freqdev='+str(freqdev)
-            
+
+            expr = delspace(correlation, '_')
+            correlation = expr
+
+            sel_pars = sel_pars+' winsize='+str(winsize)+' timedev='+(str(timedev)).replace(' ','')+\
+                    ' freqdev='+(str(freqdev)).replace(' ','')+' timedevscale='+str(timedevscale)+\
+                    ' freqdevscale='+str(freqdevscale)+' spectralmax='+str(spectralmax)+\
+                    ' spectralmin='+str(spectralmin)
 
         elif mode == 'extend':
             agent_pars['ntime'] = newtime
@@ -327,13 +349,13 @@ def tflagdata(vis,
         agent_pars['name'] = agent_name
         agent_pars['mode'] = mode
         agent_pars['apply'] = apply      
-        
 
         # Purge the empty parameters from the selection string
         if mode != 'list' and mode != 'summary':
             sel_pars = sel_pars+' mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
                     ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
                     ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
+                    
             flaglist = fh.purgeEmptyPars(sel_pars) 
             flagcmd = fh.makeDict([flaglist])
             
@@ -378,7 +400,7 @@ def tflagdata(vis,
             
             unionpars = {}
             if vrows.__len__() > 1:
-               unionpars = fh.getUnion(mslocal, vis, flaglist)
+               unionpars = fh.getUnion(mslocal, vis, flagcmd)
                
                if( len( unionpars.keys() ) > 0 ):
                     casalog.post('Pre-selecting a subset of the MS : ');
@@ -389,14 +411,15 @@ def tflagdata(vis,
                     
             # Get all the selection parameters, but set correlation to ''
             elif vrows.__len__() == 1:
-                unionpars = fh.getSelectionPars(flaglist[0])
+                cmd0 = flagcmd[vrows[0]]['command']
+                unionpars = fh.getSelectionPars(cmd0)
                 casalog.post('The selected subset of the MS will be: ');
                 casalog.post('%s'%unionpars);
                 
             tflocal.selectdata(unionpars);
             
             # Parse the parameters for each agent in the list
-            list2save = fh.setupAgent(tflocal, flagcmd, [], apply)
+            list2save = fh.setupAgent(tflocal, flagcmd, [], apply, writeflags, display)
 
         # Do display if requested
         if display != '':
@@ -436,7 +459,43 @@ def tflagdata(vis,
         
         # Run the tool
         casalog.post('Running the testflagger tool')
-        summary_stats_list = tflocal.run(writeflags, sequential)
+        summary_stats_list = tflocal.run(writeflags, True)
+
+
+        # Now, deal with all the modes that return output.
+        # Summary : Currently, only one is allowed in the task
+        # Rflag : There can be many 'rflags' in the list mode.
+
+        ## Pull out RFlag outputs. There will be outputs only if writeflags=False
+        if (mode == 'rflag' or mode== 'list') and (writeflags==False):  
+            if type(summary_stats_list) is dict:
+                nreps = summary_stats_list['nreport']
+                for rep in range(0,nreps):
+                    repname = 'report'+str(rep)
+                    if summary_stats_list[repname]['type'] == "rflag":
+                        # Pull out the rflag threshold dictionary. This has a 'name' in it.
+                        rflag_thresholds = summary_stats_list[repname]
+                        # Get the rflag id, to later construct a 'name' from to match the above.
+                        rflagid = 0
+                        if mode=='list':
+                            rflagid = int( rflag_thresholds['name'].replace('Rflag_','') )
+                        # Go through the flagcmd list, to find the 'rflags'.....
+                        for key in flagcmd.keys():
+                            cmdline = flagcmd[key]['command'];
+                            if cmdline.__contains__('rflag'):
+                                # Check for match between input flagcmd and output threshold, via the rflag id
+                                if(key==rflagid):  
+                                    # Pull out timedev, freqdev strings from flagcmd
+                                    rflagpars = fh.getLinePars(flagcmd[key]['command'] , ['timedev','freqdev']);
+                                    # Write RFlag thresholds to these file names. 
+                                    newtimedev,newfreqdev = fh.writeRFlagThresholdFile(rflag_thresholds, rflagpars['timedev'], rflagpars['freqdev'], rflagid)
+                                    ## Modify the flagcmd string, so that savepars sees the contents of the file
+                                    oldstring = 'timedev='+str(rflagpars['timedev'])
+                                    newstring = 'timedev='+str(newtimedev).replace(' ','')
+                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
+                                    oldstring = 'freqdev='+str(rflagpars['freqdev'])
+                                    newstring = 'freqdev='+str(newfreqdev).replace(' ','')
+                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
 
 
         # Save the current parameters/list to FLAG_CMD or to output
@@ -456,10 +515,6 @@ def tflagdata(vis,
         # Destroy the tool
         tflocal.done()
 
-#        if mode == 'rflag' or mode == 'list':
-#            if type(summary_stats_list) is dict:
-#                extractRFlagOutput(summary_stats_list,outfile)
-
         # Pull out the 'summary' part of summary_stats_list.
         # (This is the task, and there will be only one such dictionary.)
         # After this step, the only thing left in summary_stats_list are the
@@ -472,7 +527,7 @@ def tflagdata(vis,
                     repname = "report"+str(rep);
                     if summary_stats_list[repname]['type'] == "summary":
                           summary_stats = summary_stats_list.pop(repname);
-                          summary_stats_list[repname] = {'type':'none'};
+                          summary_stats_list[repname] = {'type':'none','name':'none'};
                           break;  # pull out only one summary.
         
            # Filter out baselines/antennas/fields/spws/... from summary_stats
@@ -498,6 +553,7 @@ def tflagdata(vis,
         return summary_stats;
     
     except Exception, instance:
+        tflocal.done()
         casalog.post('%s'%instance,'ERROR')
         raise
         
@@ -507,7 +563,10 @@ def tflagdata(vis,
             param_vals = [eval(p) for p in param_names]
             retval &= write_history(mslocal, vis, 'tflagdata', param_names,
                                     param_vals, casalog)
+            
+            mslocal.close()
     except Exception, instance:
+            mslocal.close()
             casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                          'WARN')
         

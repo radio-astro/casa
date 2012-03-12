@@ -27,6 +27,8 @@
 //----------------------------------------------------------------------------
 
 #include <synthesis/CalTables/CTMainColumns.h>
+#include <synthesis/CalTables/RIorAParray.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -70,7 +72,11 @@ CTMainColumns::CTMainColumns(NewCalTable& calTable)
   attach (calTable, antenna2_p, NCT::ANTENNA2);
   attach (calTable, scanNo_p, NCT::SCAN_NUMBER);
 
-  attach (calTable, param_p, NCT::PARAM);
+  // {C,F}PARAM columns are optional, exactly one should
+  //   be present
+  attach (calTable, cparam_p, NCT::CPARAM, True);
+  attach (calTable, fparam_p, NCT::FPARAM, True);
+
   attach (calTable, paramerr_p, NCT::PARAMERR);
   attach (calTable, flag_p, NCT::FLAG);
   attach (calTable, snr_p, NCT::SNR);
@@ -78,6 +84,56 @@ CTMainColumns::CTMainColumns(NewCalTable& calTable)
   //cerr<<"CTMainColumns instantiated"<<endl;
   //cerr<<"CTMainColumns ctor: caltable name="<<calTable.tableName()<<endl;
 };
+
+//----------------------------------------------------------------------------
+
+// Some additional methods to extract into Array<Float> generically
+//   what can be: "","AP",...TBD
+Array<Float> ROCTMainColumns::fparamArray(String what,const Vector<uInt>& rows) {
+  // Delegate to in-place method
+  Array<Float> f;
+  fparamArray(f,what,rows);
+  return f;
+}
+void ROCTMainColumns::fparamArray(Array<Float>& arr,String what,const Vector<uInt>& rows) {
+  Bool byrow=(rows.nelements()>0);
+  if (what=="") {
+    // Get out Float values however possible
+    if (!fparam().isNull()) {
+      if (byrow)
+	fparam().getColumnCells(RefRows(rows),arr);
+      else
+	fparam().getColumn(arr);
+    }
+    else if (!cparam().isNull()) {
+      // Get amp/phase (tracked) by default
+      if (byrow) {
+	RIorAPArray ap(cparam().getColumnCells(RefRows(rows)));
+	arr=ap.f(True);  // Tracks phase
+      }
+      else {
+	RIorAPArray ap(cparam().getColumn());
+	arr=ap.f(True);  // Tracks phase
+      }
+    }
+    else
+      throw(AipsError("Someting wrong with the caltable!"));
+
+    return;
+  }
+  if (what=="AP") {
+    // Convert to Amp/Ph, with Ph tracked
+    if (byrow) {
+      RIorAPArray ap(cparam().getColumnCells(RefRows(rows)));
+      arr=ap.f(True);  // Tracks phase
+    }
+    else {
+      RIorAPArray ap(cparam().getColumn());
+      arr=ap.f(True);  // Tracks phase
+    }
+    return;
+  }
+}
 
 //----------------------------------------------------------------------------
 
@@ -291,7 +347,12 @@ ROCTMainColumns::ROCTMainColumns(const NewCalTable& calTable)
   attach (calTable, fieldId_p, NCT::FIELD_ID);
   attach (calTable, spwId_p, NCT::SPECTRAL_WINDOW_ID);
   attach (calTable, scanNo_p, NCT::SCAN_NUMBER);
-  attach (calTable, param_p, NCT::PARAM);
+
+  // {C,F}PARAM columns are optional, exactly one should
+  //   be present
+  attach (calTable, cparam_p, NCT::CPARAM, True);
+  attach (calTable, fparam_p, NCT::FPARAM, True);
+
   attach (calTable, paramerr_p, NCT::PARAMERR);
   attach (calTable, flag_p, NCT::FLAG);
   attach (calTable, snr_p, NCT::SNR);

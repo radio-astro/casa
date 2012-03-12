@@ -104,8 +104,8 @@ class PrincipalAxesDD : public DisplayData {
 
   // Miscellaneous information supply routines
   // <group>
-  virtual Vector<String> worldAxisNames();
-  virtual Vector<String> worldAxisUnits();
+  virtual Vector<String> worldAxisNames() const;
+  virtual Vector<String> worldAxisUnits() const;
   virtual Vector<Double> worldAxisIncrements();
   virtual void worldAxisType(Coordinate::Type &type, Int &coordinate,
 			     Int &axisincoord, const uInt &worldaxisnum);

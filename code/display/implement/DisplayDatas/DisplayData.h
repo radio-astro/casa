@@ -347,8 +347,8 @@ public:
   // Some routines that give info on the axes names, units etc. I am not sure
   // this is the right way of doing it.
   // <group>
-  virtual Vector<String> worldAxisNames()  = 0;
-  virtual Vector<String> worldAxisUnits()  = 0;
+  virtual Vector<String> worldAxisNames() const = 0;
+  virtual Vector<String> worldAxisUnits() const = 0;
   // </group>
 
   // Returns the number of elements in this DisplayData (mainly for movie
@@ -602,7 +602,9 @@ public:
   // Get image analyis about images... for non-image
   // "DisplayData" this function will return null...
   // Use dataType() to check...
+  // Creates a new object (or a null pointer) which may need to be deleted...
   virtual ImageAnalysis *imageanalysis( ) const { return 0; }
+  // Returns a pointer that should *not* be deleted...
   virtual ImageInterface<Float> *imageinterface( ) { return 0; }
 
   // Identify the WorldCanvasHolder for the given WorldCanvas.  Return

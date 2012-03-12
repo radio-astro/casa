@@ -94,8 +94,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                 if (i in fields):
                     fldids.append(i)
 
-            # usescratch=True needed in order to have writable ms
-            myim.open(outputvis, usescratch=True)
+            # 
+            myim.open(outputvis, usescratch=False)
             myim.calcuvw(fields=fldids, refcode=therefcode, reuse=reuse)
             myim.close()
         else: # we are modifying UVWs and visibilities
@@ -365,8 +365,8 @@ def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
             fldids.append(i)
             phdirs.append(theoldphasecenter)
 
-    # usescratch=True needed in order to have writable ms
-    myim.open(outputvis, usescratch=True)
+    # 
+    myim.open(outputvis, usescratch=False)
     myim.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
     myim.close()
     return commonoldrefstr

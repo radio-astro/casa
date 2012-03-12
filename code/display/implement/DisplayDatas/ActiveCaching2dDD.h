@@ -77,8 +77,8 @@ class ActiveCaching2dDD : public CachingDisplayData {
 
   // World axis information suppliers.
   // <group>
-  virtual Vector<String> worldAxisNames();
-  virtual Vector<String> worldAxisUnits();
+  virtual Vector<String> worldAxisNames() const;
+  virtual Vector<String> worldAxisUnits() const;
   // </group>
   
   // Return the number of display elements (ie. drawable images) in

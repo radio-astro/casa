@@ -146,6 +146,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     QString pName = settings.value("Print/printer").toString();
 
     connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float, float)));
+    connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(emitChannelSelect(float)));
 
     QValidator *validator = new QDoubleValidator(-1.0e-32, 1.0e+32,10,this);
     startValue->setValidator(validator);
@@ -1486,6 +1487,10 @@ void QtProfile::doLineFit(){
 void QtProfile::plotMainCurve(){
 	pixelCanvas->clearData();
 	pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+}
+
+void QtProfile::emitChannelSelect( float xval ) {
+	emit channelSelect( z_xval, xval );
 }
 
 void QtProfile::setCollapseRange(float xmin, float xmax){

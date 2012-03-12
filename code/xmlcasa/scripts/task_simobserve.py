@@ -340,6 +340,9 @@ def simobserve(
                     if minsize < 2*pb:
                         msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, 2*pb),priority="error")
                     del minsize
+        else:
+            msg("Can't find antennalist",priority="error")
+            return False
 
 
         # now we have an estimate of the psf from the antenna configuration, 

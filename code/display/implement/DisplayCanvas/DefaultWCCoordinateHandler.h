@@ -89,8 +89,8 @@ class DefaultWCCoordinateHandler : public WCCoordinateHandler {
 
   // Routines that give the axes names and the units. Both return "Pixel".
   // <group>
-  virtual Vector<String> worldAxisNames();
-  virtual Vector<String> worldAxisUnits();
+  virtual Vector<String> worldAxisNames() const;
+  virtual Vector<String> worldAxisUnits() const;
   // </group>
 
   // Destructor

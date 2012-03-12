@@ -16,9 +16,10 @@ namespace casa {
 
     public:
 
-	static const char **execArgs( ) {
-	    static const char *args[] = { "dDBus", (char*) 0 };
-	    return args;
+	static std::list<std::string> execArgs( const std::list<std::string> &args ) {
+	    std::list<std::string> result(args);
+	    result.push_front("dDBus");
+	    return result;
 	}
 
 	static std::string dbusName( ) { return "editlinegui"; }

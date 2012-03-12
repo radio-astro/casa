@@ -85,7 +85,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
                 printStats(True), useRegion(False) {
     
   setWindowTitle("Viewer Display Panel");
-  bool use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
+  bool use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
 
   //pc_  = new QtPixelCanvas(this);
   pc_ = new QtPixelCanvas();

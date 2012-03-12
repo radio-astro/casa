@@ -479,8 +479,7 @@ Bool PrincipalAxesDD::setActiveZIndex_(Int zindex) {
   return zIndexConformed_;  }
 
   
-Vector<String> PrincipalAxesDD::worldAxisNames() 
-{
+Vector<String> PrincipalAxesDD::worldAxisNames() const {
   Vector<String> tmpVec(2);
 
 // return only displayed axis names; user can
@@ -492,8 +491,7 @@ Vector<String> PrincipalAxesDD::worldAxisNames()
   return tmpVec;
 }
 
-Vector<String> PrincipalAxesDD::worldAxisUnits() 
-{
+Vector<String> PrincipalAxesDD::worldAxisUnits() const {
   Vector<String> tmpVec(2);
   tmpVec(0) = itsCoordSys.worldAxisUnits()(0);
   tmpVec(1) = itsCoordSys.worldAxisUnits()(1);
@@ -1788,7 +1786,9 @@ Bool PrincipalAxesDD::setLabellerOptions(Record &rec, Record &recout)
 }
 
 
-
+//*
+//* called, e.g., when Z/iteration axis changes... <drs>
+//*
 Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut) 
 {
   Bool ret = DisplayData::setOptions(rec, recOut);

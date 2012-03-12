@@ -59,7 +59,7 @@
 
                 <param type="double" name="tbuff" subparam="true">
                         <description>Time buffer (sec) to pad flags</description>
-                        <value>1.0</value>
+                        <value>0.0</value>
                 </param>
 
                 <param type="string" name="ants" subparam="true">
@@ -82,7 +82,7 @@
 
                 <param type="bool" name="flagbackup" subparam="true">
                         <description>Automatically backup the FLAG column before execution</description>
-                        <value>False</value>
+                        <value>True</value>
                 </param>
 
                 <param type="bool" name="clearall" subparam="true">
@@ -98,11 +98,6 @@
             <param type="string" name="plotfile" subparam="true">
                     <description>Name of output file to save plot</description>
                     <value></value>
-            </param>
-
-            <param type="bool" name="sequential">
-                <description>Run the task in sequential or in parallel.</description>
-                <value>False</value>
             </param>
 
             <param type="bool" name="savepars">
@@ -131,7 +126,7 @@
                                     <default param="command"><value>['']</value></default>
                             </equals>
                             <equals value="xml">
-                                    <default param="tbuff"><value>1.0</value></default>
+                                    <default param="tbuff"><value>0.0</value></default>
                                     <default param="ants"><value type="string"></value></default>
                                     <default param="reason"><value type="string">any</value></default>
                             </equals>
@@ -140,10 +135,10 @@
                     <when param="action">
                             <equals value="list"></equals>
                             <equals value="apply">
-                                    <default param="flagbackup"><value>False</value></default>
+                                    <default param="flagbackup"><value>True</value></default>
                             </equals>
                             <equals value="unapply">
-                                    <default param="flagbackup"><value>False</value></default>
+                                    <default param="flagbackup"><value>True</value></default>
                             </equals>
                             <equals value="plot">
                                     <default param="plotfile"><value type="string"></value></default>
@@ -286,7 +281,7 @@
               
               flagbackup -- Automatically backup MS FLAG column before applying?
                    options: True,False
-                   default: False
+                   default: True
 
        
            action "unapply" --  unapply flags in MS
@@ -361,13 +356,6 @@
               This option will return the internal flagging dictionary to
               python.
 
-
-        sequential -- Run the task in sequential or in parallel. If you want to preserve the
-                      order in which the commands appear in the list, set sequential to True.
-                      When set to False, the framework will run the commands in parallel for
-                      optimization.
-                default: False
-                option: False/True
 
         savepars -- Save the flag commands to the FLAG_CMD table of the MS or to an output text file.
                 default: False

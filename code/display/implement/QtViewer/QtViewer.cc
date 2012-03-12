@@ -28,6 +28,7 @@
 #include <display/QtViewer/QtDBusViewerAdaptor.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
+#include <display/QtViewer/QtCleanPanelGui.qo.h>
 
 
 extern int qInitResources_QtViewer();
@@ -105,6 +106,10 @@ QtDisplayPanelGui *QtViewer::createDPG() {
     return dpg;
 }
   
+QtCleanPanelGui *QtViewer::createInteractiveCleanGui( ) {
+    QtCleanPanelGui* cpg = new QtCleanPanelGui(this,0,args_);
+    return cpg;
+}
   
 void QtViewer::quit() { QtViewerBase::quit(); }
 

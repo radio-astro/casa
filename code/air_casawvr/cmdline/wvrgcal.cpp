@@ -391,15 +391,24 @@ void printFieldSegments(const std::vector<std::pair<double, double> >  &fb,
 std::vector<std::set<std::string> > getTied(const boost::program_options::variables_map &vm)
 {
   using namespace boost::algorithm;
+
   std::vector<std::set<std::string> > res;
-  for (size_t i=0; i<vm.count("tie"); ++i)
-  {
-    std::set<std::string> cs;
-    std::string par(vm["tie"].as<std::vector<std::string> >()[i]);
-    split(cs, par, is_any_of(","));
-    res.push_back(cs);
-  }
-  return res;
+
+  //only run if --tie option given on command line
+  if (vm.count("tie"))
+    {
+    const std::vector<std::string>
+      &input=vm["tie"].as<std::vector<std::string> >();
+    
+    for (size_t i=0; i< input.size(); ++i)
+      {
+	std::set<std::string> cs;
+	const std::string &par=input[i];
+	split(cs, par, is_any_of(","));
+	res.push_back(cs);
+      }
+    }
+    return res;
 }
 
 // Convert tied source names to tied source IDs

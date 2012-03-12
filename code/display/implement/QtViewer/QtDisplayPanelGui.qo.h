@@ -236,7 +236,8 @@ class QtDisplayPanelGui : public QtPanelBase,
  
   // add a new DD
   virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False);
-
+  // go to a specifc channel
+  virtual void doSelectChannel(const Vector<float> &zvec, float zval);
  
   // (Attempts to) restore panel state from named file.
   virtual Bool restorePanelState(String filename);
@@ -448,16 +449,15 @@ class QtDisplayPanelGui : public QtPanelBase,
   QWidget*    trkgWidget_;
   
      
- private:
-  bool use_new_regions;
-  unsigned int showdataoptionspanel_enter_count;
-  QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
-
   // connection to rc file
   Casarc &rc;
   // rc id for this panel type
   std::string rcid_;
 
+ private:
+  bool use_new_regions;
+  unsigned int showdataoptionspanel_enter_count;
+  QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
     
  public:
  

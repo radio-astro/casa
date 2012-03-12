@@ -710,8 +710,10 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     TableDesc td;
     StandardStMan fldStMan("field standard manager");
     {
+      //      ArrayColumnDesc<Double> cdMDir("PHASE_DIR", "variable phase dir",
+      //				     IPosition(2, 2, 1), ColumnDesc::Direct);
       ArrayColumnDesc<Double> cdMDir("PHASE_DIR", "variable phase dir",
-				     IPosition(2, 2, 1), ColumnDesc::Direct);
+				     2);
       ScalarColumnDesc<Int> cdMDirRef("PhaseDir_Ref");
       td.addColumn(cdMDir);
       td.addColumn(cdMDirRef);
@@ -721,8 +723,10 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
       tmdMDirection.write(td);
     }
     {
+      //      ArrayColumnDesc<Double> cdMDir2("DELAY_DIR", "variable delay dir",
+      //				      IPosition(2, 2, 1), ColumnDesc::Direct);
       ArrayColumnDesc<Double> cdMDir2("DELAY_DIR", "variable delay dir",
-				      IPosition(2, 2, 1), ColumnDesc::Direct);
+				      2);
       ScalarColumnDesc<Int> cdMDirRef2("DelayDir_Ref");
       td.addColumn(cdMDir2);
       td.addColumn(cdMDirRef2);
@@ -732,8 +736,10 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
       tmdMDirection2.write(td);
     }
     {
+      //      ArrayColumnDesc<Double> cdMDir3("REFERENCE_DIR", "variable reference dir",
+      //				      IPosition(2, 2, 1), ColumnDesc::Direct);
       ArrayColumnDesc<Double> cdMDir3("REFERENCE_DIR", "variable reference dir",
-				      IPosition(2, 2, 1), ColumnDesc::Direct);
+				      2);
       ScalarColumnDesc<Int> cdMDirRef3("RefDir_Ref");
       td.addColumn(cdMDir3);
       td.addColumn(cdMDirRef3);

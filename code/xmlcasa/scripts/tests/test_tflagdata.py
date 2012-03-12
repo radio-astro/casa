@@ -148,13 +148,47 @@ class test_tfcrop(test_base):
         self.assertEqual(res['correlation']['RR']['flagged'], 4489)
 
     def test_extend1(self):
-        '''tflagdata:: Extend the flags created by tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', correlation='abs_rr',ntime=51.0,spw='9', savepars=False)
+        '''tflagdata:: Extend the flags created by clip'''
+        tflagdata(vis=self.vis, mode='clip', correlation='abs_rr', clipminmax=[0,2])
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['correlation']['RR']['flagged'], 43)
         self.assertEqual(res['correlation']['LL']['flagged'], 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 4489)
+        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 43)
+
+class test_rflag(test_base):
+    """tflagdata:: Test of mode = 'rflag'"""
+    
+    def setUp(self):
+        self.setUp_data4tfcrop()
+        
+    def test_rflag1(self):
+        '''tflagdata:: Test1 of mode = rflag'''
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], writeflags=True);
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 42866)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
+        self.assertEqual(res['spw']['7']['flagged'], 0)
+        
+    def test_rflag2(self):
+        '''tflagdata:: Test2 of mode = rflag : output/input'''
+        # (1) Test input/output files, through the task, mode='rflag'
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt', writeflags=False);
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt', writeflags=True);
+        res1 = tflagdata(vis=self.vis, mode='summary')
+        # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
+        #      and then read back in via list mode. 
+        tflagdata(vis=self.vis,mode='unflag');
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt',writeflags=False,savepars=True,outfile='outcmd.txt');
+        tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt',writeflags=True);
+        res2 = tflagdata(vis=self.vis, mode='summary')
+
+        #print res1['flagged'], res2['flagged']
+        self.assertEqual(res1['flagged'],res2['flagged']);
+        self.assertEqual(res1['flagged'], 39665)
 
 
 class test_shadow(test_base):
@@ -183,14 +217,14 @@ class test_shadow(test_base):
         filename = 'cas2399.txt'
         create_input(input, filename)
         
-        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, antennafile=filename)
+        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
         
     def test_addantenna(self):
-        '''tflagdata: use antennafile in list mode'''
+        '''tflagdata: use antenna file in list mode'''
         if os.path.exists("myants.txt"):
             os.system('rm -rf myants.txt')
         
@@ -212,12 +246,12 @@ class test_shadow(test_base):
         create_input(input, antfile)
         
         # Create list file
-        input = 'mode=shadow tolerance=10.0 antennafile=myants.txt'
+        input = "mode='shadow' tolerance=10.0 addantenna='myants.txt'"
         filename = 'listfile.txt'
         create_input(input, filename)
         
         # Flag
-        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='withdict.txt')
         
         # Check flags
         res = tflagdata(vis=self.vis, mode='summary')
@@ -825,6 +859,7 @@ class test_list(test_base):
         # save to another file
         if os.path.exists("myflags.txt"):
             os.system('rm -rf myflags.txt')
+            
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, run=False, outfile='myflags.txt')
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
         
@@ -902,7 +937,7 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['2']['flagged'], 238140, 'Should flag reason=\'\'')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
-        
+
         
 class test_clip(test_base):
     """tflagdata:: Test of mode = 'clip'"""
@@ -939,6 +974,7 @@ class cleanup(test_base):
 
 def suite():
     return [test_tfcrop,
+            test_rflag,
             test_shadow,
 #            test_flagmanager,
             test_selections,

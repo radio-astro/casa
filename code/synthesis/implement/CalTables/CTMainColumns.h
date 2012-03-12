@@ -70,11 +70,17 @@ class ROCTMainColumns
   const ROScalarColumn<Int>& fieldId() const {return fieldId_p;};
   const ROScalarColumn<Int>& spwId() const {return spwId_p;};
   const ROScalarColumn<Int>& scanNo() const {return scanNo_p;};
-  const ROArrayColumn<Complex>& param() const {return param_p;};
+  const ROArrayColumn<Complex>& cparam() const {return cparam_p;};
+  const ROArrayColumn<Float>& fparam() const {return fparam_p;};
   const ROArrayColumn<Float>& paramerr() const {return paramerr_p;};
   const ROArrayColumn<Bool>& flag() const {return flag_p;};
   const ROArrayColumn<Float>& snr() const {return snr_p;};
   const ROArrayColumn<Float>& weight() const {return weight_p;};
+
+  // Some additional methods to extract cparam into Array<Float>
+  //   what can be: "","AP"
+  Array<Float> fparamArray(String what="",const Vector<uInt>& rows=Vector<uInt>());
+  void fparamArray(Array<Float>& arr,String what="",const Vector<uInt>& rows=Vector<uInt>());
   
  protected:
   // Prohibit public use of the null constructor, which
@@ -120,7 +126,8 @@ class ROCTMainColumns
   ROScalarColumn<Int> fieldId_p;
   ROScalarColumn<Int> spwId_p;
   ROScalarColumn<Int> scanNo_p;
-  ROArrayColumn<Complex> param_p;
+  ROArrayColumn<Complex> cparam_p;
+  ROArrayColumn<Float> fparam_p;
   ROArrayColumn<Float> paramerr_p;
   ROArrayColumn<Bool> flag_p;
   ROArrayColumn<Float> snr_p;
@@ -148,7 +155,8 @@ class CTMainColumns
     ScalarColumn<Int>& antenna1() {return antenna1_p;};
     ScalarColumn<Int>& antenna2() {return antenna2_p;};
     ScalarColumn<Int>& scanNo() {return scanNo_p;};
-    ArrayColumn<Complex>& param() {return param_p;};
+    ArrayColumn<Complex>& cparam() {return cparam_p;};
+    ArrayColumn<Float>& fparam() {return fparam_p;};
     ArrayColumn<Float>& paramerr() {return paramerr_p;};
     ArrayColumn<Bool>& flag() {return flag_p;};
     ArrayColumn<Float>& snr() {return snr_p;};
@@ -194,7 +202,8 @@ class CTMainColumns
     ScalarColumn<Int> antenna1_p;
     ScalarColumn<Int> antenna2_p;
     ScalarColumn<Int> scanNo_p;
-    ArrayColumn<Complex> param_p;
+    ArrayColumn<Complex> cparam_p;
+    ArrayColumn<Float> fparam_p;
     ArrayColumn<Float> paramerr_p;
     ArrayColumn<Bool> flag_p;
     ArrayColumn<Float> snr_p;

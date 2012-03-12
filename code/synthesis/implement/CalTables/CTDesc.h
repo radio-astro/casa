@@ -88,8 +88,11 @@ class CTDesc
    CTDesc();
    virtual ~CTDesc() {};
 
-   // Construct from the Jones table type
-   CTDesc (const String& type);
+   // Construct from some external info
+   CTDesc (const String& partype,
+	   const String& msname="none",
+	   const String& viscal="unknown",
+	   const String& polbasis="circ");
 
    // Return the table descriptors for the main calibration table
    // and the cal_history and cal_desc sub-tables
@@ -104,7 +107,10 @@ class CTDesc
 
  private:
    // Generate the default sub-table descriptors
-   TableDesc defaultCalMain (const String& type);
+   TableDesc defaultCalMain (const String& partype="",
+			     const String& msname="none",
+			     const String& viscal="unknown",
+			     const String& polbasis="circ");
    //TableDesc defaultCalHistory();
 
    // Table descriptors

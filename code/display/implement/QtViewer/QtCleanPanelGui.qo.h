@@ -66,10 +66,13 @@ namespace casa {
 			//# implement/.../*.h files; also, makefile must include
 			//# name of this file in 'mocs' section.
   
-    public: 
- 
-	QtCleanPanelGui( QtViewer *v, QWidget *parent=0 );
+
+    protected: 
+	friend class QtViewer;
+	QtCleanPanelGui( QtViewer* v, QWidget* parent=0,
+			 const std::list<std::string> &args = std::list<std::string>( ) );
   
+    public: 
 	~QtCleanPanelGui();
   
 	bool supports( SCRIPTING_OPTION option ) const;
