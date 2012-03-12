@@ -537,7 +537,7 @@ public:
 	FlagDataHandler(string msname, uShort iterationApproach = SUB_INTEGRATION, Double timeInterval = 0);
 
 	// Default destructor
-	~FlagDataHandler();
+	virtual ~FlagDataHandler();
 
 	// Common MS/CalTables public interface
 	virtual bool open() {return false;}

@@ -47,6 +47,9 @@ FlagCalTableHandler::FlagCalTableHandler(string msname, uShort iterationApproach
 // -----------------------------------------------------------------------
 FlagCalTableHandler::~FlagCalTableHandler()
 {
+	logger_p->origin(LogOrigin("FlagCalTableHandler",__FUNCTION__,WHERE));
+	*logger_p << LogIO::DEBUG1 << "FlagCalTableHandler::~FlagCalTableHandler()" << LogIO::POST;
+
 	if (calBuffer_p) delete calBuffer_p;
 	if (calIter_p) delete calIter_p;
 	if (calTableInterface_p) delete calTableInterface_p;

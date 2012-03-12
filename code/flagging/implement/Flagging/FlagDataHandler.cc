@@ -158,6 +158,9 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 // -----------------------------------------------------------------------
 FlagDataHandler::~FlagDataHandler()
 {
+	logger_p->origin(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::~FlagDataHandler()" << LogIO::POST;
+
 	// Delete logger
 	if (logger_p) delete logger_p;
 

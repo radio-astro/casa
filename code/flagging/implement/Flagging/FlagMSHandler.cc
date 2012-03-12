@@ -47,8 +47,11 @@ FlagMSHandler::FlagMSHandler(string msname, uShort iterationApproach, Double tim
 // -----------------------------------------------------------------------
 FlagMSHandler::~FlagMSHandler()
 {
+	logger_p->origin(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
+	*logger_p << LogIO::DEBUG1 << "FlagMSHandler::~FlagMSHandler()" << LogIO::POST;
+
 	// Delete MS objects
-	if (measurementSetSelection_p) delete measurementSetSelection_p;
+	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
 
 	// Delete VisBuffers and iterators
