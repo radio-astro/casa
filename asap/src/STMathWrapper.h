@@ -196,7 +196,8 @@ public:
   ScantableWrapper frequencyAlign( const ScantableWrapper& in,
                                    const std::string& refTime,
                                    const std::string& method  )
-  { return ScantableWrapper(STMath::frequencyAlign(in.getCP())); }
+  { return ScantableWrapper(STMath::frequencyAlign(in.getCP(),
+						   refTime, method)); }
 
   ScantableWrapper convertPolarisation( const ScantableWrapper& in,
                                         const std::string& newtype )
