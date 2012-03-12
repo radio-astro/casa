@@ -43,6 +43,7 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 	accumTotalCount = 0;
 	spwChannelCounts = False;
 	spwPolarizationCounts = False;
+	baselineCounts = False;
 
 	setAgentParameters(config);
 
@@ -108,6 +109,25 @@ FlagAgentSummary::setAgentParameters(Record config)
 	else
 	{
 		*logger_p << LogIO::NORMAL << " Spw-Correlation count deactivated " << LogIO::POST;
+	}
+
+	exists = config.fieldNumber ("basecnt");
+	if (exists >= 0)
+	{
+		baselineCounts = config.asBool("basecnt");
+	}
+	else
+	{
+		baselineCounts = False;
+	}
+
+	if (baselineCounts)
+	{
+		*logger_p << LogIO::NORMAL << " Baseline count activated " << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::NORMAL << " Baseline count deactivated " << LogIO::POST;
 	}
 
 	return;
@@ -238,8 +258,11 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 		accumflags["antenna"][antenna2Name] += rowFlags;
 	}
 
-	accumtotal["baseline"][baseline] += rowTotal;
-	accumflags["baseline"][baseline] += rowFlags;
+	if ( baselineCounts )
+	{
+	        accumtotal["baseline"][baseline] += rowTotal;
+	        accumflags["baseline"][baseline] += rowFlags;
+	}
 
 	accumTotalFlags += rowFlags;
 	accumTotalCount += rowTotal;
@@ -360,7 +383,7 @@ FlagAgentSummary::buildFlagCountPlots()
 
         // (3) Plot of fraction flagged vs baseline-length
         Int nBase=accumtotal["baseline"].size();
-        if(nBase>0) // Perhaps put a parameter to control this ?
+        if(nBase>0 && baselineCounts==True) // Perhaps put a parameter to control this ?
 	 {
        		 Vector<Float> baselineLength(nBase), flagFraction(nBase);
 		 Int baseCount=0;

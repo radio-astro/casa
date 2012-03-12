@@ -303,8 +303,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value type="int">0</value>
             </param>
             <param type="int" name="maxabs" subparam="true">
-                <description>maximum number of flags (absolute). \
-                             Use a negative value to indicate infinity.</description>
+                <description>maximum number of flags (absolute). Use a negative value to indicate infinity.</description>
                 <value type="int">-1</value>
             </param>
             <param type="bool" name="spwchan" subparam="true">
@@ -313,6 +312,10 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
             <param type="bool" name="spwcorr" subparam="true">
                 <description>Print summary of correlation per spw</description>
+                <value type="bool">False</value>
+            </param>
+            <param type="bool" name="basecnt" subparam="true">
+                <description>Print summary counts per baseline</description>
                 <value type="bool">False</value>
             </param>
 
@@ -524,7 +527,8 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         <default param="minabs"><value type="int">0</value></default>
                         <default param="maxabs"><value type="int">-1</value></default>
                         <default param="spwchan"><value type="bool">False</value></default>
-                        <default param="spwcorr"><value type="bool">False</value></default>                    
+                        <default param="spwcorr"><value type="bool">False</value></default>
+                        <default param="basecnt"><value type="bool">False</value></default>  
                     </equals>
                 </when>
 
@@ -718,7 +722,9 @@ tfcrop,rflag,extend,unflag,summary)</description>
                              True   ==> the quack interval is counted from the
                                         first unflagged data in the scan
 
-            shadow -- Option to flag data of shadowed antennas
+            shadow -- Option to flag data of shadowed antennas.
+                           All antennas in the antenna-subtable of the MS will be considered
+                           for shadow-flag calculations.
                      
                 tolerance -- Amount of shadowing allowed...
                    default: 0.0
@@ -946,6 +952,9 @@ tfcrop,rflag,extend,unflag,summary)</description>
                     default: False
                 spwcorr -- list the number of flags per spw and per correlation.
                     default: False
+                basecnt -- list the number of flags per baseline
+                    default: False
+
                     In this mode, the task returns a dictionary of flagging statistics.
                     Example:
 

@@ -439,7 +439,7 @@ class test_msselection(test_base):
 
     def test_simple(self):
         '''tflagdata: select only cross-correlations'''
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9", basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
@@ -447,7 +447,7 @@ class test_msselection(test_base):
         assert "10&&11" not in baselines
 
 
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10", basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
@@ -456,14 +456,14 @@ class test_msselection(test_base):
 
     def test_amp(self):
         '''tflagdata: select only cross-correlations'''
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10&")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10&",basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" not in baselines
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9&10")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9&10",basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" not in baselines
@@ -473,7 +473,7 @@ class test_msselection(test_base):
     def test_autocorr(self):
         '''tflagdata: flag only auto-correlations'''
         tflagdata(vis=self.vis, mode='manual', antenna='5&&&')
-        s = tflagdata(vis = self.vis, mode="summary")['baseline']
+        s = tflagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
         assert s['5&&5']['flagged'] == 7560
         assert s['1&&5']['flagged'] == 0
         assert s['2&&5']['flagged'] == 0
@@ -493,7 +493,7 @@ class test_statistics_queries(test_base):
         '''tflagdata: test antenna negation selection'''
         
         tflagdata(vis=self.vis, antenna='!5', savepars=False) 
-        s = tflagdata(vis = self.vis, mode="summary")['baseline']
+        s = tflagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
         assert s['1&&5']['flagged'] == 0 
         assert s['2&&5']['flagged'] == 0
         assert s['3&&5']['flagged'] == 0
@@ -547,7 +547,7 @@ class test_statistics_queries(test_base):
         tflagdata(vis=self.vis, antenna='5&&9', savepars=False)
         tflagdata(vis=self.vis, antenna='14', savepars=False)
         tflagdata(vis=self.vis, field='1', savepars=False)
-        s = tflagdata(vis=self.vis, mode='summary', minrel=0.9, spwchan=True)
+        s = tflagdata(vis=self.vis, mode='summary', minrel=0.9, spwchan=True, basecnt=True)
         assert s['antenna'].keys() == ['14']
         assert '5&&9' in s['baseline'].keys()
         assert set(s['spw:channel'].keys()) == set(['0:17', '0:18', '0:19'])

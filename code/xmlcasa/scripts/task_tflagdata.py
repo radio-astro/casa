@@ -63,6 +63,7 @@ def tflagdata(vis,
              maxabs,
              spwchan,
              spwcorr,
+             basecnt,
              run,           # run or not the tool
              writeflags,
              display,
@@ -331,6 +332,7 @@ def tflagdata(vis,
         elif mode == 'summary':
             agent_pars['spwchan'] = spwchan
             agent_pars['spwcorr'] = spwcorr
+            agent_pars['basecnt'] = basecnt
             
             # Disable writeflags and savepars
             writeflags = False
