@@ -1,0 +1,209 @@
+Dependencies for graphics
+  Library:
+    libgraphics => libcasa
+    libgraphics => libgraphics
+  Application:
+
+Dependencies for msvis
+  Library:
+    libmsvis => libcasa
+    libmsvis => libscimath
+    libmsvis => libtables
+    libmsvis => libmeasures
+    libmsvis => libms
+    libmsvis => libmsvis
+  Application:
+
+Dependencies for calibration
+  Library:
+    libcalibration => libcasa
+    libcalibration => libscimath
+    libcalibration => libtables
+    libcalibration => libmeasures
+    libcalibration => libms
+    libcalibration => libmsvis
+    libcalibration => libcalibration
+  Application:
+
+Dependencies for ionosphere
+  Library:
+    libionosphere => libcasa
+    libionosphere => libscimath
+    libionosphere => libtables
+    libionosphere => libmeasures
+    libionosphere => libionosphere
+  Application:
+
+Dependencies for flagging
+  Library:
+    libflagging => libcasa
+    libflagging => libscimath
+    libflagging => libtables
+    libflagging => libmeasures
+    libflagging => liblattices
+    libflagging => libms
+    libflagging => libmsvis
+    libflagging => libflagging
+  Application:
+
+Dependencies for dish
+  Library:
+    libdish => libcasa
+    libdish => libtables
+    libdish => libmeasures
+    libdish => libfits
+    libdish => liblattices
+    libdish => libcoordinates
+    libdish => libms
+    libdish => libdish
+  Application:
+
+Dependencies for simulators
+  Library:
+    libsimulators => libcasa
+    libsimulators => libtables
+    libsimulators => libmeasures
+    libsimulators => libms
+    libsimulators => libsimulators
+  Application:
+
+Dependencies for synthesis
+  Library:
+    libsynthesis => libcasa
+    libsynthesis => libscimath
+    libsynthesis => libtables
+    libsynthesis => libmeasures
+    libsynthesis => libgraphics
+    libsynthesis => liblattices
+    libsynthesis => libcoordinates
+    libsynthesis => libcomponents
+    libsynthesis => libimages
+    libsynthesis => libms
+    libsynthesis => libmsvis
+    libsynthesis => libcalibration
+    libsynthesis => libsynthesis
+  Application:
+
+Dependencies for display
+  Library:
+    libdisplay => libcasa
+    libdisplay => libscimath
+    libdisplay => libtables
+    libdisplay => libmeasures
+    libdisplay => libgraphics
+    libdisplay => liblattices
+    libdisplay => libcoordinates
+    libdisplay => libimages
+    libdisplay => libms
+    libdisplay => libmsvis
+    libdisplay => libdisplay
+  Application:
+    appdisplay => libcasa
+    appdisplay => libgraphics
+    appdisplay => libimages
+    appdisplay => libtasking
+    appdisplay => libdisplay
+
+Dependencies for nrao
+  Library:
+    libnrao => libcasa
+    libnrao => libscimath
+    libnrao => libtables
+    libnrao => libmeasures
+    libnrao => libfits
+    libnrao => libms
+    libnrao => libnrao
+  Application:
+    appnrao => libcasa
+    appnrao => libtables
+    appnrao => libfits
+    appnrao => libms
+    appnrao => libtasking
+    appnrao => libnrao
+
+Dependencies for alma
+  Library:
+    libalma => libcasa
+    libalma => libtables
+    libalma => libmeasures
+    libalma => libfits
+    libalma => libms
+    libalma => libmsvis
+    libalma => libalma
+  Application:
+    appalma => libcasa
+    appalma => libtasking
+    appalma => libalma
+
+Dependencies for xmlcasa
+  Library:
+  Application:
+    appappsxmlcasa => libcasa
+    appappsxmlcasa => libscimath
+    appappsxmlcasa => libtables
+    appappsxmlcasa => libmeasures
+    appappsxmlcasa => libfits
+    appappsxmlcasa => liblattices
+    appappsxmlcasa => libcoordinates
+    appappsxmlcasa => libcomponents
+    appappsxmlcasa => libimages
+    appappsxmlcasa => libms
+    appappsxmlcasa => libmsfits
+    appappsxmlcasa => libmsvis
+    appappsxmlcasa => libionosphere
+    appappsxmlcasa => libflagging
+    appappsxmlcasa => libdish
+    appappsxmlcasa => libsynthesis
+    appappsxmlcasa => libtasking
+    appappsxmlcasa => libappsxmlcasa
+
+Dependencies for jive
+  Library:
+  Application:
+
+Dependencies for nfra
+  Library:
+    libnfra => libcasa
+    libnfra => libscimath
+    libnfra => libtables
+    libnfra => libmeasures
+    libnfra => libms
+    libnfra => libnfra
+  Application:
+    appnfra => libcasa
+    appnfra => libscimath
+    appnfra => libtables
+    appnfra => libmeasures
+    appnfra => libgraphics
+    appnfra => libcomponents
+    appnfra => libms
+    appnfra => libnfra
+
+Dependencies for vlbi
+  Library:
+  Application:
+
+Dependencies for atnf
+  Library:
+    libatnf => libcasa
+    libatnf => libtables
+    libatnf => libmeasures
+    libatnf => libms
+    libatnf => libatnf
+  Application:
+    appatnf => libcasa
+    appatnf => libscimath
+    appatnf => libtables
+    appatnf => libmeasures
+    appatnf => liblattices
+    appatnf => libcoordinates
+    appatnf => libimages
+    appatnf => libms
+    appatnf => libatnf
+
+Dependencies for vo
+  Library:
+  Application:
+    appvo => libcasa
+    appvo => libtables
+

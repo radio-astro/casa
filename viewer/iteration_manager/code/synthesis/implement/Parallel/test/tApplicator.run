@@ -1,0 +1,10 @@
+#!/bin/sh
+if [ -x /usr/bin/mpirun ]
+then
+# bypassing this now as its complaining about lamd
+#   mpirun -np 1 tApplicator
+ exit 3
+else
+  exit 3
+fi
+exit 0
