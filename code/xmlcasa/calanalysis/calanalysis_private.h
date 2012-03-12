@@ -1,0 +1,3 @@
+
+String oCalTable;
+CalAnalysis* poCA;
