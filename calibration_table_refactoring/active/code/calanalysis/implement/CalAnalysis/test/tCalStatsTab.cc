@@ -50,7 +50,7 @@ int main( void ) {
   cout << endl << flush;
 
   for ( uInt o=0; o<oOutput.nelements(); o++ ) {
-    cout << oOutput[o].uiFieldID << " " << oOutput[o].uiAntenna1 << " "
+    cout << oOutput[o].uiField << " " << oOutput[o].uiAntenna1 << " "
          << oOutput[o].uiAntenna2 << endl << flush;
     cout << oOutput[o].oOut(0,0).oData.oData << endl << flush;
   }
