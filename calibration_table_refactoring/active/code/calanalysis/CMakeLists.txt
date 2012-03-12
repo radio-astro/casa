@@ -26,7 +26,7 @@ casa_add_library( calanalysis
   implement/CalAnalysis/CalStatsDerived.cc
   implement/CalAnalysis/CalStatsFitter.cc
   implement/CalAnalysis/CalStatsFIT.cc
-   )
+)
 
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats0.cc )
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats1.cc )
