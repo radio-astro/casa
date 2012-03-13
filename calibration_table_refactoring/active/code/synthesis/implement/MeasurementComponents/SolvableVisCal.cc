@@ -41,6 +41,7 @@
 #include <casa/Utilities/GenSort.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
+#include <tables/Tables/TableCopy.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
@@ -191,6 +192,7 @@ SolvableVisCal::~SolvableVisCal() {
 
   deleteSVC();
 
+  if (ci_)   delete ci_;   ci_=NULL;
   if (ct_)   delete ct_;   ct_=NULL;
   if (cs_)   delete cs_;   cs_=NULL;
   if (cint_) delete cint_; cint_=NULL;
@@ -2917,9 +2919,11 @@ Bool SolvableVisCal::spwOK(Int ispw) {
   if (isApplied() && ci_)
     // Get it from the interpolator (w/ spwmap)
     return spwOK_(ispw)=ci_->spwOK(ispw);
-  else
-    return False;
-
+  else {
+    // Assume ok (e.g., non-ci_ types like TOpac, GainCurve)
+    // TBD: be more careful by specializing this method
+    return True;
+  }
 }
 
 // File a solved solution (and meta-data) into the in-memory Caltable
@@ -2946,6 +2950,7 @@ void SolvableVisCal::keepNCT() {
   ncmc.fieldId().putColumnCells(rows,Vector<Int>(nElem(),currField()));
   ncmc.spwId().putColumnCells(rows,Vector<Int>(nElem(),currSpw()));
   ncmc.scanNo().putColumnCells(rows,Vector<Int>(nElem(),currScan()));
+  ncmc.interval().putColumnCells(rows,Vector<Double>(nElem(),0.0));
 
   // Params
   if (parType()==VisCalEnum::COMPLEX)
@@ -3109,14 +3114,44 @@ void SolvableVisCal::storeNCT() {
 
   if (prtlev()>3) cout << " SVC::storeNCT()" << endl;
 
-  if (append())
-    throw(AipsError("append NYI for New CalTables"));
-  //    logSink() << "Appending solutions to table: " << calTableName()
-  //	      << LogIO::POST;
+  // If append=T and the specified table exists...
+  if (append() && Table::isReadable(calTableName())) {
+
+    // Verify the same type
+    verifyCalTable(calTableName());
+    
+    cout << "append=T does not yet verify spw consistency...." << endl;
+    
+    logSink() << "Appending solutions to table: " << calTableName()
+	      << LogIO::POST;
+    
+    // Keep the new in-memory caltable locally
+    NewCalTable *newct=ct_;
+    ct_=NULL;
+    
+    // Load the existing table (ct_)
+    loadMemCalTable(calTableName());
+
+    //    cout << ct_->nrow() << "+" << newct->nrow();
+    
+    // copy the new onto the existing...
+    TableCopy::copyRows(*ct_,*newct,ct_->nrow(),0,newct->nrow());
+    
+    //    cout << " = " << ct_->nrow() << endl;
+
+    // Delete the local pointer to the new solutions
+    //  NB: ct_ will be deleted by dtor
+    delete newct;
+   
+    // At this point, ct_ contains old and new solutions in memory
+
+  }
   else
     logSink() << "Writing solutions to table: " << calTableName()
 	      << LogIO::POST;
-
+  
+  // Write out the table to disk (regardless of what happened above)
+  //  (this will sort)
   ct_->writeToDisk(calTableName());
 
 }

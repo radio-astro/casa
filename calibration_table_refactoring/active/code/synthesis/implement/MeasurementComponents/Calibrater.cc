@@ -2163,9 +2163,8 @@ void Calibrater::fluxscale(const String& infile,
 
   try {
     // If infile is Calibration table
-    if (True ||
-	(Table::isReadable(infile) && 
-	 Table::tableInfo(infile).type()=="Calibration")) {
+    if (Table::isReadable(infile) && 
+	 Table::tableInfo(infile).type()=="Calibration") {
 
       // get calibration type
       String caltype;
@@ -2197,7 +2196,6 @@ void Calibrater::fluxscale(const String& infile,
 
       // Construct proper SVC object
       SolvableVisCal *fsvj_;
-      caltype="G Jones";
       if (caltype == "G Jones") {
 	fsvj_ = createSolvableVisCal("G",*vs_p);
       } else if (caltype == "T Jones") {
