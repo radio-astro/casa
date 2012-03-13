@@ -1329,9 +1329,6 @@ void ASDM2MSFiller::addData (bool                complexData,
   int cRow0 = 0;
   //printf("itsMSMainRow+theSize=%d\n", itsMSMainRow+theSize);
   int maxrow = itsMSMainRow+theSize;
-  //#pragma omp critical
-  //#pragma omp ordered
-  {
   for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+theSize; cRow++) {      
     int numCorr = dataShape_.at(cRow0).at(0);
     int numChan = dataShape_.at(cRow0).at(1);
@@ -1341,7 +1338,6 @@ void ASDM2MSFiller::addData (bool                complexData,
     #pragma omp ordered
     { 
     if (complexData) {
-      //printf("writing complex data column %d\n", cRow);
       data.resize(numCorr,numChan);
       data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), COPY);
       itsMSCol->data().put(cRow, data);
@@ -1353,17 +1349,13 @@ void ASDM2MSFiller::addData (bool                complexData,
       itsMSCol->floatData().put(cRow, float_data);
     }
     }
-    //printf("writing sig,weight cols %d\n", cRow);
     // Sigma and Weight set to arrays of 1.0
     itsMSCol->sigma().put(cRow, ones);
     itsMSCol->weight().put(cRow, ones);
     // The flag cell (an array) is put at false.
-    //printf("writing flag cols %d\n", cRow);
 
     itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));
-    //printf("DONE writing sig,weight cols %d %d\n", cRow, maxrow);
     cRow0++;
-  }
   }
 #endif
   // Don't forget to increment itsMSMainRow.
