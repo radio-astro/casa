@@ -49,7 +49,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="field">
-	    <description>string for selection by source name</description>
+	    <description>string for selection by field name or id</description>
 	    <any type="variant" limittype="string int"/>
             <value type="int">-1</value>
     </param>
