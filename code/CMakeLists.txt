@@ -666,7 +666,7 @@ endif()
 # ALMAWVR
 if( USE_ALMAWVR )
   casa_find( ALMAWVR
-             VERSION 1.0.2
+             VERSION 1.1.0
              PREFIX_HINTS ${ALMWVR_ROOT_DIR}
              LIBS almawvr
            )
