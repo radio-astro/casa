@@ -936,7 +936,6 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
             tim_list.append(myflags[key]['time'])
             intv_list.append(myflags[key]['interval'])
             reas_list.append(myflags[key]['reason'])
-            print reas_list
             typ_list.append(myflags[key]['type'])
             sev_list.append(myflags[key]['severity'])
             lev_list.append(myflags[key]['level'])
