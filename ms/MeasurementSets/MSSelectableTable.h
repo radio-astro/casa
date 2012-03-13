@@ -52,6 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void setTable(const Table& table) {table_p = &table;}
     const Table* table()                      {return table_p;}
+    virtual Bool isMS()                       = 0;
     TableExprNode col(const String& colName)  {return table()->col(colName);}
 
     virtual const MSAntenna& antenna()        = 0;
@@ -74,6 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual const MSField& field()                   {return asMS()->field();}
     virtual const MSSpectralWindow& spectralWindow() {return asMS()->spectralWindow();}
     virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) {return MS::columnName(nameEnum);}
+    virtual Bool isMS()                              {return True;};
 
     virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());};
   };
