@@ -93,8 +93,8 @@ CalStats::DATA::DATA( void ) {
   // Initialize the public variables and return
 
   oAbs = Vector<Double>();
-  oData = Vector<Double>();
-  oDataErr = Vector<Double>();
+  oValue = Vector<Double>();
+  oValueErr = Vector<Double>();
   oFlag = Vector<Bool>();
 
   return;
@@ -135,8 +135,8 @@ CalStats::DATA::DATA( const CalStats::DATA& oDataIn ) {
   // return
 
   oAbs = Vector<Double>( oDataIn.oAbs.copy() );
-  oData = Vector<Double>( oDataIn.oData.copy() );
-  oDataErr = Vector<Double>( oDataIn.oDataErr.copy() );
+  oValue = Vector<Double>( oDataIn.oValue.copy() );
+  oValueErr = Vector<Double>( oDataIn.oValueErr.copy() );
   oFlag = Vector<Bool>( oDataIn.oFlag.copy() );
 
   return;
@@ -207,8 +207,8 @@ CalStats::DATA& CalStats::DATA::operator=( const CalStats::DATA& oDataIn ) {
 
   if ( this != &oDataIn ) {
     oAbs = Vector<Double>( oDataIn.oAbs.copy() );
-    oData = Vector<Double>( oDataIn.oData.copy() );
-    oDataErr = Vector<Double>( oDataIn.oDataErr.copy() );
+    oValue = Vector<Double>( oDataIn.oValue.copy() );
+    oValueErr = Vector<Double>( oDataIn.oValueErr.copy() );
     oFlag = Vector<Bool>( oDataIn.oFlag.copy() );
   }
 

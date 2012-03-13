@@ -86,7 +86,7 @@ Modification history:
               member functions lsqFit(), robustFit(), numDataWeight(), slope(),
               brackFunc(), signum() (scalar), and signum() (vector).
 2011 Dec 11 - Nick Elias, NRAO
-              Added data, data error, and model vectors to the FIT structure.
+              Added value, value error, and model vectors to the FIT structure.
               Added dealloc() (pointer) and dealloc() (reference) public static
               member functions.
 2011 Dec 21 - Nick Elias, NRAO
@@ -116,7 +116,7 @@ Description:
 ------------
 This member function is the fitting interface of this class.
 
-NB: If there are no errors, the data error vector should contain all 1.0
+NB: If there are no errors, the value error vector should contain all 1.0
 elements.
 
 NB: There is no robust quadratic fit available.
@@ -126,19 +126,20 @@ is not part of the argument list for this member function.
 
 Inputs:
 -------
-oAbs     - This reference to a Vector<Double> instance contains the abscissae.
-oData    - This reference to a Vector<Double> instance contains the data.
-oDataErr - This reference to a Vector<Double> instance contains the data errors.
-oFlag    - This reference to a Vector<Bool> instance contains the flags.
-eOrder   - This reference to a CalStatsFitter::ORDER enum contains the fit order
-           (CalStatsFitter::AVERAGE = average fit, CalStatsFitter::LINEAR =
-           linear fit, CalStatsFitter::QUADRATIC = quadratic fit).
-eType    - This reference to a CalStatsFitter::TYPE enum contains the fit type
-           (CalStatsFitter::LSQ = least squares,
-           CalStatsFitter::ROBUST = robust).
-eWeight  - This reference to a CalStatsFitter::WEIGHT enum contains the weight
-           flag (CalStatsFitter::YES = apply weights, CalStatsFitter::NO = don't
-           apply weights).
+oAbs      - This reference to a Vector<Double> instance contains the abscissae.
+oValue    - This reference to a Vector<Double> instance contains the values.
+oValueErr - This reference to a Vector<Double> instance contains the value
+            errors.
+oFlag     - This reference to a Vector<Bool> instance contains the flags.
+eOrder    - This reference to a CalStatsFitter::ORDER enum contains the fit
+            order (CalStatsFitter::AVERAGE = average fit, CalStatsFitter::LINEAR
+            = linear fit, CalStatsFitter::QUADRATIC = quadratic fit).
+eType     - This reference to a CalStatsFitter::TYPE enum contains the fit type
+            (CalStatsFitter::LSQ = least squares,
+            CalStatsFitter::ROBUST = robust).
+eWeight   - This reference to a CalStatsFitter::WEIGHT enum contains the weight
+            flag (CalStatsFitter::YES = apply weights, CalStatsFitter::NO = don't
+            apply weights).
 
 Outputs:
 --------
@@ -157,7 +158,7 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 CalStatsFitter::FIT& CalStatsFitter::fit( const Vector<Double>& oAbs,
-    const Vector<Double>& oData, const Vector<Double>& oDataErr,
+    const Vector<Double>& oValue, const Vector<Double>& oValueErr,
     Vector<Bool>& oFlag, const ORDER& eOrder, const TYPE& eType,
     const WEIGHT& eWeight ) {
 
@@ -169,7 +170,7 @@ CalStatsFitter::FIT& CalStatsFitter::fit( const Vector<Double>& oAbs,
 
     case (uInt) LSQ:
       try {
-        poFit = new CalStatsFitter::FIT( lsqFit( oAbs, oData, oDataErr, oFlag,
+        poFit = new CalStatsFitter::FIT( lsqFit( oAbs, oValue, oValueErr, oFlag,
             eOrder, eWeight ) );
       }
       catch ( AipsError oAE ) {
@@ -186,7 +187,7 @@ CalStatsFitter::FIT& CalStatsFitter::fit( const Vector<Double>& oAbs,
         case (uInt) LINEAR:
           try {
             poFit = new CalStatsFitter::FIT( robustFit(
-                oAbs, oData, oDataErr, oFlag, eOrder, eWeight, 5.0 ) );
+                oAbs, oValue, oValueErr, oFlag, eOrder, eWeight, 5.0 ) );
           }
           catch ( AipsError oAE ) {
 	    throw( oAE );
@@ -391,11 +392,11 @@ Scaling algorithm:
 ------------------
 * The abscissae are scaled by the sum of the magnitude of their minimum value
   and the magnitude of their maximum value.
-* The data are scaled by the sum of the magnitude of their minimum value and the
-  magnitude of their maximum value.  The same scale factor is used to scale the
-  data errors.
-* After the fit, the parameters and covariances are scaled back.
-* NB: I could have used a scaling where the abscissae and data are scaled and
+* The values are scaled by the sum of the magnitude of their minimum value and
+  the magnitude of their maximum value.  The same scale factor is used to scale
+  the value errors.
+* After the fit, the parameters and covariances are rescaled back.
+* NB: I could have used a scaling where the abscissae and values are scaled and
   shifted between 0 and 1, but reconsituting the fit parameters and covariances
   with this scheme is more difficult.  The present scheme minimizes round off
   and reconstituting the fit parameters and covariances is easier, so it will
@@ -403,17 +404,18 @@ Scaling algorithm:
 
 Inputs:
 -------
-oAbs     - This reference to a Vector<Double> instance contains the abscissae.
-oData    - This reference to a Vector<Double> instance contains the data.
-oDataErr - This reference to a Vector<Double> instance contains the data errors.
-oFlag    - This reference to a Vector<Bool> instance contains the flags.
-eOrder   - This reference to a CalStatsFitter::ORDER enum determines the fit
-           order (CalStatsFitter::AVERAGE = average fit,
-           CalStatsFitter::LINEAR = linear fit,
-           CalStatsFitter::QUADRATIC = quadratic fit).
-eWeight  - This reference to a CalStatsFitter::WEIGHT enum is the weight flag
-           (CalStatsFitter::YES = apply weights, CalStatsFitter::NO = don't
-           apply weights).
+oAbs      - This reference to a Vector<Double> instance contains the abscissae.
+oValue    - This reference to a Vector<Double> instance contains the values.
+oValueErr - This reference to a Vector<Double> instance contains the value
+            errors.
+oFlag     - This reference to a Vector<Bool> instance contains the flags.
+eOrder    - This reference to a CalStatsFitter::ORDER enum determines the fit
+            order (CalStatsFitter::AVERAGE = average fit,
+            CalStatsFitter::LINEAR = linear fit,
+            CalStatsFitter::QUADRATIC = quadratic fit).
+eWeight   - This reference to a CalStatsFitter::WEIGHT enum is the weight flag
+            (CalStatsFitter::YES = apply weights, CalStatsFitter::NO = don't
+            apply weights).
 
 Outputs:
 --------
@@ -427,7 +429,7 @@ Modification history:
 2011 Dec 08 - Nick Elias, NRAO
               Initial version.
 2011 Dec 21 - Nick Elias, NRAO
-              Abscissa and data scaling performed before fitting to minimize
+              Abscissa and value scaling performed before fitting to minimize
               round-off errors.
 2012 Jan 23 - Nick Elias, NRAO
               Fixed bug for weighting (the CASA tool documentation is confusing
@@ -440,7 +442,7 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 CalStatsFitter::FIT& CalStatsFitter::lsqFit( const Vector<Double>& oAbs,
-    const Vector<Double>& oData, const Vector<Double>& oDataErr,
+    const Vector<Double>& oValue, const Vector<Double>& oValueErr,
     Vector<Bool>& oFlag, const ORDER& eOrder, const WEIGHT& eWeight ) {
 
   // Get the length of the input arrays
@@ -448,17 +450,17 @@ CalStatsFitter::FIT& CalStatsFitter::lsqFit( const Vector<Double>& oAbs,
   uInt uiNumData = oAbs.nelements();
 
 
-  // Eliminate the flagged abscissae, data, and data errors
+  // Eliminate the flagged abscissae, value, and value errors
 
   MaskedArray<Double> oAbsM( oAbs, !oFlag );
   Vector<Double> oAbsC( oAbsM.getCompressedArray() );
 
-  MaskedArray<Double> oDataM( oData, !oFlag );
-  Vector<Double> oDataC( oDataM.getCompressedArray() );
+  MaskedArray<Double> oValueM( oValue, !oFlag );
+  Vector<Double> oValueC( oValueM.getCompressedArray() );
 
-  MaskedArray<Double> oDataErrM( oDataErr, !oFlag );
-  Vector<Double> oDataErrC( oDataErrM.getCompressedArray() );
-  if ( !(Bool) eWeight ) oDataErrC = (Double) 1.0;
+  MaskedArray<Double> oValueErrM( oValueErr, !oFlag );
+  Vector<Double> oValueErrC( oValueErrM.getCompressedArray() );
+  if ( !(Bool) eWeight ) oValueErrC = (Double) 1.0;
 
 
   // Check to see if there are a sufficient number of data.  The absolute
@@ -478,9 +480,9 @@ CalStatsFitter::FIT& CalStatsFitter::lsqFit( const Vector<Double>& oAbs,
   Double dScaleX = abs( max(oAbsC) ) + abs( min(oAbsC) );
   oAbsC /= dScaleX;
 
-  Double dScaleY = abs( max(oDataC) ) + abs( min(oDataC) );
-  oDataC /= dScaleY;
-  oDataErrC /= dScaleY;
+  Double dScaleY = abs( max(oValueC) ) + abs( min(oValueC) );
+  oValueC /= dScaleY;
+  oValueErrC /= dScaleY;
 
 
   // Initialize the SVD linear fit object
@@ -502,7 +504,7 @@ CalStatsFitter::FIT& CalStatsFitter::lsqFit( const Vector<Double>& oAbs,
 
   Vector<Double> oPars( (uInt) eOrder+1 );
 
-  Bool bValid = oFitter.fit( oPars, oAbsC, oDataC, oDataErrC );
+  Bool bValid = oFitter.fit( oPars, oAbsC, oValueC, oValueErrC );
 
 
   // Initialize the pointer to the CalStatsFitter::FIT structure
@@ -528,7 +530,7 @@ CalStatsFitter::FIT& CalStatsFitter::lsqFit( const Vector<Double>& oAbs,
       poFit->oModel += poFit->oPars[o] * pow(oAbs,(Int)o);
     }
 
-    poFit->oRes = Vector<Double>( oData - poFit->oModel );
+    poFit->oRes = Vector<Double>( oValue - poFit->oModel );
 
     Double dMetric = oFitter.chiSquare() / ((Double) iDoF);
 
@@ -575,13 +577,13 @@ NB: Unlike member function lsqFit(), this member function does not calculate
 quadratic fits.
 
 NB: All outliers will be trimmed.  This trimming will manifest itself in the
-input/output abscissae, data, and data errors.
+input/output abscissae, value, and value errors.
 
 Algorithm:
 ----------
 * Calculate the initial slope and slope error estimate using Theil's method (see
   thiel() member function).
-* Using the initial estimate of the fit parameters (and new abscissae and data
+* Using the initial estimate of the fit parameters (and new abscissae and value
   vectors if weighting is selected), calculate the robust fit parameters by
   minimizing the absolute deviation.  No weighting is ever used here.
   - If the order is zero, the median is calculated (in ArrayMath.h).  Forming
@@ -602,24 +604,25 @@ Algorithm:
   less than fTrim (an input parameter of this member function) times the mean
   absolute deviation (avdev() function in ArrayMath.h) of the residuals.  True
   elements, of course, correspond to the opposite case.
-* Calculate a "trimmed" least-squares fit using the original absicssae, data,
-  and data errors (but with the new flag vector) to get the final estimate of
+* Calculate a "trimmed" least-squares fit using the original absicssae, value,
+  and value errors (but with the new flag vector) to get the final estimate of
   the fit parameters and their covariance matrix.
 
 Inputs:
 -------
-oAbs     - This reference to a Vector<Double> instance contains the abscissae.
-oData    - This reference to a Vector<Double> instance contains the data.
-oDataErr - This reference to a Vector<Double> instance contains the data errors.
-oFlag    - This reference to a Vector<Bool> instance contains the flags.
-eOrder   - This reference to a CalStatsFitter::ORDER enum contains the fit order
-           (CalStatsFitter::AVERAGE = average fit, CalStatsFitter::LINEAR =
-           linear fit).
-eWeight  - This reference to a CalStatsFitter::WEIGHT enum contains the weight
-           flag (CalStatsFitter::YES = apply weights, CalStatsFitter::NO = don't
-           apply weights).
-dTrim    - This reference to a Double variable contains the dimensionless trim
-           factor.
+oAbs      - This reference to a Vector<Double> instance contains the abscissae.
+oValue    - This reference to a Vector<Double> instance contains the values.
+oValueErr - This reference to a Vector<Double> instance contains the value
+            errors.
+oFlag     - This reference to a Vector<Bool> instance contains the flags.
+eOrder    - This reference to a CalStatsFitter::ORDER enum contains the fit
+            order (CalStatsFitter::AVERAGE = average fit, CalStatsFitter::LINEAR
+	    = linear fit).
+eWeight   - This reference to a CalStatsFitter::WEIGHT enum contains the weight
+            flag (CalStatsFitter::YES = apply weights, CalStatsFitter::NO =
+            don't apply weights).
+dTrim     - This reference to a Double variable contains the dimensionless trim
+            factor.
 
 Outputs:
 --------
@@ -644,20 +647,20 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 CalStatsFitter::FIT& CalStatsFitter::robustFit( const Vector<Double>& oAbs,
-    const Vector<Double>& oData, const Vector<Double>& oDataErr,
+    const Vector<Double>& oValue, const Vector<Double>& oValueErr,
     Vector<Bool>& oFlag, const ORDER& eOrder, const WEIGHT& eWeight,
     const Double& dTrim ) {
 
-  // Eliminate the flagged abscissae, data, and data errors
+  // Eliminate the flagged abscissae, value, and value errors
 
   MaskedArray<Double> oAbsM( oAbs, !oFlag );
   Vector<Double> oAbsC( oAbsM.getCompressedArray() );
 
-  MaskedArray<Double> oDataM( oData, !oFlag );
-  Vector<Double> oDataC( oDataM.getCompressedArray() );
+  MaskedArray<Double> oValueM( oValue, !oFlag );
+  Vector<Double> oValueC( oValueM.getCompressedArray() );
 
-  MaskedArray<Double> oDataErrM( oDataErr, !oFlag );
-  Vector<Double> oDataErrC( oDataErrM.getCompressedArray() );
+  MaskedArray<Double> oValueErrM( oValueErr, !oFlag );
+  Vector<Double> oDataErrC( oValueErrM.getCompressedArray() );
 
 
   // Minimize the mean absolute deviations to calculate the robust fit
@@ -670,7 +673,7 @@ CalStatsFitter::FIT& CalStatsFitter::robustFit( const Vector<Double>& oAbs,
     case (uInt) AVERAGE:
       dSlope = 0.0;
       try {
-        dMedian = median( oDataC );
+        dMedian = median( oValueC );
       }
       catch ( AipsError oAE ) {
         throw( oAE );
@@ -680,9 +683,9 @@ CalStatsFitter::FIT& CalStatsFitter::robustFit( const Vector<Double>& oAbs,
     case (uInt) LINEAR:
       try {
         Double dSlopeT, dSlopeTErr;
-        theil( oAbsC, oDataC, dSlopeT, dSlopeTErr );
-        dSlope = slope( oAbsC, oDataC, dSlopeT, dSlopeTErr, 10.0, 20, 30 );
-        dMedian = median( oDataC - dSlope*oAbsC );
+        theil( oAbsC, oValueC, dSlopeT, dSlopeTErr );
+        dSlope = slope( oAbsC, oValueC, dSlopeT, dSlopeTErr, 10.0, 20, 30 );
+        dMedian = median( oValueC - dSlope*oAbsC );
       }
       catch( AipsError oAE ) {
         throw( oAE );
@@ -700,7 +703,7 @@ CalStatsFitter::FIT& CalStatsFitter::robustFit( const Vector<Double>& oAbs,
   // function for more details.
 
   Vector<Double> oModel = Vector<Double>( dSlope*oAbs + dMedian );
-  Vector<Double> oRes = Vector<Double>( oData - oModel );
+  Vector<Double> oRes = Vector<Double>( oValue - oModel );
 
   Vector<Bool> oFlagTrim( fabs(oRes) >= dTrim*avdev(oRes) );
   oFlag = oFlag || oFlagTrim;
@@ -712,7 +715,7 @@ CalStatsFitter::FIT& CalStatsFitter::robustFit( const Vector<Double>& oAbs,
 
   try {
     poFitTrim = new CalStatsFitter::FIT(
-        lsqFit( oAbs, oData, oDataErr, oFlag, eOrder, eWeight ) );
+        lsqFit( oAbs, oValue, oValueErr, oFlag, eOrder, eWeight ) );
   }
   catch ( AipsError oAE ) {
     throw( oAE );
@@ -770,7 +773,7 @@ Algorithm:
 Inputs:
 -------
 oAbs       - This reference to a Vector<Double> instance contains the abscissae.
-oData      - This reference to a Vector<Double> instance contains the data.
+oValue     - This reference to a Vector<Double> instance contains the values.
 dSlope     - This reference to a Double variable contains the initial slope
              estimate.
 dSlopeErr  - This reference to a Double variable contains the initial slope
@@ -799,7 +802,7 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 Double& CalStatsFitter::slope( const Vector<Double>& oAbs,
-    const Vector<Double>& oData, const Double& dSlope, const Double& dSlopeErr,
+    const Vector<Double>& oValue, const Double& dSlope, const Double& dSlopeErr,
     const Double& dFudge, const uInt& uiNumSlope, const uInt& uiNumIter ) {
 
   // Initialize the slope range
@@ -819,10 +822,10 @@ Double& CalStatsFitter::slope( const Vector<Double>& oAbs,
     Vector<Double> oIndgen( uiNumSlope+1 ); indgen( oIndgen );
     Vector<Double> oSlopes( oIndgen*dSlopeInt + dSlopeMin );
 
-    Double dValueMin = brackFunc( oAbs, oData, oSlopes[0] );
+    Double dValueMin = brackFunc( oAbs, oValue, oSlopes[0] );
 
     for ( uInt s=1; s<=uiNumSlope; s++ ) {
-      Double dValue = brackFunc( oAbs, oData, oSlopes[s] );
+      Double dValue = brackFunc( oAbs, oValue, oSlopes[s] );
       if ( dValue == 0.0 ) return( oSlopes[s] );
       if ( signum( dValue ) != signum( dValueMin ) ) {
         bFlag = True;
@@ -865,7 +868,7 @@ edition, section 14.6 on pages 562-563).
 Inputs:
 -------
 oAbs   - This reference to a Vector<Double> instance contains the abscissae.
-oData  - This reference to a Vector<Double> instance contains the data.
+oValue - This reference to a Vector<Double> instance contains the values.
 dSlope - This reference to a Double variable contains the slope estimate.
 
 Outputs:
@@ -883,17 +886,17 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 Double& CalStatsFitter::brackFunc( const Vector<Double>& oAbs,
-    const Vector<Double>& oData, const Double& dSlope ) {
+    const Vector<Double>& oValue, const Double& dSlope ) {
 
   // Calculate the median (from Arraymath.h), which corresponds to the y offset
 
-  Double dOffset = median( oData - dSlope*oAbs );
+  Double dOffset = median( oValue - dSlope*oAbs );
 
 
   // Calculate the bracketing function value and return the reference to it
 
   Double* pdBrackFunc = new Double( 0.0 );
-  *pdBrackFunc = sum( oAbs * signum( oData - dSlope*oAbs - dOffset ) );
+  *pdBrackFunc = sum( oAbs * signum( oValue - dSlope*oAbs - dOffset ) );
 
   return( *pdBrackFunc );
 
@@ -1011,8 +1014,8 @@ Algorithm:
 
 Inputs:
 -------
-oAbs  - This reference to a Vector<Double> instance contains the abscissae.
-oData - This reference to a Vector<Double> instance contains the data.
+oAbs   - This reference to a Vector<Double> instance contains the abscissae.
+oValue - This reference to a Vector<Double> instance contains the values.
 
 Outputs:
 --------
@@ -1030,7 +1033,7 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 void CalStatsFitter::theil( const Vector<Double>& oAbs,
-    const Vector<Double>& oData, Double& dSlope, Double& dSlopeErr ) {
+    const Vector<Double>& oValue, Double& dSlope, Double& dSlopeErr ) {
 
   // Calculate the slope and slope error estimate using Theil's method
 
@@ -1038,9 +1041,9 @@ void CalStatsFitter::theil( const Vector<Double>& oAbs,
 
   for ( uInt e1=0,s=0; e1<oAbs.nelements(); e1++ ) {
     for ( uInt e2=e1+1; e2<oAbs.nelements(); e2++ ) {
-      if ( oData[e2] == oData[e1] && oAbs[e2] == oAbs[e1] ) continue;
+      if ( oValue[e2] == oValue[e1] && oAbs[e2] == oAbs[e1] ) continue;
       oSlope.resize( ++s, True );
-      oSlope[s-1] = (oData[e2]-oData[e1]) / (oAbs[e2]-oAbs[e1]);
+      oSlope[s-1] = (oValue[e2]-oValue[e1]) / (oAbs[e2]-oAbs[e1]);
     }
   }
 

@@ -104,7 +104,7 @@ In a nutshell:
     the inputs, statistics are calculated.  This is not the most efficient way,
     but the NewCalTable class doesn't have another way to access data and the
     time for each iteration is very fast.
-  - For each iteration, the dimensions of the data, data error, and flag cubes
+  - For each iteration, the dimensions of the value, value error, and flag cubes
     provided by ROCTIter are feed x frequency(spw) x row(spw,time).  This shape
     is not useful for calculating statistics with CalStats, so the parse<T>()
     function slices and dices the cubes into feed x frequency x time.
@@ -194,7 +194,7 @@ class CalAnalysis {
 
     // Real/Amplitude/Phase enums.
     typedef enum RAP {
-      REAL=0, AMPLITUDE, PHASE
+      INIT=-1, REAL=0, AMPLITUDE, PHASE
     } RAP;
 
     // OUTPUT nested class (allowed T: CalStats::NONE, CalStatsFitter::FIT,
@@ -202,7 +202,7 @@ class CalAnalysis {
     template <typename T>
     class OUTPUT {
       public:
-        uInt uiFieldID;
+        uInt uiField;
         uInt uiAntenna1;
         uInt uiAntenna2;
         Matrix<CalStats::OUT<T> > oOut;
@@ -333,7 +333,7 @@ NB: The stats<T>() function calculates statistics (the type depends on T) and
     the inputs, statistics are calculated.  This is not the most efficient way,
     but the ROCTIter class doesn't have another way to access data and the time
     for each iteration is very fast.
-  - For each iteration, the dimensions of the data, data error, and flag cubes
+  - For each iteration, the dimensions of the value, value error, and flag cubes
     provided by ROCTIter are feed x frequency(spw) x row(spw,time).  This shape
     is not useful for calculating statistics with CalStats, so the parse<T>()
     function slices and dices the cubes into feed x frequency x time.
@@ -487,11 +487,11 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 
     poOutput->resize( ++uiNumOutput, True );
 
-    poOutput->operator[](uiNumOutput-1).uiFieldID = poNCTIter->field()[0];
+    poOutput->operator[](uiNumOutput-1).uiField = poNCTIter->field()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna1 = poNCTIter->antenna1()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna2 = poNCTIter->antenna2()[0];
 
-    Cube<Complex> oParamP = parse<Complex>( poNCTIter->param() );
+    Cube<Complex> oParamP = parse<Complex>( poNCTIter->cparam() );
     Cube<Complex> oParam = select<Complex>( oParamP, oFeedTemp, oFreqTemp,
         oTimeTemp );
     Cube<DComplex> oParamD( oParam.shape(), 0.0 );
@@ -788,34 +788,74 @@ Cube<T>& CalAnalysis::select( const Cube<T>& oCubeIn,
     const Vector<String>& oFeedOut, const Vector<Double>& oFreqOut,
     const Vector<Double>& oTimeOut ) const {
 
-  // Initialize the output cube
+  // Check the feed inputs (may be redundant, see calling functions) and create
+  // the feed map
 
-  Cube<T>* poCubeOut = new Cube<T>( oFeedOut.nelements(), oFreqOut.nelements(),
-      oTimeOut.nelements(), (T) 0 );
+  Vector<uInt> oFeedMap( oFeedOut.nelements(), 0 );
+
+  for ( uInt pOut=0; pOut<oFeedOut.nelements(); pOut++ ) {
+    Bool bFeed = False;
+    for ( uInt p=0; p<oFeed.nelements(); p++ ) {
+      if ( oFeedOut[pOut] == oFeed[p] ) {
+        bFeed = True;
+        oFeedMap[pOut] = p;
+	break;
+      }
+    }
+    if ( !bFeed ) throw( AipsError( "Invalid feed" ) );
+  }
+
+
+  // Check the frequency inputs (may be redundant, see calling functions) and
+  // create the frequency map
+
+  Vector<uInt> oFreqMap( oFreqOut.nelements(), 0 );
+
+  for ( uInt fOut=0; fOut<oFreqOut.nelements(); fOut++ ) {
+    Bool bFreq = False;
+    for ( uInt f=0; f<oFreq.nelements(); f++ ) {
+      if ( oFreqOut[fOut] == oFreq[f] ) {
+        bFreq = True;
+        oFreqMap[fOut] = f;
+	break;
+      }
+    }
+    if ( !bFreq ) throw( AipsError( "Invalid frequency" ) );
+  }
+
+
+  // Check the time inputs (may be redundant, see calling functions) and create
+  // the time map
+
+  Vector<uInt> oTimeMap( oTimeOut.nelements(), 0 );
+
+  for ( uInt tOut=0; tOut<oTimeOut.nelements(); tOut++ ) {
+    Bool bTime = False;
+    for ( uInt t=0; t<oTime.nelements(); t++ ) {
+      if ( oTimeOut[tOut] == oTime[t] ) {
+        bTime = True;
+        oTimeMap[tOut] = t;
+	break;
+      }
+    }
+    if ( !bTime ) throw( AipsError( "Invalid time" ) );
+  }
 
 
   // Get the desired data from the input cube and put them into the output cube
 
-  for ( uInt p=0,pOut=0; p<oFeed.nelements(); p++ ) {
+  Cube<T>* poCubeOut = new Cube<T>( oFeedOut.nelements(), oFreqOut.nelements(),
+      oTimeOut.nelements(), (T) 0 );
 
-    if ( oFeedOut[pOut] != oFeed[p] ) continue;
-
-    for ( uInt f=0,fOut=0; f<oFreq.nelements(); f++ ) {
-
-      if ( oFreqOut[fOut] != oFreq[f] ) continue;
-
-      for ( uInt t=0,tOut=0; t<oTime.nelements(); t++ ) {
-	if ( oTimeOut[tOut] != oTime[t] ) continue;
-	poCubeOut->operator()(pOut,fOut,tOut) = oCubeIn(p,f,t);
-	tOut++;
+  for ( uInt pOut=0; pOut<oFeedOut.nelements(); pOut++ ) {
+    uInt p = oFeedMap[pOut];
+    for ( uInt fOut=0; fOut<oFreqOut.nelements(); fOut++ ) {
+      uInt f = oFreqMap[fOut];
+      for ( uInt tOut=0; tOut<oTimeOut.nelements(); tOut++ ) {
+        uInt t = oTimeMap[tOut];
+        poCubeOut->operator()(pOut,fOut,tOut) = oCubeIn(p,f,t);
       }
-
-      fOut++;
-
     }
-
-    pOut++;
-
   }
 
 
