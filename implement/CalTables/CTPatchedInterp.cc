@@ -41,10 +41,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Ctor
 CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
+				 VisCalEnum::MatrixType mtype,
 				 Int nPar,
 				 const String& timetype,
-				 const String& freqtype) :
+				 const String& freqtype,
+				 Vector<Int> spwmap) :
   ct_(ct),
+  mtype_(mtype),
   isCmplx_(False),
   nPar_(nPar),
   nFPar_(nPar),
@@ -58,9 +61,13 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   nFldIn_(1),
   nSpwIn_(ct.spectralWindow().nrow()),
   nAntIn_(ct.antenna().nrow()),
+  nElemIn_(0),
+  spwInOK_(),
   fldMap_(),
   spwMap_(),
   antMap_(),
+  elemMap_(),
+  conjTab_(),
   currTime_(),
   result_(),
   resFlag_(),
@@ -73,24 +80,45 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   nSpwOut_=nSpwIn_;
   nAntOut_=nAntIn_;
 
-  freqIn_.resize(nSpwIn_);
+  switch(mtype_) {
+  case VisCalEnum::GLOBAL: {
+    throw(AipsError("CTPatchedInterp::ctor: No non-Mueller/Jones yet."));
+    break;
+  }
+  case VisCalEnum::MUELLER: {
+    nElemIn_=nAntIn_*(nAntIn_+1)/2;
+    nElemOut_=nAntOut_*(nAntOut_+1)/2;
+    break;
+  }
+  case VisCalEnum::JONES: {
+    nElemIn_=nAntIn_;
+    nElemOut_=nAntOut_;
+    break;
+  }
+  }
+
+  // Handle spwmap
+  cout << "CTPatchedInterp::ctor: spwmap="<<spwmap<<endl;
+  setDefSpwMap();
+
+
+
 
   // Set default maps
   setDefFldMap();
-  setDefSpwMap();
   setDefAntMap();
+  setElemMap();
 
   // How many _Float_ parameters?
   if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
     nFPar_*=2;  // interpolating 2X as many Float values
 
-  // Set channelization
+  // Set channel/freq info
   CTSpWindowColumns ctspw(ct_.spectralWindow());
   ctspw.numChan().getColumn(nChanIn_);
-  for (uInt ispw=0;ispw<ctspw.nrow();++ispw) {
-    //    freqIn_(ispw).resize(nChanIn_(ispw));
+  freqIn_.resize(nSpwIn_);
+  for (uInt ispw=0;ispw<ctspw.nrow();++ispw) 
     ctspw.chanFreq().get(ispw,freqIn_(ispw),True);
-  }
 
   // Initialize caltable slices
   sliceTable();
@@ -125,11 +153,11 @@ Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time) {
   // TBD: set currTime (also in freq-dep version)
 
   Bool newcal(False);
-  // Loop over _output_ antennas
-  for (Int iAntOut=0;iAntOut<nAntOut_;++iAntOut) {
+  // Loop over _output_ elements
+  for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
     // Call fully _patched_ time-interpolator, keeping track of 'newness'
     //  fills timeResult_/timeResFlag_ implicitly
-    newcal|=tI_(iAntOut,spw,fld)->interpolate(time);
+    newcal|=tI_(iElemOut,spw,fld)->interpolate(time);
   }
 
   // Whole result referred to time result:
@@ -149,22 +177,21 @@ Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time, const Vector<Do
 
   // Ensure freq result Array is properly sized
   //   (no-op if already ok)
-  freqResult_(spw,fld).resize(nFPar_,freq.nelements(),nAntOut_);
-  freqResFlag_(spw,fld).resize(nPar_,freq.nelements(),nAntOut_);
+  freqResult_(spw,fld).resize(nFPar_,freq.nelements(),nElemOut_);
+  freqResFlag_(spw,fld).resize(nPar_,freq.nelements(),nElemOut_);
 
   Bool newcal(False);
   // Loop over _output_ antennas
-  for (Int iAntOut=0;iAntOut<nAntOut_;++iAntOut) {
-
+  for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
     // Call time interpolation calculation; resample in freq if new
     //   (fills timeResult_/timeResFlag_ implicitly)
-    if (tI_(iAntOut,spw,fld)->interpolate(time)) {
+    if (tI_(iElemOut,spw,fld)->interpolate(time)) {
 
       // Resample in frequency
-      Matrix<Float> fR(freqResult_(spw,fld).xyPlane(iAntOut));
-      Matrix<Bool> fRflg(freqResFlag_(spw,fld).xyPlane(iAntOut));
-      Matrix<Float> tR(timeResult_(spw,fld).xyPlane(iAntOut));
-      Matrix<Bool> tRflg(timeResFlag_(spw,fld).xyPlane(iAntOut));
+      Matrix<Float> fR(freqResult_(spw,fld).xyPlane(iElemOut));
+      Matrix<Bool> fRflg(freqResFlag_(spw,fld).xyPlane(iElemOut));
+      Matrix<Float> tR(timeResult_(spw,fld).xyPlane(iElemOut));
+      Matrix<Bool> tRflg(timeResFlag_(spw,fld).xyPlane(iElemOut));
       resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(spw));
 
       // Calibration is new
@@ -177,6 +204,26 @@ Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time, const Vector<Do
   resFlag_(spw,fld).reference(freqResFlag_(spw,fld));
 
   return newcal;
+}
+
+// spwOK info for users
+Bool CTPatchedInterp::spwOK(Int spw) const {
+
+  if (spw<spwMap_.nelements())
+    return this->spwInOK(spwMap_(spw));
+
+  // Something wrong...
+  return False;
+
+}
+Bool CTPatchedInterp::spwInOK(Int spw) const {
+
+  if (spw<spwInOK_.nelements())
+    return spwInOK_(spw);
+
+  // Something wrong
+  return False;
+
 }
 
 
@@ -195,6 +242,8 @@ void CTPatchedInterp::state() {
   cout << "nSpwIn_ = " << nSpwIn_ << endl;
   cout << "nAntOut_ = " << nAntOut_ << endl;
   cout << "nAntIn_ = " << nAntIn_ << endl;
+  cout << "nElemOut_ = " << nElemOut_ << endl;
+  cout << "nElemIn_ = " << nElemIn_ << endl;
   cout << "fldMap_ = " << fldMap_ << endl;
   cout << "spwMap_ = " << spwMap_ << endl;
   cout << "antMap_ = " << antMap_ << endl;
@@ -212,20 +261,53 @@ void CTPatchedInterp::sliceTable() {
   //  TBD (here or inside loop?)
 
   // Indexed by the spws, ants in the cal table (pre-mapped)
-  ctSlices_.resize(nAntIn_,nSpwIn_);
+  ctSlices_.resize(nElemIn_,nSpwIn_);
+
+  // Initialize spwInOK_
+  spwInOK_.resize(nSpwIn_);
+  spwInOK_.set(False);
 
   // Set up iterator
   //  TBD: handle baseline-based case!
-  Block<String> sortcol(2);
-  sortcol[0]="SPECTRAL_WINDOW_ID";
-  sortcol[1]="ANTENNA1";
-  ROCTIter ctiter(ct_,sortcol);
-
-  while (!ctiter.pastEnd()) {
-    Int ispw=ctiter.thisSpw();
-    Int iant=ctiter.thisAntenna1();
-    ctSlices_(iant,ispw)=ctiter.table();
-    ctiter.next();
+  Block<String> sortcol;
+  switch(mtype_) {
+  case VisCalEnum::GLOBAL: {
+    throw(AipsError("CTPatchedInterp::sliceTable: No non-Mueller/Jones yet."));
+    //    sortcol.resize(1);
+    //    sortcol[0]="SPECTRAL_WINDOW_ID";
+    break;
+  }
+  case VisCalEnum::MUELLER: {
+    sortcol.resize(3);
+    sortcol[0]="SPECTRAL_WINDOW_ID";
+    sortcol[1]="ANTENNA1";
+    sortcol[2]="ANTENNA2";
+    ROCTIter ctiter(ct_,sortcol);
+    while (!ctiter.pastEnd()) {
+      Int ispw=ctiter.thisSpw();
+      Int iant1=ctiter.thisAntenna1();
+      Int iant2=ctiter.thisAntenna2();
+      Int ibln=blnidx(iant1,iant2,nAntIn_);
+      ctSlices_(ibln,ispw)=ctiter.table();
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ibln,ispw).nrow()>0);
+      ctiter.next();
+    }    
+    break;
+  }
+  case VisCalEnum::JONES: {
+    sortcol.resize(2);
+    sortcol[0]="SPECTRAL_WINDOW_ID";
+    sortcol[1]="ANTENNA1";
+    ROCTIter ctiter(ct_,sortcol);
+    while (!ctiter.pastEnd()) {
+      Int ispw=ctiter.thisSpw();
+      Int iant=ctiter.thisAntenna1();
+      ctSlices_(iant,ispw)=ctiter.table();
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(iant,ispw).nrow()>0);
+      ctiter.next();
+    }    
+    break;
+  }
   }
 
 }
@@ -244,28 +326,28 @@ void CTPatchedInterp::initialize() {
   freqResFlag_.resize(nSpwOut_,nFldOut_);
 
   // Size/initialize interpolation engines
-  tI_.resize(nAntOut_,nSpwOut_,nFldOut_);
+  tI_.resize(nElemOut_,nSpwOut_,nFldOut_);
   tI_.set(NULL);
 
   for (Int iFldOut=0;iFldOut<nFldOut_;++iFldOut) {
     for (Int iSpwOut=0;iSpwOut<nSpwOut_;++iSpwOut) { 
       // Size up the timeResult_ Cube (NB: channel shape matches Cal Table)
       if (timeResult_(iSpwOut,iFldOut).nelements()==0) {
-	timeResult_(iSpwOut,iFldOut).resize(nFPar_,nChanIn_(spwMap_(iSpwOut)),nAntOut_);
-	timeResFlag_(iSpwOut,iFldOut).resize(nPar_,nChanIn_(spwMap_(iSpwOut)),nAntOut_);
+	timeResult_(iSpwOut,iFldOut).resize(nFPar_,nChanIn_(spwMap_(iSpwOut)),nElemOut_);
+	timeResFlag_(iSpwOut,iFldOut).resize(nPar_,nChanIn_(spwMap_(iSpwOut)),nElemOut_);
       }
-      for (Int iAntOut=0;iAntOut<nAntOut_;++iAntOut) {
-
+      for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
 	// Realize the mapping (no field mapping yet!)
-	NewCalTable& ict(ctSlices_(antMap_(iAntOut),spwMap_(iSpwOut)));
+	NewCalTable& ict(ctSlices_(elemMap_(iElemOut),spwMap_(iSpwOut)));
 	if (!ict.isNull()) {
-	  Matrix<Float> tR(timeResult_(iSpwOut,iFldOut).xyPlane(iAntOut));
-	  Matrix<Bool> tRf(timeResFlag_(iSpwOut,iFldOut).xyPlane(iAntOut));
-	  tI_(iAntOut,iSpwOut,iFldOut)=new CTTimeInterp1(ict,timeType_,tR,tRf);
+	  Matrix<Float> tR(timeResult_(iSpwOut,iFldOut).xyPlane(iElemOut));
+	  Matrix<Bool> tRf(timeResFlag_(iSpwOut,iFldOut).xyPlane(iElemOut));
+	  tI_(iElemOut,iSpwOut,iFldOut)=new CTTimeInterp1(ict,timeType_,tR,tRf);
 	}
 	else
-	  cout << "Ant,Spw="<<iAntOut<<","<<iSpwOut<<" have no calibration mapping!!" << endl; 
-      } // iAntOut
+	  cout << "Elem,Spw="<<iElemOut<<","<<iSpwOut<<" have no calibration mapping!!" << endl; 
+
+      } // iElemOut
     } // iSpwOut
   } // iFldOut
 }
@@ -343,11 +425,46 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     // TBD: Handle _large_ flag ranges (i.e., exceeding user's freq interp reach)
 
   }
-
-
 }
 
+void CTPatchedInterp::setElemMap() {
+ 
+  // Ensure the antMap_ is set
+  if (antMap_.nelements()!=uInt(nAntOut_))
+    setDefAntMap();
 
-
+  // Handle cases
+  switch(mtype_) {
+  case VisCalEnum::GLOBAL: {
+    throw(AipsError("CTPatchedInterp::sliceTable: No non-Mueller/Jones yet."));
+    break;
+  }
+  case VisCalEnum::MUELLER: {
+    elemMap_.resize(nElemOut_);
+    conjTab_.resize(nElemOut_);
+    conjTab_.set(False);
+    Int iElemOut(0),a1in(0),a2in(0);
+    for (Int iAntOut=0;iAntOut<nAntOut_;++iAntOut) {
+      a1in=antMap_(iAntOut);
+      for (Int jAntOut=iAntOut;jAntOut<nAntOut_;++jAntOut) {
+	a2in=antMap_(jAntOut);
+	if (a1in<=a2in)
+	  elemMap_(iElemOut)=blnidx(a1in,a2in,nAntOut_);
+	else {
+	  elemMap_(iElemOut)=blnidx(a2in,a1in,nAntOut_);
+	  conjTab_(iElemOut)=True;  // we must conjugate Complex params!
+	}
+	++iElemOut;
+      } // jAntOut
+    } // iAntOut
+    break;
+  }    
+  case VisCalEnum::JONES: {
+    // Just reference the antMap_
+    elemMap_.reference(antMap_);
+    break;
+  }
+  } // switch
+}
 
 } //# NAMESPACE CASA - END

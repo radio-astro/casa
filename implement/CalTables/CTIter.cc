@@ -132,6 +132,15 @@ Vector<Int> ROCTIter::chan() const {
   this->chan(chans);
   return chans;
 }
+
+Int ROCTIter::nchan() const {
+  if (singleSpw_)
+    return calCol_.spectralWindow().numChan()(this->thisSpw());
+  else
+    // more than one spw per iteration...
+    throw(AipsError("Please sort by spw."));
+}
+
 void ROCTIter::chan(Vector<Int>& v) const {
   if (singleSpw_) {
     v.resize(calCol_.spectralWindow().numChan()(this->thisSpw()));

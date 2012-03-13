@@ -27,7 +27,9 @@
 
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTPatchedInterp.h>
+#include <synthesis/CalTables/VisCalEnum.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
+#include <casa/OS/Timer.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/BasicMath/Math.h>
@@ -60,7 +62,7 @@ void doTest1 (Bool verbose=False) {
   if (verbose) cout << "nrow = " << tnct.nrow() << endl;
   
   // Make a CTPatchedInterp  (no freq interp yet)
-  CTPatchedInterp ci(tnct,1,"linear");
+  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear");
   ci.state();
   
   cout << "new = " << ci.interpolate(0,0,4832568310.0) << endl;
@@ -127,7 +129,7 @@ void doTest2 (Bool verbose=False) {
   if (verbose) cout << "nrow = " << tnct.nrow() << endl;
   
   // Make a CTPatchedInterp 
-  CTPatchedInterp ci(tnct,1,"linear");
+  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear");
   ci.state();
   
   Double itime=4832568060.0;
@@ -150,6 +152,59 @@ void doTest2 (Bool verbose=False) {
 
 }
 
+void doTest3 (Bool verbose=False) {
+
+  cout << "****----doTest3()----****" << endl;
+
+  Timer timer;
+
+  timer.mark();
+  
+  // Make a testing NewCalTable (Table::Memory)
+  Int nhour=6;
+  uInt nFld(1), nAnt(27), nSpw(16), nTime(61*nhour);
+  Vector<Int> nChan(nSpw,128);
+  Double refTime(4832568000.0); // 2012 Jan 06 @ noon
+  Double tint(60.0);
+
+  Bool disk(True);
+  NewCalTable tnct("test.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
+
+  cout << "Made NewCalTable in " << timer.real() << endl;
+
+  // some sanity checks on the test NewCalTable
+  AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
+  if (verbose) cout << "Table::Type: " << tnct.tableType() << endl;
+  AlwaysAssert( (tnct.nrow()==nFld*nAnt*nSpw*nTime), AipsError);
+  if (verbose) cout << "nrow = " << tnct.nrow() << endl;
+  
+  timer.mark();
+
+  // Make a CTPatchedInterp  (no freq interp yet)
+  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear");
+  //  ci.state();
+
+  Int N=60*60*nhour;
+  Cube<Complex> r;
+  cout.precision(10);
+
+  Double thistime=refTime;
+  for (Int ispw=0;ispw<nSpw;++ispw) {
+    for (Int itime=0;itime<N;++itime) {
+      thistime=refTime+Double(itime);
+      //    cout << itime << " " << thistime << endl;
+      ci.interpolate(0,ispw,thistime);
+      r.reference(ci.resultC(0,ispw));
+    }
+    cout << ispw << " time =" << timer.real() << " (dt="<<thistime-refTime<<")"<< endl;
+  }
+  Double t=timer.real();
+  Int nsamp(N*nSpw*nAnt);
+
+
+  cout << "Interpolated " << nsamp << " samples in " << t << " ("<< Double(nsamp)/t<<"/s)" << endl;
+
+}
 
 
 int main ()
@@ -158,6 +213,7 @@ int main ()
 
     doTest1(CTPATCHEDINTERPTEST_VERBOSE);
     doTest2(CTPATCHEDINTERPTEST_VERBOSE);
+    //    doTest3(CTPATCHEDINTERPTEST_VERBOSE);
 
   } catch (AipsError x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
