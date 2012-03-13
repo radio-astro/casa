@@ -90,7 +90,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_xval(Vector<Float>()), z_yval(Vector<Float>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
-         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0)
+         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0), newCollapseVals(True)
 {
     setupUi(this);
     initPlotterResource();
@@ -205,8 +205,6 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     try{
    	 analysis  = new ImageAnalysis(img);
    	 collapser = new SpectralCollapser(img, String(viewer::options.temporaryPath( )));
-   	 //Float min, max;
-   	 //collapser->getSpecMinMax(min, max);
    	 fitter    = new SpectralFitter();
     }
     catch (AipsError x){
@@ -500,6 +498,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 		if (collapser)
 			delete collapser;
 		collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
+		newCollapseVals=True;
 
 		if (fitter)
 			delete fitter;
@@ -1053,6 +1052,11 @@ void QtProfile::wcChanged( const String c,
     lastWY.assign(wyv);
     lastPX.assign(pxv);
     lastPY.assign(pyv);
+
+    if (newCollapseVals){
+   	 setCollapseVals(z_xval);
+   	 newCollapseVals=False;
+    }
 
 }
 
@@ -1999,6 +2003,11 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
     lastWY.assign(wyv);
     lastPX.assign(pxv);
     lastPY.assign(pyv);
+
+    if (newCollapseVals){
+   	 setCollapseVals(z_xval);
+   	 newCollapseVals=False;
+    }
 }
 
 
@@ -2462,6 +2471,11 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
     lastWY.assign(wyv);
     lastPX.assign(pxv);
     lastPY.assign(pyv);
+
+    if (newCollapseVals){
+   	 setCollapseVals(z_xval);
+   	 newCollapseVals=False;
+    }
 }
 
 
@@ -2732,6 +2746,59 @@ void QtProfile::messageFromProfile(QString &msg){
 	QMessageBox::critical(this, "Error", msg);
 }
 
+void QtProfile::setCollapseVals(const Vector<Float> &spcVals){
+	String msg;
+
+	*itsLog << LogOrigin("QtProfile", "setCollapseVals");
+
+	if (spcVals.size()<1){
+		String message = "No spectral values! Can not set collapse values!";
+		*itsLog << LogIO::WARN << message << LogIO::POST;
+		return;
+	}
+
+	// grab the start and end value
+	Float valueStart=spcVals(0);
+	Float valueEnd  =spcVals(spcVals.size()-1);
+
+	Bool ascending(True);
+	if (valueStart > valueEnd)
+		ascending=False;
+
+	// convert to QString
+	QString startQStr =  QString((String::toString(valueStart)).c_str());
+	QString endQStr   =  QString((String::toString(valueEnd)).c_str());
+
+	// make sure the values are valid
+	int pos=0;
+	if (startValue->validator()->validate(startQStr, pos) != QValidator::Acceptable){
+		msg = String("Spectral value not correct: ") + String::toString(valueStart);
+		*itsLog << LogIO::WARN << msg << LogIO::POST;
+		return;
+	}
+	if (startValue->validator()->validate(endQStr, pos) != QValidator::Acceptable){
+		msg = String("Spectral value not correct: ") + String::toString(valueEnd);
+		*itsLog << LogIO::WARN << msg << LogIO::POST;
+		return;
+	}
+
+	// set the values into the fields
+	if (ascending){
+		startValue->setText(startQStr);
+		endValue->setText(endQStr);
+		msg = String::toString(valueStart) + " and " + String::toString(valueEnd);
+	}
+	else{
+		startValue->setText(endQStr);
+		endValue->setText(startQStr);
+		msg = String::toString(valueEnd) + " and " + String::toString(valueStart);
+	}
+
+	// give feedback
+	msg = String("Initial collapse values set: ") + msg;
+	*itsLog << LogIO::NORMAL << msg << LogIO::POST;
+	return;
+}
 
 void QtProfile::fillPlotTypes(){
 

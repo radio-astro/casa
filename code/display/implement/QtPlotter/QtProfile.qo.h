@@ -179,6 +179,7 @@ private:
    bool exportASCIISpectrum(QString &fn);
    bool exportFITSSpectrum(QString &fn);
    void messageFromProfile(QString &msg);
+   void setCollapseVals(const Vector<Float> &spcVals);
 
    QString getRaDec(double x, double y);
 
@@ -232,6 +233,7 @@ private:
    SpectralCollapser::CollapseError itsCollapseError;
    LogIO *itsLog;
    Int ordersOfM_;
+   Bool newCollapseVals;
 
    class spectra_info {
    public:
