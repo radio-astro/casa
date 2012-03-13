@@ -123,7 +123,7 @@ public:
 	bool selectData();
 
 	// Parse MSSelection expression
-	void parseExpression(MSSelection &parser);
+	bool parseExpression(MSSelection &parser);
 
 	// Generate CalIter
 	bool generateIterator();

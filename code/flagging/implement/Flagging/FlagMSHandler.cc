@@ -315,11 +315,11 @@ FlagMSHandler::selectData()
 // -----------------------------------------------------------------------
 // Parse MSSelection expression
 // -----------------------------------------------------------------------
-void
+bool
 FlagMSHandler::parseExpression(MSSelection &parser)
 {
 	parser.toTableExprNode(selectedMeasurementSet_p);
-	return;
+	return true;
 }
 
 

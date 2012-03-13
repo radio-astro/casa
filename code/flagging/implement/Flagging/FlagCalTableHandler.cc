@@ -135,12 +135,23 @@ FlagCalTableHandler::selectData()
 
 
 	if (selectedCalTable_p) delete selectedCalTable_p;
-	TableExprNode ten = measurementSetSelection_p->toTableExprNode(calTableInterface_p);
-	selectedCalTable_p = new NewCalTable();
-	Bool madeSelection = getSelectedTable(*selectedCalTable_p,*originalCalTable_p,ten,String(""));
-	if (madeSelection == False)
+
+	try
 	{
-		*logger_p << LogIO::NORMAL << "Selection not applicable, using entire MS" << LogIO::POST;
+		TableExprNode ten = measurementSetSelection_p->toTableExprNode(calTableInterface_p);
+		selectedCalTable_p = new NewCalTable();
+		Bool madeSelection = getSelectedTable(*selectedCalTable_p,*originalCalTable_p,ten,String(""));
+
+		if (madeSelection == False)
+		{
+			*logger_p << LogIO::NORMAL << "Selection not applicable, using entire MS" << LogIO::POST;
+			delete selectedCalTable_p;
+			selectedCalTable_p = new NewCalTable(*originalCalTable_p);
+		}
+	}
+	catch (MSSelectionError &ex)
+	{
+		*logger_p << LogIO::WARN << "Selection not supported, using entire MS (" << ex.getMesg() << ")" << LogIO::POST;
 		delete selectedCalTable_p;
 		selectedCalTable_p = new NewCalTable(*originalCalTable_p);
 	}
@@ -172,13 +183,23 @@ FlagCalTableHandler::selectData()
 // -----------------------------------------------------------------------
 // Parse MSSelection expression
 // -----------------------------------------------------------------------
-void
+bool
 FlagCalTableHandler::parseExpression(MSSelection &parser)
 {
+	logger_p->origin(LogOrigin("FlagCalTableHandler",__FUNCTION__,WHERE));
 	CTInterface tmpCTInterface(*selectedCalTable_p);
-	TableExprNode ten = parser.toTableExprNode(&tmpCTInterface);
 
-	return;
+	try
+	{
+		TableExprNode ten = parser.toTableExprNode(&tmpCTInterface);
+	}
+	catch (MSSelectionError &ex)
+	{
+		*logger_p << LogIO::WARN << "Selection not supported, canceling filtering (" << ex.getMesg() << ")" << LogIO::POST;
+		return false;
+	}
+
+	return true;
 }
 
 

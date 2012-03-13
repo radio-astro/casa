@@ -114,7 +114,7 @@ void unflag(string inputFile,uShort iterationMode)
 	cout << "Total Reading Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
 }
 
-void flag(string inputFile,uShort iterationMode,Record record)
+void flag(string inputFile,uShort iterationMode,uShort testMode,String flagmode,Record record)
 {
 	bool fillBuffer = true;
 	unsigned long nBuffers = 0;
@@ -122,9 +122,6 @@ void flag(string inputFile,uShort iterationMode,Record record)
 
 	timeval start,stop;
 	double elapsedTime = 0;
-
-	uShort testMode = 2;
-	String flagmode = "manual";
 
 	Table table(inputFile,TableLock(TableLock::AutoNoReadLocking));
 	TableInfo& info = table.tableInfo();
@@ -304,7 +301,9 @@ int main(int argc, char **argv)
 	string parameter, value;
 	string inputFile, array, time, scan, field, spw, baseline, uvw;
 	string correlation, observation, intent;
-	uShort iterationMode;
+	uShort iterationMode = FlagDataHandler::SUB_INTEGRATION;
+	uShort testMode = 1;
+	String flagMode = "manual";
 
 
 	// Parse input parameters
@@ -384,17 +383,20 @@ int main(int argc, char **argv)
 			iterationMode = (uShort)atoi(value.c_str());
 			cout << "Iteration approach is: " << iterationMode << endl;
 		}
+		else if (parameter == string("-flagMode"))
+		{
+			flagMode = String(value.c_str());
+			cout << "Flagmode approach is: " << flagMode << endl;
+		}
+		else if (parameter == string("-testMode"))
+		{
+			testMode = (uShort)atoi(value.c_str());
+			cout << "Testmode approach is: " << testMode << endl;
+		}
 	}
 
-	NewCalTable calTab(inputFile,Table::Update);
-	CTInterface msLike(calTab);
-	MSSelection mss;
-	mss.setFieldExpr(field);
-	TableExprNode ten=mss.toTableExprNode(&msLike);
-	cout << "Field= " << mss.getFieldList() << endl;
-
 	//unflag(inputFile,iterationMode);
-	flag(inputFile,iterationMode,record);
+	flag(inputFile,iterationMode,testMode,flagMode,record);
 	//summary(inputFile,iterationMode);
 
 	exit(-1);
