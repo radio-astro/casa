@@ -194,7 +194,7 @@ class CalAnalysis {
 
     // Real/Amplitude/Phase enums.
     typedef enum RAP {
-      REAL=0, AMPLITUDE, PHASE
+      INIT=-1, REAL=0, AMPLITUDE, PHASE
     } RAP;
 
     // OUTPUT nested class (allowed T: CalStats::NONE, CalStatsFitter::FIT,
@@ -491,7 +491,7 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     poOutput->operator[](uiNumOutput-1).uiAntenna1 = poNCTIter->antenna1()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna2 = poNCTIter->antenna2()[0];
 
-    Cube<Complex> oParamP = parse<Complex>( poNCTIter->param() );
+    Cube<Complex> oParamP = parse<Complex>( poNCTIter->cparam() );
     Cube<Complex> oParam = select<Complex>( oParamP, oFeedTemp, oFreqTemp,
         oTimeTemp );
     Cube<DComplex> oParamD( oParam.shape(), 0.0 );
