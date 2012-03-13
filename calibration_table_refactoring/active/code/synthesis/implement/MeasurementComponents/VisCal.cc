@@ -66,6 +66,7 @@ VisCal::VisCal(VisSet& vs) :
   vb_(NULL),
   currSpw_(0),
   currTime_(vs.numberSpw(),0.0),
+  currScan_(vs.numberSpw(),-1),
   currField_(vs.numberSpw(),-1),
   currFreq_(vs.numberSpw(),-1),
   lastTime_(vs.numberSpw(),0.0),
@@ -438,7 +439,7 @@ void VisCal::setCalChannelization(const Int& nChanDat) {
     //  (e.g., G)
     nChanMat()=1;
 
-    cout << "nChanPar() = " << nChanPar() << endl;
+    //    cout << "nChanPar() = " << nChanPar() << endl;
 
     // So must be parameters:
     AlwaysAssert((!freqDepPar()),AipsError);
@@ -1069,7 +1070,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     // iterate rows
     Int& nRow(vb.nRow());
     Int& nChanDat(vb.nChannel());
-    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
+    //    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
     for (Int row=0; row<nRow; row++,flagR++,a1++,a2++,wt.next()) {
       
       // Avoid ACs

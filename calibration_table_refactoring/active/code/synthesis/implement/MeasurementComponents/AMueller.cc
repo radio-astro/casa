@@ -25,6 +25,8 @@
 //#
 
 #include <synthesis/CalTables/CalDescColumns.h>
+#include <synthesis/CalTables/CTColumns.h>
+#include <synthesis/CalTables/CTMainColumns.h>
 //#include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisBuffGroupAcc.h>
@@ -176,6 +178,44 @@ void AMueller::selfSolveOne(VisBuffGroupAcc& vbga)
            false, false, !append());
 }
 
+void AMueller::storeNCT() {
+
+  // Update the freq info
+  if(fitorder_p != 0){    // Store lofreq_p[currSpw()] and hifreq_p[currSpw()]
+
+    // Access SPW subtable
+    CTColumns ncc(*ct_);
+
+    // We are expecting nSpw rows...
+    AlwaysAssert( ncc.spectralWindow().chanFreq().nrow()==nSpw(), AipsError);
+
+    // We store the freq domain as a pair of values in chanFreq(),
+    //  and reset numChan()=fitorder_p
+
+    Vector<Double> freqrange(2);
+    for (Int ispw=0;ispw<nSpw();++ispw) {
+      // Only if values are ok...
+      if (lofreq_p[ispw]>0.0 &&
+	  hifreq_p[ispw]>0.0) {
+	freqrange(0)=lofreq_p[ispw];
+	freqrange(1)=hifreq_p[ispw];
+	ncc.spectralWindow().chanFreq().setShape(ispw,IPosition(1,2));
+	ncc.spectralWindow().chanFreq().put(ispw,freqrange);
+	ncc.spectralWindow().numChan().put(ispw,fitorder_p+1);
+	ncc.spectralWindow().flagRow().put(ispw,False);
+      }
+      else
+	// Mark this spw flagged (no solutions in main
+	ncc.spectralWindow().flagRow().put(ispw,True);
+    }
+  }
+
+  // Now call conventional store
+  MMueller::storeNCT();
+
+}
+
+/*
 void AMueller::store()
 {
   MMueller::store();
@@ -205,6 +245,7 @@ void AMueller::store()
     }
   }
 }
+*/
 
 void AMueller::hurl(const String& origin, const String& msg)
 {
@@ -213,6 +254,136 @@ void AMueller::hurl(const String& origin, const String& msg)
   os << msg << LogIO::EXCEPTION;
 }
 
+void AMueller::setApply(const Record& applypar)
+{
+  LogIO os(LogOrigin("AMueller", "setApply()", WHERE));
+
+  if(applypar.isDefined("table")){
+    calTableName() = applypar.asString("table");
+    verifyCalTable(calTableName());
+
+    {
+      // TBD: Improve this kluge!
+      //  e.g., fitorder from a keyword, etc.
+      NewCalTable ct0(calTableName(),Table::Old,Table::Plain);
+      ROCTMainColumns ncmc(ct0);
+      IPosition sh=ncmc.cparam().shape(0);
+      nCorr_p = sh(0);
+      fitorder_p= sh(1)-1;
+      nChanParList().set(sh(1));
+    }
+  }
+  else
+    os << "AMueller::setApply(Record&) needs the record to have a table"
+       << LogIO::EXCEPTION;
+
+
+  // Call parent to get the general stuff
+  MMueller::setApply(applypar);
+
+  // Now get some uvcontsub-specific stuff
+
+  // Extract freq domain for non-trivial fits
+  if(fitorder_p != 0){
+
+    // Access to SPW subtable..
+    ROCTColumns ncc(*ct_);
+    Vector<Bool> spwflrow;
+    ncc.spectralWindow().flagRow().getColumn(spwflrow);
+    Int nspw=spwflrow.nelements();
+
+    // TBD: What if caltable contains more or less than nSpw() (from MS) spws?
+
+    lofreq_p.resize(nspw);
+    hifreq_p.resize(nspw);
+
+    Vector<Double> freqrange(2);
+    for (Int ispw=0;ispw<nspw;++ispw) {
+      if (!spwflrow(ispw)) {
+	ncc.spectralWindow().chanFreq().get(ispw,freqrange);
+	lofreq_p[ispw]=freqrange(0);
+	hifreq_p[ispw]=freqrange(1);
+      }
+    }
+    
+    //  TBD: Handle spwmap, etc.  (fanout, etc.)
+
+  }
+
+  /*
+  if(fitorder_p != 0){
+
+    // Open the caltable to get the scaling frequencies.
+    CalTable2 calTable(calTableName());
+    CalDescColumns2 cd(calTable);
+
+    // if(cd.chanFreq()) is a valid column...
+    if(!cd.chanFreq().isNull() && cd.chanFreq().isDefined(0) &&
+       cd.chanFreq().shape(0)[0] > 0 && cd.chanFreq().shape(0)[1] > 0){
+      // Why is this a Matrix instead of a Vector?
+      Matrix<Double> lhfreqs(1, 2);
+      uInt nrows = cd.chanFreq().nrow();
+
+      lofreq_p.resize(nSpw());
+      hifreq_p.resize(nSpw());
+
+      if(nrows == 1){   // Use a single set of scaling frequencies for all
+                        // spws.
+        // -999 is the secret code for combspw() == True.
+        // nSpw() != 1 && (applypar.asArrayInt("spwmap")[0] != -999)
+        // seems to be flustered by overloaded overloading ambiguity.
+        // Break it down.
+        Vector<Int> spwmap(applypar.asArrayInt("spwmap"));
+        if(nSpw() != 1 && spwmap[0] != -999)
+          os << LogIO::WARN
+             << "There is > 1 spw but only one set of scaling frequencies,"
+             << "\nand applypar did not call for combining spws."
+             << "The same scaling frequencies will be applied to all spws."
+             << LogIO::POST;
+
+        cd.chanFreq().get(0, lhfreqs);
+
+        for(Int cspw = 0; cspw < nSpw(); ++cspw){
+          lofreq_p[cspw] = lhfreqs(0, 0);
+          hifreq_p[cspw] = lhfreqs(0, 1);
+        }
+      }
+      else{
+        Bool allvalidspws = True;  // I think this might be already assured.
+
+        for(uInt row = 0; row < nrows; ++row){
+          Int cspw = spwMap()[row];
+
+          if(cspw >= 0 && cspw < nSpw()){
+            // Storing lo and hifreq_p in chanFreq (suggested by George
+            // Moellenbrock) is a hack, but it does not seem to be otherwise
+            // used, and it avoids more serious mucking with the caltable.
+            cd.chanFreq().get(row, lhfreqs);
+          
+            lofreq_p[cspw] = lhfreqs(0, 0);
+            hifreq_p[cspw] = lhfreqs(0, 1);
+          }
+          else
+            allvalidspws = False;
+        }
+        if(!allvalidspws)
+          os << LogIO::WARN
+             << "The caltable pointed to some entries in the spwmap that do"
+             << "\nnot point to spws in the MS."
+             << LogIO::POST;
+      }
+    }
+    else{
+      os << LogIO::WARN
+         << "CHAN_FREQ was not found in the caltable...setting fitorder to 0"
+         << LogIO::POST;
+      fitorder_p = 0;
+    }
+  }
+  */
+}
+
+/* NEWCALTABLE
 void AMueller::setApply(const Record& applypar)
 {
   LogIO os(LogOrigin("AMueller", "setApply()", WHERE));
@@ -303,6 +474,7 @@ void AMueller::setApply(const Record& applypar)
     }
   }
 }
+*/
 
 // Apply this calibration to VisBuffer visibilities
 void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
@@ -319,15 +491,17 @@ void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 
     Int cspw = currSpw();
     VBContinuumSubtractor vbcs;
-    vbcs.init(currCPar().shape(), nAnt() - 1, totnumchan_p[cspw],
-              lofreq_p[cspw], hifreq_p[cspw]);
 
-    // correct() writes to vb.visCube(), not vb.correctedVisCube()!  I don't
-    // get this...
-    // MS::PredefinedColumns whichcol = MS::CORRECTED_DATA;
+    if (lofreq_p[cspw]>0.0 &&
+	hifreq_p[cspw]>0.0)
+      vbcs.init(currCPar().shape(), nAnt() - 1, totnumchan_p[cspw],
+		lofreq_p[cspw], hifreq_p[cspw]);
+    else
+      throw(AipsError("AMueller::applyCal: Bad freq domain info."));
+
+
+    // Correct DATA (will write out to CORRECTED_DATA later)
     MS::PredefinedColumns whichcol = MS::DATA;
-   
-
     if(!vbcs.apply(vb, whichcol, currCPar(), currParOK(), doSub_p,
                    !spwApplied_p[cspw]))
       throw(AipsError("Could not place the continuum-subtracted data in "
@@ -363,11 +537,14 @@ void AMueller::corrupt(VisBuffer& vb, Bool /* avoidACs */)
 
     Int cspw = currSpw();
     VBContinuumSubtractor vbcs;
-    vbcs.init(currCPar().shape(), nAnt() - 1, totnumchan_p[cspw],
-              lofreq_p[cspw], hifreq_p[cspw]);
-
-    MS::PredefinedColumns whichcol = MS::MODEL_DATA;
+    if (lofreq_p[cspw]>0.0 &&
+	hifreq_p[cspw]>0.0)
+      vbcs.init(currCPar().shape(), nAnt() - 1, totnumchan_p[cspw],
+		lofreq_p[cspw], hifreq_p[cspw]);
+    else
+      throw(AipsError("AMueller::applyCal: Bad freq domain info."));
     
+    MS::PredefinedColumns whichcol = MS::MODEL_DATA;
     if(!vbcs.apply(vb, whichcol, currCPar(), currParOK(), false,
                    !spwApplied_p[cspw]))
       throw(AipsError("Could not place the continuum estimate in "

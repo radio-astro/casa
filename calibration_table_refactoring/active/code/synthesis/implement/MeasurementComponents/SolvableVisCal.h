@@ -167,6 +167,8 @@ public:
 
   // Default value for parameters
   virtual Complex defaultPar() { return Complex(1.0); };
+  virtual Float defaultRPar() { return Float(0.0); };
+  virtual Complex defaultCPar() { return Complex(1.0); };
 
   // Arrange to build a cal table from specified values
   virtual void setSpecify(const Record& specify);
@@ -276,6 +278,11 @@ public:
   virtual void storeNCT();
   void storeNCT(const String& tableName,const Bool& append);
 
+  inline virtual void loadMemCalTable(String ctname) 
+      { ct_ = new NewCalTable(ctname,Table::Old,Table::Memory); };
+
+  // New spwOK
+  virtual Bool spwOK(Int ispw);
 
   // File the current solved solution into a slot in the CalSet
   virtual void keep(const Int& slot);
@@ -295,11 +302,6 @@ public:
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
 			 Matrix<Double>& fluxScaleFactor)=0;
-  virtual void fluxscale2(const Vector<Int>& refFieldIn,
-			  const Vector<Int>& tranFieldIn,
-			  const Vector<Int>& inRefSpwMap,
-			  const Vector<String>& fldNames,
-			  Matrix<Double>& fluxScaleFactor)=0;
 
   // Tell the CalSet to write a CalTable
   virtual void store();
@@ -409,7 +411,6 @@ protected:
 
   // Check if a cal table is appropriate
   void verifyCalTable(const String& caltablename);
-  //  void verifyNEWCalTable(const String& caltablename);
 
   void sortVisSet(VisSet& vs, const Bool verbose=False);
 
@@ -418,6 +419,7 @@ protected:
   // New CalTable 
   NewCalTable *ct_;
   CTPatchedInterp *ci_;
+  Vector<Bool> spwOK_;
 
   // Solution/Interpolation 
   CalSet<Complex> *cs_;
@@ -584,11 +586,9 @@ public:
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
 			 Matrix<Double>& ) { throw(AipsError("NYI")); };
-  virtual void fluxscale2(const Vector<Int>& ,
-			 const Vector<Int>& ,
-			 const Vector<Int>& ,
-			 const Vector<String>& ,
-			 Matrix<Double>& ) { throw(AipsError("NYI")); };
+
+  // SVM-specific write to caltable
+  virtual void keepNCT();
 
   // Report state:
   inline virtual void state() { stateSVM(True); };
@@ -719,11 +719,9 @@ public:
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
 		 Matrix<Double>& fluxScaleFactor);
-  void fluxscale2(const Vector<Int>& refFieldIn,
-		  const Vector<Int>& tranFieldIn,
-		  const Vector<Int>& inRefSpwMap,
-		  const Vector<String>& fldNames,
-		  Matrix<Double>& fluxScaleFactor);
+
+  // SVJ-specific write to caltable
+  virtual void keepNCT();
 			     
   // Report state:
   inline virtual void state() { stateSVJ(True); };
@@ -817,11 +815,6 @@ private:
 
 // Discern cal table type from the table itself
 String calTableType(const String& tablename);
-//String NEWcalTableType(const String& tablename);
-
-
-
-
 
 } //# NAMESPACE CASA - END
 

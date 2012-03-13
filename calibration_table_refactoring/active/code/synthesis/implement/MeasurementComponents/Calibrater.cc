@@ -1557,7 +1557,7 @@ Bool Calibrater::genericGatherAndSolve() {
 	  // Accumulate collapsed vb in a time average
 	  //  (only if the vb contains any unflagged data)
 	  if (nfalse(vb.flag())>0)
-	  vbga.accumulate(vb);
+	    vbga.accumulate(vb);
 	  
 	}
       }
@@ -1611,25 +1611,21 @@ Bool Calibrater::genericGatherAndSolve() {
 	  svc_p->markTimer();
 	  svc_p->focusChan()=ich;
 	  
-	  svc_p->state();
+	  //	  svc_p->state();
 	  
-	  cout << "Starting solution..." << endl;
+	  //	  cout << "Starting solution..." << endl;
 
 	  // Pass VE, SVC, VB to solver
 	  Bool goodSoln=vcs.solve(*ve_p,*svc_p,vbga);
 	  
-	  cout << "goodSoln= " << boolalpha << goodSoln << endl;
+	  //	  cout << "goodSoln= " << boolalpha << goodSoln << endl;
 
 	  // If good... 
 	  if (goodSoln) {
 	    totalGoodSol=True;
 	    
-	    cout << "formSolveSNR..." << flush;
 	    svc_p->formSolveSNR();
-	    cout << "done." << endl;
-	    cout << "applySNRThreshold..." << flush;
 	    svc_p->applySNRThreshold();
-	    cout << "done." << endl;
 	    
 	    // ..and file this solution in the correct slot
 	    if (svc_p->freqDepPar())
@@ -2226,7 +2222,7 @@ void Calibrater::fluxscale(const String& infile,
 
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      fsvj_->fluxscale2(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
+      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
      
       // If no outfile specified, use infile (overwrite!)
       String out(outfile);
@@ -2582,7 +2578,7 @@ void Calibrater::specifycal(const String& type,
     cal_->specify(specify);
 
     // Store result
-    cal_->store();
+    cal_->storeNCT();
 
     delete cal_;
 

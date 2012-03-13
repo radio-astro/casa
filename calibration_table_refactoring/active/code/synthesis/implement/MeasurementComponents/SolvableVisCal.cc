@@ -69,6 +69,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   VisCal(vs),
   corruptor_p(NULL),
   ct_(NULL),
+  ci_(NULL),
+  spwOK_(vs.numberSpw(),False),
   cs_(NULL),
   cint_(NULL),
   maxTimePerSolution_p(0), 
@@ -316,6 +318,8 @@ void SolvableVisCal::setApply(const Record& apply) {
     tInterpType()="linear";
 
 
+  cout << "SVC::setApply(apply) is not yet supporting CalSelection." << endl;
+
   /*  NEWCALTABLE: Tinker selection later
   if (apply.isDefined("select"))
     calTableSelect()=apply.asString("select");
@@ -366,6 +370,8 @@ void SolvableVisCal::setApply(const Record& apply) {
       autoFanOut=True;
   }
 
+  cout << "SVC::setApply: spwMap()=" << spwMap() << endl;
+
   AlwaysAssert(allGE(spwMap(),0),AipsError);
 
   // TBD: move interval to VisCal version?
@@ -383,13 +389,12 @@ void SolvableVisCal::setApply(const Record& apply) {
   //       when actual application starts?  E.g., SVC::initApply()...
 
   // Open the caltable
-  //  This loads the CalTable into a MemoryTable
-  ct_ = new NewCalTable(calTableName(),Table::Old,Table::Memory);
+  loadMemCalTable(calTableName());
 
   // Make the interpolation engine
-  // TBD: freq-axis interpolation (defaults to linear, for now)
+  // TBD: freq-axis interpolation (force linear, for now)
   // TBD: pass in spwmap
-  ci_ = new CTPatchedInterp(*ct_,nPar(),tInterpType());
+  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear",spwMap());
 
   // Handle possible global spw fan-out
   if (autoFanOut) {
@@ -414,161 +419,6 @@ void SolvableVisCal::setApply(const Record& apply) {
   //  cout << "End of SVC::setApply" << endl;
 
 }
-
-/* NEWCALTABLE
-// Setapply from a Cal Table, etc.
-void SolvableVisCal::setApply(const Record& apply) {
-  //  Inputs:
-  //    apply           Record&       Contains application params
-  //    
-
-  if (prtlev()>2) cout << "SVC::setApply(apply)" << endl;
-
-  // Call VisCal version for generic stuff
-  VisCal::setApply(apply);
-
-  // Collect Cal table parameters
-  if (apply.isDefined("table")) {
-    calTableName()=apply.asString("table");
-    verifyCalTable(calTableName());
-  }
-
-  if (apply.isDefined("select"))
-    calTableSelect()=apply.asString("select");
-
-  else {
-    
-    calTableSelect()="";
-    //    String spwsel("");
-    //    if (apply.isDefined("spw")) {
-    //      ostringstream os;
-    //      os << Vector<Int>(apply.asArrayInt("spw"));
-    //      spwsel = os.str();
-    //    }
-    //    cout << "spwsel = " << spwsel << endl;
-
-    String fldsel("");
-    if (apply.isDefined("field")) {
-      ostringstream os;
-      os << Vector<Int>(apply.asArrayInt("field"));
-      if (os.str()!="[]")
-	fldsel = os.str();
-    }
-    //    cout << "fldsel = " << fldsel << endl;
-
-    if (fldsel.length()>0) {
-      ostringstream os;
-      os << "(FIELD_ID IN " << fldsel << ")";
-      calTableSelect() = os.str();
-    }
-    //   cout << "calTableSelect() = " << calTableSelect() << endl;
-  }
-  
-  // Collect interpolation parameters
-  if (apply.isDefined("interp"))
-    tInterpType()=apply.asString("interp");
-
-  // Protect against non-specific interp
-  if (tInterpType()=="")
-    tInterpType()="linear";
-
-  // TBD: move spwmap to VisCal version?
-
-  indgen(spwMap());
-  Bool autoFanOut(False);
-  if (apply.isDefined("spwmap")) {
-    Vector<Int> spwmap(apply.asArrayInt("spwmap"));
-    if (allGE(spwmap,0)) {
-      // User has specified a valid spwmap
-      if (spwmap.nelements()==1)
-	spwMap()=spwmap(0);
-      else
-	spwMap()(IPosition(1,0),IPosition(1,spwmap.nelements()-1))=spwmap;
-      // TBD: Report non-trivial spwmap to logger.
-      //      cout << "Note: spwMap() = " << spwMap() << endl;
-    }
-    else if (spwmap(0)==-999)
-      autoFanOut=True;
-  }
-
-  AlwaysAssert(allGE(spwMap(),0),AipsError);
-
-  // TBD: move interval to VisCal version?
-  if (apply.isDefined("t"))
-    interval()=apply.asFloat("t");
-
-  // This is apply context  
-  setApplied(True);
-  setSolved(False);
-
-  //  TBD:  "Arranging to apply...."
-
-
-  // Create CalSet, from table
-  //  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-  makeCalSet();
-
-  // Handle possible global spw fan-out
-  if (autoFanOut) {
-    // Use first valid spw for all spws
-    Int ispw=0;
-    while (!cs().spwOK()(ispw)) ++ispw;
-    spwMap()=ispw;
-    logSink() << "Using automatic calibration fan-out of spw = " << ispw
-	      << " for " << typeName()
-	      << LogIO::POST;
-  }
-
-  // These come from CalSet now, but will eventually come from CalInterp
-
-  //  cout << "nChanParList().shape() = " << nChanParList().shape() << endl;
-  //  cout << "nChanParList()         = " << nChanParList() << endl;
-  //  cout << "cs().nChan().shape()   = " << cs().nChan().shape() << endl;
-  //  cout << "cs().nChan()           = " << cs().nChan() << endl;
-
-  switch (parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	for (Int ispw=0;ispw<nSpw();++ispw) 
-	  {
-	    nChanParList()(ispw) = cs().nChan()(spwMap()(ispw));
-	    startChanList()(ispw) = cs().startChan()(spwMap()(ispw));
-	  }
-	// Create CalInterp
-	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	for (Int ispw=0;ispw<nSpw();++ispw) 
-	  {
-	    nChanParList()(ispw) = rcs().nChan()(spwMap()(ispw));
-	    startChanList()(ispw) = rcs().startChan()(spwMap()(ispw));
-	  }
-	// Create CalInterp
-	//	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
-	break;
-      }
-    case VisCalEnum::COMPLEXREAL:
-      throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
-		      "COMPLEXREAL found in SolvableVisCal::setApply()"));
-        break;
-    }
-  //  cout << "nChanParList().shape() = " << nChanParList().shape() << endl;
-  //  cout << "nChanParList()         = " << nChanParList() << endl;
-  //  cout << "cs().nChan().shape()   = " << cs().nChan().shape() << endl;
-  //  cout << "cs().nChan()           = " << cs().nChan() << endl;
-
-  // Sanity check on parameter channel shape
-  //  AlwaysAssert((freqDepPar()||allEQ(nChanParList(),1)),AipsError);
-
-  ci().setSpwMap(spwMap());
-
-}
-
-*/
-
 
 // ===================================================
 
@@ -1227,31 +1077,6 @@ void SolvableVisCal::setSolve(const Record& solve)
   setSolved(True);
   setApplied(False);
 
-
-  /* NEWCALTABLE
-
-  // Create a pristine CalSet
-  //  TBD: move this to inflate()?
-  switch (parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	cs_ = new CalSet<Complex>(nSpw());
-	cs().initCalTableDesc(typeName(),parType_);
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs_ = new CalSet<Float>(nSpw());
-	rcs().initCalTableDesc(typeName(),parType_);
-	break;
-      }
-    default:
-      throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
-    }
-  */
-
-
   //  state();
 
 }
@@ -1425,42 +1250,47 @@ void SolvableVisCal::setSpecify(const Record& specify) {
 	      << "."
 	      << LogIO::POST;
 
-    // Create CalSet, from table
-    switch (parType())
-      {
-      case VisCalEnum::COMPLEX:
-	{
-	  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-	  cs().initCalTableDesc(typeName(), parType_);
-	  nChanParList() = cs().nChan();
-	  startChanList() = cs().startChan();
-	  // For now, check that table has only one slot...
-	  for (Int ispw=0;ispw<nSpw();++ispw)
-	    if (cs().nTime(ispw) != 1)
-	      throw(AipsError("Cannot yet handle multi-timestamp calibration specification."));
+    // Open it
+    loadMemCalTable(calTableName());
 
-	  break;
-	}
-      case VisCalEnum::REAL:
-	{
-	  rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-	  rcs().initCalTableDesc(typeName(), parType_);
-	  nChanParList() = rcs().nChan();
-	  startChanList() = rcs().startChan();
-	  // For now, check that table has only one slot...
-	  for (Int ispw=0;ispw<nSpw();++ispw)
-	    if (rcs().nTime(ispw) != 1)
-	      throw(AipsError("Cannot yet handle multi-timestamp calibration specification."));
-	  break;
-	}
-      default:
-	throw(AipsError("Internal SVC::setSpecify(...) error: Got invalid VisCalEnum"));
+    // Fill solveParArrays
+
+    Block<String> sortcols(1);
+    sortcols[0]="SPECTRAL_WINDOW_ID";
+    ROCTIter ctiter(*ct_,sortcols);
+    while (!ctiter.pastEnd()) {
+      currSpw()=ctiter.thisSpw();
+      nChanPar()=ctiter.nchan();
+      switch(parType()) {
+      case VisCalEnum::COMPLEX: {
+	ctiter.cparam(solveAllCPar());
+	break;
       }
-    
-  }
+      case VisCalEnum::REAL: {
+	ctiter.fparam(solveAllRPar());
+	break;
+      }
+      default: {
+	throw(AipsError("Internal SVC::setSpecify(...) error: Got invalid VisCalEnum"));
+	break;
+      }
+      }
+      ctiter.paramErr(solveAllParErr());
+      ctiter.snr(solveAllParSNR());
+      solveAllParOK().assign(!ctiter.flag());
+
+      // Advance iterator
+      ctiter.next();
+    }
+
+    // Delete old mem caltable (it will be replaced)
+    if (ct_) delete ct_;
+    else throw(AipsError("SVC::setSpecify: unknown error on caltable delete"));
+    ct_=NULL;
+
+  } // tableExists
   else {
 
-    Vector<Int> nSlot(nSpw(),1);
     nChanParList()=Vector<Int>(nSpw(),1);
     startChanList()=Vector<Int>(nSpw(),0);
     
@@ -1468,45 +1298,40 @@ void SolvableVisCal::setSpecify(const Record& specify) {
     logSink() << "Creating " << typeName()
 	      << " table from specified parameters."
 	      << LogIO::POST;
-    
-    // Create a pristine CalSet
-    switch (parType()) {
-    case VisCalEnum::COMPLEX:
-      {
-	cs_ = new CalSet<Complex>(nSpw());
-	cs().initCalTableDesc(typeName(),parType_);
-	
-	inflate(nChanParList(),startChanList(),nSlot);
-	
-	// Set parOK,etc. to true
-	for (Int ispw=0;ispw<nSpw();ispw++) {
-	  cs().par(ispw)=defaultPar();
-	  cs().parOK(ispw)=True;
-	  cs().solutionOK(ispw)=True;
-	}
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs_ = new CalSet<Float>(nSpw());
-	rcs().initCalTableDesc(typeName(),parType_);
-	
-	inflate(nChanParList(),startChanList(),nSlot);
-	
-	// Set parOK,etc. to true
-	for (Int ispw=0;ispw<nSpw();ispw++) {
-	  rcs().par(ispw)=1.0;
-	  rcs().parOK(ispw)=True;
-	  rcs().solutionOK(ispw)=True;
-	}
-	break;
-      }
-    default:
-      throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
-    }
-  }
-}
+  
+    // Size up the solve arrays
+    initSolvePar();
 
+    for (Int ispw=0;ispw<nSpw();++ispw) {
+      currSpw()=ispw;
+      refTime()=0.0;
+      currField()=-1;
+      currScan()=-1;
+
+      switch(parType()) {
+      case VisCalEnum::COMPLEX: {
+	solveAllCPar().set(defaultCPar());
+	break;
+      }
+      case VisCalEnum::REAL: {
+	solveAllRPar().set(defaultRPar());
+	break;
+      }
+      default: {
+	throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
+      }
+      }
+      solveAllParOK().set(True);
+      solveAllParSNR().set(1.0);
+      solveAllParErr().set(0.0);
+      
+    } // ispw
+  } // !tableExists
+
+  // Create the caltable
+  createMemCalTable();
+
+}
 
 void SolvableVisCal::specify(const Record& specify) {
 
@@ -1524,8 +1349,8 @@ void SolvableVisCal::specify(const Record& specify) {
   
   Bool repspw(False);
   
-  IPosition ip0(4,0,0,0,0);
-  IPosition ip1(4,0,0,0,0);
+  IPosition ip0(3,0,0,0);
+  IPosition ip1(3,0,0,0);
 
   if (specify.isDefined("caltype")) {
     String caltype=specify.asString("caltype");
@@ -1636,40 +1461,58 @@ void SolvableVisCal::specify(const Record& specify) {
   
   Int ipar(0);
   for (Int ispw=0;ispw<Nspw;++ispw) {
+
+    currSpw()=spws(ispw);
+
     // reset par index if we are repeating for all spws
     if (repspw) ipar=0;
     
-    // Loop over specified timestamps
-    for (Int itime=0;itime<Ntime;++itime) {
-      ip1(3)=ip0(3)=itime;
+    // Loop over specified antennas
+    for (Int iant=0;iant<Nant;++iant) {
+      if (Nant>1)
+	ip1(2)=ip0(2)=antennas(iant);
       
-      // Loop over specified antennas
-      for (Int iant=0;iant<Nant;++iant) {
-	if (Nant>1)
-	  ip1(2)=ip0(2)=antennas(iant);
+      // Loop over specified polarizations
+      for (Int ipol=0;ipol<Npol;++ipol) {
+	if (Npol>1)
+	  ip1(0)=ip0(0)=pols(ipol);
 	
-	// Loop over specified polarizations
-	for (Int ipol=0;ipol<Npol;++ipol) {
-	  if (Npol>1)
-	    ip1(0)=ip0(0)=pols(ipol);
-	  
-	  Array<Complex> slice(cs().par(spws(ispw))(ip0,ip1));
-	  // Default accumultion is multiplication
+	cout << "ip0,ip1 = " << ip0 << " " << ip1 << endl;
+
+	switch(parType()) {
+	case VisCalEnum::COMPLEX: {
+	  Array<Complex> sl(solveAllCPar()(ip0,ip1));
+	  // Multiply ipar-th parameter onto the selecte slice
 	  if (apmode()=="P") {
 	    // Phases have been specified
 	    Double phase=parameters(ipar)*C::pi/180.0;
-	    slice*=Complex(cos(phase),sin(phase));
+	    sl*=Complex(cos(phase),sin(phase));
 	  }
 	  else
 	    // Assume amplitude
-	    slice*=Complex(parameters(ipar));
-
-
-	  // increment ipar, but be sure not to run off the end
-	  ++ipar;
-	  ipar = ipar%nparam;
-
+	    sl*=Complex(parameters(ipar));
+	  break;
 	}
+	case VisCalEnum::REAL: {
+	  // Add ipar-th parameter onto the selected slice
+	  Array<Float> sl(solveAllRPar()(ip0,ip1));
+	  sl+=Float(parameters(ipar));
+	  break;
+	}
+	default: {
+	  throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
+	  break;
+	}
+	}
+
+	// increment ipar, but be sure not to run off the end
+	++ipar;
+	ipar = ipar%nparam;
+
+	// Keep this result
+	keepNCT();
+
+
       }
     }
   }
@@ -1700,6 +1543,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 
   VisIter& vi(vs.iter());
 
+  /*
   Block< Vector<Int> > g,st,nch,icr,spw;
   vi.getChannelSelection(g,st,nch,icr,spw);
   for (uInt isel=0;isel<spw.nelements();++isel)
@@ -1710,6 +1554,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 	 << " " << "icrem=" << icr[isel]
 	 << " " << "spw  =" << spw[isel]
 	 << endl;
+  */
 
   VisBuffer vb(vi);
   vi.originChunks();
@@ -1842,14 +1687,6 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 	    <<  nSol << " solution intervals."
 	    << LogIO::POST;
   //}
-
-/* NEWCALTABLE
-
-  // Inflate the CalSet
-  //  inflate(nChanParList(),startChanList(),nChunkPerSpw);
-
-  inflate(nChanParList(),startChanList(),nSolPerSpw);
-*/
 
   // Size the solvePar arrays
   initSolvePar();
@@ -2385,7 +2222,8 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
   // Adopt meta data from FIRST CalVisBuffer in the VBGA, for now
   currSpw()=spwMap()(vbga(0).spectralWindow());
   currField()=vbga(0).fieldId();
-  
+  //  currScan()=vbga(0).scan0();
+
   // The timestamp really is global, in any case
   Double& rTime(vbga.globalTimeStamp());
   if (rTime > 0.0) {
@@ -2409,6 +2247,7 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
 
   currSpw()=spwMap()(vb.spectralWindow());
   currField()=vb.fieldId();
+  currScan()=vb.scan0();
 
   // Row weights as a Doubles
   Vector<Double> dWts;
@@ -3009,6 +2848,8 @@ void SolvableVisCal::reportSolvedQU() {
 
 void SolvableVisCal::createMemCalTable() {
 
+  //  cout << "createMemCalTable" << endl;
+
   // Set up description
   String partype = ((parType()==VisCalEnum::COMPLEX) ? "Complex" : "Float");
   CTDesc caltabdesc(partype,msName(),typeName(),"unknown");
@@ -3058,7 +2899,6 @@ void SolvableVisCal::createMemCalTable() {
 
 // File a single-channel solved solution into the multi-channel space for it
 void SolvableVisCal::keep1(Int ichan) {
-  cout << "keep1..." << flush; 
   if (parType()==VisCalEnum::COMPLEX)
     solveAllCPar()(Slice(),Slice(ichan,1),Slice())=solveCPar();
   else if (parType()==VisCalEnum::REAL)
@@ -3067,32 +2907,47 @@ void SolvableVisCal::keep1(Int ichan) {
   solveAllParOK()(Slice(),Slice(ichan,1),Slice())=solveParOK();
   solveAllParErr()(Slice(),Slice(ichan,1),Slice())=solveParErr();
   solveAllParSNR()(Slice(),Slice(ichan,1),Slice())=solveParSNR();
-  cout << "done." << endl;
 }
 
+Bool SolvableVisCal::spwOK(Int ispw) {
+
+  if (isSolved())
+    return spwOK_(ispw);
+
+  if (isApplied() && ci_)
+    // Get it from the interpolator (w/ spwmap)
+    return spwOK_(ispw)=ci_->spwOK(ispw);
+  else
+    return False;
+
+}
 
 // File a solved solution (and meta-data) into the in-memory Caltable
 void SolvableVisCal::keepNCT() {
 
-  if (prtlev()>4) cout << " SVC::keepNCT" << endl;
+  // TBD: set CalTable freq info here
+  //  if (!spwOK(currSpw()))
+  //    setSpwFreqInCT(currSpw(),currFreq());
+
+  if (prtlev()>4) 
+    cout << " SVC::keepNCT" << endl;
+
+  // Add some rows to fill 
+  //  nElem() gets it right for both baseline- and antenna-based
+  ct_->addRow(nElem());
 
   CTMainColumns ncmc(*ct_);
 
-  // TBD: baseline- vs. antenna-based!!  (via inheritance?)
-  Int nAddRows=nAnt();
-  RefRows rows(ct_->nrow(),ct_->nrow()+nAddRows-1,1); 
-  ct_->addRow(nAddRows);
+  // We are adding to the most-recently added rows
+  RefRows rows(ct_->nrow()-nElem(),ct_->nrow()-1,1); 
 
-  ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,refTime()));
-  ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,currField()));
-  ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,currSpw()));
-  Vector<Int> antids(nAnt());
-  indgen(antids);
-  ncmc.antenna1().putColumnCells(rows,antids);
-  ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant()));
-  ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,-1));
+  // Meta-info
+  ncmc.time().putColumnCells(rows,Vector<Double>(nElem(),refTime()));
+  ncmc.fieldId().putColumnCells(rows,Vector<Int>(nElem(),currField()));
+  ncmc.spwId().putColumnCells(rows,Vector<Int>(nElem(),currSpw()));
+  ncmc.scanNo().putColumnCells(rows,Vector<Int>(nElem(),currScan()));
 
-  // Toggle param type
+  // Params
   if (parType()==VisCalEnum::COMPLEX)
     // Fill Complex column
     ncmc.cparam().putColumnCells(rows,solveAllCPar());
@@ -3100,9 +2955,13 @@ void SolvableVisCal::keepNCT() {
     // Fill Float column
     ncmc.fparam().putColumnCells(rows,solveAllRPar());
 
+  // Stats
   ncmc.paramerr().putColumnCells(rows,solveAllParErr());
   ncmc.snr().putColumnCells(rows,solveAllParSNR());
   ncmc.flag().putColumnCells(rows,!solveAllParOK());
+
+  // This spw now has some solutions in it
+  spwOK_(currSpw())=True;
 
 }
 
@@ -3215,46 +3074,6 @@ void SolvableVisCal::enforceAPonSoln() {
   else 
     throw(AipsError("Solution apmode enforcement not supported."));
 
-  /* NEWCALTABLE
-
-  if (cs_) {    
-
-    logSink() << "Enforcing apmode on solutions." 
-	      << LogIO::POST;
-
-    for (Int ispw=0;ispw<nSpw();++ispw) {
-      if (cs().nTime(ispw)>0) {
-	Array<Float> amps(amplitude(cs().par(ispw)));
-	// No zeroes:
-	cs().par(ispw)(amps==0.0f)=Complex(1.0);
-	cs().par(ispw)(operator!(LogicalArray(cs().parOK(ispw))))=Complex(1.0);
-	amps(amps==0.0f)=1.0f;
-	amps(!cs().parOK(ispw))=1.0f;
-	//	amps(operator!(LogicalArray(cs().parOK(ispw))))=1.0f;
-
-	Array<Complex> cor(amps.shape());
-	if (apmode()=='P')
-	  // we will scale solns by amp to make them phase-only
-	  convertArray(cor,amps);
-	else if (apmode()=='A') {
-	  // we will scale solns by "phase" to make them amp-only
-	  cor=cs().par(ispw);
-	  cor/=amps;
-	}
-
-	if (ntrue(amplitude(cor)==0.0f)==0)
-	  cs().par(ispw)/=cor;
-	else
-	  throw(AipsError("enforceAPonSoln divide-by-zero error."));
-      }
-    }
-  }
-  else 
-    throw(AipsError("Solution apmode enforcement not supported."));
-
-  */
-
-
 }
 
 void SolvableVisCal::normalize() {
@@ -3284,23 +3103,6 @@ void SolvableVisCal::normalize() {
     }
 
   }
-
-  /* NEWCALTABLE
-  // Only if we have a CalSet...
-  if (cs_) {
-
-    logSink() << "Normalizing solution amplitudes per spw." 
-	      << LogIO::POST;
-
-    // Normalize each non-trivial spw in the CalSet
-    for (Int ispw=0;ispw<nSpw();++ispw)
-      if (cs().nTime(ispw)>0) 
-	normSolnArray(cs().par(ispw),cs().parOK(ispw),False);
-
-  }
-  else 
-    throw(AipsError("Solution normalization not supported."));
-  */
 }
 
 void SolvableVisCal::storeNCT() {
@@ -3510,22 +3312,6 @@ void SolvableVisCal::verifyCalTable(const String& caltablename) {
   }
 }
 
-/*
-void SolvableVisCal::verifyNEWCalTable(const String& caltablename) {
-
-  // Call external method to get type (will throw if bad table)
-  String calType=NEWcalTableType(caltablename);
-
-  // Check if proper Calibration type...
-  if (calType!=typeName()) {
-    ostringstream o;
-    o << "Table " << caltablename 
-      << " has wrong Calibration type: " << calType;
-    throw(AipsError(String(o)));
-  }
-}
-*/
-
 void SolvableVisCal::applyChanMask(VisBuffer& vb) {
 
   if (chanmask_) {
@@ -3649,44 +3435,37 @@ void SolvableVisMueller::initSolvePar() {
     
     currSpw()=ispw;
 
-    switch(parType())
-      {
-      case VisCalEnum::COMPLEX:
-	{
-	  // TBD: Consider per-baseline solving (3rd=1)
-	  solveCPar().resize(nPar(),nChanPar(),nBln());
-	  solveParOK().resize(nPar(),nChanPar(),nBln());
-	  solveParErr().resize(nPar(),nChanPar(),nBln());
-	  solveParSNR().resize(nPar(),nChanPar(),nBln());
-	  
-	  solveCPar()=Complex(1.0);
-	  solveParOK()=True;
-	  solveParErr()=0.0;
-	  solveParSNR()=0.0;
-	  break;
-	}
-      case VisCalEnum::REAL:
-	{
-	  // TBD: Consider per-baseline solving (3rd=1)
-	  solveRPar().resize(nPar(),nChanPar(),nBln());
-	  solveParOK().resize(nPar(),nChanPar(),nBln());
-	  solveParErr().resize(nPar(),nChanPar(),nBln());
-	  solveParSNR().resize(nPar(),nChanPar(),nBln());
-	  
-	  solveRPar()=0.0;
-	  solveParOK()=True;
-	  solveParErr()=0.0;
-	  solveParSNR()=0.0;
-	  break;
-	}
-      case VisCalEnum::COMPLEXREAL:
-         throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
-			 "COMPLEXREAL found in SolvableVisMueller::initSolvePar()"));
-         break;
-      }//endcase
+    switch(parType()) {
+    case VisCalEnum::COMPLEX: {
+      solveAllCPar().resize(nPar(),nChanPar(),nBln());
+      solveAllCPar()=Complex(1.0);
+      solveCPar().reference(solveAllCPar());
+      break;
+    }
+    case VisCalEnum::REAL: {
+      solveAllRPar().resize(nPar(),nChanPar(),nBln());
+      solveAllRPar()=0.0;
+      solveRPar().reference(solveAllRPar());
+      break;
+    }
+    case VisCalEnum::COMPLEXREAL: {
+      throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		      "COMPLEXREAL found in SolvableVisMueller::initSolvePar()"));
+      break;
+    }
+    }//switch
+
+    solveAllParOK().resize(nPar(),nChanPar(),nBln());
+    solveAllParErr().resize(nPar(),nChanPar(),nBln());
+    solveAllParSNR().resize(nPar(),nChanPar(),nBln());
+    solveAllParOK()=True;
+    solveAllParErr()=0.0;
+    solveAllParSNR()=0.0;
+    solveParOK().reference(solveAllParOK());
+    solveParErr().reference(solveAllParErr());
+    solveParSNR().reference(solveAllParSNR());
   }
   currSpw()=0;
-
 }
 
 void SolvableVisMueller::syncDiffMat() {
@@ -3808,6 +3587,37 @@ void SolvableVisMueller::initTrivDM() {
     throw(AipsError("Unknown trivial dM initialization requested."));
 
 }
+
+// File a solved solution (and meta-data) into the in-memory Caltable
+void SolvableVisMueller::keepNCT() {
+  
+  // Call parent to do general stuff
+  //  This adds nElem() rows
+  SolvableVisCal::keepNCT();
+
+  if (prtlev()>4) 
+    cout << " SVM::keepNCT" << endl;
+
+  // Form antenna pairs
+  Vector<Int> a1(nElem()),a2(nElem());
+  Int k=0;
+  for (Int i=0;i<nAnt();++i)
+    for (Int j=i;j<nAnt();++j) {
+      a1(k)=i;
+      a2(k)=j;
+      ++k;
+    }
+
+  // We are adding to the most-recently added rows
+  RefRows rows(ct_->nrow()-nElem(),ct_->nrow()-1,1); 
+
+  // Write to table
+  CTMainColumns ncmc(*ct_);
+  ncmc.antenna1().putColumnCells(rows,a1);
+  ncmc.antenna2().putColumnCells(rows,a2);
+
+}
+
 
 void SolvableVisMueller::stateSVM(const Bool& doVC) {
   
@@ -4668,6 +4478,31 @@ void SolvableVisJones::initTrivDJ() {
 
 }
 
+// File a solved solution (and meta-data) into the in-memory Caltable
+void SolvableVisJones::keepNCT() {
+  
+  // Call parent to do general stuff
+  SolvableVisCal::keepNCT();
+
+  if (prtlev()>4) 
+    cout << " SVJ::keepNCT" << endl;
+
+  // Antenna id sequence
+  Vector<Int> a1(nAnt());
+  indgen(a1);
+
+  // We are adding to the most-recently added rows
+  RefRows rows(ct_->nrow()-nElem(),ct_->nrow()-1,1); 
+
+  // Write to table
+  CTMainColumns ncmc(*ct_);
+  ncmc.antenna1().putColumnCells(rows,a1);
+  ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAnt(),-1));  // Unknown but nominally unform
+ 
+  // NB: a2 will be set separately, e.g., by applyRefAnt
+
+}
+
 void SolvableVisJones::stateSVJ(const Bool& doVC) {
   
   // If requested, report VisCal state
@@ -5085,556 +4920,10 @@ void SolvableVisJones::applyRefAnt() {
 }
 
 void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
-                                 const Vector<Int>& tranFieldIn,
-                                 const Vector<Int>& inRefSpwMap,
+				 const Vector<Int>& tranFieldIn,
+				 const Vector<Int>& inRefSpwMap,
 				 const Vector<String>& fldNames,
-                                 Matrix<Double>& fluxScaleFactor) {
-
-  // For updating the MS History Table
-  //  LogSink logSink_p = LogSink(LogMessage::NORMAL, False);
-  //  logSink_p.clearLocally();
-  //  LogIO oss(LogOrigin("calibrater", "fluxscale()"), logSink_p);
-
-  // PtrBlocks to hold mean gain moduli and related
-  PtrBlock< Matrix<Bool>* >   ANTOK;
-  PtrBlock< Matrix<Double>* > MGNORM;
-  PtrBlock< Matrix<Double>* > MGNORM2;
-  PtrBlock< Matrix<Double>* > MGNWT;
-  PtrBlock< Matrix<Double>* > MGNVAR;
-  PtrBlock< Matrix<Int>* >    MGNN;
-
-  Int nMSFld; fldNames.shape(nMSFld);
-
-  // assemble complete list of available fields
-  Vector<Int> fldList;
-  for (Int iSpw=0;iSpw<nSpw();iSpw++) {
-    Int currlen;
-    fldList.shape(currlen);
-
-    if (cs().nTime(iSpw) > 0) {
-
-      //      cout << "cs().fieldId(iSpw) = " << cs().fieldId(iSpw) << endl;
-
-      Vector<Int> thisFldList; thisFldList=cs().fieldId(iSpw);
-      Int nThisFldList=genSort(thisFldList,(Sort::QuickSort | Sort::NoDuplicates));
-      thisFldList.resize(nThisFldList,True);
-      fldList.resize(currlen+nThisFldList,True);
-      for (Int ifld=0;ifld<nThisFldList;ifld++) {
-        fldList(currlen+ifld) = thisFldList(ifld);
-      }
-    }
-  }
-  Int nFldList=genSort(fldList,(Sort::QuickSort | Sort::NoDuplicates));
-  fldList.resize(nFldList,True);
-
-  //  cout << "fldList = " << fldList << endl;
-
-  Int nFld=max(fldList)+1;
-
-  try {
-
-    // Resize, NULL-initialize PtrBlocks
-    ANTOK.resize(nFld);   ANTOK=NULL;
-    MGNORM.resize(nFld);  MGNORM=NULL;
-    MGNORM2.resize(nFld); MGNORM2=NULL;
-    MGNWT.resize(nFld);   MGNWT=NULL;
-    MGNVAR.resize(nFld);  MGNVAR=NULL;
-    MGNN.resize(nFld);    MGNN=NULL;
-
-    // sort user-specified fields
-    Vector<Int> refField; refField = refFieldIn;
-    Vector<Int> tranField; tranField = tranFieldIn;
-    Int nRef,nTran;
-    nRef=genSort(refField,(Sort::QuickSort | Sort::NoDuplicates));
-    nTran=genSort(tranField,(Sort::QuickSort | Sort::NoDuplicates));
-
-    // make masks for ref/tran among available fields
-    Vector<Bool> tranmask(nFldList,True);
-    Vector<Bool> refmask(nFldList,False);
-    for (Int iFld=0; iFld<nFldList; iFld++) {
-      if ( anyEQ(refField,fldList(iFld)) ) {
-        // this is a ref field
-        refmask(iFld)=True;
-        tranmask(iFld)=False;
-      }
-    }
-
-    // Check availability of all ref fields
-    if (ntrue(refmask)==0) {
-      throw(AipsError(" Cannot find specified reference field(s)"));
-    }
-    // Any fields present other than ref fields?
-    if (ntrue(tranmask)==0) {
-      throw(AipsError(" Cannot find solutions for transfer field(s)"));
-    }
-
-    // make implicit reference field list
-    MaskedArray<Int> mRefFldList(fldList,LogicalArray(refmask));
-    Vector<Int> implRefField(mRefFldList.getCompressedArray());
-
-    //    cout << "implRefField = " << implRefField << endl;
-    // Check for missing reference fields
-    if (Int(ntrue(refmask)) < nRef) {
-      ostringstream x;
-      for (Int iRef=0; iRef<nRef; iRef++) {
-        if ( !anyEQ(fldList,refField(iRef)) ) {
-          if (refField(iRef)>-1 && refField(iRef) < nMSFld) x << fldNames(refField(iRef)) << " ";
-          else x << "Index="<<refField(iRef)+1<<"=out-of-range ";
-        }
-      }
-      String noRefSol=x.str();
-      logSink() << LogIO::WARN
-		<< " The following reference fields have no solutions available: "
-		<< noRefSol
-		<< LogIO::POST;
-      refField.reference(implRefField);
-    }
-    refField.shape(nRef);
-
-    // make implicit tranfer field list
-    MaskedArray<Int> mTranFldList(fldList,LogicalArray(tranmask));
-    Vector<Int> implTranField(mTranFldList.getCompressedArray());
-    Int nImplTran; implTranField.shape(nImplTran);
-
-    //    cout << "implTranField = " << implTranField << endl;
-
-    // Check availability of transfer fields
-
-    // If user specified no transfer fields, use implicit 
-    //  transfer field list, ELSE check for missing tran fields
-    //  among those they specified
-    if (nTran==0) {
-      tranField.reference(implTranField);
-      logSink() << LogIO::NORMAL
-		<< " Assuming all non-reference fields are transfer fields."
-		<< LogIO::POST;
-    } else {
-      if ( !(nTran==nImplTran &&
-             allEQ(tranField,implTranField)) ) {
-        ostringstream x;
-        for (Int iTran=0; iTran<nTran; iTran++) {
-          if ( !anyEQ(implTranField,tranField(iTran)) ) {
-            if (tranField(iTran)>-1 && tranField(iTran) < nMSFld) x << fldNames(tranField(iTran)) << " ";
-            else x << "Index="<<tranField(iTran)+1<<"=out-of-range ";
-          }
-        }
-        String noTranSol=x.str();
-	logSink() << LogIO::WARN
-		  << " The following transfer fields have no solutions available: "
-		  << noTranSol
-		  << LogIO::POST;
-        tranField.reference(implTranField);
-      }
-    }
-    tranField.shape(nTran);
-
-    // Report ref, tran field info
-    String refNames(fldNames(refField(0)));
-    for (Int iRef=1; iRef<nRef; iRef++) {
-      refNames+=" ";
-      refNames+=fldNames(refField(iRef));
-    }
-    logSink() << " Found reference field(s): " << refNames 
-	      << LogIO::POST;
-    String tranNames(fldNames(tranField(0)));
-    for (Int iTran=1; iTran<nTran; iTran++) {
-      tranNames+=" ";
-      tranNames+=fldNames(tranField(iTran));
-    }
-    logSink() << " Found transfer field(s):  " << tranNames 
-	      << LogIO::POST;
-
-    //    cout << "fldList = " << fldList << endl;
-
-    //    cout << "nFld = " << nFld << endl;
-
-
-    // Handle spw referencing
-    Vector<Int> refSpwMap;
-    refSpwMap.resize(nSpw());
-    indgen(refSpwMap);
-
-    if (inRefSpwMap(0)>-1) {
-      if (inRefSpwMap.nelements()==1) {
-        refSpwMap=inRefSpwMap(0);
-        logSink() << " All spectral windows will be referenced to spw=" << inRefSpwMap(0) 
-		  << LogIO::POST;
-      } else {
-        for (Int i=0; i<Int(inRefSpwMap.nelements()); i++) {
-          if (inRefSpwMap(i)>-1 && inRefSpwMap(i)!=i) {
-            refSpwMap(i)=inRefSpwMap(i);
-	    logSink() << " Spw=" << i << " will be referenced to spw=" << inRefSpwMap(i) 
-		      << LogIO::POST;
-          }
-        }
-      }
-    }
-
-    // Scale factor info
-    fluxScaleFactor.resize(nSpw(),nFld); fluxScaleFactor=-1.0;
-
-    Matrix<Double> fluxScaleError(nSpw(),nFld,-1.0);
-    Matrix<Double> gainScaleFactor(nSpw(),nFld,-1.0);
-    Matrix<Bool> scaleOK(nSpw(),nFld,False);
-
-    Matrix<Double> fluxScaleRatio(nSpw(),nFld,0.0);
-    Matrix<Double> fluxScaleRerr(nSpw(),nFld,0.0);
-
-    // Field names for log messages
-    Vector<String> fldname(nFld,"");
-
-    //    cout << "Filling mgnorms....";
-
-    // fill per-ant -fld, -spw  mean gain moduli
-    for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
-
-      if (cs().nTime(iSpw) > 0 ) {
-
-        for (Int islot=0; islot<cs().nTime(iSpw); islot++) {
-          Int iFld=cs().fieldId(iSpw)(islot);
-          if (ANTOK[iFld]==NULL) {
-            // First time this field, allocate ant/spw matrices
-            ANTOK[iFld]   = new Matrix<Bool>(nElem(),nSpw(),False);
-            MGNORM[iFld]  = new Matrix<Double>(nElem(),nSpw(),0.0);
-            MGNORM2[iFld] = new Matrix<Double>(nElem(),nSpw(),0.0);
-            MGNWT[iFld]   = new Matrix<Double>(nElem(),nSpw(),0.0);
-            MGNVAR[iFld]  = new Matrix<Double>(nElem(),nSpw(),0.0);
-            MGNN[iFld]    = new Matrix<Int>(nElem(),nSpw(),0);
-
-            // record name
-            fldname(iFld) = cs().fieldName(iSpw)(islot);
-          }
-          // References to PBs for syntactical convenience
-          Matrix<Bool>   antOK;   antOK.reference(*(ANTOK[iFld]));
-          Matrix<Double> mgnorm;  mgnorm.reference(*(MGNORM[iFld]));
-          Matrix<Double> mgnorm2; mgnorm2.reference(*(MGNORM2[iFld]));
-          Matrix<Double> mgnwt;   mgnwt.reference(*(MGNWT[iFld]));
-          Matrix<Int>    mgnn;    mgnn.reference(*(MGNN[iFld]));
-
-          for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-	    Double wt=cs().iFitwt(iSpw)(iAnt,islot);
-	    
-	    for (Int ipar=0; ipar<nPar(); ipar++) {
-	      IPosition ip(4,ipar,0,iAnt,islot);
-	      if (cs().parOK(iSpw)(ip)) {
-		antOK(iAnt,iSpw)=True;
-		Double gn=norm( cs().par(iSpw)(ip) );
-		mgnorm(iAnt,iSpw) += (wt*gn);
-		mgnorm2(iAnt,iSpw)+= (wt*gn*gn);
-		mgnn(iAnt,iSpw)++;
-		mgnwt(iAnt,iSpw)+=wt;
-	      }
-            }
-          }
-        }
-      }
-    }
-    //    cout << "done." << endl;
-
-    //    cout << "Normalizing mgnorms...";
-
-    // normalize mgn
-    for (Int iFld=0; iFld<nFld; iFld++) {
-
-      //      cout << "iFld = " << iFld << " " << ANTOK[iFld]->column(0) << endl;
-
-      // Have data for this field?
-      if (ANTOK[iFld]!=NULL) {
-
-        // References to PBs for syntactical convenience
-        Matrix<Bool>   antOK;   antOK.reference(*(ANTOK[iFld]));
-        Matrix<Double> mgnorm;  mgnorm.reference(*(MGNORM[iFld]));
-        Matrix<Double> mgnorm2; mgnorm2.reference(*(MGNORM2[iFld]));
-        Matrix<Double> mgnwt;   mgnwt.reference(*(MGNWT[iFld]));
-        Matrix<Double> mgnvar;  mgnvar.reference(*(MGNVAR[iFld]));
-        Matrix<Int>    mgnn;    mgnn.reference(*(MGNN[iFld]));
-
-        for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
-          for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-            if ( antOK(iAnt,iSpw) && mgnwt(iAnt,iSpw)>0.0 ) {
-              mgnorm(iAnt,iSpw)/=mgnwt(iAnt,iSpw);
-              mgnorm2(iAnt,iSpw)/=mgnwt(iAnt,iSpw);
-              // Per-ant, per-spw variance (non-zero only if sufficient data)
-              if (mgnn(iAnt,iSpw) > 2) {
-                mgnvar(iAnt,iSpw) = (mgnorm2(iAnt,iSpw) - pow(mgnorm(iAnt,iSpw),2.0))/(mgnn(iAnt,iSpw)-1);
-              }
-            } else {
-              mgnorm(iAnt,iSpw)=0.0;
-              mgnwt(iAnt,iSpw)=0.0;
-              antOK(iAnt,iSpw)=False;
-            }
-       /*
-            cout << endl;
-            cout << "iFld = " << iFld;
-            cout << " iAnt = " << iAnt;
-            cout << " mgnorm = " << mgnorm(iAnt,iSpw);
-            cout << " +/- " << sqrt(1.0/mgnwt(iAnt,iSpw));
-            cout << " SNR = " << mgnorm(iAnt,iSpw)/sqrt(1.0/mgnwt(iAnt,iSpw));
-            cout << "  " << mgnn(iAnt,iSpw);
-            cout << endl;
-       */
-          }
-        }
-
-
-      }
-    }
-
-    //    cout << "done." << endl;
-    //    cout << "nTran = " << nTran << endl;
-
-    //    cout << "Calculating scale factors...";
-
-    // Scale factor calculation, per spw, trans fld
-    for (Int iTran=0; iTran<nTran; iTran++) {
-      Int tranidx=tranField(iTran);
-
-      // References to PBs for syntactical convenience
-      Matrix<Bool>   antOKT;  antOKT.reference(*(ANTOK[tranidx]));
-      Matrix<Double> mgnormT; mgnormT.reference(*(MGNORM[tranidx]));
-      Matrix<Double> mgnvarT; mgnvarT.reference(*(MGNVAR[tranidx]));
-      Matrix<Double> mgnwtT;  mgnwtT.reference(*(MGNWT[tranidx]));
-
-      for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
-
-        // Reference spw may be different
-        Int refSpw(refSpwMap(iSpw));
-
-        // Only if anything good for this spw
-        if (ntrue(antOKT.column(iSpw)) > 0) {
-
-          // Numerator/Denominator for this spw, trans fld
-          Double sfref=0.0;
-          Double sfrefwt=0.0;
-          Double sfrefvar=0.0;
-          Int sfrefn=0;
-
-          Double sftran=0.0;
-          Double sftranwt=0.0;
-          Double sftranvar=0.0;
-          Int sftrann=0;
-
-          Double sfrat=0.0;
-          Double sfrat2=0.0;
-          Int sfrn=0;
-
-	  Int nAntUsed(0);
-          for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-
-            // this ant OK for this tran field?
-            if ( antOKT(iAnt,iSpw) ) {
-
-              // Check ref fields and accumulate them
-              Bool refOK=False;
-              Double sfref1=0.0;
-              Double sfrefwt1=0.0;
-              Double sfrefvar1=0.0;
-              Int sfrefn1=0;
-              for (Int iRef=0; iRef<nRef; iRef++) {
-
-                Int refidx=refField(iRef);
-                Matrix<Bool> antOKR; antOKR.reference(*(ANTOK[refidx]));
-                Bool thisRefOK(antOKR(iAnt,refSpw));
-                refOK = refOK || thisRefOK;
-                if (thisRefOK) {
-                  Matrix<Double> mgnormR; mgnormR.reference(*(MGNORM[refidx]));
-                  Matrix<Double> mgnwtR;  mgnwtR.reference(*(MGNWT[refidx]));
-                  Matrix<Double> mgnvarR; mgnvarR.reference(*(MGNVAR[refidx]));
-                  sfref1   += mgnwtR(iAnt,refSpw)*mgnormR(iAnt,refSpw);
-                  sfrefwt1 += mgnwtR(iAnt,refSpw);
-                  if (mgnvarR(iAnt,refSpw)>0.0) {
-                    sfrefvar1+= (mgnwtR(iAnt,refSpw)/mgnvarR(iAnt,refSpw));
-                    sfrefn1++;
-                  }
-
-                }
-              }
-
-              // If ref field accumulation ok for this ant, accumulate
-              if (refOK) {
-		nAntUsed+=1;
-                sftran   += (mgnwtT(iAnt,iSpw)*mgnormT(iAnt,iSpw));
-                sftranwt += mgnwtT(iAnt,iSpw);
-                if (mgnvarT(iAnt,iSpw)>0.0) {
-                  sftranvar+= (mgnwtT(iAnt,iSpw)/mgnvarT(iAnt,iSpw));
-                  sftrann++;
-                }
-
-                sfref    += sfref1;
-                sfrefwt  += sfrefwt1;
-                sfrefvar += sfrefvar1;
-                sfrefn   += sfrefn1;
-
-                // Accumlate per-ant ratio
-                Double thissfrat= mgnormT(iAnt,iSpw)/(sfref1/sfrefwt1);
-                sfrat    += thissfrat;
-                sfrat2   += (thissfrat*thissfrat);
-                sfrn++;
-                //cout << "Ratio: " << thissfrat << " " << sfrat << " " << sfrat2 << " " << sfrn << endl;
-              }
-
-
-
-            } // antOKT
-          } // iAnt
-
-          // normalize numerator and denominator, variances
-          if (sftranwt > 0.0) {
-            sftran/=sftranwt;
-            sftranvar/=sftranwt;
-            if (sftranvar > 0.0 && sftrann > 0) {
-              sftranvar*=sftrann;
-              sftranvar=1.0/sftranvar;
-            }
-          }
-          if (sfrefwt  > 0.0) {
-            sfref/=sfrefwt;
-            sfrefvar/=sfrefwt;
-            if (sfrefvar > 0.0 && sfrefn > 0) {
-              sfrefvar*=sfrefn;
-              sfrefvar=1.0/sfrefvar;
-            }
-          }
-
-          //      cout << endl;
-          //      cout << "Tran = " << sftran << " +/- " << sqrt(sftranvar) << endl;
-          //      cout << "Ref  = " << sfref  << " +/- " << sqrt(sfrefvar) << endl;
-
-          // form scale factor for this tran fld, spw
-          if (sftran > 0.0 && sfref > 0.0) {
-            fluxScaleFactor(iSpw,tranidx) = sftran/sfref;
-            fluxScaleError(iSpw,tranidx)  = sqrt( sftranvar/(sftran*sftran) + sfrefvar/(sfref*sfref) );
-            fluxScaleError(iSpw,tranidx) *= fluxScaleFactor(iSpw,tranidx);
-            gainScaleFactor(iSpw,tranidx) = sqrt(1.0/fluxScaleFactor(iSpw,tranidx));
-            scaleOK(iSpw,tranidx)=True;
-
-          /*
-            cout << "iTran = " << iTran;
-            cout << "  fluxScaleFactor = " << fluxScaleFactor(iSpw,tranidx);
-            cout << " +/- " << fluxScaleError(iSpw,tranidx);
-            cout << "  gainScaleFactor = " << gainScaleFactor(iSpw,tranidx);
-            cout << endl;
-          */
-            // Report flux densities:
-	    logSink() << " Flux density for " << fldNames(tranidx)
-		      << " in SpW=" << iSpw;
-            if (refSpw!=iSpw) 
-	      logSink() << " (ref SpW=" << refSpw << ")";
-
-	    logSink() << " is: " << fluxScaleFactor(iSpw,tranidx)
-		      << " +/- " << fluxScaleError(iSpw,tranidx)
-		      << " (SNR = " << fluxScaleFactor(iSpw,tranidx)/fluxScaleError(iSpw,tranidx)
-		      << ", nAnt= " << nAntUsed << ")"
-		      << LogIO::POST;
-
-            // form scale factor from mean ratio
-            sfrat  /= (Double(sfrn));
-            sfrat2 /= (Double(sfrn));
-            fluxScaleRatio(iSpw,tranidx) = sfrat;
-            fluxScaleRerr(iSpw,tranidx) = sqrt( (sfrat2 - sfrat*sfrat) / Double(sfrn-1) );
-
-          /*
-            cout << "iTran = " << iTran;
-            cout << "  fluxScaleRatio = " << fluxScaleRatio(iSpw,tranidx);
-            cout << " +/- " << fluxScaleRerr(iSpw,tranidx);
-            cout << endl;
-          */
-          } else {
-            logSink() << LogIO::WARN
-		      << " Insufficient information to calculate scale factor for "
-		      << fldname(tranidx)
-		      << " in SpW="<< iSpw
-		      << LogIO::POST;
-          }
-
-        } // ntrue(antOKT) > 0
-      } // iSpw
-    } // iTran
-
-    // quit if no scale factors found
-    if (ntrue(scaleOK) == 0) throw(AipsError("No scale factors determined!"));
-
-    //    cout << "done." << endl;
-
-    //    cout << "Adjusting gains...";
-
-    // Adjust tran field's gains here
-    for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
-      if (cs().nTime(iSpw)>0) {
-        for (Int islot=0; islot<cs().nTime(iSpw); islot++) {
-          Int iFld=cs().fieldId(iSpw)(islot);
-          // If this is a tran fld and gainScaleFactor ok
-          if (scaleOK(iSpw,iFld)) {
-            for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-	      for (Int ipar=0; ipar<nPar(); ipar++) {
-		IPosition ip(4,ipar,0,iAnt,islot);
-		if (cs().parOK(iSpw)(ip))
-                  cs().par(iSpw)(ip)*=gainScaleFactor(iSpw,iFld);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    //    cout << "done." << endl;
-
-    //    cout << "Cleaning up...";
-
-    // Clean up PtrBlocks
-    for (Int iFld=0; iFld<nFld; iFld++) {
-      if (ANTOK[iFld]!=NULL) {
-        delete ANTOK[iFld];
-        delete MGNORM[iFld];
-        delete MGNORM2[iFld];
-        delete MGNWT[iFld];
-        delete MGNVAR[iFld];
-        delete MGNN[iFld];
-      }
-    }
-
-    //    cout << "done." << endl;
-
-    // Avoid this since problem with <msname>/SELECTED_TABLE (06Feb02 gmoellen)
-    /*
-    {
-
-      MeasurementSet ms(vs_->msName().before("/SELECTED"));
-      Table historytab = Table(ms.historyTableName(),
-                               TableLock(TableLock::UserNoReadLocking),
-                               Table::Update);
-      MSHistoryHandler hist = MSHistoryHandler(ms, "calibrater");
-      historytab.lock(True);
-      oss.postLocally();
-      hist.addMessage(oss);
-      historytab.unlock();
-    }
-    */
-  }
-  catch (AipsError x) {
-
-    // Clean up PtrBlocks
-    for (Int iFld=0; iFld<nFld; iFld++) {
-      if (ANTOK[iFld]!=NULL) {
-        delete ANTOK[iFld];
-        delete MGNORM[iFld];
-        delete MGNORM2[iFld];
-        delete MGNWT[iFld];
-        delete MGNVAR[iFld];
-        delete MGNN[iFld];
-      }
-    }
-
-    throw(x);
-
-  }
-
-}
-void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
-				  const Vector<Int>& tranFieldIn,
-				  const Vector<Int>& inRefSpwMap,
-				  const Vector<String>& fldNames,
-				  Matrix<Double>& fd) {
+				 Matrix<Double>& fd) {
 
   //  cout << "REVISED FLUXSCALE" << endl;
 
@@ -6665,36 +5954,5 @@ String calTableType(const String& tablename) {
   return ti.subType();
 
 }
-
-/*
-String NEWcalTableType(const String& tablename) {
-
-  // Check existence...
-  if (!Table::isReadable(tablename)) {
-    ostringstream o;
-    o << "Table " << tablename
-      << " does not exist.";
-    throw(AipsError(String(o)));
-  }
-
-  // Table exists...
-  
-  // Get table keywords
-  Table tab(tablename,Table::Old);
-
-  // Is this a NewCalTable?
-  if (!tab.keywordSet().isDefined("VisCal")) {
-    ostringstream o;
-    o << "Table " << tablename
-      << " is not a valid Calibration table.";
-    throw(AipsError(String(o)));
-  }
-  
-  // If we get here, we have a calibration table,
-  //  so return its type
-  return tab.keywordSet().asString("VisCal");
-
-}
-*/
 
 } //# NAMESPACE CASA - END

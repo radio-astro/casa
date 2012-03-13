@@ -796,29 +796,6 @@ void BJones::normalize() {
 
   cout << "End of BJones::normalize()" << endl;
 
-
-  /* NEWCALTABLE
-  logSink() << "Normalizing solutions per spw, pol, ant, time." 
-	      << LogIO::POST;
-
-  // Iteration axes (norm per spw, pol, ant, timestamp)
-  IPosition itax(3,0,2,3);
-  
-  for (Int ispw=0;ispw<nSpw();++ispw)
-    if (cs().nTime(ispw)>0) {
-      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
-      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
-      while (!soliter.pastEnd()) {
-	normSolnArray(soliter.array(),okiter.array(),True);
-	soliter.next();
-	okiter.next();
-      }
-      
-    }
-
-  */
-
-
 }
 
 void BJones::globalPostSolveTinker() {
@@ -1602,6 +1579,9 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
   Vector<Int> nChunkPerSol;
   Int nSol = sizeUpSolve(vs,nChunkPerSol);
   
+  // Create the Caltable
+  createMemCalTable();
+
   // The iterator, VisBuffer
   VisIter& vi(vs.iter());
   VisBuffer vb(vi);
@@ -1742,7 +1722,10 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
       nGood++;
     }
 
-    keep(slotidx(thisSpw));
+    
+    //    keep(slotidx(thisSpw));  NEWCALTABLE!
+
+    keepNCT();
     
   }
   
@@ -1761,7 +1744,7 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
     globalPostSolveTinker();
 
     // write the table
-    store();
+    storeNCT();
   }
 
 }
@@ -2017,6 +2000,8 @@ MfMueller::~MfMueller() {
 void MfMueller::normalize() {
 
   // This is just like BJones
+
+  throw(AipsError("MfMueller::normalize NYI."));
 
   logSink() << "Normalizing solutions per spw, pol, baseline, time"
             << LogIO::POST;

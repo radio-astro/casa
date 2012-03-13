@@ -68,8 +68,6 @@ KJones::KJones(VisSet& vs) :
 {
   if (prtlev()>2) cout << "K::K(vs)" << endl;
 
-  cout << "parType() = " << parType() << endl;
-
   // Extract per-spw ref Freq for phase(delay) calculation
   //  TBD: these should be in the caltable!!
   MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
@@ -118,6 +116,9 @@ void KJones::setSolve(const Record& solve) {
 
 void KJones::specify(const Record& specify) {
 
+  return SolvableVisCal::specify(specify);
+
+  /* NECALTABLE!!
 
   LogMessage message(LogOrigin("SolvableVisCal","specify"));
 
@@ -135,14 +136,6 @@ void KJones::specify(const Record& specify) {
   
   IPosition ip0(4,0,0,0,0);
   IPosition ip1(4,0,0,0,0);
-
-/*   Not yet supporting time....
-  if (specify.isDefined("time")) {
-    // TBD: the time label
-    cout << "time = " << specify.asString("time") << endl;
-    cout << "refTime() = " << refTime() << endl;
-  }
-*/
 
   if (specify.isDefined("spw")) {
     // TBD: the spws (in order) identifying the solutions
@@ -264,6 +257,8 @@ void KJones::specify(const Record& specify) {
       }
     }
   }
+
+*/
 }
 
 void KJones::calcAllJones() {
@@ -806,7 +801,6 @@ void KAntPosJones::setApply(const Record& apply) {
 
 void KAntPosJones::specify(const Record& specify) {
 
-
   LogMessage message(LogOrigin("KAntPosJones","specify"));
 
   Vector<Int> spws;
@@ -832,8 +826,8 @@ void KAntPosJones::specify(const Record& specify) {
     }
   }
   
-  IPosition ip0(4,0,0,0,0);
-  IPosition ip1(4,2,0,0,0);
+  IPosition ip0(3,0,0,0);
+  IPosition ip1(3,2,0,0);
 
   if (specify.isDefined("antenna")) {
     // TBD: the antennas (in order) identifying the solutions
@@ -870,6 +864,9 @@ void KAntPosJones::specify(const Record& specify) {
 
   //  cout << "parameters = " << parameters << endl;
 
+  // Always _ONLY_ spw=0 for antpos corrections
+  currSpw()=0;
+
   // Loop over specified antennas
   Int ipar(0);
   for (Int iant=0;iant<Nant;++iant) {
@@ -893,15 +890,17 @@ void KAntPosJones::specify(const Record& specify) {
     for (Int ipar0=0;ipar0<3;++ipar0) {
       ip1(0)=ip0(0)=ipar0;
 
-      Array<Complex> slice(cs().par(0)(ip0,ip1));
+      Array<Float> sl(solveAllRPar()(ip0,ip1));
     
       // Acccumulation is addition for ant pos corrections
-      slice+=Complex(apar(ipar0),0.0);
+      sl+=Float(apar(ipar0));
       ++ipar;
     }
   }
-  
-  //  cout << "Ant pos: cs().par(0) = " << cs().par(0) << endl;
+
+  // Store in the memory caltable
+  //  (currSpw()=0 is the only one we need)
+  keepNCT();
 
 }
 
