@@ -76,6 +76,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>nod</value>
 	    <value>fs</value>
 	    <value>fsotf</value>
+	    <value>quotient</value>
 	    <value>none</value>
     </allowed>
     </param>
