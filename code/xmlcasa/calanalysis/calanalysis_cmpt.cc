@@ -1,4 +1,5 @@
 
+
 /***
  * Framework independent implementation file for calanalysis...
  *
@@ -253,7 +254,7 @@ std::string calanalysis::polbasis() {
 
         ::casac::record oRecIter;
 
-        std::string oField( String::toString(oOutput[o].uiFieldID).c_str() );
+        std::string oField( String::toString(oOutput[o].uiField).c_str() );
         oRecIter.insert( std::string("field"), oField );
 
         std::string oAntenna1( String::toString(oOutput[o].uiAntenna1).c_str() );
@@ -482,7 +483,7 @@ std::string calanalysis::polbasis() {
 
         ::casac::record oRecIter;
 
-        std::string oField( String::toString(oOutput[o].uiFieldID).c_str() );
+        std::string oField( String::toString(oOutput[o].uiField).c_str() );
         oRecIter.insert( std::string("field"), oField );
 
         std::string oAntenna1( String::toString(oOutput[o].uiAntenna1).c_str() );
