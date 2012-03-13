@@ -210,7 +210,7 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
 
   // Create the feed vector
 
-  uiNumFeed = poNCTIter->param().shape()[0];
+  uiNumFeed = poNCTIter->cparam().shape()[0];
   oFeed = Vector<String>( uiNumFeed, "" );
 
   if ( uiNumFeed == 1 ) {
