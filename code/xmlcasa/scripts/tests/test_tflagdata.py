@@ -904,7 +904,7 @@ class test_list(test_base):
         self.setUp_data4tfcrop()
         
         # creat input list
-        input = "mode=clip clipzeros=true reason=\'CLIP_ZERO\'"
+        input = "mode='clip' clipzeros=true reason='CLIP_ZERO'"
         filename = 'list5.txt'
         create_input(input, filename)
 
@@ -918,11 +918,12 @@ class test_list(test_base):
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
 
     def test_list6(self):
-        '''tflagdata: select by reason in list mode'''
+        '''tflagdata: select by reason in list mode from a file'''
         # creat input list
-        input = "mode=\'manual\' scan=\'1\' reason=\'SCAN_1\'\n"\
-                "mode=\'manual\' scan=\'2\'\n"\
-                "scan=\'3\' reason=\'SCAN_3\'"
+        input = "mode='manual' scan='1' reason='SCAN_1'\n"\
+                "mode='manual' scan='2'\n"\
+                "scan='3' reason='SCAN_3'\n"\
+                "scan='4' reason=''"
         filename = 'list6.txt'
         create_input(input, filename)
         
@@ -935,8 +936,19 @@ class test_list(test_base):
         # Select list of reasons
         tflagdata(vis=self.vis, mode='list', inpfile=filename, reason=['','SCAN_1'])
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['scan']['2']['flagged'], 238140, 'Should flag reason=\'\'')
+        self.assertEqual(res['scan']['4']['flagged'], 95256, 'Should flag reason=\'\'')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
+        
+        # No reason selection
+        tflagdata(vis=self.vis, mode='unflag')
+        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['2']['flagged'], 238140)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['4']['flagged'], 95256)
+        self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
+        
 
         
 class test_clip(test_base):
