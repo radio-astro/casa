@@ -732,7 +732,7 @@ endif()
 #
 # For some unknown reason cmake sets the /usr for Lion
 #
-if( APPLE )
+if( APPLE AND NOT python_prefix )
    set( python_prefix ${casa_packages} )
 endif()
 

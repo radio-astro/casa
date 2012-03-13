@@ -1330,7 +1330,7 @@ Bool LatticeStatistics<T>::getLayerStats(
 	pStoreLattice_p->getSlice (statsV, IPosition(1,0), shape, IPosition(1,1));
 	IPosition pos(1);
 	pos(0) = NPTS;
-	AccumType nPts = statsV(pos);
+	int nPts = statsV(pos);
 	pos(0) = SUM;
 	AccumType  sum = statsV(pos);
 	pos(0) = MEDIAN;
