@@ -27,13 +27,15 @@
 
 #ifndef CALTABLES_CTPATCHEDINTERP_H
 #define CALTABLES_CTPATCHEDINTERP_H
-#include <casa/aips.h>
+
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTTimeInterp1.h>
 #include <synthesis/CalTables/RIorAParray.h>
+#include <synthesis/CalTables/VisCalEnum.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <casa/aips.h>
 
 //#include <casa/BasicSL/Constants.h>
 //#include <casa/OS/File.h>
@@ -53,9 +55,11 @@ public:
   //  TBD: Provide default param/flag
   //  TBD: CalLib syntax (a Record?)
   CTPatchedInterp(NewCalTable& ct,
+		  VisCalEnum::MatrixType mtype,
 		  Int nPar,
 		  const String& timetype,
-		  const String& freqtype="none");
+		  const String& freqtype="none",
+		  Vector<Int> spwmap=Vector<Int>());
 
   // Destructor
   virtual ~CTPatchedInterp();
@@ -74,6 +78,10 @@ public:
   // Temporary public function for testing
   Array<Float>& tresultF(Int fld, Int spw) { fld=0; return timeResult_(spw,fld); };
 
+  // spwOK info for users
+  Bool spwOK(Int spw) const;
+  Bool spwInOK(Int spw) const;
+
   // Const access to various state
   // TBD
 
@@ -83,8 +91,8 @@ public:
 private:
 
   // Null ctor does nothing
-  CTPatchedInterp() {};
-
+  CTPatchedInterp() :mtype_(VisCalEnum::GLOBAL) {};
+  
   // Setup methods
   void sliceTable();
   void initialize();
@@ -112,6 +120,9 @@ private:
   //void setAntMap(Vector<String>& ant);       // via name/station matching
   //void setAntMap(uInt to, uInt from);        // via single to/from
 
+  // Set generic antenna/baseline map
+  void setElemMap();
+
   // This method realizes the patch panel, on-the-fly
   //  CTTimeInterp* tIout(ifld,ispw,iant) { return tIin_(fldmap_[ifld],spwmap_[ispw],antmap_[iant]); }
 
@@ -119,10 +130,16 @@ private:
   void resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const Vector<Double>& fout,
 		      Matrix<Float>& tres,Matrix<Bool>& tflg,const Vector<Double>& fin);
 
+  // Baseline index from antenna indices: (assumes a1<=a2 !!)
+  inline Int blnidx(const Int& a1, const Int& a2, const Int& nAnt) { return  a1*nAnt-a1*(a1+1)/2+a2; };
+
   // PRIVATE DATA:
   
   // The Caltable
   NewCalTable ct_;
+
+  // Matrix type
+  VisCalEnum::MatrixType mtype_;
 
   // Are parameters fundamentally complex?
   Bool isCmplx_;
@@ -139,15 +156,21 @@ private:
 
   // Field, Spw, Ant _output_ (MS) sizes (eventually from MS)
   //   calibration required for up to this many
-  Int nFldOut_, nSpwOut_, nAntOut_;
+  Int nFldOut_, nSpwOut_, nAntOut_, nElemOut_;
 
   // Field, Spw, Ant _input_ (CalTable) sizes
   //  patch panels should not violate these (point to larger indices)
-  Int nFldIn_, nSpwIn_, nAntIn_;
+  Int nFldIn_, nSpwIn_, nAntIn_, nElemIn_;
+
+  // OK flag
+  Vector<Bool> spwInOK_;
 
   // The patch panels
   //   Each has length from MS, values refer to CT
-  Vector<Int> fldMap_, spwMap_, antMap_;
+  Vector<Int> fldMap_, spwMap_, antMap_, elemMap_;
+
+  // Control conjugation of baseline-based solutions when mapping requires
+  Vector<Bool> conjTab_;
 
   // Current state of interpolation
   Matrix<Double> currTime_;   // [nSpwOut,nFldOut_=1]

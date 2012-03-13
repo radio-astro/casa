@@ -144,6 +144,7 @@ public:
   Cube<Bool> flag() const;
   void flag(Cube<Bool>& c) const;
 
+  Int nchan() const;
   Vector<Int> chan() const;
   void chan(Vector<Int>& v) const;
   Vector<Double> freq() const;
