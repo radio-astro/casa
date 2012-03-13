@@ -1094,7 +1094,9 @@ if( USE_ALMAWVR )
 else()
   message( WARNING "Will not build wvrgcal." )
 endif()
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis miriad )
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms
+display flagging synthesis dish nrao spectrallines imageanalysis miriad
+calanalysis )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.
