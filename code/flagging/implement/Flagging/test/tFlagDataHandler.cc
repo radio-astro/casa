@@ -22,8 +22,8 @@
 
 #include <flagging/Flagging/FlagCalTableHandler.h>
 #include <flagging/Flagging/FlagMSHandler.h>
-#include <flagging/Flagging/FlagAgentManual.h>
-#include <flagging/Flagging/FlagAgentSummary.h>
+#include <flagging/Flagging/FlagAgentBase.cc>
+#include <tableplot/TablePlot/FlagVersion.h>
 #include <iostream>
 
 using namespace casa;
@@ -53,13 +53,6 @@ void unflag(string inputFile,uShort iterationMode)
 		dh = new FlagCalTableHandler(inputFile,iterationMode);
 	}
 
-	// Create agent list
-	Record agentConfig;
-	agentConfig.define("name","FlagAgentUnflag");
-	FlagAgentList agentList;
-	FlagAgentManual *unflagAgent = new FlagAgentManual(dh,agentConfig,false,false);
-	agentList.push_back(unflagAgent);
-
 	// Open Measurement Set
 	dh->open();
 
@@ -69,6 +62,13 @@ void unflag(string inputFile,uShort iterationMode)
 
 	// Select data
 	dh->selectData();
+
+	// Create agent list
+	Record agentConfig;
+	agentConfig.define("name","FlagAgentUnflag");
+	FlagAgentList agentList;
+	FlagAgentManual *unflagAgent = new FlagAgentManual(dh,agentConfig,false,false);
+	agentList.push_back(unflagAgent);
 
 	// Set cout precision
 	cout.precision(20);
@@ -123,7 +123,8 @@ void flag(string inputFile,uShort iterationMode,Record record)
 	timeval start,stop;
 	double elapsedTime = 0;
 
-	uShort testMode = 1;
+	uShort testMode = 2;
+	String flagmode = "manual";
 
 	Table table(inputFile,TableLock(TableLock::AutoNoReadLocking));
 	TableInfo& info = table.tableInfo();
@@ -141,14 +142,6 @@ void flag(string inputFile,uShort iterationMode,Record record)
 		dh = new FlagCalTableHandler(inputFile,iterationMode);
 	}
 
-	// Create agent list
-	Record agentConfig;
-	agentConfig.define("name","FlagAgentManual");
-	if (testMode==2) agentConfig = record;
-	FlagAgentList agentList;
-	FlagAgentManual *manualAgent = new FlagAgentManual(dh,agentConfig);
-	agentList.push_back(manualAgent);
-
 	// Open Measurement Set
 	dh->open();
 
@@ -159,6 +152,15 @@ void flag(string inputFile,uShort iterationMode,Record record)
 
 	// Select data
 	dh->selectData();
+
+	// Create agent list
+	Record agentConfig;
+	if (testMode==2) agentConfig = record;
+	agentConfig.define("name","FlagAgent-" + flagmode);
+	agentConfig.define("mode",flagmode);
+	FlagAgentList agentList;
+	FlagAgentBase *agent = FlagAgentBase::create(dh,agentConfig);
+	agentList.push_back(agent);
 
 	// Set cout precision
 	cout.precision(20);
@@ -186,6 +188,9 @@ void flag(string inputFile,uShort iterationMode,Record record)
 	// Stop Flag Agent
 	agentList.terminate();
 	agentList.join();
+
+	// Test iterator re-generation
+	dh->generateIterator();
 
 	// Close MS
 	dh->close();
@@ -229,13 +234,6 @@ void summary(string inputFile,uShort iterationMode)
 		dh = new FlagCalTableHandler(inputFile,iterationMode);
 	}
 
-	// Create agent list
-	Record agentConfig;
-	agentConfig.define("name","FlagAgentSummary");
-	FlagAgentList agentList;
-	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,agentConfig);
-	agentList.push_back(summaryAgent);
-
 	// Open Measurement Set
 	dh->open();
 
@@ -245,6 +243,13 @@ void summary(string inputFile,uShort iterationMode)
 
 	// Select data
 	dh->selectData();
+
+	// Create agent list
+	Record agentConfig;
+	agentConfig.define("name","FlagAgentSummary");
+	FlagAgentList agentList;
+	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,agentConfig);
+	agentList.push_back(summaryAgent);
 
 	// Set cout precision
 	cout.precision(20);
@@ -381,9 +386,16 @@ int main(int argc, char **argv)
 		}
 	}
 
-	unflag(inputFile,iterationMode);
+	NewCalTable calTab(inputFile,Table::Update);
+	CTInterface msLike(calTab);
+	MSSelection mss;
+	mss.setFieldExpr(field);
+	TableExprNode ten=mss.toTableExprNode(&msLike);
+	cout << "Field= " << mss.getFieldList() << endl;
+
+	//unflag(inputFile,iterationMode);
 	flag(inputFile,iterationMode,record);
-	summary(inputFile,iterationMode);
+	//summary(inputFile,iterationMode);
 
 	exit(-1);
 }

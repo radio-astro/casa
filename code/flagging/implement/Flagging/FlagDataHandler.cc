@@ -407,6 +407,12 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 	}
 
+	// We have changed the iteration approach to the iterators has to be regenerated
+	iteratorGenerated_p = false;
+	chunksInitialized_p = false;
+	buffersInitialized_p = false;
+	stopIteration_p = false;
+
 	return;
 }
 

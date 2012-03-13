@@ -79,6 +79,11 @@ FlagCalTableHandler::open()
 	antennaPositions_p = new ROScalarMeasColumn<MPosition>(antennaSubTable->positionMeas());
 	*logger_p << LogIO::DEBUG1 << "There are " << antennaNames_p->size() << " antennas with names: " << *antennaNames_p << LogIO::POST;
 
+	// Create "dummy" correlation products list
+	corrProducts_p = new std::vector<String>(2);
+	corrProducts_p->push_back("Corr-1");
+	corrProducts_p->push_back("Corr-2");
+
 	return true;
 }
 
@@ -133,7 +138,12 @@ FlagCalTableHandler::selectData()
 	TableExprNode ten = measurementSetSelection_p->toTableExprNode(calTableInterface_p);
 	selectedCalTable_p = new NewCalTable();
 	Bool madeSelection = getSelectedTable(*selectedCalTable_p,*originalCalTable_p,ten,String(""));
-	if (madeSelection == False) selectedCalTable_p = originalCalTable_p;
+	if (madeSelection == False)
+	{
+		*logger_p << LogIO::NORMAL << "Selection not applicable, using entire MS" << LogIO::POST;
+		delete selectedCalTable_p;
+		selectedCalTable_p = new NewCalTable(*originalCalTable_p);
+	}
 
 	// Check if selected CalTable has rows...
 	if (selectedCalTable_p->nrow() == 0)
@@ -149,6 +159,12 @@ FlagCalTableHandler::selectData()
 									<< " rows" << LogIO::POST;
 	}
 
+	// There is a new selected MS so iterators have to be regenerated
+	iteratorGenerated_p = false;
+	chunksInitialized_p = false;
+	buffersInitialized_p = false;
+	stopIteration_p = false;
+
 	return true;
 }
 
@@ -159,7 +175,9 @@ FlagCalTableHandler::selectData()
 void
 FlagCalTableHandler::parseExpression(MSSelection &parser)
 {
-	parser.toTableExprNode(calTableInterface_p);
+	CTInterface tmpCTInterface(*selectedCalTable_p);
+	TableExprNode ten = parser.toTableExprNode(&tmpCTInterface);
+
 	return;
 }
 
@@ -170,20 +188,31 @@ FlagCalTableHandler::parseExpression(MSSelection &parser)
 bool
 FlagCalTableHandler::generateIterator()
 {
-	// Generate CalIterator
-	if (calIter_p) delete calIter_p;
-	calIter_p = new CTIter(*selectedCalTable_p,getSortColumns(sortOrder_p));
+	if (!iteratorGenerated_p)
+	{
+		// Generate CalIterator
+		if (calIter_p) delete calIter_p;
+		calIter_p = new CTIter(*selectedCalTable_p,getSortColumns(sortOrder_p));
 
-	// Attach to CalBuffer
-	if (calBuffer_p) delete calBuffer_p;
-	calBuffer_p = new CTBuffer(calIter_p);
+		// Create CalBuffer and put VisBuffer wrapper around
+		// NOTE: VisBuferAutoPtr destructor also deletes the VisBuffer inside
+		if (visibilityBuffer_p) delete visibilityBuffer_p;
+		calBuffer_p = new CTBuffer(calIter_p);
+		visibilityBuffer_p = new VisBufferAutoPtr();
+		visibilityBuffer_p->set(calBuffer_p);
 
-	// Put VisBuffer wrapper around CalBuffer
-	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	visibilityBuffer_p = new VisBufferAutoPtr();
-	visibilityBuffer_p->set(calBuffer_p);
+		iteratorGenerated_p = true;
+		chunksInitialized_p = false;
+		buffersInitialized_p = false;
+		stopIteration_p = false;
+	}
+	else
+	{
+		chunksInitialized_p = false;
+		buffersInitialized_p = false;
+		stopIteration_p = false;
+	}
 
-	iteratorGenerated_p = true;
 	return true;
 }
 
