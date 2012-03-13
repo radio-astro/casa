@@ -294,13 +294,13 @@ std::string calanalysis::polbasis() {
 
         std::vector<double> oValue( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oValue[a] = oOutput[o].oOut(r,c).oData.oData[a];
+	  oValue[a] = oOutput[o].oOut(r,c).oData.oValue[a];
 	}
         oRecIter.insert( string("value"), oValue );
 
         std::vector<double> oValueErr( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oValueErr[a] = oOutput[o].oOut(r,c).oData.oDataErr[a];
+	  oValueErr[a] = oOutput[o].oOut(r,c).oData.oValueErr[a];
 	}
         oRecIter.insert( string("valueErr"), oValueErr );
 
@@ -523,13 +523,13 @@ std::string calanalysis::polbasis() {
 
         std::vector<double> oValue( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oValue[a] = oOutput[o].oOut(r,c).oData.oData[a];
+          oValue[a] = oOutput[o].oOut(r,c).oData.oValue[a];
         }
         oRecIter.insert( std::string("value"), oValue );
 
         std::vector<double> oValueErr( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oValueErr[a] = oOutput[o].oOut(r,c).oData.oDataErr[a];
+          oValueErr[a] = oOutput[o].oOut(r,c).oData.oValueErr[a];
         }
         oRecIter.insert( std::string("valueErr"), oValueErr );
 
