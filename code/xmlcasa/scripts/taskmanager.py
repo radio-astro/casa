@@ -121,6 +121,19 @@ class taskmanager(object):
         time.sleep(0.25)
         return count
 
+
+    def asyncwait(self, handles=[]):
+        
+        done = (handles==[] or not type(handles)==list)
+        while not done:
+            for handle in handles:
+                done = (self.retrieve(handle)['status'] == 'done')
+                if not done:
+                    break
+            time.sleep(10)
+        return
+
+
     def __finalize(self):
 
         if self.__hub['mec'] is not None :
