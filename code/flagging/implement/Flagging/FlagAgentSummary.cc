@@ -76,6 +76,11 @@ FlagAgentSummary::setAgentParameters(Record config)
 	exists = config.fieldNumber ("spwchan");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'spwchan' must be of type 'bool'" ) );
+	        }
+		
 		spwChannelCounts = config.asBool("spwchan");
 	}
 	else
@@ -95,6 +100,11 @@ FlagAgentSummary::setAgentParameters(Record config)
 	exists = config.fieldNumber ("spwcorr");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'spwcorr' must be of type 'bool'" ) );
+	        }
+		
 		spwPolarizationCounts = config.asBool("spwcorr");
 	}
 	else
@@ -114,6 +124,11 @@ FlagAgentSummary::setAgentParameters(Record config)
 	exists = config.fieldNumber ("basecnt");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'basecnt' must be of type 'bool'" ) );
+	        }
+		
 		baselineCounts = config.asBool("basecnt");
 	}
 	else

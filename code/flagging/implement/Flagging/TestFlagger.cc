@@ -505,6 +505,7 @@ TestFlagger::initAgents()
 	// Send the logging of the re-applying agents to the debug
 	// as we are only interested in seeing the unapply action
 	uChar loglevel = LogIO::DEBUGGING;
+	Bool retstate = true;
 
 		// Loop through the vector of agents
 		for (size_t i=0; i < list_size; i++) {
@@ -552,8 +553,34 @@ TestFlagger::initAgents()
 				iterset_p = true;
 			}
 
+			FlagAgentBase *fa=NULL;
+
+			try
+			{
 				// Create this agent
-				FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
+				FlagAgentBase *tfa = FlagAgentBase::create(fdh_p, agent_rec);
+				fa = tfa;
+
+			}
+			catch(AipsError x)
+			{
+			  fa=NULL;
+			  // Send out a useful message, and stop adding agents to the list.
+			  // All valid agents before the problematic one, will remain in agents_list_p
+			  // A subsequent call to initAgents() will add to the list.
+			  ostringstream oss;
+			  agent_rec.print(oss);
+			  String recstr(oss.str());
+			  while(recstr.contains('\n'))
+			    {
+			      recstr = recstr.replace(recstr.index('\n'),1,", ");
+			    }
+
+			  os << LogIO::SEVERE << "Error in creating agent : " << x.getMesg() << endl << "Input parameters : " << recstr << LogIO::POST;
+			  retstate=false;
+			  break;
+
+			}
 
 				if (fa == NULL){
 					String name;
@@ -561,7 +588,6 @@ TestFlagger::initAgents()
 					os << LogIO::WARN << "Agent "<< name<< " is NULL. Skipping it."<<LogIO::POST;
 					continue;
 				}
-
 
 				// Get the last summary agent to list the results back to the task
 				if (mode.compare("summary") == 0) {
@@ -576,6 +602,7 @@ TestFlagger::initAgents()
 				// Add the agent to the FlagAgentList
 				agents_list_p.push_back(fa);
 
+
 		}
 		os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
 				LogIO::POST;
@@ -583,7 +610,7 @@ TestFlagger::initAgents()
 	// Clear the list so that this method cannot be called twice
 	agents_config_list_p.clear();
 
-	return true;
+	return retstate;
 }
 
 
