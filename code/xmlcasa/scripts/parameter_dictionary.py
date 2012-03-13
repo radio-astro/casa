@@ -34,6 +34,17 @@ class par(str):
 		"""
 
 	@staticmethod
+	def align():
+		"""
+	        align -- align frequency/velocity in scantable.
+                Options: True, False
+                default: False
+
+                NOTE: frequencies/velocities are aligned within spectra with
+                identical combination of SRCNAME, BEAMNO, IFNO, and MOLECULE_ID.
+		"""
+
+	@staticmethod
 	def algorithm():
 		"""
 	        algorithm -- autoflag algorithm name
@@ -1238,12 +1249,21 @@ class par(str):
 		(for widefield)
 		interactive -- use interactive clean (with GUI viewer)
 		options: True, False
-		defalt: False
+		default: False
 		"""
 
 	@staticmethod
 	def interp():
-		""" Setting of the time-dependent interpolation scheme when applying calibration solutions. 
+		"""
+                (for sdaverage and sdcal)
+                Setting of the frequency-dependent interpolation scheme for regridding spectra.
+		options: 'nearest' (nearest neighbour), 'linear', 'cubic', or 'spline' (cubic spline)
+		default: 'linear'
+
+		----------------------------------------------------------
+
+                (for the other tasks)
+                Setting of the time-dependent interpolation scheme when applying calibration solutions. 
 
 		The options are:
 		'nearest' -  calibrate each datum with the calibration value nearest in time.
@@ -1415,16 +1435,16 @@ class par(str):
 		    description of the syntax can be found at
             http://www.astron.nl/aips++/docs/notes/223/node11.html,
             eg
-		        mask='mask(myimage.mask)"
-		        mask="mask(otherimage:othermask)"
-		        mask="myimage>0.5"
+		        mask='mask(myimage.mask)'
+		        mask='mask(otherimage:othermask)'
+		        mask='myimage>0.5'
 		    or 2. an image containing numerical valued pixels,
 		    in which case pixels values >= 0.5 are masked True
 		    (good) and < 0.5 are masked False (bad). This
 		    functionality is primarily meant to support clean mask
 		    images, but will work for any image with numerical
-		    valued pixels. eg,'
-	            mask="mycleanmask.im"
+		    valued pixels. eg,
+	            mask='mycleanmask.im'
 		"""
 
 	@staticmethod
@@ -2227,6 +2247,13 @@ class par(str):
                This will ensure that transfer fields observed in spws 0,1,2,3 will be referenced to
                reference field data only in spw 1 or 3.  Pray you don't have to do this.
 		"""
+
+	@staticmethod
+	def reftime():
+		"""
+       		reftime -- reference time to align frequencies at.
+                default: '' (the time of the first row of data is used)
+                """
 
 	@staticmethod
 	def region():
