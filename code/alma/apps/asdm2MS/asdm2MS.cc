@@ -2167,6 +2167,120 @@ void fillMain_mt(MainRow*	r_p,
   if (debug) cout << "fillMain_mt : exiting" << endl;
 }
 
+void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
+  if (debug) cout << "fillSysPower_aux : entering" << endl;
+  vector<int>		antennaId;
+  vector<int>		spectralWindowId;
+  vector<int>		feedId;
+  vector<double>	time;
+  vector<double>	interval;
+  vector<int>		numReceptor;
+  vector<float>		switchedPowerDifference;
+  vector<float>		switchedPowerSum;
+  vector<float>		requantizerGain;
+  
+  unsigned int        numReceptor0;
+
+  antennaId.resize(sysPowers.size());
+  spectralWindowId.resize(sysPowers.size());
+  feedId.resize(sysPowers.size());
+  time.resize(sysPowers.size());
+  interval.resize(sysPowers.size());
+  
+  /*
+   * Prepare the mandatory attributes.
+   */
+  transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
+  transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
+  transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
+  transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
+  transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
+  
+  /*
+   * Prepare the optional attributes.
+   */
+  numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
+  //
+  // Do we have a constant numReceptor all over the array numReceptor.
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
+    errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
+    error(errstream.str());
+  }
+  /*
+    else 
+    infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
+  */
+  
+  bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end()) {
+    
+    if (switchedPowerDifferenceExists0) {
+      //  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
+      switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
+      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+    }
+    /*
+      else
+      infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
+    */
+  }
+  else {
+    errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
+    error(errstream.str());
+  }
+  
+  bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end()) {
+	
+    if (switchedPowerSumExists0) {
+      //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+      switchedPowerSum.resize(numReceptor0 * sysPowers.size());
+      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+    }
+    /*
+      else
+      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+    */
+  }
+  else {
+    errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
+    error(errstream.str());
+  }
+  
+  bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end()) {
+    if (requantizerGainExists0) {
+      //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+      requantizerGain.resize(numReceptor0 * sysPowers.size());
+      for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+    }
+    /*
+      else
+      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+    */
+  }
+  else {
+    errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
+    error(errstream.str());
+  }
+
+
+  for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+       msIter != msFillers.end();
+       ++msIter) {
+    msIter->second->addSysPowerSlice(antennaId.size(),
+				     antennaId,
+				     spectralWindowId,
+				     feedId,
+				     time,
+				     interval,
+				     (unsigned int) numReceptor0,
+				     switchedPowerDifference,
+				     switchedPowerSum,
+				     requantizerGain);
+  }         
+  if (debug) cout << "fillSysPower : exiting" << endl;
+}
 
 /**
  * This function fills the MS SysPower table from an ASDM SysPower table.
@@ -2180,168 +2294,89 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 
   if (debug) cout << "fillSysPower : entering" << endl;
 
-  try {
-
-    const SysPowerTable& sysPowerT = ds_p->getSysPower();
-    infostream.str("");
-    infostream << "The dataset has " << sysPowerT.size() << " syspower(s).";
-    info(infostream.str()); 
-
-    if (sysPowerT.size() == 0) return;
+  const SysPowerTable& sysPowerT = ds_p->getSysPower();
+  infostream.str("");
+  infostream << "The dataset has " << sysPowerT.size() << " syspower(s).";
+  info(infostream.str()); 
+  
+  if (sysPowerT.size() > 0 ) {
+    //
+    // We assume that there is an SysPower table , but we don't know yet if it's stored in a binary or an XML file.
+    // 
+    bool binFile = boost::filesystem::exists(boost::filesystem::path(uniqSlashes(asdmDirectory + "/SysPower.bin")));
     
-    TableStreamReader<SysPowerTable, SysPowerRow> tsrSysPower;
-    tsrSysPower.open(asdmDirectory);
+    try {
+      rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
+      
+      if (binFile) {
+	if (debug) cout << "fillSysPower : working with SysPower.bin by successive slices." << endl;
+	TableStreamReader<SysPowerTable, SysPowerRow> tsrSysPower;
+	tsrSysPower.open(asdmDirectory);
+	// We can process the SysPower table by slice when it's stored in a binary file so let's do it.
+	while (tsrSysPower.hasRows()) {
+	  const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.untilNBytes(50000000);
+	  infostream.str("");
+	  infostream << "(considering the next " << sysPowerRows.size() << " rows of the SysPower table. ";
 
-    while (tsrSysPower.hasRows()) {
-      const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.untilNBytes(50000000);
-      vector<int>			antennaId;
-      vector<int>			spectralWindowId;
-      vector<int>			feedId;
-      vector<double>			time;
-      vector<double>			interval;
-      vector<int>			numReceptor;
-      vector<float>			switchedPowerDifference;
-      vector<float>			switchedPowerSum;
-      vector<float>			requantizerGain;
-    
-      unsigned int        numReceptor0;
-      {
+	  if (debug) cout << "fillSysPower : determining which rows are in the selected scans." << endl;
+	  const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
+  
+	  if (!ignoreTime) 
+	    infostream << sysPowers.size() << " of them are in the selected exec blocks / scans";
+  
+	  infostream << ")";	     
+	  info(infostream.str());
+	  
+	  infostream.str("");
+	  errstream.str("");
+  
+	  if (sysPowers.size() > 0)
+	    fillSysPower_aux(sysPowerRows);
+	}
+	tsrSysPower.close();
+      }
+      
+      else {
+	// We must parse and load the entire SysPower table in memory when it's stored in an XML file.
+	if (debug) cout << "fillSysPower : working with SysPower.xml entirely parsed and loaded into memory." << endl;
+	const vector<SysPowerRow*>& sysPowerRows = sysPowerT.get();
 	infostream.str("");
 	infostream << "(considering the next " << sysPowerRows.size() << " rows of the SysPower table. ";
-	rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
-      
 	
+	if (debug) cout << "fillSysPower : determining which rows are in the selected scans." << endl;
 	const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
-
 	if (!ignoreTime) 
 	  infostream << sysPowers.size() << " of them are in the selected exec blocks / scans";
-
+	
 	infostream << ")";	     
 	info(infostream.str());
-      
+	
 	infostream.str("");
 	errstream.str("");
-
-	if (sysPowers.size() == 0) continue;
-      
-	antennaId.resize(sysPowers.size());
-	spectralWindowId.resize(sysPowers.size());
-	feedId.resize(sysPowers.size());
-	time.resize(sysPowers.size());
-	interval.resize(sysPowers.size());
-      
-	/*
-	 * Prepare the mandatory attributes.
-	 */
-	transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
-	transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
-	transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
-	transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
-	transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
-      
-	/*
-	 * Prepare the optional attributes.
-	 */
-	numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
-	//
-	// Do we have a constant numReceptor all over the array numReceptor.
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
-	  errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
-	  error(errstream.str());
-	}
-	/*
-	  else 
-	  infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
-	*/
-            
-	bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end()) {
-	  
-	  if (switchedPowerDifferenceExists0) {
-	    //  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
-	    switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
-	  }
-	  /*
-	    else
-	    infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
-	  */
-	}
-	else {
-	  errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
-      
-	bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end()) {
-
-	  if (switchedPowerSumExists0) {
-	    //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	    switchedPowerSum.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
-	  }
-	  /*
-	    else
-	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	  */
-	}
-	else {
-	  errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
-      
-	bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end()) {
-	  if (requantizerGainExists0) {
-	    //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	    requantizerGain.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
-	  }
-	  /*
-	    else
-	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	  */
-	}
-	else {
-	  errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
+	
+	if (sysPowers.size() > 0)
+	  fillSysPower_aux(sysPowers);
       }
-        
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-	   msIter != msFillers.end();
-	   ++msIter) {
-	msIter->second->addSysPowerSlice(antennaId.size(),
-					 antennaId,
-					 spectralWindowId,
-					 feedId,
-					 time,
-					 interval,
-					 (unsigned int) numReceptor0,
-					 switchedPowerDifference,
-					 switchedPowerSum,
-					 requantizerGain);
-      }      
+
+      unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+      if (numMSSysPowers > 0) {
+	infostream.str("");
+	infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
+	info(infostream.str());
+      }
       
     } // end of filling SysPower by slice.
-
-    unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
-    if (numMSSysPowers > 0) {
-      infostream.str("");
-      infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
-      info(infostream.str());
+    
+    catch (ConversionException e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
     }
-    tsrSysPower.close();
-  }
-  catch (ConversionException e) {
-    errstream.str("");
-    errstream << e.getMessage();
-    error(errstream.str());
-  }
-  catch ( std::exception & e) {
-    errstream.str("");
-    errstream << e.what();
-    error(errstream.str());      
+    catch ( std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());      
+    }
   }
   if (debug) cout << "fillSysPower : exiting" << endl;
 }
