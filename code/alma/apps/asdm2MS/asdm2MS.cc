@@ -1708,9 +1708,6 @@ void fillMain(int		rowNum,
     filteredDD.push_back(dataDescriptionIdx2Idx.at(vmsData_p->v_dataDescId.at(idd)));
   }
 
-  //return row containing data for specific spw
-  // for given i spw => mapped to dd id, and find row 
-
 
   vector<float *> uncorrectedData;
   vector<float *> correctedData;
@@ -1846,15 +1843,15 @@ void testFunc(string& tstr) {
 
 /**
  * compute the UVW (put in a method to keep sepearate from fillMain for
-   parallel case) returns vv_uvw 
+   parallel case) returns a Matrix, mat_uvw for data passing thread-safe
+   way
  */
-void calUVW(MainRow* r_p, 
+void calcUVW(MainRow* r_p, 
              SDMBinData& sdmBinData, 
              const VMSData* vmsData_p, 
              UvwCoords& uvwCoords,
              casa::Matrix< casa::Double >& mat_uvw) {
 
-  //vector<double> uvw(3*vmsData_p->v_time.size());
   vector< casa::Vector<casa::Double> > vv_uvw;
   mat_uvw.resize(3,vmsData_p->v_time.size());
 
@@ -1874,17 +1871,6 @@ void calUVW(MainRow* r_p,
     mat_uvw(iUvw, 1) = vv_uvw[iUvw](1);
     mat_uvw(iUvw, 2) = vv_uvw[iUvw](2);
   }
-
-// not needed
-/***
-  int k = 0;
-  for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
-    uvw[k++] = vv_uvw[iUvw](0);
-    uvw[k++] = vv_uvw[iUvw](1);
-    uvw[k++] = vv_uvw[iUvw](2);
-  }
-***/
-
 } 
 
 /**
@@ -1917,11 +1903,9 @@ void fillMain_mt(MainRow*	r_p,
   // Then populate the Main table.
   ComplexDataFilter filter; // To process the case numCorr == 3
   if (vmsData_p->v_antennaId1.size() == 0) {
-  /**
     infostream.str("");
     infostream << "No MS data produced for the current row." << endl;
     info(infostream.str());
-  **/
     return;
   }
 
@@ -1949,7 +1933,6 @@ void fillMain_mt(MainRow*	r_p,
   }
 
   // debug: save the row selections for each DD
-  //cerr<<"filteredDDbasedRows.size for spwId:"<<spwId<<" = "<<filteredDDbasedRows.size()<<endl;
   /***
   ofstream outf;
   ostringstream oss;
@@ -1962,36 +1945,15 @@ void fillMain_mt(MainRow*	r_p,
   outf.close();
   ***/
 
-  //cerr << "fillMain_mt: subfilteredDDbasedRows.size="<<filteredDDbasedRows.size()<<endl;
-
   //return row containing data for specific spw
   // for given i spw => mapped to dd id, and find row 
 
   vector<float *> uncorrectedData;
   vector<float *> correctedData;
 
-  // factoring out this
-  /* compute the UVW */
-/***
-  vector<double> uvw(3*vmsData_p->v_time.size());
-  vector<casa::Vector<casa::Double> > vv_uvw;
-#if DDPRIORITY
-  uvwCoords.uvw_bl(r_p, sdmBinData.timeSequence(), e_query_cm, 
-		   sdmbin::SDMBinData::dataOrder(),
-		   vv_uvw);
-#else
-  uvwCoords.uvw_bl(r, vmsData_p->v_timeCentroid, e_query_cm, 
-		   sdmbin::SDMBinData::dataOrder(),
-		   vv_uvw);
-#endif
-  int k = 0;
-  for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
-    uvw[k++] = vv_uvw[iUvw](0); 
-    uvw[k++] = vv_uvw[iUvw](1);
-    uvw[k++] = vv_uvw[iUvw](2);
-  } 
-***/
-  //cerr<<"fillMain_mt: vv_uvw.size="<<vv_uvw.size()<<endl;
+     
+  /* compute the UVW: moved outside this method*/
+  
   // Here we make the assumption that the State is the same for all the antennas and let's use the first State found in the vector stateId contained in the ASDM Main Row
   // int asdmStateIdx = r_p->getStateId().at(0).getTagValue();  
   vector<int> msStateId(vmsData_p->v_m_data.size(), stateIdx2Idx[r_p]);
@@ -2092,28 +2054,6 @@ void fillMain_mt(MainRow*	r_p,
   //printf("Ready to addData\n");	  
   if (uncorrectedData.size() > 0 && (msFillers_v[spwId].find(AP_UNCORRECTED) != msFillers_v[spwId].end())) {
     if (! mute) {
- /***
-      msFillers_v[spwId][AP_UNCORRECTED]->addData(complexData,
-					 (vector<double>&) vmsData_p->v_time, // this is already time midpoint
-					 (vector<int>&) vmsData_p->v_antennaId1,
-					 (vector<int>&) vmsData_p->v_antennaId2,
-					 (vector<int>&) vmsData_p->v_feedId1,
-					 (vector<int>&) vmsData_p->v_feedId2,
-					 filteredDD,
-					 vmsData_p->processorId,
-					 (vector<int>&)vmsData_p->v_fieldId,
-					 (vector<double>&) vmsData_p->v_interval,
-					 (vector<double>&) vmsData_p->v_exposure,
-					 (vector<double>&) vmsData_p->v_timeCentroid,
-					 (int) r_p->getScanNumber(), 
-					 0,                                               // Array Id
-					 (int) r_p->getExecBlockId().getTagValue(), // Observation Id
-					 (vector<int>&)msStateId,
-					 uvw,
-					 filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
-					 uncorrectedData,
-					 (vector<unsigned int>&)vmsData_p->v_flag);
-***/
       //cerr<<" actually filling the data (uncorrected) for spwId"<<spwId<<endl;
       msFillers_v[spwId][AP_UNCORRECTED]->addData(complexData,
                                        uncorrectedTime, // this is already time midpoint
@@ -2393,12 +2333,12 @@ void partitionMS(vector<int> SwIds,
                  int maxNumChan)
 {
   for (int i=0; i<SwIds.size(); i++) {
-  ostringstream oss;
-  oss<< SwIds.at(i);
-  string msname_suffix = ".SpW"+oss;
-  //cerr<<"msname_prefix="<<msname_suffix<<endl;
-  for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
-    msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first]+msname_suffix,
+    ostringstream oss;
+    oss<< SwIds.at(i);
+    string msname_suffix = ".SpW"+oss;
+    //cerr<<"msname_prefix="<<msname_suffix<<endl;
+    for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
+      msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first]+msname_suffix,
                                                0.0,
                                                false,
                                                complexData,
@@ -2406,12 +2346,12 @@ void partitionMS(vector<int> SwIds,
                                                telName,
                                                maxNumCorr,
                                                maxNumChan);
-       info("About to create a filler for the measurement set '" + msNames[iter->first] + msname_suffix + "'");
+     info("About to create a filler for the measurement set '" + msNames[iter->first] + msname_suffix + "'");
    }
    //vector<std::pair<const AtmPhaseCorrection,ASDM2MSFiller*> > msFillers_vec(msFillers.begin(),msFillers.end());
    msFillers_v.push_back(msFillers);
    //store ms names locally
-   }
+  }
    //cerr<<"msFillers_v.size="<<msFillers_v.size()<<endl;
 }
 
@@ -4618,22 +4558,6 @@ int main(int argc, char *argv[]) {
     error(errstream.str());      
   }
 
-  //copy subtables
-  //
-  /***
-  { 
-    cerr<<"copy subtables "<<endl;
-    cerr<<"in name ="<<msNames.begin()->second<<endl;
-    Table tb0(msNames.begin()->second);
-    cerr<<"output MS, "<<msFillersv[0].begin()->second->msPath()<<endl;
-    cerr<<"instantiate output MS as Table"<<endl; 
-    Table tb1(msFillersv[0].begin()->second->msPath());
-    tb1.closeSubTables();
-    cerr<<"table copy..."<<endl;
-    TableCopy::copySubTables(tb1,tb0);
-    cerr<<"table copy done "<<endl;
-  }
-  ***/
   // And then finally process the state and the main table.
   //
   {
@@ -4714,7 +4638,7 @@ int main(int argc, char *argv[]) {
             casa::Matrix<casa::Double> mat_uvw; // put in matrix
             int ispw = 0;
             int nspw = SwIds.size();
-            calUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
+            calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
             Bool deleteit;
             casa::Double* puvw = mat_uvw.getStorage(deleteit); 
             
@@ -4765,7 +4689,7 @@ int main(int argc, char *argv[]) {
               int nspw = SwIds.size();
               //vector< casa::Vector<casa::Double> > vv_uvw;
               casa::Matrix<casa::Double> mat_uvw; // put in matrix
-              calUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
+              calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
               Bool deleteit;
               casa::Double* puvw = mat_uvw.getStorage(deleteit); 
               #pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw)
@@ -4795,10 +4719,9 @@ int main(int argc, char *argv[]) {
               int ispw = 0;
               int nspw = SwIds.size();
               casa::Matrix<casa::Double> mat_uvw; // put in matrix
-              calUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
+              calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
               Bool deleteit;
               casa::Double* puvw = mat_uvw.getStorage(deleteit); 
-              //#pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr) shared(v,sdmBinData, vv_uvw, complexData, mute, nspw)
               //#pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw) copyin(msFiller) 
               #pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw)
               {
@@ -4911,7 +4834,6 @@ int main(int argc, char *argv[]) {
     delete iter->second;
 
   if (doparallel) {
-    //cerr<<"delete msFillers for multi..."<<endl;
     for (unsigned int i = 1; i < msFillers_v.size(); i++) {
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers_v[i].begin();
          iter != msFillers_v[i].end();
@@ -4927,7 +4849,7 @@ int main(int argc, char *argv[]) {
     ostringstream oss;
     oss<< SwIds.at(0);
     string msname_suffix_first = ".SpW"+oss;
-    #pragma omp for 
+    //#pragma omp for 
     for (int i=1; i<SwIds.size(); i++) {
       ostringstream oss2;
       oss2<< SwIds.at(i);
