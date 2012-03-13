@@ -88,6 +88,7 @@ private:
   // Current time, idx
   Double currTime_;
   Int currIdx_;
+  Bool lastWasExact_;
 
   // Time list
   Double timeRef_;
