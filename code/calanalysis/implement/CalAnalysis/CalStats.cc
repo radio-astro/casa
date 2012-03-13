@@ -104,8 +104,8 @@ axisIterUser  - This member function returns the user-defined iteration axis
 axisNonIter   - This member function returns the non-iteration axis values.
 statsShape    - This member function returns the shape of the output statistics
                 cube.
-data          - This member function returns the input data.
-dataErr       - This member function returns the input data errors.
+value         - This member function returns the input value.
+valueErr      - This member function returns the input value errors.
 flag          - This member function returns the input flags.
 
 Class static public member functions:
@@ -130,12 +130,12 @@ statsWrap<T> - This member function wraps statistics functions and provides a
 
 Class protected member functions:
 ---------------------------------
-CalStats  - This default constructor is unused by this class and unavailable
-            when an instance is created.
-next      - This member function simultaneously iterates all of the internal
-            copies of the input data cubes.
-reset     - This member function simultaneously resets all of the internal
-            copies of the input data cubes.
+CalStats - This default constructor is unused by this class and unavailable when
+           an instance is created.
+next     - This member function simultaneously iterates all of the internal
+           copies of the input data cubes.
+reset    - This member function simultaneously resets the iterators of all of
+           the internal copies of the input data cubes.
 
 Modification history:
 ---------------------
@@ -168,7 +168,7 @@ Modification history:
               Private member functions next() and reset() now protected member
               functions.  State public member functions axisIterID(),
               axisNonIterID(), axisIterFeed(), axisIterUser(), axisNonIter(),
-              statsShape(), data(), dataErr(), and flag() added.
+              statsShape(), value(), valueErr(), and flag() added.
 2011 Dec 16 - Nick Elias, NRAO
               Public member functions getData() and calcFit() replaced by
               stats<T>() template public member function.  Specialized template
@@ -209,8 +209,8 @@ by the user as an input parameter.
 
 Inputs:
 -------
-oData           - This reference to a Cube<Double> instance contains the data.
-oDataErr        - This reference to a Cube<Double> instance contains the data
+oValue          - This reference to a Cube<Double> instance contains the values.
+oValueErr       - This reference to a Cube<Double> instance contains the value
                   errors.
 oFlag           - This reference to a Cube<Bool> instance contains the flags.
 oFeed           - This reference to a Vector<String> instance is the feed
@@ -243,30 +243,30 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-CalStats::CalStats( const Cube<Double>& oData, const Cube<Double>& oDataErr,
+CalStats::CalStats( const Cube<Double>& oValue, const Cube<Double>& oValueErr,
     const Cube<Bool>& oFlag, const Vector<String>& oFeed,
     const Vector<Double>& oFrequency, const Vector<Double>& oTime,
     const CalStats::AXIS& eAxisIterUserID ) {
 
   // Check the inputs
 
-  IPosition oShapeData( oData.shape() );
-  IPosition oShapeDataErr( oDataErr.shape() );
+  IPosition oShapeValue( oValue.shape() );
+  IPosition oShapeValueErr( oValueErr.shape() );
   IPosition oShapeFlag( oFlag.shape() );
 
   if ( allEQ( oFlag, True ) ) {
     throw( AipsError( "All data flagged" ) );
   }
 
-  if ( oShapeData != oShapeDataErr || oShapeData != oShapeFlag ) {
+  if ( oShapeValue != oShapeValueErr || oShapeValue != oShapeFlag ) {
     throw( AipsError( "Input cubes have different shapes" ) );
   }
 
-  if ( (uInt) oShapeData[1] != oFrequency.nelements() ) {
+  if ( (uInt) oShapeValue[1] != oFrequency.nelements() ) {
     throw( AipsError( "Inconsistent frequency axis" ) );
   }
 
-  if ( (uInt) oShapeData[2] != oTime.nelements() ) {
+  if ( (uInt) oShapeValue[2] != oTime.nelements() ) {
     throw( AipsError( "Inconsistent time axis" ) );
   }
 
@@ -310,24 +310,24 @@ CalStats::CalStats( const Cube<Double>& oData, const Cube<Double>& oDataErr,
 
   for ( uInt a=0; a<2; a++ ) {
     uInt uiAxisIter = (uInt) oAxisIterID[a];
-    oStatsShape[uiAxisIter] = oData.shape()[uiAxisIter];
+    oStatsShape[uiAxisIter] = oValue.shape()[uiAxisIter];
   }
 
 
   // Initialize the internal copies of the input parameter cubes
 
-  poData = new Cube<Double>( oData.copy() );
-  poDataErr = new Cube<Double>( oDataErr.copy() );
+  poValue = new Cube<Double>( oValue.copy() );
+  poValueErr = new Cube<Double>( oValueErr.copy() );
   poFlag = new Cube<Bool>( oFlag.copy() );
 
 
   // Initialize the input parameter cube iterators and reset them
 
-  poDataIter = new ArrayIterator<Double>( *poData, oAxisIterID, False );
-  poDataIter->reset();
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
+  poValueIter->reset();
 
-  poDataErrIter = new ArrayIterator<Double>( *poDataErr, oAxisIterID, False );
-  poDataErrIter->reset();
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
+  poValueErrIter->reset();
 
   poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
@@ -382,15 +382,15 @@ CalStats::CalStats( const CalStats& oCalStats ) {
 
   oStatsShape = oCalStats.statsShape();
 
-  poData = new Cube<Double>( oCalStats.data().copy() );
-  poDataErr = new Cube<Double>( oCalStats.dataErr().copy() );
+  poValue = new Cube<Double>( oCalStats.value().copy() );
+  poValueErr = new Cube<Double>( oCalStats.valueErr().copy() );
   poFlag = new Cube<Bool>( oCalStats.flag().copy() );
 
-  poDataIter = new ArrayIterator<Double>( *poData, oAxisIterID, False );
-  poDataIter->reset();
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
+  poValueIter->reset();
 
-  poDataErrIter = new ArrayIterator<Double>( *poDataErr, oAxisIterID, False );
-  poDataErrIter->reset();
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
+  poValueErrIter->reset();
 
   poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
@@ -450,22 +450,22 @@ CalStats& CalStats::operator=( const CalStats& oCalStats ) {
 
   oStatsShape = oCalStats.statsShape();
 
-  delete poData;
-  poData = new Cube<Double>( oCalStats.data().copy() );
+  delete poValue;
+  poValue = new Cube<Double>( oCalStats.value().copy() );
 
-  delete poDataErr;
-  poDataErr = new Cube<Double>( oCalStats.dataErr().copy() );
+  delete poValueErr;
+  poValueErr = new Cube<Double>( oCalStats.valueErr().copy() );
 
   delete poFlag;
   poFlag = new Cube<Bool>( oCalStats.flag().copy() );
 
-  delete poDataIter;
-  poDataIter = new ArrayIterator<Double>( *poData, oAxisIterID, False );
-  poDataIter->reset();
+  delete poValueIter;
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
+  poValueIter->reset();
 
-  delete poDataErrIter;
-  poDataErrIter = new ArrayIterator<Double>( *poDataErr, oAxisIterID, False );
-  poDataErrIter->reset();
+  delete poValueErrIter;
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
+  poValueErrIter->reset();
 
   delete poFlagIter;
   poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
@@ -509,15 +509,15 @@ CalStats::~CalStats( void ) {
 
   // Deallocate the internal copies of the input parameter cubes
 
-  delete poData;
-  delete poDataErr;
+  delete poValue;
+  delete poValueErr;
   delete poFlag;
 
 
   // Deallocate the input parameter cube iterators
 
-  delete poDataIter;
-  delete poDataErrIter;
+  delete poValueIter;
+  delete poValueErrIter;
   delete poFlagIter;
 
 
@@ -771,11 +771,11 @@ IPosition& CalStats::statsShape( void ) const {
 
 /*
 
-CalStats::data
+CalStats::value
 
 Description:
 ------------
-This member function returns the input data.
+This member function returns the input values.
 
 Inputs:
 -------
@@ -783,7 +783,7 @@ None.
 
 Outputs:
 --------
-The reference to the Cube<Double> instance containing the input data, returned
+The reference to the Cube<Double> instance containing the input values, returned
 via the function value.
 
 Modification history:
@@ -795,11 +795,12 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-Cube<Double>& CalStats::data( void ) const {
+Cube<Double>& CalStats::value( void ) const {
 
-  // Return the reference to the Cube<Double> instance containing the input data
+  // Return the reference to the Cube<Double> instance containing the input
+  // values
 
-  return( *poData );
+  return( *poValue );
 
 }
 
@@ -807,11 +808,11 @@ Cube<Double>& CalStats::data( void ) const {
 
 /*
 
-CalStats::dataErr
+CalStats::valueErr
 
 Description:
 ------------
-This member function returns the input data errors.
+This member function returns the input value errors.
 
 Inputs:
 -------
@@ -819,7 +820,7 @@ None.
 
 Outputs:
 --------
-The reference to the Cube<Double> instance containing the input data errors,
+The reference to the Cube<Double> instance containing the input value errors,
 returned via the function value.
 
 Modification history:
@@ -831,12 +832,12 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-Cube<Double>& CalStats::dataErr( void ) const {
+Cube<Double>& CalStats::valueErr( void ) const {
 
-  // Return the reference to the Cube<Double> instance containing the input data
-  // errors
+  // Return the reference to the Cube<Double> instance containing the input
+  // values errors
 
-  return( *poDataErr );
+  return( *poValueErr );
 
 }
 
@@ -881,7 +882,7 @@ Cube<Bool>& CalStats::flag( void ) const {
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// Start of static public member functions
+// Start of public static member functions
 // -----------------------------------------------------------------------------
 
 /*
@@ -935,7 +936,7 @@ String& CalStats::axisName( const CalStats::AXIS& eAxis ) {
 }
 
 // -----------------------------------------------------------------------------
-// End of static public member functions
+// End of public static member functions
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
@@ -999,13 +1000,14 @@ to stats<T>().
 
 Inputs:
 -------
-oAbs     - This reference to a Vector<Double> instance contains the
-           non-iteration axis abscissae.
-oData    - This reference to a Vector<Double> instance contains the data.
-oDataErr - This reference to a Vector<Double> instance contains the data errors.
-oFlag    - This reference to a Vector<Bool> instance contains the flags.
-oArg     - This reference to a CalStats::ARG<CalStats::NONE> instance contains
-           the extra arguments.
+oAbs      - This reference to a Vector<Double> instance contains the
+            non-iteration axis abscissae.
+oValue    - This reference to a Vector<Double> instance contains the values.
+oValueErr - This reference to a Vector<Double> instance contains the value
+            errors.
+oFlag     - This reference to a Vector<Bool> instance contains the flags.
+oArg      - This reference to a CalStats::ARG<CalStats::NONE> instance contains
+            the extra arguments.
 
 Outputs:
 --------
@@ -1025,8 +1027,8 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 template <> CalStatsFitter::FIT& CalStats::statsWrap<CalStatsFitter::FIT>(
-    const Vector<Double>& oAbs, const Vector<Double>& oData,
-    const Vector<Double>& oDataErr, Vector<Bool>& oFlag,
+    const Vector<Double>& oAbs, const Vector<Double>& oValue,
+    const Vector<Double>& oValueErr, Vector<Bool>& oFlag,
     const CalStats::ARG<CalStatsFitter::FIT>& oArg ) {
 
   // Perform the fit and return the reference to a CalStatsFitter::FIT instance
@@ -1034,7 +1036,7 @@ template <> CalStatsFitter::FIT& CalStats::statsWrap<CalStatsFitter::FIT>(
   CalStatsFitter::FIT* poFit = new CalStatsFitter::FIT();
 
   try {
-    *poFit = CalStatsFitter::fit( oAbs, oData, oDataErr, oFlag, oArg.eOrder,
+    *poFit = CalStatsFitter::fit( oAbs, oValue, oValueErr, oFlag, oArg.eOrder,
         oArg.eType, oArg.eWeight );
   }
   catch ( AipsError oAE ) {
@@ -1114,8 +1116,8 @@ void CalStats::next( void ) {
 
   // Iterate the input data cube iterators
 
-  poDataIter->next();
-  poDataErrIter->next();
+  poValueIter->next();
+  poValueErrIter->next();
   poFlagIter->next();
 
 
@@ -1157,8 +1159,8 @@ void CalStats::reset( void ) {
 
   // Reset the input data cube iterators
 
-  poDataIter->reset();
-  poDataErrIter->reset();
+  poValueIter->reset();
+  poValueErrIter->reset();
   poFlagIter->reset();
 
 

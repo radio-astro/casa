@@ -131,8 +131,8 @@ axisIterUser  - This member function returns the user-defined iteration axis
 axisNonIter   - This member function returns the non-iteration axis values.
 statsShape    - This member function returns the shape of the output statistics
                 cube.
-data          - This member function returns the input data.
-dataErr       - This member function returns the input data errors.
+value         - This member function returns the input value.
+valueErr      - This member function returns the input value errors.
 flag          - This member function returns the input flags.
 
 Class static public member functions:
@@ -157,12 +157,12 @@ statsWrap<T> - This member function wraps statistics functions and provides a
 
 Class protected member functions:
 ---------------------------------
-CalStats  - This default constructor is unused by this class and unavailable
-            when an instance is created.
-next      - This member function simultaneously iterates all of the internal
-            copies of the input data cubes.
-reset     - This member function simultaneously resets all of the internal
-            copies of the input data cubes.
+CalStats - This default constructor is unused by this class and unavailable when
+           an instance is created.
+next     - This member function simultaneously iterates all of the internal
+           copies of the input data cubes.
+reset    - This member function simultaneously resets the iterators of all of
+           the internal copies of the input data cubes.
 
 Modification history:
 ---------------------
@@ -195,7 +195,7 @@ Modification history:
               Private member functions next() and reset() now protected member
               functions.  State public member functions axisIterID(),
               axisNonIterID(), axisIterFeed(), axisIterUser(), axisNonIter(),
-              statsShape(), data(), dataErr(), and flag() added.
+              statsShape(), value(), valueErr(), and flag() added.
 2011 Dec 16 - Nick Elias, NRAO
               Public member functions getData() and calcFit() replaced by
               stats<T>() template public member function.  Specialized template
@@ -249,10 +249,10 @@ class CalStats {
     // DATA nested class
     class DATA {
       public:
-        Vector<Double> oAbs;     // The abscissae (non-iteration axis values) 
-        Vector<Double> oData;    // The data
-        Vector<Double> oDataErr; // The data errors
-        Vector<Bool> oFlag;      // The flags
+        Vector<Double> oAbs;      // The abscissae (non-iteration axis values) 
+        Vector<Double> oValue;    // The values
+        Vector<Double> oValueErr; // The value errors
+        Vector<Bool> oFlag;       // The flags
         DATA( void );
         DATA( const DATA& oDataIn );
         ~DATA( void );
@@ -284,7 +284,7 @@ class CalStats {
     };
 
     // Generic constructor
-    CalStats( const Cube<Double>& oData, const Cube<Double>& oDataErr,
+    CalStats( const Cube<Double>& oValue, const Cube<Double>& oValueErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
         const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const AXIS& eAxisIterUser );
@@ -309,8 +309,8 @@ class CalStats {
     IPosition& statsShape( void ) const;
 
     // Input data states
-    Cube<Double>& data( void ) const;
-    Cube<Double>& dataErr( void ) const;
+    Cube<Double>& value( void ) const;
+    Cube<Double>& valueErr( void ) const;
     Cube<Bool>& flag( void ) const;
 
     // The axis names
@@ -323,7 +323,7 @@ class CalStats {
     // wrapper.
     template <typename T> Matrix<OUT<T> >& stats( const ARG<T>& oArg );
     template <typename T> T& statsWrap( const Vector<Double>& oAbs,
-        const Vector<Double>& oData, const Vector<Double>& oDataErr,
+        const Vector<Double>& oValue, const Vector<Double>& oValueErr,
         Vector<Bool>& oFlag, const ARG<T>& oArg );
 
   protected:
@@ -343,13 +343,13 @@ class CalStats {
     IPosition oStatsShape;
 
     // Internal copies of input parameter cubes
-    Cube<Double>* poData;
-    Cube<Double>* poDataErr;
+    Cube<Double>* poValue;
+    Cube<Double>* poValueErr;
     Cube<Bool>* poFlag;
 
     // Input parameter cube iterators
-    ArrayIterator<Double>* poDataIter;
-    ArrayIterator<Double>* poDataErrIter;
+    ArrayIterator<Double>* poValueIter;
+    ArrayIterator<Double>* poValueErrIter;
     ArrayIterator<Bool>* poFlagIter;
 
     // Unused constructor
@@ -478,16 +478,16 @@ Matrix<CalStats::OUT<T> >& CalStats::stats( const CalStats::ARG<T>& oArg ) {
   // For each iteration, convert the resulting arrays to vectors and feed them
   // to the CalStatsFitter::fit() function
 
-  while ( !poDataIter->pastEnd() ) {
+  while ( !poValueIter->pastEnd() ) {
 
-    IPosition oPos( poDataIter->pos() );
+    IPosition oPos( poValueIter->pos() );
 
-    uInt uiLength = poDataIter->array().nelements();
+    uInt uiLength = poValueIter->array().nelements();
     IPosition oShape( 1, uiLength );
 
     Vector<Double> oAbs( oAxisNonIter.copy() );
-    Vector<Double> oData( poDataIter->array().copy().reform(oShape) );
-    Vector<Double> oDataErr( poDataErrIter->array().copy().reform(oShape) );
+    Vector<Double> oValue( poValueIter->array().copy().reform(oShape) );
+    Vector<Double> oValueErr( poValueErrIter->array().copy().reform(oShape) );
     Vector<Bool> oFlag( poFlagIter->array().copy().reform(oShape) );
 
     CalStats::OUT<T> oOut;
@@ -499,12 +499,12 @@ Matrix<CalStats::OUT<T> >& CalStats::stats( const CalStats::ARG<T>& oArg ) {
     oOut.oAxes.dAxisIterUser = oAxisIterUser[oPos[oAxisIterID[1]]];
 
     oOut.oData.oAbs = Vector<Double>( oAbs );
-    oOut.oData.oData = Vector<Double>( oData );
-    oOut.oData.oDataErr = Vector<Double>( oDataErr );
+    oOut.oData.oValue = Vector<Double>( oValue );
+    oOut.oData.oValueErr = Vector<Double>( oValueErr );
     oOut.oData.oFlag = Vector<Bool>( oFlag );
 
     try {
-      oOut.oT = statsWrap<T>( oAbs, oData, oDataErr, oFlag, oArg );
+      oOut.oT = statsWrap<T>( oAbs, oValue, oValueErr, oFlag, oArg );
     }
     catch ( AipsError oAE ) {
       LogIO log( LogOrigin( "CalStats", "stats<T>()", WHERE ) );

@@ -64,7 +64,7 @@ In a nutshell:
     the inputs, statistics are calculated.  This is not the most efficient way,
     but the NewCalTable class doesn't have another way to access data and the
     time for each iteration is very fast.
-  - For each iteration, the dimensions of the data, data error, and flag cubes
+  - For each iteration, the dimensions of the value, value error, and flag cubes
     provided by ROCTIter are feed x frequency(spw) x row(spw,time).  This shape
     is not useful for calculating statistics with CalStats, so the parse<T>()
     function slices and dices the cubes into feed x frequency x time.
