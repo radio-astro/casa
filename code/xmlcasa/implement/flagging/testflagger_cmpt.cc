@@ -412,8 +412,95 @@ testflagger::parseelevationparameters(
 	}
 }
 
+bool
+testflagger::parsetfcropparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const double ntime,
+		const bool combinescans,
+		const std::string& datacolumn,
+		const double timecutoff,
+		const double freqcutoff,
+		const std::string& timefit,
+		const std::string& freqfit,
+		const int maxnpieces,
+		const std::string& flagdimension,
+		const std::string& usewindowstats,
+		const int halfwin,
+		const bool apply)
+{
+
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the tfcrop parameters
+			return testflagger_p->parseTfcropParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), ntime, Bool(combinescans),
+		       	    String(datacolumn), timecutoff,
+		       	    freqcutoff, String(timefit), String(freqfit), maxnpieces,
+		       	    String(flagdimension), String(usewindowstats), halfwin, Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
 
 
+bool
+testflagger::parsesummaryparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const bool spwchan,
+		const bool spwcorr,
+		const bool basecnt)
+{
+
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the summary parameters
+			return testflagger_p->parseSummaryParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), Bool(spwchan),
+					Bool(spwcorr), Bool(basecnt));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
 
 
 

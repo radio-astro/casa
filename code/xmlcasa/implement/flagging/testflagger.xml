@@ -687,6 +687,220 @@ for the elevation mode.
 <returns type="bool"/> 
 </method>
 
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parsetfcropparameters">
+   <shortdescription>Parses data selection parameters and specific parameters
+for the time and frequency mode.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>\tScan number. Example: '1,2,3' </description>
+     <value>""</value>
+     </param>   
+
+     <param type="string" name="baseline">
+     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id. Example: '2~4' </description>
+     <value>""</value>
+     </param>
+
+            <param type="double" name="ntime">
+                <description>\tTime-range to use for each chunk (in seconds or minutes)</description>
+                <value>0.0</value>
+            </param>
+            <param type="bool" name="combinescans">
+                <description>Accumulate data across scans.</description>
+                <value>false</value>
+            </param>
+    
+           <param type="string" name="datacolumn">
+                <description>\tData column to use for clipping. Example: 'DATA'. Default:
+                </description>
+                <value>DATA</value>
+            </param>
+            <param type="double" name="timecutoff">
+                <description>Flagging thresholds in units of deviation from the fit. Default:</description>
+                <value>4.0</value>
+            </param>
+            <param type="double" name="freqcutoff">
+                <description>Flagging thresholds in units of deviation from the fit. Default:</description>
+                <value>3.0</value>
+            </param>
+            <param type="string" name="timefit">
+                <description>\tFitting function for the time direction (poly/line). Default: </description>
+                <value>line</value>
+            </param>
+            <param type="string" name="freqfit">
+                <description>\tFitting function for the frequency direction (poly/line). Default: </description>
+                <value>poly</value>
+            </param>
+            <param type="int" name="maxnpieces">
+                <description>Number of pieces in the polynomial-fits (for \'freqfit\' or \'timefit\' = \'poly\'). Default: </description>
+                <value>7</value>
+            </param>
+            <param type="string" name="flagdimension">
+                <description>Dimensions along which to calculate fits (freq/time/freqtime/timefreq). Default: </description>
+                <value>freqtime</value>
+            </param>
+            <param type="string" name="usewindowstats">
+                <description>Calculate additional flags using sliding window statistics (none,sum,std,both). Default: </description>
+                <value>none</value>
+            </param>
+            <param type="int" name="halfwin">
+                <description>\tHalf-width of sliding window to use with \'usewindowstats\' (1,2,3). Default: </description>
+                <value>1</value>
+            </param>
+
+     <param type="bool" name="apply">
+     <description>\tParameter to flag or unflag the data. Default: </description>
+     <value>true</value>
+     </param>
+
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+</example>
+
+<returns type="bool"/> 
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parsesummaryparameters">
+   <shortdescription>Parses data selection parameters and specific parameters
+for the manual mode.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>\tScan number. Example: '1,2,3' </description>
+     <value>""</value>
+     </param>   
+
+     <param type="string" name="baseline">
+     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id. Example: '2~4' </description>
+     <value>""</value>
+     </param>
+
+     <param type="bool" name="spwchan">
+     <description>\tList the number of flags per spw and per channel. Default: </description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="spwcorr">
+     <description>\tList the number of flags per spw and per correlation. Default: </description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="basecnt">
+     <description>\tList the number of flags per baseline. Default: </description>
+     <value>false</value>
+     </param>
+     
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+</example>
+
+<returns type="bool"/> 
+</method>
 
 </tool>
 </casaxml>

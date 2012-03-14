@@ -198,8 +198,21 @@ public:
 	bool parseElevationParameters(String field, String spw, String array, String feed,
 			String scan, String antenna, String uvrange, String timerange, String correlation,
        	    String intent, String observation, Double lowerlimit, Double upperlimit,
-       	    Bool apply=true);
+       	    Bool apply);
 
+
+	// Parse parameters for tfcrop
+	bool parseTfcropParameters(String field, String spw, String array, String feed,
+			String scan, String antenna, String uvrange, String timerange, String correlation,
+       	    String intent, String observation, Double ntime, Bool combinescans,
+       	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
+       	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats,
+       	    Int halfwin, Bool apply);
+
+	// Parse parameters for summary
+	bool parseSummaryParameters(String field, String spw, String array, String feed,
+			String scan, String antenna, String uvrange, String timerange, String correlation,
+       	    String intent, String observation, Bool spwchan, Bool spwcorr, Bool basecnt);
 
 private:
 

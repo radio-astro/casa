@@ -950,8 +950,10 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
                 spwchan -- list the number of flags per spw and per channel.
                     default: False
+
                 spwcorr -- list the number of flags per spw and per correlation.
                     default: False
+
                 basecnt -- list the number of flags per baseline
                     default: False
 

@@ -989,6 +989,11 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::parseQuackParameters
+// Parse data selection parameters and specific manual parameters
+//
+// ---------------------------------------------------------------------
 bool
 TestFlagger::parseQuackParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange,String correlation,
@@ -1031,6 +1036,11 @@ TestFlagger::parseQuackParameters(String field, String spw, String array, String
 
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::parseElevationParameters
+// Parse data selection parameters and specific manual parameters
+//
+// ---------------------------------------------------------------------
 bool
 TestFlagger::parseElevationParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange,String correlation,
@@ -1070,6 +1080,111 @@ TestFlagger::parseElevationParameters(String field, String spw, String array, St
 	return true;
 
 }
+
+// ---------------------------------------------------------------------
+// TestFlagger::parseTfcropParameters
+// Parse data selection parameters and specific manual parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseTfcropParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String intent, String observation, Double ntime, Bool combinescans,
+   	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
+   	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
+   	    Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "tfcrop";
+	String agent_name = "Tfcrop";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("ntime", ntime);
+	agent_record.define("combinescans", combinescans);
+	agent_record.define("datacolumn", datacolumn);
+	agent_record.define("timecutoff", timecutoff);
+	agent_record.define("freqcutoff", freqcutoff);
+	agent_record.define("timefit", timefit);
+	agent_record.define("freqfit", freqfit);
+	agent_record.define("maxnpieces", maxnpieces);
+	agent_record.define("flagdimension", flagdimension);
+	agent_record.define("usewindowstats", usewindowstats);
+	agent_record.define("halfwin", halfwin);
+	agent_record.define("apply", apply);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
+
+// ---------------------------------------------------------------------
+// TestFlagger::parseSummaryParameters
+// Parse data selection parameters and specific manual parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseSummaryParameters(String field, String spw, String array,
+								   String feed, String scan, String antenna,
+								   String uvrange,  String timerange, String correlation,
+								   String intent, String observation,
+								   Bool spwchan, Bool spwcorr, Bool basecnt)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "summary";
+	String agent_name = "Summary";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("spwchan", spwchan);
+	agent_record.define("spwcorr", spwcorr);
+	agent_record.define("basecnt", basecnt);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+}
+
 
 
 } //#end casa namespace
