@@ -141,6 +141,7 @@ Bool HeaderDataUnit::determine_type(FitsKeywordList &kw, FITS::HDUType &htype,
 	FitsKeyword *p_bitpix = kw.next();
       	FitsKeyword *naxis = kw.next();
 	FitsKeyword *naxis1 = kw.next();
+	FitsKeyword *naxis2 = kw.next();
 	if (!p_bitpix || (p_bitpix->kw().name() != FITS::BITPIX)) {
 	    p_bitpix = kw(FITS::BITPIX); // look for BITPIX elsewhere
 	    if (!p_bitpix || (p_bitpix->kw().name() != FITS::BITPIX)) {
@@ -209,11 +210,21 @@ Bool HeaderDataUnit::determine_type(FitsKeywordList &kw, FITS::HDUType &htype,
 		return False;
 	}
 	if (word1->kw().name() == FITS::SIMPLE) {
-	    if (naxis->asInt() == 0)
+            //cout << "naxis=" << naxis->asInt() << " naxis2=" << naxis2->asInt()
+            //     << " naxis1=" << naxis1->asInt() << endl;
+	    if (naxis->asInt() > 0) {
 	        htype = FITS::PrimaryArrayHDU;
-	    else
-	    	htype = (naxis1->asInt() == 0) ? 
-	    	        FITS::PrimaryGroupHDU : FITS::PrimaryArrayHDU;
+                if (naxis1->asInt() == 0)
+	    	   htype = FITS::PrimaryGroupHDU;
+	        else if (naxis->asInt() == 2 && 
+                         (naxis2->asInt() == 0 && naxis1->asInt() == 777777701))
+	    	   htype = FITS::PrimaryTableHDU;
+                else
+	           htype = FITS::PrimaryArrayHDU;
+                //cout << "htype=" << htype << endl;
+            } 
+	    else 
+	    	htype = FITS::PrimaryArrayHDU;
 	} else { // word1 is XTENSION
  	    if (strcmp(word1->asString(),"TABLE   ") == 0)
 	    	htype = FITS::AsciiTableHDU;
@@ -265,7 +276,6 @@ Bool HeaderDataUnit::compute_size(FitsKeywordList &kw, OFF_T &datasize,
 	    return True;
 	int n;
 	FitsKeyword *naxisn;
-
 	// Primary Array HDU
 	if (htype == FITS::PrimaryArrayHDU) {
 	    datasize = 1;
@@ -292,6 +302,11 @@ Bool HeaderDataUnit::compute_size(FitsKeywordList &kw, OFF_T &datasize,
 	    datasize *= FITS::fitssize(dtype);
 	    return True;
 	}// end of if( htype == ...).
+	// Primary Table HDU
+	else if (htype == FITS::PrimaryTableHDU) {
+	    datasize = 777777701;
+	    return True;
+	}
 	// Primary Group HDU 
 	else if ( htype == FITS::PrimaryGroupHDU) {
 	    datasize = 1;
@@ -583,6 +598,8 @@ HeaderDataUnit::HeaderDataUnit(FitsInput &f, FITS::HDUType t,
 		    dimn[i] = kwlist_(FITS::NAXIS,(i + 1))->asInt();
 	    }
 	}
+        //cout << "-----hdu_type=" << hdu_type << " f.hdutype()=" << f.hdutype() 
+        //     << " fin->hdutype()=" << fin->hdutype() << endl;
 }
 //=================================================================================================
 HeaderDataUnit::HeaderDataUnit(FitsKeywordList &k, FITS::HDUType t, 

@@ -274,7 +274,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        m_rec_type = FITS::BadBeginningRecord;
 	        return;
 	    }
-	    if (!(m_hdu_type == FITS::PrimaryArrayHDU || 
+	    if (!(m_hdu_type == FITS::PrimaryTableHDU || 
 		  m_hdu_type == FITS::PrimaryGroupHDU)) {
 	        errmsg(NOPRIMARY,"Missing primary header-data unit [FitsInput::init()].");
 	    } else {
@@ -393,7 +393,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return m_curr;
 	    }
 	    if (!(m_hdu_type == FITS::PrimaryArrayHDU || 
-		  m_hdu_type == FITS::PrimaryGroupHDU)) {
+		  m_hdu_type == FITS::PrimaryGroupHDU ||
+		  m_hdu_type == FITS::PrimaryTableHDU)) {
 		errmsg(NOPRIMARY,"Missing primary header-data unit.");
 	    } else {
 		if (m_kw(FITS::SIMPLE)->asBool() == True){ 
@@ -542,7 +543,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    m_errfn(messages_[i].chars(), FITSError::ErrorLevel(errLevels_[i]));
 	}
 	nerrs_ = 0;
-	if (m_hdu_type == FITS::PrimaryArrayHDU || m_hdu_type == FITS::PrimaryGroupHDU){ 
+	if (m_hdu_type == FITS::PrimaryArrayHDU || 
+            m_hdu_type == FITS::PrimaryGroupHDU ||
+            m_hdu_type == FITS::PrimaryTableHDU) { 
 	    errmsg(BADPRIMARY,"[ FitsInput::read_header_rec()] Misplaced primary header-data unit.");
 	}
 	m_rec_type = FITS::HDURecord;
@@ -1029,12 +1032,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    errmsg(BADOPER,"Illegal operation -- cannot write FITS header.");
 	    return -1;
 	}
-	if (t == FITS::PrimaryArrayHDU || t == FITS::PrimaryGroupHDU) {
+	if (t == FITS::PrimaryArrayHDU || 
+            t == FITS::PrimaryGroupHDU ||
+            t == FITS::PrimaryTableHDU) {
 	    if (m_rec_type != FITS::InitialState) {
 		errmsg(BADOPER,"[FitsOutput::write_hdr()] Primary Header must be written first.");
 		return -1;
 	    } else {
-		//cout << "[FitsOutput::write_hdr()] PrimaryArrayHDU or PrimaryGroupHDU"<<endl;
 		m_isaprimary = True;
 	        if (kwl(FITS::SIMPLE)->asBool() == True) 
 		{ m_valid_fits = True; }
@@ -1058,7 +1062,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		errmsg(BADOPER,"[FitsOutput::write_hdr()] Cannot write extension HDU - EXTEND not True");
 		return -1;
 	    } else {
-	    	if (t == FITS::PrimaryArrayHDU || t == FITS::PrimaryGroupHDU) {
+	    	if (t == FITS::PrimaryArrayHDU || 
+                    t == FITS::PrimaryGroupHDU ||
+                    t == FITS::PrimaryTableHDU ){
 	    	    errmsg(BADOPER,"[FitsOutput::write_hdr()] Primary HDU already written.");
 	    	    return -1;
 	    	}
@@ -1105,7 +1111,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // FitsOutput::set_data_into() is used by PrimaryArray::write_priArr_hdr() etc.
     void FitsOutput::set_data_info( FitsKeywordList &kwl, FITS::HDUType t, FITS::ValueType dt, OFF_T ds, Int is){
-	if (t == FITS::PrimaryArrayHDU || t == FITS::PrimaryGroupHDU) {
+	if (t == FITS::PrimaryArrayHDU || 
+            t == FITS::PrimaryGroupHDU ||
+            t == FITS::PrimaryTableHDU) {
 	    m_isaprimary = True;
 	    if (kwl(FITS::SIMPLE)->asBool() == True) 
 	    { m_valid_fits = True; }
