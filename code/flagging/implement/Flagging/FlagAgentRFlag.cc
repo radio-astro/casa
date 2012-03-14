@@ -301,14 +301,8 @@ FlagReport FlagAgentRFlag::getReport()
 {
 	FlagReport totalRep(String("list"),agentName_p);
 
-	if ((doflag_p==false)) //  and (doplot_p==true))  // RVU commented out doplot_p here....
+	if ((doflag_p==false))
 	{
-	         // These functions compute thresholds, and resize and fill
-                 // field_spw_noise_map_p and field_spw_scutof_map_p.
-	         // TODO : Thresholds should be calculated even if no plot is asked for, but the "plot"
-                 //             should be made only when doplot_p==true.  These two operations should
-	         //             be separated.
-
 		// Plot reports (should be returned if params were calculated and display is activated)
 		FlagReport noiseStd = getReportCore(	field_spw_noise_histogram_sum_p,
 												field_spw_noise_histogram_sum_squares_p,
@@ -316,7 +310,10 @@ FlagReport FlagAgentRFlag::getReport()
 												field_spw_noise_map_p,
 												"Time analysis",
 												noiseScale_p);
-		totalRep.addReport(noiseStd);
+		if(doplot_p==true)
+		{
+		         totalRep.addReport(noiseStd);
+		}
 
 		FlagReport scutofStd = getReportCore(	field_spw_scutof_histogram_sum_p,
 												field_spw_scutof_histogram_sum_squares_p,
@@ -324,12 +321,11 @@ FlagReport FlagAgentRFlag::getReport()
 												field_spw_scutof_map_p,
 												"Spectral analysis",
 												scutofScale_p);
-		totalRep.addReport(scutofStd);
-	}
+		if(doplot_p==true)
+		{
+		         totalRep.addReport(scutofStd);
+		}
 
-
-	if (doflag_p==false)
-	{
 		// Threshold reports (should be returned if params were calculated)
 		Record threshList;
 		Int nEntries = field_spw_noise_map_p.size();
