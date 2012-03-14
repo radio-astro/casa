@@ -52,8 +52,15 @@ namespace casa {
 
 	    qt::statfield_list_t::iterator fiter = fields.begin( );
 	    std::list<std::pair<String,String> >::iterator siter = (*stats.list()).begin( );
+
+#if defined(__APPLE__)
+	    QFont stat_field_font( "Lucida Grande", 10 );
+#else
+	    QFont stat_field_font( "Sans Serif", 7 );
+#endif
 	    while ( fiter != fields.end( ) && siter != (*stats.list()).end( ) ) {
 		(*fiter).first->setTitle( QString::fromStdString((*siter).first) );
+		(*fiter).second->setFont( stat_field_font );
 		(*fiter).second->setText( QString::fromStdString((*siter).second) );
 		(*fiter).second->setCursorPosition(0);
 		++fiter;
