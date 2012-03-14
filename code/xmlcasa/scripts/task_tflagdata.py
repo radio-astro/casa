@@ -92,8 +92,6 @@ def tflagdata(vis,
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
-    mslocal.writehistory(message='taskname = tflagdata', origin='tflagdata')
-    mslocal.open(vis, nomodify=False)
 
 
     try: 
@@ -411,6 +409,8 @@ def tflagdata(vis,
                else:
                     casalog.post('Iterating through the entire MS');
                     
+               mslocal.close()
+                    
             # Get all the selection parameters, but set correlation to ''
             elif vrows.__len__() == 1:
                 cmd0 = flagcmd[vrows[0]]['command']
@@ -561,15 +561,17 @@ def tflagdata(vis,
         
     # Write history to the MS
     try:
-            param_names = tflagdata.func_code.co_varnames[:tflagdata.func_code.co_argcount]
-            param_vals = [eval(p) for p in param_names]
-            retval &= write_history(mslocal, vis, 'tflagdata', param_names,
-                                    param_vals, casalog)
-            
-            mslocal.close()
+        mslocal.open(vis, nomodify=False)
+        mslocal.writehistory(message='taskname = tflagdata', origin='tflagdata')
+        param_names = tflagdata.func_code.co_varnames[:tflagdata.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+        retval &= write_history(mslocal, vis, 'tflagdata', param_names,
+                                param_vals, casalog)
+        
+        mslocal.close()
     except Exception, instance:
-            mslocal.close()
-            casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+        mslocal.close()
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                          'WARN')
         
     return
