@@ -189,7 +189,6 @@ class test_unapply(test_base):
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         res = tflagdata(vis=self.vis,mode='summary')
-        print res['scan']
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
         self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
         
