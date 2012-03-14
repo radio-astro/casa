@@ -1,5 +1,5 @@
 import os
-from taskinit import casalog, fgtool, mstool, write_history
+from taskinit import *
 
 def importuvfits(fitsfile, vis, antnamescheme=None):
 	"""Convert a UVFITS file to a CASA visibility data set (MS):
@@ -34,12 +34,12 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
 
 	# save original flagversion
 	try:
-		myfg = fgtool.create()
-		ok &= myfg.open(vis)
-		ok &= myfg.saveflagversion('Original',
+		tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+		ok &= tflocal.open(vis)
+		ok &= tflocal.saveflagversion('Original',
 					   comment='Original flags at import into CASA',
 					   merge='replace')
-		ok &= myfg.done()
+		ok &= tflocal.done()
 	except Exception, instance: 
 		print '*** Error saving original flags (importuvfits) ***', instance
 		raise Exception, instance
