@@ -52,29 +52,29 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
         logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
-	exists = config.fieldNumber ("time_amp_cutoff");
+	exists = config.fieldNumber ("timecutoff");
 	if (exists >= 0)
 	{
-		time_cutoff_p = config.asDouble("time_amp_cutoff");
+		time_cutoff_p = config.asDouble("timecutoff");
 	}
 	else
 	{
 		time_cutoff_p = 4.0;
 	}
 
-	*logger_p << logLevel_p << " time_amp_cutoff is " << time_cutoff_p << LogIO::POST;
+	*logger_p << logLevel_p << " timecutoff is " << time_cutoff_p << LogIO::POST;
 
-	exists = config.fieldNumber ("freq_amp_cutoff");
+	exists = config.fieldNumber ("freqcutoff");
 	if (exists >= 0)
 	{
-		freq_cutoff_p = config.asDouble("freq_amp_cutoff");
+		freq_cutoff_p = config.asDouble("freqcutoff");
 	}
 	else
 	{
 		freq_cutoff_p = 3.0;
 	}
 
-	*logger_p << logLevel_p << " freq_amp_cutoff is " << freq_cutoff_p << LogIO::POST;
+	*logger_p << logLevel_p << " freqcutoff is " << freq_cutoff_p << LogIO::POST;
 
 	exists = config.fieldNumber ("maxnpieces");
 	if (exists >= 0)
