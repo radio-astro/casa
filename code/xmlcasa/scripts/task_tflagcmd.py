@@ -33,13 +33,6 @@ def tflagcmd(
     # Task tflagcmd
     #    Reads flag commands from file or string and applies to MS
 
-    # TO DO:
-    # remove sorting
-    # add reason selection in all input types
-    # what to do with the TIME column?
-    # implement backup for the whole input file
-    # add support for ASDM.xml ????
-
     try:
         from xml.dom import minidom
     except:
@@ -54,9 +47,9 @@ def tflagcmd(
     mslocal2 = casac.homefinder.find_home_by_name('msHome').create()
 
     # MS HISTORY
-    mslocal.open(vis, nomodify=False)
-    mslocal.writehistory(message='taskname = tflagcmd',
-                         origin='tflagcmd')
+#    mslocal.open(vis, nomodify=False)
+#    mslocal.writehistory(message='taskname = tflagcmd',
+#                         origin='tflagcmd')
     mslocal.open(vis, nomodify=False)
 
     try:
@@ -254,13 +247,14 @@ def tflagcmd(
             # Antenna, correlation and timerange should be handled by the agent
             unionpars = {}
             if cmdlist.__len__() > 1:
-#                unionpars = fh.getUnion(mslocal, vis, cmdlist)
                 unionpars = fh.getUnion(mslocal, vis, myflagcmd)
                 if len(unionpars.keys()) > 0:
                     casalog.post('Pre-selecting a subset of the MS: ')
                     casalog.post('%s' % unionpars)
                 else:
                     casalog.post('Iterating through the entire MS')
+                
+                mslocal.close()
                     
             # Get all the selection parameters, but set correlation to ''
             elif cmdlist.__len__() == 1:
