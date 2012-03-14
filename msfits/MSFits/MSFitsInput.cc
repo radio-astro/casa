@@ -784,7 +784,7 @@ void MSFitsInput::setupMeasurementSet(const String& MSFileName, Bool useTSM,
     // avoid lock overheads by locking the table permanently
     TableLock lock(TableLock::AutoLocking);
     MeasurementSet ms(newtab, lock);
-    cout << "ms created" << endl;
+    //cout << "ms created" << endl;
 
     // Set up the subtables for the UVFITS MS
     // we make new tables with 0 rows
