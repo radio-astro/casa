@@ -53,6 +53,90 @@ class MSColumns;
 // </summary>
 // <use visibility=local>
 // <etymology>
+// This class can hold a primary array of several datatypes
+// </etymology>
+// <synopsis>
+// This is a helper class to avoid cumbersome switch statements on the
+// template type of the primary array 
+// It forwards all the PrimaryArray member functions we need in the filler.
+// </synopsis>
+class MSPrimaryTableHolder
+{
+  // This is a helper class to avoid cumbersome switch statements on the
+  // template type of the primary array
+  // It forwards all the PrimaryTable member function we need in the filler.
+public:
+  // Construct an empty holder, used to attach to later
+  MSPrimaryTableHolder();
+
+  // Construct from an input file containing a FITS primary group hdu.
+  // Throws an exception if the datatype is not Short, FitsLong or Float
+  MSPrimaryTableHolder(FitsInput& infile);
+
+  ~MSPrimaryTableHolder();
+
+  // Attach to the input file, create the appropriate PrimaryArray.
+  // Throws an exception if the datatype is not Short, FitsLong or Float
+  void attach(FitsInput& infile);
+
+  // Detach from the input file
+  void detach();
+
+  //# forwarding functions
+
+  // Number of dimensions
+  Int dims()
+  {return hdu_p->dims();}
+
+  // Length of i'th axis
+  Int dim(Int i)
+  {return hdu_p->dim(i);}
+
+  // Coordinate type
+  Char* ctype(Int i)
+  { return pf ? pf->ctype(i) : (pl ? pl->ctype(i) : ps->ctype(i));}
+
+  // Coordinate reference value
+  Double crval(Int i)
+  { return pf ? pf->crval(i) : (pl ? pl->crval(i) : ps->crval(i));}
+
+  // Coordinate reference pixel
+  Double crpix(Int i)
+  { return pf ? pf->crpix(i) : (pl ? pl->crpix(i) : ps->crpix(i));}
+
+  // Coordinate delta
+  Double cdelt(Int i)
+  { return pf ? pf->cdelt(i) : (pl ? pl->cdelt(i) : ps->cdelt(i));}
+
+  // Keyword of given type
+  const FitsKeyword* kw(const FITS::ReservedName& n)
+  { return hdu_p->kw(n);}
+
+  // All keywords
+  ConstFitsKeywordList& kwlist()
+  { return hdu_p->kwlist();}
+
+  // Advance to next keyword
+  const FitsKeyword* nextkw()
+  { return hdu_p->nextkw();}
+
+  // Read the next group
+  Int read()
+  { return pf ? pf->read() : ( pl ? pl->read() : ps->read());}
+
+private:
+  HeaderDataUnit* hdu_p;
+  PrimaryTable<Short>* ps;
+  PrimaryTable<FitsLong>* pl;
+  PrimaryTable<Float>* pf;
+  PrimaryTable<uChar>* pb;
+};
+
+// <summary>
+// A helper class for MSFitsInput
+// </summary>
+// <use visibility=local>
+// <etymology>
 // This class can hold a primary group of several datatypes
 // </etymology>
 // <synopsis>
@@ -209,7 +293,7 @@ protected:
   // DATA, FLAG and WEIGHT_SPECTRUM. Use obsType to choose the tiling
   // scheme.
   void setupMeasurementSet(const String& MSFileName, Bool useTSM=True,
-			   Int obsType = MSTileLayout::Standard);
+               Int obsType = MSTileLayout::Standard);
 
   // Fill the Observation and ObsLog tables
   void fillObsTables();
@@ -255,6 +339,8 @@ protected:
   // update a the Spectral window post filling if necessary
   void updateSpectralWindowTable();
 
+  void readRandomGroupUVFits(Int obsType);
+  void readPrimaryTableUVFits(Int obsType);
 
 
 private:
@@ -269,6 +355,7 @@ private:
   FitsInput* infile_p;
   String msFile_p;
   MSPrimaryGroupHolder priGroup_p;
+  MSPrimaryTableHolder priTable_p;
   MeasurementSet ms_p;
   MSColumns* msc_p;
   Int nIF_p;
