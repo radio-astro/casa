@@ -1164,90 +1164,37 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 	for (Int j=0; j<numcorr0; j++) {
 	  Int offset = indptr[j] + k*numcorr0;
 
-	  //if(!fptr[offset]){
+	  if(!fptr[offset]){
 	    realcorr[j] += iptr[offset].real()*wptr[offset];
 	    imagcorr[j] += iptr[offset].imag()*wptr[offset];
 	    wgtaver[j] += wptr[offset];
-	  //}
+	  }
 
 	  if(chancounter==chanstep){
 	    if(wgtaver[j] > 0){
 	      outptr[0] = realcorr[j]/wgtaver[j];
 	      outptr[1] = imagcorr[j]/wgtaver[j];
-	    }
-	    else if(wgtaver[j] < 0){
-	      outptr[0] = realcorr[j]/wgtaver[j];
-	      outptr[1] = imagcorr[j]/wgtaver[j];
+	      outptr[2] = wgtaver[j];
 	    }
 	    else{
 	      //outptr[0]=0.0;
 	      //outptr[1]=0.0;
 	      outptr[0] = realcorr[j];
 	      outptr[1] = imagcorr[j];
+	      outptr[2] = -wgtaver[j];
 	    }
-	    if (rowFlag || fptr[offset]) {
+	    if (rowFlag) {
 	      // FLAGged
 	      outptr[2] = -wgtaver[j];
-	    } else {
-	      // NOT FLAGged
-	      outptr[2] = wgtaver[j];
-	    }
+	    } 
+            //else {
+	    //  // NOT FLAGged
+	    //  outptr[2] = wgtaver[j];
+	    //}
 	    outptr += 3;
 	  }
 	}
       }
-//      for (Int k=chanstart; k< (nchan*chanstep+chanstart); k++) {
-//
-//  /*
-//	cout << "row = " << tbfrownr << " "
-//	  //	<< outptr << " " << optr << " " << outptr-optr << " ";
-//	     << "ddi = " << m << " (" << inspwinid(i) << ") "
-//	     << "chan = " << k << " / "
-//	     << boolalpha 
-//	  //     << "hasWeightArray = " << hasWeightArray << " " 
-//	     << "wt(chan) = " << inwttmp.column(k) << "; "
-//	     << "flag(chan) = " << inflagtmp.column(k) << " "
-//	     << "shapes: " 
-//	     << indatatmp.shape() << " "
-//	     << inwttmp.shape()  << " "
-//	     << inflagtmp.shape()  << " "
-//	     << endl;
-//  */
-//	if(chancounter == chanstep){
-//	  realcorr.set(0); imagcorr.set(0); wgtaver.set(0);
-//	  chancounter=0;
-//	}
-//	++chancounter;
-//	for (Int j=0; j<numcorr0; j++) {
-//	  Int offset = indptr[j] + k*numcorr0;
-//
-//	  if(!fptr[offset]){
-//	    //	    dowrite=True;
-//	    realcorr[j] += iptr[offset].real()*wptr[offset];
-//	    imagcorr[j] += iptr[offset].imag()*wptr[offset];
-//	    wgtaver[j] += wptr[offset];
-//	  }
-//
-//	  if(chancounter==chanstep){
-//	    if(wgtaver[j] > 0){
-//	      outptr[0] = realcorr[j]/wgtaver[j];
-//	      outptr[1] = imagcorr[j]/wgtaver[j];
-//	    }
-//	    else{
-//	      outptr[0]=0.0;
-//	      outptr[1]=0.0;
-//	    }
-//	    if (rowFlag) {
-//	      // FLAGged
-//	      outptr[2] = -wgtaver[j];
-//	    } else {
-//	      // NOT FLAGged
-//	      outptr[2] = wgtaver[j];
-//	    }
-//	    outptr += 3;
-//	  }
-//	}
-//    }
 
       // if(nOutRow - outtbfrownr < 5)
       //   os << LogIO::DEBUG1 << "(outtbfrownr, m) = (" << outtbfrownr
