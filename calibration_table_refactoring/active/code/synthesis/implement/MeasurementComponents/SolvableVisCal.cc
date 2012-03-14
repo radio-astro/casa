@@ -4669,12 +4669,14 @@ void SolvableVisJones::applyRefAnt() {
     for (Int ich=0;ich<ssh(1);++ich) {
       for (Int ipar=0;ipar<ssh(0);++ipar) {
 	Complex cref=sol(ipar,ich,iref);
-	cref/=abs(cref);
-
-	blc(0)=trc(0)=ipar;
-	blc(1)=trc(1)=ich;
-	Array<Complex> solpc(sol(blc,trc));
-	solpc/=cref;
+	Float amp=abs(cref);
+	if (amp>0.0) {
+	  cref/=amp;
+	  blc(0)=trc(0)=ipar;
+	  blc(1)=trc(1)=ich;
+	  Array<Complex> solpc(sol(blc,trc));
+	  solpc/=cref;
+	}
       }
     }
     // put back 

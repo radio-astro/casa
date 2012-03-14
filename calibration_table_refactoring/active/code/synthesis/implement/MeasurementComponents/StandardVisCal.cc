@@ -811,28 +811,61 @@ void BJones::globalPostSolveTinker() {
 
 void BJones::fillChanGaps() {
 
+  // TBD: Can this be consolidated with normalization (should be done before norm!)
+
   logSink() << "Filling in flagged solution channels by interpolation." 
 	    << LogIO::POST;
 
   // Iteration axes (norm per spw, pol, ant, timestamp)
   IPosition itax(3,0,2,3);
 
-  for (Int ispw=0;ispw<nSpw();++ispw)
-    // Only if there are any solutions, and there are more than 2 channels
-    if (cs().nTime(ispw)>0 && cs().nChan(ispw)>2) {
-      // Iterate over time, pol, and ant
-      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
-      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
-      while (!soliter.pastEnd()) {
-	fillChanGapArray(soliter.array(),okiter.array());
-	soliter.next();
-	okiter.next();
+
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
+
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
+
+    logSink() << "Normalizing solutions per spw, pol, ant, time." 
+	      << LogIO::POST;
+
+    // In this generic version, one normalization factor per spw
+    Block<String> col(3);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    CTIter ctiter(*ct_,col);
+
+    // Cube iteration axes are pol and ant
+    IPosition itax(2,0,2);
+   
+    while (!ctiter.pastEnd()) {
+      Cube<Bool> fl(ctiter.flag());
+      
+      if (nfalse(fl)>0) {
+	Cube<Complex> p(ctiter.cparam());
+	ArrayIterator<Complex> soliter(p,itax,False);
+	ArrayIterator<Bool> fliter(fl,itax,False);
+	Array<Bool> sok;
+	while (!soliter.pastEnd()) {
+	  sok=!fliter.array();
+	  fillChanGapArray(soliter.array(),sok);
+	  soliter.next();
+	  fliter.next();
+	}
+	
+	// record result...	
+	ctiter.setcparam(p);
+	ctiter.setflag(!sok);
       }
+      ctiter.next();
     }
+  }
 }
 
 void BJones::fillChanGapArray(Array<Complex>& sol,
 			      Array<Bool>& solOK) {
+
+  // TBD: Do this with InterpolateArray1D a la CTPatchedInterp::resampleInFreq
 
   // Make the arrays 1D
   Vector<Complex> solv(sol.reform(IPosition(1,sol.nelements())));
@@ -2000,28 +2033,46 @@ MfMueller::~MfMueller() {
 void MfMueller::normalize() {
 
   // This is just like BJones
+  // TBD:  consolidate (via generalized SVC::normalize(Block<String> cols) )
 
-  throw(AipsError("MfMueller::normalize NYI."));
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
 
-  logSink() << "Normalizing solutions per spw, pol, baseline, time"
-            << LogIO::POST;
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
 
-  // Iteration axes (norm per spw, pol, ant, timestamp)
-  //  (this normalizes each baseline spectrum)
-  IPosition itax(3,0,2,3);
+    logSink() << "Normalizing solutions per spw, pol, baseline, time"
+	      << LogIO::POST;
 
-  for (Int ispw=0;ispw<nSpw();++ispw)
-    if (cs().nTime(ispw)>0) {
-      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
-      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
-      while (!soliter.pastEnd()) {
-        normSolnArray(soliter.array(),okiter.array(),True);
-        soliter.next();
-        okiter.next();
+    Block<String> col(4);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    col[3]="ANTENNA2";
+    CTIter ctiter(*ct_,col);
+
+    // Cube iteration axes are pol and ant
+    IPosition itax(2,0,2);
+   
+    while (!ctiter.pastEnd()) {
+      Cube<Bool> fl(ctiter.flag());
+      
+      if (nfalse(fl)>0) {
+	Cube<Complex> p(ctiter.cparam());
+	ArrayIterator<Complex> soliter(p,itax,False);
+	ArrayIterator<Bool> fliter(fl,itax,False);
+	while (!soliter.pastEnd()) {
+	  normSolnArray(soliter.array(),!fliter.array(),True); // Do phase
+	  soliter.next();
+	  fliter.next();
+	}
+	
+	// record result...	
+	ctiter.setcparam(p);
       }
-
+      ctiter.next();
     }
-
+  }
+  cout << "End of MfMueller::normalize()" << endl;
 }
 
 
