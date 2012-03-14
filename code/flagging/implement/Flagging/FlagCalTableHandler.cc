@@ -65,7 +65,7 @@ bool
 FlagCalTableHandler::open()
 {
 	if (originalCalTable_p) delete originalCalTable_p;
-	originalCalTable_p = new NewCalTable(msname_p,Table::Update);
+	originalCalTable_p = new NewCalTable(msname_p,Table::Update,Table::Plain);
 
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalCalTable_p->field());
@@ -542,6 +542,33 @@ Vector<Int>& CTBuffer::observationId()
 	return observationId_p;
 }
 
+Vector<Int>& CTBuffer::corrType()
+{
+	if (!CTcorrTypeOK_p)
+	{
+		if (!CTnRowOK_p) nCorr();
+		corrType_p.resize(nCorr_p,False);
+		switch (nCorr_p)
+		{
+			case 1:
+				corrType_p[0] = Stokes::PP;
+			break;
+			case 2:
+				corrType_p[0] = Stokes::PP;
+				corrType_p[1] = Stokes::LL;
+			break;
+			case 4:
+				corrType_p[0] = Stokes::PP;
+				corrType_p[1] = Stokes::PQ;
+				corrType_p[2] = Stokes::QP;
+				corrType_p[3] = Stokes::QQ;
+			break;
+		}
+	}
+
+	return corrType_p;
+}
+
 Vector<Int>& CTBuffer::channel()
 {
 	if (!CTchannelOK_p)
@@ -615,6 +642,7 @@ void CTBuffer::invalidate()
 	CTantenna2OK_p = False;
 	CTflagCubeOk_p = False;
 	CTobservationIdOK_p = False;
+	CTcorrTypeOK_p = False;
 	CTchannelOK_p = False;
 	CTfrequencyOK_p = False;
 	CTnRowChunkOK_p = False;

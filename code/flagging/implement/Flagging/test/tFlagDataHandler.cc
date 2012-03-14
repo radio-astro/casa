@@ -395,9 +395,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	//unflag(inputFile,iterationMode);
+	unflag(inputFile,iterationMode);
 	flag(inputFile,iterationMode,testMode,flagMode,record);
-	//summary(inputFile,iterationMode);
+	summary(inputFile,iterationMode);
 
 	exit(-1);
 }

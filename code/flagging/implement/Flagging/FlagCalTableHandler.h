@@ -56,6 +56,7 @@ public:
 
 	// Convenient public methods for compatibility with MS-like interface
 	Vector<Int>& observationId();
+	Vector<Int>& corrType();
 
 	// Methods for efficient synchronization with CTIter
 	void invalidate();
@@ -81,6 +82,7 @@ private:
 
 	// Convenient members for compatibility with MS-like interface
 	Vector<Int> observationId_p;
+	Vector<Int> corrType_p;
 
 	// Members for efficient synchronization with CTIter
 	Bool CTfieldIdOK_p;
@@ -91,6 +93,7 @@ private:
 	Bool CTantenna2OK_p;
 	Bool CTflagCubeOk_p;
 	Bool CTobservationIdOK_p;
+	Bool CTcorrTypeOK_p;
 	Bool CTchannelOK_p;
 	Bool CTfrequencyOK_p;
 	Bool CTnRowOK_p;
