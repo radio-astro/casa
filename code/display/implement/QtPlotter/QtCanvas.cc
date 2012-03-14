@@ -587,8 +587,11 @@ void QtCanvas::keyPressEvent(QKeyEvent *event)
     		emit xRangeChanged(1.0,0.0);
     	}
         break;
+#if defined(__APPLE__)
     case Qt::Key_Meta:
+#else
     case Qt::Key_Control:
+#endif
 	xcursor = QColor(Qt::gray);
 	update( );
 	break;

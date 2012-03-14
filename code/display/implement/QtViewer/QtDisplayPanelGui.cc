@@ -723,17 +723,30 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 }
 
 void QtDisplayPanelGui::doSelectChannel( const Vector<float> &zvec, float zval ) {
-    unsigned int channel_num = 0;
     unsigned int size = zvec.size( );
     if ( size == 0 ) return;
-    for ( unsigned int i=0; i < size; ++i ) {
-	if ( zval > zvec[i] ) channel_num = i;
-    }
-    if ( size > 0 && channel_num > 0 && channel_num < (size-1) ) {
-	if ( (zval-zvec[channel_num]) > (zvec[channel_num+1]-zval) ) {
-	    channel_num += 1;
+    unsigned int channel_num = zvec[0];
+    bool forward = zvec[0] < zvec[size-1];
+    if ( forward ) {
+	for ( unsigned int i=0; i < size; ++i ) {
+	    if ( zval > zvec[i] ) channel_num = i;
+	}
+	if ( channel_num < (size-1) ) {
+	    if ( (zval-zvec[channel_num]) > (zvec[channel_num+1]-zval) ) {
+		channel_num += 1;
+	    }
+	}
+    } else {
+	for ( unsigned int i=0; i < size; ++i ) {
+	    if ( zval < zvec[i] ) channel_num = i;
+	}
+	if ( channel_num > 0 ) {
+	    if ( (zval-zvec[channel_num]) > (zvec[channel_num-1]-zval) ) {
+		channel_num -= 1;
+	    }
 	}
     }
+
     qdp_->goTo((int)channel_num);
 }
 
