@@ -183,18 +183,21 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
         # Flag using tfcrop agent from file
-        input = "scan=3 mode=tfcrop correlation='ABS_RR'"
+        # Note : For this test, scan=4 gives identical flags on 32/64 bit machines
+        #           Other scans give differences at the 0.005% level.
+        input = "scan=4 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         res = tflagdata(vis=self.vis,mode='summary')
+        print res['scan']
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
-        self.assertEqual(res['scan']['3']['flagged'], 2829, 'scan=3 should be partially flagged')
+        self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
         
         # Unapply only the tfcrop line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
-        result = tflagdata(vis=self.vis,mode='summary',scan='3')
+        result = tflagdata(vis=self.vis,mode='summary',scan='4')
         self.assertEqual(result['flagged'], 0, 'Expected 0 flags, found %s'%result['flagged'])
-        self.assertEqual(result['total'], 762048,'Expected total 762048, found %s'%result['total'])
+        self.assertEqual(result['total'], 95256,'Expected total 95256, found %s'%result['total'])
 
     def test_uquack(self):
         '''tflagcmd: unapply quack agent'''
