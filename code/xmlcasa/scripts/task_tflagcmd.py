@@ -230,8 +230,13 @@ def tflagcmd(
                                     applied=False, outfile=outfile)
         elif action == 'apply' or action == 'unapply':
 
-        # Apply/Unapply the flag commands to the data
+            # Apply/Unapply the flag commands to the data
             apply = True
+            
+            # Preserve the order of the cmd list. When unapply, the order
+            # should not be preserved, because the unapply list should run
+            # before the re-apply list in the FlagAgentList.apply() method
+            preserve_order = True
 
             # Get the list of parameters
             cmdlist = []
@@ -268,6 +273,7 @@ def tflagcmd(
             # Parse the agents parameters
             if action == 'unapply':
                 apply = False
+                preserve_order = False
 
             list2save = fh.setupAgent(tflocal, myflagcmd, tablerows, apply, True)
 
@@ -279,7 +285,7 @@ def tflagcmd(
                 fh.backupFlags(tflocal, 'tflagcmd')
 
             # Run the tool
-            stats = tflocal.run(True, True)
+            stats = tflocal.run(True, preserve_order)
 
             tflocal.done()
 
