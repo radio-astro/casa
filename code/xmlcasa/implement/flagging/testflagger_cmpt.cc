@@ -307,6 +307,7 @@ testflagger::parseclipparameters(
 		const std::vector<double>& clipminmax,
 		const bool clipoutside,
 		const bool channelavg,
+		const bool clipzeros,
 		const bool apply)
 {
 
@@ -321,7 +322,7 @@ testflagger::parseclipparameters(
 					String(uvrange),String(timerange),String(correlation),
 					String(intent), String(observation),
 					String(datacolumn), clipminmax, Bool(clipoutside),
-					Bool(channelavg), Bool(apply));
+					Bool(channelavg), Bool(clipzeros), Bool(apply));
 
 		}
 
@@ -331,6 +332,93 @@ testflagger::parseclipparameters(
 		RETHROW(x);
 	}
 }
+
+bool
+testflagger::parsequackparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const std::string& quackmode,
+		const double quackinterval,
+		const bool quackincrement,
+		const bool apply)
+{
+
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the quack parameters
+			return testflagger_p->parseQuackParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), String(quackmode),
+					quackinterval, Bool(quackincrement), Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+bool
+testflagger::parseelevationparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const double lowerlimit,
+		const double upperlimit,
+		const bool apply)
+{
+
+	try {
+
+		if (testflagger_p) {
+
+			// Parse the elevation parameters
+			return testflagger_p->parseElevationParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), lowerlimit,
+					upperlimit, Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+
+
+
+
+
+
+
 
 } // casac namespace
 

@@ -948,7 +948,7 @@ bool
 TestFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange,String correlation,
    	    String intent, String observation, String datacolumn,
-   	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply)
+   	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool clipzeros, Bool apply)
 {
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
@@ -979,6 +979,7 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 	agent_record.define("clipminmax", clipminmax);
 	agent_record.define("clipoutside", clipoutside);
 	agent_record.define("channelavg", channelavg);
+	agent_record.define("clipzeros", clipzeros);
 
 
 	// Call the main method
@@ -1030,7 +1031,45 @@ TestFlagger::parseQuackParameters(String field, String spw, String array, String
 
 }
 
+bool
+TestFlagger::parseElevationParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String intent, String observation, Double lowerlimit, Double upperlimit, Bool apply)
+{
 
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "elevation";
+	String agent_name = "Elevation";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("lowerlimit", lowerlimit);
+	agent_record.define("upperlimit", upperlimit);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
 
 
 } //#end casa namespace

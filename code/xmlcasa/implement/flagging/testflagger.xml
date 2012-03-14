@@ -482,6 +482,12 @@ for the manual mode.
      <value>false</value>
      </param>
 
+          <param type="bool" name="clipzeros">
+     <description>\tClip zero-value data. [True/False]. Default:
+     </description>
+     <value>false</value>
+     </param>
+     
      <param type="bool" name="apply">
      <description>\tParameter to flag or unflag data. Default: </description>
      <value>true</value>
@@ -495,6 +501,192 @@ for the manual mode.
 
 <returns type="bool"/> 
 </method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parsequackparameters">
+   <shortdescription>Parses data selection parameters and specific parameters
+for the quack mode.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>\tScan number. Example: '1,2,3' </description>
+     <value>""</value>
+     </param>   
+
+     <param type="string" name="baseline">
+     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id. Example: '2~4' </description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="quackmode">
+     <description>\tQuack mode. Default: </description>
+     <value>beg</value>
+     </param>
+
+     <param type="double" name="quackinterval">
+     <description>Quack length in seconds. Default: </description>
+     <value>0.0</value>
+     </param>
+
+     <param type="bool" name="quackincrement">
+     <description>Flag incrementally in time. Default:</description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="apply">
+     <description>\tParameter to flag or unflag the data. Default: </description>
+     <value>true</value>
+     </param>
+
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+</example>
+
+<returns type="bool"/> 
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="parseelevationparameters">
+   <shortdescription>Parses data selection parameters and specific parameters
+for the elevation mode.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>\tScan number. Example: '1,2,3' </description>
+     <value>""</value>
+     </param>   
+
+     <param type="string" name="baseline">
+     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id. Example: '2~4' </description>
+     <value>""</value>
+     </param>
+
+     <param type="double" name="lowerlimit">
+     <description>The limiting elevation in degrees. Data obtained at lower antenna elevations will get flagged. Default: 
+     </description>
+     <value>0.0</value>
+     </param>
+
+     <param type="double" name="upperlimit">
+     <description>The limiting elevation in degrees. Data obtained at higher antenna elevations will get flagged. Default:
+     </description>
+     <value>90.0</value>
+     </param>
+
+     <param type="bool" name="apply">
+     <description>\tParameter to flag or unflag the data. Default: </description>
+     <value>true</value>
+     </param>
+
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+</example>
+
+<returns type="bool"/> 
+</method>
+
 
 </tool>
 </casaxml>

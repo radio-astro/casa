@@ -176,19 +176,30 @@ public:
 	bool getFlagVersionList(Vector<String> &verlist);
 
 	// Agent's specific parsing methods (for convenience only)
+	// Parse parameters for manual
 	bool parseManualParameters(String field, String spw, String array, String feed, String scan,
        	    String antenna, String uvrange, String timerange,String correlation,
        	    String intent, String observation, Bool apply);
 
+	// Parse parameters for clip
 	bool parseClipParameters(String field, String spw, String array, String feed, String scan,
        	    String antenna, String uvrange, String timerange,String correlation,
        	    String intent, String observation, String datacolumn,
-       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply);
+       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg,
+       	    Bool clipzeros, Bool apply);
 
+	// Parse parameters for quack
 	bool parseQuackParameters(String field, String spw, String array, String feed, String scan,
        	    String antenna, String uvrange, String timerange,String correlation,
        	    String intent, String observation, String quackmode, Double quackinterval,
        	    Bool quackincrement, Bool apply);
+
+	// Parse parameters for elevation
+	bool parseElevationParameters(String field, String spw, String array, String feed,
+			String scan, String antenna, String uvrange, String timerange, String correlation,
+       	    String intent, String observation, Double lowerlimit, Double upperlimit,
+       	    Bool apply=true);
+
 
 private:
 
