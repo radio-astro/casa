@@ -406,7 +406,7 @@ class cleanup(unittest.TestCase):
         pass
            
     def test1a(self):
-        '''Importevla2: Cleanup'''
+        '''Importevla: Cleanup'''
         pass
                     
 def suite():
