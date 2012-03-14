@@ -116,7 +116,7 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
   //cerr<<"ctor: from existing cal table with name, option"<<endl;
 
   if (ttype==Table::Memory) 
-    *this = this->copyToMemoryTable("tempcaltable");
+    *this = this->copyToMemoryTable(tableName+".tempMemCalTable");
  
   // Attach subtable accessors
   attachSubTables();
@@ -136,7 +136,7 @@ NewCalTable::NewCalTable(String tableName, String caltype,
   CTDesc nctd("Complex","none",caltype,"circ");
 
   // Form underlying generic Table according to the supplied desc
-  SetupNewTable calMainTab(tableName,nctd.calMainDesc(),Table::New);
+  SetupNewTable calMainTab(tableName+".tempMemCalTable",nctd.calMainDesc(),Table::New);
   Table tab(calMainTab, Table::Memory, 0, False); 
   *this = tab;
   
@@ -150,10 +150,9 @@ NewCalTable::NewCalTable(String tableName, String caltype,
   this->fillGenericContents(nFld,nAnt,nSpw,nChan,nTime,rTime,tint,verbose);
 
   if (disk) {
-    // Write it out
-    String diskname("testNCTctor.tab");
-    if (verbose) cout << "Writing out to disk: "+diskname << endl;
-    this->writeToDisk(diskname);
+    // Write it out to disk
+    if (verbose) cout << "Writing out to disk: "+tableName << endl;
+    this->writeToDisk(tableName);
   }
 
 }

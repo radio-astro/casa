@@ -209,7 +209,7 @@ Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time, const Vector<Do
 // spwOK info for users
 Bool CTPatchedInterp::spwOK(Int spw) const {
 
-  if (spw<spwMap_.nelements())
+  if (spw<Int(spwMap_.nelements()))
     return this->spwInOK(spwMap_(spw));
 
   // Something wrong...
@@ -218,7 +218,7 @@ Bool CTPatchedInterp::spwOK(Int spw) const {
 }
 Bool CTPatchedInterp::spwInOK(Int spw) const {
 
-  if (spw<spwInOK_.nelements())
+  if (spw<Int(spwInOK_.nelements()))
     return spwInOK_(spw);
 
   // Something wrong
@@ -378,6 +378,16 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
     // Mask time result by flags
     Vector<Double> mfin=fin(!tflgi).getCompressedArray();
+
+    if (mfin.nelements()==0) {
+      cout << ifpar << " All chans flagged!" << endl;
+      // Everything flagged this par
+      //  Just flag, zero and go on to the next one
+      fflgi.set(True);
+      fresi.set(0.0);
+      continue;
+    }
+
     mfin/=1.0e9; // in GHz
     Vector<Float> mtresi=tresi(!tflgi).getCompressedArray();
 
@@ -392,12 +402,13 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     // TBD: ensure phases tracked on freq axis...
 
     // TBD: handle flags carefully!
+    //      (i.e., flag gaps larger than user's "freach")
     // For now,just unset them
     fflgi.set(False);
     
     // Always use nearest on edges
     // TBD: trap cases where frequencies don't overlap at all
-    //     (fout(hi)<mfin(0) || fout(lo)> mfin(ihi))
+    //     (fout(hi)<mfin(0) || fout(lo)> mfin(ihi))..... already OK (lo>hi)?
     // TBD: optimize the following by forming Slices in the
     //     while loops and doing Array assignment once afterwords
 
@@ -421,8 +432,6 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     Vector<Double> slfout(fout(blc,trc));
 
     InterpolateArray1D<Double,Float>::interpolate(slfresi,slfout,mfin,mtresi,1);
-
-    // TBD: Handle _large_ flag ranges (i.e., exceeding user's freq interp reach)
 
   }
 }
