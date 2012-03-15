@@ -68,6 +68,11 @@ FlagAgentElevation::setAgentParameters(Record config)
 	exists = config.fieldNumber ("lowerlimit");
 	if (exists >= 0)
 	{
+                if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt)
+	        {
+			 throw( AipsError ( "Parameter 'lowerlimit' must be of type 'double'" ) );
+	        }
+		
 		lowerlimit_p = config.asDouble("lowerlimit");
 	}
 	else
@@ -80,6 +85,11 @@ FlagAgentElevation::setAgentParameters(Record config)
 	exists = config.fieldNumber ("upperlimit");
 	if (exists >= 0)
 	{
+                if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt)
+	        {
+			 throw( AipsError ( "Parameter 'upperlimit' must be of type 'double'" ) );
+	        }
+		
 		upperlimit_p = config.asDouble("upperlimit");
 	}
 	else

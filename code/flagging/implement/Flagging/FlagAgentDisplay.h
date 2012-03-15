@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool showBandpass_p;
 
     // Control parameters
-    Bool showPlots_p, stopAndExit_p;
+    Bool stopAndExit_p;
     Bool pause_p;
     Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
     Bool reportReturn_p;

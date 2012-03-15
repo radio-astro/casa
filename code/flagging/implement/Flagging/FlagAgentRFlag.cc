@@ -65,67 +65,102 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("winsize");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'winsize' must be of type 'Int'" ) );
+	        }
+		
 		nTimeSteps_p = config.asuInt("winsize");
-		*logger_p << logLevel_p << " winsize is " << nTimeSteps_p << LogIO::POST;
 	}
 	else
 	{
 		nTimeSteps_p = 3;
 	}
+	
+	*logger_p << logLevel_p << " winsize is " << nTimeSteps_p << LogIO::POST;
 
 	// AIPS RFlag FPARM(5)
 	exists = config.fieldNumber ("spectralmax");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt)
+	        {
+			 throw( AipsError ( "Parameter 'spectralmax' must be of type 'double'" ) );
+	        }
+		
 		spectralmax_p = config.asDouble("spectralmax");
-		*logger_p << logLevel_p << " spectralmax is " << spectralmax_p << LogIO::POST;
 	}
 	else
 	{
 		spectralmax_p  = 1E6;
 	}
+	
+	*logger_p << logLevel_p << " spectralmax is " << spectralmax_p << LogIO::POST;
 
 	// AIPS RFlag FPARM(6)
 	exists = config.fieldNumber ("spectralmin");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat && config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'spectralmin' must be of type 'double'" ) );
+	        }
+		
 		spectralmin_p = config.asDouble("spectralmin");
-		*logger_p << logLevel_p << " spectralmin is " << spectralmin_p << LogIO::POST;
 	}
 	else
 	{
 		spectralmin_p = 0;
 	}
 
+	*logger_p << logLevel_p << " spectralmin is " << spectralmin_p << LogIO::POST;
+
 	// AIPS RFlag FPARM(9)
 	exists = config.fieldNumber ("timedevscale");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt)
+	        {
+			 throw( AipsError ( "Parameter 'timedevscale' must be of type 'double'" ) );
+	        }
+		
 		noiseScale_p = config.asDouble("timedevscale");
-		*logger_p << logLevel_p << " timedevscale is " << noiseScale_p << LogIO::POST;
 	}
 	else
 	{
 		noiseScale_p  = 5;
 	}
 
+	*logger_p << logLevel_p << " timedevscale is " << noiseScale_p << LogIO::POST;
+
 	// AIPS RFlag FPARM(10)
 	exists = config.fieldNumber ("freqdevscale");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt )
+	        {
+		         throw( AipsError ( "Parameter 'freqdevscale' must be of type 'double'" ) );
+	        }
+		
 		scutofScale_p = config.asDouble("freqdevscale");
-		*logger_p << logLevel_p << " freqdevscale is " << scutofScale_p << LogIO::POST;
 	}
 	else
 	{
 		scutofScale_p = 5;
 	}
 
+	*logger_p << logLevel_p << " freqdevscale is " << scutofScale_p << LogIO::POST;
+
 	// Determine if we have to apply the flags in the modified flag cube
 	String display("none");
 	exists = config.fieldNumber ("display");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpString )
+	        {
+			 throw( AipsError ( "Parameter 'display' must be of type 'string'" ) );
+	        }
+		
 		display = config.asString("display");
 	}
 
@@ -133,13 +168,18 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("writeflags");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'writeflags' must be of type 'bool'" ) );
+	        }
+		
 		writeflags = config.asBool("writeflags");
 	}
 
 	if( (writeflags == True) or (display == String("data")) or (display == String("both")) )
 	{
 		doflag_p = true;
-		*logger_p << logLevel_p << " (writeflags,display)=(" <<  writeflags << "," << display << "), will apply flags on modified flag cube " << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << " (writeflags,display)=(" <<  writeflags << "," << display << "), will apply flags on modified flag cube " << LogIO::POST;
 	}
 	else
 	{
@@ -161,12 +201,12 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("timedev");
 	if (exists >= 0)
 	{
-		if ( config.type( exists ) == casa::TpFloat ||  config.type( exists ) == casa::TpDouble )
+	  if ( config.type( exists ) == casa::TpFloat ||  config.type( exists ) == casa::TpDouble || config.type(exists) == casa::TpInt )
 		{
 			noise_p = config.asDouble("timedev");
 			*logger_p << logLevel_p << " timedev (same for all fields and spws) is " << noise_p << LogIO::POST;
 		}
-		else if( config.type(exists) == casa::TpArrayDouble )
+		else if( config.type(exists) == casa::TpArrayDouble || config.type(exists) == casa::TpArrayFloat || config.type(exists) == casa::TpArrayInt)
 		{
 			Matrix<Double> timedev = config.asArrayDouble( RecordFieldId("timedev") );
 			if(timedev.ncolumn()==3)
@@ -178,22 +218,23 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
 			    {
 			    	field_spw_noise_map_p[std::make_pair(timedev(dev_i,0),timedev(dev_i,1))] = timedev(dev_i,2);
-			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << endl;
+			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
 			    }
 			}
 			else
 			{
-				*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (timedev) must have 3 columns ([field,spw,dev]), using automatically computed values" << endl;
+			  throw( AipsError( " Matrix for time analysis deviation thresholds (timedev) must have 3 columns [[field,spw,dev]]. Set to [] to use automatically-computed thresholds." ) );
 			}
 		}
 		else
 		{
-			*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (timedev) does not have proper type (Float or Double), using automatically computed values" << endl;
-	    }
+		        *logger_p << logLevel_p << "Using automatically computed values for timedev" << LogIO::POST;
+		}
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG1 << " Matrix for time analysis deviation thresholds (timedev) not provided, using automatically computed values" << endl;
+	        *logger_p << logLevel_p << "Using automatically computed values for timedev" << LogIO::POST;
+		// noise_p initialized to 0 above.
 	}
 
 
@@ -202,12 +243,12 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("freqdev");
 	if (exists >= 0)
 	{
-		if ( config.type( exists ) == casa::TpFloat ||  config.type( exists ) == casa::TpDouble )
+		if ( config.type( exists ) == casa::TpFloat ||  config.type( exists ) == casa::TpDouble  || config.type(exists) == casa::TpInt )
 		{
 			scutof_p = config.asDouble("freqdev");
 			*logger_p << logLevel_p << " freqdev (same for all fields and spws) is " << scutof_p << LogIO::POST;
 		}
-		else if ( config.type(exists) == casa::TpArrayDouble )
+		else if( config.type(exists) == casa::TpArrayDouble || config.type(exists) == casa::TpArrayFloat || config.type(exists) == casa::TpArrayInt)
 		{
 			Matrix<Double> freqdev = config.asArrayDouble( RecordFieldId("freqdev") );
 			if(freqdev.ncolumn()==3)
@@ -224,17 +265,18 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			}
 			else
 			{
-				*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (freqdev) must have 3 columns ([field,spw,dev]), using automatically computed values" << endl;
+			  throw( AipsError( " Matrix for spectral analysis deviation thresholds (freqdev) must have 3 columns [[field,spw,dev]]. Set to [] to use automatically-computed thresholds." ) );
 			}
 		}
 		else
 		{
-			*logger_p << LogIO::WARN << " Matrix for time analysis deviation thresholds (freqdev) does not have proper type (Float or Double), using automatically computed values" << endl;
+		        *logger_p << logLevel_p << "Using automatically computed values for freqdev" << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG1 << " Matrix for spectral analysis deviation thresholds (freqdev) not provided, using automatically computed values" << endl;
+	        *logger_p << logLevel_p << "Using automatically computed values for freqdev" << LogIO::POST;
+		// scutof initialized to zero above.
 	}
 
 	return;
