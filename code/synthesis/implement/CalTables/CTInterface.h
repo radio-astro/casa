@@ -43,10 +43,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CTInterface(const Table& table);
 
     virtual ~CTInterface();
-    virtual const CTAntenna& antenna() {return asCT()->antenna();}
-    virtual const CTField& field() {return asCT()->field();}
+    virtual const CTAntenna& antenna()               {return asCT()->antenna();}
+    virtual const CTField& field()                   {return asCT()->field();}
     virtual const CTSpectralWindow& spectralWindow() {return asCT()->spectralWindow();}
-    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) {return MS::columnName(nameEnum);}
+    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) 
+                                                     {return MS::columnName(nameEnum);}
+    virtual Bool isMS()                              {return False;};
 
     virtual const MeasurementSet* asMS() 
     {

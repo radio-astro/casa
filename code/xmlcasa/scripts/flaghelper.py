@@ -97,6 +97,8 @@ def makeDict(cmdlist, myreason='any'):
 
     # List of reasons in input file
     nrows = cmdlist.__len__()
+    
+    # If any selection was requested
     reaslist = []
     for i in range(nrows):            
         command = cmdlist[i]
@@ -104,8 +106,8 @@ def makeDict(cmdlist, myreason='any'):
             reaslist.append(getReason(command))
         else:
             # so that cmdlist and reaslist have the same sizes
-            reaslist.append('')
-            
+            reaslist.append('NoReasonToMatch')
+        
     if debug:
         print "reason in input"
         print reaslist
@@ -126,18 +128,21 @@ def makeDict(cmdlist, myreason='any'):
     # If select by reason is requested
     if myreaslist.__len__() > 0:
         rowl = []
-        for i in range(nrows):
-            # If selection matches what is in input line
-            if myreaslist.count(reaslist[i]) > 0:
-                rowl.append(i)
+
+        # If selection matches what is in input line
+        for j in range(reaslist.__len__()):
+            if myreaslist.count(reaslist[j]) > 0:
+                rowl.append(j)
         rowlist = rowl
 
     try:
         for i in rowlist:            
             flagd = {}
+            reason = ''
 
             command = cmdlist[i]
-            reason = reaslist[i]
+            if reaslist[i] != 'NoReasonToMatch':
+                reason = reaslist[i]
                                 
             # Skip comment lines
             if command.startswith('#'):
@@ -373,6 +378,8 @@ def readXML(sdmfile, mytbuff):
         # reasons
         rowreason = rownode.getElementsByTagName('reason')
         reas = str(rowreason[0].childNodes[0].nodeValue)
+        # Replace any white space with underscores
+        reason = reas.replace(' ','_')
     # NEW SDM ADDITIONS 2011-11-01
         rownspw = rownode.getElementsByTagName('numSpectralWindow')
         spwstring = ''
@@ -427,7 +434,7 @@ def readXML(sdmfile, mytbuff):
         flagdict[fid]['antenna'] = antname
         timestr = starttime + '~' + endtime
         flagdict[fid]['timerange'] = timestr
-        flagdict[fid]['reason'] = reas
+        flagdict[fid]['reason'] = reason
         # Construct command strings (per input flag)
         cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
         if spwstring != '':
@@ -981,16 +988,16 @@ def getReason(cmdline):
     '''
             
     reason = ''
+
+    # Skip comment lines
+    if cmdline.startswith('#'):
+        return reason    
     
     # Split by white space
     keyvlist = cmdline.split()
     if keyvlist.__len__() > 0:  
         
         for keyv in keyvlist:            
-
-            # Skip if it is a comment character #
-            if keyv.count('#') > 0:
-                break
 
             # Split by '='
             (xkey,xval) = keyv.split('=')

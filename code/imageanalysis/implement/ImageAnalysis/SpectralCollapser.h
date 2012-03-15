@@ -38,22 +38,29 @@ template <class T> class SubImage;
 
 class SpectralCollapser {
 	// <summary>
-	// TODO: Documentation in the header, add a test program 'tSpectralCollapser'
+	// Class to collapse an image along the spectral axis.
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
 	// </reviewed>
 
 	// <prerequisite>
+	//   <li> <linkto class=ImageCollapser>ImageCollapser</linkto>
 	// </prerequisite>
 
 	// <etymology>
+	// Collapses an image along the spectral axis
 	// </etymology>
 
 	// <synopsis>
+	// Helper class to collapse an image along the spectral axis. The spectral
+	// range to combine is provided interactively from the profiler. The class
+	// transforms the range to the channels to be combined. The actual image\
+	// combination is then done with the class "ImageCollapser".
 	// </synopsis>
 
 public:
+	// The different collapse types
 	enum CollapseType {
 		PMEAN,
 		PMEDIAN,
@@ -69,15 +76,24 @@ public:
 		EUNKNOWN
 	};
 
-	// constructor
+	// Constructor
 	SpectralCollapser(ImageInterface<Float> * image);
 
-	// constructor
+	// Constructor
 	SpectralCollapser(ImageInterface<Float> * image, const String storePath);
 
-	// destructor
+	// Destructor
 	virtual ~SpectralCollapser();
 
+	// Parameters:
+	// <src>specVals</src>  - the vector of spectral values
+	// <src>startVal</src>  - the spectral value to start the collapse
+	// <src>endVal</src>    - the spectral value to end the collapse
+	// <src>unit</src>      - the unit of the spectral values
+	// <src>collType</src>  - the collapse type (e.g. "mean" or "median")
+	// <src>collError</src> - information on what the error
+	// <src>outname</src>   - name of the collapsed image (output)
+	// <src>msg</src>       - message string (output)
 	virtual Bool collapse(const Vector<Float> &specVals, const Float startVal, const Float endVal,
 			const String &unit, const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError, String &outname, String &msg);
 
@@ -85,10 +101,16 @@ public:
 
    void collapseTypeToVector(const SpectralCollapser::CollapseType &collType, Vector<Int> &momentVec);
 
+   // Convert from string to collapse type
 	static void stringToCollapseType(const String &text,  SpectralCollapser::CollapseType &collType);
-   static void stringToCollapseError(const String &text, SpectralCollapser::CollapseError &collError);
 
+	// Convert from string to error type
+	static void stringToCollapseError(const String &text, SpectralCollapser::CollapseError &collError);
+
+	// Convert from collapse type to string
    static void collapseTypeToString(const SpectralCollapser::CollapseType &collType, String &strCollType);
+
+   // Convert from error type to string
    static void collapseErrorToString(const SpectralCollapser::CollapseError &collError, String &strCollError);
 
 private:
@@ -100,7 +122,7 @@ private:
    IPosition _specAxis;
    Bool _hasQualAxis;
 
-	// disallow default constructor
+	// Disallow default constructor
    SpectralCollapser();
 
    void _setUp();
@@ -114,7 +136,6 @@ private:
    Bool _moments(const ImageInterface<Float> *image, const Vector<Int> &momentVec,
    		const Int & startIndex, const Int &endIndex, const String& outname);
    Bool _mergeDataError(const String &outImg, const String &dataImg, const String &errorImg, const Float &normError=1.0) const;
-   Bool mergeDataErrorOLD(const String &dataImg, const String &errorImg, const String &outImg);
 	void _addMiscInfo(const String &outName, const String &wcsInput, const String &chanInput,
 			const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError) const;
 	void _collTypeToImCollString(const SpectralCollapser::CollapseType &collType, String &colType) const;

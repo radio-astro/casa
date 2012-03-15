@@ -51,6 +51,7 @@ def tflagcmd(
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome'
             ).create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
+    mslocal2 = casac.homefinder.find_home_by_name('msHome').create()
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
@@ -73,9 +74,9 @@ def tflagcmd(
         # Get overall MS time range for later use (if needed)
 #        try:
             # this might take too long for large MS
-        mslocal.open(vis)
-        timd = mslocal.range(['time'])
-        mslocal.close()
+        mslocal2.open(vis)
+        timd = mslocal2.range(['time'])
+        mslocal2.close()
 
         ms_startmjds = timd['time'][0]
         ms_endmjds = timd['time'][1]

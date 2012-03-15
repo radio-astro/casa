@@ -107,6 +107,7 @@ add_custom_command( OUTPUT version.cc
 )
 
 casa_add_library( xmlcasa
+  implement/calanalysis/calanalysis_cmpt.cc
   implement/atmosphere/atmosphere_cmpt.cc
   implement/calibrater/calplot_cmpt.cc
   implement/casa/logsink_cmpt.cc
@@ -215,7 +216,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_boxit.py
   scripts/task_browsetable.py
   scripts/task_calstat.py
-  scripts/task_caltab_convert.py
+  scripts/task_caltabconvert.py
   scripts/task_clean.py
   scripts/task_clearcal.py
   scripts/task_clearplot.py
@@ -350,7 +351,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/boxit.xml
   tasks/browsetable.xml
   tasks/calstat.xml
-  tasks/caltab_convert.xml
+  tasks/caltabconvert.xml
   tasks/clean.xml
   tasks/clearcal.xml
   tasks/clearplot.xml
@@ -464,6 +465,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
 
 casa_add_tools( tools_idl tools_sources 
   implement/atmosphere/atmosphere.xml
+  implement/calanalysis/calanalysis.xml
   implement/calibrater/calplot.xml
   implement/casa/logsink.xml
   implement/casa/quanta.xml

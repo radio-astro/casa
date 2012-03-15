@@ -56,6 +56,7 @@ CTTimeInterp1::CTTimeInterp1(NewCalTable& ct,
   timeType_(timetype),
   currTime_(-999.0),
   currIdx_(-1),
+  lastWasExact_(False),
   timeRef_(0.0),
   timelist_(),
   domain_(2,0.0),
@@ -125,12 +126,14 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
   Int newIdx(currIdx_);
   Bool newReg=findTimeRegistration(newIdx,exact,fnewtime);
 
-  if (CTTIMEINTERPVERB1) cout <<boolalpha<< " newReg="<<newReg<< " newIdx="<<newIdx<< " exact="<<exact<< endl;
+  if (CTTIMEINTERPVERB1) 
+    cout <<boolalpha<< " newReg="<<newReg<< " newIdx="<<newIdx<< " exact="<<exact
+	 << " lastWasExact_=" << lastWasExact_ << endl;
 
   // Update interpolator coeffs if new registr. and not nearest
-  if (newReg) {
+  if (newReg || (!exact && lastWasExact_)) {
     // Only bother if not 'nearest' nor exact...
-    if (timeType()!="nearest" && !exact) {
+    if (timeType()!="nearest" && !exact) { 
       ScalarSampledFunctional<Float> xf(timelist_(Slice(newIdx,2)));
       Vector<uInt> rows(2); indgen(rows); rows+=uInt(newIdx);
       Array<Float> ya(mcols_p->fparamArray("",rows));
@@ -160,6 +163,7 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
   // Now remember for next round
   currTime_=newtime;
   currIdx_=newIdx;
+  lastWasExact_=exact;
 
   return True;
  

@@ -1,3 +1,11 @@
+#ifdef _OPENMP
+#include <omp.h>
+#endif 
+//#else
+//  #define omp_get_num_threads() 0
+//  #define omp_get_thread_num() 0
+//#endif
+
 #define DDPRIORITY 1
 #include <iostream>
 #include <sstream>
@@ -38,6 +46,11 @@ using namespace asdm;
 #include "measures/Measures/Stokes.h"
 #include "measures/Measures/MFrequency.h"
 using namespace casa;
+#include <tables/Tables/Table.h>
+#include <tables/Tables/PlainTable.h>
+#include <tables/Tables/TableCopy.h>
+
+
 
 #include "CBasebandName.h"
 #include "CCalibrationDevice.h"
@@ -698,7 +711,21 @@ vector<Tag> reorderSwIds(const ASDM& ds) {
 
   return result;
 }
-  
+
+// mapping SpwId to DDId
+vector<int> getDDIdsFromSwId(const ASDM& ds, const int& spwid) {
+  vector<int> DDIds;
+  vector<DataDescriptionRow *> ddRs = ds.getDataDescription().get();
+  //cerr<<"ddRs nrow="<<ddRs.size()<<endl;
+  for (vector<DataDescriptionRow *>::size_type i = 0; i < ddRs.size(); i++) {
+    int ddSwId = ddRs[i]->getSpectralWindowId().getTagValue();
+    if (spwid == ddSwId) {
+      DDIds.push_back(i);
+    }
+  }
+  return DDIds;
+}
+
 void usage(char* command) {
   cout << "Usage : " << command << " DataSetName" << endl;
 }
@@ -1187,7 +1214,10 @@ vector<uint64_t> sizeInMemory(uint64_t BDFsize, uint64_t approxSizeInMemory) {
   return result;
 } 
 
+vector<map<AtmPhaseCorrection,ASDM2MSFiller*> >  msFillers_v;
+
 map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers; // There will be one filler per value of the axis APC.
+//#pragma omp threadprivate(msFiller)
 
 vector<int>	dataDescriptionIdx2Idx;
 int		ddIdx;
@@ -1294,7 +1324,8 @@ void fillSpectralWindow(ASDM* ds_p) {
   try {
     SpectralWindowTable& spwT = ds_p->getSpectralWindow();      
     vector<Tag> reorderedSwIds = reorderSwIds(*ds_p); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
-    
+    //for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) cerr<<" reorderedSwIds["<<i<<"]="<<reorderedSwIds[i].getTagValue()<<endl;
+ 
     for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) swIdx2Idx[reorderedSwIds[i].getTagValue()] = i;
 
     SpectralWindowRow* r = 0;
@@ -1673,8 +1704,11 @@ void fillMain(int		rowNum,
   }
 	  
   vector<int> filteredDD;
-  for (unsigned int idd = 0; idd < vmsData_p->v_dataDescId.size(); idd++)
+  for (unsigned int idd = 0; idd < vmsData_p->v_dataDescId.size(); idd++){
     filteredDD.push_back(dataDescriptionIdx2Idx.at(vmsData_p->v_dataDescId.at(idd)));
+  }
+
+
   vector<float *> uncorrectedData;
   vector<float *> correctedData;
 
@@ -1802,6 +1836,392 @@ void fillMain(int		rowNum,
   if (debug) cout << "fillMain : exiting" << endl;
 }
 
+
+void testFunc(string& tstr) {
+   cerr<<tstr<<endl;
+}
+
+/**
+ * compute the UVW (put in a method to keep sepearate from fillMain for
+   parallel case) returns a Matrix, mat_uvw for data passing thread-safe
+   way
+ */
+void calcUVW(MainRow* r_p, 
+             SDMBinData& sdmBinData, 
+             const VMSData* vmsData_p, 
+             UvwCoords& uvwCoords,
+             casa::Matrix< casa::Double >& mat_uvw) {
+
+  vector< casa::Vector<casa::Double> > vv_uvw;
+  mat_uvw.resize(3,vmsData_p->v_time.size());
+
+#if DDPRIORITY
+  uvwCoords.uvw_bl(r_p, sdmBinData.timeSequence(), e_query_cm,
+                   sdmbin::SDMBinData::dataOrder(),
+                   vv_uvw);
+#else
+  uvwCoords.uvw_bl(r, vmsData_p->v_timeCentroid, e_query_cm,
+                   sdmbin::SDMBinData::dataOrder(),
+                   vv_uvw);
+#endif
+
+//put in a Matrix
+  for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
+    mat_uvw(iUvw, 0) = vv_uvw[iUvw](0);
+    mat_uvw(iUvw, 1) = vv_uvw[iUvw](1);
+    mat_uvw(iUvw, 2) = vv_uvw[iUvw](2);
+  }
+} 
+
+/**
+ * This function fills the MS Main table from an ASDM Main table which refers to correlator data.
+ * designed for multithreading........
+ *
+ * given:
+ * @parameter rowNum an integer expected to contain the number of the row being processed.
+ * @parameter r_p a pointer to the MainRow being processed.
+ * @parameter sdmBinData a reference to the SDMBinData containing a lot of information about the binary data being processed. Useful to know the requested ordering of data.
+ * @parameter uvwCoords a reference to the UVW calculator.
+ * @parameter complexData a bool which says if the DATA is going to be filled (true) or if it will be the FLOAT_DATA (false).
+ * @parameter mute if the value of this parameter is false then nothing is written in the MS .
+ *
+ * !!!!! One must be carefull to the fact that fillState must have been called before fillMain. During the execution of fillState , the global vector<int> msStateID
+ * is filled and will be used by fillMain.
+ */ 
+void fillMain_mt(MainRow*	r_p,
+	      const VMSData* vmsData_p,
+              casa::Double*&   puvw,
+	      bool		complexData,
+              int               spwId,
+	      bool           mute) {
+  
+  //if (debug) cout << "fillMain : entering" << endl;
+  //cout << "fillMain_mt : entering for row="<< rowNum << endl;
+
+   ASDM & ds = r_p -> getTable() . getContainer();
+
+  // Then populate the Main table.
+  ComplexDataFilter filter; // To process the case numCorr == 3
+  if (vmsData_p->v_antennaId1.size() == 0) {
+    infostream.str("");
+    infostream << "No MS data produced for the current row." << endl;
+    info(infostream.str());
+    return;
+  }
+
+  vector<vector<unsigned int> > filteredShape = vmsData_p->vv_dataShape;
+  for (unsigned int ipart = 0; ipart < vmsData_p->vv_dataShape.size(); ipart++) {
+    if (filteredShape.at(ipart).at(0) == 3)
+      filteredShape.at(ipart).at(0) = 4;
+  }
+	  
+  vector<int> filteredDD;
+  // filtered DDid = row indx to get subset of rows for selected DDid
+  vector<int> filteredDDbasedRows;
+  // for given spw id get DD id
+  vector<int> iddv=getDDIdsFromSwId(ds, spwId);
+  for (unsigned int idd = 0; idd < vmsData_p->v_dataDescId.size(); idd++){
+    filteredDD.push_back(dataDescriptionIdx2Idx.at(vmsData_p->v_dataDescId.at(idd)));
+  }
+  // create row selection vector
+  for (unsigned int idd = 0; idd < vmsData_p->v_dataDescId.size(); idd++){
+    for (unsigned int iseldd=0; iseldd < iddv.size(); iseldd++) {
+      if (vmsData_p->v_dataDescId.at(idd) == iddv.at(iseldd)) {
+         filteredDDbasedRows.push_back(idd);
+      }
+    }
+  }
+
+  // debug: save the row selections for each DD
+  /***
+  ofstream outf;
+  ostringstream oss;
+  oss<< spwId;
+  string filen ("filteredDDRows"+oss+".txt");
+  outf.open(filen.c_str());
+  for (unsigned int i=0; i < filteredDDbasedRows.size(); i++) {
+    outf << filteredDDbasedRows.at(i) <<endl;
+  }
+  outf.close();
+  ***/
+
+  //return row containing data for specific spw
+  // for given i spw => mapped to dd id, and find row 
+
+  vector<float *> uncorrectedData;
+  vector<float *> correctedData;
+
+     
+  /* compute the UVW: moved outside this method*/
+  
+  // Here we make the assumption that the State is the same for all the antennas and let's use the first State found in the vector stateId contained in the ASDM Main Row
+  // int asdmStateIdx = r_p->getStateId().at(0).getTagValue();  
+  vector<int> msStateId(vmsData_p->v_m_data.size(), stateIdx2Idx[r_p]);
+
+  ComplexDataFilter cdf;
+  map<AtmPhaseCorrectionMod::AtmPhaseCorrection, float*>::const_iterator iter;
+  //cerr<<"fillerMain_mt: declare data columns"<<endl; 
+
+  vector<double>	uncorrectedTime;
+  vector<int>		uncorrectedAntennaId1;
+  vector<int>		uncorrectedAntennaId2;
+  vector<int>		uncorrectedFeedId1;
+  vector<int>		uncorrectedFeedId2;
+  vector<int>		uncorrectedFieldId;
+  vector<int>           uncorrectedFilteredDD;
+  vector<double>	uncorrectedInterval;
+  vector<double>	uncorrectedExposure;
+  vector<double>	uncorrectedTimeCentroid;
+  vector<int>		uncorrectedMsStateId(msStateId);
+  vector<double>	uncorrectedUvw ;
+  vector<unsigned int>	uncorrectedFlag;
+
+  vector<double>	correctedTime;
+  vector<int>		correctedAntennaId1;
+  vector<int>		correctedAntennaId2;
+  vector<int>		correctedFeedId1;
+  vector<int>		correctedFeedId2;
+  vector<int>		correctedFieldId;
+  vector<int>           correctedFilteredDD;
+  vector<double>	correctedInterval;
+  vector<double>	correctedExposure;
+  vector<double>	correctedTimeCentroid;
+  vector<int>		correctedMsStateId(msStateId);
+  vector<double>	correctedUvw ;
+  vector<unsigned int>	correctedFlag;
+
+
+  // loop over only selected rows 
+  //for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
+  if (vmsData_p->v_m_data.size() < filteredDDbasedRows.size()) cerr<<"ERROR selected rows > tot data rows"<<endl;
+  int iData;
+  //cerr<<"writing to "<<msFillers_v[spwId][AP_UNCORRECTED]->msPath()<<endl;
+  for (unsigned int i = 0; i < filteredDDbasedRows.size(); i++) {
+
+    iData = filteredDDbasedRows.at(i); 
+    //cerr<<"iData="<<iData<<endl;
+    //cerr<<"msFillers_v.size="<<msFillers_v.size()<<endl;
+
+    if ((msFillers_v[spwId].find(AP_UNCORRECTED) != msFillers_v[spwId].end()) &&
+	(iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+      uncorrectedTime.push_back(vmsData_p->v_time.at(iData));
+      uncorrectedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+      uncorrectedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+      uncorrectedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+      uncorrectedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+      uncorrectedFilteredDD.push_back(filteredDD.at(iData));
+      uncorrectedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+      uncorrectedInterval.push_back(vmsData_p->v_interval.at(iData));
+      uncorrectedExposure.push_back(vmsData_p->v_exposure.at(iData));
+      uncorrectedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+      //uncorrectedUvw.push_back(vv_uvw.at(iData)(0));
+      //uncorrectedUvw.push_back(vv_uvw.at(iData)(1));
+      //uncorrectedUvw.push_back(vv_uvw.at(iData)(2));
+      uncorrectedUvw.push_back(puvw[3*iData]);
+      uncorrectedUvw.push_back(puvw[3*iData+1]);
+      uncorrectedUvw.push_back(puvw[3*iData+2]);
+      uncorrectedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					   vmsData_p->vv_dataShape.at(iData).at(1),
+					   iter->second));
+      uncorrectedFlag.push_back(vmsData_p->v_flag.at(iData));
+    }
+	    
+    if ((msFillers_v[spwId].find(AP_CORRECTED) != msFillers_v[spwId].end()) &&
+	(iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+      correctedTime.push_back(vmsData_p->v_time.at(iData));
+      correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+      correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+      correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+      correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+      correctedFilteredDD.push_back(filteredDD.at(iData));
+      correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+      correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+      correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+      correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+      //correctedUvw.push_back(vv_uvw.at(iData)(0));
+      //correctedUvw.push_back(vv_uvw.at(iData)(1));
+      //correctedUvw.push_back(vv_uvw.at(iData)(2));
+      correctedUvw.push_back(puvw[3*iData]);
+      correctedUvw.push_back(puvw[3*iData+1]);
+      correctedUvw.push_back(puvw[3*iData+2]);
+      correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					 vmsData_p->vv_dataShape.at(iData).at(1),
+					 iter->second));
+      correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+    }
+  }
+
+  //printf("Ready to addData\n");	  
+  if (uncorrectedData.size() > 0 && (msFillers_v[spwId].find(AP_UNCORRECTED) != msFillers_v[spwId].end())) {
+    if (! mute) {
+      //cerr<<" actually filling the data (uncorrected) for spwId"<<spwId<<endl;
+      msFillers_v[spwId][AP_UNCORRECTED]->addData(complexData,
+                                       uncorrectedTime, // this is already time midpoint
+                                       uncorrectedAntennaId1,
+                                       uncorrectedAntennaId2,
+                                       uncorrectedFeedId1,
+                                       uncorrectedFeedId2,
+                                       uncorrectedFilteredDD,
+				       vmsData_p->processorId,
+                                       uncorrectedFieldId,
+                                       uncorrectedInterval,
+                                       uncorrectedExposure,
+                                       uncorrectedTimeCentroid,
+                                       (int) r_p->getScanNumber(),
+                                       0,                                               // Array Id
+                                       (int) r_p->getExecBlockId().getTagValue(), // Observation Id
+                                       uncorrectedMsStateId,
+                                       uncorrectedUvw,
+                                       filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
+                                       uncorrectedData,
+                                       uncorrectedFlag);
+
+      //cerr<<" filling the data (uncorrected) for spwId DONE ******"<<spwId<<endl;
+    }
+  }
+
+  if (correctedData.size() > 0 && (msFillers_v[spwId].find(AP_CORRECTED) != msFillers_v[spwId].end())) {
+    if (! mute) {
+      msFillers_v[spwId][AP_CORRECTED]->addData(complexData,
+				       correctedTime, // this is already time midpoint
+				       correctedAntennaId1, 
+				       correctedAntennaId2,
+				       correctedFeedId1,
+				       correctedFeedId2,
+				       correctedFilteredDD,
+				       vmsData_p->processorId,
+				       correctedFieldId,
+				       correctedInterval,
+				       correctedExposure,
+				       correctedTimeCentroid,
+				       (int) r_p->getScanNumber(), 
+				       0,                                               // Array Id
+				       (int) r_p->getExecBlockId().getTagValue(), // Observation Id
+				       correctedMsStateId,
+				       correctedUvw,
+				       filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
+				       correctedData,
+				       correctedFlag);
+    }
+  }
+  if (debug) cout << "fillMain_mt : exiting" << endl;
+}
+
+void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
+  if (debug) cout << "fillSysPower_aux : entering" << endl;
+  vector<int>		antennaId;
+  vector<int>		spectralWindowId;
+  vector<int>		feedId;
+  vector<double>	time;
+  vector<double>	interval;
+  vector<int>		numReceptor;
+  vector<float>		switchedPowerDifference;
+  vector<float>		switchedPowerSum;
+  vector<float>		requantizerGain;
+  
+  unsigned int        numReceptor0;
+
+  antennaId.resize(sysPowers.size());
+  spectralWindowId.resize(sysPowers.size());
+  feedId.resize(sysPowers.size());
+  time.resize(sysPowers.size());
+  interval.resize(sysPowers.size());
+  
+  /*
+   * Prepare the mandatory attributes.
+   */
+  transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
+  transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
+  transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
+  transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
+  transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
+  
+  /*
+   * Prepare the optional attributes.
+   */
+  numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
+  //
+  // Do we have a constant numReceptor all over the array numReceptor.
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
+    errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
+    error(errstream.str());
+  }
+  /*
+    else 
+    infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
+  */
+  
+  bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end()) {
+    
+    if (switchedPowerDifferenceExists0) {
+      //  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
+      switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
+      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+    }
+    /*
+      else
+      infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
+    */
+  }
+  else {
+    errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
+    error(errstream.str());
+  }
+  
+  bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end()) {
+	
+    if (switchedPowerSumExists0) {
+      //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+      switchedPowerSum.resize(numReceptor0 * sysPowers.size());
+      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+    }
+    /*
+      else
+      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+    */
+  }
+  else {
+    errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
+    error(errstream.str());
+  }
+  
+  bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
+  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end()) {
+    if (requantizerGainExists0) {
+      //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+      requantizerGain.resize(numReceptor0 * sysPowers.size());
+      for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+    }
+    /*
+      else
+      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+    */
+  }
+  else {
+    errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
+    error(errstream.str());
+  }
+
+
+  for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+       msIter != msFillers.end();
+       ++msIter) {
+    msIter->second->addSysPowerSlice(antennaId.size(),
+				     antennaId,
+				     spectralWindowId,
+				     feedId,
+				     time,
+				     interval,
+				     (unsigned int) numReceptor0,
+				     switchedPowerDifference,
+				     switchedPowerSum,
+				     requantizerGain);
+  }         
+  if (debug) cout << "fillSysPower : exiting" << endl;
+}
+
 /**
  * This function fills the MS SysPower table from an ASDM SysPower table.
  *
@@ -1814,172 +2234,126 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 
   if (debug) cout << "fillSysPower : entering" << endl;
 
-  try {
-
-    const SysPowerTable& sysPowerT = ds_p->getSysPower();
-    infostream.str("");
-    infostream << "The dataset has " << sysPowerT.size() << " syspower(s).";
-    info(infostream.str()); 
-
-    if (sysPowerT.size() == 0) return;
+  const SysPowerTable& sysPowerT = ds_p->getSysPower();
+  infostream.str("");
+  infostream << "The dataset has " << sysPowerT.size() << " syspower(s).";
+  info(infostream.str()); 
+  
+  if (sysPowerT.size() > 0 ) {
+    //
+    // We assume that there is an SysPower table , but we don't know yet if it's stored in a binary or an XML file.
+    // 
+    bool binFile = boost::filesystem::exists(boost::filesystem::path(uniqSlashes(asdmDirectory + "/SysPower.bin")));
     
-    TableStreamReader<SysPowerTable, SysPowerRow> tsrSysPower;
-    tsrSysPower.open(asdmDirectory);
+    try {
+      rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
+      
+      if (binFile) {
+	if (debug) cout << "fillSysPower : working with SysPower.bin by successive slices." << endl;
+	TableStreamReader<SysPowerTable, SysPowerRow> tsrSysPower;
+	tsrSysPower.open(asdmDirectory);
+	// We can process the SysPower table by slice when it's stored in a binary file so let's do it.
+	while (tsrSysPower.hasRows()) {
+	  const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.untilNBytes(50000000);
+	  infostream.str("");
+	  infostream << "(considering the next " << sysPowerRows.size() << " rows of the SysPower table. ";
 
-    while (tsrSysPower.hasRows()) {
-      const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.untilNBytes(50000000);
-      vector<int>			antennaId;
-      vector<int>			spectralWindowId;
-      vector<int>			feedId;
-      vector<double>			time;
-      vector<double>			interval;
-      vector<int>			numReceptor;
-      vector<float>			switchedPowerDifference;
-      vector<float>			switchedPowerSum;
-      vector<float>			requantizerGain;
-    
-      unsigned int        numReceptor0;
-      {
+	  if (debug) cout << "fillSysPower : determining which rows are in the selected scans." << endl;
+	  const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
+  
+	  if (!ignoreTime) 
+	    infostream << sysPowers.size() << " of them are in the selected exec blocks / scans";
+  
+	  infostream << ")";	     
+	  info(infostream.str());
+	  
+	  infostream.str("");
+	  errstream.str("");
+  
+	  if (sysPowers.size() > 0)
+	    fillSysPower_aux(sysPowerRows);
+	}
+	tsrSysPower.close();
+      }
+      
+      else {
+	// We must parse and load the entire SysPower table in memory when it's stored in an XML file.
+	if (debug) cout << "fillSysPower : working with SysPower.xml entirely parsed and loaded into memory." << endl;
+	const vector<SysPowerRow*>& sysPowerRows = sysPowerT.get();
 	infostream.str("");
 	infostream << "(considering the next " << sysPowerRows.size() << " rows of the SysPower table. ";
-	rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
-      
 	
+	if (debug) cout << "fillSysPower : determining which rows are in the selected scans." << endl;
 	const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
-
 	if (!ignoreTime) 
 	  infostream << sysPowers.size() << " of them are in the selected exec blocks / scans";
-
+	
 	infostream << ")";	     
 	info(infostream.str());
-      
+	
 	infostream.str("");
 	errstream.str("");
-
-	if (sysPowers.size() == 0) continue;
-      
-	antennaId.resize(sysPowers.size());
-	spectralWindowId.resize(sysPowers.size());
-	feedId.resize(sysPowers.size());
-	time.resize(sysPowers.size());
-	interval.resize(sysPowers.size());
-      
-	/*
-	 * Prepare the mandatory attributes.
-	 */
-	transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
-	transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
-	transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
-	transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
-	transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
-      
-	/*
-	 * Prepare the optional attributes.
-	 */
-	numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
-	//
-	// Do we have a constant numReceptor all over the array numReceptor.
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
-	  errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
-	  error(errstream.str());
-	}
-	/*
-	  else 
-	  infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
-	*/
-            
-	bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end()) {
-	  
-	  if (switchedPowerDifferenceExists0) {
-	    //  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
-	    switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
-	  }
-	  /*
-	    else
-	    infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
-	  */
-	}
-	else {
-	  errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
-      
-	bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end()) {
-
-	  if (switchedPowerSumExists0) {
-	    //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	    switchedPowerSum.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
-	  }
-	  /*
-	    else
-	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	  */
-	}
-	else {
-	  errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
-      
-	bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end()) {
-	  if (requantizerGainExists0) {
-	    //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	    requantizerGain.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
-	  }
-	  /*
-	    else
-	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	  */
-	}
-	else {
-	  errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
+	
+	if (sysPowers.size() > 0)
+	  fillSysPower_aux(sysPowers);
       }
-        
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-	   msIter != msFillers.end();
-	   ++msIter) {
-	msIter->second->addSysPowerSlice(antennaId.size(),
-					 antennaId,
-					 spectralWindowId,
-					 feedId,
-					 time,
-					 interval,
-					 (unsigned int) numReceptor0,
-					 switchedPowerDifference,
-					 switchedPowerSum,
-					 requantizerGain);
-      }      
+
+      unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+      if (numMSSysPowers > 0) {
+	infostream.str("");
+	infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
+	info(infostream.str());
+      }
       
     } // end of filling SysPower by slice.
-
-    unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
-    if (numMSSysPowers > 0) {
-      infostream.str("");
-      infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
-      info(infostream.str());
+    
+    catch (ConversionException e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
     }
-    tsrSysPower.close();
-  }
-  catch (ConversionException e) {
-    errstream.str("");
-    errstream << e.getMessage();
-    error(errstream.str());
-  }
-  catch ( std::exception & e) {
-    errstream.str("");
-    errstream << e.what();
-    error(errstream.str());      
+    catch ( std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());      
+    }
   }
   if (debug) cout << "fillSysPower : exiting" << endl;
 }
 
+// ------ data partition function
+void partitionMS(vector<int> SwIds, 
+                 //vector< map<AtmPhaseCorrection,ASDM2MSFiller* > >&  msFillers_vec,
+                 //map<AtmPhaseCorrection,string>  msFillers,
+                 map<AtmPhaseCorrection,string> msNames,
+                 bool complexData,
+                 bool withCompression,
+                 string telName,
+                 int maxNumCorr,
+                 int maxNumChan)
+{
+  for (int i=0; i<SwIds.size(); i++) {
+    ostringstream oss;
+    oss<< SwIds.at(i);
+    string msname_suffix = ".SpW"+oss;
+    //cerr<<"msname_prefix="<<msname_suffix<<endl;
+    for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
+      msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first]+msname_suffix,
+                                               0.0,
+                                               false,
+                                               complexData,
+                                               withCompression,
+                                               telName,
+                                               maxNumCorr,
+                                               maxNumChan);
+     info("About to create a filler for the measurement set '" + msNames[iter->first] + msname_suffix + "'");
+   }
+   //vector<std::pair<const AtmPhaseCorrection,ASDM2MSFiller*> > msFillers_vec(msFillers.begin(),msFillers.end());
+   msFillers_v.push_back(msFillers);
+   //store ms names locally
+  }
+   //cerr<<"msFillers_v.size="<<msFillers_v.size()<<endl;
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2000,6 +2374,8 @@ int main(int argc, char *argv[]) {
   uint64_t bdfSliceSizeInMb = 0; // The default size of the BDF slice hold in memory.
 
   bool mute = false;
+
+  bool doparallel = false;
 
 
   //   Process command line options and parameters.
@@ -2038,8 +2414,8 @@ int main(int argc, char *argv[]) {
       ("no-caldevice", "The CalDevice table will be ignored.")
       ("no-pointing", "The Pointing table will be ignored.")
       ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined")
-      ("bdf-slice-size", po::value<uint64_t>(&bdfSliceSizeInMb)->default_value(500),  "The maximum amount of memory expressed as an integer in units of megabytes (1024*1024) allocated for BDF data. The default is 500 (megabytes)") ;
-
+      ("bdf-slice-size", po::value<uint64_t>(&bdfSliceSizeInMb)->default_value(500),  "The maximum amount of memory expressed as an integer in units of megabytes (1024*1024) allocated for BDF data. The default is 500 (megabytes)") 
+      ("parallel", "run with multithreading mode."); 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
     po::options_description hidden("Hidden options");
@@ -2248,13 +2624,29 @@ int main(int argc, char *argv[]) {
     infostream.str("");
     infostream << "the BDF slice size is set to " << bdfSliceSizeInMb << " megabytes." << endl;
     info(infostream.str());
+
+    doparallel = vm.count("parallel") != 0;
+    if (doparallel) {
+      infostream.str("");
+      infostream << "run in multithreading mode" << endl;
+      info(infostream.str());
+    }
   }
   catch (std::exception& e) {
     errstream.str("");
     errstream << e.what();
     error(errstream.str());
   }
+  // this just a dummy number for now (innthread may
+  // come from user input in future..)
+  // Also setting environment variable, OMP_NUM_THREADS=1
+  // one can excute multiwrite part in a single thread.
+  int innthread = 4;
+  if (doparallel && innthread > 1) {
+    doparallel = true;
+  }
 
+  //if(doparallel) cerr<<"DO PARALLEL...."<<endl;
   //
   // Try to open an ASDM dataset whose name has been passed as a parameter on the command line
   //
@@ -2480,6 +2872,20 @@ int main(int argc, char *argv[]) {
   sdmBinData.setPriorityDataDescription();
 #endif
 
+  // test openMP
+  /***
+     int myint;
+     for (myint=0; myint<10; myint++) {
+       int ii=0;
+       #pragma omp parallel for default(shared) private(ii) ordered
+       for (ii=0; ii<4; ii++) {
+         int threadid;
+         threadid=omp_get_thread_num();
+         printf("id:%d This is a test!=%d\n", threadid, myint);
+       }
+     }
+  ***/
+
   //get numCorr, numChan, telescope name for setupMS
   
   ExecBlockTable& temp_execBlockT = ds->getExecBlock();
@@ -2499,16 +2905,50 @@ int main(int argc, char *argv[]) {
   int maxNumChan=1;
   SpectralWindowTable& temp_spwT = ds->getSpectralWindow();
   SpectralWindowRow* temp_spwtrow;
+  int nSpW = temp_spwT.size();
+  vector<int> SwIds;
   for (int i=0; i<temp_spwT.size(); i++) {
     temp_spwtrow = temp_spwT.get()[i];
     maxNumChan=max(maxNumChan, temp_spwtrow->getNumChan());
+    SwIds.push_back(temp_spwtrow->getSpectralWindowId().getTagValue());
   }
+  //for (vector<int> ::iterator it=SwIds.begin(); it != SwIds.end(); ++it)
+  //  cerr<<"SwIds="<<*it<<endl;
+
+  // need loop through nDDs/scans to create msFillers per DD
+  //vector< map<AtmPhaseCorrection,ASDM2MSFiller* > > msFillersv;
 
   // Create the measurement set(s). 
   if (!false) {
     try {
-      for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
-	msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first],
+      if(doparallel) {
+        // should use pass vec. of spectral ids
+        partitionMS(SwIds,
+                  //msFillersv,
+                  msNames,
+                  complexData,
+                  withCompression,
+                  telName,
+                  maxNumCorr,
+                  maxNumChan);
+
+        //cerr<<"After calling partitionMS msFillers_v.size="<<msFillers_v.size()<<endl;
+        for (int i=0; i < msFillers_v.size(); i++) {
+          for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers_v[i].begin();
+               iter != msFillers_v[i].end(); ++iter) {
+            //cerr<<"ms name: "<<iter->second->msPath()<<endl;
+          }
+        }
+        for (int i=0; i < SwIds.size(); i++) {
+          vector<int> checkDDs = getDDIdsFromSwId(*ds, SwIds.at(i));  
+            for (int j=0; j< checkDDs.size(); j++) {
+              //cerr<<"for SwId="<<SwIds.at(i)<<" : DDs="<<checkDDs.at(j)<<endl;
+            }
+        }
+      }
+      else { // single thread case
+        for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
+	  msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first],
 						   0.0,
 						   false,
 						   complexData,
@@ -2516,7 +2956,8 @@ int main(int argc, char *argv[]) {
                                                    telName,
                                                    maxNumCorr,
                                                    maxNumChan);
-	info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
+	  info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
+        }
       }
     }
     catch(AipsError & e) {
@@ -2531,7 +2972,12 @@ int main(int argc, char *argv[]) {
     }
 
 
+    if (doparallel) {
+      msFillers = msFillers_v[0];
+    }
+
     msFiller = msFillers.begin()->second;
+    
   }
 
   //
@@ -4112,7 +4558,6 @@ int main(int argc, char *argv[]) {
     error(errstream.str());      
   }
 
-
   // And then finally process the state and the main table.
   //
   {
@@ -4120,6 +4565,7 @@ int main(int argc, char *argv[]) {
     const StateTable& stateT = ds->getState();
     
     MainRow* r = 0;
+    MainRow* temp_r = 0;
     vector<MainRow*> v;
     vector<int32_t> mainRowIndex; 
     //
@@ -4144,12 +4590,13 @@ int main(int argc, char *argv[]) {
     const VMSData *vmsDataPtr = 0;
     // Initialize an UVW coordinates engine.
     UvwCoords uvwCoords(ds);
-    
+
     ostringstream oss;
 
     // For each selected main row.
     for (int32_t i = 0; i < nMain; i++) {
       try {
+        //cerr<<"Check again 2. msFillers_v.size="<<msFillers_v.size()<<endl;
 	// Populate the State table.
 	fillState(v[i]);
 
@@ -4185,7 +4632,29 @@ int main(int argc, char *argv[]) {
 	    continue;
 	  }
 	  vmsDataPtr = sdmBinData.getDataCols();
-	  fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+
+          if (doparallel) {
+            //vector< casa::Vector<casa::Double> > vv_uvw;
+            casa::Matrix<casa::Double> mat_uvw; // put in matrix
+            int ispw = 0;
+            int nspw = SwIds.size();
+            calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
+            Bool deleteit;
+            casa::Double* puvw = mat_uvw.getStorage(deleteit); 
+            
+            #pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw)
+            //#pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw) copyin(msFiller)
+            {
+            #pragma omp for ordered
+            for (ispw = 0; ispw < nspw; ispw++) { 
+	      //fillMain_mt(i, v[i], sdmBinData, vmsDataPtr, vv_uvw, complexData, ispw, mute);
+	      fillMain_mt(v[i], vmsDataPtr, puvw, complexData, ispw, mute);
+            }
+            }
+          }//end of doparallel
+          else {
+	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+          }
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << mainRowIndex[i] << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
 	  info(infostream.str());
@@ -4193,6 +4662,9 @@ int main(int argc, char *argv[]) {
 	else {
 
 	  // Open its associate BDF.
+	  //infostream.str("");
+          //infostream << "opening BDF"<< endl;
+          //info(infostream.str());
 	  sdmBinData.openMainRow(v[i]);
 	  
 	  uint32_t		N			 = v[i]->getNumIntegration();
@@ -4211,8 +4683,29 @@ int main(int argc, char *argv[]) {
 	    numberOfReadIntegrations += numberOfIntegrations;
 	    numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
 	    
-	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
-	    
+            if (doparallel) {
+              // do parallel MS filling
+              int ispw = 0;
+              int nspw = SwIds.size();
+              //vector< casa::Vector<casa::Double> > vv_uvw;
+              casa::Matrix<casa::Double> mat_uvw; // put in matrix
+              calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
+              Bool deleteit;
+              casa::Double* puvw = mat_uvw.getStorage(deleteit); 
+              #pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw)
+              //#pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw) copyin(msFiller)
+              {
+              #pragma omp for ordered 
+              for (ispw = 0; ispw < nspw; ispw++) { 
+	        //fillMain_mt(i, v[i], sdmBinData, vmsDataPtr, vv_uvw, complexData, ispw, mute);
+	        fillMain_mt(v[i], vmsDataPtr, puvw, complexData, ispw, mute);
+              }
+              }//end of doparallel
+            }
+            else {
+	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+            }
+
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	    info(infostream.str());
 	  }
@@ -4222,8 +4715,25 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
-	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
-	    
+            if (doparallel) {
+              int ispw = 0;
+              int nspw = SwIds.size();
+              casa::Matrix<casa::Double> mat_uvw; // put in matrix
+              calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
+              Bool deleteit;
+              casa::Double* puvw = mat_uvw.getStorage(deleteit); 
+              //#pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw) copyin(msFiller) 
+              #pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw)
+              {
+              #pragma omp for ordered
+              for (ispw = 0; ispw < nspw; ispw++) { 
+	        fillMain_mt(v[i], vmsDataPtr, puvw, complexData, ispw, mute);
+              }
+              }
+            }//end of doparallel
+            else {
+	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+            }
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	    info(infostream.str());
 	    numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
@@ -4302,17 +4812,61 @@ int main(int argc, char *argv[]) {
     ASDMVerbatimFiller avf(const_cast<casa::MS*>(msFillers.begin()->second->ms()), Name2Table::find(tablenames, verbose));
     avf.fill(*ds);
   }
-  
+
   for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
        iter != msFillers.end();
        ++iter)
     iter->second->end(0.0);
-  
-  
+ 
+  if (doparallel) {
+    for (unsigned int i = 1; i < msFillers_v.size(); i++) {
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers_v[i].begin(); 
+           iter != msFillers_v[i].end();
+           ++iter)
+        iter->second->end(0.0);
+    }
+  }
+
+
   for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
        iter != msFillers.end();
        ++iter)
     delete iter->second;
+
+  if (doparallel) {
+    for (unsigned int i = 1; i < msFillers_v.size(); i++) {
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers_v[i].begin();
+         iter != msFillers_v[i].end();
+         ++iter)
+      delete iter->second;
+    }
+  }
+  // do subtable copy in the end
+  
+  if (doparallel) { 
+    //copy subtables from first spw MSes
+    //cerr<<"copy subtables ......."<<endl;
+    ostringstream oss;
+    oss<< SwIds.at(0);
+    string msname_suffix_first = ".SpW"+oss;
+    //#pragma omp for 
+    for (int i=1; i<SwIds.size(); i++) {
+      ostringstream oss2;
+      oss2<< SwIds.at(i);
+      string msname_suffix = ".SpW"+oss2;
+      for (map<AtmPhaseCorrection, string>::iterator iter=msNames.begin(); iter != msNames.end(); ++iter) {
+        string intabname = msNames[iter->first]+msname_suffix_first; 
+        string outtabname = msNames[iter->first]+msname_suffix;
+        cerr<<"Copy subtables from intabname="<<intabname<<" to outtabname="<<outtabname<<endl;
+        if(PlainTable::tableCache()(outtabname))
+          PlainTable::tableCache().remove(outtabname);
+
+        Table intab(intabname);
+        Table outtab(outtabname,Table::Update);
+        TableCopy::copySubTables(outtab,intab);
+      }
+    }
+  }
   delete ds;
   return 0;
 }

@@ -64,10 +64,6 @@ testflagger::done()
 			delete testflagger_p;
 			testflagger_p = NULL;
 		}
-		if (logger_p){
-			delete logger_p;
-			logger_p = NULL;
-		}
 
 		return true;
 	} catch (AipsError x) {

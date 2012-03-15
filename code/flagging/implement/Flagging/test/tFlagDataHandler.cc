@@ -22,8 +22,8 @@
 
 #include <flagging/Flagging/FlagCalTableHandler.h>
 #include <flagging/Flagging/FlagMSHandler.h>
-#include <flagging/Flagging/FlagAgentManual.h>
-#include <flagging/Flagging/FlagAgentSummary.h>
+#include <flagging/Flagging/FlagAgentBase.cc>
+#include <tableplot/TablePlot/FlagVersion.h>
 #include <iostream>
 
 using namespace casa;
@@ -53,13 +53,6 @@ void unflag(string inputFile,uShort iterationMode)
 		dh = new FlagCalTableHandler(inputFile,iterationMode);
 	}
 
-	// Create agent list
-	Record agentConfig;
-	agentConfig.define("name","FlagAgentUnflag");
-	FlagAgentList agentList;
-	FlagAgentManual *unflagAgent = new FlagAgentManual(dh,agentConfig,false,false);
-	agentList.push_back(unflagAgent);
-
 	// Open Measurement Set
 	dh->open();
 
@@ -69,6 +62,13 @@ void unflag(string inputFile,uShort iterationMode)
 
 	// Select data
 	dh->selectData();
+
+	// Create agent list
+	Record agentConfig;
+	agentConfig.define("name","FlagAgentUnflag");
+	FlagAgentList agentList;
+	FlagAgentManual *unflagAgent = new FlagAgentManual(dh,agentConfig,false,false);
+	agentList.push_back(unflagAgent);
 
 	// Set cout precision
 	cout.precision(20);
@@ -114,7 +114,7 @@ void unflag(string inputFile,uShort iterationMode)
 	cout << "Total Reading Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
 }
 
-void flag(string inputFile,uShort iterationMode,Record record)
+void flag(string inputFile,uShort iterationMode,uShort testMode,String flagmode,Record record)
 {
 	bool fillBuffer = true;
 	unsigned long nBuffers = 0;
@@ -122,8 +122,6 @@ void flag(string inputFile,uShort iterationMode,Record record)
 
 	timeval start,stop;
 	double elapsedTime = 0;
-
-	uShort testMode = 1;
 
 	Table table(inputFile,TableLock(TableLock::AutoNoReadLocking));
 	TableInfo& info = table.tableInfo();
@@ -141,14 +139,6 @@ void flag(string inputFile,uShort iterationMode,Record record)
 		dh = new FlagCalTableHandler(inputFile,iterationMode);
 	}
 
-	// Create agent list
-	Record agentConfig;
-	agentConfig.define("name","FlagAgentManual");
-	if (testMode==2) agentConfig = record;
-	FlagAgentList agentList;
-	FlagAgentManual *manualAgent = new FlagAgentManual(dh,agentConfig);
-	agentList.push_back(manualAgent);
-
 	// Open Measurement Set
 	dh->open();
 
@@ -159,6 +149,15 @@ void flag(string inputFile,uShort iterationMode,Record record)
 
 	// Select data
 	dh->selectData();
+
+	// Create agent list
+	Record agentConfig;
+	if (testMode==2) agentConfig = record;
+	agentConfig.define("name","FlagAgent-" + flagmode);
+	agentConfig.define("mode",flagmode);
+	FlagAgentList agentList;
+	FlagAgentBase *agent = FlagAgentBase::create(dh,agentConfig);
+	agentList.push_back(agent);
 
 	// Set cout precision
 	cout.precision(20);
@@ -186,6 +185,9 @@ void flag(string inputFile,uShort iterationMode,Record record)
 	// Stop Flag Agent
 	agentList.terminate();
 	agentList.join();
+
+	// Test iterator re-generation
+	dh->generateIterator();
 
 	// Close MS
 	dh->close();
@@ -229,13 +231,6 @@ void summary(string inputFile,uShort iterationMode)
 		dh = new FlagCalTableHandler(inputFile,iterationMode);
 	}
 
-	// Create agent list
-	Record agentConfig;
-	agentConfig.define("name","FlagAgentSummary");
-	FlagAgentList agentList;
-	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,agentConfig);
-	agentList.push_back(summaryAgent);
-
 	// Open Measurement Set
 	dh->open();
 
@@ -245,6 +240,13 @@ void summary(string inputFile,uShort iterationMode)
 
 	// Select data
 	dh->selectData();
+
+	// Create agent list
+	Record agentConfig;
+	agentConfig.define("name","FlagAgentSummary");
+	FlagAgentList agentList;
+	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,agentConfig);
+	agentList.push_back(summaryAgent);
 
 	// Set cout precision
 	cout.precision(20);
@@ -299,7 +301,9 @@ int main(int argc, char **argv)
 	string parameter, value;
 	string inputFile, array, time, scan, field, spw, baseline, uvw;
 	string correlation, observation, intent;
-	uShort iterationMode;
+	uShort iterationMode = FlagDataHandler::SUB_INTEGRATION;
+	uShort testMode = 1;
+	String flagMode = "manual";
 
 
 	// Parse input parameters
@@ -379,11 +383,21 @@ int main(int argc, char **argv)
 			iterationMode = (uShort)atoi(value.c_str());
 			cout << "Iteration approach is: " << iterationMode << endl;
 		}
+		else if (parameter == string("-flagMode"))
+		{
+			flagMode = String(value.c_str());
+			cout << "Flagmode approach is: " << flagMode << endl;
+		}
+		else if (parameter == string("-testMode"))
+		{
+			testMode = (uShort)atoi(value.c_str());
+			cout << "Testmode approach is: " << testMode << endl;
+		}
 	}
 
-	unflag(inputFile,iterationMode);
-	flag(inputFile,iterationMode,record);
-	summary(inputFile,iterationMode);
+	//unflag(inputFile,iterationMode);
+	flag(inputFile,iterationMode,testMode,flagMode,record);
+	//summary(inputFile,iterationMode);
 
 	exit(-1);
 }

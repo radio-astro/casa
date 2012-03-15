@@ -20,7 +20,7 @@
 #include "almawvr/libair_main.hpp"
 #include "almawvr/arraygains.hpp"
 #include "msspec.hpp"
-#include "../src/dispersion.hpp"
+#include "almawvr/dispersion.hpp"
 
 // These are used to turn the directory where the data files live into
 // a string

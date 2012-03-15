@@ -4,8 +4,9 @@ from taskinit import *
 import asap as sd
 from asap._asap import Scantable
 import pylab as pl
+from asap import _to_list
 
-def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdaverage')
 
@@ -98,19 +99,18 @@ def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     #print 'Using current doppler convention'
                     casalog.post( 'Using current doppler convention' )
 
-            # Select scan and field
-            sel = sd.selector()
+            # A scantable selection
+            # Scan selection
+            scans = _to_list(scanlist,int) or []
 
-            # Set up scanlist
-            if ( type(scanlist) == list ):
-                    # is a list
-                    scans = scanlist
-            else:
-                    # is a single int, make into list
-                    scans = [ scanlist ]
-            # Now select them
-            if ( len(scans) > 0 ):
-                    sel.set_scans(scans)
+            # IF selection
+            ifs = _to_list(iflist,int) or []
+
+            # Select polarizations
+            pols = _to_list(pollist,int) or []
+
+            # Actual selection
+            sel = sd.selector(scans=scans, ifs=ifs, pols=pols)
 
             # Select source names
             if ( field != '' ):
@@ -119,30 +119,11 @@ def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     # set of names this way, will probably
                     # need to do a set_query eventually
 
-            # Select IFs
-            if ( type(iflist) == list ):
-                    # is a list
-                    ifs = iflist
-            else:
-                    # is a single int, make into list
-                    ifs = [ iflist ]
-            if ( len(ifs) > 0 ):
-                    # Do any IF selection
-                    sel.set_ifs(ifs)
-
-           # Select polarizations
-            if (type(pollist) == list):
-              pols = pollist
-            else:
-              pols = [pollist]
-            if(len(pols) > 0 ):
-              sel.set_polarisations(pols)
 
             try:
                 #Apply the selection
                 s.set_selection(sel)
             except Exception, instance:
-                #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
             del sel
@@ -256,6 +237,11 @@ def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     # recalculate az/el (NOT needed for GBT data)
                     if ( antennaname != 'GBT'): scal.recalc_azel()
                     scal.opacity(tau)
+
+            # Align frequencies if desired
+            if ( align ):
+                    if reftime == '': reftime=None
+                    scal.freq_align(reftime=reftime,method=interp,insitu=True)
 
             # Average in time if desired
             if ( timeaverage ):

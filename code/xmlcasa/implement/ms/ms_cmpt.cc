@@ -1463,6 +1463,7 @@ ms::cvel(const std::string& mode,
   Bool rstat(False);
 
   Bool hanningDone(False);
+  Bool needToClearModel(False);
   SubMS *sms = 0;
 
   try {
@@ -1470,7 +1471,7 @@ ms::cvel(const std::string& mode,
     *itsLog << LogOrigin("ms", "cvel");
 
     Bool t_doHanning = hanning;
-    
+
     String t_phasec = toCasaString(phasec);
 
     String t_mode;
@@ -1556,10 +1557,15 @@ ms::cvel(const std::string& mode,
 
     // test parameters of input SPWs
     Bool foundInconsistentSPW = False;
+    
     {
       Table spwtable(originalName+"/SPECTRAL_WINDOW");
       ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
       ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
+
+      if(spwtable.nrow()>1){
+	needToClearModel = True;
+      }
 
       for(uInt ii=0; ii<spwtable.nrow(); ii++){
 	Vector<Double> cw(chanwidths(ii));
@@ -1686,6 +1692,8 @@ ms::cvel(const std::string& mode,
 	*itsLog << LogIO::NORMAL << "Hanning smoothing was applied." << LogIO::POST;
       }
       
+      
+
       // Update HISTORY table of modfied MS
       String message = "Transformed/regridded with cvel";
       writehistory(message, regridMessage, "ms::cvel()", originalName, "ms"); 
@@ -1771,10 +1779,16 @@ ms::cvel(const std::string& mode,
     if(rstat){ // re-open MS for writing, unlocked
       open(originalName,  False, False); 
       *itsLog << LogOrigin("ms", "cvel");
-       if(!hanningDone && t_doHanning){ 
-	 // still need to Hanning Smooth
-	 hanningsmooth("all");
-       }
+      if(!hanningDone && t_doHanning){ 
+	// still need to Hanning Smooth
+	hanningsmooth("all");
+      }
+
+      if(needToClearModel){
+	*itsLog << LogIO::NORMAL  << "NOTE: any virtual model data will be cleared." << LogIO::POST;
+	VisModelData::clearModel(*itsMS);
+      }
+
     }
 
   } catch (AipsError x) {

@@ -77,7 +77,6 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("spectralmax");
 	if (exists >= 0)
 	{
-	  cout << "Type of spectralmax : " << config.type( exists ) << endl;
 		spectralmax_p = config.asDouble("spectralmax");
 		*logger_p << logLevel_p << " spectralmax is " << spectralmax_p << LogIO::POST;
 	}
@@ -147,10 +146,14 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 		doflag_p = false;
 	}
 
-	// Determine if we have to store the plot reports in
+	// Determine if we have to generate plot reports.
 	if ( (display == String("report")) or (display == String("both")) )
 	{
 		doplot_p = true;
+	}
+	else
+	{
+	        doplot_p = false;
 	}
 
 	// timedev - Matrix for time analysis deviation thresholds - (old AIPS RFlag FPARM(3)/NOISE)
@@ -298,8 +301,14 @@ FlagReport FlagAgentRFlag::getReport()
 {
 	FlagReport totalRep(String("list"),agentName_p);
 
-	if ((doflag_p==false) and (doplot_p==true))
+	if ((doflag_p==false)) //  and (doplot_p==true))  // RVU commented out doplot_p here....
 	{
+	         // These functions compute thresholds, and resize and fill
+                 // field_spw_noise_map_p and field_spw_scutof_map_p.
+	         // TODO : Thresholds should be calculated even if no plot is asked for, but the "plot"
+                 //             should be made only when doplot_p==true.  These two operations should
+	         //             be separated.
+
 		// Plot reports (should be returned if params were calculated and display is activated)
 		FlagReport noiseStd = getReportCore(	field_spw_noise_histogram_sum_p,
 												field_spw_noise_histogram_sum_squares_p,
@@ -317,6 +326,7 @@ FlagReport FlagAgentRFlag::getReport()
 												scutofScale_p);
 		totalRep.addReport(scutofStd);
 	}
+
 
 	if (doflag_p==false)
 	{

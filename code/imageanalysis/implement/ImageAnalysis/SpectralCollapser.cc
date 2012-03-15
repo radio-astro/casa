@@ -114,11 +114,11 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 			return False;
 		}
 		startIndex=0;
-		while (specVals(startIndex)<endVal)
+		while (specVals(startIndex)>endVal)
 			startIndex++;
 
 		endIndex=specVals.size()-1;
-		while (specVals(endIndex)>startVal)
+		while (specVals(endIndex)<startVal)
 			endIndex--;
 	}
 
@@ -229,7 +229,6 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 
 	return True;
 }
-
 
 String SpectralCollapser::summaryHeader() const {
 	ostringstream os;
@@ -526,7 +525,6 @@ Bool SpectralCollapser::_getOutputName(const String &wcsInp, String &outImg, Str
 	return True;
 }
 
-
 Bool SpectralCollapser::_collapse(const ImageInterface<Float> *image, const String &aggString,
 		const String& chanInp, const String& outname) const {
 	// create and execute the imcollapse-class
@@ -689,141 +687,6 @@ Bool SpectralCollapser::_mergeDataError( const String &outImg, const String &dat
 	return True;
 }
 
-Bool SpectralCollapser::mergeDataErrorOLD(const String &dataImg, const String &errorImg, const String &outImg){
-	Bool needsMask=False;
-
-	// open the data and the error image
-	ImageInterface<Float>  *data  = new PagedImage<Float>(dataImg, TableLock::AutoNoReadLocking);
-	ImageInterface<Float>  *error = new PagedImage<Float>(errorImg, TableLock::AutoNoReadLocking);
-
-	// see whether a mask is needed
-	if (data->hasPixelMask() || error->hasPixelMask())
-		needsMask = True;
-
-	// create the tiled shape for the output image
-	IPosition newShape=IPosition(data->shape());
-	newShape.append(IPosition(1, 2));
-	TiledShape tiledShape(newShape);
-
-	// create the coordinate system for the output image
-	CoordinateSystem newCSys = data->coordinates();
-	Vector<Int> quality(2);
-	quality(0) = Quality::DATA;
-	quality(1) = Quality::ERROR;
-	QualityCoordinate qualAxis(quality);
-	newCSys.addCoordinate(qualAxis);
-
-	Array<Float> outData=Array<Float>(newShape, 0.0);
-	Array<Bool>  outMask;
-
-	// create mask if necessary
-	if (needsMask)
-		outMask=Array<Bool>(newShape, True);
-
-	// get all the data values
-	Array<Float> inData;
-	Slicer inSlicer(IPosition((data->shape()).size(), 0), IPosition(data->shape()));
-	data->doGetSlice(inData, inSlicer);
-	//inDataDeg = inData.addDegenerate(1);
-
-	Array<Bool> inMask, inMaskDeg;
-	if (needsMask){
-		if (data->hasPixelMask()){
-			inMask  = (data->pixelMask()).get();
-		}
-		else{
-			inMask = Array<Bool>(data->shape(), True);
-		}
-		//inMaskDeg = inMask.addDegenerate(1);
-	}
-
-	// put the data values to output
-	Int qualCooPos, qualIndex;
-	qualCooPos = newCSys.findCoordinate(Coordinate::QUALITY);
-	(newCSys.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::DATA);
-	IPosition outStart(newShape.size(), 0);
-	IPosition outStride(newShape.size(), 1);
-	outStart(newShape.size()-1)=qualIndex;
-
-	IPosition outLength(newShape);
-	outLength(newShape.size()-1)=1;
-	Slicer outSlicer(outStart, outLength);
-	//outData(outSlicer) = inDataDeg;
-	outData(outSlicer) = inData.addDegenerate(1);
-	if (needsMask)
-		//outMask(outSlicer) = inMaskDeg;
-		outMask(outSlicer) = inMask.addDegenerate(1);
-	//cout << "outData: " << outData << endl;
-
-	// get all the error values
-	error->doGetSlice(inData, inSlicer);
-	//inDataDeg = inData.addDegenerate(1);
-
-	if (needsMask){
-		if (error->hasPixelMask()){
-			inMask  = (error->pixelMask()).get();
-		}
-		else{
-			inMask = Array<Bool>(error->shape(), True);
-		}
-		//inMaskDeg = inMask.addDegenerate(1);
-	}
-
-	// put the error values to output
-	(newCSys.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::ERROR);
-	outStart(newShape.size()-1)=qualIndex;
-	//newImg->doPutSlice(inDataDeg, outStart, outStride);
-
-	outSlicer = Slicer(outStart, outLength);
-	//outData(outSlicer) = inDataDeg;
-	outData(outSlicer) = inData.addDegenerate(1);
-	if (needsMask)
-		//outMask(outSlicer) = inMaskDeg;
-		outMask(outSlicer) = inMask.addDegenerate(1);
-
-	// write out the image
-	ImageUtilities::writeImage(tiledShape, newCSys, outImg, outData, *_log, outMask);
-
-	delete data;
-	delete error;
-
-	return True;
-	// create the output image
-	//PagedImage<Float> *newImg = new PagedImage<Float>(newShape, newCSys, outImg);
-	//newImg->doPutSlice(inDataDeg, outStart, outStride);
-	//newImg->doPutSlice(inDataDeg, outStart, outStride);
-
-	// flush to disk
-	//newImg->flush();
-
-
-	//ImageUtilities::writeImage(tiledShape, newCSys, outImg, outData, *_log, outMask);
-
-	//Slicer (const IPosition &start, const IPosition &end, LengthOrLast endInterpretation=endIsLength)
-	//Slicer newDataSlicer
-	//SubImage (const ImageInterface< T > &image, const Slicer &slicer, AxesSpecifier=AxesSpecifier())
-	// subNewData = SubImage(*newImg, newDataSlicer)
-
-	//Slicer inDataSlicer
-	//SubImage (const ImageInterface< T > &image, const Slicer &slicer, AxesSpecifier=AxesSpecifier())
-	// subInData = SubImage(*data, inDataSlicer)
-
-
-	// that code just copies the data layer
-	// to the output file that there is something
-	/*File tmpFile(dataImg);
-	if (tmpFile.exists ()){
-		if (tmpFile.isRegular()){
-			RegularFile regFile = RegularFile (dataImg);
-			regFile.copy(outImg);
-		}
-		else if (tmpFile.isDirectory()){
-			Directory tmpDir(dataImg);
-			tmpDir.copy(outImg);
-		}
-	}
-	 */
-}
 
 void SpectralCollapser::_addMiscInfo(const String &outName, const String &wcsInput, const String &chanInput,
 		const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError) const {

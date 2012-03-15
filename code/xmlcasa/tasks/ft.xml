@@ -56,9 +56,13 @@
 		</param>
 
 		<param type="bool" name="incremental">
-			<description>Add to the existing MODEL_DATA column?</description>
+			<description>Add to the existing model visibility?</description>
 			<value>False</value>
 		</param>
+		<param type="bool" name="usescratch">
+			<description>Add to the existing model visibility?</description>
+			<value>True</value>
+		</param>	
 
 		<constraints>
 		        <when param="nterms">
@@ -110,9 +114,12 @@
        complist -- Name of component list
                default: None; ; example: complist='test.cl'
                component lists are difficult to make.
-       incremental -- Add model visibility to the existing MODEL_DATA visibilties
+       incremental -- Add model visibility to the existing model visibilties stored in the MS
                default: False; example: incremental=True
-
+       usescratch  -- if True model visibilities will be stored in the scratch column 
+                            MODEL_SATA; when false the moedl visibilities will be generated 
+                            on the fly (this mode saves 1/3 of the disk space). 
+                            default: True; example default=False
 
 
      

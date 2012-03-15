@@ -100,13 +100,13 @@ def correct_ant_posns (vis_name, print_offsets=False):
 # first, see if the internet connection is possible
     try:
         response = urllib2.urlopen(URL_BASE + '2010')
-    except URLError, err:
+    except urllib2.URLError, err:
         if (print_offsets):
             print 'No internet connection to antenna position correction URL ', \
                   err.reason
         else:
-           casalog.post('No internet connection to antenna position correction URL ', \
-                  err.reason,"WARN")
+           casalog.post('No internet connection to antenna position correction URL '+ \
+                  str(err.reason),"WARN")
         return [2, '', []]
     response.close()
     for year in range(2010,current_year+1):

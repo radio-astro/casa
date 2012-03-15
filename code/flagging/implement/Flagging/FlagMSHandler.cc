@@ -302,6 +302,12 @@ FlagMSHandler::selectData()
 		*logger_p << LogIO::DEBUG1 << " Selected correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
 	}
 
+	// There is a new selected MS so iterators have to be regenerated
+	iteratorGenerated_p = false;
+	chunksInitialized_p = false;
+	buffersInitialized_p = false;
+	stopIteration_p = false;
+
 	return true;
 }
 
@@ -309,11 +315,11 @@ FlagMSHandler::selectData()
 // -----------------------------------------------------------------------
 // Parse MSSelection expression
 // -----------------------------------------------------------------------
-void
+bool
 FlagMSHandler::parseExpression(MSSelection &parser)
 {
 	parser.toTableExprNode(selectedMeasurementSet_p);
-	return;
+	return true;
 }
 
 
@@ -408,70 +414,83 @@ FlagMSHandler::checkMaxMemory()
 bool
 FlagMSHandler::generateIterator()
 {
-	// First create and initialize RW iterator
-	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
-	rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
-
-	// Set the table data manager (ISM and SSM) cache size to the full column size, for
-	// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-	if (slurp_p) rwVisibilityIterator_p->slurp();
-
-	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator in sync mode)
-	applyChannelSelection(rwVisibilityIterator_p);
-
-	if ((mapScanStartStop_p) or (groupTimeSteps_p and asyncio_enabled_p)) 
+	if (!iteratorGenerated_p)
 	{
-		checkMaxMemory();
-	}
+		// Delete VisBuffer (this implies it self-detaches from VisIter, so we cannot delete VisIter before)
+		if (visibilityBuffer_p) delete visibilityBuffer_p;
 
-	// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
-	// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
-	// With this configuration the Visibility Buffer is attached to the RO async iterator
-	if (asyncio_enabled_p)
-	{
-		// Set preFetchColumns
-		prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,
-																			VisBufferComponents::FlagRow,
-																			VisBufferComponents::NRow,
-																			VisBufferComponents::FieldId);
-		preFetchColumns();
-
-
-		// Then create and initialize RO Async iterator
+		// First create and initialize RW iterator
 		if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
-		rwVisibilityIterator_p = new VisibilityIterator(&prefetchColumns_p,*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
-
-		// Cast RW conventional iterator into RO conventional iterator
-		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
+		rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
 		// Set the table data manager (ISM and SSM) cache size to the full column size, for
 		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-		if (slurp_p) roVisibilityIterator_p->slurp();
+		if (slurp_p) rwVisibilityIterator_p->slurp();
 
-		// Apply channel selection
-		applyChannelSelection(roVisibilityIterator_p);
+		// Apply channel selection (Notice that is not necessary to do this again with the RO iterator in sync mode)
+		applyChannelSelection(rwVisibilityIterator_p);
 
-		// Set row blocking to a huge number
-		*logger_p << LogIO::NORMAL <<  "Setting row blocking to maximum number of rows in all the chunks swapped: " << maxChunkRows << LogIO::POST;
-		if (groupTimeSteps_p) roVisibilityIterator_p->setRowBlocking(maxChunkRows);
+		if ((mapScanStartStop_p) or (groupTimeSteps_p and asyncio_enabled_p))
+		{
+			checkMaxMemory();
+		}
 
-		// Attach Visibility Buffer to Visibility Iterator
-		if (visibilityBuffer_p) delete visibilityBuffer_p;
-		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+		// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
+		// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
+		// With this configuration the Visibility Buffer is attached to the RO async iterator
+		if (asyncio_enabled_p)
+		{
+			// Set preFetchColumns
+			prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,
+																				VisBufferComponents::FlagRow,
+																				VisBufferComponents::NRow,
+																				VisBufferComponents::FieldId);
+			preFetchColumns();
+
+
+			// Then create and initialize RO Async iterator
+			if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+			rwVisibilityIterator_p = new VisibilityIterator(&prefetchColumns_p,*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
+
+			// Cast RW conventional iterator into RO conventional iterator
+			if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+			roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
+
+			// Set the table data manager (ISM and SSM) cache size to the full column size, for
+			// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+			if (slurp_p) roVisibilityIterator_p->slurp();
+
+			// Apply channel selection
+			applyChannelSelection(roVisibilityIterator_p);
+
+			// Set row blocking to a huge number
+			*logger_p << LogIO::NORMAL <<  "Setting row blocking to maximum number of rows in all the chunks swapped: " << maxChunkRows << LogIO::POST;
+			if (groupTimeSteps_p) roVisibilityIterator_p->setRowBlocking(maxChunkRows);
+
+			// Attach Visibility Buffer to Visibility Iterator
+			visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+		}
+		else
+		{
+			// Cast RW conventional iterator into RO conventional iterator
+			if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+			roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
+
+			// Finally attach Visibility Buffer to RO conventional iterator
+			visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+		}
+
+		iteratorGenerated_p = true;
+		chunksInitialized_p = false;
+		buffersInitialized_p = false;
+		stopIteration_p = false;
 	}
 	else
 	{
-		// Cast RW conventional iterator into RO conventional iterator
-		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
-
-		// Finally attach Visibility Buffer to RO conventional iterator
-		if (visibilityBuffer_p) delete visibilityBuffer_p;
-		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+		chunksInitialized_p = false;
+		buffersInitialized_p = false;
+		stopIteration_p = false;
 	}
-
-	iteratorGenerated_p = true;
 
 	return true;
 }
