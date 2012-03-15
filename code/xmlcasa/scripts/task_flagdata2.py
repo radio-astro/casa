@@ -72,6 +72,16 @@ def flagdata2(vis = None,
         return
 
     casalog.origin('flagdata2')
+
+    # DEPRECATE THIS TASK
+    casalog.post('**************************************************','WARN')
+    casalog.post('   THIS TASK IS OBSOLETE AND WILL BE DEPRECATED', 'WARN')
+    casalog.post('','WARN')
+    casalog.post('             USE THE TASK tflagdata', 'WARN')
+    casalog.post('**************************************************','WARN')
+    casalog.post('','WARN')
+    
+    
     fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
 
