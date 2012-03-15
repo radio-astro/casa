@@ -5000,7 +5000,9 @@ every other pixel is dropped in the output image so that the pixel width and the
 are the same. In this case, the first output pixel is centered on the second input pixel, so that the
 (zero-based) jth output pixel is related to the (zero-based) ith input pixel by
 
-j = 2*i + 1
+j = (i - 1)/2
+
+where i takes on only odd values.
 
 The hanning smoothed image is written to disk with name {\stfaf outfile}, if
 specified. If not, no image is written but the image is still accessible via
@@ -5009,14 +5011,13 @@ the returned image analysis tool (see below).
 This method always returns an image analysis tool which is attached to the
 hanning smoothed image. This tool should always be captured and closed after
 any desired manipulations have been done. Closing the tool frees up system
-resources (eg memory). Eg,
+resources (eg memory), eg,
 
 hanning_image = ia.hanning(...)
 # do things (or not) with hanning_image 
 ... 
 # close the returned tool promptly upon finishing with it.
 hanning_image.done()
-
 
 Masked pixels will be assigned the value 0.0 before convolution. 
 The output mask is the combination (logical OR) of the default input
