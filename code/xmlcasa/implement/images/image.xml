@@ -4992,7 +4992,7 @@ This function performs Hanning convolution of one axis of an image defined by
 z[i] = 0.25*y[i-1] + 0.5*y[i] + 0.25*y[i+1] 
 
 where z[i] is the value at pixel i in the hanning smoothed image, and
-y[i-1, y[i], and y[i+1] are the values of the input image at pixels i-1,
+y[i-1], y[i], and y[i+1] are the values of the input image at pixels i-1,
 i, and i+1 respectively.
 
 The convolution is done in the image domain (i.e., not with an FFT). If drop=True,
