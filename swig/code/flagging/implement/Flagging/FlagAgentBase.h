@@ -60,7 +60,7 @@ public:
 	};
 
 	FlagAgentBase(FlagDataHandler *dh, Record config, uShort iterationApproach, Bool writePrivateFlagCube = false, Bool flag = true);
-	~FlagAgentBase ();
+	virtual ~FlagAgentBase ();
 	static FlagAgentBase *create (FlagDataHandler *dh,Record config);
 
 	void start();

@@ -1019,8 +1019,8 @@ public:
     
   // Return the names and units of the world coordinate axes.
   // <group>
-  virtual Vector<String> worldAxisNames();
-  virtual Vector<String> worldAxisUnits();
+  virtual Vector<String> worldAxisNames() const;
+  virtual Vector<String> worldAxisUnits() const;
   // </group>
 
   const std::list<DisplayData*> &displaylist( ) const;

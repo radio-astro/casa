@@ -158,6 +158,9 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 // -----------------------------------------------------------------------
 FlagDataHandler::~FlagDataHandler()
 {
+	logger_p->origin(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::~FlagDataHandler()" << LogIO::POST;
+
 	// Delete logger
 	if (logger_p) delete logger_p;
 
@@ -404,6 +407,12 @@ FlagDataHandler::setIterationApproach(uShort iterationApproach)
 		}
 	}
 
+	// We have changed the iteration approach to the iterators has to be regenerated
+	iteratorGenerated_p = false;
+	chunksInitialized_p = false;
+	buffersInitialized_p = false;
+	stopIteration_p = false;
+
 	return;
 }
 
@@ -630,6 +639,16 @@ FlagDataHandler::generateAntennaPointingMap()
 	*logger_p << LogIO::NORMAL << " Generated antenna pointing map with "
 			<< antennaPointingMap_p->size() << " elements" << LogIO::POST;
 
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+// Generate scan start stop map
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::generateScanStartStopMap()
+{
 	return;
 }
 

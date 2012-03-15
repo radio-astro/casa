@@ -537,9 +537,9 @@ public:
 	FlagDataHandler(string msname, uShort iterationApproach = SUB_INTEGRATION, Double timeInterval = 0);
 
 	// Default destructor
-	~FlagDataHandler();
+	virtual ~FlagDataHandler();
 
-	// Common MS/CalTables interface
+	// Common MS/CalTables public interface
 	virtual bool open() {return false;}
 	virtual bool close() {return false;}
 	virtual bool selectData() {return false;}
@@ -548,7 +548,7 @@ public:
 	virtual bool nextBuffer() {return false;}
 	virtual bool flushFlags() {return false;}
 	virtual String getTableName() {return String("none");}
-	virtual void parseExpression(MSSelection &parser) {return;}
+	virtual bool parseExpression(MSSelection &parser) {return true;}
 
 	// Set the iteration approach
 	void setIterationApproach(uShort iterationApproach);
@@ -583,12 +583,6 @@ public:
 	void setMapAntennaPointing(bool activated);
 	void setScanStartStopMap(bool activated);
 	void setScanStartStopFlaggedMap(bool activated);
-
-	// Mapping functions
-	void generateAntennaPairMap();
-	void generateSubIntegrationMap();
-	void generatePolarizationsMap();
-	void generateAntennaPointingMap();
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
@@ -638,6 +632,13 @@ public:
 
 
 protected:
+
+	// Common MS/CalTables private interface
+	virtual void generateAntennaPairMap();
+	virtual void generateSubIntegrationMap();
+	virtual void generatePolarizationsMap();
+	virtual void generateAntennaPointingMap();
+	virtual void generateScanStartStopMap();
 
 	// Data Selection ranges
 	bool anySelection_p;

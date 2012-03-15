@@ -537,17 +537,18 @@ FlagAgentBase::setDataSelection(Record config)
 		}
 		else
 		{
-
 			parser.setArrayExpr(arraySelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			arrayList_p=parser.getSubArrayList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				arrayList_p=parser.getSubArrayList();
+				filterRows_p=true;
 
-			// Request to pre-load ArrayId
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
+				// Request to pre-load ArrayId
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
 
-			*logger_p << LogIO::DEBUG1 << " array selection is " << arraySelection_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " array ids are " << arrayList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " array selection is " << arraySelection_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " array ids are " << arrayList_p << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -566,17 +567,19 @@ FlagAgentBase::setDataSelection(Record config)
 		}
 		else
 		{
-
 			parser.setFieldExpr(fieldSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			fieldList_p=parser.getFieldList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				fieldList_p=parser.getFieldList();
+				filterRows_p=true;
 
-			// Request to pre-load FieldId
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
+				// Request to pre-load FieldId
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
 
-			*logger_p << LogIO::DEBUG1 << " field selection is " << fieldSelection_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " field ids are " << fieldList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " field selection is " << fieldSelection_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " field ids are " << fieldList_p << LogIO::POST;
+			}
+
 		}
 	}
 	else
@@ -596,15 +599,17 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setScanExpr(scanSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			scanList_p=parser.getScanList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				scanList_p=parser.getScanList();
+				filterRows_p=true;
 
-			// Request to pre-load scan
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
+				// Request to pre-load scan
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
 
-			*logger_p << LogIO::DEBUG1 << " scan selection is " << scanSelection_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " scan ids are " << scanList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " scan selection is " << scanSelection_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " scan ids are " << scanList_p << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -624,15 +629,17 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setTimeExpr(timeSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			timeList_p=parser.getTimeList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				timeList_p=parser.getTimeList();
+				filterRows_p=true;
 
-			// Request to pre-load time
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
+				// Request to pre-load time
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
 
-			*logger_p << LogIO::DEBUG1 << " timerange selection is " << timeSelection_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " time ranges in MJD are " << timeList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " timerange selection is " << timeSelection_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " time ranges in MJD are " << timeList_p << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -652,18 +659,20 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setSpwExpr(spwSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			spwList_p=parser.getSpwList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				spwList_p=parser.getSpwList();
+				filterRows_p=true;
 
-			channelList_p=parser.getChanList();
-			filterChannels_p=true;
+				channelList_p=parser.getChanList();
+				filterChannels_p=true;
 
-			// Request to pre-load spw
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+				// Request to pre-load spw
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
 
-			*logger_p << LogIO::DEBUG1 << " spw selection is " << spwSelection_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " channel selection are " << channelList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " spw selection is " << spwSelection_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " channel selection are " << channelList_p << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -694,17 +703,19 @@ FlagAgentBase::setDataSelection(Record config)
 			}
 
 			parser.setAntennaExpr(baselineSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			antenna1List_p=parser.getAntenna1List();
-			antenna2List_p=parser.getAntenna2List();
-			baselineList_p=parser.getBaselineList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				antenna1List_p=parser.getAntenna1List();
+				antenna2List_p=parser.getAntenna2List();
+				baselineList_p=parser.getBaselineList();
+				filterRows_p=true;
 
-			// Request to pre-load antenna1/2
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+				// Request to pre-load antenna1/2
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
 
-			*logger_p << LogIO::DEBUG1 << " selected baselines are " << baselineList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " selected baselines are " << baselineList_p << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -724,15 +735,17 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setUvDistExpr(uvwSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			uvwList_p=parser.getUVList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				uvwList_p=parser.getUVList();
+				filterRows_p=true;
 
-			// Request to pre-load uvw
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
+				// Request to pre-load uvw
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
 
-			*logger_p << LogIO::DEBUG1 << " uvrange selection is " << uvwSelection_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " uvrange ids are " << uvwList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " uvrange ids are " << uvwList_p << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -758,19 +771,22 @@ FlagAgentBase::setDataSelection(Record config)
 		{
 
 			parser.setPolnExpr(polarizationSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			polarizationList_p=parser.getPolMap();
-			filterPols_p=true;
 
-			// Request to pre-load CorrType
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				polarizationList_p=parser.getPolMap();
+				filterPols_p=true;
 
-			// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
-			ostringstream polarizationListToPrint (ios::in | ios::out);
-			polarizationListToPrint << polarizationList_p;
+				// Request to pre-load CorrType
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
-			*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+				// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
+				ostringstream polarizationListToPrint (ios::in | ios::out);
+				polarizationListToPrint << polarizationList_p;
+
+				*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -790,15 +806,17 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setObservationExpr(observationSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			observationList_p=parser.getObservationList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				observationList_p=parser.getObservationList();
+				filterRows_p=true;
 
-			// Request to pre-load ObservationId
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
+				// Request to pre-load ObservationId
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
 
-			*logger_p << LogIO::DEBUG1 << " observation selection is " << observationList_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " observation ids are " << observationList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " observation selection is " << observationList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " observation ids are " << observationList_p << LogIO::POST;
+			}
 		}
 	}
 	else
@@ -818,15 +836,17 @@ FlagAgentBase::setDataSelection(Record config)
 		else
 		{
 			parser.setStateExpr(scanIntentSelection_p);
-			flagDataHandler_p->parseExpression(parser);
-			scanIntentList_p=parser.getStateObsModeList();
-			filterRows_p=true;
+			if (flagDataHandler_p->parseExpression(parser))
+			{
+				scanIntentList_p=parser.getStateObsModeList();
+				filterRows_p=true;
 
-			// Request to pre-load StateId
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::StateId);
+				// Request to pre-load StateId
+				flagDataHandler_p->preLoadColumn(VisBufferComponents::StateId);
 
-			*logger_p << LogIO::DEBUG1 << " scan intent selection is " << scanIntentList_p << LogIO::POST;
-			*logger_p << LogIO::DEBUG1 << " scan intent ids are " << scanIntentList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " scan intent selection is " << scanIntentList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " scan intent ids are " << scanIntentList_p << LogIO::POST;
+			}
 		}
 	}
 	else

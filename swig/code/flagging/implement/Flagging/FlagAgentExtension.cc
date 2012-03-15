@@ -46,72 +46,118 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	exists = config.fieldNumber ("extendpols");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'extendpols' must be of type 'bool'" ) );
+	        }
+		
 		extendpols_p = config.asBool("extendpols");
 	}
 	else
 	{
 		extendpols_p = False;
 	}
+
 	*logger_p << logLevel_p << " extendpols is " << extendpols_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growtime");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt)
+	        {
+			 throw( AipsError ( "Parameter 'growtime' must be of type 'double'" ) );
+	        }
+		
 		growtime_p = config.asDouble("growtime");
+
+		if( growtime_p < 0.0 || growtime_p > 100.0 )
+	        {
+		         throw( AipsError ( "Unsupported value for growtime:" + String::toString(growtime_p) + ". Allowed range is 0.0 through 100.0" ) );
+	        }
 	}
 	else
 	{
 		growtime_p = 50.0;
 	}
+
 	*logger_p << logLevel_p << " growtime is " << growtime_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growfreq");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'growfreq' must be of type 'double'" ) );
+	        }
+		
 		growfreq_p = config.asDouble("growfreq");
+
+		if( growfreq_p < 0.0 || growfreq_p > 100.0 )
+	        {
+		         throw( AipsError ( "Unsupported value for growfreq:" + String::toString(growfreq_p) + ". Allowed range is 0.0 through 100.0" ) );
+	        }
 	}
 	else
 	{
 		growfreq_p = 50.0;
 	}
+
 	*logger_p << logLevel_p << " growfreq is " << growfreq_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("growaround");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'growaround' must be of type 'bool'" ) );
+	        }
+		
 		growaround_p = config.asBool("growaround");
 	}
 	else
 	{
 		growaround_p = True;
 	}
+
 	*logger_p << logLevel_p << " growaround is " << growaround_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("flagneartime");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'flagneartime' must be of type 'bool'" ) );
+	        }
+		
 		flagneartime_p = config.asBool("flagneartime");
 	}
 	else
 	{
 		flagneartime_p = False;
 	}
+
 	*logger_p << logLevel_p << " flagneartime is " << flagneartime_p << LogIO::POST;
 
 
 	exists = config.fieldNumber ("flagnearfreq");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'flagnearfreq' must be of type 'bool'" ) );
+	        }
+		
 		flagnearfreq_p = config.asBool("flagnearfreq");
 	}
 	else
 	{
 		flagnearfreq_p = False;
 	}
+
 	*logger_p << logLevel_p << " flagnearfreq is " << flagnearfreq_p << LogIO::POST;
 
 

@@ -52,41 +52,53 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
         logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	int exists;
 
-	exists = config.fieldNumber ("time_amp_cutoff");
+	exists = config.fieldNumber ("timecutoff");
 	if (exists >= 0)
 	{
-		time_cutoff_p = config.asDouble("time_amp_cutoff");
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat  && config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'timecutoff' must be of type 'double'" ) );
+	        }
+		
+		time_cutoff_p = config.asDouble("timecutoff");
 	}
 	else
 	{
 		time_cutoff_p = 4.0;
 	}
 
-	*logger_p << logLevel_p << " time_amp_cutoff is " << time_cutoff_p << LogIO::POST;
+	*logger_p << logLevel_p << " timecutoff is " << time_cutoff_p << LogIO::POST;
 
-	exists = config.fieldNumber ("freq_amp_cutoff");
+	exists = config.fieldNumber ("freqcutoff");
 	if (exists >= 0)
 	{
-		freq_cutoff_p = config.asDouble("freq_amp_cutoff");
+	        if( config.type(exists) !=  TpDouble && config.type(exists) != TpFloat   && config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'freqcutoff' must be of type 'double'" ) );
+	        }
+		
+		freq_cutoff_p = config.asDouble("freqcutoff");
 	}
 	else
 	{
 		freq_cutoff_p = 3.0;
 	}
 
-	*logger_p << logLevel_p << " freq_amp_cutoff is " << freq_cutoff_p << LogIO::POST;
+	*logger_p << logLevel_p << " freqcutoff is " << freq_cutoff_p << LogIO::POST;
 
 	exists = config.fieldNumber ("maxnpieces");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'maxnpieces' must be of type 'int'" ) );
+	        }
+		
 		maxNPieces_p = config.asInt("maxnpieces");
 
 		if ((maxNPieces_p<1) or (maxNPieces_p>9))
 		{
-			*logger_p << LogIO::WARN 
-				  << " Unsupported maxnpieces: " 
-				  << maxNPieces_p << ", using 7 by default. Supported values: 1-9" << LogIO::POST;
-			maxNPieces_p = 7;
+		  throw ( AipsError (" Unsupported maxnpieces : " + String::toString(maxNPieces_p) + ". Supported values: 1-9") );
 		}
 	}
 	else
@@ -99,13 +111,15 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("timefit");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpString )
+	        {
+			 throw( AipsError ( "Parameter 'timefit' must be of type 'string'" ) );
+	        }
+		
 		timeFitType_p = config.asString("timefit");
 		if ((timeFitType_p.compare("line") != 0) and (timeFitType_p.compare("poly") != 0))
 		{
-			*logger_p << LogIO::WARN 
-				  << " Unsupported timefit: " 
-				  << timeFitType_p << ", using line by default. Supported modes: line,poly" << LogIO::POST;
-			timeFitType_p = "line";
+		         throw ( AipsError ("Unsupported timefit: " + timeFitType_p +". Supported modes: line,poly" ) );
 		}
 
 	}
@@ -119,13 +133,16 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("freqfit");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpString )
+	        {
+			 throw( AipsError ( "Parameter 'timefit' must be of type 'string'" ) );
+	        }
+		
 		freqFitType_p = config.asString("freqfit");
+
 		if ((freqFitType_p.compare("line") != 0) and (freqFitType_p.compare("poly") != 0))
 		{
-			*logger_p << LogIO::WARN 
-				  << " Unsupported freqfit " 
-				  << freqFitType_p << ", using line by default. Supported modes: line,poly" << LogIO::POST;
-			freqFitType_p = "line";
+		         throw ( AipsError ("Unsupported freqfit: " + freqFitType_p +". Supported modes: line,poly" ) );
 		}
 	}
 	else
@@ -138,14 +155,17 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("flagdimension");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpString )
+	        {
+			 throw( AipsError ( "Parameter 'flagdimension' must be of type 'string'" ) );
+	        }
+		
 		flagDimension_p = config.asString("flagdimension");
+
 		if ((flagDimension_p.compare("time") != 0) and (flagDimension_p.compare("freq") != 0)
 				and (flagDimension_p.compare("timefreq") != 0) and (flagDimension_p.compare("freqtime") != 0))
 		{
-			*logger_p << LogIO::WARN
-				  << " Unsupported flagdimension "
-				  << flagDimension_p << ", using line by default. Supported modes: time,freq,timefreq,freqtime" << LogIO::POST;
-			flagDimension_p = "freqtime";
+		         throw ( AipsError ("Unsupported flagdimension: " + flagDimension_p +". Supported modes: time,freq,timefreq,freqtime" ) );
 		}
 	}
 	else
@@ -158,13 +178,16 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("halfwin");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'halfwin' must be of type 'int'" ) );
+	        }
+		
 		halfWin_p = config.asInt("halfwin");
+
 		if ((halfWin_p < 1) or (halfWin_p > 3))
 		{
-			*logger_p << LogIO::WARN 
-				  << " Unsupported halfWin_p " 
-				  << halfWin_p << ", using 1 by default. Supported values: 1,2,3" << LogIO::POST;
-			halfWin_p = 1;
+		         throw ( AipsError ("Unsupported halfwin: " + String::toString(halfWin_p) +". Supported values : 1,2,3" ) );
 		}
 	}
 	else
@@ -177,14 +200,17 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("usewindowstats");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpString )
+	        {
+			 throw( AipsError ( "Parameter 'usewindowstats' must be of type 'string'" ) );
+	        }
+		
 		winStats_p = config.asString("usewindowstats");
+
 		if ((winStats_p.compare("none") != 0) and (winStats_p.compare("sum") != 0)
 				and (winStats_p.compare("std") != 0) and (winStats_p.compare("both") != 0))
 		{
-			*logger_p << LogIO::WARN 
-				       << "Unsupported usewindowstats "
-				       << winStats_p << ", using none by default. Supported modes: none,sum,std,both" << LogIO::POST;
-			winStats_p = "none";
+		         throw ( AipsError ("Unsupported usewindowstats: " + winStats_p +". Supported modes : none,sum,std,both") );
 		}
 	}
 	else
@@ -194,20 +220,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 
 	*logger_p << logLevel_p << " usewindowstats is " << winStats_p << LogIO::POST;
 
-	/*
-	exists = config.fieldNumber ("usepreflags");
-	if (exists >= 0)
-	{
-		usePreFlags_p = config.asBool("usepreflags");
-		// Nothing more to check - it's either True or False.
-	}
-	else
-	{
-		usePreFlags_p = True;
-	}
 
-	*logger_p << logLevel_p << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " usepreflags is " << usePreFlags_p << LogIO::POST;
-	*/
 	return;
 }
 

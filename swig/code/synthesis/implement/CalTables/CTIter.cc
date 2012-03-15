@@ -41,7 +41,7 @@ ROCTIter::ROCTIter(NewCalTable tab, const Block<String>& sortcol) :
   calCol_(tab),
   ti_(NULL),
   inct_(NULL),
-  iMainCols_(NULL)
+  iROCTMainCols_(NULL)
 {
 
   ti_=new TableIterator(tab,sortcol);
@@ -58,8 +58,8 @@ ROCTIter::ROCTIter(NewCalTable tab, const Block<String>& sortcol) :
   cout << "singleSpw_ = " << boolalpha << singleSpw_ << endl;
   cout << "inct_->nrow() = " << inct_->nrow() << endl;
   cout << "this->nrow() = " << this->nrow() << endl;
-  cout << "iMainCols_->spwId() = " << iMainCols_->spwId().getColumn() << endl;
-  cout << "iMainCols_->spwId()(0) = " << iMainCols_->spwId()(0) << endl;
+  cout << "iROCTMainCols_->spwId() = " << iROCTMainCols_->spwId().getColumn() << endl;
+  cout << "iROCTMainCols_->spwId()(0) = " << iROCTMainCols_->spwId()(0) << endl;
   cout << "thisSpw() = " << this->thisSpw() << endl;
 
   cout << "done." << endl;
@@ -71,7 +71,7 @@ ROCTIter::ROCTIter(NewCalTable tab, const Block<String>& sortcol) :
 ROCTIter::~ROCTIter()
 {
   if (ti_!=NULL) delete ti_;
-  if (iMainCols_!=NULL) delete iMainCols_;
+  if (iROCTMainCols_!=NULL) delete iROCTMainCols_;
   if (inct_!=NULL) delete inct_;
 };
 
@@ -79,51 +79,68 @@ void ROCTIter::next() {
   // Advance the TableIterator
   ti_->next();
 
+  // attach accessors to new iteration
   this->attach();
 
 };
 
-Double ROCTIter::thisTime() const { return iMainCols_->time()(0); };
-Vector<Double> ROCTIter::time() const { return iMainCols_->time().getColumn(); };
-void ROCTIter::time(Vector<Double>& v) const { iMainCols_->time().getColumn(v); };
+Double ROCTIter::thisTime() const { return iROCTMainCols_->time()(0); };
+Vector<Double> ROCTIter::time() const { return iROCTMainCols_->time().getColumn(); };
+void ROCTIter::time(Vector<Double>& v) const { iROCTMainCols_->time().getColumn(v); };
 
-Int ROCTIter::thisField() const { return iMainCols_->fieldId()(0); };
-Vector<Int> ROCTIter::field() const { return iMainCols_->fieldId().getColumn(); };
-void ROCTIter::field(Vector<Int>& v) const { iMainCols_->fieldId().getColumn(v); };
+Int ROCTIter::thisField() const { return iROCTMainCols_->fieldId()(0); };
+Vector<Int> ROCTIter::field() const { return iROCTMainCols_->fieldId().getColumn(); };
+void ROCTIter::field(Vector<Int>& v) const { iROCTMainCols_->fieldId().getColumn(v); };
 
-Int ROCTIter::thisSpw() const { return iMainCols_->spwId()(0); };
-Vector<Int> ROCTIter::spw() const { return iMainCols_->spwId().getColumn(); };
-void ROCTIter::spw(Vector<Int>& v) const { iMainCols_->spwId().getColumn(v); };
+Int ROCTIter::thisSpw() const { return iROCTMainCols_->spwId()(0); };
+Vector<Int> ROCTIter::spw() const { return iROCTMainCols_->spwId().getColumn(); };
+void ROCTIter::spw(Vector<Int>& v) const { iROCTMainCols_->spwId().getColumn(v); };
 
-Int ROCTIter::thisScan() const { return iMainCols_->scanNo()(0); };
-Vector<Int> ROCTIter::scan() const { return iMainCols_->scanNo().getColumn(); };
-void ROCTIter::scan(Vector<Int>& v) const { iMainCols_->scanNo().getColumn(v); };
+Int ROCTIter::thisScan() const { return iROCTMainCols_->scanNo()(0); };
+Vector<Int> ROCTIter::scan() const { return iROCTMainCols_->scanNo().getColumn(); };
+void ROCTIter::scan(Vector<Int>& v) const { iROCTMainCols_->scanNo().getColumn(v); };
 
-Int ROCTIter::thisAntenna1() const { return iMainCols_->antenna1()(0); };
-Vector<Int> ROCTIter::antenna1() const { return iMainCols_->antenna1().getColumn(); };
-void ROCTIter::antenna1(Vector<Int>& v) const { iMainCols_->antenna1().getColumn(v); };
-Int ROCTIter::thisAntenna2() const { return iMainCols_->antenna2()(0); };
-Vector<Int> ROCTIter::antenna2() const { return iMainCols_->antenna2().getColumn(); };
-void ROCTIter::antenna2(Vector<Int>& v) const { iMainCols_->antenna2().getColumn(v); };
+Int ROCTIter::thisAntenna1() const { return iROCTMainCols_->antenna1()(0); };
+Vector<Int> ROCTIter::antenna1() const { return iROCTMainCols_->antenna1().getColumn(); };
+void ROCTIter::antenna1(Vector<Int>& v) const { iROCTMainCols_->antenna1().getColumn(v); };
+Int ROCTIter::thisAntenna2() const { return iROCTMainCols_->antenna2()(0); };
+Vector<Int> ROCTIter::antenna2() const { return iROCTMainCols_->antenna2().getColumn(); };
+void ROCTIter::antenna2(Vector<Int>& v) const { iROCTMainCols_->antenna2().getColumn(v); };
 
-Cube<Complex> ROCTIter::param() const { return iMainCols_->param().getColumn(); };
-void ROCTIter::param(Cube<Complex>& c) const { iMainCols_->param().getColumn(c); };
-Cube<Float> ROCTIter::paramErr() const { return iMainCols_->paramerr().getColumn(); };
-void ROCTIter::paramErr(Cube<Float>& c) const { iMainCols_->paramerr().getColumn(c); };
+Cube<Complex> ROCTIter::cparam() const { return iROCTMainCols_->cparam().getColumn(); };
+void ROCTIter::cparam(Cube<Complex>& c) const { iROCTMainCols_->cparam().getColumn(c); };
+Cube<Float> ROCTIter::fparam() const { return iROCTMainCols_->fparam().getColumn(); };
+void ROCTIter::fparam(Cube<Float>& f) const { iROCTMainCols_->fparam().getColumn(f); };
 
-Cube<Float> ROCTIter::snr() const { return iMainCols_->snr().getColumn(); };
-void ROCTIter::snr(Cube<Float>& c) const { iMainCols_->snr().getColumn(c); };
-Cube<Float> ROCTIter::wt() const { return iMainCols_->weight().getColumn(); };
-void ROCTIter::wt(Cube<Float>& c) const { iMainCols_->weight().getColumn(c); };
+// Complex as Float
+Cube<Float> ROCTIter::casfparam(String what) const { return iROCTMainCols_->fparamArray(what); };
+void ROCTIter::casfparam(Cube<Float>& f,String what) const { iROCTMainCols_->fparamArray(f,what); };
 
-Cube<Bool> ROCTIter::flag() const { return iMainCols_->flag().getColumn(); };
-void ROCTIter::flag(Cube<Bool>& c) const { iMainCols_->flag().getColumn(c); };
+Cube<Float> ROCTIter::paramErr() const { return iROCTMainCols_->paramerr().getColumn(); };
+void ROCTIter::paramErr(Cube<Float>& c) const { iROCTMainCols_->paramerr().getColumn(c); };
+
+Cube<Float> ROCTIter::snr() const { return iROCTMainCols_->snr().getColumn(); };
+void ROCTIter::snr(Cube<Float>& c) const { iROCTMainCols_->snr().getColumn(c); };
+Cube<Float> ROCTIter::wt() const { return iROCTMainCols_->weight().getColumn(); };
+void ROCTIter::wt(Cube<Float>& c) const { iROCTMainCols_->weight().getColumn(c); };
+
+Cube<Bool> ROCTIter::flag() const { return iROCTMainCols_->flag().getColumn(); };
+void ROCTIter::flag(Cube<Bool>& c) const { iROCTMainCols_->flag().getColumn(c); };
 
 Vector<Int> ROCTIter::chan() const {
   Vector<Int> chans;
   this->chan(chans);
   return chans;
 }
+
+Int ROCTIter::nchan() const {
+  if (singleSpw_)
+    return calCol_.spectralWindow().numChan()(this->thisSpw());
+  else
+    // more than one spw per iteration...
+    throw(AipsError("Please sort by spw."));
+}
+
 void ROCTIter::chan(Vector<Int>& v) const {
   if (singleSpw_) {
     v.resize(calCol_.spectralWindow().numChan()(this->thisSpw()));
@@ -153,11 +170,57 @@ void ROCTIter::freq(Vector<Double>& v) const {
 
 void ROCTIter::attach() {
   // Attach accessors:
-  if (iMainCols_!=NULL) delete iMainCols_;
+  if (iROCTMainCols_!=NULL) delete iROCTMainCols_;
   if (inct_!=NULL) delete inct_;
   inct_= new NewCalTable(ti_->table());
-  iMainCols_ = new ROCTMainColumns(*inct_);
+  iROCTMainCols_ = new ROCTMainColumns(*inct_);
 }
+
+
+CTIter::CTIter(NewCalTable tab, const Block<String>& sortcol) :
+  ROCTIter(tab,sortcol),
+  irwnct_(NULL),
+  iRWCTMainCols_(NULL)
+{
+  // Attach first iteration
+  //  TBD: this unnecessarily redoes the ROCTIter attach...
+  attach();
+}
+
+CTIter::~CTIter() {
+  if (iRWCTMainCols_!=NULL) delete iRWCTMainCols_;
+  if (irwnct_!=NULL) delete irwnct_;
+}
+
+// Set antenna2 (e.g., used for setting refant)
+void CTIter::setantenna2(const Vector<Int>& a2) {
+  iRWCTMainCols_->antenna2().putColumn(a2); 
+}
+
+void CTIter::setflag(const Cube<Bool>& fl) {
+  iRWCTMainCols_->flag().putColumn(fl); 
+}
+
+void CTIter::setfparam(const Cube<Float>& f) {
+  iRWCTMainCols_->fparam().putColumn(f); 
+};
+
+void CTIter::setcparam(const Cube<Complex>& c) {
+  iRWCTMainCols_->cparam().putColumn(c); 
+};
+
+void CTIter::attach() {
+
+  // Attach readonly access
+  ROCTIter::attach();
+
+  // Attach writable access
+  if (iRWCTMainCols_!=NULL) delete iRWCTMainCols_;
+  if (irwnct_!=NULL) delete irwnct_;
+  irwnct_= new NewCalTable(this->table());
+  iRWCTMainCols_ = new CTMainColumns(*irwnct_);
+}
+
 
 
 } //# NAMESPACE CASA - END

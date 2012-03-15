@@ -133,6 +133,7 @@ public slots:
 
 signals:
 	void xRangeChanged(float xmin, float xmax);
+	void channelSelect(float xvalue);
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -142,6 +143,7 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
 	void keyPressEvent(QKeyEvent *event);
+	void keyReleaseEvent(QKeyEvent *event);
 	void wheelEvent(QWheelEvent *event);
 
 protected:
@@ -183,6 +185,9 @@ protected:
 	QPixmap pixmap;
 	QPixmap backBuffer;
 	Matrix<uInt> *pMask;
+
+	QPoint currentCursorPosition;
+	QColor xcursor;
 
 	int autoScaleX;
 	int autoScaleY;

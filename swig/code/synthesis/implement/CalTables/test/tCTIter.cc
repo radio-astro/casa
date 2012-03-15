@@ -28,6 +28,7 @@
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <synthesis/CalTables/CTIter.h>
+#include <casa/Arrays/Cube.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/BasicMath/Math.h>
@@ -119,9 +120,115 @@ void doTest1 (Bool verbose=False) {
 	   << "nrow=" << tablist(i).nrow() << " "
 	   << "ant1=" << mc.antenna1()(0) << " "
 	//	     << " row #s: " << tablist(i).rowNumbers(tablist(i))
-	   << "paramshape= " << mc.param().shape(0) << " "
-	   << "param= " << mc.param()(0) << " "
+	   << "paramshape= " << mc.cparam().shape(0) << " "
+	   << "param= " << mc.cparam()(0) << " "
 	   << endl;
+    }
+
+    // Tests
+    AlwaysAssert( (tablist(i).nrow()==nFld*nTime) , AipsError);
+    AlwaysAssert( allEQ(thisspw,expectSpw) , AipsError);
+    AlwaysAssert( allEQ(thisant,expectAnt) , AipsError);
+
+    // TBD: Add param value tests here...
+
+  }
+}
+void doTest2 (Bool verbose=False) {
+  
+  // Test (the writable) CTIter
+
+  // Make a testing NewCalTable (Table::Memory)
+  uInt nFld(1), nAnt(10), nSpw(1), nTime(1);
+  Vector<Int> nChan(nSpw,1);
+  Bool disk(True);
+  NewCalTable tnct("test.ct","T",nFld,nAnt,nSpw,nChan,nTime,disk,verbose);
+
+  // some sanity checks on the test NewCalTable
+  AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
+  if (verbose) cout << "Table::Type: " << tnct.tableType() << endl;
+  AlwaysAssert( (tnct.nrow()==nFld*nAnt*nSpw*nTime), AipsError);
+  if (verbose) cout << "nrow = " << tnct.nrow() << endl;
+  
+  // Set up iteration
+  Block<String> sortcol(2);
+  sortcol[0]="SPECTRAL_WINDOW_ID";
+  sortcol[1]="ANTENNA1";
+  CTIter nctiter(tnct,sortcol);
+
+  // Count iterations
+  //  TBD: provide this service in CalIter itself!
+  uInt niter(0);
+  while (!nctiter.pastEnd()) {
+    niter+=1;
+    nctiter.next();
+  }
+  AlwaysAssert( (niter==nAnt*nSpw), AipsError)
+  if (verbose) cout << "niter = " << niter << endl;
+  
+  // Test individual iterations
+  nctiter.reset();
+  Vector<NewCalTable> tablist(niter);
+  Int iter=0;
+  while (!nctiter.pastEnd()) {
+    Int expectSpw(iter/nAnt);
+    Int expectAnt(iter%nAnt);    
+    Int thisspw(nctiter.thisSpw());
+    Int thisant(nctiter.thisAntenna1());
+
+    NewCalTable tab(nctiter.table());
+    tablist(iter)=tab;
+
+    if (verbose) {
+      cout << iter // << ": name = " << tab.tableName() << " / " << tablist(iter).tableName()
+	   << " nrow=" << nctiter.nrow(); // << flush;
+      cout << " spw="<<thisspw;
+      cout << " ant1="<<thisant;
+      //cout << " row #s: " << tab.rowNumbers(); 
+      //      cout << " " << tab.rowNumbers(nct); 
+      cout << endl;
+    }
+
+    AlwaysAssert( (thisspw==expectSpw) , AipsError);
+    AlwaysAssert( (thisant==expectAnt) , AipsError);
+
+    // Play with setable columns
+    Cube<Bool> flag(nctiter.flag());
+    //    cout << boolalpha << " flag = " << flag << endl;
+    if (thisant==Int(nAnt/2))
+      flag=True;
+    nctiter.setflag(flag);
+
+    nctiter.next();
+    ++iter;
+  }
+  
+
+  // Test recorded reference table contents
+  for (uInt i=0;i<niter;++i) {
+    Int expectSpw(i/nAnt);
+    Int expectAnt(i%nAnt);
+    
+    CTMainColumns mc(tablist(i));
+    
+    Vector<Int> thisspw=mc.spwId().getColumn();
+    Vector<Int> thisant=mc.antenna1().getColumn();
+
+    if (verbose) {
+      cout << i << " "
+	//	   << tablist(i).tableName() << " "
+	   << "nrow=" << tablist(i).nrow() << " "
+	   << "ant1=" << mc.antenna1()(0) << " "
+	//	     << " row #s: " << tablist(i).rowNumbers(tablist(i))
+	   << "paramshape= " << mc.cparam().shape(0) << " "
+	   << "param= " << mc.cparam()(0) << " "
+	   << endl;
+    }
+
+
+    if (thisant(0)==Int(nAnt/2)) {
+      Bool f(Cube<Bool>(mc.flag().getColumn())(0,0,0));
+      AlwaysAssert( (f), AipsError);
     }
 
     // Tests
@@ -138,7 +245,8 @@ int main ()
 {
   try {
 
-    doTest1(CTITERTEST_VERBOSE);
+    //    doTest1(CTITERTEST_VERBOSE);
+    doTest2(CTITERTEST_VERBOSE);
 
   } catch (AipsError x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;

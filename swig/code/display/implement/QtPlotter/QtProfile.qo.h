@@ -152,7 +152,7 @@ public slots:
 	void doLineFit();
 	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
-
+	void emitChannelSelect(float xval);
 
 	void overplot(QHash<QString, ImageInterface<float>*>);
 
@@ -168,16 +168,18 @@ signals:
    void hideProfile();
    void coordinateChange(const String&);
    void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData);
+   void channelSelect( const Vector<float> &zvec, float zval );
 
 private:
    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
    void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
-   void fillPlotTypes();
+   void fillPlotTypes(const ImageInterface<Float>* img);
    void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
    void printIt(QPrinter*);
    bool exportASCIISpectrum(QString &fn);
    bool exportFITSSpectrum(QString &fn);
    void messageFromProfile(QString &msg);
+   void setCollapseVals(const Vector<Float> &spcVals);
 
    QString getRaDec(double x, double y);
 
@@ -231,6 +233,7 @@ private:
    SpectralCollapser::CollapseError itsCollapseError;
    LogIO *itsLog;
    Int ordersOfM_;
+   Bool newCollapseVals;
 
    class spectra_info {
    public:

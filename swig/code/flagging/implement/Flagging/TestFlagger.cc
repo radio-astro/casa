@@ -44,7 +44,6 @@ namespace casa {
 
 const bool TestFlagger::dbg = false;
 
-// TODO: add convenient functions to other agents, to pase parameters
 
 // -----------------------------------------------------------------------
 // Default Constructor
@@ -59,6 +58,9 @@ TestFlagger::TestFlagger ()
 }
 
 
+// -----------------------------------------------------------------------
+// Default Destructor
+// -----------------------------------------------------------------------
 TestFlagger::~TestFlagger ()
 {
 	done();
@@ -125,7 +127,9 @@ TestFlagger::done()
 
 // ---------------------------------------------------------------------
 // TestFlagger::open
-// Configure some parameters to the TestFlagger
+// Create a FlagDataHandler object based on the input type:
+// MS or a calibration file. Open the MS or cal table and
+// attach it to the tool.
 // ---------------------------------------------------------------------
 bool
 TestFlagger::open(String msname, Double ntime)
@@ -153,7 +157,24 @@ TestFlagger::open(String msname, Double ntime)
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
-	fdh_p = new FlagMSHandler(msname_p, iterationApproach_p, timeInterval_p);
+	Table table(msname_p,TableLock(TableLock::AutoNoReadLocking));
+	TableInfo& info = table.tableInfo();
+	String type=info.type();
+	table.flush();
+	table.relinquishAutoLocks(True);
+	table.unlock();
+	os << LogIO::NORMAL << "Table type is " << type << LogIO::POST;
+
+	// For a measurement set
+	if (type == "Measurement Set")
+	{
+		fdh_p = new FlagMSHandler(msname_p, iterationApproach_p, timeInterval_p);
+	}
+	// For a calibration file
+	else
+	{
+		fdh_p = new FlagCalTableHandler(msname_p, iterationApproach_p, timeInterval_p);
+	}
 
 	// Open the MS
 	fdh_p->open();
@@ -163,7 +184,8 @@ TestFlagger::open(String msname, Double ntime)
 
 // ---------------------------------------------------------------------
 // TestFlagger::selectData
-// Parse parameters to the FlagDataHandler and select the data
+// Get a record with data selection parameters and
+// Parse it to the FlagDataHandler to select the data
 // ---------------------------------------------------------------------
 bool
 TestFlagger::selectData(Record selrec)
@@ -235,7 +257,7 @@ TestFlagger::selectData(Record selrec)
 
 // ---------------------------------------------------------------------
 // TestFlagger::selectData
-// Parse parameters to the FlagDataHandler and select the data
+// Create a record with data selection parameters.
 // ---------------------------------------------------------------------
 bool
 TestFlagger::selectData(String field, String spw, String array,
@@ -303,7 +325,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		return false;
 	}
 
-	// Use the given Record of paramters
+	// Use the given Record of parameters
 	agentParams_p = agent_params;
 
 	if (! agentParams_p.isDefined("mode")) {
@@ -338,7 +360,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		agentParams_p.define("apply", apply);
 	}
 
-	// If there is a tfcrop or extend agent in the list,
+	// If there is a tfcrop, extend or rflag agent in the list,
 	// get the maximum value of ntime and the combinescans parameter
 	if (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or mode.compare("rflag") == 0) {
 		Double ntime;
@@ -366,17 +388,22 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		fdh_p->enableAsyncIO(true);
 	}
 
+	// Make correlation always uppercase
+	// Default for all modes
+	String correlation = "";
+	if (agentParams_p.isDefined("correlation")) {
+
+		agentParams_p.get("correlation", correlation);
+		correlation.upcase();
+		agentParams_p.define("correlation", correlation);
+	}
+
 	// Create one agent for each polarization
 	if (mode.compare("tfcrop") == 0) {
 
-		// Default for these modes
-		String correlation = "ABS ALL";
-
-		if (agentParams_p.isDefined("correlation")) {
-
-			agentParams_p.get("correlation", correlation);
-		}
-		else {
+		if (not agentParams_p.isDefined("correlation")) {
+			// Default for tfcrop
+			correlation = "ABS_ALL";
 			agentParams_p.define("correlation", correlation);
 		}
 		if (dbg){
@@ -465,6 +492,8 @@ TestFlagger::initAgents()
 			" agents in the list"<<LogIO::POST;
 
 	// Check if list has a mixed state of apply and unapply parameters
+	// If the list contains apply=True and False, the apply=True list will
+	// be hidden in the debug.
 	Bool mixed, apply0;
 	size_t list_size = agents_config_list_p.size();
 	if (list_size > 1){
@@ -490,8 +519,9 @@ TestFlagger::initAgents()
 	}
 
 	// Send the logging of the re-applying agents to the debug
-	// as we are only interested in seeing the unapply action
+	// as we are only interested in seeing the unapply action (tflagcmd)
 	uChar loglevel = LogIO::DEBUGGING;
+	Bool retstate = true;
 
 		// Loop through the vector of agents
 		for (size_t i=0; i < list_size; i++) {
@@ -539,8 +569,35 @@ TestFlagger::initAgents()
 				iterset_p = true;
 			}
 
+			FlagAgentBase *fa=NULL;
+
+			try
+			{
 				// Create this agent
-				FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
+				FlagAgentBase *tfa = FlagAgentBase::create(fdh_p, agent_rec);
+				fa = tfa;
+
+			}
+			catch(AipsError x)
+			{
+			  fa=NULL;
+			  // Send out a useful message, and stop adding agents to the list.
+			  // All valid agents before the problematic one, will remain in agents_list_p
+			  // A subsequent call to initAgents() will add to the list.
+			  ostringstream oss;
+			  agent_rec.print(oss);
+			  String recstr(oss.str());
+			  while(recstr.contains('\n'))
+			    {
+			      recstr = recstr.replace(recstr.index('\n'),1,", ");
+			    }
+
+			  os << LogIO::SEVERE << "Error in creating agent : " << x.getMesg() << endl
+					  << "Input parameters : " << recstr << LogIO::POST;
+			  retstate=false;
+			  break;
+
+			}
 
 				if (fa == NULL){
 					String name;
@@ -548,7 +605,6 @@ TestFlagger::initAgents()
 					os << LogIO::WARN << "Agent "<< name<< " is NULL. Skipping it."<<LogIO::POST;
 					continue;
 				}
-
 
 				// Get the last summary agent to list the results back to the task
 				if (mode.compare("summary") == 0) {
@@ -563,6 +619,7 @@ TestFlagger::initAgents()
 				// Add the agent to the FlagAgentList
 				agents_list_p.push_back(fa);
 
+
 		}
 		os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
 				LogIO::POST;
@@ -570,7 +627,7 @@ TestFlagger::initAgents()
 	// Clear the list so that this method cannot be called twice
 	agents_config_list_p.clear();
 
-	return true;
+	return retstate;
 }
 
 
@@ -720,6 +777,11 @@ TestFlagger::getExpressionFunction(String expression)
 	return func;
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::getMax
+// Get the maximum between two values and
+// assign it to the max_p class member.
+// ---------------------------------------------------------------------
 void
 TestFlagger::getMax(Double value)
 {
@@ -776,7 +838,7 @@ TestFlagger::getFlagVersionList(Vector<String> &verlist)
 
 // ---------------------------------------------------------------------
 // TestFlagger::printFlagSelection
-// Get the flag versions list
+// Print the flag versions list
 //
 // ---------------------------------------------------------------------
 bool
@@ -816,7 +878,7 @@ TestFlagger::printFlagSelections()
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
+TestFlagger::saveFlagVersion(String versionname, String comment, String merge)
 {
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
@@ -831,10 +893,70 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 	return true;
 }
 
+
+// ---------------------------------------------------------------------
+// TestFlagger::restoreFlagVersion
+// Restore the flag version
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::restoreFlagVersion(Vector<String> versionname, String merge)
+{
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
+	try
+	{
+		FlagVersion fv(fdh_p->getTableName(),"FLAG","FLAG_ROW");
+		for(Int j=0;j<(Int)versionname.nelements();j++)
+			fv.restoreFlagVersion(versionname[j], merge);
+	}
+	catch (AipsError x)
+	{
+		os << LogIO::SEVERE << "Could not restore Flag Version : " << x.getMesg() << LogIO::POST;
+		return False;
+	}
+	return True;
+}
+
+// ---------------------------------------------------------------------
+// TestFlagger::deleteFlagVersion
+// Delete the flag version
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::deleteFlagVersion(Vector<String> versionname)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
+	try
+	{
+		FlagVersion fv(fdh_p->getTableName(),"FLAG","FLAG_ROW");
+		for(Int j=0;j<(Int)versionname.nelements();j++)
+			fv.deleteFlagVersion(versionname[j]);
+	}
+	catch (AipsError x)
+	{
+		os << LogIO::SEVERE << "Could not delete Flag Version : " << x.getMesg() << LogIO::POST;
+		return False;
+	}
+	return True;
+}
+
 // ---------------------------------------------------------------------
 // TestFlagger::isModeValid
-// Check if mode is valid
-//
+// Check if mode is valid.
+// Return False if not in the list
 // ---------------------------------------------------------------------
 bool
 TestFlagger::isModeValid(String mode)
@@ -906,9 +1028,9 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 // ---------------------------------------------------------------------
 bool
 TestFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, String datacolumn,
-   	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool apply)
+   	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool clipzeros, Bool apply)
 {
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
@@ -939,6 +1061,7 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 	agent_record.define("clipminmax", clipminmax);
 	agent_record.define("clipoutside", clipoutside);
 	agent_record.define("channelavg", channelavg);
+	agent_record.define("clipzeros", clipzeros);
 
 
 	// Call the main method
@@ -948,9 +1071,14 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::parseQuackParameters
+// Parse data selection parameters and specific quack parameters
+//
+// ---------------------------------------------------------------------
 bool
 TestFlagger::parseQuackParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, String quackmode, Double quackinterval,
    	    Bool quackincrement, Bool apply)
 {
@@ -990,6 +1118,209 @@ TestFlagger::parseQuackParameters(String field, String spw, String array, String
 
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::parseElevationParameters
+// Parse data selection parameters and specific elevation parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseElevationParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String intent, String observation, Double lowerlimit, Double upperlimit, Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "elevation";
+	String agent_name = "Elevation";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("lowerlimit", lowerlimit);
+	agent_record.define("upperlimit", upperlimit);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
+
+// ---------------------------------------------------------------------
+// TestFlagger::parseTfcropParameters
+// Parse data selection parameters and specific tfcrop parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseTfcropParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange, String correlation,
+   	    String intent, String observation, Double ntime, Bool combinescans,
+   	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
+   	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
+   	    Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "tfcrop";
+	String agent_name = "Tfcrop";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("ntime", ntime);
+	agent_record.define("combinescans", combinescans);
+	agent_record.define("datacolumn", datacolumn);
+	agent_record.define("timecutoff", timecutoff);
+	agent_record.define("freqcutoff", freqcutoff);
+	agent_record.define("timefit", timefit);
+	agent_record.define("freqfit", freqfit);
+	agent_record.define("maxnpieces", maxnpieces);
+	agent_record.define("flagdimension", flagdimension);
+	agent_record.define("usewindowstats", usewindowstats);
+	agent_record.define("halfwin", halfwin);
+	agent_record.define("apply", apply);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
+
+// ---------------------------------------------------------------------
+// TestFlagger::parseExtendParameters
+// Parse data selection parameters and specific extend parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseExtendParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange, String correlation, String intent,
+   	    String observation, Double ntime, Bool combinescans, Bool extendpols, Double growtime,
+   	    Double growfreq, Bool growaround, Bool flagneartime, Bool flagnearfreq, Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "extend";
+	String agent_name = "Extend";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("ntime", ntime);
+	agent_record.define("combinescans", combinescans);
+	agent_record.define("extendpols", extendpols);
+	agent_record.define("growtime", growtime);
+	agent_record.define("growfreq", growfreq);
+	agent_record.define("growaround", growaround);
+	agent_record.define("flagneartime", flagneartime);
+	agent_record.define("flagnearfreq", flagnearfreq);
+	agent_record.define("apply", apply);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
+
+
+
+// ---------------------------------------------------------------------
+// TestFlagger::parseSummaryParameters
+// Parse data selection parameters and specific summary parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseSummaryParameters(String field, String spw, String array,
+								   String feed, String scan, String antenna,
+								   String uvrange,  String timerange, String correlation,
+								   String intent, String observation,
+								   Bool spwchan, Bool spwcorr, Bool basecnt)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "summary";
+	String agent_name = "Summary";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("spwchan", spwchan);
+	agent_record.define("spwcorr", spwcorr);
+	agent_record.define("basecnt", basecnt);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+}
 
 
 

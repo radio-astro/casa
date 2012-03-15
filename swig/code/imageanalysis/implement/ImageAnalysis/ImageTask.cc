@@ -92,34 +92,38 @@ void ImageTask::_construct() {
     );
 }
 
-void ImageTask::_removeExistingOutfileIfNecessary() const {
-	File out(_outname);
+void ImageTask::_removeExistingFileIfNecessary(
+	const String& filename, const Bool overwrite
+) {
+	File out(filename);
 	if (out.exists()) {
 		// remove file if it exists which prevents emission of
 		// file is already open in table cache exceptions
-		if (_overwrite) {
+		if (overwrite) {
 			if (out.isDirectory()) {
-				Directory dir(_outname);
+				Directory dir(filename);
 				dir.removeRecursive();
 			}
 			else if (out.isRegular()) {
-				RegularFile reg(_outname);
+				RegularFile reg(filename);
 				reg.remove();
 			}
 			else if (out.isSymLink()) {
-				SymLink link(_outname);
+				SymLink link(filename);
 				link.remove();
 			}
 		}
 		else {
-			// The only way this block can be entered is if a file by this name
-			// has been written between the checking of inputs in the constructor
-			// call and the call of this method.
-			*_log << "File " << _outname
+			LogIO log;
+			log << LogOrigin("ImageTask", __FUNCTION__) << "File " << filename
 				<< " exists but overwrite is false so it cannot be overwritten"
 				<< LogIO::EXCEPTION;
 		}
 	}
+}
+
+void ImageTask::_removeExistingOutfileIfNecessary() const {
+	_removeExistingFileIfNecessary(_outname, _overwrite);
 }
 
 String ImageTask::_summaryHeader() const {

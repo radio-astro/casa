@@ -1,3 +1,7 @@
+#ifdef _OPENMP
+#include <omp.h>
+#endif 
+
 #include	"stdio.h"			/* <stdio.h> */
 #include	"stddef.h"			/* <stddef.h> */
 #include        <math.h>
@@ -1176,6 +1180,8 @@ void ASDM2MSFiller::addData (bool                      complexData,
 
     Vector<float>   ones(IPosition(1, numCorr), 1.0);
 
+    #pragma omp ordered
+    {
     if (complexData) {
       // Uncorrected data
       if ( uncorrectedData_.at(cRow0) != 0) {
@@ -1201,6 +1207,7 @@ void ASDM2MSFiller::addData (bool                      complexData,
       // Float data.
       float_data.takeStorage(IPosition(2, numCorr, numChan), uncorrectedData_.at(cRow0), SHARE);
       itsMSCol->floatData().put(cRow, float_data);
+    }
     }
 
     // Sigma and Weight set to arrays of 1.0
@@ -1245,6 +1252,7 @@ void ASDM2MSFiller::addData (bool                complexData,
 			     vector<unsigned int>      &flag_) {
   
   //cout << "Entering addData" << endl;
+  //printf("entering addData ...\n");
 
   unsigned int theSize = time_.size();
   Bool *flag_row__  = new Bool[theSize];
@@ -1267,6 +1275,7 @@ void ASDM2MSFiller::addData (bool                complexData,
   Vector<Int>    arrayId(IPosition(1, theSize), arrayId_);
   Vector<Int>    observationId(IPosition(1, theSize), observationId_);
   Vector<Int>    stateId(IPosition(1, theSize), &stateId_.at(0), SHARE);
+  //printf("storing uvw\n");
   Matrix<Double> uvw(IPosition(2, 3, theSize), &uvw_.at(0), SHARE);
   Vector<Bool>   flagRow(IPosition(1, theSize), flag_row__, SHARE);
 
@@ -1289,6 +1298,7 @@ void ASDM2MSFiller::addData (bool                complexData,
 		Slicer::endIsLast);
     
   // Let's create nBaseLines empty rows into the main table.
+  //printf("addRow \n");
   itsMS->addRow(theSize);
     
   // Now it's time to write all these Arrays into the relevant columns.
@@ -1309,7 +1319,6 @@ void ASDM2MSFiller::addData (bool                complexData,
   itsMSCol->stateId().putColumnRange(slicer, stateId);
   itsMSCol->uvw().putColumnRange(slicer, uvw);
   itsMSCol->flagRow().putColumnRange(slicer, flagRow);
-
 #if 1     
   // All the columns that could not be written in one shot are now filled row by row.
   //Matrix<Complex> uncorrected_data;
@@ -1318,22 +1327,28 @@ void ASDM2MSFiller::addData (bool                complexData,
   Matrix<Bool>    flag;
 
   int cRow0 = 0;
+  //printf("itsMSMainRow+theSize=%d\n", itsMSMainRow+theSize);
+  int maxrow = itsMSMainRow+theSize;
   for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+theSize; cRow++) {      
     int numCorr = dataShape_.at(cRow0).at(0);
     int numChan = dataShape_.at(cRow0).at(1);
 
     Vector<float>   ones(IPosition(1, numCorr), 1.0);
 
+    #pragma omp ordered
+    { 
     if (complexData) {
+      data.resize(numCorr,numChan);
       data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), COPY);
       itsMSCol->data().put(cRow, data);
+      //printf("DONE writing complex data column %d %d\n", cRow, maxrow);
     }
     else {
       // Float data.
       float_data.takeStorage(IPosition(2, numCorr, numChan), data_.at(cRow0), SHARE);
       itsMSCol->floatData().put(cRow, float_data);
     }
-
+    }
     // Sigma and Weight set to arrays of 1.0
     itsMSCol->sigma().put(cRow, ones);
     itsMSCol->weight().put(cRow, ones);

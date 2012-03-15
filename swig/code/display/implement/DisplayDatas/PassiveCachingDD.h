@@ -75,8 +75,8 @@ class PassiveCachingDD : public CachingDisplayData {
   
   // World axis information suppliers.
   // <group>
-  virtual Vector<String> worldAxisNames();
-  virtual Vector<String> worldAxisUnits();
+  virtual Vector<String> worldAxisNames() const;
+  virtual Vector<String> worldAxisUnits() const;
   // </group>
   
   const Unit dataUnit() const { return Unit("_"); }

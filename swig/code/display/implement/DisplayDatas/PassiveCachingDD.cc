@@ -56,13 +56,13 @@ void PassiveCachingDD::refreshEH(const WCRefreshEvent &ev) {
   CachingDisplayData::refreshEH(ev);
 }
 
-Vector<String> PassiveCachingDD::worldAxisNames() {
+Vector<String> PassiveCachingDD::worldAxisNames() const {
   Vector<String> axisNames(2);
   axisNames = String("");
   return axisNames;
 }
 
-Vector<String> PassiveCachingDD::worldAxisUnits() {
+Vector<String> PassiveCachingDD::worldAxisUnits() const {
   Vector<String> axisUnits(2);
   axisUnits = String("_");
   return axisUnits;

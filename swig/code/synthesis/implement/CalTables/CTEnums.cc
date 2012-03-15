@@ -55,7 +55,8 @@ void CTEnums::initMaps ()
     theirFieldMap.define (OBSERVATION_ID, "OBSERVATION_ID");
     theirFieldMap.define (SPECTRAL_WINDOW_ID, "SPECTRAL_WINDOW_ID");
 
-    theirFieldMap.define (PARAM, "PARAM");
+    theirFieldMap.define (CPARAM, "CPARAM");
+    theirFieldMap.define (FPARAM, "FPARAM");
     theirFieldMap.define (PARAMERR, "PARAMERR");
     theirFieldMap.define (FLAG, "FLAG");
     theirFieldMap.define (SNR, "SNR");
@@ -78,7 +79,8 @@ void CTEnums::initMaps ()
     theirTypeMap.define (OBSERVATION_ID, TpInt);
     theirTypeMap.define (SPECTRAL_WINDOW_ID, TpInt);
 
-    theirTypeMap.define (PARAM, TpComplex);
+    theirTypeMap.define (CPARAM, TpComplex);
+    theirTypeMap.define (FPARAM, TpFloat);
     theirTypeMap.define (PARAMERR, TpFloat);
     theirTypeMap.define (FLAG, TpBool);
     theirTypeMap.define (SNR, TpFloat);

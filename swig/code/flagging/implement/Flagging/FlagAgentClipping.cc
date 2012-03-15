@@ -49,6 +49,11 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("clipzeros");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'clipzeros' must be of type 'bool'" ) );
+	        }
+		
 		clipzeros_p = config.asBool("clipzeros");
 	}
 	else
@@ -62,6 +67,11 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("clipoutside");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'clipoutside' must be of type 'bool'" ) );
+	        }
+		
 		clipoutside_p = config.asBool("clipoutside");
 	}
 	else
@@ -75,6 +85,11 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpArrayDouble && config.type(exists) != TpArrayFloat && config.type(exists) != TpArrayInt )
+	        {
+			 throw( AipsError ( "Parameter 'clipminmax' must be of type 'array double' : [minval,maxval]" ) );
+	        }
+		
 		Array<Double> cliprange = config.asArrayDouble("clipminmax");
 		if (cliprange.size()==2)
 		{
@@ -148,6 +163,11 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("channelavg");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'channelavg' must be of type 'bool'" ) );
+	        }
+		
 		channelavg_p = config.asBool("channelavg");
 	}
 	else

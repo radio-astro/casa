@@ -133,11 +133,11 @@ String ActiveCaching2dDD::showPosition(const Vector<Double> &world,
  return retval;
 }
 
-Vector<String> ActiveCaching2dDD::worldAxisNames() {
+Vector<String> ActiveCaching2dDD::worldAxisNames() const {
   return itsCoordinateSystem.worldAxisNames();
 }
 
-Vector<String> ActiveCaching2dDD::worldAxisUnits() {
+Vector<String> ActiveCaching2dDD::worldAxisUnits() const {
   return itsCoordinateSystem.worldAxisUnits();
 }
 

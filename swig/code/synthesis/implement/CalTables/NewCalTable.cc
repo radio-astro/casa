@@ -34,6 +34,7 @@
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/TableParse.h>
+#include <tables/Tables/TableInfo.h>
 #include <casa/Arrays.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <synthesis/CalTables/CTEnums.h>
@@ -76,6 +77,9 @@ NewCalTable::NewCalTable (const String& tableName, CTDesc& ctableDesc,
     Table tab(calMainTab, ttype, 0, False); 
     *this = tab;
 
+    // Set the table info record
+    this->setTableInfo();
+
     // Form (empty) subtables
     this->createSubTables();
   }
@@ -112,7 +116,7 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
   //cerr<<"ctor: from existing cal table with name, option"<<endl;
 
   if (ttype==Table::Memory) 
-    *this = this->copyToMemoryTable("tempcaltable");
+    *this = this->copyToMemoryTable(tableName+".tempMemCalTable");
  
   // Attach subtable accessors
   attachSubTables();
@@ -124,28 +128,31 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
 NewCalTable::NewCalTable(String tableName, String caltype,
 			 Int nFld, Int nAnt, Int nSpw, 
 			 Vector<Int> nChan, Int nTime,
+			 Double rTime, Double tint,
 			 Bool disk, Bool verbose) :
   Table()
 {
 
-  CTDesc nctd(caltype);
+  CTDesc nctd("Complex","none",caltype,"circ");
 
   // Form underlying generic Table according to the supplied desc
-  SetupNewTable calMainTab(tableName,nctd.calMainDesc(),Table::New);
+  SetupNewTable calMainTab(tableName+".tempMemCalTable",nctd.calMainDesc(),Table::New);
   Table tab(calMainTab, Table::Memory, 0, False); 
   *this = tab;
   
+  // Set the table info record
+  this->setTableInfo();
+
   // Add (empty) subtables
   this->createSubTables();
 
   // Fill it generically
-  this->fillGenericContents(nFld,nAnt,nSpw,nChan,nTime,verbose);
+  this->fillGenericContents(nFld,nAnt,nSpw,nChan,nTime,rTime,tint,verbose);
 
   if (disk) {
-    // Write it out
-    String diskname("testNCTctor.tab");
-    if (verbose) cout << "Writing out to disk: "+diskname << endl;
-    this->writeToDisk(diskname);
+    // Write it out to disk
+    if (verbose) cout << "Writing out to disk: "+tableName << endl;
+    this->writeToDisk(tableName);
   }
 
 }
@@ -191,6 +198,13 @@ NewCalTable& NewCalTable::operator= (const NewCalTable& other)
   }
   return *this;
 };
+
+
+//----------------------------------------------------------------------------
+void NewCalTable::setTableInfo() {
+      this->tableInfo().setType(TableInfo::type(TableInfo::ME_CALIBRATION));
+      this->tableInfo().setSubType(this->tableDesc().getType());
+}
 
 //----------------------------------------------------------------------------
 void NewCalTable::createSubTables() {
@@ -375,9 +389,19 @@ void NewCalTable::writeToDisk(const String& outTableName)
   sorted.deepCopy(outTableName,Table::New);
 };
 
+Complex NewCalTable::NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint) {
+
+  Double a=1.0 + Double(iant)/10.0 + Double(ispw)/100.0 +Double(ich)/10000.0;
+  Double dt=(time-refTime)/tint;
+  Double p=dt+Double(ich)/100.0; 
+  return Complex(Float(a*cos(p)),Float(a*sin(p)));
+
+}
+
 //----------------------------------------------------------------------------
 void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw, 
 				      Vector<Int> nChan, Int nTime,
+				      Double rTime, Double tint,
 				      Bool verbose) {
   if (verbose)
     cout << nFld << " "
@@ -400,15 +424,14 @@ void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw,
   // T-like
   Int nPar(1);
 
-  Double thistime(4832568000.0);  // start at noon on 2012 Jan 6
-  Double interval(60.0);
+  Double thistime(rTime-tint);  // first sample will be at rTime
   Int thisscan(0);
 
   CTMainColumns ncmc(*this);
 
   for (Int itime=0;itime<nTime;++itime) {
     for (Int ifld=0;ifld<nFld;++ifld) {
-      thistime+=interval; // every minute
+      thistime+=tint; // every minute
       thisscan+=1;    //  unique scans
       for (Int ispw=0;ispw<nSpw;++ispw) {
 
@@ -422,7 +445,7 @@ void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw,
 
 	// fill columns in new rows
 	ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,thistime));
-	ncmc.interval().putColumnCells(rows,Vector<Double>(nAddRows,interval));
+	ncmc.interval().putColumnCells(rows,Vector<Double>(nAddRows,tint));
 	ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,ifld));
 	ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,ispw));
 	ncmc.antenna1().putColumnCells(rows,antlist);
@@ -430,8 +453,12 @@ void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw,
 	ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,thisscan));
 
 	Cube<Complex> par(nPar,nChan(ispw),nAddRows);
-	for (Int iant=0;iant<nAnt;++iant) par.xyPlane(iant)=Complex(1.0+Float(iant)/100.0);
-	ncmc.param().putColumnCells(rows,par);
+	for (Int iant=0;iant<nAnt;++iant) {
+	  for (Int ich=0;ich<nChan(ispw);++ich) {
+	    par.xyPlane(iant).column(ich)=NCTtestvalueC(iant,ispw,ich,thistime,rTime,tint);
+	  }
+	}
+	ncmc.cparam().putColumnCells(rows,par);
 	Cube<Float> parerr(nPar,nChan(ispw),nAddRows);
 	parerr=0.001;
 	ncmc.paramerr().putColumnCells(rows,parerr);

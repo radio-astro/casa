@@ -3,6 +3,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 #include <display/QtViewer/QtPixelCanvas.qo.h>
+#include <images/Images/SubImage.h>
 #include <measures/Measures/MCDirection.h>
 
 #include <images/Images/ImageStatistics.h>
@@ -1076,14 +1077,15 @@ namespace casa {
 		    start = 0;
 		    stride = 1;
 
-		    Int _axis_h_ = padd->xlatePixelAxes(3);		// get first "hidden axis
+		    Int _axis_h_ = shp.size( ) > 3 ? padd->xlatePixelAxes(3) : -1;		// get first "hidden axis
 		    String zaxis = padd->zaxisStr( );
 
 		    const CoordinateSystem& cs = image->coordinates();
 
 		    Vector<String> axesNames = padd->worldToPixelAxisNames( cs );
-		    String haxis = axesNames(_axis_h_);
-		    Int hIndex = padd->xlateFixedPixelAxes(_axis_h_) + padd->uiBase( );		// uiBase( ) sets zero/one based
+		    String haxis = _axis_h_ >= 0 ? axesNames(_axis_h_) : "";
+		    // uiBase( ) sets zero/one based:
+		    Int hIndex = _axis_h_ >= 0 ? padd->xlateFixedPixelAxes(_axis_h_) + padd->uiBase( ) : -1;
 		    Int zIndex = padd->activeZIndex();
 
 		    String zUnit, zspKey, zspVal;
@@ -1180,8 +1182,15 @@ namespace casa {
 		    }
 
 
-		    layerstats->push_back(RegionInfo::stats_t::value_type(haxis,hLabel));
-		    layerstats->push_back(RegionInfo::stats_t::value_type("BrightnessUnit",unit));
+		    if ( hLabel != "" ) layerstats->push_back(RegionInfo::stats_t::value_type(haxis,hLabel));
+
+		    // strip out extra quotes, e.g. '"ELECTRONS"'
+		    std::string unitval(unit.c_str( ));
+		    std::string::size_type p = 0;
+		    while( (p = unitval.find('"',p)) != unitval.npos ) {
+			unitval.erase(p, 1);
+		    }
+		    layerstats->push_back(RegionInfo::stats_t::value_type("BrightnessUnit",unitval));
 
 		    Double beamArea = 0;
 		    ImageInfo ii = image->imageInfo();
@@ -1205,7 +1214,7 @@ namespace casa {
 			beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
 		    }
 
-		    layerstats->push_back(RegionInfo::stats_t::value_type("BeamArea",String::toString(beamArea)));
+		    if ( beamArea > 0 ) layerstats->push_back(RegionInfo::stats_t::value_type("BeamArea",String::toString(beamArea)));
 
 		    Bool statsOk = stats.getLayerStats(*layerstats, beamArea, zPos, zIndex, hPos, hIndex);
 		    if ( ! statsOk ) {

@@ -85,8 +85,8 @@ class NBody : public DisplayData {
   // Routines which yield information on the axis names and units, and
   // some miscellaneous information. 
   // <group>
-  virtual Vector<String> worldAxisNames() ;
-  virtual Vector<String> worldAxisUnits() ;
+  virtual Vector<String> worldAxisNames() const;
+  virtual Vector<String> worldAxisUnits() const;
   virtual const Unit dataUnit() ;
   virtual const RecordInterface& miscInfo() ;
   // </group>

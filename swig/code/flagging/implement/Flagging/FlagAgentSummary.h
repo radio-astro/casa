@@ -58,17 +58,18 @@ private:
 
 	Bool spwChannelCounts;
 	Bool spwPolarizationCounts;
+        Bool baselineCounts;
 
-    std::map<std::string, std::map<std::string, uInt64> > accumflags;
-    std::map<std::string, std::map<std::string, uInt64> > accumtotal;
+        std::map<std::string, std::map<std::string, uInt64> > accumflags;
+        std::map<std::string, std::map<std::string, uInt64> > accumtotal;
 
-    std::map<Int, std::map<uInt, uInt64> > accumChannelflags;
-    std::map<Int, std::map<uInt, uInt64> > accumChanneltotal;
+        std::map<Int, std::map<uInt, uInt64> > accumChannelflags;
+        std::map<Int, std::map<uInt, uInt64> > accumChanneltotal;
 
-    std::map<Int, std::map<std::string, uInt64> > accumPolarizationflags;
-    std::map<Int, std::map<std::string, uInt64> > accumPolarizationtotal;
+        std::map<Int, std::map<std::string, uInt64> > accumPolarizationflags;
+        std::map<Int, std::map<std::string, uInt64> > accumPolarizationtotal;
 
-    uInt64 accumTotalFlags, accumTotalCount;
+        uInt64 accumTotalFlags, accumTotalCount;
 
 	Int arrayId;
 	Int fieldId;

@@ -114,8 +114,8 @@ protected:
   virtual const Float dataValue(IPosition pos);
   virtual const Bool maskValue(const IPosition &pos);
 
-  virtual Vector<String> worldAxisNames();
-  virtual Vector<String> worldAxisUnits();
+  virtual Vector<String> worldAxisNames() const;
+  virtual Vector<String> worldAxisUnits() const;
 
   // (Required) default constructor.
   ScrollingRasterDD(uInt mAxis=2, uInt scanNo=100);

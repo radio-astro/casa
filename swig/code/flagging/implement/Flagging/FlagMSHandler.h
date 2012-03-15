@@ -50,7 +50,7 @@ public:
 	bool selectData();
 
 	// Parse MSSelection expression
-	void parseExpression(MSSelection &parser);
+	bool parseExpression(MSSelection &parser);
 
 	// Generate Visibility Iterator
 	bool generateIterator();
@@ -67,15 +67,10 @@ public:
 	// Provide table name (for flag version)
 	String getTableName();
 
-	// Measurement set section
-	MeasurementSet *selectedMeasurementSet_p;
-	MeasurementSet *originalMeasurementSet_p;
-
-	// RO Visibility Iterator
-	VisibilityIterator *rwVisibilityIterator_p;
-	ROVisibilityIterator *roVisibilityIterator_p;
-
 private:
+
+	// Mapping functions
+	virtual void generateScanStartStopMap();
 
 	// Swap MS to check what is the maximum RAM memory needed
 	void checkMaxMemory();
@@ -84,8 +79,13 @@ private:
 	// NOTE: We always have to do this, even if there is no SPW:channel selection
 	void applyChannelSelection(ROVisibilityIterator *roVisIter);
 
-	// Mapping functions
-	void generateScanStartStopMap();
+	// Measurement set section
+	MeasurementSet *selectedMeasurementSet_p;
+	MeasurementSet *originalMeasurementSet_p;
+
+	// RO Visibility Iterator
+	VisibilityIterator *rwVisibilityIterator_p;
+	ROVisibilityIterator *roVisibilityIterator_p;
 
 };
 

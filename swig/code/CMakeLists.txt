@@ -632,7 +632,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.152
+           VERSION 1.0.155
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -663,7 +663,7 @@ endif()
 # ALMAWVR
 if( USE_ALMAWVR )
   casa_find( ALMAWVR
-             VERSION 1.0.2
+             VERSION 1.1.0
              PREFIX_HINTS ${ALMWVR_ROOT_DIR}
              LIBS almawvr
            )

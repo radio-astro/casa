@@ -78,7 +78,7 @@ class ROCTIter
 public:
   // Constructor/Destructor 
   ROCTIter(NewCalTable tab,const Block<String>& sortcol);
-  ~ROCTIter();
+  virtual ~ROCTIter();
   
   // Iteration operators
   inline void reset() { ti_->reset(); this->attach(); };
@@ -122,8 +122,16 @@ public:
   Vector<Int> antenna2() const;
   void antenna2(Vector<Int>& v) const;
 
-  Cube<Complex> param() const;
-  void param(Cube<Complex>& c) const;
+  Cube<Complex> cparam() const;
+  void cparam(Cube<Complex>& c) const;
+
+  Cube<Float> fparam() const;
+  void fparam(Cube<Float>& c) const;
+
+  Cube<Float> casfparam(String what="") const;
+  void casfparam(Cube<Float>& casf, String what="") const;
+
+
   Cube<Float> paramErr() const;
   void paramErr(Cube<Float>& c) const;
 
@@ -136,20 +144,23 @@ public:
   Cube<Bool> flag() const;
   void flag(Cube<Bool>& c) const;
 
+  Int nchan() const;
   Vector<Int> chan() const;
   void chan(Vector<Int>& v) const;
   Vector<Double> freq() const;
   void freq(Vector<Double>& v) const;
 
+ protected:
+
+  // Attach accessors
+  virtual void attach();
+  
  private:
 
   // Prohibit public use of copy, assignment
   ROCTIter (const ROCTIter& other);
   ROCTIter& operator= (const ROCTIter& other);
 
-  // Attach accessors
-  void attach();
-  
   // Data:
 
   // Remember the sort columns...
@@ -169,8 +180,45 @@ public:
   NewCalTable *inct_;
 
   // Per-iteration columns
-  ROCTMainColumns *iMainCols_;
+  ROCTMainColumns *iROCTMainCols_;
 
+
+};
+
+// Writable version (limited to certain 'columns')
+class CTIter : public ROCTIter
+{
+public:
+  // Constructor/Destructor 
+  CTIter(NewCalTable tab,const Block<String>& sortcol);
+  virtual ~CTIter();
+
+  // Set antenna2 (e.g., used for setting refant)
+  void setantenna2(const Vector<Int>& a2);
+
+  // Set the flags
+  void setflag(const Cube<Bool>& flag);
+
+  // Set the parameters
+  void setfparam(const Cube<Float>& f);
+  void setcparam(const Cube<Complex>& c);
+
+protected:
+
+  // Attach writable column access
+  virtual void attach();
+
+private:
+
+  // Prohibit public use of copy, assignment
+  CTIter (const CTIter& other);
+  CTIter& operator= (const CTIter& other);
+
+  // Per-iteration table
+  NewCalTable *irwnct_;
+
+  // Writable column access
+  CTMainColumns *iRWCTMainCols_;
 
 };
 

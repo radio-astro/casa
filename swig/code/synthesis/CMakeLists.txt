@@ -128,9 +128,12 @@ casa_add_library( synthesis
   implement/CalTables/CTColumns.cc
   implement/CalTables/CTDesc.cc
   implement/CalTables/CTEnums.cc
+  implement/CalTables/CTInterface.cc
   implement/CalTables/CTIter.cc
   implement/CalTables/CTMainColumns.cc
   implement/CalTables/CTMainRecord.cc
+  implement/CalTables/CTPatchedInterp.cc
+  implement/CalTables/CTTimeInterp1.cc
   implement/CalTables/EPointDesc.cc
   implement/CalTables/EPointMBuf.cc
   implement/CalTables/EPointMCol.cc
@@ -145,6 +148,7 @@ casa_add_library( synthesis
   implement/CalTables/MJonesDesc.cc
   implement/CalTables/MJonesMRec.cc
   implement/CalTables/NewCalTable.cc
+  implement/CalTables/RIorAParray.cc
   implement/CalTables/SolvableMJDesc.cc
   implement/CalTables/SolvableMJMRec.cc
   implement/CalTables/SolvableVJDesc.cc
@@ -294,6 +298,15 @@ install (FILES
 	implement/CalTables/BJonesMCol.h
 	implement/CalTables/BJonesMRec.h
 	implement/CalTables/BJonesTable.h
+	implement/CalTables/CTColumns.h
+	implement/CalTables/CTDesc.h
+	implement/CalTables/CTEnums.h
+	implement/CalTables/CTInterface.h
+	implement/CalTables/CTIter.h
+	implement/CalTables/CTMainColumns.h
+	implement/CalTables/CTMainRecord.h
+	implement/CalTables/CTPatchedInterp.h
+	implement/CalTables/CTTimeInterp1.h
 	implement/CalTables/CalBuffer.h
 	implement/CalTables/CalDescBuffer.h
 	implement/CalTables/CalDescColumns.h
@@ -332,6 +345,8 @@ install (FILES
 	implement/CalTables/GJonesTable.h
 	implement/CalTables/MJonesDesc.h
 	implement/CalTables/MJonesMRec.h
+	implement/CalTables/NewCalTable.h
+	implement/CalTables/RIorAParray.h
 	implement/CalTables/ROCalMainColumns2.h
 	implement/CalTables/SkyJonesDesc.h
 	implement/CalTables/SolvableCalSetMCol.h
@@ -644,3 +659,7 @@ casa_add_assay( synthesis implement/CalTables/test/tCalInterpolation.cc )
 casa_add_assay( synthesis implement/CalTables/test/tCalIntpMatch.cc )
 casa_add_assay( synthesis implement/CalTables/test/tNewCalTable.cc )
 casa_add_assay( synthesis implement/CalTables/test/tCTIter.cc )
+casa_add_assay( synthesis implement/CalTables/test/tRIorAPArray.cc )
+casa_add_assay( synthesis implement/CalTables/test/tCTTimeInterp1.cc )
+casa_add_assay( synthesis implement/CalTables/test/tCTPatchedInterp.cc )
+casa_add_assay( synthesis implement/CalTables/test/tCTSelection.cc )
