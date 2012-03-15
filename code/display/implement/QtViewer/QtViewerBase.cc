@@ -249,11 +249,6 @@ String QtViewerBase::fileType(const String pathname) {
 
     if (fileInfo.isFile()) {
 
-	if ( pathName.endsWith(".crtf") )
-	    return "CASA Region File";
-	if ( pathName.endsWith(".reg") )
-	    return "DS9 Region File";
-
 	QFile file(pathName);
 	if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 	    char buf[10240];
@@ -271,6 +266,12 @@ String QtViewerBase::fileType(const String pathname) {
 		}
 	    }
 	}
+
+	if ( pathName.endsWith(".crtf") )
+	    return "CASA Region File";
+	if ( pathName.endsWith(".reg") )
+	    return "DS9 Region File";
+
     } else if (fileInfo.isDir()) {	// Directory
 
 	QFileInfo tab(pathName + "/table.dat");
