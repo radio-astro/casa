@@ -32,7 +32,6 @@
 #include <lattices/LatticeMath/Fit2D.h>
 #include <casa/Quanta.h>
 #include <measures/Measures/Stokes.h>
-#include <images/Images/ImageFit1D.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentType.h>
@@ -581,16 +580,16 @@ class ImageAnalysis
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
     // misc from inimage.   Returns T if image made, F if not
-    static Bool
-      makeExternalImage (
-    	casa::PtrHolder<ImageInterface<Float> >& image,
-                         const String& fileName,
-                         const CoordinateSystem& cSys,
-                         const IPosition& shape,
-                         const ImageInterface<Float>& inImage,
-                         LogIO& os, Bool overwrite=False,
-                         Bool allowTemp=False,
-                         Bool copyMask=True);
+    static Bool	makeExternalImage (
+    	std::auto_ptr<ImageInterface<Float> >& image,
+    	const String& fileName,
+    	const CoordinateSystem& cSys,
+    	const IPosition& shape,
+    	const ImageInterface<Float>& inImage,
+    	LogIO& os, Bool overwrite=False,
+    	Bool allowTemp=False,
+    	Bool copyMask=True
+    );
 
 
  private:
