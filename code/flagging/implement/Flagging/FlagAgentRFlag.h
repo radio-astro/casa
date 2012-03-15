@@ -96,6 +96,7 @@ private:
 	// Time-direction analysis
 	Double noise_p;
 	map< pair<Int,Int>,Double > field_spw_noise_map_p;
+	map< pair<Int,Int>,Bool > user_field_spw_noise_map_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_squares_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_counts_p;
@@ -103,6 +104,7 @@ private:
 	// Spectral analysis
 	Double scutof_p;
 	map< pair<Int,Int>,Double > field_spw_scutof_map_p;
+	map< pair<Int,Int>,Bool > user_field_spw_scutof_map_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_squares_p;
 	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_counts_p;

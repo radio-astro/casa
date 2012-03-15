@@ -217,7 +217,9 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    uInt nDevs = shape[0];
 			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
 			    {
-			    	field_spw_noise_map_p[std::make_pair(timedev(dev_i,0),timedev(dev_i,1))] = timedev(dev_i,2);
+			    	pair<Int,Int> field_spw = std::make_pair(timedev(dev_i,0),timedev(dev_i,1));
+			    	field_spw_noise_map_p[field_spw] = timedev(dev_i,2);
+			    	user_field_spw_noise_map_p[field_spw] = True;
 			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
 			    }
 			}
@@ -259,7 +261,9 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    uInt nDevs = shape[0];
 			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
 			    {
-			    	field_spw_scutof_map_p[std::make_pair(freqdev(dev_i,0),freqdev(dev_i,1))] = freqdev(dev_i,2);
+			    	pair<Int,Int> field_spw = std::make_pair(freqdev(dev_i,0),freqdev(dev_i,1));
+			    	field_spw_scutof_map_p[field_spw] = freqdev(dev_i,2);
+			    	user_field_spw_scutof_map_p[field_spw] = True;
 			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << endl;
 			    }
 			}
@@ -582,8 +586,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 	            	{
 	            		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 	            		{
-	            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-	            			visBufferFlags_p += 1;
+							if (!flags.getModifiedFlags(pol_k,chan_j,timestep_i))
+							{
+								flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+								visBufferFlags_p += 1;
+							}
 	            		}
 	            	}
 				}
@@ -691,8 +698,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 					{
 						for (uInt chan_j=0;chan_j<nChannels;chan_j++)
 						{
-							flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-							visBufferFlags_p += 1;
+							if (!flags.getModifiedFlags(pol_k,chan_j,timestep_i))
+							{
+								flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+								visBufferFlags_p += 1;
+							}
 						}
 					}
 					// Check each channel separately vs the scutof level
@@ -704,8 +714,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 							if (	(abs(visibility.real()-AverageReal)>scutof) or
 									(abs(visibility.imag()-AverageImag)>scutof)	)
 							{
-								flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-								visBufferFlags_p += 1;
+								if (!flags.getModifiedFlags(pol_k,chan_j,timestep_i))
+								{
+									flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+									visBufferFlags_p += 1;
+								}
 							}
 						}
 					}
@@ -876,14 +889,21 @@ FlagAgentRFlag::passFinal(const VisBuffer &visBuffer)
 	Int field = visBuffer.fieldId();
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
-	field_spw_noise_map_p.erase(field_spw);
-	field_spw_noise_histogram_sum_p.erase(field_spw);
-	field_spw_noise_histogram_sum_squares_p.erase(field_spw);
-	field_spw_noise_histogram_counts_p.erase(field_spw);
-	field_spw_scutof_map_p.erase(field_spw);
-	field_spw_scutof_histogram_sum_p.erase(field_spw);
-	field_spw_scutof_histogram_sum_squares_p.erase(field_spw);
-	field_spw_scutof_histogram_counts_p.erase(field_spw);
+	if (user_field_spw_noise_map_p.find(field_spw) == user_field_spw_noise_map_p.end())
+	{
+		field_spw_noise_map_p.erase(field_spw);
+		field_spw_noise_histogram_sum_p.erase(field_spw);
+		field_spw_noise_histogram_sum_squares_p.erase(field_spw);
+		field_spw_noise_histogram_counts_p.erase(field_spw);
+	}
+
+	if (user_field_spw_scutof_map_p.find(field_spw) == user_field_spw_scutof_map_p.end())
+	{
+		field_spw_scutof_map_p.erase(field_spw);
+		field_spw_scutof_histogram_sum_p.erase(field_spw);
+		field_spw_scutof_histogram_sum_squares_p.erase(field_spw);
+		field_spw_scutof_histogram_counts_p.erase(field_spw);
+	}
 
 	return;
 }
