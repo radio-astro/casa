@@ -81,7 +81,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        </value>
 	</param>
 
-	<param type="boolArray" name="varpar">
+	<param type="boolArray" name="varypar">
 		<description>Control which parameters to let vary in the fit</description>
 		<value></value>
 	</param>
