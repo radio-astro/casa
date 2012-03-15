@@ -88,6 +88,8 @@ class Rovia_Test {
 
 public:
 
+    static Bool checkScalars (const String & msNameSync,
+                              const String & msNameAsync);
     static Bool compareComponents (const String & msNameSync,
                                    const String & msNameAsync,
                                    const String & componentName,
@@ -145,7 +147,8 @@ public:
         msAsync = new MeasurementSet (msNameAsync, Table::Update);
 
         viAsync = new ROVisibilityIterator (& prefetchColumns, * msAsync, bi);
-        vbAsync.set (* viAsync, True);
+        VisBufferAutoPtr p (viAsync);
+        vbAsync = dynamic_cast<VisBufferAsync *> (p.release());
     }
 
     ~Rovia_Test_Configuration ()
@@ -153,14 +156,13 @@ public:
         delete msAsync;
         delete msSync;
         delete vbSync;
-        delete vbAsync.release();
         delete viAsync;
         delete viSync;
     }
 
     MeasurementSet * msAsync;
     MeasurementSet * msSync;
-    VisBufferAutoPtr vbAsync;
+    VisBufferAsync * vbAsync;
     VisBuffer * vbSync;
     ROVisibilityIterator * viAsync;
     ROVisibilityIterator * viSync;
@@ -193,6 +195,7 @@ main(int argc, char **argv)
         mtrace();
 
         Bool ok = True;
+        ok = Rovia_Test::checkScalars (argv[1], argv[2]) && ok;
         ok = Rovia_Test::compareComponents (argv[1], argv[2], "Imaging Weights", Rovia_Test::compareImagingWeights) && ok;
         ok = Rovia_Test::compareTimesAsyncToSync (argv[1]) && ok;
         ok = Rovia_Test::compareComponents (argv[1], argv[2], "Flag Cubes", Rovia_Test::compareFlagCubes) && ok;
@@ -219,6 +222,40 @@ main(int argc, char **argv)
 }
 
 namespace casa {
+
+#define CheckScalar(x, y) \
+    (!(rtc.vbAsync->x != y &&  (cout << "*** Scalar check failed; " << #x << " unitialized." << endl)))
+
+Bool
+Rovia_Test::checkScalars (const String & msNameSync,
+                          const String & msNameAsync)
+{
+    Rovia_Test_Configuration rtc (msNameSync, msNameAsync);
+
+    rtc.viAsync->origin();
+
+    Bool ok = True;
+
+    ok = CheckScalar (dataDescriptionId_p, -1) && ok;
+    ok = CheckScalar (nAntennas_p, -1) && ok;
+    ok = CheckScalar (nCoh_p, -1) && ok;
+    ok = CheckScalar (newArrayId_p, False) && ok;
+    ok = CheckScalar (newFieldId_p, False) && ok;
+    ok = CheckScalar (newSpectralWindow_p, False) && ok;
+    ok = CheckScalar (nRowChunk_p, -1) && ok;
+    ok = CheckScalar (nSpw_p, -1) && ok;
+    ok = CheckScalar (polarizationId_p, -1) && ok;
+
+    if (ok){
+        cout << "--- Scalar check passed." << endl;
+    }
+    else{
+        cout << "***\n*** Scalar check FAILED.\n***" << endl;
+    }
+
+    return ok;
+}
+
 
 String
 Rovia_Test::compareFlagCubes (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc)
