@@ -4948,7 +4948,7 @@ ia.close()
   
      <param type="any" direction="in" name="region">
 	     <any type="record"/>
-     <description>Region of interest.  Default is whole image.</description>
+     <description>Dictionary (record) defining the region of interest, most often obtained from an rg tool method.  Default is whole image.</description>
      <value></value>
      </param>
   
@@ -4959,7 +4959,7 @@ ia.close()
      </param>
   
      <param type="int" direction="in" name="axis">
-	     <description>Axis to convolve. Default is spectral axis if there is one</description>
+	     <description>Zero based axis to convolve. ia.coordsys().names() gives the order of the axes in the image. Less than 0 means use the spectral axis if there is one, if not an exception is thrown.</description>
      <value>-10</value>
      </param>
   
@@ -4987,19 +4987,36 @@ ia.close()
 
 <description>
 
-This function performs Hanning convolution ($z[i] = 0.25*y[i-1] +
-0.5*y[i] + 0.25*y[i+1]$) of one axis of an image.  The convolution is
-done in the image domain (i.e., not with an FFT). You can optionally drop
-every other pixel on output. If you do this, the first output
-pixel is centered on the second input pixel. 
+This function performs Hanning convolution of one axis of an image defined by
 
-If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the Image \tool\ is
-associated with a temporary image.  This temporary image may be in
-memory or on disk, depending on its size.  When you destroy the
-on-the-fly Image \tool\ created by this function (with the <link
-anchor="images:image.done.function">done</link> function) this
-temporary image is deleted.
+z[i] = 0.25*y[i-1] + 0.5*y[i] + 0.25*y[i+1] 
+
+where z[i] is the value at pixel i in the hanning smoothed image, and
+y[i-1, y[i], and y[i+1] are the values of the input image at pixels i-1,
+i, and i+1 respectively.
+
+The convolution is done in the image domain (i.e., not with an FFT). If drop=True,
+every other pixel is dropped in the output image so that the pixel width and the hanning smoothed resolution 
+are the same. In this case, the first output pixel is centered on the second input pixel, so that the
+(zero-based) jth output pixel is related to the (zero-based) ith input pixel by
+
+j = 2*i + 1
+
+The hanning smoothed image is written to disk with name {\stfaf outfile}, if
+specified. If not, no image is written but the image is still accessible via
+the returned image analysis tool (see below).
+
+This method always returns an image analysis tool which is attached to the
+hanning smoothed image. This tool should always be captured and closed after
+any desired manipulations have been done. Closing the tool frees up system
+resources (eg memory). Eg,
+
+hanning_image = ia.hanning(...)
+# do things (or not) with hanning_image 
+... 
+# close the returned tool promptly upon finishing with it.
+hanning_image.done()
+
 
 Masked pixels will be assigned the value 0.0 before convolution. 
 The output mask is the combination (logical OR) of the default input
@@ -5017,21 +5034,15 @@ See also the other convolution functions
 
 <example>
 
-"""
-print "\t----\t hanning Ex 1 \t----"
-ia.fromshape('x', shape=[64,64,128], overwrite=true)
-print ia.summary()
-im2 = ia.hanning(outfile='x.hann')
-print im2.summary()
-im2.done(remove=T)
-ia.close()
-#
-"""
-
-
-This would Hanning smooth the spectral axis of the image associated with
-the default \imagetool\ {\stf ia}, if there is one.  Every other pixel on the
-convolution axis is dropped on output, by default. 
+ia.open("mynonsmoothed.im")
+# smooth the spectral axis, say it's axis 2 and only write every other pixel
+hanning = ia.hanning(outfile="myhanningsmoothed.im", axis=2, drop=True, overwrite=True)
+# done with input
+ia.done()
+# do something with the output image, get statistics say
+stats = hanning.statistics()
+# close the result image
+hanning.done()
 
 </example>
 
