@@ -301,20 +301,28 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        ### reference values ( ASAP r2084 + CASA r14498)
+        ### reference values ( ASAP r2435 + CASA r18782)
         refdic = {'linemax': 1.9440968036651611,
                   'linemaxpos': 762.0,
                   'lineeqw': 15.466022935853511,
                   'baserms': 0.16496795415878296}
+        refsc = {"ch0": 44049935561.916985,
+                 "incr": 24416.931915037214}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
         self._compareDictVal(refdic, testval)
-        # channel number check
+        # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
-        scan.set_unit(unit)
-        nch_new = scan.nchan(scan.getif(0))
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
         del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
         self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
-        # TODO: add tests of FREQUENCY subtable
+        self.assertAlmostEqual((ch0_new-refsc['ch0'])/refsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
+
 
     def test08(self):
         """Test 8: kernel = 'regrid' + chanwidth in frequency unit"""
@@ -337,20 +345,28 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        ### reference values ( ASAP r2084 + CASA r14498)
+        ### reference values ( ASAP r2435 + CASA r18782)
         refdic = {'linemax': 1.9440968036651611,
                   'linemaxpos': 762.0,
                   'lineeqw': 15.466022935853511,
                   'baserms': 0.16496795415878296}
+        refsc = {"ch0": 44049935561.916985,
+                 "incr": 24416.931914787496}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
         self._compareDictVal(refdic, testval)
-        # channel number check
+        # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
-        scan.set_unit(unit)
-        nch_new = scan.nchan(scan.getif(0))
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
         del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
         self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
-        # TODO: add tests of FREQUENCY subtable
+        self.assertAlmostEqual((ch0_new-refsc['ch0'])/refsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
+
 
     def test09(self):
         """Test 9: kernel = 'regrid' + chanwidth in velocity unit"""
@@ -373,20 +389,27 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        ### reference values ( ASAP r2084 + CASA r14498)
-        refdic = {'linemax': 1.9440968036651611,
+        ### reference values ( ASAP r2435 + CASA r18782)
+        refdic = {'linemax': 1.9440964460372925,
                   'linemaxpos': 762.0,
-                  'lineeqw': 15.466022935853511,
-                  'baserms': 0.16496795415878296}
+                  'lineeqw': 15.466027743114028,
+                  'baserms': 0.16496789455413818}
+        refsc = {"ch0": 44049935561.917,
+                 "incr": 24416.931942994266}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
         self._compareDictVal(refdic, testval)
-        # channel number check
+        # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
-        scan.set_unit(unit)
-        nch_new = scan.nchan(scan.getif(0))
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
         del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
         self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
-        # TODO: add tests of FREQUENCY subtable
+        self.assertAlmostEqual((ch0_new-refsc['ch0'])/refsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
 
 
 def suite():
