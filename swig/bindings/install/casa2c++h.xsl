@@ -21,6 +21,7 @@
 #include &lt;complex&gt;
 #include &lt;stdcasa/record.h&gt;
 #include &lt;tools/casaswig_types.h&gt;
+#include &lt;casa/Exceptions/Error.h&gt;
 </xsl:text>
 <xsl:for-each select="aps:needs">
 	<xsl:text disable-output-escaping="yes">#include &lt;</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">_cmpt.h&gt;

@@ -22,6 +22,14 @@
 <xsl:text disable-output-escaping="yes">
 %feature("kwargs");
 %feature("autodoc");
+%exception {
+   try {
+      $action
+      } catch (const casa::AipsError &amp;ae) {
+         PyErr_SetString(PyExc_StandardError, ae.what());
+         return NULL;
+      }
+}
 %include "</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h"
 %{
 #include &lt;</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h&gt;
