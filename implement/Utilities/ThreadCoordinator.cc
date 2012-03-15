@@ -41,7 +41,7 @@ namespace casa {
 ThreadCoordinatorBase::ThreadCoordinatorBase (Int nThreads, bool logStates)
   : barrier_p (new boost::barrier(nThreads)),
     logStates_p (logStates),
-    mutex_p (new Mutex()),
+    mutex_p (new async::Mutex()),
     nThreads_p (nThreads),
     nThreadsAtBarrier_p (0),
     nThreadsDispatched_p (0),
@@ -66,7 +66,7 @@ ThreadCoordinatorBase::dispatchWork ()
 
   workToBeDone_p = True;
   workCompleted_p = False;
-  stateChanged_p->broadcast ();
+  stateChanged_p->notify_all ();
 }
 
 void
@@ -115,7 +115,7 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
       if (nThreadsAtBarrier_p == nThreads_p){
           workCompleted_p = True;
           nThreadsAtBarrier_p = 0;
-          stateChanged_p->broadcast();
+          stateChanged_p->notify_all ();
       }
   }
 
@@ -125,7 +125,7 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
 
   if (! readyForWork_p){
       readyForWork_p = True;
-      stateChanged_p->broadcast();
+      stateChanged_p->notify_all ();
   }
 
   //  logState ("waitForWork (past barrier)");

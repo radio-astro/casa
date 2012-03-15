@@ -650,67 +650,15 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
 
-    using namespace casa::asyncio;
+    ROVisibilityIterator * oldRvi = NULL;
+    VisibilityIterator * oldWvi = NULL;
 
-    asyncio::PrefetchColumns prefetchColumns =
-            PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
-                                              VisBufferComponents::Ant2,
-                                              VisBufferComponents::ArrayId,
-                                              VisBufferComponents::DataDescriptionId,
-                                              VisBufferComponents::Direction1,
-                                              VisBufferComponents::Direction2,
-                                              VisBufferComponents::Feed1,
-                                              VisBufferComponents::Feed1_pa,
-                                              VisBufferComponents::Feed2,
-                                              VisBufferComponents::Feed2_pa,
-                                              VisBufferComponents::FieldId,
-                                              VisBufferComponents::FlagCube,
-                                              VisBufferComponents::Flag,
-                                              VisBufferComponents::FlagRow,
-                                              VisBufferComponents::Freq,
-                                              VisBufferComponents::NChannel,
-                                              VisBufferComponents::NCorr,
-                                              VisBufferComponents::NRow,
-                                              VisBufferComponents::ObservedCube,
-                                              VisBufferComponents::PhaseCenter,
-                                              VisBufferComponents::PolFrame,
-                                              VisBufferComponents::SpW,
-                                              VisBufferComponents::Time,
-                                              VisBufferComponents::Uvw,
-                                              VisBufferComponents::UvwMat,
-                                              VisBufferComponents::Weight,
-                                              -1);
-
-    Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
+    configureAsyncIo (oldRvi, oldWvi);
 
     ////if people want to use model but it isn't there
     if(!noModelCol_p)
       noModelCol_p=rvi_p->msColumns().modelData().isNull();
 
-    if (addCorrectedVisCube){
-        prefetchColumns.insert (VisBufferComponents::CorrectedCube);
-        // This can cause an error if a multi-MS has a mixture of MSs with corrected
-        // and without corrected data columns.
-    }
-
-    ROVisibilityIterator * oldRvi = NULL;
-    VisibilityIterator * oldWvi = NULL;
-
-    if (ROVisibilityIterator::isAsynchronousIoEnabled()){
-
-        vb_p->detachFromVisIter();
-        oldRvi = rvi_p;
-
-        if (wvi_p != NULL){
-            oldWvi = wvi_p;
-            wvi_p = new VisibilityIterator (& prefetchColumns, * wvi_p);
-            rvi_p = wvi_p;
-        }
-        else{
-            rvi_p = new ROVisibilityIterator (& prefetchColumns, * rvi_p);
-        }
-
-    }
     //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();
     // Initialize
@@ -954,6 +902,79 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " "
     // 	<< "Extra = " << aExtra.formatAverage().c_str() << " "
     // 	<< endl;
+}
+
+void
+CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIterator * & oldWvi)
+{
+
+    using namespace casa::asyncio;
+
+    oldRvi = NULL;
+    oldWvi = NULL;
+
+    Bool isEnabled;
+    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
+    isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
+
+    if (! (isEnabled && ROVisibilityIterator::isAsynchronousIoEnabled())){
+        return; // async i/o is not going to be used this time around
+    }
+
+    // Async I/O is enabled globally and for imaging so prepare to replace the
+    // existing VIs with async implmentations.
+
+    PrefetchColumns prefetchColumns =
+            PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
+                                              VisBufferComponents::Ant2,
+                                              VisBufferComponents::ArrayId,
+                                              VisBufferComponents::DataDescriptionId,
+                                              VisBufferComponents::Direction1,
+                                              VisBufferComponents::Direction2,
+                                              VisBufferComponents::Feed1,
+                                              VisBufferComponents::Feed1_pa,
+                                              VisBufferComponents::Feed2,
+                                              VisBufferComponents::Feed2_pa,
+                                              VisBufferComponents::FieldId,
+                                              VisBufferComponents::FlagCube,
+                                              VisBufferComponents::Flag,
+                                              VisBufferComponents::FlagRow,
+                                              VisBufferComponents::Freq,
+                                              VisBufferComponents::NChannel,
+                                              VisBufferComponents::NCorr,
+                                              VisBufferComponents::NRow,
+                                              VisBufferComponents::ObservedCube,
+                                              VisBufferComponents::PhaseCenter,
+                                              VisBufferComponents::PolFrame,
+                                              VisBufferComponents::SpW,
+                                              VisBufferComponents::Time,
+                                              VisBufferComponents::Uvw,
+                                              VisBufferComponents::UvwMat,
+                                              VisBufferComponents::Weight,
+                                              -1);
+
+    Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
+
+    if (addCorrectedVisCube){
+        prefetchColumns.insert (VisBufferComponents::CorrectedCube);
+        // This can cause an error if a multi-MS has a mixture of MSs with corrected
+        // and without corrected data columns.
+    }
+
+    // Replace the existing VIs with an async version.  Keep pointers to the old
+    // ones around (these are kept by the caller) so they can be swapped back afterwards.
+
+    vb_p->detachFromVisIter();
+    oldRvi = rvi_p;
+
+    if (wvi_p != NULL){
+        oldWvi = wvi_p;
+        wvi_p = new VisibilityIterator (& prefetchColumns, * wvi_p);
+        rvi_p = wvi_p;
+    }
+    else{
+        rvi_p = new ROVisibilityIterator (& prefetchColumns, * rvi_p);
+    }
 }
 
 void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 

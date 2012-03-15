@@ -2238,10 +2238,7 @@ Int& VisBuffer::fillSpW()
 
 Vector<Double>& VisBuffer::fillTime()
 {
-  if (visIter_p == NULL) {
-    throw AipsError ("No VisibilityIterator is attached.", __FILE__, __LINE__);
-  }
-
+  CheckVisIter ();
   timeOK_p = True;
   return visIter_p->time(time_p);
 }

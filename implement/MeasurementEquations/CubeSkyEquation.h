@@ -76,6 +76,8 @@ class CubeSkyEquation : public SkyEquation {
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
  protected:
 
+  void configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIterator * & oldWvi);
+
   //Different versions of psf making
   void makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs);
   void makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs);

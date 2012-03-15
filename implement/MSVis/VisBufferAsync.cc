@@ -581,6 +581,18 @@ VisBufferAsync::getMs () const
     return * measurementSet_p;
 }
 
+Int
+VisBufferAsync::getNSpw () const
+{
+    return nSpw_p;
+}
+
+Int
+VisBufferAsync::getOldMSId () const
+{
+    return oldMSId_p;
+}
+
 
 Double
 VisBufferAsync::hourang(Double time) const
@@ -876,6 +888,13 @@ VisBufferAsync::setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpe
     newFieldId_p = newFieldId;
     newSpectralWindow_p = newSpectralWindow;
 }
+
+void
+VisBufferAsync::setNSpw (Int nSpw)
+{
+    nSpw_p = nSpw;
+}
+
 
 void
 VisBufferAsync::setPolarizationId (Int pId)

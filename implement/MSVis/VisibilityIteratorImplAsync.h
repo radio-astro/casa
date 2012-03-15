@@ -187,7 +187,7 @@ public:
     Int numberCoh() { NotImplementedROVIA; }
     Int numberDDId() { NotImplementedROVIA; }
     Int numberPol() { NotImplementedROVIA; }
-    Int numberSpw() { NotImplementedROVIA; }
+    Int numberSpw();
     Vector<Int>& observationId(Vector<Int>& /*obsIDs*/) const { NotImplementedROVIA; }
     Vector<Float> parang(Double ) const { NotImplementedROVIA; }
     const Float& parang0(Double ) const { NotImplementedROVIA; }

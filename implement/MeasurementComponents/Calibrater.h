@@ -48,6 +48,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class CorrectorVp;
 
+namespace asyncio {
+  class PrefetchColumns;
+}
+
 class Calibrater 
 {
 
@@ -349,6 +353,7 @@ class Calibrater
   String timerString();
   Timer timer_p;
 
+  VisibilityIterator::DataColumn configureForCorrection ();
   Bool correctUsingVpf ();
 
   // Select on channel using MSSelection
