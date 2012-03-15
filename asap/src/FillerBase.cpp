@@ -120,11 +120,10 @@ void FillerBase::setMolecule(const Vector<Double>& restfreq)
   uInt nEntry = mEntry_.size() ;
   Int idx = -1 ;
   for ( uInt i = 0 ; i < nEntry ; i++ ) {
-    if ( restfreq.conform( mEntry_[i] ) ) {
-      if ( allEQ( restfreq, mEntry_[i] ) ) {
-        idx = i ;
-        break ;
-      }
+    if ( restfreq.conform( mEntry_[i] ) && 
+         allEQ( restfreq, mEntry_[i] ) ) {
+      idx = i ;
+      break ;
     }
   }
   uInt id ;
@@ -133,7 +132,7 @@ void FillerBase::setMolecule(const Vector<Double>& restfreq)
   else {
     Vector<String> tmp ;
     id = table_->molecules().addEntry(restfreq,tmp,tmp) ;
-    mEntry_.push_back( restfreq ) ;
+    mEntry_.push_back( restfreq.copy() ) ;
     mIdx_.push_back( id ) ;
   }
   RecordFieldPtr<uInt> molidCol(row_.record(), "MOLECULE_ID");

@@ -826,3 +826,27 @@ double NRODataset::toLSR( double v, double t, double x, double y )
 
   return vlsr ;
 }
+
+uInt NRODataset::getPolNo( int i )
+{
+  int idx = getIndex( i ) ;
+//   cout << "HORN[" << idx << "]=" << HORN[idx] 
+//        << ", RX[" << idx << "]=" << RX[idx] << endl ;
+  return polNoFromRX( RX[idx].c_str() ) ;
+}
+
+uInt NRODataset::polNoFromRX( const char *rx ) 
+{
+  uInt polno = 0 ;
+  // 2012/03/15 TN
+  // T100H/V is multi-polarization receiver which is installed 
+  // on NRO 45m telescope. Here, POLNO is assigned as follows: 
+  // 
+  //    POLNO=0: T100H
+  //          1: T100V
+  // 
+  // For other receivers, POLNO is always 0.
+  if ( strncmp( rx, "T100V", 5 ) == 0 )
+    polno = 1 ;
+  return polno ;
+}

@@ -144,6 +144,8 @@ void python_Scantable() {
     .def("_reshape", &ScantableWrapper::reshapeSpectrum, 
 	 (boost::python::arg("nmin")=-1, 
 	  boost::python::arg("nmax")=-1) )
+    .def("_regrid_specchan", &ScantableWrapper::regridSpecChannel, 
+	 (boost::python::arg("nchan")=-1) )
     .def("_poly_baseline", &ScantableWrapper::polyBaseline)
     .def("_auto_poly_baseline", &ScantableWrapper::autoPolyBaseline)
     .def("_cspline_baseline", &ScantableWrapper::cubicSplineBaseline)

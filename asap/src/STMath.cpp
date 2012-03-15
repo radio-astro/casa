@@ -2769,7 +2769,7 @@ CountedPtr< Scantable >
           Bool ok = fa.align(specOut, maskOut, abc, spec,
                              mask, timeCol(i), !first,
                              interp, False);
-	  (void) ok; // unused stop compiler nagging	  
+	  (void) ok; // unused stop compiler nagging
           // back into scantable
           flagOut.resize(maskOut.nelements());
           convertArray(flagOut, maskOut);

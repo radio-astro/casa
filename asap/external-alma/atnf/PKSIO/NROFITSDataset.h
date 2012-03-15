@@ -96,6 +96,7 @@ class NROFITSDataset : public NRODataset
   virtual uInt getArrayId( string type ) ;
   virtual double getStartIntTime( int i ) ;
   virtual double getScanTime( int i ) ;
+  virtual uInt getPolNo( int irow ) ;
 
  protected:
   // fill header information

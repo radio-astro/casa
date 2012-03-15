@@ -501,6 +501,8 @@ public:
   void regridChannel( int nchan, double dnu ) ;
   void regridChannel( int nchan, double dnu, int irow ) ;
 
+  void regridSpecChannel( double dnu, int nchan=-1 ) ;
+
   bool getFlagtraFast(casa::uInt whichrow);
 
   void polyBaseline(const std::vector<bool>& mask, 

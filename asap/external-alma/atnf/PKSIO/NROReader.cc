@@ -581,7 +581,7 @@ int NROReader::getScanInfo( int irow,
   //cout << "beamno = " << beamno << endl ;
 
   // polno
-  polno = 0 ;
+  polno = dataset_->getPolNo( irow ) ;
   //cout << "polno = " << polno << endl ;
 
   // freqs (for IFNO and FREQ_ID)

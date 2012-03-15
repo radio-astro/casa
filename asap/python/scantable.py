@@ -274,7 +274,7 @@ class scantable(Scantable):
 
         Parameters:
 
-            name:        the name of the outputfile. For format "ASCII"
+            name:        the name of the outputfile. For format 'ASCII'
                          this is the root file name (data in 'name'.txt
                          and header in 'name'_header.txt)
 
@@ -532,8 +532,8 @@ class scantable(Scantable):
         Parameters:
 
             selection:    a selector object (default unset the selection), or
-                          any combination of "pols", "ifs", "beams", "scans",
-                          "cycles", "name", "query"
+                          any combination of 'pols', 'ifs', 'beams', 'scans',
+                          'cycles', 'name', 'query'
 
         Examples::
 
@@ -1201,7 +1201,7 @@ class scantable(Scantable):
 
             end:      the end frequency or period to remove
 
-            unit:     the frequency unit (default "MHz") or "" for
+            unit:     the frequency unit (default 'MHz') or '' for
                       explicit lag channels
 
         *Notes*:
@@ -1753,7 +1753,7 @@ class scantable(Scantable):
 
                 # provided your scantable is called scan
                 selection = selector()
-                selection.set_name("ORION*")
+                selection.set_name('ORION*')
                 selection.set_ifs([1])
                 scan.set_selection(selection)
                 scan.set_restfreqs(freqs=86.6e9)
@@ -1994,7 +1994,7 @@ class scantable(Scantable):
             filename:    The name of an ascii file holding correction factors.
                          The first row of the ascii file must give the column
                          names and these MUST include columns
-                         "ELEVATION" (degrees) and "FACTOR" (multiply data
+                         'ELEVATION' (degrees) and 'FACTOR' (multiply data
                          by this) somewhere.
                          The second row must give the data type of the
                          column. Use 'R' for Real and 'I' for Integer.
@@ -2011,8 +2011,8 @@ class scantable(Scantable):
                          0.6 90 0.75
 
             method:      Interpolation method when correcting from a table.
-                         Values are  "nearest", "linear" (default), "cubic"
-                         and "spline"
+                         Values are  'nearest', 'linear' (default), 'cubic'
+                         and 'spline'
 
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
@@ -2046,8 +2046,8 @@ class scantable(Scantable):
                          the first row of data is used.
 
             method:      Interpolation method for regridding the spectra.
-                         Choose from "nearest", "linear", "cubic" (default)
-                         and "spline"
+                         Choose from 'nearest', 'linear', 'cubic' (default)
+                         and 'spline'
 
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
@@ -2055,11 +2055,13 @@ class scantable(Scantable):
 
         """
         if insitu is None: insitu = rcParams["insitu"]
+        oldInsitu = self._math._insitu()
         self._math._setinsitu(insitu)
         varlist = vars()
         reftime = reftime or ""
         s = scantable(self._math._freq_align(self, reftime, method))
         s._add_history("freq_align", varlist)
+        self._math._setinsitu(oldInsitu)
         if insitu: 
             self._assign(s)
         else: 
@@ -2135,8 +2137,8 @@ class scantable(Scantable):
             width:       The bin width (default=5) in pixels
 
             method:      Interpolation method when correcting from a table.
-                         Values are  "nearest", "linear", "cubic" (default)
-                         and "spline"
+                         Values are  'nearest', 'linear', 'cubic' (default)
+                         and 'spline'
 
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
@@ -2219,7 +2221,7 @@ class scantable(Scantable):
         Parameters:
 
             poltype:    The new polarisation type. Valid types are:
-                        "linear", "circular", "stokes" and "linpol"
+                        'linear', 'circular', 'stokes' and 'linpol'
 
         """
         varlist = vars()
@@ -2301,6 +2303,77 @@ class scantable(Scantable):
             theplot.quit()
             del theplot
             del orgscan
+
+        if insitu: self._assign(s)
+        else: return s
+
+    @asaplog_post_dec
+    def regrid_channel(self, width=5, plot=False, insitu=None):
+        """\
+        Regrid the spectra by the specified channel width
+
+        Parameters:
+
+            width:      The channel width (float) of regridded spectra
+                        in the current spectral unit.
+
+            plot:       [NOT IMPLEMENTED YET]
+                        plot the original and the regridded spectra.
+                        In this each indivual fit has to be approved, by
+                        typing 'y' or 'n'
+
+            insitu:     if False a new scantable is returned.
+                        Otherwise, the scaling is done in-situ
+                        The default is taken from .asaprc (False)
+
+        """
+        if insitu is None: insitu = rcParams['insitu']
+        varlist = vars()
+
+        if plot:
+           asaplog.post()
+           asaplog.push("Verification plot is not implemtnetd yet.")
+           asaplog.post("WARN")
+
+        s = self.copy()
+        s._regrid_specchan(width)
+
+        s._add_history("regrid_channel", varlist)
+
+#         if plot:
+#             from asap.asapplotter import new_asaplot
+#             theplot = new_asaplot(rcParams['plotter.gui'])
+#             theplot.set_panels()
+#             ylab=s._get_ordinate_label()
+#             #theplot.palette(0,["#777777","red"])
+#             for r in xrange(s.nrow()):
+#                 xsm=s._getabcissa(r)
+#                 ysm=s._getspectrum(r)
+#                 xorg=orgscan._getabcissa(r)
+#                 yorg=orgscan._getspectrum(r)
+#                 theplot.clear()
+#                 theplot.hold()
+#                 theplot.set_axes('ylabel',ylab)
+#                 theplot.set_axes('xlabel',s._getabcissalabel(r))
+#                 theplot.set_axes('title',s._getsourcename(r))
+#                 theplot.set_line(label='Original',color="#777777")
+#                 theplot.plot(xorg,yorg)
+#                 theplot.set_line(label='Smoothed',color="red")
+#                 theplot.plot(xsm,ysm)
+#                 ### Ugly part for legend
+#                 for i in [0,1]:
+#                     theplot.subplots[0]['lines'].append(
+#                         [theplot.subplots[0]['axes'].lines[i]]
+#                         )
+#                 theplot.release()
+#                 ### Ugly part for legend
+#                 theplot.subplots[0]['lines']=[]
+#                 res = raw_input("Accept smoothing ([y]/n): ")
+#                 if res.upper() == 'N':
+#                     s._setspectrum(yorg, r)
+#             theplot.quit()
+#             del theplot
+#             del orgscan
 
         if insitu: self._assign(s)
         else: return s

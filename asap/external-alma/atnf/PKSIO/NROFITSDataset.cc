@@ -619,144 +619,63 @@ int NROFITSDataset::fillHeader( int sameEndian )
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       cout << "RX      " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << "\'" << RX[i] << "\' " ;
-//   }
-//   cout << endl ;
+//   nro_debug_output( "RX", ARYNM, RX ) ;
   //
   if ( readColumn( HPBW, "HPBW", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data HPBW." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "HPBW    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << HPBW[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "HPBW", ARYNM, HPBW ) ;
   //
   if ( readColumn( EFFA, "EFFA", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFFA." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "EFFA    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << EFFA[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "EFFA", ARYNM, EFFA ) ;
   //
   if ( readColumn( EFFB, "EFFB", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFFB." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "EFFB    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << EFFB[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "EFFB", ARYNM, EFFB ) ;
   //
   if ( readColumn( EFFL, "EFFL", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFFL." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "EFFL    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     } 
-//     //cout << EFFL[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "EFFL", ARYNM, EFFL ) ;
   //
   if ( readColumn( EFSS, "EFSS", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFSS." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "EFSS    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << EFSS[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "EFSS", ARYNM, EFSS ) ;
   //
   if ( readColumn( GAIN, "GAIN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data GAIN." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "GAIN    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << GAIN[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "GAIN", ARYNM, GAIN ) ;
   //
   if ( readColumn( HORN, "HORN" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data HORN." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "HORN    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << "\'" << HORN[i] << "\' " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "HORN", ARYNM, HORN ) ;
   //
   if ( readColumn( POLTP, "POLTP" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data POLTP." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "POLTP   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << "\'" << POLTP[i] << "\' " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "POLTP", ARYNM, POLTP ) ;
   //
   vector<int> ipoldr( ARYNM, 0 ) ;
   if ( readColumn( ipoldr, "POLDR", sameEndian ) != 0 ) {
@@ -766,240 +685,105 @@ int NROFITSDataset::fillHeader( int sameEndian )
   for ( int i = 0 ; i < ARYNM ; i++ ) 
     POLDR[i] = (double)ipoldr[i] ;
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "POLDR   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << POLDR[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "POLDR", ARYNM, POLDR ) ;
   //
   if ( readColumn( POLAN, "POLAN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data POLAN." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "POLAN   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << POLAN[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "POLAN", ARYNM, POLAN ) ;
   //
   if ( readColumn( DFRQ, "DFRQ", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data DFRQ." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "DFRQ    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << DFRQ[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "DFRQ", ARYNM, DFRQ ) ;
   //
   if ( readColumn( SIDBD, "SIDBD" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SIDBD." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "SIDBD   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << "\'" << SIDBD[i] << "\' " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "SIDBD", ARYNM, SIDBD ) ;
   //
   if ( readColumn( REFN, "REFN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data REFN." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "REFN    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << REFN[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "REFN", ARYNM, REFN ) ;
   //
   if ( readColumn( IPINT, "IPINT", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data IPINT." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "IPINT   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << IPINT[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "IPINT", ARYNM, IPINT ) ;
   //
   if ( readColumn( MULTN, "MULTN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data MULTN." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "MULTN   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << MULTN[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "MULTN", ARYNM, MULTN ) ;
   //
   if ( readColumn( MLTSCF, "MLTSCF", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data MLTSCF." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "MLTSCF  " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << MLTSCF[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "MLTSCF", ARYNM, MLTSCF ) ;
   //
   if ( readColumn( LAGWIND, "LAGWIN" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data LAGWIND." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "LAGWIND " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << "\'" << LAGWIND[i] << "\' " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "LAGWIND", ARYNM, LAGWIND ) ;
   //
   if ( readColumn( BEBW, "BEBW", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data BEBW." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "BEBW    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << BEBW[i] << " " ;
-//   }  
-//   //cout << endl ;
+//   nro_debug_output( "BEBW", ARYNM, BEBW ) ;
   //
   if ( readColumn( BERES, "BERES", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data BERES." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "BERES   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << BERES[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "BERES", ARYNM, BERES ) ;
   //
   if ( readColumn( CHWID, "CHWID", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data CHWID." << LogIO::POST ;
     return -1 ;
   }
-    // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "CHWID   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << CHWID[i] << " " ;
-//   }
-//   //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "CHWID", ARYNM, CHWID ) ;
   //
   if ( readARRY() != 0 ) {
     os << LogIO::WARN << "Error while reading data ARRY." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < NRO_FITS_ARYMAX ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "ARRY    " ;
-//     }
-//     else if ( ( i % 20 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << ARRY[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "ARRY", NRO_FITS_ARYMAX, ARRY ) ;
   //
   if ( readColumn( NFCAL, "NFCAL", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data NFCAL." << LogIO::POST ;
     return -1 ;
   }
-    // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "NFCAL   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << NFCAL[i] << " " ;
-//   }
-//   //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "NFCAL", ARYNM, NFCAL ) ;
   //
   if ( readColumn( F0CAL, "F0CAL", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data F0CAL." << LogIO::POST ;
     return -1 ;
   }
-    // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "F0CAL   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << F0CAL[i] << " " ;
-//   }
-//   //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "F0CAL", ARYNM, F0CAL ) ;
   //
   for ( int i= 0 ; i < 10 ; i++) {
     vector<double> vv( ARYNM, 0 ) ;
@@ -1012,21 +796,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
     }
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     for ( int j = 0 ; j < 10 ; j++ ) {
-//       if ( j == 0 ) {
-//         if ( i < 10 ) 
-//           //cout << "FQCAL0" << i << " " ;
-//         else 
-//           //cout << "FQCAL" << i << " " ;
-//       }
-//       else if ( ( j % 5 ) == 0 ) {
-//         //cout << endl << "        " ;
-//       }
-//       //cout << FQCAL[i][j] << " " ;
-//     }
-//     //cout << endl ;
-//   }
+//   nro_debug_output( "FQCAL", ARYNM, 10, FQCAL ) ;
   //
   for ( int i= 0 ; i < 10 ; i++) {
     vector<double> vv( ARYNM, 0 ) ;
@@ -1039,21 +809,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
     }
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     for ( int j = 0 ; j < 10 ; j++ ) {
-//       if ( j == 0 ) {
-//         if ( i < 10 ) 
-//           //cout << "CHCAL0" << i << " " ;
-//         else 
-//           //cout << "CHCAL" << i << " " ;
-//       }
-//       else if ( ( j % 5 ) == 0 ) {
-//         //cout << endl << "        " ;
-//       }
-//      //cout << CHCAL[i][j] << " " ;
-//    }
-//    //cout << endl ;
-//   }
+//   nro_debug_output( "CHCAL", ARYNM, 10, CHCAL ) ;
   //
   for ( int i= 0 ; i < 10 ; i++) {
     vector<double> vv( ARYNM, 0 ) ;
@@ -1066,21 +822,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
     }
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     for ( int j = 0 ; j < 10 ; j++ ) {
-//       if ( j == 0 ) {
-//         if ( i < 10 ) 
-//           //cout << "CWCAL0" << i << " " ;
-//         else 
-//           //cout << "CWCAL" << i << " " ;
-//       }
-//       else if ( ( j % 5 ) == 0 ) {
-//         //cout << endl << "        " ;
-//       }
-//       //cout << CWCAL[i][j] << " " ;
-//     }
-//     //cout << endl ;
-//   }
+//   nro_debug_output( "CWCAL", ARYNM, 10, CWCAL ) ;
   //
   if ( readHeader( SCNLEN, "NAXIS1", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SCNLEN." << LogIO::POST ;
@@ -1116,16 +858,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
       DSBFC[i] = 1.0 ;
   }
   // DEBUG
-//   for ( int i = 0 ; i < ARYNM ; i++ ) {
-//     if ( i == 0 ) {
-//       //cout << "DSBFC   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       //cout << endl << "        " ;
-//     }
-//     //cout << DSBFC[i] << " " ;
-//   }
-//   //cout << endl ;
+//   nro_debug_output( "DSBFC", ARYNM, DSBFC ) ;
   //
 
   show() ;
@@ -2739,6 +2472,15 @@ double NROFITSDataset::getScanTime( int i )
   double interval = getIPTIM() ;
   interval /= 86400.0 ;
   return startTime+0.5*interval ;
+}
+
+uInt NROFITSDataset::getPolNo( int irow ) 
+{
+  char rx[9] ;
+  readTable( rx, "RX", 8, irow ) ;
+  rx[8] = '\0' ;
+  //cout << rx << endl ;
+  return polNoFromRX( rx ) ;
 }
 
 // double NROFITSDataset::toLSR( double v, double t, double x, double y ) 

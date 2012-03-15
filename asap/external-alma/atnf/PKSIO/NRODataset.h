@@ -43,6 +43,7 @@
 #include <casa/Containers/Record.h>
 #include <atnf/PKSIO/NRODataRecord.h>
 #include <casa/namespace.h>
+#include <casa/iomanip.h>
 
 #define SCAN_HEADER_SIZE 424 
 
@@ -199,6 +200,7 @@ class NRODataset
   virtual vector<bool> getIFs() ;
   virtual vector<double> getFrequencies( int i ) ;
   virtual uInt getArrayId( string type ) ;
+  virtual uInt getPolNo( int irow ) ;
 
  protected:
   // fill header information
@@ -236,6 +238,9 @@ class NRODataset
 
   // convert frequency frame
   virtual double toLSR( double v, double t, double x, double y ) ;
+
+  // POLNO from RX
+  uInt polNoFromRX( const char *rx ) ;
 
   // Type of file record
   string LOFIL ;
@@ -516,6 +521,40 @@ class NRODataset
   // record to store REFPIX, REFVAL, INCREMENT pair for each array
   Record frec_ ;
 } ;
+
+// debug message output
+template<class T> inline void nro_debug_output( char *name, int len, vector<T> &val ) 
+{
+  for ( int i = 0 ; i < len ; i++ ) {
+    if ( i == 0 ) {
+      cout << setw(8) << left << name ;
+    }
+    else if ( ( i % 5 ) == 0 ) {
+      cout << endl << "        " ;
+    }
+    cout << "\'" << val[i] << "\' " ;
+  }
+  cout << endl ;
+} 
+
+template<class T> inline void nro_debug_output( char *name, int len1, int len2, vector< vector<T> > &val ) 
+{
+  for ( int i = 0 ; i < len1 ; i++ ) {
+    for ( int j = 0 ; j < len2 ; j++ ) {
+      if ( j == 0 ) {
+        if ( i < 10 ) 
+          cout << name << "0" << i << " " ;
+        else 
+          cout << name << i << " " ;
+      }
+      else if ( ( j % 5 ) == 0 ) {
+        cout << endl << "        " ;
+      }
+      cout << "\'" << val[i][j] << "\' " ;
+    }
+    cout << endl ;
+  }
+}
 
 
 #endif /* NRO_HEADER_H */

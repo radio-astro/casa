@@ -267,6 +267,9 @@ public:
   void reshapeSpectrum( int nmin, int nmax )
   { table_->reshapeSpectrum( nmin, nmax ); }
 
+  void regridSpecChannel( double dnu, int nchan )
+  { table_->regridSpecChannel( dnu, nchan ); }
+
   void polyBaseline(const std::vector<bool>& mask, int order, bool getresidual=true, const std::string& showprogress="true,1000", const bool outlog=false, const std::string& blfile="")
   { table_->polyBaseline(mask, order, getresidual, showprogress, outlog, blfile); }
 

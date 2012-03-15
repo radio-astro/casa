@@ -528,113 +528,64 @@ int ASTEFXDataset::fillHeader( int sameEndian )
     }
     c18[16] = '\0' ;
     RX[i] = string( c18 ) ;
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "RX      " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << RX[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "RX", ASTE_ARYMAX_FX, RX ) ;
+  //
   for ( int i = 0 ; i < ASTE_ARYMAX_FX ; i++ ) {
     if ( readHeader( HPBW[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data HPBW[" << i << "]." << endl ;
       return -1 ;
     }
-//     // DEBUG
-//     if ( i == 0 ) {
-//       cout << "HPBW    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl <    //cerr << "Error opening file " << filename_ << "." << endl ;< "        " ;
-//     }
-//     cout << HPBW[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "HPBW", ASTE_ARYMAX_FX, HPBW ) ;
+  //
   for ( int i = 0 ; i < ASTE_ARYMAX_FX ; i++ ) {
     if ( readHeader( EFFA[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data EFFA[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "EFFA    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << EFFA[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "EFFA", ASTE_ARYMAX_FX, EFFA ) ;
+  //
   for ( int i = 0 ; i < ASTE_ARYMAX_FX ; i++ ) {
     if ( readHeader( EFFB[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data EFFB[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "EFFB    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << EFFB[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "EFFB", ASTE_ARYMAX_FX, EFFB ) ;
+  //
   for ( int i = 0 ; i < ASTE_ARYMAX_FX ; i++ ) {
     if ( readHeader( EFFL[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data EFFL[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "EFFL    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     } 
-//     cout << EFFL[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "EFFL", ASTE_ARYMAX_FX, EFFL ) ;
+  //
   for ( int i = 0 ; i < ASTE_ARYMAX_FX ; i++ ) {
     if ( readHeader( EFSS[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data EFSS[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "EFSS    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << EFSS[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "EFSS", ASTE_ARYMAX_FX, EFSS ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( GAIN[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data GAIN[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "GAIN    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << GAIN[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "GAIN", ASTE_ARYMAX_FX, GAIN ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     strcpy( c4, str4.c_str() ) ;
     if ( readHeader( c4, 4 ) == -1 ) {
@@ -642,17 +593,10 @@ int ASTEFXDataset::fillHeader( int sameEndian )
       return -1 ;
     }
     HORN[i] = string( c4 ) ;
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "HORN    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << HORN[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "HORN", ASTE_ARYMAX_FX, HORN ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     strcpy( c4, str4.c_str() ) ;
     if ( readHeader( c4, 4 ) == -1 ) {
@@ -660,65 +604,37 @@ int ASTEFXDataset::fillHeader( int sameEndian )
       return -1 ;
     }
     POLTP[i] = string( c4 ) ;
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "POLTP   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << POLTP[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "POLTP", ASTE_ARYMAX_FX, POLTP ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( POLDR[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data POLDR[" << i << "]." << endl ;
       return -1 ;
     }
-     // DEBUG
-//     if ( i == 0 ) {
-//       cout << "POLDR   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << POLDR[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "POLDR", ASTE_ARYMAX_FX, POLDR ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( POLAN[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data POLAN[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "POLAN   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << POLAN[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "POLAN", ASTE_ARYMAX_FX, POLAN ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( DFRQ[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data DFRQ[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "DFRQ    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << DFRQ[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "DFRQ", ASTE_ARYMAX_FX, DFRQ ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     strcpy( c4, str4.c_str() ) ;
     if ( readHeader( c4, 4 ) == -1 ) {
@@ -726,81 +642,46 @@ int ASTEFXDataset::fillHeader( int sameEndian )
       return -1 ;
     }
     SIDBD[i] = string( c4 ) ;
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "SIDBD   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << SIDBD[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "SIDBD", ASTE_ARYMAX_FX, SIDBD ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( REFN[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data REFN[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "REFN    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << REFN[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "REFN", ASTE_ARYMAX_FX, REFN ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( IPINT[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data IPINT[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "IPINT   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << IPINT[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "IPINT", ASTE_ARYMAX_FX, IPINT ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( MULTN[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data MULTN[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "MULTN   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << MULTN[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "MULTN", ASTE_ARYMAX_FX, MULTN ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( MLTSCF[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data MLTSCF[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "MLTSCF  " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << MLTSCF[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "MLTSCF", ASTE_ARYMAX_FX, MLTSCF ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     strcpy( c8, str8.c_str() ) ;
     if ( readHeader( c8, 8 ) == -1 ) {
@@ -808,176 +689,97 @@ int ASTEFXDataset::fillHeader( int sameEndian )
       return -1 ;
     }
     LAGWIND[i] = string( c8 ) ;
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "LAGWIND " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << LAGWIND[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "LAGWIND", ASTE_ARYMAX_FX, LAGWIND ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( BEBW[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data BEBW[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "BEBW    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << BEBW[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "BEBW", ASTE_ARYMAX_FX, BEBW ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( BERES[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data BERES[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "BERES   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << BERES[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "BERES", ASTE_ARYMAX_FX, BERES ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( CHWID[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data CHWID[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "CHWID   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << CHWID[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "CHWID", ASTE_ARYMAX_FX, CHWID ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( ARRY[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data ARRY[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "ARRY    " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << ARRY[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "ARRY", ASTE_ARYMAX_FX, ARRY ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( NFCAL[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data NFCAL[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "NFCAL   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << NFCAL[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "NFCAL", ASTE_ARYMAX_FX, NFCAL ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     if ( readHeader( F0CAL[i], sameEndian ) == -1 ) {
       os << LogIO::WARN << "Error while reading data F0CAL[" << i << "]." << endl ;
       return -1 ;
     }
-    // DEBUG
-//     if ( i == 0 ) {
-//       cout << "F0CAL   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << F0CAL[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "F0CAL", ASTE_ARYMAX_FX, F0CAL ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     for ( int j = 0 ; j < 10 ; j++ ) {
       if ( readHeader( FQCAL[i][j], sameEndian ) == -1 ) {
         os << LogIO::WARN << "Error while reading data FQCAL[" << i << "][" << j << "]." << endl ;
         return -1 ;
       }
-      // DEBUG
-//       if ( j == 0 ) {
-//         if ( i < 10 ) 
-//           cout << "FQCAL0" << i << " " ;
-//         else 
-//           cout << "FQCAL" << i << " " ;
-//       }
-//       else if ( ( j % 5 ) == 0 ) {
-//         cout << endl << "        " ;
-//       }
-//       cout << FQCAL[i][j] << " " ;
-      //
     }
-    //cout << endl ;
   }
+  // DEBUG
+//   nro_debug_output( "FQCAL", ASTE_ARYMAX_FX, 10, FQCAL ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     for ( int j = 0 ; j < 10 ; j++ ) {
       if ( readHeader( CHCAL[i][j], sameEndian ) == -1 ) {
         os << LogIO::WARN << "Error while reading data CHCAL[" << i << "][" << j << "]." << endl ;
         return -1 ;
       }
-     // DEBUG
-//       if ( j == 0 ) {
-//         if ( i < 10 ) 
-//           cout << "CHCAL0" << i << " " ;
-//         else 
-//           cout << "CHCAL" << i << " " ;
-//       }
-//       else if ( ( j % 5 ) == 0 ) {
-//         cout << endl << "        " ;
-//       }
-//      cout << CHCAL[i][j] << " " ;
-     //
     }
-    //cout << endl ;
   }
+  // DEBUG
+//   nro_debug_output( "CHCAL", ASTE_ARYMAX_FX, 10, CHCAL ) ;
+  //
   for ( int i= 0 ; i < ASTE_ARYMAX_FX ; i++) {
     for ( int j = 0 ; j < 10 ; j++ ) {
       if ( readHeader( CWCAL[i][j], sameEndian ) == -1 ) {
         os << LogIO::WARN << "Error while reading data CWCAL[" << i << "][" << j << "]." << endl ;
         return -1 ;
       }
-      // DEBUG
-//       if ( j == 0 ) {
-//         if ( i < 10 ) 
-//           cout << "CWCAL0" << i << " " ;
-//         else 
-//           cout << "CWCAL" << i << " " ;
-//       }
-//       else if ( ( j % 5 ) == 0 ) {
-//         cout << endl << "        " ;
-//       }
-//       cout << CWCAL[i][j] << " " ;
-      //
     }
-    //cout << endl ;
   }
+  // DEBUG
+//   nro_debug_output( "CWCAL", ASTE_ARYMAX_FX, 10, CWCAL ) ;
+  //
   if ( readHeader( SCNLEN, sameEndian ) == -1 ) {
     os << LogIO::WARN << "Error while reading data SCNLEN." << endl ;
     return -1 ;
@@ -1023,17 +825,10 @@ int ASTEFXDataset::fillHeader( int sameEndian )
       os << LogIO::WARN << "Error while reading data DSBFC[" << i << "]." << endl ;
       return -1 ;
     }
-     // DEBUG
-//     if ( i == 0 ) {
-//       cout << "DSBFC   " ;
-//     }
-//     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
-//     }
-//     cout << DSBFC[i] << " " ;
-    //
   }
-  //cout << endl ;
+  // DEBUG
+//   nro_debug_output( "DSBFC", ASTE_ARYMAX_FX, DSBFC ) ;
+  //
 
   scanNum_ = NSCAN + 1 ; // includes ZERO scan
   rowNum_ = scanNum_ * ARYNM ;
