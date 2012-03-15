@@ -457,6 +457,9 @@ void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
 	//qDebug() << "mouse release" << event->button() << Qt::LeftButton;
+
+	if ( xcursor.isValid( ) ) return;
+
 	if (event->button() == Qt::LeftButton)
 	{
 		if (xRangeMode){
