@@ -1565,7 +1565,7 @@ def backupFlags(tflocal, prename):
         # integer giving a name, which does not already exist
         
     prefix = prename
-    existing = tflocal.getflagversionlist(printflags=True)
+    existing = tflocal.getflagversionlist(printflags=False)
 
     # remove comments from strings
     existing = [x[0:x.find(' : ')] for x in existing]
