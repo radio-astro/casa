@@ -21,6 +21,7 @@ test_fixvis                     dpetry@nrao.edu
 test_fixplanets                 dpetry@nrao.edu
 test_flagdata                   jkern@nrao.edu
 test_flagdata2                  scastro@eso.org
+test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
 test_ia_convolve                dmehring@nrao.edu

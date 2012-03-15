@@ -67,7 +67,6 @@
 import numpy
 import os
 from importuvfits import *
-from flagdata import *
 from taskinit import *
 #from fg import *
 
@@ -133,7 +132,9 @@ def importgmrt( fitsfile, flagfile, vis ):
         casalog.post( str(instance), 'SEVERE' )
         return retValue
 
-    mytb, myms, myfg = gentools(['tb', 'ms', 'fg'])
+#    mytb, myms, myfg = gentools(['tb', 'ms', 'fg'])
+    mytb, myms = gentools(['tb', 'ms'])
+    tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
 
     # Write history
     try:
@@ -218,9 +219,12 @@ def importgmrt( fitsfile, flagfile, vis ):
 					  
 	# First lets save the flag information as we got it from the
 	# flag file.
-    myfg.open( vis )
-    myfg.saveflagversion( 'none', 'No flagging performed yet' )
-    myfg.done()
+#    myfg.open( vis )
+#    myfg.saveflagversion( 'none', 'No flagging performed yet' )
+#    myfg.done()
+    tflocal.open( vis )
+    tflocal.saveflagversion( 'none', 'No flagging performed yet' )
+    tflocal.done()
 
     for file in flagfile:
         casalog.post( 'Reading flag file '+file, 'NORMAL2' )
@@ -350,22 +354,30 @@ def importgmrt( fitsfile, flagfile, vis ):
                 antStr = ant_names[ int(antennas)-1 ].strip( ' ' )
 
             try:
-                casalog.post( "flagdata( "+vis+", mode='manualflag', antenna='"
+#                casalog.post( "flagdata( "+vis+", mode='manualflag', antenna='"
+#                              +antStr+"', timerange='"+timerange+"' )", 'NORMAL')
+                casalog.post( "tflagdata( "+vis+", mode='manual', antenna='"
                               +antStr+"', timerange='"+timerange+"' )", 'NORMAL')
                 #flagdata( vis, mode='manualflag', selectdata=True, \
                 #            antenna=antStr, timerange=timerange, \
                 #            flagbackup=False )
-                myfg.open( vis )
-                #print "myfg.setdata( time='",timerange,"' )"
-                myfg.setdata( time=timerange )
-                #print "myfg.setmanualflags( baseline='",antStr,"', time='",timerange,"' )"
-                myfg.setmanualflags( baseline=antStr, time=timerange, unflag=False, clipexpr='' )
-                myfg.run()
-                myfg.done()
+#                myfg.open( vis )
+#                #print "myfg.setdata( time='",timerange,"' )"
+#                myfg.setdata( time=timerange )
+#                #print "myfg.setmanualflags( baseline='",antStr,"', time='",timerange,"' )"
+#                myfg.setmanualflags( baseline=antStr, time=timerange, unflag=False, clipexpr='' )
+#                myfg.run()
+#                myfg.done()
+                tflocal.open(vis)
+                tflocal.selectdata(timerange=timerange)
+                tflocal.parsemanualparameters(antenna=antStr, timerange=timerange)
+                tflocal.init()
+                tflocal.run(True, True)
+                tflocal.done()
             except Exception, instance:
                 casalog.post( 'Unable to flag data from flag file '+file\
-                              +'.\nAntennas='+antennas+' and timerage='\
-                              +timerange, 'WARNING' )
+                              +'.\nAntennas='+antennas+' and timerange='\
+                              +timerange, 'WARN' )
                 casalog.post( str(instance), 'SEVERE' )
                 return retValue
 
@@ -374,9 +386,12 @@ def importgmrt( fitsfile, flagfile, vis ):
         FLAG_FILE.close()
 
 	# Save a Flag version so we can revert back to it if we wish
-    myfg.open( vis )
-    myfg.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
-    myfg.done()
+#    myfg.open( vis )
+#    myfg.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
+#    myfg.done()
+    tflocal.open( vis )
+    tflocal.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
+    tflocal.done()
 
     retValue = True
     return retValue

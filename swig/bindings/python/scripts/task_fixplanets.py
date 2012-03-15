@@ -288,7 +288,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0):
                 if (i in fields):
                     fldids.append(i)
 
-            im.open(vis, usescratch=True) # usescratch=True needed in order to have writable ms
+            im.open(vis, usescratch=False)
             im.calcuvw(fldids, refcode='J2000', reuse=False)
             im.close()
 

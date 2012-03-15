@@ -294,13 +294,13 @@ def importevla2(
 #                	cmdline = myflagd[k]['command']
 #                	flaglist.append(cmdline)
 #                	
-#                unionpars = fh.getUnion(mslocal, viso, flaglist)
+#                unionpars = fh.getUnion(mslocal, viso, allflags)
                 
                 # Select the data
                 tflocal.selectdata()
 
                 # Setup the agent's parameters
-                saved_list = fh.setupAgent(tflocal, allflags, [], True)
+                saved_list = fh.setupAgent(tflocal, allflags, [], True, True)
 
                 # Initialize the agents
                 tflocal.init()
@@ -338,22 +338,11 @@ def importevla2(
                 if outfile == '': 
                     # Save to standard filename
                     outfile = viso.replace('.ms','_cmd.txt')
+                    
+                fh.writeFlagCmd(viso, allflags, allkeys, False, outfile)
+                
+                casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
         
-                ffout = open(outfile, 'a')
-    
-                try:                    
-                    for k in allflags.keys():                        
-                        cmdline = allflags[k]['command']
-                        print >> ffout, '%s' %cmdline
-                    
-                    casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
-                    
-                except:
-                    raise Exception, 'Error writing lines to file ' \
-                        + outfile
-                ffout.close()
-                return
-            
             else:
                 casalog.post('There are no flag commands to save')
                 

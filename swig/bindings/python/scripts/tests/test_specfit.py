@@ -82,6 +82,7 @@ solims = [
     "amp", "ampErr", "center", "centerErr",
     "fwhm", "fwhmErr", "integral", "integralErr"
 ]
+birdie = "birdie.im"
 
 nanvalue = 4.53345345
 
@@ -96,7 +97,8 @@ def run_fitprofile (
     pfix="", gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
     gmfwhmest=[0], gmfix="", logfile="", pfunc="",
-    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0]
+    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0],
+    sigma="", outsigma=""
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -119,7 +121,7 @@ def run_fitprofile (
         gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
         pfunc=pfunc, goodamprange=goodamprange,
         goodcenterrange=goodcenterrange,
-        goodfwhmrange=goodfwhmrange
+        goodfwhmrange=goodfwhmrange, sigma=sigma, outsigma=outsigma
 >>>>>>> .merge-right.r18376
     )
     myia.close()
@@ -136,7 +138,8 @@ def run_specfit(
     gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
     gmfwhmest=[0], gmfix="", logfile="", pfunc="",
-    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0]
+    goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0],
+    sigma="", outsigma=""
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
@@ -156,7 +159,7 @@ def run_specfit(
         pfunc=pfunc,
         goodamprange=goodamprange,
         goodcenterrange=goodcenterrange,
-        goodfwhmrange=goodfwhmrange
+        goodfwhmrange=goodfwhmrange, sigma=sigma, outsigma=outsigma
     )
 
 class specfit_test(unittest.TestCase):
@@ -607,7 +610,6 @@ class specfit_test(unittest.TestCase):
         myim.open(residname)
         pixels = myim.getchunk()
         self.assertTrue(pixels.shape == tuple(shape))
-        print str(pixels)
         self.assertTrue((pixels == 0).all())
         myim.done()
         
@@ -747,7 +749,7 @@ class specfit_test(unittest.TestCase):
             
     def test_13(self):
         """test setting solution parameter validities """
-        imagename=datapath+invalid_fits
+        imagename = datapath + invalid_fits
         i = 0
         goodfwhmrange= [[0], [2,20]]
         for gfr in goodfwhmrange:
@@ -757,14 +759,87 @@ class specfit_test(unittest.TestCase):
                     stokes="", axis=3, mask="", ngauss=2, poly=-1,
                     multifit=True, logresults=False, goodfwhmrange=gfr
                 )
-                print "**** " + str(res["valid"].sum())
                 if i == 0:
                     exp = 16
                 else:
                     exp = 7
                 self.assertTrue(res["valid"].sum() == exp)
             i = i+1
-           
+          
+    def test_14(self):
+        imagename = datapath + birdie
+        sigmaimage = "sigma.im"
+        myia = iatool.create()
+        myia.open(imagename)
+        bb = myia.getchunk()
+        myia.done()
+        fullsigma = bb
+        fullsigma[:] = 1
+        s = []
+        s.append(fullsigma[:])
+        s.append(fullsigma[0, 0, :, 0].reshape([1, 1, 100, 1]))
+        s.append(fullsigma[0, 0, :, 0])
+        outsigma = "outsigma.im"
+        expfwhmtrue = {
+            "0": [ 61.77550675, 41.74020775],
+            "0.1" : [82.55515563, 36.4484157],
+            "1": [ 61.89796905, 41.69283371],
+            "100": [ 61.77551883, 41.74020306]
+        }
+        expfwhmerrtrue = {
+            "0": [  2.88886469e-07, 4.18990637e-07],
+            "0.1": [ 1.96169836, 2.99212108],
+            "1": [ 0.30788521, 0.44558165],
+            "100": [ 0.00307781, 0.00446394]
+        }
+        expfwhmfalse = {
+            "0": 42.43941294,
+            "0.1": 42.43941294,
+            "1": 42.43941294,
+            "100":  42.43941294
+        }
+        expfwhmerrfalse = {
+            "0": 4.0707913,
+            "0.1": 6.09143172,
+            "1": 4.07523664,
+            "100": 4.04975604
+        }
+        for sigma in (s):
+            for birdiesigma in [0, 0.1, 1, 100]:
+                fullsigma[:, :, 50, :] = birdiesigma
+                mymax = max(1, birdiesigma)
+                for i in range(2):
+                    sig = sigma
+                    if (sig.ndim == 1):
+                        sig[50] = birdiesigma
+                    else:
+                        sig[:,:,50,:] = birdiesigma
+                    if i == 1:
+                        myia.fromarray(sigmaimage, sig, overwrite=T)
+                        myia.done()
+                        sig = sigmaimage
+                    for code in [run_fitprofile, run_specfit]:
+                        for multifit in [True, False]:
+                            res = code(
+                                imagename=imagename, box="", region="", chans="",
+                                stokes="", axis=2, mask=imagename + "<1000", ngauss=2, poly=-1,
+                                multifit=multifit, logresults=False, sigma=sig,
+                                outsigma=outsigma
+                            )
+                            if multifit:
+                                self.assertTrue((abs(res["gs"]["fwhm"][8,8,0,0,:] - expfwhmtrue[str(birdiesigma)]) < 1e-7).all())
+                                self.assertTrue((abs(res["gs"]["fwhmErr"][8,8,0,0,:] - expfwhmerrtrue[str(birdiesigma)]) < 1e-7).all())
+                            else:
+                                self.assertTrue(abs(res["gs"]["fwhm"][0,0,0,0,0] - expfwhmfalse[str(birdiesigma)]) < 1e-7)
+                                self.assertTrue(abs(res["gs"]["fwhmErr"][0,0,0,0,0] - expfwhmerrfalse[str(birdiesigma)]) < 1e-7)
+                            myia.open(outsigma)
+                            if (birdiesigma == 0 or birdiesigma == 1):
+                                self.assertTrue((mymax*myia.getchunk() == fullsigma).all())
+                            else:
+                                self.assertTrue(((mymax*myia.getchunk() - fullsigma)/fullsigma < 1e-7).all())
+                            myia.remove()
+                
+        
 
 
 def suite():

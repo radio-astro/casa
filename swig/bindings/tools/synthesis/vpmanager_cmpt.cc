@@ -1116,7 +1116,8 @@ vpmanager::getrespimagename(const std::string& telescope,
     String antRespPath;
     if (!MeasTable::AntennaResponsesPath(antRespPath, obsName)) {
       // unknown observatory
-      *itsLog << LogIO::SEVERE << "No antenna responses available for observatory: \"" << obsName << "\"." << LogIO::POST;
+      *itsLog << LogIO::SEVERE << "No antenna responses path set for observatory: \"" << obsName 
+	      << "\" in the AntennaResponses column of the Observatories table." << LogIO::POST;
       return rval;
     }
 

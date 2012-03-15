@@ -21,284 +21,306 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	<value></value>
         <example>imagenam='ngc5921_task.image'</example>
     </param>
-
-        <param type="string" direction="in" name="box">
-            <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
-            <value></value>
-            <example>box="4,4,10,10"</example>
-        </param>
-        <param type="string" direction="in" name="region">
-            <description>Region of interest. See help par.region for possible specifications. Default: Do not use a region.</description>
-            <value></value>
-            <example>region="myregion.rgn"</example>
-        </param>
-        <param type="string" direction="in" name="chans">
-            <description>Channels to use. Channels must be contiguous. Default: all channels ("").</description>
-            <value></value>
-            <example>chans="4-11"</example>
-        </param>
-        <param type="string" direction="in" name="stokes">
-            <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
-            <value></value>
-            <example>stokes="I"</example>
-        </param>
-        <param type="int" direction="in" name="axis">
-            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
-            <value>-1</value>
-            <example>axis=3</example>
-        </param>
-        <param type="string" direction="in" name="mask">
-            <description>Mask to use. See help par.mask. Default is none..</description>
-            <value></value>
-        </param>
-        <param type="int" direction="in" name="ngauss" subparam="true">
-            <description>Number of Gaussian elements.  Default: 1.</description>
-            <value>1</value>
-            <example>ngauss=2</example>
-        </param>
-        <param type="int" direction="in" name="poly">
-            <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
-            <value>-1</value>
-            <example>poly=4</example>
-        </param>
-        <param type="string" direction="in" name="estimates">
-            <description>Name of file containing initial estimates.  Default: No initial estimates ("").</description>
-            <value/>
-        </param>
-        <param type="int" direction="in" name="minpts">
-            <description>Minimum number of unmasked points necessary to attempt fit.</description>
-            <value>0</value>
-        </param>
-        <param type="bool" direction="in" name="multifit">
-            <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
-            <value>False</value>
-            <example>multifit=True</example>
-         </param>
-        <param type="string" direction="in" name="model">
-            <description>Name of model image. Default: do not write the model image ("").</description>
-            <value></value>
-            <example>model="mymodel.im"</example>
-        </param>
-        <param type="string" direction="in" name="residual">
-            <description>Name of residual image. Default: do not write the residual image ("").</description>
-            <value></value>
-            <example>residual="myresid.im"</example>
-        </param>
-        <param type="string" direction="in" name="amp" subparam="true">
-            <description>Name of amplitude solution image. Default: do not write the image ("").</description>
-            <value/>
-            <example>amp="amp"</example>
-        </param>
-        <param type="string" direction="in" name="amperr" subparam="true">
-            <description>Name of amplitude solution error image. Default: do not write the image ("").</description>
-            <value/>
-            <example>amperr="ampErr"</example>
-        </param>
-        <param type="string" direction="in" name="center" subparam="true">
-            <description>Name of center solution image. Default: do not write the image ("").</description>
-            <value/>
-            <example>center="center"</example>
-        </param>
-        <param type="string" direction="in" name="centererr" subparam="true">
-            <description>Name of center solution error image. Default: do not write the image ("").</description>
-            <value/>
-            <example>centererr="centerErr"</example>
-        </param>
-        <param type="string" direction="in" name="fwhm" subparam="true">
-            <description>Name of fwhm solution image. Default: do not write the image ("").</description>
-            <value/>
-            <example>fwhm="fwhm"</example>
-        </param>
-        <param type="string" direction="in" name="fwhmerr" subparam="true">
-            <description>Name of fwhm solution error image. Default: do not write the image ("").</description>
-            <value/>
-            <example>fwhmerr="fwhmErr"</example>
-        </param>
-        <param type="string" direction="in" name="integral" subparam="true">
-            <description>Prefix of ame of integral solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
-            <value/>
-            <example>integral="integral"</example>
-        </param>
-        <param type="string" direction="in" name="integralerr" subparam="true">
-            <description>Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
-            <value/>
-            <example>integralerr="integralErr"</example>
-        </param>
-        <param type="bool" name="wantreturn">
-            <description>Should a record summarizing the results be returned?</description>
-            <value>True</value>
-            <example>wantreturn=True</example>
-        </param>
-        <param type="bool" direction="in" name="stretch" subparam="true">
-            <description>Stretch the mask if necessary and possible? See help par.stretch </description>
-            <value>False</value>
-        </param>
-        <param type="bool" direction="in" name="logresults">
-            <description>Output results to logger?</description>
-            <value>True</value>
-        </param>
-        <param type="variant" name="pampest" subparam="true">
-            <description>Initial estimate of PCF profile (gaussian or lorentzian) amplitudes.</description>
-            <value type="string"/>
-        </param>
-        <param type="variant" name="pcenterest" subparam="true">
-            <description>Initial estimate PCF profile centers, in pixels.</description>
-            <value type="string"/>
-        </param>
-        <param type="variant" name="pfwhmest" subparam="true">
-            <description>Initial estimate PCF profile FWHMs, in pixels.</description>
-            <value type="string"/>
-        </param>
-        <param type="variant" direction="in" name="pfix" subparam="true">
-            <description>PCF profile parameters to fix during fit.</description>
-            <value type="string"/>
-        </param>
-        <param type="variant" direction="in" name="gmncomps">
-            <description>Number of components in each gaussian multiplet to fit</description>
-            <value type="int">0</value>
-        </param>
-        <param type="variant" direction="in" name="gmampcon">
-            <description>The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
-            <value type="string"/>
-        </param>
-        <param type="variant" direction="in" name="gmcentercon">
-            <description>The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.</description>
-            <value type="string"/>
-        </param>
-        <param type="variant" direction="in" name="gmfwhmcon">
-            <description>The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
-            <value type="string"/>
-        </param>
-        <param type="doubleArray" direction="in" name="gmampest">
-            <description>Initial estimate of individual gaussian amplitudes in gaussian multiplets.</description>
-            <value>0.0</value>
-        </param>
-        <param type="doubleArray" direction="in" name="gmcenterest">
-            <description>Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.</description>
-            <value>0.0</value>
-        </param>
-        <param type="doubleArray" direction="in" name="gmfwhmest">
-            <description>Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.</description>
-            <value>0.0</value>
-        </param>
-        <param type="variant" direction="in" name="gmfix">
-            <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
-            <value type="string"/>
-        </param>
-        <param type="string" direction="in" name="logfile">
-            <description>File in which to log results. Default is not to write a logfile.</description>
-            <value/>
-        </param>
-        <param type="bool" direction="in" name="append" subparam="true">
-            <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
-            <value>True</value>
-        </param>
-        <param type="any" direction="in" name="pfunc" subparam="true">
-            <any type="variant"/>
-            <description>PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.</description>
-            <value type="string"/>
-        </param>
-        <param type="doubleArray" direction="in" name="goodamprange">
-            <description>Acceptable amplitude solution range. [0.0] => all amplitude solutions are acceptable.</description>
-            <value>0.0</value>
-        </param>
-        <param type="doubleArray" direction="in" name="goodcenterrange">
-            <description>Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.</description>
-            <value>0.0</value>
-        </param>
-        <param type="doubleArray" direction="in" name="goodfwhmrange">
-            <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
-            <value>0.0</value>
-        </param>
-        <constraints>
-            <when param="mask">
-                <notequals type="string" value="">
-                    <default param="stretch"><value type="bool">False</value></default>
-                </notequals>
-            </when>
-            <when param="estimates">
-                <equals type="string" value="">
-                    <default param="ngauss">
-                        <value>1</value>
-                    </default>
-                    <default param="pampest">
-                        <value type="string"/>
-                    </default>
-                    <default param="pcenterest">
-                        <value type="string"/>
-                    </default>
-                    <default param="pfwhmest">
-                        <value type="string"/>
-                    </default>
-                    <default param="pfix">
-                        <value type="string"/>
-                    </default>
-                    <default param="pfunc">
-                        <value type="string"/>
-                    </default>
-                </equals>
-                
-            </when>
-            <when param="multifit">
-                <equals type="bool" value="True">
-                    <default param="amp">
-                        <value>""</value>
-                    </default>
-                    <default param="amperr">
-                        <value>""</value>
-                    </default>
-                    <default param="center">
-                        <value>""</value>
-                    </default>
-                    <default param="centererr">
-                        <value>""</value>
-                    </default>
-                    <default param="fwhm">
-                        <value>""</value>
-                    </default>
-                    <default param="fwhmerr">
-                        <value>""</value>
-                    </default>
-                   <default param="integral">
-                        <value>""</value>
-                    </default>
-                    <default param="integralerr">
-                        <value>""</value>
-                    </default>
-                </equals>
-            </when>
-            <when param="gmncomps">
-                <notequals type="int" value="0">
-                    <default param="gmampcon">
-                        <value type="string"/>
-                    </default>
-                    <default param="gmcentercon">
-                        <value type="string"/>
-                    </default>
-                    <default param="gmfwhmcon">
-                        <value type="string"/>
-                    </default>
-                    <default param="gmampest">
-                        <value>0.0</value>
-                    </default>
-                    <default param="gmcenterest">
-                        <value>0.0</value>
-                    </default>
-                    <default param="gmfwhmest">
-                        <value>0.0</value>
-                    </default>
-                    <default param="gmfix">
-                        <value type="string"/>
-                    </default>
-                </notequals>
-            </when>
-            <when param="logfile">
-                <notequals type="string" value="">
-                    <default param="append">
-                        <value>True</value>
-                    </default>
-                </notequals>
-            </when>
+    <param type="string" direction="in" name="box">
+        <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
+        <value></value>
+        <example>box="4,4,10,10"</example>
+    </param>
+    <param type="string" direction="in" name="region">
+        <description>Region of interest. See help par.region for possible specifications. Default: Do not use a region.</description>
+        <value></value>
+        <example>region="myregion.rgn"</example>
+    </param>
+    <param type="string" direction="in" name="chans">
+        <description>Channels to use. Channels must be contiguous. Default: all channels ("").</description>
+        <value></value>
+        <example>chans="4-11"</example>
+    </param>
+    <param type="string" direction="in" name="stokes">
+        <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
+        <value></value>
+        <example>stokes="I"</example>
+    </param>
+    <param type="int" direction="in" name="axis">
+        <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
+        <value>-1</value>
+        <example>axis=3</example>
+    </param>
+    <param type="string" direction="in" name="mask">
+        <description>Mask to use. See help par.mask. Default is none..</description>
+        <value></value>
+    </param>
+    <param type="int" direction="in" name="ngauss" subparam="true">
+        <description>Number of Gaussian elements.  Default: 1.</description>
+        <value>1</value>
+        <example>ngauss=2</example>
+    </param>
+    <param type="int" direction="in" name="poly">
+        <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
+        <value>-1</value>
+        <example>poly=4</example>
+    </param>
+    <param type="string" direction="in" name="estimates">
+        <description>Name of file containing initial estimates.  Default: No initial estimates ("").</description>
+        <value/>
+    </param>
+    <param type="int" direction="in" name="minpts">
+        <description>Minimum number of unmasked points necessary to attempt fit.</description>
+        <value>0</value>
+    </param>
+    <param type="bool" direction="in" name="multifit">
+        <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
+        <value>False</value>
+        <example>multifit=True</example>
+     </param>
+    <param type="string" direction="in" name="model">
+        <description>Name of model image. Default: do not write the model image ("").</description>
+        <value></value>
+        <example>model="mymodel.im"</example>
+    </param>
+    <param type="string" direction="in" name="residual">
+        <description>Name of residual image. Default: do not write the residual image ("").</description>
+        <value></value>
+        <example>residual="myresid.im"</example>
+    </param>
+    <param type="string" direction="in" name="amp" subparam="true">
+        <description>Name of amplitude solution image. Default: do not write the image ("").</description>
+        <value/>
+        <example>amp="amp"</example>
+    </param>
+    <param type="string" direction="in" name="amperr" subparam="true">
+        <description>Name of amplitude solution error image. Default: do not write the image ("").</description>
+        <value/>
+        <example>amperr="ampErr"</example>
+    </param>
+    <param type="string" direction="in" name="center" subparam="true">
+        <description>Name of center solution image. Default: do not write the image ("").</description>
+        <value/>
+        <example>center="center"</example>
+    </param>
+    <param type="string" direction="in" name="centererr" subparam="true">
+        <description>Name of center solution error image. Default: do not write the image ("").</description>
+        <value/>
+        <example>centererr="centerErr"</example>
+    </param>
+    <param type="string" direction="in" name="fwhm" subparam="true">
+        <description>Name of fwhm solution image. Default: do not write the image ("").</description>
+        <value/>
+        <example>fwhm="fwhm"</example>
+    </param>
+    <param type="string" direction="in" name="fwhmerr" subparam="true">
+        <description>Name of fwhm solution error image. Default: do not write the image ("").</description>
+        <value/>
+        <example>fwhmerr="fwhmErr"</example>
+    </param>
+    <param type="string" direction="in" name="integral" subparam="true">
+        <description>Prefix of ame of integral solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+        <value/>
+        <example>integral="integral"</example>
+    </param>
+    <param type="string" direction="in" name="integralerr" subparam="true">
+        <description>Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+        <value/>
+        <example>integralerr="integralErr"</example>
+    </param>
+    <param type="bool" name="wantreturn">
+        <description>Should a record summarizing the results be returned?</description>
+        <value>True</value>
+        <example>wantreturn=True</example>
+    </param>
+    <param type="bool" direction="in" name="stretch" subparam="true">
+        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+        <value>False</value>
+    </param>
+    <param type="bool" direction="in" name="logresults">
+        <description>Output results to logger?</description>
+        <value>True</value>
+    </param>
+    <param type="variant" name="pampest" subparam="true">
+        <any type="variant" limittypes="string double doubleArray int intArray"/>
+        <description>Initial estimate of PCF profile (gaussian or lorentzian) amplitudes.</description>
+        <value type="string"/>
+    </param>
+    <param type="variant" name="pcenterest" subparam="true">
+        <any type="variant" limittypes="string double doubleArray int intArray"/>
+        <description>Initial estimate PCF profile centers, in pixels.</description>
+        <value type="string"/>
+    </param>
+    <param type="variant" name="pfwhmest" subparam="true">
+        <any type="variant" limittypes="string double doubleArray int intArray"/>
+        <description>Initial estimate PCF profile FWHMs, in pixels.</description>
+        <value type="string"/>
+    </param>
+    <param type="variant" direction="in" name="pfix" subparam="true">
+        <any type="variant" limittypes="string stringArray"/>
+        <description>PCF profile parameters to fix during fit.</description>
+        <value type="string"/>
+    </param>
+    <param type="variant" direction="in" name="gmncomps">
+        <any type="variant" limittypes="int intArray"/>
+        <description>Number of components in each gaussian multiplet to fit</description>
+        <value type="int">0</value>
+    </param>
+    <param type="variant" direction="in" name="gmampcon">
+        <any type="variant" limittypes="string double doubleArray int intArray"/>
+        <description>The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
+        <value type="string"/>
+    </param>
+    <param type="variant" direction="in" name="gmcentercon">
+        <any type="variant" limittypes="string double doubleArray int intArray"/>
+        <description>The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.</description>
+        <value type="string"/>
+    </param>
+    <param type="variant" direction="in" name="gmfwhmcon">
+        <any type="variant" limittypes="string double doubleArray int intArray"/>
+        <description>The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
+        <value type="string"/>
+    </param>
+    <param type="doubleArray" direction="in" name="gmampest">
+        <description>Initial estimate of individual gaussian amplitudes in gaussian multiplets.</description>
+        <value>0.0</value>
+    </param>
+    <param type="doubleArray" direction="in" name="gmcenterest">
+        <description>Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.</description>
+        <value>0.0</value>
+    </param>
+    <param type="doubleArray" direction="in" name="gmfwhmest">
+        <description>Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.</description>
+        <value>0.0</value>
+    </param>
+    <param type="variant" direction="in" name="gmfix">
+        <any type="variant" limittypes="string stringArray"/>
+        <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
+        <value type="string"/>
+    </param>
+    <param type="string" direction="in" name="logfile">
+        <description>File in which to log results. Default is not to write a logfile.</description>
+        <value/>
+    </param>
+    <param type="bool" direction="in" name="append" subparam="true">
+        <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
+        <value>True</value>
+    </param>
+    <param type="any" direction="in" name="pfunc" subparam="true">
+        <any type="variant" limittypes="string stringArray"/>
+        <description>PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.</description>
+        <value type="string"/>
+    </param>
+    <param type="doubleArray" direction="in" name="goodamprange">
+        <description>Acceptable amplitude solution range. [0.0] => all amplitude solutions are acceptable.</description>
+        <value>0.0</value>
+    </param>
+    <param type="doubleArray" direction="in" name="goodcenterrange">
+        <description>Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.</description>
+        <value>0.0</value>
+    </param>
+    <param type="doubleArray" direction="in" name="goodfwhmrange">
+        <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
+        <value>0.0</value>
+    </param>
+    <param type="any" direction="in" name="sigma">
+        <any type="variant" limittypes="string doubleArray intArray"/>
+        <description>Standard deviation array or image name.</description>
+        <value type="string"/>
+    </param>
+    <param type="string" direction="in" name="outsigma" subparam="true">
+        <description>Name of output image used for standard deviation. Ignored if sigma is empty.</description>
+        <value/>
+    </param>
+    <constraints>
+        <when param="mask">
+            <notequals type="string" value="">
+                <default param="stretch"><value type="bool">False</value></default>
+            </notequals>
+        </when>
+        <when param="estimates">
+            <equals type="string" value="">
+                <default param="ngauss">
+                    <value>1</value>
+                </default>
+                <default param="pampest">
+                    <value type="string"/>
+                </default>
+                <default param="pcenterest">
+                    <value type="string"/>
+                </default>
+                <default param="pfwhmest">
+                    <value type="string"/>
+                </default>
+                <default param="pfix">
+                    <value type="string"/>
+                </default>
+                <default param="pfunc">
+                    <value type="string"/>
+                </default>
+            </equals>
+            
+        </when>
+        <when param="multifit">
+            <equals type="bool" value="True">
+                <default param="amp">
+                    <value>""</value>
+                </default>
+                <default param="amperr">
+                    <value>""</value>
+                </default>
+                <default param="center">
+                    <value>""</value>
+                </default>
+                <default param="centererr">
+                    <value>""</value>
+                </default>
+                <default param="fwhm">
+                    <value>""</value>
+                </default>
+                <default param="fwhmerr">
+                    <value>""</value>
+                </default>
+               <default param="integral">
+                    <value>""</value>
+                </default>
+                <default param="integralerr">
+                    <value>""</value>
+                </default>
+            </equals>
+        </when>
+        <when param="gmncomps">
+            <notequals type="int" value="0">
+                <default param="gmampcon">
+                    <value type="string"/>
+                </default>
+                <default param="gmcentercon">
+                    <value type="string"/>
+                </default>
+                <default param="gmfwhmcon">
+                    <value type="string"/>
+                </default>
+                <default param="gmampest">
+                    <value>0.0</value>
+                </default>
+                <default param="gmcenterest">
+                    <value>0.0</value>
+                </default>
+                <default param="gmfwhmest">
+                    <value>0.0</value>
+                </default>
+                <default param="gmfix">
+                    <value type="string"/>
+                </default>
+            </notequals>
+        </when>
+        <when param="logfile">
+            <notequals type="string" value="">
+                <default param="append">
+                    <value>True</value>
+                </default>
+            </notequals>
+        </when>
+        <when param="sigma">
+            <notequals type="string" value="">
+                <default param="outsigma"><value type="string"/></default>
+            </notequals>
+        </when>
     </constraints>
 </input>
 
@@ -360,6 +382,8 @@ append          Append results to logfile? Logfile must be specified. Default is
 goodamprange    Acceptable amplitude solution range. 0 => all amplitude solutions are acceptable. [0.0] => All amplitude solutions are acceptable.
 goodcenterrange Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.
 goodfwhmrange   Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.
+sigma           Standard deviation array or image name.
+outsigma        Name of output image used for standard deviation. Ignored if sigma is empty.
 
 This task simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
 and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
@@ -545,6 +569,38 @@ that parameter.  goodamprange is expressed in terms of image brightness units. g
 from the zeroth pixel in the specified region. goodfwhmrange is expressed in terms of pixels (only non-negative values should be
 given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
 ranges, the entire solution is considered to be invalid.
+
+LIMITING RANGES FOR SOLUTION PARAMETERS
+In cases of low (or no) signal to noise spectra, it is still possible for the fit to converge, but often to a
+nonsensical solution. The astronomer can use her knowledge of the source to filter out obviously bogus solutions.
+One can limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
+parameters. Any combination can be specified and the limit constraints will be ANDed together. The ranges apply to all PCF components
+that might be fit; choosing ranges on a component by component basis is not supported. If specified,
+an array of exactly two numerical values must be given to indicate the range of acceptable solution values for
+that parameter.  goodamprange is expressed in terms of image brightness units. goodcenterrange is expressed in terms of pixels
+from the zeroth pixel in the specified region. goodfwhmrange is expressed in terms of pixels (only non-negative values should be
+given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
+ranges, the entire solution is considered to be invalid.
+
+INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
+If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
+near the edge of the band), they can be included in the sigma parameter. This parameter takes either an array or an image name. The
+array or image must have one of three shapes: 1. the shape of the input image, 2. the same dimensions as the input image with the lengths
+of all axes being one except for the fit axis which must have length corresponding to its length in the input image, or 3. be one
+dimensional with lenght equal the the length of the fit axis in the input image. In cases 2 and 3, the array or pixels in sigma will
+be replicated such that the image that is ultimately used is the same shape as the input image. The values of sigma must be non-negative.
+It is only the relative values that are important. A value of 0 means that pixel should not be used in the fit. Other than that, if pixel
+A has a higher standard deviation than pixel B, then pixel A is noisier than pixel B and will receive a lower weight when the fit is done.
+The weight of a pixel is the usual
+
+weight = 1/(sigma*sigma)
+
+In the case of multifit=F, the sigma values at each pixel along the fit axis in the hyperplane perpendicular to the fit axis which includes
+that pixel are averaged and the resultant averaged standard deviation spectrum is the one used in the fit. Internally, sigma values are normalized
+such that the maximum value is 1. This mitigates a known overflow issue.
+
+One can write the normalized standard deviation image used in the fit but specifying its name in outsigma. This image can then be
+used as sigma for subsequent runs.
 
 RETURNED DICTIONARY STRUCTURE
 The dictionary returned (if wantreturn=True) has a (necessarily) complex structure. First, there are keys "xUnit" and "yUnit" whose values are

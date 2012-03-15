@@ -57,6 +57,9 @@ class vpmanager_test(unittest.TestCase):
     def test3(self):
         '''Test 3: getvp for ALMA'''
         vp.reset()
+        vp.setpbantresptable(telescope='ALMA',
+                             antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses-ALMA',
+                             dopb=True)
         myrec = vp.getvp(telescope='ALMA',
                          obstime = '2009/07/24/10:00:00',
                          freq = 'TOPO 100GHz',
@@ -78,6 +81,9 @@ class vpmanager_test(unittest.TestCase):
     def test5(self):
         '''Test 5: numvps for ALMA'''
         vp.reset()
+        vp.setpbantresptable(telescope='ALMA',
+                             antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses-ALMA',
+                             dopb=True)
         myrval = vp.numvps(telescope='ALMA',
                            obstime = '2009/07/24/10:00:00',
                            freq = 'TOPO 100GHz',
@@ -88,6 +94,9 @@ class vpmanager_test(unittest.TestCase):
     def test6(self):
         '''Test 6: numvps for ALMA with too high freq'''
         vp.reset()
+        vp.setpbantresptable(telescope='ALMA',
+                             antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses-ALMA',
+                             dopb=True)
         myrval = vp.numvps(telescope='ALMA',
                            obstime = '2009/07/24/10:00:00',
                            freq = 'TOPO 1000GHz', # freq too high
@@ -291,12 +300,7 @@ class vpmanager_test(unittest.TestCase):
         self.assertFalse(self.res)
 
     def test16(self):
-        '''Test 16: get image name (fails if AntennaResponses-ALMA table not in repository)'''
-        self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","INTERNAL","CM","0deg","0deg","",0)
-        self.assertTrue(self.res)
-
-    def test17(self):
-        '''Test 17: define Airy beam for ALMA, save it, load it, then use it'''        
+        '''Test 16: define Airy beam for ALMA, save it, load it, then use it'''        
         vp.reset()
         vp.setpbairy(telescope='ALMA',
                      dishdiam=str(12./1.18)+'m',
@@ -328,6 +332,14 @@ class vpmanager_test(unittest.TestCase):
 
         self.assertTrue(woanttypeok and withanttypeok)
     
+##     def test17(self):
+##         '''Test 17: get image name (fails if no resp. table path set in Observatories table))'''
+##         vp.reset()
+##         vp.setpbantresptable(telescope='ALMA',
+##                              antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses-ALMA',
+##                              dopb=True)
+##         self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","INTERNAL","CM","0deg","0deg","",0)
+##         self.assertTrue(self.res)
 
 
 def suite():

@@ -139,22 +139,59 @@ class test_tfcrop(test_base):
         
     def test_tfcrop2(self):
         '''tflagdata:: Test2 of mode = tfcrop ABS_ALL'''
-        tflagdata(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
+        # Note : With ntime=51.0, 64-bit machines get 18696 flags, and 32-bit gets 18695 flags.
+        #           As far as we can determine, this is a genuine precision-related difference.
+        #           With ntime=53.0, there happens to be no difference.
+        tflagdata(vis=self.vis, mode='tfcrop',ntime=53.0,spw='9', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 18696)
-        self.assertEqual(res['correlation']['LL']['flagged'], 4258)
-        self.assertEqual(res['correlation']['RL']['flagged'], 4999)
-        self.assertEqual(res['correlation']['LR']['flagged'], 4950)
-        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['flagged'], 18671)
+        self.assertEqual(res['correlation']['LL']['flagged'], 4250)
+        self.assertEqual(res['correlation']['RL']['flagged'], 5007)
+        self.assertEqual(res['correlation']['LR']['flagged'], 4931)
+        self.assertEqual(res['correlation']['RR']['flagged'], 4483)
 
     def test_extend1(self):
-        '''tflagdata:: Extend the flags created by tfcrop'''
-        tflagdata(vis=self.vis, mode='tfcrop', correlation='abs_rr',ntime=51.0,spw='9', savepars=False)
+        '''tflagdata:: Extend the flags created by clip'''
+        tflagdata(vis=self.vis, mode='clip', correlation='abs_rr', clipminmax=[0,2])
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['correlation']['RR']['flagged'], 43)
         self.assertEqual(res['correlation']['LL']['flagged'], 0)
         tflagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 4489)
+        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 43)
+
+class test_rflag(test_base):
+    """tflagdata:: Test of mode = 'rflag'"""
+    
+    def setUp(self):
+        self.setUp_data4tfcrop()
+        
+    def test_rflag1(self):
+        '''tflagdata:: Test1 of mode = rflag'''
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], writeflags=True);
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 42866)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
+        self.assertEqual(res['spw']['7']['flagged'], 0)
+        
+    def test_rflag2(self):
+        '''tflagdata:: Test2 of mode = rflag : output/input'''
+        # (1) Test input/output files, through the task, mode='rflag'
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt', writeflags=False);
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt', writeflags=True);
+        res1 = tflagdata(vis=self.vis, mode='summary')
+        # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
+        #      and then read back in via list mode. 
+        tflagdata(vis=self.vis,mode='unflag');
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+                      freqdev='fdevfile.txt',writeflags=False,savepars=True,outfile='outcmd.txt');
+        tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt',writeflags=True);
+        res2 = tflagdata(vis=self.vis, mode='summary')
+
+        #print res1['flagged'], res2['flagged']
+        self.assertEqual(res1['flagged'],res2['flagged']);
+        self.assertEqual(res1['flagged'], 39665)
 
 
 class test_shadow(test_base):
@@ -183,14 +220,14 @@ class test_shadow(test_base):
         filename = 'cas2399.txt'
         create_input(input, filename)
         
-        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, antennafile=filename)
+        tflagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
         
     def test_addantenna(self):
-        '''tflagdata: use antennafile in list mode'''
+        '''tflagdata: use antenna file in list mode'''
         if os.path.exists("myants.txt"):
             os.system('rm -rf myants.txt')
         
@@ -212,12 +249,12 @@ class test_shadow(test_base):
         create_input(input, antfile)
         
         # Create list file
-        input = 'mode=shadow tolerance=10.0 antennafile=myants.txt'
+        input = "mode='shadow' tolerance=10.0 addantenna='myants.txt'"
         filename = 'listfile.txt'
         create_input(input, filename)
         
         # Flag
-        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='withdict.txt')
         
         # Check flags
         res = tflagdata(vis=self.vis, mode='summary')
@@ -313,89 +350,94 @@ class test_shadow(test_base):
 #        assert s['9']['flagged'] == 58968; assert s['9']['total'] == 203994
 
 
-#class test_flagmanager(test_base):
+class test_flagmanager(test_base):
     
-#    def setUp(self):
-#        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
-#        self.setUp_flagdatatest()
+    def setUp(self):
+        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
+        self.setUp_flagdatatest()
         
-#    def test1m(self):
-#        '''flagmanager test1m: mode=list, flagbackup=True/False'''
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 2)
-#        tf.done()
-#
-#
-#        tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 2)
-#        tf.done()
-#
-#        tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 3)
-#        tf.done()
-#
-#        print "Test of flagmanager mode=rename"
-#        flagmanager(vis=self.vis, mode='rename', oldname='manualflag_2', versionname='Ha! The best version ever!', 
-#                    comment='This is a *much* better name')
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 3)
-#        tf.done()
+    def test1m(self):
+        '''flagmanager test1m: mode=list, flagbackup=True/False'''
+        
+        # Create a local copy of the tool
+        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 3)
+        tflocal.done()
 
-#    def test2m(self):
-#        """flagmanager test2m: Create, then restore autoflag"""
-#
-#        tflagdata(vis=self.vis, mode='summary')
-#        flagmanager(vis=self.vis)
-#        
-#        tflagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
-#        
-#        flagmanager(vis=self.vis)
-#        ant2 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After flagging antenna 2 there were", ant2, "flags"
-#
-#        # Change flags, then restore
-#        tflagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
-#        flagmanager(vis = self.vis)
-#        ant3 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After flagging antenna 2 and 3 there were", ant3, "flags"
-#
-#        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
-#        restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
-#
-#        self.assertEqual(restore2, ant2)
 
-#    def test_CAS2701(self):
-#        """flagmanager: Do not allow flagversion=''"""
-#        
-#        tf.open(self.vis)
-#        l = len(tf.getflagversionlist())
-#        tf.done()
-#        
-#        flagmanager(vis = self.vis,
-#                    mode = "save",
-#                    versionname = "non-empty-string")
-#
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), l+1)
-#        tf.done()
-#
-#        flagmanager(vis = self.vis,
-#                    mode = "save",
-#                    versionname = "non-empty-string")
-#
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), l+1)
-#        tf.done()
+        tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 3)
+        tflocal.done()
+
+        tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 4)
+        tflocal.done()
+
+        flagmanager(vis=self.vis, mode='rename', oldname='unflag_2', versionname='Ha! The best version ever!', 
+                    comment='This is a *much* better name')
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 4)
+        tflocal.done()
+
+    def test2m(self):
+        """flagmanager test2m: Create, then restore autoflag"""
+
+        tflagdata(vis=self.vis, mode='summary')
+        flagmanager(vis=self.vis)
+        
+        tflagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
+        
+        flagmanager(vis=self.vis)
+        ant2 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 there were", ant2, "flags"
+
+        # Change flags, then restore
+        tflagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
+        flagmanager(vis = self.vis)
+        ant3 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 and 3 there were", ant3, "flags"
+
+        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
+        restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
+
+        self.assertEqual(restore2, ant2)
+
+    def test_CAS2701(self):
+        """flagmanager: Do not allow flagversion=''"""
+        
+        # Create a local copy of the tool
+        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        
+        tflocal.open(self.vis)
+        l = len(tflocal.getflagversionlist())
+        tflocal.done()
+        
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
+        tflocal.done()
+
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
+        tflocal.done()
 
 
 class test_msselection(test_base):
@@ -405,7 +447,7 @@ class test_msselection(test_base):
 
     def test_simple(self):
         '''tflagdata: select only cross-correlations'''
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9", basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
@@ -413,7 +455,7 @@ class test_msselection(test_base):
         assert "10&&11" not in baselines
 
 
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10", basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
@@ -422,14 +464,14 @@ class test_msselection(test_base):
 
     def test_amp(self):
         '''tflagdata: select only cross-correlations'''
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10&")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10&",basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" not in baselines
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9&10")['baseline'].keys()
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9&10",basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" not in baselines
@@ -439,7 +481,7 @@ class test_msselection(test_base):
     def test_autocorr(self):
         '''tflagdata: flag only auto-correlations'''
         tflagdata(vis=self.vis, mode='manual', antenna='5&&&')
-        s = tflagdata(vis = self.vis, mode="summary")['baseline']
+        s = tflagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
         assert s['5&&5']['flagged'] == 7560
         assert s['1&&5']['flagged'] == 0
         assert s['2&&5']['flagged'] == 0
@@ -459,7 +501,7 @@ class test_statistics_queries(test_base):
         '''tflagdata: test antenna negation selection'''
         
         tflagdata(vis=self.vis, antenna='!5', savepars=False) 
-        s = tflagdata(vis = self.vis, mode="summary")['baseline']
+        s = tflagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
         assert s['1&&5']['flagged'] == 0 
         assert s['2&&5']['flagged'] == 0
         assert s['3&&5']['flagged'] == 0
@@ -513,7 +555,7 @@ class test_statistics_queries(test_base):
         tflagdata(vis=self.vis, antenna='5&&9', savepars=False)
         tflagdata(vis=self.vis, antenna='14', savepars=False)
         tflagdata(vis=self.vis, field='1', savepars=False)
-        s = tflagdata(vis=self.vis, mode='summary', minrel=0.9, spwchan=True)
+        s = tflagdata(vis=self.vis, mode='summary', minrel=0.9, spwchan=True, basecnt=True)
         assert s['antenna'].keys() == ['14']
         assert '5&&9' in s['baseline'].keys()
         assert set(s['spw:channel'].keys()) == set(['0:17', '0:18', '0:19'])
@@ -825,6 +867,7 @@ class test_list(test_base):
         # save to another file
         if os.path.exists("myflags.txt"):
             os.system('rm -rf myflags.txt')
+            
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, run=False, outfile='myflags.txt')
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
         
@@ -869,7 +912,7 @@ class test_list(test_base):
         self.setUp_data4tfcrop()
         
         # creat input list
-        input = "mode=clip clipzeros=true reason=\'CLIP_ZERO\'"
+        input = "mode='clip' clipzeros=true reason='CLIP_ZERO'"
         filename = 'list5.txt'
         create_input(input, filename)
 
@@ -883,11 +926,12 @@ class test_list(test_base):
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
 
     def test_list6(self):
-        '''tflagdata: select by reason in list mode'''
+        '''tflagdata: select by reason in list mode from a file'''
         # creat input list
-        input = "mode=\'manual\' scan=\'1\' reason=\'SCAN_1\'\n"\
-                "mode=\'manual\' scan=\'2\'\n"\
-                "scan=\'3\' reason=\'SCAN_3\'"
+        input = "mode='manual' scan='1' reason='SCAN_1'\n"\
+                "mode='manual' scan='2'\n"\
+                "scan='3' reason='SCAN_3'\n"\
+                "scan='4' reason=''"
         filename = 'list6.txt'
         create_input(input, filename)
         
@@ -900,9 +944,20 @@ class test_list(test_base):
         # Select list of reasons
         tflagdata(vis=self.vis, mode='list', inpfile=filename, reason=['','SCAN_1'])
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['scan']['2']['flagged'], 238140, 'Should flag reason=\'\'')
+        self.assertEqual(res['scan']['4']['flagged'], 95256, 'Should flag reason=\'\'')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
         
+        # No reason selection
+        tflagdata(vis=self.vis, mode='unflag')
+        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['2']['flagged'], 238140)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['4']['flagged'], 95256)
+        self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
+        
+
         
 class test_clip(test_base):
     """tflagdata:: Test of mode = 'clip'"""
@@ -922,14 +977,13 @@ class test_clip(test_base):
 class cleanup(test_base):
     
     def tearDown(self):
-        os.system('rm -rf ngc5921.ms')
-        os.system('rm -rf ngc5921.ms.flagversions')
-        os.system('rm -rf flagdatatest.ms')
-        os.system('rm -rf flagdatatest.ms.flagversions')
+        os.system('rm -rf ngc5921.ms*')
+        os.system('rm -rf flagdatatest.ms*')
         os.system('rm -rf missing-baseline.ms')
-        os.system('rm -rf multiobs.ms')
-        os.system('rm -rf flagdatatest-alma.ms')
-        os.system('rm -rf Four_ants_3C286.ms')
+        os.system('rm -rf multiobs.ms*')
+        os.system('rm -rf flagdatatest-alma.ms*')
+        os.system('rm -rf Four_ants_3C286.ms*')
+        os.system('rm -rf shadowtest_part.ms*')
         os.system('rm -rf list*txt')
 
     def test1(self):
@@ -939,8 +993,9 @@ class cleanup(test_base):
 
 def suite():
     return [test_tfcrop,
+            test_rflag,
             test_shadow,
-#            test_flagmanager,
+            test_flagmanager,
             test_selections,
             test_selections2,
             test_selections_alma,

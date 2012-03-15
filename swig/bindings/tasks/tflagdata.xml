@@ -169,13 +169,10 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <description>Amount of shadow allowed (in meters)</description>
                 <value>0.0</value>
             </param>
-            <param type="bool" name="recalcuvw" subparam="true">
-                <description>Recalculate U,V,W</description>
-                <value>False</value>
-            </param>
-            <param type="string" name="antennafile" subparam="true">
-                <description>File name with additional antenna names, positions and diameters</description>
-                <value></value>
+            <param type="any" name="addantenna" subparam="true">
+                <description>File name or dictionary with additional antenna names, positions and diameters</description>
+                <any type='variant' limittype='string record'/>
+                <value type="string"></value>
             </param>
             
             <!-- ELEVATION parameters -->            
@@ -306,8 +303,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                 <value type="int">0</value>
             </param>
             <param type="int" name="maxabs" subparam="true">
-                <description>maximum number of flags (absolute). \
-                             Use a negative value to indicate infinity.</description>
+                <description>maximum number of flags (absolute). Use a negative value to indicate infinity.</description>
                 <value type="int">-1</value>
             </param>
             <param type="bool" name="spwchan" subparam="true">
@@ -316,6 +312,10 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
             <param type="bool" name="spwcorr" subparam="true">
                 <description>Print summary of correlation per spw</description>
+                <value type="bool">False</value>
+            </param>
+            <param type="bool" name="basecnt" subparam="true">
+                <description>Print summary counts per baseline</description>
                 <value type="bool">False</value>
             </param>
 
@@ -335,7 +335,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
             <param type="bool" name="flagbackup" subparam="true">
                 <description>Back up the state of flags before the run</description>
-                <value>False</value>
+                <value>True</value>
             </param>
 
 
@@ -415,8 +415,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
                         <default param="tolerance"><value type="double">0.0</value></default>
-                        <default param="recalcuvw"><value type="bool">False</value></default>
-                        <default param="antennafile"><value type="string"></value></default>
+                        <default param="addantenna"><value type="string"></value></default>
                     </equals>
                     <equals value="elevation">
                         <default param="field"><value type="string"></value></default>
@@ -528,7 +527,8 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         <default param="minabs"><value type="int">0</value></default>
                         <default param="maxabs"><value type="int">-1</value></default>
                         <default param="spwchan"><value type="bool">False</value></default>
-                        <default param="spwcorr"><value type="bool">False</value></default>                    
+                        <default param="spwcorr"><value type="bool">False</value></default>
+                        <default param="basecnt"><value type="bool">False</value></default>  
                     </equals>
                 </when>
 
@@ -536,7 +536,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                     <equals type="bool" value="True">
                         <default param="writeflags"><value type="bool">True</value></default>
                         <default param="display"><value type="string"></value></default>
-                        <default param="flagbackup"><value type="bool">False</value></default>
+                        <default param="flagbackup"><value type="bool">True</value></default>
                     </equals>
                 </when>
                                
@@ -722,16 +722,30 @@ tfcrop,rflag,extend,unflag,summary)</description>
                              True   ==> the quack interval is counted from the
                                         first unflagged data in the scan
 
-            shadow -- Option to flag data of shadowed antennas
+            shadow -- Option to flag data of shadowed antennas.
+                           All antennas in the antenna-subtable of the MS will be considered
+                           for shadow-flag calculations.
                      
                 tolerance -- Amount of shadowing allowed...
                    default: 0.0
 
-                recalcuvw -- Recalculate U,V,W..........
-                   default: False
-
-                antennafile -- File name with additional antenna names, positions and diameters.
+                addantenna -- It can be either a file name with additional antenna names, positions 
+                 and diameters, or a Python dictionary with the same information. You can use the flaghelper
+                 functions to create the dictionary from a file.  
                    default: ''
+                   
+                   To create a dictionary inside casapy.
+                   > import flaghelper as fh
+                   > antdic = fh.readAntennaList(antfile)
+                   
+                   Where antfile is a text file in disk that contains information such as:
+                    name=VLA01
+                    diameter=25.0
+                    position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]
+                    name=VLA02
+                    diameter=25.0
+                    position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]
+                  
 
             elevation -- Option to flag based on antenna elevation
                  
@@ -936,8 +950,13 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
                 spwchan -- list the number of flags per spw and per channel.
                     default: False
+
                 spwcorr -- list the number of flags per spw and per correlation.
                     default: False
+
+                basecnt -- list the number of flags per baseline
+                    default: False
+
                     In this mode, the task returns a dictionary of flagging statistics.
                     Example:
 
@@ -984,7 +1003,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                   	'both' --> displays data per chunk and end-of-MS reports on the screen
                                  
               flagbackup -- Automatically backup flags before running the tool.
-                   default: False
+                   default: True
                    options: True/False                    
 
         savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.

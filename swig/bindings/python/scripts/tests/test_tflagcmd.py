@@ -152,11 +152,11 @@ class test_alma(test_base):
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Save cmd to FLAG_CMD
-        cmd = "mode=clip clipminmax=[0,50] correlation=ABS_WVR"
+        cmd = "mode='clip' clipminmax=[0,50] correlation='ABS_WVR'"
         tflagcmd(vis=self.vis, inpmode='cmd', command=[cmd], action='list', savepars=True)
         
         # Extract it
-        res = tflagcmd(vis=self.vis, action='extract')
+        res = tflagcmd(vis=self.vis, action='extract', useapplied=True)
         
         # Apply to clip only WVR
         tflagcmd(vis=self.vis, inpmode='cmd', command=[res[0]['command']], savepars=False, action='apply')
@@ -182,19 +182,23 @@ class test_unapply(test_base):
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
-        # Flag using tfcrop agent
-        input = "scan=3 mode=tfcrop correlation='ABS_RR'"
+        # Flag using tfcrop agent from file
+        # Note : For this test, scan=4 gives identical flags on 32/64 bit machines,
+        #           and one flag difference on a Mac (32)
+        #           Other scans give differences at the 0.005% level.
+        input = "scan=4 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         res = tflagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
-        self.assertEqual(res['scan']['3']['flagged'], 2829, 'scan=3 should be partially flagged')
+        #self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
+        self.assertTrue(res['scan']['4']['flagged']>= 1200 and res['scan']['4']['flagged']<= 1204, 'scan=4 should be partially flagged')
         
         # Unapply only the tfcrop line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
-        result = tflagdata(vis=self.vis,mode='summary',scan='3')
+        result = tflagdata(vis=self.vis,mode='summary',scan='4')
         self.assertEqual(result['flagged'], 0, 'Expected 0 flags, found %s'%result['flagged'])
-        self.assertEqual(result['total'], 762048,'Expected total 762048, found %s'%result['total'])
+        self.assertEqual(result['total'], 95256,'Expected total 95256, found %s'%result['total'])
 
     def test_uquack(self):
         '''tflagcmd: unapply quack agent'''
@@ -348,8 +352,7 @@ class test_XML(test_base):
         # Now apply them by selecting the reasons and save in another file
         # 507 cmds crash on my computer.
         reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
-        tflagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt',
-                 sequential=True)
+        tflagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt')
                 
         # Compare with original XML
         self.assertTrue(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
@@ -395,7 +398,7 @@ class test_shadow(test_base):
         filename = create_input(input)
 
         # Create command line
-        input = ['mode=shadow tolerance=10.0 antennafile=tflagcmd.txt']
+        input = ["mode='shadow' tolerance=10.0 addantenna='tflagcmd.txt'"]
 #        filename = 'cmdfile.txt'
 #        if os.path.exists(filename):
 #            os.system('rm -rf cmdfile.txt')

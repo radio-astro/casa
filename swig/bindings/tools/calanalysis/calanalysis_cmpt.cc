@@ -253,7 +253,7 @@ std::string calanalysis::polbasis() {
 
         ::casac::record oRecIter;
 
-        std::string oField( String::toString(oOutput[o].uiFieldID).c_str() );
+        std::string oField( String::toString(oOutput[o].uiField).c_str() );
         oRecIter.insert( std::string("field"), oField );
 
         std::string oAntenna1( String::toString(oOutput[o].uiAntenna1).c_str() );
@@ -294,13 +294,13 @@ std::string calanalysis::polbasis() {
 
         std::vector<double> oValue( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oValue[a] = oOutput[o].oOut(r,c).oData.oData[a];
+	  oValue[a] = oOutput[o].oOut(r,c).oData.oValue[a];
 	}
         oRecIter.insert( string("value"), oValue );
 
         std::vector<double> oValueErr( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oValueErr[a] = oOutput[o].oOut(r,c).oData.oDataErr[a];
+	  oValueErr[a] = oOutput[o].oOut(r,c).oData.oValueErr[a];
 	}
         oRecIter.insert( string("valueErr"), oValueErr );
 
@@ -482,7 +482,7 @@ std::string calanalysis::polbasis() {
 
         ::casac::record oRecIter;
 
-        std::string oField( String::toString(oOutput[o].uiFieldID).c_str() );
+        std::string oField( String::toString(oOutput[o].uiField).c_str() );
         oRecIter.insert( std::string("field"), oField );
 
         std::string oAntenna1( String::toString(oOutput[o].uiAntenna1).c_str() );
@@ -523,13 +523,13 @@ std::string calanalysis::polbasis() {
 
         std::vector<double> oValue( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oValue[a] = oOutput[o].oOut(r,c).oData.oData[a];
+          oValue[a] = oOutput[o].oOut(r,c).oData.oValue[a];
         }
         oRecIter.insert( std::string("value"), oValue );
 
         std::vector<double> oValueErr( uiNumAbs );
         for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oValueErr[a] = oOutput[o].oOut(r,c).oData.oDataErr[a];
+          oValueErr[a] = oOutput[o].oOut(r,c).oData.oValueErr[a];
         }
         oRecIter.insert( std::string("valueErr"), oValueErr );
 

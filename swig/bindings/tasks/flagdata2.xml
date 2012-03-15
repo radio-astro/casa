@@ -6,6 +6,8 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="flagdata2" category="editing" visibility="experimental">
+        <shortdescription>\n ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
+        <shortdescription>*******            USE THE TASK tflagdata            *******\n</shortdescription>
     <shortdescription> All purpose flagging task based on selections. It allows the combination of several modes.</shortdescription>
     <description>
         The task will select a subset of data explicitly for flagging,

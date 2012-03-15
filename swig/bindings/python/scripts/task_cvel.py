@@ -309,16 +309,16 @@ def cvel(vis, outputvis,
         dpresent = ('DATA' in allcols)
         mpresent = ('MODEL_DATA' in allcols)
         cpresent = ('CORRECTED_DATA' in allcols)
-        if (dpresent and mpresent and cpresent):
+        if (dpresent and cpresent):
             datacolumn = 'all'
-        elif (dpresent and not mpresent and not cpresent):
+        elif (dpresent and not cpresent):
             datacolumn = 'data'
-        elif (cpresent and not mpresent and not dpresent):
+        elif (cpresent and not dpresent):
             datacolumn = 'corrected_data'
         elif (mpresent and not cpresent and not dpresent):
             datacolumn = 'model_data'
         else:
-            raise Exception, "Can only handle MSs with all three data columns or just one."
+            raise Exception, "Neither DATA nor CORRECTED_DATA nor MODEL_DATA column present. Cannot proceed."
 
         if(doselection):
             casalog.post("Creating selected SubMS ...", 'INFO')
