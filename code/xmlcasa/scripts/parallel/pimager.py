@@ -516,6 +516,12 @@ class pimager():
 
         out=range(numcpu)  
         c=self.c
+       ####
+        #the default working directory is somewhere 
+        owd=os.getcwd()
+        self.c.pgc('import os')
+        self.c.pgc('os.chdir("'+owd+'")')
+        ##################### 
         c.pgc('casalog.filter()')
         c.pgc('from  parallel.parallel_cont import *')
 
