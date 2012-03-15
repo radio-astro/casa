@@ -209,6 +209,13 @@ public:
        	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats,
        	    Int halfwin, Bool apply);
 
+	// Parse parameters for extend
+	bool parseExtendParameters(String field, String spw, String array, String feed,
+			String scan, String antenna, String uvrange, String timerange, String correlation,
+       	    String intent, String observation, Double ntime, Bool combinescans,
+       	    Bool extendpols, Double growtime, Double growfreq, Bool growaround,
+       	    Bool flagneartime, Bool flagnearfreq, Bool apply);
+
 	// Parse parameters for summary
 	bool parseSummaryParameters(String field, String spw, String array, String feed,
 			String scan, String antenna, String uvrange, String timerange, String correlation,

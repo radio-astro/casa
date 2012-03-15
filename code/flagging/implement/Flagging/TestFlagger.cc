@@ -383,7 +383,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	if (mode.compare("tfcrop") == 0) {
 
 		// Default for these modes
-		String correlation = "ABS ALL";
+		String correlation = "ABS_ALL";
 
 		if (agentParams_p.isDefined("correlation")) {
 
@@ -946,7 +946,7 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 // ---------------------------------------------------------------------
 bool
 TestFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, String datacolumn,
    	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool clipzeros, Bool apply)
 {
@@ -991,12 +991,12 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseQuackParameters
-// Parse data selection parameters and specific manual parameters
+// Parse data selection parameters and specific quack parameters
 //
 // ---------------------------------------------------------------------
 bool
 TestFlagger::parseQuackParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, String quackmode, Double quackinterval,
    	    Bool quackincrement, Bool apply)
 {
@@ -1038,7 +1038,7 @@ TestFlagger::parseQuackParameters(String field, String spw, String array, String
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseElevationParameters
-// Parse data selection parameters and specific manual parameters
+// Parse data selection parameters and specific elevation parameters
 //
 // ---------------------------------------------------------------------
 bool
@@ -1083,12 +1083,12 @@ TestFlagger::parseElevationParameters(String field, String spw, String array, St
 
 // ---------------------------------------------------------------------
 // TestFlagger::parseTfcropParameters
-// Parse data selection parameters and specific manual parameters
+// Parse data selection parameters and specific tfcrop parameters
 //
 // ---------------------------------------------------------------------
 bool
 TestFlagger::parseTfcropParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange,String correlation,
+   	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, Double ntime, Bool combinescans,
    	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
    	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
@@ -1140,8 +1140,63 @@ TestFlagger::parseTfcropParameters(String field, String spw, String array, Strin
 }
 
 // ---------------------------------------------------------------------
+// TestFlagger::parseExtendParameters
+// Parse data selection parameters and specific extend parameters
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::parseExtendParameters(String field, String spw, String array, String feed, String scan,
+   	    String antenna, String uvrange, String timerange, String correlation, String intent,
+   	    String observation, Double ntime, Bool combinescans, Bool extendpols, Double growtime,
+   	    Double growfreq, Bool growaround, Bool flagneartime, Bool flagnearfreq, Bool apply)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+
+	// Default values for some parameters
+	String mode = "extend";
+	String agent_name = "Extend";
+
+	// Create a record with the parameters
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("spw", spw);
+	agent_record.define("scan", scan);
+	agent_record.define("field", field);
+	agent_record.define("antenna", antenna);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("feed", feed);
+	agent_record.define("array", array);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("observation", observation);
+	agent_record.define("apply", apply);
+	agent_record.define("name", agent_name);
+
+	agent_record.define("ntime", ntime);
+	agent_record.define("combinescans", combinescans);
+	agent_record.define("extendpols", extendpols);
+	agent_record.define("growtime", growtime);
+	agent_record.define("growfreq", growfreq);
+	agent_record.define("growaround", growaround);
+	agent_record.define("flagneartime", flagneartime);
+	agent_record.define("flagnearfreq", flagnearfreq);
+	agent_record.define("apply", apply);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+
+}
+
+
+
+// ---------------------------------------------------------------------
 // TestFlagger::parseSummaryParameters
-// Parse data selection parameters and specific manual parameters
+// Parse data selection parameters and specific summary parameters
 //
 // ---------------------------------------------------------------------
 bool
