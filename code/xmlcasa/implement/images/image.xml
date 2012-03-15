@@ -4046,10 +4046,19 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
             <value>0.0</value>
         </param>
+        <param type="any" direction="in" name="sigma">
+            <any type="variant" limittypes="string doubleArray intArray"/>
+            <description>Standard deviation array or image name.</description>
+            <value type="string"/>
+        </param>
+        <param type="string" direction="in" name="outsigma">
+            <description>Name of output image used for standard deviations. Ignored if sigma is empty.</description>
+            <value/>
+        </param>
     </input>
-<returns type="any"><any type="record"/></returns>
+    <returns type="any"><any type="record"/></returns>
 
-<description>
+    <description>
 This method simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
 and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
 center position, and width) are all independent from any other feature that may be simultaneously fit. A gaussian multiplet is a set of two or
@@ -4235,6 +4244,26 @@ from the zeroth pixel in the specified region. goodfwhmrange is expressed in ter
 given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
 ranges, the entire solution is considered to be invalid.
 
+INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
+If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
+near the edge of the band), they can be included in the sigma parameter. This parameter takes either an array or an image name. The
+array or image must have one of three shapes: 1. the shape of the input image, 2. the same dimensions as the input image with the lengths
+of all axes being one except for the fit axis which must have length corresponding to its length in the input image, or 3. be one
+dimensional with lenght equal the the length of the fit axis in the input image. In cases 2 and 3, the array or pixels in sigma will
+be replicated such that the image that is ultimately used is the same shape as the input image. The values of sigma must be non-negative.
+It is only the relative values that are important. A value of 0 means that pixel should not be used in the fit. Other than that, if pixel
+A has a higher standard deviation than pixel B, then pixel A is noisier than pixel B and will receive a lower weight when the fit is done.
+The weight of a pixel is the usual
+
+weight = 1/(sigma*sigma)
+
+In the case of multifit=F, the sigma values at each pixel along the fit axis in the hyperplane perpendicular to the fit axis which includes
+that pixel are averaged and the resultant averaged standard deviation spectrum is the one used in the fit. Internally, sigma values are normalized
+such that the maximum value is 1. This mitigates a known overflow issue.
+
+One can write the normalized standard deviation image used in the fit but specifying its name in outsigma. This image can then be
+used as sigma for subsequent runs.
+
 RETURNED DICTIONARY STRUCTURE
 The returned dictionary has a (necessarily) complex structure. First, there are keys "xUnit" and "yUnit" whose values are
 the abscissa unit and the ordinate unit described by simple strings. Next there are arrays giving a broad overview of the
@@ -4285,18 +4314,17 @@ is a linear axis and repesents component number (and is named accordingly).
 
 Writing analogous images for polynomial coefficients is not supported.
 
-</description>
+    </description>
 
-<example>
+    <example>
 """
 ia.open("myspectrum.im")
 res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
 """
-</example>
+    </example>
 
 </method>
 
- 
 <method type="function" name="fitcomponents">
     <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
     <input>

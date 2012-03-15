@@ -38,6 +38,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <images/Regions/WCBox.h>
+#include <lattices/Lattices/LatticeStatistics.h>
 #include <lattices/Lattices/LCLELMask.h>
 
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>

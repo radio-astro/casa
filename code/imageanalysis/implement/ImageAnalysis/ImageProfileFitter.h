@@ -32,6 +32,7 @@
 
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <images/Images/ImageFit1D.h>
+#include <images/Images/TempImage.h>
 
 #include <casa/namespace.h>
 
@@ -152,12 +153,20 @@ public:
 
     void setGoodFWHMRange(const Double min, const Double max);
 
+    // <group>
+    // set standard deviation image
+    void setSigma(const Array<Float>& sigma);
+
+    void setSigma(const ImageInterface<Float> *const &sigma);
+
+    inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
+    // </group>
 private:
 
 	String _residual, _model, _regionString, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
-		_integralName, _integralErrName;
+		_integralName, _integralErrName, _sigmaName;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
 		_deleteImageOnDestruct, _logResults;
 	Int _polyOrder, _fitAxis;
@@ -170,6 +179,8 @@ private:
 	Record _results;
 	SpectralList _nonPolyEstimates;
 	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
+
+	std::auto_ptr<TempImage<Float> > _sigma;
 
 	const static String _class;
 
@@ -239,16 +250,15 @@ private:
     	const Array<Bool>& mask, const String& yUnit
     ) const;
 
+    /*
     // moved from ImageAnalysis
     void _fitProfile(
-        const Bool fitIt=True,
-        const String weightsImageName=""
+        const Bool fitIt=True
     );
+    */
 
     // moved from ImageAnalysis
-    void _fitallprofiles(
-        const String& weightsImageName = ""
-    );
+    void _fitallprofiles();
 
     // Fit all profiles in image.  The output images must be already
     // created; if the pointer is 0, that image won't be filled.
@@ -266,9 +276,8 @@ private:
     // to something astronomer friendly if it so desires.
 
     void _fitProfiles(
-    	ImageInterface<Float>* &pFit,
-        ImageInterface<Float>* &pResid,
-        const ImageInterface<Float> *const &weightsImage=0,
+    	std::auto_ptr<ImageInterface<Float> >& pFit,
+    	std::auto_ptr<ImageInterface<Float> >& pResid,
         const Bool showProgress=False
     );
 

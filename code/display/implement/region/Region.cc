@@ -3,6 +3,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 #include <display/QtViewer/QtPixelCanvas.qo.h>
+#include <images/Images/SubImage.h>
 #include <measures/Measures/MCDirection.h>
 
 #include <images/Images/ImageStatistics.h>

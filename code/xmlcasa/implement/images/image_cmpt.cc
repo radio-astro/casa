@@ -1139,7 +1139,9 @@ record* image::fitprofile(const string& box, const variant& region,
     const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
     const variant& gmfix, const string& logfile, const bool append,
     const variant& pfunc, const vector<double>& goodamprange,
-    const vector<double>& goodcenterrange, const vector<double>& goodfwhmrange
+    const vector<double>& goodcenterrange,
+    const vector<double>& goodfwhmrange, const variant& sigma,
+    const string& outsigma
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
@@ -1354,6 +1356,36 @@ record* image::fitprofile(const string& box, const variant& region,
 		if (mask == "[]") {
 			mask = "";
 		}
+		std::auto_ptr<Array<Float> > sigmaArray(0);
+		std::auto_ptr<PagedImage<Float> > sigmaImage(0);
+		if (sigma.type() == variant::STRING) {
+			String sigmaName = sigma.toString();
+			if (! sigmaName.empty()) {
+				sigmaImage.reset(new PagedImage<Float>(sigmaName));
+			}
+		}
+		else if (
+			sigma.type() == variant::DOUBLEVEC
+			|| sigma.type() == variant::INTVEC
+		) {
+			sigmaArray.reset(new Array<Float>());
+			vector<double> sigmaVector = sigma.getDoubleVec();
+			Vector<Int> shape = sigma.arrayshape();
+			sigmaArray->resize(IPosition(shape));
+			convertArray(
+				*sigmaArray,
+				Vector<Double>(sigmaVector).reform(IPosition(shape))
+			);
+		}
+		else if (sigma.type() == variant::BOOLVEC) {
+			// nothing to do
+		}
+		else {
+			*_log << LogIO::SEVERE
+				<< "Unrecognized type for sigma. Use either a string (image name) or a numpy array"
+				<< LogIO::POST;
+			return 0;
+		}
 		ImageProfileFitter fitter(
 			_image->getImage(), regionName, regionPtr.get(),
 			box, chans, stokes, mask, axis,
@@ -1387,8 +1419,26 @@ record* image::fitprofile(const string& box, const variant& region,
 		if (mygoodfwhms.size() == 2) {
 			fitter.setGoodFWHMRange(mygoodfwhms[0], mygoodfwhms[1]);
 		}
+		if (sigmaImage.get()) {
+			fitter.setSigma(sigmaImage.get());
+		}
+		else if (sigmaArray.get()) {
+			fitter.setSigma(*sigmaArray);
+		}
+		if (! outsigma.empty()) {
+			if (sigmaImage.get() || sigmaArray.get()) {
+				fitter.setOutputSigmaImage(outsigma);
+			}
+			else {
+				*_log << LogIO::WARN
+					<< "outsigma specified but no sigma image "
+					<< "or array specified. outsigma will be ignored"
+					<< LogIO::POST;
+			}
+		}
 		return fromRecord(fitter.fit());
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
