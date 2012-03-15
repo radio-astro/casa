@@ -38,6 +38,10 @@ using namespace casa::asyncio;
         Throw ("ViWriteImplAsync --> Operation not permitted!\n" \
                "Modify VisBuffer, mark components as dirty and use VisibilityIterator::writeBack.");
 
+#define ThrowIfNoVbaAttached() \
+        ThrowIf (visBufferAsync_p != 0, "No VisBufferAsync attached to VI; try doing vi.origin() first.");
+
+
 namespace casa {
 
 
@@ -354,7 +358,7 @@ ViReadImplAsync::getDefaultNBuffers ()
 const MeasurementSet &
 ViReadImplAsync::getMs() const
 {
-    Assert (visBufferAsync_p != 0);
+    ThrowIfNoVbaAttached ();
 
     return visBufferAsync_p->getMs ();
 }
@@ -400,7 +404,7 @@ ViReadImplAsync::moreChunks () const
 const ROMSColumns &
 ViReadImplAsync::msColumns() const
 {
-    Assert (visBufferAsync_p != 0);
+    ThrowIfNoVbaAttached ();
 
     return visBufferAsync_p->msColumns();
 }
@@ -409,7 +413,7 @@ ViReadImplAsync::msColumns() const
 Int
 ViReadImplAsync::msId() const
 {
-    Assert (visBufferAsync_p != 0);
+    ThrowIfNoVbaAttached ();
 
     return visBufferAsync_p->getOldMSId ();
 }
@@ -434,9 +438,18 @@ ViReadImplAsync::nextChunk ()
 }
 
 Int
+ViReadImplAsync::nRowChunk() const
+{
+    ThrowIfNoVbaAttached ();
+
+    return visBufferAsync_p->nRowChunk ();
+}
+
+
+Int
 ViReadImplAsync::numberSpw()
 {
-    Assert (visBufferAsync_p != 0);
+    ThrowIfNoVbaAttached ();
 
     return visBufferAsync_p->getNSpw ();
 }
@@ -458,7 +471,6 @@ void
 ViReadImplAsync::originChunks ()
 {
     readComplete (); // complete any pending read
-
 
     subchunk_p.resetToOrigin ();
 

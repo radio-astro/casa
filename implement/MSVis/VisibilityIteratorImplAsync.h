@@ -178,7 +178,7 @@ public:
     Int msId() const;
     Int nCorr() const { NotImplementedROVIA; }
     Int nRow() const { NotImplementedROVIA; }
-    Int nRowChunk() const { NotImplementedROVIA; }
+    Int nRowChunk() const;
     Int nSubInterval() const { NotImplementedROVIA; }
     Bool newArrayId() const { NotImplementedROVIA; }
     Bool newFieldId() const { NotImplementedROVIA; }

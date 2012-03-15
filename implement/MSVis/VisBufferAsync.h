@@ -12,8 +12,6 @@
 
 namespace casa {
 
-class ROVisibilityIteratorAsync;
-
 namespace asyncio {
     class VlaDatum;
     class VLAT;
@@ -84,7 +82,7 @@ protected:
 
     VisBufferAsync ();
     VisBufferAsync (const VisBufferAsync & other);
-    VisBufferAsync (ROVisibilityIteratorAsync & iter);
+    VisBufferAsync (ROVisibilityIterator & iter);
 
     void attachToVisIter(ROVisibilityIterator & iter);
     void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
@@ -100,6 +98,7 @@ protected:
     const MeasurementSet & getMs () const;
     Int getNSpw () const;
     Int getOldMSId () const;
+    void initializeScalars ();
     void setDataDescriptionId (Int id);
     void setFilling (Bool isFilling);
     void setLsrInfo (const Block <Int> & channelGroupNumber,
