@@ -378,6 +378,9 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
     datum->getVisBuffer()->setSelectedNVisibilityChannels (nvischan);
     datum->getVisBuffer()->setSelectedSpectralWindows (spw);
 
+    int nSpw = visibilityIterator_p->numberSpw();
+    datum->getVisBuffer()->setNSpw (nSpw);
+
     datum->getVisBuffer()->setMSD (visibilityIterator_p->getMSD ()); // ought to be last
 }
 

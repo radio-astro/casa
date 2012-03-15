@@ -98,6 +98,8 @@ protected:
     void fillFrom (const VisBufferAsync & other);
     MDirection & fillPhaseCenter();
     const MeasurementSet & getMs () const;
+    Int getNSpw () const;
+    Int getOldMSId () const;
     void setDataDescriptionId (Int id);
     void setFilling (Bool isFilling);
     void setLsrInfo (const Block <Int> & channelGroupNumber,
@@ -113,6 +115,7 @@ protected:
     void setMSD (const MSDerivedValues & msd);
     void setNAntennas (Int);
     void setNCoh (Int);
+    void setNSpw (Int);
     void setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpectralWindow);
     void setPolarizationId (Int);
     void setNRowChunk (Int);
@@ -152,6 +155,7 @@ private:
     Bool                           newFieldId_p;
     Bool                           newSpectralWindow_p;
     Int                            nRowChunk_p;
+    Int                            nSpw_p;
     //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;
     mutable Vector<Float>          parangCached_p;      // mutable because it is a cached value

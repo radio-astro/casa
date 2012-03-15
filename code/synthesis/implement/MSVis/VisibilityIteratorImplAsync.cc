@@ -411,7 +411,7 @@ ViReadImplAsync::msId() const
 {
     Assert (visBufferAsync_p != 0);
 
-    return visBufferAsync_p->oldMSId_p;
+    return visBufferAsync_p->getOldMSId ();
 }
 
 
@@ -432,6 +432,15 @@ ViReadImplAsync::nextChunk ()
 
     return * this;
 }
+
+Int
+ViReadImplAsync::numberSpw()
+{
+    Assert (visBufferAsync_p != 0);
+
+    return visBufferAsync_p->getNSpw ();
+}
+
 
 void
 ViReadImplAsync::origin ()
