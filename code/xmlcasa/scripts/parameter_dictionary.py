@@ -369,7 +369,7 @@ class par(str):
 	def chanwidth():
 		"""
 		chanwidth -- channel width
-		default: '10MHz'
+		default: '5' (for sdsmooth) or '10MHz' (for the other tasks)
 		"""
 		
 	@staticmethod
