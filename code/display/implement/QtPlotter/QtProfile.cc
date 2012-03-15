@@ -98,7 +98,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     setWindowTitle(QString("Spectral Profile - ").append(name));
     setBackgroundRole(QPalette::Dark);
 
-    fillPlotTypes();
+    fillPlotTypes(img);
     connect(plotMode, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changePlotType(const QString &)));
     connect(errorMode, SIGNAL(currentIndexChanged(const QString &)),
@@ -521,7 +521,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	}
 
 	// adjust the error box
-	fillPlotTypes();
+	fillPlotTypes(img);
 
 	// adjust the collapse type
 	changeCollapseType();
@@ -2800,16 +2800,23 @@ void QtProfile::setCollapseVals(const Vector<Float> &spcVals){
 	return;
 }
 
-void QtProfile::fillPlotTypes(){
+void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 
-	if (plotMode->count() <1 ){
+	// check whether plot mode "flux" make sense
+	bool allowFlux(false);
+	const Unit& brightnessUnit = img->units();
+   String bUName = brightnessUnit.getName();
+   bUName.downcase();
+   if(bUName.contains("/beam"))
+   	allowFlux=true;
 
+   if (plotMode->count() <1 ){
 		// fill the plot types
 		plotMode->addItem("mean");
 		plotMode->addItem("median");
 		plotMode->addItem("sum");
-		plotMode->addItem("flux");
-		//plotMode->addItem("rmse");
+		if (allowFlux)
+			plotMode->addItem("flux");
 
 		// read the preferred plot mode from casarc
 		QString pref_plotMode = QString(rc.get("viewer." + rcid() + ".plot.type").c_str());
@@ -2823,8 +2830,19 @@ void QtProfile::fillPlotTypes(){
 		}
 		stringToPlotType(plotMode->currentText(), itsPlotType);
 	}
+   else{
+   	// add/remove "flux" if necessary
+   	if (allowFlux){
+      	if (plotMode->findText("flux")<0)
+      		plotMode->addItem("flux");
+   	}
+   	else{
+   		if (plotMode->findText("flux") > -1)
+   			plotMode->removeItem(plotMode->findText("flux"));
+   	}
+   }
 
-	// clean out the error box
+   // clean out the error box
 	if (errorMode->count() > 0){
 		if (errorMode->findText("propagated") > -1){
 			errorMode->removeItem(errorMode->findText("propagated"));

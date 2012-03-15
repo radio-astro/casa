@@ -173,7 +173,7 @@ signals:
 private:
    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
    void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
-   void fillPlotTypes();
+   void fillPlotTypes(const ImageInterface<Float>* img);
    void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
    void printIt(QPrinter*);
    bool exportASCIISpectrum(QString &fn);
