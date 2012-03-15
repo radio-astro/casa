@@ -350,89 +350,94 @@ class test_shadow(test_base):
 #        assert s['9']['flagged'] == 58968; assert s['9']['total'] == 203994
 
 
-#class test_flagmanager(test_base):
+class test_flagmanager(test_base):
     
-#    def setUp(self):
-#        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
-#        self.setUp_flagdatatest()
+    def setUp(self):
+        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
+        self.setUp_flagdatatest()
         
-#    def test1m(self):
-#        '''flagmanager test1m: mode=list, flagbackup=True/False'''
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 2)
-#        tf.done()
-#
-#
-#        tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 2)
-#        tf.done()
-#
-#        tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 3)
-#        tf.done()
-#
-#        print "Test of flagmanager mode=rename"
-#        flagmanager(vis=self.vis, mode='rename', oldname='manualflag_2', versionname='Ha! The best version ever!', 
-#                    comment='This is a *much* better name')
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 3)
-#        tf.done()
+    def test1m(self):
+        '''flagmanager test1m: mode=list, flagbackup=True/False'''
+        
+        # Create a local copy of the tool
+        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 3)
+        tflocal.done()
 
-#    def test2m(self):
-#        """flagmanager test2m: Create, then restore autoflag"""
-#
-#        tflagdata(vis=self.vis, mode='summary')
-#        flagmanager(vis=self.vis)
-#        
-#        tflagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
-#        
-#        flagmanager(vis=self.vis)
-#        ant2 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After flagging antenna 2 there were", ant2, "flags"
-#
-#        # Change flags, then restore
-#        tflagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
-#        flagmanager(vis = self.vis)
-#        ant3 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After flagging antenna 2 and 3 there were", ant3, "flags"
-#
-#        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
-#        restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
-#
-#        self.assertEqual(restore2, ant2)
 
-#    def test_CAS2701(self):
-#        """flagmanager: Do not allow flagversion=''"""
-#        
-#        tf.open(self.vis)
-#        l = len(tf.getflagversionlist())
-#        tf.done()
-#        
-#        flagmanager(vis = self.vis,
-#                    mode = "save",
-#                    versionname = "non-empty-string")
-#
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), l+1)
-#        tf.done()
-#
-#        flagmanager(vis = self.vis,
-#                    mode = "save",
-#                    versionname = "non-empty-string")
-#
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), l+1)
-#        tf.done()
+        tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 3)
+        tflocal.done()
+
+        tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 4)
+        tflocal.done()
+
+        flagmanager(vis=self.vis, mode='rename', oldname='unflag_2', versionname='Ha! The best version ever!', 
+                    comment='This is a *much* better name')
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 4)
+        tflocal.done()
+
+    def test2m(self):
+        """flagmanager test2m: Create, then restore autoflag"""
+
+        tflagdata(vis=self.vis, mode='summary')
+        flagmanager(vis=self.vis)
+        
+        tflagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
+        
+        flagmanager(vis=self.vis)
+        ant2 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 there were", ant2, "flags"
+
+        # Change flags, then restore
+        tflagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
+        flagmanager(vis = self.vis)
+        ant3 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 and 3 there were", ant3, "flags"
+
+        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
+        restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
+
+        self.assertEqual(restore2, ant2)
+
+    def test_CAS2701(self):
+        """flagmanager: Do not allow flagversion=''"""
+        
+        # Create a local copy of the tool
+        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        
+        tflocal.open(self.vis)
+        l = len(tflocal.getflagversionlist())
+        tflocal.done()
+        
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
+        tflocal.done()
+
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
+        tflocal.done()
 
 
 class test_msselection(test_base):
@@ -972,14 +977,13 @@ class test_clip(test_base):
 class cleanup(test_base):
     
     def tearDown(self):
-        os.system('rm -rf ngc5921.ms')
-        os.system('rm -rf ngc5921.ms.flagversions')
-        os.system('rm -rf flagdatatest.ms')
-        os.system('rm -rf flagdatatest.ms.flagversions')
+        os.system('rm -rf ngc5921.ms*')
+        os.system('rm -rf flagdatatest.ms*')
         os.system('rm -rf missing-baseline.ms')
-        os.system('rm -rf multiobs.ms')
-        os.system('rm -rf flagdatatest-alma.ms')
-        os.system('rm -rf Four_ants_3C286.ms')
+        os.system('rm -rf multiobs.ms*')
+        os.system('rm -rf flagdatatest-alma.ms*')
+        os.system('rm -rf Four_ants_3C286.ms*')
+        os.system('rm -rf shadowtest_part.ms*')
         os.system('rm -rf list*txt')
 
     def test1(self):
@@ -991,7 +995,7 @@ def suite():
     return [test_tfcrop,
             test_rflag,
             test_shadow,
-#            test_flagmanager,
+            test_flagmanager,
             test_selections,
             test_selections2,
             test_selections_alma,
