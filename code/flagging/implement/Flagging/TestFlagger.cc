@@ -43,7 +43,6 @@ namespace casa {
 
 const bool TestFlagger::dbg = false;
 
-// TODO: add convenient functions to other agents, to pase parameters
 
 // -----------------------------------------------------------------------
 // Default Constructor
@@ -58,6 +57,9 @@ TestFlagger::TestFlagger ()
 }
 
 
+// -----------------------------------------------------------------------
+// Default Destructor
+// -----------------------------------------------------------------------
 TestFlagger::~TestFlagger ()
 {
 	done();
@@ -124,7 +126,9 @@ TestFlagger::done()
 
 // ---------------------------------------------------------------------
 // TestFlagger::open
-// Configure some parameters to the TestFlagger
+// Create a FlagDataHandler object based on the input type:
+// MS or a calibration file. Open the MS or cal table and
+// attach it to the tool.
 // ---------------------------------------------------------------------
 bool
 TestFlagger::open(String msname, Double ntime)
@@ -159,10 +163,13 @@ TestFlagger::open(String msname, Double ntime)
 	table.relinquishAutoLocks(True);
 	table.unlock();
 	os << LogIO::NORMAL << "Table type is " << type << LogIO::POST;
+
+	// For a measurement set
 	if (type == "Measurement Set")
 	{
 		fdh_p = new FlagMSHandler(msname_p, iterationApproach_p, timeInterval_p);
 	}
+	// For a calibration file
 	else
 	{
 		fdh_p = new FlagCalTableHandler(msname_p, iterationApproach_p, timeInterval_p);
@@ -176,7 +183,8 @@ TestFlagger::open(String msname, Double ntime)
 
 // ---------------------------------------------------------------------
 // TestFlagger::selectData
-// Parse parameters to the FlagDataHandler and select the data
+// Get a record with data selection parameters and
+// Parse it to the FlagDataHandler to select the data
 // ---------------------------------------------------------------------
 bool
 TestFlagger::selectData(Record selrec)
@@ -248,7 +256,7 @@ TestFlagger::selectData(Record selrec)
 
 // ---------------------------------------------------------------------
 // TestFlagger::selectData
-// Parse parameters to the FlagDataHandler and select the data
+// Create a record with data selection parameters.
 // ---------------------------------------------------------------------
 bool
 TestFlagger::selectData(String field, String spw, String array,
@@ -316,7 +324,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		return false;
 	}
 
-	// Use the given Record of paramters
+	// Use the given Record of parameters
 	agentParams_p = agent_params;
 
 	if (! agentParams_p.isDefined("mode")) {
@@ -351,7 +359,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		agentParams_p.define("apply", apply);
 	}
 
-	// If there is a tfcrop or extend agent in the list,
+	// If there is a tfcrop, extend or rflag agent in the list,
 	// get the maximum value of ntime and the combinescans parameter
 	if (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or mode.compare("rflag") == 0) {
 		Double ntime;
@@ -379,17 +387,22 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		fdh_p->enableAsyncIO(true);
 	}
 
+	// Make correlation always uppercase
+	// Default for all modes
+	String correlation = "";
+	if (agentParams_p.isDefined("correlation")) {
+
+		agentParams_p.get("correlation", correlation);
+		correlation.upcase();
+		agentParams_p.define("correlation", correlation);
+	}
+
 	// Create one agent for each polarization
 	if (mode.compare("tfcrop") == 0) {
 
-		// Default for these modes
-		String correlation = "ABS_ALL";
-
-		if (agentParams_p.isDefined("correlation")) {
-
-			agentParams_p.get("correlation", correlation);
-		}
-		else {
+		if (not agentParams_p.isDefined("correlation")) {
+			// Default for tfcrop
+			correlation = "ABS_ALL";
 			agentParams_p.define("correlation", correlation);
 		}
 		if (dbg){
@@ -478,6 +491,8 @@ TestFlagger::initAgents()
 			" agents in the list"<<LogIO::POST;
 
 	// Check if list has a mixed state of apply and unapply parameters
+	// If the list contains apply=True and False, the apply=True list will
+	// be hidden in the debug.
 	Bool mixed, apply0;
 	size_t list_size = agents_config_list_p.size();
 	if (list_size > 1){
@@ -503,7 +518,7 @@ TestFlagger::initAgents()
 	}
 
 	// Send the logging of the re-applying agents to the debug
-	// as we are only interested in seeing the unapply action
+	// as we are only interested in seeing the unapply action (tflagcmd)
 	uChar loglevel = LogIO::DEBUGGING;
 	Bool retstate = true;
 
@@ -576,7 +591,8 @@ TestFlagger::initAgents()
 			      recstr = recstr.replace(recstr.index('\n'),1,", ");
 			    }
 
-			  os << LogIO::SEVERE << "Error in creating agent : " << x.getMesg() << endl << "Input parameters : " << recstr << LogIO::POST;
+			  os << LogIO::SEVERE << "Error in creating agent : " << x.getMesg() << endl
+					  << "Input parameters : " << recstr << LogIO::POST;
 			  retstate=false;
 			  break;
 
@@ -760,6 +776,11 @@ TestFlagger::getExpressionFunction(String expression)
 	return func;
 }
 
+// ---------------------------------------------------------------------
+// TestFlagger::getMax
+// Get the maximum between two values and
+// assign it to the max_p class member.
+// ---------------------------------------------------------------------
 void
 TestFlagger::getMax(Double value)
 {
@@ -816,7 +837,7 @@ TestFlagger::getFlagVersionList(Vector<String> &verlist)
 
 // ---------------------------------------------------------------------
 // TestFlagger::printFlagSelection
-// Get the flag versions list
+// Print the flag versions list
 //
 // ---------------------------------------------------------------------
 bool
@@ -873,8 +894,8 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 
 // ---------------------------------------------------------------------
 // TestFlagger::isModeValid
-// Check if mode is valid
-//
+// Check if mode is valid.
+// Return False if not in the list
 // ---------------------------------------------------------------------
 bool
 TestFlagger::isModeValid(String mode)
