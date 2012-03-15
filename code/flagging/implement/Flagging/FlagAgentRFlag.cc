@@ -220,7 +220,7 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    	pair<Int,Int> field_spw = std::make_pair(timedev(dev_i,0),timedev(dev_i,1));
 			    	field_spw_noise_map_p[field_spw] = timedev(dev_i,2);
 			    	user_field_spw_noise_map_p[field_spw] = True;
-			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
+			    	*logger_p << LogIO::DEBUG1 << "timedev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
 			    }
 			}
 			else
@@ -264,7 +264,7 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    	pair<Int,Int> field_spw = std::make_pair(freqdev(dev_i,0),freqdev(dev_i,1));
 			    	field_spw_scutof_map_p[field_spw] = freqdev(dev_i,2);
 			    	user_field_spw_scutof_map_p[field_spw] = True;
-			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << endl;
+				*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << LogIO::POST;
 			    }
 			}
 			else
@@ -374,30 +374,44 @@ FlagReport FlagAgentRFlag::getReport()
 
 		// Threshold reports (should be returned if params were calculated)
 		Record threshList;
-		Int nEntries = field_spw_noise_map_p.size();
-		Matrix<Double> timedev(nEntries,3), freqdev(nEntries,3);
-		Int threshCount = 0;
-		pair<Int,Int> field_spw;
-		for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
-				spw_field_iter != field_spw_noise_map_p.end();
-				spw_field_iter++)
-		{
-			field_spw = spw_field_iter->first;
+		Int nEntriesNoise = field_spw_noise_map_p.size();
+		Int nEntriesScutof = field_spw_scutof_map_p.size();
 
-			timedev(threshCount,0) = field_spw.first;
-			timedev(threshCount,1) = field_spw.second;
-			timedev(threshCount,2) = field_spw_noise_map_p[field_spw];
-			freqdev(threshCount,0) = field_spw.first;
-			freqdev(threshCount,1) = field_spw.second;
-			freqdev(threshCount,2) = field_spw_scutof_map_p[field_spw];
+		if(nEntriesNoise>0 || nEntriesScutof>0)
+	        {
+		          Matrix<Double> timedev(nEntriesNoise,3), freqdev(nEntriesScutof,3);
+			  Int threshCountTime = 0, threshCountFreq = 0;
+			  pair<Int,Int> field_spw;
+			  for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
+				        spw_field_iter != field_spw_noise_map_p.end();
+				        spw_field_iter++)
+		          {
+			            field_spw = spw_field_iter->first;
 
-			threshCount++;
+				    timedev(threshCountTime,0) = field_spw.first;
+				    timedev(threshCountTime,1) = field_spw.second;
+				    timedev(threshCountTime,2) = field_spw_noise_map_p[field_spw];
+				    threshCountTime++;
+			  }
+
+			  for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_scutof_map_p.begin();
+				        spw_field_iter != field_spw_scutof_map_p.end();
+				        spw_field_iter++)
+		          {
+			            field_spw = spw_field_iter->first;
+
+				    freqdev(threshCountFreq,0) = field_spw.first;
+				    freqdev(threshCountFreq,1) = field_spw.second;
+				    freqdev(threshCountFreq,2) = field_spw_scutof_map_p[field_spw];
+				    threshCountFreq++;
+			  }
+
+			  threshList.define( RecordFieldId("timedev") , timedev );
+			  threshList.define( RecordFieldId("freqdev") , freqdev );
+			  
+			  FlagReport returnThresh("rflag",agentName_p, threshList);
+			  totalRep.addReport(returnThresh);
 		}
-		threshList.define( RecordFieldId("timedev") , timedev );
-		threshList.define( RecordFieldId("freqdev") , freqdev );
-
-		FlagReport returnThresh("rflag",agentName_p, threshList);
-		totalRep.addReport(returnThresh);
 	}
 
 
@@ -857,7 +871,7 @@ FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
-	if (field_spw_noise_map_p.find(field_spw) == field_spw_noise_map_p.end())
+	if (field_spw_noise_map_p.find(field_spw) == field_spw_noise_map_p.end() && !noise_p)
 	{
 		Double noise = noiseScale_p*computeThreshold(	field_spw_noise_histogram_sum_p[field_spw],
 														field_spw_noise_histogram_sum_squares_p[field_spw],
@@ -867,7 +881,7 @@ FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
 		*logger_p << LogIO::DEBUG1 << " field=" << field << " spw=" <<  spw << " noise=" << noise << LogIO::POST;
 	}
 
-	if (field_spw_scutof_map_p.find(field_spw) == field_spw_scutof_map_p.end())
+	if (field_spw_scutof_map_p.find(field_spw) == field_spw_scutof_map_p.end() && !scutof_p)
 	{
 		Double scutof = scutofScale_p*computeThreshold(	field_spw_scutof_histogram_sum_p[field_spw],
 														field_spw_scutof_histogram_sum_squares_p[field_spw],
@@ -876,7 +890,6 @@ FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
 		field_spw_scutof_map_p[field_spw] = scutof;
 		*logger_p << LogIO::DEBUG1 << " field=" << field << " spw=" <<  spw << " scutof=" << scutof << LogIO::POST;
 	}
-
 
 	return;
 }

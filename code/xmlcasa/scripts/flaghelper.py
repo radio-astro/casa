@@ -1787,13 +1787,13 @@ def writeRFlagThresholdFile(rflag_thresholds={},timedevfile='', freqdevfile='',a
     Return them as arrays, and optionally, write them into a file.
     """
     # Decide the output file name.
-    if( type(timedevfile) == str and timedevfile != '' ):
+    if( type(timedevfile) == str and timedevfile != '' and timedevfile.count('[')==0 and (not timedevfile.replace('.','').isdigit() ) ):
         toutfile = timedevfile
     else:
         toutfile = 'rflag_output_thresholds_timedev'+str(agent_id)+'.txt'
 
     # Decide the output file name.
-    if( type(freqdevfile) == str and freqdevfile != '' ):
+    if( type(freqdevfile) == str and freqdevfile != ''  and freqdevfile.count('[')==0 and (not freqdevfile.replace('.','').isdigit() ) ):
         foutfile = freqdevfile
     else:
         foutfile = 'rflag_output_thresholds_freqdev'+str(agent_id)+'.txt'

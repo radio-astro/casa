@@ -480,6 +480,7 @@ def tflagdata(vis,
                     if summary_stats_list[repname]['type'] == "rflag":
                         # Pull out the rflag threshold dictionary. This has a 'name' in it.
                         rflag_thresholds = summary_stats_list[repname]
+                        ##print rflag_thresholds
                         # Get the rflag id, to later construct a 'name' from to match the above.
                         rflagid = 0
                         if mode=='list':
@@ -490,17 +491,29 @@ def tflagdata(vis,
                             if cmdline.__contains__('rflag'):
                                 # Check for match between input flagcmd and output threshold, via the rflag id
                                 if(key==rflagid):  
+                                    # If timedev,freqdev are missing from cmdline, add empty ones.
+                                    if( not cmdline.__contains__('timedev=') ):  # aah. don't confuse it with timedevscale
+                                        cmdline = cmdline + "timedev=[] ";
+                                    if( not cmdline.__contains__('freqdev=') ):
+                                        cmdline = cmdline + "freqdev=[] ";
                                     # Pull out timedev, freqdev strings from flagcmd
-                                    rflagpars = fh.getLinePars(flagcmd[key]['command'] , ['timedev','freqdev']);
+                                    rflagpars = fh.getLinePars(cmdline , ['timedev','freqdev']);
+                                    ##print "cmdline : ", cmdline
+                                    ##print "rflagpars : ", rflagpars
                                     # Write RFlag thresholds to these file names. 
                                     newtimedev,newfreqdev = fh.writeRFlagThresholdFile(rflag_thresholds, rflagpars['timedev'], rflagpars['freqdev'], rflagid)
                                     ## Modify the flagcmd string, so that savepars sees the contents of the file
-                                    oldstring = 'timedev='+str(rflagpars['timedev'])
-                                    newstring = 'timedev='+str(newtimedev).replace(' ','')
-                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
-                                    oldstring = 'freqdev='+str(rflagpars['freqdev'])
-                                    newstring = 'freqdev='+str(newfreqdev).replace(' ','')
-                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
+                                    if( rflagpars['timedev'].__contains__('[') ):
+                                        oldstring = 'timedev='+str(rflagpars['timedev'])
+                                        newstring = 'timedev='+str(newtimedev).replace(' ','')
+                                        ##print "time : replacing " , oldstring , newstring
+                                        cmdline = cmdline.replace( oldstring, newstring );
+                                    if( rflagpars['freqdev'].__contains__('[') ):
+                                        oldstring = 'freqdev='+str(rflagpars['freqdev'])
+                                        newstring = 'freqdev='+str(newfreqdev).replace(' ','')
+                                        ##print "freq : replacing " , oldstring , newstring
+                                        cmdline = cmdline.replace( oldstring, newstring );
+                                    flagcmd[key]['command'] = cmdline;
 
 
         # Save the current parameters/list to FLAG_CMD or to output
