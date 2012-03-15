@@ -64,11 +64,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>hanning</value>
 	    <value>gaussian</value>
 	    <value>boxcar</value>
+	    <value>regrid</value>
             </allowed>
     </param>
 
     <param type="int" name="kwidth" subparam="true">
 	    <description>width of spectral kernel in channels</description>
+	    <value>5</value>
+    </param>
+
+    <param type="string" name="chanwidth" subparam="true">
+	    <description>width of regridded channels</description>
 	    <value>5</value>
     </param>
 
@@ -119,6 +125,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals value="boxcar">
 			<default param="kwidth"><value>5</value></default>
 		</equals>
+		<equals value="regrid">
+			<default param="chanwidth"><value type="string">5</value></default>
+		</equals>
 	    </when>
     </constraints>
 
@@ -167,6 +176,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		         example: 5 or 10 seem to be popular for boxcar
 		                  ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
+                 chanwidth -- channel width of regridded spectra
+	                 default: '5' (in channels)
+		         example: '500MHz', '0.2km/s'
 
         verify -- verify the results of smoothing
                 options: (bool) True,False
