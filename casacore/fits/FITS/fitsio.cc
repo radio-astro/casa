@@ -274,7 +274,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        m_rec_type = FITS::BadBeginningRecord;
 	        return;
 	    }
-	    if (!(m_hdu_type == FITS::PrimaryTableHDU || 
+	    if (!(m_hdu_type == FITS::PrimaryArrayHDU || 
+                  m_hdu_type == FITS::PrimaryTableHDU || 
 		  m_hdu_type == FITS::PrimaryGroupHDU)) {
 	        errmsg(NOPRIMARY,"Missing primary header-data unit [FitsInput::init()].");
 	    } else {
