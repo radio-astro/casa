@@ -372,6 +372,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (fullTEN_p.isNull()==False) return fullTEN_p;
 
     const MeasurementSet *ms=msLike->asMS();
+    
+    //
+    // When msLike is CTInterface, msLike->asMS() will return NULL.
+    // In this case, *ms should also not be used anyway.
+    //
+    // When msLike is MSInterface, msLike->asMS() must return a usable
+    // *ms.
+    //
+    if (msLike->isMS() && (ms==NULL))
+      throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
+				    "MS pointer from MS-Like object is null")));
+
+    // if (!msLike->isMS())
+    //   {
+    // 	for (uInt i=0; i<exprOrder_p.nelements(); i++)
+    // 	  if (exprOrder_p[i] != FIELD_EXPR)
+    // 	    throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
+    // 					  "Only field-selection is supported for CalTables")));
+    //   }
+
+    if (!msLike->isMS()         &&
+	(
+	 (antennaExpr_p != "")  ||
+	 (spwExpr_p != "")      ||
+	 (scanExpr_p != "")     ||
+	 (observationExpr_p != "") ||
+	 (arrayExpr_p != "")    ||
+	 (uvDistExpr_p != "")   ||
+	 (taqlExpr_p != "")     ||
+	 (polnExpr_p != "")     ||
+	 (stateExpr_p != "")    ||
+	 (timeExpr_p != "")
+	 ))
+      throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
+				    "Only field-selection is supported for CalTables")));
+
+
     resetMS(*ms);
     //    ms_p = msLike->asMS();
     TableExprNode condition;
