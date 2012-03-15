@@ -1019,8 +1019,8 @@ information on foreign images.
 -->
 
    <method type="function" name="newimage">
-   <shortdescription>Construct a new image tool from a \casa\ image file.  
-(Also know as newimagefromfile.)</shortdescription>
+   <shortdescription>Construct a new image analysis tool using the specified image.
+(Also known as newimagefromfile.)</shortdescription>
    
 <input>
   
@@ -1031,47 +1031,15 @@ information on foreign images.
 </input>
 <returns type="casaimage"/>
 <description>
-This is the most commonly used function to create an on-the-fly image
-tool.  It constructs (creates) a \imagetool\ associated with a disk
-\imagefile.
-
-The disk image file may be a native \casa, \fits\ (Float, Double,
-Short, Long are supported) , or Miriad
-\imagefile.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
+This method is identical to ia.newimagefromfile(). The description of
+how it works is in the online help for that method.
 </description>
-
-<example>
-
-"""
-#
-print "\t----\t newimage Ex 1 \t----"
-ia.maketestimage('test1',overwrite=true)
-ia.maketestimage('test2',overwrite=true)
-print ia.name()
-#[...]test2
-im1=ia.newimage('test1')
-print im1.name()
-#[...]test1
-print im1.summary()
-im2=ia.newimage('test2')
-print im2.name()
-#[...]test2
-print im1.name()
-#[...]test1
-im1.done()
-im2.done()
-ia.close()
-#
-"""
-
-</example>
 </method>
 
 
    <method type="function" name="newimagefromfile">
-   <shortdescription>Construct a new image tool from a \casa\ image file.
-(Also know as newimage.)</shortdescription>
+   <shortdescription>Construct a new image analysis tool using the specified image.
+(Also known as newimage.)</shortdescription>
    
 <input>
   
@@ -1082,39 +1050,40 @@ ia.close()
 </input>
 <returns type="casaimage"/>
 <description>
-This is the most commonly used function to create an on-the-fly image
-tool.  It constructs (creates) a \imagetool\ associated with a disk
-\imagefile.
+This method returns an image analysis tool associated with the specified image.
+Constructing a image analysis tool in addition to the default ia tool allows the
+user to operate on multiple images without having to close one
+before opening another. All ia.newimagefrom*() methods share this functionality.
+    
+The parameter infile may refer to a CASA image, a Miriad image, or a FITS image.
+FITS images of types Float, Double, Long, and Short are supported.
 
-The disk image file may be a native \casa, \fits\ (Float, Double,
-Short, Long are supported) , or Miriad
-\imagefile.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
+When finished with the newly created tool, the user should close it to free
+up system resources (eg memory).
+
+ia.newimage() is an alias for this method.
 </description>
 
 <example>
+# This is one way to copy a FITS image into an already extant CASA image
+# of the same shape (ia.subimage() is more effecient, but this example is
+# meant to demonstrate ia.newimagefromfile()
 
-"""
-#
-print "\t----\t newimagefromfile Ex 1 \t----"
-ia.maketestimage('test1',overwrite=true)
-ia.maketestimage('test2',overwrite=true)
-print ia.name()
-#[...]test2
-im1=ia.newimagefromfile('test1')
-print im1.name()
-#[...]test1
-print im1.summary()
-im2=ia.newimagefromfile('test2')
-print im2.name()
-#[...]test2
-print im1.name()
-#[...]test1
-im1.done()
-im2.done()
-ia.close()
-#
-"""
+# note that the ia tool is not attached to an image after the first command,
+# the fitsimage tool is
+fitsimage = ia.newimagefromfile("myimage.fits")
+# now attach the target CASA image to the ia tool
+ia.open("myimage.im")
+# copy pixel values
+ia.putchunk(fitsimage.getchunk())
+# copy the coordinate system
+ia.setcoordsys(fitsimage.coordsys().torecord())
+# copy other miscellaneous things
+ia.setbrightnessunit(fitsimage.getbrightnessunit())
+ia.setmiscinfo(fitsimage.miscinfo())
+# be sure to call done() on both tools to free up memory
+ia.done()
+fitsimage.done()
 
 </example>
 </method>
