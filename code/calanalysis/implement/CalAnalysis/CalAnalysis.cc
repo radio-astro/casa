@@ -50,6 +50,9 @@ Description:
 ------------
 This class acts as the interface between the ROCTIter and CalAnalysis classes.
 
+NB: I may replace msName(), parType(), polBasis(), and visCal() with a single
+function whose second argument is the keyword name.
+
 In a nutshell:
 --------------
 * The constructor gets the information from the new format calibration table.
@@ -84,9 +87,11 @@ Class public member functions:
 CalAnalysis  - This constructor gets information from the new format calibration
                table for further processing by the stats<T>() function.
 ~CalAnalysis - This destructor deallocates the internal memory of an instance.
-tableType    - This function returns the table type (Complex or Float).
-polBasis     - This function returns the polarization basis (linear, circular,
-               or scalar).
+msName       - This function returns the associated MS name.
+parType      - This function returns the parameter type (Complex or Float).
+polBasis     - This function returns the polarization basis (linear or
+               circular).
+visCal       - This function returns the visibility calibration type.
 
 Class template public stats member functions:
 ---------------------------------------------
@@ -143,6 +148,12 @@ Modification history:
 2012 Feb 14 - Nick Elias, NRAO
               Updated this code to reflect changes in NewCalTabIter (now
               ROCTIter) and other classes.  Added the RAP enum.
+2012 Mar 13 - Nick Elias, NRAO
+              Public member function tableType() renamed to parType().  Public
+              member functions visCal() and msName() added.
+2012 Mar 14 - Nick Elias, NRAO
+              I added the spectral window ID, start channel, and stop channel
+              to the nested OUTPUT<T> class.
 
 */
 
@@ -202,10 +213,9 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   poNCTIter->reset();
 
 
-  // Get the table type and polarization basis
+  // Get the type of the parameter column
 
-  oTableType = tableType( oTableName );
-  oPolBasis = polBasis( oTableName );
+  oParType = parType( oTableName );
 
 
   // Create the feed vector
@@ -216,7 +226,7 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   if ( uiNumFeed == 1 ) {
     oFeed[0] = "S";
   } else {
-    if ( oPolBasis == 'L' ) {
+    if ( polBasis(oTableName) == 'L' ) {
       oFeed[0] = "X";
       oFeed[1] = "Y";
     } else {
@@ -231,8 +241,10 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   oTime = uniqueNoSort<Double>( poNCTIter->time() );
   uiNumTime = oTime.nelements();
 
-  oSPW = uniqueNoSort<Int>( poNCTIter->spw() );
-  uiNumSPW = oSPW.nelements();
+  Vector<Int> oSPWInt( uniqueNoSort<Int>(poNCTIter->spw()) );
+  uiNumSPW = oSPWInt.nelements();
+  oSPW.resize( uiNumSPW );
+  convertArray<uInt,Int>( oSPW, oSPWInt );
 
 
   // Get the CHAN_FREQ column from the spectral window subtable
@@ -319,11 +331,58 @@ CalAnalysis::~CalAnalysis( void ) {
 
 /*
 
-CalAnalysis::tableType
+CalAnalysis::msName
 
 Description:
 ------------
-This function returns the table type (Complex or Float).
+This function returns the associated MS name.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the String instance containing the MS name, returned via the
+function value.
+
+Modification history:
+---------------------
+2012 Mar 13 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::msName( const String& oTableName ) {
+
+  // Get the record containing the main table keywords
+
+  Table oTable( oTableName );
+  TableProxy oTP( oTable );
+  Record oR( oTP.getKeywordSet( String("") ) );
+
+
+  // Get the MS name and return it
+
+  uInt uiIndex = oR.fieldNumber( String( "MSName" ) );
+  String* poMSName = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
+
+  return( *poMSName );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::parType
+
+Description:
+------------
+This function returns the parameter type (Complex or Float).
 
 Inputs:
 -------
@@ -339,12 +398,14 @@ Modification history:
 ---------------------
 2012 Jan 20 - Nick Elias, NRAO
               Initial version.
+2012 Mar 13 - Nick Elias, NRAO
+              Function renamed to parType().
 
 */
 
 // -----------------------------------------------------------------------------
 
-String& CalAnalysis::tableType( const String& oTableName ) {
+String& CalAnalysis::parType( const String& oTableName ) {
 
   // Get the record containing the main table keywords
 
@@ -355,10 +416,10 @@ String& CalAnalysis::tableType( const String& oTableName ) {
 
   // Get the table type (Complex or Float) and return it
 
-  uInt uiIndex = oR.fieldNumber( String( "Type" ) );
-  String* poCalType = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
+  uInt uiIndex = oR.fieldNumber( String( "ParType" ) );
+  String* poParType = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
 
-  return( *poCalType );
+  return( *poParType );
 
 }
 
@@ -370,7 +431,7 @@ CalAnalysis::polBasis
 
 Description:
 ------------
-This function returns the polarization basis (linear, circular, or scalar).
+This function returns the polarization basis (linear or circular).
 
 Inputs:
 -------
@@ -379,13 +440,15 @@ oTableName - This reference to a String instance contains the new format
 
 Outputs:
 --------
-The reference to the String instance containing the polarization basis (linear,
-circular, or scalar), returned via the function value.
+The reference to the String instance containing the polarization basis
+("L"=linear or "C"=circular), returned via the function value.
 
 Modification history:
 ---------------------
 2012 Jan 20 - Nick Elias, NRAO
               Initial version.
+2012 Mar 13 - Nick Elias, NRAO
+              No "S"=scalar type.
 
 */
 
@@ -400,7 +463,7 @@ String& CalAnalysis::polBasis( const String& oTableName ) {
   Record oR( oTP.getKeywordSet( String("") ) );
 
 
-  // Get the polarization basis (Linear, Circular, or Scalar), make it upper
+  // Get the polarization basis ("L"=linear or "C"=circular), make it upper
   // case, and keep only the initial letter
 
   uInt uiIndex = oR.fieldNumber( String( "PolBasis" ) );
@@ -413,6 +476,53 @@ String& CalAnalysis::polBasis( const String& oTableName ) {
   // Return the polarization basis
 
   return( *poPolBasis );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::visCal
+
+Description:
+------------
+This function returns the visibility calibration type.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the String instance containing the visibility calibration type,
+returned via the function value.
+
+Modification history:
+---------------------
+2012 Mar 13 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::visCal( const String& oTableName ) {
+
+  // Get the record containing the main table keywords
+
+  Table oTable( oTableName );
+  TableProxy oTP( oTable );
+  Record oR( oTP.getKeywordSet( String("") ) );
+
+
+  // Get the visibility calibration type and return it
+
+  uInt uiIndex = oR.fieldNumber( String( "VisCal" ) );
+  String* poVisCal = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
+
+  return( *poVisCal );
 
 }
 
@@ -436,7 +546,7 @@ vector.
 Inputs:
 -------
 oFeedIn - This reference to a Vector<String> instance contains the feeds ("R"
-          and "L" for circular, "X" and "Y" for linear, "S" for scalar).
+          and "L" for circular, "X" and "Y" for linear).
 
 Outputs:
 --------
@@ -448,6 +558,8 @@ Modification history:
 ---------------------
 2012 Jan 20 - Nick Elias, NRAO
               Initial version.
+2012 Mar 13 - Nick Elias, NRAO
+              Now checking for null.
 
 */
 
@@ -458,7 +570,10 @@ Bool CalAnalysis::feed( const Vector<String>& oFeedIn,
 
   // Check the input feed values
 
+  if ( oFeedIn.nelements() == 0 ) return( False );
+
   for ( uInt f=0; f<oFeedIn.nelements(); f++ ) {
+    if ( oFeedIn[f] == String("") ) return( False );
     if ( !exists<String>( oFeedIn[f], oFeed ) ) return( False );
   }
 
@@ -542,26 +657,23 @@ CalAnalysis::spw_channel
 
 Description:
 ------------
-This member functions checks the input spectral window and channel vectors and
-returns the fixed spectral window and channel vectors.
-
-NB: Each element of the Vector<Int> array must correspond to an element in the
-spectral window vector.  If there is no correspondence, the function stops and
-returns False.
+This member functions checks the input spectral window and start/stop channel
+vectors and returns the fixed spectral window and channel vectors.
 
 Inputs:
 -------
-oSPWIn      - This reference to a Vector<Int> instance contains the spectral
-              window IDs.
-aoChannelIn - This array of Vector<Int> instances containing the channel
-              numbers.  Each element of the array corresponds to an element of
-              oSPWIn.
+oSPWIn           - This reference to a Vector<uInt> instance contains the
+                   spectral window IDs.
+aoStartChannelIn - This reference to a Vector<uInt> instance contains the start
+                   channels for the spectral windows.
+aoStopChannelIn  - This reference to a Vector<uInt> instance contains the stop
+                   channels for the spectral windows.
 
 Outputs:
 --------
-oSPWIn       - This Vector<Int> instance contains the checked spectral window
+oSPWIn       - This Vector<uInt> instance contains the checked spectral window
                IDs.
-aoChannelOut - This array of Vector<Int> instances containing the checked
+aoChannelOut - This array of Vector<uInt> instances containing the checked
                channel numbers.  Each element of the array corresponds to an
                element of oSPWIn.
 The reference to the success Bool variable, returned via the function value.
@@ -570,27 +682,27 @@ Modification history:
 ---------------------
 2012 Jan 20 - Nick Elias, NRAO
               Initial version.
+2012 Mar 14 - Nick Elias, NRAO
+              I replaced the array of vectors containing the channel numbers
+              with an array of start channels and an array of stop channels (the
+              index corresponds to spectral window).
 
 */
 
 // -----------------------------------------------------------------------------
 
-Bool CalAnalysis::spw_channel( const Vector<Int>& oSPWIn,
-    const Vector<Int>* const aoChannelIn, Vector<Int>& oSPWOut,
-    Vector<Int>* aoChannelOut ) const {
+Bool CalAnalysis::spw_channel( const Vector<uInt>& oSPWIn,
+    const Vector<uInt>& aoStartChannelIn, const Vector<uInt>& aoStopChannelIn,
+    Vector<uInt>& oSPWOut, Vector<uInt>* aoChannelOut ) const {
 
-  // Check the input spectral window and channel values
+  // Check the input spectral window and start/stop channel values
 
-  for ( uInt s=0; s<oSPWIn.nelements(); s++ ) {
+  uInt uiNumSPWIn = oSPWIn.nelements();
+  if ( uiNumSPWIn == 0 ) return( False );
 
-    if ( !exists<Int>( oSPWIn[s], oSPW ) ) return( False );
-
-    for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
-      if ( aoChannelIn[s][c] < 0 || aoChannelIn[s][c] >= (Int) oNumFreq[s] ) {
-        return( False );
-      }
-    }
-
+  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
+    if ( !exists<uInt>( oSPWIn[s], oSPW ) ) return( False );
+    if ( aoStartChannelIn[s] > aoStopChannelIn[s] ) return( False );
   }
 
 
@@ -598,26 +710,22 @@ Bool CalAnalysis::spw_channel( const Vector<Int>& oSPWIn,
   // values, return False.
 
   if ( oSPWOut.nelements() != 0 ) oSPWOut.resize();
-  oSPWOut = uniqueNoSort<Int>( oSPWIn );
+  oSPWOut = uniqueNoSort<uInt>( oSPWIn );
 
-  if ( oSPWOut.nelements() != oSPWIn.nelements() ) return( False );
+  uInt uiNumSPWOut = oSPWOut.nelements();
+  if ( uiNumSPWOut != uiNumSPWIn ) return( False );
 
 
   // Get the unique and unsorted channel values
 
   if ( aoChannelOut == NULL ) {
-    aoChannelOut = new Vector<Int> [oSPWOut.nelements()];
+    aoChannelOut = new Vector<uInt> [uiNumSPWOut];
   }
 
-  for ( uInt s=0; s<oSPWOut.nelements(); s++ ) {
-
-    if ( aoChannelOut[s].nelements() > 0 ) aoChannelOut[s].resize();
-    aoChannelOut[s] = aoChannelIn[s];
-
-    uInt uiNumChannelOut = GenSort<Int>::sort( aoChannelOut[s],
-        Sort::Ascending, Sort::NoDuplicates );
-    aoChannelOut[s].resize( uiNumChannelOut, True );
-
+  for ( uInt s=0; s<uiNumSPWOut; s++ ) {
+    uInt uiNumChannel = aoStopChannelIn[s] - aoStartChannelIn[s] + 1;
+    aoChannelOut[s].resize( uiNumChannel, False );
+    indgen<uInt>( aoChannelOut[s], aoStartChannelIn[s] );
   }
 
 
@@ -643,9 +751,9 @@ CalAnalysis::spw_channel() function before feeding them to this function.
 
 Inputs:
 -------
-oSPWIn      - This reference to a Vector<Int> instance contains the spectral
+oSPWIn      - This reference to a Vector<uInt> instance contains the spectral
               window IDs.
-aoChannelIn - This array of Vector<Int> instances containing the channel
+aoChannelIn - This array of Vector<uInt> instances containing the channel
               numbers.  Each element of the array corresponds to an element of
               oSPWIn.
 
@@ -664,16 +772,31 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-Bool CalAnalysis::freq( const Vector<Int>& oSPWIn,
-    const Vector<Int>* const aoChannelIn, Vector<Double>& oFreqOut ) const {
+Bool CalAnalysis::freq( const Vector<uInt>& oSPWIn,
+    const Vector<uInt>* const aoChannelIn, Vector<Double>& oFreqOut ) const {
+
+  // Check the input spectral window and channel values
+
+  uInt uiNumSPWIn = oSPWIn.nelements();
+  if ( uiNumSPWIn == 0 ) return( False );
+
+  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
+
+    if ( !exists<uInt>( oSPWIn[s], oSPW ) ) return( False );
+
+    for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
+      if ( aoChannelIn[s][c] >= oNumFreq[s] ) return( False );
+    }
+
+  }
+
 
   // Get the frequency values
 
   if ( oFreqOut.nelements() != 0 ) oFreqOut.resize();
-
   uInt uiNumFreqOut = 0;
 
-  for ( uInt s=0,fStart=0; s<oSPWIn.nelements(); s++ ) {
+  for ( uInt s=0,fStart=0; s<uiNumSPWIn; s++ ) {
 
     for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
       oFreqOut.resize( ++uiNumFreqOut, True );

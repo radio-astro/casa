@@ -90,6 +90,9 @@ Description:
 ------------
 This class acts as the interface between the ROCTIter and CalAnalysis classes.
 
+NB: I may replace msName(), parType(), polBasis(), and visCal() with a single
+function whose second argument is the keyword name.
+
 In a nutshell:
 --------------
 * The constructor gets the information from the new format calibration table.
@@ -124,9 +127,11 @@ Class public member functions:
 CalAnalysis  - This constructor gets information from the new format calibration
                table for further processing by the stats<T>() function.
 ~CalAnalysis - This destructor deallocates the internal memory of an instance.
-tableType    - This function returns the table type (Complex or Float).
-polBasis     - This function returns the polarization basis (linear, circular,
-               or scalar).
+msName       - This function returns the associated MS name.
+parType      - This function returns the parameter type (Complex or Float).
+polBasis     - This function returns the polarization basis (linear or
+               circular).
+visCal       - This function returns the visibility calibration type.
 
 Class template public stats member functions:
 ---------------------------------------------
@@ -183,6 +188,12 @@ Modification history:
 2012 Feb 14 - Nick Elias, NRAO
               Updated this code to reflect changes in NewCalTabIter (now
               ROCTIter) and other classes.  Added the RAP enum.
+2012 Mar 13 - Nick Elias, NRAO
+              Public member function tableType() renamed to parType().  Public
+              member functions visCal() and msName() added.
+2012 Mar 14 - Nick Elias, NRAO
+              I added the spectral window ID, start channel, and stop channel
+              to the nested OUTPUT<T> class.
 
 */
 
@@ -205,6 +216,9 @@ class CalAnalysis {
         uInt uiField;
         uInt uiAntenna1;
         uInt uiAntenna2;
+	Vector<uInt> oSPW;
+	Vector<uInt> oStartChan;
+	Vector<uInt> oStopChan;
         Matrix<CalStats::OUT<T> > oOut;
     };
 
@@ -215,19 +229,21 @@ class CalAnalysis {
     virtual ~CalAnalysis( void );
 
     // Get main table keywords
-    String& tableType( const String& oTableName );
+    String& parType( const String& oTableName );
     String& polBasis( const String& oTableName );
+    String& visCal( const String& oTableName );
+    String& msName( const String& oTableName );
 
     // Calculate statistics for the specified fields, antennas, time range,
     // feeds, spectral windows, and channels (allowed T: CalStats::NONE gets
     // data without calculating statistics, CalStatsFitter::FIT calculates fits,
     // and CalStatsHist::HIST calculates histogram statistics).
     template <typename T>
-    Vector<OUTPUT<T> >& stats( const Vector<Int>& oFieldIn,
-        const Vector<Int>& oAntenna1In, const Vector<Int>& oAntenna2In,
+    Vector<OUTPUT<T> >& stats( const Vector<uInt>& oFieldIn,
+        const Vector<uInt>& oAntenna1In, const Vector<uInt>& oAntenna2In,
         const Double& dStartTimeIn, const Double& dStopTimeIn,
-        const Vector<String>& oFeedIn, const Vector<Int>& oSPWIn,
-        const Vector<Int>* const aoChannelIn,
+        const Vector<String>& oFeedIn, const Vector<uInt>& oSPWIn,
+        const Vector<uInt>& oStartChannelIn, const Vector<uInt>& oStopChannelIn,
         const CalStats::AXIS& eAxisIterUserID, const RAP& eRAP,
         const CalStats::ARG<T>& oArg );
 
@@ -244,8 +260,7 @@ class CalAnalysis {
     NewCalTable* poNCT;
     ROCTIter* poNCTIter;
 
-    String oTableType;
-    String oPolBasis;
+    String oParType;
     
     uInt uiNumFeed;
     Vector<String> oFeed;
@@ -254,7 +269,7 @@ class CalAnalysis {
     Vector<Double> oTime;
 
     uInt uiNumSPW;
-    Vector<Int> oSPW;
+    Vector<uInt> oSPW;
 
     uInt uiNumFreq;
     Vector<uInt> oNumFreq;
@@ -265,11 +280,11 @@ class CalAnalysis {
     Bool feed( const Vector<String>& oFeedIn, Vector<String>& oFeedOut ) const;
     Bool time( const Double& dStartTimeIn, const Double& dStopTimeIn,
         Vector<Double>& oTimeOut ) const;
-    Bool spw_channel( const Vector<Int>& oSPWIn,
-        const Vector<Int>* const aoChannelIn, Vector<Int>& oSPWOut,
-        Vector<Int>* aoChannelOut ) const;
-    Bool freq( const Vector<Int>& oSPWIn, const Vector<Int>* const aoChannelIn,
-        Vector<Double>& oFreqOut ) const;
+    Bool spw_channel( const Vector<uInt>& oSPWIn,
+        const Vector<uInt>& oStartChannelIn, const Vector<uInt>& oStopChannelIn,
+        Vector<uInt>& oSPWOut, Vector<uInt>* aoChannelOut ) const;
+    Bool freq( const Vector<uInt>& oSPWIn,
+        const Vector<uInt>* const aoChannelIn, Vector<Double>& oFreqOut ) const;
 
     // This function sorts the input feed x frequency(spw) x row(spw,time) cube
     // (from ROCTIter) to feed x frequency x time (for CalStats)
@@ -345,12 +360,12 @@ NB: The stats<T>() function calculates statistics (the type depends on T) and
 
 Inputs:
 -------
-oFieldIn        - This reference to a Vector<Int> instance contains the field
+oFieldIn        - This reference to a Vector<uInt> instance contains the field
                   IDs.
-oAntenna1In     - This reference to a Vector<Int> instance contains the antenna
+oAntenna1In     - This reference to a Vector<uInt> instance contains the antenna
                   1 IDs.  This vector must be the same length as oAntenna2In,
                   i.e., the vectors together comprise the baselines.
-oAntenna2In     - This reference to a Vector<Int> instance contains the antenna
+oAntenna2In     - This reference to a Vector<uInt> instance contains the antenna
                   2 IDs.  This vector must be the same length as oAntenna1In,
                   i.e., the vectors together comprise the baselines.
 dStartTimeIn    - This reference to a Double variable contains the start time.
@@ -358,10 +373,13 @@ dStopTimeIn     - This reference to a Double variable contains the stop time.
 oFeedIn         - This reference to a Vector<String> instance contains the feeds
                   ("R" and "L" for circular, "X" and "Y" for linear, "S" for
                   scalar).
-oSPWIn          - This reference to a Vector<Int> instance contains the spectral
-                  window IDs.
-aoChannelIn     - This array of Vector<Int> instances containing the channel
-                  numbers.  Each element of the array corresponds to an element
+oSPWIn          - This reference to a Vector<uInt> instance contains the
+                  spectral window IDs.
+oStartChannelIn - This reference to a Vector<uInt> instance contains the start
+                  channels.  Each element of the array corresponds to an element
+                  of oSPWIn.
+oStopChannelIn  - This reference to a Vector<uInt> instance contains the start
+                  channels.  Each element of the array corresponds to an element
                   of oSPWIn.
 eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
                   FREQUENCY or TIME iteration axes (user defined).
@@ -392,12 +410,12 @@ Modification history:
 
 template <typename T>
 Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
-    const Vector<Int>& oFieldIn, const Vector<Int>& oAntenna1In,
-    const Vector<Int>& oAntenna2In, const Double& dStartTimeIn,
+    const Vector<uInt>& oFieldIn, const Vector<uInt>& oAntenna1In,
+    const Vector<uInt>& oAntenna2In, const Double& dStartTimeIn,
     const Double& dStopTimeIn, const Vector<String>& oFeedIn,
-    const Vector<Int>& oSPWIn, const Vector<Int>* const aoChannelIn,
-    const CalStats::AXIS& eAxisIterUserID, const RAP& eRAP,
-    const CalStats::ARG<T>& oArg ) {
+    const Vector<uInt>& oSPWIn, const Vector<uInt>& oStartChannelIn,
+    const Vector<uInt>& oStopChannelIn, const CalStats::AXIS& eAxisIterUserID,
+    const RAP& eRAP, const CalStats::ARG<T>& oArg ) {
 
   // Initialize the output vector containing statistics versus field ID, antenna
   // 1, and antenna 2
@@ -453,10 +471,10 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     return( *poOutput );
   }
 
-  Vector<Int> oSPWTemp = Vector<Int>();
-  Vector<Int>* aoChannelTemp = new Vector<Int> [oSPWIn.nelements()];
-  Bool bSPW_Channel = spw_channel( oSPWIn, aoChannelIn, oSPWTemp,
-      aoChannelTemp );
+  Vector<uInt> oSPWTemp = Vector<uInt>();
+  Vector<uInt>* aoChannelTemp = new Vector<uInt> [oSPWIn.nelements()];
+  Bool bSPW_Channel = spw_channel( oSPWIn, oStartChannelIn, oStopChannelIn,
+      oSPWTemp, aoChannelTemp );
   if ( !bSPW_Channel ) {
     LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid spectral window(s) and/or channels"
@@ -478,9 +496,9 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 
   while ( !poNCTIter->pastEnd() ) {
 
-    if ( !exists<Int>( poNCTIter->field()[0], oFieldIn ) ||
-         !exists<Int>( poNCTIter->antenna1()[0], oAntenna1In ) ||
-         !exists<Int>( poNCTIter->antenna2()[0], oAntenna2In ) ) {
+    if ( !exists<uInt>( poNCTIter->field()[0], oFieldIn ) ||
+         !exists<uInt>( poNCTIter->antenna1()[0], oAntenna1In ) ||
+         !exists<uInt>( poNCTIter->antenna2()[0], oAntenna2In ) ) {
       poNCTIter->next();
       continue;
     }
@@ -490,21 +508,33 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     poOutput->operator[](uiNumOutput-1).uiField = poNCTIter->field()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna1 = poNCTIter->antenna1()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna2 = poNCTIter->antenna2()[0];
+    poOutput->operator[](uiNumOutput-1).oSPW = oSPWTemp;
+    poOutput->operator[](uiNumOutput-1).oStartChan = oStartChannelIn;
+    poOutput->operator[](uiNumOutput-1).oStopChan = oStopChannelIn;
 
-    Cube<Complex> oParamP = parse<Complex>( poNCTIter->cparam() );
-    Cube<Complex> oParam = select<Complex>( oParamP, oFeedTemp, oFreqTemp,
-        oTimeTemp );
-    Cube<DComplex> oParamD( oParam.shape(), 0.0 );
-    convertArray<DComplex,Complex>( oParamD, oParam );
+    Cube<Double> oParamD;
+    Cube<DComplex> oParamDC;
 
-    Cube<Float> oParamErrP = parse<Float>( poNCTIter->paramErr() );
-    Cube<Float> oParamErr = select<Float>( oParamErrP, oFeedTemp, oFreqTemp,
-        oTimeTemp );
+    if ( oParType == String("Float") ) {
+      Cube<Float> oParamF = select<Float>( parse<Float>(poNCTIter->fparam()),
+          oFeedTemp, oFreqTemp, oTimeTemp );
+      oParamD.resize( oParamF.shape(), 0.0 );
+      convertArray<Double,Float>( oParamD, oParamF.copy() );
+    } else {
+      Cube<Complex> oParamC = select<Complex>(
+          parse<Complex>(poNCTIter->cparam()), oFeedTemp, oFreqTemp,
+          oTimeTemp );
+      oParamDC.resize( oParamC.shape(), 0.0 );
+      convertArray<DComplex,Complex>( oParamDC, oParamC.copy() );
+    }
+
+    Cube<Float> oParamErr = select<Float>( parse<Float>(poNCTIter->paramErr()),
+        oFeedTemp, oFreqTemp, oTimeTemp );
     Cube<Double> oParamErrD( oParamErr.shape(), 0.0 );
     convertArray<Double,Float>( oParamErrD, oParamErr );
 
-    Cube<Bool> oFlagP = parse<Bool>( poNCTIter->flag() );
-    Cube<Bool> oFlag = select<Bool>( oFlagP, oFeedTemp, oFreqTemp, oTimeTemp );
+    Cube<Bool> oFlag = select<Bool>( parse<Bool>(poNCTIter->flag()), oFeedTemp,
+        oFreqTemp, oTimeTemp );
 
     CalStats* poCS = NULL;
 
@@ -512,15 +542,15 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 
       switch ((uInt) eRAP) {
         case (uInt) REAL:
-          poCS = (CalStats*) new CalStatsReal( real(oParamD), oParamErrD,
-              oFlag, oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID );
+          poCS = (CalStats*) new CalStatsReal( oParamD, oParamErrD, oFlag,
+              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID );
           break;
 	case (uInt) AMPLITUDE:
-	  poCS = (CalStats*) new CalStatsAmp( oParamD, oParamErrD, oFlag,
+	  poCS = (CalStats*) new CalStatsAmp( oParamDC, oParamErrD, oFlag,
               oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True );
           break;
 	case (uInt) PHASE:
-	  poCS = (CalStats*) new CalStatsPhase( oParamD, oParamErrD, oFlag,
+	  poCS = (CalStats*) new CalStatsPhase( oParamDC, oParamErrD, oFlag,
               oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True );
           break;
         default:
