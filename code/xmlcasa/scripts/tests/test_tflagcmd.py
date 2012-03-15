@@ -183,14 +183,16 @@ class test_unapply(test_base):
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         
         # Flag using tfcrop agent from file
-        # Note : For this test, scan=4 gives identical flags on 32/64 bit machines
+        # Note : For this test, scan=4 gives identical flags on 32/64 bit machines,
+        #           and one flag difference on a Mac (32)
         #           Other scans give differences at the 0.005% level.
         input = "scan=4 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
         res = tflagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
-        self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
+        #self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
+        self.assertTrue(res['scan']['4']['flagged']>= 1200 and res['scan']['4']['flagged']<= 1204, 'scan=4 should be partially flagged')
         
         # Unapply only the tfcrop line
         tflagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
