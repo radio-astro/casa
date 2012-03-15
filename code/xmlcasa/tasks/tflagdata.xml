@@ -843,43 +843,88 @@ tfcrop,rflag,extend,unflag,summary)</description>
                             in a window centered on that point is larger than N-stddev/2.0. 
                             This option is an attempt to catch noisy RFI that is not excluded in the
                             polynomial fits, and which increases the global stddev, and results in 
-                            fewer flags (based on the N-stddev threshold). This is an approximation to
-                            the idea behind 'rflag' in AIPS (which E.Greisen is currently refining).
+                            fewer flags (based on the N-stddev threshold).
                                                                 
                 halfwin -- Half width of sliding window to use with 'usewindowstats'
                     default: 1  (a 3-point window size)
                     options: 1,2,3
                         Note: This is experimental !
 
-            rflag -- Detect outliers based on a sliding-window RMS.
+            rflag -- Detect outliers based on the RFLAG algorithm (ref. E.Greisen, AIPS, 2011)
+
+                         Iterate through the data in chunks of time.  For each chunk, calculate local
+                         statistics, and apply flags based on user supplied (or auto-calculated) thresholds.
+
+                         Step 1 : Time analysis (for each channel)
+                           -- calculate local rms of real and imag visibilities, within a sliding time window
+                           -- calculate the median rms across time windows, deviations of local rms from
+                              this median, and the median deviation 
+                           -- flag if local rms is larger than timedevscale x (medianRMS + medianDev)
+
+                         Step 2 : Spectral analysis (for each time)
+                           -- calculate avg of real and imag visibilities and their rms across channels
+                           -- calculate the deviation of each channel from this avg, and the median-deviation
+                           -- flag if deviation is larger than freqdevscale x medianDev
+
+                       Example usage : 
+                        (1) Calculate thresholds automatically per scan, and use them to find flags.
+                             Specify scale-factor for time-analysis thresholds, use default for frequency.
+
+                              tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
+ 
+                        (2) Supply noise-estimates to be used with default scale-factors. 
+  
+                              tflagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, writeflags=True);
+
+                        (3) Two-passes. This replicates the usage pattern in AIPS.
+
+                             -- The first pass saves commands in an output cmd file, with auto-calculated thresholds.
+                                The user can edit this file before doing the second pass. Thresholds are returned from 
+                                rflag only when writeflags=False (calc-only mode). 
+                             -- The second pass applies these commands (writeflags=True).
+
+                              tflagdata(vis='my.ms', mode='rflag', spw='9,10', writeflags=False, 
+                                             savepars=True,outfile='outcmd.txt');
+                              tflagdata(vis=msname, mode='list', inpfile='outcmd.txt',writeflags=True);
+
             
-                     The rflag algorithm was originally developed by Eric Greisen in AIPS (31DEC11).
-                     AIPS documentation : 
-                     Task parameters : http://www.aips.nrao.edu/cgi-bin/ZXHLP2.PL?RFLAG
-                     Summary : Section E.5 of the AIPS cookbook
-                     (Appendix E : Special Considerations for EVLA data calibration and imaging in AIPS,
-                     http://www.aips.nrao.edu/cook.html#CEE )
-                     
-                winsize -- 
+                        Note : The rflag algorithm was originally developed by Eric Greisen in AIPS (31DEC11).
+                        AIPS documentation : Section E.5 of the AIPS cookbook
+                        (Appendix E : Special Considerations for EVLA data calibration and imaging in AIPS,
+                        http://www.aips.nrao.edu/cook.html#CEE )
+
+                winsize -- size of the sliding time window ( fparm(1) in AIPS ). 
                     default: 3
                     
-                timedev --
+                timedev -- time-series noise estimate ( noise in AIPS ). 
                     default: []
+                    Examples : 
+                         timedev = 0.5 : Use this noise-estimate to calculate flags. Do not recalculate.
+                         timedev = [ [1,9,0.2], [1,10,0.5] ] :  Use noise-estimate of 0.2 for field 1, spw 9, 
+                                                                              and noise-estimate of 0.5 for field 1, spw 10.
+                         timedev = [] : Auto-calculate noise estimates.
+                
                     
-                freqdev --
+                freqdev -- spectral noise estimate ( scutoff in AIPS ).
+                               This step depends on having a relatively-flat bandshape.
+                               Same parameter-options as 'timedev'. 
                     default: []
+                     
 
-                timedevscale --
+                timedevscale -- For Step 1 (time analysis), flag a point if local rms around it 
+                                        is larger than  'timedevscale' x 'timedev'   ( fparm(0) in AIPS )
                     default: 5.0
                     
-                freqdevscale --
+                freqdevscale -- For Step 2 (spectral analysis), flag a point if local rms around it
+                                       is larger than 'freqdevscale' x 'freqdev'     ( fparm(10) in AIPS )
                     default: 5.0
 
-                spectralmax -- 
+                spectralmax -- Flag whole spectrum if 'freqdev' is greater than spectralmax ( fparm(6) in AIPS )
                     default: 1E6
                     
-                spectralmin --
+                spectralmin -- Flag whole spectrum if 'freqdev' is less than spectralmin ( fparm(5) in AIPS )
                     default: 0.0
+
 
 
             extend -- Extend and/or grow flags beyond what the basic algorithms detect.
@@ -1067,6 +1112,11 @@ tfcrop,rflag,extend,unflag,summary)</description>
             
             tflagdata(vis=self.vis, mode='list', inpfile='flags.txt', reason='MYREASON')
             
+        11) Automatic flagging using 'rflag', using auto-thresholds, and specifying 
+              a threshold scale-factor to use for flagging.
+
+            tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
+
 
    ---- SYNTAX FOR COMMANDS GIVEN IN A FILE ----
 
