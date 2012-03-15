@@ -38,7 +38,6 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/RebinImage.h>
-#include <images/Images/ImageFit1D.h>
 #include <lattices/Lattices/TiledShape.h>
 #include <lattices/Lattices/TempLattice.h>
 #include <lattices/Lattices/TiledLineStepper.h>

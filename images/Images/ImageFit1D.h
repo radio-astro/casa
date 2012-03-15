@@ -40,6 +40,8 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <components/SpectralComponents/ProfileFit1D.h>
 
+#include <memory>
+
 namespace casa {
 
 class SpectralElement;
@@ -122,9 +124,9 @@ public:
        VELOCITY = 2,
        N_TYPES};
 
-    // Default Constructor (no image or axis set, so cannot be used).
-    // You must call <src>setImage</src> to use this object.
-    // FIXME if I cannot use it, why is it public?
+    // Default Constructor. No image or axis set, so
+    // <src>fit()</src> cannot be called until other parameters are set,
+    // via eg <src>setImage</src>.
     ImageFit1D();
 
     // Constructor.  Fitting weights are assumed all unity.
@@ -252,8 +254,8 @@ public:
     Bool isValid() const;
 
 private:
-   ImageInterface<T>* itsImagePtr;
-   ImageInterface<T>* itsWeightPtr;
+   std::auto_ptr<ImageInterface<T> > itsImagePtr;
+   std::auto_ptr<ImageInterface<T> > itsWeightPtr;
    uInt itsAxis;
 
 // In the future I will be able to template the fitter on T. For now
@@ -271,6 +273,10 @@ private:
    void copy (const ImageFit1D<T>& other);
    Bool makeAbcissa (Vector<Double>& x, ImageFit1D<T>::AbcissaType type, Bool doAbs);
    void setWeightsImage (const ImageInterface<T>& im);
+
+   // reset the fitter, for example if we've done a fit and want to move
+   // to the next position in the image
+   void _resetFitter();
 
 };
 

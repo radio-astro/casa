@@ -31,9 +31,10 @@
 
 #include <casa/aips.h>
 #include <components/ComponentModels/ComponentType.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/MaskSpecifier.h>
-#include <images/Images/ImageFit1D.h>
 #include <measures/Measures/Stokes.h>
+#include <lattices/Lattices/TiledShape.h>
 #include <casa/Utilities/PtrHolder.h>
 #include <casa/Containers/SimOrdMap.h>
 
