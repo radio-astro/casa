@@ -878,15 +878,16 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
                         (3) Two-passes. This replicates the usage pattern in AIPS.
 
-                             -- The first pass saves commands in an output cmd file, with auto-calculated thresholds.
-                                The user can edit this file before doing the second pass. Thresholds are returned from 
-                                rflag only when writeflags=False (calc-only mode). 
+                             -- The first pass saves commands in an output text files, with auto-calculated thresholds.
+                                Thresholds are returned from rflag only when writeflags=False (calc-only mode). 
+                                The user can edit this file before doing the second pass, but the python-dictionary 
+                                 structure must be preserved.
                              -- The second pass applies these commands (writeflags=True).
 
-                              tflagdata(vis='my.ms', mode='rflag', spw='9,10', writeflags=False, 
-                                             savepars=True,outfile='outcmd.txt');
-                              tflagdata(vis=msname, mode='list', inpfile='outcmd.txt',writeflags=True);
-
+                              tflagdata(vis='my.ms', mode='rflag', spw='9,10', 
+                                            timedev='tdevfile.txt', freqdev='fdevfile.txt', writeflags=False);
+                              tflagdata(vis='my.ms', mode='rflag', spw='9,10', 
+                                            timedev='tdevfile.txt', freqdev='fdevfile.txt', writeflags=True);
             
                         Note : The rflag algorithm was originally developed by Eric Greisen in AIPS (31DEC11).
                         AIPS documentation : Section E.5 of the AIPS cookbook
