@@ -159,24 +159,50 @@ del ca
 
 <!-- *********************************************************************** -->
 
-<method type="function" name="coltype">
+<method type="function" name="msname">
 
 <shortdescription>
-Get PARAM and PARAMERR column type in the calibration table.
+Get name of the MS that created this calibration table.
 </shortdescription>
 
 <description>
-Get PARAM and PARAMERR column type in the calibration table.
+Get name of the MS that created this calibration table.
 </description>
 
 <returns type="string">
-  <shortdescription>Column type</shortdescription>
+  <shortdescription>MS name</shortdescription>
 </returns>
 
 <example>
 ca = calanalysis()
 ca.open( '{caltable name}' )
-coltype = ca.coltype()
+msname = ca.msname()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="partype">
+
+<shortdescription>
+Get parameter column type in the calibration table ('Complex' or 'Float').
+</shortdescription>
+
+<description>
+Get parameter column type in the calibration table ('Complex' or 'Float').
+</description>
+
+<returns type="string">
+  <shortdescription>Parameter column type</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+partype = ca.partype()
 ca.close()
 del ca
 </example>
@@ -203,6 +229,32 @@ Get polarization basis in the calibration table.
 ca = calanalysis()
 ca.open( '{caltable name}' )
 polbasis = ca.polbasis()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="viscal">
+
+<shortdescription>
+Get the type of calibration table (B, G, T, etc.).
+</shortdescription>
+
+<description>
+Get the type of calibration table (B, G, T, etc.).
+</description>
+
+<returns type="string">
+  <shortdescription>Calibration table type</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+viscal = ca.viscal()
 ca.close()
 del ca
 </example>
