@@ -189,6 +189,9 @@ def tflagdata(vis,
             agent_pars['channelavg'] = channelavg
             agent_pars['clipzeros'] = clipzeros
             
+
+            if type(clipminmax) != list:
+                casalog.post('Error : clipminmax must be a list : [min,max]', 'ERROR')
             # If clipminmax = [], do not write it in the dictionary.
             # It will be handled by the framework to flag NaNs only
             if clipminmax.__len__() == 2:      
