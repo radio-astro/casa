@@ -255,6 +255,46 @@ testflagger::saveflagversion(const std::string& versionname, const std::string& 
 }
 
 bool
+testflagger::restoreflagversion(const std::vector<std::string>& versionname,
+		const std::string& merge)
+{
+    try
+    {
+        if(testflagger_p)
+        {
+        	Vector<String> verlist;
+        	verlist.resize(0);
+        	verlist = toVectorString(versionname);
+            return testflagger_p->restoreFlagVersion(verlist, String(merge));
+        }
+        return False;
+    } catch (AipsError x) {
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            RETHROW(x);
+    }
+}
+
+bool
+testflagger::deleteflagversion(const std::vector<std::string>& versionname)
+{
+    try
+    {
+        if(testflagger_p)
+        {
+        	Vector<String> verlist;
+        	verlist.resize(0);
+        	verlist = toVectorString(versionname);
+            return testflagger_p->deleteFlagVersion(verlist);
+        }
+        return False;
+    } catch (AipsError x) {
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            RETHROW(x);
+    }
+}
+
+
+bool
 testflagger::parsemanualparameters(
 		const std::string& field,
 		const std::string& spw,

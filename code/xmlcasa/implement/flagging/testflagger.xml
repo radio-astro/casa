@@ -262,8 +262,7 @@ Executes a flagging run.
 <!-- ********************************************************************** -->
 
     <method type="function" name="getflagversionlist">
-   <shortdescription>*** \n Print out a list of saved flag_versions. 
-              ***</shortdescription>
+   <shortdescription>Print out a list of saved flag_versions.</shortdescription>
 <description> 
 Print out the list of flag versions in the MS, unless the parameter printflags=False. The list of names is returned.
 </description>
@@ -279,11 +278,11 @@ Print out the list of flag versions in the MS, unless the parameter printflags=F
 <!-- ********************************************************************** -->
 
    <method type="function" name="printflagselection">
-   <shortdescription>Print out a list of current manual and auto flag selections.
+   <shortdescription>Print out a list of current flag selections.
    </shortdescription>
    
 <description>
-Print out a list of current manual and auto flag selections.
+Print out a list of current flag selections.
 </description>
 <input>
 </input>
@@ -293,7 +292,7 @@ Print out a list of current manual and auto flag selections.
 <!-- ********************************************************************** -->
 
    <method type="function" name="saveflagversion">
-   <shortdescription>*** \n Save current flags with a version name.*** 
+   <shortdescription>Save current flags with a version name.
             </shortdescription>
 <description> 
 </description>
@@ -308,6 +307,50 @@ Print out a list of current manual and auto flag selections.
      </param>
      <param type="string" name="merge">
      <description>merge type </description>
+     <value>""</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="restoreflagversion">
+   <shortdescription>Restore flags from a saved flag_version. 
+			\n versionname : name of flag version to restore to main table
+			\n merge : Type of operation to perform during restoration.
+			\n        merge = replace  : replaces the main table flags.
+			\n        merge = and   : logical AND with main table flags
+			\n        merge = or    : logical OR with main table flags
+			\n        Default : replace.
+ 			  \n
+   </shortdescription>
+<description> 
+</description>
+<input>
+     <param type="stringArray" name="versionname">
+     <description>Version name </description>
+     <value>""</value>
+     </param>
+     <param type="string" name="merge">
+     <description>merge type </description>
+     <value>""</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ********************************************************************** -->
+
+
+    <method type="function" name="deleteflagversion">
+   <shortdescription>Delete a saved flag_version.</shortdescription>
+<description> 
+</description>
+<input>
+     <param type="stringArray" name="versionname">
+     <description>Version name </description>
      <value>""</value>
      </param>
 </input>

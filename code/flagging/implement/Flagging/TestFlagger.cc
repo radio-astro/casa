@@ -877,7 +877,7 @@ TestFlagger::printFlagSelections()
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
+TestFlagger::saveFlagVersion(String versionname, String comment, String merge)
 {
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
 
@@ -890,6 +890,66 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
 	fv.saveFlagVersion(versionname, comment, merge);
 
 	return true;
+}
+
+
+// ---------------------------------------------------------------------
+// TestFlagger::restoreFlagVersion
+// Restore the flag version
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::restoreFlagVersion(Vector<String> versionname, String merge)
+{
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
+	try
+	{
+		FlagVersion fv(fdh_p->getTableName(),"FLAG","FLAG_ROW");
+		for(Int j=0;j<(Int)versionname.nelements();j++)
+			fv.restoreFlagVersion(versionname[j], merge);
+	}
+	catch (AipsError x)
+	{
+		os << LogIO::SEVERE << "Could not restore Flag Version : " << x.getMesg() << LogIO::POST;
+		return False;
+	}
+	return True;
+}
+
+// ---------------------------------------------------------------------
+// TestFlagger::deleteFlagVersion
+// Delete the flag version
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::deleteFlagVersion(Vector<String> versionname)
+{
+
+	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+
+	if (! fdh_p){
+		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		return false;
+	}
+
+	try
+	{
+		FlagVersion fv(fdh_p->getTableName(),"FLAG","FLAG_ROW");
+		for(Int j=0;j<(Int)versionname.nelements();j++)
+			fv.deleteFlagVersion(versionname[j]);
+	}
+	catch (AipsError x)
+	{
+		os << LogIO::SEVERE << "Could not delete Flag Version : " << x.getMesg() << LogIO::POST;
+		return False;
+	}
+	return True;
 }
 
 // ---------------------------------------------------------------------
