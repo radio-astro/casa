@@ -217,8 +217,10 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    uInt nDevs = shape[0];
 			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
 			    {
-			    	field_spw_noise_map_p[std::make_pair(timedev(dev_i,0),timedev(dev_i,1))] = timedev(dev_i,2);
-			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
+			    	pair<Int,Int> field_spw = std::make_pair(timedev(dev_i,0),timedev(dev_i,1));
+			    	field_spw_noise_map_p[field_spw] = timedev(dev_i,2);
+			    	user_field_spw_noise_map_p[field_spw] = True;
+			    	*logger_p << LogIO::DEBUG1 << "timedev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
 			    }
 			}
 			else
@@ -259,8 +261,10 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    uInt nDevs = shape[0];
 			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
 			    {
-			    	field_spw_scutof_map_p[std::make_pair(freqdev(dev_i,0),freqdev(dev_i,1))] = freqdev(dev_i,2);
-			    	*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << endl;
+			    	pair<Int,Int> field_spw = std::make_pair(freqdev(dev_i,0),freqdev(dev_i,1));
+			    	field_spw_scutof_map_p[field_spw] = freqdev(dev_i,2);
+			    	user_field_spw_scutof_map_p[field_spw] = True;
+				*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << LogIO::POST;
 			    }
 			}
 			else
@@ -352,48 +356,68 @@ FlagReport FlagAgentRFlag::getReport()
 												field_spw_noise_map_p,
 												"Time analysis",
 												noiseScale_p);
-		if(doplot_p==true)
-		{
-		         totalRep.addReport(noiseStd);
-		}
-
 		FlagReport scutofStd = getReportCore(	field_spw_scutof_histogram_sum_p,
 												field_spw_scutof_histogram_sum_squares_p,
 												field_spw_scutof_histogram_counts_p,
 												field_spw_scutof_map_p,
 												"Spectral analysis",
 												scutofScale_p);
-		if(doplot_p==true)
+		// Threshold reports (should be returned if params were calculated)
+		Record threshList;
+		Int nEntriesNoise = field_spw_noise_map_p.size();
+		Int nEntriesScutof = field_spw_scutof_map_p.size();
+
+		if(nEntriesNoise>0 || nEntriesScutof>0)
+	        {
+		          Matrix<Double> timedev(nEntriesNoise,3), freqdev(nEntriesScutof,3);
+			  Int threshCountTime = 0, threshCountFreq = 0;
+			  pair<Int,Int> field_spw;
+			  for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
+				        spw_field_iter != field_spw_noise_map_p.end();
+				        spw_field_iter++)
+		          {
+			            field_spw = spw_field_iter->first;
+
+				    timedev(threshCountTime,0) = field_spw.first;
+				    timedev(threshCountTime,1) = field_spw.second;
+				    timedev(threshCountTime,2) = field_spw_noise_map_p[field_spw];
+				    threshCountTime++;
+			  }
+
+			  for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_scutof_map_p.begin();
+				        spw_field_iter != field_spw_scutof_map_p.end();
+				        spw_field_iter++)
+		          {
+			            field_spw = spw_field_iter->first;
+
+				    freqdev(threshCountFreq,0) = field_spw.first;
+				    freqdev(threshCountFreq,1) = field_spw.second;
+				    freqdev(threshCountFreq,2) = field_spw_scutof_map_p[field_spw];
+				    threshCountFreq++;
+			  }
+
+			  threshList.define( RecordFieldId("timedev") , timedev );
+			  threshList.define( RecordFieldId("freqdev") , freqdev );
+			  
+			  FlagReport returnThresh("rflag",agentName_p, threshList);
+			  totalRep.addReport(returnThresh);
+		}
+
+
+		// Add the plot-reports last. Display needs plot-reports to be at the end of the list
+                // Should be fixed in the display agent....
+		if(doplot_p==true && nEntriesNoise>0)
+		{
+		         totalRep.addReport(noiseStd);
+		}
+
+		if(doplot_p==true && nEntriesScutof>0)
 		{
 		         totalRep.addReport(scutofStd);
 		}
 
-		// Threshold reports (should be returned if params were calculated)
-		Record threshList;
-		Int nEntries = field_spw_noise_map_p.size();
-		Matrix<Double> timedev(nEntries,3), freqdev(nEntries,3);
-		Int threshCount = 0;
-		pair<Int,Int> field_spw;
-		for (	map< pair<Int,Int>,Double >::iterator spw_field_iter = field_spw_noise_map_p.begin();
-				spw_field_iter != field_spw_noise_map_p.end();
-				spw_field_iter++)
-		{
-			field_spw = spw_field_iter->first;
 
-			timedev(threshCount,0) = field_spw.first;
-			timedev(threshCount,1) = field_spw.second;
-			timedev(threshCount,2) = field_spw_noise_map_p[field_spw];
-			freqdev(threshCount,0) = field_spw.first;
-			freqdev(threshCount,1) = field_spw.second;
-			freqdev(threshCount,2) = field_spw_scutof_map_p[field_spw];
 
-			threshCount++;
-		}
-		threshList.define( RecordFieldId("timedev") , timedev );
-		threshList.define( RecordFieldId("freqdev") , freqdev );
-
-		FlagReport returnThresh("rflag",agentName_p, threshList);
-		totalRep.addReport(returnThresh);
 	}
 
 
@@ -415,7 +439,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     pair<Int,Int> current_field_spw;
     Double spwStd = 0;
     Double avg,sumSquare,variance = 0;
-    FlagReport thresholdStd = FlagReport("plotpoints",agentName_p,label, "xaxis", "yaxis");
+    FlagReport thresholdStd = FlagReport("plotpoints",agentName_p,label, "channels", "statistics");
 
     // Extract data from all spws and put them in one single Array
     vector<Double> total_threshold;
@@ -470,6 +494,9 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     	idx++;
     }
 
+    // TODO : Instead of threshold_index, we need to send frequency values. 
+    //             See the use of frequencyList in FlagAgentSummary for an example.
+
     // Plot the scaled threshold
     thresholdStd.addData("line", threshold_index,total_threshold_spw_average,"",Vector<Float>(),"rflag threshold");
 
@@ -477,9 +504,9 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     // thresholdStd.addData("scatter", threshold_index, threshold_avg, "bar", threshold_variance, "median deviation and variance");
 
     // OPTION 2 for mean/rms : "avg" is a scatter plot, "up" and "down" are lines (not so pretty, but fast).
-    thresholdStd.addData("line",threshold_index,threshold_up,"",Vector<Float>(),"threshold std+var (field-spw:timestep average over baselines)");
-    thresholdStd.addData("scatter",threshold_index,threshold_avg,"",Vector<Float>(),"threshold std (field-spw average over baselines and timesteps)");
-    thresholdStd.addData("line", threshold_index,threshold_down,"",Vector<Float>(),"threshold std-var  (field-spw:timestep average over baselines)");
+    thresholdStd.addData("line",threshold_index,threshold_up,"",Vector<Float>(),"median_deviation + variance");
+    thresholdStd.addData("scatter",threshold_index,threshold_avg,"",Vector<Float>(),"median_deviation");
+    thresholdStd.addData("line", threshold_index,threshold_down,"",Vector<Float>(),"median_deviation - variance");
     
 
     return thresholdStd;
@@ -582,8 +609,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 	            	{
 	            		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
 	            		{
-	            			flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-	            			visBufferFlags_p += 1;
+							if (!flags.getModifiedFlags(pol_k,chan_j,timestep_i))
+							{
+								flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+								visBufferFlags_p += 1;
+							}
 	            		}
 	            	}
 				}
@@ -691,8 +721,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 					{
 						for (uInt chan_j=0;chan_j<nChannels;chan_j++)
 						{
-							flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-							visBufferFlags_p += 1;
+							if (!flags.getModifiedFlags(pol_k,chan_j,timestep_i))
+							{
+								flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+								visBufferFlags_p += 1;
+							}
 						}
 					}
 					// Check each channel separately vs the scutof level
@@ -704,8 +737,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 							if (	(abs(visibility.real()-AverageReal)>scutof) or
 									(abs(visibility.imag()-AverageImag)>scutof)	)
 							{
-								flags.setModifiedFlags(pol_k,chan_j,timestep_i);
-								visBufferFlags_p += 1;
+								if (!flags.getModifiedFlags(pol_k,chan_j,timestep_i))
+								{
+									flags.setModifiedFlags(pol_k,chan_j,timestep_i);
+									visBufferFlags_p += 1;
+								}
 							}
 						}
 					}
@@ -844,7 +880,7 @@ FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
-	if (field_spw_noise_map_p.find(field_spw) == field_spw_noise_map_p.end())
+	if (field_spw_noise_map_p.find(field_spw) == field_spw_noise_map_p.end() && !noise_p)
 	{
 		Double noise = noiseScale_p*computeThreshold(	field_spw_noise_histogram_sum_p[field_spw],
 														field_spw_noise_histogram_sum_squares_p[field_spw],
@@ -854,7 +890,7 @@ FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
 		*logger_p << LogIO::DEBUG1 << " field=" << field << " spw=" <<  spw << " noise=" << noise << LogIO::POST;
 	}
 
-	if (field_spw_scutof_map_p.find(field_spw) == field_spw_scutof_map_p.end())
+	if (field_spw_scutof_map_p.find(field_spw) == field_spw_scutof_map_p.end() && !scutof_p)
 	{
 		Double scutof = scutofScale_p*computeThreshold(	field_spw_scutof_histogram_sum_p[field_spw],
 														field_spw_scutof_histogram_sum_squares_p[field_spw],
@@ -863,7 +899,6 @@ FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
 		field_spw_scutof_map_p[field_spw] = scutof;
 		*logger_p << LogIO::DEBUG1 << " field=" << field << " spw=" <<  spw << " scutof=" << scutof << LogIO::POST;
 	}
-
 
 	return;
 }
@@ -876,14 +911,21 @@ FlagAgentRFlag::passFinal(const VisBuffer &visBuffer)
 	Int field = visBuffer.fieldId();
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
-	field_spw_noise_map_p.erase(field_spw);
-	field_spw_noise_histogram_sum_p.erase(field_spw);
-	field_spw_noise_histogram_sum_squares_p.erase(field_spw);
-	field_spw_noise_histogram_counts_p.erase(field_spw);
-	field_spw_scutof_map_p.erase(field_spw);
-	field_spw_scutof_histogram_sum_p.erase(field_spw);
-	field_spw_scutof_histogram_sum_squares_p.erase(field_spw);
-	field_spw_scutof_histogram_counts_p.erase(field_spw);
+	if (user_field_spw_noise_map_p.find(field_spw) == user_field_spw_noise_map_p.end())
+	{
+		field_spw_noise_map_p.erase(field_spw);
+		field_spw_noise_histogram_sum_p.erase(field_spw);
+		field_spw_noise_histogram_sum_squares_p.erase(field_spw);
+		field_spw_noise_histogram_counts_p.erase(field_spw);
+	}
+
+	if (user_field_spw_scutof_map_p.find(field_spw) == user_field_spw_scutof_map_p.end())
+	{
+		field_spw_scutof_map_p.erase(field_spw);
+		field_spw_scutof_histogram_sum_p.erase(field_spw);
+		field_spw_scutof_histogram_sum_squares_p.erase(field_spw);
+		field_spw_scutof_histogram_counts_p.erase(field_spw);
+	}
 
 	return;
 }

@@ -592,6 +592,34 @@ FlagDataHandler::generatePolarizationsMap()
 				(*polarizationIndexMap_p)[pos] = "LR";
 				break;
 			}
+			case VisMapper::CALSOL1:
+			{
+				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				(*polarizationMap_p)[VisMapper::CALSOL1] = pos;
+				(*polarizationIndexMap_p)[pos] = "Sol1";
+				break;
+			}
+			case VisMapper::CALSOL2:
+			{
+				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				(*polarizationMap_p)[VisMapper::CALSOL2] = pos;
+				(*polarizationIndexMap_p)[pos] = "Sol2";
+				break;
+			}
+			case VisMapper::CALSOL3:
+			{
+				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				(*polarizationMap_p)[VisMapper::CALSOL3] = pos;
+				(*polarizationIndexMap_p)[pos] = "Sol3";
+				break;
+			}
+			case VisMapper::CALSOL4:
+			{
+				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				(*polarizationMap_p)[VisMapper::CALSOL4] = pos;
+				(*polarizationIndexMap_p)[pos] = "Sol4";
+				break;
+			}
 			default:
 			{
 				*logger_p << LogIO::WARN << " The " << pos << " th correlation is unknown: " << *iter << LogIO::POST;
@@ -1939,6 +1967,71 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			throw AipsError("Requested Stokes parameter (V) cannot be computed from available polarizations");
 		}
 	}
+	if (expression_p.find("Sol1") != string::npos)
+	{
+		if (polMap_p->find(VisMapper::CALSOL1) != polMap_p->end())
+		{
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL1]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::calsol1);
+			selectedCorrelationStrings_p.push_back(string("Sol1"));
+			matchExpression = true;
+		}
+		else
+		{
+			throw AipsError("Requested Calibration solution element (Sol1) not available");
+		}
+	}
+	if (expression_p.find("Sol2") != string::npos)
+	{
+		if (polMap_p->find(VisMapper::CALSOL2) != polMap_p->end())
+		{
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL2]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::calsol2);
+			selectedCorrelationStrings_p.push_back(string("Sol2"));
+			matchExpression = true;
+		}
+		else
+		{
+			throw AipsError("Requested Calibration solution element (Sol1) not available");
+		}
+	}
+	if (expression_p.find("Sol3") != string::npos)
+	{
+		if (polMap_p->find(VisMapper::CALSOL3) != polMap_p->end())
+		{
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL3]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::calsol3);
+			selectedCorrelationStrings_p.push_back(string("Sol3"));
+			matchExpression = true;
+		}
+		else
+		{
+			throw AipsError("Requested Calibration solution element (Sol1) not available");
+		}
+	}
+	if (expression_p.find("Sol4") != string::npos)
+	{
+		if (polMap_p->find(VisMapper::CALSOL4) != polMap_p->end())
+		{
+			vector<uInt> selectedPolarizations;
+			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL4]);
+			selectedCorrelations_p.push_back(selectedPolarizations);
+			selectedCorrelationProducts_p.push_back(&VisMapper::calsol4);
+			selectedCorrelationStrings_p.push_back(string("Sol4"));
+			matchExpression = true;
+		}
+		else
+		{
+			throw AipsError("Requested Calibration solution element (Sol1) not available");
+		}
+	}
+
 
 	if (!matchExpression)
 	{
@@ -2134,8 +2227,34 @@ VisMapper::stokes_u_from_circular(uInt chan, uInt row)
 Complex
 VisMapper::stokes_v_from_circular(uInt chan, uInt row)
 {
-	// V = (RR-LL)/2
-	return ((*this.*getVis_p)((*polMap_p)[Stokes::RR],chan,row) - (*this.*getVis_p)((*polMap_p)[Stokes::LL],chan,row))/2;
+	return (*this.*getVis_p)((*polMap_p)[Stokes::RR],chan,row);
+}
+
+Complex
+VisMapper::calsol1(uInt chan, uInt row)
+{
+	return (*this.*getVis_p)((*polMap_p)[VisMapper::CALSOL1],chan,row);
+}
+
+
+Complex
+VisMapper::calsol2(uInt chan, uInt row)
+{
+	return (*this.*getVis_p)((*polMap_p)[VisMapper::CALSOL2],chan,row);
+}
+
+
+Complex
+VisMapper::calsol3(uInt chan, uInt row)
+{
+	return (*this.*getVis_p)((*polMap_p)[VisMapper::CALSOL3],chan,row);
+}
+
+
+Complex
+VisMapper::calsol4(uInt chan, uInt row)
+{
+	return (*this.*getVis_p)((*polMap_p)[VisMapper::CALSOL4],chan,row);
 }
 
 

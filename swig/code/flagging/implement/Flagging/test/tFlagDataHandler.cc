@@ -136,7 +136,7 @@ void flag(string inputFile,uShort iterationMode,uShort testMode,String flagmode,
 	}
 	else
 	{
-		dh = new FlagCalTableHandler(inputFile,iterationMode);
+		dh = new FlagCalTableHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
 	}
 
 	// Open Measurement Set
@@ -155,9 +155,27 @@ void flag(string inputFile,uShort iterationMode,uShort testMode,String flagmode,
 	if (testMode==2) agentConfig = record;
 	agentConfig.define("name","FlagAgent-" + flagmode);
 	agentConfig.define("mode",flagmode);
+
+	casa::IPosition size(1);
+	size[0]=2;
+	casa::Array<Double> cliprange(size);
+	cliprange[0] = 0.0001;
+	cliprange[1] = 7.5;
+	agentConfig.define("clipminmax",cliprange);
+
 	FlagAgentList agentList;
 	FlagAgentBase *agent = FlagAgentBase::create(dh,agentConfig);
 	agentList.push_back(agent);
+
+	uShort displayMode = 1;
+	if ((displayMode == 1) or (displayMode == 3))
+	{
+		Record diplayAgentConfig;
+		diplayAgentConfig.define("name","FlagAgentDisplay");
+		diplayAgentConfig.define("datadisplay",True);
+		FlagAgentDisplay *dataDisplayAgent = new FlagAgentDisplay(dh,diplayAgentConfig);
+		agentList.push_back(dataDisplayAgent);
+	}
 
 	// Set cout precision
 	cout.precision(20);
@@ -396,8 +414,8 @@ int main(int argc, char **argv)
 	}
 
 	unflag(inputFile,iterationMode);
-	flag(inputFile,iterationMode,testMode,flagMode,record);
-	summary(inputFile,iterationMode);
+	//flag(inputFile,iterationMode,testMode,flagMode,record);
+	//summary(inputFile,iterationMode);
 
 	exit(-1);
 }

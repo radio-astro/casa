@@ -436,6 +436,8 @@ Modification history:
               with respect to how to input errors and weights).
 2012 Jan 25 - Nick Elias, NRAO
               Error checking added.
+2012 Mar 15 - Nick Elias, NRAO
+              Added calculates for residual variance and mean.
 
 */
 
@@ -531,6 +533,9 @@ CalStatsFitter::FIT& CalStatsFitter::lsqFit( const Vector<Double>& oAbs,
     }
 
     poFit->oRes = Vector<Double>( oValue - poFit->oModel );
+
+    poFit->dResMean = mean<Double>( poFit->oRes );
+    poFit->dResVar = variance<Double>( poFit->oRes, poFit->dResMean );
 
     Double dMetric = oFitter.chiSquare() / ((Double) iDoF);
 

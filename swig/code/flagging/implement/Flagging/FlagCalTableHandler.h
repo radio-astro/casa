@@ -52,7 +52,7 @@ public:
 	Int nRowChunk() const;
 	Int& nChannel();
 	Int& nCorr();
-
+	Cube<Complex>& visCube();
 
 	// Convenient public methods for compatibility with MS-like interface
 	Vector<Int>& observationId();
@@ -75,6 +75,7 @@ private:
 	Cube<Bool> flagCube_p;
 	Vector<Int> channel_p;
 	Vector<Double> frequency_p;
+	Cube<Complex> calsolution_p;
 	Int nRow_p;
 	Int nRowChunk_p;
 	Int nChannel_p;
@@ -96,10 +97,11 @@ private:
 	Bool CTcorrTypeOK_p;
 	Bool CTchannelOK_p;
 	Bool CTfrequencyOK_p;
+	Bool CTVisCubeOK_p;
 	Bool CTnRowOK_p;
 	Bool CTnRowChunkOK_p;
 	Bool CTnChannelOK_p;
-	Bool CTnCorr_pOK_p;
+	Bool CTnCorrOK_p;
 
 };
 
@@ -144,9 +146,6 @@ public:
 	String getTableName();
 
 private:
-
-	// Mapping functions
-	void generatePolarizationsMap();
 
 	// Convenient private methods for compatibility with MS-like interface
 	Block<String> getSortColumns(Block<Int> intCols);

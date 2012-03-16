@@ -82,15 +82,14 @@ VisBufferAsync::VisBufferAsync (const VisBufferAsync & vb)
     * this = vb;
 }
 
-//VisBufferAsync::VisBufferAsync (ROVisibilityIteratorAsync & iter)
-//  : VisBuffer ()
-//{
-//    construct ();
-//
-//    Log (2, "VisBufferAsync::VisBufferAsync: attaching in constructor this=%08x\n", this);
-//    attachToVisIterAsync (iter);
-//
-//}
+VisBufferAsync::VisBufferAsync (ROVisibilityIterator & iter)
+  : VisBuffer ()
+{
+    construct ();
+
+    Log (2, "VisBufferAsync::VisBufferAsync: attaching in constructor this=%08x\n", this);
+    attachToVisIter (iter);
+}
 
 
 VisBufferAsync::~VisBufferAsync ()
@@ -341,6 +340,9 @@ void
 VisBufferAsync::construct ()
 {
     Log (2, "Constructing VisBufferAsync; addr=0x%016x\n", this);
+
+    initializeScalars ();
+
     azelCachedTime_p = 0; // tag azel as currently uncached
     feedpaCachedTime_p = 0; // tag azel as currently uncached
     parangCachedTime_p = 0; // tag azel as currently uncached
@@ -581,6 +583,18 @@ VisBufferAsync::getMs () const
     return * measurementSet_p;
 }
 
+Int
+VisBufferAsync::getNSpw () const
+{
+    return nSpw_p;
+}
+
+Int
+VisBufferAsync::getOldMSId () const
+{
+    return oldMSId_p;
+}
+
 
 Double
 VisBufferAsync::hourang(Double time) const
@@ -591,6 +605,30 @@ VisBufferAsync::hourang(Double time) const
     Double hourang = ROVisibilityIterator::hourangCalculate (time, * msd_p, mEpoch_p);
 
     return hourang;
+}
+
+void
+VisBufferAsync::initializeScalars ()
+{
+    // Set all VBA specific scalars to known values to prevent
+    // nondeterminism.
+
+    dataDescriptionId_p = -1;
+    feedpaCachedTime_p = -1;
+    isFilling_p = False;
+    measurementSet_p = NULL;
+    msColumns_p = NULL;
+    msd_p = NULL;
+    nAntennas_p = -1;
+    nCoh_p = -1;
+    newArrayId_p = False;
+    newFieldId_p = False;
+    newSpectralWindow_p = False;
+    nRowChunk_p = -1;
+    nSpw_p = -1;
+    parangCachedTime_p = -1;
+    polarizationId_p = -1;
+    velSelection_p = False;
 }
 
 void
@@ -876,6 +914,13 @@ VisBufferAsync::setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpe
     newFieldId_p = newFieldId;
     newSpectralWindow_p = newSpectralWindow;
 }
+
+void
+VisBufferAsync::setNSpw (Int nSpw)
+{
+    nSpw_p = nSpw;
+}
+
 
 void
 VisBufferAsync::setPolarizationId (Int pId)

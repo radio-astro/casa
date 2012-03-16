@@ -1131,22 +1131,97 @@ Bool Calibrater::unsetsolve() {
 }
 
 
-Bool Calibrater::correct() {
-  
-  logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
-  
-  Bool useVpf;
-  AipsrcValue<Bool>::find (useVpf, "Calibrater.useVpf", False);
+Bool
+Calibrater::correct()
+{
+    logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
 
-  if (useVpf){
-      logSink() << "Using VPF for correction" << LogIO::POST;
-      return correctUsingVpf ();
-  }
+    Bool retval = true;
 
-  Bool retval = true;
+    try {
 
-  try {
+        // Set up VisSet and its VisibilityIterator.
 
+        VisibilityIterator::DataColumn whichOutCol = configureForCorrection ();
+
+        // See if this is to be handled using the Visibility Processing Framework
+
+        Bool useVpf;
+        AipsrcValue<Bool>::find (useVpf, "Calibrater.useVpf", False);
+
+        if (useVpf){
+            logSink() << "Using VPF for correction" << LogIO::POST;
+            return correctUsingVpf ();
+        }
+
+        VisIter& vi(vs_p->iter());
+        VisBufferAutoPtr vb (vi);
+        vi.origin();
+
+        // Pass each timestamp (VisBuffer) to VisEquation for correction
+        Bool calwt(calWt());
+        Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
+        uncalspw.set(False);		        // instead of bombing the user
+                                                // in a loop.
+
+        for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+            for (vi.origin(); vi.more(); vi++) {
+
+                uInt spw = vb->spectralWindow();
+                if (ve_p->spwOK(spw)){
+
+                    // If we are going to update the weights, reset them first
+                    // TBD: move this to VisEquation::correct?
+                    if (calwt){
+                        vb->resetWeightMat();
+                    }
+
+                    ve_p->correct(* vb);    // throws exception if nothing to apply
+
+                    vi.setVis (vb->visCube(), whichOutCol);
+                    vi.setFlag (vb->flag());
+
+                    if (calwt){
+                        vi.setWeightMat(vb->weightMat()); // Write out weight col, if it has changed
+                    }
+                }
+                else{
+                    uncalspw[spw] = true;
+                    if (! vi.isAsynchronous()){
+
+                        // Asynchronous I/O doesn't have a way to skip
+                        // VisBuffers, so only break out when not using
+                        // async i/o.
+
+                        break; // Only proceed if spw can be calibrated
+                    }
+                }
+            }
+        }
+
+        vs_p->flush(); // Flush to disk
+
+        // Now that we're out of the loop, summarize any errors.
+
+        retval = summarize_uncalspws(uncalspw, "correct");
+    }
+    catch (AipsError x) {
+        logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	              << LogIO::POST;
+
+        logSink() << "Resetting all calibration application settings." << LogIO::POST;
+        unsetapply();
+
+        throw(AipsError("Error in Calibrater::correct."));
+        retval = False;         // Not that it ever gets here...
+    }
+    return retval;
+}
+
+VisibilityIterator::DataColumn
+Calibrater::configureForCorrection ()
+{
     if (!ok())
       throw(AipsError("Calibrater not prepared for correct!"));
 
@@ -1171,73 +1246,44 @@ Bool Calibrater::correct() {
     columns[2]=MS::FIELD_ID;
     columns[3]=MS::DATA_DESC_ID;
     columns[4]=MS::TIME;
-    vs_p->resetVisIter(columns,0.0);
-    VisIter& vi(vs_p->iter());
-    VisBuffer vb(vi);
-    
-    // Pass each timestamp (VisBuffer) to VisEquation for correction
-    Bool calwt(calWt());
-    Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
-    uncalspw.set(False);		        // instead of bombing the user
-						// in a loop.
-    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-      uInt spw = vi.spectralWindow();
-      //      Vector<Int> scans;
-      //      vi.scan(scans);
-      //      cout << " scan = " << scans(0)
-      //	   << " spw = " << vi.spectralWindow() 
-      //	   << " fld = " << vi.fieldId() 
-      //	   << endl;
 
-      // Only proceed if spw can be calibrated
-      if (ve_p->spwOK(spw)) {
-	for (vi.origin(); vi.more(); vi++) {
-	  
-	  // If we are going to update the weights, reset them first
-	  // TBD: move this to VisEquation::correct?
-	  if (calwt) vb.resetWeightMat();
-	  
-	  ve_p->correct(vb);    // throws exception if nothing to apply
+    // Reset the VisibilityIterator in the VisSet.  If asyncio is to be
+    // used then configure the prefetch columns.  Use the casarc setting
+    // Calibrater.async to decide if applying calibration should
+    // utilize async i/o.  This is in addition to the global setting which
+    // must also be enabled to use async i/o (see VisibilityIterator.{cc,h}).
 
-//Cube<Complex> & cube = vb.visCube();
-//Int d1, d2, d3;
-//cube.shape (d1, d2, d3);
-//cout << "CorrectedVisCube [" << d1 << "," << d2 << "," << d3 << "] {no-vpf}" << endl;
-//for (int i = 0; i < min(d1, 10); i++){
-//    for (int j = 0; j < min (d2, 10); j++){
-//        for (int k = 0; k < min (d3, 10); k++){
-//            cout << "[" << i << "," << j << "," << k << "] = " << cube(i,j,k) << endl;
-//        }
-//    }
-//}
+    Bool isEnabled;
+    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
+    isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
 
-	  vi.setVis(vb.visCube(),whichOutCol);
-	  vi.setFlag(vb.flag());
-	  
-	  // Write out weight col, if it has changed
-	  if (calwt) vi.setWeightMat(vb.weightMat()); 
-	}
-      }
-      else
-	uncalspw[spw] = true;      
+    asyncio::PrefetchColumns * prefetchColumns = NULL;
+
+    if (isEnabled){
+        prefetchColumns = new asyncio::PrefetchColumns ();
+        * prefetchColumns =
+            asyncio::PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
+                                                       VisBufferComponents::Ant2,
+                                                       VisBufferComponents::Flag,
+                                                       VisBufferComponents::FlagRow,
+                                                       VisBufferComponents::FieldId,
+                                                       VisBufferComponents::Freq,
+                                                       VisBufferComponents::NChannel,
+                                                       VisBufferComponents::NCorr,
+                                                       VisBufferComponents::NRow,
+                                                       VisBufferComponents::ObservedCube,
+                                                       VisBufferComponents::SigmaMat,
+                                                       VisBufferComponents::SpW,
+                                                       VisBufferComponents::Time,
+                                                       VisBufferComponents::WeightMat,
+                                                       -1);
     }
-    // Flush to disk
-    vs_p->flush();
 
-    // Now that we're out of the loop, summarize any errors.
-    retval = summarize_uncalspws(uncalspw, "correct");
-  }
-  catch (AipsError x) {
-    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
-	      << LogIO::POST;
+    vs_p->resetVisIter (columns, 0.0, prefetchColumns);
 
-    logSink() << "Resetting all calibration application settings." << LogIO::POST;
-    unsetapply();
+    delete prefetchColumns;
 
-    throw(AipsError("Error in Calibrater::correct."));
-    retval = False;         // Not that it ever gets here...
-  } 
-  return retval;
+    return whichOutCol;
 }
 
 //Bool

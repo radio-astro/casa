@@ -99,8 +99,8 @@ typedef Vector<CStokesVector> vvCoh;
 typedef ROVisibilityIterator ROVisIter;
 typedef VisibilityIterator VisIter;
 
-
 class VisSet {
+
 public:
   // default constructor, only useful to assign to later.
   VisSet() {}
@@ -163,7 +163,8 @@ public:
   VisSet& operator=(const VisSet& other);
 
   // Re-initialize the VisibilityIterator (cf copy ctor)
-  void resetVisIter(const Block<Int>& columns, Double timeInterval=0);
+  void resetVisIter(const Block<Int>& columns, Double timeInterval = 0,
+                    asyncio::PrefetchColumns * prefetchColumns = NULL);
 
   // Initializes scratch columns
   void initCalSet(Int calSet=0);

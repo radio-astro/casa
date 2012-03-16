@@ -1217,13 +1217,12 @@ vector<uint64_t> sizeInMemory(uint64_t BDFsize, uint64_t approxSizeInMemory) {
 vector<map<AtmPhaseCorrection,ASDM2MSFiller*> >  msFillers_v;
 
 map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers; // There will be one filler per value of the axis APC.
-//#pragma omp threadprivate(msFiller)
 
 vector<int>	dataDescriptionIdx2Idx;
 int		ddIdx;
 map<MainRow*, int>     stateIdx2Idx;
 
-
+set<int> SwIdUsed;
 
 template<typename T>
 struct negateFunctor {
@@ -1928,6 +1927,9 @@ void fillMain_mt(MainRow*	r_p,
     for (unsigned int iseldd=0; iseldd < iddv.size(); iseldd++) {
       if (vmsData_p->v_dataDescId.at(idd) == iddv.at(iseldd)) {
          filteredDDbasedRows.push_back(idd);
+         // if DDId matches also update a spwId set
+         if (SwIdUsed.find(spwId)==SwIdUsed.end()) 
+           SwIdUsed.insert(spwId);
       }
     }
   }
@@ -2872,20 +2874,6 @@ int main(int argc, char *argv[]) {
   sdmBinData.setPriorityDataDescription();
 #endif
 
-  // test openMP
-  /***
-     int myint;
-     for (myint=0; myint<10; myint++) {
-       int ii=0;
-       #pragma omp parallel for default(shared) private(ii) ordered
-       for (ii=0; ii<4; ii++) {
-         int threadid;
-         threadid=omp_get_thread_num();
-         printf("id:%d This is a test!=%d\n", threadid, myint);
-       }
-     }
-  ***/
-
   //get numCorr, numChan, telescope name for setupMS
   
   ExecBlockTable& temp_execBlockT = ds->getExecBlock();
@@ -2924,7 +2912,6 @@ int main(int argc, char *argv[]) {
       if(doparallel) {
         // should use pass vec. of spectral ids
         partitionMS(SwIds,
-                  //msFillersv,
                   msNames,
                   complexData,
                   withCompression,
@@ -2932,19 +2919,14 @@ int main(int argc, char *argv[]) {
                   maxNumCorr,
                   maxNumChan);
 
-        //cerr<<"After calling partitionMS msFillers_v.size="<<msFillers_v.size()<<endl;
+        /***
         for (int i=0; i < msFillers_v.size(); i++) {
           for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers_v[i].begin();
                iter != msFillers_v[i].end(); ++iter) {
             //cerr<<"ms name: "<<iter->second->msPath()<<endl;
           }
         }
-        for (int i=0; i < SwIds.size(); i++) {
-          vector<int> checkDDs = getDDIdsFromSwId(*ds, SwIds.at(i));  
-            for (int j=0; j< checkDDs.size(); j++) {
-              //cerr<<"for SwId="<<SwIds.at(i)<<" : DDs="<<checkDDs.at(j)<<endl;
-            }
-        }
+        ***/
       }
       else { // single thread case
         for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
@@ -4842,6 +4824,7 @@ int main(int argc, char *argv[]) {
     }
   }
   // do subtable copy in the end
+  // and also delete MS not used for filling main data
   
   if (doparallel) { 
     //copy subtables from first spw MSes
@@ -4849,24 +4832,53 @@ int main(int argc, char *argv[]) {
     ostringstream oss;
     oss<< SwIds.at(0);
     string msname_suffix_first = ".SpW"+oss;
+    string intabname;
+    String message;
     //#pragma omp for 
     for (int i=1; i<SwIds.size(); i++) {
       ostringstream oss2;
       oss2<< SwIds.at(i);
       string msname_suffix = ".SpW"+oss2;
-      for (map<AtmPhaseCorrection, string>::iterator iter=msNames.begin(); iter != msNames.end(); ++iter) {
-        string intabname = msNames[iter->first]+msname_suffix_first; 
-        string outtabname = msNames[iter->first]+msname_suffix;
-        cerr<<"Copy subtables from intabname="<<intabname<<" to outtabname="<<outtabname<<endl;
-        if(PlainTable::tableCache()(outtabname))
-          PlainTable::tableCache().remove(outtabname);
 
-        Table intab(intabname);
-        Table outtab(outtabname,Table::Update);
-        TableCopy::copySubTables(outtab,intab);
+      for (map<AtmPhaseCorrection, string>::iterator iter=msNames.begin(); iter != msNames.end(); ++iter) {
+        intabname = msNames[iter->first]+msname_suffix_first; 
+        string outtabname = msNames[iter->first]+msname_suffix;
+        if (SwIdUsed.find(SwIds.at(i))!=SwIdUsed.end()) {
+          //cerr<<"Copy subtables from intabname="<<intabname<<" to outtabname="<<outtabname<<endl;
+          infostream.str("");
+          infostream << "Copying subtables from intabname="<<intabname<<" to outtabname="<<outtabname;
+          info(infostream.str());
+          if(PlainTable::tableCache()(outtabname))
+            PlainTable::tableCache().remove(outtabname);
+
+          Table intab(intabname);
+          Table outtab(outtabname,Table::Update);
+          TableCopy::copySubTables(outtab,intab);
+        }
+        else {
+          if (Table::canDeleteTable(message, outtabname, True)) {
+            Table::deleteTable(outtabname, True);
+          } else {
+             infostream.str("");
+             infostream << "Cannot delete file " << outtabname 
+             << " because " << message ;
+             info(infostream.str());
+          }
+        }
       }
     }
-  }
+    //delete the first MS if not filled 
+    if (SwIdUsed.find(SwIds.at(0))==SwIdUsed.end()) {
+      if (Table::canDeleteTable(message, intabname, True)) {
+        Table::deleteTable(intabname, True);
+      } else {
+        infostream.str("");
+        infostream << "Cannot delete file " << intabname
+        << " because " << message ;
+        info(infostream.str());
+      }
+    }
+  }//doparallel end
   delete ds;
   return 0;
 }

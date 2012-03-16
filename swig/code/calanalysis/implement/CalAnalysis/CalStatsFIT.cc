@@ -101,6 +101,8 @@ CalStatsFitter::FIT::FIT( void ) {
   oCovars = Matrix<Double>();
   oModel = Vector<Double>();
   oRes = Vector<Double>();
+  dResVar = 0.0;
+  dResMean = 0.0;
   dRedChi2 = 0.0;
 
   return;
@@ -148,6 +150,8 @@ CalStatsFitter::FIT::FIT( const CalStatsFitter::FIT& oFit ) {
   oCovars = Matrix<Double>( oFit.oCovars.copy() );
   oModel = Vector<Double>( oFit.oModel.copy() );
   oRes = Vector<Double>( oFit.oRes.copy() );
+  dResVar = oFit.dResVar;
+  dResMean = oFit.dResMean;
   dRedChi2 = oFit.dRedChi2;
 
   return;
@@ -226,6 +230,8 @@ CalStatsFitter::FIT& CalStatsFitter::FIT::operator=(
     oCovars = Matrix<Double>( oFit.oCovars.copy() );
     oModel = Vector<Double>( oFit.oModel.copy() );
     oRes = Vector<Double>( oFit.oRes.copy() );
+    dResVar = oFit.dResVar;
+    dResMean = oFit.dResMean;
     dRedChi2 = oFit.dRedChi2;
   }
   
