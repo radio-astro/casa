@@ -80,9 +80,9 @@ FlagCalTableHandler::open()
 	*logger_p << LogIO::DEBUG1 << "There are " << antennaNames_p->size() << " antennas with names: " << *antennaNames_p << LogIO::POST;
 
 	// Create "dummy" correlation products list
-	corrProducts_p = new std::vector<String>(2);
-	corrProducts_p->push_back("Corr-1");
-	corrProducts_p->push_back("Corr-2");
+	corrProducts_p = new std::vector<String>(1);
+	corrProducts_p->push_back("Sol1");
+	//corrProducts_p->push_back("Sol2");
 
 	return true;
 }
@@ -320,6 +320,7 @@ FlagCalTableHandler::nextBuffer()
 			visibilityBuffer_p->get()->invalidate();
 			if (!asyncio_enabled_p) preFetchColumns();
 			if (mapPolarizations_p) generatePolarizationsMap();
+			if (mapAntennaPairs_p) generateAntennaPairMap();
 			buffersInitialized_p = true;
 			flushFlags_p = false;
 			flushFlagRow_p = false;
@@ -372,29 +373,12 @@ FlagCalTableHandler::nextBuffer()
 					", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
 					", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
 					", Channels = " << visibilityBuffer_p->get()->nChannel() <<
-					", Corrs = " << corrs <<
+					", CalSolutions = " << corrs <<
 					", Total Rows = " << visibilityBuffer_p->get()->nRowChunk() << LogIO::POST;
 		}
 	}
 
 	return moreBuffers;
-}
-
-void
-FlagCalTableHandler::generatePolarizationsMap()
-{
-	Cube<Bool> curentFlagCube= visibilityBuffer_p->get()->flagCube();
-
-	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
-	polarizationIndexMap_p = new polarizationIndexMap();
-	for (uInt corr_i=0;corr_i<curentFlagCube.shape()[0];corr_i++)
-	{
-		stringstream corrStream;
-		corrStream << corr_i;
-		(*polarizationIndexMap_p)[corr_i] = "Corr-" + corrStream.str();
-	}
-
-	return;
 }
 
 
@@ -548,22 +532,11 @@ Vector<Int>& CTBuffer::corrType()
 	{
 		if (!CTnRowOK_p) nCorr();
 		corrType_p.resize(nCorr_p,False);
-		switch (nCorr_p)
+		for (uInt corr_i=0;corr_i<nCorr_p;corr_i++)
 		{
-			case 1:
-				corrType_p[0] = Stokes::PP;
-			break;
-			case 2:
-				corrType_p[0] = Stokes::PP;
-				corrType_p[1] = Stokes::LL;
-			break;
-			case 4:
-				corrType_p[0] = Stokes::PP;
-				corrType_p[1] = Stokes::PQ;
-				corrType_p[2] = Stokes::QP;
-				corrType_p[3] = Stokes::QQ;
-			break;
+			corrType_p[corr_i] =  Stokes::NumberOfTypes+corr_i;
 		}
+		CTcorrTypeOK_p = True;
 	}
 
 	return corrType_p;
@@ -584,15 +557,28 @@ Vector<Int>& CTBuffer::channel()
 
 Vector<Double>& CTBuffer::frequency()
 {
-	if (!CTchannelOK_p)
+	if (!CTfrequencyOK_p)
 	{
 		Vector<Double> tmp = calIter_p->freq();
 		frequency_p.resize(tmp.size(),False);
 		frequency_p = tmp;
-		CTchannelOK_p = True;
+		CTfrequencyOK_p = True;
 	}
 
 	return frequency_p;
+}
+
+Cube<Complex>& CTBuffer::visCube()
+{
+	if (!CTVisCubeOK_p)
+	{
+		Cube<Complex> tmp = calIter_p->cparam();
+		calsolution_p.resize(tmp.shape(),False);
+		calsolution_p = tmp;
+		CTVisCubeOK_p = True;
+	}
+
+	return calsolution_p;
 }
 
 Int& CTBuffer::nRow()
@@ -616,6 +602,7 @@ Int& CTBuffer::nChannel()
 	{
 		if (!CTflagCubeOk_p) flagCube();
 		nChannel_p = flagCube_p.shape()[1];
+		CTnChannelOK_p = True;
 	}
 
 	return nChannel_p;
@@ -623,7 +610,7 @@ Int& CTBuffer::nChannel()
 
 Int& CTBuffer::nCorr()
 {
-	if (!CTnCorr_pOK_p)
+	if (!CTnCorrOK_p)
 	{
 		if (!CTflagCubeOk_p) flagCube();
 		nCorr_p = flagCube_p.shape()[0];
@@ -645,9 +632,10 @@ void CTBuffer::invalidate()
 	CTcorrTypeOK_p = False;
 	CTchannelOK_p = False;
 	CTfrequencyOK_p = False;
+	CTVisCubeOK_p = False;
 	CTnRowChunkOK_p = False;
 	CTnChannelOK_p = False;
-	CTnCorr_pOK_p = False;
+	CTnCorrOK_p = False;
 
 	return;
 }

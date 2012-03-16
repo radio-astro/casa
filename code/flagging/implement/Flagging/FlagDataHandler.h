@@ -331,6 +331,14 @@ class VisMapper
 
 public:
 
+	enum calsolutions {
+
+		CALSOL1=Stokes::NumberOfTypes,
+		CALSOL2,
+		CALSOL3,
+		CALSOL4
+	};
+
 	VisMapper(String expression,polarizationMap *polMap,CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
 	VisMapper(String expression,polarizationMap *polMap);
 	~VisMapper();
@@ -396,6 +404,10 @@ protected:
 	Complex stokes_q_from_circular(uInt chan, uInt row);
 	Complex stokes_u_from_circular(uInt chan, uInt row);
 	Complex stokes_v_from_circular(uInt chan, uInt row);
+	Complex calsol1(uInt chan, uInt row);
+	Complex calsol2(uInt chan, uInt row);
+	Complex calsol3(uInt chan, uInt row);
+	Complex calsol4(uInt chan, uInt row);
 
 
 private:
