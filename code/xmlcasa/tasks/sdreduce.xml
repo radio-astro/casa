@@ -106,27 +106,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
-    <param type="bool" name="align">
-            <description>align frequency before averaging (True,False) </description>
-            <value>False</value>
-    </param>
-
-    <param type="string" name="reftime" subparam="true">
-            <description>reference time to align at</description>
-            <value></value>
-    </param>
-
-    <param type="string" name="interp" subparam="true">
-            <description>interpolation scheme for regridding the spectra</description>
-            <value>linear</value>
-	    <allowed kind="enum">
-	    <value>nearest</value>
-	    <value>linear</value>
-	    <value>cubic</value>
-	    <value>spline</value>
-            </allowed>
-    </param>
-
     <param type="bool" name="average">
             <description>data averaging (True,False) </description>
             <value>False</value>
@@ -361,13 +340,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="telescopeparm"><value>""</value></default>
 	        </equals>
 	    </when>
-	    <when param="align">
-		<equals type="bool" value="False"/>
-		<equals type="bool" value="True">
-			<default param="reftime"><value type='string'></value></default>
-                        <default param="interp"><value type='string'>linear</value></default>
-                </equals>
-            </when>
             <when param="average">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
@@ -496,17 +468,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: [0,5000]
                          Note that specified values are recognized as 
                          'channel' regardless of the value of specunit 
-        align -- align frequencies
-                options: (bool) True,False
-                default: False
-                example: if True, this happens after calibration
-
-            &gt;&gt;&gt;align expandable parameter
-                 reftime -- reference time to align frequencies at
-                         default: '' (The time in the first row of input table)
-                 interp -- interpolation scheme for regridding the spectra
-                         options: 'nearest','linear','cubic','spline'
-                         default: 'linear'
         average -- averaging on spectral data 
                 options: (bool) True,False
                 default: False

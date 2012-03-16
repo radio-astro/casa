@@ -34,17 +34,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def align():
-		"""
-	        align -- align frequency/velocity in scantable.
-                Options: True, False
-                default: False
-
-                NOTE: frequencies/velocities are aligned within spectra with
-                identical combination of SRCNAME, BEAMNO, IFNO, and MOLECULE_ID.
-		"""
-
-	@staticmethod
 	def algorithm():
 		"""
 	        algorithm -- autoflag algorithm name
@@ -1255,14 +1244,6 @@ class par(str):
 	@staticmethod
 	def interp():
 		"""
-                (for sdcal and sdreduce)
-                Setting of the frequency-dependent interpolation scheme for regridding spectra.
-		options: 'nearest' (nearest neighbour), 'linear', 'cubic', or 'spline' (cubic spline)
-		default: 'linear'
-
-		----------------------------------------------------------
-
-                (for the other tasks)
                 Setting of the time-dependent interpolation scheme when applying calibration solutions. 
 
 		The options are:
@@ -2247,13 +2228,6 @@ class par(str):
                This will ensure that transfer fields observed in spws 0,1,2,3 will be referenced to
                reference field data only in spw 1 or 3.  Pray you don't have to do this.
 		"""
-
-	@staticmethod
-	def reftime():
-		"""
-       		reftime -- reference time to align frequencies at.
-                default: '' (the time of the first row of data is used)
-                """
 
 	@staticmethod
 	def region():

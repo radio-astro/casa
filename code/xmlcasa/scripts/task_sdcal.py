@@ -6,7 +6,8 @@ from asap._asap import Scantable
 import pylab as pl
 from asap import _to_list
 
-def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+#def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdcal')
 
@@ -239,9 +240,9 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
                     scal.opacity(tau)
 
             # Align frequencies if desired
-            if ( align ):
-                    if reftime == '': reftime=None
-                    scal.freq_align(reftime=reftime,method=interp,insitu=True)
+            #if ( align ):
+            #        if reftime == '': reftime=None
+            #        scal.freq_align(reftime=reftime,method=interp,insitu=True)
 
             # Average in time if desired
             if ( timeaverage ):
