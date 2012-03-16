@@ -157,8 +157,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     //A field can have multiple FTmachines and ComponentList associated with it 
     //For example having many flanking images for the model
     //For componentlist it may have multiple componentlist ...for different spw
-  Timer tim;
-  tim.mark();
+  //Timer tim;
+  //tim.mark();
     Int counter=0;
     Record modrec;
     modrec.define("fields", validfieldids);
@@ -204,7 +204,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	newTab.rwKeywordSet().removeField(elkey);
     newTab.rwKeywordSet().defineRecord(elkey, outRec);
     
-    tim.show("Time taken to save record ");
+    // tim.show("Time taken to save record ");
  
 }
 
