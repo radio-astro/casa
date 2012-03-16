@@ -117,8 +117,8 @@ namespace casa {
 		enum LineStyle { SolidLine, DashLine, DotLine, LSDoubleDashed };
 		enum TextPosition { TopText, RightText, BottomText, LeftText };
 		enum TextFontStyle { ItalicText = 1 << 0, BoldText = 1 << 1 };
-		enum Coord { J2000, B1950, Galactic, SuperGalactic, Ecliptic, Pixel, DefaultCoord };
-		enum Units { Degrees, Radians, HMS, DMS, DefaultUnits };
+		enum Coord { J2000, B1950, Galactic, SuperGalactic, Ecliptic, DefaultCoord };
+		enum Units { Degrees, Radians, Sexagesimal, Pixel, DefaultUnits };
 
 		// state returned from mouse functions for regions...
 		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseHandle = 1 << 2 };

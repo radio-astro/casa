@@ -57,7 +57,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
 		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
 		   regionDock_(0), use_new_regions(true),
-		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0) {
+		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0),
+		   controlling_dd(0) {
 
     // initialize the "pix" unit, et al...
     QtWCBox::unitInit( );
@@ -84,6 +85,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
 	// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
 	regionDock_  = new viewer::QtRegionDock();
+	connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
     }
 
     qdp_ = new QtDisplayPanel(this,0,args);
@@ -618,6 +620,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		// Sets gui state from QDomDocument (window size, esp.)
 
     // FINAL INITIALIZATIONS
+
+    connect( qdp_, SIGNAL(newRegisteredDD(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
+    connect( qdp_, SIGNAL(oldDDUnregistered(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
+    connect( qdp_, SIGNAL(oldDDRegistered(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
+    connect( qdp_, SIGNAL(RegisteredDDRemoved(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
   
     connect(qdp_,  SIGNAL(registrationChange()),
 		   SLOT(hideImageMenus()));
@@ -2265,5 +2272,37 @@ void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
   v_->hold();	// (avoid unnecessary extra refreshes).
   emit colorBarOrientationChange();
   v_->release();  }
+
+  void QtDisplayPanelGui::controlling_dd_update(QtDisplayData*) {
+	// manage controlling_dd so that we can generate updateAxis( ) events
+	// in response to user visible axis changes...
+
+	QtDisplayData *ctrld = 0;
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	for ( ListIter<QtDisplayData*> iter(&rdds); ! iter.atEnd(); ++iter ) {
+	    QtDisplayData* pdd = iter.getRight();
+	    if ( pdd != 0 && pdd->dataType() == "image" ) {
+		ImageInterface<float>* img = pdd->imageInterface( );
+		PanelDisplay* ppd = qdp_->panelDisplay( );
+		if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) { ctrld = pdd; }
+	    }
+	}
+
+	if ( ctrld != controlling_dd ) {
+	    if ( controlling_dd != 0 )
+		disconnect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+			    this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+	    controlling_dd = ctrld;
+	    emit axisToolUpdate( controlling_dd );
+	    if ( controlling_dd != 0 )
+		connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+			 SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+	}
+
+  }
+
+  void QtDisplayPanelGui::controlling_dd_axis_change(String, String, String, std::vector<int> ) {
+	emit axisToolUpdate( controlling_dd );
+  }
 
 }

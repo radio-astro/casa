@@ -8,10 +8,10 @@
 namespace casa {
     namespace viewer {
 	// QtPoint::QtPoint( QtRegionSource *factory, double blc_x, double blc_y, double trc_x, double trc_y ) : 
-	// 			QtRegion("point name",factory), Point(blc_x, blc_y, trc_x, trc_y) { }
+	// 			QtRegion("point",factory), Point(blc_x, blc_y, trc_x, trc_y) { }
 
 	QtPoint::QtPoint( QtRegionSource *factory, WorldCanvas *wc, double x, double y, bool hold_signals ) :
-				QtRegion("point name", factory, hold_signals), Point(wc, x, y) { mystate->init( ); }
+				QtRegion("point", factory, hold_signals), Point(wc, x, y) { mystate->init( ); }
 
 	QtPoint::~QtPoint( ) { }
 

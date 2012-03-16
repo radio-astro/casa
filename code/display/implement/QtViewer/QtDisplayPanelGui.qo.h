@@ -249,7 +249,9 @@ class QtDisplayPanelGui : public QtPanelBase,
 
 
  signals:
- 
+
+    void axisToolUpdate( QtDisplayData *controlling_dd );
+
     void colorBarOrientationChange();     
   
     void overlay(QHash<QString, ImageInterface<float>*>);
@@ -459,6 +461,13 @@ class QtDisplayPanelGui : public QtPanelBase,
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
     
+  // used to manage generation of the updateAxes( ) signal...
+  QtDisplayData *controlling_dd;
+
+ private slots:
+  void controlling_dd_axis_change(String, String, String, std::vector<int> );
+  void controlling_dd_update(QtDisplayData*);
+
  public:
  
   // True by default.  Set False to disable auto-raise of the Data
