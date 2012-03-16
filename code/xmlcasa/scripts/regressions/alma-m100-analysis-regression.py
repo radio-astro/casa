@@ -225,22 +225,28 @@ mystep = 4
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
+    # Create flagcmd input file
+    flagcmd = "mode='manual' antenna='CM01'\n"\
+              "mode='manual' intent='*POINTING*'\n"\
+              "mode='manual' intent='*ATMOSPHERE*'\n"\
+              "mode='shadow'\n"\
+              "mode='manual' antenna='*&&&'" # autocorrelations
+              
+    flagfile = "m100_flag_step4.txt"
+    if os.path.exists(flagfile):
+        os.system('rm -f '+ flagfile)
+    
+    # Save it to disk   
+    with open(flagfile, 'w') as f:
+        f.write(flagcmd)
+    f.close()
+    
     for name in basename:
 
         flagmanager(vis=name+'.ms', mode='restore', versionname='Original')
+
         
-	flagdata(vis = name+'.ms',
-		 flagbackup = F,
-		 mode = 'manualflag',
-		 antenna='CM01')
-
-	flagdata(vis=name+'.ms', mode='manualflag', flagbackup = F,
-		 intent='*POINTING*')
-	flagdata(vis=name+'.ms', mode='manualflag', flagbackup = F,
-		 intent='*ATMOSPHERE*')
-
-	flagdata(vis=name+'.ms', flagbackup = F, mode = 'shadow')
-	flagautocorr(vis=name+'.ms')
+        tflagdata(vis=name + '.ms', mode='list', inpfile=flagfile, flagbackup=False)
 
 	if(makeplots):
 		# Plot amplitude vs time
@@ -322,45 +328,45 @@ mystep = 9
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
+    # Create flagcmd input file (could also call tflagdata twice alternatively)
+    flagcmd = "mode='manual' field='' spw='0~3:0~10;3800~3839'\n"\ # Edge channels
+              "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'\n" # Channels 239, 447/448, 720/721 and 2847/2848 are off
+              
+    flagfile = "m100_flag_step9.txt"
+    if os.path.exists(flagfile):
+        os.system('rm -f '+ flagfile)
+    
+    # Save it to disk   
+    with open(flagfile, 'w') as f:
+        f.write(flagcmd)
+    f.close()
+
     for name in basename:
 
-        flagmanager(vis=name+'-line.ms', mode='restore', versionname='apriori')
+        flagmanager(vis=name + '-line.ms', mode='restore',
+                    versionname='apriori')
+        
+        tflagdata(vis=name + '-line.ms', mode='list', inpfile=flagfile, flagbackup=False)
 
-        # Edge channels
-        flagdata2(vis=name+'-line.ms', selectdata=T, 
-                  field='',  manualflag=T, 
-                  mf_spw='0~3:0~10;3800~3839',
-                  flagbackup = F)
+    # some integrations are off
+    tflagdata(vis='X220-line.ms', mode='manual',
+              timerange='19:52:55~19:53:04', flagbackup=False)
 
-        # Channels 239, 447/448, 720/721 and 2847/2848 are off
-        flagdata2(vis=name+'-line.ms', selectdata=T, 
-                  field='',  manualflag=T, 
-                  mf_spw='0~3:239;447~448;720~721;2847~2848',
-                  flagbackup = F)
+    tflagdata(
+        vis='X54-line.ms',
+        antenna='PM01',
+        timerange='19:03:35~19:03:42',
+        mode='manual',
+        flagbackup=False,
+        )
 
-    # some ints are off
-    flagdata2(
-	    vis='X220-line.ms',
-	    selectdata=F,
-	    manualflag=T,
-	    mf_timerange='19:52:55~19:53:04',
-	    flagbackup = F)
-    flagdata2(
-	    vis='X54-line.ms',
-	    mf_antenna='PM01',
-	    mf_timerange='19:03:35~19:03:42',
-	    selectdata=F,
-	    manualflag=T,
-	    flagbackup = F)
-
-    flagdata2(
-	    vis='X54-line.ms',
-	    mf_antenna='DV04',
-	    mf_timerange='19:38:45~19:38:55',
-	    selectdata=F,
-	    manualflag=T,
-	    flagbackup = F)
-    
+    tflagdata(
+        vis='X54-line.ms',
+        antenna='DV04',
+        timerange='19:38:45~19:38:55',
+        mode='manual',
+        flagbackup=False,
+        )
 
     timing()
 
@@ -454,11 +460,19 @@ if(mystep in thesteps):
     for name in basename:
         flagmanager(vis=name+'-line-vs.ms', mode='restore', versionname='apriori')
 
-	flagdata2(vis=name+'-line-vs.ms', selectdata=T, 
-		  field='Titan',  manualflag=T, 
-		  mf_uvrange=['0~40',''], 
-		  mf_spw=['','0:200~479'],
-		  flagbackup = F)
+        tflagdata(vis=name + '-line-vs.ms',
+                  field='Titan',
+                  mode='manual',
+                  uvrange='0~40',
+                  spw='',
+                  flagbackup=False)
+        
+        tflagdata(vis=name + '-line-vs.ms',
+                  field='Titan',
+                  mode='manual',
+                  uvrange='',
+                  spw='0:200~479',
+                  flagbackup=False)
  
 	setjy(vis=name+'-line-vs.ms',
               field='Titan',
