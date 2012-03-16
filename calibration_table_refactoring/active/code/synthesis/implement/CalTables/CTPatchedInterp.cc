@@ -414,14 +414,35 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
     Int nfreq=fout.nelements();
     Int lo=0;
-    while (lo<nfreq && fout(lo)<=mfin(0)) {
-      fresi(lo++)=mtresi(0);
-    }
     Int hi=fresi.nelements()-1;
+    Double inlo(mfin(0));
     Int ihi=mtresi.nelements()-1;
-    while (hi>-1 && fout(hi)>=mfin(ihi)) {
-      fresi(hi--)=mtresi(ihi);
+    Double inhi(mfin(ihi));
+
+    // Handle 'nearest' extrapolation in sideband-dep way
+    Bool inUSB(inhi>inlo);
+    Bool outUSB(fout(hi)>fout(lo));
+    if (inUSB) {
+      if (outUSB) {
+	while (lo<nfreq && fout(lo)<=inlo) fresi(lo++)=mtresi(0);
+	while (hi>-1 && fout(hi)>=inhi) fresi(hi--)=mtresi(ihi);
+      }
+      else { // "outLSB"
+	while (lo<nfreq && fout(lo)>=inhi) fresi(lo++)=mtresi(ihi);
+	while (hi>-1 && fout(hi)<=inlo) fresi(hi--)=mtresi(0);
+      }
     }
+    else {  // "inLSB"
+      if (outUSB) {
+	while (lo<nfreq && fout(lo)<=inhi) fresi(lo++)=mtresi(ihi);
+	while (hi>-1 && fout(hi)>=inlo) fresi(hi--)=mtresi(0);
+      }
+      else {  // "outLSB"
+	while (lo<nfreq && fout(lo)>=inlo) fresi(lo++)=mtresi(0);
+	while (hi>-1 && fout(hi)<=inhi) fresi(hi--)=mtresi(ihi);
+      }
+    }
+
     //    cout << "lo, hi = " << lo << ","<<hi << endl;
 
     if (lo>hi) return; // Frequencies didn't overlap, nearest was used
