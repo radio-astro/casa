@@ -28,7 +28,7 @@ startTime=time.time()
 startProc=time.clock()
 
 # Set parameters
-default('sdcal')
+default('sdreduce')
 infile = 'OrionS_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
@@ -45,14 +45,15 @@ scanlist = [24,25,26,27]
 iflist = [15]
 kernel = 'boxcar'
 kwidth = 10
-blmode = 'list'
-blpoly = 5
+maskmode='list'
+blfunc='poly'
+order=5
 masklist = [[500,3500],[5000,7500]]
 outfile = 'sdregress_orions_sio.asap'
 outform = 'asap'
 plotlevel = 0
 
-sdcal()
+sdreduce()
 
 # Now do some region statistics
 # First the line-free region
@@ -242,7 +243,7 @@ startTime=time.time()
 startProc=time.clock()
 
 # Set parameters
-default('sdcal')
+default('sdreduce')
 infile = 'OrionS_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
@@ -259,8 +260,9 @@ scanlist = [20,21,22,23]
 iflist = [0]
 kernel = 'boxcar'
 kwidth = 5
-blmode = 'auto'
-blpoly = 2
+maskmode='auto'
+blfunc='poly'
+order=2
 avg_limit=4
 #edge = [1000]
 edge = [50]
@@ -270,7 +272,7 @@ outfile = 'sdregress_orions_hc3n.asap'
 outform = 'asap'
 plotlevel = 0
 
-sdcal()
+sdreduce()
 
 # Now do some region statistics
 # First the line-free region
@@ -460,7 +462,7 @@ startTime=time.time()
 startProc=time.clock()
 
 # Set parameters
-default('sdcal')
+default('sdreduce')
 infile = 'OrionS_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
@@ -477,15 +479,16 @@ scanlist = [20,21,22,23]
 iflist = [2]
 kernel = 'boxcar'
 kwidth = 10
-blmode = 'list'
-blpoly = 5
+maskmode='list'
+blfunc='poly'
+order=5
 #edge = [1000]
 masklist = [[350,2700],[3500,7500]]
 outfile = 'sdregress_orions_ch3oh.asap'
 outform = 'asap'
 plotlevel = 0
 
-sdcal()
+sdreduce()
 
 # Now do some region statistics
 # First the line-free region

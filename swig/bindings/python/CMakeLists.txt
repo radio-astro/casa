@@ -134,7 +134,6 @@ scripts/task_partition.py
 scripts/task_polcal.py
 scripts/task_predictcomp.py
 scripts/task_rmtables.py
-scripts/task_sdaverage.py
 scripts/task_sdbaseline.py
 scripts/task_sdcal.py
 scripts/task_sdcoadd.py
@@ -147,6 +146,7 @@ scripts/task_sdimprocess.py
 scripts/task_sdlist.py
 scripts/task_sdmath.py
 scripts/task_sdplot.py
+scripts/task_sdreduce.py
 scripts/task_sdsave.py
 scripts/task_sdscale.py
 scripts/task_sdsmooth.py

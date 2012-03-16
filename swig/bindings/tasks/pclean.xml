@@ -62,10 +62,9 @@
 		  </allowed>
 		</param>
 
-                <param type="any" name="mask">
-                     <description>Cleanbox(es), mask image(s), and/or mask region(s)</description>
-                     <any type="variant"/>
-                     <value type="stringArray"></value>
+                <param type="string" name="mask"> 
+                     <description>mask image</description>
+                     <value></value>
                 </param>
 
                 <param type="string" name="field">

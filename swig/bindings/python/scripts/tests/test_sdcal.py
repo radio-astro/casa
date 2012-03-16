@@ -4,340 +4,810 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
+from asap_init import *
 import unittest
-#
-#import listing
-#from numpy import array
+import sha
+import time
+import numpy
+import re
+import string
 
 asap_init()
-import asap as sd
 from sdcal import sdcal
-#from sdstat import sdstat
+import asap as sd
 
-class sdcal_test(unittest.TestCase):
-    """
-    Basic unit tests for task sdcal. No interactive testing.
+#
+# Unit test of sdcal task.
+# 
 
-    The list of tests:
-    test00    --- default parameters (raises an errror)
-    test01    --- Default parameters + valid input filename
-    test02    --- operate all 3 steps (mostly with default parameters)
-    test03    --- explicitly specify all parameters
-    test04-07 --- do one of calibration, average, baseline, or smooth
-    test08-10 --- skip one of of calibration and average, baseline, or smooth
-    
-    Note: input data (infile0) is generated from a single dish regression data,
-    'OrionS_rawACSmod', as follows:
-      default(sdsave)
-      sdsave(infile='OrionS_rawACSmod',outfile=self.infile0,outform='ASAP')
-    -> Just converted to scantable to eliminate errors by data conversion.
+###
+# Base class for sdcal unit test
+###
+class sdcal_unittest_base:
     """
-    # Data path of input/output
+    Base class for sdcal unit test
+    """
+    taskname='sdcal'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcal/'
+    tolerance=1.0e-15
+
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+        
+
+    def _getspectra( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        sp=tb.getcol('SPECTRA').transpose()
+        tb.close()
+        return sp
+
+    def _checkshape( self, sp, ref ):
+        # check array dimension 
+        self.assertEqual( sp.ndim, ref.ndim,
+                          msg='array dimension differ' )
+        # check number of spectra
+        self.assertEqual( sp.shape[0], ref.shape[0],
+                          msg='number of spectra differ' )
+        # check number of channel
+        self.assertEqual( sp.shape[1], ref.shape[1],
+                          msg='number of channel differ' )
+
+###
+# Base class for calibration test
+###
+class sdcal_caltest_base(sdcal_unittest_base):
+    """
+    Base class for calibration test
+    """
+    reffile=''
+    postfix='.cal.asap'
+
+    def _comparecal( self, name ):
+        self._checkfile(name)
+        sp=self._getspectra(name)
+        spref=self._getspectra(self.reffile)
+
+        self._checkshape( sp, spref )
+        
+        for irow in xrange(sp.shape[0]):
+            retval=numpy.allclose(sp[irow],spref[irow],atol=1e-5)
+            diff=(abs(sp[irow]-spref[irow])).max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+###
+# Base class for averaging test
+###
+class sdcal_avetest_base(sdcal_unittest_base):
+    """
+    Base class for averaging test
+    """
+    postfix='ave.asap'
+
+    def _split( self, s ):
+        pos0=s.find('[')+1
+        pos1=s.find(']')
+        substr=s[pos0:pos1]
+        return substr.split(',')
+
+    def _getrefdata( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))
+        f=open(name)
+        lines=f.readlines()
+        f.close
+        # scanno
+        scans=[]
+        if re.match('^SCANNO:',lines[0]) is not None:
+            ss=self._split(lines[0])
+            for s in ss:
+                scans.append(string.atoi(s))
+
+        # polno
+        pols=[]
+        if re.match('^POLNO:',lines[1]) is not None:
+            ss=self._split(lines[1])
+            for s in ss:
+                pols.append(string.atoi(s))
+
+        # spectral data
+        sp=[]
+        for line in lines[2:]:
+            tmp=[]
+            ss=self._split(line)
+            for s in ss:
+                tmp.append(string.atof(s))
+            sp.append(tmp)
+
+        # python list -> numpy array
+        scans=numpy.unique(scans)
+        pols=numpy.unique(pols)
+        sp=numpy.array(sp)
+
+        return (scans, pols, sp)
+    
+
+    def _compare( self, name1, name2 ):
+        self._checkfile(name1)
+        sp=self._getspectra( name1 )
+        (scan0,pol0,sp0)=self._getrefdata( name2 )
+
+        self._checkshape( sp, sp0 )
+
+        s=sd.scantable(name1,False)
+        scan=numpy.array(s.getscannos())
+        pol=numpy.array(s.getpolnos())
+        #print scan0, scan
+        #print pol0, pol
+        retval=len(pol)==len(pol0) and all(pol==pol0)
+        self.assertEqual( retval, True,
+                          msg='POLNO is wrong' )
+        retval=len(scan)==len(scan0) and all(scan==scan0)
+        self.assertEqual( retval, True,
+                          msg='SCANNO is wrong' )
+        del s
+        
+        for irow in xrange(sp.shape[0]):
+            #print sp0[irow][0], sp[irow][0]
+            retval=numpy.allclose(sp[irow],sp0[irow])
+            self.assertEqual( retval, True,
+                              msg='averaged result is wrong (irow=%s)'%irow )
+        del sp, sp0
+        
+
+###
+# Test on bad parameter settings
+###
+class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
+    """
+    Test on bad parameter setting
+    """
     # Input and output names
-    # uncalibrated data
-    infile0 = 'OrionS_rawACSmod.asap'
-    # uncalibrated data
-    infile1 = 'OrionS_rawACSmod_cal2123.asap'
-    infiles = [infile0, infile1]
-    outroot = 'sdcal_test'
+    rawfile='calpsGBT.asap'
+    prefix=sdcal_unittest_base.taskname+'Test0'
+    outfile=prefix+'.asap'
 
     def setUp(self):
-        for file in self.infiles:
-            if os.path.exists(file):
-                shutil.rmtree(file)
-            shutil.copytree(self.datapath+file, file)
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+
         default(sdcal)
 
     def tearDown(self):
-        for file in self.infiles:
-            if (os.path.exists(file)):
-                shutil.rmtree(file)
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
 
-    def _row0_stats(self,file):
-        scan = sd.scantable(file,average=False)
-        stats=["max","min","sum","rms","stddev","max_abc","min_abc"]
-        edge = 500
-        chanrange = [edge, scan.nchan()-edge-1]
-        mask = scan.create_mask(chanrange)
-        statdict = {}
-        for stat in stats:
-            statdict[stat] = scan.stats(stat,mask=mask,row=0)[0]
-        del scan
-        print "\nCurrent run: "+str(statdict)
-        return statdict
+    def test000(self):
+        """Test 000: Default parameters"""
+        self.res=sdcal()
+        self.assertFalse(self.res)
+        
+    def test001(self):
+        """Test 001: Time averaging without weight"""
+        self.res=sdcal(infile=self.rawfile,timeaverage=True,outfile=self.outfile)
+        self.assertFalse(self.res)        
 
-    def _teststats0(self,teststat,refstat,places=4):
-        for stat, refval in refstat.iteritems():
-            self.assertTrue(teststat.has_key(stat),
-                            msg = "'%s' is not defined in the current run" % stat)
-            allowdiff = 0.01
-            #print "Comparing '%s': %f (current run), %f (reference)" % \
-            #      (stat,testdict[stat],refval)
-            reldiff = (teststat[stat]-refval)/refval
-            self.assertTrue(reldiff < allowdiff,\
-                            msg="'%s' differs: %f (ref) != %f" % \
-                            (stat, refval, teststat[stat]))
+    def test002(self):
+        """Test 002: Polarization averaging without weight"""
+        self.res=sdcal(infile=self.rawfile,polaverage=True,outfile=self.outfile)
+        self.assertFalse(self.res)        
 
-    def test00(self):
-        """Test 0: Default parameters (raises an errror)"""
-        #print blfunc
-        result = sdcal()
-        self.assertFalse(result)
+    def test003(self):
+        """Test 003: Invalid calibration mode"""
+        self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
+        self.assertFalse(self.res)
 
-    def test01(self):
-        """Test 1: Default parameters + valid input filename (do nothing)"""
-        self.tid="01"
-        infile = self.infile0
-        outfile = self.outroot+self.tid+'.asap'
-
-        result = sdcal(infile=infile,outfile=outfile)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
-        refstat = {'rms': 0.55389463901519775, 'min': 0.26541909575462341,
-                   'max_abc': 773.0, 'max': 0.91243284940719604,
-                   'sum': 3802.1259765625, 'stddev': 0.16529126465320587,
-                   'min_abc': 7356.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
-
-    def test02(self):
-        """
-        Test 2: operate all steps (mostly with default parameters)
-        testing if default parameter values are changed
-        """
-        # Don't average GBT ps data at the same time of calibration.
-        self.tid="02"
-        infile = self.infile0
-        outfile = self.outroot+self.tid+'.asap'
-        calmode = 'ps'
-        kernel = 'hanning'
-        blfunc='poly'
+    def test004(self):
+        """Test 004: Specify existing output file name with overwrite=False"""
+        outfile='calpsGBT.cal.asap'
+        if (not os.path.exists(outfile)):
+            shutil.copytree(self.datapath+outfile, outfile)
+        self.res=sdcal(infile=self.rawfile,outfile=outfile,overwrite=False)
+        os.system( 'rm -rf %s'%outfile )        
+        self.assertFalse(self.res)
 
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
-                       kernel=kernel,blfunc=blfunc)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
+###
+# Test GBT position switch calibration 
+###
+class sdcal_test1(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test GBT position switch calibration 
+    
+    Data is taken from OrionS_rawACSmod and created by the following
+    script:
 
-        refstat = {'rms': 0.21985267102718353, 'min': -0.70194435119628906,
-                   'max_abc': 4093.0, 'max': 0.96840262413024902,
-                   'sum': 5.4850387573242188, 'stddev': 0.21986636519432068,
-                   'min_abc': 7623.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
+    asap_init()
+    s=sd.scantable('OrionS_rawACSmod',average=False)
+    sel=sd.selector()
+    sel.set_ifs([0])
+    sel.set_scans([20,21,22,23])
+    s.set_selection(sel)
+    s.save('calpsGBT.asap','ASAP')
+
+    In addition, unnecessary TCAL rows were removed.
+    """
+    # Input and output names
+    rawfile='calpsGBT.asap'
+    reffile='calpsGBT.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test1'
+    calmode='ps'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test100(self):
+        """Test 100: test to calibrate data (GBT position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
+
+###
+# Test GBT nodding calibration 
+###
+class sdcal_test2(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test GBT nodding calibration 
+    
+    Data is taken from IRC+10216_rawACSmod and created by the following
+    script:
+
+    asap_init()
+    s=sd.scantable('IRC+10216_rawACSmod',average=False)
+    sel=sd.selector()
+    sel.set_scans([229,230])
+    sel.set_ifs([3])
+    sel.set_cycles([0,1])
+    s.set_selection(sel)
+    s.save('calnodGBT.asap','ASAP')
+
+    In addition, unnecessary TCAL rows were removed.
+    """
+    # Input and output names
+    rawfile='calnodGBT.asap'
+    reffile='calnodGBT.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test2'
+    calmode='nod'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test200(self):
+        """Test 200: test to calibrate data (GBT nod)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
+
+###
+# Test GBT frequency switch calibration 
+###
+class sdcal_test3(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test GBT frequency switch calibration 
+    
+    Data is taken from FLS3_all_newcal_SP and created by the following
+    script:
+
+    asap_init()
+    sd.rc('scantable',storage='disk')
+    s=sd.scantable('FLS3_all_newcal_SP',average=False)
+    sel=sd.selector()
+    sel.set_scans([14914])
+    sel.set_cycles([0,1])
+    s.set_selection(sel)
+    s.save('calfsGBT.asap','ASAP')
+
+    In addition, unnecessary TCAL rows were removed.
+    """
+    # Input and output names
+    rawfile='calfsGBT.asap'
+    reffile='calfsGBT.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test3'
+    calmode='fs'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test300(self):
+        """Test 300: test to calibrate data (GBT frequency switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
+        
+###
+# Test quotient
+###
+class sdcal_test4(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test quotient.
+    
+    Data is taken from MOPS.rpf, which is included in ASAP package
+    for testing, and created by the following script:
+
+    asap_init()
+    s=sd.scantable('MOPS.rpf',average=False)
+    sel=sd.selector()
+    sel.set_cycles([0,1])
+    s.set_selection(sel)
+    s.save('quotient.asap','ASAP')
+
+    """
+    # Input and output names
+    rawfile='quotient.asap'
+    reffile='quotient.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test4'
+    calmode='quotient'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test400(self):
+        """Test 400: test to calibrate data (quotient)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
+
+###
+# Test ALMA position switch calibration
+###
+class sdcal_test5(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test ALMA position switch calibration (OTF raster with OFF scan)
+    
+    Data is taken from uid___A002_X8ae1b_X1 (DV01) and created by 
+    the following script:
+
+    asap_init()
+    sd.splitant('uid___A002_X8ae1b_X1') # to split data by antenna
+    s=sd.scantable('uid___A002_X8ae1b.DV01.asap',average=False)
+    sel=sd.selector()
+    sel.set_ifs([2])
+    sel.set_cycles([20,118,205])
+    s.set_selection(sel)
+    s.save('calpsALMA.asap','ASAP')
+
+    """
+    # Input and output names
+    rawfile='calpsALMA.asap'
+    reffile='calpsALMA.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test5'
+    calmode='ps'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test500(self):
+        """Test 500: test to calibrate data (ALMA position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
+
+
+###
+# Test polarization averaging with/without scan average
+###
+class sdcal_test6(sdcal_avetest_base,unittest.TestCase):
+    """
+    Test polarization averaging with/without scan average
+
+    Data is calpsGBT.cal.asap.
+
+    ###NOTE###
+    Polarization average averages data in both time and polarization.
+    """
+    # Input and output names
+    rawfile='calpsGBT.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test6'
+    reffiles=['polaverage.ref0',
+              'polaverage.ref1',
+              'polaverage.ref2',
+              'polaverage.ref3']
+    
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        for reffile in self.reffiles:
+            if (not os.path.exists(reffile)):
+                shutil.copyfile(self.datapath+reffile, reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        for reffile in self.reffiles:
+            if (os.path.exists(reffile)):
+                os.remove(reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test600(self):
+        """Test 600: test polarization average with pweight='var' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=True,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during polarization averaging')
+        self._compare(outname,self.reffiles[0])
+        
+    def test601(self):
+        """Test 601: test polarization average with pweight='var' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during polarization averaging')
+        self._compare(outname,self.reffiles[1])
+
+    def test602(self):
+        """Test 602: test polarization average with pweight='tsys' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=True,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during polarization averaging')
+        self._compare(outname,self.reffiles[2])
+        
+    def test603(self):
+        """Test 603: test polarization average with pweight='tsys' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during polarization averaging')
+        self._compare(outname,self.reffiles[3])
+
+
+###
+# Test time averaging with/without scan average
+###
+class sdcal_test7(sdcal_avetest_base,unittest.TestCase):
+    """
+    Test time averaging with/without scan average
+
+    Data is calpsGBT.cal.asap.
+    """
+    # Input and output names
+    rawfile='calpsGBT.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test7'
+    reffiles=['timeaverage.ref0',
+              'timeaverage.ref1',
+              'timeaverage.ref2',
+              'timeaverage.ref3',
+              'timeaverage.ref4',
+              'timeaverage.ref5',
+              'timeaverage.ref6',
+              'timeaverage.ref7',
+              'timeaverage.ref8',
+              'timeaverage.ref9']
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        for reffile in self.reffiles:
+            if (not os.path.exists(reffile)):
+                shutil.copyfile(self.datapath+reffile, reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        for reffile in self.reffiles:
+            if (os.path.exists(reffile)):
+                os.remove(reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test700(self):
+        """Test 700: test time average with tweight='var' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[0])
+        
+    def test701(self):
+        """Test 701: test time average with tweight='var' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[1])
+        
+    def test702(self):
+        """Test 702: test time average with tweight='tsys' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[2])
+        
+    def test703(self):
+        """Test 703: test time average with tweight='tsys' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[3])
+        
+    def test704(self):
+        """Test 704: test time average with tweight='tint' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[4])
+        
+    def test705(self):
+        """Test 705: test time average with tweight='tint' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[5])
+        
+    def test706(self):
+        """Test 706: test time average with tweight='tintsys' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[6])
+        
+    def test707(self):
+        """Test 707: test time average with tweight='tintsys' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[7])
+        
+    def test708(self):
+        """Test 708: test time average with tweight='median' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[8])
+        
+    def test709(self):
+        """Test 709: test time average with tweight='median' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        self._compare(outname,self.reffiles[9])
         
 
-    def test03(self):
-        """
-        Test 3:  explicitly specify all parameters
-        testing if parameter names are changed
-        """
-        self.tid="03"
-        infile = self.infile0
-        outfile = self.outroot+self.tid+'.asap'
 
-        result = sdcal(infile=infile,
-                       antenna=0,
-                       fluxunit='K',
-                       telescopeparm='',
-                       specunit='GHz',
-                       frame='',
-                       doppler='',
-                       calmode='ps',
-                       scanlist=[20,21,22,23],
-                       field='OrionS*',
-                       iflist=[0],
-                       pollist=[],
-                       channelrange=[],
-                       average=False,
-                       scanaverage=False,
-                       timeaverage=False,
-                       tweight='none',
-                       averageall=False,
-                       polaverage=False,
-                       pweight='none',
-                       tau=0.0,
-                       kernel='hanning',
-                       kwidth=5,
-                       blfunc='poly',
-                       order=5,
-                       npiece=2,
-                       clipthresh=3.0,
-                       clipniter=1,
-                       masklist=[],
-                       maskmode='auto',
-                       thresh=5.0,
-                       avg_limit=4,
-                       edge=[0],
-                       verifycal=False,
-                       verifysm=False,
-                       verifybl=False,
-                       verbosebl=True,
-                       outfile=outfile,
-                       outform='ASAP',
-                       overwrite=False,
-                       plotlevel=0)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
+###
+# Test mixed operation (cal+average,time+pol average,...)
+###
+class sdcal_test8(sdcal_avetest_base,unittest.TestCase):
+    """
+    Test other things including mixed opearation
 
-    def test04(self):
-        """ Test 4:  operate only calibration step """
-        self.tid="04"
-        infile = self.infile0
-        outfile = self.outroot+self.tid+'.asap'
-        calmode = 'ps'
+       - calibration + time average
+       - calibration + polarization average
+       - time average + polarzation average
+       - channelrange parameter
+       
+    """
+    # Input and output names
+    rawfile='calpsGBT.asap'
+    calfile='calpsGBT.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'Test8'
+    reffiles=['polaverage.ref2',
+              'timeaverage.ref6',
+              'timepolaverage.ref']
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
-        refstat = {'rms': 2.1299083232879639, 'min': 1.2246102094650269,
-                   'max_abc': 4093.0, 'max': 3.1902554035186768,
-                   'sum': 15209.119140625, 'stddev': 0.25390961766242981,
-                   'min_abc': 7434.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.calfile)):
+            shutil.copytree(self.datapath+self.calfile, self.calfile)
+        for reffile in self.reffiles:
+            if (not os.path.exists(reffile)):
+                shutil.copyfile(self.datapath+reffile, reffile)
 
-    def test05(self):
-        """ Test 5:  operate only averaging step """
-        self.tid="05"
-        infile = self.infile1
-        outfile = self.outroot+self.tid+'.asap'
-        average = True
-        # need to run one of average
-        scanaverage = True
+        default(sdcal)
 
-        result = sdcal(infile=infile,outfile=outfile,
-                       average=average,scanaverage=scanaverage)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.calfile)):
+            shutil.rmtree(self.calfile)
+        for reffile in self.reffiles:
+            if (os.path.exists(reffile)):
+                os.remove(reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
 
-        refstat = {'rms': 4.1353230476379395, 'min': 3.2386586666107178,
-                   'max_abc': 4093.0, 'max': 5.6874399185180664,
-                   'sum': 29690.876953125, 'stddev': 0.24056948721408844,
-                   'min_abc': 2452.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
+    def test800(self):
+        """Test 800: test calibration + polarization average with pweight='tsys' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode='ps',scanaverage=True,polaverage=True,pweight='tsys',tau=0.09,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration and averaging')
+        self._compare(outname,self.reffiles[0])
+        
+    def test801(self):
+        """Test 801: test calibration + time average with tweight='tintsys' (scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode='ps',scanaverage=True,timeaverage=True,tweight='tintsys',tau=0.09,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration and averaging')
+        self._compare(outname,self.reffiles[1])
+        
+    def test802(self):
+        """Test 802: test polarization average with pweight='tsys' + time average with tweight='tintsys' (no scan average)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.calfile,scanaverage=False,timeaverage=True,tweight='tintsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during averaging')
+        self._compare(outname,self.reffiles[2])
+        
+    def test803(self):
+        """Test 803: test channelrange selection"""
+        chrange=[1000,8000]
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.calfile,channelrange=chrange,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during channel range selection')
 
-    def test06(self):
-        """ Test 6:  operate only smoothing step """
-        self.tid="06"
-        infile = self.infile1
-        outfile = self.outroot+self.tid+'.asap'
-        kernel = 'hanning'
+        s0=sd.scantable(self.calfile,False)
+        s1=sd.scantable(outname,False)
 
-        result = sdcal(infile=infile,outfile=outfile,kernel=kernel)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
+        # check spectral value
+        sp0=numpy.array(s0._getspectrum(0))
+        sp1=numpy.array(s1._getspectrum(0))
+        self.res=all(sp0[chrange[0]:chrange[1]+1]==sp1)
+        self.assertEqual(self.res,True,
+                         msg='spectral data do not match')
 
-        refstat = {'rms': 3.5979659557342529, 'min': 2.3542881011962891,
-                   'max_abc': 4093.0, 'max': 5.2421674728393555,
-                   'sum': 25737.166015625, 'stddev': 0.37295544147491455,
-                   'min_abc': 6472.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
+        # check frequency
+        s0.set_unit('GHz')
+        s1.set_unit('GHz')
+        abc0=numpy.array(s0._getabcissa(0))
+        abc1=numpy.array(s1._getabcissa(0))
+        self.res=numpy.allclose(abc0[chrange[0]:chrange[1]+1],abc1)
+        self.assertEqual(self.res,True,
+                         msg='frequencies do not match')
 
-    def test07(self):
-        """ Test 7:  operate only baseline step """
-        self.tid="07"
-        infile = self.infile1
-        outfile = self.outroot+self.tid+'.asap'
-        blfunc = 'poly'
+        del s0,s1
 
-        result = sdcal(infile=infile,outfile=outfile,blfunc=blfunc)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
+###
+# Test averageall parameter
+###
+class sdcal_test9(sdcal_avetest_base,unittest.TestCase):
+    """
+    Test averageall parameter that forces to average spectra with
+    different spectral resolution.
 
-        refstat =  {'rms': 0.42929685115814209, 'min': -1.4878685474395752,
-                    'max_abc': 4093.0, 'max': 1.8000495433807373,
-                    'sum': 6.9646663665771484, 'stddev': 0.42932614684104919,
-                    'min_abc': 7434.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
+    Here, test to average the following two spectra that have same
+    frequency in band center.
 
-    def test08(self):
-        """ Test 8:  skip calibration and averaging """
-        self.tid="08"
-        infile = self.infile1
-        outfile = self.outroot+self.tid+'.asap'
-        calmode = 'none'
-        average = False
-        kernel = 'hanning'
-        blfunc = 'poly'
+       - nchan = 8192, resolution = 6104.23 Hz
+       - nchan = 8192, resolution = 12208.5 Hz
+       
+    """
+    # Input and output names
+    rawfile='averageall.asap'
+    prefix=sdcal_unittest_base.taskname+'Test9'
+    reffiles=['averageall.ref']
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
-                       average=average,kernel=kernel,blfunc=blfunc)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
-        refstat = {'rms': 0.37204021215438843, 'min': -1.1878492832183838,
-                   'max_abc': 4093.0, 'max': 1.6387548446655273,
-                   'sum': 9.2789239883422852, 'stddev': 0.3720642626285553,
-                   'min_abc': 7623.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        for reffile in self.reffiles:
+            if (not os.path.exists(reffile)):
+                shutil.copyfile(self.datapath+reffile, reffile)
 
-    def test09(self):
-        """ Test 9:  skip smoothing"""
-        self.tid="09"
-        infile = self.infile0
-        outfile = self.outroot+self.tid+'.asap'
-        calmode = 'ps'
-        kernel = 'none'
-        blfunc = 'poly'
+        default(sdcal)
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
-                       kernel=kernel,blfunc=blfunc)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        for reffile in self.reffiles:
+            if (os.path.exists(reffile)):
+                os.remove(reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
 
-        refstat = {'rms': 0.25368797779083252, 'min': -0.87923824787139893,
-                   'max_abc': 4093.0, 'max': 1.0637180805206299,
-                   'sum': 4.11566162109375, 'stddev': 0.25370475649833679,
-                   'min_abc': 7434.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
+    def test900(self):
+        """Test 900: test averageall parameter"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',averageall=True,polaverage=False,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during averaging')
+        self._compare(outname,self.reffiles[0])
+        
 
-    def test10(self):
-        """ Test 10:  skip baseline"""
-        self.tid="10"
-        infile = self.infile0
-        outfile = self.outroot+self.tid+'.asap'
-        calmode = 'ps'
-        kernel = 'hanning'
-        blfunc = 'none'
-
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
-                       kernel=kernel,blfunc=blfunc)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(outfile),
-                         msg="Output file '"+str(outfile)+"' doesn't exists")
-
-        refstat = {'rms': 2.126171350479126, 'min': 1.3912382125854492,
-                   'max_abc': 4093.0, 'max': 3.0977959632873535,
-                   'sum': 15209.0869140625, 'stddev': 0.2203933447599411,
-                   'min_abc': 6472.0}
-        teststat = self._row0_stats(outfile)
-        self._teststats0(teststat,refstat)
 
 def suite():
-    return [sdcal_test]
+    return [sdcal_test0, sdcal_test1,
+            sdcal_test2, sdcal_test3,
+            sdcal_test4, sdcal_test5,
+            sdcal_test6, sdcal_test7,
+            sdcal_test8, sdcal_test9]

@@ -87,7 +87,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_report.py
   test_rg_frombcs.py
   test_rg_fromtextfile.py
-  test_sdaverage.py
   test_sdbaseline.py
   test_sdcal.py
   test_sdcoadd.py
@@ -99,6 +98,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdlist.py
   test_sdmath.py
   test_sdplot.py
+  test_sdreduce.py
   test_sdsave.py
   test_sdscale.py
   test_sdsmooth.py

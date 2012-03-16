@@ -1,6 +1,8 @@
 from parallel.pimager import pimager
 import pdb
 from simple_cluster import simple_cluster
+import string
+import commands
 from taskinit import *
 import shutil
 import os
@@ -105,10 +107,17 @@ def pclean(vis=None,
                 
 
 ####checking done
+    #I'll assume this machine is representative in memory
+    arch=os.uname()[0].lower()
+    totmem=8.0e9
+    if(arch=='linux'):
+        totmem=string.atof(commands.getoutput('cat /proc/meminfo | grep -i memtotal').split()[1])*1024.0
+    elif(arch=='darwin'):
+        totmem=string.atof(commands.getoutput('sysctl hw.memsize').split()[1])
 
     
     cluster=simple_cluster.getCluster()._cluster
-    
+    numprocperhost=len(cluster.get_engines())/len(cluster.get_nodes()) if (len(cluster.get_nodes()) >0 ) else 1
 
     pim=pimager(cluster)
     #pdb.set_trace()
@@ -128,11 +137,15 @@ def pclean(vis=None,
               hostnames='', numcpuperhost=-1, 
               majorcycles=majorcycles, niter=niter,
               threshold=threshold, weight=weighting, robust=robust, scales=scales,
-              wprojplanes=wprojplanes,facets=facets, 
-              contclean=(not overwrite), visinmem=False, maskimage=mask, interactive=interactive)
+              wprojplanes=wprojplanes,facets=facets,  stokes=stokes,
+              contclean=(not overwrite), visinmem=False, maskimage=mask, interactive=interactive, numthreads=1)
     else:
         ##need to calculate chanchunk
-        chanchunk=1
+        memperproc=totmem/float(numprocperhost)/2.0
+        estmem=14.0*float(imsize[0]*imsize[1])*4
+        chanchunk=int(memperproc/estmem) 
+        if(chanchunk <1):
+            chanchunk=1
         pim.pcube(msname=vis, imagename=imagename, 
               imsize=imsize, pixsize=[cellx, celly], 
               phasecenter=phasecenter, 
@@ -143,9 +156,10 @@ def pclean(vis=None,
               threshold=threshold, weight=weighting, robust=robust, scales=scales,
               mode=cubemode, 
               wprojplanes=wprojplanes,facets=facets, 
-              start=start, nchan=nchan, step=width, 
+              start=start, nchan=nchan, step=width, restfreq=restfreq,stokes=stokes, 
               imagetilevol=1000000, chanchunk=chanchunk, maskimage=mask,  
-              contclean=(not overwrite), visinmem=False)
-parallel_clean=pclean
+              contclean=(not overwrite), visinmem=False, numthreads=1)
+
+#parallel_clean=pclean
     
 

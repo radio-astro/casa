@@ -6,7 +6,7 @@
 #
 # used tasks
 # sdlist
-# sdaverage
+# sdcal
 # sdsmooth
 # sdbaseline
 # sdplot
@@ -82,7 +82,7 @@ else:
 
 # calibartion and averaging
 # calibrate position-switched CH3OH scans (IF=2) 
-default(sdaverage)
+default(sdcal)
 infile='OrionS_rawACSmod'
 fluxunit='K' 
 calmode='ps'
@@ -96,7 +96,7 @@ pweight='tsys'   # weighted by Tsys
 tau=0.09         # do opacity correction 
 overwrite=True
 plotlevel=localplotlevel  
-sdaverage() 
+sdcal() 
 # output
 localoutfile=infile+'_cal'
 

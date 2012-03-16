@@ -28,6 +28,7 @@ class pimager():
         self.robust=0.0
         self.stokes='I'
         self.visinmem=False
+        self.numthreads=-1
         self.c=cluster
         if self.c == '' :
             # Until we move to the simple cluster
@@ -420,6 +421,7 @@ class pimager():
               hostnames='', 
               numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
+              numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''):
 
@@ -476,7 +478,8 @@ class pimager():
         self.weight=weight
         self.robust=robust
         self.visinmem=visinmem
-        
+        self.numthreads=numthreads
+
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
       
         if(spw==''):
@@ -689,7 +692,7 @@ class pimager():
               mode='channel', start=0, nchan=1, step=1, restfreq='', weight='natural', 
               robust=0.0, 
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' ,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -749,6 +752,7 @@ class pimager():
         self.weight=weight
         self.robust=robust
         self.visinmem=visinmem
+        self.numthreads=numthreads
         self.setupcluster(hostnames,numcpuperhost, 3)
         numcpu=self.numcpu
         ##Start an slave for my async use for cleaning up etc here
@@ -916,10 +920,10 @@ class pimager():
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
               numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
-              mode='channel', start=0, nchan=1, step=1, restfreq='', weight='natural', 
+              mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
               robust=0.0, 
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' ,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -978,7 +982,9 @@ class pimager():
         self.cell=pixsize
         self.weight=weight
         self.robust=robust
+        self.stokes=stokes
         self.visinmem=visinmem
+        self.numthreads=numthreads
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
         ####
@@ -1150,10 +1156,10 @@ class pimager():
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
               numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
-              mode='channel', start=0, nchan=1, step=1, restfreq='', weight='natural', 
+              mode='channel', start=0, nchan=1, step=1, stokes='I', restfreq='', weight='natural', 
               robust=0.0, 
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' ,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -1213,6 +1219,8 @@ class pimager():
         self.weight=weight
         self.robust=robust
         self.visinmem=visinmem
+        self.numthreads=numthreads
+        self.stokes=stokes
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
         ####
@@ -1397,7 +1405,7 @@ class pimager():
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
                      numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0,
-                     contclean=False, visinmem=False, maskimage='lala.mask',
+                     contclean=False, visinmem=False, maskimage='lala.mask', numthreads=-1,
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
         """
@@ -1453,7 +1461,7 @@ class pimager():
         self.weight=weight
         self.robust=robust
         self.visinmem=visinmem
-        
+        self.numthreads=numthreads
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
         model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
         if(not contclean):
@@ -1911,7 +1919,7 @@ class pimager():
         spwlaunch='"'+self.spw+'"' if (type(self.spw)==str) else str(self.spw)
         fieldlaunch='"'+self.field+'"' if (type(self.field) == str) else str(self.field)
         pslaunch='"'+self.phasecenter+'"' if (type(self.phasecenter) == str) else str(self.phasecenter)
-        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', stokes="'+self.stokes+'")'
+        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+')'
         print 'launch command', launchcomm
         self.c.pgc(launchcomm);
         self.c.pgc('a.visInMem='+str(self.visinmem));

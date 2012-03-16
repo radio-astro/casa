@@ -3467,27 +3467,7 @@ image* image::newimagefromfile(const std::string& fileName) {
 }
 
 image* image::newimage(const string& fileName) {
-	try {
-		if (_log.get() == 0) {
-			_log.reset(new LogIO());
-		}
-		std::auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
-		*_log << _ORIGIN;
-		std::auto_ptr<ImageInterface<Float> > outIm(
-			newImage->newimagefromfile(fileName)
-		);
-		if (outIm.get() != 0) {
-			return new ::casac::image(outIm.get());
-		}
-		else {
-			return new image();
-		}
-	}
-	catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+	return newimagefromfile(fileName);
 }
 
 image* image::newimagefromarray(

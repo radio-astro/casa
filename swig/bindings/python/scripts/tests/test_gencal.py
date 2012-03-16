@@ -28,7 +28,8 @@ class gencal_antpostest(unittest.TestCase):
 
     def setUp(self):
         if (os.path.exists(self.msfile)):
-            os.system('rm -rf ' + self.msfile)
+            #os.system('rm -rf ' + self.msfile)
+            shutil.rmtree(self.msfile)
 
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/gencal/'
         #datapath='/export/home/tengu/alma/casatest/gencal_antoffset/testdata/'
@@ -36,8 +37,8 @@ class gencal_antpostest(unittest.TestCase):
 
     def tearDown(self):
         if (os.path.exists(self.msfile)):
-        #    os.system('rm -rf ' + self.msfile)
-             pass
+            shutil.rmtree(self.msfile)
+        shutil.rmtree(self.caltable,ignore_errors=True)
 
     def test_antpos_manual(self):
         """

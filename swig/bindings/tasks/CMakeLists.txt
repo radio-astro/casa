@@ -74,7 +74,6 @@ partition.xml
 polcal.xml
 predictcomp.xml
 rmtables.xml
-sdaverage.xml
 sdbaseline.xml
 sdcal.xml
 sdcoadd.xml
@@ -87,6 +86,7 @@ sdimprocess.xml
 sdlist.xml
 sdmath.xml
 sdplot.xml
+sdreduce.xml
 sdsave.xml
 sdscale.xml
 sdsmooth.xml

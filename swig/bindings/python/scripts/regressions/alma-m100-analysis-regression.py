@@ -225,22 +225,28 @@ mystep = 4
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
+    # Create flagcmd input file
+    flagcmd = "mode='manual' antenna='CM01'\n"\
+              "mode='manual' intent='*POINTING*'\n"\
+              "mode='manual' intent='*ATMOSPHERE*'\n"\
+              "mode='shadow'\n"\
+              "mode='manual' antenna='*&&&'" # autocorrelations
+              
+    flagfile = "m100_flag_step4.txt"
+    if os.path.exists(flagfile):
+        os.system('rm -f '+ flagfile)
+    
+    # Save it to disk   
+    with open(flagfile, 'w') as f:
+        f.write(flagcmd)
+    f.close()
+    
     for name in basename:
 
         flagmanager(vis=name+'.ms', mode='restore', versionname='Original')
+
         
-	flagdata(vis = name+'.ms',
-		 flagbackup = F,
-		 mode = 'manualflag',
-		 antenna='CM01')
-
-	flagdata(vis=name+'.ms', mode='manualflag', flagbackup = F,
-		 intent='*POINTING*')
-	flagdata(vis=name+'.ms', mode='manualflag', flagbackup = F,
-		 intent='*ATMOSPHERE*')
-
-	flagdata(vis=name+'.ms', flagbackup = F, mode = 'shadow')
-	flagautocorr(vis=name+'.ms')
+        tflagdata(vis=name + '.ms', mode='list', inpfile=flagfile, flagbackup=False)
 
 	if(makeplots):
 		# Plot amplitude vs time
@@ -322,45 +328,41 @@ mystep = 9
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
+    # Create flagcmd input file (could also call tflagdata twice alternatively)
+    flagcmd = "mode='manual' field='' spw='0~3:0~10;3800~3839'\n" # edge channels
+    flagcmd += "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'\n" # channels 239, 447/448, 720/721 and 2847/2848 are off
+              
+    flagfile = "m100_flag_step9.txt"
+    if os.path.exists(flagfile):
+        os.system('rm -f '+ flagfile)
+    
+    # Save it to disk   
+    with open(flagfile, 'w') as f:
+        f.write(flagcmd)
+    f.close()
+
     for name in basename:
 
-        flagmanager(vis=name+'-line.ms', mode='restore', versionname='apriori')
+        flagmanager(vis=name + '-line.ms', mode='restore',
+                    versionname='apriori')
+        
+        tflagdata(vis=name + '-line.ms', mode='list', inpfile=flagfile, flagbackup=False)
 
-        # Edge channels
-        flagdata2(vis=name+'-line.ms', selectdata=T, 
-                  field='',  manualflag=T, 
-                  mf_spw='0~3:0~10;3800~3839',
-                  flagbackup = F)
+    # some integrations are off
+    tflagdata(vis='X220-line.ms', mode='manual',
+              timerange='19:52:55~19:53:04', flagbackup=False)
 
-        # Channels 239, 447/448, 720/721 and 2847/2848 are off
-        flagdata2(vis=name+'-line.ms', selectdata=T, 
-                  field='',  manualflag=T, 
-                  mf_spw='0~3:239;447~448;720~721;2847~2848',
-                  flagbackup = F)
+    tflagdata(vis='X54-line.ms',
+              antenna='PM01',
+              timerange='19:03:35~19:03:42',
+              mode='manual',
+              flagbackup=False)
 
-    # some ints are off
-    flagdata2(
-	    vis='X220-line.ms',
-	    selectdata=F,
-	    manualflag=T,
-	    mf_timerange='19:52:55~19:53:04',
-	    flagbackup = F)
-    flagdata2(
-	    vis='X54-line.ms',
-	    mf_antenna='PM01',
-	    mf_timerange='19:03:35~19:03:42',
-	    selectdata=F,
-	    manualflag=T,
-	    flagbackup = F)
-
-    flagdata2(
-	    vis='X54-line.ms',
-	    mf_antenna='DV04',
-	    mf_timerange='19:38:45~19:38:55',
-	    selectdata=F,
-	    manualflag=T,
-	    flagbackup = F)
-    
+    tflagdata(vis='X54-line.ms',
+              antenna='DV04',
+              timerange='19:38:45~19:38:55',
+              mode='manual',
+              flagbackup=False)
 
     timing()
 
@@ -454,11 +456,19 @@ if(mystep in thesteps):
     for name in basename:
         flagmanager(vis=name+'-line-vs.ms', mode='restore', versionname='apriori')
 
-	flagdata2(vis=name+'-line-vs.ms', selectdata=T, 
-		  field='Titan',  manualflag=T, 
-		  mf_uvrange=['0~40',''], 
-		  mf_spw=['','0:200~479'],
-		  flagbackup = F)
+        tflagdata(vis=name + '-line-vs.ms',
+                  field='Titan',
+                  mode='manual',
+                  uvrange='0~40',
+                  spw='',
+                  flagbackup=False)
+        
+        tflagdata(vis=name + '-line-vs.ms',
+                  field='Titan',
+                  mode='manual',
+                  uvrange='',
+                  spw='0:200~479',
+                  flagbackup=False)
  
 	setjy(vis=name+'-line-vs.ms',
               field='Titan',
@@ -878,7 +888,6 @@ mystep = 30
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    print "***** Peak and RMS of the image of the primary phase calibrator *****\n"
     resrms = []
     respeak = []
 
@@ -894,23 +903,15 @@ if(mystep in thesteps):
 
         calstat=imstat(imagename='test-'+name+'-prim_phasecal.image.tt0', region='', box='30,30,170,80')
         rms=(calstat['rms'][0])
-        print name+': rms in phase calibrator image: '+str(rms)
+        casalog.post( name+': rms in phase calibrator image: '+str(rms))
         calstat=imstat(imagename='test-'+name+'-prim_phasecal.image.tt0', region='')
         peak=(calstat['max'][0])
-        print name+': Peak in phase calibrator image: '+str(peak)
-        print name+': Dynamic range in phase calibrator image: '+str(peak/rms)
+        casalog.post( name+': Peak in phase calibrator image: '+str(peak))
+        casalog.post( name+': Dynamic range in phase calibrator image: '+str(peak/rms))
 
         resrms.append(rms)
         respeak.append(peak)
 
-    print "\nDataset, Peak (expectation, expectation CASA 3.3), RMS (expectation, expectation CASA 3.3)"
-    print "------------------------------------------------------------------------------------------"
-    for i in [0,1]:
-        print basename[i],",", respeak[i], "(",exppeak[i],",", exppeak33[i],"),", resrms[i], "(",exprms[i],",",exprms33[i],")"
-        
-    print "------------------------------------------------------------------------------------------"
-
-    print "***** Peak and RMS of the image of the central field of the M100 mosaic  *****\n"
     resrmsm = []
     respeakm = []
 
@@ -923,16 +924,33 @@ if(mystep in thesteps):
 
     calstat=imstat(imagename='test-M100line.image', region='', box='42,115,65,134')
     resrmsm=(calstat['rms'][0])
-    print ' rms in M100: '+str(resrmsm)
     calstat=imstat(imagename='test-M100line.image', region='')
     respeakm=(calstat['max'][0])
-    print ' Peak in M100: '+str(respeakm)
-    print ' Dynamic range in M100: '+str(respeakm/resrmsm)
 
-    print "\nM100: Peak (expectation, expectation CASA 3.3), RMS (expectation, expectation CASA 3.3)"
-    print "------------------------------------------------------------------------------------------"
-    print respeakm, "(",exppeakm,",", exppeakm33,"),", resrmsm, "(",exprmsm,",",exprmsm33,")"
-    print "------------------------------------------------------------------------------------------"
+    casalog.post( ' rms in M100: '+str(resrmsm))
+    casalog.post( ' Peak in M100: '+str(respeakm))
+    casalog.post( ' Dynamic range in M100: '+str(respeakm/resrmsm))
+
+
+    timing()
+
+    # print results to logger
+    casalog.origin('SUMMARY')
+    casalog.post("\n***** Peak and RMS of the images of the primary phase calibrator *****")
+    casalog.post( "Dataset, Peak (expectation, expectation CASA 3.3), RMS (expectation, expectation CASA 3.3)")
+    casalog.post( "------------------------------------------------------------------------------------------")
+    for i in [0,1]:
+        casalog.post( basename[i]+","+ str(respeak[i])+ "("+str(exppeak[i])+","+ str(exppeak33[i])+"),"
+                      + str(resrms[i])+ "("+str(exprms[i])+","+str(exprms33[i])+")")
+        
+    casalog.post( "------------------------------------------------------------------------------------------")
+
+    casalog.post( "\n***** Peak and RMS of the image of the central field of the M100 mosaic  *****")
+
+    casalog.post( "M100: Peak (expectation, expectation CASA 3.3), RMS (expectation, expectation CASA 3.3)")
+    casalog.post( "------------------------------------------------------------------------------------------")
+    casalog.post( str(respeakm)+ "("+str(exppeakm)+","+ str(exppeakm33)+"),"+ str(resrmsm)+ "("+str(exprmsm)+","+str(exprmsm33)+")")
+    casalog.post( "------------------------------------------------------------------------------------------")
 
 
     passed = True
@@ -940,28 +958,28 @@ if(mystep in thesteps):
     for i in [0,1]:
         peakdev = abs(respeak[i]-exppeak[i])/exppeak[i]*100.
         if (peakdev > 0.5):
-            print 'ERROR: Peak in primary phase calibrator image '+str(i)+' deviates from expectation by '+str(peakdev)+' percent.'
+            casalog.post( 'ERROR: Peak in primary phase calibrator image '+str(i)+' deviates from expectation by '+str(peakdev)+' percent.', 'WARN')
             passed = False
 
         rmsdev = abs(resrms[i]-exprms[i])/exprms[i]*100.
         if (rmsdev > 0.5):
-            print 'ERROR: RMS in primary phase calibrator image '+str(i)+' deviates from expectation by '+str(rmsdev)+' percent.'
+            casalog.post( 'ERROR: RMS in primary phase calibrator image '+str(i)+' deviates from expectation by '+str(rmsdev)+' percent.','WARN')
             passed = False
 
     peakmdev = abs(respeakm-exppeakm)/exppeakm*100.
     if (peakmdev > 0.5):
-        print 'ERROR: Peak in M100 central field image '+str(i)+' deviates from expectation by '+str(peakmdev)+' percent.'
+        casalog.post( 'ERROR: Peak in M100 central field image '+str(i)+' deviates from expectation by '+str(peakmdev)+' percent.','WARN')
         passed = False
 
     rmsmdev = abs(resrmsm-exprmsm)/exprmsm*100.
     if (rmsmdev > 0.5):
-        print 'ERROR: RMS in M100 central field image '+str(i)+' deviates from expectation by '+str(rmsmdev)+' percent.'
+        casalog.post( 'ERROR: RMS in M100 central field image '+str(i)+' deviates from expectation by '+str(rmsmdev)+' percent.','WARN')
         passed = False
 
     if not passed:
         raise Exception, 'Results are different from expectations by more than 0.5 percent.'
 
-    print "All peak and RMS values within 0.5 percent of the expectation."
+    casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
     
 
 print 'Done.'

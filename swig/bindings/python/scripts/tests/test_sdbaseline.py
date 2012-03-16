@@ -26,11 +26,11 @@ class sdbaseline_basictest(unittest.TestCase):
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
-      default(sdaverage)
-      sdaverage(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
                 calmode='ps',tau=0.09,outfile='temp.asap')
-      default(sdaverage)
-      sdaverage(infile='temp.asap',timeaverage=True,
+      default(sdcal)
+      sdcal(infile='temp.asap',timeaverage=True,
                 tweight='tintsys',outfile=self.infile)
     """
     # Data path of input/output
@@ -188,11 +188,11 @@ class sdbaseline_masktest(unittest.TestCase):
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
-      default(sdaverage)
-      sdaverage(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
                 calmode='ps',tau=0.09,outfile='temp.asap')
-      default(sdaverage)
-      sdaverage(infile='temp.asap',timeaverage=True,
+      default(sdcal)
+      sdcal(infile='temp.asap',timeaverage=True,
                 tweight='tintsys',outfile=self.infile)
     """
     # Data path of input/output

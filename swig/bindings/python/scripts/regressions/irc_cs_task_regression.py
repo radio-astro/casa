@@ -6,7 +6,7 @@
 # 
 # tasks used
 # sdlist
-# sdaverage
+# sdcal
 # sdsmooth
 # sdbaseline
 # sdplot
@@ -83,7 +83,7 @@ else:
 
 # calibartion and averaging
 # calibrate nod scans for CS line (IF=3)
-default(sdaverage)
+default(sdcal)
 infile='IRC+10216_rawACSmod'
 fluxunit='K'
 calmode='nod'
@@ -97,7 +97,7 @@ pweight='tsys'   # weighted by Tsys for pol. averaging
 tau=0.09         # do opacity correction
 overwrite=True
 plotlevel=localplotlevel
-sdaverage()
+sdcal()
 # output
 localoutfile=infile+'_cal'
 

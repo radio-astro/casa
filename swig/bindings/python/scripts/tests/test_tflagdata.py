@@ -166,15 +166,24 @@ class test_rflag(test_base):
         self.setUp_data4tfcrop()
         
     def test_rflag1(self):
-        '''tflagdata:: Test1 of mode = rflag'''
+        '''tflagdata:: Test1 of mode = rflag : automatic thresholds'''
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], writeflags=True);
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 42866)
         self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
         self.assertEqual(res['spw']['7']['flagged'], 0)
-        
+
     def test_rflag2(self):
-        '''tflagdata:: Test2 of mode = rflag : output/input'''
+        '''tflagdata:: Test2 of mode = rflag : partially-specified thresholds'''
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[[1,10,0.1],[1,11,0.07]], \
+                       freqdev=0.5, writeflags=True);
+        res = tflagdata(vis=self.vis, mode='summary',spw='9,10,11')
+        self.assertEqual(res['flagged'], 52411)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
+        self.assertEqual(res['spw']['11']['flagged'], 0)
+
+    def test_rflag3(self):
+        '''tflagdata:: Test3 of mode = rflag : output/input via two methods'''
         # (1) Test input/output files, through the task, mode='rflag'
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
                       freqdev='fdevfile.txt', writeflags=False);
@@ -183,9 +192,10 @@ class test_rflag(test_base):
         res1 = tflagdata(vis=self.vis, mode='summary')
         # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
         #      and then read back in via list mode. 
+        #      Also test the 'savepars' when timedev and freqdev are specified differently...
         tflagdata(vis=self.vis,mode='unflag');
-        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt',writeflags=False,savepars=True,outfile='outcmd.txt');
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
+                      freqdev=[],writeflags=False,savepars=True,outfile='outcmd.txt');
         tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt',writeflags=True);
         res2 = tflagdata(vis=self.vis, mode='summary')
 
