@@ -36,7 +36,7 @@ storage_sav=sd.rcParams['scantable.storage']
 sd.rc('scantable',storage='disk')               # Note this enables handling of large datasets with limited memory
 
 # Set parameters
-default('sdcal')
+default('sdreduce')
 #infile = 'FLS3_all_newcal_SP'
 infile = datapath
 telescope = 'FIX'
@@ -57,7 +57,7 @@ outfile = 'sdregress_FLS3a_HI.ms'
 outform = 'ms'
 plotlevel = 0
 
-sdcal()
+sdreduce()
 caltime=time.time()
 savetime=time.time()
 #

@@ -12,8 +12,8 @@ from sdaverage import sdaverage
 from sdsmooth import sdsmooth
 from sdbaseline import sdbaseline
 
-#def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blfunc, order, npiece, nwave, maxwavelength, clipthresh, clipniter, masklist, maskmode, thresh, avg_limit, edge, verifycal, verifysm, verifybl, verbosebl, outfile, outform, overwrite, plotlevel):
-def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+#def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blfunc, order, npiece, nwave, maxwavelength, clipthresh, clipniter, masklist, maskmode, thresh, avg_limit, edge, verifycal, verifysm, verifybl, verbosebl, outfile, outform, overwrite, plotlevel):
+def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 
         a=inspect.stack()
         stacklevel=0
@@ -23,9 +23,9 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
         myf=sys._getframe(stacklevel).f_globals
 
         saveinputs=myf['saveinputs']
-        saveinputs('sdcal','sdcal.tmp')       
+        saveinputs('sdreduce','sdreduce.tmp')       
 
-        casalog.origin('sdcal')
+        casalog.origin('sdreduce')
 
         ###
         ### Now the actual task code
@@ -163,7 +163,7 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
 
 def _reset_inputs(param=None):
         '''
-        internal function to recover inputs of sdcal (containing other tasks) with global task parameter settin
+        internal function to recover inputs of sdreduce (containing other tasks) with global task parameter settin
 g
         '''
         arg_names=['infile','antenna','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist','channelrange','average','scanaverage','timeaverage','tweight','averageall','polaverage','pweight','tau','kernel','kwidth','blfunc','order','npiece','applyfft','fftmethod','fftthresh','addwn','rejwn','clipthresh','clipniter','masklist','maskmode','thresh','avg_limit','edge','verifycal','verifysm','verifybl','verbosebl','showprogress','minnrow','outfile','outform','overwrite','plotlevel']
@@ -174,7 +174,7 @@ g
                 stacklevel=k
         myf=sys._getframe(stacklevel).f_globals
         a=odict()
-        paramfile = 'sdcal' + '.tmp'
+        paramfile = 'sdreduce' + '.tmp'
         f=open(paramfile)
         while 1:
                 try:

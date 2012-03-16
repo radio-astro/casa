@@ -6,15 +6,15 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<!-- This is the param set for (new) sdcal -->
+<!-- This is the param set for (new) sdreduce -->
 
-<task type="function" name="sdcal" startup="false" category="single dish">
+<task type="function" name="sdreduce" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: do sdaverage, sdsmooth, and sdbaseline in one task</shortdescription>
+  <shortdescription>ASAP SD task: do sdcal, sdsmooth, and sdbaseline in one task</shortdescription>
 
   <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
         
-        Combine sdaverage, sdsmooth, and sdbaseline to do standard single dish
+        Combine sdcal, sdsmooth, and sdbaseline to do standard single dish
         calibration in a single task. 
 
         Task Version 2008-01-28 TT
@@ -695,17 +695,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         DESCRIPTION:
 
-        Task sdcal performs data selection, calibration, and/or spectral
+        Task sdreduce performs data selection, calibration, and/or spectral
         baseline fitting for single-dish spectra. This task internally calls the
-        tasks, sdaverage, sdsmooth, and sdbaseline and it can be used to run all the
+        tasks, sdcal, sdsmooth, and sdbaseline and it can be used to run all the
         three steps in one task execution.
-        By setting calmode='none', one can run sdcal on already calibrated data,
+        By setting calmode='none', one can run sdreduce on already calibrated data,
         for further selection, averaging and atmospheric optical depth correction.
 
         If you give multiple IFs in iflist, then your scantable will have
         multiple IFs. This can be handled, but there can be funny interactions
         later on.  We recommend you split each IF out into separate files
-        by re-running sdcal with each IF in turn.
+        by re-running sdreduce with each IF in turn.
 
         ASAP recognizes the data of the "AT" telescopes, but currently
         does not know about the GBT or any other telescope. This task
@@ -720,7 +720,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         to be telescope diameter (m) and aperture efficiency
         respectively.
 
-        Note that sdcal assumes that the fluxunit is set correctly in
+        Note that sdreduce assumes that the fluxunit is set correctly in
         the data already.  If not, then set telescopeparm='FIX' and it
         will set the default units to fluxunit without conversion.
         NOTE: If the data in infile is an ms from GBT and the default flux

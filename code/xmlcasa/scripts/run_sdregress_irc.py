@@ -28,7 +28,7 @@ startTime=time.time()
 startProc=time.clock()
 
 # Set parameters
-default('sdcal')
+default('sdreduce')
 infile = 'IRC+10216_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
@@ -45,9 +45,10 @@ scanlist = [240,241,242,243,244,245,246,247]
 iflist = [30]
 kernel = 'boxcar'
 kwidth = 5
-blmode = 'auto'
+maskmode='auto'
 thresh=5
-blpoly = 1
+blfunc='poly'
+order=1
 avg_limit=4
 masklist = []
 #edge = [500]
@@ -55,7 +56,7 @@ outfile = 'sdregress_irc_sio.asap'
 outform = 'asap'
 plotlevel = 0
 
-sdcal()
+sdreduce()
 
 # No line fitting, the lines are
 # broad double-peaked
@@ -173,7 +174,7 @@ startTime=time.time()
 startProc=time.clock()
 
 # Set parameters
-default('sdcal')
+default('sdreduce')
 infile = 'IRC+10216_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
@@ -190,9 +191,10 @@ scanlist = [236,237,238,239,248,249,250,251]
 iflist = [17]
 kernel = 'boxcar'
 kwidth = 5
-blmode = 'auto'
+maskmode='auto'
 thresh=5
-blpoly = 2
+blfunc='poly'
+order=2
 avg_limit=4
 #edge = [500]
 masklist = []
@@ -200,7 +202,7 @@ outfile = 'sdregress_irc_hc3n.asap'
 outform = 'asap'
 plotlevel = 0
 
-sdcal()
+sdreduce()
 
 # No line fitting, the lines are
 # broad double-peaked
@@ -319,7 +321,7 @@ startTime=time.time()
 startProc=time.clock()
 
 # Set parameters
-default('sdcal')
+default('sdreduce')
 infile = 'IRC+10216_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
@@ -336,9 +338,10 @@ scanlist = [229,230]
 iflist = [3]
 kernel = 'boxcar'
 kwidth = 5
-blmode = 'auto'
+maskmode='auto'
 thresh=5
-blpoly = 1
+blfunc='poly'
+order = 1
 avg_limit=4
 #edge = [500]
 masklist = []
@@ -346,7 +349,7 @@ outfile = 'sdregress_irc_cs.asap'
 outform = 'asap'
 plotlevel = 0
 
-sdcal()
+sdreduce()
 
 # No line fitting, the lines are
 # broad double-peaked

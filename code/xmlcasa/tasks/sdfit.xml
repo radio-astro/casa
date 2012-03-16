@@ -334,8 +334,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         DESCRIPTION:
 
         Task sdfit is a basic line-fitter for single-dish spectra.
-        It assumes that the spectra have been calibrated in sdaverage
-        or sdcal.
+        It assumes that the spectra have been calibrated in sdcal
+        or sdreduce.
 
         Furthermore, it assumes that any selection of scans, IFs,
         polarizations, and time and channel averaging/smoothing has

@@ -185,7 +185,7 @@ try:
     from sdaverage import sdaverage
     from sdsmooth import sdsmooth
     from sdbaseline import sdbaseline
-    from sdcal import sdcal
+    from sdreduce import sdreduce
     from sdcoadd import sdcoadd
     from sdsave import sdsave
     from sdscale import sdscale
@@ -212,4 +212,4 @@ except ImportError:
     sdaverage = None
     sdplot = None
     sdsmooth = None
-    sdcal = None
+    sdreduce = None

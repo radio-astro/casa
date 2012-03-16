@@ -259,7 +259,7 @@ pause=raw_input('\n* Hit Return to continue ')
 print "\n###############\n 4. sdplot \n###############"
 desc="\n" \
      "* First, generate calibrated data without polarization average.\n" \
-     "* This time use sdcal.\n"
+     "* This time use sdreduce.\n"
 print desc
 #
 # Following step is just to save default setting.
@@ -274,7 +274,7 @@ print desc
 #   for key,val in lsalias.iteritems():
 #      if lstyle==val: default_linestyles.append(key)
 
-default(sdcal)
+default(sdreduce)
 sdfile='OrionS_rawACSmod'
 calmode='ps'
 scanlist=[20, 21, 22, 23]
@@ -285,11 +285,11 @@ tweight='tintsys'
 tau=0.09
 blmode='auto'
 outfile='orion_pscal_allif_tave'
-inp(sdcal)
+inp(sdreduce)
 pause=raw_input('\n* Hit Return to continue ')
-print "\n* Run sdcal...\n"
-sdcal()
-print "*** Done sdcal ****\n"
+print "\n* Run sdreduce...\n"
+sdreduce()
+print "*** Done sdreduce ****\n"
 
 desc="\n" \
      "* NEW FEATURE: plot color control\n" \

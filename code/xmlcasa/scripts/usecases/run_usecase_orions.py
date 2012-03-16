@@ -176,9 +176,9 @@ sdlist()
 ##########################
 # Calibrate data
 ##########################
-# We will use the sdcal task to calibrate the data.
+# We will use the sdreduce task to calibrate the data.
 # Set the defaults
-default('sdcal')
+default('sdreduce')
 
 # You can see the inputs with
 #inp
@@ -190,7 +190,7 @@ sdfile = 'OrionS_rawACSmod'
 # Lets leave the spectral axis in channels for now
 specunit = 'channel'
 
-# This is position-switched data so we tell sdcal this
+# This is position-switched data so we tell sdreduce this
 calmode = 'ps'
 
 # For GBT data, it is safest to not have scantable pre-average
@@ -198,7 +198,7 @@ calmode = 'ps'
 average = True
 scanaverage = False
 
-# We do want sdcal to average up scans and polarization after
+# We do want sdreduce to average up scans and polarization after
 # calibration however.
 timeaverage = True
 tweight='tintsys'
@@ -241,7 +241,7 @@ edge = [1000]
 #masklist=[[1000,3000],[5000,7000]]
 masklist = []
 
-# By default, we will not get plots in sdcal (but
+# By default, we will not get plots in sdreduce (but
 # can make them using sdplot).
 plotlevel = 0
 # But if you wish to see a final spectrum, set
@@ -261,18 +261,18 @@ outform = 'asap'
 
 # Before running, lets save the inputs in case we want
 # to come back and re-run the calibration.
-saveinputs('sdcal','sdcal.orions.save')
+saveinputs('sdreduce','sdreduce.orions.save')
 # These can be recovered by
-#execfile 'sdcal.orions.save'
+#execfile 'sdreduce.orions.save'
 
 # We are ready to calibrate
-sdcal()
+sdreduce()
 
 # Note that after the task ran, it produced a file
-# sdcal.last which contains the inputs from the last
+# sdreduce.last which contains the inputs from the last
 # run of the task (all tasks do this). You can recover
-# this (anytime before sdcal is run again) with
-#execfile 'sdcal.last'
+# this (anytime before sdreduce is run again) with
+#execfile 'sdreduce.last'
 
 ##########################
 # List data
@@ -323,7 +323,7 @@ default('sdplot')
 # (if we hadn't reset defaults it would have
 # been set - note that sdplot,sdfit,sdstat use
 # sdfile as the input file, which is the output
-# file of sdcal).
+# file of sdreduce).
 sdfile = 'sdusecase_orions_hc3n.asap'
 
 # Lets just go ahead and plot it up as-is

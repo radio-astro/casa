@@ -292,9 +292,9 @@ class par(str):
 	@staticmethod
 	def calmode():
 		"""
-		(for sdaverage, sdcal, sdtpimaging)
+		(for sdaverage, sdreduce, sdtpimaging)
 		calmode -- SD calibration mode
-		options: 'ps', 'nod', 'fs', 'fsotf', 'quotient', 'none' (for sdaverage/sdcal)
+		options: 'ps', 'nod', 'fs', 'fsotf', 'quotient', 'none' (for sdaverage/sdreduce)
 			 'baseline', 'none' (for sdtpimaging)
 	        default: 'none'
 		example: choose 'none' if you have already calibrated
@@ -1255,7 +1255,7 @@ class par(str):
 	@staticmethod
 	def interp():
 		"""
-                (for sdaverage and sdcal)
+                (for sdaverage and sdreduce)
                 Setting of the frequency-dependent interpolation scheme for regridding spectra.
 		options: 'nearest' (nearest neighbour), 'linear', 'cubic', or 'spline' (cubic spline)
 		default: 'linear'
@@ -1313,7 +1313,7 @@ class par(str):
 
 		-----------------------------------------------------------
 		
-		(for sdcal, sdplot, and sdsmooth)
+		(for sdreduce, sdplot, and sdsmooth)
 		kernel -- type of spectral smoothing
 		options: 'none', 'hanning', 'gaussian', 'boxcar'
 		default: 'hanning' for sdsmooth, 'none' for the other tasks
@@ -1479,7 +1479,7 @@ class par(str):
 	@staticmethod
 	def masklist():
 		"""
-                (for sdbaseline and sdcal)
+                (for sdbaseline and sdreduce)
 		masklist -- list or string of mask regions to INCLUDE in BASELINE fitting
                     a string masklist allows per IF selection of channels as the
                     parameter 'spw'. See the parameter help of 'spw' for more details.
@@ -1518,8 +1518,8 @@ class par(str):
 	def maskmode():
 		"""
 		maskmode -- mode for baseline fitting
-		default: 'auto' for sdbaseline, 'none' for sdcal
-		options: 'auto', 'list', 'interact', 'none'(for sdcal)
+		default: 'auto' for sdbaseline, 'none' for sdreduce
+		options: 'auto', 'list', 'interact', 'none'(for sdreduce)
 		example: maskmode='auto' runs linefinder to detect line regions 
 		to be excluded from fitting. this mode requires three 
 		expandable parameters: thresh, avg_limit, and edge.
@@ -1888,7 +1888,7 @@ class par(str):
 		"""
 		order -- order of baseline polynomial
 		options: (int) (<0 turns off baseline fitting)
-		default: 5 for sdbaseline/sdcal, 1 for sdtpimaging
+		default: 5 for sdbaseline/sdreduce, 1 for sdtpimaging
 		example: typically in range 2-9 (higher values
 		         seem to be needed for GBT)
 		"""
@@ -1930,7 +1930,7 @@ class par(str):
 
 		Given default value ('') for outfile, some ASAP tasks set output
 		file name as infile (=input file name) with suffix as follows:
-		        <infile>_cal             for sdaverage and sdcal,
+		        <infile>_cal             for sdaverage and sdreduce,
 			<infile>_bs              for sdbaseline,
 			<infile>_f               for sdflag,
 			<infile>_scaleed<factor> for sdscale, and

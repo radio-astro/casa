@@ -12,12 +12,12 @@ import unittest
 
 asap_init()
 import asap as sd
-from sdcal import sdcal
+from sdreduce import sdreduce
 #from sdstat import sdstat
 
-class sdcal_test(unittest.TestCase):
+class sdreduce_test(unittest.TestCase):
     """
-    Basic unit tests for task sdcal. No interactive testing.
+    Basic unit tests for task sdreduce. No interactive testing.
 
     The list of tests:
     test00    --- default parameters (raises an errror)
@@ -34,21 +34,21 @@ class sdcal_test(unittest.TestCase):
     -> Just converted to scantable to eliminate errors by data conversion.
     """
     # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcal/'
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdreduce/'
     # Input and output names
     # uncalibrated data
     infile0 = 'OrionS_rawACSmod.asap'
     # uncalibrated data
     infile1 = 'OrionS_rawACSmod_cal2123.asap'
     infiles = [infile0, infile1]
-    outroot = 'sdcal_test'
+    outroot = 'sdreduce_test'
 
     def setUp(self):
         for file in self.infiles:
             if os.path.exists(file):
                 shutil.rmtree(file)
             shutil.copytree(self.datapath+file, file)
-        default(sdcal)
+        default(sdreduce)
 
     def tearDown(self):
         for file in self.infiles:
@@ -83,7 +83,7 @@ class sdcal_test(unittest.TestCase):
     def test00(self):
         """Test 0: Default parameters (raises an errror)"""
         #print blfunc
-        result = sdcal()
+        result = sdreduce()
         self.assertFalse(result)
 
     def test01(self):
@@ -92,7 +92,7 @@ class sdcal_test(unittest.TestCase):
         infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
 
-        result = sdcal(infile=infile,outfile=outfile)
+        result = sdreduce(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -118,7 +118,7 @@ class sdcal_test(unittest.TestCase):
         blfunc='poly'
 
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -142,7 +142,7 @@ class sdcal_test(unittest.TestCase):
         infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
 
-        result = sdcal(infile=infile,
+        result = sdreduce(infile=infile,
                        antenna=0,
                        fluxunit='K',
                        telescopeparm='',
@@ -195,7 +195,7 @@ class sdcal_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode)
+        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -216,7 +216,7 @@ class sdcal_test(unittest.TestCase):
         # need to run one of average
         scanaverage = True
 
-        result = sdcal(infile=infile,outfile=outfile,
+        result = sdreduce(infile=infile,outfile=outfile,
                        average=average,scanaverage=scanaverage)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -237,7 +237,7 @@ class sdcal_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         kernel = 'hanning'
 
-        result = sdcal(infile=infile,outfile=outfile,kernel=kernel)
+        result = sdreduce(infile=infile,outfile=outfile,kernel=kernel)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -257,7 +257,7 @@ class sdcal_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         blfunc = 'poly'
 
-        result = sdcal(infile=infile,outfile=outfile,blfunc=blfunc)
+        result = sdreduce(infile=infile,outfile=outfile,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -280,7 +280,7 @@ class sdcal_test(unittest.TestCase):
         kernel = 'hanning'
         blfunc = 'poly'
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
                        average=average,kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -302,7 +302,7 @@ class sdcal_test(unittest.TestCase):
         kernel = 'none'
         blfunc = 'poly'
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -325,7 +325,7 @@ class sdcal_test(unittest.TestCase):
         kernel = 'hanning'
         blfunc = 'none'
 
-        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -340,4 +340,4 @@ class sdcal_test(unittest.TestCase):
         self._teststats0(teststat,refstat)
 
 def suite():
-    return [sdcal_test]
+    return [sdreduce_test]

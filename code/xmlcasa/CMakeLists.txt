@@ -287,7 +287,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_rmtables.py
   scripts/task_sdaverage.py
   scripts/task_sdbaseline.py
-  scripts/task_sdcal.py
+  scripts/task_sdreduce.py
   scripts/task_sdcoadd.py
   scripts/task_sdfit.py
   scripts/task_sdflag.py
@@ -419,7 +419,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/rmtables.xml
   tasks/sdaverage.xml
   tasks/sdbaseline.xml
-  tasks/sdcal.xml
+  tasks/sdreduce.xml
   tasks/sdcoadd.xml
   tasks/sdfit.xml
   tasks/sdflag.xml
