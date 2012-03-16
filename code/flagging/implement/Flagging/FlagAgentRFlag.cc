@@ -356,22 +356,12 @@ FlagReport FlagAgentRFlag::getReport()
 												field_spw_noise_map_p,
 												"Time analysis",
 												noiseScale_p);
-		if(doplot_p==true)
-		{
-		         totalRep.addReport(noiseStd);
-		}
-
 		FlagReport scutofStd = getReportCore(	field_spw_scutof_histogram_sum_p,
 												field_spw_scutof_histogram_sum_squares_p,
 												field_spw_scutof_histogram_counts_p,
 												field_spw_scutof_map_p,
 												"Spectral analysis",
 												scutofScale_p);
-		if(doplot_p==true)
-		{
-		         totalRep.addReport(scutofStd);
-		}
-
 		// Threshold reports (should be returned if params were calculated)
 		Record threshList;
 		Int nEntriesNoise = field_spw_noise_map_p.size();
@@ -412,6 +402,22 @@ FlagReport FlagAgentRFlag::getReport()
 			  FlagReport returnThresh("rflag",agentName_p, threshList);
 			  totalRep.addReport(returnThresh);
 		}
+
+
+		// Add the plot-reports last. Display needs plot-reports to be at the end of the list
+                // Should be fixed in the display agent....
+		if(doplot_p==true && nEntriesNoise>0)
+		{
+		         totalRep.addReport(noiseStd);
+		}
+
+		if(doplot_p==true && nEntriesScutof>0)
+		{
+		         totalRep.addReport(scutofStd);
+		}
+
+
+
 	}
 
 
@@ -433,7 +439,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     pair<Int,Int> current_field_spw;
     Double spwStd = 0;
     Double avg,sumSquare,variance = 0;
-    FlagReport thresholdStd = FlagReport("plotpoints",agentName_p,label, "xaxis", "yaxis");
+    FlagReport thresholdStd = FlagReport("plotpoints",agentName_p,label, "channels", "statistics");
 
     // Extract data from all spws and put them in one single Array
     vector<Double> total_threshold;
@@ -488,6 +494,9 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     	idx++;
     }
 
+    // TODO : Instead of threshold_index, we need to send frequency values. 
+    //             See the use of frequencyList in FlagAgentSummary for an example.
+
     // Plot the scaled threshold
     thresholdStd.addData("line", threshold_index,total_threshold_spw_average,"",Vector<Float>(),"rflag threshold");
 
@@ -495,9 +504,9 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     // thresholdStd.addData("scatter", threshold_index, threshold_avg, "bar", threshold_variance, "median deviation and variance");
 
     // OPTION 2 for mean/rms : "avg" is a scatter plot, "up" and "down" are lines (not so pretty, but fast).
-    thresholdStd.addData("line",threshold_index,threshold_up,"",Vector<Float>(),"threshold std+var (field-spw:timestep average over baselines)");
-    thresholdStd.addData("scatter",threshold_index,threshold_avg,"",Vector<Float>(),"threshold std (field-spw average over baselines and timesteps)");
-    thresholdStd.addData("line", threshold_index,threshold_down,"",Vector<Float>(),"threshold std-var  (field-spw:timestep average over baselines)");
+    thresholdStd.addData("line",threshold_index,threshold_up,"",Vector<Float>(),"median_deviation + variance");
+    thresholdStd.addData("scatter",threshold_index,threshold_avg,"",Vector<Float>(),"median_deviation");
+    thresholdStd.addData("line", threshold_index,threshold_down,"",Vector<Float>(),"median_deviation - variance");
     
 
     return thresholdStd;
