@@ -41,11 +41,11 @@ class sdstat_test(unittest.TestCase):
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
-      default(sdaverage)
-      sdaverage(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
                 calmode='ps',tau=0.09,outfile='temp.asap')
-      default(sdaverage)
-      sdaverage(infile='temp.asap',timeaverage=True,tweight='tintsys',
+      default(sdcal)
+      sdcal(infile='temp.asap',timeaverage=True,tweight='tintsys',
                 polaverage=True,pweight='tsys',outfile=self.infile)
     """
     ### TODO:

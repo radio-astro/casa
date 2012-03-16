@@ -8,7 +8,7 @@ from odict import odict
 import asap as sd
 from asap._asap import Scantable
 import pylab as pl
-from sdaverage import sdaverage
+from sdcal import sdcal
 from sdsmooth import sdsmooth
 from sdbaseline import sdbaseline
 
@@ -33,7 +33,7 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler,
 
         try:
             tmpfilelist=''
-            sdaverageout=''
+            sdcalout=''
             sdsmoothout=''
             sdbaselineout=''
             if outfile=='':
@@ -48,10 +48,10 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler,
 
             if calmode != 'none' or average: 
               if kernel =='none' and blfunc=='none':
-                sdaverageout = outfile
+                sdcalout = outfile
               else:
-                sdaverageout = 'sdaverageout.tmp'
-                tmpfilelist+=sdaverageout+' '
+                sdcalout = 'sdcalout.tmp'
+                tmpfilelist+=sdcalout+' '
                 if kernel !='none':
                   if blfunc !='none':
                     sdsmoothout = 'sdsmoothout.tmp'
@@ -64,8 +64,8 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler,
                     sdbaselineout = outfile
             else:
               if kernel != 'none':
-                sdaverageout = 'sdaverageout_noncal.tmp'
-                tmpfilelist+=sdaverageout+' '
+                sdcalout = 'sdcalout_noncal.tmp'
+                tmpfilelist+=sdcalout+' '
                 if blfunc == 'none':
                   sdsmoothout = outfile
                 else:
@@ -75,10 +75,10 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler,
               else:
                 if blfunc != 'none':
                   sdbaselineout = outfile
-                  sdaverageout = 'sdaverageout_noncal.tmp'
-                  tmpfilelist+=sdaverageout+' '
+                  sdcalout = 'sdcalout_noncal.tmp'
+                  tmpfilelist+=sdcalout+' '
                 else:
-                  sdaverageout = outfile 
+                  sdcalout = outfile 
             
             if average:
               if scanaverage == False and timeaverage == False and polaverage == False:
@@ -88,25 +88,25 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler,
               if polaverage == True and pweight == 'none':
                  raise Exception, 'Specify weighting type of polarization average'
                    
-            #print "*** sdaverage stage ***";
-            casalog.post( "*** sdaverage stage ***" )
+            #print "*** sdcal stage ***";
+            casalog.post( "*** sdcal stage ***" )
             if calmode != 'none':
-              tmpoutfile = sdaverageout
-              #sdaverage(infile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
-              sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verifycal, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              tmpoutfile = sdcalout
+              #sdcal(infile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verifycal, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
               plevel = plotlevel
               if not average:
-                # still need to call sdaverage for unit conversion, etc.
+                # still need to call sdcal for unit conversion, etc.
                 plevel = 0
                 casalog.post( "Neither calibrated nor averaged..." )
-              tmpoutfile = sdaverageout
-              sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plevel)
+              tmpoutfile = sdcalout
+              sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plevel)
 
             #reset data selection
             tmpinfile=tmpoutfile
             if not os.path.exists(tmpinfile):
-              m = "No output file found. Error occurred at sdaverage stage"
+              m = "No output file found. Error occurred at sdcal stage"
               raise Exception, m
             
             # scanlist, iflist needed to be reset since created scantable (calibration reduces scans,

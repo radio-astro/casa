@@ -182,7 +182,7 @@ from msmoments import msmoments
 ##
 try:
     import asap as sd
-    from sdaverage import sdaverage
+    from sdcal import sdcal
     from sdsmooth import sdsmooth
     from sdbaseline import sdbaseline
     from sdreduce import sdreduce
@@ -209,7 +209,7 @@ except ImportError:
     sdstat = None
     sdsave = None
     sdflag = None
-    sdaverage = None
+    sdcal = None
     sdplot = None
     sdsmooth = None
     sdreduce = None

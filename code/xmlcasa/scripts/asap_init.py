@@ -20,9 +20,8 @@ def asap_init():
     import asap as sd
     print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
     os.environ['CASAPATH']=casapath
-    from sdaverage_cli import sdaverage_cli as sdaverage
     from sdbaseline_cli import sdbaseline_cli as sdbaseline
-    from sdreduce_cli import sdreduce_cli as sdreduce
+    from sdcal_cli import sdcal_cli as sdcal
     from sdcoadd_cli import sdcoadd_cli as sdcoadd
     from sdfit_cli import sdfit_cli as sdfit
     from sdflag_cli import sdflag_cli as sdflag
@@ -33,15 +32,15 @@ def asap_init():
     from sdlist_cli import sdlist_cli as sdlist
     from sdmath_cli import sdmath_cli as sdmath
     from sdplot_cli import sdplot_cli as sdplot
+    from sdreduce_cli import sdreduce_cli as sdreduce
     from sdsave_cli import sdsave_cli as sdsave
     from sdscale_cli import sdscale_cli as sdscale
     from sdsmooth_cli import sdsmooth_cli as sdsmooth
     from sdstat_cli import sdstat_cli as sdstat
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     myf['sd']=sd
-    myf['sdaverage']=sdaverage
     myf['sdbaseline']=sdbaseline
-    myf['sdreduce']=sdreduce
+    myf['sdcal']=sdcal
     myf['sdcoadd']=sdcoadd
     myf['sdfit']=sdfit
     myf['sdflag']=sdflag
@@ -52,6 +51,7 @@ def asap_init():
     myf['sdlist']=sdlist
     myf['sdmath']=sdmath
     myf['sdplot']=sdplot
+    myf['sdreduce']=sdreduce
     myf['sdsave']=sdsave
     myf['sdscale']=sdscale
     myf['sdsmooth']=sdsmooth

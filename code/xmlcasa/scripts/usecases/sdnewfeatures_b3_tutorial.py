@@ -55,10 +55,10 @@ else:
         
 
 ################
-# 1. sdaverage #
+# 1. sdcal #
 ################
-print "###############\n 1. sdaverage \n###############"
-default(sdaverage)
+print "###############\n 1. sdcal \n###############"
+default(sdcal)
 desc="* At first, run calibration for the position switch observation\n" \
      "* (taken from ori_hc3n_task_regression.py) to get calibrated data\n"
 print desc
@@ -76,27 +76,27 @@ tau=0.09         # do opacity correction
 outfile='orion_pscal'
 overwrite=True
 plotlevel=1
-inp(sdaverage)
+inp(sdcal)
 pause=raw_input('* Hit Return to continue ')
 
-print "\n* Run sdaverage with these parameters...\n"
-sdaverage()
-print "*** Done sdaverage ****\n"
+print "\n* Run sdcal with these parameters...\n"
+sdcal()
+print "*** Done sdcal ****\n"
 desc="\n" \
      "* NEW FEATURE: channelrange\n" \
      "* now try new parameter, channelrange to save a subset of the spectra\n" \
      "* with restricted channel range. We do the same calibration as the previous\n" \
-     "* sdaverage run but select IF0 only and set a channel range from 3000 to 5000\n"
+     "* sdcal run but select IF0 only and set a channel range from 3000 to 5000\n"
 print desc
 iflist=[0]
 channelrange=[3000,5000]
 outfile='orion_pscal_if0_3000_5000'
-inp(sdaverage)
+inp(sdcal)
 pause=raw_input('* Hit Return to continue ')
 
-print "\n* Run sdaverage with these parameters...\n"
-sdaverage()
-print "*** Done sdaverage ****\n"
+print "\n* Run sdcal with these parameters...\n"
+sdcal()
+print "*** Done sdcal ****\n"
 
 pause=raw_input('* Hit Return to continue ')
 

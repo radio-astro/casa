@@ -6,9 +6,9 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<!-- This is the param set for sdaverage -->
+<!-- This is the param set for sdcal -->
 
-<task type="function" name="sdaverage" startup="false" category="single dish">
+<task type="function" name="sdcal" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: do data selection, calibration, and averaging</shortdescription>
 
@@ -403,15 +403,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         DESCRIPTION:
 
-        Task sdaverage performs data selection, calibration for single-dish
-        spectra.  By setting calmode='none', one can run sdaverage on already 
+        Task sdcal performs data selection, calibration for single-dish
+        spectra.  By setting calmode='none', one can run sdcal on already 
         calibrated data, for further selection , averaging and atmospheric 
         optical depth correction.
 
         If you give multiple IFs in iflist, then your scantable will have
         multiple IFs. This can be handled, but there can be funny interactions
         later on.  We recommend you split each IF out into separate files
-        by re-running sdaverage with each IF in turn.
+        by re-running sdcal with each IF in turn.
 
         ASAP recognizes the data of the "AT" telescopes, but currently
         does not know about the GBT or any other telescope. This task
@@ -426,7 +426,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         to be telescope diameter (m) and aperture efficiency
         respectively.
 
-        Note that sdaverage assumes that the fluxunit is set correctly in
+        Note that sdcal assumes that the fluxunit is set correctly in
         the data already.  If not, then set telescopeparm='FIX' and it
         will set the default units to fluxunit without conversion.
         NOTE: If the data in infile is an ms from GBT and the default flux

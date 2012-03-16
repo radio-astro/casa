@@ -292,9 +292,9 @@ class par(str):
 	@staticmethod
 	def calmode():
 		"""
-		(for sdaverage, sdreduce, sdtpimaging)
+		(for sdcal, sdreduce, sdtpimaging)
 		calmode -- SD calibration mode
-		options: 'ps', 'nod', 'fs', 'fsotf', 'quotient', 'none' (for sdaverage/sdreduce)
+		options: 'ps', 'nod', 'fs', 'fsotf', 'quotient', 'none' (for sdcal/sdreduce)
 			 'baseline', 'none' (for sdtpimaging)
 	        default: 'none'
 		example: choose 'none' if you have already calibrated
@@ -1255,7 +1255,7 @@ class par(str):
 	@staticmethod
 	def interp():
 		"""
-                (for sdaverage and sdreduce)
+                (for sdcal and sdreduce)
                 Setting of the frequency-dependent interpolation scheme for regridding spectra.
 		options: 'nearest' (nearest neighbour), 'linear', 'cubic', or 'spline' (cubic spline)
 		default: 'linear'
@@ -1930,7 +1930,7 @@ class par(str):
 
 		Given default value ('') for outfile, some ASAP tasks set output
 		file name as infile (=input file name) with suffix as follows:
-		        <infile>_cal             for sdaverage and sdreduce,
+		        <infile>_cal             for sdcal and sdreduce,
 			<infile>_bs              for sdbaseline,
 			<infile>_f               for sdflag,
 			<infile>_scaleed<factor> for sdscale, and
