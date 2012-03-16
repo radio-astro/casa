@@ -329,8 +329,8 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     # Create flagcmd input file (could also call tflagdata twice alternatively)
-    flagcmd = "mode='manual' field='' spw='0~3:0~10;3800~3839'\n"\ # Edge channels
-              "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'\n" # Channels 239, 447/448, 720/721 and 2847/2848 are off
+    flagcmd = "mode='manual' field='' spw='0~3:0~10;3800~3839'\n" # edge channels
+    flagcmd += "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'\n" # channels 239, 447/448, 720/721 and 2847/2848 are off
               
     flagfile = "m100_flag_step9.txt"
     if os.path.exists(flagfile):
@@ -352,21 +352,17 @@ if(mystep in thesteps):
     tflagdata(vis='X220-line.ms', mode='manual',
               timerange='19:52:55~19:53:04', flagbackup=False)
 
-    tflagdata(
-        vis='X54-line.ms',
-        antenna='PM01',
-        timerange='19:03:35~19:03:42',
-        mode='manual',
-        flagbackup=False,
-        )
+    tflagdata(vis='X54-line.ms',
+              antenna='PM01',
+              timerange='19:03:35~19:03:42',
+              mode='manual',
+              flagbackup=False)
 
-    tflagdata(
-        vis='X54-line.ms',
-        antenna='DV04',
-        timerange='19:38:45~19:38:55',
-        mode='manual',
-        flagbackup=False,
-        )
+    tflagdata(vis='X54-line.ms',
+              antenna='DV04',
+              timerange='19:38:45~19:38:55',
+              mode='manual',
+              flagbackup=False)
 
     timing()
 
