@@ -249,7 +249,8 @@ class Imager
 		  const Float& pbLimit=5.0e-2,
 		  const String& freqinterpmethod="linear",
 		  const Int imageTileSizeInPix=0,
-		  const Bool singleprecisiononly=False);
+		  const Bool singleprecisiononly=False,
+		  const Int numthreads=-1);
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 

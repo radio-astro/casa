@@ -1566,7 +1566,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol, const bool singprec )
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol, const bool singprec, const int numthreads)
 {
 
    Bool rstat(False);
@@ -1584,7 +1584,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 					applypointingoffsets, 
 					dopbgriddingcorrections, 
 					String(cfcachedirname), Float(pastep), 
-					Float(pblimit), String(freqinterp), imagetilevol, singprec);
+					Float(pblimit), String(freqinterp), imagetilevol, singprec, numthreads);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
@@ -1665,7 +1665,7 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
    Bool rstat(False);
    try {
      casa::String pcolToUse(pointingcolumntouse);
-     
+     cerr << "SCALE " << scale << endl;
      rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
    } catch  (AipsError x) {
      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

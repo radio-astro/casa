@@ -3607,6 +3607,10 @@ however not used yet.</description>
        </description>
        <value>false</value>
      </param>
+     <param type="int" name="numthreads">
+     <description>Limit the number of threads used in this run (openmp enabled only)</description>
+     <value>-1</value>
+     </param>
 </input>
 <returns type="bool"/>
 <example>
