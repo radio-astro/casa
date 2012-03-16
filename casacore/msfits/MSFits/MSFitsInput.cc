@@ -452,6 +452,7 @@ void MSFitsInput::readFitsFile(Int obsType) {
     } else if (infile_p->hdutype() == FITS::PrimaryTableHDU) {
         cout << "Primary Table uvfits not yet handled!" << endl;
         //readPrimaryTableUVFits(obsType);
+
     } 
     else {
         cout << "unhandled extension type! " << endl;
