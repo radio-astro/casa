@@ -383,7 +383,6 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
 }
 
 void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
-        itsLog << LogOrigin("MSFitsInput", "readFitsFile-PrimaryTable");
         //Int nField = 0, nSpW = 0;
 
         useAltrval = False;
@@ -398,14 +397,14 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
 
         ////////////////fillObsTables();
 
-        cout << "infile_p->err()=" << infile_p->err() << endl;
-        cout << "rectype=" << infile_p->rectype() << endl;
-        cout << "hdutype=" << infile_p->hdutype() << endl;
         while (infile_p->rectype() != FITS::EndOfFile && !infile_p->err()) {
             if (infile_p->hdutype() != FITS::BinaryTableHDU) {
-                itsLog << LogIO::NORMAL << "Skipping unhandled extension"
-                        << LogIO::POST;
+                itsLog << LogOrigin("MSFitsInput", "readFitsFile-PrimaryTable")
+                       << LogIO::NORMAL << "Skipping unhandled extension"
+                       << LogIO::POST;
+                cout << "infile_p->err()=" << infile_p->err() << endl;
                 infile_p->skip_hdu();
+                cout << "infile_p->err()=" << infile_p->err() << endl; 
             } 
             else {
                 cout << "rectype=" << infile_p->rectype() << endl;
@@ -1618,6 +1617,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
     Vector<Float> antDiams(nAnt);
     antDiams.set(diameter);
 
+
     //If it has a column called DIAMETER ...make use of it
     if (anTab.tableDesc().isColumn("DIAMETER")) {
         ROScalarColumn<Float> fitsDiams(anTab, "DIAMETER");
@@ -1727,7 +1727,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
         offsets = 0.;
         offsets(0) = offset(i);
         ant.offset().put(row, offsets);
-        ant.station().put(row, name(i));
+        ant.station().put(row, name(i).before('\0'));
         ant.type().put(row, "GROUND-BASED");
 
         // Do UVFITS-dependent position corrections:
@@ -1929,6 +1929,7 @@ MDirection::Types MSFitsInput::getDirectionFrame(Double epoch) {
     MDirection::Types epochRef = MDirection::J2000;
     if (nearAbs(epoch, 1950.0, 0.01))
         epochRef = array_p == "VLA" ? MDirection::B1950_VLA : MDirection::B1950;
+    itsLog << LogIO::NORMAL << "epochRef ok " << LogIO::POST;
 
     return epochRef;
 }
