@@ -785,7 +785,7 @@ Bool CalAnalysis::freq( const Vector<uInt>& oSPWIn,
     if ( !exists<uInt>( oSPWIn[s], oSPW ) ) return( False );
 
     for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
-      if ( aoChannelIn[s][c] >= oNumFreq[s] ) return( False );
+      if ( aoChannelIn[s][c] >= oNumFreq[oSPWIn[s]] ) return( False );
     }
 
   }
@@ -796,14 +796,16 @@ Bool CalAnalysis::freq( const Vector<uInt>& oSPWIn,
   if ( oFreqOut.nelements() != 0 ) oFreqOut.resize();
   uInt uiNumFreqOut = 0;
 
-  for ( uInt s=0,fStart=0; s<uiNumSPWIn; s++ ) {
+  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
+
+    uInt fStart = 0;
+    for ( uInt s2=0; s2<oSPWIn[s]; s2++ ) fStart += oNumFreq[s2];
+    cerr << oSPWIn[s] << " " << fStart << endl << flush;
 
     for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
       oFreqOut.resize( ++uiNumFreqOut, True );
       oFreqOut[uiNumFreqOut-1] = oFreq[aoChannelIn[s][c]+fStart];
     }
-
-    fStart += oNumFreq[s];
 
   }
 
