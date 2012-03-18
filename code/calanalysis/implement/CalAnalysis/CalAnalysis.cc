@@ -800,7 +800,6 @@ Bool CalAnalysis::freq( const Vector<uInt>& oSPWIn,
 
     uInt fStart = 0;
     for ( uInt s2=0; s2<oSPWIn[s]; s2++ ) fStart += oNumFreq[s2];
-    cerr << oSPWIn[s] << " " << fStart << endl << flush;
 
     for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
       oFreqOut.resize( ++uiNumFreqOut, True );
