@@ -41,6 +41,7 @@ public:
 
 	Int fieldId() const;
 	Int& spectralWindow();
+	Int spectralWindow() const;
 	Vector<Int>& scan();
 	Vector<Double>& time();
 	Vector<Int>& antenna1();
@@ -103,6 +104,10 @@ private:
 	Bool CTnChannelOK_p;
 	Bool CTnCorrOK_p;
 
+	CTBuffer* This;
+	Int& fillSpectralWindow();
+	Int& fillFieldId();
+
 };
 
 // Flag Data Handler class definition
@@ -146,6 +151,9 @@ public:
 	String getTableName();
 
 private:
+
+	// Mapping functions
+	void generateScanStartStopMap();
 
 	// Convenient private methods for compatibility with MS-like interface
 	Block<String> getSortColumns(Block<Int> intCols);

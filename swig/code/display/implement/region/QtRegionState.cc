@@ -16,7 +16,7 @@ namespace casa {
 	    QString cat = categories->tabText(categories->currentIndex( ));
 	    if ( cat == "stats" )
 		emit statisticsVisible( true );
-	    else if ( cat == "state" ) {
+	    else if ( cat == "properties" ) {
 		QString state = states->tabText(categories->currentIndex( ));
 		if ( state == "coordinates" )
 		    emit positionVisible( true );
@@ -37,7 +37,7 @@ namespace casa {
 
 	    text_position->setWrapping(true);
 
-	    name->setPlaceholderText(QApplication::translate("QtRegionState", n.toAscii( ).constData( ), 0, QApplication::UnicodeUTF8));
+	    region_type->setText(QApplication::translate("QtRegionState", n.toAscii( ).constData( ), 0, QApplication::UnicodeUTF8));
 
 	    csys_box->hide( );
 
@@ -93,8 +93,7 @@ namespace casa {
 	QtRegionState::~QtRegionState( ) { }
 
 	void QtRegionState::reset( const QString &n, QtRegion *r ) {
-	    name->setText(QString());
-	    name->setPlaceholderText(QApplication::translate("QtRegionState", n.toAscii( ).constData( ), 0, QApplication::UnicodeUTF8));
+	    region_type->setText(QApplication::translate("QtRegionState", n.toAscii( ).constData( ), 0, QApplication::UnicodeUTF8));
 	    region_ = r;
 
 	    int z_max = region_->numFrames( );
@@ -479,6 +478,7 @@ namespace casa {
 		case 1: return("deg");
 		case 2: return("arcsec");
 		case 3: return("arcmin");
+		case 4: return("pixel");
 		default: return("rad");
 	    }
 	    return("rad");
@@ -491,21 +491,20 @@ namespace casa {
 		case 2: c = Region::Galactic; break;
 		case 3: c = Region::SuperGalactic; break;
 		case 4: c = Region::Ecliptic; break;
-		case 5: c = Region::Pixel; break;
 		default: c = Region::J2000; break;
 	    }
 	    switch ( x_units->currentIndex( ) ) {
 		case 0: xu = Region::Radians; break;
 		case 1: xu = Region::Degrees; break;
-		case 2: xu = Region::HMS; break;
-		case 3: xu = Region::DMS; break;
+		case 2: xu = Region::Sexagesimal; break;
+		case 3: xu = Region::Pixel; break;
 		default: xu = Region::Radians; break;
 	    }
 	    switch ( y_units->currentIndex( ) ) {
 		case 0: yu = Region::Radians; break;
 		case 1: yu = Region::Degrees; break;
-		case 2: yu = Region::HMS; break;
-		case 3: yu = Region::DMS; break;
+		case 2: yu = Region::Sexagesimal; break;
+		case 3: yu = Region::Pixel; break;
 		default: yu = Region::Radians; break;
 	    }
 
@@ -520,21 +519,20 @@ namespace casa {
 		case Region::Galactic: coordinate_system->setCurrentIndex( 2 ); break;
 		case Region::SuperGalactic: coordinate_system->setCurrentIndex( 3 ); break;
 		case Region::Ecliptic: coordinate_system->setCurrentIndex( 4 ); break;
-		case Region::Pixel: coordinate_system->setCurrentIndex( 5 ); break;
 		default: coordinate_system->setCurrentIndex( 0 ); break;
 	    }
 	    switch ( xu ) {
 		case Region::Radians: x_units->setCurrentIndex( 0 ); break;
 		case Region::Degrees: x_units->setCurrentIndex( 1 ); break;
-		case Region::HMS: x_units->setCurrentIndex( 2 ); break;
-		case Region::DMS: x_units->setCurrentIndex( 3 ); break;
+		case Region::Sexagesimal: x_units->setCurrentIndex( 2 ); break;
+		case Region::Pixel: x_units->setCurrentIndex( 3 ); break;
 		default: x_units->setCurrentIndex( 0 ); break;
 	    }
 	    switch ( yu ) {
 		case Region::Radians: y_units->setCurrentIndex( 0 ); break;
 		case Region::Degrees: y_units->setCurrentIndex( 1 ); break;
-		case Region::HMS: y_units->setCurrentIndex( 2 ); break;
-		case Region::DMS: y_units->setCurrentIndex( 3 ); break;
+		case Region::Sexagesimal: y_units->setCurrentIndex( 2 ); break;
+		case Region::Pixel: y_units->setCurrentIndex( 3 ); break;
 		default: y_units->setCurrentIndex( 0 ); break;
 	    }
 
@@ -544,6 +542,8 @@ namespace casa {
 		dim_units->setCurrentIndex(2);
 	    else if ( bounding_units == "arcmin" )
 		dim_units->setCurrentIndex(3);
+	    else if ( bounding_units == "pixel" )
+		dim_units->setCurrentIndex(4);
 	    else 
 		dim_units->setCurrentIndex(0);
 	}

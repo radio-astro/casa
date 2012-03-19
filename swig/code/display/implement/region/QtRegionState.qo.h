@@ -20,10 +20,8 @@ namespace casa {
 
 		QtRegionState( const QString &name, QtRegion *region, QWidget *parent=0 );
 		~QtRegionState( );
-#if OLDSTUFF
-		void clearstats( );
-		void addstats( const std::string &name, std::list<std::pair<String,String> > *stats );
-#endif
+
+		void updateCoord( ) { coordinates_reset_event(true); }
 		void updateStatistics( std::list<RegionInfo> *stats );
 		void clearStatistics( );
 

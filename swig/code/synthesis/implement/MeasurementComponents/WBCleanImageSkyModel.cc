@@ -1063,9 +1063,9 @@ void WBCleanImageSkyModel::blankOverlappingModels(){
 	      
 	      ImageRegion imagreg(WCBox(lbox, cs));
 	      try{
-		SubImage<Float> partToMask(image(model), imagreg, True);
 		LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
 		ArrayLattice<Bool> pixmask(latReg.get());
+		SubImage<Float> partToMask(image(model), imagreg, True);
 		LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
 		partToMask.copyData(myexpr);
 		
@@ -1116,12 +1116,13 @@ void WBCleanImageSkyModel::restoreOverlappingModels(){
 	      
 	      ImageRegion imagreg(WCBox(lbox, cs));
 	      try{
-		SubImage<Float> partToMerge(image(nextmodel), imagreg0, True);
-		SubImage<Float> partToUnmask(image(model), imagreg, True);
-		
 		LatticeRegion latReg0=imagreg0.toLatticeRegion(image(nextmodel).coordinates(), image(nextmodel).shape());
 		LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
 		ArrayLattice<Bool> pixmask(latReg.get());
+
+		SubImage<Float> partToMerge(image(nextmodel), imagreg0, True);
+		SubImage<Float> partToUnmask(image(model), imagreg, True);
+		
 		LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
 		partToUnmask.copyData(myexpr0);
 		

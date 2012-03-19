@@ -82,7 +82,6 @@ FlagCalTableHandler::open()
 	// Create "dummy" correlation products list
 	corrProducts_p = new std::vector<String>(1);
 	corrProducts_p->push_back("Sol1");
-	//corrProducts_p->push_back("Sol2");
 
 	return true;
 }
@@ -232,6 +231,17 @@ FlagCalTableHandler::generateIterator()
 		chunksInitialized_p = false;
 		buffersInitialized_p = false;
 		stopIteration_p = false;
+	}
+
+	// Do quack pre-swap
+	if (mapScanStartStop_p)
+	{
+		calIter_p->reset();
+		while (!calIter_p->pastEnd())
+		{
+			generateScanStartStopMap();
+			calIter_p->next();
+		}
 	}
 
 	return true;
@@ -385,6 +395,119 @@ FlagCalTableHandler::nextBuffer()
 // -----------------------------------------------------------------------
 // Flush flags to CalTable
 // -----------------------------------------------------------------------
+void
+FlagCalTableHandler::generateScanStartStopMap()
+{
+	Int scan;
+	Double start,stop;
+	Vector<Int> scans;
+	Vector<Double> times;
+
+	Cube<Bool> flags;
+	uInt scanStartRow;
+	uInt scanStopRow;
+	uInt ncorrs,nchannels,nrows;
+	Bool stopSearch;
+
+	if (scanStartStopMap_p == NULL) scanStartStopMap_p = new scanStartStopMap();
+
+	scans = calIter_p->scan();
+	times = calIter_p->time();
+
+	// Check if anything is flagged in this buffer
+	scanStartRow = 0;
+	scanStopRow = times.size()-1;
+	if (mapScanStartStopFlagged_p)
+	{
+		calIter_p->flag(flags);
+		IPosition shape = flags.shape();
+		ncorrs = shape[0];
+		nchannels = shape[1];
+		nrows = shape[2];
+
+		// Look for effective scan start
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,row_i))
+					{
+						scanStartRow = row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+
+		// If none of the rows were un-flagged we don't continue checking from the end
+		// As a consequence of this some scans may not be present in the map, and have
+		// to be skipped in the flagging process because they are already flagged.
+		if (!stopSearch) return;
+
+		// Look for effective scan stop
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,nrows-1-row_i))
+					{
+						scanStopRow = nrows-1-row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+	}
+
+	// Check scan start/stop times
+	scan = scans[0];
+	start = times[scanStartRow];
+	stop = times[scanStopRow];
+
+	if (scanStartStopMap_p->find(scan) == scanStartStopMap_p->end())
+	{
+		(*scanStartStopMap_p)[scan].push_back(start);
+		(*scanStartStopMap_p)[scan].push_back(stop);
+	}
+	else
+	{
+		// Check if we have a better start time
+		if ((*scanStartStopMap_p)[scan][0] > start)
+		{
+			(*scanStartStopMap_p)[scan][0] = start;
+		}
+		// Check if we have a better stop time
+		if ((*scanStartStopMap_p)[scan][1] < stop)
+		{
+			(*scanStartStopMap_p)[scan][1] = stop;
+		}
+	}
+
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+// Flush flags to CalTable
+// -----------------------------------------------------------------------
 bool
 FlagCalTableHandler::flushFlags()
 {
@@ -412,7 +535,7 @@ FlagCalTableHandler::getTableName()
 //////// CTBuffer implementation ////////
 //////////////////////////////////////////
 
-CTBuffer::CTBuffer(CTIter *calIter): calIter_p(calIter)
+CTBuffer::CTBuffer(CTIter *calIter): calIter_p(calIter), This(this)
 {
 	invalidate();
 	CTnRowOK_p = False;
@@ -426,10 +549,31 @@ CTBuffer::~CTBuffer()
 
 Int CTBuffer::fieldId() const
 {
-	return  calIter_p->field()[0];
+	return This->fillFieldId();
+}
+
+Int& CTBuffer::fillFieldId()
+{
+	if (!CTfieldIdOK_p)
+	{
+		field0_p = calIter_p->field()[0];
+		CTfieldIdOK_p = False;
+	}
+
+	return field0_p;
+}
+
+Int CTBuffer::spectralWindow() const
+{
+	return This->fillSpectralWindow();
 }
 
 Int& CTBuffer::spectralWindow()
+{
+	return This->fillSpectralWindow();
+}
+
+Int& CTBuffer::fillSpectralWindow()
 {
 	if (!CTspectralWindowOK_p)
 	{

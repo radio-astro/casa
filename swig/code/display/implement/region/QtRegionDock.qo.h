@@ -33,6 +33,9 @@
 #include <imageanalysis/Annotations/RegionTextList.h>
 
 namespace casa {
+
+    class QtDisplayData;
+
     namespace viewer {
 
 	class QtRegionState;
@@ -60,12 +63,18 @@ namespace casa {
 		void saveRegions( std::list<QtRegionState*>, ds9writer & );
 		void loadRegions( bool &handled, const QString &path, const QString &type );
 
+	    public slots:
+		void updateRegionState(QtDisplayData*);
+
 	    private slots:
 		void stack_changed(int);
 		void change_stack(int);
 		void delete_current_region(bool);
 		void output_region_event(const QString &what, const QString &where, const QString &type, const QString &csys );
 		void handle_visibility(bool);
+
+	    private:
+		QtDisplayData *current_dd;
 	};
     }
 }

@@ -228,7 +228,7 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>63</height>
+        <height>70</height>
        </size>
       </property>
       <property name="tabPosition">
@@ -252,6 +252,18 @@
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QLabel" name="fromLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>24</height>
+             </size>
+            </property>
             <property name="text">
              <string>&lt;font color='black'&gt;from:&lt;/font&gt;</string>
             </property>
@@ -262,13 +274,25 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>0</height>
+              <height>18</height>
              </size>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QLabel" name="toLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>24</height>
+             </size>
+            </property>
             <property name="text">
              <string>&lt;font color='black'&gt;to:&lt;/font&gt;</string>
             </property>
@@ -279,17 +303,23 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>0</height>
+              <height>20</height>
              </size>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QLabel" name="collapseUnits">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>45</width>
-              <height>0</height>
+              <height>24</height>
              </size>
             </property>
             <property name="text">
@@ -299,6 +329,12 @@
           </item>
           <item>
            <widget class="QComboBox" name="collapseType">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>21</height>
+             </size>
+            </property>
             <item>
              <property name="text">
               <string>mean</string>
@@ -318,6 +354,12 @@
           </item>
           <item>
            <widget class="QComboBox" name="collapseError">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>21</height>
+             </size>
+            </property>
             <item>
              <property name="text">
               <string>no error</string>
@@ -337,6 +379,18 @@
           </item>
           <item>
            <widget class="QPushButton" name="collapse">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>21</height>
+             </size>
+            </property>
             <property name="toolTip">
              <string>Collapse along the spectral axis.</string>
             </property>
@@ -358,6 +412,18 @@
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QLabel" name="fromLabelFit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>24</height>
+             </size>
+            </property>
             <property name="text">
              <string>&lt;font color='black'&gt;from:&lt;/font&gt;</string>
             </property>
@@ -368,13 +434,25 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>0</height>
+              <height>18</height>
              </size>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QLabel" name="toLabelFit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>24</height>
+             </size>
+            </property>
             <property name="text">
              <string>&lt;font color='black'&gt;to:&lt;/font&gt;</string>
             </property>
@@ -385,17 +463,23 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>0</height>
+              <height>18</height>
              </size>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QLabel" name="fitUnits">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>45</width>
-              <height>0</height>
+              <height>24</height>
              </size>
             </property>
             <property name="text">
@@ -405,6 +489,12 @@
           </item>
           <item>
            <widget class="QComboBox" name="fitGauss">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>21</height>
+             </size>
+            </property>
             <item>
              <property name="text">
               <string>gauss</string>
@@ -419,6 +509,18 @@
           </item>
           <item>
            <widget class="QComboBox" name="fitPolyN">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>21</height>
+             </size>
+            </property>
             <item>
              <property name="text">
               <string>poly 1</string>
@@ -433,6 +535,12 @@
           </item>
           <item>
            <widget class="QPushButton" name="clean">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>21</height>
+             </size>
+            </property>
             <property name="text">
              <string>clean</string>
             </property>
@@ -440,6 +548,18 @@
           </item>
           <item>
            <widget class="QPushButton" name="fit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>21</height>
+             </size>
+            </property>
             <property name="toolTip">
              <string>Collapse along the spectral axis.</string>
             </property>
@@ -486,7 +606,7 @@
   <widget class="QStatusBar" name="profileStatus"/>
   <action name="actionExport">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
    </property>
    <property name="text">
@@ -498,7 +618,7 @@
   </action>
   <action name="actionPrint">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/print.png</normaloff>:/images/print.png</iconset>
    </property>
    <property name="text">
@@ -510,7 +630,7 @@
   </action>
   <action name="actionPreferences">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/settings.png</normaloff>:/images/settings.png</iconset>
    </property>
    <property name="text">
@@ -522,7 +642,7 @@
   </action>
   <action name="actionMoveLeft">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/leftarrow.png</normaloff>:/images/leftarrow.png</iconset>
    </property>
    <property name="text">
@@ -534,7 +654,7 @@
   </action>
   <action name="actionMoveRight">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/rightarrow.png</normaloff>:/images/rightarrow.png</iconset>
    </property>
    <property name="text">
@@ -546,7 +666,7 @@
   </action>
   <action name="actionMoveUp">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/uparrow.png</normaloff>:/images/uparrow.png</iconset>
    </property>
    <property name="text">
@@ -558,7 +678,7 @@
   </action>
   <action name="actionMoveDown">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/downarrow.png</normaloff>:/images/downarrow.png</iconset>
    </property>
    <property name="text">
@@ -570,7 +690,7 @@
   </action>
   <action name="actionZoomIn">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/zoomi.png</normaloff>:/images/zoomi.png</iconset>
    </property>
    <property name="text">
@@ -582,7 +702,7 @@
   </action>
   <action name="actionZoomOut">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/zoomo.png</normaloff>:/images/zoomo.png</iconset>
    </property>
    <property name="text">
@@ -594,7 +714,7 @@
   </action>
   <action name="actionSaveGraphic">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/saveGraphic.png</normaloff>:/images/saveGraphic.png</iconset>
    </property>
    <property name="text">
@@ -606,7 +726,7 @@
   </action>
   <action name="actionZoomNeutral">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/zoomn.png</normaloff>:/images/zoomn.png</iconset>
    </property>
    <property name="text">

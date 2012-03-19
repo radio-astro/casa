@@ -35,7 +35,7 @@
 
 namespace casa {
     namespace viewer {
-	QtRegionDock::QtRegionDock( QWidget* parent ) : QDockWidget(parent), Ui::QtRegionDock( ) {
+	QtRegionDock::QtRegionDock( QWidget* parent ) : QDockWidget(parent), Ui::QtRegionDock( ), current_dd(0) {
 	    setupUi(this);
 
 	    // there are two standard Qt, dismiss icons...
@@ -103,6 +103,22 @@ namespace casa {
 	    int size = regions->count( );
 	    if ( index >= 0 && index <= size - 1 )
 		regions->setCurrentIndex( index );
+	}
+
+	void QtRegionDock::updateRegionState( QtDisplayData *dd ) {
+	    if ( dd == 0 && current_dd == 0 ) return;
+	    if ( current_dd != 0 && dd == 0 )
+		regions->hide( );
+	    else if ( current_dd == 0 && dd != 0 )
+		regions->show( );
+
+	    for ( int i = 0; i < regions->count( ); ++i ) {
+		QWidget *widget = regions->widget( i );
+		QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
+		if ( state != 0 ) state->updateCoord( );
+	    }
+
+	    current_dd = dd;
 	}
 
 	void QtRegionDock::stack_changed( int index ) {
