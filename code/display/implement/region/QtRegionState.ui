@@ -1102,7 +1102,7 @@
     <attribute name="title">
      <string>file</string>
     </attribute>
-    <widget class="QTabWidget" name="action_tab">
+    <widget class="QTabWidget" name="file_tab">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -1112,7 +1112,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">

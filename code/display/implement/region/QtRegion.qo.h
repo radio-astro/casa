@@ -121,6 +121,9 @@ namespace casa {
 
 		virtual void output( ds9writer &out ) const = 0;
 
+		// used to synchronize all of the RegionDock's RegionState tab configuration...
+		std::pair<int,int> &tabState( );
+
 	    public slots:
 		/* void name( const QString &newname ); */
 		/* void color( const QString &newcolor ); */

@@ -57,6 +57,8 @@ namespace casa {
 
 		/* void showStats( const QString &stats ); */
 
+		std::pair<int,int> &tabState( ) { return current_tab_state; }
+
 	    signals:
 		void deleteRegion(QtRegionState*);
 		void saveRegions( std::list<QtRegionState*>, RegionTextList & );
@@ -75,6 +77,8 @@ namespace casa {
 
 	    private:
 		QtDisplayData *current_dd;
+		std::pair<int,int> current_tab_state;
+
 	};
     }
 }
