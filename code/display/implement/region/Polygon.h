@@ -79,6 +79,8 @@ namespace casa {
 		// in "linear" coordinates...
 		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
 
+		int numVertices( ) const { return drawing_points( ).size( ); }
+
 	    protected:
 		unsigned int check_handle( double x, double y ) const;
 
