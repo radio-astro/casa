@@ -59,7 +59,7 @@
 using std::vector;
 #include <synthesis/MSVis/UtilJ.h>
 
-ausing namespace casa::utilj;
+using namespace casa::utilj;
 
 using namespace casa::vpf;
 
