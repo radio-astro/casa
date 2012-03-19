@@ -1929,13 +1929,20 @@ CountedPtr< Scantable > STMath::bin( const CountedPtr< Scantable > & in,
   out->frequencies().rescale(width, "BIN");
   ArrayColumn<Float> specCol(tout, "SPECTRA");
   ArrayColumn<uChar> flagCol(tout, "FLAGTRA");
+  ArrayColumn<Float> tsysCol(tout, "TSYS");
+
   for (uInt i=0; i < tout.nrow(); ++i ) {
     MaskedArray<Float> main  = maskedArray(specCol(i), flagCol(i));
     MaskedArray<Float> maout;
     LatticeUtilities::bin(maout, main, 0, Int(width));
-    /// @todo implement channel based tsys binning
     specCol.put(i, maout.getArray());
     flagCol.put(i, flagsFromMA(maout));
+    if (tsysCol(i).nelements() == specCol(i).nelements()) {
+      MaskedArray<Float> matsysin = maskedArray(tsysCol(i), flagCol(i));
+      MaskedArray<Float> matsysout;
+      LatticeUtilities::bin(matsysout, matsysin, 0, Int(width));
+      tsysCol.put(i, matsysout.getArray());
+    }
     // take only the first binned spectrum's length for the deprecated
     // global header item nChan
     if (i==0) tout.rwKeywordSet().define(String("nChan"),

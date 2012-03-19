@@ -412,7 +412,7 @@ void STGrid::grid()
   t0 = mathutil::gettimeofday_sec() ;
   selectData() ;
   t1 = mathutil::gettimeofday_sec() ;
-  os << "selectData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ;
+  os << LogIO::DEBUGGING << "selectData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ;
 
   setupGrid() ;
   setupArray() ;
@@ -645,7 +645,7 @@ void STGrid::gridPerRow()
   t0 = mathutil::gettimeofday_sec() ;
   setConvFunc( common.convFunc ) ;
   t1 = mathutil::gettimeofday_sec() ;
-  os << "setConvFunc: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "setConvFunc: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
 
   // for performance check
   eGetData_ = 0.0 ;
@@ -686,12 +686,12 @@ void STGrid::gridPerRow()
     }
     os << "end table " << ifile << LogIO::POST ;   
   }
-  os << "initPol: elapsed time is " << eInitPol << " sec." << LogIO::POST ; 
-  os << "getData: elapsed time is " << eGetData_-eToInt-eGetWeight << " sec." << LogIO::POST ; 
-  os << "toPixel: elapsed time is " << eToPixel_ << " sec." << LogIO::POST ; 
-  os << "ggridsd: elapsed time is " << eGGridSD_ << " sec." << LogIO::POST ; 
-  os << "toInt: elapsed time is " << eToInt << " sec." << LogIO::POST ;
-  os << "getWeight: elapsed time is " << eGetWeight << " sec." << LogIO::POST ;
+  os << LogIO::DEBUGGING << "initPol: elapsed time is " << eInitPol << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "getData: elapsed time is " << eGetData_-eToInt-eGetWeight << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "toPixel: elapsed time is " << eToPixel_ << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "ggridsd: elapsed time is " << eGGridSD_ << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "toInt: elapsed time is " << eToInt << " sec." << LogIO::POST ;
+  os << LogIO::DEBUGGING << "getWeight: elapsed time is " << eGetWeight << " sec." << LogIO::POST ;
   
   delete chanMap ;
 
@@ -795,7 +795,7 @@ void STGrid::gridPerRowWithClipping()
   t0 = mathutil::gettimeofday_sec() ;
   setConvFunc( common.convFunc ) ;
   t1 = mathutil::gettimeofday_sec() ;
-  os << "setConvFunc: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "setConvFunc: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
 
   // for performance check
   eGetData_ = 0.0 ;
@@ -836,12 +836,12 @@ void STGrid::gridPerRowWithClipping()
     }
     os << "end table " << ifile << LogIO::POST ;   
   }
-  os << "initPol: elapsed time is " << eInitPol << " sec." << LogIO::POST ; 
-  os << "getData: elapsed time is " << eGetData_-eToInt-eGetWeight << " sec." << LogIO::POST ; 
-  os << "toPixel: elapsed time is " << eToPixel_ << " sec." << LogIO::POST ; 
-  os << "ggridsd2: elapsed time is " << eGGridSD_ << " sec." << LogIO::POST ; 
-  os << "toInt: elapsed time is " << eToInt << " sec." << LogIO::POST ;
-  os << "getWeight: elapsed time is " << eGetWeight << " sec." << LogIO::POST ;
+  os << LogIO::DEBUGGING << "initPol: elapsed time is " << eInitPol << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "getData: elapsed time is " << eGetData_-eToInt-eGetWeight << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "toPixel: elapsed time is " << eToPixel_ << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "ggridsd2: elapsed time is " << eGGridSD_ << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "toInt: elapsed time is " << eToInt << " sec." << LogIO::POST ;
+  os << LogIO::DEBUGGING << "getWeight: elapsed time is " << eGetWeight << " sec." << LogIO::POST ;
   
   delete chanMap ;
 
@@ -860,7 +860,7 @@ void STGrid::gridPerRowWithClipping()
               common.clipWMax,
               common.clipCMax ) ;
   t1 = mathutil::gettimeofday_sec() ;
-  os << "clipMinMax: elapsed time is " << t1-t0 << " sec." << LogIO::POST ;
+  os << LogIO::DEBUGGING << "clipMinMax: elapsed time is " << t1-t0 << " sec." << LogIO::POST ;
 //   os << "AFTER CLIPPING" << LogIO::POST ;
 //   os << "gdataArrC=" << common.gdataArrC << LogIO::POST ;
 //   os << "gwgtArr=" << common.gwgtArr << LogIO::POST ;
@@ -1001,7 +1001,7 @@ void STGrid::setData( Array<Complex> &gdata,
   gdata.freeStorage( gdata_p, b1 ) ;
   data_.putStorage( gwgt_p, b2 ) ;
   t1 = mathutil::gettimeofday_sec() ;
-  os << "setData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "setData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
 }
 
 void STGrid::setupGrid() 
@@ -1162,7 +1162,7 @@ void STGrid::mapExtent( Double &xmin, Double &xmax,
 void STGrid::selectData()
 {
   LogIO os( LogOrigin("STGrid","selectData",WHERE) ) ;    
-  //Int ifno = ifno_ ;
+  Int ifno = ifno_ ;
   tableList_.resize( nfile_ ) ;
   if ( ifno_ == -1 ) {
     Table taborg( infileList_[0] ) ;
@@ -1174,7 +1174,7 @@ void STGrid::selectData()
   for ( uInt i = 0 ; i < nfile_ ; i++ ) {
     Table taborg( infileList_[i] ) ;
     TableExprNode node ;
-    if ( isMultiIF( taborg ) ) {
+    if ( ifno != -1 || isMultiIF( taborg ) ) {
       os << "apply selection on IFNO" << LogIO::POST ;
       node = taborg.col("IFNO") == ifno_ ;
     }
@@ -1188,7 +1188,7 @@ void STGrid::selectData()
     else {
       tableList_[i] = taborg( node ) ;
     }
-    os << "tableList_[" << i << "].nrow()=" << tableList_[i].nrow() << LogIO::POST ;
+    os << LogIO::DEBUGGING << "tableList_[" << i << "].nrow()=" << tableList_[i].nrow() << LogIO::POST ;
     if ( tableList_[i].nrow() == 0 ) {
       os << LogIO::SEVERE
          << "No corresponding rows for given selection: IFNO " << ifno_ ;
@@ -1573,7 +1573,7 @@ void STGrid::setConvFunc( Vector<Float> &convFunc )
   else if ( convType_ == "GAUSS" ) {
     // to take into account Gaussian tail
     if ( convSupport_ < 0 )
-      convSupport_ = 12 ; // 3 * 4
+      convSupport_ = 4 ; // 1 * 4
     else {
       convSupport_ = userSupport_ * 4 ;
     }
@@ -1658,7 +1658,7 @@ string STGrid::saveData( string outfile )
   data_.freeStorage( data_p, bdata ) ;
 
   t1 = mathutil::gettimeofday_sec() ;
-  os << "saveData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
+  os << LogIO::DEBUGGING << "saveData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
 
   fillMainColumns( tab ) ;
 
