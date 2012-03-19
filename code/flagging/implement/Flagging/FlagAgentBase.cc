@@ -2115,6 +2115,54 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 			return False;
 		}
 	}
+	else if (expression_p.find("Sol1") != string::npos)
+	{
+		if (polMap->find(VisMapper::CALSOL1) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol1) not available" << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("Sol2") != string::npos)
+	{
+		if (polMap->find(VisMapper::CALSOL2) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol2) not available" << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("Sol3") != string::npos)
+	{
+		if (polMap->find(VisMapper::CALSOL3) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol3) not available" << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("Sol4") != string::npos)
+	{
+		if (polMap->find(VisMapper::CALSOL4) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol4) not available" << LogIO::POST;
+			return False;
+		}
+	}
 	else
 	{
 		throw AipsError("Unknown polarization requested, (" + expression_p + ") supported types are: XX,YY,XY,YX,RR,LL,RL,LR,I,Q,U,V");

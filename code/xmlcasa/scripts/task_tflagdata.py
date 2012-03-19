@@ -92,8 +92,6 @@ def tflagdata(vis,
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)
-    mslocal.writehistory(message='taskname = tflagdata', origin='tflagdata')
-    mslocal.open(vis, nomodify=False)
 
 
     try: 
@@ -191,6 +189,9 @@ def tflagdata(vis,
             agent_pars['channelavg'] = channelavg
             agent_pars['clipzeros'] = clipzeros
             
+
+            if type(clipminmax) != list:
+                casalog.post('Error : clipminmax must be a list : [min,max]', 'ERROR')
             # If clipminmax = [], do not write it in the dictionary.
             # It will be handled by the framework to flag NaNs only
             if clipminmax.__len__() == 2:      
@@ -411,6 +412,8 @@ def tflagdata(vis,
                else:
                     casalog.post('Iterating through the entire MS');
                     
+               mslocal.close()
+                    
             # Get all the selection parameters, but set correlation to ''
             elif vrows.__len__() == 1:
                 cmd0 = flagcmd[vrows[0]]['command']
@@ -477,6 +480,7 @@ def tflagdata(vis,
                     if summary_stats_list[repname]['type'] == "rflag":
                         # Pull out the rflag threshold dictionary. This has a 'name' in it.
                         rflag_thresholds = summary_stats_list[repname]
+                        ##print rflag_thresholds
                         # Get the rflag id, to later construct a 'name' from to match the above.
                         rflagid = 0
                         if mode=='list':
@@ -487,17 +491,29 @@ def tflagdata(vis,
                             if cmdline.__contains__('rflag'):
                                 # Check for match between input flagcmd and output threshold, via the rflag id
                                 if(key==rflagid):  
+                                    # If timedev,freqdev are missing from cmdline, add empty ones.
+                                    if( not cmdline.__contains__('timedev=') ):  # aah. don't confuse it with timedevscale
+                                        cmdline = cmdline + "timedev=[] ";
+                                    if( not cmdline.__contains__('freqdev=') ):
+                                        cmdline = cmdline + "freqdev=[] ";
                                     # Pull out timedev, freqdev strings from flagcmd
-                                    rflagpars = fh.getLinePars(flagcmd[key]['command'] , ['timedev','freqdev']);
+                                    rflagpars = fh.getLinePars(cmdline , ['timedev','freqdev']);
+                                    ##print "cmdline : ", cmdline
+                                    ##print "rflagpars : ", rflagpars
                                     # Write RFlag thresholds to these file names. 
                                     newtimedev,newfreqdev = fh.writeRFlagThresholdFile(rflag_thresholds, rflagpars['timedev'], rflagpars['freqdev'], rflagid)
                                     ## Modify the flagcmd string, so that savepars sees the contents of the file
-                                    oldstring = 'timedev='+str(rflagpars['timedev'])
-                                    newstring = 'timedev='+str(newtimedev).replace(' ','')
-                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
-                                    oldstring = 'freqdev='+str(rflagpars['freqdev'])
-                                    newstring = 'freqdev='+str(newfreqdev).replace(' ','')
-                                    flagcmd[key]['command'] = flagcmd[key]['command'].replace( oldstring, newstring );
+                                    if( rflagpars['timedev'].__contains__('[') ):
+                                        oldstring = 'timedev='+str(rflagpars['timedev'])
+                                        newstring = 'timedev='+str(newtimedev).replace(' ','')
+                                        ##print "time : replacing " , oldstring , newstring
+                                        cmdline = cmdline.replace( oldstring, newstring );
+                                    if( rflagpars['freqdev'].__contains__('[') ):
+                                        oldstring = 'freqdev='+str(rflagpars['freqdev'])
+                                        newstring = 'freqdev='+str(newfreqdev).replace(' ','')
+                                        ##print "freq : replacing " , oldstring , newstring
+                                        cmdline = cmdline.replace( oldstring, newstring );
+                                    flagcmd[key]['command'] = cmdline;
 
 
         # Save the current parameters/list to FLAG_CMD or to output
@@ -561,15 +577,17 @@ def tflagdata(vis,
         
     # Write history to the MS
     try:
-            param_names = tflagdata.func_code.co_varnames[:tflagdata.func_code.co_argcount]
-            param_vals = [eval(p) for p in param_names]
-            retval &= write_history(mslocal, vis, 'tflagdata', param_names,
-                                    param_vals, casalog)
-            
-            mslocal.close()
+        mslocal.open(vis, nomodify=False)
+        mslocal.writehistory(message='taskname = tflagdata', origin='tflagdata')
+        param_names = tflagdata.func_code.co_varnames[:tflagdata.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+        retval &= write_history(mslocal, vis, 'tflagdata', param_names,
+                                param_vals, casalog)
+        
+        mslocal.close()
     except Exception, instance:
-            mslocal.close()
-            casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+        mslocal.close()
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                          'WARN')
         
     return

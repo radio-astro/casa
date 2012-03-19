@@ -108,6 +108,11 @@ protected:
 
     void _removeExistingOutfileIfNecessary() const;
 
+    static void _removeExistingFileIfNecessary(
+    	const String& filename, const Bool overwrite
+    );
+
+
     String _summaryHeader() const;
 
     inline const std::auto_ptr<LogIO>& _getLog() const {return _log;}

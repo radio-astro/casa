@@ -32,7 +32,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	fieldId_p(-1), fieldName_p(""), scanStart_p(-1), scanEnd_p(-1), spwId_p(-1),
 	nPolarizations_p(1), freqList_p(Vector<Double>()),
 	antenna1_p(""),antenna2_p(""),
-        dataDisplay_p(False), reportDisplay_p(False),showPlots_p(False),reportFormat_p("screen"),
+        dataDisplay_p(False), reportDisplay_p(False),reportFormat_p("screen"),
 	stopAndExit_p(False),reportReturn_p(False),showBandpass_p(False)
   {
     // Parse parameters and set base variables.
@@ -75,11 +75,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     exists = config.fieldNumber ("pause");
     if (exists >= 0)
       {
-	pause_p = config.asBool("pause");
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'pause' must be of type 'bool'" ) );
+	        }
+		
+		pause_p = config.asBool("pause");
       }
     else
       {
-	pause_p = True;
+ 	        pause_p = True;
       }
     
     *logger_p << LogIO::NORMAL << " pause is " << pause_p << LogIO::POST;
@@ -87,24 +92,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     exists = config.fieldNumber ("datadisplay");
     if (exists >= 0)
       {
-	dataDisplay_p = config.asBool("datadisplay");
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'datadisplay' must be of type 'bool'" ) );
+	        }
+		
+		dataDisplay_p = config.asBool("datadisplay");
       }
     else
       {
-	dataDisplay_p = False;
+	        dataDisplay_p = False;
       }
     
     *logger_p << LogIO::NORMAL << " datadisplay is " << dataDisplay_p << LogIO::POST;
-    showPlots_p = dataDisplay_p; // TODO : get rid of showPlots_p
     
     exists = config.fieldNumber ("reportdisplay");
     if (exists >= 0)
       {
-	reportDisplay_p = config.asBool("reportdisplay");
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'reportdisplay' must be of type 'bool'" ) );
+	        }
+		
+		reportDisplay_p = config.asBool("reportdisplay");
       }
     else
       {
-	reportDisplay_p = False;
+	        reportDisplay_p = False;
       }
     
     *logger_p << LogIO::NORMAL << " reportdisplay is " << reportDisplay_p << LogIO::POST;
@@ -113,21 +127,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     exists = config.fieldNumber ("format");
     if (exists >= 0)
       {
-	reportFormat_p = config.asString("format");
-        if( reportFormat_p != "screen" && reportFormat_p != "file")
-	  {
-	    *logger_p << LogIO::WARN
-		      << "Unsupported report format : " << reportFormat_p << ", setting to 'screen' by default. Supported formats are 'screen' and 'file'" << LogIO::POST;
-            reportFormat_p = "screen";
-	  }
+	        if( config.type(exists) != TpString )
+	        {
+			 throw( AipsError ( "Parameter 'format' must be of type 'bool'" ) );
+	        }
+		
+		reportFormat_p = config.asString("format");
+		if( reportFormat_p != "screen" && reportFormat_p != "file")
+		{
+		         throw( AipsError( "Unsupported report format : " + reportFormat_p + ". Supported formats are 'screen' and 'file'") );
+		}
       }
     else
       {
-	reportFormat_p = String("screen");
+	      reportFormat_p = String("screen");
       }
     
     *logger_p << LogIO::NORMAL << " format is " << reportFormat_p << LogIO::POST;
-    
     
   }
 
@@ -159,23 +175,23 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 	// Check whether to skip the rest of this chunk or not
 	if(skipSpw_p != -1) 
 	  {
-	    if(skipSpw_p == spwId_p) {showPlots_p=False;} // Skip the rest of this SPW
-	    else {skipSpw_p = -1; showPlots_p=True;} // Reached next SPW. Reset state
+	    if(skipSpw_p == spwId_p) {dataDisplay_p=False;} // Skip the rest of this SPW
+	    else {skipSpw_p = -1; dataDisplay_p=True;} // Reached next SPW. Reset state
 	  }
 	if(skipField_p != -1) 
 	  {
-	    if(skipField_p == fieldId_p) {showPlots_p=False;} // Skip the rest of this Field
-	    else {skipField_p = -1; showPlots_p=True;} // Reached next Field. Reset state
+	    if(skipField_p == fieldId_p) {dataDisplay_p=False;} // Skip the rest of this Field
+	    else {skipField_p = -1; dataDisplay_p=True;} // Reached next Field. Reset state
 	  }
 	if(skipScan_p != -1) 
 	  {
-	    if(skipScan_p == scanEnd_p) {showPlots_p=False;} // Skip the rest of this Scan
-	    else {skipScan_p = -1; showPlots_p=True;} // Reached next Scan. Reset state
+	    if(skipScan_p == scanEnd_p) {dataDisplay_p=False;} // Skip the rest of this Scan
+	    else {skipScan_p = -1; dataDisplay_p=True;} // Reached next Scan. Reset state
 	  }
 
 
 	// Display this baseline
-	if(showPlots_p)
+	if(dataDisplay_p)
 	  {
 	    
 	    // If choice from previous plot was to go backwards in baseline.
@@ -203,11 +219,11 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 		      }
 		    else 
 		      {
-			cout << "No Previous baseline in this chunk with Ant1 : " 
+			*logger_p << "No Previous baseline in this chunk with Ant1 : " 
 			     << ( (userFixA1_p==String(""))?String("any"):userFixA1_p )
 			     << "  and Ant2 : " 
 			     << ( (userFixA2_p==String(""))?String("any"):userFixA2_p )
-			     << endl;
+			     << LogIO::POST;
 		
 			// Stay on current baseline
 			if( myAntennaPairMapIterator != antennaPairMap_ptr->end() )
@@ -238,49 +254,49 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 		// React to user-input
 		if(userChoice_p=="Quit")
 		  {
-		    showPlots_p = False; 
+		    dataDisplay_p = False; 
 		    stopAndExit_p = True;
-		    cout << "Exiting flagger" << endl;
+		    *logger_p << "Exiting flagger" << LogIO::POST;
 		    if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
 		    flagDataHandler_p->stopIteration();
 		    return ;
 		  }
 		else if(userChoice_p=="StopDisplay")
 		  {
-		    showPlots_p = False;
-		    cout << "Stopping display. Continuing flagging." << endl;
+		    dataDisplay_p = False;
+		    *logger_p << "Stopping display. Continuing flagging." << LogIO::POST;
 		    if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
 		  }
 		else if(userChoice_p=="PrevBaseline")
 		  {
 		    if( myAntennaPairMapIterator==antennaPairMap_ptr->begin() )
-		      cout << "Already on first baseline..." << endl;
+		      *logger_p << "Already on first baseline..." << LogIO::POST;
 		    stepback=True;
 		  }
 		else if(userChoice_p=="NextScan")
 		  {
-		    cout << "Next Scan " << endl;
+		    //*logger_p << "Next Scan " << LogIO::POST;
 		    skipScan_p = scanEnd_p;
 		  }
 		else if(userChoice_p=="NextSpw")
 		  {
-		    cout << "Next SPW " << endl;
+		    //*logger_p << "Next SPW " << LogIO::POST;
 		    skipSpw_p = spwId_p;
 		  }
 		else if(userChoice_p=="NextField")
 		  {
-		    cout << "Next Field " << endl;
+		    //*logger_p << "Next Field " << LogIO::POST;
 		    skipField_p = fieldId_p;
 		  }
 		else if(userChoice_p=="Continue")
 		  {
-		    cout << "Next chunk " << endl; // Right now, a chunk is one baseline !
+		    //*logger_p << "Next chunk " << LogIO::POST; // Right now, a chunk is one baseline !
 		    return; 
 		  }
 		
 	      }// end if pause=True
 	    
-	  }// if showPlots_p
+	  }// if dataDisplay_p
 	
       }// end antennaMapIterator
     
@@ -293,7 +309,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
   {
     String antenna1Name = flagDataHandler_p->antennaNames_p->operator()(antennaPair.first);
     String antenna2Name = flagDataHandler_p->antennaNames_p->operator()(antennaPair.second);
-    //	    if(userFixA2_p != "") cout << "*********** userfixa2 : " << userFixA2_p << "   thisant : " << antenna1Name << " && " << antenna2Name << endl;
+    //	    if(userFixA2_p != "") cout << "*********** userfixa2 : " << userFixA2_p << "   thisant : " << antenna1Name << " && " << antenna2Name << LogIO::POST;
     return  (  (userFixA1_p != ""  && userFixA1_p != antenna1Name)  ||   (userFixA2_p != ""  && userFixA2_p != antenna2Name) ) ;
   }
   
@@ -346,26 +362,26 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     vector<string> corrTypes = visibilities.getSelectedCorrelationStrings();
     nPolarizations_p = corrTypes.size();
 
-    ///cout << "Selected Correlations : " << polarizations << endl;
+    ///cout << "Selected Correlations : " << polarizations << LogIO::POST;
  
     // Print where we are...
     //    *logger_p << LogIO::NORMAL  << " Baseline : " << baselineName << " Field : " << fieldName_p << " Spw : " << spwName << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
     
     // Build the Plot Window for the first time
-    if(showPlots_p && dataplotter_p==NULL) buildDataPlotWindow();
+    if(dataDisplay_p && dataplotter_p==NULL) buildDataPlotWindow();
     
     // Initialize Plot Arrays and other vars
     Float runningsum=0, runningflag=0,runningpreflag=0;
     Vector<Float> vecflagdat(0), vecdispdat(0);
     Vector<Float> origspectrum(0), flagspectrum(0), precountspec(0), countspec(0);
-    if(showPlots_p)
+    if(dataDisplay_p)
       {
 	vecflagdat.resize(nChannels * nTimes); vecdispdat.resize(nChannels * nTimes); 
 	origspectrum.resize(nChannels); flagspectrum.resize(nChannels);
 	precountspec.resize(nChannels); countspec.resize(nChannels);
       }
     
-    if(showPlots_p)
+    if(dataDisplay_p)
       {
 	// Make and send plots for each polarization
 	for(int pl=0;pl<nPolarizations_p;pl++)  // Start Correlation Loop
@@ -446,9 +462,9 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 	    
 	  }//End Correlation Loop
 	
-	*logger_p << LogIO::POST;
+	//*logger_p << LogIO::POST;
 	
-      }// end if showPlots_p
+      }// end if dataDisplay_p
     
     return false;
   }// end computeAntennaPairFlags
@@ -569,7 +585,7 @@ FlagReport
                     
 		    if(previd==-1)
 		      {
-			cout << "Already on first plot" << endl;
+			*logger_p << "Already on first plot" << LogIO::POST;
 			reportid=0;
 		      }
 		    else
@@ -647,27 +663,27 @@ FlagReport
 			    // React to user-input
 			    if(userChoice_p=="Quit")
 			      {
-				showPlots_p = False; 
+				dataDisplay_p = False; 
 				stopAndExit_p = True;
-				//cout << "Exiting flagger" << endl;
+				//*logger_p << "Exiting flagger" << LogIO::POST;
 				if(reportplotter_p!=NULL) { reportplotter_p->done(); reportplotter_p=NULL; }
 				return True;
 			      }
 			    else if(userChoice_p=="Prev")
 			      {
-				//cout << "Prev Plot" << endl;
+				//*logger_p << "Prev Plot" << LogIO::POST;
 				if( reportid==0 )
-				  cout << "Already on first plot..." << endl;
+				  *logger_p << "Already on first plot..." << LogIO::POST;
                                 else
 				  --reportid;
 				stepback=True;
 			      }
 			    else if(userChoice_p=="Continue" || userChoice_p=="Next")
 			      {
-				//cout << "Next Plot " << endl; 
+				//*logger_p << "Next Plot " << LogIO::POST; 
 				if( reportid==nReports-1 )
 				  {
-				     cout << "Already on last plot..." << endl;
+				     *logger_p << "Already on last plot..." << LogIO::POST;
 				     --reportid;
 				  }
 			      }
@@ -852,7 +868,7 @@ FlagReport
 	  }
 	else *logger_p << LogIO::DEBUG2 << "Unknown GUI choice : " << returnvalue << LogIO::POST;
 
-	//    cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p << "  userFixA1 : " << userFixA1_p << "  userFixA2 : " << userFixA2_p << endl;
+	//    *logger_p << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p << "  userFixA1 : " << userFixA1_p << "  userFixA2 : " << userFixA2_p << LogIO::POST;
 	
       }
     
@@ -879,7 +895,7 @@ FlagReport
 	  }
 	else *logger_p << LogIO::DEBUG2 << "Unknown GUI choice (Not sure why eventloop is exiting without user-click... re-entering... )" << returnvalue << LogIO::POST;
 	
-	//cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p  << endl;
+	//*logger_p << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p  << LogIO::POST;
 	
       }
     
@@ -899,7 +915,7 @@ FlagReport
 	*logger_p << LogIO::WARN << "Error in data XY dimensions. Not plotting" << LogIO::POST;
 	return;
       }
-    //    cout << "panel id : " << frame << endl;;
+    //    cout << "panel id : " << frame << endl;
     
     // dataplotter_p->release( panel_p.getInt( ) );
     dataplotter_p->erase( frame );

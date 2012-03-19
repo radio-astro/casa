@@ -32,8 +32,8 @@ class sdplot_test_plot(unittest.TestCase):
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
-      default(sdaverage)
-      sdaverage(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
                 calmode='ps',tau=0.09,outfile=self.infile)
     """
     # Data path of input/output

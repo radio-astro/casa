@@ -53,7 +53,7 @@ void doTest1 (Bool verbose=False) {
   Double tint(60.0);
 
   Bool disk(True);
-  NewCalTable tnct("test.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
+  NewCalTable tnct("tCTPatchedInterp_test1.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
 
   // some sanity checks on the test NewCalTable
   AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
@@ -120,7 +120,7 @@ void doTest2 (Bool verbose=False) {
   Double refTime(4832568000.0); // 2012 Jan 06 @ noon
   Double tint(60.0);
   Bool disk(True);
-  NewCalTable tnct("test.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
+  NewCalTable tnct("tCTPatchedInterp_test2.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
 
   // some sanity checks on the test NewCalTable
   AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
@@ -168,7 +168,7 @@ void doTest3 (Bool verbose=False) {
   Double tint(60.0);
 
   Bool disk(True);
-  NewCalTable tnct("test.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
+  NewCalTable tnct("tCTPatchedInterp_test3.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
 
   cout << "Made NewCalTable in " << timer.real() << endl;
 
@@ -189,7 +189,7 @@ void doTest3 (Bool verbose=False) {
   cout.precision(10);
 
   Double thistime=refTime;
-  for (Int ispw=0;ispw<nSpw;++ispw) {
+  for (uInt ispw=0;ispw<nSpw;++ispw) {
     for (Int itime=0;itime<N;++itime) {
       thistime=refTime+Double(itime);
       //    cout << itime << " " << thistime << endl;

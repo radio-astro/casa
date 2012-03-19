@@ -8,7 +8,7 @@
 #
 # used tasks
 # sdlist
-# sdaverage
+# sdcal
 # sdsmooth
 # sdbaseline
 # sd
@@ -81,7 +81,7 @@ else:
 
 # calibartion and averaging
 # calibrate position-switched HC3N scans (IF=0) 
-default(sdaverage)
+default(sdcal)
 infile='OrionS_rawACSmod'
 fluxunit='K' 
 calmode='ps'
@@ -95,7 +95,7 @@ pweight='tsys'   # weighted by Tsys for pol. averaging
 tau=0.09         # do opacity correction 
 overwrite=True
 plotlevel=localplotlevel  
-sdaverage() 
+sdcal() 
 # output
 localoutfile=infile+'_cal'
 

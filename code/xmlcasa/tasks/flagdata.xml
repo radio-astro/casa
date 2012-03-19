@@ -6,7 +6,9 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="flagdata" category="editing">
-        <shortdescription> All purpose flagging task based on selections</shortdescription>
+        <shortdescription>\n ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
+        <shortdescription>*******            USE THE TASK tflagdata            *******\n</shortdescription>
+        <shortdescription>All purpose flagging task based on selections</shortdescription>
         <description>
         The task will select a subset of data explicitly for flagging,
         quacking, clipping, autocorrelation flagging, or flagging
@@ -251,6 +253,7 @@
 <returns type="void"/>
 
 <example>
+
         The task will flag a subset of data explicitly with the modes:
             manualflag = flagging based on specific selection parameter
                          plus clipping and flagging autcorrelations

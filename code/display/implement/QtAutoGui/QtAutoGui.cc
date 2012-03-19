@@ -161,7 +161,7 @@ bool QtAutoGui::load(QDomDocument &doc)
         button->setObjectName(QString::fromUtf8("button"));
         button->setCheckable(true);
         button->setText(cat_elt.tagName().replace('_', ' '));
-        button->setChecked(button->text()=="Basic Settings");
+        button->setChecked(button->text()=="basic settings");
 	button->setMinimumWidth(438);
         vboxLayout->addWidget(button);
 

@@ -1019,8 +1019,8 @@ information on foreign images.
 -->
 
    <method type="function" name="newimage">
-   <shortdescription>Construct a new image tool from a \casa\ image file.  
-(Also know as newimagefromfile.)</shortdescription>
+   <shortdescription>Construct a new image analysis tool using the specified image.
+(Also known as newimagefromfile.)</shortdescription>
    
 <input>
   
@@ -1031,47 +1031,15 @@ information on foreign images.
 </input>
 <returns type="casaimage"/>
 <description>
-This is the most commonly used function to create an on-the-fly image
-tool.  It constructs (creates) a \imagetool\ associated with a disk
-\imagefile.
-
-The disk image file may be a native \casa, \fits\ (Float, Double,
-Short, Long are supported) , or Miriad
-\imagefile.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
+This method is identical to ia.newimagefromfile(). The description of
+how it works is in the online help for that method.
 </description>
-
-<example>
-
-"""
-#
-print "\t----\t newimage Ex 1 \t----"
-ia.maketestimage('test1',overwrite=true)
-ia.maketestimage('test2',overwrite=true)
-print ia.name()
-#[...]test2
-im1=ia.newimage('test1')
-print im1.name()
-#[...]test1
-print im1.summary()
-im2=ia.newimage('test2')
-print im2.name()
-#[...]test2
-print im1.name()
-#[...]test1
-im1.done()
-im2.done()
-ia.close()
-#
-"""
-
-</example>
 </method>
 
 
    <method type="function" name="newimagefromfile">
-   <shortdescription>Construct a new image tool from a \casa\ image file.
-(Also know as newimage.)</shortdescription>
+   <shortdescription>Construct a new image analysis tool using the specified image.
+(Also known as newimage.)</shortdescription>
    
 <input>
   
@@ -1082,39 +1050,40 @@ ia.close()
 </input>
 <returns type="casaimage"/>
 <description>
-This is the most commonly used function to create an on-the-fly image
-tool.  It constructs (creates) a \imagetool\ associated with a disk
-\imagefile.
+This method returns an image analysis tool associated with the specified image.
+Constructing a image analysis tool in addition to the default ia tool allows the
+user to operate on multiple images without having to close one
+before opening another. All ia.newimagefrom*() methods share this functionality.
+    
+The parameter infile may refer to a CASA image, a Miriad image, or a FITS image.
+FITS images of types Float, Double, Long, and Short are supported.
 
-The disk image file may be a native \casa, \fits\ (Float, Double,
-Short, Long are supported) , or Miriad
-\imagefile.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
+When finished with the newly created tool, the user should close it to free
+up system resources (eg memory).
+
+ia.newimage() is an alias for this method.
 </description>
 
 <example>
+# This is one way to copy a FITS image into an already extant CASA image
+# of the same shape (ia.subimage() is more effecient, but this example is
+# meant to demonstrate ia.newimagefromfile()
 
-"""
-#
-print "\t----\t newimagefromfile Ex 1 \t----"
-ia.maketestimage('test1',overwrite=true)
-ia.maketestimage('test2',overwrite=true)
-print ia.name()
-#[...]test2
-im1=ia.newimagefromfile('test1')
-print im1.name()
-#[...]test1
-print im1.summary()
-im2=ia.newimagefromfile('test2')
-print im2.name()
-#[...]test2
-print im1.name()
-#[...]test1
-im1.done()
-im2.done()
-ia.close()
-#
-"""
+# note that the ia tool is not attached to an image after the first command,
+# the fitsimage tool is
+fitsimage = ia.newimagefromfile("myimage.fits")
+# now attach the target CASA image to the ia tool
+ia.open("myimage.im")
+# copy pixel values
+ia.putchunk(fitsimage.getchunk())
+# copy the coordinate system
+ia.setcoordsys(fitsimage.coordsys().torecord())
+# copy other miscellaneous things
+ia.setbrightnessunit(fitsimage.getbrightnessunit())
+ia.setmiscinfo(fitsimage.miscinfo())
+# be sure to call done() on both tools to free up memory
+ia.done()
+fitsimage.done()
 
 </example>
 </method>
@@ -4042,10 +4011,19 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
             <value>0.0</value>
         </param>
+        <param type="any" direction="in" name="sigma">
+            <any type="variant" limittypes="string doubleArray intArray"/>
+            <description>Standard deviation array or image name.</description>
+            <value type="string"/>
+        </param>
+        <param type="string" direction="in" name="outsigma">
+            <description>Name of output image used for standard deviations. Ignored if sigma is empty.</description>
+            <value/>
+        </param>
     </input>
-<returns type="any"><any type="record"/></returns>
+    <returns type="any"><any type="record"/></returns>
 
-<description>
+    <description>
 This method simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
 and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
 center position, and width) are all independent from any other feature that may be simultaneously fit. A gaussian multiplet is a set of two or
@@ -4231,6 +4209,26 @@ from the zeroth pixel in the specified region. goodfwhmrange is expressed in ter
 given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
 ranges, the entire solution is considered to be invalid.
 
+INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
+If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
+near the edge of the band), they can be included in the sigma parameter. This parameter takes either an array or an image name. The
+array or image must have one of three shapes: 1. the shape of the input image, 2. the same dimensions as the input image with the lengths
+of all axes being one except for the fit axis which must have length corresponding to its length in the input image, or 3. be one
+dimensional with lenght equal the the length of the fit axis in the input image. In cases 2 and 3, the array or pixels in sigma will
+be replicated such that the image that is ultimately used is the same shape as the input image. The values of sigma must be non-negative.
+It is only the relative values that are important. A value of 0 means that pixel should not be used in the fit. Other than that, if pixel
+A has a higher standard deviation than pixel B, then pixel A is noisier than pixel B and will receive a lower weight when the fit is done.
+The weight of a pixel is the usual
+
+weight = 1/(sigma*sigma)
+
+In the case of multifit=F, the sigma values at each pixel along the fit axis in the hyperplane perpendicular to the fit axis which includes
+that pixel are averaged and the resultant averaged standard deviation spectrum is the one used in the fit. Internally, sigma values are normalized
+such that the maximum value is 1. This mitigates a known overflow issue.
+
+One can write the normalized standard deviation image used in the fit but specifying its name in outsigma. This image can then be
+used as sigma for subsequent runs.
+
 RETURNED DICTIONARY STRUCTURE
 The returned dictionary has a (necessarily) complex structure. First, there are keys "xUnit" and "yUnit" whose values are
 the abscissa unit and the ordinate unit described by simple strings. Next there are arrays giving a broad overview of the
@@ -4281,18 +4279,17 @@ is a linear axis and repesents component number (and is named accordingly).
 
 Writing analogous images for polynomial coefficients is not supported.
 
-</description>
+    </description>
 
-<example>
+    <example>
 """
 ia.open("myspectrum.im")
 res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
 """
-</example>
+    </example>
 
 </method>
 
- 
 <method type="function" name="fitcomponents">
     <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
     <input>
@@ -4916,7 +4913,7 @@ ia.close()
   
      <param type="any" direction="in" name="region">
 	     <any type="record"/>
-     <description>Region of interest.  Default is whole image.</description>
+     <description>Dictionary (record) defining the region of interest, most often obtained from an rg tool method.  Default is whole image.</description>
      <value></value>
      </param>
   
@@ -4927,7 +4924,7 @@ ia.close()
      </param>
   
      <param type="int" direction="in" name="axis">
-	     <description>Axis to convolve. Default is spectral axis if there is one</description>
+	     <description>Zero based axis to convolve. ia.coordsys().names() gives the order of the axes in the image. Less than 0 means use the spectral axis if there is one, if not an exception is thrown.</description>
      <value>-10</value>
      </param>
   
@@ -4955,19 +4952,37 @@ ia.close()
 
 <description>
 
-This function performs Hanning convolution ($z[i] = 0.25*y[i-1] +
-0.5*y[i] + 0.25*y[i+1]$) of one axis of an image.  The convolution is
-done in the image domain (i.e., not with an FFT). You can optionally drop
-every other pixel on output. If you do this, the first output
-pixel is centered on the second input pixel. 
+This function performs Hanning convolution of one axis of an image defined by
 
-If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the Image \tool\ is
-associated with a temporary image.  This temporary image may be in
-memory or on disk, depending on its size.  When you destroy the
-on-the-fly Image \tool\ created by this function (with the <link
-anchor="images:image.done.function">done</link> function) this
-temporary image is deleted.
+z[i] = 0.25*y[i-1] + 0.5*y[i] + 0.25*y[i+1] 
+
+where z[i] is the value at pixel i in the hanning smoothed image, and
+y[i-1], y[i], and y[i+1] are the values of the input image at pixels i-1,
+i, and i+1 respectively.
+
+The convolution is done in the image domain (i.e., not with an FFT). If drop=True,
+every other pixel is dropped in the output image so that the pixel width and the hanning smoothed resolution 
+are the same. In this case, the first output pixel is centered on the second input pixel, so that the
+(zero-based) jth output pixel is related to the (zero-based) ith input pixel by
+
+j = (i - 1)/2
+
+where i takes on only odd values.
+
+The hanning smoothed image is written to disk with name {\stfaf outfile}, if
+specified. If not, no image is written but the image is still accessible via
+the returned image analysis tool (see below).
+
+This method always returns an image analysis tool which is attached to the
+hanning smoothed image. This tool should always be captured and closed after
+any desired manipulations have been done. Closing the tool frees up system
+resources (eg memory), eg,
+
+hanning_image = ia.hanning(...)
+# do things (or not) with hanning_image 
+... 
+# close the returned tool promptly upon finishing with it.
+hanning_image.done()
 
 Masked pixels will be assigned the value 0.0 before convolution. 
 The output mask is the combination (logical OR) of the default input
@@ -4985,21 +5000,15 @@ See also the other convolution functions
 
 <example>
 
-"""
-print "\t----\t hanning Ex 1 \t----"
-ia.fromshape('x', shape=[64,64,128], overwrite=true)
-print ia.summary()
-im2 = ia.hanning(outfile='x.hann')
-print im2.summary()
-im2.done(remove=T)
-ia.close()
-#
-"""
-
-
-This would Hanning smooth the spectral axis of the image associated with
-the default \imagetool\ {\stf ia}, if there is one.  Every other pixel on the
-convolution axis is dropped on output, by default. 
+ia.open("mynonsmoothed.im")
+# smooth the spectral axis, say it's axis 2 and only write every other pixel
+hanning = ia.hanning(outfile="myhanningsmoothed.im", axis=2, drop=True, overwrite=True)
+# done with input
+ia.done()
+# do something with the output image, get statistics say
+stats = hanning.statistics()
+# close the result image
+hanning.done()
 
 </example>
 

@@ -3,6 +3,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 #include <display/QtViewer/QtPixelCanvas.qo.h>
+#include <images/Images/SubImage.h>
 #include <measures/Measures/MCDirection.h>
 
 #include <images/Images/ImageStatistics.h>
@@ -230,7 +231,7 @@ namespace casa {
 		type == MDirection::B1950 ? Region::B1950 :
 		type == MDirection::GALACTIC ? Region::Galactic :
 		type == MDirection::SUPERGAL ? Region::SuperGalactic :
-		type == MDirection::ECLIPTIC ? Region::Ecliptic : Region::Pixel;
+		type == MDirection::ECLIPTIC ? Region::Ecliptic : Region::J2000;
 	}
 
 	static inline MDirection::Types viewer_to_casa( Region::Coord type ) {
@@ -293,7 +294,6 @@ namespace casa {
 		return;
 	    }
 
-
 	    if ( coord == DefaultCoord ) coord = current_region_coordsys( );
 	    if ( new_x_units == DefaultUnits ) new_x_units = current_xunits( );
 	    if ( new_y_units == DefaultUnits ) new_y_units = current_xunits( );
@@ -302,6 +302,29 @@ namespace casa {
 
 	    MDirection::Types cccs = current_casa_coordsys( );
 
+	    if ( cccs == MDirection::N_Types ) {
+		// this impiles that the coordinate system does not have a direction coordinate...
+		// so it is probably a measurement set... treat as a pixel coordinate for now...
+		double center_x, center_y;
+		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
+		x = as_string(center_x);
+		y = as_string(center_y);
+
+		// set bounding width/height
+		double p_blc_x, p_blc_y, p_trc_x, p_trc_y;
+		linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y );
+		bounding_width = fabs(p_trc_x-p_blc_x);
+		bounding_height = fabs(p_trc_y-p_blc_y);
+
+		angle = as_string(0);
+		return;
+	    }
+
+	    Coord cvcs = casa_to_viewer(cccs);
+	    double result_x, result_y;
+	    const Vector<String> &units = wc_->worldAxisUnits();
+
+	    // seting bounding units
 	    if ( bounding_units == "pixel" ) {
 		double p_blc_x, p_blc_y, p_trc_x, p_trc_y;
 		linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y );
@@ -311,58 +334,41 @@ namespace casa {
 		linear_offset_to_world_offset(wc_,fabs(trc_x-blc_x),fabs(trc_y-blc_y), viewer_to_casa(coord), bounding_units, bounding_width, bounding_height);
 	    }
 
-	    if ( cccs == MDirection::N_Types ) {
-		// this impiles that the coordinate system does not have a direction coordinate...
-		// so it is probably a measurement set... treat as a pixel coordinate for now...
-		double center_x, center_y;
-		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
-		x = as_string(center_x);
-		y = as_string(center_y);
-		angle = as_string(0);
-		return;
-	    }
-
-	    Coord cvcs = casa_to_viewer(cccs);
-	    double result_x, result_y;
-
-	    if ( coord == Pixel ) {
-		double center_x, center_y;
-		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
-
-		x = as_string(center_x);
-		y = as_string(center_y);
-		angle = as_string(0);
-
-		double p_blc_x, p_blc_y, p_trc_x, p_trc_y;
-		linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y );
-		bounding_width = fabs(p_trc_x - p_blc_x);
-		bounding_height = fabs(p_trc_y - p_blc_y);
-
-		return;
-
-	    } else if ( coord == cvcs ) {
+	    if ( coord == cvcs ) {
 		linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y );
-		const Vector<String> &units = wc_->worldAxisUnits();
 		convert_units( result_x, units[0], new_x_units, result_y, units[1], new_y_units );
+
 	    } else {
 		linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y );
-		const Vector<String> &units = wc_->worldAxisUnits();
 		Quantum<Vector<double> > result = convert_angle( result_x, units[0], result_y, units[1], cccs, viewer_to_casa(coord) );
 		result_x = result.getValue(as_string(new_x_units))(0);
 		result_y = result.getValue(as_string(new_y_units))(1);
+
 	    }
 
-	    if ( new_x_units == HMS ) {
-		x = MVAngle(result_x)(0.0).string(MVAngle::TIME,9);
-	    } else if ( new_x_units == DMS ) {
-		x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+	    const Vector<String> &axis_labels = wc_->worldAxisNames( );
+	    if ( new_x_units == Pixel ) {
+		double center_x, center_y;
+		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
+		x = as_string(center_x);
+	    } else if ( new_x_units == Sexagesimal ) {
+		if ( axis_labels(0) == "Declination" )
+		    x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		else
+		    x = MVAngle(result_x)(0.0).string(MVAngle::TIME,8);
 	    } else {
 		x = as_string(result_x);
 	    }
-	    if ( new_y_units == HMS ) {
-		y = MVAngle(result_y)(0.0).string(MVAngle::TIME,9);
-	    } else if ( new_y_units == DMS ) {
-		y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+
+	    if ( new_y_units == Pixel ) {
+		double center_x, center_y;
+		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
+		y = as_string(center_y);
+	    } else if ( new_y_units == Sexagesimal ) {
+		if ( axis_labels(1) == "Declination" )
+		    y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		else
+		    y = MVAngle(result_y)(0.0).string(MVAngle::TIME,8);
 	    } else {
 		y = as_string(result_y);
 	    }

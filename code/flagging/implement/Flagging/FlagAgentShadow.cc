@@ -85,6 +85,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 
                 if( ! arec.isDefined("diameter") || 
                     ( arec.type(arec.fieldNumber("diameter")) != casa::TpFloat && 
+                      arec.type(arec.fieldNumber("diameter")) != casa::TpInt && 
 		      arec.type(arec.fieldNumber("diameter")) != casa::TpDouble  ) )
 		  {
 		    validants=False;
@@ -93,6 +94,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 
                 if( ! arec.isDefined("position") || 
                     ( arec.type(arec.fieldNumber("position")) != casa::TpArrayFloat && 
+                      arec.type(arec.fieldNumber("position")) != casa::TpInt && 
 		      arec.type(arec.fieldNumber("position")) != casa::TpArrayDouble  ) )
 		  {
 		    validants=False;
@@ -186,11 +188,16 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
     exists = config.fieldNumber ("tolerance");
     if (exists >= 0)
       {
-	shadowTolerance_p = config.asDouble("tolerance");
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat && config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'tolerance' must be of type 'double'" ) );
+	        }
+		
+		shadowTolerance_p = config.asDouble("tolerance");
       }
     else
       {
-	shadowTolerance_p = 0.0;
+	        shadowTolerance_p = 0.0;
       }
     
     *logger_p << logLevel_p << " tolerance is " << shadowTolerance_p << " meters "<< LogIO::POST;
@@ -199,7 +206,12 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
     exists = config.fieldNumber ("addantenna");
     if (exists >= 0)
       {
-	additionalAntennas_p = config.subRecord( RecordFieldId("addantenna") );
+	        if( config.type(exists) != TpRecord )
+	        {
+			 throw( AipsError ( "Parameter 'addantenna' must be of type 'record/dict'" ) );
+	        }
+		
+		additionalAntennas_p = config.subRecord( RecordFieldId("addantenna") );
       }
     else
       {

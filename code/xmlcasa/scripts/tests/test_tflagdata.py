@@ -139,13 +139,16 @@ class test_tfcrop(test_base):
         
     def test_tfcrop2(self):
         '''tflagdata:: Test2 of mode = tfcrop ABS_ALL'''
-        tflagdata(vis=self.vis, mode='tfcrop',ntime=51.0,spw='9', savepars=False)
+        # Note : With ntime=51.0, 64-bit machines get 18696 flags, and 32-bit gets 18695 flags.
+        #           As far as we can determine, this is a genuine precision-related difference.
+        #           With ntime=53.0, there happens to be no difference.
+        tflagdata(vis=self.vis, mode='tfcrop',ntime=53.0,spw='9', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 18696)
-        self.assertEqual(res['correlation']['LL']['flagged'], 4258)
-        self.assertEqual(res['correlation']['RL']['flagged'], 4999)
-        self.assertEqual(res['correlation']['LR']['flagged'], 4950)
-        self.assertEqual(res['correlation']['RR']['flagged'], 4489)
+        self.assertEqual(res['flagged'], 18671)
+        self.assertEqual(res['correlation']['LL']['flagged'], 4250)
+        self.assertEqual(res['correlation']['RL']['flagged'], 5007)
+        self.assertEqual(res['correlation']['LR']['flagged'], 4931)
+        self.assertEqual(res['correlation']['RR']['flagged'], 4483)
 
     def test_extend1(self):
         '''tflagdata:: Extend the flags created by clip'''
@@ -163,15 +166,24 @@ class test_rflag(test_base):
         self.setUp_data4tfcrop()
         
     def test_rflag1(self):
-        '''tflagdata:: Test1 of mode = rflag'''
+        '''tflagdata:: Test1 of mode = rflag : automatic thresholds'''
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], writeflags=True);
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 42866)
         self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
         self.assertEqual(res['spw']['7']['flagged'], 0)
-        
+
     def test_rflag2(self):
-        '''tflagdata:: Test2 of mode = rflag : output/input'''
+        '''tflagdata:: Test2 of mode = rflag : partially-specified thresholds'''
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[[1,10,0.1],[1,11,0.07]], \
+                       freqdev=0.5, writeflags=True);
+        res = tflagdata(vis=self.vis, mode='summary',spw='9,10,11')
+        self.assertEqual(res['flagged'], 52411)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
+        self.assertEqual(res['spw']['11']['flagged'], 0)
+
+    def test_rflag3(self):
+        '''tflagdata:: Test3 of mode = rflag : output/input via two methods'''
         # (1) Test input/output files, through the task, mode='rflag'
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
                       freqdev='fdevfile.txt', writeflags=False);
@@ -180,9 +192,10 @@ class test_rflag(test_base):
         res1 = tflagdata(vis=self.vis, mode='summary')
         # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
         #      and then read back in via list mode. 
+        #      Also test the 'savepars' when timedev and freqdev are specified differently...
         tflagdata(vis=self.vis,mode='unflag');
-        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt',writeflags=False,savepars=True,outfile='outcmd.txt');
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
+                      freqdev=[],writeflags=False,savepars=True,outfile='outcmd.txt');
         tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt',writeflags=True);
         res2 = tflagdata(vis=self.vis, mode='summary')
 
@@ -347,89 +360,94 @@ class test_shadow(test_base):
 #        assert s['9']['flagged'] == 58968; assert s['9']['total'] == 203994
 
 
-#class test_flagmanager(test_base):
+class test_flagmanager(test_base):
     
-#    def setUp(self):
-#        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
-#        self.setUp_flagdatatest()
+    def setUp(self):
+        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
+        self.setUp_flagdatatest()
         
-#    def test1m(self):
-#        '''flagmanager test1m: mode=list, flagbackup=True/False'''
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 2)
-#        tf.done()
-#
-#
-#        tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 2)
-#        tf.done()
-#
-#        tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 3)
-#        tf.done()
-#
-#        print "Test of flagmanager mode=rename"
-#        flagmanager(vis=self.vis, mode='rename', oldname='manualflag_2', versionname='Ha! The best version ever!', 
-#                    comment='This is a *much* better name')
-#        flagmanager(vis=self.vis, mode='list')
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), 3)
-#        tf.done()
+    def test1m(self):
+        '''flagmanager test1m: mode=list, flagbackup=True/False'''
+        
+        # Create a local copy of the tool
+        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 3)
+        tflocal.done()
 
-#    def test2m(self):
-#        """flagmanager test2m: Create, then restore autoflag"""
-#
-#        tflagdata(vis=self.vis, mode='summary')
-#        flagmanager(vis=self.vis)
-#        
-#        tflagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
-#        
-#        flagmanager(vis=self.vis)
-#        ant2 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After flagging antenna 2 there were", ant2, "flags"
-#
-#        # Change flags, then restore
-#        tflagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
-#        flagmanager(vis = self.vis)
-#        ant3 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After flagging antenna 2 and 3 there were", ant3, "flags"
-#
-#        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
-#        restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
-#
-#        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
-#
-#        self.assertEqual(restore2, ant2)
 
-#    def test_CAS2701(self):
-#        """flagmanager: Do not allow flagversion=''"""
-#        
-#        tf.open(self.vis)
-#        l = len(tf.getflagversionlist())
-#        tf.done()
-#        
-#        flagmanager(vis = self.vis,
-#                    mode = "save",
-#                    versionname = "non-empty-string")
-#
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), l+1)
-#        tf.done()
-#
-#        flagmanager(vis = self.vis,
-#                    mode = "save",
-#                    versionname = "non-empty-string")
-#
-#        tf.open(self.vis)
-#        self.assertEqual(len(tf.getflagversionlist()), l+1)
-#        tf.done()
+        tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 3)
+        tflocal.done()
+
+        tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 4)
+        tflocal.done()
+
+        flagmanager(vis=self.vis, mode='rename', oldname='unflag_2', versionname='Ha! The best version ever!', 
+                    comment='This is a *much* better name')
+        flagmanager(vis=self.vis, mode='list')
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), 4)
+        tflocal.done()
+
+    def test2m(self):
+        """flagmanager test2m: Create, then restore autoflag"""
+
+        tflagdata(vis=self.vis, mode='summary')
+        flagmanager(vis=self.vis)
+        
+        tflagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
+        
+        flagmanager(vis=self.vis)
+        ant2 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 there were", ant2, "flags"
+
+        # Change flags, then restore
+        tflagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
+        flagmanager(vis = self.vis)
+        ant3 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 and 3 there were", ant3, "flags"
+
+        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
+        restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
+
+        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
+
+        self.assertEqual(restore2, ant2)
+
+    def test_CAS2701(self):
+        """flagmanager: Do not allow flagversion=''"""
+        
+        # Create a local copy of the tool
+        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        
+        tflocal.open(self.vis)
+        l = len(tflocal.getflagversionlist())
+        tflocal.done()
+        
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
+        tflocal.done()
+
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        tflocal.open(self.vis)
+        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
+        tflocal.done()
 
 
 class test_msselection(test_base):
@@ -969,14 +987,13 @@ class test_clip(test_base):
 class cleanup(test_base):
     
     def tearDown(self):
-        os.system('rm -rf ngc5921.ms')
-        os.system('rm -rf ngc5921.ms.flagversions')
-        os.system('rm -rf flagdatatest.ms')
-        os.system('rm -rf flagdatatest.ms.flagversions')
+        os.system('rm -rf ngc5921.ms*')
+        os.system('rm -rf flagdatatest.ms*')
         os.system('rm -rf missing-baseline.ms')
-        os.system('rm -rf multiobs.ms')
-        os.system('rm -rf flagdatatest-alma.ms')
-        os.system('rm -rf Four_ants_3C286.ms')
+        os.system('rm -rf multiobs.ms*')
+        os.system('rm -rf flagdatatest-alma.ms*')
+        os.system('rm -rf Four_ants_3C286.ms*')
+        os.system('rm -rf shadowtest_part.ms*')
         os.system('rm -rf list*txt')
 
     def test1(self):
@@ -988,7 +1005,7 @@ def suite():
     return [test_tfcrop,
             test_rflag,
             test_shadow,
-#            test_flagmanager,
+            test_flagmanager,
             test_selections,
             test_selections2,
             test_selections_alma,

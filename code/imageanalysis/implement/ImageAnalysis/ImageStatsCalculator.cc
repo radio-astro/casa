@@ -31,6 +31,8 @@
 #include <images/Images/ImageUtilities.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
+#include <iomanip>
+
 #include <memory>
 
 namespace casa {

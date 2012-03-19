@@ -7,7 +7,7 @@
 
       <task type="function" name="pclean" category="utilities" async="never" visibility="experimental">
 	<shortdescription>Invert and deconvolve images with parallel engines</shortdescription>
-	<description>Form images from visibilities. Handles continuum and spectral line cubes using module pcont and pcube respectively.</description>
+	<description>Form images from visibilities. Handles continuum and spectral line cubes using module.</description>
 
 	<input>
 		<param type="string" vis="true" name="vis" mustexist="true">
@@ -38,10 +38,33 @@
                      <value type="string"></value>
                 </param>
 
-                <param type="any" name="mask">
-                     <description>Cleanbox(es), mask image(s), and/or mask region(s)</description>
-                     <any type="variant"/>
-                     <value type="stringArray"></value>
+		<param type="string" name="stokes">
+		  <description>Stokes params to image (eg I,IV,IQ,IQUV)</description>
+		  <value>I</value>
+		  <allowed kind="enum">
+		    <value>I</value>
+		    <value>Q</value>
+		    <value>U</value>
+		    <value>V</value>
+		    <value>IV</value>
+		    <value>IQ</value>
+		    <value>QU</value>
+		    <value>UV</value>
+		    <value>IQU</value>
+		    <value>IUV</value>
+		    <value>IQUV</value>
+		    <value>RR</value>
+		    <value>LL</value>
+		    <value>RRLL</value>
+		    <value>XX</value>
+		    <value>YY</value>
+		    <value>XXYY</value>
+		  </allowed>
+		</param>
+
+                <param type="string" name="mask"> 
+                     <description>mask image</description>
+                     <value></value>
                 </param>
 
                 <param type="string" name="field">
@@ -62,26 +85,32 @@
 		</param-->
 
                 <param type="string" name="ftmachine">
-                        <description>Fourier Transform Engine</description>
+                        <description>Fourier Transform Engine (\'ft\', \'sd\', \'mosaic\' or \'wproject\')</description>
                         <value type="string">ft</value>
                         <allowed kind="enum">
                              <value>ft</value>
                              <value>mosaic</value>
+                             <value>wproject</value>
                              <value>sd</value>
-                             <value>both</value>
-                             <value>pbwproject</value>
                         </allowed>
                 </param>
 
                 <param type="string" name="alg">
-                        <description>Deconvolution algorithm</description>
+                        <description>Deconvolution algorithm (\'clark\', \'hogbom\', \'multiscale\')</description>
                         <value type="string">clark</value>
                         <allowed kind="enum">
                             <value>clark</value>
-                            <value>clarkstokes</value>
                             <value>hogbom</value>
+                            <value>multiscale</value>
                         </allowed>
                 </param>
+
+			<param type="intArray" name="scales" subparam="true">
+			<description>Scales to use in deconvolution</description>
+			<value>0</value>
+		</param>
+
+		
 
 		<param type="int" name="majorcycles">
 			<description>Number of major cycles</description>
@@ -92,10 +121,13 @@
 			<description>Maximum number of iterations</description>
 			<value>500</value>
 		</param>
-
+		<param type="double" name="gain">
+			<description>Maximum number of iterations</description>
+			<value>0.1</value>
+		</param>
 		<param type="string" name="threshold">
 			<description>Flux level to stop cleaning, must include units: \'1.0mJy\'</description>
-			<value>0.0</value>
+			<value>0.0Jy</value>
 		</param>
 
 		<param type="string" name="weighting">
@@ -111,18 +143,27 @@
 		    </allowed>
 		</param>
 
-		<param type="intArray" name="scales">
-			<description>Scales to use in deconvolution</description>
-			<value>0</value>
+		<param type="double" name="robust" subparam="true">
+		  <description>Briggs robustness parameter</description>
+		  <value>0.0</value>
+		  <allowed kind="range">
+		    <value range="min">-2.0</value>
+		    <value range="max">2.0</value>
+		  </allowed>
 		</param>
 
+		<param type="int" name="npixels" subparam="true">
+		  <description>number of pixels for superuniform or briggs weighting</description>
+	    <value>0</value>
+		</param>
+		
 		<param type="string" name="mode">
-			<description>Clean mode (continuum, channel)</description>
+			<description>Clean mode (\'continuum\', \'channel\')</description>
 			<!--description>Clean mode (continuum, channel, frequency, velocity, mfs)</description-->
 			<value>continuum</value>
 	              <allowed kind="enum">
 		      <value>continuum</value>
-		      <value>channel</value>
+		      <value>cube</value>
 		      <!--value>frequency</value>
 		      <value>velocity</value>
 		      <value>mfs</value-->
@@ -130,7 +171,7 @@
 		</param>
 
 		<param type="any" name="start" subparam="true">
-			<description>Begin the output cube at the frequency of this channel in the MS</description>
+			<description>Begin the output cube at the frequency of this channel in the MS in channel number or frequency or velocity</description>
                         <any type="variant"/>
 			<value type="int">0</value>
 		</param>
@@ -140,37 +181,20 @@
 			<value>1</value>
 		</param>
 
-		<param type="any" name="step" subparam="true">
-			<description>Channel Steps</description>
+		<param type="any" name="width" subparam="true">
+			<description>width of output channel </description>
                         <any type="variant"/>
 			<value type="int">1</value>
 		</param>
-
-		<param type="int" name="imagetilevol" subparam="true">
-			<description>Size of the image mage tile</description>
-			<value>1000000</value>
+		<param type="string" name="restfreq" subparam="true">
+			<description>rest frequency to assign to image cube for velocity translattion</description>
+			<value></value>
 		</param>
-
-		<param type="int" name="chanchunk" subparam="true">
-			<description>Size of channel chunk</description>
-			<value>1</value>
-		</param>
-
-		<param type="boolean" name="interactive" subparam="true">
+		<param type="boolean" name="interactive">
 			<description>Interactive clean</description>
 			<value>False</value>
 		</param>
 
-                <param type="string" name="gridmode">
-                   <description>Gridding kernel for FFT-based transforms, default=\'\' None</description>
-                   <value></value>
-                   <allowed kind="enum">
-                       <value></value>
-                       <value>widefield</value>
-                       <value>aprojection</value>
-                       <value>experimental</value>
-                   </allowed>
-                </param>
 
 		<param type="int" name="wprojplanes" subparam="true">
 			<description>Number of w-projection planes for convolution</description>
@@ -182,115 +206,124 @@
 			<value>1</value>
 		</param>
 
-		<param type="double" name="painc" subparam="true">
-			<description>Parallactic angle increment in degrees</description>
-			<value>360.</value>
-		</param>
 
-		<param type="double" name="pblimit" subparam="true">
-			<description>The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)</description>
-			<value>0.1</value>
-		</param>
 
-		<param type="boolean" name="dopbcorr" subparam="true">
-			<description>Correct for PB in the major cycles as well</description>
+		<param type="boolean" name="overwrite">
+			<description>Overwrite an existing model image</description>
 			<value>True</value>
 		</param>
 
-		<param type="boolean" name="applyoffsets" subparam="true">
-			<description>Apply antenna pointing offsets in g table given by epjtablename</description>
-			<value>False</value>
+		<param type="bool" name="uvtaper">
+		  <description>Apply additional uv tapering of visibilities</description>
+		  <value>False</value>
+		</param>
+		<param type="stringArray" name="outertaper" subparam="true">
+		  <description>uv-taper on outer baselines in uv-plane</description>
+		  <value type="vector">
+		    <value></value>
+		  </value>
+		</param>
+		<param type="bool" name="selectdata">
+		  <description>Other data selection parameters</description>
+		  <value>False</value>
 		</param>
 
-		<param type="string" name="cfcache" subparam="true">
-			<description>The disk cache directory for convolution functions</description>
-			<value>cfcache.dir</value>
+		<param type="any" name="timerange" subparam="true">
+		  <description>Range of time to select from data</description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
+		</param>
+		
+    
+		<param type="any" name="uvrange" subparam="true">
+		  <description>Select data within uvrange </description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
+		</param>
+		
+    
+		<param type="any" name="antenna" subparam="true">
+		  <description>Select data based on antenna/baseline</description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
 		</param>
 
-		<param type="string" name="epjtablename" subparam="true">
-			<description>Table containing antenna pointing offsets</description>
-			<value></value>
+    
+		<param type="any" name="scan" subparam="true">
+		  <description>Scan number range</description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
 		</param>
-
-		<param type="boolean" name="contclean">
-			<description>Use existing model image</description>
-			<value>False</value>
-		</param>
-
-		<param type="boolean" name="visinmem">
-			<description>Load visibilities into memory</description>
-			<value>False</value>
-		</param>
-
-		<param type="stringArray" name="hostnames">
-			<description>The names of the cluster engine hosts</description>
-			<value></value>
-		</param>
-
-		<param type="int" name="numcpuperhost">
-			<description>Number of engines on each host</description>
-			<value>1</value>
+    
+		<param type="any" name="observation" subparam="true">
+		  <description>Observation ID range</description>
+		  <any type="variant" limittypes="string int"/>
+		  <value type="string"></value>
 		</param>
 
 
-        <constraints>
-                 <when param="mode">
-                     <equals type="string" value="continuum">
-                         <default param="interactive"><value>False</value></default>
+		<constraints>
+		  <when param="mode">
+		    <equals type="string" value="continuum"></equals>
+		    <equals type="string" value="cube">
+		      <default param="start"><value type="int">0</value></default>
+		      <default param="nchan"><value>1</value></default>
+		      <default param="width"><value type="int">1</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
                      </equals>
-                     <equals type="string" value="channel">
-                         <default param="start"><value type="int">0</value></default>
-                         <default param="nchan"><value>1</value></default>
-                         <default param="step"><value type="int">1</value></default>
-                         <!--default param="imagetilevol"><value>1000000</value></default-->
-                         <default param="chanchunk"><value>1</value></default>
-                     </equals>
-                     <equals type="string" value="frequency">
-                         <default param="start"><value type="string"></value><description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in first SpW of MS)</description></default>
-                         <!--default param="nchan"><value>1</value></default-->
-                         <default param="step"><value type="string"></value><description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description></default>
-                         <default param="imagetilevol"><value>1000000</value></default>
-                         <default param="chanchunk"><value>1</value></default>
-                     </equals>
-                     <equals type="string" value="velocity">
-                         <default param="start"><value type="string"></value><description>Velocity of first channel: e.g \'0.0km/s\' (\'\'=first channel in first SpW of MS)</description></default>
-                         <!--default param="nchan"><value>1</value></default-->
-                         <default param="step"><value type="string"></value><description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description></default>
-                         <default param="imagetilevol"><value>1000000</value></default>
-                         <!--default param="chanchunk"><value>1</value></default-->
-                     </equals>
-                     <equals type="string" value="mfs"></equals>
                  </when>
-                 <when param="gridmode">
-                     <equals value=""/>
-                     <equals value="widefield">
+                 <when param="ftmachine">
+                     <equals value="ft"/>
+                     <equals value="wproject">
                       <default param="wprojplanes"><value>128</value></default>
                       <default param="facets"><value>1</value></default>
                      </equals>
-                     <equals value="aprojection">
-                      <default param="wprojplanes"><value>1</value></default>
-                      <default param="facets"><value>1</value></default>
-                      <default param="painc"><value>360.0</value></default>
-                      <default param="pblimit"><value>0.1</value></default>
-                      <default param="dopbcorr"><value>True</value></default>
-                      <default param="applyoffsets"><value>False</value></default>
-                      <default param="cfcache"><value type="string">cfcache.dir</value></default>
-                      <default param="epjtablename"><value type="string"></value></default>
-              </equals>
-
-                     <equals value="experimental">
-                      <!--default param="ftmachine"><value type="string">ft</value></default-->
-                      <default param="wprojplanes"><value>1</value></default>
-                      <default param="facets"><value>1</value></default>
-                      <default param="cfcache"><value type="string">cfcache.dir</value></default>
-                      <default param="painc"><value>360.0</value></default>
-                      <default param="epjtablename"><value type="string"></value></default>
-                    </equals>
-
+                     <equals value="mosaic"/>
+		     <equals value="sd"/>                     
                  </when>
 
-        </constraints>
-	</input>
+		 <when param="selectdata">
+		   <equals type="bool" value="False"/>
+		   <equals type="bool" value="True">
+		     <default param="timerange"><value type="string"></value>
+		     </default>
+		     <default param="uvrange"><value type="string"></value>
+		     </default>
+		     <default param="antenna"><value type="string"></value>
+		     </default>
+		     <default param="scan"><value type="string"></value>
+		     </default>
+		     <default param="observation"><value type="string"></value>
+		     </default>
+		   </equals>
+		 </when>
+		 <when param="alg">
+		   <equals type="string" value="hogbom"/>
+		   <equals type="string" value="clark"/>
+		   <equals type="string" value="multiscale">
+		     <default param="scales"><value type="intArray"><value>1</value></value></default>
+		   </equals>     
+		 </when>
+		 <when param="weighting">
+		   <equals type="string" value="natural"/>
+		   <equals type="string" value="radial"/>
+		   <equals type="string" value="uniform"/>
+		   <equals type="string" value="briggs">
+		     <default param="robust"><value type="double">0.0</value></default>
+		     <default param="npixels"><value type="int">0</value></default>
+		   </equals>
+		   <equals type="string" value="briggsabs">
+		     <default param="npixels"><value type="int">0</value></default>
+		     <default param="robust"><value type="double">0.0</value></default>
+		   </equals>
+		   <equals type="string" value="radial" />
+
+		   <equals type="string" value="superuniform">
+		     <default param="npixels"><value type="int">0</value></default>
+		   </equals>
+		 </when>
+		</constraints>
+	      </input>
 
 
 <example>

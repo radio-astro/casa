@@ -48,6 +48,11 @@ FlagAgentQuack::setAgentParameters(Record config)
 	exists = config.fieldNumber ("quackinterval");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpDouble && config.type(exists) != TpFloat && config.type(exists) != TpInt )
+	        {
+			 throw( AipsError ( "Parameter 'quackinterval' must be of type 'double'" ) );
+	        }
+		
 		quackinterval_p = config.asDouble("quackinterval");
 	}
 	else
@@ -61,6 +66,11 @@ FlagAgentQuack::setAgentParameters(Record config)
 	String quackmode;
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpString )
+	        {
+			 throw( AipsError ( "Parameter 'quackmode' must be of type 'string'" ) );
+	        }
+		
 		quackmode = config.asString("quackmode");
 		if (quackmode == "beg")
 		{
@@ -80,11 +90,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		}
 		else
 		{
-			*logger_p << LogIO::WARN <<
-					" Unsupported quack mode: " <<
-					quackmode_p << ", selecting beg by default. Supported modes: beg,endb,end,tail." << LogIO::POST;
-			quackmode_p = BEGINNING_OF_SCAN;
-			quackmode = "beg";
+			 throw( AipsError ( "Unsupported quack mode: " + quackmode + ". Supported modes: beg,endb,end,tail (following AIPS convention)" ) );
 		}
 	}
 	else
@@ -98,6 +104,11 @@ FlagAgentQuack::setAgentParameters(Record config)
 	exists = config.fieldNumber ("quackincrement");
 	if (exists >= 0)
 	{
+	        if( config.type(exists) != TpBool )
+	        {
+			 throw( AipsError ( "Parameter 'quackincrement' must be of type 'bool'" ) );
+	        }
+		
 		quackincrement_p = config.asBool("quackincrement");
 	}
 	else

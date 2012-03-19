@@ -6,7 +6,7 @@
 # 
 # tasks used
 # sdlist
-# sdcal (new)
+# sdreduce (new)
 # sdplot
 # sdstat
 # sdsave
@@ -81,7 +81,7 @@ else:
 
 # calibartion,averaging, smoothing, and baseline removal
 # calibrate nod scans for SiO line (IF=30)
-default(sdcal)
+default(sdreduce)
 infile='IRC+10216_rawACSmod'
 fluxunit='K'
 calmode='nod'
@@ -106,7 +106,7 @@ blfunc='poly'
 order=1
 overwrite=True
 plotlevel=localplotlevel
-sdcal()
+sdreduce()
 localoutfile=infile+'_cal'
 
 #plotting the reslut

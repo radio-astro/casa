@@ -163,7 +163,7 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 	SpectralList elemList;
 	_prepareElems(fitGauss, fitPoly, nPoly, dspcVals, dyVals, elemList);
 	_fit.setElements(elemList);
-	_report(_fit.getList(False), *_log);
+	//_report(_fit.getList(False), *_log);
 
 	// do the fit
 	Bool ok(False);

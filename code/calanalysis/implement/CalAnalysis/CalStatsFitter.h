@@ -121,6 +121,8 @@ Modification history:
 2012 Mar 06 - Nick Elias, NRAO
               Static public member functions orderName(), typeName(), and
               weightName() added.
+2012 Mar 15 - Nick Elias, NRAO
+              Public members dResVar and dResMean added to the nested FIT class.
 
 */
 
@@ -156,6 +158,8 @@ class CalStatsFitter {
         Matrix<Double> oCovars; // Fit parameter covariances
         Vector<Double> oModel;  // Fit model
         Vector<Double> oRes;    // Fit residuals
+        Double dResVar;         // Fit variance of residuals
+        Double dResMean;        // Fit mean of residuals
         Double dRedChi2;        // Fit reduced chi^2
         FIT( void );
         FIT( const FIT& oFit );

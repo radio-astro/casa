@@ -85,7 +85,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
 	{
-	        if( config.type(exists) != TpArrayDouble && config.type(exists) != TpArrayFloat )
+	        if( config.type(exists) != TpArrayDouble && config.type(exists) != TpArrayFloat && config.type(exists) != TpArrayInt )
 	        {
 			 throw( AipsError ( "Parameter 'clipminmax' must be of type 'array double' : [minval,maxval]" ) );
 	        }

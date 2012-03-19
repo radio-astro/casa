@@ -45,10 +45,10 @@ def applycal(vis=None,
                         raise Exception, 'Visibility data set not found - please verify the name'
 		# Back up the flags, if requested
 		if (flagbackup):
-			fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
-			fglocal.open(vis)
-			backup_flags(fglocal)
-			fglocal.done()
+			tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+			tflocal.open(vis)
+			backup_flags(tflocal)
+			tflocal.done()
 
 		# Do data selection according to selectdata
 		if (selectdata):
@@ -142,7 +142,7 @@ def applycal(vis=None,
 		raise Exception, instance
 
 
-def backup_flags(fglocal):
+def backup_flags(tflocal):
 
         # Create names like this:
         # before_applycal_1,
@@ -153,7 +153,7 @@ def backup_flags(fglocal):
         # Generally  before_applycal_<i>, where i is the smallest
         # integer giving a name, which does not already exist
        
-        existing = fglocal.getflagversionlist(printflags=False)
+        existing = tflocal.getflagversionlist(printflags=False)
 
 	# remove comments from strings
 	existing = [x[0:x.find(' : ')] for x in existing]
@@ -168,7 +168,7 @@ def backup_flags(fglocal):
 
         time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
 
-        fglocal.saveflagversion(versionname=versionname,
+        tflocal.saveflagversion(versionname=versionname,
                            comment='Flag backup before applycal on ' + time_string,
                            merge='replace')
 

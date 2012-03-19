@@ -35,10 +35,12 @@ calanalysis::calanalysis() {
 calanalysis::~calanalysis() {
 
   //  If the CalAnalysis instance is valid deallocate it and return
+  
+  oCalTable = string();
 
   if ( poCA != NULL ) {
-    oCalTable = string();
     delete poCA;
+    poCA = NULL;
   }
 
   return;
@@ -66,8 +68,10 @@ bool calanalysis::close() {
 
   oCalTable = string();
 
-  delete poCA;
-  poCA = NULL;
+  if ( poCA != NULL ) {
+    delete poCA;
+    poCA = NULL;
+  }
 
   return( true );
 
@@ -90,13 +94,27 @@ std::string calanalysis::caltable() {
 
 // --- ///
 
-std::string calanalysis::coltype() {
+std::string calanalysis::msname() {
 
-  // If the CalAnalysis instance is valid return the PARAM/PARAMERR column type
-  // otherwise return a null string
+  // Return the associated caltable name
 
   if ( poCA != NULL ) {
-    return( poCA->tableType( oCalTable ) );
+    return( poCA->msName( oCalTable ) );
+  } else {
+    return( string() );
+  }
+
+}
+
+// --- ///
+
+std::string calanalysis::partype() {
+
+  // If the CalAnalysis instance is valid return "Complex" for a CPARAM column
+  // or "Float" for a PARAM colum, otherwise a null string
+
+  if ( poCA != NULL ) {
+    return( poCA->parType( oCalTable ) );
   } else {
     return( string() );
   }
@@ -122,6 +140,20 @@ std::string calanalysis::polbasis() {
 
 // --- ///
 
+std::string calanalysis::viscal() {
+
+  // Return the caltable type (B, G, T, etc.)
+
+  if ( poCA != NULL ) {
+    return( poCA->visCal( oCalTable ) );
+  } else {
+    return( string() );
+  }
+
+}
+
+// --- ///
+
 ::casac::record* calanalysis::get( const std::vector<std::string>& field,
     const std::vector<std::string>& antenna1,
     const std::vector<std::string>& antenna2, const double starttime,
@@ -133,8 +165,8 @@ std::string calanalysis::polbasis() {
   // Initialize the field parameter
 
   uInt uiNumField = field.size();
-  Vector<Int> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = atoi( field[f].c_str() );
+  Vector<uInt> oField( uiNumField );
+  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi( field[f].c_str() );
 
 
   // Initialize the antenna parameters
@@ -146,14 +178,14 @@ std::string calanalysis::polbasis() {
     throw( AipsError( "Number of antenna1 must be the same as antenna2" ) );
   }
 
-  Vector<Int> oAntenna1( uiNumAntenna1 );
+  Vector<uInt> oAntenna1( uiNumAntenna1 );
   for ( uInt a=0; a<uiNumAntenna1; a++ ) {
-    oAntenna1[a] = atoi( antenna1[a].c_str() );
+    oAntenna1[a] = (uInt) atoi( antenna1[a].c_str() );
   }
 
-  Vector<Int> oAntenna2( uiNumAntenna2 );
+  Vector<uInt> oAntenna2( uiNumAntenna2 );
   for ( uInt a=0; a<uiNumAntenna2; a++ ) {
-    oAntenna2[a] = atoi( antenna2[a].c_str() );
+    oAntenna2[a] = (uInt) atoi( antenna2[a].c_str() );
   }
 
 
@@ -173,16 +205,21 @@ std::string calanalysis::polbasis() {
   // Initialize the spectral window and channel parameters
 
   uInt uiNumSPW = spw.size();
-  Vector<Int> oSPW( uiNumSPW );
-  for ( uInt s=0; s<uiNumSPW; s++ ) oSPW[s] = atoi( spw[s].c_str() );
 
-  Vector<Int> aoChannel[uiNumSPW];
+  if ( startchan.size() != uiNumSPW || stopchan.size() != uiNumSPW ) {
+    String oError( "The number of startchan and/or stopchan must be the same " );
+    oError += "as the number of spw";
+    throw( AipsError( oError ) );
+  }
+
+  Vector<uInt> oSPW( uiNumSPW );
+  Vector<uInt> oStartChan( uiNumSPW );
+  Vector<uInt> oStopChan( uiNumSPW );
+
   for ( uInt s=0; s<uiNumSPW; s++ ) {
-    uInt uiNumChannel = stopchan[s] - startchan[s] + 1;
-    aoChannel[s].resize( uiNumChannel );
-    for ( uInt c=(uInt)startchan[s]; c<=(uInt)stopchan[s]; c++ ) {
-      aoChannel[s][c-startchan[s]] = c;
-    }
+    oSPW[s] = (uInt) atoi( spw[s].c_str() );
+    oStartChan[s] = (uInt) startchan[s];
+    oStopChan[s] = (uInt) stopchan[s];
   }
 
 
@@ -223,8 +260,8 @@ std::string calanalysis::polbasis() {
 
   try {
     oOutput = poCA->stats<CalStats::NONE>( oField, oAntenna1, oAntenna2,
-        dStartTime, dStopTime, oFeed, oSPW, aoChannel, eAxisIterUserID, eRAP,
-        oArg );
+        dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
+        eAxisIterUserID, eRAP, oArg );
   }
   catch( AipsError oAipsError ) {
     throw( oAipsError );
@@ -261,6 +298,10 @@ std::string calanalysis::polbasis() {
 
         std::string oAntenna2( String::toString(oOutput[o].uiAntenna2).c_str() );
         oRecIter.insert( std::string("antenna2"), oAntenna2 );
+
+        oRecIter.insert( std::string("spw"), spw );
+        oRecIter.insert( std::string("startchan"), startchan );
+	oRecIter.insert( std::string("stopchan"), stopchan );
 
         std::string oFeedKey( "feed" );
 	std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
@@ -338,8 +379,8 @@ std::string calanalysis::polbasis() {
   // Initialize the field parameter
 
   uInt uiNumField = field.size();
-  Vector<Int> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = atoi( field[f].c_str() );
+  Vector<uInt> oField( uiNumField );
+  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi( field[f].c_str() );
 
 
   // Initialize the antenna parameters
@@ -351,14 +392,14 @@ std::string calanalysis::polbasis() {
     throw( AipsError( "Number of antenna1 must be the same as antenna2" ) );
   }
 
-  Vector<Int> oAntenna1( uiNumAntenna1 );
+  Vector<uInt> oAntenna1( uiNumAntenna1 );
   for ( uInt a=0; a<uiNumAntenna1; a++ ) {
-    oAntenna1[a] = atoi( antenna1[a].c_str() );
+    oAntenna1[a] = (uInt) atoi( antenna1[a].c_str() );
   }
 
-  Vector<Int> oAntenna2( uiNumAntenna2 );
+  Vector<uInt> oAntenna2( uiNumAntenna2 );
   for ( uInt a=0; a<uiNumAntenna2; a++ ) {
-    oAntenna2[a] = atoi( antenna2[a].c_str() );
+    oAntenna2[a] = (uInt) atoi( antenna2[a].c_str() );
   }
 
 
@@ -378,16 +419,21 @@ std::string calanalysis::polbasis() {
   // Initialize the spectral window and channel parameters
 
   uInt uiNumSPW = spw.size();
-  Vector<Int> oSPW( uiNumSPW );
-  for ( uInt s=0; s<uiNumSPW; s++ ) oSPW[s] = atoi( spw[s].c_str() );
 
-  Vector<Int> aoChannel[uiNumSPW];
+  if ( startchan.size() != uiNumSPW || stopchan.size() != uiNumSPW ) {
+    String oError( "The number of startchan and/or stopchan must be the same " );
+    oError += "as the number of spw";
+    throw( AipsError( oError ) );
+  }
+
+  Vector<uInt> oSPW( uiNumSPW );
+  Vector<uInt> oStartChan( uiNumSPW );
+  Vector<uInt> oStopChan( uiNumSPW );
+
   for ( uInt s=0; s<uiNumSPW; s++ ) {
-    uInt uiNumChannel = stopchan[s] - startchan[s] + 1;
-    aoChannel[s].resize( uiNumChannel );
-    for ( uInt c=(uInt)startchan[s]; c<=(uInt)stopchan[s]; c++ ) {
-      aoChannel[s][c-startchan[s]] = c;
-    }
+    oSPW[s] = (uInt) atoi( spw[s].c_str() );
+    oStartChan[s] = (uInt) startchan[s];
+    oStopChan[s] = (uInt) stopchan[s];
   }
 
 
@@ -452,8 +498,8 @@ std::string calanalysis::polbasis() {
 
   try {
     oOutput = poCA->stats<CalStatsFitter::FIT>( oField, oAntenna1, oAntenna2,
-        dStartTime, dStopTime, oFeed, oSPW, aoChannel, eAxisIterUserID, eRAP,
-        oArg );
+        dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
+        eAxisIterUserID, eRAP, oArg );
   }
   catch( AipsError oAipsError ) {
     throw( oAipsError );
@@ -490,6 +536,10 @@ std::string calanalysis::polbasis() {
 
         std::string oAntenna2( String::toString(oOutput[o].uiAntenna2).c_str() );
         oRecIter.insert( std::string("antenna2"), oAntenna2 );
+
+        oRecIter.insert( std::string("spw"), spw );
+        oRecIter.insert( std::string("startchan"), startchan );
+	oRecIter.insert( std::string("stopchan"), stopchan );
 
         std::string oFeedKey( "feed" );
         std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
@@ -585,6 +635,12 @@ std::string calanalysis::polbasis() {
           oRes[d] = oOutput[o].oOut(r,c).oT.oRes[d];
         }
         oRecIter.insert( std::string("res"), oRes );
+
+        Double dResVar = oOutput[o].oOut(r,c).oT.dResVar;
+        oRecIter.insert( std::string("resVar"), dResVar );
+
+        Double dResMean = oOutput[o].oOut(r,c).oT.dResMean;
+        oRecIter.insert( std::string("resMean"), dResMean );
 
         std::string oNumIter( String::toString(uiNumIter).c_str() );
         poRecOutput->insert( oNumIter, oRecIter );

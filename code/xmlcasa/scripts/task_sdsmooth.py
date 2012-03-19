@@ -3,8 +3,9 @@ from taskinit import *
 
 import asap as sd
 from asap._asap import Scantable
+from asap import _to_list
 
-def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, verify, outfile, outform, overwrite, plotlevel):
+def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, chanwidth, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdsmooth')
 
@@ -43,19 +44,18 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                     s._summary()
 
 
-            # Select scan and field
-            sel = sd.selector()
+            # A scantable selection
+            # Scan selection
+            scans = _to_list(scanlist,int) or []
 
-            # Set up scanlist
-            if ( type(scanlist) == list ):
-                    # is a list
-                    scans = scanlist
-            else:
-                    # is a single int, make into list
-                    scans = [ scanlist ]
-            # Now select them
-            if ( len(scans) > 0 ):
-                    sel.set_scans(scans)
+            # IF selection
+            ifs = _to_list(iflist,int) or []
+
+            # Select polarizations
+            pols = _to_list(pollist,int) or []
+
+            # Actual selection
+            sel = sd.selector(scans=scans, ifs=ifs, pols=pols)
 
             # Select source names
             if ( field != '' ):
@@ -64,24 +64,6 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                     # set of names this way, will probably
                     # need to do a set_query eventually
 
-            # Select IFs
-            if ( type(iflist) == list ):
-                    # is a list
-                    ifs = iflist
-            else:
-                    # is a single int, make into list
-                    ifs = [ iflist ]
-            if ( len(ifs) > 0 ):
-                    # Do any IF selection
-                    sel.set_ifs(ifs)
-
-            # Selec polarizations
-            if (type(pollist) == list):
-              pols = pollist
-            else:
-              pols = [pollist]
-            if(len(pols) > 0 ):
-              sel.set_polarisations(pols)
 
             try:
                 #Apply the selection
@@ -102,7 +84,10 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             if kernel=='' or kernel=='none':
                 s = "kernel need to be specified"
                 raise Exception, s
-            if ( kernel != '' and (not (kwidth<=0 and kernel!='hanning'))):
+            elif kernel!='hanning' and kwidth<=0:
+                s = "kernel should be > 0"
+                raise Exception, s
+            else:
                     if ( abs(plotlevel) > 0 ):
                             # plot spectrum before smoothing
                             # each IF is separate panel, pols stacked
@@ -117,8 +102,26 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                                     pltfile=project+'_rawspec.eps'
                                     sd.plotter.save(pltfile)
 
-                    casalog.post( "Smoothing spectrum with kernel "+kernel )
-                    s.smooth(kernel=kernel,width=kwidth,plot=verify,insitu=True)
+                    if kernel == 'regrid':
+                            if not qa.isquantity(chanwidth):
+                                    s = "Invalid quantity chanwidth "+chanwidth
+                                    raise Exception, s
+                            qchw = qa.quantity(chanwidth)
+                            oldUnit = s.get_unit()
+                            if qchw['unit'] in ("", "channel", "pixel"):
+                                    s.set_unit("channel")
+                            elif qa.compare(chanwidth,"1Hz") or \
+                               qa.compare(chanwidth,"1m/s"):
+                                    s.set_unit(qchw['unit'])
+                            else:
+                                    s = "Invalid dimension of quantity chanwidth "+chanwidth
+                                    raise Exception, s
+                            casalog.post( "Regridding spectra in width "+chanwidth )
+                            s.regrid_channel(width=qchw['value'],plot=verify,insitu=True)
+                            s.set_unit(oldUnit)
+                    else:
+                            casalog.post( "Smoothing spectra with kernel "+kernel )
+                            s.smooth(kernel=kernel,width=kwidth,plot=verify,insitu=True)
 
                     if ( abs(plotlevel) > 0 ):
                             # plot spectrum after smoothing

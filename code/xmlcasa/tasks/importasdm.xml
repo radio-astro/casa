@@ -101,6 +101,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>True</value>
     </param>
 
+    <param type="bool" name="process_flags">
+      <description> Create online flags in the FLAG_CMD sub-table.</description>
+      <value>True</value>
+    </param>
+
+    <param type="double" name="tbuff" subparam="true">
+            <description> Time padding buffer (seconds)</description>
+            <value>0.0</value>
+    </param> 
+
+    <param type="bool" name="applyflags" subparam="true">
+      <description> Apply the flags to the MS.</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="savecmds" subparam="true">
+        <description>Save flag commands to an ASCII file</description>
+        <value>True</value>
+    </param>
+
+    <param type="string" name="outfile" subparam="true">
+        <description>Name of ASCII file to save flag commands</description>
+        <value></value>
+    </param>
+
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
 	    <value>False</value>
@@ -123,6 +148,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <default param="antenna"><value type="int">0</value></default>
                 </equals>
             </when>
+            
+            <when param="process_flags">
+                 <equals type="bool" value="True">
+                      <default param="tbuff"><value type="float">0.0</value></default>
+                      <default param="applyflags"><value type="bool">False</value></default>
+                      <default param="savecmds"><value type="bool">False</value></default>
+                      <default param="outfile"><value type="string"></value></default>
+                 </equals>
+                 <equals type="bool" value="False"/>
+            </when>
+
     </constraints>
 
     <param type="string" name="useversion" >
@@ -218,6 +254,37 @@ process_caldevice -- The CalDevice table is processed if and only if this parame
 
 process_pointing -- The Pointing table is processed if and only if this parameter is set to True.
                     default: True
+
+process_flags    -- Create online flags based on the Flag.xml, Antenna.xml and SpectralWindow.xml files
+                    and copy them to the FLAG_CMD sub-table of the MS. The flags will NOT be applied unless 
+                    the parameter applyflags is set to True. Optionally, the flags can also be saved to
+                    an external ASCII file if savecmds is set to True.
+                    default: True
+                    
+            &gt;&gt;&gt; process_flags expandable parameter
+                 tbuff   -- Time padding buffer (in seconds)
+                    default: 0.0
+
+                 NOTE: this time is in seconds. You should currently
+                 set the value of tbuff to be 1.5x the correlator
+                 integration time if greater than 1 second.  For
+                 example, if the SDM has integrations of 3 seconds,
+                 set tbuff=4.5.  Likewise, set tbuff=15.0 for 10-sec
+                 integrations.
+
+                 applyflags -- Apply the online flags to the MS.
+                 default: False
+
+
+                savecmds -- Save the flag commands to an ASCII file given by the parameter outfile. 
+                default: False
+                    
+                outfile -- Filename where to save the flag commands.
+                default: ' ' --> by default it will save on a filename composed from the MS name.
+                    Example: vis='uid_A02.ms', the outfile will be 'uid_A02_cmd.txt'. 
+                    
+                    NOTE: The file is open to save in append mode.
+
 
 verbose     -- produce log output as asdm2MS is being run
                     default: False

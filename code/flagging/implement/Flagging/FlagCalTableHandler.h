@@ -41,6 +41,7 @@ public:
 
 	Int fieldId() const;
 	Int& spectralWindow();
+	Int spectralWindow() const;
 	Vector<Int>& scan();
 	Vector<Double>& time();
 	Vector<Int>& antenna1();
@@ -52,10 +53,11 @@ public:
 	Int nRowChunk() const;
 	Int& nChannel();
 	Int& nCorr();
-
+	Cube<Complex>& visCube();
 
 	// Convenient public methods for compatibility with MS-like interface
 	Vector<Int>& observationId();
+	Vector<Int>& corrType();
 
 	// Methods for efficient synchronization with CTIter
 	void invalidate();
@@ -74,6 +76,7 @@ private:
 	Cube<Bool> flagCube_p;
 	Vector<Int> channel_p;
 	Vector<Double> frequency_p;
+	Cube<Complex> calsolution_p;
 	Int nRow_p;
 	Int nRowChunk_p;
 	Int nChannel_p;
@@ -81,6 +84,7 @@ private:
 
 	// Convenient members for compatibility with MS-like interface
 	Vector<Int> observationId_p;
+	Vector<Int> corrType_p;
 
 	// Members for efficient synchronization with CTIter
 	Bool CTfieldIdOK_p;
@@ -91,12 +95,18 @@ private:
 	Bool CTantenna2OK_p;
 	Bool CTflagCubeOk_p;
 	Bool CTobservationIdOK_p;
+	Bool CTcorrTypeOK_p;
 	Bool CTchannelOK_p;
 	Bool CTfrequencyOK_p;
+	Bool CTVisCubeOK_p;
 	Bool CTnRowOK_p;
 	Bool CTnRowChunkOK_p;
 	Bool CTnChannelOK_p;
-	Bool CTnCorr_pOK_p;
+	Bool CTnCorrOK_p;
+
+	CTBuffer* This;
+	Int& fillSpectralWindow();
+	Int& fillFieldId();
 
 };
 
@@ -143,7 +153,7 @@ public:
 private:
 
 	// Mapping functions
-	void generatePolarizationsMap();
+	void generateScanStartStopMap();
 
 	// Convenient private methods for compatibility with MS-like interface
 	Block<String> getSortColumns(Block<Int> intCols);

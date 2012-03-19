@@ -181,7 +181,9 @@
 
 #include <sys/types.h>
 #include <unistd.h>
-
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 using namespace std;
 
 
@@ -1810,7 +1812,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Bool doPointingCorrection,
 			const String& cfCacheDirName,const Float& paStep, 
 			const Float& pbLimit, const String& interpMeth, const Int imageTileVol,
-			const Bool singprec)
+			const Bool singprec,
+			const Int numthreads)
 {
 
 #ifdef PABLO_IO
@@ -1879,7 +1882,12 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 
   doPointing = applyPointingOffsets;
   doPBCorr = doPointingCorrection;
-
+#ifdef HAS_OMP
+  if(numthreads > 0){
+    if(numthreads <= omp_get_max_threads())
+      omp_set_num_threads(numthreads);
+  }
+#endif
   return True;
 }
 

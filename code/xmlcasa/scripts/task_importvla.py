@@ -46,9 +46,9 @@ def importvla(archivefiles,vis,
 
         # write initial flag version
         try:
-                myfg = fgtool.create()
-                ok &= myfg.open(vis);
-                ok &= myfg.saveflagversion('Original',
+                tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+                ok &= tflocal.open(vis);
+                ok &= tflocal.saveflagversion('Original',
                                            comment='Original flags at import into CASA',
                                            merge='replace')
                 ok &= myfg.done();

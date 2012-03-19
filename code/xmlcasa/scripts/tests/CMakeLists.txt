@@ -38,6 +38,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_flagdata2.py
   test_flagcmd.py
   test_getchunk.py
+  test_gencal.py
   test_hanningsmooth.py
   test_ia_convolve.py
   test_ia_convolve2d.py
@@ -66,7 +67,6 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_importasdm.py
   test_importasdm_sd.py
   test_importevla.py
-  test_importevla2.py
   test_importfitsidi.py
   test_imregrid.py
   test_imsmooth.py
@@ -87,7 +87,6 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_report.py
   test_rg_frombcs.py
   test_rg_fromtextfile.py
-  test_sdaverage.py
   test_sdbaseline.py
   test_sdcal.py
   test_sdcoadd.py
@@ -99,6 +98,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_sdlist.py
   test_sdmath.py
   test_sdplot.py
+  test_sdreduce.py
   test_sdsave.py
   test_sdscale.py
   test_sdsmooth.py

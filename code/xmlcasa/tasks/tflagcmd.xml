@@ -213,7 +213,7 @@
                    instead of '0~29,50~54' for now.
        
               reason -- select flag commands based on REASON(s) 
-                   default: '' (all flags regardless of reason)
+                   default: 'any' (all flags regardless of reason)
                             can be a string, or list of strings
                    example: reason='FOCUS_ERROR'
                             reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']

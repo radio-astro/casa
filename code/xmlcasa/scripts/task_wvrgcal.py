@@ -107,20 +107,20 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 				if not (type(ant)==int or type(ant)==str):
 					raise Exception, "List elements of parameter wvrflag must be int or string."
 				if (ant != ''):
-					execute_string += ' --wvrflag '+str(ant)
+					execute_string += ' --wvrflag \"'+str(ant)+'\"'
 
 		if (len(sourceflag)>0):
 			for src in sourceflag:
 				if not (type(src)==int or type(src)==str):
 					raise Exception, "List elements of parameter sourceflag must be int or string."
 				if (src != ''):
-					execute_string += ' --sourceflag '+str(src)
+					execute_string += ' --sourceflag \"'+str(src)+'\"'
 
 		if not (statfield==None or statfield=="") and type(statfield)==str:
-			execute_string += ' --statfield '+ statfield
+			execute_string += ' --statfield \"'+ statfield + '\"'
 
 		if not (statsource==None or statsource=="") and type(statsource)==str:
-			execute_string += ' --statsource '+ statsource
+			execute_string += ' --statsource \"'+ statsource + '\"'
 
 		if (len(tie)>0):
 			for i in xrange(0,len(tie)):
@@ -129,7 +129,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, nsol=None, segsource=False,
 					raise Exception, "List elements of parameter tie must be strings."
 				if (src != ''):
 					execute_string += ' --tie '
-					execute_string += '\''+str(src)+'\''
+					execute_string += '\"'+str(src)+'\"'
 					if not (i==len(tie)-1):
 						execute_string += ','
 

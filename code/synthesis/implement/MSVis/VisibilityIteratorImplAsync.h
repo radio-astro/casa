@@ -178,7 +178,7 @@ public:
     Int msId() const;
     Int nCorr() const { NotImplementedROVIA; }
     Int nRow() const { NotImplementedROVIA; }
-    Int nRowChunk() const { NotImplementedROVIA; }
+    Int nRowChunk() const;
     Int nSubInterval() const { NotImplementedROVIA; }
     Bool newArrayId() const { NotImplementedROVIA; }
     Bool newFieldId() const { NotImplementedROVIA; }
@@ -187,7 +187,7 @@ public:
     Int numberCoh() { NotImplementedROVIA; }
     Int numberDDId() { NotImplementedROVIA; }
     Int numberPol() { NotImplementedROVIA; }
-    Int numberSpw() { NotImplementedROVIA; }
+    Int numberSpw();
     Vector<Int>& observationId(Vector<Int>& /*obsIDs*/) const { NotImplementedROVIA; }
     Vector<Float> parang(Double ) const { NotImplementedROVIA; }
     const Float& parang0(Double ) const { NotImplementedROVIA; }

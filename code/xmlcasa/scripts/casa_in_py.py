@@ -216,10 +216,10 @@ try:
 #    from sdstat_pg import sdstat_pg as sdstat
 #    from sdsave_pg import sdsave_pg as sdsave
 #    from sdflag_pg import sdflag_pg as sdflag
-#    from sdaverage_pg import sdaverage_pg as sdaverage
+#    from sdcal_pg import sdcal_pg as sdcal
 #    from sdplot_pg import sdplot_pg as sdplot
 #    from sdsmooth_pg import sdsmooth_pg as sdsmooth
-#    from sdcal_pg import sdcal_pg as sdcal
+#    from sdreduce_pg import sdreduce_pg as sdreduce
 except ImportError:
     sdcoadd = None
     sdscale = None
@@ -230,10 +230,10 @@ except ImportError:
     sdstat = None
     sdsave = None
     sdflag = None
-    sdaverage = None
+    sdcal = None
     sdplot = None
     sdsmooth = None
-    sdcal = None
+    sdreduce = None
      
 
 #from tasks import *
@@ -389,10 +389,10 @@ def go(taskname=None):
 #    import asap as sd
 #    print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
 #    os.environ['CASAPATH']=casapath
-#    from sdaverage_pg import sdaverage_pg as sdaverage
+#    from sdcal_pg import sdcal_pg as sdcal
 #    from sdsmooth_pg import sdsmooth_pg as sdsmooth
 #    from sdbaseline_pg import sdbaseline_pg as sdbaseline
-#    from sdcal_pg import sdcal_pg as sdcal
+#    from sdreduce_pg import sdreduce_pg as sdreduce
 #    from sdcoadd_pg import sdcoadd_pg as sdcoadd
 #    from sdsave_pg import sdsave_pg as sdsave
 #    from sdscale_pg import sdscale_pg as sdscale
@@ -403,10 +403,10 @@ def go(taskname=None):
 #    from sdflag_pg import sdflag_pg as sdflag
 #    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
 #    myf['sd']=sd
-#    myf['sdaverage']=sdaverage
+#    myf['sdcal']=sdcal
 #    myf['sdsmooth']=sdsmooth
 #    myf['sdbaseline']=sdbaseline
-#    myf['sdcal']=sdcal
+#    myf['sdreduce']=sdreduce
 #    myf['sdcoadd']=sdcoadd
 #    myf['sdsave']=sdsave
 #    myf['sdscale']=sdscale

@@ -688,7 +688,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	  image(model).copyData( LatticeExpr<Float>((image(model))+(deltaImage(model))));
 	  os << LogIO::NORMAL << LatticeExprNode(sum(deltaImage(model))).getFloat()  // Loglevel INFO
 	     << " Jy <- cleaned in this cycle for  model " 
-	     << model << LogIO::POST;
+	     << model 
+	     << " (Total flux : " << LatticeExprNode(sum(image(model))).getFloat() << "Jy)"
+	     << LogIO::POST;
 	}
 
       }
@@ -779,9 +781,12 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
       LCBox lbox(iblc, itrc, image(nextmodel).shape());
 
       ImageRegion imagreg(WCBox(lbox, cs));
+
+
       try{
-	SubImage<Float> partToMask(image(model), imagreg, True);
 	LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
+
+	SubImage<Float> partToMask(image(model), imagreg, True);
 	ArrayLattice<Bool> pixmask(latReg.get());
 	LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
 	partToMask.copyData(myexpr);
@@ -789,7 +794,12 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
       }
       catch(...){
 	//no overlap you think ?
-	//cout << "Did i fail " << endl;
+	/*
+           os << LogIO::WARN
+              << "no overlap or failure of copying the clean components"
+              << x.getMesg()
+              << LogIO::POST;
+	*/
 	continue;
       }
     
@@ -825,11 +835,13 @@ void MFCleanImageSkyModel::restoreOverlappingModels(){
 
       ImageRegion imagreg(WCBox(lbox, cs));
       try{
+        LatticeRegion latReg0=imagreg0.toLatticeRegion(image(nextmodel).coordinates(), image(nextmodel).shape());
+        LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
+
+
         SubImage<Float> partToMerge(image(nextmodel), imagreg0, True);
         SubImage<Float> partToUnmask(image(model), imagreg, True);
         
-        LatticeRegion latReg0=imagreg0.toLatticeRegion(image(nextmodel).coordinates(), image(nextmodel).shape());
-        LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
         ArrayLattice<Bool> pixmask(latReg.get());
         LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
         partToUnmask.copyData(myexpr0);
@@ -873,7 +885,16 @@ void MFCleanImageSkyModel::mergeOverlappingMasks(){
 	    LCBox lbox(iblc, itrc, image(nextmodel).shape());
 	    
 	    ImageRegion imagreg(WCBox(lbox, cs));
+
 	    try{
+
+	      LatticeRegion latRef1 = imagreg0.toLatticeRegion(
+							      (mask(nextmodel)).coordinates(), 
+							      (mask(nextmodel)).shape() );
+	      LatticeRegion latRef2 = imagreg.toLatticeRegion(
+							      (mask(model)).coordinates(), 
+							      (mask(model)).shape() );
+
 	      SubImage<Float> partToMerge(mask(nextmodel), imagreg0, True);
 	      SubImage<Float> partToMask(mask(model), imagreg, True);
 	      LatticeExpr<Float> myexpr0(max(partToMerge,partToMask));	      
@@ -889,10 +910,11 @@ void MFCleanImageSkyModel::mergeOverlappingMasks(){
 		<< x.getMesg()
 		<< LogIO::POST;
 	      */
+
 	      continue;
 	    }
 	  }
-	}
+	}// for model
     }//hasmask(model)
   }
 }

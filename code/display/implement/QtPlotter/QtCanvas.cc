@@ -457,6 +457,9 @@ void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
 	//qDebug() << "mouse release" << event->button() << Qt::LeftButton;
+
+	if ( xcursor.isValid( ) ) return;
+
 	if (event->button() == Qt::LeftButton)
 	{
 		if (xRangeMode){
@@ -587,8 +590,11 @@ void QtCanvas::keyPressEvent(QKeyEvent *event)
     		emit xRangeChanged(1.0,0.0);
     	}
         break;
+#if defined(__APPLE__)
     case Qt::Key_Meta:
+#else
     case Qt::Key_Control:
+#endif
 	xcursor = QColor(Qt::gray);
 	update( );
 	break;

@@ -5,7 +5,7 @@ import time
 import numpy as np
 from cleanhelper import *
 class imagecont():
-    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I'):
+    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, gain=0.1, numthreads=-1):
         self.im=imtool.create()
         self.imperms={}
         self.dc=dctool.create()
@@ -24,8 +24,9 @@ class imagecont():
         self.weight=weight
         self.imageparamset=False
         self.robust=robust
-        self.weightnpix=0
+        self.weightnpix=npixels
         self.stokes=stokes
+        self.numthreads=numthreads
         self.imagetilevol=1000000
         self.visInMem=False
         self.painc=360.0
@@ -35,6 +36,8 @@ class imagecont():
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
         self.epjtablename=''
+        self.gain=gain
+        
     def setparamcont(self, im, freq, band, singleprec=False):
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], 
                        celly=self.cell[1], phasecenter=self.phCen, mode='frequency', 
@@ -46,7 +49,7 @@ class imagecont():
                       pastep=self.painc, pblimit=self.pblimit, 
                       cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, 
                       applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol,
-                       singleprecisiononly=singleprec)
+                       singleprecisiononly=singleprec, numthreads=self.numthreads)
 
     def imagecontmultims(self, msnames=[''], start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
@@ -184,12 +187,12 @@ class imagecont():
                     self.im[k].defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
                     self.im[k].weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                               robust=self.robust)
-                    self.im[k].setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, pastep=self.painc, pblimit=self.pblimit, cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol, singleprecisiononly=True)
+                    self.im[k].setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, pastep=self.painc, pblimit=self.pblimit, cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
                #im.regionmask(mask='lala.mask', boxes=[[0, 0, 3599, 3599]])
                #im.setmfcontrol(cyclefactor=0.0)
                 if(not self.imageparamset):
                     try:
-                        self.im[k].clean(algorithm='clark', niter=0, model=imname+'.model', image=image, residual=residual, psfimage=psf)
+                        self.im[k].clean(algorithm='clark', gain=self.gain, niter=0, model=imname+'.model', image=image, residual=residual, psfimage=psf)
                         if(k > 0):
                             ia.open(imname+'.psf')
                             ia.calc('"'+imname+'.psf'+'" + "'+psf+'"')
@@ -238,9 +241,9 @@ class imagecont():
             dc.setscales(scalemethod='uservector', uservector=sca)
             alg='fullmsclean'
         if(alg=='clark'):
-            dc.fullclarkclean(niter=niter, threshold=thr, model=model, mask=mask)
+            dc.fullclarkclean(niter=niter, gain=self.gain, threshold=thr, model=model, mask=mask)
         else:
-            dc.clean(algorithm=alg, niter=niter, threshold=thr, model=model, mask=mask)
+            dc.clean(algorithm=alg, gain=self.gain, niter=niter, threshold=thr, model=model, mask=mask)
         dc.done()
         del dc
 
@@ -259,12 +262,12 @@ class imagecont():
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
        
-        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True)
+        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
         im.setscales(scalemethod='uservector', uservector=scales)
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):
-            im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
+            im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
         im.done()
         if(maskname != ''):
             shutil.rmtree(maskname, True)
@@ -305,14 +308,14 @@ class imagecont():
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
        
-        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True)
+        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
         im.setscales(scalemethod='uservector', uservector=scales)
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         try:
             
             for kk in range(majcycle):
-                im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
+                im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
             im.done()
         except Exception as instance:
                 if(string.count(str(instance), 'PSFZero') <1):
@@ -339,12 +342,12 @@ class imagecont():
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
-        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True)
+        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
         im.setscales(scalemethod='uservector', uservector=scales)
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):
-            im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', 
+            im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', 
                      mask=maskname, psfimage='')
         im.done()
         if(maskname != ''):
@@ -528,7 +531,12 @@ class imagecont():
         blc=np.array([0,0,0,0])
         #if inimshape[0:3]!=cubeshape[0:3]: 
         #        return False
-        nchTile=max(ibig.summary()['header']['tileshape'][3], subshape[3])
+        nchTile=1
+        if((ibig.summary()['header']['tileshape'][3]%subshape[3] ==0) or (subshape[3] > ibig.summary()['header']['tileshape'][3])):
+            nchTile=max(ibig.summary()['header']['tileshape'][3], subshape[3])
+        else:
+            nchTile=subshape[3]
+        
         trc=np.array([int(cubeshape[0]-1),int(cubeshape[1]-1),int(cubeshape[2]-1),nchTile-1])
         arr=ibig.getchunk(blc=blc.tolist(), trc=trc.tolist())
         nchanchunk=cubeshape[3]/nchTile
@@ -633,7 +641,7 @@ class imagecont():
             return
         if(not self.imageparamset):
             try:
-                im.clean(algorithm='mfclark', niter=0, threshold='0.05mJy', 
+                im.clean(algorithm='mfclark', gain=self.gain, niter=0, threshold='0.05mJy', 
                          model=imname+'.model', image=imname+'.image', 
                          residual=imname+'.residual', psfimage=imname+'.psf')
             except Exception, instance:
