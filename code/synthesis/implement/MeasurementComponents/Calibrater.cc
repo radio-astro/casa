@@ -1255,7 +1255,9 @@ Calibrater::configureForCorrection ()
 
     Bool isEnabled;
     Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
-    isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
+
+    // isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
+    // For now (3/19/12) make asyncio for apply cal be explicitly enabled.
 
     asyncio::PrefetchColumns * prefetchColumns = NULL;
 

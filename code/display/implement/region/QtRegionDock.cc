@@ -35,7 +35,8 @@
 
 namespace casa {
     namespace viewer {
-	QtRegionDock::QtRegionDock( QWidget* parent ) : QDockWidget(parent), Ui::QtRegionDock( ), current_dd(0) {
+	QtRegionDock::QtRegionDock( QWidget* parent ) : QDockWidget(parent), Ui::QtRegionDock( ),
+							current_dd(0), current_tab_state(-1,-1) {
 	    setupUi(this);
 
 	    // there are two standard Qt, dismiss icons...
@@ -97,6 +98,7 @@ namespace casa {
 
 	void QtRegionDock::selectRegion(QtRegionState *state) {
 	    regions->setCurrentWidget(state);
+	    state->nowVisible( );
 	}
 
 	void QtRegionDock::change_stack( int index ) {
