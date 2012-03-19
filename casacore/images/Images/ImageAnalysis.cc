@@ -1920,19 +1920,19 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 
 	// Create output residual image (returned as an Image tool)
 	// Create with no mask
-	PtrHolder<ImageInterface<Float> > residImage;
+	std::auto_ptr<ImageInterface<Float> > residImage(0);
 	ImageInterface<Float>* pResid = 0;
 	if (makeExternalImage(residImage, residFile, cSys, imageShape, subImage,
 			*itsLog, overwrite, True, False))
-		pResid = residImage.ptr()->cloneII();
+		pResid = residImage->cloneII();
 
 	// Create optional disk image holding fit
 	// Create with no mask
-	PtrHolder<ImageInterface<Float> > fitImage;
+	std::auto_ptr<ImageInterface<Float> > fitImage;
 	ImageInterface<Float>* pFit = 0;
 	if (makeExternalImage(fitImage, fitFile, cSys, imageShape, subImage,
 			*itsLog, overwrite, False, False))
-		pFit = fitImage.ptr();
+		pFit = fitImage.get();
 
 	// Make fitter
 	Polynomial<AutoDiff<Float> > poly(baseline);
@@ -5213,18 +5213,20 @@ Bool ImageAnalysis::make_image(String &error, const String& outfile,
 	return True;
 }
 
-Bool ImageAnalysis::makeExternalImage(PtrHolder<ImageInterface<Float> >& image,
-		const String& fileName, const CoordinateSystem& cSys,
-		const IPosition& shape, const ImageInterface<Float>& inImage,
-		LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask)
-{
+Bool ImageAnalysis::makeExternalImage(
+	std::auto_ptr<ImageInterface<Float> >& image,
+	const String& fileName, const CoordinateSystem& cSys,
+	const IPosition& shape, const ImageInterface<Float>& inImage,
+	LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask
+) {
 	if (fileName.empty()) {
 		if (allowTemp) {
 			os << LogIO::NORMAL << "Creating (Temp)Image '" << " of shape "
-					<< shape << LogIO::POST;
-			image.set(new TempImage<Float> (shape, cSys));
+				<< shape << LogIO::POST;
+			image.reset(new TempImage<Float> (shape, cSys));
 		}
-	} else {
+	}
+	else {
 		if (!overwrite) {
 			NewFile validfile;
 			String errmsg;
@@ -5234,30 +5236,27 @@ Bool ImageAnalysis::makeExternalImage(PtrHolder<ImageInterface<Float> >& image,
 		}
 		os << LogIO::NORMAL << "Creating image '" << fileName << "' of shape "
 				<< shape << LogIO::POST;
-		image.set(new PagedImage<Float> (shape, cSys, fileName));
+		image.reset(new PagedImage<Float> (shape, cSys, fileName));
 	}
-
-	// See if we made something
-	ImageInterface<Float>* pIm = image.ptr();
-	if (pIm) {
-		ImageUtilities::copyMiscellaneous(*pIm, inImage);
-		//
-		if (copyMask && inImage.isMasked()) {
-			String maskName("");
-			makeMask(*pIm, maskName, False, True, os, True);
-			Lattice<Bool>& pixelMaskOut = pIm->pixelMask();
-			// The input image may be a subimage with a pixel mask and
-			// a region mask, so use getMaskSlice to get its mask
-			LatticeIterator<Bool> maskIter(pixelMaskOut);
-			for (maskIter.reset(); !maskIter.atEnd(); maskIter++) {
-				maskIter.rwCursor() = inImage.getMaskSlice(maskIter.position(),
-						maskIter.cursorShape());
-			}
-		}
-		return True;
-	} else {
+	if (! image.get()) {
 		return False;
 	}
+	image->put(inImage.get());
+	ImageUtilities::copyMiscellaneous(*image, inImage);
+	if (copyMask && inImage.isMasked()) {
+		String maskName("");
+		makeMask(*image, maskName, False, True, os, True);
+		Lattice<Bool>& pixelMaskOut = image->pixelMask();
+		// The input image may be a subimage with a pixel mask and
+		// a region mask, so use getMaskSlice to get its mask
+		LatticeIterator<Bool> maskIter(pixelMaskOut);
+		for (maskIter.reset(); !maskIter.atEnd(); maskIter++) {
+			maskIter.rwCursor() = inImage.getMaskSlice(
+				maskIter.position(), maskIter.cursorShape()
+			);
+		}
+	}
+	return True;
 }
 
 CoordinateSystem* ImageAnalysis::makeCoordinateSystem(

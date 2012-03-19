@@ -57,11 +57,11 @@ class FitsOutput;
 //				/          | 
 //			       /           | 
 //		     PrimaryArray	ExtensionHeaderDataUnit
-//		      /    \			           | 
-//		     /      \                              | 
-//	  PrimaryGroup	ImageExtension	                   | 
-//					                   | 
-//							BinaryTableExtension
+//		      /  |  \			           | 
+//		     /   |   \                             | 
+//	  PrimaryGroup	 |   ImageExtension                | 
+//		         |                                 | 
+//	            PrimaryTable			BinaryTableExtension
 //							   /
 //							  /
 //					AsciiTableExtension
@@ -692,6 +692,85 @@ typedef PrimaryGroup<short> ShortPrimaryGroup;
 typedef PrimaryGroup<FitsLong> LongPrimaryGroup;
 typedef PrimaryGroup<float> FloatPrimaryGroup;
 typedef PrimaryGroup<double> DoublePrimaryGroup;
+
+//<summary> Primary Table structure </summary>
+//<templating>
+// <li> typedef PrimaryTable<unsigned char> BytePrimaryTable;
+// <li> typedef PrimaryTable<short> ShortPrimaryTable;
+// <li> typedef PrimaryTable<FitsLong> LongPrimaryTable;
+// <li> typedef PrimaryTable<float> FloatPrimaryTable;
+// <li> typedef PrimaryTable<double> DoublePrimaryTable;
+//</templating>
+
+template <class TYPE>
+class PrimaryTable : public PrimaryArray<TYPE> {
+    public:
+        typedef TYPE ElementType;
+
+	PrimaryTable(FitsInput &, 
+		       FITSErrorHandler errhandler = FITSError::defaultHandler);
+	PrimaryTable(FitsKeywordList &, 
+		       FITSErrorHandler errhandler = FITSError::defaultHandler);
+	// constructor for header consisted required keywords only			 
+	PrimaryTable(FITSErrorHandler errhandler = FITSError::defaultHandler);
+
+	~PrimaryTable();
+	// write required keywords for PrimaryTable
+	int write_priTable_hdr( FitsOutput &fout,
+            int bitpix, int naxis, long *naxes);     
+
+	int read();
+	int write(FitsOutput &){ return -1; }
+
+	char* object() const 	   { return object_x; }
+	char* telescop()  const	   { return telescop_x; }
+	char* instrume()  const	   { return instrume_x; }
+	double dateobs()  const { return dateobs_x; }
+	double datemap()  const { return datemap_x; }
+	char* bunit()  const	   { return bunit_x; }
+	float bscal()  const { return bscale_x; }
+	float bzero()  const { return bzero_x; }
+	float equinox()  const { return equinox_x; }
+	float altrpix()  const { return altrpix_x; }
+
+    protected:
+        char* object_x;      //OBJECT
+        char* telescop_x;    //TELESCOP
+        char* instrume_x;    //INSTRUME
+        Double dateobs_x;    //DATE-OBS
+        Double datemap_x;    //DATE-MAP
+        Float bscale_x;      //BSCALE
+        Float bzero_x;       //BZERO
+        char* bunit_x;       //BUNIT
+        Float equinox_x;     //EQUINOX
+        Float altrpix_x;     //ALTRPIX
+
+
+    private:
+	void pt_assign();
+
+	//# Make members in parent known
+    protected:
+	using PrimaryArray<TYPE>::assign;
+	using PrimaryArray<TYPE>::errmsg;
+	using PrimaryArray<TYPE>::init_data_unit;
+	using PrimaryArray<TYPE>::pa_assign;
+	using PrimaryArray<TYPE>::char_null;
+	using PrimaryArray<TYPE>::kwlist_;
+	using PrimaryArray<TYPE>::errfn;
+	using PrimaryArray<TYPE>::hdu_type;
+	using PrimaryArray<TYPE>::data_type;
+	using PrimaryArray<TYPE>::fits_data_size;
+	using PrimaryArray<TYPE>::fits_item_size;
+	using PrimaryArray<TYPE>::array;
+	using PrimaryArray<TYPE>::BADOPER;
+};
+
+typedef PrimaryTable<unsigned char> BytePrimaryTable;
+typedef PrimaryTable<short> ShortPrimaryTable;
+typedef PrimaryTable<FitsLong> LongPrimaryTable;
+typedef PrimaryTable<float> FloatPrimaryTable;
+typedef PrimaryTable<double> DoublePrimaryTable;
 
 //<summary>  base class for generalized exentensions HDU </summary>
 

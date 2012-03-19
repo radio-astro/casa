@@ -40,6 +40,8 @@
 #include <components/SpectralComponents/SpectralElement.h>
 #include <casa/Utilities/Assert.h>
 
+#include <memory>
+
 namespace casa {
 
 template <class T> 
@@ -97,20 +99,16 @@ ImageFit1D<T>& ImageFit1D<T>::operator=(const ImageFit1D<T>& other)
 }
 
 
-template <class T> 
-ImageFit1D<T>::~ImageFit1D()
-{
-   if (itsImagePtr) delete itsImagePtr;
-   if (itsWeightPtr) delete itsWeightPtr;
-}
+template <class T> ImageFit1D<T>::~ImageFit1D() {}
 
 
 template <class T> 
 void ImageFit1D<T>::setImage (const ImageInterface<T>& image, uInt pixelAxis)
 {
+	_resetFitter();
    AlwaysAssert(pixelAxis < image.ndim(), AipsError);
-//
-   itsImagePtr = image.cloneII();
+
+   itsImagePtr.reset(image.cloneII());
    itsAxis = pixelAxis;
    itsCS = itsImagePtr->coordinates();
 }
@@ -121,6 +119,7 @@ void ImageFit1D<T>::setImage (const ImageInterface<T>& image,
                               const ImageInterface<T>& weights,
                               uInt pixelAxis)
 {
+	_resetFitter();
    setImage(image, pixelAxis);
    setWeightsImage(weights);
 }
@@ -132,6 +131,7 @@ template <class T>  Bool ImageFit1D<T>::setData (
 	const Bool doAbs
 )
 {
+	_resetFitter();
 	const uInt nDim = itsImagePtr->ndim();
 	AlwaysAssert (pos.nelements()==nDim, AipsError);
 	//
@@ -158,7 +158,7 @@ template <class T>  Bool ImageFit1D<T>::setData (
 	// Weights
 
 	Vector<T> weights(y.nelements());
-	if (itsWeightPtr) {
+	if (itsWeightPtr.get()) {
 		weights = itsWeightPtr->getSlice(start, shape, True);
 	}
 	else {
@@ -191,7 +191,7 @@ template <class T> Bool ImageFit1D<T>::setData (
 		const ImageFit1D<T>::AbcissaType abcissaType,
 		const Bool doAbs)
 		{
-
+	_resetFitter();
 	// Make SubImage
 
 	const SubImage<T> subImage(*itsImagePtr, region, False);
@@ -209,7 +209,7 @@ template <class T> Bool ImageFit1D<T>::setData (
 
 	Vector<T> weights(y.nelements());
 	weights = 1.0;
-	if (itsWeightPtr) {
+	if (itsWeightPtr.get()) {
 		LatticeUtilities::collapse (weights, axes, *itsWeightPtr, dropDeg);
 	}
 
@@ -373,7 +373,7 @@ Bool ImageFit1D<T>::makeAbcissa (Vector<Double>& x,
 template <class T> 
 void ImageFit1D<T>::check() const
 {
-   if (!itsImagePtr) {
+   if (!itsImagePtr.get()) {
       throw(AipsError("Image has not been set"));
    }
 }
@@ -383,21 +383,23 @@ template <class T>
 void ImageFit1D<T>::setWeightsImage (const ImageInterface<T>& image)
 {
    AlwaysAssert (itsImagePtr->shape().isEqual(image.shape()), AipsError);
-   itsWeightPtr = image.cloneII();
+   itsWeightPtr.reset(image.cloneII());
 }
 
 
 template <class T> 
 void ImageFit1D<T>::copy(const ImageFit1D<T>& other)
 {
-
-// Lattices are reference counted
-
-   if (itsImagePtr) delete itsImagePtr;
-   itsImagePtr = other.itsImagePtr->cloneII();
-//
-   if (itsWeightPtr) delete itsWeightPtr;
-   if (other.itsWeightPtr) itsWeightPtr = other.itsWeightPtr->cloneII();
+	itsImagePtr.reset(
+		other.itsImagePtr.get()
+			? other.itsImagePtr->cloneII()
+			: 0
+	);
+	itsWeightPtr.reset(
+		other.itsWeightPtr.get()
+			? other.itsWeightPtr->cloneII()
+			: 0
+	);
 
 // These things are copies
 
@@ -463,6 +465,16 @@ template <class T>  void ImageFit1D<T>::invalidate() {
 template <class T>
 Bool ImageFit1D<T>::isValid() const {
 	return _isValid;
+}
+
+template <class T>
+void ImageFit1D<T>::_resetFitter() {
+	SpectralList initialGuess = itsFitter.getList(False);
+	itsFitter = ProfileFit1D<FitterType>();
+	itsFitter.setElements(initialGuess);
+	_isValid = True;
+	_converged = False;
+	_success = False;
 }
 
 

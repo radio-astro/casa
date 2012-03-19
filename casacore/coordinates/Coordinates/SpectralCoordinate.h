@@ -43,6 +43,7 @@
 
 #include <wcslib/wcs.h>
 
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -535,6 +536,11 @@ public:
     Bool setFormatUnit (const String& unit);
     // </group>
 
+    // replace the tabulated frequency values with a new set. Object must use
+    // a tabular coordinate for frequencies or an exception is thrown. Input
+    // frequencies are assumed to be in Hz.
+    void replaceTabulatedFrequencies(const Vector<Double>& freqs);
+
     // Convert to FITS header record.  When writing the FITS record,
     // the fields "ctype, crval, crpix", and "cdelt" must already be created. Other header
     // words are created as needed.  Use <src>oneRelative=True</src> to
@@ -578,7 +584,7 @@ public:
 
 private:
 
-    TabularCoordinate* pTabular_p;                     // Tabular coordinate OR
+    std::auto_ptr<TabularCoordinate> _tabular;                     // Tabular coordinate OR
     mutable ::wcsprm wcs_p;                              // wcs structure is used 
     Double to_hz_p;                                    // Convert from current world units to Hz
     Double to_m_p;                                     // Convert from current wavelength units to m
@@ -678,6 +684,8 @@ private:
 // Save wcs stuff into Record
    Bool wcsSave (RecordInterface& rec, const wcsprm& wcs,
                  const String& fieldName) const;
+
+   void _setTabulatedFrequencies(const Vector<Double>& freqs);
 
 };
 
