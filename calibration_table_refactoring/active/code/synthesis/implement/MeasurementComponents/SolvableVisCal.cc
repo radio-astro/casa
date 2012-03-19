@@ -2770,7 +2770,9 @@ void SolvableVisCal::calcPar() {
   if (freqDepPar()) {
     //    cout << "currFreq() = " << currFreq().shape() << " " << currFreq() << endl;
     // Call w/ freq-dep
+    cout.precision(12);
     newcal=ci_->interpolate(currField(),currSpw(),currTime(),currFreq());
+    cout << typeName() << " t="<< currTime() << " newcal=" << boolalpha << newcal << endl;
   }
   else
     // Don't bother to include freq
@@ -4629,7 +4631,8 @@ void SolvableVisJones::applyRefAnt() {
   genSort(ord,dist2);
 
   // Assemble the whole choices list
-  Vector<Int> refantchoices(nUserRefant+1+ord.nelements(),0);
+  Int nchoices=nUserRefant+1+ord.nelements();
+  Vector<Int> refantchoices(nchoices,0);
   Vector<Int> r(refantchoices(IPosition(1,nUserRefant+1),IPosition(1,refantchoices.nelements()-1)));
   convertArray(r,ord);
 
@@ -4641,51 +4644,228 @@ void SolvableVisJones::applyRefAnt() {
     refantchoices(IPosition(1,2),IPosition(1,nUserRefant))=
       refantlist()(IPosition(1,1),IPosition(1,nUserRefant-1));
 
+  //  cout << "refantchoices = " << refantchoices << endl;
+
+
+  Int nPol(nPar());  // TBD:or 1, if data was single pol
+  //  cout << "nPol = " << nPol << endl;
+
   Bool usedaltrefant(False);
+  Int currrefant(refantchoices(0)), lastrefant(-1);
 
   Block<String> cols(2);
   cols[0]="SPECTRAL_WINDOW_ID";
   cols[1]="TIME";
   CTIter ctiter(*ct_,cols);
 
+  // Arrays to hold per-timestamp solutions
+  Cube<Complex> solA, solB;
+  Cube<Bool> flA, flB;
+  Vector<Int> ant1A, ant1B, ant2B;
+  Matrix<Complex> refPhsr;  // the reference phasor [npol,nchan] 
+  Bool first(True);
   while (!ctiter.pastEnd()) {
 
-    // Access this timestamp's parameters
-    Vector<Int> ant1(ctiter.antenna1());
-    Vector<Int> ant2(ctiter.antenna2());
-    Cube<Complex> sol(ctiter.cparam());
-    IPosition ssh(sol.shape());
+    // Read in the current sol, fl, ant1:
+    solB.assign(ctiter.cparam());
+    flB.assign(ctiter.flag());
+    ant1B.assign(ctiter.antenna1());
+    ant2B.assign(ctiter.antenna2()); 
 
-    // Find the refant
-    // TBD: cope with flags, and exhaust choices
-    Int iref=0;
-    while (ant1(iref)!=refantchoices(0)) ++iref;
+    // First time thru, 'previous' solution same as 'current'
+    if (first) {
+      solA.reference(solB);
+      flA.reference(flB);
+      ant1A.reference(ant1B);
+    }
+    IPosition shB(solB.shape());
+    IPosition shA(solA.shape());
 
-    ant2=refantchoices(0);
+    // Find a good refant at this time
+    //  A good refant is one that is unflagged in all polarizations
+    //     in the current(B) and previous(A) intervals (so they can be connected)
+    Int irefA(0),irefB(0);  // index on 3rd axis of solution arrays
+    Int ichoice(0);  // index in refantchoicelist
+    Bool found(False);
+    IPosition blcA(3,0,0,0),trcA(shA),blcB(3,0,0,0),trcB(shB);
+    trcA-=1; trcA(0)=trcA(2)=0;
+    trcB-=1; trcB(0)=trcB(2)=0;
+    ichoice=0;
+    while (!found && ichoice<nchoices) { 
+      // Find index of current refant choice
+      irefA=irefB=0;
+      while (ant1A(irefA)!=refantchoices(ichoice) && irefA<shA(2)) ++irefA;
+      while (ant1B(irefB)!=refantchoices(ichoice) && irefB<shB(2)) ++irefB;
 
-    // Divide out the refant phase (per par, chan)
-    // TBD: handle flags, d-b-0, etc...
-    IPosition blc(3,0,0,0), trc(3,0,0,ssh(2)-1);
-    for (Int ich=0;ich<ssh(1);++ich) {
-      for (Int ipar=0;ipar<ssh(0);++ipar) {
-	Complex cref=sol(ipar,ich,iref);
-	Float amp=abs(cref);
-	if (amp>0.0) {
-	  cref/=amp;
-	  blc(0)=trc(0)=ipar;
-	  blc(1)=trc(1)=ich;
-	  Array<Complex> solpc(sol(blc,trc));
-	  solpc/=cref;
+      if (irefA<shA(2) && irefB<shB(2)) {
+
+	//	cout << " Trial irefA,irefB: " << irefA << "," << irefB 
+	//	     << "   Ants=" << ant1A(irefA) << "," << ant1B(irefB) << endl;
+
+	blcA(2)=trcA(2)=irefA;
+	blcB(2)=trcB(2)=irefB;
+	found=True;  // maybe
+	for (Int ipol=0;ipol<nPol;++ipol) {
+	  blcA(0)=trcA(0)=blcB(0)=trcB(0)=ipol;
+	  found &= (nfalse(flA(blcA,trcA))>0);  // previous interval
+	  found &= (nfalse(flB(blcB,trcB))>0);  // current interval
+	} 
+      }
+      else
+	// irefA or irefB out-of-range
+	found=False;  // Just to be sure
+
+      if (!found) ++ichoice;  // try next choice next round
+
+    }
+
+    if (found) {
+      // at this point, irefA/irefB point to a good refant
+      
+      // Keep track
+      usedaltrefant=(ichoice>0);
+      currrefant=refantchoices(ichoice);
+      refantchoices(1)=currrefant;  // 2nd priorty next time
+
+      //      cout << " currrefant = " << currrefant << " (" << ichoice << ")" << endl;
+
+      //      cout << " Final irefA,irefB: " << irefA << "," << irefB 
+      //	   << "   Ants=" << ant1A(irefA) << "," << ant1B(irefB) << endl;
+
+
+      // Only report if using an alternate refant
+      if (currrefant!=lastrefant && ichoice>0) {
+	logSink() 
+	  << "At " 
+	  << MVTime(ctiter.thisTime()/C::day).string(MVTime::YMD,7) 
+	  << " ("
+	  << "Spw=" << ctiter.thisSpw()
+	  << ", Fld=" << ctiter.thisField()
+	  << ")"
+	  << ", using refant " << csmi.getAntName(currrefant)
+	  << " (id=" << currrefant 
+	  << ")" << " (alternate)"
+	  << LogIO::POST;
+      }  
+
+      // Form reference phasor [nPar,nChan]
+      Matrix<Complex> rA,rB;
+      Matrix<Float> ampA,ampB;
+      Matrix<Bool> rflA,rflB;
+      rB.assign(solB.xyPlane(irefB));
+      rflB.assign(flB.xyPlane(irefB));
+      switch (this->type()) {
+      case VisCal::G:
+      case VisCal::B:
+      case VisCal::T: {
+	ampB=amplitude(rB);
+	rflB(ampB<FLT_EPSILON)=True; // flag... 
+	rB(rflB)=Complex(1.0);       //  ...and reset zeros
+	ampB(rflB)=1.0;
+	rB/=ampB;  // rB now normalized ("phase"-only)
+	break;
+      }
+      case VisCal::D: {
+	// Fill 2nd pol with negative conj of 1st pol
+	rB.row(1)=-conj(rB.row(0));
+	break;
+      }
+      default:
+	throw(AipsError("SVC::applyRefAnt attempted for inapplicable type"));
+      }
+
+      if (!first) {
+	// Get and condition previous phasor for the current refant
+	rA.assign(solA.xyPlane(irefA));
+	rflA.assign(flA.xyPlane(irefA));
+	switch (this->type()) {
+	case VisCal::G:
+	case VisCal::B:
+	case VisCal::T: {
+	  ampA=amplitude(rA);
+	  rflA(ampA<FLT_EPSILON)=True;  // flag...
+	  rA(rflA)=Complex(1.0);        // ...and reset zeros
+	  ampA(rflA)=1.0;
+	  rA/=ampA; // rA now normalized ("phase"-only)
+	
+	  // Phase difference (as complex) relative to last
+	  rB/=rA;
+	  break;
+	}
+	case VisCal::D: {
+	  // 
+	  rA.row(1)=-conj(rA.row(0));
+
+	  // Complex difference relative to last
+	  rB-=rA;
+	  break;
+	}
+	default:
+	  throw(AipsError("SVC::applyRefAnt attempted for inapplicable type"));
+	}
+
+	// Accumulate flags
+	rflB&=rflA;
+      }
+      
+      //      cout << " rB = " << rB << endl;
+      //      cout << boolalpha << " rflB = " << rflB << endl;
+      // TBD: fillChanGaps?
+      
+      // Now apply reference phasor to all antennas
+      Matrix<Complex> thissol;
+      for (Int iant=0;iant<shB(2);++iant) {
+	thissol.reference(solB.xyPlane(iant));
+	switch (this->type()) {
+	case VisCal::G:
+	case VisCal::B:
+	case VisCal::T: {
+	  // Complex division == phase subtraction
+	  thissol/=rB;
+	  break;
+	}
+	case VisCal::D: {
+	  // Complex subtraction
+	  thissol-=rB;
+	  break;
+	}
+	default:
+	  throw(AipsError("SVC::applyRefAnt attempted for inapplicable type"));
 	}
       }
-    }
-    // put back 
-    ctiter.setcparam(sol);
-    ctiter.setantenna2(ant2);
+      
+      // Set refant, so we can put it back
+      ant2B=currrefant;
+      
+      // put back referenced solutions
+      ctiter.setcparam(solB);
+      ctiter.setantenna2(ant2B);
 
-    // advance
+      // Next time thru, solB is previous
+      solA.reference(solB);
+      flA.reference(flB);
+      ant1A.reference(ant1B);
+      solB.resize();  // (break references)
+      flB.resize();
+      ant1B.resize();
+	
+      lastrefant=currrefant;
+      first=False;  // avoid first-pass stuff from now on
+      
+    } // found
+
+    // advance to the next interval
     ctiter.next();
   }
+
+  if (usedaltrefant)
+    logSink() << LogIO::NORMAL
+	      << " NB: An alternate refant was used at least once to maintain" << endl
+	      << "  phase continuity where the user's preferred refant drops out." << endl
+	      << "  Alternate refants are held constant in phase (_not_ zeroed)" << 
+	      << "  during these periods, and the preferred refant may return at" <<
+	      << "  a non-zero phase.  This is generally harmless."
+	      << LogIO::POST;
 
   return;  // NEWCALTABLE
 
