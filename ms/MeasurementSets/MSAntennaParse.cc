@@ -38,6 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
  // Global pointer to the parser object
   MSAntennaParse* MSAntennaParse::thisMSAParser = 0;
+  TableExprNode MSAntennaParse::column1AsTEN_p,MSAntennaParse::column2AsTEN_p;
   MSSelectionErrorHandler* MSAntennaParse::thisMSAErrorHandler = 0;
   
   //# Constructor
@@ -49,6 +50,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   }
   
+  //# Constructor with given ms name.
+  MSAntennaParse::MSAntennaParse (const MSAntenna& antSubTable, 
+				  const TableExprNode& ant1AsTEN, const TableExprNode& ant2AsTEN)
+    : MSParse(),
+      colName1(MS::columnName(MS::ANTENNA1)),
+      colName2(MS::columnName(MS::ANTENNA2)),
+      ant1List(0),ant2List(0), baselineList(0,2),
+      msSubTable_p(antSubTable)
+      
+  {
+    column1AsTEN_p = ant1AsTEN;
+    column2AsTEN_p = ant2AsTEN;
+  }
+
   //# Constructor with given ms name.
   MSAntennaParse::MSAntennaParse (const MeasurementSet* myms)
     : MSParse(myms, "Antenna"),
@@ -67,7 +82,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if (baselineType==CrossOnly) 
       {
-	TableExprNode noAutoCorr = (ms()->col(colName1) != ms()->col(colName2));
+	//	TableExprNode noAutoCorr = (ms()->col(colName1) != ms()->col(colName2));
+	TableExprNode noAutoCorr = (column1AsTEN_p != column2AsTEN_p);
 	condition = noAutoCorr && condition;
       }
     //    if (negate) cerr << "Generating a negation condition" << endl;
@@ -90,24 +106,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int n=antennaIds.nelements();
 	if (n) 
 	  {
-	    condition = ((ms()->col(colName1) == antennaIds[0]) &&
-			 (ms()->col(colName2) == antennaIds[0]));
+	    // condition = ((ms()->col(colName1) == antennaIds[0]) &&
+	    // 		 (ms()->col(colName2) == antennaIds[0]));
+	    condition = ((column1AsTEN_p == antennaIds[0]) &&
+			 (column2AsTEN_p == antennaIds[0]));
 	    for (Int i=1;i<n;i++) 
 	      {
 		condition = condition || 
-		  ((ms()->col(colName1) == antennaIds[i]) &&
-		   (ms()->col(colName2) == antennaIds[i]));
+		  ((column1AsTEN_p == antennaIds[i]) && (column2AsTEN_p == antennaIds[i]));
+		  // ((ms()->col(colName1) == antennaIds[i]) &&
+		  //  (ms()->col(colName2) == antennaIds[i]));
 	      }
 	  }
       } 
     else 
       {
 	condition =
-	  (ms()->col(colName1).in(antennaIds) ||
-	   ms()->col(colName2).in(antennaIds)); //&& ms()->col(colName1) != ms()->col(colName2);
+	  // (ms()->col(colName1).in(antennaIds) ||
+	  //  ms()->col(colName2).in(antennaIds)); //&& ms()->col(colName1) != ms()->col(colName2);
+	  (column1AsTEN_p.in(antennaIds) ||
+	   column2AsTEN_p.in(antennaIds)); //&& ms()->col(colName1) != ms()->col(colName2);
       }
     {
-      Int nrows_p = ms()->antenna().nrow();
+      Int nrows_p = subTable().nrow();//ms()->antenna().nrow();
       Vector<Int> a2(nrows_p);
       a2.resize(nrows_p);
       indgen(a2);
@@ -142,13 +163,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (antennaIds2.size()) 
       {
 	condition =
-	  (ms()->col(colName1).in(antennaIds1)  && ms()->col(colName2).in(antennaIds2)) ||
-	  (ms()->col(colName1).in(antennaIds2)  && ms()->col(colName2).in(antennaIds1));
+	  // (ms()->col(colName1).in(antennaIds1)  && ms()->col(colName2).in(antennaIds2)) ||
+	  // (ms()->col(colName1).in(antennaIds2)  && ms()->col(colName2).in(antennaIds1));
+	  (column1AsTEN_p.in(antennaIds1)  && column1AsTEN_p.in(antennaIds2)) ||
+	  (column2AsTEN_p.in(antennaIds2)  && column2AsTEN_p.in(antennaIds1));
       } 
     else 
       {
 	condition =
-	  (ms()->col(colName1).in(antennaIds1) && ms()->col(colName2).in(antennaIds1));
+	  //	  (ms()->col(colName1).in(antennaIds1) && ms()->col(colName2).in(antennaIds1));
+	  (column1AsTEN_p.in(antennaIds1) && column2AsTEN_p.in(antennaIds1));
       }    
     makeAntennaList(ant1List, antennaIds1,negate);
     makeAntennaList(ant2List, antennaIds2,negate);
@@ -163,11 +187,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							   BaselineListType baselineType,
 							   Bool negate)
   {
-    MSAntennaIndex msAI(ms()->antenna());
+    //    MSAntennaIndex msAI(ms()->antenna());
+    MSAntennaIndex msAI(subTable());
     
     Vector<Int> ant=msAI.matchAntennaName(antenna);
 
-    TableExprNode condition =(ms()->col(colName1).in(ant) || ms()->col(colName2).in(ant));
+    //    TableExprNode condition =(ms()->col(colName1).in(ant) || ms()->col(colName2).in(ant));
+    TableExprNode condition =(column1AsTEN_p.in(ant) || column2AsTEN_p.in(ant));
     
     return setTEN(condition,baselineType,negate);
   }
@@ -177,14 +203,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							   BaselineListType baselineType,
 							   Bool negate)
   {
-    MSAntennaIndex msAI(ms()->antenna());
+    //    MSAntennaIndex msAI(ms()->antenna());
+    MSAntennaIndex msAI(subTable());
     
     Vector<Int> a1=msAI.matchAntennaName(antenna1),
       a2 = msAI.matchAntennaName(antenna2);
 
+    // TableExprNode condition =
+    //   (ms()->col(colName1).in(a1) && ms()->col(colName2).in(a2)) ||
+    //   (ms()->col(colName1).in(a2) && ms()->col(colName2).in(a1));
     TableExprNode condition =
-      (ms()->col(colName1).in(a1) && ms()->col(colName2).in(a2)) ||
-      (ms()->col(colName1).in(a2) && ms()->col(colName2).in(a1));
+      (column1AsTEN_p.in(a1) && column2AsTEN_p.in(a2)) ||
+      (column1AsTEN_p.in(a2) && column2AsTEN_p.in(a1));
     
     return setTEN(condition,baselineType,negate);
   }
@@ -194,9 +224,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							   BaselineListType baselineType,
 							   Bool negate)
   {
+    // TableExprNode condition =
+    //   (ms()->col(colName1) >= antenna1 && ms()->col(colName2) <= antenna2) ||
+    //   (ms()->col(colName2) >= antenna1 && ms()->col(colName1) <= antenna2);
     TableExprNode condition =
-      (ms()->col(colName1) >= antenna1 && ms()->col(colName2) <= antenna2) ||
-      (ms()->col(colName2) >= antenna1 && ms()->col(colName1) <= antenna2);
+      (column1AsTEN_p >= antenna1 && column2AsTEN_p <= antenna2) ||
+      (column2AsTEN_p >= antenna1 && column1AsTEN_p <= antenna2);
     
     return setTEN(condition,baselineType,negate);
   }
@@ -242,15 +275,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (ant1.size() > 0) {
       Array<Int> arrAnt1(IPosition(1,ant1.size()), &(ant1[0]), SHARE);
       Array<Int> arrAnt2(IPosition(1,ant1.size()), &(ant2[0]), SHARE);
-      condition = TableExprNode(any((ms()->col(colName1) == arrAnt1  &&
-                                     ms()->col(colName2) == arrAnt2)));
+      // condition = TableExprNode(any((ms()->col(colName1) == arrAnt1  &&
+      //                                ms()->col(colName2) == arrAnt2)));
+      condition = TableExprNode(any((column1AsTEN_p == arrAnt1  &&
+                                     column2AsTEN_p == arrAnt2)));
     }
     return setTEN (condition, AutoCorrAlso, negate);
   }
 
   Matrix<double> MSAntennaParse::getBaselineLengths()
   {
-    MSAntenna msant(ms()->antenna());
+    //    MSAntenna msant(ms()->antenna());
+    MSAntenna msant(subTable());
     ROMSAntennaColumns antCols(msant);
     // First get the antenna positions.
     vector<Vector<double> > antVec;

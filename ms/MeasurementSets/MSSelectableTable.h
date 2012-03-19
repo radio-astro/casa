@@ -58,6 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual const MSAntenna& antenna()        = 0;
     virtual const MSField& field()            = 0;
     virtual const MSSpectralWindow& spectralWindow() = 0;
+    virtual const MSDataDescription& dataDescription() = 0;
 
     virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) = 0;
     virtual const MeasurementSet* asMS() = 0;
@@ -68,14 +69,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MSInterface: public MSSelectableTable
   {
   public:
-    MSInterface()                                    {};
+    MSInterface()                                      {};
     MSInterface(const Table& table);
-    virtual ~MSInterface()                           {};
-    virtual const MSAntenna& antenna()               {return asMS()->antenna();}
-    virtual const MSField& field()                   {return asMS()->field();}
-    virtual const MSSpectralWindow& spectralWindow() {return asMS()->spectralWindow();}
+    virtual ~MSInterface()                             {};
+    virtual const MSAntenna& antenna()                 {return asMS()->antenna();}
+    virtual const MSField& field()                     {return asMS()->field();}
+    virtual const MSSpectralWindow& spectralWindow()   {return asMS()->spectralWindow();}
+    virtual const MSDataDescription& dataDescription() {return asMS()->dataDescription();}
     virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) {return MS::columnName(nameEnum);}
-    virtual Bool isMS()                              {return True;};
+    virtual Bool isMS()                                {return True;};
 
     virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());};
   };

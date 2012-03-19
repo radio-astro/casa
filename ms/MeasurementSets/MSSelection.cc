@@ -366,11 +366,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   //----------------------------------------------------------------------------
-  
-  TableExprNode MSSelection::toTableExprNode(MSSelectableTable* msLike)
+  const MeasurementSet* MSSelection::getMS(MSSelectableTable* msLike)
   {
-    if (fullTEN_p.isNull()==False) return fullTEN_p;
-
     const MeasurementSet *ms=msLike->asMS();
     
     //
@@ -384,33 +381,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
 				    "MS pointer from MS-Like object is null")));
 
-    // if (!msLike->isMS())
-    //   {
-    // 	for (uInt i=0; i<exprOrder_p.nelements(); i++)
-    // 	  if (exprOrder_p[i] != FIELD_EXPR)
-    // 	    throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
-    // 					  "Only field-selection is supported for CalTables")));
-    //   }
-
     if (!msLike->isMS()         &&
 	(
-	 (antennaExpr_p != "")  ||
-	 (spwExpr_p != "")      ||
-	 (scanExpr_p != "")     ||
-	 (observationExpr_p != "") ||
-	 (arrayExpr_p != "")    ||
-	 (uvDistExpr_p != "")   ||
-	 (taqlExpr_p != "")     ||
-	 (polnExpr_p != "")     ||
-	 (stateExpr_p != "")    ||
-	 (timeExpr_p != "")
+	 //	 (antennaExpr_p != "")     || 
+	 (timeExpr_p != "") ||
+	 (spwExpr_p != "")  || 
+	 (scanExpr_p != "") || (observationExpr_p != "") || (arrayExpr_p != "") || (uvDistExpr_p != "") ||
+	 (taqlExpr_p != "") || (polnExpr_p != "")        || (stateExpr_p != "")
 	 ))
       throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
 				    "Only field-selection is supported for CalTables")));
+    return ms;
+  }
+  //----------------------------------------------------------------------------
+  
+  TableExprNode MSSelection::toTableExprNode(MSSelectableTable* msLike)
+  {
+    if (fullTEN_p.isNull()==False) return fullTEN_p;
 
-
+    const MeasurementSet *ms=getMS(msLike);
     resetMS(*ms);
     //    ms_p = msLike->asMS();
+
+
     TableExprNode condition;
     if (MSAntennaParse::thisMSAErrorHandler == NULL)
       {
@@ -427,15 +420,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 	      case ANTENNA_EXPR:
 		{
+		  TableExprNode col1AsTEN = msLike->col(msLike->columnName(MS::ANTENNA1)),
+		    col2AsTEN = msLike->col(msLike->columnName(MS::ANTENNA2));
+
 		  antenna1IDs_p.resize(0);
 		  antenna2IDs_p.resize(0);
 		  baselineIDs_p.resize(0,2);
-		  if(antennaExpr_p != "") {
-		    node = msAntennaGramParseCommand(ms, antennaExpr_p, 
-						     antenna1IDs_p, 
-						     antenna2IDs_p,
-						     baselineIDs_p);
-		  }
+		  if(antennaExpr_p != "") 
+		    node = msAntennaGramParseCommand(msLike->antenna(), 
+						     col1AsTEN, col2AsTEN, antennaExpr_p, 
+						     antenna1IDs_p, antenna2IDs_p, baselineIDs_p);
+		  // if(antennaExpr_p != "") 
+		  //   node = msAntennaGramParseCommand(ms, antennaExpr_p, 
+		  // 				     antenna1IDs_p, 
+		  // 				     antenna2IDs_p,
+		  // 				     baselineIDs_p);
 		  break;
 		}
 	      case FIELD_EXPR:
@@ -444,17 +443,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //		  TableExprNode colTEN = msLike->col(String("FIELD_ID"));
 		  //		  TableExprNode colTEN = ms->col(MS::columnName(MS::FIELD_ID));
 
-		  TableExprNode colTEN = msLike->col(msLike->columnName(MS::FIELD_ID));
+		  TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::FIELD_ID));
 		  if(fieldExpr_p != "")
-		    node = msFieldGramParseCommand(msLike->field(), colTEN, fieldExpr_p,fieldIDs_p);
+		    node = msFieldGramParseCommand(msLike->field(), colAsTEN, fieldExpr_p,fieldIDs_p);
 		  //		  colTEN.unlink();
 		  break;
 		}
 	      case SPW_EXPR:
 		{
+		  TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::DATA_DESC_ID));
 		  spwIDs_p.resize(0);
 		  if (spwExpr_p != "" &&
-		      msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
+		      msSpwGramParseCommand(msLike->spectralWindow(), msLike->dataDescription(),
+					    colAsTEN, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
+		  // if (spwExpr_p != "" &&
+		  //     msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
 		    node = *(msSpwGramParseNode());
 		  break;
 		}

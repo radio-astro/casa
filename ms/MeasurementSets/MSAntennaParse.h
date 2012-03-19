@@ -98,6 +98,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Associate the ms.
     MSAntennaParse (const MeasurementSet* ms);
 
+    MSAntennaParse (const MSAntenna& antSubTable, 
+		    const TableExprNode& ant1AsTEN, const TableExprNode& ant2AsTEN);
+
+    ~MSAntennaParse() {column1AsTEN_p=TableExprNode();column2AsTEN_p=TableExprNode();};
+
     // Add the given antennae selection.
     const TableExprNode* selectAntennaIds(const Vector<Int>& antennaIds, 
 					  BaselineListType baselineType=CrossOnly,
@@ -143,6 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void setComplexity(const ComplexityLevels& level=RESET) 
     {if (level==RESET) complexity.reset(); else complexity.set(level,True);};
     std::bitset<HIGHESTLEVEL> getComplexity() {return complexity;};
+    MSAntenna& subTable() {return msSubTable_p;}
   private:
     const TableExprNode* setTEN(TableExprNode& condition, 
                                 BaselineListType baselineType=CrossOnly,
@@ -167,6 +173,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     const String colName1, colName2;
     Vector<Int> ant1List, ant2List;
     Matrix<Int> baselineList;
+    MSAntenna msSubTable_p;
+    static TableExprNode column1AsTEN_p,column2AsTEN_p;
   };
   
 } //# NAMESPACE CASA - END
