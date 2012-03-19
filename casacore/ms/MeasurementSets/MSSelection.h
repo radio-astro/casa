@@ -209,13 +209,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Antennas affected by the baseline negation operator have the
     // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna1List(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return antenna1IDs_p;}
+    {if (antenna1IDs_p.nelements() <= 0) getTEN(ms); return antenna1IDs_p;}
     
     // Accessor for the list of antenna-2 of the selected baselines.
     // Antennas affected by the baseline negation operator have the
     // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna2List(const MeasurementSet* ms=NULL) 
-    {getTEN(ms); return antenna2IDs_p;}
+    {if (antenna2IDs_p.nelements() <= 0) getTEN(ms); return antenna2IDs_p;}
     
     // Accessor for the list of selected baselines.  The list is a Nx2
     // Matrix with one row per baseline containing the antenna IDs of
@@ -376,6 +376,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const Bool overRide=False);
 
     void runErrorHandler();
+    const MeasurementSet* getMS(MSSelectableTable* msLike);
   private:
     // Set into the order of the selection expression
     Bool setOrder(MSSelection::MSExprType type);
