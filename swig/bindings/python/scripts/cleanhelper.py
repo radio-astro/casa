@@ -818,7 +818,8 @@ class cleanhelper:
             ia.close()
             ia.removefile('__temp_mask')
             ia.open(outputmask)
-            ia.regrid(outfile='__temp_mask',shape=shp,axes=[0,1], csys=self.csys,overwrite=True)
+            outim = ia.regrid(outfile='__temp_mask',shape=shp,axes=[0,1], csys=self.csys,overwrite=True)
+            outim.done(verbose=False)
             ia.done(verbose=False)
             ia.removefile(outputmask)
             os.rename('__temp_mask',outputmask)
@@ -864,9 +865,10 @@ class cleanhelper:
                 #          overwrite=True)
                 #ia.done(verbose=False)
                 os.rename(outputmask,'__temp_mask2')
-                ia.imagecalc(outfile=outputmask,
+                outim = ia.imagecalc(outfile=outputmask,
                              pixels='__temp_mask + __temp_mask2',
                              overwrite=True)
+                outim.done(verbose=False)
                 ia.done(verbose=False)
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
@@ -1241,7 +1243,8 @@ class cleanhelper:
                 tmpomask='__temp_o_mask'
                 self.makemaskimage(outputmask=tmpomask, maskobject=maskelos)
                 os.rename(outputmask, '__temp_i_mask')
-                ia.imagecalc(outfile=outputmask, pixels='__temp_o_mask * __temp_i_mask', overwrite=True)
+                outim = ia.imagecalc(outfile=outputmask, pixels='__temp_o_mask * __temp_i_mask', overwrite=True)
+                outim.done(verbose=False)
                 ia.removefile('__temp_o_mask')
                 ia.removefile('__temp_i_mask')
                 self.outputmask=outputmask
@@ -1266,9 +1269,10 @@ class cleanhelper:
             #os.rename(outputmodel,'__temp_model2')
             shutil.copytree(outputmodel,'__temp_model2')
             
-            ia.imagecalc(outfile=outputmodel,
+            outim = ia.imagecalc(outfile=outputmodel,
                              pixels=modelos[k]+' + '+'__temp_model2',
                              overwrite=True)
+            outim.done(verbose=False)
             ia.removefile('__temp_model2')
             ia.removefile(modelos[k]);
     
@@ -3052,6 +3056,7 @@ class cleanhelper:
             if not os.path.exists(cubeimage):
                 if os.path.exists(chanimage):
                     outim=ia.newimagefromimage(cubeimagerootname+'.model',cubeimage)
+                    outim.done(verbose=False)
                 elif ext=='.mask':
                     # unless mask image is given or in interactive mode
                     # there is no mask image

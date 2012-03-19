@@ -29,6 +29,8 @@ class pimager():
         self.stokes='I'
         self.visinmem=False
         self.numthreads=-1
+        self.gain=0.1
+        self.npixels=0
         self.c=cluster
         if self.c == '' :
             # Until we move to the simple cluster
@@ -418,8 +420,8 @@ class pimager():
     def pcont(self, msname=None, imagename=None, imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
-              hostnames='', 
-              numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, 
+              hostnames='',  
+              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -477,6 +479,8 @@ class pimager():
         self.cell=pixsize
         self.weight=weight
         self.robust=robust
+        self.npixels=npixels
+        self.gain=gain
         self.visinmem=visinmem
         self.numthreads=numthreads
 
@@ -557,6 +561,7 @@ class pimager():
         intmask=0
         ### do one major cycle at the end
         for maj in range(majorcycles +1):
+            casalog.post('Starting Gridding for major cycle '+str(maj)) 
             for k in range(numcpu):
                 imnam='"%s"'%(imlist[k])
                 c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
@@ -634,6 +639,7 @@ class pimager():
                     c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
             ####no need to do this in last major cycle
             if(maj < majorcycles):
+                casalog.post('Deconvolving for major cycle '+str(maj))  
                 #incremental clean...get rid of tempmodel
                 shutil.rmtree(tempmodel, True)
                 rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
@@ -681,16 +687,16 @@ class pimager():
             shutil.rmtree(imlist[k]+'.psf', True)
             shutil.rmtree(imlist[k]+'.residual', True)
             shutil.rmtree(imlist[k]+'.image', True)
-        print 'Time to image is ', (time2-time1)/60.0, 'mins'
+        casalog.post('Time to image is '+str((time2-time1)/60.0)+ ' mins')
         #c.stop_cluster()
 
     def pcube_try(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
-              numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
+              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', weight='natural', 
-              robust=0.0, 
+              robust=0.0, npixels=0, 
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -749,8 +755,10 @@ class pimager():
         self.facets=facets
         self.imsize=imsize
         self.cell=pixsize
+        self.gain=gain
         self.weight=weight
         self.robust=robust
+        self.npixels=npixels
         self.visinmem=visinmem
         self.numthreads=numthreads
         self.setupcluster(hostnames,numcpuperhost, 3)
@@ -919,9 +927,9 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
-              numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
+              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
-              robust=0.0, 
+              robust=0.0, npixels=0,  
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -981,7 +989,9 @@ class pimager():
         self.imsize=imsize
         self.cell=pixsize
         self.weight=weight
+        self.gain=gain
         self.robust=robust
+        self.npixels=npixels
         self.stokes=stokes
         self.visinmem=visinmem
         self.numthreads=numthreads
@@ -1155,9 +1165,9 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
-              numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
+              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, stokes='I', restfreq='', weight='natural', 
-              robust=0.0, 
+              robust=0.0, npixels=0, 
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -1218,9 +1228,11 @@ class pimager():
         self.cell=pixsize
         self.weight=weight
         self.robust=robust
+        self.npixels=npixels
         self.visinmem=visinmem
         self.numthreads=numthreads
         self.stokes=stokes
+        self.gain=gain
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
         ####
@@ -1404,7 +1416,7 @@ class pimager():
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
-                     numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0,
+                     numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0, npixels=0, 
                      contclean=False, visinmem=False, maskimage='lala.mask', numthreads=-1,
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
@@ -1460,7 +1472,9 @@ class pimager():
         self.cell=pixsize
         self.weight=weight
         self.robust=robust
+        self.npixels=npixels
         self.visinmem=visinmem
+        self.gain=gain
         self.numthreads=numthreads
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
         model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
@@ -1578,7 +1592,7 @@ class pimager():
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
-                     numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0,
+                     numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0, 
                      contclean=False, visinmem=False, maskimage='lala.mask',
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
@@ -1634,6 +1648,8 @@ class pimager():
         self.cell=pixsize
         self.weight=weight
         self.robust=robust
+        self.npixels=npixels
+        self.gain=gain
         self.visinmem=visinmem
         
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
@@ -1919,7 +1935,7 @@ class pimager():
         spwlaunch='"'+self.spw+'"' if (type(self.spw)==str) else str(self.spw)
         fieldlaunch='"'+self.field+'"' if (type(self.field) == str) else str(self.field)
         pslaunch='"'+self.phasecenter+'"' if (type(self.phasecenter) == str) else str(self.phasecenter)
-        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+')'
+        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+')'
         print 'launch command', launchcomm
         self.c.pgc(launchcomm);
         self.c.pgc('a.visInMem='+str(self.visinmem));

@@ -21,6 +21,7 @@ def pclean(vis=None,
            scales=None,
            majorcycles=None,
            niter=None,
+           gain=None,
            threshold=None,
            weighting=None,
            robust=None,
@@ -117,6 +118,7 @@ def pclean(vis=None,
 
     
     cluster=simple_cluster.getCluster()._cluster
+    numproc=len(cluster.get_engines())
     numprocperhost=len(cluster.get_engines())/len(cluster.get_nodes()) if (len(cluster.get_nodes()) >0 ) else 1
 
     pim=pimager(cluster)
@@ -135,7 +137,7 @@ def pclean(vis=None,
               field=field, spw=spw, 
               ftmachine=ftmachine, alg=alg, 
               hostnames='', numcpuperhost=-1, 
-              majorcycles=majorcycles, niter=niter,
+              majorcycles=majorcycles, niter=niter, gain=gain,
               threshold=threshold, weight=weighting, robust=robust, scales=scales,
               wprojplanes=wprojplanes,facets=facets,  stokes=stokes,
               contclean=(not overwrite), visinmem=False, maskimage=mask, interactive=interactive, numthreads=1)
@@ -143,7 +145,9 @@ def pclean(vis=None,
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
         estmem=14.0*float(imsize[0]*imsize[1])*4
-        chanchunk=int(memperproc/estmem) 
+        chanchunk=int(memperproc/estmem)
+        while((chanchunk*numproc) > nchan):
+            chanchunk=chanchunk-1
         if(chanchunk <1):
             chanchunk=1
         pim.pcube(msname=vis, imagename=imagename, 
@@ -152,7 +156,7 @@ def pclean(vis=None,
               field=field, spw=spw, 
               ftmachine=ftmachine, alg=alg,
               hostnames='', numcpuperhost=-1, 
-              majorcycles=majorcycles, niter=niter, 
+              majorcycles=majorcycles, niter=niter, gain=gain,
               threshold=threshold, weight=weighting, robust=robust, scales=scales,
               mode=cubemode, 
               wprojplanes=wprojplanes,facets=facets, 

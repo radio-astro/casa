@@ -110,6 +110,7 @@
 			<value>0</value>
 		</param>
 
+		
 
 		<param type="int" name="majorcycles">
 			<description>Number of major cycles</description>
@@ -120,10 +121,13 @@
 			<description>Maximum number of iterations</description>
 			<value>500</value>
 		</param>
-
+		<param type="double" name="gain">
+			<description>Maximum number of iterations</description>
+			<value>0.1</value>
+		</param>
 		<param type="string" name="threshold">
 			<description>Flux level to stop cleaning, must include units: \'1.0mJy\'</description>
-			<value>0.0</value>
+			<value>0.0Jy</value>
 		</param>
 
 		<param type="string" name="weighting">
