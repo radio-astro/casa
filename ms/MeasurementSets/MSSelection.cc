@@ -383,14 +383,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (!msLike->isMS()         &&
 	(
-	 //	 (antennaExpr_p != "")     || 
-	 (timeExpr_p != "") ||
-	 (spwExpr_p != "")  || 
+	 // (fieldExpr_p != "")     ||     
+	 // (antennaExpr_p != "")     || 
+	 (timeExpr_p != "") ||         // Will be opened-up for CalTables in the future
+	 (spwExpr_p != "")  ||         // Will be opened-up for CalTables in the future
 	 (scanExpr_p != "") || (observationExpr_p != "") || (arrayExpr_p != "") || (uvDistExpr_p != "") ||
 	 (taqlExpr_p != "") || (polnExpr_p != "")        || (stateExpr_p != "")
 	 ))
       throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
-				    "Only field-selection is supported for CalTables")));
+				    "Only field- and antenna-selection is supported for CalTables")));
     return ms;
   }
   //----------------------------------------------------------------------------
