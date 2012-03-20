@@ -96,7 +96,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
   
 	    // returns a set which indicates regions this creator creates...
-	    const std::set<Types> &regionsCreated( ) const;
+	    const std::set<viewer::Region::RegionTypes> &regionsCreated( ) const;
 
 	protected:
 

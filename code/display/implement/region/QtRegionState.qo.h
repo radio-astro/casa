@@ -44,11 +44,14 @@ namespace casa {
 		void setTextColor( const std::string &c );
 		void setLineColor( const std::string &c );
 		void setLineStyle( Region::LineStyle s );
+		void setAnnotation( bool );
+		void disableAnnotation( bool );
 
 		int zMin( ) const;
 		int zMax( ) const;
 		int numFrames( ) const;
 
+		bool isAnnotation( ) const;
 
 		// reset the widget to its original state...
 		void reset( const QString &name, QtRegion *r );

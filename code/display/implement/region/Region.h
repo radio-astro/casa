@@ -170,6 +170,7 @@ namespace casa {
 		virtual void setLabel( const std::string &l ) = 0;
 		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
 		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine ) = 0;
+		virtual void setAnnotation(bool) = 0;
 
 		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units,
 					     std::string &width_height_units ) const;
