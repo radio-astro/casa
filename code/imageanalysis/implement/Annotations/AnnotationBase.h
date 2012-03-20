@@ -210,7 +210,12 @@ public:
 
 	Bool isUseTex() const;
 
+	// is the object a region?
 	virtual Bool isRegion() const;
+
+	// is the object only an annotation? Can only be false if the object
+	// is a region
+	inline virtual Bool isAnnotationOnly() const { return True; }
 
 	// set "pix" as valid unit. This should be called externally
 	// before creating quantities which have pixel units.
