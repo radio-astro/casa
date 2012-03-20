@@ -176,8 +176,8 @@ def pclean(vis=None,
                 myim,=gentools(['im'])
                 myim.drawmask(imagename+'.residual', mask)
                 myim.done()
-            ###make sure the damn images are not kept locked
-            del myim
+                ###make sure the damn images are not kept locked
+                del myim
 #parallel_clean=pclean
     
 
