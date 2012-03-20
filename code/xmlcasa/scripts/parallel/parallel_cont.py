@@ -369,7 +369,7 @@ class imagecont():
             for k in range(nchan):
                 #timbeg=time.time()
                 blc[3]=k*chanchunk
-                trc[3]=k+chanchunk-1
+                trc[3]=(k+1)*chanchunk-1
                 if((trc[3]) >= modshape[3]):
                     trc[3]=modshape[3]-1
                 sbim=ia.subimage(outfile=inimage+str(k)+'.model', region=rg.box(blc,trc), overwrite=True)
@@ -579,6 +579,7 @@ class imagecont():
                 shutil.rmtree(inim[k], True)
             k+=1
         ibig.putchunk(arr, blc.tolist())
+        ibig.unlock()
         ibig.close()
         tb.clearlocks()
         #casalog.post('putLOCKS:  '+ str(inim)+ ' ---  ' + str(tb.listlocks()))
