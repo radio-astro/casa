@@ -534,6 +534,9 @@ Bool Calibrater::setapply(const String& type,
   logSink() << LogOrigin("Calibrater",
                          "setapply(type, t, table, spw, field, interp, calwt, spwmap, opacity)")
             << LogIO::NORMAL;
+
+
+  //  cout << "Calibrater::setapply: field="<< field << endl;
    
   // Set record format for calibration table application information
   RecordDesc applyparDesc;
@@ -542,6 +545,7 @@ Bool Calibrater::setapply(const String& type,
   applyparDesc.addField ("interp", TpString);
   applyparDesc.addField ("spw", TpArrayInt);
   applyparDesc.addField ("field", TpArrayInt);
+  applyparDesc.addField ("fieldstr", TpString);
   applyparDesc.addField ("calwt",TpBool);
   applyparDesc.addField ("spwmap",TpArrayInt);
   applyparDesc.addField ("opacity",TpArrayDouble);
@@ -553,6 +557,7 @@ Bool Calibrater::setapply(const String& type,
   applypar.define ("interp", interp);
   applypar.define ("spw",getSpwIdx(spw));
   applypar.define ("field",getFieldIdx(field));
+  applypar.define ("fieldstr",field);
   applypar.define ("calwt",calwt);
   applypar.define ("spwmap",spwmap);
   applypar.define ("opacity", opacity);
@@ -1255,7 +1260,9 @@ Calibrater::configureForCorrection ()
 
     Bool isEnabled;
     Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
-    isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
+
+    // isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
+    // For now (3/19/12) make asyncio for apply cal be explicitly enabled.
 
     asyncio::PrefetchColumns * prefetchColumns = NULL;
 
@@ -1549,6 +1556,9 @@ Bool Calibrater::genericGatherAndSolve() {
   Vector<Int> nChunkPerSol;
   Int nSol = svc_p->sizeUpSolve(*vs_p,nChunkPerSol);
 
+  // Create the in-memory (New)CalTable
+  svc_p->createMemCalTable();
+
   // The iterator, VisBuffer
   VisIter& vi(vs_p->iter());
   VisBuffer vb(vi);
@@ -1600,7 +1610,7 @@ Bool Calibrater::genericGatherAndSolve() {
 	  // Accumulate collapsed vb in a time average
 	  //  (only if the vb contains any unflagged data)
 	  if (nfalse(vb.flag())>0)
-	  vbga.accumulate(vb);
+	    vbga.accumulate(vb);
 	  
 	}
       }
@@ -1654,9 +1664,15 @@ Bool Calibrater::genericGatherAndSolve() {
 	  svc_p->markTimer();
 	  svc_p->focusChan()=ich;
 	  
+	  //	  svc_p->state();
+	  
+	  //	  cout << "Starting solution..." << endl;
+
 	  // Pass VE, SVC, VB to solver
 	  Bool goodSoln=vcs.solve(*ve_p,*svc_p,vbga);
 	  
+	  //	  cout << "goodSoln= " << boolalpha << goodSoln << endl;
+
 	  // If good... 
 	  if (goodSoln) {
 	    totalGoodSol=True;
@@ -1665,9 +1681,11 @@ Bool Calibrater::genericGatherAndSolve() {
 	    svc_p->applySNRThreshold();
 	    
 	    // ..and file this solution in the correct slot
-	    svc_p->keep(slotidx(thisSpw));
-	    Int n=svc_p->nSlots(thisSpw);
-	    svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
+	    if (svc_p->freqDepPar())
+	      svc_p->keep1(ich);
+	    //	    svc_p->keep(slotidx(thisSpw));
+	    //      Int n=svc_p->nSlots(thisSpw);
+	    //	    svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
 	    
 	  }
 	  else 
@@ -1675,6 +1693,10 @@ Bool Calibrater::genericGatherAndSolve() {
 	    svc_p->currMetaNote();
 	  
 	} // parameter channels
+
+	if (totalGoodSol)
+	  svc_p->keepNCT();
+
 	
 	// Count good solutions.
 	if (totalGoodSol)	nGood++;
@@ -1687,7 +1709,8 @@ Bool Calibrater::genericGatherAndSolve() {
 	svc_p->selfSolveOne(vbga);
 
 	// File this solution in the correct slot of the CalSet
-	svc_p->keep(slotidx(thisSpw));
+	//	svc_p->keep(slotidx(thisSpw));  NEWCALTABLE
+	svc_p->keepNCT();
 
 	nGood++;
       } 
@@ -1713,10 +1736,13 @@ Bool Calibrater::genericGatherAndSolve() {
     // TBD: Remove BPOLY specificity here
     if (svc_p->typeName()!="BPOLY") {
       // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+
+      //  /* NEWCALTABLE
       svc_p->globalPostSolveTinker();
-      
+      //  */
       // write the table
-      svc_p->store();
+      svc_p->storeNCT();
+      //      svc_p->store();
     }
   }
 
@@ -2271,7 +2297,7 @@ void Calibrater::fluxscale(const String& infile,
 	String message="Storing result in "+out;
 	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
       }
-      fsvj_->store(out,append);
+      fsvj_->storeNCT(out,append);
       
       // Clean up
       delete fsvj_;
@@ -2610,7 +2636,7 @@ void Calibrater::specifycal(const String& type,
     cal_->specify(specify);
 
     // Store result
-    cal_->store();
+    cal_->storeNCT();
 
     delete cal_;
 
@@ -2637,7 +2663,7 @@ Bool Calibrater::smooth(const String& infile,
                         const Vector<String>& fields)
 {
 
-  //  throw(AipsError("Method 'smooth' is temporarily disabled."));
+  throw(AipsError("Method 'Calibrater::smooth' is temporarily disabled."));
   
   // TBD: support append?
   // TBD: spw selection?
@@ -2752,7 +2778,7 @@ Bool Calibrater::smooth(const String& infile,
                         const String& fields)
 {
 
-  //  throw(AipsError("Method 'smooth' is temporarily disabled."));
+  throw(AipsError("Method 'Calibrater::smooth' is temporarily disabled."));
   
   // TBD: support append?
   // TBD: spw selection?

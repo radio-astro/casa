@@ -66,10 +66,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// could still be needed for flagging measurement sets...
 	if (ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval())  {
 	    if ( memory::nullptr.check(building_polygon) == false ) {
-		building_polygon->closeFigure( );
-		building_polygon = memory::nullptr;
-		refresh( );
-		return;
+		// upon double-click close polygon if more than 3 vertices...
+		// otherwise, add another vertex...
+		if ( building_polygon->numVertices( ) > 3 ) {
+		    // greater than 3 because the last vertex is pre-loaded
+		    // and adjusted as the user moves the mouse...
+		    building_polygon->closeFigure( );
+		    building_polygon = memory::nullptr;
+		    refresh( );
+		    return;
+		} else {
+		    double linx1, liny1;
+		    viewer::screen_to_linear( wc, x, y, linx1, liny1 );
+		    building_polygon->addVertex( linx1, liny1, true );
+		    building_polygon->addVertex( linx1, liny1 );
+		    refresh( );
+		    return;
+		}
 	    }
 	    doubleClicked(x, y);
 	}

@@ -307,7 +307,8 @@ public:
 
 protected:
 
-  // <nothing>
+  // B-specific weight scaling factors
+  virtual void syncWtScale();
 
 private:
 

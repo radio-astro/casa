@@ -38,6 +38,8 @@
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CTPatchedInterp.h>
 #include <synthesis/CalTables/CalSet.h>
 #include <synthesis/CalTables/CalSetMetaInfo.h>
 #include <synthesis/CalTables/CalInterp.h>
@@ -175,6 +177,8 @@ public:
 
   // Default value for parameters
   virtual Complex defaultPar() { return Complex(1.0); };
+  virtual Float defaultRPar() { return Float(0.0); };
+  virtual Complex defaultCPar() { return Complex(1.0); };
 
   // Arrange to build a cal table from specified values
   virtual void setSpecify(const Record& specify);
@@ -205,6 +209,11 @@ public:
   inline virtual Cube<Bool>&    solveParOK()  {return (*solveParOK_[currSpw()]);};
   inline virtual Cube<Float> &  solveParErr() {return (*solveParErr_[currSpw()]);};
   inline virtual Cube<Float> &  solveParSNR() {return (*solveParSNR_[currSpw()]);};
+  inline virtual Cube<Complex>& solveAllCPar()   {return (*solveAllCPar_[currSpw()]);};
+  inline virtual Cube<Float>&   solveAllRPar()   {return (*solveAllRPar_[currSpw()]);};
+  inline virtual Cube<Bool>&    solveAllParOK()  {return (*solveAllParOK_[currSpw()]);};
+  inline virtual Cube<Float> &  solveAllParErr() {return (*solveAllParErr_[currSpw()]);};
+  inline virtual Cube<Float> &  solveAllParSNR() {return (*solveAllParSNR_[currSpw()]);};
 
   // Access to source pol parameters
   inline Vector<Complex>& srcPolPar() { return srcPolPar_; };
@@ -270,6 +279,19 @@ public:
 
   // Report solved-for QU
   virtual void reportSolvedQU();
+
+
+  // New CalTable handling
+  virtual void createMemCalTable();
+  virtual void keep1(Int ichan);
+  virtual void keepNCT();
+  virtual void storeNCT();
+  void storeNCT(const String& tableName,const Bool& append);
+
+  virtual void loadMemCalTable(String ctname,String field="");
+
+  // New spwOK
+  virtual Bool spwOK(Int ispw);
 
   // File the current solved solution into a slot in the CalSet
   virtual void keep(const Int& slot);
@@ -403,6 +425,12 @@ protected:
   void sortVisSet(VisSet& vs, const Bool verbose=False);
 
   Int parType_;
+
+  // New CalTable 
+  NewCalTable *ct_;
+  CTPatchedInterp *ci_;
+  Vector<Bool> spwOK_;
+
   // Solution/Interpolation 
   CalSet<Complex> *cs_;
   CalSet<Float> *rcs_;
@@ -492,6 +520,12 @@ private:
   PtrBlock<Cube<Float>*>   solveParErr_; // [nSpw](nPar,1,{1|nElm})
   PtrBlock<Cube<Float>*>   solveParSNR_; // [nSpw](nPar,1,{1|nElm})
 
+  PtrBlock<Cube<Complex>*> solveAllCPar_;   // [nSpw](nPar,nChan,{1|nElem})
+  PtrBlock<Cube<Float>*>   solveAllRPar_;   // [nSpw](nPar,nChan,{1|nElem})
+  PtrBlock<Cube<Bool>*>    solveAllParOK_;  // [nSpw](nPar,nChan,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveAllParErr_; // [nSpw](nPar,nChan,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveAllParSNR_; // [nSpw](nPar,nChan,{1|nElm})
+
   Vector<Complex> srcPolPar_;
 
   // A _pointer_ to the external channel mask
@@ -564,6 +598,9 @@ public:
 			 SolvableVisCal::fluxScaleStruct&,
 			 const String&)
 	{ throw(AipsError("NYI")); };
+
+  // SVM-specific write to caltable
+  virtual void keepNCT();
 
   // Report state:
   inline virtual void state() { stateSVM(True); };
@@ -695,6 +732,9 @@ public:
 		 const Vector<String>& fldNames,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
 		 const String& oListFile);
+
+  // SVJ-specific write to caltable
+  virtual void keepNCT();
 			     
   // Report state:
   inline virtual void state() { stateSVJ(True); };
@@ -788,10 +828,6 @@ private:
 
 // Discern cal table type from the table itself
 String calTableType(const String& tablename);
-
-
-
-
 
 } //# NAMESPACE CASA - END
 
