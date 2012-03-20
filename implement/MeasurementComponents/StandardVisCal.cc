@@ -29,6 +29,7 @@
 
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/CalTables/CTIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <scimath/Fitting/LSQFit.h>
@@ -755,23 +756,45 @@ void BJones::setSolve(const Record& solve) {
 
 void BJones::normalize() {
 
-  logSink() << "Normalizing solutions per spw, pol, ant, time." 
-	    << LogIO::POST;
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
 
-  // Iteration axes (norm per spw, pol, ant, timestamp)
-  IPosition itax(3,0,2,3);
-  
-  for (Int ispw=0;ispw<nSpw();++ispw)
-    if (cs().nTime(ispw)>0) {
-      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
-      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
-      while (!soliter.pastEnd()) {
-	normSolnArray(soliter.array(),okiter.array(),True);
-	soliter.next();
-	okiter.next();
-      }
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
+
+    logSink() << "Normalizing solutions per spw, pol, ant, time." 
+	      << LogIO::POST;
+
+    // In this generic version, one normalization factor per spw
+    Block<String> col(3);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    CTIter ctiter(*ct_,col);
+
+    // Cube iteration axes are pol and ant
+    IPosition itax(2,0,2);
+   
+    while (!ctiter.pastEnd()) {
+      Cube<Bool> fl(ctiter.flag());
       
+      if (nfalse(fl)>0) {
+	Cube<Complex> p(ctiter.cparam());
+	ArrayIterator<Complex> soliter(p,itax,False);
+	ArrayIterator<Bool> fliter(fl,itax,False);
+	while (!soliter.pastEnd()) {
+	  normSolnArray(soliter.array(),!fliter.array(),True); // Do phase
+	  soliter.next();
+	  fliter.next();
+	}
+	
+	// record result...	
+	ctiter.setcparam(p);
+      }
+      ctiter.next();
     }
+  }
+
+  cout << "End of BJones::normalize()" << endl;
 
 }
 
@@ -788,28 +811,61 @@ void BJones::globalPostSolveTinker() {
 
 void BJones::fillChanGaps() {
 
+  // TBD: Can this be consolidated with normalization (should be done before norm!)
+
   logSink() << "Filling in flagged solution channels by interpolation." 
 	    << LogIO::POST;
 
   // Iteration axes (norm per spw, pol, ant, timestamp)
   IPosition itax(3,0,2,3);
 
-  for (Int ispw=0;ispw<nSpw();++ispw)
-    // Only if there are any solutions, and there are more than 2 channels
-    if (cs().nTime(ispw)>0 && cs().nChan(ispw)>2) {
-      // Iterate over time, pol, and ant
-      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
-      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
-      while (!soliter.pastEnd()) {
-	fillChanGapArray(soliter.array(),okiter.array());
-	soliter.next();
-	okiter.next();
+
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
+
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
+
+    logSink() << "Normalizing solutions per spw, pol, ant, time." 
+	      << LogIO::POST;
+
+    // In this generic version, one normalization factor per spw
+    Block<String> col(3);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    CTIter ctiter(*ct_,col);
+
+    // Cube iteration axes are pol and ant
+    IPosition itax(2,0,2);
+   
+    while (!ctiter.pastEnd()) {
+      Cube<Bool> fl(ctiter.flag());
+      
+      if (nfalse(fl)>0) {
+	Cube<Complex> p(ctiter.cparam());
+	ArrayIterator<Complex> soliter(p,itax,False);
+	ArrayIterator<Bool> fliter(fl,itax,False);
+	Array<Bool> sok;
+	while (!soliter.pastEnd()) {
+	  sok=!fliter.array();
+	  fillChanGapArray(soliter.array(),sok);
+	  soliter.next();
+	  fliter.next();
+	}
+	
+	// record result...	
+	ctiter.setcparam(p);
+	ctiter.setflag(!sok);
       }
+      ctiter.next();
     }
+  }
 }
 
 void BJones::fillChanGapArray(Array<Complex>& sol,
 			      Array<Bool>& solOK) {
+
+  // TBD: Do this with InterpolateArray1D a la CTPatchedInterp::resampleInFreq
 
   // Make the arrays 1D
   Vector<Complex> solv(sol.reform(IPosition(1,sol.nelements())));
@@ -894,6 +950,51 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
   } // done
 
 }
+
+void BJones::syncWtScale() {
+
+  //  VisJones::syncWtScale();
+  //  cout << "currWtScale().shape() = " << currWtScale().shape() << endl;
+  //  cout << "currWtScale() = " << currWtScale() << endl;
+
+  Cube<Float> amps;
+  amps=Cube<Float>(ci_->tresultF(currField(),currSpw()))(Slice(0,2,2),Slice(),Slice());
+  Cube<Bool> ampfl;
+  ampfl=ci_->tresultFlag(currField(),currSpw());
+  IPosition ash=amps.shape();
+
+  // Calculate 1/square(mean(1/amp(ch))) for all B channels
+  //  (even if we are calibrating a subset of channels)
+  Matrix<Float> newWtSc(ash(0),ash(2));
+  newWtSc.set(Float(1.0));
+  Vector<Float> thisamp;
+  Vector<Bool> thisfl;
+  for (Int iant=0;iant<ash(2);++iant) {
+    for (Int ipol=0;ipol<ash(0);++ipol) {
+      thisfl.reference(ampfl.xyPlane(iant).row(ipol));
+      thisamp.reference(amps.xyPlane(iant).row(ipol));
+      thisfl(thisamp<FLT_EPSILON)=True;  // flag any zeros
+      Int ngoodch=nfalse(thisfl);
+      if (ngoodch>0) {
+	Float thisWtSc(0.0);
+	for (Int ich=0;ich<ash(1);++ich)
+	  if (!thisfl(ich)) 
+	    thisWtSc+=Float(1.0)/thisamp(ich);
+	thisWtSc/=Float(ngoodch);
+	newWtSc(ipol,iant)=Float(1.0)/thisWtSc/thisWtSc;
+      }
+    }
+  }
+
+  //  cout << "newWtSc.shape() = " << newWtSc.shape() << endl;
+  //  cout << "newWtSc="<< newWtSc << endl;
+  //  cout << "Ratio: " << newWtSc/currWtScale() << endl;
+
+  // Assign to currWtScale
+  currWtScale().assign(newWtSc);
+
+}
+
 
 
 
@@ -1108,6 +1209,10 @@ void DJones::globalPostSolveTinker() {
 						       
 void DJones::applyRefAnt() {
 
+  SolvableVisJones::applyRefAnt();
+  return;
+  /*
+
   if (refant()<0)
     throw(AipsError("No refant specified."));
 
@@ -1169,7 +1274,7 @@ void DJones::applyRefAnt() {
       } // islot
     } // nTime(ispw)>0
   } // ispw
-
+  */
 }
 
 void DJones::logResults() {
@@ -1181,63 +1286,61 @@ void DJones::logResults() {
   rl(0)="R: ";
   rl(1)="L: ";
 
-  const ROMSAntennaColumns ac(MeasurementSet(msName()).antenna());
-  Vector<String> antNames(ac.name().getColumn());
-
-  Vector<uInt> ord;
-  genSort(ord,antNames);
+  ROMSAntennaColumns antcol(ct_->antenna());
+  Vector<String> antNames(antcol.name().getColumn());
 
   logSink() << "The instrumental polarization solutions are: " << LogIO::POST;
 
   logSink().output().precision(4);
 
-  for (Int ispw=0;ispw<nSpw();++ispw) {
-    
-    currSpw()=ispw;
-    
-    if (cs().nTime(ispw)>0) {
+  Block<String> cols(3);
+  cols[0]="SPECTRAL_WINDOW_ID";
+  cols[1]="TIME";
+  cols[2]="ANTENNA1";
+  ROCTIter ctiter(*ct_,cols);
 
-      if (cs().nTime(ispw)>1)
-	logSink() << " Spw " << ispw << " has a time-dep D solution." << endl;
+  Int lastspw(-1);
+  Double lasttime(-1.0);
+  while (!ctiter.pastEnd()) {
+    Int ispw=ctiter.thisSpw();
+    Double time=ctiter.thisTime();
+    Int a1=ctiter.thisAntenna1();
+    Vector<Complex> sol;
+    sol=ctiter.cparam().xyPlane(0).column(0);
+    Vector<Bool> fl;
+    fl=ctiter.flag().xyPlane(0).column(0);
+
+    if (ispw!=lastspw)    
+      logSink() << " Spw " << ispw << ":" << endl;
+    if (time !=lasttime)
+      logSink() << " Time " << MVTime(time/C::day).string(MVTime::YMD,7) << ":" << endl;
+
+    logSink().output().setf(ios::left, ios::adjustfield);
+
+    logSink() << "  Ant=" << antNames(a1) << ": ";
+    for (Int ipar=0;ipar<2;++ipar) {
+      logSink() << rl(ipar);
+      if (!fl(ipar)) {
+	logSink() << "A="; 
+	logSink().output().width(10);
+	logSink() << abs(sol(ipar));
+	logSink() << " P=";
+	logSink().output().width(8);
+	logSink() << arg(sol(ipar))*180.0/C::pi;
+	if (ipar==0) logSink() << " ; ";
+      }
       else {
-    
-	logSink() << " Spw " << ispw << ":" << endl;
-	
-	// References to ease access to solutions
-	Array<Complex> sol(cs().par(ispw));
-	Array<Bool> sok(cs().parOK(ispw));
-	
-	IPosition ip(4,0,0,0,0);
+	logSink().output().width(26);
+	logSink() << "(flagged)" << " ";
+      }
+    } // ipol
+    logSink() << endl;
+    logSink() << LogIO::POST;
 
-	logSink().output().setf(ios::left, ios::adjustfield);
-
-	for (Int iant=0;iant<sol.shape()(2);++iant) {
-	  ip(2)=ord(iant);
-	  logSink() << "  Ant=" << antNames(ord(iant)) << ": ";
-	  for (Int ipar=0;ipar<2;++ipar) {
-	    logSink() << rl(ipar);
-	    ip(0)=ipar;
-	    if (sok(ip)) {
-	      logSink() << "A="; 
-	      logSink().output().width(10);
-	      logSink() << abs(sol(ip));
-	      logSink() << " P=";
-	      logSink().output().width(8);
-	      logSink() << arg(sol(ip))*180.0/C::pi;
-	      if (ipar==0) logSink() << " ; ";
-	    }
-	    else {
-	      logSink().output().width(26);
-	      logSink() << "(flagged)" << " ";
-	    }
-	  } // ipol
-	  logSink() << endl;
-	} // iant
-	logSink() << LogIO::POST;
-      } // nTime==1
-    } // nTime>0
-  } // ispw
-
+    lastspw=ispw;
+    lasttime=time;
+    ctiter.next();
+  } // ctiter
 }
 
 
@@ -1556,6 +1659,9 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
   Vector<Int> nChunkPerSol;
   Int nSol = sizeUpSolve(vs,nChunkPerSol);
   
+  // Create the Caltable
+  createMemCalTable();
+
   // The iterator, VisBuffer
   VisIter& vi(vs.iter());
   VisBuffer vb(vi);
@@ -1629,6 +1735,12 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
     Int thisSpw=spwMap()(svb.spectralWindow());
     slotidx(thisSpw)++;
 
+    // We are actually solving for all channels simultaneously
+    solveCPar().reference(solveAllCPar());
+    solveParOK().reference(solveAllParOK());
+    solveParErr().reference(solveAllParErr());
+    solveParSNR().reference(solveAllParSNR());
+
     // Fill solveCPar() with 1, nominally, and flagged
     solveCPar()=Complex(1.0);
     solveParOK()=False;
@@ -1696,7 +1808,10 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
       nGood++;
     }
 
-    keep(slotidx(thisSpw));
+    
+    //    keep(slotidx(thisSpw));  NEWCALTABLE!
+
+    keepNCT();
     
   }
   
@@ -1715,7 +1830,7 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
     globalPostSolveTinker();
 
     // write the table
-    store();
+    storeNCT();
   }
 
 }
@@ -1971,26 +2086,46 @@ MfMueller::~MfMueller() {
 void MfMueller::normalize() {
 
   // This is just like BJones
+  // TBD:  consolidate (via generalized SVC::normalize(Block<String> cols) )
 
-  logSink() << "Normalizing solutions per spw, pol, baseline, time"
-            << LogIO::POST;
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
 
-  // Iteration axes (norm per spw, pol, ant, timestamp)
-  //  (this normalizes each baseline spectrum)
-  IPosition itax(3,0,2,3);
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
 
-  for (Int ispw=0;ispw<nSpw();++ispw)
-    if (cs().nTime(ispw)>0) {
-      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
-      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
-      while (!soliter.pastEnd()) {
-        normSolnArray(soliter.array(),okiter.array(),True);
-        soliter.next();
-        okiter.next();
+    logSink() << "Normalizing solutions per spw, pol, baseline, time"
+	      << LogIO::POST;
+
+    Block<String> col(4);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    col[3]="ANTENNA2";
+    CTIter ctiter(*ct_,col);
+
+    // Cube iteration axes are pol and ant
+    IPosition itax(2,0,2);
+   
+    while (!ctiter.pastEnd()) {
+      Cube<Bool> fl(ctiter.flag());
+      
+      if (nfalse(fl)>0) {
+	Cube<Complex> p(ctiter.cparam());
+	ArrayIterator<Complex> soliter(p,itax,False);
+	ArrayIterator<Bool> fliter(fl,itax,False);
+	while (!soliter.pastEnd()) {
+	  normSolnArray(soliter.array(),!fliter.array(),True); // Do phase
+	  soliter.next();
+	  fliter.next();
+	}
+	
+	// record result...	
+	ctiter.setcparam(p);
       }
-
+      ctiter.next();
     }
-
+  }
+  cout << "End of MfMueller::normalize()" << endl;
 }
 
 
@@ -2177,6 +2312,8 @@ void XMueller::setApply(const Record& apply) {
 
 void XMueller::setSolve(const Record& solvepar) {
 
+  cout << "XMueller: parType() = " << this->parType() << endl;
+
   SolvableVisCal::setSolve(solvepar);
 
   // Force calwt to False 
@@ -2185,6 +2322,10 @@ void XMueller::setSolve(const Record& solvepar) {
   // For X insist preavg is meaningful (5 minutes or user-supplied)
   if (preavg()<0.0)
     preavg()=300.0;
+
+  
+  cout << "ct_ = " << ct_ << endl;
+
 
 }
 
@@ -2204,6 +2345,9 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
   Vector<Int> nChunkPerSol;
   Int nSol = sizeUpSolve(vs,nChunkPerSol);
   
+  // Create the Caltable
+  createMemCalTable();
+
   // The iterator, VisBuffer
   VisIter& vi(vs.iter());
   VisBuffer vb(vi);
@@ -2271,8 +2415,13 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
     Int thisSpw=spwMap()(svb.spectralWindow());
     slotidx(thisSpw)++;
 
+    // We are actually solving for all channels simultaneously
+    solveCPar().reference(solveAllCPar());
+    solveParOK().reference(solveAllParOK());
+    solveParErr().reference(solveAllParErr());
+    solveParSNR().reference(solveAllParSNR());
+
     // Fill solveCPar() with 1, nominally, and flagged
-    // TBD: drop unneeded basline-dependence    
     solveCPar()=Complex(1.0);
     solveParOK()=False;
     
@@ -2298,7 +2447,8 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
       nGood++;
     }
 
-    keep(slotidx(thisSpw));
+    //    keep(slotidx(thisSpw));  NEWCALTABLE
+    keepNCT();
     
   }
   
@@ -2318,7 +2468,9 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
     // globalPostSolveTinker();
 
     // write the table
-    store();
+    //    store();  NEWCALTABLE
+    storeNCT();
+
   }
 
 }
@@ -2634,6 +2786,9 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
   Vector<Int> nChunkPerSol;
   Int nSol = sizeUpSolve(vs,nChunkPerSol);
 
+  // Create the Caltable
+  createMemCalTable();
+
   // The iterator, VisBuffer
   VisIter& vi(vs.iter());
   VisBuffer vb(vi);
@@ -2701,8 +2856,13 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
     Int thisSpw=spwMap()(svb.spectralWindow());
     slotidx(thisSpw)++;
 
+    // We are actually solving for all channels simultaneously
+    solveCPar().reference(solveAllCPar());
+    solveParOK().reference(solveAllParOK());
+    solveParErr().reference(solveAllParErr());
+    solveParSNR().reference(solveAllParSNR());
+
     // Fill solveCPar() with 1, nominally, and flagged
-    // TBD: drop unneeded basline-dependence    
     solveCPar()=Complex(1.0);
     solveParOK()=False;
     
@@ -2728,7 +2888,8 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
       nGood++;
     }
 
-    keep(slotidx(thisSpw));
+    //    keep(slotidx(thisSpw));  NEWCALTABLE
+    keepNCT();
     
   }
   
@@ -2748,7 +2909,8 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
     // globalPostSolveTinker();
 
     // write the table
-    store();
+    //    store();  NEWCALTABLE
+    storeNCT();
   }
 
 }
@@ -2913,6 +3075,8 @@ XfJones::XfJones(VisSet& vs) :
 {
   if (prtlev()>2) cout << "Xf::Xf(vs)" << endl;
 
+  cout << "nPar() = " << this->nPar() << endl;
+
   cout << "NB: You are using an EXPERIMENTAL antenna-based and CHANNEL-DEPENDENT X calibration." << endl;
 
 }
@@ -2931,6 +3095,10 @@ XfJones::~XfJones() {
 
 void XfJones::initSolvePar() {
 
+  SolvableVisJones::initSolvePar();
+  return;
+
+  /*
   if (prtlev()>3) cout << " XJones::initSolvePar()" << endl;
 
   for (Int ispw=0;ispw<nSpw();++ispw) {
@@ -2948,7 +3116,7 @@ void XfJones::initSolvePar() {
 
   }
   currSpw()=0;
-
+  */
 }
 
 

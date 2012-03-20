@@ -53,6 +53,9 @@ public:
   virtual void setSolve(const Record& solve);
   using GJones::setSolve;
 
+  // We have Float parameters
+  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
+
   // Return the type enum
   virtual Type type() { return VisCal::K; };
 

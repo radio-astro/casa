@@ -85,7 +85,7 @@ public:
   // fitorder != 0, but overkill otherwise.
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
-  virtual void store();
+  virtual void storeNCT();
 
   virtual void setApply() {SolvableVisCal::setApply();}
   virtual void setApply(const Record& applypar);

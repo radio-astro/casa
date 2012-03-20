@@ -53,7 +53,7 @@ class VisCal {
   friend class SolvableVisJones;
 
 public:
-
+ 
   // Allowed types of VisCal matrices - 'correct' order
   //  enum Type{UVMOD,Mf,M,K,B,G,D,C,E,P,T,EP,F};
   enum Type{Test=0,ANoise,M,KAntPos,K,B,G,J,D,X,C,P,E,T,F,A,ALL};
@@ -94,6 +94,9 @@ public:
   virtual String typeName()     { return "Unknown VisCal"; };
   virtual String longTypeName() { return "Unknown VisCal"; };
 
+  // Return Matrix type
+  virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::GLOBAL; };
+
   // Return the parameter type (nominally complex)
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::COMPLEX; };
 
@@ -104,6 +107,7 @@ public:
   // Report calibration availability per spw
   //  (always True for non-tabular?)
   virtual Vector<Bool> spwOK() { return Vector<Bool>(nSpw(),True); };
+  virtual Bool spwOK(Int) { return True; };
 
   // Frequency-dependent Parameters?  Nominally not.
   virtual Bool freqDepPar() { return False; };
@@ -192,6 +196,7 @@ protected:
   // Current coords
   inline Double& lastTime()                { return lastTime_(currSpw()); };
   inline Double& currTime()                { return currTime_(currSpw()); };
+  inline Int&    currScan()                { return currScan_(currSpw()); };
   inline Int&    currField()               { return currField_(currSpw()); };
   inline Vector<Double>& currFreq()        { return currFreq_; };
 
@@ -297,6 +302,7 @@ private:
 
   // Current indices
   Vector<Double> currTime_;
+  Vector<Int> currScan_;
   Vector<Int> currField_;
   Vector<Double> currFreq_;
   Vector<Double> lastTime_;
@@ -356,6 +362,9 @@ public:
   VisMueller(const Int& nAnt);
 
   virtual ~VisMueller();
+
+  // Return Matrix type
+  virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::MUELLER; };
 
   // Mueller matrix type (must be implemented in Mueller specializations!)
   virtual Mueller::MuellerType muellerType()=0;  
@@ -466,6 +475,9 @@ public:
   VisJones(const Int& nAnt);
 
   virtual ~VisJones();
+
+  // Return Matrix type
+  virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::JONES; };
 
   // What kind of Mueller matrices should we use?  
   //   (A function of the jonesType and target data shape)

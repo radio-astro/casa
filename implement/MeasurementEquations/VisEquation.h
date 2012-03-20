@@ -115,7 +115,7 @@ public:
   inline void unSetModel() { useInternalModel_=False; };
   
   // Report if spw has solutions available from all applied tables
-  inline Bool spwOK(const Int& spw) { return (napp_>0) ? spwOK_(spw) : True; };
+  Bool spwOK(const Int& spw);
 
   // Correct in place the OBSERVED visibilities in a VisBuffer
   //  with the apply-able VisCals
@@ -200,9 +200,6 @@ private:
 
   // The pivot point used by collapse2
   VisCal::Type pivot_;
-
-  // SpwOK?
-  Vector<Bool> spwOK_;
 
   // An internal (global) point source model
   Bool useInternalModel_;
