@@ -602,10 +602,31 @@ void QtExportManager::expImageInterfaceToCASA(ImageInterface<Float> *img, String
    try{
 		// from: synthesis/TransformMachines/Utils.h
    	// still to be copied over:
-   	// miscinfo, imageinfo, regions, history, mask??
+   	// regions, history??
    	PagedImage<Float> newPagedImage(img->shape(), img->coordinates(), outFile);
    	LatticeExpr<Float> le(*img);
    	newPagedImage.copyData(le);
+
+   	// check for a mask
+   	if (img->isMasked()){
+   		// get the default mask name
+   		const String maskName = img->getDefaultMask();
+
+   		// create a mask in the output image
+   		if (maskName.size()>0)
+   			newPagedImage.makeMask(maskName, True, True);
+   		else
+   			newPagedImage.makeMask("default", True, True);
+
+   		// copy the mask over
+   		(newPagedImage.pixelMask()).copyData(img->pixelMask());
+   		//img->pixelMask().copyDataTo(newPagedImage.pixelMask());
+   	}
+
+   	// copy ImageInfo and MiscInfo
+   	newPagedImage.setImageInfo(img->imageInfo());
+   	newPagedImage.setMiscInfo(img->miscInfo());
+
    } catch (AipsError x) {
    	QString msg = "Error: " + QString((x.getMesg()).c_str());
 		messageFromEM(msg);
