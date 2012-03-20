@@ -76,7 +76,6 @@ namespace casa {
 	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
-	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Polygon>(result);
 	    // return std::tr1::shared_ptr<Polygon>( );
 	}

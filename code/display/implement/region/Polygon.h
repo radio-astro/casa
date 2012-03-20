@@ -71,6 +71,8 @@ namespace casa {
 		void regionCenter( double &x, double &y ) const;
 
 		void closeFigure( );
+		virtual void polygonComplete( ) = 0;
+
 		void addVertex( double x, double y, bool rewrite_last_point=false );
 
 		AnnotationBase *annotation( ) const;

@@ -95,6 +95,9 @@ namespace casa {
 		// qt-event -> QtRegion -> QtPolygon -> Region::refresh( )
 		void refresh( ) { Polygon::refresh( ); }
 		AnnotationBase *annotation( ) const { return Polygon::annotation( ); }
+		// called when polygon region is completely specified...
+		// used to trigger related region events, e.g. displaying spectra...
+		void polygonComplete( );
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
