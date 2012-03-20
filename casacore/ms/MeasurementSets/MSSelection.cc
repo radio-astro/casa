@@ -421,16 +421,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 	      case ANTENNA_EXPR:
 		{
-		  TableExprNode col1AsTEN = msLike->col(msLike->columnName(MS::ANTENNA1)),
-		    col2AsTEN = msLike->col(msLike->columnName(MS::ANTENNA2));
+		  if(antennaExpr_p != "")
+		    {
+		      TableExprNode col1AsTEN = msLike->col(msLike->columnName(MS::ANTENNA1)),
+			col2AsTEN = msLike->col(msLike->columnName(MS::ANTENNA2));
 
-		  antenna1IDs_p.resize(0);
-		  antenna2IDs_p.resize(0);
-		  baselineIDs_p.resize(0,2);
-		  if(antennaExpr_p != "") 
-		    node = msAntennaGramParseCommand(msLike->antenna(), 
-						     col1AsTEN, col2AsTEN, antennaExpr_p, 
-						     antenna1IDs_p, antenna2IDs_p, baselineIDs_p);
+		      antenna1IDs_p.resize(0);
+		      antenna2IDs_p.resize(0);
+		      baselineIDs_p.resize(0,2);
+		      node = msAntennaGramParseCommand(msLike->antenna(), 
+						       col1AsTEN, col2AsTEN, antennaExpr_p, 
+						       antenna1IDs_p, antenna2IDs_p, baselineIDs_p);
+		    }
 		  // if(antennaExpr_p != "") 
 		  //   node = msAntennaGramParseCommand(ms, antennaExpr_p, 
 		  // 				     antenna1IDs_p, 
@@ -440,26 +442,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      case FIELD_EXPR:
 		{
-		  fieldIDs_p.resize(0);
-		  //		  TableExprNode colTEN = msLike->col(String("FIELD_ID"));
-		  //		  TableExprNode colTEN = ms->col(MS::columnName(MS::FIELD_ID));
-
-		  TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::FIELD_ID));
 		  if(fieldExpr_p != "")
-		    node = msFieldGramParseCommand(msLike->field(), colAsTEN, fieldExpr_p,fieldIDs_p);
-		  //		  colTEN.unlink();
+		    {
+		      fieldIDs_p.resize(0);
+		      // TableExprNode colTEN = msLike->col(String("FIELD_ID"));
+		      // TableExprNode colTEN = ms->col(MS::columnName(MS::FIELD_ID));
+
+		      TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::FIELD_ID));
+		      node = msFieldGramParseCommand(msLike->field(), colAsTEN, fieldExpr_p,fieldIDs_p);
+		      // colTEN.unlink();
+		    }
 		  break;
 		}
 	      case SPW_EXPR:
 		{
-		  TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::DATA_DESC_ID));
-		  spwIDs_p.resize(0);
-		  if (spwExpr_p != "" &&
-		      msSpwGramParseCommand(msLike->spectralWindow(), msLike->dataDescription(),
-					    colAsTEN, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
-		  // if (spwExpr_p != "" &&
-		  //     msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
-		    node = *(msSpwGramParseNode());
+		  if (spwExpr_p != "")
+		    {
+		      TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::DATA_DESC_ID));
+		      spwIDs_p.resize(0);
+		      // if (spwExpr_p != "" &&
+		      //     msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
+		      if (msSpwGramParseCommand(msLike->spectralWindow(), 
+						msLike->dataDescription(),
+						colAsTEN, spwExpr_p,
+						spwIDs_p, chanIDs_p) == 0)
+			node = *(msSpwGramParseNode());
+		}
 		  break;
 		}
 	      case SCAN_EXPR:
