@@ -117,7 +117,7 @@
 
 		<param type="bool" name="usescratch">
 		  <description>Will create if necessary and use the MODEL_DATA </description>
-		  <value>True</value>
+		  <value>False</value>
 		  </param>
                 <constraints>
                   <when param="selectdata">
@@ -394,11 +394,13 @@
 	       with descriptions of the models used by setjy (both
 	       extragalactic and Solar System).
 
-        usescratch  -- If True: he model visibility will be evaulated and saved on 
+        usescratch  -- If True: the model visibility will be evaluated and saved on 
 	disk in the MODEL_DATA column. This will increase your ms in size 
-	by a factor of 3. If False: then the model is saved header and model visibilities 
-	are evaluated when calculating calibration  or plotting in plotms.
-        Use True if you need to interact with the  MODEL_DATA in python, say.
+	by a factor of 1.5 (w.r.t. the case where you only have the DATA and 
+        the CORRECTED_DATA column). If False: the model is saved in the header 
+        and model visibilities are evaluated when calculating calibration or 
+        plotting in plotms.
+        Use True if you need to interact with the MODEL_DATA in python, say.
             
 </example>
 </task>
