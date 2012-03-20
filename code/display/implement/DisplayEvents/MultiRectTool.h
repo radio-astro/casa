@@ -117,11 +117,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    void revokeRegion( viewer::Region * );
 
 	    // returns a set which indicates regions this creator creates...
-	    const std::set<Types> &regionsCreated( ) const;
+	    const std::set<viewer::Region::RegionTypes> &regionsCreated( ) const;
 
-	    bool create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+	    bool create( viewer::Region::RegionTypes region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 			 const std::string &font, int font_size, int font_style, const std::string &font_color,
-			 const std::string &line_color, viewer::Region::LineStyle line_style );
+			 const std::string &line_color, viewer::Region::LineStyle line_style, bool );
 
 	protected:
 

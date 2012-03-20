@@ -150,20 +150,34 @@ def pclean(vis=None,
             chanchunk=chanchunk-1
         if(chanchunk <1):
             chanchunk=1
-        pim.pcube(msname=vis, imagename=imagename, 
-              imsize=imsize, pixsize=[cellx, celly], 
-              phasecenter=phasecenter, 
-              field=field, spw=spw, 
-              ftmachine=ftmachine, alg=alg,
-              hostnames='', numcpuperhost=-1, 
-              majorcycles=majorcycles, niter=niter, gain=gain,
-              threshold=threshold, weight=weighting, robust=robust, scales=scales,
-              mode=cubemode, 
-              wprojplanes=wprojplanes,facets=facets, 
-              start=start, nchan=nchan, step=width, restfreq=restfreq,stokes=stokes, 
-              imagetilevol=1000000, chanchunk=chanchunk, maskimage=mask,  
-              contclean=(not overwrite), visinmem=False, numthreads=1)
-
+        majcyc=majorcycles
+        interloop=1
+        if(interactive):
+            interloop=majorcycles
+            majcyc=1
+            niter=niter/interloop
+        for k in range([1,interloop+1][interactive]) :
+            if(interactive and (mask=='')):
+                mask=imagename+'.mask'
+            pim.pcube(msname=vis, imagename=imagename, 
+                      imsize=imsize, pixsize=[cellx, celly], 
+                      phasecenter=phasecenter, 
+                      field=field, spw=spw, 
+                      ftmachine=ftmachine, alg=alg,
+                      hostnames='', numcpuperhost=-1, 
+                      majorcycles=majcyc, niter=[0,niter][k>0], gain=gain,
+                      threshold=threshold, weight=weighting, robust=robust, scales=scales,
+                      mode=cubemode, 
+                      wprojplanes=wprojplanes,facets=facets, 
+                      start=start, nchan=nchan, step=width, restfreq=restfreq,stokes=stokes, 
+                      imagetilevol=1000000, chanchunk=chanchunk, maskimage=mask,  
+                      contclean=[(not overwrite), True][interactive and k>0], visinmem=False, numthreads=1)
+            if(interactive and (k < interloop)) :
+                myim,=gentools(['im'])
+                myim.drawmask(imagename+'.residual', mask)
+                myim.done()
+                ###make sure the damn images are not kept locked
+                del myim
 #parallel_clean=pclean
     
 

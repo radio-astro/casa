@@ -75,6 +75,10 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 {
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp()" << endl;
 
+  ia1dmethod_=ftype(freqType_);
+
+  //  cout << "ia1dmethod_ = " << ia1dmethod_ << endl;
+
   // Assume MS dimensions in spw,ant are same (for now)
   //  TBD: Supply something from the MS to discern this...
   nSpwOut_=nSpwIn_;
@@ -98,11 +102,9 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   }
 
   // Handle spwmap
-  cout << "CTPatchedInterp::ctor: spwmap="<<spwmap<<endl;
+  //  cout << "CTPatchedInterp::ctor: spwmap="<<spwmap<<endl;
   setDefSpwMap();
-
-
-
+  setSpwMap(spwmap);
 
   // Set default maps
   setDefFldMap();
@@ -192,7 +194,7 @@ Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time, const Vector<Do
       Matrix<Bool> fRflg(freqResFlag_(spw,fld).xyPlane(iElemOut));
       Matrix<Float> tR(timeResult_(spw,fld).xyPlane(iElemOut));
       Matrix<Bool> tRflg(timeResFlag_(spw,fld).xyPlane(iElemOut));
-      resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(spw));
+      resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(spwMap_(spw)));
 
       // Calibration is new
       newcal=True;
@@ -366,7 +368,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
   Int flparmod=nFPar_/nPar_;    // for indexing the flag Matrices on the par axis
 
-  //cout << "nFPar_,nPar_,flparmod = " << nFPar_ << "," << nPar_ << "," << flparmod << endl;
+  //  cout << "nFPar_,nPar_,flparmod = " << nFPar_ << "," << nPar_ << "," << flparmod << endl;
 
   fres=0.0;
 
@@ -414,14 +416,35 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
     Int nfreq=fout.nelements();
     Int lo=0;
-    while (lo<nfreq && fout(lo)<=mfin(0)) {
-      fresi(lo++)=mtresi(0);
-    }
     Int hi=fresi.nelements()-1;
+    Double inlo(mfin(0));
     Int ihi=mtresi.nelements()-1;
-    while (hi>-1 && fout(hi)>=mfin(ihi)) {
-      fresi(hi--)=mtresi(ihi);
+    Double inhi(mfin(ihi));
+
+    // Handle 'nearest' extrapolation in sideband-dep way
+    Bool inUSB(inhi>inlo);
+    Bool outUSB(fout(hi)>fout(lo));
+    if (inUSB) {
+      if (outUSB) {
+	while (lo<nfreq && fout(lo)<=inlo) fresi(lo++)=mtresi(0);
+	while (hi>-1 && fout(hi)>=inhi) fresi(hi--)=mtresi(ihi);
+      }
+      else { // "outLSB"
+	while (lo<nfreq && fout(lo)>=inhi) fresi(lo++)=mtresi(ihi);
+	while (hi>-1 && fout(hi)<=inlo) fresi(hi--)=mtresi(0);
+      }
     }
+    else {  // "inLSB"
+      if (outUSB) {
+	while (lo<nfreq && fout(lo)<=inhi) fresi(lo++)=mtresi(ihi);
+	while (hi>-1 && fout(hi)>=inlo) fresi(hi--)=mtresi(0);
+      }
+      else {  // "outLSB"
+	while (lo<nfreq && fout(lo)>=inlo) fresi(lo++)=mtresi(0);
+	while (hi>-1 && fout(hi)<=inhi) fresi(hi--)=mtresi(ihi);
+      }
+    }
+
     //    cout << "lo, hi = " << lo << ","<<hi << endl;
 
     if (lo>hi) return; // Frequencies didn't overlap, nearest was used
@@ -431,7 +454,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     Vector<Float> slfresi(fresi(blc,trc));
     Vector<Double> slfout(fout(blc,trc));
 
-    InterpolateArray1D<Double,Float>::interpolate(slfresi,slfout,mfin,mtresi,1);
+    InterpolateArray1D<Double,Float>::interpolate(slfresi,slfout,mfin,mtresi,ia1dmethod_);
 
   }
 }
@@ -475,5 +498,24 @@ void CTPatchedInterp::setElemMap() {
   }
   } // switch
 }
+
+
+InterpolateArray1D<Double,Float>::InterpolationMethod CTPatchedInterp::ftype(String& strtype) {
+  if (strtype=="nearest")
+    return InterpolateArray1D<Double,Float>::nearestNeighbour;
+  if (strtype=="linear")
+    return InterpolateArray1D<Double,Float>::linear;
+  if (strtype=="cubic")
+    return InterpolateArray1D<Double,Float>::cubic;
+  if (strtype=="spline")
+    return InterpolateArray1D<Double,Float>::spline;
+
+  cout << "Using linear for freq interpolation as last resort." << endl;
+  return InterpolateArray1D<Double,Float>::linear;
+
+
+}
+
+
 
 } //# NAMESPACE CASA - END

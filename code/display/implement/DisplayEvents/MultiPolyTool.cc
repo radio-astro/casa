@@ -66,10 +66,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// could still be needed for flagging measurement sets...
 	if (ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval())  {
 	    if ( memory::nullptr.check(building_polygon) == false ) {
-		building_polygon->closeFigure( );
-		building_polygon = memory::nullptr;
-		refresh( );
-		return;
+		// upon double-click close polygon if more than 3 vertices...
+		// otherwise, add another vertex...
+		if ( building_polygon->numVertices( ) > 3 ) {
+		    // greater than 3 because the last vertex is pre-loaded
+		    // and adjusted as the user moves the mouse...
+		    building_polygon->closeFigure( );
+		    building_polygon = memory::nullptr;
+		    refresh( );
+		    return;
+		} else {
+		    double linx1, liny1;
+		    viewer::screen_to_linear( wc, x, y, linx1, liny1 );
+		    building_polygon->addVertex( linx1, liny1, true );
+		    building_polygon->addVertex( linx1, liny1 );
+		    refresh( );
+		    return;
+		}
 	    }
 	    doubleClicked(x, y);
 	}
@@ -501,23 +514,25 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
 	}
     }
 
-    static std::set<viewer::RegionCreator::Types> multi_poly_tool_region_set;
-    const std::set<viewer::RegionCreator::Types> &MultiPolyTool::regionsCreated( ) const {
+    static std::set<viewer::Region::RegionTypes> multi_poly_tool_region_set;
+    const std::set<viewer::Region::RegionTypes> &MultiPolyTool::regionsCreated( ) const {
 	if ( multi_poly_tool_region_set.size( ) == 0 ) {
-	    multi_poly_tool_region_set.insert( POLYGON );
+	    multi_poly_tool_region_set.insert( viewer::Region::PolyRegion );
 	}
 	return multi_poly_tool_region_set;
     }
 
-    bool MultiPolyTool::create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
-				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style ) {
+bool MultiPolyTool::create( viewer::Region::RegionTypes region_type, WorldCanvas *wc,
+			    const std::vector<std::pair<double,double> > &pts, const std::string &label,
+			    const std::string &font, int font_size, int font_style, const std::string &font_color,
+			    const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {
 	if ( pts.size( ) <= 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
 	std::tr1::shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
 	result->setLabel( label );
 	result->setFont( font, font_size, font_style, font_color );
 	result->setLine( line_color, line_style );
+	result->setAnnotation(is_annotation);
 	polygons.push_back( result );
 	refresh( );
 	return true;

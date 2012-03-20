@@ -142,8 +142,8 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
     }
   }
   else
-    // Escape if registration unchanged and 'nearest'
-    if (timeType()=="nearest") return False;  // no change
+    // Escape if registration unchanged and 'nearest' or exact
+    if (timeType()=="nearest" || exact) return False;  // no change
 
   // Now calculate the interpolation result
 
