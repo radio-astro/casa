@@ -2663,7 +2663,7 @@ Bool Calibrater::smooth(const String& infile,
                         const Vector<String>& fields)
 {
 
-  //  throw(AipsError("Method 'smooth' is temporarily disabled."));
+  throw(AipsError("Method 'Calibrater::smooth' is temporarily disabled."));
   
   // TBD: support append?
   // TBD: spw selection?
@@ -2778,7 +2778,7 @@ Bool Calibrater::smooth(const String& infile,
                         const String& fields)
 {
 
-  //  throw(AipsError("Method 'smooth' is temporarily disabled."));
+  throw(AipsError("Method 'Calibrater::smooth' is temporarily disabled."));
   
   // TBD: support append?
   // TBD: spw selection?
