@@ -65,18 +65,19 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     
     setWindowTitle("Viewer Display Panel");
     use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
+    const char default_dock_location[] = "right";
 
     std::string apos = rc.get("viewer." + rcid() + ".position.animator");
     if ( apos != "bottom" && apos != "right" && apos != "left" && apos != "top" ) {
-	rc.put( "viewer." + rcid() + ".position.animator", "bottom" );
+	rc.put( "viewer." + rcid() + ".position.animator", default_dock_location );
     }
     std::string tpos = rc.get("viewer." + rcid() + ".position.cursor_tracking");
     if ( tpos != "bottom" && tpos != "right" && tpos != "left" && tpos != "top" ) {
-	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "bottom" );
+	rc.put( "viewer." + rcid() + ".position.cursor_tracking", default_dock_location );
     }
     std::string rpos = rc.get("viewer." + rcid() + ".position.regions");
     if ( rpos != "bottom" && rpos != "right" && rpos != "left" && rpos != "top" ) {
-	rc.put( "viewer." + rcid() + ".position.regions", "bottom" );
+	rc.put( "viewer." + rcid() + ".position.regions", default_dock_location );
     }
 
     if ( use_new_regions ) {
