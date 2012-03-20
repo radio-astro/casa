@@ -165,8 +165,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	condition =
 	  // (ms()->col(colName1).in(antennaIds1)  && ms()->col(colName2).in(antennaIds2)) ||
 	  // (ms()->col(colName1).in(antennaIds2)  && ms()->col(colName2).in(antennaIds1));
-	  (column1AsTEN_p.in(antennaIds1)  && column1AsTEN_p.in(antennaIds2)) ||
-	  (column2AsTEN_p.in(antennaIds2)  && column2AsTEN_p.in(antennaIds1));
+	  (column1AsTEN_p.in(antennaIds1)  && column2AsTEN_p.in(antennaIds2)) ||
+	  (column1AsTEN_p.in(antennaIds2)  && column2AsTEN_p.in(antennaIds1));
       } 
     else 
       {
