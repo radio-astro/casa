@@ -59,8 +59,9 @@ StandardTsys::StandardTsys(VisSet& vs) :
 {
   if (prtlev()>2) cout << "StandardTsys::StandardTsys(vs)" << endl;
 
+  // TBD: get these directly from the MS
   nChanParList()=vs.numberChan();
-  startChanList()=vs.startChan();
+  startChanList()=vs.startChan();  // should be 0?
   
 }
 
@@ -104,14 +105,7 @@ void StandardTsys::setSpecify(const Record& specify) {
 	    << LogIO::POST;
   
 
-  Vector<Int> nSlot(nSpw(),0);
-
-  // Count slots per spw, and set nChan  
-  Block<String> columns(2);
-  columns[0] = "TIME";
-  columns[1] = "SPECTRAL_WINDOW_ID";
   Table sysCalTab(sysCalTabName_,Table::Old);
-  TableIterator sysCalIter(sysCalTab,columns);
 
   // Verify required columns in SYSCAL
   {
@@ -129,6 +123,21 @@ void StandardTsys::setSpecify(const Record& specify) {
 	  !sscol.tsysSpectrum().isDefined(0)) )
       throw(AipsError("SYSCAL table is incomplete. Cannot proceed."));
   }
+
+  // Create a new caltable to fill up
+  createMemCalTable();
+
+  // Setup shape of solveAllRPar
+  initSolvePar();
+
+  /* NEWCALTABLE
+
+  Vector<Int> nSlot(nSpw(),0);
+  // Count slots per spw, and set nChan  
+  Block<String> columns(2);
+  columns[0] = "TIME";
+  columns[1] = "SPECTRAL_WINDOW_ID";
+  TableIterator sysCalIter(sysCalTab,columns);
 
   // Iterate
   Int iter=0;
@@ -157,9 +166,106 @@ void StandardTsys::setSpecify(const Record& specify) {
       cs().solutionOK(ispw)=True;
     }
   }
+  */
 
 }
 
+
+
+void StandardTsys::specify(const Record&) {
+
+  // Escape if SYSCAL table absent
+  if (!Table::isReadable(sysCalTabName_))
+    throw(AipsError("The SYSCAL subtable is not present in the specified MS. Tsys unavailable."));
+
+  // Keep a count of the number of Tsys found per spw/ant
+  Matrix<Int> tsyscount(nSpw(),nAnt(),0);
+
+  Block<String> columns(2);
+  columns[0] = "TIME";
+  columns[1] = "SPECTRAL_WINDOW_ID";
+  Table sysCalTab(sysCalTabName_,Table::Old);
+  TableIterator sysCalIter(sysCalTab,columns);
+
+  // Iterate
+  Int iter(0);
+  while (!sysCalIter.pastEnd()) {
+
+    // First extract info from SYSCAL
+    MSSysCal mssc(sysCalIter.table());
+    MSSysCalColumns sccol(mssc);
+
+    Int ispw=sccol.spectralWindowId()(0);
+    currSpw()=ispw; // registers everything else!
+    Double timestamp=sccol.time()(0);
+    Double interval=sccol.interval()(0);
+
+    Vector<Int> ants;
+    sccol.antennaId().getColumn(ants);
+
+    Cube<Float> tsys;
+    sccol.tsysSpectrum().getColumn(tsys);
+    IPosition tsysshape(tsys.shape());
+
+    // Insist only that channel axis matches
+    if (tsysshape(1)!=nChanPar())
+      throw(AipsError("SYSCAL Tsys Spectrum channel axis shape doesn't match data! Cannot proceed."));
+
+    //  ...and that tsys pol axis makes sense
+    if (tsysshape(0)>2)
+      throw(AipsError("Tsys pol axis is implausible"));
+
+  /*
+    cout << iter << " "
+	 << MVTime(timestamp/C::day).string(MVTime::YMD,7)
+	 << " spw=" << ispw 
+	 << " shape = " << tsys.shape() 
+	 << endl;
+  */
+
+    // Now prepare to store in a caltable
+    currSpw()=ispw; // registers everything else!
+    refTime()=timestamp-interval/2.0;
+    currField()=-1;  // don't know this yet
+
+    // Initialize solveAllRPar, etc.
+    solveAllRPar()=0.0;
+    solveAllParOK()=True;  // Assume all ok
+    solveAllParErr()=0.1;  // what should we use here?  ~1/bandwidth?
+    solveAllParSNR()=1.0;
+
+    IPosition blc(3,0,0,0), trc(3,tsysshape(0)-1,nChanPar()-1,0);
+    for (uInt iant=0;iant<ants.nelements();++iant) {
+      Int thisant=ants(iant);
+      blc(2)=trc(2)=thisant; // the MS antenna index (not loop index)
+      Array<Float> currtsys(tsys.xyPlane(iant));
+      solveAllRPar()(blc,trc).nonDegenerate(2)=currtsys;
+      solveAllParOK()(blc,trc)=True;
+
+      // Increment tsys counter
+      ++tsyscount(ispw,thisant);
+
+    }
+    keepNCT();
+
+    sysCalIter.next();
+    ++iter;
+  }
+
+  logSink() << "Tsys counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    Vector<Int> tsyscountspw(tsyscount.row(ispw));
+    if (sum(tsyscountspw)>0)
+      logSink() << "Spw " << ispw << ": " << tsyscountspw 
+		<< " (" << sum(tsyscountspw) << ")" 
+		<< LogIO::POST;
+    else
+      logSink() << "Spw " << ispw << ": NONE." << LogIO::POST;
+  }
+
+}
+
+/*
 void StandardTsys::specify(const Record&) {
 
   // Escape if SYSCAL table absent
@@ -199,15 +305,6 @@ void StandardTsys::specify(const Record&) {
     //  ...and that tsys pol axis makes sense
     if (tsysshape(0)>2)
       throw(AipsError("Tsys pol axis is implausible"));
-
-  /*
-    cout << iter << " "
-	 << MVTime(timestamp/C::day).string(MVTime::YMD,7)
-	 << " spw=" << ispw 
-	 << " nrow = " << mssc.nrow() 
-	 << " shape = " << tsys.shape() 
-	 << endl;
-  */
 
     Int slot=islot(ispw);
 
@@ -266,12 +363,13 @@ void StandardTsys::specify(const Record&) {
 
 
 }
-
+*/
 
 void StandardTsys::calcAllJones() {
 
   // Antenna-based factors are the sqrt(Tsys)
-  currJElem()=sqrt(currCPar());
+  //  currJElem()=sqrt(currRPar());  NEWCALTABLE
+  convertArray(currJElem(),sqrt(currRPar()));
   currJElemOK()=currParOK();
 
 }
@@ -339,7 +437,15 @@ void EVLAGainTsys::setSpecify(const Record& specify) {
     //	    << " table from CANNED VALUES."
     	    << " table from MS SYSPOWER/CALDEVICE subtables."
 	    << LogIO::POST;
-  
+
+  // Create a caltable to fill up
+  createMemCalTable();
+
+  // Init the shapes of solveAllRPar, etc.
+  initSolvePar();
+
+
+  /*  NEWCALTABLE
   Vector<Int> nSlot(nSpw(),0);
 
   // Count slots per spw, and set nChan  
@@ -370,6 +476,7 @@ void EVLAGainTsys::setSpecify(const Record& specify) {
   cs().initCalTableDesc(typeName(),parType_);
   
   inflate(nChanParList(),startChanList(),nSlot);
+  */
 
 }
 
@@ -426,24 +533,22 @@ void EVLAGainTsys::specify(const Record&) {
     // the number of receptors
     Int nrec=psumshape(0);
 
-    Int slot=islot(ispw);
+    // Now prepare to record pars in the caltable
+    currSpw()=ispw;
+    refTime()=timestamp;
+    currField()=-1;  // TBD
+    // currScan()=??
 
-    cs().fieldId(ispw)(slot)=-1;
-    cs().time(ispw)(slot)=timestamp;
+    // Initialize solveAllRPar, etc.
+    solveAllRPar()=0.0;
+    solveAllParOK()=True;  // Assume all ok?
+    solveAllParErr()=0.1;  // what should we use here?  ~1/bandwidth?
+    solveAllParSNR()=1.0;
 
-    // Only stop-start diff matters
-    //  TBD: change CalSet to use only the interval
-    //  TBD: change VisBuffAcc to calculate exposure properly
-    cs().startTime(ispw)(slot)=0.0;
-    cs().stopTime(ispw)(slot)=interval;
+    Vector<Float> gain;  // a Vector for referencing slices of solveAllRPar
 
-    // For now, just make these non-zero:
-    cs().iFit(ispw).column(slot)=1.0;
-    cs().iFitwt(ispw).column(slot)=1.0;
-    cs().fit(ispw)(slot)=1.0;
-    cs().fitwt(ispw)(slot)=1.0;
-  
     Bool anyantgood(False);
+    IPosition blc(3,0,0,0),trc(3,2*nrec-1,0,0),stp(3,nrec,1,1);
     for (uInt iant=0;iant<ants.nelements();++iant) {
       Int thisant=ants(iant);
       Vector<Float> currpsum(psum.column(iant));
@@ -460,35 +565,29 @@ void EVLAGainTsys::specify(const Record&) {
 	++badcount(ispw,thisant);
       else {
 
-	anyantgood=True;
-	IPosition blc4(4,0,0,thisant,slot);
-	//	IPosition trc4(4,1,0,thisant,slot);
-	//	IPosition stp4(4,1,1,1,1);
-	IPosition trc4(4,2*nrec-1,0,thisant,slot);
-	IPosition stp4(4,nrec,1,1,1);
-	Vector<Complex> currgain(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
-	convertArray(currgain,sqrt(currpdif/currtcal));
-	cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(2)= True;
-	cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 0.0;
-	cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 1.0;
+	blc(2)=trc(2)=thisant; // the MS ant index (not loop index)
 	
-	blc4(0)=1;
-	Vector<Complex> currtsys(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
-	convertArray(currtsys,currtcal*currpsum/currpdif/2.0);
-	cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(2)= True;
-	cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 0.0;
-	cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 1.0;
-
+	blc(0)=0;
+	gain.reference(solveAllRPar()(blc,trc,stp).nonDegenerate(1));   // 'gain'
+	gain=sqrt(currpdif/currtcal);
+	gain*=Float(0.932*1.17);  // correlator efficiency X lobe rotator factor
+	
+	blc(0)=1;
+	solveAllRPar()(blc,trc,stp).nonDegenerate(1)=(currtcal*currpsum/currpdif/2.0);  // 'tsys'
+	
+	solveAllParOK().xyPlane(thisant)=True;
+      
 	// Increment good counter
 	++goodcount(ispw,thisant);
+	anyantgood=True;
 
       }
 
     }
-    cs().solutionOK(ispw)(slot) = anyantgood;
 
-    // increment spw-dep slot counter
-    ++islot(ispw);
+    // Record in the memory caltable
+    keepNCT();
+
     sysPowIter.next();
     ++iter;
   }
@@ -532,7 +631,6 @@ void EVLAGainTsys::specify(const Record&) {
 
 
 }
-
 
 void EVLAGainTsys::fillTcals() {
 
@@ -587,21 +685,19 @@ void EVLAGainTsys::fillTcals() {
 void EVLAGainTsys::calcAllJones() {
 
   // 0th and 2nd pars are the gains
-  currJElem()=currCPar()(Slice(0,2,2),Slice(),Slice());
+  //  currJElem()=currRPar()(Slice(0,2,2),Slice(),Slice()); // NEWCALTABLE
+  convertArray(currJElem(),currRPar()(Slice(0,2,2),Slice(),Slice()));
   currJElemOK()=currParOK()(Slice(0,2,2),Slice(),Slice());
 
 }
 
 void EVLAGainTsys::syncWtScale() {
 
-  Int nPolWt=currCPar().shape()(0)/2;
-
+  Int nPolWt=currRPar().shape()(0)/2;
   currWtScale().resize(nPolWt,nAnt());
 
-  Matrix<Complex> cCP(currCPar().nonDegenerate(0));
-  Matrix<Float> Tsys(nPolWt,nAnt());
-  Tsys=real(cCP(Slice(1,2,2),Slice()));
-  Tsys(Tsys<FLT_MIN)=1.0;
+  Matrix<Float> Tsys(currRPar()(Slice(1,2,2),Slice(),Slice()).nonDegenerate(1));
+  Tsys(Tsys<FLT_MIN)=1.0;  // OK?
 
   currWtScale() = 1.0f/Tsys;
 

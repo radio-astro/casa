@@ -55,7 +55,7 @@ VisEquation::VisEquation() :
   freqAveOK_(False),
   svc_(NULL),
   pivot_(VisCal::ALL),  // at the sky
-  spwOK_(),
+  //  spwOK_(),
   useInternalModel_(False),
   prtlev_(VISEQPRTLEV)
 {
@@ -130,14 +130,6 @@ void VisEquation::setapply(PtrBlock<VisCal*>& vcin) {
       }
       
     }
-    
-    // Maintain spwOK_ list
-    // TBD: Should VisEquation know a priori how many spw here? Probably.
-    spwOK_.resize();
-    spwOK_ = (vc()[0])->spwOK();
-    for (Int i=1;i<napp_;++i) 
-      spwOK_ = spwOK_ && vc()[i]->spwOK();
-    
   }
 
   // Set up freq-dependence of the Vis Equation
@@ -185,6 +177,16 @@ void VisEquation::setModel(const Vector<Float>& stokes) {
 
 }
 
+//----------------------------------------------------------------------
+// Get spwOK for a single spw by aggregating from the vc's
+Bool VisEquation::spwOK(const Int& spw) {
+  if (napp_<1) return True;  // if there are none, all is ok
+  // otherwise, accumulate from the VisCals
+  Bool spwok=vc()[0]->spwOK(spw);
+  for (Int i=1;i<napp_;++i) 
+    spwok = spwok && vc()[i]->spwOK(spw);
+  return spwok;
+}
 
 //----------------------------------------------------------------------
 // Correct in place the OBSERVED visibilities in a VisBuffer

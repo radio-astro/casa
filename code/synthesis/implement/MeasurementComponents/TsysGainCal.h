@@ -63,6 +63,9 @@ public:
   virtual String typeName()     { return "B TSYS"; };
   virtual String longTypeName() { return "B TSYS (freq-dep Tsys)"; };
 
+  // Tsys are Float parameters
+  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
+
   // Local setSpecify
   using BJones::setSpecify;
   virtual void setSpecify(const Record& specify);
@@ -85,6 +88,10 @@ protected:
   
   // Calculate Jones matrix elements from Tsys (j = sqrt(p) )
   virtual void calcAllJones();
+
+  // Calculate weight scale
+  //  For now, just call VisJones version (BJones version is experimental)
+  virtual void syncWtScale() { VisJones::syncWtScale(); };
 
 private:
 
@@ -113,6 +120,9 @@ public:
 
   // Return the type enum (for now, pretend we are B)
   virtual Type type() { return VisCal::G; };
+
+  // EVLA Gain and Tsys are Float parameters
+  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Return type name as string (ditto)
   virtual String typeName()     { return "G EVLAGAIN"; };
