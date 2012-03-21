@@ -326,7 +326,26 @@ class par(str):
 		default: '0.1arcsec'
 	        example: 'incell'    #uses incell value for the output cell size
 		
+	        -----------------------------------------------------
+
+                (for sdgrid)
+                cell -- x and y cell size. default unit arcsec
+                default: '' (automatically calculated from npix if it is 
+                             set, otherwise '1.0arcmin')
+                example: cell=['0.2arcmin, 0.2arcmin']
+                         cell='0.2arcmin' (equivalent to example above)
+                         cell=12.0 (interpreted as '12.0arcsec'='0.2arcmin')
 		"""
+
+        @staticmethod
+        def center():
+                """
+                center -- grid center
+                default: '' (automatically calculated from the data)
+                example: 'J2000 13h44m00 -17d02m00'
+                         ['05:34:48.2', '-05.22.17.7'] (in J2000 frame)
+                         [1.46, -0.09] (interpreted as radian in J2000 frame)
+                """
 
 	@staticmethod
 	def channelrange():
@@ -437,10 +456,16 @@ class par(str):
 	@staticmethod	
 	def clipminmax():
 		"""
+                (for flagdata)
         	clipminmax -- Range of data (Jy) that will NOT be flagged
                 default: [] means do not use clip option
                 example: [0.0,1.5]
 		
+	        -----------------------------------------------------
+                
+                (for sdgrid)
+                clipminmax -- do min/max cliping if True
+                default: False                
 		"""
 
 	@staticmethod
@@ -1004,9 +1029,18 @@ class par(str):
 	@staticmethod
 	def gridfunction():
 		"""
+                (for sdimaging, sdtpimaging)
 		gridfunction -- gridding function for imaging
 		options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
 		default: 'BOX'
+                
+                ------------------------------------------------------------
+
+                gridfunction -- gridding function 
+                options: 'BOX' (Box-car), 'SF' (Spheroidal), 
+                         'GAUSS' (Gaussian), 'PB' (Primary-beam)
+                default: 'BOX'
+                'PB' is not implemented yet.
 		"""
 		
 	@staticmethod
@@ -1069,6 +1103,14 @@ class par(str):
 		
 	        This selection is in addition to scanlist, field, and pollist
 		"""
+
+        @staticmethod
+        def ifno():
+                """
+                ifno -- IFNO to be gridded
+                default: -1 (only process IFNO in the first row)
+                example: 1
+                """
 
         @staticmethod
         def ignoreables():
@@ -1833,6 +1875,14 @@ class par(str):
         	npixels -- number of pixels to determine uv-cell size for weight calculation
 		"""
 
+        @staticmethod
+        def npix():
+                """
+                npix -- x and y image size in pixels, symmetric for single value
+                default: -1 (automatically calculated from cell size and the data)
+                example: npix=200 (equivalent to [200,200])
+                """
+
 	@staticmethod
 	def npointaver():
 		""" Number of points to average together for tuning the
@@ -1914,6 +1964,7 @@ class par(str):
 		        <infile>_cal             for sdcal and sdreduce,
 			<infile>_bs              for sdbaseline,
 			<infile>_f               for sdflag,
+                        <infile>.grid            for sdgrid,
 			<infile>_scaleed<factor> for sdscale, and
 			<infile>_sm              for sdsmooth.
 
@@ -2000,6 +2051,14 @@ class par(str):
                 example: axis=3; planes='3~9'
                          This will select channels 3-9 from axis 3 (spectral axis)
 		"""
+
+        @staticmethod
+        def plot():
+                """
+                plot -- Plot result or not
+                default: False (not plot)
+                example: if True, result will be plotted
+                """
 
 	@staticmethod
 	def plotcolor():
@@ -2962,6 +3021,18 @@ class par(str):
 
 		"""
 
+        @staticmethod
+        def weight():
+                """
+        weight -- weight type (both lower-case and upper-case are 
+                  acceptable)
+                options: 'UNIFORM',
+                         'TSYS'  (1/Tsys**2 weighted)
+                         'TINT'  (integration time weighted)
+                         'TINTSYS'  (Tint/Tsys**2)
+                default: 'UNIFORM'
+                """
+
 	@staticmethod
 	def whichhdu():
 		"""
@@ -2980,7 +3051,16 @@ class par(str):
 
 	@staticmethod
 	def width():
-		""" Channel width (value>1 indicates channel averaging: """
+		"""
+                Channel width (value>1 indicates channel averaging:
+
+		---------------------------------------------------------------
+
+                (for sdgrid)
+                width -- width of convolution kernel, not available 
+                         for BOX gridding
+                default: -1 (use default for each gridfunction)
+                """
 
 	@staticmethod
 	def windowsize():
