@@ -50,6 +50,7 @@
 #include <synthesis/CalTables/CTDesc.h>
 #include <synthesis/CalTables/CTMainRecord.h>
 #include <synthesis/CalTables/CTMainColumns.h>
+#include <synthesis/CalTables/VisCalEnum.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -120,6 +121,10 @@ class NewCalTable : public Table
    // Construct from setupNewTable 
    NewCalTable (SetupNewTable& newTab, uInt nrow = 0, Bool initialize = False);
    
+   // Create an empty NewCalTable conveniently
+   NewCalTable(String tableName,VisCalEnum::VCParType parType,
+	       String typeName,String msName,Bool doSingleChan);
+
    // Construct from a specified table name, and access option. Used
    // for accessing existing tables.
    NewCalTable (const String& tableName, 
@@ -185,6 +190,19 @@ class NewCalTable : public Table
 
    static Complex NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
 
+   // Fill in antenna-based solutions
+   void fillAntBasedMainRows(uInt nrows, 
+			     Double time,Double interval,
+			     Int fieldId,uInt spwId,Int scanNo,
+			     const Vector<Int>& ant1list, Int refant,
+			     const Cube<Complex>& cparam,
+			     const Cube<Bool>& flag,
+			     const Cube<Float>& paramErr,
+			     const Cube<Float>& snr);
+
+   // Add a line to the HISTORY table
+   void addHistoryMessage(String app="",String message="none");
+
  private:
 
    // Services for generic test table ctor
@@ -197,6 +215,10 @@ class NewCalTable : public Table
    void fillGenericAntenna(Int nAnt);
    void fillGenericSpw(Int nSpw,Vector<Int>& nChan);
      
+   // Force Spw subtable to be all nchan=1
+   //  (very basic; uses chan n/2 freq)
+   void makeSpwSingleChan();
+
    // The subtables
    CTAntenna antenna_p;
    CTField field_p;

@@ -46,6 +46,14 @@ namespace LibAIR {
 		    bool disperse,
 		    const std::string &msname);
 
+  void writeNewGainTbl(const ArrayGains &g,
+		       const char *fnameout,
+		       const MSSpec &s,
+		       std::set<size_t> reverse,
+		       bool disperse,
+		       const std::string &msname,
+		       const std::string &invocation);
+
   /** \brief Add "History" information to a calibration table --
       really just version info about us
    */
