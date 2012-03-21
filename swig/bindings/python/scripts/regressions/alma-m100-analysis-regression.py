@@ -313,13 +313,14 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-	    split(vis=name+'.ms',
-		  outputvis=name+'-line.ms',
-		  spw='1,3,5,7',
-		  datacolumn='corrected')
-	    flagmanager(vis = name+'-line.ms',
-			mode = 'save',
-                        versionname = 'apriori')
+        os.system('rm -rf '+name+'-line.ms')
+        split(vis=name+'.ms',
+              outputvis=name+'-line.ms',
+              spw='1,3,5,7',
+              datacolumn='corrected')
+        flagmanager(vis = name+'-line.ms',
+                    mode = 'save',
+                    versionname = 'apriori')
     timing()
 
             
