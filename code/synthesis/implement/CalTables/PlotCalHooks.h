@@ -68,14 +68,15 @@ private:
 class PlotCalCallBacks : public TPGuiCallBackHooks
 {
 public:
-  PlotCalCallBacks(Record metainfo):
-    TPGuiCallBackHooks()
+  PlotCalCallBacks(Record metainfo,Bool isNCT):
+    TPGuiCallBackHooks(),
+    isNCT_p(isNCT)
  {
     LocateColumns.resize(4);
     LocateColumns[0] = "ANTENNA1";
     LocateColumns[1] = "FIELD_ID";
     LocateColumns[2] = "TIME";
-    LocateColumns[3] = "CAL_DESC_ID";
+    LocateColumns[3] = CDIcol();
 
     if (metainfo.isDefined("fieldNames"))
       fieldNames_p = metainfo.asArrayString("fieldNames");
@@ -128,7 +129,7 @@ public:
 	else
 	  titleString = titleString + "  FldId=" + String::toString((Int)values(i));
       }
-      if (iteraxes(i)=="CAL_DESC_ID") {
+      if (iteraxes(i)==CDIcol()) {
 	if (spwIds_p.nelements()>0 && values(i)<spwIds_p.nelements())
 	  titleString = titleString + "  Spw=\\'" + String::toString(spwIds_p((Int)values(i))) + "\\'";
 	else
@@ -187,10 +188,15 @@ public:
   }
 
 private:
+
+  inline String CDIcol() { return (isNCT_p ? "SPECTRAL_WINDOW_ID" : "CAL_DESC_ID"); };
+
+
   Vector<String> fieldNames_p;
   Vector<String> antNames_p;
   Vector<Int> spwIds_p;
 
+  Bool isNCT_p;
 
 };
 

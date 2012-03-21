@@ -35,6 +35,8 @@ solutions may be iterated through antennas/spw/fields during one execution.
 			<value>real</value>
 			<value>imag</value>
 			<value>snr</value>
+			<value>tsys</value>
+			<value>delay</value>
 			</allowed>
 		</param>
 
@@ -49,6 +51,8 @@ solutions may be iterated through antennas/spw/fields during one execution.
 			<value>imag</value>
 			<value>snr</value>
 			<value>antenna</value>
+			<value>tsys</value>
+			<value>delay</value>
 			</allowed>
 		</param>
 
@@ -179,8 +183,8 @@ solutions may be iterated through antennas/spw/fields during one execution.
 	xaxis -- Value to plot on the x axis
 		Options: 'time','chan','freq','antenna','amp','phase','real','imag','snr'
 		Default: cal type dependent, usually 'time'
-	yaxis -- Value to plot ong the y-axis
-		Options: 'amp','phase','real','imag','snr','antenna'
+	yaxis -- Value to plot on the y-axis
+		Options: 'amp','phase','real','imag','snr','antenna','tsys','delay'
 		Default: cal type dependent, usually 'amp'
 	poln -- Polarization (or combination) to plot
 	        default: '' (RL); all polarizations
