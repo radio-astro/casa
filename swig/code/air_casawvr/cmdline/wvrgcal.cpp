@@ -14,6 +14,9 @@
    
 */
 
+// Control formation of NewCalTable (if 0, make the old caltable)
+#define NEWCALTABLE 1
+
 #include <iostream>
 
 #include <boost/program_options.hpp>
@@ -799,22 +802,39 @@ int main(int argc,  char* argv[])
   loadSpec(ms, sp);
   std::set<size_t> reverse=reversedSPWs(sp, vm);  
 
-  LibAIR::writeGainTbl(g,
-		       fnameout.c_str(),
-		       sp,
-		       reverse,
-		       vm.count("disperse")>0,
-		       msname
-		       );
+  if (NEWCALTABLE)
+    {
+      // Write new table, including history
+      LibAIR::writeNewGainTbl(g,
+			      fnameout.c_str(),
+			      sp,
+			      reverse,
+			      vm.count("disperse")>0,
+			      msname,
+			      buildCmdLine(argc,
+					   argv));
+    }
+  else
+    {
+      // Write old table...
+      LibAIR::writeGainTbl(g,
+			   fnameout.c_str(),
+			   sp,
+			   reverse,
+			   vm.count("disperse")>0,
+			   msname
+			   );
+      // ...and history
+      LibAIR::addCalHistory(fnameout.c_str(),
+			    buildCmdLine(argc,
+					 argv));
+    }
 
 #ifdef BUILD_HD5
   LibAIR::writeAntPath(g,
 		       fnameout+".hd5");
 #endif
 
-  LibAIR::addCalHistory(fnameout.c_str(),
-			buildCmdLine(argc,
-				     argv));
 
   return 0;
 }

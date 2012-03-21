@@ -35,6 +35,7 @@
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/TableInfo.h>
+#include <measures/Measures/MEpoch.h>
 #include <casa/Arrays.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <synthesis/CalTables/CTEnums.h>
@@ -100,6 +101,38 @@ NewCalTable::NewCalTable (SetupNewTable& newtab, uInt nrow, Bool initialize):
 //    initialize       Bool                   
 //
 };
+
+//----------------------------------------------------------------------------
+// Create an empty NewCalTable conveniently
+NewCalTable::NewCalTable(String tableName,VisCalEnum::VCParType parType,
+			 String typeName,String msName,Bool doSingleChan) : 
+  Table()
+{
+  // Form CTDesc from parameters
+  String parTypeStr = ((parType==VisCalEnum::COMPLEX) ? "Complex" : "Float");
+
+  CTDesc nctd(parTypeStr,msName,typeName,"unknown");
+
+  // Form underlying generic Table according to the CTDesc
+  SetupNewTable calMainTab(tableName+".tempMemCalTable",nctd.calMainDesc(),Table::New);
+  Table tab(calMainTab, Table::Memory, 0, False); 
+  *this = tab;
+  
+  // Set the table info record
+  this->setTableInfo();
+
+  // Add (empty) subtables
+  this->createSubTables();
+
+  // Copy subtables from the supplied MS
+  this->setMetaInfo(msName);
+
+  // Reset Spw channelization, if nec.
+  //  (very basic, uses chan n/2 freq)
+  if (doSingleChan)
+    this->makeSpwSingleChan();
+
+}
 
 //----------------------------------------------------------------------------
 NewCalTable::NewCalTable (const String& tableName, Table::TableOption access, 
@@ -532,6 +565,148 @@ void NewCalTable::fillGenericSpw(Int nSpw,Vector<Int>& nChan) {
     sc.resolution().put(ispw,res);
     sc.totalBandwidth().put(ispw,sum(res));
     sc.flagRow().put(ispw,False);
+  }
+}
+
+
+
+//----------------------------------------------------------------------------
+void NewCalTable::fillAntBasedMainRows(uInt nrows, 
+				       Double time,Double interval,
+				       Int fieldId,uInt spwId,Int scanNo,
+				       const Vector<Int>& ant1list, Int refant,
+				       const Cube<Complex>& cparam,
+				       const Cube<Bool>& flag,
+				       const Cube<Float>& paramErr,
+				       const Cube<Float>& snr) {
+  
+  // Verify that we are Complex
+  TableRecord keywords=this->keywordSet();
+  if (!keywords.isDefined("ParType") ||
+      keywords.asString("ParType")!="Complex")
+    throw(AipsError("NewCalTable::fillAntBasedMainRows: NewCalTable's ParType is not Complex"));
+
+  // First, verify internal consistency
+  IPosition csh=cparam.shape();
+
+  // Data must conform to specified nrows
+  AlwaysAssert( (cparam.nplane()==nrows), AipsError);
+  AlwaysAssert( (cparam.shape()==flag.shape()), AipsError);
+
+  // Stat arrays much match cparam shape
+  if (paramErr.nelements()>0) 
+    AlwaysAssert( (paramErr.shape()==cparam.shape()), AipsError);
+  if (snr.nelements()>0)
+    AlwaysAssert( (snr.shape()==cparam.shape()), AipsError);
+
+  // Specified indices must be rational
+  AlwaysAssert( (spwId<this->spectralWindow().nrow()), AipsError);
+  AlwaysAssert( (fieldId<Int(this->field().nrow())), AipsError);
+
+  // Handle ant1list
+  Vector<Int> ant1;
+  if (ant1list.nelements()>0) {
+    AlwaysAssert( (min(ant1list)>0), AipsError); // must be definite
+    AlwaysAssert( (max(ant1list)<Int(this->antenna().nrow())), AipsError);
+    ant1.reference(ant1list);
+  }
+  else {
+    // Generate the ant1 list
+    ant1.resize(nrows);
+    indgen(ant1);
+  }
+
+  // All seems well, so add rows
+  RefRows rows(this->nrow(),this->nrow()+nrows-1,1);
+  this->addRow(nrows);
+  
+  CTMainColumns mc(*this);
+  
+  // Meta-info (these are uniform for all rows)
+  mc.time().putColumnCells(rows,Vector<Double>(nrows,time));
+  mc.fieldId().putColumnCells(rows,Vector<Int>(nrows,fieldId));
+  mc.spwId().putColumnCells(rows,Vector<Int>(nrows,spwId));
+  mc.scanNo().putColumnCells(rows,Vector<Int>(nrows,scanNo));
+  mc.interval().putColumnCells(rows,Vector<Double>(nrows,interval));
+  
+  // Antenna
+  mc.antenna1().putColumnCells(rows,ant1);
+  mc.antenna2().putColumnCells(rows,Vector<Int>(nrows,refant));  // uniform
+
+  // Complex CPARAM column
+  mc.cparam().putColumnCells(rows,cparam);
+
+  // Fill stats
+  mc.flag().putColumnCells(rows,flag);
+  if (paramErr.nelements()>0)
+    mc.paramerr().putColumnCells(rows,paramErr);
+  else
+    // zeros, w/ correct shape
+    mc.paramerr().putColumnCells(rows,Cube<Float>(csh,0.0));
+  if (snr.nelements()>0) 
+    mc.snr().putColumnCells(rows,snr);
+  else
+    // ones, w/ correct shape
+    mc.paramerr().putColumnCells(rows,Cube<Float>(csh,1.0));
+
+}
+
+void NewCalTable::addHistoryMessage(String app, String message) {
+
+  Int row=this->history().nrow();
+  this->history().addRow(1);
+
+  MSHistoryColumns hcol(this->history());
+
+  // Add the current data
+  Time date;
+  MEpoch now(MVEpoch(date.modifiedJulianDay()),MEpoch::Ref(MEpoch::UTC));
+  hcol.timeMeas().put(row,now);
+
+  // The application
+  hcol.application().put(row,app);
+
+  // Write the message
+  hcol.message().put(row,message);
+
+  // Fill in some other columns with emptiness
+  hcol.objectId().put(row,-1);
+  hcol.observationId().put(row,-1);
+
+}
+
+void NewCalTable::makeSpwSingleChan() {
+
+  MSSpWindowColumns spwcol(this->spectralWindow());
+
+  // Reset each spw to a single channel
+  for (uInt ispw=0;ispw<spwcol.nrow();++ispw) {
+
+    Int nchan;
+    spwcol.numChan().get(ispw,nchan);
+    IPosition ip(1,1);
+    if (nchan>1) {
+      Vector<Double> midFreq;
+      spwcol.chanFreq().get(ispw,midFreq);
+      midFreq(0)=midFreq(nchan/2);
+      midFreq.resize(1,True);
+      Double totBW;
+      spwcol.totalBandwidth().get(ispw,totBW);
+      Vector<Double> totBWv(1,totBW);
+      
+      spwcol.numChan().put(ispw,1);
+
+      spwcol.chanFreq().setShape(ispw,ip);
+      spwcol.chanFreq().put(ispw,midFreq);
+
+      spwcol.chanWidth().setShape(ispw,ip);
+      spwcol.chanWidth().put(ispw,totBWv);
+      spwcol.effectiveBW().setShape(ispw,ip);
+      spwcol.effectiveBW().put(ispw,totBWv);
+      spwcol.resolution().setShape(ispw,ip);
+      spwcol.resolution().put(ispw,totBWv);
+
+    }
   }
 }
 

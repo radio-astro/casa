@@ -514,23 +514,25 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
 	}
     }
 
-    static std::set<viewer::RegionCreator::Types> multi_poly_tool_region_set;
-    const std::set<viewer::RegionCreator::Types> &MultiPolyTool::regionsCreated( ) const {
+    static std::set<viewer::Region::RegionTypes> multi_poly_tool_region_set;
+    const std::set<viewer::Region::RegionTypes> &MultiPolyTool::regionsCreated( ) const {
 	if ( multi_poly_tool_region_set.size( ) == 0 ) {
-	    multi_poly_tool_region_set.insert( POLYGON );
+	    multi_poly_tool_region_set.insert( viewer::Region::PolyRegion );
 	}
 	return multi_poly_tool_region_set;
     }
 
-    bool MultiPolyTool::create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
-				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style ) {
+bool MultiPolyTool::create( viewer::Region::RegionTypes region_type, WorldCanvas *wc,
+			    const std::vector<std::pair<double,double> > &pts, const std::string &label,
+			    const std::string &font, int font_size, int font_style, const std::string &font_color,
+			    const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {
 	if ( pts.size( ) <= 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
 	std::tr1::shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
 	result->setLabel( label );
 	result->setFont( font, font_size, font_style, font_color );
 	result->setLine( line_color, line_style );
+	result->setAnnotation(is_annotation);
 	polygons.push_back( result );
 	refresh( );
 	return true;

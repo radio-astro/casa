@@ -454,7 +454,14 @@ namespace casa {
 		casa::Quantum<casa::Vector<double> > trc = trc_md.getAngle("rad");
 
 		double dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y;
-		world_to_linear( wc_, blc.getValue("rad")(0), blc.getValue("rad")(1), trc.getValue("rad")(0), trc.getValue("rad")(1), dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y );
+		try {
+		    world_to_linear( wc_, blc.getValue("rad")(0), blc.getValue("rad")(1), trc.getValue("rad")(0), trc.getValue("rad")(1), dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y );
+		} catch(...) {
+		    // conversion failed...
+		    // need a viewer status line...
+		    updateStateInfo( true );
+		    return;
+		}
 
 		double new_blc_x = (dd_blc_x <= dd_trc_x ? dd_blc_x : dd_trc_x);
 		double new_blc_y = (dd_blc_y <= dd_trc_y ? dd_blc_y : dd_trc_y);

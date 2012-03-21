@@ -868,23 +868,25 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	}
     }
 
-    static std::set<viewer::RegionCreator::Types> multi_rect_tool_region_set;
-    const std::set<viewer::RegionCreator::Types> &MultiRectTool::regionsCreated( ) const {
+    static std::set<viewer::Region::RegionTypes> multi_rect_tool_region_set;
+    const std::set<viewer::Region::RegionTypes> &MultiRectTool::regionsCreated( ) const {
 	if ( multi_rect_tool_region_set.size( ) == 0 ) {
-	    multi_rect_tool_region_set.insert( RECTANGLE );
+	    multi_rect_tool_region_set.insert( viewer::Region::RectRegion );
 	}
 	return multi_rect_tool_region_set;
     }
 
-    bool MultiRectTool::create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+    bool MultiRectTool::create( viewer::Region::RegionTypes region_type, WorldCanvas *wc,
+				const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style ) {
+				const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {
 	if ( pts.size( ) != 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
 	std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );
 	result->setLabel( label );
 	result->setFont( font, font_size, font_style, font_color );
 	result->setLine( line_color, line_style );
+	result->setAnnotation(is_annotation);
 	rectangles.push_back( result );
 	refresh( );
 	return true;

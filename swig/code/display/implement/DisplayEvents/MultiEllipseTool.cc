@@ -33,10 +33,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	return rfactory->ellipse( wc, x1, y1, x2, y2 );
     }
 
-    static std::set<viewer::RegionCreator::Types> multi_ellipse_tool_region_set;
-    const std::set<viewer::RegionCreator::Types> &MultiEllipseTool::regionsCreated( ) const {
+    static std::set<viewer::Region::RegionTypes> multi_ellipse_tool_region_set;
+    const std::set<viewer::Region::RegionTypes> &MultiEllipseTool::regionsCreated( ) const {
 	if ( multi_ellipse_tool_region_set.size( ) == 0 ) {
-	    multi_ellipse_tool_region_set.insert( ELLIPSE );
+	    multi_ellipse_tool_region_set.insert( viewer::Region::EllipseRegion );
 	}
 	return multi_ellipse_tool_region_set;
     }
