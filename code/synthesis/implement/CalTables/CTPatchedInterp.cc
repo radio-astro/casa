@@ -45,6 +45,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 				 Int nPar,
 				 const String& timetype,
 				 const String& freqtype,
+				 Int nMSSpw,
 				 Vector<Int> spwmap) :
   ct_(ct),
   mtype_(mtype),
@@ -56,10 +57,10 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   nChanIn_(),
   freqIn_(),
   nFldOut_(1),  // for now, only one element on field axes...
-  nSpwOut_(0),
+  nMSSpw_(nMSSpw),
   nAntOut_(0),
   nFldIn_(1),
-  nSpwIn_(ct.spectralWindow().nrow()),
+  nCTSpw_(ct.spectralWindow().nrow()),
   nAntIn_(ct.antenna().nrow()),
   nElemIn_(0),
   spwInOK_(),
@@ -79,9 +80,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 
   //  cout << "ia1dmethod_ = " << ia1dmethod_ << endl;
 
-  // Assume MS dimensions in spw,ant are same (for now)
+  // Assume MS dimensions in ant are same (for now)
   //  TBD: Supply something from the MS to discern this...
-  nSpwOut_=nSpwIn_;
   nAntOut_=nAntIn_;
 
   switch(mtype_) {
@@ -101,16 +101,6 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   }
   }
 
-  // Handle spwmap
-  //  cout << "CTPatchedInterp::ctor: spwmap="<<spwmap<<endl;
-  setDefSpwMap();
-  setSpwMap(spwmap);
-
-  // Set default maps
-  setDefFldMap();
-  setDefAntMap();
-  setElemMap();
-
   // How many _Float_ parameters?
   if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
     nFPar_*=2;  // interpolating 2X as many Float values
@@ -118,12 +108,21 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   // Set channel/freq info
   CTSpWindowColumns ctspw(ct_.spectralWindow());
   ctspw.numChan().getColumn(nChanIn_);
-  freqIn_.resize(nSpwIn_);
-  for (uInt ispw=0;ispw<ctspw.nrow();++ispw) 
-    ctspw.chanFreq().get(ispw,freqIn_(ispw),True);
+  freqIn_.resize(nCTSpw_);
+  for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
 
   // Initialize caltable slices
   sliceTable();
+
+  // Set spwmap
+  setSpwMap(spwmap);
+
+  // Set default maps
+  setDefFldMap();
+  setDefAntMap();
+  setElemMap();
+
 
   // Setup mapped interpolators
   initialize();
@@ -240,8 +239,8 @@ void CTPatchedInterp::state() {
   cout << "nFPar_ = " << nFPar_ << endl;
   cout << "nFldOut_ = " << nFldOut_ << endl;
   cout << "nFldIn_ = " << nFldIn_ << endl;
-  cout << "nSpwOut_ = " << nSpwOut_ << endl;
-  cout << "nSpwIn_ = " << nSpwIn_ << endl;
+  cout << "nMSSpw_ = " << nMSSpw_ << endl;
+  cout << "nCTSpw_ = " << nCTSpw_ << endl;
   cout << "nAntOut_ = " << nAntOut_ << endl;
   cout << "nAntIn_ = " << nAntIn_ << endl;
   cout << "nElemOut_ = " << nElemOut_ << endl;
@@ -263,10 +262,10 @@ void CTPatchedInterp::sliceTable() {
   //  TBD (here or inside loop?)
 
   // Indexed by the spws, ants in the cal table (pre-mapped)
-  ctSlices_.resize(nElemIn_,nSpwIn_);
+  ctSlices_.resize(nElemIn_,nCTSpw_);
 
   // Initialize spwInOK_
-  spwInOK_.resize(nSpwIn_);
+  spwInOK_.resize(nCTSpw_);
   spwInOK_.set(False);
 
   // Set up iterator
@@ -302,10 +301,10 @@ void CTPatchedInterp::sliceTable() {
     sortcol[1]="ANTENNA1";
     ROCTIter ctiter(ct_,sortcol);
     while (!ctiter.pastEnd()) {
-      Int ispw=ctiter.thisSpw();
+      Int iCTspw=ctiter.thisSpw();
       Int iant=ctiter.thisAntenna1();
-      ctSlices_(iant,ispw)=ctiter.table();
-      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(iant,ispw).nrow()>0);
+      ctSlices_(iant,iCTspw)=ctiter.table();
+      spwInOK_(iCTspw)=(spwInOK_(iCTspw) || ctSlices_(iant,iCTspw).nrow()>0);
       ctiter.next();
     }    
     break;
@@ -320,39 +319,89 @@ void CTPatchedInterp::initialize() {
   if (CTPATCHEDINTERPVERB) cout << "  CTPatchedInterp::initialize()" << endl;
 
   // Resize working arrays
-  result_.resize(nSpwOut_,nFldOut_);
-  resFlag_.resize(nSpwOut_,nFldOut_);
-  timeResult_.resize(nSpwOut_,nFldOut_);
-  timeResFlag_.resize(nSpwOut_,nFldOut_);
-  freqResult_.resize(nSpwOut_,nFldOut_);
-  freqResFlag_.resize(nSpwOut_,nFldOut_);
+  result_.resize(nMSSpw_,nFldOut_);
+  resFlag_.resize(nMSSpw_,nFldOut_);
+  timeResult_.resize(nMSSpw_,nFldOut_);
+  timeResFlag_.resize(nMSSpw_,nFldOut_);
+  freqResult_.resize(nMSSpw_,nFldOut_);
+  freqResFlag_.resize(nMSSpw_,nFldOut_);
 
   // Size/initialize interpolation engines
-  tI_.resize(nElemOut_,nSpwOut_,nFldOut_);
+  tI_.resize(nElemOut_,nMSSpw_,nFldOut_);
   tI_.set(NULL);
 
   for (Int iFldOut=0;iFldOut<nFldOut_;++iFldOut) {
-    for (Int iSpwOut=0;iSpwOut<nSpwOut_;++iSpwOut) { 
+    for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw) { 
       // Size up the timeResult_ Cube (NB: channel shape matches Cal Table)
-      if (timeResult_(iSpwOut,iFldOut).nelements()==0) {
-	timeResult_(iSpwOut,iFldOut).resize(nFPar_,nChanIn_(spwMap_(iSpwOut)),nElemOut_);
-	timeResFlag_(iSpwOut,iFldOut).resize(nPar_,nChanIn_(spwMap_(iSpwOut)),nElemOut_);
+      if (timeResult_(iMSSpw,iFldOut).nelements()==0) {
+	timeResult_(iMSSpw,iFldOut).resize(nFPar_,nChanIn_(spwMap_(iMSSpw)),nElemOut_);
+	timeResFlag_(iMSSpw,iFldOut).resize(nPar_,nChanIn_(spwMap_(iMSSpw)),nElemOut_);
       }
       for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
 	// Realize the mapping (no field mapping yet!)
-	NewCalTable& ict(ctSlices_(elemMap_(iElemOut),spwMap_(iSpwOut)));
+	NewCalTable& ict(ctSlices_(elemMap_(iElemOut),spwMap_(iMSSpw)));
 	if (!ict.isNull()) {
-	  Matrix<Float> tR(timeResult_(iSpwOut,iFldOut).xyPlane(iElemOut));
-	  Matrix<Bool> tRf(timeResFlag_(iSpwOut,iFldOut).xyPlane(iElemOut));
-	  tI_(iElemOut,iSpwOut,iFldOut)=new CTTimeInterp1(ict,timeType_,tR,tRf);
+	  Matrix<Float> tR(timeResult_(iMSSpw,iFldOut).xyPlane(iElemOut));
+	  Matrix<Bool> tRf(timeResFlag_(iMSSpw,iFldOut).xyPlane(iElemOut));
+	  tI_(iElemOut,iMSSpw,iFldOut)=new CTTimeInterp1(ict,timeType_,tR,tRf);
 	}
 	else
-	  cout << "Elem,Spw="<<iElemOut<<","<<iSpwOut<<" have no calibration mapping!!" << endl; 
+	  cout << "Elem,Spw="<<iElemOut<<","<<iMSSpw<<" have no calibration mapping!!" << endl; 
 
       } // iElemOut
-    } // iSpwOut
+    } // iMSSpw
   } // iFldOut
 }
+
+void CTPatchedInterp::setSpwMap(Vector<Int>& spwmap) {
+
+  // Set the default spwmap first, then we'll ammend it
+  setDefSpwMap();
+
+  Int nspec=spwmap.nelements();
+
+  // Do nothing, if nothing specified (and rely on default)
+  if (nspec==0) return;
+
+  // Do nothing f a single -1 is specified
+  if (nspec==1 && spwmap(0)==-1) return;
+
+
+  // Alert user if too many spws specified
+  //  TBD
+  //  if (spwmap.nelements()>nMSSpw_)
+    
+  // Handle auto-fanout
+  if (spwmap(0)==-999) {
+    // Use first OK spw for all MS spws
+    Int gspw(0);
+    while (!spwInOK(gspw)) ++gspw;
+    spwMap_.set(gspw);
+  }
+  else {
+    // First trap out-of-range values
+    if (anyLT(spwmap,0))
+      throw(AipsError("Please specify positive indices in spwmap."));
+    if (anyGE(spwmap,nCTSpw_)) {
+      ostringstream o;
+      o << "Please specify spw indices <= maximum available ("
+	<< (nCTSpw_-1) << " in " << ct_.tableName() << ")";
+      throw(AipsError(o.str()));
+    }
+
+    // Now fill from spwmap
+    if (nspec==1)
+      // Use one value for all
+      spwMap_.set(spwmap(0));
+    else {
+      // set as many as are specified
+      IPosition blc(1,0);
+      IPosition trc(1,min(nspec,nMSSpw_));
+      spwMap_(blc,trc)=spwmap(blc,trc);
+    }
+  }
+}
+
 
 // Resample in frequency
 void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const Vector<Double>& fout,
