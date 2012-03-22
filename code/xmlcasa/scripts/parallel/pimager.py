@@ -1026,21 +1026,14 @@ class pimager():
         fend=fstep*(nchan-1)+fstart
         ia.done()
         ###handle mask
-        if((maskimage != '')):
-            if(os.path.exists(maskimage)):
-                ia.open(maskimage)
-                maskshape=ia.shape()
-                ia.done()
-                if(maskshape != elshape):
-                    newmask=maskimage+'_regrid'
-                    self.regridimage(outimage=newmask, inimage=maskimage, templateimage=model);
-                    maskimage=newmask
-            else:
-                shutil.copytree(model, maskimage)
-                ia.open(maskimage)
-                ia.set(0.0)
-                ia.done()
-                
+        if((maskimage != '') and (os.path.exists(maskimage))):
+            ia.open(maskimage)
+            maskshape=ia.shape()
+            ia.done()
+            if(maskshape != elshape):
+                newmask=maskimage+'_regrid'
+                self.regridimage(outimage=newmask, inimage=maskimage, templateimage=model);
+                maskimage=newmask
         #print 'LOCKS2 ', tb.listlocks()
         imepoch=csys.epoch()
         imobservatory=csys.telescope()

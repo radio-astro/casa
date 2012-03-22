@@ -11,22 +11,23 @@ namespace casa {
 	class RegionCreator {
 	    public:
 		typedef std::list<RegionCreator*> creator_list_type;
+		// region types created
+		enum Types { RECTANGLE, POLYGON, ELLIPSE, POINT };
 		// called when the user indicates that a region should be deleted...
 		virtual void revokeRegion( Region * ) = 0;
 		// returns the set of region types which this creator will create
-		virtual const std::set<Region::RegionTypes> &regionsCreated( ) const = 0;
-		virtual bool create( Region::RegionTypes region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+		virtual const std::set<Types> &regionsCreated( ) const = 0;
+		virtual bool create( Types region_type, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				     const std::string &font, int font_size, int font_style, const std::string &font_color,
-				     const std::string &line_color, viewer::Region::LineStyle line_style, bool )
-			DISPLAY_PURE_VIRTUAL(MultiWCTool::create,true);
+				     const std::string &line_color, viewer::Region::LineStyle line_style ) = 0;
 
 		RegionCreator( );
 		virtual ~RegionCreator( );
 
-		static const creator_list_type &findCreator( Region::RegionTypes type );
+		static const creator_list_type &findCreator( Types type );
 
 	    private:
-		typedef std::map<Region::RegionTypes,creator_list_type*> creator_map_type;
+		typedef std::map<Types,creator_list_type*> creator_map_type;
 		static creator_map_type creator_map;
 		static creator_list_type unsorted_creators;
 	};

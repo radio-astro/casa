@@ -289,20 +289,11 @@ namespace casa {
 	    }
 	}
 
-	void QtRegionState::setAnnotation( bool ann ) {
-	    region_annotation->setChecked(ann);
-	}
-
-	void QtRegionState::disableAnnotation( bool ann ) {
-	    region_annotation->setChecked(ann);
-	    region_annotation->setDisabled(true);
-	}
 
 	int QtRegionState::zMin( ) const { return frame_min->value( ); }
 	int QtRegionState::zMax( ) const { return frame_max->value( ); }
 	int QtRegionState::numFrames( ) const { return region_->numFrames( ); }
 
-	bool QtRegionState::isAnnotation( ) const { region_annotation->isChecked( ) ? true : false; }
 
 	void QtRegionState::state_change( int ) { emit refreshCanvas( ); }
 	void QtRegionState::state_change( bool ) { emit refreshCanvas( ); }

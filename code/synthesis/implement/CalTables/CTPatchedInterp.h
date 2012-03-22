@@ -32,7 +32,6 @@
 #include <synthesis/CalTables/CTTimeInterp1.h>
 #include <synthesis/CalTables/RIorAParray.h>
 #include <synthesis/CalTables/VisCalEnum.h>
-#include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
@@ -78,8 +77,6 @@ public:
 
   // Temporary public function for testing
   Array<Float>& tresultF(Int fld, Int spw) { fld=0; return timeResult_(spw,fld); };
-  Array<Bool>& tresultFlag(Int fld, Int spw) { fld=0; return timeResFlag_(spw,fld); };
-
 
   // spwOK info for users
   Bool spwOK(Int spw) const;
@@ -136,10 +133,6 @@ private:
   // Baseline index from antenna indices: (assumes a1<=a2 !!)
   inline Int blnidx(const Int& a1, const Int& a2, const Int& nAnt) { return  a1*nAnt-a1*(a1+1)/2+a2; };
 
-  // Translate freq axis interpolation string
-  InterpolateArray1D<Double,Float>::InterpolationMethod ftype(String& strtype);
-
-
   // PRIVATE DATA:
   
   // The Caltable
@@ -156,8 +149,6 @@ private:
 
   // Interpolation modes
   String timeType_, freqType_;
-
-  InterpolateArray1D<Double,Float>::InterpolationMethod ia1dmethod_;
 
   // CalTable freq axis info
   Vector<Int> nChanIn_;

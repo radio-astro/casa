@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<task type="function" name="plotweather" category="visualization" visibility="experimental">
+<task type="function" name="plotweather" category="Visualization" visibility="experimental">
 <shortdescription>Plot elements of the weather table; estimate opacity.</shortdescription>
 
 <input>

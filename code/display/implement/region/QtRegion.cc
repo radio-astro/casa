@@ -77,8 +77,6 @@ namespace casa {
 	    mystate->setLineStyle( line_style );
 	}
 
-	void QtRegion::setAnnotation(bool ann) { mystate->setAnnotation(ann); }
-
 	int QtRegion::numFrames( ) const { return source_->numFrames( ); }
 
 	void QtRegion::zRange( int &min, int &max ) const {
@@ -199,9 +197,6 @@ namespace casa {
 		    fprintf( stderr, "Failed to create region annotation...\n" );
 		    return;
 		}
-
-		AnnRegion *reg = dynamic_cast<AnnRegion*>(ann);
-		if ( reg ) reg->setAnnotationOnly((*iter)->isAnnotation( ));
 
 		int number_frames = (*iter)->numFrames( );
 		ann->setLabel( (*iter)->textValue( ) );

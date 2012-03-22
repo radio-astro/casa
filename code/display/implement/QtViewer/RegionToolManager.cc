@@ -357,7 +357,6 @@ namespace casa {
 		for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
 		    if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;
 		    const AnnotationBase* ann = aaregions[i].getAnnotationBase();
-		    const AnnRegion *reg = dynamic_cast<const AnnRegion*>(ann);
 		    AnnotationBase::Direction points = ann->getDirections( );
 		    switch ( ann->getType( ) ) {
 			case AnnotationBase::SYMBOL:
@@ -384,14 +383,13 @@ namespace casa {
 				AnnotationBase::FontStyle fs = ann->getFontStyle( );
 				tool_map::iterator ptit = tools.find(PointTool);
 				if ( ptit == tools.end( ) ) continue;
-				(*ptit).second->create( Region::PointRegion, wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+				(*ptit).second->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
 						    (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
 						    (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
 						    (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
 						    ann->getLabelColorString( ), ann->getColorString( ),
 						    ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
-						      ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-						    (reg == 0 || reg->isAnnotationOnly( )) );
+						      ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
 
 			    }
 			    break;
@@ -421,14 +419,13 @@ namespace casa {
 				AnnotationBase::FontStyle fs = ann->getFontStyle( );
 				tool_map::iterator rtit = tools.find(RectTool);
 				if ( rtit == tools.end( ) ) continue;
-				(*rtit).second->create( Region::RectRegion, wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+				(*rtit).second->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
 						   (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
 						   (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
 						   (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
 						   ann->getLabelColorString( ), ann->getColorString( ),
 						   ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
-						     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-						   (reg == 0 || reg->isAnnotationOnly( )) );
+						     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
 			    }
 
 			    break;
@@ -486,14 +483,13 @@ namespace casa {
 				AnnotationBase::FontStyle fs = ann->getFontStyle( );
 				tool_map::iterator elit = tools.find(EllipseTool);
 				if ( elit == tools.end( ) ) continue;
-				(*elit).second->create( Region::EllipseRegion, wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+				(*elit).second->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
 						   (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
 						   (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
 						   (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
 						   ann->getLabelColorString( ), ann->getColorString( ),
 						   ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
-						     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-						   (reg == 0 || reg->isAnnotationOnly( )) );
+						     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
 			    }
 			    break;
 			case AnnotationBase::POLYGON:
@@ -527,14 +523,13 @@ namespace casa {
 
 				tool_map::iterator plyit = tools.find(PolyTool);
 				if ( plyit == tools.end( ) ) continue;
-				(*plyit).second->create( Region::PolyRegion, wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+				(*plyit).second->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
 						   (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
 						   (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
 						   (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
 						   ann->getLabelColorString( ), ann->getColorString( ),
 						   ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
-						     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-						   (reg == 0 || reg->isAnnotationOnly( )) );
+						     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
 			    }
 			    break;
 

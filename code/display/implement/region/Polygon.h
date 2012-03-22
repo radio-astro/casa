@@ -71,8 +71,6 @@ namespace casa {
 		void regionCenter( double &x, double &y ) const;
 
 		void closeFigure( );
-		virtual void polygonComplete( ) = 0;
-
 		void addVertex( double x, double y, bool rewrite_last_point=false );
 
 		AnnotationBase *annotation( ) const;
@@ -80,8 +78,6 @@ namespace casa {
 		// return the *drawing* bounding rectangle...
 		// in "linear" coordinates...
 		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
-
-		int numVertices( ) const { return drawing_points( ).size( ); }
 
 	    protected:
 		unsigned int check_handle( double x, double y ) const;

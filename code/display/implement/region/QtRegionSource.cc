@@ -76,6 +76,7 @@ namespace casa {
 	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
+	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Polygon>(result);
 	    // return std::tr1::shared_ptr<Polygon>( );
 	}
@@ -227,14 +228,14 @@ namespace casa {
 			     pts[0].first, pts[0].second, pts[1].first, pts[1].second );
 
 	    // create the rectangle...
-	    const RegionCreator::creator_list_type &rect_creators = RegionCreator::findCreator( Region::RectRegion );
+	    const RegionCreator::creator_list_type &rect_creators = RegionCreator::findCreator( RegionCreator::RECTANGLE );
 	    if ( rect_creators.size( ) <= 0 ) return;
 	    int font_style = get_font_style(rectangle->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(rectangle->getLineStyle( ));
 
-	    rect_creators.front( )->create( Region::RectRegion, wc, pts, rectangle->getLabel( ), rectangle->getFont( ),
+	    rect_creators.front( )->create( RegionCreator::RECTANGLE, wc, pts, rectangle->getLabel( ), rectangle->getFont( ),
 					    rectangle->getFontSize( ), font_style, rectangle->getLabelColorString( ),
-					    rectangle->getColorString( ), line_style, rectangle->isAnnotationOnly( ) );
+					    rectangle->getColorString( ), line_style );
 	}
 
 
@@ -258,14 +259,14 @@ namespace casa {
 	    world_to_linear(wc,center[0]-xradius,center[1]-yradius,center[0]+xradius,center[1]+yradius, pts[0].first, pts[0].second, pts[1].first, pts[1].second);
 	    
 	    // create the ellipse...
-	    const RegionCreator::creator_list_type &ellipse_creators = RegionCreator::findCreator( Region::EllipseRegion );
+	    const RegionCreator::creator_list_type &ellipse_creators = RegionCreator::findCreator( RegionCreator::ELLIPSE );
 	    if ( ellipse_creators.size( ) <= 0 ) return;
 	    int font_style = get_font_style(ellipse->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(ellipse->getLineStyle( ));
 
-	    ellipse_creators.front( )->create( Region::EllipseRegion, wc, pts, ellipse->getLabel( ), ellipse->getFont( ),
+	    ellipse_creators.front( )->create( RegionCreator::ELLIPSE, wc, pts, ellipse->getLabel( ), ellipse->getFont( ),
 					    ellipse->getFontSize( ), font_style, ellipse->getLabelColorString( ),
-					    ellipse->getColorString( ), line_style, ellipse->isAnnotationOnly( ) );
+					    ellipse->getColorString( ), line_style );
 	}
 
 
@@ -283,14 +284,14 @@ namespace casa {
 	    pts[1] = pts[0];	// points also have two corners...
 
 	    // create the point...
-	    const RegionCreator::creator_list_type &point_creators = RegionCreator::findCreator( Region::PointRegion );
+	    const RegionCreator::creator_list_type &point_creators = RegionCreator::findCreator( RegionCreator::POINT );
 	    if ( point_creators.size( ) <= 0 ) return;
 	    int font_style = get_font_style(symbol->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(symbol->getLineStyle( ));
 
-	    point_creators.front( )->create( Region::PointRegion, wc, pts, symbol->getLabel( ), symbol->getFont( ),
+	    point_creators.front( )->create( RegionCreator::POINT, wc, pts, symbol->getLabel( ), symbol->getFont( ),
 					     symbol->getFontSize( ), font_style, symbol->getLabelColorString( ),
-					     symbol->getColorString( ), line_style, false );
+					     symbol->getColorString( ), line_style );
 	}
 
 	void QtRegionSource::load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon ) {
@@ -309,14 +310,14 @@ namespace casa {
 	    }
 
 	    // create the polygon...
-	    const RegionCreator::creator_list_type &poly_creators = RegionCreator::findCreator( Region::PolyRegion );
+	    const RegionCreator::creator_list_type &poly_creators = RegionCreator::findCreator( RegionCreator::POLYGON );
 	    if ( poly_creators.size( ) <= 0 ) return;
 	    int font_style = get_font_style(polygon->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(polygon->getLineStyle( ));
 
-	    poly_creators.front( )->create( Region::PolyRegion, wc, pts, polygon->getLabel( ), polygon->getFont( ),
+	    poly_creators.front( )->create( RegionCreator::POLYGON, wc, pts, polygon->getLabel( ), polygon->getFont( ),
 					    polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
-					    polygon->getColorString( ), line_style, polygon->isAnnotationOnly( ) );
+					    polygon->getColorString( ), line_style );
 	}
 
     }

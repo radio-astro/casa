@@ -105,7 +105,6 @@ namespace casa {
 				{ QtRegion::setFont( font, font_size, font_style, font_color ); }
 		void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine )
 				{ QtRegion::setLine( line_color, line_style ); }
-		void setAnnotation(bool ann) { QtRegion::setAnnotation(ann); }
 
 		// functions added with the introduction of RegionToolManager and the
 		// unified selection and manipulation of the various region types...

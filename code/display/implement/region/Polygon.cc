@@ -59,7 +59,6 @@ namespace casa {
 	    }
 	    update_reference_bounds_rectangle( );
 	    update_drawing_bounds_rectangle( );
-	    polygonComplete( );
 	}
 
 	void Polygon::addVertex( double x, double y, bool rewrite_last_point ) {
