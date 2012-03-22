@@ -38,9 +38,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
+  
   MSSpwIndex::MSSpwIndex(const MSSpectralWindow& msSpw):
         msSpwSubTable_p(msSpw) 
   {
@@ -48,9 +47,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     spwIDs.resize(nrows);
     indgen(spwIDs);
   }
-  //
-  //------------------------------------------------------------------
-  //
+
+  //-------------------------------------------------------------------------
+  
   Vector<Int> MSSpwIndex::matchRegexOrPattern(const String& pattern,
 						     const Bool regex)
   {
@@ -72,9 +71,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MaskedArray<Int> maskSpwID(spwIDs,maskArray);
     return maskSpwID.getCompressedArray();
   }
-  //
-  //------------------------------------------------------------------
-  //
+
+  //-------------------------------------------------------------------------
+  
   Vector<Int> MSSpwIndex::matchName(const String& name)
   {
     LogicalArray maskArray = (msSpwSubTable_p.name().getColumn()==name);
@@ -83,18 +82,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return maskSpwId.getCompressedArray();
   } 
-  //
-  //------------------------------------------------------------------
-  //
+  
+  //-------------------------------------------------------------------------
+  
   Vector<Int> MSSpwIndex::matchId(const Vector<Int>& sourceId)
   {
     Vector<Int> IDs;
     IDs = set_intersection(sourceId,spwIDs);
     return IDs;
   } 
-  //
-  //------------------------------------------------------------------
-  //
+  
+  //-------------------------------------------------------------------------
   Bool MSSpwIndex::matchFrequencyRange(const Double f0, const Double f1, 
 				       Vector<Int>& spw, Vector<Int>& start, 
 				       Vector<Int>& nchan){
@@ -173,13 +171,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	nchan.resize(nmatch, True);
 	nchan(nmatch-1)=nch;
 	found=True;
+
       }
+
     }
     return found;
   }
-  //
-  //------------------------------------------------------------------
-  //
+
+
   Vector<Int> MSSpwIndex::matchFrequencyRange(const Float f0, const Float f1,
 					      Bool approx, const Float f3)
   {
@@ -266,19 +265,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     return IDs;
   } 
-  //
-  //------------------------------------------------------------------
-  //
+  
+  //-------------------------------------------------------------------------
   Vector<Int> MSSpwIndex::matchLT(const Float* phyVal)
   {
     Vector<Double> refFreqs= msSpwSubTable_p.refFrequency().getColumn();
     LogicalArray maskArray = (refFreqs < (Double)phyVal[0]);
+    // cerr << refFreqs << endl << phyVal[0] << " " << phyVal[1] << endl << maskArray << endl;
+    // throw(MSSelectionSpwParseError(String(">NUMBER UNIT not yet implemented")));
     MaskedArray<Int> maskSpwId(spwIDs,maskArray);
     return maskSpwId.getCompressedArray();
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
   Vector<Int> MSSpwIndex::matchGT(const Float* phyVal)
   {
     Vector<Double> refFreqs= msSpwSubTable_p.refFrequency().getColumn();
@@ -286,20 +284,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MaskedArray<Int> maskSpwId(spwIDs,maskArray);
     return maskSpwId.getCompressedArray();
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
   Vector<Int> MSSpwIndex::matchGTAndLT(const Float* phyValMin, const Float *phyValMax)
   {
     Vector<Double> refFreqs= msSpwSubTable_p.refFrequency().getColumn();
-    LogicalArray maskArray = ((refFreqs > (Double)phyValMin[0]) && 
-			      (refFreqs < (Double)phyValMax[0]));
+    LogicalArray maskArray = ((refFreqs > (Double)phyValMin[0]) && (refFreqs < (Double)phyValMax[0]));
     MaskedArray<Int> maskSpwId(spwIDs,maskArray);
     return maskSpwId.getCompressedArray();
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
   Vector<Int> MSSpwIndex::matchLT(const Int n)
   {
     LogicalArray maskArray = 
@@ -308,9 +301,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MaskedArray<Int> maskSpwId(spwIDs, maskArray);
     return maskSpwId.getCompressedArray();
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
   Vector<Int> MSSpwIndex::matchGT(const Int n)
   {
     LogicalArray maskArray = 
@@ -318,9 +309,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MaskedArray<Int> maskSpwId(spwIDs, maskArray);
     return maskSpwId.getCompressedArray();
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
+  
   Vector<Int> MSSpwIndex::matchGTAndLT(const Int n0, const Int n1)
   {
     LogicalArray maskArray = 
@@ -328,9 +318,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MaskedArray<Int> maskSpwId(spwIDs, maskArray);
     return maskSpwId.getCompressedArray();
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
   Vector<Float> MSSpwIndex::convertToMKS(const Float f0, const Float f1, 
 					 const String& unit)
   {
@@ -347,9 +335,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return freqs;
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
   Vector<Int> MSSpwIndex::convertToChannelIndex(const Vector<Int>& spw, 
 						const Vector<Float>& freqList,
 						Int &nFSpec)
@@ -524,9 +510,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return localFreqList;
   }
-  //
-  //------------------------------------------------------------------
-  //
+  //-------------------------------------------------------------------------
   Vector<Int> MSSpwIndex::convertToSpwIndex(const Vector<Float>& freqList,
 					    Int &nFSpec)
   {
