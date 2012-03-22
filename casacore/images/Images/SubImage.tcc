@@ -55,14 +55,13 @@ SubImage<T>::SubImage()
 {}
 
 template<class T>
-SubImage<T>::SubImage (
-	ImageInterface<T>& image,
-	AxesSpecifier axesSpec
-)
-	: itsImagePtr(image.cloneII()) {
-	itsSubLatPtr.reset(new SubLattice<T> (image, axesSpec));
-	setCoords (image.coordinates());
-	setMembers (*itsImagePtr);
+SubImage<T>::SubImage (ImageInterface<T>& image,
+		       AxesSpecifier axesSpec)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image, axesSpec);
+  setCoords (image.coordinates());
+  setMembers (*itsImagePtr);
 }
 
 template<class T>
@@ -71,35 +70,29 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
 		       AxesSpecifier axesSpec)
 : itsImagePtr (image.cloneII())
 {
-	itsSubLatPtr.reset(
-		new SubLattice<T> (image, writableIfPossible, axesSpec)
-	);
-	setCoords (image.coordinates());
-	setMembers (*itsImagePtr);
+  itsSubLatPtr = new SubLattice<T> (image, writableIfPossible, axesSpec);
+  setCoords (image.coordinates());
+  setMembers (*itsImagePtr);
 }
 
 template<class T>
-SubImage<T>::SubImage (
-	const ImageInterface<T>& image,
-	const LattRegionHolder& region,
-	AxesSpecifier axesSpec
-)
-	: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
-		new SubLattice<T> (
-			image,
-			region.toLatticeRegion(image.coordinates(),
-			image.shape()),
-			axesSpec)
-		);
-	const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
+SubImage<T>::SubImage (const ImageInterface<T>& image,
+		       const LattRegionHolder& region,
+		       AxesSpecifier axesSpec)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image,
+				    region.toLatticeRegion(image.coordinates(),
+							   image.shape()),
+				    axesSpec);
+  const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
 
-	Vector<Float> blc, inc;
-	convertIPosition(blc, slicer.start());
-	convertIPosition(inc, slicer.stride());
+  Vector<Float> blc, inc;
+  convertIPosition(blc, slicer.start());
+  convertIPosition(inc, slicer.stride());
 
-	setCoords (image.coordinates().subImage (blc, inc, slicer.length().asVector()));
-	setMembers (*itsImagePtr);
+  setCoords (image.coordinates().subImage (blc, inc, slicer.length().asVector()));
+  setMembers (*itsImagePtr);
 }
 
 template<class T>
@@ -113,65 +106,56 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
 				 image.coordinates(),
 				 image.shape()
     );
-    itsSubLatPtr.reset(
-    	new SubLattice<T> (
-    		image,
-    		latReg,
-    		writableIfPossible,
-    		axesSpec
-		)
-    );
+        itsSubLatPtr = new SubLattice<T> (
+		  image,
+          latReg,
+          writableIfPossible,
+          axesSpec
+);
 
 
-    const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
-
-	Vector<Float> blc, inc;
-	convertIPosition(blc, slicer.start());
-	convertIPosition(inc, slicer.stride());
-	setCoords (image.coordinates().subImage (blc, inc, slicer.length().asVector()));
-	setMembers (*itsImagePtr);
+  const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
+//
+  Vector<Float> blc, inc;
+  convertIPosition(blc, slicer.start());
+  convertIPosition(inc, slicer.stride());
+//
+  setCoords (image.coordinates().subImage (blc, inc, slicer.length().asVector()));
+  setMembers (*itsImagePtr);
 }
 
 template<class T>
-SubImage<T>::SubImage (
-	const ImageInterface<T>& image,
-	const Slicer& slicer,
-	AxesSpecifier axesSpec
-)
-	: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(new SubLattice<T> (image, slicer, axesSpec));
-	const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
-	Vector<Float> blc, inc;
-	convertIPosition(blc, refslicer.start());
-	convertIPosition(inc, refslicer.stride());
-	setCoords (image.coordinates().subImage (blc, inc, refslicer.length().asVector()));
-	setMembers (*itsImagePtr);
+SubImage<T>::SubImage (const ImageInterface<T>& image,
+		       const Slicer& slicer,
+		       AxesSpecifier axesSpec)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image, slicer, axesSpec);
+  const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
+//
+  Vector<Float> blc, inc;
+  convertIPosition(blc, refslicer.start());
+  convertIPosition(inc, refslicer.stride());
+  setCoords (image.coordinates().subImage (blc, inc, refslicer.length().asVector()));
+  setMembers (*itsImagePtr);
 }
 
 template<class T>
-SubImage<T>::SubImage (
-	ImageInterface<T>& image,
-	const Slicer& slicer,
-	Bool writableIfPossible,
-	AxesSpecifier axesSpec
-)
-	: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
-		new SubLattice<T> (
-			image, slicer, writableIfPossible,
-			axesSpec
-		)
-	);
-	const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
-	Vector<Float> blc, inc;
-	convertIPosition(blc, refslicer.start());
-	convertIPosition(inc, refslicer.stride());
-	setCoords(
-		image.coordinates().subImage(
-			blc, inc, refslicer.length().asVector()
-		)
-	);
-	setMembers (*itsImagePtr);
+SubImage<T>::SubImage (ImageInterface<T>& image,
+		       const Slicer& slicer,
+		       Bool writableIfPossible,
+		       AxesSpecifier axesSpec)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image, slicer, writableIfPossible,
+				    axesSpec);
+  const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
+//
+  Vector<Float> blc, inc;
+  convertIPosition(blc, refslicer.start());
+  convertIPosition(inc, refslicer.stride());
+  setCoords (image.coordinates().subImage (blc, inc, refslicer.length().asVector()));
+  setMembers (*itsImagePtr);
 }
 
 template<class T>
@@ -179,19 +163,25 @@ SubImage<T>::SubImage (const SubImage<T>& other)
 : ImageInterface<T> (other),
   itsImagePtr (other.itsImagePtr->cloneII())
 {
-	itsSubLatPtr.reset(new SubLattice<T> (*other.itsSubLatPtr));
+  itsSubLatPtr = new SubLattice<T> (*other.itsSubLatPtr);
 }
 
 template<class T>
-SubImage<T>::~SubImage() {}
+SubImage<T>::~SubImage()
+{
+  delete itsImagePtr;
+  delete itsSubLatPtr;
+}
 
 template<class T>
 SubImage<T>& SubImage<T>::operator= (const SubImage<T>& other)
 {
   if (this != &other) {
     ImageInterface<T>::operator= (other);
-    itsImagePtr.reset(other.itsImagePtr->cloneII());
-    itsSubLatPtr.reset(new SubLattice<T> (*other.itsSubLatPtr));
+    delete itsImagePtr;
+    itsImagePtr = other.itsImagePtr->cloneII();
+    delete itsSubLatPtr;
+    itsSubLatPtr = new SubLattice<T> (*other.itsSubLatPtr);
   }
   return *this;
 }

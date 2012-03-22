@@ -33,8 +33,6 @@
 #include <images/Images/ImageInterface.h>
 #include <casa/Arrays/AxesSpecifier.h>
 
-#include <memory>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -283,8 +281,8 @@ private:
    void convertIPosition(Vector<Float>& x, const IPosition& pos) const;
 
   //# itsImagePtr points to the parent image.
-  std::auto_ptr<ImageInterface<T> > itsImagePtr;
-  std::auto_ptr<SubLattice<T> >    itsSubLatPtr;
+  ImageInterface<T>* itsImagePtr;
+  SubLattice<T>*     itsSubLatPtr;
 
   //# Make members of parent class known.
 public:
