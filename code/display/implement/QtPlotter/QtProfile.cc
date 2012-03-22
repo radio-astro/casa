@@ -148,7 +148,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float, float)));
     connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(emitChannelSelect(float)));
 
-    QValidator *validator = new QDoubleValidator(-1.0e-32, 1.0e+32,10,this);
+    QValidator *validator = new QDoubleValidator(-1.0e+32, 1.0e+32,10,this);
     startValue->setValidator(validator);
     startValue->setMaximumWidth(100);
     endValue->setValidator(validator);
