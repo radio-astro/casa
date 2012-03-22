@@ -73,8 +73,6 @@ namespace casa {
 		bool marked( ) const { return region_mark->isChecked( ); }
 		void mark_toggle( ) { region_mark->setChecked(region_mark->isChecked( ) ? false : true); }
 
-		void nowVisible( );
-
 	    signals:
 		void refreshCanvas( );
 		void statisticsVisible( bool );
@@ -92,12 +90,10 @@ namespace casa {
 		void state_change( bool );
 		void state_change( const QString & );
 		void states_change( int );
-		void states_val_change( int );
 		void coordsys_change( const QString &text );
 		void coordinates_reset_event(bool);
 		void coordinates_apply_event(bool);
 		void category_change( int );
-		void filetab_change( int );
 		// keeps text color in sync with line color (if they were the same before)
 		void line_color_change(const QString & );
 		QString default_extension( const QString & );
@@ -128,7 +124,6 @@ namespace casa {
 		QString last_save_directory;
 
 		std::string bounding_index_to_string( int index ) const;
-
 	};
     }
 }
