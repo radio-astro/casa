@@ -28,7 +28,7 @@
 
 #include <casa/aips.h>
 #include <tools/tables/TablePlot/TablePlot.h>
-
+#include <synthesis/CalTables/NewCalTable.h>
 
 #ifndef CALIBRATION_PLOTCAL_H
 #define CALIBRATION_PLOTCAL_H
@@ -184,6 +184,10 @@ class PlotCal
     void virtualKTab( Table& tabB, Int& nAnt, 
 			       Vector<Int>& ant1hash, Vector<Int>& ant2hash );
 
+    // Return which MAIN table column to return for "CAL_DESC_ID",
+    //  depending on whether we are plotting a new or old table
+    inline String CDIcol() { return (isNCT_p ? "SPECTRAL_WINDOW_ID" : "CAL_DESC_ID"); };
+    inline String GAINcol() { return (isNCT_p ? "CPARAM" : "GAIN"); };
 
     // Private data
     TablePlot *tp_p;
@@ -244,6 +248,11 @@ class PlotCal
     Bool noMS_p;
 
     Vector<Int> MSstartChan_p;
+
+    // If True, we are plotting a NewCalTable, else the old kind
+    Bool isNCT_p;
+
+    NewCalTable ct_p;
 
   };
 

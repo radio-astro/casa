@@ -230,7 +230,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
             <!-- RFLAG parameters -->
             <param type="int" name="winsize" subparam="true">
-                <description>Size of sliding time window [aips:fparm(1)]</description>
+                <description>Number of timesteps in the sliding time window [aips:fparm(1)]</description>
                 <value>3</value>
             </param>
             <param type="any" name="timedev" subparam="true">
@@ -894,7 +894,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         (Appendix E : Special Considerations for EVLA data calibration and imaging in AIPS,
                         http://www.aips.nrao.edu/cook.html#CEE )
 
-                winsize -- size of the sliding time window ( fparm(1) in AIPS ). 
+                winsize -- number of timesteps in the sliding time window ( fparm(1) in AIPS ). 
                     default: 3
                     
                 timedev -- time-series noise estimate ( noise in AIPS ). 
