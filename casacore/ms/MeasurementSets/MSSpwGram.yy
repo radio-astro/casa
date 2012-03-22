@@ -97,11 +97,17 @@
 %}
 
 %%
-SpwStatement: FullExpr               
-               {$$=MSSpwParse::thisMSSParser->endOfCeremony(*($1));}
-            | LPAREN FullExpr RPAREN 
-	       {$$ = $2;}
-;
+SpwStatement: FullExpr
+                  {
+		    $$=MSSpwParse::thisMSSParser->endOfCeremony(*($1));
+                  }
+                 | LPAREN FullExpr RPAREN //Parenthesis are not
+                                          //syntactically useful
+                                          //here
+                  {
+		    $$ = $2;
+		  }
+                ;
 
 PhyVal: FNUMBER
            { 
@@ -124,8 +130,7 @@ UnitCode: UNIT
 						      "support temporarily disabled.")));
 	      }
 
-	    //	    MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	    MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	    MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	    $$[1] = myMSSI.convertToMKS(1.0,1.0,$1)(0);
 	    free($1);
           }
@@ -156,11 +161,11 @@ PhyRange: Physical DASH Physical
 	     if ($1 > $3)
 	       throw(MSSelectionSpwParseError(String("Spw expression: Start of "
 						     "range greater than end of range")));
-	     //	     MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	     MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	     MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 
-	     $$[0] = $1*$4[1];
-	     $$[1] = $3*$4[1];
+	     //	     cout << $1 << " " << $3 << " " << $4[0] << " " << $4[1] << endl;
+	     $$[0]=$1*$4[1];
+	     $$[1]=$3*$4[1];
 	     $$[2] = -1;       // The Step
 	     $$[3] = $4[0];
     	   }
@@ -169,6 +174,7 @@ PhyRange: Physical DASH Physical
 	     if ($1[3] != $3[1])
 	       throw(MSSelectionSpwParseError(String("Spw expression: Range and step specifications"
 						     " not in the same units.")));
+	       
 	     $$[2] = $3[0];  // Load the step
 	   } 
         | CARET Physical
@@ -184,6 +190,7 @@ IndexRange: PhyVal DASH PhyVal
 						       "range greater than end of range")));
 	       $$[0] = (Int)$1;
 	       $$[1] = (Int)$3;
+	       //	       $$[2] = 1;  // The Step
 	       $$[2] = -1;       // The Step
 	       $$[3] = MSSpwIndex::MSSPW_INDEX;
 	     }
@@ -269,8 +276,7 @@ Spw: IDENTIFIER
 	//
 	// Convert name to index
 	//
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
 	$$=new Vector<Int>(myMSSI.matchName($1));
 	
@@ -289,8 +295,7 @@ Spw: IDENTIFIER
 	//
 	// Convert name to index
 	//
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!$$) delete $$;
 	$$ = new Vector<Int>(myMSSI.matchRegexOrPattern($1));
 	
@@ -309,8 +314,7 @@ Spw: IDENTIFIER
 	//
 	// Convert name to index
 	//
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!$$) delete $$;
 	$$ = new Vector<Int>(myMSSI.matchRegexOrPattern($1));
 	
@@ -321,8 +325,7 @@ Spw: IDENTIFIER
       }
    | GT OneFreq
       {
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
 	ostringstream m; m << "No spw ID found > ";
 	if ($2[1] == MSSpwIndex::MSSPW_INDEX)
@@ -340,8 +343,7 @@ Spw: IDENTIFIER
       }
    | LT OneFreq
       {
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
 	ostringstream m; m << "No spw ID found < ";
 	if ($2[1] == MSSpwIndex::MSSPW_INDEX)
@@ -359,8 +361,7 @@ Spw: IDENTIFIER
       }
    | OneFreq GTNLT OneFreq
       {
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
 	ostringstream m; m << "No spw ID found ";
 	if ($1[1] == MSSpwIndex::MSSPW_INDEX)
@@ -378,8 +379,7 @@ Spw: IDENTIFIER
       }
    | DASH OneFreq
       {
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
 	$$ = new Vector<Int>(myMSSI.matchFrequencyRange($2[0],$2[0],True));
 	
@@ -388,23 +388,21 @@ Spw: IDENTIFIER
       }
    | FreqList 
       {
-	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	if (!($$)) delete $$;
 	Int nSpec;
-	// cout << (*($1)) << "  " << endl;
-	// cout << "FreqList ";
-	// if ((*($1))[3] == MSSpwIndex::MSSPW_INDEX) cout << "Index ";
-	// if ((*($1))[3] == MSSpwIndex::MSSPW_INDEXRANGE) cout << "IndexRange ";
-	// if ((*($1))[3] == MSSpwIndex::MSSPW_UNITHZ) cout << "FreqRange ";
+/* 	   cout << (*($1)) << "  " << endl; */
+/* 	   cout << "FreqList "; */
+/* 	   if ((*($1))[3] == MSSpwIndex::MSSPW_INDEX) cout << "Index "; */
+/* 	   if ((*($1))[3] == MSSpwIndex::MSSPW_INDEXRANGE) cout << "IndexRange "; */
+/* 	   if ((*($1))[3] == MSSpwIndex::MSSPW_UNITHZ) cout << "FreqRange "; */
 	$$ = new Vector<Int>(myMSSI.convertToSpwIndex($1[0],nSpec)); 
 	/*   cout << (*($$)) << endl; */
       }
 ;
 FullSpec: Spw
             {
-	      //	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	      Vector<Int> varifiedSpwList=myMSSI.matchId(*($1));
 	      //	      $$ = MSSpwParse().selectSpwIdsFromIDList(varifiedSpwList);
 	      Int nFSpec;
@@ -417,8 +415,7 @@ FullSpec: Spw
             }
         | Spw COLON FreqList 
             {
-	      //	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
-	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
+	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	      //Vector<Int> varifiedSpwList=myMSSI.matchId(*($1));
 	      Vector<Int> varifiedSpwList=(*($1));
 	      Int nFSpecs;
