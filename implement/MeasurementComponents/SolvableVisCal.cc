@@ -370,27 +370,11 @@ void SolvableVisCal::setApply(const Record& apply) {
     //    cout << "SVC::setApply: fieldstr=" << fieldstr  << endl;
   }
 
-
-  indgen(spwMap());
-  Bool autoFanOut(False);
-  if (apply.isDefined("spwmap")) {
-    Vector<Int> spwmap(apply.asArrayInt("spwmap"));
-    if (allGE(spwmap,0)) {
-      // User has specified a valid spwmap
-      if (spwmap.nelements()==1)
-	spwMap()=spwmap(0);
-      else
-	spwMap()(IPosition(1,0),IPosition(1,spwmap.nelements()-1))=spwmap;
-      // TBD: Report non-trivial spwmap to logger.
-      //      cout << "Note: spwMap() = " << spwMap() << endl;
-    }
-    else if (spwmap(0)==-999)
-      autoFanOut=True;
-  }
+  spwMap().resize();
+  if (apply.isDefined("spwmap")) 
+    spwMap().assign(apply.asArrayInt("spwmap"));
 
   //  cout << "SVC::setApply: spwMap()=" << spwMap() << endl;
-
-  AlwaysAssert(allGE(spwMap(),0),AipsError);
 
   // TBD: move interval to VisCal version?
   // TBD: change to "reach"
@@ -412,21 +396,7 @@ void SolvableVisCal::setApply(const Record& apply) {
   // Make the interpolation engine
   // TBD: freq-axis interpolation (force linear, for now)
   // TBD: pass in spwmap
-  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,spwMap());
-
-  // Handle possible global spw fan-out
-  if (autoFanOut) {
-    throw(AipsError("autoFanOut NYI for new CalTables"));
-    /* NEWCALTABLE
-    // Use first valid spw for all spws
-    Int ispw=0;
-    while (!cs().spwOK()(ispw)) ++ispw;
-    spwMap()=ispw;
-    logSink() << "Using automatic calibration fan-out of spw = " << ispw
-	      << " for " << typeName()
-	      << LogIO::POST;
-    */
-  }
+  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,nSpw(),spwMap());
 
   // Channel counting info 
   //  (soon will deprecate, I think, because there will be no need

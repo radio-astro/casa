@@ -59,7 +59,8 @@ public:
 		  VisCalEnum::MatrixType mtype,
 		  Int nPar,
 		  const String& timetype,
-		  const String& freqtype="none",
+		  const String& freqtype,
+		  Int nMSSpw,
 		  Vector<Int> spwmap=Vector<Int>());
 
   // Destructor
@@ -111,8 +112,8 @@ private:
 
   // Spw
   // default: indgen (index identity)
-  void setDefSpwMap() {spwMap_.resize(nSpwOut_); indgen(spwMap_);};
-  void setSpwMap(Vector<Int>& spwmap) {spwMap_=spwmap;}; // via ordered index list
+  void setDefSpwMap() {spwMap_.resize(nMSSpw_); indgen(spwMap_);};
+  void setSpwMap(Vector<Int>& spwmap);
   //void setSpwMap(Vector<Double>& refFreqs);  // via refFreq matching
   //void setSpwMap(uInt to, uInt from);        // via single to/from
 
@@ -125,9 +126,6 @@ private:
 
   // Set generic antenna/baseline map
   void setElemMap();
-
-  // This method realizes the patch panel, on-the-fly
-  //  CTTimeInterp* tIout(ifld,ispw,iant) { return tIin_(fldmap_[ifld],spwmap_[ispw],antmap_[iant]); }
 
   // Resample in frequency
   void resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const Vector<Double>& fout,
@@ -165,11 +163,11 @@ private:
 
   // Field, Spw, Ant _output_ (MS) sizes (eventually from MS)
   //   calibration required for up to this many
-  Int nFldOut_, nSpwOut_, nAntOut_, nElemOut_;
+  Int nFldOut_, nMSSpw_, nAntOut_, nElemOut_;
 
   // Field, Spw, Ant _input_ (CalTable) sizes
   //  patch panels should not violate these (point to larger indices)
-  Int nFldIn_, nSpwIn_, nAntIn_, nElemIn_;
+  Int nFldIn_, nCTSpw_, nAntIn_, nElemIn_;
 
   // OK flag
   Vector<Bool> spwInOK_;
@@ -183,24 +181,24 @@ private:
 
   // Current state of interpolation
   Matrix<Double> currTime_;   // [nSpwOut,nFldOut_=1]
-  // Vector<Int> currField_;  // [nSpwOut_]  ---> Is this ever needed?
+  // Vector<Int> currField_;  // [nMSSpw_]  ---> Is this ever needed?
 
   // Internal result Arrays
-  Matrix<Cube<Float> > timeResult_,freqResult_;   // [nSpwOut_,nFldOut_=1][nFpar,nChan,nAnt]
-  Matrix<Cube<Bool> >  timeResFlag_,freqResFlag_; // [nSpwOut_,nFldOut_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Float> > timeResult_,freqResult_;   // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Bool> >  timeResFlag_,freqResFlag_; // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
 
   // Current interpolation result Arrays
   //  These will reference time or freq result, depending on context,
   //  and may be referenced by external code
-  Matrix<Cube<Float> > result_;        // [nSpwOut_,nFldOut_=1][nFpar,nChan,nAnt]
-  Matrix<Cube<Bool> >  resFlag_;    // [nSpwOut_,nFldOut_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Float> > result_;        // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Bool> >  resFlag_;    // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
 
   // The CalTable slices
   Matrix<NewCalTable> ctSlices_;  // [nAntIn,nSpwIn]
 
   // The pre-patched Time interpolation engines
   //   These are populated by the available caltables slices
-  Cube<CTTimeInterp1*> tI_;  // [nAntIn_,nSpwIn_,nFldIn_=1]
+  Cube<CTTimeInterp1*> tI_;  // [nAntIn_,nCTSpw_,nFldIn_=1]
 
 };
 
