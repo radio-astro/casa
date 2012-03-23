@@ -336,8 +336,9 @@ void CasacRegionManager::_setRegion(
 		}
 		catch (AipsError x) {
 			*_getLog() << LogIO::SEVERE << regionName
-				+ " is neither a valid binary region file, or a valid region text file.";
-		}
+				<< " is neither a valid binary region file, or a valid region text file."
+                << LogIO::EXCEPTION;
+        }
 	}
 	else if (regionName.contains(regionText)) {
 		try {
