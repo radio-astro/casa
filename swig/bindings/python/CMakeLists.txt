@@ -165,6 +165,7 @@ scripts/task_split.py
 scripts/task_statwt.py
 scripts/task_testconcat.py
 scripts/task_tflagcmd.py
+scripts/task_tflagdata.py
 scripts/task_uvcontsub.py
 scripts/task_uvcontsub2.py
 scripts/task_uvcontsub3.py
