@@ -125,6 +125,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 
 
   // Setup mapped interpolators
+  // TBD: defer this to later, so that spwmap, etc. can be revised
+  //   before committing to the interpolation engines
   initialize();
 
 }
@@ -330,27 +332,44 @@ void CTPatchedInterp::initialize() {
   tI_.resize(nElemOut_,nMSSpw_,nFldOut_);
   tI_.set(NULL);
 
+
+  Bool reportBadSpw(False);
   for (Int iFldOut=0;iFldOut<nFldOut_;++iFldOut) {
     for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw) { 
-      // Size up the timeResult_ Cube (NB: channel shape matches Cal Table)
-      if (timeResult_(iMSSpw,iFldOut).nelements()==0) {
-	timeResult_(iMSSpw,iFldOut).resize(nFPar_,nChanIn_(spwMap_(iMSSpw)),nElemOut_);
-	timeResFlag_(iMSSpw,iFldOut).resize(nPar_,nChanIn_(spwMap_(iMSSpw)),nElemOut_);
-      }
-      for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
-	// Realize the mapping (no field mapping yet!)
-	NewCalTable& ict(ctSlices_(elemMap_(iElemOut),spwMap_(iMSSpw)));
-	if (!ict.isNull()) {
-	  Matrix<Float> tR(timeResult_(iMSSpw,iFldOut).xyPlane(iElemOut));
-	  Matrix<Bool> tRf(timeResFlag_(iMSSpw,iFldOut).xyPlane(iElemOut));
-	  tI_(iElemOut,iMSSpw,iFldOut)=new CTTimeInterp1(ict,timeType_,tR,tRf);
-	}
-	else
-	  cout << "Elem,Spw="<<iElemOut<<","<<iMSSpw<<" have no calibration mapping!!" << endl; 
 
-      } // iElemOut
+      // Only if the required CT spw is available
+      if (this->spwOK(spwMap_(iMSSpw))) {
+	
+	// Size up the timeResult_ Cube (NB: channel shape matches Cal Table)
+	if (timeResult_(iMSSpw,iFldOut).nelements()==0) {
+	  timeResult_(iMSSpw,iFldOut).resize(nFPar_,nChanIn_(spwMap_(iMSSpw)),nElemOut_);
+	  timeResFlag_(iMSSpw,iFldOut).resize(nPar_,nChanIn_(spwMap_(iMSSpw)),nElemOut_);
+	}
+	for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
+	  // Realize the mapping (no field mapping yet!)
+	  NewCalTable& ict(ctSlices_(elemMap_(iElemOut),spwMap_(iMSSpw)));
+	  if (!ict.isNull()) {
+	    Matrix<Float> tR(timeResult_(iMSSpw,iFldOut).xyPlane(iElemOut));
+	    Matrix<Bool> tRf(timeResFlag_(iMSSpw,iFldOut).xyPlane(iElemOut));
+	    tI_(iElemOut,iMSSpw,iFldOut)=new CTTimeInterp1(ict,timeType_,tR,tRf);
+	  }
+	  else
+	    cout << "Elem,Spw="<<iElemOut<<","<<iMSSpw<<" have no calibration mapping!!" << endl; 
+	  
+	} // iElemOut
+      } // spwOK
+      else
+	reportBadSpw=True;
     } // iMSSpw
   } // iFldOut
+
+  if (reportBadSpw) {
+    cout << "The following MS spws have no corresponding cal spws: ";
+    for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw)
+      if (!this->spwOK(spwMap_(iMSSpw))) cout << iMSSpw << " ";
+    cout << endl;
+  }
+
 }
 
 void CTPatchedInterp::setSpwMap(Vector<Int>& spwmap) {
@@ -396,10 +415,13 @@ void CTPatchedInterp::setSpwMap(Vector<Int>& spwmap) {
     else {
       // set as many as are specified
       IPosition blc(1,0);
-      IPosition trc(1,min(nspec,nMSSpw_));
+      IPosition trc(1,min(nspec-1,nMSSpw_-1));
       spwMap_(blc,trc)=spwmap(blc,trc);
     }
   }
+
+  cout << "CTPatchedInterp::setSpwMap: Realized spwMap_ = " << spwMap_ << endl;
+
 }
 
 

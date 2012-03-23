@@ -86,7 +86,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   append_(False),
   tInterpType_(""),
   fInterpType_(""),
-  spwMap_(vs.numberSpw(),-1),
+  spwMap_(1,-1),
   urefantlist_(1,-1),
   minblperant_(4),
   solved_(False),
@@ -370,7 +370,6 @@ void SolvableVisCal::setApply(const Record& apply) {
     //    cout << "SVC::setApply: fieldstr=" << fieldstr  << endl;
   }
 
-  spwMap().resize();
   if (apply.isDefined("spwmap")) 
     spwMap().assign(apply.asArrayInt("spwmap"));
 
