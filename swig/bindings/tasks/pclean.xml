@@ -322,6 +322,12 @@
 		     <default param="npixels"><value type="int">0</value></default>
 		   </equals>
 		 </when>
+		 <when param="uvtaper">
+		   <equals type="bool" value="False"/>
+		   <equals type="bool" value="True">
+		     <default param="outertaper"><value type="vector"></value></default>
+		   </equals>
+		 </when>
 		</constraints>
 	      </input>
 

@@ -42,7 +42,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   </param>
 
   <param type="doubleArray" name="visweightscale">
-    <description>List of the weight scales to be applied to the individual MSs</description>
+    <description>List of the weight scaling factors to be applied to the individual MSs</description>
     <value></value>
   </param>
 
@@ -125,6 +125,13 @@ timesort -- If true, the output visibility table will be sorted in time.
 copypointing -- Make a proper copy of the POINTING subtable (can be time consuming).
         If False, the result is an empty POINTING table.
         default: True
+
+visweightscale -- The weights of the individual MSs will be scaled in the concatenated
+        output MS by the factors in this list. Useful for handling heterogeneous arrays.
+	Use plotms to inspect the "Wt" column as a reference for determining the scaling 
+	factors. See the cookbook for more details.
+	example: [1.,3.,3.] - scale the weights of the second and third MS by a factor 3.
+	default: [] (empty list) - no scaling
 
 createmms -- If true, the output will be a multi-MS, i.e. the input MSs are
          virtually concatenated. A directory concatvis+'.data' will be created
