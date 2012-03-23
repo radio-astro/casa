@@ -157,12 +157,14 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
                                            standard='Perley-Taylor 99',
+                                           usescratch=True,
                                            async=False)
             else:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
+                                           usescratch=True,
                                            async=False)
             record['history'] = get_last_history_line(self.inpms,
                                                       origin='imager::setjy()',
@@ -266,7 +268,7 @@ class Uranus(SplitChecker):
             print "\nRunning setjy(field='Uranus')."
             sjran = setjy(self.inpms, field='Uranus', spw='', modimage='',
                           scalebychan=False, fluxdensity=-1,
-                          standard='Butler-JPL-Horizons 2010', async=False)
+                          standard='Butler-JPL-Horizons 2010', usescratch=True,  async=False)
         except Exception, e:
             print "Error running setjy(field='Uranus')"
             raise e
@@ -351,7 +353,7 @@ class ScaleUranusByChan(SplitChecker):
             print "\nRunning setjy(field='Uranus')."
             sjran = setjy(self.inpms, field='Uranus', spw='', modimage='',
                           scalebychan=True, fluxdensity=-1,
-                          standard='Butler-JPL-Horizons 2010', async=False)
+                          standard='Butler-JPL-Horizons 2010', usescratch=True, async=False)
         except Exception, e:
             print "Error running setjy(field='Uranus')"
             raise e
@@ -449,7 +451,7 @@ class selectobs(SplitChecker):
                           selectdata=True, observation=1, 
                           modimage='',
                           scalebychan=False, fluxdensity=-1,
-                          standard='Butler-JPL-Horizons 2010', async=False)
+                          standard='Butler-JPL-Horizons 2010', usescratch=True, async=False)
         except Exception, e:
             print "Error running setjy(field='Titan', observation=1)"
             raise e
