@@ -59,15 +59,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     SetupNewTable setup(String(""), MSDataDescription::requiredTableDesc(), 
 			Table::Scratch);
-    Int nrow=spectralWindow().nrow();
-    fakeDDSubTable = MSDataDescription(setup, Table::Memory, nrow);
-    //
-    // The MSDataDescription() ctor above does not honour nrow!  It
-    // always creates a table with one row.  So add the differential
-    // number of rows to the in-memory fakeDDSubTable.
-    //
-    Int dRow=min(nrow,(Int)(nrow-fakeDDSubTable.nrow()));
-    fakeDDSubTable.addRow(dRow);
+    const Table tmpTab(setup, Table::Memory, spectralWindow().nrow());
+    fakeDDSubTable = MSDataDescription(tmpTab);
     //
     // Call the in-memory table what it is.
     //
@@ -81,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Bool> spwFlagRow=ROMSSpWindowColumns(spectralWindow()).flagRow().getColumn();
     MSDataDescColumns(fakeDDSubTable).flagRow().putColumn(spwFlagRow);
 
-    Vector<Int> spwId(nrow); indgen(spwId);
+    Vector<Int> spwId(fakeDDSubTable.nrow()); indgen(spwId);
     MSDataDescColumns(fakeDDSubTable).spectralWindowId().putColumn(spwId);
   }
   //
