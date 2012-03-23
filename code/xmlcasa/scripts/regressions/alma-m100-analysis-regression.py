@@ -192,13 +192,7 @@ if(mystep in thesteps):
             gencal(
                 vis=name+'.ms',
                 caltype='tsys', 
-                caltable='cal-tsys_'+name)
-##         interTsys=aU.InterpolateTsys('cal-tsys_'+name)
-##         interTsys.correctBadTimes()
-##         interTsys.assignFieldAndScanToSolution()
-##         interTsys.getTdmFdmSpw()
-##         interTsys.interpolateTsys()
-
+                caltable='cal-tsys_'+name+'.fdm')
     else:
         print "Generation of Tsys tables omitted to avoid usage of analysisUtils"
         print "We use canned tsys tables instead."
