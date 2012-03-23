@@ -27,21 +27,80 @@
 //----------------------------------------------------------------------------
 
 #include <synthesis/CalTables/CTInterface.h>
+#include <ms/MeasurementSets/MSColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-//----------------------------------------------------------------------------
-  CTInterface::CTInterface(const Table& table):MSSelectableTable(table)
-  {};
-
+  //
+  //----------------------------------------------------------------------------
+  //
+  CTInterface::CTInterface(const Table& table)
+    :MSSelectableTable(table), fakeDDSubTable()
+  {makeDDSubTable();};
+  //
+  //----------------------------------------------------------------------------
+  //
   CTInterface::~CTInterface() 
   {};
-
+  //
+  //----------------------------------------------------------------------------
+  //
   const NewCalTable* CTInterface::asCT()
   {
     return static_cast<const NewCalTable *>(table());
   };
+  //
+  //----------------------------------------------------------------------------
+  //
+  void CTInterface::makeDDSubTable()
+  {
+    //
+    // Make an in-memory DataDescription table.
+    //
+    SetupNewTable setup(String(""), MSDataDescription::requiredTableDesc(), 
+			Table::Scratch);
+    Int nrow=spectralWindow().nrow();
+    fakeDDSubTable = MSDataDescription(setup, Table::Memory, nrow);
+    //
+    // The MSDataDescription() ctor above does not honour nrow!  It
+    // always creates a table with one row.  So add the differential
+    // number of rows to the in-memory fakeDDSubTable.
+    //
+    Int dRow=min(nrow,(Int)(nrow-fakeDDSubTable.nrow()));
+    fakeDDSubTable.addRow(dRow);
+    //
+    // Call the in-memory table what it is.
+    //
+    TableInfo& tabInfo=fakeDDSubTable.tableInfo();
+    tabInfo.setType("FAKE_DATA_DESCRIPTION_ID");
+    //
+    // Fill the required columns (flagRow and spectralWindowId).
+    // These should ideally be just referenced, but I (SB) could not
+    // figure out how to do it.
+    //
+    Vector<Bool> spwFlagRow=ROMSSpWindowColumns(spectralWindow()).flagRow().getColumn();
+    MSDataDescColumns(fakeDDSubTable).flagRow().putColumn(spwFlagRow);
 
-//----------------------------------------------------------------------------
+    Vector<Int> spwId(nrow); indgen(spwId);
+    MSDataDescColumns(fakeDDSubTable).spectralWindowId().putColumn(spwId);
+  }
+  //
+  //----------------------------------------------------------------------------
+  //
+  const MSDataDescription& CTInterface::dataDescription() 
+  {
+    return fakeDDSubTable;
+  }
+  //
+  //----------------------------------------------------------------------------
+  //
+  String CTInterface::columnName(MSMainEnums::PredefinedColumns nameEnum) 
+  {
+    if (nameEnum == MS::DATA_DESC_ID) 
+      return CTEnums::fieldName(CTEnums::SPECTRAL_WINDOW_ID);
+    else
+      return MS::columnName(nameEnum);
+  }
+  //----------------------------------------------------------------------------
 } //# NAMESPACE CASA - END
 
