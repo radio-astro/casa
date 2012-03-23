@@ -135,7 +135,7 @@ def makeMS(choice='RL_all',stokesvals=[1.0,1.0,0.0,0.0],parentpath='.'):
   cl.close();
 
   print >>logfile, 'Predicting  : ', clname , ' onto ' , msname;
-  ft(vis=msname,complist=clname);
+  ft(vis=msname,complist=clname,usescratch=True);
 
   tb.open(msname,nomodify=False);
   moddata = tb.getcol(columnname='MODEL_DATA');
