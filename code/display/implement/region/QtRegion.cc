@@ -86,12 +86,6 @@ namespace casa {
 	    max = mystate->zMax( );
 	}
 
-#if OLDSTUFF
-	void QtRegion::clearstats( ) { mystate->clearstats( ); }
-	void QtRegion::addstats( const std::string &name, std::list<std::pair<String,String> > *stats )
-	    { mystate->addstats( name, stats ); }
-
-#endif
 	void QtRegion::selectedInCanvas( ) { dock_->selectRegion(mystate); }
 
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
@@ -109,6 +103,7 @@ namespace casa {
 		std::list<RegionInfo> *rl = generate_dds_statistics( );
 		// send statistics to region state object...
 		mystate->updateStatistics(rl);
+		delete rl;
 	    }
 
 	    // update position, when needed...
