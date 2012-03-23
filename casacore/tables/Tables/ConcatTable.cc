@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatTable.cc 21025 2011-03-03 15:09:00Z gervandiepen $
+//# $Id: ConcatTable.cc 21212 2012-03-23 15:01:08Z gervandiepen $
 
 #include <tables/Tables/ConcatTable.h>
 #include <tables/Tables/ConcatColumn.h>
@@ -303,22 +303,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void ConcatTable::initialize()
   {
-    //# Copy the table description of the first table.
-    tdescPtr_p = new TableDesc (baseTabPtr_p[0]->tableDesc(),
-				TableDesc::Scratch);
     // Check if all tables have the same description.
-    TableDesc actualDesc (baseTabPtr_p[0]->actualTableDesc(),
-			  TableDesc::Scratch);
+    vector<CountedPtr<TableDesc> > actualDesc;
+    actualDesc.reserve (baseTabPtr_p.nelements());
     Bool equalDataTypes;
     for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
-      if (baseTabPtr_p[i]->actualTableDesc().columnDescSet().isEqual
-	  (actualDesc.columnDescSet(), equalDataTypes)) {
+      actualDesc.push_back (new TableDesc (baseTabPtr_p[i]->actualTableDesc()));
+      if (actualDesc[i]->columnDescSet().isEqual
+	  (actualDesc[0]->columnDescSet(), equalDataTypes)) {
 	if (equalDataTypes) {
 	  continue;
 	}
       }
       throw TableError("All tables in ConCatTable must have same description");
     }
+    // For fixed shaped arrays check if all tables have the same shape.
+    // If not, clear dimensionality and options.
+    for (uInt i=0; i<actualDesc[0]->ncolumn(); ++i) {
+      ColumnDesc& colDesc = actualDesc[0]->rwColumnDesc(i);
+      if (colDesc.isArray()  &&
+          (colDesc.options() & ColumnDesc::FixedShape) != 0) {
+        Bool sameShape = true;
+        for (uInt j=1; j<baseTabPtr_p.nelements(); ++j) {
+          const ColumnDesc& cd = actualDesc[j]->columnDesc(i);
+          if ((cd.options() & ColumnDesc::FixedShape) == 0  ||
+              ! colDesc.shape().isEqual (cd.shape())) {
+            sameShape = False;
+            break;
+          }
+        }
+        if (!sameShape) {
+          colDesc.setNdim (0);
+          colDesc.setOptions (0);
+        }
+      }
+    }
+    //# Use the table description.
+    tdescPtr_p = new TableDesc (*(actualDesc[0]), TableDesc::Scratch);
     keywordSet_p = baseTabPtr_p[0]->keywordSet();
     // Create the concatColumns.
     makeConcatCol();
@@ -415,7 +436,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   TableDesc ConcatTable::actualTableDesc() const
   {
-    return baseTabPtr_p[0]->actualTableDesc();
+    return *tdescPtr_p;
   }
 
   Record ConcatTable::dataManagerInfo() const
