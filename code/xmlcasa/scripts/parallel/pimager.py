@@ -31,6 +31,13 @@ class pimager():
         self.numthreads=-1
         self.gain=0.1
         self.npixels=0
+        self.uvtaper=False
+        self.outertaper=[]
+        self.timerange=''
+        self.uvrange=''
+        self.baselines=''
+        self.scan=''
+        self.observation=''
         self.c=cluster
         if self.c == '' :
             # Until we move to the simple cluster
@@ -421,7 +428,7 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='',  
-              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  
+              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -481,6 +488,13 @@ class pimager():
         self.robust=robust
         self.npixels=npixels
         self.gain=gain
+        self.uvtaper=uvtaper
+        self.outertaper=outertaper
+        self.timrange=timerange
+        self.uvrange=uvrange
+        self.baselines=baselines
+        self.scan=scan
+        self.observation=observation
         self.visinmem=visinmem
         self.numthreads=numthreads
 
@@ -929,7 +943,7 @@ class pimager():
               hostnames='', 
               numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
-              robust=0.0, npixels=0,  
+              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -994,6 +1008,13 @@ class pimager():
         self.npixels=npixels
         self.stokes=stokes
         self.visinmem=visinmem
+        self.uvtaper=uvtaper
+        self.outertaper=outertaper
+        self.timrange=timerange
+        self.uvrange=uvrange
+        self.baselines=baselines
+        self.scan=scan
+        self.observation=observation
         self.numthreads=numthreads
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
@@ -1942,7 +1963,7 @@ class pimager():
         spwlaunch='"'+self.spw+'"' if (type(self.spw)==str) else str(self.spw)
         fieldlaunch='"'+self.field+'"' if (type(self.field) == str) else str(self.field)
         pslaunch='"'+self.phasecenter+'"' if (type(self.phasecenter) == str) else str(self.phasecenter)
-        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+')'
+        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+')'
         print 'launch command', launchcomm
         self.c.pgc(launchcomm);
         self.c.pgc('a.visInMem='+str(self.visinmem));

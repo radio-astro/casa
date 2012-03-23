@@ -76,6 +76,20 @@ def pclean(vis=None,
     elif(type(imsize) != list):
         raise TypeError, "parameter imsize %s is not understood" % str(imsize)
 
+    if((uvtaper==True) and (type(outertaper) in (str, int, float, long))):
+        outertaper=[outertaper]
+    if((uvtaper==True) and (type(outertaper)==list) and (len(outertaper) > 0)):
+        if(len(outertaper)==1):
+            outertaper.append(outertaper[0])
+        if(len(outertaper)==2):
+            outertaper.append('0deg')
+        if(qa.quantity(outertaper[0])['unit']==''):
+            outertaper[0]=qa.quantity(qa.quantity(outertaper[0])['value'],'lambda')
+        if(qa.quantity(outertaper[1])['unit']==''):
+            outertaper[1]=qa.quantity(qa.quantity(outertaper[1])['value'],'lambda')
+    else:
+        uvtaper=False
+
     ###make sure units are consistent
     cubemode='channel'
     if (qa.quantity(start)['unit'].find('Hz') > 0):
@@ -140,7 +154,10 @@ def pclean(vis=None,
               majorcycles=majorcycles, niter=niter, gain=gain,
               threshold=threshold, weight=weighting, robust=robust, scales=scales,
               wprojplanes=wprojplanes,facets=facets,  stokes=stokes,
-              contclean=(not overwrite), visinmem=False, maskimage=mask, interactive=interactive, numthreads=1)
+                  contclean=(not overwrite), uvtaper=uvtaper, outertaper=outertaper,
+                  timerange=timerange,
+                  uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
+                  visinmem=False, maskimage=mask, interactive=interactive, numthreads=1)
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
@@ -171,6 +188,9 @@ def pclean(vis=None,
                       wprojplanes=wprojplanes,facets=facets, 
                       start=start, nchan=nchan, step=width, restfreq=restfreq,stokes=stokes, 
                       imagetilevol=1000000, chanchunk=chanchunk, maskimage=mask,  
+                      uvtaper=uvtaper, outertaper=outertaper,
+                      timerange=timerange,
+                      uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
                       contclean=[(not overwrite), True][interactive and k>0], visinmem=False, numthreads=1)
             if(interactive and (k < interloop)) :
                 myim,=gentools(['im'])

@@ -1129,6 +1129,7 @@ class cleanhelper:
         if((uvtaper==True) and (type(outertaper)==list) and (len(outertaper) > 0)):
             if(len(outertaper)==1):
                 outertaper.append(outertaper[0])
+            if(len(outertaper)==2):
                 outertaper.append('0deg')
             if(qa.quantity(outertaper[0])['unit']==''):
                 outertaper[0]=qa.quantity(qa.quantity(outertaper[0])['value'],'lambda')
