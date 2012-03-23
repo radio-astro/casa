@@ -401,7 +401,6 @@ void SolvableVisCal::setApply(const Record& apply) {
   // Channel counting info 
   //  (soon will deprecate, I think, because there will be no need
   //    to do channel registration in the apply)
-  nChanParList()=0;  // is this MSnchan?
   startChanList()=0;  // all zero
 
   //  cout << "End of SVC::setApply" << endl;
@@ -1106,8 +1105,6 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 				   const Int&) {
 
 
-  throw(AipsError("Accum is temporarily disabled."));
-
   LogMessage message(LogOrigin("SolvableVisCal","setAccumulate"));
 
   // meta-info
@@ -1122,10 +1119,18 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
   // If interval<0, this signals an existing input cumulative table
   if (interval()<0.0) {
 
+    //    throw(AipsError("Accum is temporarily disabled."));
+  
     logSink() << "Loading existing " << typeName()
 	      << " table: " << table
 	      << " for accumulation."
 	      << LogIO::POST;
+
+
+    // Load the exiting table
+    loadMemCalTable(calTableName(),"");
+
+ /* NewCalTable
 
     // Create CalSet, from table
     switch (parType())
@@ -1153,6 +1158,11 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 
     // The following should be for trivial types only!    
     nChanMatList()=nChanParList();
+ */
+
+    // The following should be for trivial types only!    
+    nChanMatList()=nChanParList();
+
 
   }
 
@@ -1163,6 +1173,21 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 	      << " table for accumulation."
 	      << LogIO::POST;
 
+    // Creat an empty caltable
+    createMemCalTable();
+
+    // Setup channelization (as if solving)
+    setSolveChannelization(vs);
+    nChanMatList()=nChanParList();
+
+    // Initialize solvePar shapes
+    initSolvePar();
+
+    // Inflate it by iteratin over the dataset
+    inflateNCTwithMetaData(vs);
+
+
+  /* NEWCALTABLE
     // Create a pristine CalSet
     //  TBD: move this to inflate()?
     switch (parType())
@@ -1208,6 +1233,9 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
       default:
 	throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
       }
+
+  */
+
   }
 
 }
@@ -2207,6 +2235,69 @@ void SolvableVisCal::fillMetaData(VisSet& vs) {
 
 }
 
+// Inflate an empty Caltable w/ meta-data from a VisSet
+void SolvableVisCal::inflateNCTwithMetaData(VisSet& vs) {
+
+  if (prtlev()>3) cout << "  SVC::inflateNCTwithMetaData(vs)" << endl;
+
+  // NB: Currently, this is only used for the accumulate
+  //     context; in solve, meta-data is filled on-the-fly
+  //     (this ensures more accurate timestamps, etc.)
+
+  // Fill the Calset with meta info
+  VisIter& vi(vs.iter());
+  vi.originChunks();
+  VisBuffer vb(vi);
+  Vector<Int> islot(nSpw(),0);
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+    vi.origin();
+    currSpw()=vi.spectralWindow();
+    currField()=vi.fieldId();
+    currScan()=vb.scan0();
+    
+    // Derive average time info
+    Double timeStamp(0.0);
+    Int ntime(0);
+    for (vi.origin(); vi.more(); vi++,++ntime) timeStamp+=vb.time()(0);
+    if (ntime>0)
+      refTime()=timeStamp/Double(ntime);
+    else
+      refTime()=0.0;
+
+    // Initialize parameters
+    switch(parType()) {
+    case VisCalEnum::COMPLEX: {
+      solveAllCPar().set(defaultPar());
+      break;
+    }
+    case VisCalEnum::REAL: {
+      solveAllCPar().set(defaultPar());
+      break;
+    }
+    default:
+      break;
+    }
+    solveAllParOK().set(True);
+    solveAllParErr().set(Float(0.0));
+    solveAllParSNR().set(1.0);
+
+    /*
+    cout << "Spw=" << currSpw()
+	 << " Fld=" << currField()
+	 << " Scan=" << currScan()
+	 << " Time=" << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+	 << endl;
+    */
+
+    // Add this interval to the NCT
+    if (refTime()>0.0)
+      keepNCT();
+
+  }
+
+}
+
 
 Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
 
@@ -3141,6 +3232,10 @@ void SolvableVisCal::storeNCT() {
     logSink() << "Writing solutions to table: " << calTableName()
 	      << LogIO::POST;
   
+
+
+
+
   // Write out the table to disk (regardless of what happened above)
   //  (this will sort)
   ct_->writeToDisk(calTableName());
@@ -3201,6 +3296,12 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
   else
     // No selection
     ct_ = new NewCalTable(ctname,Table::Old,Table::Memory);
+
+
+  // Fill nChanParList from the Caltable
+  //   (this may be revised by calcPar)
+  MSSpWindowColumns spwcol(ct_->spectralWindow());
+  nChanParList().assign(spwcol.numChan().getColumn());
 
 }
 
@@ -4281,66 +4382,79 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 
   Bool fldok(True);
 
-  for (Int ispw=0; ispw<nSpw(); ispw++) {
+  // TBD: Iterate over the ct_
+  Block<String> cols(2);
+  cols[0]="SPECTRAL_WINDOW_ID";
+  cols[1]="TIME";
+  CTIter ctiter(*ct_,cols);
+
+  cout << boolalpha;
+  Int piter(0);
+  Int prow(0);
+  while (!ctiter.pastEnd()) {
+    
+    currSpw()=ctiter.thisSpw();
+    currTime()=ctiter.thisTime();
+
+    /*    
+    cout << "Spw=" << currSpw() << " spwok=" << svj->spwOK(currSpw());
+    cout << " Time=" << MVTime(currTime()/C::day).string(MVTime::YMD,7);
+    cout << " nrow=" << ctiter.nrow();
+    */
 
     // Only update spws which are available in the incr table:
-    if (incr->spwOK()(ispw)) {
-
-      currSpw()=ispw;
-      
-      Int nSlot(cs().nTime(ispw));
-      
-      // For each slot in this spw
-      for (Int islot=0; islot<nSlot; islot++) {
+    if (svj->spwOK(currSpw())) {
 	
-	Double thistime=cs().time(ispw)(islot);
-	Int thisfield=cs().fieldId(ispw)(islot);
+      currField()=ctiter.thisField();
+
+      // Is current field among those we need to update?
+      fldok = (nfield==0 || anyEQ(fields,currField()));	
+
+      //      cout << " Fld=" << currField() << " fldok=" << fldok;
+
+      if (fldok) {
+
+	currFreq()=ctiter.freq();
+
+	currCPar().assign(ctiter.cparam());
+	currParOK().assign(!ctiter.flag());
+
+	syncCalMat(False);  // a reference!!
+	  
+	// Sync svj with this
+	svj->syncCal(*this);
+
+	AlwaysAssert( (nChanMat()==svj->nChanMat()), AipsError);
+	  
+	// Do the multiplication each ant, chan
+	for (Int iant=0; iant<nAnt(); iant++) {
+	  for (Int ichan=0; ichan<svj->nChanMat(); ichan++) {
+	    J1()*=(svj->J1());
+	    J1()++;
+	    svj->J1()++;
+	  } // ichan
+	} // iant
+
+	//cout << "  keep";
 	
-	// TBD: proper frequency?  (from CalSet?)
-	Vector<Double> thisfreq(nSpw(),0.0);
-	
-	// Is current field among those we need to update?
-	fldok = (nfield==0 || anyEQ(fields,thisfield));
+	ctiter.setcparam(currCPar());  // assumes matrices are references
+	ctiter.setflag(!currParOK());
 
-	if (fldok) {
+	piter+=1;
+	prow+=ctiter.nrow();
 
-	  // TBD: group following into syncCal(cs)?
-	  syncMeta(currSpw(),thistime,thisfield,thisfreq,nChanPar());
-	  syncPar(currSpw(),islot);
-	  syncCalMat(False);
-	  
-	  // Sync svj with this
-	  svj->syncCal(*this);
-	  
-	  // Relevant channels to update are bounded by
-	  //  channels available in incr table:
-	  Int prestep(svj->startChan());
-	  Int poststep(nChanMat()-prestep-svj->nChanMat());
-	  
-	  AlwaysAssert((prestep<nChanMat()),AipsError);
-	  AlwaysAssert((poststep>-1),AipsError);
-
-	  // Do the multiplication each ant, chan
-	  for (Int iant=0; iant<nAnt(); iant++) {
-
-	    J1().advance(prestep);
-	    for (Int ichan=0; ichan<svj->nChanMat(); ichan++) {
-	      J1()*=(svj->J1());
-	      J1()++;
-	      svj->J1()++;
-	    } // ichan
-	    J1().advance(poststep);
-	  } // iant
-	  IPosition blc(4,0,0,0,islot);
-	  IPosition trc(cs().parOK(currSpw()).shape());
-	  trc-=1;
-	  trc(3)=islot;
-	  cs().solutionOK(currSpw())(islot)=
-	    anyEQ(cs().parOK(currSpw())(blc,trc),True);
-	} // fldok
-      } // islot
+      } // fldok
     } // spwOK
+
+    //    cout << endl;
+
+    // Advance iterator
+    ctiter.next();
+    
   } // ispw
+
+  //  cout << "Processed " << prow << " rows in " << piter << " iterations." << endl;
+
 }
 
 

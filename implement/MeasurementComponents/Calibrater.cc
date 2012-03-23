@@ -2379,8 +2379,10 @@ void Calibrater::accumulate(const String& intab,
     }
   }
 
+  throw(AipsError("Deprecated version of Calibrater::accumulate(...)!"));
+
   // Call Vector<Int> version
-  accumulate(intab,incrtab,outtab,fldidx,cfldidx,interp,t,spwmap);
+  //  accumulate(intab,incrtab,outtab,fldidx,cfldidx,interp,t,spwmap);
 
 }
 
@@ -2393,7 +2395,9 @@ void Calibrater::accumulate(const String& intab,
 			    const Double& t,
 			    const Vector<Int>& spwmap) {
 
+/*  NEWCALTABLE
   logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
+
 
   // Convert refFields/transFields to index lists
   // These are empty vectors by default
@@ -2420,7 +2424,7 @@ void Calibrater::accumulate(const String& intab,
 			    const Double& t,
 			    const Vector<Int>& spwmap) {
 
-  //  throw(AipsError("Method 'accumulate' is temporarily disabled."));
+*/
   
   //  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
 
@@ -2498,6 +2502,8 @@ void Calibrater::accumulate(const String& intab,
     // initialize the cumulative solutions
     incal_->setAccumulate(*vs_p,intab,"",t,-1);
     
+
+    /*
     // form selection on incr table
     String incrSel="";
     if (calFields.shape()>0) {
@@ -2512,6 +2518,7 @@ void Calibrater::accumulate(const String& intab,
       selectstr << "]";
       incrSel=selectstr.str();
     }
+    */
     
     // fill incr table with selection
     logSink() << "Preparing to accumulate calibration from table: "
@@ -2522,7 +2529,8 @@ void Calibrater::accumulate(const String& intab,
     RecordDesc applyparDesc;
     applyparDesc.addField ("t", TpDouble);
     applyparDesc.addField ("table", TpString);
-    applyparDesc.addField ("select", TpString);
+    //    applyparDesc.addField ("select", TpString);
+    applyparDesc.addField ("fieldstr", TpString);
     applyparDesc.addField ("interp", TpString);
     applyparDesc.addField ("spwmap",TpArrayInt);
     
@@ -2530,14 +2538,19 @@ void Calibrater::accumulate(const String& intab,
     Record applypar(applyparDesc);
     applypar.define ("t", t);
     applypar.define ("table", incrtab);
-    applypar.define ("select", incrSel);
+    //    applypar.define ("select", incrSel);
+    applypar.define ("fieldstr", calFields);
     applypar.define ("interp", interp);
     applypar.define ("spwmap",spwmap);
 
     incrcal_->setApply(applypar);
 
+    Vector<Int> fldidx(0);
+    if (fields.length()>0)
+      fldidx=getFieldIdx(fields);
+
     // All ready, now do the accumulation
-    incal_->accumulate(incrcal_,fields);
+    incal_->accumulate(incrcal_,fldidx);
     
     // ...and store the result
     logSink() << "Storing accumulated calibration in table: " 
@@ -2547,7 +2560,8 @@ void Calibrater::accumulate(const String& intab,
     if (outtab != "") 
       incal_->calTableName()=outtab;
 
-    incal_->store();
+    //    incal_->store();   NEWCALTABLE
+    incal_->storeNCT();
     
     delete incal_;
     delete incrcal_;

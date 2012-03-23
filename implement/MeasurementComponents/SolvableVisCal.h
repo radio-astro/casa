@@ -393,6 +393,10 @@ protected:
   // Fill CalSet meta-data according to a VisSet
   void fillMetaData(VisSet& vs);
 
+  // Inflate an NCT w/ meta-data according to a VisSet 
+  //   (for accum)
+  void inflateNCTwithMetaData(VisSet& vs);
+
   // Synchronize calibration for solve context
   void syncSolveCal();
 
