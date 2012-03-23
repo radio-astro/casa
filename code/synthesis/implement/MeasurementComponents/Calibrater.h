@@ -275,7 +275,7 @@ class Calibrater
 		  const String& interp="linear",
 		  const Double& t=-1.0,
 		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
-
+  /*  NEWCALTABLE
   // Accumululate (via field indices)
   void accumulate(const String& intab,
 		  const String& incrtab,
@@ -285,7 +285,8 @@ class Calibrater
 		  const String& interp="linear",
 		  const Double& t=-1.0,
 		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
-  
+  */
+
   // Generate cal table from specified values
   void specifycal(const String& type,
 		  const String& caltable,
