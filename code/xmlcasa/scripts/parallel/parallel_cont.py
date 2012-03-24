@@ -100,7 +100,10 @@ class imagecont():
             return self.imperms[msname].getweightgrid(type=wgttype)
     def setweightgrid(self, msname='', weight=[], wgttype='imaging'):
         if(self.imperms.has_key(msname) and (not self.novaliddata[msname])):
-            self.imperms[msname].setweightgrid(weight=weight, type=wgttype)   
+            self.imperms[msname].setweightgrid(weight=weight, type=wgttype)
+    def getftweight(self, msname='', wgtimage=['']):
+        if(self.imperms.has_key(msname) and (not self.novaliddata[msname])):
+            self.imperms[msname].getweightgrid(type='ftweight', wgtimages=wgtimage)
 #### 
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[-1], spw='', field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         #casalog.post('KEYS '+str(self.imperms.keys()))

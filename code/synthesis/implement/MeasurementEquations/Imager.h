@@ -588,8 +588,10 @@ class Imager
   // getweightGrid will get the weight density for uniform style imaging weight
   // the Block elements are for different fields if independent field weighting 
   // was done.
+  // when type is "ftweight"..then a Vector of string is expected in weightimage 
+  // which is of the same length as the number of models put in clean etc 
 
-  Bool getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type);
+  Bool getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type, const Vector<String>& weightImagenames=Vector<String>());
   Bool setWeightGrid(const Block<Matrix<Float> >& weightgrid, const String& type);
   String dQuantitytoString(const Quantity& dq);
 
