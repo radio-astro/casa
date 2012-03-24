@@ -2544,7 +2544,7 @@ Bool Imager::weight(const String& type, const String& rmode,
 }
 
 
-Bool Imager::getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type){
+Bool Imager::getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type, const Vector<String>&imagenames){
 
   if(type=="imaging"){
     weightgrid.resize(0, True, False);
@@ -2553,6 +2553,17 @@ Bool Imager::getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type)
     imwgt_p.getWeightDensity(weightgrid);
     return True;
   }
+  if((type=="ftweight") && (Int(imagenames.nelements())== sm_p->numberOfModels())){
+    for (Int model=0; model < sm_p->numberOfModels(); ++model){
+      PagedImage<Float> wgtImage(sm_p->image(model).shape(),
+				   (sm_p->image(model)).coordinates(),
+				   imagenames(model));
+      se_p->getWeightImage(model, wgtImage);
+      
+
+    }
+    return True;
+  } 
         
   return False;
 }
