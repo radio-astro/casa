@@ -118,9 +118,9 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
 	 // The operator= would have copied only the pointer, and not made a new instance of subftm_p
 	 // Make the new instance of subftm_p here. 
 	 // Ideally, this should call "clone" of that ftm, so that the if/else stuff can all go away.
-	 if(other.subFTMname_p=="ft") 
+	 if(other.subFTMname_p=="GridFT") 
 	   { subftm_p = new GridFT(static_cast<const GridFT&>(*other.subftm_p)); }
-	 else if(other.subFTMname_p=="wproject") 
+	 else if(other.subFTMname_p=="WProjectFT") 
 	   { subftm_p = new WProjectFT(static_cast<const WProjectFT&>(*other.subftm_p)); }
 	 /*	 else if(other.subFTMname_p=="wbawp") 
 	   { subftm_p = new AWProjectWBFT(static_cast<const AWProjectWBFT&>(*other.subftm_p)); }
