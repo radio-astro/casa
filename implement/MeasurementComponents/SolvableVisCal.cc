@@ -486,6 +486,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   LogIO os(LogOrigin("SVC["+typeName()+"]", "setSimulate()", WHERE));
   if (prtlev()>2) cout << " SVC::setSimulate(simpar)" << endl;
 
+  //  cout << "SVC::setSimulate" << endl;
+
   // Extract calWt
   if (simpar.isDefined("calwt"))
     calWt()=simpar.asBool("calwt");
@@ -696,9 +698,12 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
       slotidx(thisSpw)++;
     
       IPosition cparshape=solveCPar().shape();
+
+      /* NEWCALTABLE
       // this will get changed to True by keep() depending on solveParOK
       cs().solutionOK(currSpw())(slotidx(thisSpw))=False;  // all Pars, all Chans, all Ants
-      
+      */
+
       Vector<Double> timevec;
       Double starttime,stoptime;
       starttime=vi.time(timevec)[0];
@@ -829,6 +834,17 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	    //solveParOK()(blc,trc)=True;
     	  }// if not flagged
     	}// row
+
+	// Reference solveCPar, etc. for keepNCT
+	solveAllCPar().reference(solveCPar());
+	solveAllParOK().reference(solveParOK());
+	solveAllParErr().reference(solveParErr());
+	solveAllParSNR().reference(solveParSNR());
+	currScan()=-1;
+
+	keepNCT();
+
+	/* NEWCALTABLE
     	if (prtlev()>5) cout << "  about to keep, cs.parshape="<<cs().par(currSpw()).shape()<<endl;
     	// sigh - need own keep too, to have all chans at once...
     	{
@@ -865,6 +881,10 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	  }
     	}
     	//keep(slotidx(thisSpw));
+	*/
+
+
+
         }// vi
         if (vi.moreChunks()) vi.nextChunk();
       } // chunk loop
@@ -885,7 +905,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
        << endl << LogIO::POST;      
     // write the table
     append()=False; 
-    store();
+    //    store();   NEWCALTABLE
+    storeNCT();
   } else {
     os << LogIO::NORMAL 
        << "calTable name not set - not writing to disk (note: ";
@@ -895,6 +916,21 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
       os << "NOT OTF sim - still creating Calset)";  
     os << LogIO::POST;
   }  
+
+
+
+  if (not simOnTheFly()) {
+
+    // Create the interpolator
+    if (ci_)
+      delete ci_;
+
+    ci_=new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear",nSpw(),spwMap());
+
+  }
+
+  //  cout << "End of SVC::setSimulate" << endl;
+
 
   if (prtlev()>2) cout << " ~SVC::setSimulate(simpar)" << endl;
 }
@@ -1883,6 +1919,17 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   // do it ourselves in order to use nchanparlist just set in setsolvechan
 
   if (not simOnTheFly()) {
+
+    if (ct_) 
+      delete ct_;
+
+    // Make a caltable into which simulated solutions will be deposited
+    // !freqDepPar controls channelization in SPW subtable  (T == single channel)
+    ct_=new NewCalTable(calTableName()+"_sim_temp",parType(),typeName(),msName(),!freqDepPar());
+
+
+    /*  NEWCALTABLE
+
   switch(parType())
     {
     case VisCalEnum::COMPLEX:
@@ -1909,7 +1956,11 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 		      "COMPLEXREAL found in SolvableVisCal::makeCalSet()"));
     }
 
+
   if (prtlev()>3) cout<<"   calset of size "<<cs().par(currSpw()).shape()<<" created"<<endl;
+
+    */
+
   }
 
 
@@ -2007,9 +2058,12 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
          break;
       }
   }
+
   
   if (not simOnTheFly()) {
-    os << LogIO::DEBUG1 << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() 
+    os << LogIO::DEBUG1 
+      //       << "calset shape = " << cs().shape(0) 
+       << " solveCPar shape = " << solveCPar().shape() 
        << LogIO::POST;
   }
 
