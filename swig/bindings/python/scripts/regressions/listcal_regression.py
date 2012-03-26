@@ -783,19 +783,16 @@ pagerows            =         50        #  Rows per page
 async               =      False        #  If true the taskname must be started using
 go(listcal)
 
-
 # Remove first line of listcal output (contains hard-coded path)
 lt.listcalFix(outputFilename)
 
 compareFilename = prefix + 'compare'
-if (False): # lt.runTests(outputFilename,standardFileName,'1.000',compareFilename)): 
+if (lt.runTests(outputFilename,standardFileName,'1.000',compareFilename)): 
     print "Passed listcal output test"
     testPassed +=1
 else:       
     print "FAILED listcal output test"
     testFailed +=1
-
-
 
 ##########################################################################                                                                        
 # TEST - NGC4826 
@@ -830,7 +827,7 @@ go(listcal)
 # Remove first line of listcal output (contains hard-coded path)
 lt.listcalFix(outputFilename)
 
-if (False):  #lt.runTests(outputFilename,standardFileName,'1.000',compareFilename)): 
+if (lt.runTests(outputFilename,standardFileName,'1.000',compareFilename)): 
     print "Passed listcal output test"
     testPassed +=1
 else:       

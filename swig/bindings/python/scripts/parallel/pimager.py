@@ -64,8 +64,38 @@ class pimager():
             shutil.copytree(inimages, outimage)
         else:
             return False
+        return True  
+    @staticmethod
+    def weightedaverimages(outimage='outimage', inimages=[], wgtimages=[]):
+        if((type(inimages)==list) and (len (inimages)==0)):
+            return False
+        if(len(wgtimages) != len (inimages)):
+            raise Exception, 'number of images and weight images are different'
+        if(os.path.exists(outimage)):
+            shutil.rmtree(outimage)
+            shutil.rmtree( '__sumweight_image', ignore_errors=True)
+        if(type(inimages)==list):
+            shutil.copytree(inimages[0], outimage)
+            if(len(inimages)==1):
+                return True
+            shutil.copytree(wgtimages[0], '__sumweight_image')
+            ia.open(outimage)  
+            ia.calc('"'+inimages[0]+'"*"'+wgtimages[0]+'"')
+            ib,=gentools(['ia'])
+            ib.open( '__sumweight_image')
+            for k in range(1, len(inimages)) :
+                ia.calc('"'+outimage+'" +  "'+inimages[k]+'"*"'+wgtimages[k]+'"')
+                ib.calc('"'+'__sumweight_image' + '" +  "'+wgtimages[k]+'"')
+            ib.done()
+            ia.calc('"'+outimage+'"'+'/"__sumweight_image"')
+            ia.done()
+            shutil.rmtree( '__sumweight_image')
+        elif(type(inimages)==str):
+            shutil.copytree(inimages, outimage)
+        else:
+            return False
         return True
-
+  
     @staticmethod
     def findchansel(msname='', spw='*', numpartition=1, freqrange=[0, 1e12]):
         thesel=ms.msseltoindex(msname, spw=spw)
@@ -535,7 +565,8 @@ class pimager():
         minfreq=freqrange[0]
         maxfreq=freqrange[1]
 
-        out=range(numcpu)  
+        out=range(numcpu) 
+        
         c=self.c
        ####
         #the default working directory is somewhere 
@@ -573,6 +604,7 @@ class pimager():
             for k in range(len(imlist)):
                 shutil.rmtree(imlist[k]+'.model', True)
         intmask=0
+        donewgt=[False]*numcpu
         ### do one major cycle at the end
         for maj in range(majorcycles +1):
             casalog.post('Starting Gridding for major cycle '+str(maj)) 
@@ -595,7 +627,14 @@ class pimager():
                 overone=True
                 for k in range(numcpu):
                     #print 'k', k, out[k]
-                    overone=(overone and c.check_job(out[k],False))
+                    cj=c.check_job(out[k],False)
+                    overone=(overone and cj)
+                    #print 'maj, cj, dwght', maj, cj, donewgt[k]
+                    if((maj==0) and cj and (not donewgt[k])):
+                        print 'doing weight', 'a.getftweight(msname="'+msname+'", wgtimage="'+imlist[k]+'.wgt''")'
+                        c.odo('a.getftweight(msname="'+msname+'", wgtimage="'+imlist[k]+'.wgt''")', k)
+                        donewgt[k]=True
+                    
                     #if((printkounter==10) and not(c.check_job(out[k],False))):
                     #    print 'job ', k, 'is waiting'
                     #    printkounter=0
@@ -606,13 +645,15 @@ class pimager():
             psfs=range(len(imlist))
             residuals=range(len(imlist))
             restoreds=range(len(imlist))
+            weightims=range(len(imlist))
             fluxims=range(len(imlist))
             for k in range (len(imlist)):
                 psfs[k]=imlist[k]+'.psf'
                 residuals[k]=imlist[k]+'.residual'
                 restoreds[k]=imlist[k]+'.image'
                 fluxims[k]=imlist[k]+'.flux'
-            self.averimages(residual, residuals)
+                weightims[k]=imlist[k]+'.wgt'
+            self.weightedaverimages(residual, residuals, weightims)
             if(maskimage == ''):
                 maskimage='lala.mask'
             if (interactive and (intmask==0)):
@@ -640,7 +681,7 @@ class pimager():
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
                               init=True, initval=0.0)     
-                self.averimages(psf, psfs)
+                self.weightedaverimages(psf, psfs, weightims)
                 if(self.ftmachine=='mosaic'):
                     self.averimages(fluxim, fluxims)
                 if((self.weight=='uniform') or (self.weight=='briggs')):
@@ -692,7 +733,7 @@ class pimager():
         #ia.calc('"'+restored+'"'+'/'+str(len(imlist)))
         #ia.done()
         shutil.rmtree(imagename+'.image', True)
-        self.averimages(restored, restoreds)
+        self.weightedaverimages(restored, restoreds, weightims)
         #shutil.move(restored,  imagename+'.image')
         time2=time.time()
         ###Clean up
@@ -701,6 +742,8 @@ class pimager():
             shutil.rmtree(imlist[k]+'.psf', True)
             shutil.rmtree(imlist[k]+'.residual', True)
             shutil.rmtree(imlist[k]+'.image', True)
+            shutil.rmtree(imlist[k]+'.wgt', True)
+        print 'Time to image is ', (time2-time1)/60.0, 'mins'
         casalog.post('Time to image is '+str((time2-time1)/60.0)+ ' mins')
         #c.stop_cluster()
 

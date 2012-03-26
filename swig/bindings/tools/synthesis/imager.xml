@@ -1527,14 +1527,26 @@ One would wish to weight the dirty image before averaging or set the imaging wei
 Brigg's style weighting) to account for all the data being used. This is {\bf NOT} for the general user but for people who 
 are parallelizing at the scripting level.
 
+{\bf imaging}: will return a the weight griddensity \\
+ 
+{\bf ftweight}: will put the FT-machine weight images in the names given in wgtimage parameters..these may be needed to average residual images from different processes running seperately on different section of the data.
+
 
 </description>
 
 <input>
 
      <param type="string" name="type">
-     <description>Type of weight requested</description>
+     <description>Type of weight requested (imaging, ftweight)</description>
      <value>imaging</value>
+     <allowed kind="enum">
+       <value>imaging</value>
+       <value>ftweight</value>
+     </allowed>
+     </param>
+     <param type="stringArray" name="wgtimages">
+     <description>names of weightimages to save</description>
+     <value></value>
      </param>
 
  </input>
