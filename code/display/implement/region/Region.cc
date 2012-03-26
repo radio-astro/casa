@@ -193,6 +193,42 @@ namespace casa {
 	    pc->drawText( x + dx, y + dy, text, m_angle, alignment );
 	}
 
+
+	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
+	    std::list<RegionInfo> *info = generate_dds_statistics( );
+	    for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
+		fprintf( stdout, "(%s)%s\n", (*iter).label().c_str( ),
+			 (*iter).type( ) == RegionInfo::MsInfoType ? " ms" :
+			 (*iter).type( ) == RegionInfo::ImageInfoType ? " image" : "" );
+		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
+		size_t width = 0;
+		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ++stats_iter ) {
+		    size_t w = (*stats_iter).first.size( );
+		    if ( w > width ) width = w;
+		    w = (*stats_iter).second.size( );
+		    if ( w > width ) width = w;
+		}
+		char format[10];
+		sprintf( format, "%%%us ", (width > 0 && width < 30 ? width : 15) );
+		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ) {
+		    RegionInfo::stats_t::iterator row = stats_iter;
+		    for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
+			fprintf( stdout, format, (*row).first.c_str( ) );
+			++row;
+		    }
+		    fprintf( stdout, "\n");
+		    row = stats_iter;
+		    for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
+			fprintf( stdout, format, (*row).second.c_str( ) );
+			++row;
+		    }
+		    fprintf( stdout, "\n" );
+		    stats_iter = row;
+		}
+	    }
+	    delete info;
+	}
+
 	static std::string as_string( double v ) {
 	    char buf[256];
 	    sprintf( buf, "%g", v );

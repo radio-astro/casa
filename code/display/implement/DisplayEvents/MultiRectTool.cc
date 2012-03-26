@@ -216,7 +216,7 @@ void MultiRectTool::disable() {
 	    moving_regions.clear( );
 	}
 
-	if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
+	if ( ev.modifiers( ) & Display::KM_Double_Click ) {
 
 	    // double click--invoke callbacks
 	    itsEmitted = True;

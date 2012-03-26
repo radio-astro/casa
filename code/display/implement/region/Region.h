@@ -230,6 +230,7 @@ namespace casa {
 
 		virtual bool clickWithin( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickWithin,false);
 		virtual int clickHandle( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickHandle,0);
+		virtual bool doubleClick( double /*x*/, double /*y*/ );
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
 		virtual int moveHandle( int handle, double /*x*/, double /*y*/ ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
@@ -248,6 +249,9 @@ namespace casa {
 			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
 	    protected:
+		virtual std::list<RegionInfo> *generate_dds_statistics( )
+			DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,new std::list<RegionInfo>( ));
+
 		static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }

@@ -398,7 +398,9 @@ public:
     // Mouse button 4 bit
     KM_Pointer_Button_4 = 0x0800,
     // Mouse button 5 bit
-    KM_Pointer_Button_5 = 0x1000
+    KM_Pointer_Button_5 = 0x1000,
+    // Double click bit
+    KM_Double_Click = 0x2000
   };
 
   //

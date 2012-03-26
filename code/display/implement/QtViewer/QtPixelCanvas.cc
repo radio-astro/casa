@@ -1154,6 +1154,7 @@ uInt QtPixelCanvas::dlKeyMods_(QMouseEvent* e) {
   if(qbtns & Qt::LeftButton)   kmods |= Display::KM_Pointer_Button_1;
   if(qbtns & Qt::MidButton)    kmods |= Display::KM_Pointer_Button_2;
   if(qbtns & Qt::RightButton)  kmods |= Display::KM_Pointer_Button_3;
+  if(e->type( ) == QEvent::MouseButtonDblClick) kmods |= Display::KM_Double_Click;
 
   return kmods;  }
 

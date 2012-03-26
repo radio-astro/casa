@@ -182,6 +182,30 @@ namespace casa {
 	    moving_ref_point.second += dy;
 	}
 
+	bool RegionToolManager::process_double_click( RegionTool::State &state ) {
+	    region_list_type &point_inside = state.regions( viewer::Region::PointInside );
+	    if ( point_inside.size( ) <= 0 ) return false;
+	    region_list_type intersection;
+	    // intersection of marked regions and regions inclosing the current point...
+	    std::set_intersection( marked_regions.begin( ), marked_regions.end( ),
+				   point_inside.begin( ), point_inside.end( ),
+				   std::insert_iterator<region_list_type>(intersection,intersection.begin( )) );
+
+	    if ( intersection.size( ) > 0 ) {
+		// double-click on one of the selected (or "marked") regions,
+		// process double-click for all selected regions...
+		for ( region_list_type::iterator iter = marked_regions.begin( ); iter != marked_regions.end( ); ++iter )
+		    (*iter)->doubleClick( state.x( ), state.y( ) );
+		return true;
+	    } else if ( point_inside.size( ) > 0 ) {
+		moving_regions.clear( );
+		for ( region_list_type::iterator iter = point_inside.begin( ); iter != point_inside.end( ); ++iter )
+		    (*iter)->doubleClick( state.x( ), state.y( ) );
+		return true;
+	    }
+	    return false;
+	}
+
 	void RegionToolManager::operator()(const WCPositionEvent& ev) {
 
 	    Int x = ev.pixX( );
@@ -207,6 +231,8 @@ namespace casa {
 			if ( add_mark_select( state ) ) return;
 			else return clear_mark_select( state );
 
+		    } else if ( ev.modifiers( ) & Display::KM_Double_Click ) {
+			if ( process_double_click( state ) ) return;
 		    } else {
 			region_list_type &handles = state.regions( viewer::Region::PointHandle );
 			if ( handles.size( ) > 0 ) {
