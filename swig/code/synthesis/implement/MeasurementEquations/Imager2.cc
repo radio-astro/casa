@@ -2963,7 +2963,7 @@ Bool Imager::createFTMachine()
   if( ntaylor_p > 1 )
   { 
     //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
-     FTMachine *tempftm = new MultiTermFT(ft_p, ftmachine_p, ntaylor_p, reffreq_p);
+    FTMachine *tempftm = new MultiTermFT(ft_p, ft_p->name(), ntaylor_p, reffreq_p);
      ft_p = tempftm;
   }
   /******* End MTFT code ********/

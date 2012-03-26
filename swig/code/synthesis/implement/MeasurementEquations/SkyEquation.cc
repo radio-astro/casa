@@ -1317,7 +1317,7 @@ ImageInterface<Complex>& SkyEquation::applySkyJones(const VisBuffer& vb,
   StokesImageUtil::From(out, in);
 
   // Now apply the SkyJones as needed
-  if(!isPSFWork_p  && (ft_->name() != "MosaicFT")){
+  if(!isPSFWork_p  && (ift_->name() != "MosaicFT")){
     if(ej_) ej_->apply(out,out,vb,row,True);
     if(dj_) dj_->apply(out,out,vb,row,True);
     if(tj_) tj_->apply(out,out,vb,row,True);
@@ -1342,7 +1342,7 @@ void SkyEquation::applySkyJonesInv(const VisBuffer& vb, Int row,
   // Apply the various SkyJones to the current image
   // remembering to apply the Jones in the backward
   // direction
-  if(!isPSFWork_p && (ft_->name() != "MosaicFT")){
+  if(!isPSFWork_p && (ift_->name() != "MosaicFT")){
 
     if(ej_) ej_->apply(in,in,vb,row,False);
     if(dj_) dj_->apply(in,in,vb,row,False);
@@ -1463,7 +1463,7 @@ void SkyEquation::scaleDeltaImage(Int model)
 
 void SkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
   if ((sm_->doFluxScale(model))){
-    ft_->getFluxImage(im);
+    ift_->getFluxImage(im);
   }
 
 }

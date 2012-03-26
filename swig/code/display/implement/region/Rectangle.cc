@@ -32,6 +32,27 @@ namespace casa {
 	    return check_handle( x, y );
 	}
 
+	bool Rectangle::doubleClick( double x, double y ) {
+	    bool flagged_ms = false;
+	    const std::list<DisplayData*> &dds = wc_->displaylist( );
+	    for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+		DisplayData *dd = *ddi;
+		PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+		if (padd==0) {
+		    // if this DisplayData is not an image, attempt to flag (measurement set)
+		    MSAsRaster *msar =  dynamic_cast<MSAsRaster*>(dd);
+		    if ( msar != 0 ) {
+			flagged_ms = true;
+			flag(msar);
+		    }
+		    continue;
+		}
+	    }
+	    if ( flagged_ms ) return true;
+
+	    // if no MeasurementSet was found (to flag), generate statistics output to the terminal
+	    return Region::doubleClick( x, y );
+	}
 
 	bool Rectangle::valid_translation( double dx, double dy, double width_delta, double height_delta ) {
 

@@ -93,6 +93,9 @@ private:
 	Double spectralmin_p;
 	Double spectralmax_p;
 
+	// Store frequency to be used in Reports
+	map< pair<Int,Int>,vector<Double> > field_spw_frequency_p;
+
 	// Time-direction analysis
 	Double noise_p;
 	map< pair<Int,Int>,Double > field_spw_noise_map_p;

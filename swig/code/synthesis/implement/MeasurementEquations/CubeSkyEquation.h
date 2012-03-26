@@ -74,6 +74,9 @@ class CubeSkyEquation : public SkyEquation {
 
   //Get the flux scale that the ftmachines have if they have
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
+
+  //get the weight image from the ftmachines
+  virtual void getWeightImage(const Int model, ImageInterface<Float>& weightim);
  protected:
 
   void configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIterator * & oldWvi);

@@ -2227,7 +2227,8 @@ VisMapper::stokes_u_from_circular(uInt chan, uInt row)
 Complex
 VisMapper::stokes_v_from_circular(uInt chan, uInt row)
 {
-	return (*this.*getVis_p)((*polMap_p)[Stokes::RR],chan,row);
+	// V = (RR-LL)/2
+	return ((*this.*getVis_p)((*polMap_p)[Stokes::RR],chan,row) - (*this.*getVis_p)((*polMap_p)[Stokes::LL],chan,row))/(2*ImaginaryUnit);
 }
 
 Complex

@@ -1051,6 +1051,13 @@ void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
 
 }
 
+void CubeSkyEquation::getWeightImage(Int model, ImageInterface<Float>& im){
+  if (iftm_p.nelements() > uInt(model)){
+    Matrix<Float> weights;
+    iftm_p[model]->getWeightImage(im, weights);
+  }
+}
+
 void
 CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
 

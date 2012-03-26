@@ -791,10 +791,18 @@ void KAntPosJones::setApply(const Record& apply) {
   //  TBD: Handle missing solutions in spw 0?
 
   // Force spwmap to all 0  (antpos is not spw-dep)
+  //  NB: this is required before calling parents, because
+  //   SVC::setApply sets up the CTPatchedInterp with spwMap()
   spwMap() = Vector<Int>(nSpw(),0);
+
+  // Remove spwmap from record, and pass along to generic code
+  Record newapply;
+  newapply=apply;
+  if (newapply.isDefined("spwmap"))
+    newapply.removeField("spwmap");
   
   // Call parent to do conventional things
-  KJones::setApply(apply);
+  KJones::setApply(newapply);
 
 }
 

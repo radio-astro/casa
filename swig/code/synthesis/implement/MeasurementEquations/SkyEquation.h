@@ -238,6 +238,8 @@ public:
   //pb^2 units (optimum mode for clean search for centimetric imaging)
   virtual void doFlatNoise(Bool doFlat=False){doflat_p=doFlat;};
   
+  //get the weight image from the ftmachines
+  virtual void getWeightImage(const Int, ImageInterface<Float>&){};
  protected:
 
   // Increment gradientsChiSquared. The image of SkyModel must contain
