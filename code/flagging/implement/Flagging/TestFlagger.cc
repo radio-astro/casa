@@ -706,11 +706,6 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	if (displayAgent_p)
 		displayAgent_p->displayReports(combinedReport);
 
-	// Print the combined Record (for debugging)
-	stringstream replist;
-	combinedReport.print(replist);
-	os << LogIO::NORMAL << "Combined report: " << replist.str() << LogIO::POST;
-
 	// Get the record with the summary if there was any summary agent in the list
 //	Record summary_stats = Record();
 //	if (summaryAgent_p){
@@ -1329,3 +1324,5 @@ TestFlagger::parseSummaryParameters(String field, String spw, String array,
 
 
 } //#end casa namespace
+
+

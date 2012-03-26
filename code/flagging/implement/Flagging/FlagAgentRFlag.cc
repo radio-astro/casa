@@ -32,6 +32,7 @@ FlagAgentRFlag::FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePri
 
 	// Request pre-loading spw
 	flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Freq);
 
 	// Initialize parameters for robust stats (spectral analysis)
 	nIterationsRobust_p = 12;
@@ -461,12 +462,14 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     pair<Int,Int> current_field_spw;
     Double spwStd = 0;
     Double avg,sumSquare,variance = 0;
-    FlagReport thresholdStd = FlagReport("plotpoints",agentName_p,label, "channels", "statistics");
+    FlagReport thresholdStd = FlagReport("plotpoints",agentName_p,label, "Frequency (GHz)", "Deviation");
 
     // Extract data from all spws and put them in one single Array
+    vector<Double> total_frequency;
     vector<Double> total_threshold;
     vector<Double> total_threshold_squared;
     vector<Double> total_threshold_counts;
+    vector<Double> current_spw_frequency;
     vector<Double> current_spw_threshold;
     vector<Double> current_spw_threshold_squared;
     vector<Double> current_spw_threshold_counts;
@@ -477,10 +480,12 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     {
     	current_field_spw = spw_field_iter->first;
 
+    	current_spw_frequency = field_spw_frequency_p[current_field_spw];
     	current_spw_threshold = data[current_field_spw];
     	current_spw_threshold_squared = dataSquared[current_field_spw];
     	current_spw_threshold_counts = counts[current_field_spw];
 
+    	total_frequency.insert(total_frequency.end(),current_spw_frequency.begin(),current_spw_frequency.end());
     	total_threshold.insert(total_threshold.end(),current_spw_threshold.begin(),current_spw_threshold.end());
     	total_threshold_squared.insert(total_threshold_squared.end(),current_spw_threshold_squared.begin(),current_spw_threshold_squared.end());
     	total_threshold_counts.insert(total_threshold_counts.end(),current_spw_threshold_counts.begin(),current_spw_threshold_counts.end());
@@ -497,6 +502,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
 
     // Copy values from std::vector to casa::vector
     Vector<Float> threshold_index(total_threshold_counts.size(),0);
+    Vector<Float> threshold_frequency(total_threshold_counts.size(),0);
     Vector<Float> threshold_avg(total_threshold_counts.size(),0);
     Vector<Float> threshold_up(total_threshold_counts.size(),0);
     Vector<Float> threshold_down(total_threshold_counts.size(),0);
@@ -505,6 +511,7 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     for (vector<Double>::iterator iter = total_threshold.begin();iter != total_threshold.end();iter++)
     {
     	threshold_index(idx) = idx;
+    	threshold_frequency(idx) = total_frequency[idx];
     	if (total_threshold_counts[idx] > 0)
     	{
     		avg = total_threshold[idx]/total_threshold_counts[idx];
@@ -530,15 +537,15 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     //             See the use of frequencyList in FlagAgentSummary for an example.
 
     // Plot the scaled threshold
-    thresholdStd.addData("line", threshold_index,total_threshold_spw_average,"",Vector<Float>(),"rflag threshold");
+    thresholdStd.addData("line", threshold_frequency,total_threshold_spw_average,"",Vector<Float>(),"rflag threshold");
 
     // OPTION 1 for mean/rms : Scatter Plot with vertical Error-Bars (pretty, but slow)
     // thresholdStd.addData("scatter", threshold_index, threshold_avg, "bar", threshold_variance, "median deviation and variance");
 
     // OPTION 2 for mean/rms : "avg" is a scatter plot, "up" and "down" are lines (not so pretty, but fast).
-    thresholdStd.addData("line",threshold_index,threshold_up,"",Vector<Float>(),"median_deviation + variance");
-    thresholdStd.addData("scatter",threshold_index,threshold_avg,"",Vector<Float>(),"median_deviation");
-    thresholdStd.addData("line", threshold_index,threshold_down,"",Vector<Float>(),"median_deviation - variance");
+    thresholdStd.addData("line",threshold_frequency,threshold_up,"",Vector<Float>(),"median_deviation + variance");
+    thresholdStd.addData("scatter",threshold_frequency,threshold_avg,"",Vector<Float>(),"median_deviation");
+    thresholdStd.addData("line", threshold_frequency,threshold_down,"",Vector<Float>(),"median_deviation - variance");
     
 
     return thresholdStd;
@@ -839,6 +846,9 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
+	// Check if frequency array has to be initialized
+	Bool initFreq = False;
+
 	// Get noise and scutoff levels
 	Double noise = 0;
 	if (field_spw_noise_map_p.find(field_spw) != field_spw_noise_map_p.end())
@@ -854,7 +864,9 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		field_spw_noise_histogram_sum_p[field_spw] = vector<Double>(nChannels,0);
 		field_spw_noise_histogram_counts_p[field_spw] = vector<Double>(nChannels,0);
 		field_spw_noise_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
+		field_spw_frequency_p[field_spw] = vector<Double>(nChannels,0);
 		if (doflag_p) prepass_p = true;
+		initFreq = True;
 	}
 
 	// Get cutoff level
@@ -873,7 +885,20 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 		field_spw_scutof_histogram_counts_p[field_spw] = vector<Double>(nChannels,0);
 		field_spw_scutof_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
 		if (doflag_p) prepass_p = true;
+		initFreq = True;
 	}
+
+
+	// Initialize frequency array has to be initialized
+	if (initFreq)
+	{
+		Vector<Double> freqInHz = visBuffer.frequency();
+		for (uInt channel_idx=0;channel_idx < freqInHz.size();channel_idx++)
+		{
+			field_spw_frequency_p[field_spw][channel_idx] = freqInHz[channel_idx]/1E9;
+		}
+	}
+
 
 	uInt effectiveNTimeSteps;
 	if (nTimesteps > nTimeSteps_p)
