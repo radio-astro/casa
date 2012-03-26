@@ -162,6 +162,7 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	        }
 		
 		display = config.asString("display");
+		*logger_p << LogIO::NORMAL << " display is: " << display << LogIO::POST;
 	}
 
 	Bool writeflags(True);
@@ -174,12 +175,13 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	        }
 		
 		writeflags = config.asBool("writeflags");
+		*logger_p << LogIO::NORMAL << " writeflags is: " << writeflags << LogIO::POST;
 	}
 
 	if( (writeflags == True) or (display == String("data")) or (display == String("both")) )
 	{
 		doflag_p = true;
-		*logger_p << LogIO::DEBUG1 << " (writeflags,display)=(" <<  writeflags << "," << display << "), will apply flags on modified flag cube " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << " (writeflags,display)=(" <<  writeflags << "," << display << "), will apply flags on modified flag cube " << LogIO::POST;
 	}
 	else
 	{
@@ -288,12 +290,25 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 
 Double FlagAgentRFlag::mean(vector<Double> &data,vector<Double> &counts)
 {
-	Double sumAvg = 0;
-	for (size_t index = 0; index < data.size();index++)
+	Double sumAvg,avg = 0;
+
+	if (data.size() == 0)
 	{
-		sumAvg += data[index]/counts[index];
+		for (size_t index = 0; index < data.size();index++)
+		{
+			if (counts[index] > 0)
+			{
+				sumAvg += data[index]/counts[index];
+			}
+		}
+		avg = sumAvg/data.size();
 	}
-	return sumAvg/data.size();
+	else
+	{
+		avg = 0;
+	}
+
+	return avg;
 }
 
 Double FlagAgentRFlag::median(vector<Double> &data)
@@ -302,7 +317,11 @@ Double FlagAgentRFlag::median(vector<Double> &data)
 	vector<Double> datacopy = data;
 	sort(data.begin(),data.end());
 
-	if (data.size() % 2 == 1)
+	if (data.size() == 0)
+	{
+		med = 0;
+	}
+	else if (data.size() % 2 == 1)
 	{
 		med = data[(data.size()-1)/2];
 	}
@@ -323,16 +342,19 @@ Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &dat
 	vector<Double> samplesForMedian(data.size(),0);
 	for (size_t index = 0; index < data.size();index++)
 	{
-		avg = data[index]/counts[index];
-		samplesForMedian[index] = avg;
+		if (counts[index] > 0)
+		{
+			avg = data[index]/counts[index];
+			samplesForMedian[index] = avg;
+		}
 	}
 
 	// Compute median
 	Double med = median(samplesForMedian);
 
 	// Produce samples for median absolute deviation
-	vector<Double> samplesForMad(data.size(),0);
-	for (size_t index = 0; index < data.size();index++)
+	vector<Double> samplesForMad(samplesForMedian.size(),0);
+	for (size_t index = 0; index < samplesForMedian.size();index++)
 	{
 		samplesForMad[index] = abs(samplesForMedian[index] - med);
 	}
@@ -483,11 +505,21 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     for (vector<Double>::iterator iter = total_threshold.begin();iter != total_threshold.end();iter++)
     {
     	threshold_index(idx) = idx;
-    	avg = total_threshold[idx]/total_threshold_counts[idx];
-    	threshold_avg(idx) = avg;
+    	if (total_threshold_counts[idx] > 0)
+    	{
+    		avg = total_threshold[idx]/total_threshold_counts[idx];
+    		sumSquare = total_threshold_squared[idx]/total_threshold_counts[idx];
+    	}
+    	else
+    	{
+    		avg = 0;
+    		sumSquare = 0;
+    	}
 
-    	sumSquare = total_threshold_squared[idx]/total_threshold_counts[idx];
-    	variance = sqrt(sumSquare - avg*avg);
+    	variance = sumSquare - avg*avg;
+    	variance = sqrt(variance > 0?  variance:0);
+
+    	threshold_avg(idx) = avg;
     	threshold_up(idx) = avg+variance;
     	threshold_down(idx) = avg-variance;
     	threshold_variance(idx) = variance; // New
@@ -674,6 +706,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 						StdReal = SumRealSquare - AverageReal * AverageReal;
 						StdReal = sqrt(StdReal > 0?  StdReal:0);
 					}
+					else
+					{
+						AverageReal = 0;
+						StdReal = 1000.0;
+					}
 
 					if (SumWeightImag > 0)
 					{
@@ -681,6 +718,11 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 						SumImagSquare = SumImagSquare / SumWeightImag;
 						StdImag = SumImagSquare - AverageImag * AverageImag;
 						StdImag = sqrt(StdImag > 0?  StdImag:0);
+					}
+					else
+					{
+						AverageImag = 0;
+						StdImag = 1000.0;
 					}
 				}
 
