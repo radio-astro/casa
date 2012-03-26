@@ -1299,7 +1299,11 @@ void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {
 }
 
 void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys){
-   *itsLog << LogOrigin("QtProfile", "changeSpectrum");
+	// NOTE: A change of any of these values requires a re-plot of the
+	//       extracted spectrum. A change in "spcTypeUnit" and "spcSys"
+	//       causes a change in a GUI element which then invokes a re-plot.
+	//       However if "spcRval" changes, a re-plot must be enforced.
+	*itsLog << LogOrigin("QtProfile", "changeSpectrum");
 
 	// transform to QString
 	QString  qSpcTypeUnit = QString(spcTypeUnit.c_str());
@@ -1326,7 +1330,11 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
 		cSysRval = spcRval;
-		//qDebug() << "New rest freq./wavel.: " <<  cSysRval.c_str();
+		// an immediate replot has to be triggered such that the
+		// new rest frequency is taken into account this COULD be done as such:
+		if(lastPX.nelements() > 0){ // update display with new rest frequency/wavelength
+			wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
+		}
 	}
 }
 
@@ -1702,22 +1710,22 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 	case QtProfile::PMEAN:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEAN, 0 );
+					 (Int)QtProfile::MEAN, 0, cSysRval);
 	    break;
 	case QtProfile::PMEDIAN:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEDIAN, 0);
+					 (Int)QtProfile::MEDIAN, 0, cSysRval);
 	    break;
 	case QtProfile::PSUM:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::SUM, 0);
+					 (Int)QtProfile::SUM, 0, cSysRval);
 	    break;
 	case QtProfile::PFLUX:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::FLUX, 0);
+					 (Int)QtProfile::FLUX, 0, cSysRval);
 	    break;
 	//case QtProfile::PVRMSE:
 	//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
@@ -1727,7 +1735,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 	default:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEAN, 0);
+					 (Int)QtProfile::MEAN, 0, cSysRval);
 	    break;
     }
 
@@ -1765,7 +1773,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 		    default:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::RMSE, 0);
+						     (Int)QtProfile::RMSE, 0, cSysRval);
 			break;
 		}
 	    }
@@ -1780,7 +1788,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 		    case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::NSQRTSUM, 1);
+						     (Int)QtProfile::NSQRTSUM, 1, cSysRval);
 			break;
 		    case QtProfile::PMEDIAN:
 			*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
@@ -1790,12 +1798,12 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 		    case QtProfile::PSUM:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::SQRTSUM, 1);
+						     (Int)QtProfile::SQRTSUM, 1, cSysRval);
 			break;
 		    case QtProfile::PFLUX:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::EFLUX, 1);
+						     (Int)QtProfile::EFLUX, 1, cSysRval);
 			break;
 		    default:
 			if (z_eval.size()> 0)
@@ -2171,22 +2179,22 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 	case QtProfile::PMEAN:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEAN, 0 );
+					 (Int)QtProfile::MEAN, 0, cSysRval);
 	    break;
 	case QtProfile::PMEDIAN:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEDIAN, 0);
+					 (Int)QtProfile::MEDIAN, 0, cSysRval);
 	    break;
 	case QtProfile::PSUM:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::SUM, 0);
+					 (Int)QtProfile::SUM, 0, cSysRval);
 	    break;
 	case QtProfile::PFLUX:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::FLUX, 0);
+					 (Int)QtProfile::FLUX, 0, cSysRval);
 	    break;
 	//case QtProfile::PVRMSE:
 	//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
@@ -2196,7 +2204,7 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 	default:
 	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					 "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEAN, 0);
+					 (Int)QtProfile::MEAN, 0, cSysRval);
 	    break;
     }
 
@@ -2233,7 +2241,7 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 		    default:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::RMSE, 0);
+						     (Int)QtProfile::RMSE, 0, cSysRval);
 			break;
 		}
 	    }
@@ -2248,7 +2256,7 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 		    case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::NSQRTSUM, 1);
+						     (Int)QtProfile::NSQRTSUM, 1, cSysRval);
 			break;
 		    case QtProfile::PMEDIAN:
 			*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
@@ -2258,12 +2266,12 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
 		    case QtProfile::PSUM:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::SQRTSUM, 1);
+						     (Int)QtProfile::SQRTSUM, 1, cSysRval);
 			break;
 		    case QtProfile::PFLUX:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						     "world", coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						     (Int)QtProfile::EFLUX, 1);
+						     (Int)QtProfile::EFLUX, 1, cSysRval);
 			break;
 		    default:
 			if (z_eval.size()> 0)
