@@ -5990,18 +5990,19 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		trc(pixQualAx) = whichQuality;
 	}
 
-	// make sure the pixel is inside the image
-	if ((xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
-		  || (xypix(1) > pImage_p->shape()(1))) {
-		return False;
-	}
-
 	// set the directional position in pixels
 	Vector<Int> dirPixelAxis = cSys.pixelAxes(which);
 	blc[dirPixelAxis(0)] = Int(xypix(0) + 0.5); // note: pixel _center_ is at integer values
 	trc[dirPixelAxis(0)] = Int(xypix(0) + 0.5);
 	blc[dirPixelAxis(1)] = Int(xypix(1) + 0.5);
 	trc[dirPixelAxis(1)] = Int(xypix(1) + 0.5);
+
+	// make sure the pixel is inside the image
+	if ((xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || blc[dirPixelAxis(0)] < 0 || blc[dirPixelAxis(0)] >= pImage_p->shape()(dirPixelAxis(0))
+		|| blc[dirPixelAxis(1)] < 0 || blc[dirPixelAxis(1)] >= pImage_p->shape()(dirPixelAxis(1)))
+	{
+		return False;
+	}
 
 	// set the spectral index to extract the entire spectrum
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
