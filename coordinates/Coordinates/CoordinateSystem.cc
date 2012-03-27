@@ -61,8 +61,6 @@
 #include <casa/iomanip.h>
 #include <casa/iostream.h>
 
-#include <memory>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -655,24 +653,26 @@ void CoordinateSystem::subImageInSitu(const Vector<Float> &originShift,
         	&& spectralCoordinate(coordinate).worldValues().size() > 0
         ) {
         	// tabular spectral coordinate
-        	std::auto_ptr<SpectralCoordinate> spCoord(
-        		dynamic_cast<SpectralCoordinate*>(
-        			spectralCoordinate(coordinate).clone()
-        		)
-        	);
+        	SpectralCoordinate spCoord = spectralCoordinate(coordinate);
+        	SpectralCoordinate::SpecType nativeType = spCoord.nativeType();
         	Vector<Double> newWorldValues(newShape[i]);
         	for (
         		uInt j=0; j< newWorldValues.size(); j++
         	) {
         		Double pix = originShift[i] + j*pixincFac[i];
-        		if (! spCoord->toWorld(newWorldValues[j], pix)) {
+        		if (! spCoord.toWorld(newWorldValues[j], pix)) {
         			throw AipsError("Unable to convert tabular spectral coordinate");
         		}
         	}
-        	spCoord->replaceTabulatedFrequencies(newWorldValues);
-        	replaceCoordinate(*spCoord, coordinate);
+        	SpectralCoordinate newCoord(
+        		spCoord.frequencySystem(), newWorldValues, spCoord.restFrequency()
+        	);
+        	if (! newCoord.setNativeType(nativeType)) {
+        		throw AipsError("Unable to set native type of tabular spectral coordinate.");
+        	}
+        	replaceCoordinate(newCoord, coordinate);
         	crpix(i) = 0;
-        	cdelt[i] = spCoord->increment()[0];
+        	cdelt[i] = newCoord.increment()[0];
         }
         else {
            AlwaysAssert(pixincFac(i) > 0, AipsError);
