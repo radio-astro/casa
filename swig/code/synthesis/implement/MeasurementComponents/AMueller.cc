@@ -257,7 +257,7 @@ void AMueller::hurl(const String& origin, const String& msg)
 void AMueller::setApply(const Record& applypar)
 {
   LogIO os(LogOrigin("AMueller", "setApply()", WHERE));
-
+  
   if(applypar.isDefined("table")){
     calTableName() = applypar.asString("table");
     verifyCalTable(calTableName());
@@ -298,15 +298,22 @@ void AMueller::setApply(const Record& applypar)
     hifreq_p.resize(nspw);
 
     Vector<Double> freqrange(2);
-    for (Int ispw=0;ispw<nspw;++ispw) {
-      if (!spwflrow(ispw)) {
-	ncc.spectralWindow().chanFreq().get(ispw,freqrange);
-	lofreq_p[ispw]=freqrange(0);
-	hifreq_p[ispw]=freqrange(1);
+    if (spwMap()(0)==-999) {  // auto-fan-out
+      Int ispw=0;
+      while (spwflrow(ispw)) ++ispw;  // find first good spw
+      ncc.spectralWindow().chanFreq().get(ispw,freqrange);
+      lofreq_p.set(freqrange(0));
+      hifreq_p.set(freqrange(1));
+    }
+    else {  // fill lo/hifreq per spw (only good ones)
+      for (Int ispw=0;ispw<nspw;++ispw) {
+	if (!spwflrow(ispw)) {
+	  ncc.spectralWindow().chanFreq().get(ispw,freqrange);
+	  lofreq_p[ispw]=freqrange(0);
+	  hifreq_p[ispw]=freqrange(1);
+	}
       }
     }
-    
-    //  TBD: Handle spwmap, etc.  (fanout, etc.)
 
   }
 
@@ -498,7 +505,6 @@ void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 		lofreq_p[cspw], hifreq_p[cspw]);
     else
       throw(AipsError("AMueller::applyCal: Bad freq domain info."));
-
 
     // Correct DATA (will write out to CORRECTED_DATA later)
     MS::PredefinedColumns whichcol = MS::DATA;

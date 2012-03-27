@@ -324,7 +324,11 @@ namespace casa {
 	    Int y = ev.pixY( );
 	    WorldCanvas *wc = ev.worldCanvas( );
 
-	    if ( ! wc->inDrawArea(x,y) ) return;
+	    if ( ! wc->inDrawArea(x,y) ) {
+		moving_regions.clear( );
+		moving_handle = false;
+		return;
+	    }
 
 	    if ( moving_handle ) {
 

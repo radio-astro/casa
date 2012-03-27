@@ -2072,14 +2072,16 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
       modelNames[k]=images_p[k]->name();
     }
 
-    /*
-    if((nx_p*ny_p > 7000*7000) && (ft_p->name() != "MosaicFT")){
+
+    Double availablemem=Double(HostInfo::memoryFree())*1024.0;
+    //The convolution needs in ram 3 complex x-y planes ...lets multiply it by 5 for safety
+    if((availablemem < Double(nx_p*ny_p)*15.0*8.0 ) && (ft_p->name() != "MosaicFT")){
       // very large for convolution ...destroy Skyequations to release memory
       // need to fix the convolution to be leaner
       destroySkyEquation();
 
     }
-    */
+    
     Bool dorestore=False;
     if( (bmaj_p.getValue() >0.0) && (bmin_p.getValue() > 0.0))
       dorestore=True;

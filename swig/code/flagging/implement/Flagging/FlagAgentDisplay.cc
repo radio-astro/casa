@@ -1008,6 +1008,19 @@ FlagReport
 		plotter->line(dbus::af(xval), dbus::af(pointerror), color,"",frame);
 	      }
 	  }
+	else if(errortype == "separator")
+	  {
+	    Vector<Double>pointerror(2);
+	    Vector<Double>xval(2);
+	    for ( Int onepoint=0; onepoint<error.nelements(); onepoint++)
+	      {
+		xval[0]=xdata[onepoint];
+		xval[1]=xdata[onepoint];
+		pointerror[0]=ydata[onepoint] + error[onepoint];
+		pointerror[1]=0;
+		plotter->line(dbus::af(xval), dbus::af(pointerror),"black","",frame);
+	      }
+	  }
 	else if(errortype == "circle")
 	  {
 	    // Check Circle shape ( if not zero, must match xdata,ydata)

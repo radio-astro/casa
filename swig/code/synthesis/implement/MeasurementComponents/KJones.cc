@@ -435,8 +435,6 @@ void KJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
 
 void KJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 
-  cout << "selfSolveOne" << endl;
-
   // We don't support combine on spw or field (yet),
   // so there should be only one VB in the vbga
   if (vbga.nBuf()!=1) 
@@ -450,8 +448,6 @@ void KJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 
 // Do the FFTs
 void KJones::solveOneVB(const VisBuffer& vb) {
-
-  cout << "solveOneVB" << endl;
 
   Int nChan=vb.nChannel();
 
@@ -793,7 +789,11 @@ void KAntPosJones::setApply(const Record& apply) {
   // Force spwmap to all 0  (antpos is not spw-dep)
   //  NB: this is required before calling parents, because
   //   SVC::setApply sets up the CTPatchedInterp with spwMap()
-  spwMap() = Vector<Int>(nSpw(),0);
+  logSink() << " (" << this->typeName() 
+	    << ": Overriding with spwmap=[0] since " << this->typeName() 
+	    << " is not spw-dependent)"
+	    << LogIO::POST;
+  spwMap().assign(Vector<Int>(1,0));
 
   // Remove spwmap from record, and pass along to generic code
   Record newapply;
