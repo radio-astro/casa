@@ -383,15 +383,26 @@ namespace casa {
 	    }
 
 	    const Vector<String> &axis_labels = wc_->worldAxisNames( );
+	    
 	    if ( new_x_units == Pixel ) {
 		double center_x, center_y;
 		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
 		x = as_string(center_x);
 	    } else if ( new_x_units == Sexagesimal ) {
-		if ( axis_labels(0) == "Declination" )
-		    x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,8);
-		else
+		if ( axis_labels(0) == "Declination" || (coord != Region::J2000 && coord != Region::B1950) ) {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // D.M.S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
+		    //x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		    // MVAngle::operator( ) => -pi to +pi
+		    x = MVAngle(result_x)( ).string(MVAngle::ANGLE_CLEAN,8);
+		} else {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // H:M:S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    x = MVAngle(result_x)(0.0).string(MVAngle::TIME,8);
+		}
 	    } else {
 		x = as_string(result_x);
 	    }
@@ -401,10 +412,20 @@ namespace casa {
 		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
 		y = as_string(center_y);
 	    } else if ( new_y_units == Sexagesimal ) {
-		if ( axis_labels(1) == "Declination" )
-		    y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,8);
-		else
+		if ( axis_labels(1) == "Declination"  || (coord != Region::J2000 && coord != Region::B1950) ) {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // D.M.S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
+		    //y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		    // MVAngle::operator( ) => -pi to +pi
+		    y = MVAngle(result_y)( ).string(MVAngle::ANGLE_CLEAN,8);
+		} else {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // H:M:S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    y = MVAngle(result_y)(0.0).string(MVAngle::TIME,8);
+		}
 	    } else {
 		y = as_string(result_y);
 	    }
