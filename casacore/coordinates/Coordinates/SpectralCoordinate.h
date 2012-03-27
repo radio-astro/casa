@@ -536,11 +536,6 @@ public:
     Bool setFormatUnit (const String& unit);
     // </group>
 
-    // replace the tabulated frequency values with a new set. Object must use
-    // a tabular coordinate for frequencies or an exception is thrown. Input
-    // frequencies are assumed to be in Hz.
-    void replaceTabulatedFrequencies(const Vector<Double>& freqs);
-
     // Convert to FITS header record.  When writing the FITS record,
     // the fields "ctype, crval, crpix", and "cdelt" must already be created. Other header
     // words are created as needed.  Use <src>oneRelative=True</src> to
