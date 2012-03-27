@@ -128,6 +128,7 @@ casa_add_library( synthesis
   implement/CalTables/CTColumns.cc
   implement/CalTables/CTDesc.cc
   implement/CalTables/CTEnums.cc
+  implement/CalTables/CTGlobals.cc
   implement/CalTables/CTInterface.cc
   implement/CalTables/CTIter.cc
   implement/CalTables/CTMainColumns.cc
@@ -331,3 +332,4 @@ casa_add_assay( synthesis implement/CalTables/test/tRIorAPArray.cc )
 casa_add_assay( synthesis implement/CalTables/test/tCTTimeInterp1.cc )
 casa_add_assay( synthesis implement/CalTables/test/tCTPatchedInterp.cc )
 casa_add_assay( synthesis implement/CalTables/test/tCTSelection.cc )
+casa_add_assay( synthesis implement/CalTables/test/tCTGenericFill.cc )

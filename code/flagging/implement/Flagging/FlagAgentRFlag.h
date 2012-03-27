@@ -75,6 +75,7 @@ protected:
 								map< pair<Int,Int>,vector<Double> > &dataSquared,
 								map< pair<Int,Int>,vector<Double> > &counts,
 								map< pair<Int,Int>,Double > &threshold,
+								FlagReport &totalReport,
 								string label,
 								Double scale);
 
@@ -92,6 +93,10 @@ private:
 	vector<Double> thresholdRobust_p;
 	Double spectralmin_p;
 	Double spectralmax_p;
+
+	// Store frequency to be used in Reports
+	map< pair<Int,Int>,vector<Double> > field_spw_frequency_p;
+	map< pair<Int,Int>,Double > field_spw_frequencies_p;
 
 	// Time-direction analysis
 	Double noise_p;

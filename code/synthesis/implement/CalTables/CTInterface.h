@@ -34,21 +34,26 @@
 #include <ms/MeasurementSets/MSSelectableTable.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 #include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CTEnums.h>
+//#include <ms/MeasurementSets/MSDataDescription.h>
+#include <tables/Tables/SetupNewTab.h>
+#include <tables/Tables/TableDesc.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   class CTInterface: public MSSelectableTable
   {
   public:
-    CTInterface() {};
+    CTInterface():fakeDDSubTable() {};
     CTInterface(const Table& table);
 
     virtual ~CTInterface();
-    virtual const CTAntenna& antenna()               {return asCT()->antenna();}
-    virtual const CTField& field()                   {return asCT()->field();}
-    virtual const CTSpectralWindow& spectralWindow() {return asCT()->spectralWindow();}
-    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) 
-                                                     {return MS::columnName(nameEnum);}
-    virtual Bool isMS()                              {return False;};
+    virtual const CTAntenna& antenna()                {return asCT()->antenna();}
+    virtual const CTField& field()                    {return asCT()->field();}
+    virtual const CTSpectralWindow& spectralWindow()  {return asCT()->spectralWindow();}
+    virtual Bool isMS()                               {return False;};
+
+    virtual const MSDataDescription& dataDescription();
+    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum);
 
     virtual const MeasurementSet* asMS() 
     {
@@ -58,6 +63,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return NULL;
     }
     virtual const NewCalTable* asCT();
+  private:
+    MSDataDescription fakeDDSubTable;
+    void makeDDSubTable();
   };
 } //# NAMESPACE CASA - END
 

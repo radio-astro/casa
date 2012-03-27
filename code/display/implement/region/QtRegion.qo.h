@@ -80,6 +80,7 @@ namespace casa {
 		virtual void setLabel( const std::string &l );
 		virtual void setFont( const std::string &font="", int font_size=0, int font_style=0, const std::string &font_color="" );
 		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine );
+		virtual void setAnnotation(bool ann);
 
 		int numFrames( ) const;
 		void zRange( int &x, int &y ) const;
@@ -120,6 +121,9 @@ namespace casa {
 		void mark_toggle( ) { mystate->mark_toggle( ); }
 
 		virtual void output( ds9writer &out ) const = 0;
+
+		// used to synchronize all of the RegionDock's RegionState tab configuration...
+		std::pair<int,int> &tabState( );
 
 	    public slots:
 		/* void name( const QString &newname ); */

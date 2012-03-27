@@ -298,9 +298,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os(LogOrigin("vpmanager", "summarizevps"));
 
-    os << LogIO::NORMAL << "Voltage patterns internally defined in CASA (* = global default for this telescope):"
+    os << LogIO::NORMAL << "Voltage patterns internally defined in CASA (* = global default for this telescope):\n"
+       << "  Telescope: Class"
        << LogIO::POST;
     String telName;
+    String pbClassName;
     for(Int pbtype = static_cast<Int>(PBMath::DEFAULT) + 1;
         pbtype < static_cast<Int>(PBMath::NONE); ++pbtype){
       PBMath::nameCommonPB(static_cast<PBMath::CommonPB>(pbtype), telName);
@@ -312,7 +314,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else{
 	os << LogIO::NORMAL << "   ";
       }
-      os << telName << LogIO::POST;
+      os << telName;
+      try{
+	PBMath(static_cast<PBMath::CommonPB>(pbtype)).namePBClass(pbClassName);
+	os << ": " << pbClassName << LogIO::POST;
+      }
+      catch(AipsError){
+	os <<  ": not available" << LogIO::POST;
+      }
     }
     
     os << LogIO::NORMAL << "\nExternally defined voltage patterns (* = global default for this telescope):" << LogIO::POST;

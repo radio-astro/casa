@@ -20,5 +20,10 @@ namespace casa {
 	    out.setCsysSource(path.c_str( ));
 	    out.polygon(wc_,drawing_points( ));
 	}
+
+	void QtPolygon::polygonComplete( ) {
+	    // for polygons signals remain blocked until polygon is complete...
+	    releaseSignals( );
+	}
     }
 }

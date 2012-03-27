@@ -1,5 +1,5 @@
-//# MultiEllipseTool.cc: Base class for MultiWorldCanvas event-based ellipse tools
-//# Copyright (C) 2000,2001,2002
+//# CTGlobals.h: Declaration of CTGlobals
+//# Copyright (C) 1996,1997,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -16,30 +16,32 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
+//# Correspondence concerning AIPS++ should be adressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//#
 
-#include <display/DisplayEvents/MultiEllipseTool.h>
+#ifndef SYNTHESIS_CTGLOBALS_H
+#define SYNTHESIS_CTGLOBALS_H
+
+#include <casa/aips.h>
+#include <synthesis/CalTables/NewCalTable.h>
+#include <casa/Arrays/Vector.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiEllipseTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
-	return rfactory->ellipse( wc, x1, y1, x2, y2 );
-    }
-
-    static std::set<viewer::Region::RegionTypes> multi_ellipse_tool_region_set;
-    const std::set<viewer::Region::RegionTypes> &MultiEllipseTool::regionsCreated( ) const {
-	if ( multi_ellipse_tool_region_set.size( ) == 0 ) {
-	    multi_ellipse_tool_region_set.insert( viewer::Region::EllipseRegion );
-	}
-	return multi_ellipse_tool_region_set;
-    }
+// Create a specialized VisCal from VisSet
+void smoothCT(NewCalTable ct,
+	      const String& smtype,
+	      const Double& smtime,
+	      Vector<Int> selfields);
 
 
 } //# NAMESPACE CASA - END
+
+#endif
+

@@ -435,40 +435,53 @@ problems = 0
 for frame in frames_to_do:
     for mode in ['frequency', 'radio velocity', 'optical velocity']:
         for chan in mode_imstats.keys():
-            isok = true
-            c1 = cleanonly_imstats[mode][chan][frame]['max']
-            c2 = cvel_imstats[mode][chan][frame]['max']
             print "Testing ", frame, ", ",  mode, ", Hanning ", dohanning[frame], ", box ", testregion, ", channel ", chan, " ..."
-            if(abs(c1-c2) > maxdev):
-                maxdev = abs(c1-c2)
-                maxdevat = mode+" mode for output frame "+frame\
-                           +":\n    cvel+clean finds max flux in channel "+str(chan)+" to be "+str(c2)\
-                           +"\n    clean-only finds max flux in channel "+str(chan)+" to be "+str(c1)
-            if(not isnear(c1,c2, tolerance)):
-                print " ** Problem in ", mode, " mode for output frame ", frame, ":"
-                print "     cvel+clean finds max flux in channel ", chan, " to be ", c2
-                print "     clean-only finds max flux in channel ", chan, " to be ", c1
-                passed = False
-                isok = False
-                problems +=1
 
-            avdev += abs(c1-c2)
-            numpoints += 1.
-            
-            s1 = cleanonly_imstats[mode][chan][frame]['maxposf']
-            s2 = cvel_imstats[mode][chan][frame]['maxposf']
-            if(not s1 == s2):
-                print " ** Problem in ", mode, " mode for output frame ", frame, ":"
-                print "     cvel+clean finds world coordinates for channel ", chan, " to be ", s2
-                print "     clean-only finds world coordinates for channel ", chan, " to be ", s1
-                passed = False
+            isok = true
+            c1 = 0.
+            c2 = 0.
+            s1 = 0.
+            s2 = 0.
+            try:
+                c1 = cleanonly_imstats[mode][chan][frame]['max']
+                c2 = cvel_imstats[mode][chan][frame]['max']
+                s1 = cleanonly_imstats[mode][chan][frame]['maxposf']
+                s2 = cvel_imstats[mode][chan][frame]['maxposf']
+            except:
                 isok = False
+                passed = False
                 problems +=1
-            else:
-                print "  World coordinates identical == ", s2
-
+                print "Error: this subtest failed"
+                
             if isok:
-                print "... OK"      
+                if(abs(c1-c2) > maxdev):
+                    maxdev = abs(c1-c2)
+                    maxdevat = mode+" mode for output frame "+frame\
+                               +":\n    cvel+clean finds max flux in channel "+str(chan)+" to be "+str(c2)\
+                               +"\n    clean-only finds max flux in channel "+str(chan)+" to be "+str(c1)
+                if(not isnear(c1,c2, tolerance)):
+                    print " ** Problem in ", mode, " mode for output frame ", frame, ":"
+                    print "     cvel+clean finds max flux in channel ", chan, " to be ", c2
+                    print "     clean-only finds max flux in channel ", chan, " to be ", c1
+                    passed = False
+                    isok = False
+                    problems +=1
+
+                avdev += abs(c1-c2)
+                numpoints += 1.
+            
+                if(not s1 == s2):
+                    print " ** Problem in ", mode, " mode for output frame ", frame, ":"
+                    print "     cvel+clean finds world coordinates for channel ", chan, " to be ", s2
+                    print "     clean-only finds world coordinates for channel ", chan, " to be ", s1
+                    passed = False
+                    isok = False
+                    problems +=1
+                else:
+                    print "  World coordinates identical == ", s2
+
+                if isok:
+                    print "... OK"      
 
 if(numpoints > 0.):
     avdev = avdev/numpoints

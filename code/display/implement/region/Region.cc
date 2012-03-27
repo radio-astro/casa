@@ -193,6 +193,42 @@ namespace casa {
 	    pc->drawText( x + dx, y + dy, text, m_angle, alignment );
 	}
 
+
+	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
+	    std::list<RegionInfo> *info = generate_dds_statistics( );
+	    for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
+		fprintf( stdout, "(%s)%s\n", (*iter).label().c_str( ),
+			 (*iter).type( ) == RegionInfo::MsInfoType ? " ms" :
+			 (*iter).type( ) == RegionInfo::ImageInfoType ? " image" : "" );
+		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
+		size_t width = 0;
+		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ++stats_iter ) {
+		    size_t w = (*stats_iter).first.size( );
+		    if ( w > width ) width = w;
+		    w = (*stats_iter).second.size( );
+		    if ( w > width ) width = w;
+		}
+		char format[10];
+		sprintf( format, "%%%us ", (width > 0 && width < 30 ? width : 15) );
+		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ) {
+		    RegionInfo::stats_t::iterator row = stats_iter;
+		    for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
+			fprintf( stdout, format, (*row).first.c_str( ) );
+			++row;
+		    }
+		    fprintf( stdout, "\n");
+		    row = stats_iter;
+		    for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
+			fprintf( stdout, format, (*row).second.c_str( ) );
+			++row;
+		    }
+		    fprintf( stdout, "\n" );
+		    stats_iter = row;
+		}
+	    }
+	    delete info;
+	}
+
 	static std::string as_string( double v ) {
 	    char buf[256];
 	    sprintf( buf, "%g", v );
@@ -347,15 +383,26 @@ namespace casa {
 	    }
 
 	    const Vector<String> &axis_labels = wc_->worldAxisNames( );
+	    
 	    if ( new_x_units == Pixel ) {
 		double center_x, center_y;
 		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
 		x = as_string(center_x);
 	    } else if ( new_x_units == Sexagesimal ) {
-		if ( axis_labels(0) == "Declination" )
-		    x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,8);
-		else
+		if ( axis_labels(0) == "Declination" || (coord != Region::J2000 && coord != Region::B1950) ) {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // D.M.S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
+		    //x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		    // MVAngle::operator( ) => -pi to +pi
+		    x = MVAngle(result_x)( ).string(MVAngle::ANGLE_CLEAN,8);
+		} else {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // H:M:S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    x = MVAngle(result_x)(0.0).string(MVAngle::TIME,8);
+		}
 	    } else {
 		x = as_string(result_x);
 	    }
@@ -365,10 +412,20 @@ namespace casa {
 		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
 		y = as_string(center_y);
 	    } else if ( new_y_units == Sexagesimal ) {
-		if ( axis_labels(1) == "Declination" )
-		    y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,8);
-		else
+		if ( axis_labels(1) == "Declination"  || (coord != Region::J2000 && coord != Region::B1950) ) {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // D.M.S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
+		    //y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		    // MVAngle::operator( ) => -pi to +pi
+		    y = MVAngle(result_y)( ).string(MVAngle::ANGLE_CLEAN,8);
+		} else {
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // H:M:S
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    y = MVAngle(result_y)(0.0).string(MVAngle::TIME,8);
+		}
 	    } else {
 		y = as_string(result_y);
 	    }
@@ -454,7 +511,14 @@ namespace casa {
 		casa::Quantum<casa::Vector<double> > trc = trc_md.getAngle("rad");
 
 		double dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y;
-		world_to_linear( wc_, blc.getValue("rad")(0), blc.getValue("rad")(1), trc.getValue("rad")(0), trc.getValue("rad")(1), dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y );
+		try {
+		    world_to_linear( wc_, blc.getValue("rad")(0), blc.getValue("rad")(1), trc.getValue("rad")(0), trc.getValue("rad")(1), dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y );
+		} catch(...) {
+		    // conversion failed...
+		    // need a viewer status line...
+		    updateStateInfo( true );
+		    return;
+		}
 
 		double new_blc_x = (dd_blc_x <= dd_trc_x ? dd_blc_x : dd_trc_x);
 		double new_blc_y = (dd_blc_y <= dd_trc_y ? dd_blc_y : dd_trc_y);

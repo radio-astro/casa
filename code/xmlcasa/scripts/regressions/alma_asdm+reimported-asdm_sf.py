@@ -157,7 +157,7 @@ def verify_asdm(asdmname, withPointing):
         raise Exception
 
 
-def analyseASDM(basename, caltablename0):
+def analyseASDM(basename, caltablename0, genwvr=True):
     # Reduction of NGC3256 Band 6
     # M. Zwaan, May 2010
     # D. Petry, May 2010
@@ -198,6 +198,13 @@ def analyseASDM(basename, caltablename0):
         showversion=False,
         useversion='v3'
         )
+
+    if(casadef.casa_version>='3.4.0' and genwvr): # generate the WVR correction table
+        print ">> Generating the WVR caltable ", caltablename0
+        os.system('rm -rf '+caltablename0)
+        wvrgcal(vis=msn, caltable=caltablename0, segsource=False, toffset=-2, reversespw='0~7')
+    else:
+        print ">> Reusing existing WVR caltable ", caltablename0
     
     # Delay correction
     
@@ -278,6 +285,9 @@ def analyseASDM(basename, caltablename0):
     for i in range(2):
         print ">> SPW: ",i
         os.system('rm -rf '+caltablename+'_spw'+str(i)+'.G_WVR')
+        wvrspw = 0
+        if(casadef.casa_version>='3.4.0'):
+            wvrspw = i
         gaincal(
             vis=msn,
             caltable=caltablename+"_spw"+str(i)+".G_WVR",
@@ -287,7 +297,7 @@ def analyseASDM(basename, caltablename0):
             solint="60s",
             # Pre-apply the WVR correction, the bandpass and the delay correction
             gaintable=[caltablename0,caltablename+'_spw'+str(i)+'.K',caltablename+'_spw'+str(i)+'.B'],
-            spwmap=[[0],[i],[i]],
+            spwmap=[[wvrspw],[i],[i]],
             combine="",refant="0",minblperant=2,minsnr=-1,solnorm=False,
             gaintype="G",calmode="ap",
             )	
@@ -297,6 +307,9 @@ def analyseASDM(basename, caltablename0):
     for i in range(2):
         print ">> SPW: ",i
         os.system('rm -rf '+caltablename+'.GSPLINE_WVR_'+str(i))
+        wvrspw = 0
+        if(casadef.casa_version>='3.4.0'):
+            wvrspw = i
         gaincal(
             vis=msn,
             caltable=caltablename+".GSPLINE_WVR_"+str(i),
@@ -307,7 +320,7 @@ def analyseASDM(basename, caltablename0):
             splinetime=10000,
             # Pre-apply the WVR correction, the bandpass and the delay correction
             gaintable=[caltablename0,caltablename+'_spw'+str(i)+'.K',caltablename+'_spw'+str(i)+'.B'],
-            spwmap=[[0],[i],[i]],
+            spwmap=[[wvrspw],[i],[i]],
             combine="",refant="0",minblperant=2,minsnr=-1,solnorm=False,
             gaintype="GSPLINE",
             npointaver=2,
@@ -348,6 +361,9 @@ def analyseASDM(basename, caltablename0):
     print ">> Apply the G and WVR solutions to",msn
     for i in range (2):
         print ">> SPW: ",i
+        wvrspw = 0
+        if(casadef.casa_version>='3.4.0'):
+            wvrspw = i
         applycal(
             vis=msn,
             field="",
@@ -359,7 +375,7 @@ def analyseASDM(basename, caltablename0):
             gaintable=[caltablename+"_spw"+str(i)+".G_WVR",caltablename0,caltablename+"_spw"+str(i)+".K",caltablename+"_spw"+str(i)+".B"],
             gainfield=['','','',''],
             interp=['linear','','',''],
-            spwmap=[[i],[0],[i],[i]]
+            spwmap=[[i],[wvrspw],[i],[i]]
             )
 
     # Clean the calibrator
@@ -656,7 +672,8 @@ else:
         
         name = "ANTENNA"
         expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
-                     ['POSITION',     1, [2224600.1130,  -5440364.6494, -2481417.4709], 0.001],
+                     #['POSITION',     1, [2224600.1130,  -5440364.6494, -2481417.4709], 0.001],
+                     ['POSITION',     1,  [2224602.5538,  -5440370.6185, -2481420.1935], 0.001],
                      ['DISH_DIAMETER',1, 12.0, 0]
                      ]
         checktable(name, expected)
@@ -792,7 +809,9 @@ if dopart4:
     
     rval = True
     try:
-        rval = analyseASDM(myasdm_dataset2_name+'-re-exported', mywvr_correction_file)
+        rval = analyseASDM(myasdm_dataset2_name+'-re-exported', mywvr_correction_file,
+                           False # do not regenerate the WVR table
+                           )
     except:
         print myname, ': *** Unexpected error analysing re-exported ASDM, regression failed ***'   
         part4 = False

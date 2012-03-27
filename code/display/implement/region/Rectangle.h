@@ -55,6 +55,7 @@ namespace casa {
 
 		int clickHandle( double x, double y ) const;
 
+		bool doubleClick( double /*x*/, double /*y*/ );
 
 		// returns point state (Region::PointLocation)
 		PointInfo checkPoint( double x, double y ) const;

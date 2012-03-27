@@ -49,6 +49,7 @@ using namespace casa;
 #include <tables/Tables/Table.h>
 #include <tables/Tables/PlainTable.h>
 #include <tables/Tables/TableCopy.h>
+#include <casa/Arrays/MatrixMath.h>
 
 
 
@@ -664,6 +665,33 @@ void rect(const vector<double>& s, vector<double>& x) {
 void spher(const vector<double>& x, vector<double>& s) {
   s.at(0) = atan2(x.at(1) , x.at(0));
   s.at(1) = atan2(x.at(2), sqrt(x.at(0)*x.at(0) + x.at(1)*x.at(1)));
+}
+
+
+/** 
+ * a rotation matrix from local (topocentric) coordinates to ITRF geocentric coordinates
+ * lambda - longitude, phi - latitude 
+ */
+void topo2geomat(double lambda, double phi, vector<vector<double> >& mat) {
+ 
+  double cpsi, spsi, clam, slam, cphi, sphi;
+
+  clam = cos(lambda);
+  slam = sin(lambda);
+  cphi = cos(phi);
+  sphi = sin(phi);
+
+  mat.at(0).at(0) =  -slam;
+  mat.at(0).at(1) =  -sphi * clam;
+  mat.at(0).at(2) = cphi * clam; 
+
+  mat.at(1).at(0) = clam;
+  mat.at(1).at(1) = -sphi * slam;
+  mat.at(1).at(2) = cphi * slam;
+
+  mat.at(2).at(0) =  0; 
+  mat.at(2).at(1) =  cphi;
+  mat.at(2).at(2) =  sphi;
 }
 
 /**
@@ -2999,10 +3027,98 @@ int main(int argc, char *argv[]) {
       // The MS Antenna position is defined as the sum of the ASDM station position and
       // of the ASDM Antenna position after applying to it a coordinate system transformation.
       // Since the ASDM Antenna position is 0,0,0 for now, we only use the ASDM station position.
+      // Update - 2012-03-22
+      // Now the ASDM Antenna position contains non-zeros  so need to take account
+      // for this now as shown below. For EVLA, this is still 0,0,0.       
       vector<Length> position = r->getStationUsingStationId()->getPosition();
-      double xPosition = position.at(0).get();
-      double yPosition = position.at(1).get();
-      double zPosition = position.at(2).get();
+      double xStation = position.at(0).get();
+      double yStation = position.at(1).get();
+      double zStation = position.at(2).get();
+      
+      // ---- transform antenna position to geocentric coordinates ----
+      // Method 1 - assume z axis of antenna position lines up with station vector
+      //            and transformation is done by a rotation matrix based on 
+      //            geocntric longitude and latitude. Good enough for current 
+      //            antenna position measurement accuracy.
+      //
+      // geocentric longitude  and latitude
+      double glat = atan2(zStation,sqrt(xStation*xStation + yStation*yStation)); 
+      double glon = atan2(yStation,xStation);
+
+      // get ASDM Antenna position vector
+      vector<Length> antPosition = r->getPosition();
+      
+      vector<double> cartesianAnt1(3, 0.0);
+      vector<double> cartesianAnt2(3, 0.0);
+      vector<vector<double> > matrixAnt3x3;
+      for (unsigned int ii = 0; ii < 3; ii++) {
+        matrixAnt3x3.push_back(cartesianAnt1);
+      }
+      cartesianAnt1[0] = antPosition.at(0).get();
+      cartesianAnt1[1] = antPosition.at(1).get();
+      cartesianAnt1[2] = antPosition.at(2).get();
+
+      if (cartesianAnt1[0]!=0.0 || cartesianAnt1[1]!=0 || cartesianAnt1[2]!=0.0) {
+        topo2geomat(glon,glat,matrixAnt3x3);
+        matvec(matrixAnt3x3,cartesianAnt1,cartesianAnt2); 
+      }
+      
+      /*** 
+      // Method 2 - use Measures and let Measure figure out
+      //            transoformation for local geodetic coordinates (with
+      //            earth's oblateness taken account) to geocentric
+      //            coordinates.
+      //            Use AZELGEO as a coordinate ref to be more precise
+      casa::Vector<casa::Quantity> vq; vq.resize(3);
+      vq[0] = casa::Quantity(antPosition.at(0).get(),"m");
+      vq[1] = casa::Quantity(antPosition.at(1).get(),"m");
+      vq[2] = casa::Quantity(antPosition.at(2).get(),"m");
+      casa::MVPosition mvp(vq);
+      casa::MVBaseline mvb(mvp);
+
+      // setup conversion template
+      double anttime =  ((double) r->getTime().get()) / ArrayTime::unitsInASecond ;
+      casa::MEpoch ep(casa::Quantity(anttime,"s"), casa::MEpoch::UTC);
+      casa::Vector<casa::Quantity> rvq; rvq.resize(3);
+      //station vector in ITRF
+      rvq[0] = casa::Quantity(xStation,"m");
+      rvq[1] = casa::Quantity(yStation,"m");
+      rvq[2] = casa::Quantity(zStation,"m");
+      casa::MVPosition rmvp(rvq);
+      casa::MPosition rmp(rmvp,casa::MPosition::ITRF);
+      // set the direction to the pole
+      casa::MVDirection mvd = casa::MVDirection();
+      // this approximate the antenna position to be in topocentric, z is parallel
+      // to the station vector. 
+      casa::MDirection mdir(mvd,casa::MDirection::AZEL);
+      // to be precise set the ref to geodetic local coordinates  
+      //casa::MDirection mdir(mvd,casa::MDirection::AZELGEO);
+      casa::MeasFrame mFrame(rmp,ep,mdir);
+
+      casa::MBaseline baseMeas;
+      casa::MVBaseline mantv;
+      casa::MBaseline::Ref baseref(MBaseline::AZEL, mFrame);
+      // geodetic local coordinates case
+      //casa::MBaseline::Ref baseref(MBaseline::AZELGEO, mFrame);
+      baseMeas.set(mantv, baseref);
+      baseMeas.getRefPtr()->set(mFrame);
+
+      casa::MBaseline mb(mvb,baseref);
+      casa::MBaseline::Convert antvconv(baseMeas, MBaseline::Ref(MBaseline::ITRF));      
+      casa::MBaseline mbantp = antvconv(mb); 
+      
+      //compare transformed antenna positions in the two methods
+      //for the measure frame with AZEL those two values should be identical
+      cerr<<"rotated measAnt(0)="<<mbantp.getValue()(0)<<" measAnt(1)="<<mbantp.getValue()(1)<<" measAnt(2)="<<mbantp.getValue()(2)<<endl;
+      // end of Method2
+      ***/
+
+      //cerr<<"rotated cartAnt(0)="<<cartesianAnt2.at(0)<<" cartAnt(1)="<<cartesianAnt2.at(1)<<" cartAnt(2)="<<cartesianAnt2.at(2)<<endl;
+
+      //add antenna position: for now use ones obtained by the topo2geomat() 
+      double xPosition = position.at(0).get() + cartesianAnt2.at(0);
+      double yPosition = position.at(1).get() + cartesianAnt2.at(1);
+      double zPosition = position.at(2).get() + cartesianAnt2.at(2);
 
       vector<Length> offset = r->getOffset();
       double xOffset = offset.at(0).get();

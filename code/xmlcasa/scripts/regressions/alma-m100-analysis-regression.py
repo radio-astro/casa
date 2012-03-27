@@ -20,19 +20,20 @@
 # using observation of M100 from September 2011
 
 #import analysisUtils as aU
-# aU is only needed for the Tsys cal table generation which we ommit in this
-# regression by using canned Tsys cal tables
+# for casa before release 3.4.0, aU is needed for the Tsys cal table
+# generation which we ommit in this regression by using canned Tsys cal tables
+# for 3.4.0, the tsys table can be generated without the help of aU
 
 
 step_title = { 0 : 'Data import',
 	       1 : 'Generate antenna position cal tables',
-	       2 : 'Generate tsys cal tables (commented out)',
+	       2 : 'Generate tsys cal tables (if possible) or use canned ones',
 	       3 : 'Correct the Titan position',
 	       4 : 'Apriori flagging',
 	       5 : 'Generate WVR cal tables',
 	       6 : 'Generate delay calibration tables',
                7 : 'Apply antpos, wvr, tsys, and delay cal tables',
-	       8 : 'Split of non-wvr spws and save flags',
+	       8 : 'Split off non-wvr spws and save flags',
                9 : 'Flagging',
 	       10: 'Rebin to a reduced resolution of approx. 10 km/s',
 	       11: 'Fast phase-only gaincal for bandpass',
@@ -183,20 +184,18 @@ mystep = 2
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    print "Generation of Tsys tables omitted to avoid usage of analysisUtils"
-    print "We use canned tsys tables instead."
 
-##     for name in basename:
-##         os.system('rm -rf cal-tsys_'+name)
-##         gencal(
-##             vis=name+'.ms',
-##             caltype='tsys', 
-##             caltable='cal-tsys_'+name)
-##         interTsys=aU.InterpolateTsys('cal-tsys_'+name)
-##         interTsys.correctBadTimes()
-##         interTsys.assignFieldAndScanToSolution()
-##         interTsys.getTdmFdmSpw()
-##         interTsys.interpolateTsys()
+    if(casadef.casa_version>='3.4.0'):
+
+        for name in basename:
+            os.system('rm -rf cal-tsys_'+name+'.fdm')
+            gencal(
+                vis=name+'.ms',
+                caltype='tsys', 
+                caltable='cal-tsys_'+name+'.fdm')
+    else:
+        print "Generation of Tsys tables omitted to avoid usage of analysisUtils"
+        print "We use canned tsys tables instead."
 
     if(makeplots):
         for spw in ['1','3','5','7']:
@@ -244,7 +243,6 @@ if(mystep in thesteps):
     for name in basename:
 
         flagmanager(vis=name+'.ms', mode='restore', versionname='Original')
-
         
         tflagdata(vis=name + '.ms', mode='list', inpfile=flagfile, flagbackup=False)
 
@@ -280,6 +278,7 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
+        os.system('rm -rf cal-delay_'+name+'.K')
 	gaincal(vis=name+'.ms',caltable='cal-delay_'+name+'.K',
 		field='*Phase*',spw='1,3,5,7',
 		solint='inf',combine='scan',refant=therefant,
@@ -294,13 +293,18 @@ mystep = 7
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
+    tsysinterp = 'nearest'
+    if(casadef.casa_version>='3.4.0'):
+        print "Using linear interpolation for Tsys in applycal ..."
+        tsysinterp='linear'
+
     for myfield in ['3c273 - Bandpass','Titan','3c273 - Phase','1224+213 Phase','M100']:
         print "Field ", myfield
         for name in basename:
             applycal(vis=name+'.ms', 
                      spw='1,3,5,7',
                      field=myfield, gainfield=[myfield,myfield,'',''],
-                     interp='nearest', 
+                     interp=['nearest',tsysinterp,'nearest','nearest'], 
                      gaintable=['cal-wvr_'+name,'cal-tsys_'+name+'.fdm','cal-delay_'+name+'.K','cal-antpos_'+name],
                      flagbackup=F)
 
@@ -313,13 +317,14 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-	    split(vis=name+'.ms',
-		  outputvis=name+'-line.ms',
-		  spw='1,3,5,7',
-		  datacolumn='corrected')
-	    flagmanager(vis = name+'-line.ms',
-			mode = 'save',
-                        versionname = 'apriori')
+        os.system('rm -rf '+name+'-line.ms')
+        split(vis=name+'.ms',
+              outputvis=name+'-line.ms',
+              spw='1,3,5,7',
+              datacolumn='corrected')
+        flagmanager(vis = name+'-line.ms',
+                    mode = 'save',
+                    versionname = 'apriori')
     timing()
 
             

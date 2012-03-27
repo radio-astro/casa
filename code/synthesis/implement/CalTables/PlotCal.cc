@@ -66,6 +66,7 @@
 #include <synthesis/CalTables/CalIter.h>
 #include <synthesis/CalTables/PlotCal.h>
 #include <synthesis/CalTables/PlotCalHooks.h>
+#include <synthesis/CalTables/NewCalTable.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
@@ -111,7 +112,9 @@ extern "C" {
     nchan_p(),
     resetCallBack_p(NULL),
     noMS_p(True),
-    MSstartChan_p()
+    MSstartChan_p(),
+    isNCT_p(True),
+    ct_p()
 {
 
   // Attach to TablePlotInstance
@@ -225,7 +228,7 @@ extern "C" {
        ++iter;
      }
      if ( ucIter.contains("SPW") ) {
-       iterAxes_p(iter)="CAL_DESC_ID";
+       iterAxes_p(iter)=CDIcol();
        ++iter;
      }
      if ( ucIter.contains("FIELD") ) {
@@ -361,7 +364,7 @@ Bool PlotCal::selectCal(const String& antenna,
     }
     if(spwSel){
 
-      String col="CAL_DESC_ID";
+      String col=CDIcol();
       Vector<Int> caldescids=getCalDescIds(spwId);
 
       if (caldescids.nelements() > 0) {
@@ -608,20 +611,34 @@ void PlotCal::getAxisTaQL(const String& axis,
       
       String defval("0.0");
       if (axis.contains("AMP") ) {
-	taql = "(AMPLITUDE(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
+	taql = "(AMPLITUDE("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
 	label = "Gain Amplitude POLN Ratio";
       }
       else if (axis.contains("REAL") ) {
-	taql = "(REAL(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
+	taql = "(REAL("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
 	label = "Gain: Real Part POLN Ratio";
       }
       else if (axis.contains("IMAG") ) {
-	taql = "(IMAG(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
+	taql = "(IMAG("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
 	label = "Gain: Imaginary Part POLN Ratio";
       }
       else if (axis.contains("PHASE")) {
-	taql = "((180.0/PI())*ARG(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
+	taql = "((180.0/PI())*ARG("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
 	label = "Gain Phase POLN Difference (deg)";
+      }
+      else if (axis.contains("TSYS")) {
+	if (isNCT_p) 
+	  taql = "(FPARAM[1,"+chansel+"]/FPARAM[2,"+chansel+"])";
+	else 
+	  taql = "(REAL("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
+	label = "Tsys POLN ratio";
+      }
+      else if (axis.contains("DEL")) {
+	if (isNCT_p) 
+	  taql = "(FPARAM[1,"+chansel+"]-FPARAM[2,"+chansel+"])";
+	else 
+	  taql = "(REAL(GAIN[1,"+chansel+"])-REAL(GAIN[2,"+chansel+"]))";
+	label = "Delay POLN Difference (nsec)";
       }
       else if (axis.contains("SNR") ) {
 	if (calType_p=="M" || calType_p=="A" || 
@@ -638,7 +655,6 @@ void PlotCal::getAxisTaQL(const String& axis,
       // Expand TaQL to "handle" flag info properly
       taql = 
 	"IIF(ARRAY(ANYS(FLAG[1:2,],1),[SHAPE(FLAG)[2]]),0.0,ARRAY("+taql+",[SHAPE(FLAG)[2]]))";
-      //"IIF(ARRAY(ANYS(FLAG[,],1),[SHAPE(GAIN)[2],SHAPE(GAIN)[1]]),0.0,ARRAY("+taql+",[SHAPE(GAIN)[2],SHAPE(GAIN)[1]]))";
     }
     else {
       
@@ -649,20 +665,34 @@ void PlotCal::getAxisTaQL(const String& axis,
 	polsel="2";
 
       if (axis.contains("AMP") ) {
-	taql = "(AMPLITUDE(GAIN["+polsel+","+chansel+"]))";
+	taql = "(AMPLITUDE("+GAINcol()+"["+polsel+","+chansel+"]))";
 	label = "Gain Amplitude";
       }
       else if (axis.contains("REAL") ) {
-	taql = "(REAL(GAIN["+polsel+","+chansel+"]))";
+	taql = "(REAL("+GAINcol()+"["+polsel+","+chansel+"]))";
 	label = "Gain: Real Part";
       }
       else if (axis.contains("IMAG") ) {
-	taql = "(IMAG(GAIN["+polsel+","+chansel+"]))";
+	taql = "(IMAG("+GAINcol()+"["+polsel+","+chansel+"]))";
 	label = "Gain: Imaginary Part";
       }
       else if (axis.contains("PHASE")) {
-	taql = "((180.0/PI())*ARG(GAIN["+polsel+","+chansel+"]))";
+	taql = "((180.0/PI())*ARG("+GAINcol()+"["+polsel+","+chansel+"]))";
 	label = "Gain Phase (deg)";
+      }
+      else if (axis.contains("TSYS")) {
+	if (isNCT_p) 
+	  taql = "(FPARAM["+polsel+","+chansel+"])";
+	else 
+	  taql = "(REAL(GAIN["+polsel+","+chansel+"]))";
+	label = "Tsys (K)";
+      }
+      else if (axis.contains("DEL")) {
+	if (isNCT_p) 
+	  taql = "(FPARAM["+polsel+","+chansel+"])";
+	else 
+	  taql = "(REAL(GAIN["+polsel+","+chansel+"]))";
+	label = "Delay (nsec)";
       }
       else if (axis.contains("SNR") ) {
 	if (calType_p=="M" || calType_p=="MF" || calType_p=="A")
@@ -779,7 +809,7 @@ Bool PlotCal::doPlot(){
     itsPlotOptions.XLabel=label_p[1];
     itsPlotOptions.YLabel=label_p[2];
     itsPlotOptions.MultiColour="cellrow";
-    itsPlotOptions.CallBackHooks = new PlotCalCallBacks(metaRec_p);
+    itsPlotOptions.CallBackHooks = new PlotCalCallBacks(metaRec_p,isNCT_p);
 
     
     //    if (calType_p=="BPOLY") {
@@ -802,10 +832,10 @@ Bool PlotCal::doPlot(){
 	//	cout << "Iterating on " << iterAxes_p << endl;
 	
    
-	if (!anyEQ(iterAxes_p,String("CAL_DESC_ID"))) {
+	if (!anyEQ(iterAxes_p,String(CDIcol()))) {
 	  nlayers++;
 	  layercols.resize(nlayers,True);
-	  layercols[nlayers-1]="CAL_DESC_ID";
+	  layercols[nlayers-1]=CDIcol();
 	}
    
 	if (!anyEQ(iterAxes_p,String("ANTENNA1"))) {
@@ -870,7 +900,7 @@ Bool PlotCal::doPlot(){
       iterating_p=False;
 
       layercols.resize(2);
-      layercols[0]="CAL_DESC_ID";
+      layercols[0]=CDIcol();
       layercols[1]="ANTENNA1";
 
       Vector<String> iterAxes;
@@ -958,7 +988,7 @@ Bool PlotCal::doPlot(){
 	iterAxes[0]="BASELINE";
 
 	Int numDesc=0;
-	numDesc=multiTablesInt("CAL_DESC_ID");
+	numDesc=multiTablesInt(CDIcol());
 	Vector<Table> vt(numDesc);
 	Vector<String> tabnames(numDesc);
 	tabnames.set(tabName_p);
@@ -1042,7 +1072,7 @@ Int PlotCal::multiTables(const Table& tablein,
     tablesout(itab) = titer.table();
     tablesoutnames(itab)=tablesout(itab).tableName();
 
-    cdlist(itab) = ROScalarColumn<Int>(tablesout(itab),"CAL_DESC_ID")(0);
+    cdlist(itab) = ROScalarColumn<Int>(tablesout(itab),CDIcol())(0);
     if (cdlist(itab)<0) cdlist(itab)=0;
 
     fldlist_p(itab).resize();
@@ -1071,6 +1101,24 @@ Int PlotCal::multiTables(const Table& tablein,
       os << LogIO::SEVERE << "Table " << tabName 
 	 << " is not a calibration table " 
 	 << LogIO::POST;
+    }
+
+
+    TableRecord tr(tab_p.keywordSet());
+
+    //    cout << boolalpha;
+    //    cout << "tr.isDefined(CAL_DESC) = " << tr.isDefined("CAL_DESC") << endl;
+    //    cout << "tr.isDefined(ParType)  = " << tr.isDefined("ParType") << endl;
+
+
+    if (!tr.isDefined("CAL_DESC") && tr.isDefined("ParType")) {
+      os << LogIO::NORMAL << "Detected a NewCalTable!" << LogIO::POST;
+      isNCT_p=True;
+      ct_p = NewCalTable(tab_p);
+    }
+    else {
+      os << LogIO::NORMAL << "Detected an old CalTable." << LogIO::POST;
+      isNCT_p=False;
     }
 
     tabName_p = tabName;
@@ -1125,6 +1173,32 @@ Int PlotCal::multiTables(const Table& tablein,
 
     // Get meta data from CAL_DESC subtable
     msName_p="";
+
+    if (isNCT_p) {
+      // NewCalTable!
+
+      nCalDesc_p=ct_p.spectralWindow().nrow();
+
+      tabSpws_p.resize(1,nCalDesc_p);
+      Vector<Int> tV;
+      tV.reference(tabSpws_p.row(0));
+      indgen(tV);
+
+      startFreq_p.resize(nCalDesc_p);
+      startFreq_p=0.0;
+      stepFreq_p.resize(nCalDesc_p);
+      stepFreq_p=1.0;
+      
+      MSstartChan_p.resize(nCalDesc_p);
+      MSstartChan_p=0;
+
+      TableRecord tr(ct_p.keywordSet());
+      if (tr.isDefined("MSName"))
+	msName_p=tr.asString("MSName");
+      
+    }
+    else {
+
     String cdtabname=tabName+"/CAL_DESC";
     if (Table::isReadable(cdtabname)) {
 
@@ -1166,8 +1240,11 @@ Int PlotCal::multiTables(const Table& tablein,
 
 	//	cout << "msName_p = " << msName_p << endl;
 
-      }
-    }
+      }  // nCalDesc_p>0
+    } // CAL_DESC readable
+    } // isNCT_p
+
+
   }
 
   void PlotCal::virtualKTab( Table& tabB, Int& nAnt,  
@@ -1182,7 +1259,7 @@ Int PlotCal::multiTables(const Table& tablein,
     td.addColumn (ArrayColumnDesc<Float>("AMP"));
     td.addColumn (ArrayColumnDesc<Float>("DELAY"));
     td.addColumn (ArrayColumnDesc<Float>("DELAYRATE"));
-    td.addColumn (ScalarColumnDesc<Int>("CAL_DESC_ID"));
+    td.addColumn (ScalarColumnDesc<Int>(CDIcol()));
     td.addColumn (ArrayColumnDesc<Bool> ("FLAG"));
     td.addColumn (ScalarColumnDesc<Double> ("TIME"));
     
@@ -1194,10 +1271,10 @@ Int PlotCal::multiTables(const Table& tablein,
     tabB = Table (aNewTab, Table::Memory, nrows);
     
     
-    ROArrayColumn<Complex>  origGain(tabSel_p,"GAIN");
+    ROArrayColumn<Complex>  origGain(tabSel_p,GAINcol());
     ROArrayColumn<Bool> solnOk(tabSel_p, "SOLUTION_OK") ;
     ROScalarColumn<Int> origBaseline(tabSel_p, "ANTENNA1");
-    ROScalarColumn<Int> origCalDesc(tabSel_p, "CAL_DESC_ID");
+    ROScalarColumn<Int> origCalDesc(tabSel_p, CDIcol());
     ROScalarColumn<Double> origTime(tabSel_p, "TIME");
     Cube<Complex> ydata=origGain.getColumn();
     Vector<Int> baselines=origBaseline.getColumn();
@@ -1278,7 +1355,7 @@ Int PlotCal::multiTables(const Table& tablein,
     newAnt1.putColumn(ant1);
     ScalarColumn<Int> newAnt2(tabB, "ANTENNA2");
     newAnt2.putColumn(ant2);
-    ScalarColumn<Int> cal_desc(tabB, "CAL_DESC_ID");
+    ScalarColumn<Int> cal_desc(tabB, CDIcol());
     cal_desc.putColumn(origCalDesc);
     ArrayColumn<Bool> flagCol(tabB, "FLAG");
     flagCol.putColumn(flag);
@@ -1493,7 +1570,9 @@ Int PlotCal::multiTables(const Table& tablein,
 
   // Get cal_desc indices (from spw indices)
   Vector<Int> PlotCal::getCalDescIds(const Vector<Int> selspws) {
-    
+
+    if (!isNCT_p) {
+
     Vector<Int> allcds(nCalDesc_p);
     Vector<Bool> cdmask(nCalDesc_p,False);
     indgen(allcds);
@@ -1505,6 +1584,10 @@ Int PlotCal::multiTables(const Table& tablein,
     }
 
     return allcds(cdmask).getCompressedArray();
+    }
+
+    // this is NCT, just return the spws
+    return selspws;
 
   }
 
@@ -1525,31 +1608,62 @@ Int PlotCal::multiTables(const Table& tablein,
 
   void PlotCal::getFreqInfo() {
 
-    if (noMS_p)
-      throw(AipsError("MS is not available to get frequencies for freq axis. Please plot channels instead."));
+    if (isNCT_p) {
+      // Direct from the NCT
+      ROArrayColumn<Double> chanfreqcol(ROMSSpWindowColumns(ct_p.spectralWindow()).chanFreq());
 
-    MeasurementSet ms(msName_p);
-    ROArrayColumn<Double> chanfreqcol(ROMSSpWindowColumns(ms.spectralWindow()).chanFreq());
+      startFreq_p.resize(nCalDesc_p);
+      stepFreq_p.resize(nCalDesc_p);
+      nchan_p.resize(nCalDesc_p);
+      
+      for (Int icd=0;icd<nCalDesc_p;++icd) {
+	
+	Int ispw=tabSpws_p(0,icd);
+	if (ispw<0) ispw=0;
+	//      cout << icd << " " << tabSpws_p(0,icd) << "  chanfreqcol.shape() = " << chanfreqcol.shape(ispw) << endl;
+	
+	Vector<Double> chanfreq = chanfreqcol(ispw);
+	Int nchan=chanfreq.nelements();
+	
+	nchan_p(icd)=nchan;  // used in virtualBPoly()
+	
+	startFreq_p(icd) = chanfreq(MSstartChan_p(icd));
+	stepFreq_p(icd)= nchan>1 ? (chanfreq(nchan-1)-chanfreq(0))/Double(nchan-1): 0.0;
+	
+	//      cout << "    " << startFreq_p(icd) << " " << stepFreq_p(icd) << endl;
+	
+      }
+      
+    }
+    else {
+      // From the parent MS, if available
+      if (noMS_p)
+	throw(AipsError("MS is not available to get frequencies for freq axis. Please plot channels instead."));
+      
+      MeasurementSet ms(msName_p);
+      ROArrayColumn<Double> chanfreqcol(ROMSSpWindowColumns(ms.spectralWindow()).chanFreq());
 
-    startFreq_p.resize(nCalDesc_p);
-    stepFreq_p.resize(nCalDesc_p);
-    nchan_p.resize(nCalDesc_p);
-
-    for (Int icd=0;icd<nCalDesc_p;++icd) {
-
-      Int ispw=tabSpws_p(0,icd);
-      if (ispw<0) ispw=0;
-      //      cout << icd << " " << tabSpws_p(0,icd) << "  chanfreqcol.shape() = " << chanfreqcol.shape(ispw) << endl;
-
-      Vector<Double> chanfreq = chanfreqcol(ispw);
-      Int nchan=chanfreq.nelements();
-
-      nchan_p(icd)=nchan;  // used in virtualBPoly()
-
-      startFreq_p(icd) = chanfreq(MSstartChan_p(icd));
-      stepFreq_p(icd)= nchan>1 ? (chanfreq(nchan-1)-chanfreq(0))/Double(nchan-1): 0.0;
-
-      //      cout << "    " << startFreq_p(icd) << " " << stepFreq_p(icd) << endl;
+      startFreq_p.resize(nCalDesc_p);
+      stepFreq_p.resize(nCalDesc_p);
+      nchan_p.resize(nCalDesc_p);
+      
+      for (Int icd=0;icd<nCalDesc_p;++icd) {
+	
+	Int ispw=tabSpws_p(0,icd);
+	if (ispw<0) ispw=0;
+	//      cout << icd << " " << tabSpws_p(0,icd) << "  chanfreqcol.shape() = " << chanfreqcol.shape(ispw) << endl;
+	
+	Vector<Double> chanfreq = chanfreqcol(ispw);
+	Int nchan=chanfreq.nelements();
+	
+	nchan_p(icd)=nchan;  // used in virtualBPoly()
+	
+	startFreq_p(icd) = chanfreq(MSstartChan_p(icd));
+	stepFreq_p(icd)= nchan>1 ? (chanfreq(nchan-1)-chanfreq(0))/Double(nchan-1): 0.0;
+	
+	//      cout << "    " << startFreq_p(icd) << " " << stepFreq_p(icd) << endl;
+	
+      }
 
     }
 
@@ -1567,7 +1681,7 @@ Int PlotCal::multiTables(const Table& tablein,
 
     //    ROScalarColumn<Int> origAnt1(tabSel_p, "ANTENNA1");
     ROScalarColumn<Int> origFld(tabSel_p, "FIELD_ID");
-    ROScalarColumn<Int> origCalDesc(tabSel_p, "CAL_DESC_ID");
+    ROScalarColumn<Int> origCalDesc(tabSel_p, CDIcol());
     ROScalarColumn<Double> origTime(tabSel_p, "TIME");
 
     // The following is cribbed from MeasurementComponents/BPoly.cc
@@ -1703,8 +1817,8 @@ Int PlotCal::multiTables(const Table& tablein,
     td.addColumn (ScalarColumnDesc<Double> ("TIME"));
     td.addColumn (ScalarColumnDesc<Int>("ANTENNA1"));
     td.addColumn (ScalarColumnDesc<Int>("FIELD_ID"));
-    td.addColumn (ScalarColumnDesc<Int>("CAL_DESC_ID"));
-    td.addColumn (ArrayColumnDesc<Complex>("GAIN"));
+    td.addColumn (ScalarColumnDesc<Int>(CDIcol()));
+    td.addColumn (ArrayColumnDesc<Complex>(GAINcol()));
     td.addColumn (ArrayColumnDesc<Bool> ("FLAG"));
     
     // Now create a new table from the description.
@@ -1717,9 +1831,9 @@ Int PlotCal::multiTables(const Table& tablein,
     newAnt1.putColumn(origAnt1);
     ScalarColumn<Int> fieldid(tabB, "FIELD_ID");
     fieldid.putColumn(origFld);
-    ScalarColumn<Int> cal_desc(tabB, "CAL_DESC_ID");
+    ScalarColumn<Int> cal_desc(tabB, CDIcol());
     cal_desc.putColumn(origCalDesc);
-    ArrayColumn<Complex> newGain(tabB, "GAIN");
+    ArrayColumn<Complex> newGain(tabB, GAINcol());
     newGain.putColumn(gain);
     ArrayColumn<Bool> flagCol(tabB, "FLAG");
     flagCol.putColumn(flag);
@@ -1990,8 +2104,8 @@ void PlotCal::virtualGSpline( Table& tabG ) {
   td.addColumn (ScalarColumnDesc<Double> ("TIME"));
   td.addColumn (ScalarColumnDesc<Int>("ANTENNA1"));
   td.addColumn (ScalarColumnDesc<Int>("FIELD_ID"));
-  td.addColumn (ScalarColumnDesc<Int>("CAL_DESC_ID"));
-  td.addColumn (ArrayColumnDesc<Complex>("GAIN"));
+  td.addColumn (ScalarColumnDesc<Int>(CDIcol()));
+  td.addColumn (ArrayColumnDesc<Complex>(GAINcol()));
   td.addColumn (ArrayColumnDesc<Bool> ("FLAG"));
     
   // Now create a new table from the description.
@@ -2004,9 +2118,9 @@ void PlotCal::virtualGSpline( Table& tabG ) {
   newAnt1.putColumn(ant1);
   ScalarColumn<Int> fieldid(tabG, "FIELD_ID");
   fieldid.fillColumn(0);
-  ScalarColumn<Int> cal_desc(tabG, "CAL_DESC_ID");
+  ScalarColumn<Int> cal_desc(tabG, CDIcol());
   cal_desc.fillColumn(0);
-  ArrayColumn<Complex> newGain(tabG, "GAIN");
+  ArrayColumn<Complex> newGain(tabG, GAINcol());
   newGain.putColumn(gainspl);
   ArrayColumn<Bool> flagCol(tabG, "FLAG");
   flagCol.putColumn(flag);

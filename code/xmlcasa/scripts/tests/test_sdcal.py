@@ -57,6 +57,15 @@ class sdcal_unittest_base:
         self.assertEqual( sp.shape[1], ref.shape[1],
                           msg='number of channel differ' )
 
+    def _diff(self, sp, ref):
+        diff=abs((sp-ref)/ref)
+        idx=numpy.argwhere(numpy.isnan(diff))
+        #print idx
+        if len(idx) > 0:
+            diff[idx]=sp[idx]
+        return diff
+        
+
 ###
 # Base class for calibration test
 ###
@@ -75,8 +84,9 @@ class sdcal_caltest_base(sdcal_unittest_base):
         self._checkshape( sp, spref )
         
         for irow in xrange(sp.shape[0]):
-            retval=numpy.allclose(sp[irow],spref[irow],atol=1e-5)
-            diff=(abs(sp[irow]-spref[irow])).max()
+            diff=self._diff(sp[irow],spref[irow])
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
             self.assertEqual( retval, True,
                              msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         del sp, spref
@@ -155,10 +165,10 @@ class sdcal_avetest_base(sdcal_unittest_base):
         del s
         
         for irow in xrange(sp.shape[0]):
-            #print sp0[irow][0], sp[irow][0]
-            retval=numpy.allclose(sp[irow],sp0[irow])
+            diff=self._diff(sp[irow],sp0[irow])
+            retval=numpy.all(diff<0.01)
             self.assertEqual( retval, True,
-                              msg='averaged result is wrong (irow=%s)'%irow )
+                              msg='averaged result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         del sp, sp0
         
 

@@ -80,7 +80,8 @@ void doTest1 (Bool verbose=False) {
   NewCalTable selnct(tnct);
   CTInterface cti(tnct);
   MSSelection mss;
-  mss.reset(cti,MSSelection::PARSE_LATE,"","",fieldsel);
+  //  mss.reset(cti,MSSelection::PARSE_LATE,"","",fieldsel);
+  mss.setFieldExpr(fieldsel);
   TableExprNode ten=mss.toTableExprNode(&cti);
 
   if (verbose)

@@ -227,13 +227,15 @@ try:
     fail = 0
     
     tb.open(Ginttable)
-    intcol = tb.getvarcol('GAIN')
+#    intcol = tb.getvarcol('GAIN')
+    intcol = tb.getvarcol('CPARAM')
     iflag = tb.getvarcol('FLAG')
     tb.close()
     
     tb.open(Acc2table)
     afield = tb.query('FIELD_ID == 0')
-    acccol = afield.getvarcol('GAIN')
+#    acccol = afield.getvarcol('GAIN')
+    acccol = afield.getvarcol('CPARAM')
     aflag = afield.getvarcol('FLAG')
     afield.done()
     tb.close()

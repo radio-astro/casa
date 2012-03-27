@@ -98,10 +98,10 @@ namespace casa {
 
 	    // create regions of various types (e.g. point, rect, poly, etc.). For use when
 	    // loading casa region files...
-	    virtual bool create( WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
+	    virtual bool create( viewer::Region::RegionTypes, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
 				 const std::string &/*label*/, const std::string &/*font*/, int /*font_size*/,
 				 int /*font_style*/, const std::string &/*font_color*/,
-				 const std::string &/*line_color*/, viewer::Region::LineStyle /*line_style*/ )
+				 const std::string &/*line_color*/, viewer::Region::LineStyle /*line_style*/, bool /*annotation*/ )
 			DISPLAY_PURE_VIRTUAL(MultiWCTool::create,true);
 
 	    // defeat the registering/unregistering done by MultiWCTool (because polygon regions stop working

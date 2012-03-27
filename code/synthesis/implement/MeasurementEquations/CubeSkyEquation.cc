@@ -915,7 +915,9 @@ CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIt
 
     Bool isEnabled;
     Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
-    isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
+
+    //isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
+    // For now (release 3.4) make imaging be explicitly turned on
 
     if (! (isEnabled && ROVisibilityIterator::isAsynchronousIoEnabled())){
         return; // async i/o is not going to be used this time around
@@ -1004,14 +1006,14 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
     // cerr << npix << " " << pixInMem/8 << endl;
     nslice=1;
     //There are roughly 13 float images worth held in memory
-    if(npix > (pixInMem/16)){
-      //Lets slice it so grid is at most 1/16th of memory
-      pixInMem=pixInMem/16;
+    //plus some extra
+    if(npix > (pixInMem/25)){
+      //Lets slice it so grid is at most 1/25th of memory
+      pixInMem=pixInMem/25;
       //One plane is
       npix=theIm.shape()(0)*theIm.shape()(1)*theIm.shape()(2);
       nchanPerSlice_p=Int(floor(pixInMem/npix));
-      // cerr << "Nchan " << nchanPerSlice_p << " " << pixInMem << " " << npix << " " << pixInMem/npix << endl
-	;
+      // cerr << "Nchan " << nchanPerSlice_p << " " << pixInMem << " " << npix << " " << pixInMem/npix << endl;
       if (nchanPerSlice_p==0){
 	nchanPerSlice_p=1;
       }
@@ -1047,6 +1049,13 @@ void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
     ftm_p[model]->getFluxImage(im);
   }
 
+}
+
+void CubeSkyEquation::getWeightImage(Int model, ImageInterface<Float>& im){
+  if (iftm_p.nelements() > uInt(model)){
+    Matrix<Float> weights;
+    iftm_p[model]->getWeightImage(im, weights);
+  }
 }
 
 void
@@ -1200,7 +1209,7 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
-    Double memoryMB=HostInfo::memoryTotal(true)/1024.0/(8.0*(sm_->numberOfModels()));
+    Double memoryMB=HostInfo::memoryTotal(true)/1024.0/(20.0*(sm_->numberOfModels()));
     slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));

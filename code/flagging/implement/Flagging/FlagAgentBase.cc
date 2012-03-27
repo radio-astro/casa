@@ -936,7 +936,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				(expression_p.find("ABS") == string::npos) and
 				(expression_p.find("NORM") == string::npos))
 		{
-			expression_p = "ABS ALL";
+			expression_p = "ABS " + expression_p;
 			*logger_p 	<< LogIO::WARN
 						<< " Unsupported visibility expression: " << expression_p
 						<< ", selecting ABS ALL by default. "

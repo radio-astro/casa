@@ -26,6 +26,22 @@ namespace casa {
 	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QWidget *parent ) :
 					QFrame(parent), selected_statistics(-1), region_(r) {
 	    setupUi(this);
+	    std::pair<int,int> &tab_state = region_->tabState( );
+	    if ( tab_state.first < 0 ) {
+		QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
+		tab_state.first = categories->currentIndex( );
+		if ( tabs.size( ) > 0 )
+		    tab_state.second = tabs.first( )->currentIndex( );
+		else
+		    tab_state.second = -1;
+	    } else {
+		categories->setCurrentIndex(tab_state.first);
+		if ( tab_state.second >= 0 ) {
+		    QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
+		    if ( tabs.size( ) > 0 )
+			tabs.first( )->setCurrentIndex(tab_state.second);
+		}
+	    }
 
 	    //setLineWidth(0);
 	    setFrameShape(QFrame::NoFrame);
@@ -77,11 +93,12 @@ namespace casa {
 
 	    connect( categories, SIGNAL(currentChanged(int)), SLOT(category_change(int)) );
 	    connect( states, SIGNAL(currentChanged(int)), SLOT(states_change(int)) );
+	    connect( file_tab, SIGNAL(currentChanged(int)), SLOT(filetab_change(int)) );
 
 	    connect( coordinate_system, SIGNAL(currentIndexChanged(const QString &)), SLOT(coordsys_change(const QString &)) );
-	    connect( x_units, SIGNAL(currentIndexChanged(int)), SLOT(states_change(int)) );
-	    connect( y_units, SIGNAL(currentIndexChanged(int)), SLOT(states_change(int)) );
-	    connect( dim_units, SIGNAL(currentIndexChanged(int)), SLOT(states_change(int)) );
+	    connect( x_units, SIGNAL(currentIndexChanged(int)), SLOT(states_val_change(int)) );
+	    connect( y_units, SIGNAL(currentIndexChanged(int)), SLOT(states_val_change(int)) );
+	    connect( dim_units, SIGNAL(currentIndexChanged(int)), SLOT(states_val_change(int)) );
 	    connect( coordinates_reset, SIGNAL(clicked(bool)), SLOT(coordinates_reset_event(bool)) );
 	    connect( coordinates_apply, SIGNAL(clicked(bool)), SLOT(coordinates_apply_event(bool)) );
 
@@ -272,11 +289,20 @@ namespace casa {
 	    }
 	}
 
+	void QtRegionState::setAnnotation( bool ann ) {
+	    region_annotation->setChecked(ann);
+	}
+
+	void QtRegionState::disableAnnotation( bool ann ) {
+	    region_annotation->setChecked(ann);
+	    region_annotation->setDisabled(true);
+	}
 
 	int QtRegionState::zMin( ) const { return frame_min->value( ); }
 	int QtRegionState::zMax( ) const { return frame_max->value( ); }
 	int QtRegionState::numFrames( ) const { return region_->numFrames( ); }
 
+	bool QtRegionState::isAnnotation( ) const { region_annotation->isChecked( ) ? true : false; }
 
 	void QtRegionState::state_change( int ) { emit refreshCanvas( ); }
 	void QtRegionState::state_change( bool ) { emit refreshCanvas( ); }
@@ -317,7 +343,7 @@ namespace casa {
 		    fclose(fh);
 		}
 	    }
-	  
+
 	}
 
 	void QtRegionState::load_regions( bool ) {
@@ -336,7 +362,7 @@ namespace casa {
 		load_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
 		load_now->setFocus(Qt::OtherFocusReason);
 		free(buf);
-		return;	      
+		return;
 	    } else {
 		int fd = open( path.toAscii( ).constData( ), O_RDONLY );
 		if ( fd == -1 ) {
@@ -408,8 +434,24 @@ namespace casa {
 	    emit outputRegions( what, name, save_file_type->currentText( ), save_csys_type->currentText( ) );
 	}
 
-	void QtRegionState::category_change( int ) {
-	    QString cat = categories->tabText(categories->currentIndex( ));
+	// this gets called for each mouse movement as the mouse crosses the region...
+	// it would be nice if there were a better way to update the tab state...
+	void QtRegionState::nowVisible( ) {
+	    std::pair<int,int> &tab_state = region_->tabState( );
+	    categories->setCurrentIndex(tab_state.first);
+	    if ( tab_state.second >= 0 ) {
+		QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
+		if ( tabs.size( ) > 0 )
+		    tabs.first( )->setCurrentIndex(tab_state.second);
+	    }
+	}
+
+	void QtRegionState::category_change( int index ) {
+	    std::pair<int,int> &tab_state = region_->tabState( );
+	    QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
+	    tab_state.first = index;
+
+	    QString cat = categories->tabText(index);
 	    if ( cat == "stats" )
 		emit statisticsVisible( true );
 	    else
@@ -417,12 +459,31 @@ namespace casa {
 	}
 
 	void QtRegionState::states_change( int ) {
+	    // this callback is called for all of the "state" combo-boxes too...
+	    // this assignment really only needs to be done when the "states" tab changes...
+	    std::pair<int,int> &tab_state = region_->tabState( );
+	    tab_state.second = states->currentIndex( );
+
 	    // coordinates tab selected or not...
 	    QString state = states->tabText(categories->currentIndex( ));
 	    if ( state == "coordinates" )
 		emit positionVisible( true );
 	    else
 		emit positionVisible( false );
+	}
+
+	void QtRegionState::states_val_change( int ) {
+	    // coordinates tab selected or not...
+	    QString state = states->tabText(categories->currentIndex( ));
+	    if ( state == "coordinates" )
+		emit positionVisible( true );
+	    else
+		emit positionVisible( false );
+	}
+
+	void QtRegionState::filetab_change( int index ) {
+	    std::pair<int,int> &tab_state = region_->tabState( );
+	    tab_state.second = index;
 	}
 
 	void QtRegionState::coordsys_change( const QString &text ) {
@@ -544,7 +605,7 @@ namespace casa {
 		dim_units->setCurrentIndex(3);
 	    else if ( bounding_units == "pixel" )
 		dim_units->setCurrentIndex(4);
-	    else 
+	    else
 		dim_units->setCurrentIndex(0);
 	}
 

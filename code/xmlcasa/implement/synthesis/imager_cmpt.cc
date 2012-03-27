@@ -831,7 +831,7 @@ imager::plotvis(const std::string& type, const int increment)
  }
 
  ::casac::variant*
- imager::getweightgrid(const std::string& type)
+ imager::getweightgrid(const std::string& type, const std::vector<std::string>& wgtimages)
  {
    ::casac::variant *rstat = 0;
    if(hasValidMS_p){
@@ -839,20 +839,26 @@ imager::plotvis(const std::string& type, const int increment)
          
 	 Cube<Float> weight;
 	 Block<Matrix<Float> > blockOGrid;
-	 if(itsImager->getWeightGrid(blockOGrid, String(type))){
-	   weight.resize(blockOGrid[0].shape()(0), blockOGrid[0].shape()(0), blockOGrid.nelements());
-	   for (uInt k=0; k < blockOGrid.nelements(); ++k){
-	     weight.xyPlane(k)= blockOGrid[k];
+	 if(String(type)==String("imaging")){
+	   if(itsImager->getWeightGrid(blockOGrid, String(type))){
+	     weight.resize(blockOGrid[0].shape()(0), blockOGrid[0].shape()(0), blockOGrid.nelements());
+	     for (uInt k=0; k < blockOGrid.nelements(); ++k){
+	       weight.xyPlane(k)= blockOGrid[k];
+	     }
+	     std::vector<int> s_shape;
+	     weight.shape().asVector().tovector(s_shape);
+	     std::vector<double> d_weight(weight.nelements());
+	     {
+	       Cube<Double> temp(weight.shape());
+	       casa::convertArray(temp, weight); 
+	       temp.tovector(d_weight);
+	     }
+	     rstat = new ::casac::variant(d_weight, s_shape);
 	   }
-	   std::vector<int> s_shape;
-	   weight.shape().asVector().tovector(s_shape);
-	   std::vector<double> d_weight(weight.nelements());
-	   {
-	     Cube<Double> temp(weight.shape());
-	     casa::convertArray(temp, weight); 
-	     temp.tovector(d_weight);
-	   }
-	   rstat = new ::casac::variant(d_weight, s_shape);
+	 }
+	 else if(String(type)==String("ftweight")){
+	   Vector <String> wgtim(toVectorString(wgtimages));
+	   itsImager->getWeightGrid(blockOGrid, String(type), wgtim);
 	 }
 
       } catch  (AipsError x) {

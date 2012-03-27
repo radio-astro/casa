@@ -77,6 +77,8 @@ namespace casa {
 	    mystate->setLineStyle( line_style );
 	}
 
+	void QtRegion::setAnnotation(bool ann) { mystate->setAnnotation(ann); }
+
 	int QtRegion::numFrames( ) const { return source_->numFrames( ); }
 
 	void QtRegion::zRange( int &min, int &max ) const {
@@ -84,13 +86,9 @@ namespace casa {
 	    max = mystate->zMax( );
 	}
 
-#if OLDSTUFF
-	void QtRegion::clearstats( ) { mystate->clearstats( ); }
-	void QtRegion::addstats( const std::string &name, std::list<std::pair<String,String> > *stats )
-	    { mystate->addstats( name, stats ); }
-
-#endif
 	void QtRegion::selectedInCanvas( ) { dock_->selectRegion(mystate); }
+
+	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 
         // indicates that region movement requires that the statistcs be updated...
 	void QtRegion::updateStateInfo( bool region_modified ) {
@@ -105,6 +103,7 @@ namespace casa {
 		std::list<RegionInfo> *rl = generate_dds_statistics( );
 		// send statistics to region state object...
 		mystate->updateStatistics(rl);
+		delete rl;
 	    }
 
 	    // update position, when needed...
@@ -195,6 +194,9 @@ namespace casa {
 		    fprintf( stderr, "Failed to create region annotation...\n" );
 		    return;
 		}
+
+		AnnRegion *reg = dynamic_cast<AnnRegion*>(ann);
+		if ( reg ) reg->setAnnotationOnly((*iter)->isAnnotation( ));
 
 		int number_frames = (*iter)->numFrames( );
 		ann->setLabel( (*iter)->textValue( ) );

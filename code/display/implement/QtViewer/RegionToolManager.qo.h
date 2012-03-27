@@ -99,6 +99,7 @@ namespace casa {
 		bool setup_moving_regions( RegionTool::State &state );
 		void setup_moving_regions_state( double linx, double liny );
 		void translate_moving_regions( WorldCanvas *wc, double dx, double dy );
+		bool process_double_click( RegionTool::State &state );
 	};
     }
 }

@@ -81,9 +81,12 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   if      (uptype=="B" || uptype=="B JONES") 
     return new BJones(vs);
 
-  else if (uptype=="BPOLY") 
-    return new BJonesPoly(vs);
+  else if (uptype=="BPOLY") {
 
+    throw(AipsError("BPOLY temporarily disabled during NewCalTable deployment."));
+    // return new BJonesPoly(vs);
+
+  }
   else if (uptype=="G" || uptype=="G JONES") 
     return new GJones(vs);
 

@@ -62,7 +62,7 @@ void doTest1 (Bool verbose=False) {
   if (verbose) cout << "nrow = " << tnct.nrow() << endl;
   
   // Make a CTPatchedInterp  (no freq interp yet)
-  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear");
+  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear","none",nSpw);
   ci.state();
   
   cout << "new = " << ci.interpolate(0,0,4832568310.0) << endl;
@@ -129,14 +129,16 @@ void doTest2 (Bool verbose=False) {
   if (verbose) cout << "nrow = " << tnct.nrow() << endl;
   
   // Make a CTPatchedInterp 
-  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear");
+  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear","linear",nSpw);
   ci.state();
-  
+
+  /*  
   Double itime=4832568060.0;
   cout << "new = " << ci.interpolate(0,0,itime) << endl;
   cout << "resultF = " << ci.resultF(0,0) << endl;
   cout << "resultC = " << ci.resultC(0,0) << endl;
   cout << "ch5 = "<< NewCalTable::NCTtestvalueC(0,0,5,itime,refTime,tint) << endl;
+  */
 
   Vector<Double> f(40); indgen(f);
   f-=3.1;  
@@ -181,7 +183,7 @@ void doTest3 (Bool verbose=False) {
   timer.mark();
 
   // Make a CTPatchedInterp  (no freq interp yet)
-  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear");
+  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"linear","none",nSpw);
   //  ci.state();
 
   Int N=60*60*nhour;

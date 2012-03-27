@@ -988,13 +988,24 @@ ms::statistics(const std::string& column,
 
              if (mycolumn == "DATA" || mycolumn == "CORRECTED" || mycolumn == "MODEL") {
                  ROVisibilityIterator::DataColumn dc;
-                 if(mycolumn == "DATA")
+                 if(mycolumn == "DATA"){
                    dc = ROVisibilityIterator::Observed;
-                 else if(mycolumn == "CORRECTED")
+		   if(vi.msColumns().data().isNull()){
+		     throw(AipsError("Data column is not present"));
+		   }
+		 }
+                 else if(mycolumn == "CORRECTED"){
                    dc = ROVisibilityIterator::Corrected;
-                 else
+		   if(vi.msColumns().correctedData().isNull()){
+		     throw(AipsError("Corrected Data column is not present"));
+		   }
+		 }
+                 else{
                    dc = ROVisibilityIterator::Model;
-                 
+		   if(vi.msColumns().modelData().isNull()){
+		     throw(AipsError("Model Data column is not present"));
+		   }
+                 }
                  vi.visibility(static_cast<Cube<Complex>&>(data_complex_chunk),
                                dc);
                  

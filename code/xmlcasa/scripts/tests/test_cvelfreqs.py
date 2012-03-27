@@ -1828,7 +1828,7 @@ class cvelfreqs_test(unittest.TestCase):
 
         if(not os.path.exists('test_uvcontsub2.ms')):
             print "Copying test data ..."
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub2/test_uvcontsub2.ms .')
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/cvel/test_uvcontsub2.ms .')
             
     def tearDown(self):
         os.system('rm -rf sample.ms sample2.ms sample3.ms sample4.ms sampler.ms')   

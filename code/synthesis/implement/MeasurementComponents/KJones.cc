@@ -116,6 +116,9 @@ void KJones::setSolve(const Record& solve) {
 
 void KJones::specify(const Record& specify) {
 
+  return SolvableVisCal::specify(specify);
+
+  /* NECALTABLE!!
 
   LogMessage message(LogOrigin("SolvableVisCal","specify"));
 
@@ -133,14 +136,6 @@ void KJones::specify(const Record& specify) {
   
   IPosition ip0(4,0,0,0,0);
   IPosition ip1(4,0,0,0,0);
-
-/*   Not yet supporting time....
-  if (specify.isDefined("time")) {
-    // TBD: the time label
-    cout << "time = " << specify.asString("time") << endl;
-    cout << "refTime() = " << refTime() << endl;
-  }
-*/
 
   if (specify.isDefined("spw")) {
     // TBD: the spws (in order) identifying the solutions
@@ -262,6 +257,8 @@ void KJones::specify(const Record& specify) {
       }
     }
   }
+
+*/
 }
 
 void KJones::calcAllJones() {
@@ -273,12 +270,12 @@ void KJones::calcAllJones() {
 
   Vector<Complex> oneJones;
   Vector<Bool> oneJOK;
-  Vector<Complex> onePar;
+  Vector<Float> onePar;
   Vector<Bool> onePOK;
 
   ArrayIterator<Complex> Jiter(currJElem(),1);
   ArrayIterator<Bool>    JOKiter(currJElemOK(),1);
-  ArrayIterator<Complex> Piter(currCPar(),1);
+  ArrayIterator<Float>   Piter(currRPar(),1);
   ArrayIterator<Bool>    POKiter(currParOK(),1);
 
   Double phase(0.0);
@@ -293,9 +290,7 @@ void KJones::calcAllJones() {
 
       for (Int ipar=0;ipar<nPar();++ipar) {
 	if (onePOK(ipar)) { 
-	  
-
-	  phase=2.0*C::pi*real(onePar(ipar))*(currFreq()(ich)-KrefFreqs_(currSpw()));
+	  phase=2.0*C::pi*onePar(ipar)*(currFreq()(ich)-KrefFreqs_(currSpw()));
 	  oneJones(ipar)=Complex(cos(phase),sin(phase));
 	  oneJOK(ipar)=True;
 	}
@@ -321,7 +316,8 @@ void KJones::calcAllJones() {
 // Simple FFT search solver
 void KJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
 
-  if (prtlev()>4) cout << "   K::selfGatherAndSolve(ve)" << endl;
+  //if (prtlev()>4) 
+  cout << "   K::selfGatherAndSolve(ve)" << endl;
 
   // Inform logger/history
   logSink() << "Solving for " << typeName()
@@ -399,8 +395,8 @@ void KJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
     Int thisSpw=spwMap()(svb.spectralWindow());
     slotidx(thisSpw)++;
 
-    // Fill solveCPar() with 1, nominally, and flagged
-    solveCPar()=Complex(1.0);
+    // Fill solveRPar() with 0, nominally, and flagged
+    solveRPar()=0.0;
     solveParOK()=False;
     
     if (vbOk && svb.nRow()>0) {
@@ -455,16 +451,17 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 
   Int nChan=vb.nChannel();
 
-  solveCPar()=Complex(0.0);
+  solveRPar()=0.0;
   solveParOK()=False;
 
-  //  cout << "solveCPar().shape() = " << solveCPar().shape() << endl;
+  //  cout << "solveRPar().shape() = " << solveRPar().shape() << endl;
   //  cout << "vb.nCorr() = " << vb.nCorr() << endl;
   //  cout << "vb.corrType() = " << vb.corrType() << endl;
 
   // FFT parallel-hands only
-  Int nC= (vb.nCorr()>1 ? 2 : 1);  // number of parallel hands
-  Int sC= (vb.nCorr()>2 ? 3 : 1);  // step by 3 for full pol data
+  Int nCorr=vb.nCorr();
+  Int nC= (nCorr>1 ? 2 : 1);  // number of parallel hands
+  Int sC= (nCorr>2 ? 3 : 1);  // step by 3 for full pol data
 
   // I/O shapes
   Int fact(8);
@@ -541,13 +538,13 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 	  if (vb.antenna1()(irow)==refant()) {
 	    //	    cout << vb.antenna2()(irow) 
 	    //		 << ", pol=" << icor << " delay(nsec)="<< -delay; 
-	    solveCPar()(icor,0,vb.antenna2()(irow))=-Complex(delay);
+	    solveRPar()(icor,0,vb.antenna2()(irow))=-delay;
 	    solveParOK()(icor,0,vb.antenna2()(irow))=True;
 	  }
 	  else if (vb.antenna2()(irow)==refant()) {
 	    //	    cout << vb.antenna1()(irow) 
 	    //		 << ", pol=" << icor << " delay(nsec)="<< delay;
-	    solveCPar()(icor,0,vb.antenna1()(irow))=Complex(delay);
+	    solveRPar()(icor,0,vb.antenna1()(irow))=delay;
 	    solveParOK()(icor,0,vb.antenna1()(irow))=True;
 	  }
 	  //	  cout << " (refant ID=" << refant() << ")" << endl;
@@ -580,7 +577,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   } // irow
 
   // Ensure refant has zero delay and is NOT flagged
-  solveCPar()(Slice(),Slice(),Slice(refant(),1,1)) = 0.0;
+  solveRPar()(Slice(),Slice(),Slice(refant(),1,1)) = 0.0;
   solveParOK()(Slice(),Slice(),Slice(refant(),1,1)) = True;
 
   /*  
@@ -631,7 +628,7 @@ KcrossJones::~KcrossJones() {
 // Do the FFTs
 void KcrossJones::solveOneVB(const VisBuffer& vb) {
 
-  solveCPar()=Complex(0.0);
+  solveRPar()=0.0;
   solveParOK()=False;
 
   Int fact(8);
@@ -702,7 +699,7 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
   delay/=df;
   delay/=1.0e-9;
 
-  solveCPar()(Slice(0,1,1),Slice(),Slice())=Complex(delay);
+  solveRPar()(Slice(0,1,1),Slice(),Slice())=delay;
   solveParOK()=True;
 
   logSink() << " Time="<< MVTime(refTime()/C::day).string(MVTime::YMD,7)
@@ -726,14 +723,6 @@ KMBDJones::KMBDJones(VisSet& vs) :
   //  TBD: these should be in the caltable!!
   KrefFreqs_.resize(nSpw());
   KrefFreqs_.set(0.0);
-
-  /*  
-  MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
-  MSSpWindowColumns msCol(msSpw);
-  msCol.refFrequency().getColumn(KrefFreqs_,True);
-  KrefFreqs_/=1.0e9;  // in GHz
-  */
-
 }
 
 KMBDJones::KMBDJones(const Int& nAnt) :
@@ -795,26 +784,30 @@ KAntPosJones::~KAntPosJones() {
 
 void KAntPosJones::setApply(const Record& apply) {
 
+  //  TBD: Handle missing solutions in spw 0?
+
+  // Force spwmap to all 0  (antpos is not spw-dep)
+  //  NB: this is required before calling parents, because
+  //   SVC::setApply sets up the CTPatchedInterp with spwMap()
+  logSink() << " (" << this->typeName() 
+	    << ": Overriding with spwmap=[0] since " << this->typeName() 
+	    << " is not spw-dependent)"
+	    << LogIO::POST;
+  spwMap().assign(Vector<Int>(1,0));
+
+  // Remove spwmap from record, and pass along to generic code
+  Record newapply;
+  newapply=apply;
+  if (newapply.isDefined("spwmap"))
+    newapply.removeField("spwmap");
+  
   // Call parent to do conventional things
-  KJones::setApply(apply);
-
-  //  cout << "spwMap() = " << spwMap();
-
-  // Reset spwmap to use spw 0 for all spws
-  if (cs().spwOK()(0)) {
-    spwMap() = Vector<Int>(nSpw(),0);
-    ci().setSpwMap(spwMap());
-  }
-  else
-    throw(AipsError("No KAntPos solutions available for spw 0"));
-
-  //  cout << "->" << spwMap() << endl;
+  KJones::setApply(newapply);
 
 }
 
 
 void KAntPosJones::specify(const Record& specify) {
-
 
   LogMessage message(LogOrigin("KAntPosJones","specify"));
 
@@ -841,8 +834,8 @@ void KAntPosJones::specify(const Record& specify) {
     }
   }
   
-  IPosition ip0(4,0,0,0,0);
-  IPosition ip1(4,2,0,0,0);
+  IPosition ip0(3,0,0,0);
+  IPosition ip1(3,2,0,0);
 
   if (specify.isDefined("antenna")) {
     // TBD: the antennas (in order) identifying the solutions
@@ -879,6 +872,9 @@ void KAntPosJones::specify(const Record& specify) {
 
   //  cout << "parameters = " << parameters << endl;
 
+  // Always _ONLY_ spw=0 for antpos corrections
+  currSpw()=0;
+
   // Loop over specified antennas
   Int ipar(0);
   for (Int iant=0;iant<Nant;++iant) {
@@ -902,16 +898,17 @@ void KAntPosJones::specify(const Record& specify) {
     for (Int ipar0=0;ipar0<3;++ipar0) {
       ip1(0)=ip0(0)=ipar0;
 
-      Array<Complex> slice(cs().par(0)(ip0,ip1));
+      Array<Float> sl(solveAllRPar()(ip0,ip1));
     
       // Acccumulation is addition for ant pos corrections
-      slice+=Complex(apar(ipar0),0.0);
+      sl+=Float(apar(ipar0));
       ++ipar;
     }
   }
-  
-  //  cout << "Ant pos: cs().par(0) = " << cs().par(0) << endl;
 
+  // Store in the memory caltable
+  //  (currSpw()=0 is the only one we need)
+  keepNCT();
 
 }
 
@@ -947,14 +944,13 @@ void KAntPosJones::calcAllJones() {
   Double phase(0.0);
   for (Int iant=0; iant<nAnt(); iant++) {
 
-    Vector<Complex> pars(currCPar().xyPlane(iant).column(0));
-    Vector<Float> rpars=real(pars);
+    Vector<Float> rpars(currRPar().xyPlane(iant).column(0));
     Vector<Double> dpars(rpars.nelements());
     convertArray(dpars,rpars);
 
     // Only do complicated calculation if there 
     //   is a non-zero ant pos error
-    if (max(amplitude(pars))>0.0) {
+    if (max(abs(rpars))>0.0) {
 
       //      cout << iant << " ";
       //      cout << dpars << " ";

@@ -109,18 +109,19 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 			tb.close()
 			if ((nprocrows>0) and (a0>-1)):
 				tb.open(tsortvis+'/PROCESSOR')
+				therow = tb.nrows()-1 
 				mode0 = tb.getcell('MODE_ID',a0)
 				tb.close()
 				offset = 1
 				if nprocrows>1:
 					casalog.post("   Modifying PROCESSOR subtable ...")
-					while (nprocrows>1):
+					while (nprocrows>1 and therow>0):
 						tb.open(tsortvis+'/PROCESSOR', nomodify=False)
 						therow = tb.nrows()-offset
 						if(tb.getcell('MODE_ID',therow)!=mode0):
 							tb.removerows([therow])
 						else:
-							offset = 2
+							offset += 1
 						nprocrows = tb.nrows()
 					casalog.post("... done.")
 
