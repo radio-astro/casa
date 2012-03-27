@@ -1700,6 +1700,8 @@ void STGrid::fillMainColumns( Table &tab )
   Vector<Double> srcpm = rec.asArrayDouble( "SRCPROPERMOTION" ) ;
   Vector<Double> srcdir = rec.asArrayDouble( "SRCDIRECTION" ) ;
   Vector<Double> scanrate = rec.asArrayDouble( "SCANRATE" ) ;
+  Double time = rec.asDouble( "TIME" ) ;
+  Double interval = rec.asDouble( "INTERVAL" ) ;
 
   // fill columns
   Int nrow = tab.nrow() ;
@@ -1722,6 +1724,8 @@ void STGrid::fillMainColumns( Table &tab )
   ArrayColumn<Double> srcpmCol( tab, "SRCPROPERMOTION" ) ;
   ArrayColumn<Double> srcdirCol( tab, "SRCDIRECTION" ) ;
   ArrayColumn<Double> scanrateCol( tab, "SCANRATE" ) ;
+  ScalarColumn<Double> timeCol( tab, "TIME" ) ;
+  ScalarColumn<Double> intervalCol( tab, "INTERVAL" ) ;
   for ( Int i = 0 ; i < nrow ; i++ ) {
     scannoCol.put( i, (uInt)i ) ;
     ifnoCol.put( i, (uInt)ifno_ ) ;
@@ -1742,6 +1746,8 @@ void STGrid::fillMainColumns( Table &tab )
     srcpmCol.put( i, srcpm ) ;
     srcdirCol.put( i, srcdir ) ;
     scanrateCol.put( i, scanrate ) ;
+    timeCol.put( i, time ) ;
+    intervalCol.put( i, interval ) ;
   }
 }
 

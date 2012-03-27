@@ -104,35 +104,27 @@ class NROFITSDataset : public NRODataset
 
   // Read char data
   int readHeader( string &v, char *name ) ;
-  int readTable( char *v, char *name ) ;
-  int readTable( char *v, char *name, int clen, int idx ) ;
-  int readTable( vector<char *> &v, char *name, int idx ) ;
-  int readColumn( vector<string> &v, char *name ) ;
-  int readColumn( vector<string> &v, char *name, int idx ) ;
+  int readTable( char *v, char *name, int clen, int idx=0 ) ;
+  int readTable( vector<char *> &v, char *name, int idx=0 ) ;
+  int readColumn( vector<string> &v, char *name, int idx=0 ) ;
 
   // Read int data
   int readHeader( int &v, char *name, int b ) ;
-  int readTable( int &v, char *name, int b ) ;
-  int readTable( int &v, char *name, int b, int idx ) ;
-  int readTable( vector<int> &v, char *name, int b, int idx ) ;
-  int readColumn( vector<int> &v, char *name, int b ) ;
-  int readColumn( vector<int> &v, char *name, int b, int idx ) ;
+  int readTable( int &v, char *name, int b, int idx=0 ) ;
+  int readTable( vector<int> &v, char *name, int b, int idx=0 ) ;
+  int readColumn( vector<int> &v, char *name, int b, int idx=0 ) ;
 
   // Read float data
   int readHeader( float &v, char *name, int b ) ;
-  int readTable( float &v, char *name, int b ) ;
-  int readTable( float &v, char *name, int b, int idx ) ;
-  int readTable( vector<float> &v, char *name, int b, int idx ) ;
-  int readColumn( vector<float> &v, char *name, int b ) ;
-  int readColumn( vector<float> &v, char *name, int b, int idx ) ;
+  int readTable( float &v, char *name, int b, int idx=0 ) ;
+  int readTable( vector<float> &v, char *name, int b, int idx=0 ) ;
+  int readColumn( vector<float> &v, char *name, int b, int idx=0 ) ;
 
   // Read double data
   int readHeader( double &v, char *name, int b ) ;
-  int readTable( double &v, char *name, int b ) ;
-  int readTable( double &v, char *name, int b, int idx ) ;
-  int readTable( vector<double> &v, char *name, int b, int idx ) ;
-  int readColumn( vector<double> &v, char *name, int b ) ;
-  int readColumn( vector<double> &v, char *name, int b, int idx ) ;
+  int readTable( double &v, char *name, int b, int idx=0 ) ;
+  int readTable( vector<double> &v, char *name, int b, int idx=0 ) ;
+  int readColumn( vector<double> &v, char *name, int b, int idx=0 ) ;
 
   // read ARRY
   int readARRY() ;
@@ -154,6 +146,9 @@ class NROFITSDataset : public NRODataset
 
   // get offset bytes for attributes
   int getOffset( char *name ) ;
+
+  // move pointer to target position
+  int movePointer( char *name, int idx=0 ) ;
 
   // convert frequency frame
 //   virtual double toLSR( double v, double t, double x, double y ) ;
