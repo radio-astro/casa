@@ -38,33 +38,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   TableExprNode* MSSpwParse::node_p = 0x0;
   Vector<Int> MSSpwParse::idList;
   Matrix<Int> MSSpwParse::chanList; 
+  TableExprNode MSSpwParse::columnAsTEN_p;
   //# Constructor
+  //
+  //------------------------------------------------------------------
+  //
   MSSpwParse::MSSpwParse ()
     : MSParse()
   {
-    //    cout << "Spw cleanup()" << endl;
     if (MSSpwParse::node_p!=0x0) delete MSSpwParse::node_p;
     MSSpwParse::node_p=0x0;
     node_p = new TableExprNode();
   }
-  
+  //
+  //------------------------------------------------------------------
+  //
   //# Constructor with given ms name.
   MSSpwParse::MSSpwParse (const MeasurementSet* ms)
     : MSParse(ms, "Spw")
   {
     idList.resize(0);
-    //    cout << "Spw cleanup(X)" << endl;
     if(MSSpwParse::node_p) delete MSSpwParse::node_p;
     node_p = new TableExprNode();
-    //    setMS(ms);
   }
-  
+  //
+  //------------------------------------------------------------------
+  //
+  MSSpwParse::MSSpwParse (const MSSpectralWindow& spwSubTable, 
+			  const MSDataDescription& ddSubTable,
+			  const TableExprNode& columnAsTEN):
+    MSParse(), spwSubTable_p(spwSubTable), ddSubTable_p(ddSubTable)
+  {
+    idList.resize(0);
+    if(MSSpwParse::node_p) delete MSSpwParse::node_p;
+    node_p = new TableExprNode();
+    columnAsTEN_p = columnAsTEN;
+  }
+  //
+  //------------------------------------------------------------------
+  //
   const TableExprNode *MSSpwParse::selectSpwIdsFromIDList(const Vector<Int>& SpwIds,
 							  const Bool addTen,
 							  const Bool addIDs)
   {
-    ROMSSpWindowColumns msSpwSubTable(ms()->spectralWindow());
-    ROMSDataDescColumns msDataDescSubTable(ms()->dataDescription());
+    // ROMSSpWindowColumns msSpwSubTable(ms()->spectralWindow());
+    // ROMSDataDescColumns msDataDescSubTable(ms()->dataDescription());
+    ROMSSpWindowColumns msSpwSubTable(spwSubTable_p);
+    ROMSDataDescColumns msDataDescSubTable(ddSubTable_p);
 
     Vector<Int> mapDDID2SpwID, notFoundIDs;
     Int nSpwRows, nDDIDRows;
@@ -91,7 +111,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    {
 	      if (addTen)
 		{
-		  TableExprNode tmp=((ms()->col(DATA_DESC_ID)==i));
+		  //		  TableExprNode tmp=((ms()->col(DATA_DESC_ID)==i));
+		  TableExprNode tmp=((columnAsTEN_p==i));
 		  addCondition(condition, tmp);
 		}
 	      // if (condition.isNull())
@@ -127,8 +148,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   const TableExprNode *MSSpwParse::selectSpwIdsFromFreqList(const Vector<Float>& freq,
 							    const Float factor)
   {
-    ROMSSpWindowColumns msSpwSubTable(ms()->spectralWindow());
-    ROMSDataDescColumns msDataDescSubTable(ms()->dataDescription());
+    // ROMSSpWindowColumns msSpwSubTable(ms()->spectralWindow());
+    // ROMSDataDescColumns msDataDescSubTable(ms()->dataDescription());
+    ROMSSpWindowColumns msSpwSubTable(spwSubTable_p);
+    ROMSDataDescColumns msDataDescSubTable(ddSubTable_p);
     Vector<Float> mapFreq2SpwID;
     Vector<Int> mapDDID2SpwID;
     Int nSpwRows, nDDIDRows;
@@ -168,7 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for(Int ddid=0;ddid<nDDIDRows;ddid++)
 	      if (mapDDID2SpwID(ddid) == spw)
 		{
-		  TableExprNode tmp=((ms()->col(DATA_DESC_ID)==ddid));
+		  TableExprNode tmp=((columnAsTEN_p==ddid));
 		  addCondition(condition, tmp);
 		  // if (condition.isNull())
 		  //   condition = ((ms()->col(DATA_DESC_ID)==ddid));
@@ -188,7 +211,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     addCondition(*node_p, condition);
     return node_p;
   }
-
+  //
+  //------------------------------------------------------------------
+  //
   void MSSpwParse::selectChannelsFromIDList(Vector<Int>& spwIds,
                                             Vector<Int>& chanIDList,
                                             Int nFSpec)
@@ -218,29 +243,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     spwIds.resize(nSpw);
     for (Int i=0;i<nSpw;i++)
       spwIds[i] = chanList(i,0);
-
-    // Int n=chanList.shape()(0),
-    //   nSpw = spwIds.nelements(),
-    //   m=nSpw*nFSpec,loc=n,k=0;
-
-    // if ((chanIDList[k] != -1) && (chanIDList[k+1] != -1))
-    //   {
-    // 	chanList.resize(n+m,4,True);
-    // 	for(Int i=0;i<nSpw;i++)
-    // 	  {
-    // 	    for(Int j=0;j<nFSpec;j++)
-    // 	      {
-    // 		chanList(loc,0) = spwIds(i);
-    // 		chanList(loc,1) = chanIDList(k++);
-    // 		chanList(loc,2) = chanIDList(k++);
-    // 		chanList(loc,3) = chanIDList(k++);
-    // 		loc++;
-    // 	      }
-    // 	  }
-    //   }
   }
-
-  
+  //
+  //------------------------------------------------------------------
+  //
   void MSSpwParse::selectChannelsFromDefaultList(Vector<Int>& spwIds,
                                                  Vector<Int>& chanIDList)
   {
@@ -261,13 +267,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	loc++;
       }
   }
-
-  
+  //
+  //------------------------------------------------------------------
+  //
   const TableExprNode* MSSpwParse::node()
   {
     return node_p;
   }
-
+  //
+  //------------------------------------------------------------------
+  //
   const TableExprNode* MSSpwParse::endOfCeremony(const TableExprNode& ten)
   {
     (void)ten;
