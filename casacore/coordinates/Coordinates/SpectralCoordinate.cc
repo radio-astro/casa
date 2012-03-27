@@ -2431,17 +2431,6 @@ void SpectralCoordinate::copy (const SpectralCoordinate &other) {
     }
 }
 
-void SpectralCoordinate::replaceTabulatedFrequencies(
-	const Vector<Double>& freqs
-) {
-	if (! _tabular.get()) {
-		throw AipsError(
-			"This SpectralCoordinate object does not use a tabulated coordinate"
-		);
-	}
-	_setTabulatedFrequencies(freqs);
-}
-
 
 void SpectralCoordinate::_setTabulatedFrequencies(const Vector<Double>& freqs) {
 	Vector<Double> channels(freqs.nelements());
