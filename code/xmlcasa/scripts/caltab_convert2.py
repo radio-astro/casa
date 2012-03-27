@@ -174,19 +174,33 @@ def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 	arg = 'cp -r ' + ms + '/FIELD ' + caltabnew
 	os.system( arg )
 
-	arg = 'cp -r ' + caltabold + '/CAL_HISTORY ' + caltabnew + '/HISTORY'
-	os.system( arg )
+#	arg = 'cp -r ' + caltabold + '/CAL_HISTORY ' + caltabnew + '/HISTORY'
+#	os.system( arg )
 
+  	tbHis = casa.__tablehome__.create()
+	tbHis.open(ms+'/HISTORY')
+	tbHis.copy(newtablename=caltabnew+'/HISTORY',deep=True,valuecopy=True,norows=True)
+	tbHis.close()
+	del tbHis
+	
 	arg = 'cp -r ' + ms + '/SPECTRAL_WINDOW ' + caltabnew \
 		+ '/SPECTRAL_WINDOW'
 	os.system( arg )
 
 
-	# Add the keywords to the main table of the new-format caltable
+	# Add the info and keywords to the main table of the new-format caltable
+	tabinfo=tbOld.info()
 
+	tbNew.putinfo(tabinfo)
+
+	if (pTypeTemp=='complex'):
+		tbNew.putkeyword( 'ParType', 'Complex' )
+	if (pTypeTemp=='float'):
+		tbNew.putkeyword( 'ParType', 'Float' )
+	
 	tbNew.putkeyword( 'MSName', ms )
-	tbNew.putkeyword( 'Type', pTypeTemp.upper() )
-
+	tbNew.putkeyword( 'VisCal', tabinfo['subType'] )
+			  
 	polBasis = get_polbasis( ms )
 	tbNew.putkeyword( 'PolBasis', polBasis )
 
