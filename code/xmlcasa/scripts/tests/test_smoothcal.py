@@ -31,8 +31,10 @@ class smoothcal_test(unittest.TestCase):
         default(smoothcal)
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/smoothcal/'
         shutil.copytree(datapath+self.msfile, self.msfile)
-        shutil.copytree(datapath+self.gcal, self.gcal)
-        shutil.copytree(datapath+self.ref, self.ref)
+#        shutil.copytree(datapath+self.gcal, self.gcal)
+#        shutil.copytree(datapath+self.ref, self.ref)
+        caltabconvert(caltabold=datapath+self.gcal,vis=self.msfile,caltabnew=self.gcal)
+        caltabconvert(caltabold=datapath+self.ref,vis=self.msfile,caltabnew=self.ref)
     
     def tearDown(self):
         if (os.path.exists(self.msfile)):
@@ -117,9 +119,10 @@ class smoothcal_test(unittest.TestCase):
         self.res=smoothcal(vis=self.msfile,tablein=self.gcal,caltable=self.out,smoothtype='mean',
                          smoothtime=7200.)
         self.assertEqual(self.res,None)
-        refcol = self.getvarcol(self.out, 'GAIN')
-        smcol = self.getvarcol(self.out, 'GAIN')
+        refcol = self.getvarcol(self.ref, 'CPARAM')
+        smcol = self.getvarcol(self.out, 'CPARAM')
         nrows = len(refcol)
+        print 'nrows=',nrows
         EPS = 1e-5;  # Logical "zero"
         # Loop over every row,pol and get the data
         for i in range(1,nrows,1) :

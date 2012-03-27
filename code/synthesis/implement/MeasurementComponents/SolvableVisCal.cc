@@ -47,6 +47,7 @@
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <synthesis/CalTables/CTColumns.h>
+#include <synthesis/CalTables/CTGlobals.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <synthesis/CalTables/CTInterface.h>
 #include <ms/MeasurementSets/MSSelection.h>
@@ -2835,7 +2836,8 @@ void SolvableVisCal::smooth(Vector<Int>& fields,
 
   if (smoothable()) 
     // Call CalSet's global smooth method
-    casa::smooth(cs(),smtype,smtime,fields);
+    //    casa::smooth(cs(),smtype,smtime,fields);
+    casa::smoothCT(*ct_,smtype,smtime,fields);
   else
     throw(AipsError("This type does not support smoothing!"));
 
