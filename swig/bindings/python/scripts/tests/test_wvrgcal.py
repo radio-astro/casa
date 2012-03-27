@@ -13,6 +13,7 @@ class wvrgcal_test(unittest.TestCase):
     vis_f = 'multisource_unittest.ms'
     vis_g = 'M51.ms'
     ref = 'multisource_unittest_reference.wvr'
+    ref2 = 'multisource_unittest_reference-newformat.wvr'
     out = 'mycaltable.wvr'
     rval = False
     
@@ -23,6 +24,8 @@ class wvrgcal_test(unittest.TestCase):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/multisource_unittest.ms .')
         if(not os.path.exists(self.ref)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/multisource_unittest_reference.wvr .')
+        if(not os.path.exists(self.ref2)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/multisource_unittest_reference-newformat.wvr .')
         if(not os.path.exists(self.vis_g)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/exportasdm/input/M51.ms .')
 
@@ -32,6 +35,7 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf myinput.ms')
         os.system('rm -rf ' + self.out)
         os.system('rm -rf ' + self.ref)
+        os.system('rm -rf ' + self.ref2)
 
     def compTables(self, referencetab, testtab, excludecols):
 
@@ -102,9 +106,25 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, wvrflag=['0', '1'])
 
         if(self.rval):
-            self.rval = self.compTables(self.ref, self.out,
-                                        ['REF_ANT', 'REF_FEED', 'REF_RECEPTOR', 'REF_FREQUENCY',
-                                         'REF_DIRECTION'])
+            if os.path.exists(self.out+'/CAL_DESC'):
+                self.rval = self.compTables(self.ref, self.out,
+                                            ['REF_ANT', 'REF_FEED', 'REF_RECEPTOR', 'REF_FREQUENCY',
+                                             'REF_DIRECTION'])
+            else:
+                self.rval = self.compTables(self.ref2, self.out,
+                                            ['TIME',
+                                             'FIELD_ID',
+                                             'SPECTRAL_WINDOW_ID',
+                                             'ANTENNA1',
+                                             'ANTENNA2',
+                                             'INTERVAL',
+                                             'SCAN_NUMBER',
+                                             'CPARAM',
+                                             'PARAMERR',
+                                             'FLAG',
+                                             'SNR',
+                                             'WEIGHT']
+                                            )
 
         self.assertTrue(self.rval)
 

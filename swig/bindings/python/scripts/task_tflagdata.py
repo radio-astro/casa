@@ -281,6 +281,8 @@ def tflagdata(vis,
                 # default
                 correlation = "ABS_ALL"
 
+            agent_pars['ntime'] = newtime
+            agent_pars['combinescans'] = combinescans   
             agent_pars['winsize'] = winsize
             agent_pars['timedevscale'] = timedevscale
             agent_pars['freqdevscale'] = freqdevscale
@@ -306,7 +308,8 @@ def tflagdata(vis,
             expr = delspace(correlation, '_')
             correlation = expr
 
-            sel_pars = sel_pars+' winsize='+str(winsize)+' timedev='+(str(timedev)).replace(' ','')+\
+            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+\
+                    ' winsize='+str(winsize)+' timedev='+(str(timedev)).replace(' ','')+\
                     ' freqdev='+(str(freqdev)).replace(' ','')+' timedevscale='+str(timedevscale)+\
                     ' freqdevscale='+str(freqdevscale)+' spectralmax='+str(spectralmax)+\
                     ' spectralmin='+str(spectralmin)

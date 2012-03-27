@@ -188,7 +188,7 @@ if(mystep in thesteps):
     if(casadef.casa_version>='3.4.0'):
 
         for name in basename:
-            os.system('rm -rf cal-tsys_'+name)
+            os.system('rm -rf cal-tsys_'+name+'.fdm')
             gencal(
                 vis=name+'.ms',
                 caltype='tsys', 

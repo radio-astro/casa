@@ -460,7 +460,7 @@ class pimager():
               hostnames='',  
               numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
-              numthreads=-1,
+              numthreads=1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''):
 
@@ -988,7 +988,7 @@ class pimager():
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
               robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -1488,7 +1488,7 @@ class pimager():
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
                      numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0, npixels=0, 
-                     contclean=False, visinmem=False, maskimage='lala.mask', numthreads=-1,
+                     contclean=False, visinmem=False, maskimage='lala.mask', numthreads=1,
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
         """

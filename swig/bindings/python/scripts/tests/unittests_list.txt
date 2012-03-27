@@ -102,3 +102,4 @@ test_uvcontsub3			rreid@nrao.edu
 test_vishead                    jkern@nrao.edu
 test_visstat                    jkern@nrao.edu
 test_vpmanager                  dpetry@eso.org
+test_wvrgcal			dpetry@eso.org
