@@ -1,4 +1,4 @@
-# wrapper script for the cvel regression test
+# wrapper script for the cvel and clean regression test
 import sys
 import os
 import string
@@ -43,7 +43,7 @@ def run( fetch=False ):
     
     #####locate the regression script
     try: 
-        lepath=locatescript('cvel_regression.py')
+        lepath=locatescript('cvel+clean_regression.py')
         print 'Script used is ',lepath
         execfile(lepath, gl, pass_on)
     except:
