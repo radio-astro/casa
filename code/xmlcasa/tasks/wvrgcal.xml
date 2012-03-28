@@ -106,7 +106,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
              default: 1
 
   segsource -- Do a new coefficient calculation for each source
-             default: False
+             default: True
 
   reversespw -- Reverse the sign of the correction for the listed SPWs
              default: '' (none), example: reversespw='0~2,4'; spectral windows 0,1,2,4
