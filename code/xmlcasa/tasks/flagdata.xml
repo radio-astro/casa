@@ -8,7 +8,7 @@
 <task type="function" name="flagdata" category="editing">
         <shortdescription>\n ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
         <shortdescription>*******            USE THE TASK tflagdata            *******\n</shortdescription>
-        <shortdescription>All purpose flagging task based on selections</shortdescription>
+        <shortdescription> All purpose flagging task based on selections</shortdescription>
         <description>
         The task will select a subset of data explicitly for flagging,
         quacking, clipping, autocorrelation flagging, or flagging

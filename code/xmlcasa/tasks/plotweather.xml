@@ -28,8 +28,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 </input>
 
-<returns name="tauZ">
-<value>meanTau</value>
+<returns name="tauZ" type="double">
+<description>meanTau</description>
 </returns>
 
 
