@@ -30,7 +30,7 @@ casa_add_python( tools tools_regressions_python python/${PYTHONV}/regressions
   cleanchan_regression.py
   cleanhelper_regression.py
   coordsystest_regression.py
-  cvel_regression.py
+  cvel+clean_regression.py
   cvel_regression2.py
   fits-import-export_regression.py
   fls3a_hi_regression.py

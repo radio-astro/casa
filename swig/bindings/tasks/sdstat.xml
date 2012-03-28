@@ -258,13 +258,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         for single-dish spectra.  It assumes that the spectra have
         been calibrated.  Furthermore, it assumes that any
         time and channel averaging/smoothing has also already been done as
-        there are no controls for these.  Note that you can run sdcal
-        with calmode='none' and do selection, writing out a new
-        scantable.
+        there are no controls for these. 
 
         Note that multiple scans and IFs can in principle be handled, but
-        we recommend that you use scanlist, field, iflist, and pollist to give a
-        single selection for each run.
+        we recommend that you use scanlist, field, iflist, and pollist to give 
+        a single selection for each run.
 
         WARNING: If you do have multiple scantable rows, then the returning 
         values will be lists.

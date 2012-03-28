@@ -30,7 +30,7 @@ casa_add_python( tools tools_regressions_tests_python python/${PYTHONV}/regressi
   cleanchan_test.py
   cleanhelper_test.py
   coordsystest.py
-  cvel_test.py
+  cvel+clean_test.py
   cvel_test2.py
   equinox_vis.py
   fits-import-export.py

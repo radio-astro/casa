@@ -19,7 +19,7 @@ calstat_test                    jmlarsen eso.org
 cleanhelper_test                rindebet nrao.edu
 cleanchan_test                  rindebet nrao.edu
 coordsystest_regression         dpetry eso.org
-cvel_test                       dpetry eso.org
+cvel+clean_test                 dpetry eso.org
 #cvel_test2                     dpetry eso.org
 equinox_vis                     rreid nrao.edu
 fits-import-export              dpetry eso.org
