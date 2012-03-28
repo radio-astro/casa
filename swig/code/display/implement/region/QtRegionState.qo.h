@@ -89,6 +89,9 @@ namespace casa {
 		void outputRegions( const QString &what, const QString &name, const QString &type, const QString &csys );
 		void loadRegions( bool &handled, const QString &path, const QString &type );
 
+	    public slots:
+		void stackChange(QWidget*);
+
 	    protected slots:
 		// updates canvas with any line changes
 		void state_change( int );
@@ -131,6 +134,9 @@ namespace casa {
 		QString last_save_directory;
 
 		std::string bounding_index_to_string( int index ) const;
+
+	    private:
+		unsigned int setting_combo_box;
 
 	};
     }

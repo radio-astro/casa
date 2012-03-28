@@ -24,8 +24,10 @@ namespace casa {
 	}
 
 	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QWidget *parent ) :
-					QFrame(parent), selected_statistics(-1), region_(r) {
+					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0) {
 	    setupUi(this);
+
+	    // use common tab state from dock...
 	    std::pair<int,int> &tab_state = region_->tabState( );
 	    if ( tab_state.first < 0 ) {
 		QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
@@ -42,6 +44,23 @@ namespace casa {
 			tabs.first( )->setCurrentIndex(tab_state.second);
 		}
 	    }
+
+	    // use common coordinate state from dock...
+	    std::map<std::string,int> &coordinate_state = region_->coordState( );
+	    QList<QComboBox*> combos = coordinateTab->findChildren<QComboBox*>( );
+	    if ( coordinate_state.size( ) == 0 ) {
+		for (int i = 0; i < combos.size(); ++i) {
+		    const QComboBox *combo = combos.at(i);
+		    coordinate_state.insert( std::map<std::string,int>::value_type(combo->objectName( ).toStdString( ), combo->currentIndex( ) ) );
+		}
+	    } else {
+		for (int i = 0; i < combos.size(); ++i) {
+		    QComboBox *combo = combos[i];
+		    std::map<std::string,int>::iterator it = coordinate_state.find(combo->objectName( ).toStdString( ));
+		    if ( it == coordinate_state.end( ) ) continue;
+		    combo->setCurrentIndex(it->second);
+		}
+	    }	      
 
 	    //setLineWidth(0);
 	    setFrameShape(QFrame::NoFrame);
@@ -304,6 +323,31 @@ namespace casa {
 
 	bool QtRegionState::isAnnotation( ) const { region_annotation->isChecked( ) ? true : false; }
 
+	void QtRegionState::stackChange( QWidget *top ) {
+
+	    if ( top == this ) {
+		QString state = states->tabText(categories->currentIndex( ));
+		if ( state == "coordinates" ) {
+		    bool updated_comboboxes = false;
+		    std::map<std::string,int> &coordinate_state = region_->coordState( );
+		    QList<QComboBox*> combos = coordinateTab->findChildren<QComboBox*>( );
+		    for (int i = 0; i < combos.size(); ++i) {
+			QComboBox *combo = combos[i];
+			std::map<std::string,int>::iterator it = coordinate_state.find(combo->objectName( ).toStdString( ));
+			if ( it == coordinate_state.end( ) ) continue;
+			if ( it->second != combo->currentIndex( ) ) {
+			    ++setting_combo_box;
+			    combo->setCurrentIndex(it->second);
+			    updated_comboboxes = true;
+			    --setting_combo_box;
+			}
+		    }
+		    if ( updated_comboboxes )
+			emit positionVisible( true );
+		}
+	    }
+	}
+
 	void QtRegionState::state_change( int ) { emit refreshCanvas( ); }
 	void QtRegionState::state_change( bool ) { emit refreshCanvas( ); }
 	void QtRegionState::state_change( const QString & ) { emit refreshCanvas( ); }
@@ -473,12 +517,21 @@ namespace casa {
 	}
 
 	void QtRegionState::states_val_change( int ) {
+	    if ( setting_combo_box ) return;
 	    // coordinates tab selected or not...
 	    QString state = states->tabText(categories->currentIndex( ));
-	    if ( state == "coordinates" )
+	    if ( state == "coordinates" ) {
+		std::map<std::string,int> &coordinate_state = region_->coordState( );
+		QList<QComboBox*> combos = coordinateTab->findChildren<QComboBox*>( );
+		for (int i = 0; i < combos.size(); ++i) {
+		    const QComboBox *combo = combos.at(i);
+		    std::map<std::string,int>::iterator it = coordinate_state.find(combo->objectName( ).toStdString( ));
+		    it->second = combo->currentIndex( );
+		}
 		emit positionVisible( true );
-	    else
+	    } else {
 		emit positionVisible( false );
+	    }
 	}
 
 	void QtRegionState::filetab_change( int index ) {
@@ -487,6 +540,9 @@ namespace casa {
 	}
 
 	void QtRegionState::coordsys_change( const QString &text ) {
+	    std::map<std::string,int> &coordinate_state = region_->coordState( );
+	    coordinate_state["coordinate_system"] = coordinate_system->currentIndex( );
+
 	    // pixels are unitless...
 	    if ( text == "pixel" ) {
 		x_units->setDisabled(true);
@@ -497,6 +553,7 @@ namespace casa {
 		y_units->setDisabled(false);
 		dim_units->setDisabled(false);
 	    }
+	    
 	    // coordinates tab selected or not...
 	    QString state = states->tabText(categories->currentIndex( ));
 	    if ( state == "coordinates" )

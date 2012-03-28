@@ -58,12 +58,15 @@ namespace casa {
 		/* void showStats( const QString &stats ); */
 
 		std::pair<int,int> &tabState( ) { return current_tab_state; }
+		std::map<std::string,int> &coordState( ) { return current_coord_state; }
 
 	    signals:
 		void deleteRegion(QtRegionState*);
 		void saveRegions( std::list<QtRegionState*>, RegionTextList & );
 		void saveRegions( std::list<QtRegionState*>, ds9writer & );
 		void loadRegions( bool &handled, const QString &path, const QString &type );
+
+		void region_stack_change(QWidget*);
 
 	    public slots:
 		void updateRegionState(QtDisplayData*);
@@ -74,10 +77,12 @@ namespace casa {
 		void delete_current_region(bool);
 		void output_region_event(const QString &what, const QString &where, const QString &type, const QString &csys );
 		void handle_visibility(bool);
+		void emit_region_stack_change( int );
 
 	    private:
 		QtDisplayData *current_dd;
 		std::pair<int,int> current_tab_state;
+		std::map<std::string,int> current_coord_state;
 
 	};
     }

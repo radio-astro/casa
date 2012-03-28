@@ -60,6 +60,7 @@ namespace casa {
 
 	    connect( dismiss_region, SIGNAL(clicked(bool)), SLOT(delete_current_region(bool)) );
 	    connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
+	    connect( regions, SIGNAL(currentChanged(int)), SLOT(emit_region_stack_change(int)) );
 
 	    hide( );
 
@@ -78,6 +79,7 @@ namespace casa {
 	    regions->setCurrentWidget(state);
 	    connect( state, SIGNAL(outputRegions(const QString &,const QString &,const QString&,const QString&)), SLOT(output_region_event(const QString &,const QString &,const QString&,const QString&)) );
 	    connect( state, SIGNAL(loadRegions(bool&,const QString &,const QString &)), SIGNAL(loadRegions(bool&,const QString &,const QString&)) );
+	    connect( this, SIGNAL(region_stack_change(QWidget*)), state, SLOT(stackChange(QWidget*)) );
 
 	    if ( ! isVisible( ) ) show( );
 	}
@@ -212,6 +214,10 @@ namespace casa {
 	void QtRegionDock::handle_visibility( bool visible ) {
 	    // this is a dangling "improvement"...
 	    //fprintf( stderr, "!!!!!!!!!!!!!!! visibility: %s !!!!!!!!!!!!!!!\n", visible ? "is visible" : "is not visible" );
+	}
+
+	void QtRegionDock::emit_region_stack_change( int index ) {
+	    emit region_stack_change(regions->widget(index));
 	}
     }
 }
