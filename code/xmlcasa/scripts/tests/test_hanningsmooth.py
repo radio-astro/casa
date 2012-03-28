@@ -227,7 +227,7 @@ class hanningsmooth_test(unittest.TestCase):
       # check correct flagging (just for one row as a sample)
         flag_col = self.getvarcol('cvelngc.ms', 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [True])
-        self.assertTrue(flag_col['r1'][0][1] == [True])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][2] == [False])
         self.assertTrue(flag_col['r1'][0][60] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
