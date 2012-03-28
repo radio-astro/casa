@@ -89,6 +89,7 @@ namespace casa {
 	void QtRegion::selectedInCanvas( ) { dock_->selectRegion(mystate); }
 
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
+	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
 
         // indicates that region movement requires that the statistcs be updated...
 	void QtRegion::updateStateInfo( bool region_modified ) {
