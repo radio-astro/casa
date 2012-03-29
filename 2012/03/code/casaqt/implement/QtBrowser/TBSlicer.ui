@@ -1,0 +1,172 @@
+<ui version="4.0" >
+ <class>Slicer</class>
+ <widget class="QWidget" name="Slicer" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>517</width>
+    <height>120</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Array Slicer</string>
+  </property>
+  <layout class="QGridLayout" >
+   <property name="margin" >
+    <number>3</number>
+   </property>
+   <property name="spacing" >
+    <number>3</number>
+   </property>
+   <item row="0" column="0" >
+    <widget class="QGroupBox" name="groupBox" >
+     <property name="title" >
+      <string>View Slice</string>
+     </property>
+     <layout class="QGridLayout" >
+      <property name="margin" >
+       <number>3</number>
+      </property>
+      <property name="spacing" >
+       <number>3</number>
+      </property>
+      <item row="0" column="0" >
+       <layout class="QHBoxLayout" >
+        <property name="margin" >
+         <number>0</number>
+        </property>
+        <property name="spacing" >
+         <number>15</number>
+        </property>
+        <item>
+         <widget class="QSpinBox" name="spinBox" >
+          <property name="buttonSymbols" >
+           <enum>QAbstractSpinBox::PlusMinus</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" >
+       <layout class="QHBoxLayout" >
+        <property name="margin" >
+         <number>0</number>
+        </property>
+        <property name="spacing" >
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label" >
+          <property name="text" >
+           <string>Slice Axes:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType" >
+           <enum>QSizePolicy::Maximum</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>35</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2" >
+          <property name="text" >
+           <string>X (columns):</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType" >
+           <enum>QSizePolicy::Maximum</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>10</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="rowsSpinBox" />
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType" >
+           <enum>QSizePolicy::Maximum</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>35</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_3" >
+          <property name="text" >
+           <string>Y (rows):</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType" >
+           <enum>QSizePolicy::Maximum</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>10</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="colsSpinBox" />
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
