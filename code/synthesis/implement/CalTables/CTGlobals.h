@@ -40,6 +40,10 @@ void smoothCT(NewCalTable ct,
 	      const Double& smtime,
 	      Vector<Int> selfields);
 
+// Extract time-dep scan and field id info from the specified MS,
+//   and assign them to the NewCalTable
+void assignCTScanField(NewCalTable& ct, String msName, 
+		       Bool doField=True, Bool doScan=True);
 
 } //# NAMESPACE CASA - END
 
