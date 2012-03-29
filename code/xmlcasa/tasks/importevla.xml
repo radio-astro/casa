@@ -46,11 +46,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
-    <param type="bool" name="switchedpower">
-      <description> The SysPower and CalDevice tables are processed if and only if this parameter is set to true, enabling support for switched-power gain and tsys corrections.</description>
-      <value>False</value>
-    </param>
-
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
 	    <value>False</value>
@@ -270,10 +265,6 @@ savecmds   -- Save the flag commands to an ASCII file given by the parameter out
                     Example: vis='evla.ms', the outfile will be 'evla_cmd.txt'. 
                     
                     NOTE: The file is open to save in append mode.
-
-
-switchedpower -- The SysPower and CalDevice tables are processed if and only if this parameter
-		 is set to true, enabling support for switched-power gain and tsys corrections.
 
 flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions 
                 default: True
