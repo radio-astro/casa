@@ -192,6 +192,17 @@ CTIter::~CTIter() {
   if (irwnct_!=NULL) delete irwnct_;
 }
 
+
+// Set fieldid
+void CTIter::setfield(Int fieldid) {
+  iRWCTMainCols_->fieldId().fillColumn(fieldid); 
+}
+
+// Set scan number
+void CTIter::setscan(Int scan) {
+  iRWCTMainCols_->scanNo().fillColumn(scan); 
+}
+
 // Set antenna2 (e.g., used for setting refant)
 void CTIter::setantenna2(const Vector<Int>& a2) {
   iRWCTMainCols_->antenna2().putColumn(a2); 
