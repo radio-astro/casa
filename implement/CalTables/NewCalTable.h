@@ -200,6 +200,10 @@ class NewCalTable : public Table
 			     const Cube<Float>& paramErr,
 			     const Cube<Float>& snr);
 
+   // Reset spw freq info
+   void setSpwFreqs(Int spw, const Vector<Double>& freq, 
+		    const Vector<Double>& chanwidth=Vector<Double>());
+
    // Add a line to the HISTORY table
    void addHistoryMessage(String app="",String message="none");
 
