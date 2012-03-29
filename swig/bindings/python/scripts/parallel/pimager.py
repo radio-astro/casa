@@ -73,7 +73,7 @@ class pimager():
             raise Exception, 'number of images and weight images are different'
         if(os.path.exists(outimage)):
             shutil.rmtree(outimage)
-            shutil.rmtree( '__sumweight_image', ignore_errors=True)
+        shutil.rmtree( '__sumweight_image', ignore_errors=True)
         if(type(inimages)==list):
             shutil.copytree(inimages[0], outimage)
             if(len(inimages)==1):
@@ -632,8 +632,10 @@ class pimager():
                     #print 'maj, cj, dwght', maj, cj, donewgt[k]
                     if((maj==0) and cj and (not donewgt[k])):
                         print 'doing weight', 'a.getftweight(msname="'+msname+'", wgtimage="'+imlist[k]+'.wgt''")'
-                        c.odo('a.getftweight(msname="'+msname+'", wgtimage="'+imlist[k]+'.wgt''")', k)
+                        out[k]=c.odo('a.getftweight(msname="'+msname+'", wgtimage="'+imlist[k]+'.wgt''")', k)
                         donewgt[k]=True
+                        while(not c.check_job(out[k],False)):
+                            time.sleep(1)
                     
                     #if((printkounter==10) and not(c.check_job(out[k],False))):
                     #    print 'job ', k, 'is waiting'

@@ -1300,7 +1300,9 @@ for when the python garbage collector will delete it. If the returned object is 
 should be deleted as soon as possible for the same reasons, eg
         
 collapsed_image = ia.collapse(...)
+\begin{verbatim}
 # do things (or not) with collapsed_image and when done with object, do
+\end{verbatim}
 collapsed_image.done()
 
 The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
@@ -4960,9 +4962,11 @@ any desired manipulations have been done. Closing the tool frees up system
 resources (eg memory), eg,
 
 hanning_image = ia.hanning(...)
+\begin{verbatim}
 # do things (or not) with hanning_image 
 ... 
 # close the returned tool promptly upon finishing with it.
+\end{verbatim}
 hanning_image.done()
 
 Masked pixels will be assigned the value 0.0 before convolution. 

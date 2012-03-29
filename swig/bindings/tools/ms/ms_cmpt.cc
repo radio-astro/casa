@@ -2417,6 +2417,8 @@ bool ms::statwt(const bool dorms,                const bool byantenna,
 	      << LogIO::POST;
       return false;
     }
+    Double timeInSec=casaQuantity(timebin).get("s").getValue();
+    reweighter.selectTime(timeInSec, String(timerange));
 
     String t_whichcol(datacol);
     const String t_combine = downcase(combine);
