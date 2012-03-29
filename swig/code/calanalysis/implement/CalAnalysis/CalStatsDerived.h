@@ -44,6 +44,7 @@ Modification history:
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+#include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MaskedArray.h>
 
 #include <calanalysis/CalAnalysis/CalStats.h>
@@ -131,8 +132,6 @@ Modification history:
               Initial version.  The public member functions are CalStatsAmp()
               (generic) and ~CalStatsAmp().  The static member function is
               norm().
-2012 Feb 15 - Nick Elias, NRAO
-              Value error input parameter changed from DComplex to Double.
 
 */
 
@@ -152,8 +151,8 @@ class CalStatsAmp : public CalStats {
     ~CalStatsAmp( void );
 
     // Normalize member function
-    static void norm( Cube<Double>& oAmp, Cube<Double>& oAmpErr,
-        Cube<Bool>& oFlag );
+    static void norm( Vector<Double>& oAmp, Vector<Double>& oAmpErr,
+        Vector<Bool>& oFlag );
 
 };
 
@@ -181,9 +180,18 @@ CalStatsPhase  - This generic constructor converts complex data to amplitudes
                  for initial testing.
 ~CalStatsPhase - This destructor deallocates the internal memory of an instance.
 
-CalStatsPhase static member functions:
---------------------------------------
+CalStatsPhase public static member functions:
+---------------------------------------------
 unwrap - This member function unwraps the phases.
+
+CalStatsPhase private static member functions:
+----------------------------------------------
+fringePacket2 - This member function forms the squared-amplitude fringe packet.
+
+CalStatsPhase templated private static member functions:
+--------------------------------------------------------
+maxLocation - This member function finds the abscissa corresponding to the peak
+              value of an ordinate vector.
 
 Modification history:
 ---------------------
@@ -191,8 +199,10 @@ Modification history:
               Initial version.  The public member functions are CalStatsPhase()
               (generic) and ~CalStatsPhase().  The static member function is
               unwrap().
-2012 Feb 15 - Nick Elias, NRAO
-              Value error input parameter changed from DComplex to Double.
+2012 Mar 27 - Nick Elias, NRAO
+              Private static member functions fringePacket2() and maxLocation()
+              added. Private static member variables NUM_ITER_UNWRAP and
+              NEW_RANGE_FACTOR added.
 
 */
 
@@ -212,13 +222,89 @@ class CalStatsPhase : public CalStats {
     ~CalStatsPhase( void );
 
     // Unwrap member function
-    static void unwrap( Cube<Double>& oPhase, const Vector<Double>& oFrequency,
-        const Cube<Bool>& oFlag );
+    static void unwrap( Vector<Double>& oPhase,
+        const Vector<Double>& oFrequency, const Vector<Bool>& oFlag );
+
+  private:
+
+    // Form the squared-amplitude fringe packet
+    static Vector<Double>& fringePacket2( const Vector<Double>& oPhase,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime );
+
+    // Find the abscissa corresponding to the peak value of an ordinate vector
+    template <typename T> static Double& maxLocation( const Vector<T>& oAbs,
+        const Vector<T>& oValue );
+
+    // The maximum number of iterations for unwrapping
+    static const uInt NUM_ITER_UNWRAP = 50;
+
+    // The new time range per unwrapping iteration is this factor times the
+    // present time increment
+    static const Double NEW_RANGE_FACTOR = 5.0;
 
 };
 
 // -----------------------------------------------------------------------------
 // End of CalStatsPhase class definition
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Start of CalStatsDerived::maxLocation<T> template private statistics member
+// function
+// -----------------------------------------------------------------------------
+
+/*
+
+CalStatsPhase::maxLocation<T>
+
+Description:
+------------
+This member function finds the abscissa corresponding to the peak value of an
+ordinate vector.
+
+Inputs:
+-------
+oAbs   - This Vector<T>() instance contains the abscissae.
+oValue - This Vector<T>() instance contains the ordinates.
+
+Outputs:
+--------
+The reference to the Double variable containing the abscissa corresponding to
+the peak value of the ordinate vector, returned via the function value.
+
+Modification history:
+---------------------
+2012 Mar 27 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+template <typename T>
+Double& CalStatsPhase::maxLocation( const Vector<T>& oAbs,
+    const Vector<T>& oValue ) {
+
+  // Call the minMax() function and return the position of the maximum value
+
+  Double dValMin = 0.0;
+  Double dValMax = 0.0;
+
+  IPosition oPosMin( 1, 0 );
+  IPosition oPosMax( 1, 0 );
+
+  minMax( dValMin, dValMax, oPosMin, oPosMax, oValue );
+
+  Double* pdAbsMax = new Double;
+  *pdAbsMax = oAbs(oPosMax);
+
+  return( *pdAbsMax );
+
+}
+
+// -----------------------------------------------------------------------------
+// End of CalStatsDerived::maxLocation<T> template private statistics member
+// function
 // -----------------------------------------------------------------------------
 
 };

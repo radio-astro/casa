@@ -543,6 +543,9 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	QString lbl = ctype->currentText();
 	pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]");
 
+	// re-set the rest
+	//frequence or wavelength
+	//cSysRval = "";
 
 	// get reference frame info for frequency axis label
 	MFrequency::Types freqtype = determineRefFrame(img);
@@ -908,7 +911,7 @@ void QtProfile::wcChanged( const String c,
    			 yUnitPrefix = "M";
    			 break;
    		 case 9:
-   			 yUnitPrefix = "M";
+   			 yUnitPrefix = "G";
    			 break;
    		 default:
    			 ostringstream oss;
@@ -1491,7 +1494,7 @@ void QtProfile::doLineFit(){
 		QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
 		pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
 	}
-	profileStatus->showMessage(QString((fitter->report(*itsLog)).c_str()));
+	profileStatus->showMessage(QString((fitter->report(*itsLog, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str()));
 
 	return;
 }
