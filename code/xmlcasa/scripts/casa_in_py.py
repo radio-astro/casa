@@ -136,7 +136,8 @@ from flagdata_pg import flagdata_pg as flagdata
 from flagdata2_pg import flagdata2_pg as flagdata2
 from tflagdata_pg import tflagdata_pg as tflagdata
 from tflagcmd_pg import tflagcmd_pg as tflagcmd
-from importevla2_pg import importevla2_pg as importevla2
+from importevla_pg import importevla_pg as importevla
+# from importevla2_pg import importevla2_pg as importevla2
 from split_pg import split_pg as split
 from importvla_pg import importvla_pg as importvla
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
