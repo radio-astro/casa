@@ -10,12 +10,12 @@
   <shortdescription>Convert old-style caltables into new-style caltables.\n</shortdescription>
 
   <description>
-    This task converts old-style caltables into new-style caltables.  It is
-    provided as a convenience and is strictly temporary.  The information
-    transferred should be enough for most calibration purposes.  BPOLY and
-    GSPLINE versions are not supported.  Only simple bugs will be fixed.  If
-    there are other issues, it is suggested that a new-style caltable be
-    created.
+    This task converts old-style (up to CASA 3.3.0) caltables into new-style 
+    (CASA 3.4.0 and later) caltables.  It is provided as a convenience and 
+    is strictly temporary.  The information transferred should be enough 
+    for most calibration purposes.  BPOLY and GSPLINE versions are not 
+    supported.  Only simple bugs will be fixed.  If there are other issues, 
+    it is suggested that a new-style caltable be created directly.
   </description>
 
   <input>
@@ -45,12 +45,12 @@
   <returns type="boolean"/>
 
   <example>
-    This task converts old-style caltables into new-style caltables.  It is
-    provided as a convenience and is strictly temporary.  The information
-    transferred should be enough for most calibration purposes.  BPOLY and
-    GSPLINE versions are not supported.  Only simple bugs will be fixed.  If
-    there are other issues, it is suggested that a new-style caltable be
-    created.
+    This task converts old-style (up to CASA 3.3.0) caltables into new-style 
+    (CASA 3.4.0 and later) caltables. It is provided as a convenience and 
+    is strictly temporary. The information transferred should be enough 
+    for most calibration purposes. BPOLY and GSPLINE versions are not 
+    supported. Only simple bugs will be fixed. If there are other issues, 
+    it is suggested that a new-style caltable be created directly.
 
     Arguments:
 
