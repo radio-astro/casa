@@ -58,6 +58,8 @@ namespace casa {
 typedef std::vector<double> CurveData;
 typedef std::vector<double> ErrorData;
 
+#define QT_DIAMOND_SIZE 5
+
 class GraphLabel
 {
 public:

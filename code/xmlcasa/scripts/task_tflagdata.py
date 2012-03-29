@@ -283,6 +283,7 @@ def tflagdata(vis,
 
             agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans   
+            agent_pars['datacolumn'] = datacolumn
             agent_pars['winsize'] = winsize
             agent_pars['timedevscale'] = timedevscale
             agent_pars['freqdevscale'] = freqdevscale

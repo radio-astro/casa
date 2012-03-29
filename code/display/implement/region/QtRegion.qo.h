@@ -124,6 +124,8 @@ namespace casa {
 
 		// used to synchronize all of the RegionDock's RegionState tab configuration...
 		std::pair<int,int> &tabState( );
+		// used to synchronize all of the RegionDock's RegionState coordinate configuration...
+		std::map<std::string,int> &coordState( );
 
 	    public slots:
 		/* void name( const QString &newname ); */
