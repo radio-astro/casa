@@ -45,10 +45,10 @@ set( CASAGOOGLESEARCH 006707099318971825654:0jfwitmloig )
       add_custom_command(
         OUTPUT ${_html}
 	COMMAND sed -e "s/CASADOCUMENT/CASA Task Reference Manual/" -e "s/CASAGOOGLESEARCH/${CASAGOOGLESEARCH}/" ${casaroot}/code/doc/texinputs.dir/nraoheader.4ht > ${prefix}/nraoheader.4ht
-	COMMAND sed -e "s/%\\\\NextFile/\\\\NextFile/" ${prefix}/helpfiles/sim_observe.htex > /tmp/sim_observe.htex
-	COMMAND cp /tmp/sim_observe.htex ${prefix}/helpfiles
-	COMMAND sed -e "s/%\\\\NextFile/\\\\NextFile/" ${prefix}/helpfiles/sim_analyze.htex > /tmp/sim_analyze.htex
-	COMMAND cp /tmp/sim_analyze.htex ${prefix}/helpfiles
+	COMMAND sed -e "s/%\\\\NextFile/\\\\NextFile/" ${prefix}/helpfiles/simobserve.htex > /tmp/simobserve.htex
+	COMMAND cp /tmp/simobserve.htex ${prefix}/helpfiles
+	COMMAND sed -e "s/%\\\\NextFile/\\\\NextFile/" ${prefix}/helpfiles/simanalyze.htex > /tmp/simanalyze.htex
+	COMMAND cp /tmp/simanalyze.htex ${prefix}/helpfiles
         COMMAND mkdir -p ${prefix}/TaskRef
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
@@ -69,10 +69,10 @@ set( CASAGOOGLESEARCH 006707099318971825654:0jfwitmloig )
       set( _pdf  ${prefix}/TaskRef/${_base}.pdf )
       add_custom_command(
         OUTPUT ${_pdf}
-	COMMAND sed -e "s/\\\\NextFile/%\\\\NextFile/" ${prefix}/helpfiles/sim_observe.htex > /tmp/sim_observe.htex
-	COMMAND cp /tmp/sim_observe.htex ${prefix}/helpfiles
-	COMMAND sed -e "s/\\\\NextFile/%\\\\NextFile/" ${prefix}/helpfiles/sim_analyze.htex > /tmp/sim_analyze.htex
-	COMMAND cp /tmp/sim_analyze.htex ${prefix}/helpfiles
+	COMMAND sed -e "s/\\\\NextFile/%\\\\NextFile/" ${prefix}/helpfiles/simobserve.htex > /tmp/simobserve.htex
+	COMMAND cp /tmp/simobserve.htex ${prefix}/helpfiles
+	COMMAND sed -e "s/\\\\NextFile/%\\\\NextFile/" ${prefix}/helpfiles/simanalyze.htex > /tmp/simanalyze.htex
+	COMMAND cp /tmp/simanalyze.htex ${prefix}/helpfiles
         COMMAND mkdir -p ${prefix}/TaskRef
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
