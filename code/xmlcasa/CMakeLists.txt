@@ -254,7 +254,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_impbcor.py
   scripts/task_importasdm.py
   scripts/task_importevla.py
-  scripts/task_importevla2.py
+#  scripts/task_importevla2.py
   scripts/task_importfits.py
   scripts/task_importfitsidi.py
   scripts/task_importgmrt.py
@@ -388,7 +388,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/impbcor.xml
   tasks/importasdm.xml
   tasks/importevla.xml
-  tasks/importevla2.xml
+#  tasks/importevla2.xml
   tasks/importfits.xml
   tasks/importfitsidi.xml
   tasks/importgmrt.xml
