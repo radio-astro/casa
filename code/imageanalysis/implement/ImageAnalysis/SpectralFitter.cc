@@ -210,7 +210,7 @@ void SpectralFitter::report() const{
 	report(*_log);
 }
 
-String SpectralFitter::report(LogIO &os) const{
+String SpectralFitter::report(LogIO &os, const String &xUnit, const String &yUnit, const String &yPrefixUnit) const{
 	String resultMsg("");
 	SpectralList list = _fit.getList(True);
 
@@ -221,7 +221,7 @@ String SpectralFitter::report(LogIO &os) const{
 		os << LogIO::NORMAL << "No. of iterations: " << String::toString(_fit.getNumberIterations()) << LogIO::POST;
 		os << LogIO::NORMAL << "Chi-square:       " << String::toString(_fit.getChiSquared())       << LogIO::POST;
 		// report the spectral elements
-		resultMsg  = _report(list, os);
+		resultMsg  = _report(os, list, xUnit, yUnit, yPrefixUnit);
 
 		break;
 	case SpectralFitter::FAILED:
@@ -431,10 +431,11 @@ void SpectralFitter::_report(const ProfileFit1D<Double> &fit, const Bool print, 
 		cout << report;
 }
 */
-String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
+String SpectralFitter::_report(LogIO &os, const SpectralList &list, const String &xUnit, const String &yUnit, const String &yPrefixUnit) const{
 	ostringstream sstream;
 
 	String spTypeStr;
+	String intUnit(""), slopeUnit(""), xStreamUnit(""), yStreamUnit("");
 	Vector<Double> params, errors;
 	Double gaussAmpV(0.0), gaussCentV(0.0), gaussSigmaV(0.0), gaussFWHMV(0.0);
 	Double gaussAmpE(0.0), gaussCentE(0.0), gaussSigmaE(0.0), gaussFWHME(0.0);
@@ -442,6 +443,27 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 	Double polyOffsetV(0.0), polySlopeV(0.0);
 	Double polyOffsetE(0.0), polySlopeE(0.0);
 	Int gaussIndex(-1), polyIndex(-1);
+
+	// compose the unit for the Gauss integral
+	if (xUnit.size()>0 && yUnit.size()>0) {
+		intUnit = String(" [")+yPrefixUnit+yUnit+String("*")+xUnit+String("]");
+		if (xUnit.contains("/"))
+			slopeUnit = String(" [")+yPrefixUnit+yUnit+String("/(")+xUnit+String(")]");
+		else
+			slopeUnit = String(" [")+yPrefixUnit+yUnit+String("/")+xUnit+String("]");
+	}
+
+	// compose the units for the fit
+	// values on the x-axis
+	if (xUnit.size()>0)
+		xStreamUnit = String(" [")+xUnit+String("]");
+
+	// compose the units for the fit
+	// values on the y-axis
+	if (yUnit.size()>0)
+		yStreamUnit = String(" [")+ yPrefixUnit + yUnit+String("]");
+	else if (yPrefixUnit.size()>0)
+		yStreamUnit = String(" (")+yPrefixUnit+String(")");
 
 	// go over all elements
 	for (uInt index=0; index < list.nelements(); index++){
@@ -471,8 +493,11 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 			gaussFWHME  = gaussSigmaE * GaussianSpectralElement::SigmaToFWHM;
 			gaussAreaE  = sqrt(C::pi) * sqrt(gaussAmpV*gaussAmpV*gaussSigmaE*gaussSigmaE + gaussSigmaV*gaussSigmaV*gaussAmpE*gaussAmpE);
 
-			os << LogIO::NORMAL << "  Amplitude: " << String::toString(gaussAmpV) << "+-" << gaussAmpE << " centre: " << String::toString(gaussCentV) << "+-" << gaussCentE << " FWHM: " << String::toString(gaussFWHMV) << "+-" << gaussFWHME<< LogIO::POST;
-			os << LogIO::NORMAL << "  Gaussian area: " << String::toString(gaussAreaV) <<"+-"<< gaussAreaE << LogIO::POST;
+			//os << LogIO::NORMAL << "  Amplitude: " << String::toString(gaussAmpV) << "+-" << gaussAmpE << yStreamUnit << " centre: " << String::toString(gaussCentV) << "+-" << gaussCentE << xStreamUnit << " FWHM: " << String::toString(gaussFWHMV) << "+-" << gaussFWHME << xStreamUnit << LogIO::POST;
+			os << LogIO::NORMAL << "  Gauss amplitude: " << String::toString(gaussAmpV) << "+-" << gaussAmpE << yStreamUnit << LogIO::POST;
+			os << LogIO::NORMAL << "  Gauss centre:    " << String::toString(gaussCentV) << "+-" << gaussCentE << xStreamUnit << LogIO::POST;
+			os << LogIO::NORMAL << "  Gauss FWHM:      " << String::toString(gaussFWHMV) << "+-" << gaussFWHME << xStreamUnit << LogIO::POST;
+			os << LogIO::NORMAL << "  Gaussian area:   " << String::toString(gaussAreaV) <<"+-"<< gaussAreaE << intUnit << LogIO::POST;
 			//returnMsg += " Cent.: " + String::toString(gaussCentV) + " FWHM: " + String::toString(gaussFWHMV) + "  Ampl.: " + String::toString(gaussAmpV);
 			sstream << " Cent.: " << setiosflags(ios::scientific) << setprecision(6) << gaussCentV << " FWHM: " << setprecision(4) << gaussFWHMV << "  Ampl.: " << setprecision(3) << gaussAmpV;
 			break;
@@ -486,11 +511,11 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 				polySlopeV = params(1);
 				polySlopeE = errors(2);
 			}
-			os << LogIO::NORMAL << "  Offset: " << String::toString(polyOffsetV) << "+-"<< String::toString(polyOffsetE) <<LogIO::POST;
+			os << LogIO::NORMAL << "  Offset: " << String::toString(polyOffsetV) << "+-"<< String::toString(polyOffsetE) << yStreamUnit <<LogIO::POST;
 			//returnMsg += "  Offs.: " + String::toString(polyOffsetV);
 			sstream << "  Offs.: " << setiosflags(ios::scientific) << setprecision(3) << polyOffsetV;
 			if (params.size()>1){
-				os << LogIO::NORMAL << "  Slope:  " << String::toString(polySlopeV) << "+-"<< String::toString(polySlopeE) <<LogIO::POST;
+				os << LogIO::NORMAL << "  Slope:  " << String::toString(polySlopeV) << "+-"<< String::toString(polySlopeE) << slopeUnit << LogIO::POST;
 				sstream << "  Slope:  " << setiosflags(ios::scientific) << setprecision(3) << polySlopeV;
 				//returnMsg += "  Slope:  " + String::toString(polySlopeV);
 			}
@@ -514,8 +539,8 @@ String SpectralFitter::_report(const SpectralList &list, LogIO &os) const{
 		}
 		else{
 			os << LogIO::NORMAL << "Can compute equivalent width" << LogIO::POST;
-			os << LogIO::NORMAL << "  Continuum value: " << String::toString(centVal) << LogIO::POST;
-			os << LogIO::NORMAL << "  --> Equivalent width: " << String::toString(-1.0*gaussAreaV/centVal) << LogIO::POST;
+			os << LogIO::NORMAL << "  Continuum value: " << String::toString(centVal) << yStreamUnit << LogIO::POST;
+			os << LogIO::NORMAL << "  --> Equivalent width: " << String::toString(-1.0*gaussAreaV/centVal) << xStreamUnit << LogIO::POST;
 			sstream << " Equ.Width: " << setiosflags(ios::scientific) << setprecision(4) << -1.0*gaussAreaV/centVal;
 			//returnMsg += " Equ.Width: "+ String::toString(-1.0*gaussAreaV/centVal);
 		}

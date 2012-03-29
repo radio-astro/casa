@@ -1023,13 +1023,21 @@ void QtCanvas::drawCurves(QPainter *painter)
    				 / settings.spanY());
    		 if (fabs(x) < 32768 && fabs(y) < 32768)
    		 {
-   			 // plots a diamond in order to have
-   			 // a 2D item at all
-   			 points.moveTo((int)x + 1, (int)y);
-   			 points.lineTo((int)x, (int)y - 1);
-   			 points.lineTo((int)x - 1, (int)y);
-   			 points.lineTo((int)x, (int)y + 1);
-   			 points.lineTo((int)x + 1, (int)y);
+
+   			 // plots a diamond from
+   			 // primitive lines to have a 2D item
+   			 for (int i = 0; i < QT_DIAMOND_SIZE; ++i)
+      		 {
+   				 // closes the centre
+   				 if (i==1)
+   					 points.lineTo((int)x + i, (int)y);
+   				 else
+     					 points.moveTo((int)x + i, (int)y);
+   				 points.lineTo((int)x, (int)y - i);
+   				 points.lineTo((int)x - i, (int)y);
+   				 points.lineTo((int)x, (int)y + i);
+   				 points.lineTo((int)x + i, (int)y);
+      		 }
    		 }
 
    		 if (plotError && (error.size() > 0)){

@@ -86,8 +86,8 @@ public:
 	// <src>fitPoly</src>  - fit polynomial
 	// <src>nPoly</src>    - order of polynomial to be fitted
 	// <src>msg</src>      - message back to the calling routine
-	virtual Bool fit(const Vector<Float> &spcVals, const Vector<Float> &yVals, const Vector<Float> &eVals, const Float startVal, const Float endVal,
-			const Bool fitGauss, const Bool fitPoly, const uInt nPoly, String &msg);
+	virtual Bool fit(const Vector<Float> &spcVals, const Vector<Float> &yVals, const Vector<Float> &eVals,
+			const Float startVal, const Float endVal, const Bool fitGauss, const Bool fitPoly, const uInt nPoly, String &msg);
 
 	// get the status of the last fit
 	const SpectralFitter::FitStatus &getStatus(){return _fitStatus;};
@@ -112,7 +112,7 @@ public:
 	void report() const;
 
 	// report on the last fit to a stream
-	String report(LogIO &os) const;
+	String report(LogIO &os, const String &xUnit="", const String &yUnit="", const String &yPrefixUnit="") const;
 
 private:
    LogIO *_log;
@@ -150,7 +150,7 @@ private:
    //String _report(LogIO &os) const;
 
    // report on a list of spectral elements to a stream
-   String _report(const SpectralList &list, LogIO &os) const;
+   String _report(LogIO &os, const SpectralList &list, const String &xUnit="", const String &yUnit="", const String &yPrefixUnit="") const;
 };
 }
 
