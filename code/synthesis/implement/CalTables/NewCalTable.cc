@@ -651,6 +651,61 @@ void NewCalTable::fillAntBasedMainRows(uInt nrows,
 
 }
 
+void NewCalTable::setSpwFreqs(Int spw, const Vector<Double>& freq, 
+			      const Vector<Double>& chanwidth) { 
+
+
+  MSSpWindowColumns spwcol(this->spectralWindow());
+
+  AlwaysAssert( (spw<spwcol.nrow()), AipsError );
+  
+  Int nchan=freq.nelements();
+  IPosition sh(1,nchan);
+
+  spwcol.numChan().put(spw,nchan);
+  spwcol.chanFreq().setShape(spw,sh);
+  spwcol.chanFreq().put(spw,freq);
+  
+  if (chanwidth.nelements()==0) {
+
+    if (nchan>1) {
+      Double width=freq(1)-freq(0);
+      Vector<Double> widthV(nchan,width);
+      
+      spwcol.chanWidth().setShape(spw,sh);
+      spwcol.chanWidth().put(spw,widthV);
+      spwcol.resolution().setShape(spw,sh);
+      spwcol.resolution().put(spw,widthV);
+      spwcol.effectiveBW().setShape(spw,sh);
+      spwcol.effectiveBW().put(spw,widthV);
+  
+      Double totalBW=nchan*width;
+      spwcol.totalBandwidth().put(spw,totalBW);
+    }
+    else
+      throw(AipsError("NewCalTable::setSpwFreqs: Problem resetting SPECTRAL_WINDOW info"));
+
+
+  }
+  else {
+    AlwaysAssert( (chanwidth.nelements()==nchan), AipsError);
+    
+    spwcol.chanWidth().setShape(spw,sh);
+    spwcol.chanWidth().put(spw,chanwidth);
+    spwcol.resolution().setShape(spw,sh);
+    spwcol.resolution().put(spw,chanwidth);
+    spwcol.effectiveBW().setShape(spw,sh);
+    spwcol.effectiveBW().put(spw,chanwidth);
+
+    spwcol.totalBandwidth().put(spw,sum(chanwidth));
+
+  }
+
+
+}
+
+
+
 void NewCalTable::addHistoryMessage(String app, String message) {
 
   Int row=this->history().nrow();
