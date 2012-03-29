@@ -24,12 +24,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="bool" name="byantenna">
-	  <description>Estimate the noise per antenna (vs. per baseline)</description>
-	  <value>True</value>
+	  <description>Estimate the noise per antenna -not implemented (vs. per baseline)</description>
+	  <value>False</value>
 	</param>
 
 	<param type="bool" name="sepacs" subparam="true">
-	  <description>If solving by antenna, treat autocorrs separately</description>
+	  <description>If solving by antenna, treat autocorrs separately (not implemented)</description>
 	  <value>True</value>
 	</param>
 
@@ -40,7 +40,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="any" name="fitcorr">
-		<description>The signal-free correlation(s) to estimate the scatter from</description>
+		<description>The signal-free correlation(s) to estimate the scatter from (not implemented)</description>
 		<any type="variant" limittypes="string stringArray int intArray"/>
 		<value type="string"></value>
 	</param>
@@ -52,7 +52,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="string" name="timebin">
-		<description>Bin length for estimates</description>		
+		<description>Bin length for estimates (not implemented)</description>		
 		<value type="string">0s</value>
 	</param>
 
@@ -120,6 +120,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         <constraints>
 	  <when param="byantenna">
+            <equals type="bool" value="False">
+            </equals>
             <equals type="bool" value="True">
               <default param="sepacs"><value type="bool">True</value></default>
             </equals>
@@ -137,6 +139,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     weights and sigmas.  statwt empirically measures the visibility scatter
     (typically as a function of time, antenna, and/or baseline) and uses that
     to set WEIGHT and SIGMA.
+    
+    Note: Some of the parameters (byantenna, sepacs, fitcorr, and timebin) 
+          are not fully implemeted for CASA 3.4.
+          
 
         Keyword arguments:
         vis -- Name of the measurement set.
@@ -158,12 +164,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         byantenna -- Assume that the noise is factorable by antenna (feed).
                      If false, treat it seperately for each baseline
                      (recommended if there is strong signal).
-               default: True
+               default: False (*** byantenna=True is not yet implemented)
 
         sepacs -- If solving by antenna, treat autocorrelations separately.
                   (Acknowledge that what autocorrelations "see" is very
                    different from what crosscorrelations see.)
-               default: True
+               default: True (*** not yet implemented)
 
 
         --- Data Selection (see help par.selectdata for more detailed
@@ -175,7 +181,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         fitcorr -- The (ideally) signal-free correlations to
                    estimate the scatter from.
-               default: '' (All)
+               default: '' (All) 
+               *** not yet implemented 
 
         combine -- Let samples span multiple spws, corrs, scans, and/or states.
                    combine = 'spw': Recommended when a line spans an entire spw 
@@ -197,6 +204,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    default: '0s' or '-1s' (1 integration at a time)
                    example: timebin='30s'
                             '10' means '10s'
+                   *** not yet implemented 
 
         minsamp -- Minimum number of unflagged visibilities for estimating the
                    scatter.  Selected visibilities for which the weight cannot
