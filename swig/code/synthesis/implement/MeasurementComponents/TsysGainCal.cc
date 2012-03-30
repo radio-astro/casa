@@ -31,6 +31,7 @@
 #include <casa/BasicMath/Math.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableIter.h>
+#include <synthesis/CalTables/CTGlobals.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -252,6 +253,9 @@ void StandardTsys::specify(const Record&) {
     ++iter;
   }
 
+  // Assign scan and fieldid info
+  assignCTScanField(*ct_,msName());
+
   logSink() << "Tsys counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {
     Vector<Int> tsyscountspw(tsyscount.row(ispw));
@@ -348,6 +352,7 @@ void StandardTsys::specify(const Record&) {
     sysCalIter.next();
     ++iter;
   }
+
 
   logSink() << "Tsys counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {
@@ -592,6 +597,9 @@ void EVLAGainTsys::specify(const Record&) {
     ++iter;
   }
 
+  // Set scan and fieldid info
+  assignCTScanField(*ct_,msName());
+
   logSink() << "GOOD gain counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {
     Vector<Int> goodcountspw(goodcount.row(ispw));
@@ -701,6 +709,30 @@ void EVLAGainTsys::syncWtScale() {
 
   currWtScale() = 1.0f/Tsys;
 
+
+  cout << "Tsys = " << Tsys << endl;
+  cout << "currWtScale() = " << currWtScale() << endl;
+
 }
+
+/*
+void EVLAGainTsys::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
+
+  Vector<Float> ws1(currWtScale().column(a1));
+  Vector<Float> ws2(currWtScale().column(a2));
+
+  if (a1==0 && a2==1) {
+    cout << "wt = " << wt << endl;
+    cout << "ws1 = " << ws1 << endl;
+    cout << "ws2 = " << ws2 << endl;
+  }
+
+  VisJones::updateWt(wt,a1,a2);
+
+  if (a1==0 && a2==1) {
+    cout << "wt = " << wt << endl;
+  }
+}
+*/
 
 } //# NAMESPACE CASA - END

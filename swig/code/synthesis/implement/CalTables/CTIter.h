@@ -193,6 +193,12 @@ public:
   CTIter(NewCalTable tab,const Block<String>& sortcol);
   virtual ~CTIter();
 
+  // Set fieldid
+  void setfield(Int fieldid);
+
+  // Set scan number
+  void setscan(Int scan);
+
   // Set antenna2 (e.g., used for setting refant)
   void setantenna2(const Vector<Int>& a2);
 
