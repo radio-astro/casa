@@ -121,8 +121,14 @@ public:
   { return hdu_p->nextkw();}
 
   // Read the next group
-  Int read()
-  { return pf ? pf->read() : ( pl ? pl->read() : ps->read());}
+  Int read() {
+     if (pf) return pf->read(); 
+     else if (pl) return pl->read(); 
+     else if (ps) return ps->read(); 
+     else if (pb) return pb->read(); 
+     else cout << "can not read the table" << endl;
+     return 0;
+  }
 
 private:
   HeaderDataUnit* hdu_p;
@@ -297,6 +303,8 @@ protected:
 
   // Fill the Observation and ObsLog tables
   void fillObsTables();
+  void fillHistoryTable(ConstFitsKeywordList &kwl); 
+
 
   // Fill the main table from the Primary group data
   // if we have enough memory try to do it in mem
@@ -380,6 +388,7 @@ private:
   Bool useAltrval;
   Vector<Double> chanFreq_p;
   Bool newNameStyle;
+  Vector<Double> obsTime;
 };
 
 
