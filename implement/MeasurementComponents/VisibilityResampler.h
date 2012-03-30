@@ -89,7 +89,7 @@ public:
     {
         convFuncStore_p = cfs;
     };
-    virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap) {};
+    virtual void setCFMaps(const Vector<Int>& /*cfMap*/, const Vector<Int>& /*conjCFMap*/) {};
     //
     //------------------------------------------------------------------------------
     //
@@ -122,13 +122,13 @@ public:
     //
     // These are no-ops for unithreaded samplers.
     //
-    virtual void init(const Bool& doublePrecision) {};
-    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt) {};
-    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt) {};
-    virtual void initializePutBuffers(const Array<DComplex>& griddedData,
-                                      const Matrix<Double>& sumwt) {};
-    virtual void initializePutBuffers(const Array<Complex>& griddedData,
-                                      const Matrix<Double>& sumwt) {};
+    virtual void init(const Bool& /*doublePrecision*/) {};
+    virtual void GatherGrids(Array<DComplex>& /*griddedData*/, Matrix<Double>& /*sumwt*/) {};
+    virtual void GatherGrids(Array<Complex>& /*griddedData*/, Matrix<Double>& /*sumwt*/) {};
+    virtual void initializePutBuffers(const Array<DComplex>& /*griddedData*/,
+                                      const Matrix<Double>& /*sumwt*/) {};
+    virtual void initializePutBuffers(const Array<Complex>& /*griddedData*/,
+                                      const Matrix<Double>& /*sumwt*/) {};
 
 
     //

@@ -45,11 +45,11 @@ namespace casa{
     {expTableReady=cexpTableReady=sigmaReady=False;pa_p=1000.0;};
     ~IlluminationConvFunc() {};
 
-    IlluminationConvFunc& operator=(const IlluminationConvFunc& other)
+    IlluminationConvFunc& operator=(const IlluminationConvFunc& /*other*/)
     {
       return *this;
     }
-    IlluminationConvFunc& operator=(const ConvolutionFunction& other)
+    IlluminationConvFunc& operator=(const ConvolutionFunction& /*other*/)
     {
       return *this;
     }
@@ -62,7 +62,7 @@ namespace casa{
     CF_TYPE area(Vector<Int>& convSupport, Vector<Double>& uvScale);
     Vector<Int> supportSize(Vector<Double>& uvScale);
 
-    CF_TYPE getValue(Vector<CF_TYPE>& coord, Vector<CF_TYPE>& offset) 
+    CF_TYPE getValue(Vector<CF_TYPE>& /*coord*/, Vector<CF_TYPE>& /*offset*/)
     {
       throw(AipsError("This version of IlluminationConvFunc::getValue() is not useful."));
       return 0;
@@ -78,7 +78,7 @@ namespace casa{
 			     Double& currentCFPA
 			     //		  ,Double lsigma
 			     );
-    int getVisParams(const VisBuffer&, const CoordinateSystem& skyCoord=CoordinateSystem()) {return 0;};
+    int getVisParams(const VisBuffer&, const CoordinateSystem& /*skyCoord*/=CoordinateSystem()) {return 0;};
     void makeConvFunction(const ImageInterface<std::complex<float> >&, 
 			  const VisBuffer&, Int, Float, 
 			  CFStore&, CFStore&) {};
@@ -87,18 +87,18 @@ namespace casa{
     void setParams(const Vector<int>& polMap, const Vector<int>& feedStokes)
     {(void)polMap;(void)feedStokes;};
 
-    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+    Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/)
     {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
-    virtual Bool makeAverageResponse(const VisBuffer& vb, 
-				     const ImageInterface<Complex>& image,
-				     ImageInterface<Float>& theavgPB,
-				     Bool reset=True)
+    virtual Bool makeAverageResponse(const VisBuffer& /*vb*/,
+				     const ImageInterface<Complex>& /*image*/,
+				     ImageInterface<Float>& /*theavgPB*/,
+				     Bool /*reset*/=True)
       {throw(AipsError("IlluminationConvFunc::makeAverageRes() called"));};
 
-    virtual Bool makeAverageResponse(const VisBuffer& vb, 
-				     const ImageInterface<Complex>& image,
-				     ImageInterface<Complex>& theavgPB,
-				     Bool reset=True)
+    virtual Bool makeAverageResponse(const VisBuffer& /*vb*/,
+				     const ImageInterface<Complex>& /*image*/,
+				     ImageInterface<Complex>& /*theavgPB*/,
+				     Bool /*reset*/=True)
       {throw(AipsError("IlluminationConvFunc::makeAverageRes() called"));};
 
 		  
