@@ -41,6 +41,7 @@
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/SpectralModel.h>
+#include <components/ComponentModels/TabularSpectrum.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>
@@ -1391,14 +1392,21 @@ std::string componentlist::spectrumtype(const int which)
   return rstat;
 }
 
-bool componentlist::setspectrum(const int which, const std::string& type,
-                                const double index)
+bool componentlist::setspectrum(const int which, const std::string& eltype,
+                                const double index, const std::vector<double>& tabfreqs, const std::vector<double>& tabflux, const std::string& freqframe)
 {
   itsLog->origin(LogOrigin("componentlist", "setspectrum"));
+
 
   bool rstat(false);
   try {
     if(itsList && itsBin){
+      String type(eltype);
+      type.upcase();
+      if(type.contains("TABU"))
+	 type="Tabular Spectrum";	 
+      if(type.contains("SPECTRAL"))
+	 type="Spectral Index";
        ComponentType::SpectralShape reqSpectrum = ComponentType::spectralShape(type);
        SpectralModel* spectrumPtr = ComponentType::construct(reqSpectrum);
        if (spectrumPtr == 0) {
@@ -1412,22 +1420,44 @@ bool componentlist::setspectrum(const int which, const std::string& type,
          *itsLog << "Spectrum not changed." << LogIO::POST;
          return false;
        }
-       String errorMessage;
-       Record rec;
-       rec.define("frequency", "current");
-       *itsLog << LogIO::DEBUG1 << "index: " << index << LogIO::POST;
-       // Vector<Double> indexVec(index);
-       // if(indexVec.nelements() > 0)
-       //   rec.define("index", indexVec[0]);
-       // else
-       rec.define("index", index);
-       if (!spectrumPtr->fromRecord(errorMessage, rec)) {
-         *itsLog << LogIO::SEVERE
-                << "Could not parse the spectrum parameters. The error was:" << endl
-                << "\t" << errorMessage << endl
-                << "Spectrum not changed."
-                << LogIO::POST;
-         return false;
+       if(reqSpectrum==ComponentType::TABULAR_SPECTRUM){
+	 if(tabfreqs.size() <2)
+	   throw(AipsError("There need to be at least 2 points in a tabular spectrum to interpolate in between"));
+	 if(tabfreqs.size() != tabflux.size())
+	   throw(AipsError("lengths of tabular frequencies and values have to be the same"));
+	 Vector<MVFrequency> freqs(tabfreqs.size());
+	 Vector<Flux<Double> > fluxval(tabfreqs.size());
+	 for (Int i=0; i < Int(tabfreqs.size()) ; ++i){
+	   freqs[i]=casa::Quantity(tabfreqs[i], "Hz");
+	   fluxval[i]=Flux<Double>(tabflux[i]);
+	 }
+	 MFrequency::Types freqFrameType;
+	 if(!MFrequency::getType(freqFrameType, freqframe))
+	   throw(AipsError(String(freqframe) + String(" is not a frequency frame that is understood")));
+	 MFrequency refreq(freqs[0], freqFrameType);
+	 delete spectrumPtr;
+	 spectrumPtr=new TabularSpectrum(refreq, freqs, fluxval, MFrequency::Ref(freqFrameType));
+	 
+
+       }
+       else{
+	 String errorMessage;
+	 Record rec;
+	 rec.define("frequency", "current");
+	 *itsLog << LogIO::DEBUG1 << "index: " << index << LogIO::POST;
+	 // Vector<Double> indexVec(index);
+	 // if(indexVec.nelements() > 0)
+	 //   rec.define("index", indexVec[0]);
+	 // else
+	 rec.define("index", index);
+	 if (!spectrumPtr->fromRecord(errorMessage, rec)) {
+	   *itsLog << LogIO::SEVERE
+		   << "Could not parse the spectrum parameters. The error was:" << endl
+		   << "\t" << errorMessage << endl
+		   << "Spectrum not changed."
+		   << LogIO::POST;
+	   return false;
+	 }
        }
        Vector<Int> intVec(1, which);
        itsList->setSpectrumParms(intVec, *spectrumPtr);

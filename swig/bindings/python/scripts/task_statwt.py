@@ -12,6 +12,15 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
         myms = mstool()
         mytb = tbtool()
         
+        # parameter check for those not fully implemeted
+        # (should be taken out once implemented)
+        if byantenna:
+          raise ValueError("byantenna=True is not supported yet")
+        if fitcorr !='':
+          raise ValueError("fitcorr is not supported yet")
+        if timebin !='0s' and timebin !='-1s':
+          raise ValueError("timebin is not supported yet")
+                     
         datacol = 'DATA'
         mytb.open(vis)
         colnames  = mytb.colnames()
