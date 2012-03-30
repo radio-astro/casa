@@ -238,12 +238,14 @@ MSFitsInput::MSFitsInput(const String& msFile, const String& fitsFile,
     // FITS file.
     File f(fitsFile);
     if (!f.exists() || !f.isReadable()) {
-        itsLog << "File " << fitsFile << " does not exist or is not readable"
+        itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+               << "File " << fitsFile << " does not exist or is not readable"
                 << LogIO::EXCEPTION;
     }
     // First attempt at validating that it's a FITS file
     if (!f.isRegular()) {
-        itsLog << "File " << fitsFile
+        itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+               << "File " << fitsFile
                 << " is not a plain file (maybe a directory?)"
                 << LogIO::EXCEPTION;
     }
@@ -252,22 +254,34 @@ MSFitsInput::MSFitsInput(const String& msFile, const String& fitsFile,
     String errmsg;
     NewFile fileOK(True);
     if (!fileOK.valueOK(msFile, errmsg)) {
-        itsLog << "Error in output file: " << errmsg << LogIO::EXCEPTION;
+        itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+               << "Error in output file: " << errmsg << LogIO::EXCEPTION;
     }
 
     msFile_p = msFile;
 
-    itsLog << LogIO::NORMAL << "Converting FITS file '" << fitsFile
+    itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+           << LogIO::NORMAL << "Converting FITS file '" << fitsFile
             << "' to MeasurementSet '" << msFile << "'" << LogIO::POST;
 
     // Open the FITS file for reading
     infile_p = new FitsInput(fitsFile.chars(), FITS::Disk);
     //cout << "++infile_p->hdutype()=" << infile_p->hdutype() << endl;
+
+    obsTime.resize(2);
+    MVTime timeVal;
+    MEpoch::Types epochRef;
+    FITSDateUtil::fromFITS(timeVal, epochRef, "2000-01-01", "UTC");
+    obsTime(0) = timeVal.second();
+    obsTime(1) = timeVal.second();
+
     if (infile_p) {
         if (infile_p->err() == FitsIO::IOERR) {
-            itsLog << "Error reading file " << fitsFile << LogIO::EXCEPTION;
+            itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+                   << "Failed to read file " << fitsFile << LogIO::EXCEPTION;
         } else if (infile_p->err()) {
-            itsLog << "Error reading initial record -- exiting."
+            itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+                   << "Failed to read initial record -- exiting."
                     << LogIO::EXCEPTION;
         } else {
 
@@ -283,13 +297,14 @@ MSFitsInput::MSFitsInput(const String& msFile, const String& fitsFile,
             }
         }
     } else {
-        itsLog << "Error opening fits file " << fitsFile << LogIO::EXCEPTION;
+        itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+               << "Failed to open fits file " << fitsFile << LogIO::EXCEPTION;
     }
 }
 
 void MSFitsInput::readRandomGroupUVFits(Int obsType) {
-
-        itsLog << LogOrigin("MSFitsInput", "readFitsFile-PrimaryGroup");
+        itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+               << LogIO::POST;
         Int nField = 0, nSpW = 0;
 
         useAltrval = False;
@@ -328,16 +343,25 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
 
         while (infile_p->rectype() != FITS::EndOfFile && !infile_p->err()) {
             if (infile_p->hdutype() != FITS::BinaryTableHDU) {
-                itsLog << LogIO::NORMAL << "Skipping unhandled extension"
-                        << LogIO::POST;
+                itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+                       << LogIO::NORMAL << "Skipping unhandled extension"
+                       << LogIO::POST;
                 infile_p->skip_hdu();
             } else {
                 BinaryTable binTab(*infile_p);
                 // see if we can recognize the type
                 String type = binTab.extname();
-                itsLog << LogIO::NORMAL << "Found binary table of type "
-                        << type << " following data" << LogIO::POST;
-                //itsLog << binTab <<LogIO::POST;
+                itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+                       << LogIO::DEBUG1 << "Found binary table of type "
+                       << type << " following data" << LogIO::POST;
+
+                itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+                       << LogIO::NORMAL
+                       << "extname=" << type << " nrows=" << binTab.nrows()
+                       << " ncols=" << binTab.ncols() << " rowsize=" << binTab.rowsize() 
+                       << " pcount=" << binTab.pcount() << " gcount=" << binTab.gcount()
+                       << LogIO::POST;
+                
                 if (type.contains("AN") && !haveAn) {
                     haveAn = True;
                     fillAntennaTable(binTab);
@@ -354,9 +378,10 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
                         updateSpectralWindowTable();
                     }
                 } else {
-                    itsLog << LogIO::NORMAL
-                            << "Skipping table, duplicate or unrecognized type: "
-                            << type << LogIO::POST;
+                    itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+                           << LogIO::NORMAL
+                           << "Skipping table, duplicate or unrecognized type: "
+                           << type << LogIO::POST;
                     //    binTab.fullTable("", Table::Scratch); // infile.skip_hdu();
                     binTab.fullTable();
                 }
@@ -376,86 +401,134 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
         fixEpochReferences();
 
         if (!haveAn) {
-            itsLog << "Cannot find an AN Table. This is required."
-                    << LogIO::EXCEPTION;
+            itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+                   << "Cannot find an AN Table. This is required."
+                   << LogIO::EXCEPTION;
         }
         fillFeedTable();
 }
 
 void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
-        //Int nField = 0, nSpW = 0;
+    itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits") 
+           << "msFile_p=" << msFile_p
+           << "obsType=" << obsType
+           << LogIO::POST;
+           
+    Int nField = 0, nSpW = 0;
 
-        useAltrval = False;
+    useAltrval = False;
 
-        Bool useTSM = False;
-        cout << "msFile_p=" << msFile_p << endl;
-        cout << "obsType=" << obsType << endl;
+    Bool useTSM = False;
 
-        epochRef_p = getDirectionFrame(2000.0);
-        setupMeasurementSet(msFile_p, useTSM, obsType);
-        cout << "now processing the tables....." << endl;
+    epochRef_p = getDirectionFrame(2000.0);
+    setupMeasurementSet(msFile_p, useTSM, obsType);
+    //cout << "now processing the tables....." << endl;
 
-        ////////////////fillObsTables();
+    ConstFitsKeywordList kwlist = priTable_p.kwlist();
 
-        while (infile_p->rectype() != FITS::EndOfFile && !infile_p->err()) {
-            if (infile_p->hdutype() != FITS::BinaryTableHDU) {
-                itsLog << LogOrigin("MSFitsInput", "readFitsFile-PrimaryTable")
-                       << LogIO::NORMAL << "Skipping unhandled extension"
+    const FitsKeyword* kw;
+    kwlist.first();
+
+    //this date is not source observation time!
+    String date = "2000-01-01";
+    date = (kw = kwlist(FITS::DATE)) ? kw->asString() : date;
+
+    MVTime timeVal;
+    MEpoch::Types epochRef;
+    FITSDateUtil::fromFITS(timeVal, epochRef, date, "UTC");
+    obsTime(0) = timeVal.second();
+    obsTime(1) = timeVal.second();
+    cout << "obstime=" << obsTime(0) << " " << obsTime(1) << endl;
+
+    
+    fillHistoryTable(kwlist);
+    Bool moreToDo = true;
+    while (moreToDo &&
+           infile_p->rectype() != FITS::EndOfFile && !infile_p->err()) { 
+        if (//infile_p->rectype() != FITS::HDURecord ||
+            infile_p->hdutype() != FITS::BinaryTableHDU) {
+            itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
+                   << LogIO::NORMAL << "Skipping unhandled extension"
+                   << LogIO::POST;
+            //cout << "infile_p->err()=" << infile_p->err() << endl;
+            infile_p->skip_hdu();
+            //cout << "infile_p->err()=" << infile_p->err() << endl; 
+        } 
+        else {
+            //cout << "rectype=" << infile_p->rectype() << endl;
+            //cout << "rectype FITS::HDURecord=" << FITS::HDURecord << endl;
+            //cout << "Data type is " << infile_p->datatype() << endl;
+            itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
+                   << LogIO::DEBUG1 << "Binary Table HDU ------>>>" << LogIO::POST;
+            while (infile_p->hdutype() == FITS::BinaryTableHDU) {
+                itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
+                       << LogIO::DEBUG1
+                       << "Found binary table of type "
+                       << infile_p->rectype() << " following data"
                        << LogIO::POST;
-                cout << "infile_p->err()=" << infile_p->err() << endl;
-                infile_p->skip_hdu();
-                cout << "infile_p->err()=" << infile_p->err() << endl; 
-            } 
-            else {
-                cout << "rectype=" << infile_p->rectype() << endl;
-                cout << "rectype FITS::HDURecord=" << FITS::HDURecord << endl;
-                cout << "read Binary Table data" << endl;
-                cout << "Binary Table HDU ------>>>" << endl;
-                cout << "Data type is " << infile_p->datatype() << endl;
-                while (infile_p->hdutype() == FITS::BinaryTableHDU) {
-                itsLog << LogIO::NORMAL
-                        << "Found binary table extension of type "
-                        << infile_p->rectype() << " following data"
-                        << LogIO::POST;
 
                 BinaryTable* bt = new BinaryTable(*infile_p);
-                //BinaryTableExtension* bt = new BinaryTableExtension(*infile_p);
                 String type = bt->extname();
-                cout << "extname=" << bt->extname() << " nrows=" << bt->nrows()
-                        << " ncols=" << bt->ncols() << " rowsize="
-                        << bt->rowsize() << " pcount=" << bt->pcount()
-                        << " gcount=" << bt->gcount() << endl;
-                //            showBinaryTable(*bt);
 
-                itsLog << LogIO::NORMAL << "Found binary table of type "
-                        << type << " following data" << LogIO::POST;
-                itsLog << bt << LogIO::POST;
+                itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
+                       << LogIO::NORMAL
+                       << "extname=" << bt->extname() << " nrows=" << bt->nrows()
+                       << " ncols=" << bt->ncols() << " rowsize=" << bt->rowsize() 
+                       //<< " pcount=" << bt->pcount() << " gcount=" << bt->gcount()
+                       << LogIO::POST;
+
                 if (type.contains("AN")) {
-                    cout << " AN table ---" << endl;
+                    nAnt_p = bt->nrows();
                     fillAntennaTable(*bt);
-                }
+                //} else if (type.contains("FQ")) {
+                //    nSpW = bt->nrows();
+                //    fillSpectralWindowTable(*bt, nSpW);
+                } 
+                else if (type.contains("SU")) {
+                    nField = bt->nrows();
+                    fillFieldTable(*bt, nField);
+                    setFreqFrameVar(*bt);
+                    //in case spectral window was already filled
+                    //if (haveSpW) {
+                    //    updateSpectralWindowTable();
+                    //}
+                } 
+                else if (type.contains("UV")) {
+                    showBinaryTable(*bt);
+                    //bt->fullTable();
+                    moreToDo = false;
+		    }
                 else {
-                    cout << "type=" << type << endl;
+                    //bt->fullTable();
+                    //infile_p->skip_all(FITS::BinaryTableHDU);
+                    infile_p->skip_hdu();
+                    itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
+                           << LogIO::NORMAL << "skip " << type << LogIO::POST;
                 }
-                cout << "<<<------ Binary Table HDU" << endl;
+                itsLog << LogOrigin("MSFitsInput", "readPrimaryTable")
+                       << LogIO::DEBUG1 << "<<<------ Binary Table HDU" << LogIO::POST;
             }
         }
-      }
+    }
 
 
 }
 
 void MSFitsInput::readFitsFile(Int obsType) {
-    //cout << "readFitsFile hdutype=" << infile_p->hdutype() << endl;
+    itsLog << LogOrigin("MSFitsInput", "readFitsFile")
+           << LogIO::NORMAL
+           << "hdutype=" << infile_p->hdutype()
+           << LogIO::POST;
     if (infile_p->hdutype() == FITS::PrimaryGroupHDU) {
         readRandomGroupUVFits(obsType);
     } else if (infile_p->hdutype() == FITS::PrimaryTableHDU) {
         cout << "Primary Table uvfits not yet handled!" << endl;
         //readPrimaryTableUVFits(obsType);
-
     } 
     else {
-        cout << "unhandled extension type! " << endl;
+        itsLog << LogOrigin("MSFitsInput", "readFitsFile")
+           << LogIO::NORMAL << "unhandled extension type! "
+           << LogIO::POST;
     }
 }
 
@@ -465,19 +538,23 @@ MSFitsInput::~MSFitsInput() {
 }
 
 Bool MSFitsInput::checkInput(FitsInput& infile) {
-    itsLog << LogOrigin("MSFitsInput", "checkInput");
     // Check that we have a valid UV fits file
     if (infile.rectype() != FITS::HDURecord) {
-        itsLog << "Error, file does not start with standard hdu record."
-                << LogIO::EXCEPTION;
+        itsLog << LogOrigin("MSFitsInput", "checkInput")
+               << "file does not start with standard hdu record."
+               << LogIO::EXCEPTION;
     }
-    //cout << "infile.hdutype(): " << infile.hdutype() << endl;
+    itsLog << LogOrigin("MSFitsInput", "checkInput")
+           << LogIO::DEBUG1
+           << "infile.hdutype(): " << infile.hdutype() 
+           << LogIO::POST;
     
     //visibilty must be one of these type
     if (infile.hdutype() != FITS::PrimaryGroupHDU &&
     	 infile.hdutype() != FITS::PrimaryTableHDU) {
-        itsLog << "Error, neither primary group nor primary table"
-                << LogIO::EXCEPTION;
+        itsLog << LogOrigin("MSFitsInput", "checkInput")
+               << "Error, neither primary group nor primary table"
+               << LogIO::EXCEPTION;
     }
     FITS::ValueType dataType = infile.datatype();
     //cout << "dataType=" << dataType
@@ -489,9 +566,9 @@ Bool MSFitsInput::checkInput(FitsInput& infile) {
     	 dataType != FITS::SHORT &&
     	 dataType != FITS::LONG &&
     	 dataType != FITS::BYTE) {
-        itsLog
-                << "Error, this class handles only FLOAT, SHORT, LONG and BYTE data "
-                << "(BITPIX=-32,16,32,8) at present" << LogIO::EXCEPTION;
+        itsLog << LogOrigin("MSFitsInput", "checkInput")
+               << "Error, this class handles only FLOAT, SHORT, LONG and BYTE data "
+               << "(BITPIX=-32,16,32,8) at present" << LogIO::EXCEPTION;
     }
     return True;
 }
@@ -852,6 +929,9 @@ void MSFitsInput::fillObsTables() {
     Vector<Double> times(2);
     times(0) = timeVal.second();
     times(1) = timeVal.second(); // change this to last time in input
+    obsTime(0) = times(0);
+    obsTime(1) = times(1);
+
     msObsCol.timeRange().put(0, times);
     msObsCol.releaseDate().put(0, times(0)); // just use TIME_RANGE for now
     Double time = timeVal.second();
@@ -881,6 +961,51 @@ void MSFitsInput::fillObsTables() {
 }
 
 //
+void MSFitsInput::fillHistoryTable(ConstFitsKeywordList &kwl) {
+    kwl.first();
+    const FitsKeyword *kw;
+
+    const Regex trailing(" *$");
+
+    String date;
+    date = (kw = kwl(FITS::DATE_OBS)) ? kw->asString() : "";
+    if (date == "") {
+        date = (kw = kwl(FITS::DATE)) ? kw->asString() : "";
+    }
+    if (date == "")
+        date = "2000-01-01";
+    MVTime timeVal;
+    MEpoch::Types epochRef;
+    FITSDateUtil::fromFITS(timeVal, epochRef, date, "UTC");
+    Double time = timeVal.second();
+
+    String history;
+    MSHistoryColumns msHisCol(ms_p.history());
+    Int row = ms_p.history().nrow() - 1;
+    kwl.first();
+    while ((kw = kwl.next())) {
+        String nm = kw->name();
+        //cout << "nm=" << nm << endl;
+        if (nm == "HISTORY" || nm == "COMMENT" || nm == "") {
+            history = kw->comm();
+            //cout << "history=" << history << endl;
+            history = history.before(trailing);
+            ms_p.history().addRow();
+            row++;
+            msHisCol.observationId().put(row, 0);
+            msHisCol.time().put(uInt(row), time);
+            msHisCol.priority().put(row, "NORMAL");
+            msHisCol.origin().put(row, "MSFitsInput::fillHistoryTables");
+            msHisCol.application().put(row, history.before(' '));
+            Vector<String> cliComm(1);
+            cliComm[0] = "";
+            msHisCol.cliCommand().put(row, cliComm);
+            msHisCol.appParams().put(row, cliComm);
+            msHisCol.message().put(row, history.after(' '));
+        }
+    }
+
+}
 
 // Extract the data from the PrimaryGroup object and stick it into
 // the MeasurementSet 
@@ -1517,14 +1642,14 @@ void MSFitsInput::fillMSMainTable(Int& nField, Int& nSpW) {
 }
 
 void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
-    itsLog << LogOrigin("MSFitsInput", "fillAntennaTable");
     const Regex trailing(" *$"); // trailing blanks
     TableRecord btKeywords = bt.getKeywords();
     Int nAnt, nAntMax;
     Bool missingAnts = False;
     nAntMax = nAnt_p;
     if (nAnt_p != bt.nrows()) {
-        itsLog << array_p
+        itsLog << LogOrigin("MSFitsInput", "fillAntennaTable")
+               << array_p
                 << " telescope quirk detected.  Filler purports to construct the full"
                 << " ANTENNA table with possible blank entries."
                 << LogIO::NORMAL1 << LogIO::POST;
@@ -1532,6 +1657,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
     }
 
     nAnt = bt.nrows();
+    //cout << "nAnt=" << nAnt << endl;
     if (nAnt - 1 > nAntMax)
         nAntMax = nAnt - 1;
 
@@ -1755,7 +1881,6 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
 }
 
 void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
-    itsLog << LogOrigin("MSFitsInput", "fillSpectralWindowTable");
 
     //  cout << "fSWT type: " << MFrequency::showType(freqsys_p) << endl;
 
@@ -1817,7 +1942,8 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
         }
         Int fqRow = spw / max(1, nIF_p);
         if (fqRow != colFrqSel(fqRow) - 1)
-            itsLog << LogIO::SEVERE
+            itsLog << LogOrigin("MSFitsInput", "fillSpectralWindowTable")
+                   << LogIO::SEVERE
                     << "Trouble interpreting FQ table, id's may be wrong"
                     << LogIO::POST;
         msSpW.name().put(spw, "none");
@@ -1925,18 +2051,17 @@ void MSFitsInput::fillSpectralWindowTable() {
 // Returns the Direction Measure reference for UVW and other appropriate columns
 // in msc_p (which must exist but have empty columns before you can set it!).
 MDirection::Types MSFitsInput::getDirectionFrame(Double epoch) {
-    itsLog << LogOrigin("MSFitsInput", "getDirectionFrame");
 
     MDirection::Types epochRef = MDirection::J2000;
     if (nearAbs(epoch, 1950.0, 0.01))
         epochRef = array_p == "VLA" ? MDirection::B1950_VLA : MDirection::B1950;
-    itsLog << LogIO::NORMAL << "epochRef ok " << LogIO::POST;
+    itsLog << LogOrigin("MSFitsInput", "getDirectionFrame") 
+           << LogIO::DEBUG1 << "epochRef ok " << LogIO::POST;
 
     return epochRef;
 }
 
 void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
-    itsLog << LogOrigin("MSFitsInput", "fillFieldTable");
     MSFieldColumns& msField(msc_p->field());
     // Table suTab=bt.fullTable("",Table::Scratch);
     Table suTab = bt.fullTable();
@@ -1958,7 +2083,8 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
     ROScalarColumn<Double> pmra(suTab, "PMRA"); //deg/day
     ROScalarColumn<Double> pmdec(suTab, "PMDEC"); //deg/day
     if (Int(suTab.nrow()) < nField) {
-        itsLog << LogIO::NORMAL
+        itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+               << LogIO::NORMAL
                 << "Input Source id's not sequential, adding empty rows in output"
                 << LogIO::POST;
     }
@@ -1979,7 +2105,8 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
 
     MDirection::Types epochRefZero = getDirectionFrame(epoch(0));
     if (epochRefZero != epochRef_p)
-        itsLog << LogIO::WARN << "The direction measure reference code, "
+        itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+               << LogIO::WARN << "The direction measure reference code, "
                 << epochRefZero << "\n"
                 << "for the first field does not match the one from the FITS header, "
                 << epochRef_p
@@ -2033,10 +2160,12 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
                     epochRef = MDirection::B1950;
             } else if (epoch(inRow) == -1.0) {
                 epochRef = epochRefZero;
-                itsLog << " Assuming standard epoch " << " for " << name(inRow)
+                itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+                       << " Assuming standard epoch " << " for " << name(inRow)
                         << ".  Be aware that this may not be correct." << endl;
             } else {
-                itsLog << " Cannot handle epoch in SU table: " << epoch(inRow)
+                itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+                       << " Cannot handle epoch in SU table: " << epoch(inRow)
                         << LogIO::EXCEPTION;
             }
             refDir = MVDirection(ra(inRow) * C::degree, dec(inRow) * C::degree);
@@ -2052,11 +2181,15 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
                     pmdec(inRow) * C::degree / C::day), MDirection::Ref(
                     epochRef));
         }
+
+        /*
         // Get the time from the observation subtable. I have assumed that this bit
         // of the observation table has been filled by now.
         const Vector<Double> obsTimes = msc_p->observation().timeRange()(0);
 
         msField.time().put(fld, obsTimes(0));
+        */
+        msField.time().put(fld, obsTime(0));
         msField.numPoly().put(fld, numPoly);
         msField.delayDirMeasCol().put(fld, radecMeas);
         msField.phaseDirMeasCol().put(fld, radecMeas);
@@ -2067,7 +2200,6 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
 
 // single source fits case
 void MSFitsInput::fillFieldTable(Int nField) {
-    itsLog << LogOrigin("MSFitsInput", "fillFieldTable");
     // some UVFITS files have the source number set, but have no SU
     // table. We will assume there is only a single source in that case
     // and set all fieldId's back to zero
@@ -2158,7 +2290,8 @@ void MSFitsInput::fillExtraTables() {
     // table entries for each field/spw combination
 
     if (addSourceTable_p)
-        itsLog << LogIO::NORMAL << "Filling SOURCE table." << LogIO::POST;
+        itsLog << LogOrigin("MSFitsInput", "fillExtraable")
+               << LogIO::NORMAL << "Filling SOURCE table." << LogIO::POST;
 
     Int nrow = ms_p.nrow();
     Int nAnt = ms_p.antenna().nrow();
@@ -2278,7 +2411,6 @@ void MSFitsInput::fillExtraTables() {
 }
 
 void MSFitsInput::fixEpochReferences() {
-    itsLog << LogOrigin("MSFitsInput", "fixEpochReferences");
     if (timsys_p == "IAT")
         timsys_p = "TAI";
     if (timsys_p == "UTC" || timsys_p == "TAI") {
@@ -2288,7 +2420,8 @@ void MSFitsInput::fixEpochReferences() {
             msc_p->setEpochRef(MEpoch::TAI, False);
     } else {
         if (timsys_p != "")
-            itsLog << LogIO::SEVERE << "Unhandled time reference frame: "
+            itsLog << LogOrigin("MSFitsInput", "fixEpochReferences")
+                   << LogIO::SEVERE << "Unhandled time reference frame: "
                     << timsys_p << LogIO::POST;
     }
 }
