@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cout<<"[FitsInput::errmsg] called."<<endl;
 	static char msgstring[180];
 	ostringstream msgline;
-	msgline << "FitsInput error:  ";
+	//msgline << "FitsInput Error: ";
 	if (m_fin.fname() == 0 || *m_fin.fname() == '\0') 
 	    msgline << "File Descriptor " << m_fin.fdes();
 	else
@@ -248,18 +248,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //========================================================================================
     void FitsInput::init() {
 	if (m_fin.err())
-	    errmsg(IOERR,"Error constructing input");
+	    errmsg(IOERR,"[FitsInput::init()] Failed to construct input");
 	else {
 	    //cout<<"[FitsInput::init()] First call to BlockInput::read()." << endl;
 	    m_curr = m_fin.read();
 	    m_got_rec = True;
 	    if (!m_curr) {
-	        errmsg(EMPTYFILE,"This is an empty file [FitsInput::init()].");
+	        errmsg(EMPTYFILE,"[FitsInput::init()] This is an empty file");
 	        m_rec_type = FITS::EndOfFile;
 	        return;
 	    }
 	    if (m_fin.err()) {
-	        errmsg(IOERR,"Error reading first record [FitsInput::init()].");
+	        errmsg(IOERR,"[FitsInput::init()] Failed to read the first record");
 	        m_rec_type = FITS::BadBeginningRecord;
 	        return;
 	    }
@@ -270,20 +270,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    HeaderDataUnit::HDUErrs n;
 	    if (!HeaderDataUnit::determine_type(m_kw,m_hdu_type,m_data_type,m_errfn,n)) {
-	        errmsg(BADBEGIN,"Unrecognizable record at the beginning [FitsInput::init()].");
+	        errmsg(BADBEGIN,"[FitsInput::init()] Unrecognizable record at the beginning");
 	        m_rec_type = FITS::BadBeginningRecord;
 	        return;
 	    }
 	    if (!(m_hdu_type == FITS::PrimaryArrayHDU || 
                   m_hdu_type == FITS::PrimaryTableHDU || 
 		  m_hdu_type == FITS::PrimaryGroupHDU)) {
-	        errmsg(NOPRIMARY,"Missing primary header-data unit [FitsInput::init()].");
+	        errmsg(NOPRIMARY,"[FitsInput::init()] Missing primary header-data unit");
 	    } else {
                 m_isaprimary = True;
 	        if (m_kw(FITS::SIMPLE)->asBool() == True) 
 		    m_valid_fits = True;
 		else
-		    m_errfn("Value of keyword SIMPLE is FALSE; this file may not be a valid FITS file [FitsInput::init()].",
+		    m_errfn("Value of keyword SIMPLE is FALSE; this file may not be a "
+                            "valid FITS file [FitsInput::init()].",
 			    FITSError::WARN);
 	        if (m_kw(FITS::EXTEND))
 		    if (m_kw.curr()->asBool() == True)
@@ -297,7 +298,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    int l_status = 0;
 	    if( ffthdu(m_fptr, &m_thdunum, &l_status)>0){
 		fits_report_error(stderr, l_status); // print error report
-		errmsg(IOERR,"[FitsInput::init()] Error when getting total number of HDU.");
+		errmsg(IOERR,"[FitsInput::init()] Failed to get total number of HDU.");
 		return;
 	    }
 	    // set the cfitsio bytepos to what it was at begnning of this method.
@@ -316,7 +317,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<String> FitsInput::kwlist_str(Bool length80){  
 	Vector<String> cards;
 	if( !m_header_done ){
-	    cout<< "[FitsInput::kwlist_str()] If you need call this method, you should do so before reading any data from CHDU."<<endl;
+	    cout<< "[FitsInput::kwlist_str()] If you need call this method, "
+                   "you should do so before reading any data from CHDU."<<endl;
 	    return cards;	
 	}else{
 	    // remember the cfitsio bytepos before calling any cfitsio function
@@ -325,7 +327,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // get the total number of keywords in the chdu
 	    if(ffghsp( m_fptr,&l_keysexist, &l_morekeys, &l_status )){
 		fits_report_error(stderr, l_status); // print error report
-		cout<<"[FitsInput::kwlist_str()]Error when getting total number of keywords in CHDU."<<endl;
+		cout << "[FitsInput::kwlist_str()] Failed to get total number of keywords in CHDU."
+                     << endl;
 		return cards;
 	    }
 	    // get every card image as a char* and store them into cards.
@@ -334,7 +337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for( int keynum = 1; keynum<l_keysexist+1;keynum++ ){
 		if(ffgrec( m_fptr, keynum, cardImg, &l_status )){ // error reading card
 		    fits_report_error(stderr, l_status); // print error report
-		    errmsg(BADOPER,"error reading card!");
+		    errmsg(BADOPER,"[FitsInput::kwlist_str()] Failed to read the card!");
 		}
 		else {
 		    String onecard( cardImg );
@@ -348,7 +351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if( l_bytepos < ((m_fptr->Fptr)->filesize) ){
 		if(ffmbyt(m_fptr, l_bytepos, REPORT_EOF, &l_status)>0 ){
 		    fits_report_error(stderr, l_status); // print error report
-		    errmsg(BADOPER,"bytepos setting error!");
+		    errmsg(BADOPER,"[FitsInput::kwlist_str()] bytepos setting error!");
 		}
 	    }else{
 		(m_fptr->Fptr)->bytepos = l_bytepos;
@@ -383,7 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    	return 0;
 	    }
 	    if (m_fin.err()) {
-	    	errmsg(IOERR,"Error reading record.");
+	    	errmsg(IOERR,"[FitsInput::read_sp()] Failed to read a sp record.");
 	    	return m_curr;
 	    }
 	    m_kw.delete_all();
@@ -396,12 +399,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if (!(m_hdu_type == FITS::PrimaryArrayHDU || 
 		  m_hdu_type == FITS::PrimaryGroupHDU ||
 		  m_hdu_type == FITS::PrimaryTableHDU)) {
-		errmsg(NOPRIMARY,"Missing primary header-data unit.");
+		errmsg(NOPRIMARY,"[FitsInput::read_sp()] Missing primary header-data unit.");
 	    } else {
 		if (m_kw(FITS::SIMPLE)->asBool() == True){ 
 		    m_valid_fits = True;
 		}else{
-		    m_errfn("Value of keyword SIMPLE is FALSE; this file may not be a valid FITS file.",
+		    m_errfn("[FitsInput::read_sp()] Value of keyword SIMPLE is FALSE; this"
+                            " file may not be a valid FITS file.",
 			    FITSError::WARN);
 		}
 		if (m_kw(FITS::EXTEND)){
@@ -424,7 +428,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    	return 0;
 	    }
 	    if (m_fin.err()) {
-		errmsg(IOERR,"Error reading record.");
+		errmsg(IOERR,"[FitsInput::read_sp()] Failed to read a unrecognizable record.");
 		return m_curr;
 	    }
 	    m_kw.delete_all();
@@ -450,7 +454,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    	return 0;
 	    }
 	    if (m_fin.err()) {
-		errmsg(IOERR,"Error reading record.");
+		errmsg(IOERR,"[FitsInput::read_sp()] Failed to read a sp record.");
 		return m_curr;
 	    }
 	    m_err_status = OK;
@@ -470,19 +474,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( l_chdunum < m_thdunum ){ 
 	    if( ffmrhd(m_fptr,  1, &l_hdutype, &l_status)>0){
 		fits_report_error(stderr, l_status); // print error report
-		errmsg(IOERR,"[FitsInput::read_header_rec()] Error moving CHDU.");
+		errmsg(IOERR,"[FitsInput::read_header_rec()] Failed to move to the next hdu");
 		return;
 	    }
 	}else{ // reach the end of the fits file, end the program gracefully.
 	    m_curr = m_fin.read();
 	    m_got_rec = True;
 	    if (!m_curr) {
-		//cout <<"Reached the end of the FITS file. [ FitsInput::read_header_rec()] "<< endl;
+		//cout << "[FitsInput::read_header_rec()] Reached the end of the FITS file" << endl;
 		m_rec_type = FITS::EndOfFile;
 		return;
 	    }
 	    if (m_fin.err()) {
-		errmsg(IOERR,"Error reading first record of new header [ FitsInput::read_header_rec()].");
+		errmsg(IOERR,"[FitsInput::read_header_rec()] Failed to read first record of new header");
 		m_rec_type = FITS::UnrecognizableRecord;
 		return;
 	    }
@@ -494,14 +498,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// get size info of the current HDU 
 	if (ffghof(m_fptr, &l_headstart, &l_datastart, &l_dataend, &l_status) > 0){
 	    fits_report_error(stderr, l_status); // print error report
-	    errmsg(BADSIZE,"[FitsInput::read_header_rec()]Error computing size of data.");
+	    errmsg(BADSIZE,"[FitsInput::read_header_rec()] Failed to get the size of data.");
 	    return;
 	}
 	// move file pointer to the beginning of the new hdu.
 	l_status = 0;
 	if(ffmbyt(m_fptr, l_headstart, REPORT_EOF, &l_status)){
 	    fits_report_error(stderr, l_status); // print error report
-	    errmsg(IOERR,"[FitsInput::read_header_rec()]Error when moving the file position pointer.");
+	    errmsg(IOERR,"[FitsInput::read_header_rec()] Failed to move the file pointer to beginning.");
 	}
 	// reset m_iosize so that next m_fin.read() will start from the beginning of next hdu.
 	m_fin.reset_iosize();
@@ -509,12 +513,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	m_curr = m_fin.read();
 	m_got_rec = True;
 	if (!m_curr) {
-	    //cout <<" Reached the end of the fit file. [ FitsInput::read_header_rec()] "<< endl;
+	    //cout << "[FitsInput::read_header_rec()] Reached the end of the FITS file" << endl;;
 	    m_rec_type = FITS::EndOfFile;
 	    return;
 	}
 	if (m_fin.err()) {
-	    errmsg(IOERR,"Error reading first record of new header [ FitsInput::read_header_rec()].");
+	    errmsg(IOERR,"[FitsInput::read_header_rec()] Failed to read the first record of new header");
 	    m_rec_type = FITS::UnrecognizableRecord;
 	    return;
 	}
@@ -525,6 +529,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cout << "[ FitsInput::read_header_rec()] Number of errors from parsing: nerrs_ = " << nerrs_ <<endl;
 	uInt parseErrs = nerrs_;
 	HeaderDataUnit::HDUErrs n;
+        //cout << ">>FitsInput::read_header_rec() - hdu_type=" << m_hdu_type << endl; 
 	if (!HeaderDataUnit::determine_type(m_kw,m_hdu_type,m_data_type,readHeaderRecErrHandler,n)) {
 	    // in this case, the header is completely bogus, the error messages which
 	    // convey that are the ones returned by determine_type, the ones returned
@@ -538,6 +543,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    m_rec_type = FITS::SpecialRecord;
 	    return;
 	}
+        //cout << "<<FitsInput::read_header_rec() + hdu_type=" << m_hdu_type << endl; 
 	// spit out all of the cached error messages
 	// cout<< "[ FitsInput::read_header_rec()] Error message from parsing and determin_type():" << endl;
 	for (uInt i=0;i<nerrs_;i++) {
@@ -547,18 +553,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (m_hdu_type == FITS::PrimaryArrayHDU || 
             m_hdu_type == FITS::PrimaryGroupHDU ||
             m_hdu_type == FITS::PrimaryTableHDU) { 
-	    errmsg(BADPRIMARY,"[ FitsInput::read_header_rec()] Misplaced primary header-data unit.");
+	    errmsg(BADPRIMARY,"[FitsInput::read_header_rec()] Misplaced primary header-data unit.");
 	}
 	m_rec_type = FITS::HDURecord;
 	m_header_done = False;
+        //cout << "<<FitsInput::read_header_rec() ~ hdu_type=" << m_hdu_type << endl; 
     }
 //========================================================================================
 // Implement the skip_hdu with cfitsio of NASA
     int FitsInput::skip_hdu() { //Skip an entire header-data unit
 	m_err_status = OK;
-	if ((m_rec_type != FITS::HDURecord) || m_header_done) {
-	    errmsg(BADOPER,"Illegal operation on FITS input");
+	if ((m_rec_type != FITS::HDURecord) /*|| m_header_done*/) {
+	    errmsg(BADOPER,"[FitsInput::skip_hdu()] not a hdu record");
 	    return (int)m_err_status;
+	}
+	if (/*(m_rec_type != FITS::HDURecord) || */m_header_done) {
+	    //errmsg(BADOPER,"[FitsInput::skip_hdu()] hdu already done");
+	    read_header_rec(); // this will set the current hdu_type etc.
+	    if (err()){ 
+	        return (int)m_err_status;	
+	    }
+	    return 0;
 	}
 	
 	// check if the header of the current HDU is properly ended
@@ -574,7 +589,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// get size info of the HDU to be skipped
 	if (ffghof(m_fptr, &l_headstart, &l_datastart, &l_dataend, &l_status) > 0){
 	    fits_report_error(stderr, l_status); // print error report
-	    errmsg(BADSIZE,"[FitsInput::read_header_rec()]Error computing size of data.");
+	    errmsg(BADSIZE,"[FitsInput::read_header_rec()] Failed to get the size of data.");
 	    return (int)m_err_status;
 	}
 	m_skipHDU_size = l_dataend-l_headstart;
@@ -610,7 +625,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    errmsg(MISSKEY,l_message);
 
 		    if (nextkey % 36 == 0){ // test if at beginning of 36-card record.
-			errmsg(MISSKEY,"This may indicate a missing END keyword.");
+			errmsg(MISSKEY,"[FitsInput::skip_hdu()] Possible missing END keyword.");
 			return (int)m_err_status;
 		    }
 		}
@@ -649,15 +664,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 //=================================================================================
     int FitsInput::process_header(FITS::HDUType t, FitsKeywordList &uk) {
+        //cout << "[FitsInput::process_header] t=" << t << " hdu_type=" << m_hdu_type
+        //     << " m_header_done=" << m_header_done << endl; 
 	m_err_status = OK;
 	m_item_size = 0;
 	m_data_type = FITS::NOVALUE;
 	m_data_size = 0;
 	m_bytepos = 0;
 	m_curr_size = 0;
-	if ((m_rec_type != FITS::HDURecord || m_hdu_type != t) || m_header_done) {
-	    errmsg(BADOPER,"Illegal operation on FITS input");
+	if (m_rec_type != FITS::HDURecord) {
+	    errmsg(BADOPER,"[FitsInput::process_header()] Not a hdu record");
 	    return -1;
+	}
+	if (m_hdu_type != t) {
+	    errmsg(BADOPER,"[FitsInput::process_header()] mismatch hdu type");
+	    return -1;
+	}
+	if (m_header_done) {
+	    //errmsg(BADOPER,"[FitsInput::process_header()] header already done");
+	    //return -1;
+	    read_header_rec();
+            return 0;
 	}
 	uk.delete_all();
 	uk = m_kw;
@@ -681,12 +708,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    uk.last(); // return list iterator to last position
 	    m_curr = m_fin.read(); // read the next record
 	    if (!m_curr) {
-	        errmsg(BADEOF,"[FitsInput::process_header()] Unexpected end of file.");
+	        errmsg(BADEOF,"[FitsInput::process_header()] Unexpected end of file");
 	        m_rec_type = FITS::EndOfFile;
 	        return -1;
 	    }
 	    if (m_fin.err()) {
-	        errmsg(IOERR,"[FitsInput::process_header()] Error reading header record.");
+	        errmsg(IOERR,"[FitsInput::process_header()] Unrecognizable record");
 	        m_rec_type = FITS::UnrecognizableRecord;
 	        return -1;
 	    }
@@ -697,8 +724,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (!FITS::isa_text(m_curr[i]))
 		    break;
 	    if (i < 8) {
-		errmsg(MISSKEY,"[FitsInput::process_header()] Missing END keyword.  Non-text data \
-             found in name field.\n\tEnd of keywords assumed.");
+		errmsg(MISSKEY,"[FitsInput::process_header()] Missing END keyword.  Non-text data "
+                               "found in name field.\n\tEnd of keywords assumed.");
 		break;
 	    }
 	}
@@ -712,13 +739,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int nd;
 	if (!HeaderDataUnit::compute_size(uk,m_data_size,nd,
 					  m_hdu_type,m_data_type,m_errfn,n)) {
-	    errmsg(BADSIZE,"[FitsInput::process_header()] Error computing size of data.");
+	    errmsg(BADSIZE,"[FitsInput::process_header()] Failed to compute size of data.");
 	    m_rec_type = FITS::UnrecognizableRecord;
 	    return -1;
 	}
+        //cout << "t=" << t << " m_curr_size=" << m_curr_size << " m_data_size=" << m_data_size << endl;
+        //cout << "m_hdu_type=" << m_hdu_type << " m_header_done=" << m_header_done << endl;
 	m_item_size = FITS::fitssize(m_data_type);
 	m_curr_size = m_data_size;
         m_header_done = True;
+           
 	if ( m_data_size > 0) {
 	    m_curr = m_fin.read();
 	    m_got_rec = True;
@@ -738,12 +768,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		m_data_type = FITS::NOVALUE;
 		m_data_size = 0;
 		m_curr_size = 0;
-		errmsg(IOERR,"[FitsInput::process_header()] Error reading first data record.");
+		errmsg(IOERR,"[FitsInput::process_header()] Failed to read first data record.");
 		m_rec_type = FITS::UnrecognizableRecord;
 		return -1;
 	    }
 	} else{
-	    read_header_rec();
+           //cout << "FitsInput::process_header - t=" << t << " hdu_type=" << m_hdu_type << endl; 
+	   //read_header_rec();
 	}
 	return 0;
     }
@@ -757,9 +788,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // called, m_data_size actually cannot be bigger than the machine's memory size.
 // we still change the return type to OFF_T though.
     OFF_T FitsInput::read_all(FITS::HDUType t, char *addr) {
-	if (m_curr_size <= 0 || m_curr_size != m_data_size ||
+	if (m_curr_size < 0 || m_curr_size != m_data_size ||
 	    m_rec_type != FITS::HDURecord || t != m_hdu_type || (!m_header_done)) {
-	    errmsg(BADOPER,"Illegal operation on FITS input[FitsInput::read_all]");
+	    errmsg(BADOPER,"[FitsInput::read_all] Illegal operation on FITS input");
 	    return 0;
 	}
 	// get size of the current HDU
@@ -767,7 +798,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int l_status = 0;
 	if (ffghof(m_fptr, &l_headstart, &l_datastart, &l_dataend, &l_status) > 0){
 	    fits_report_error(stderr, l_status); // print error report
-	    errmsg(BADSIZE,"[FitsInput::read_all()]Error computing size of data.");
+	    errmsg(BADSIZE,"[FitsInput::read_all()] Failed to get the size of current hdu");
 	    return 0;
 	}
 
@@ -796,7 +827,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( l_dataend < ((m_fptr->Fptr)->filesize) ){
 	    if(ffmbyt(m_fptr, l_dataend, REPORT_EOF, &l_status)>0 ){
 		fits_report_error(stderr, l_status); // print error report
-		errmsg(BADOPER,"bytepos setting error!");
+		errmsg(BADOPER,"[FitsInput::read_all()] bytepos setting error!");
 		return(0);
 	    }
 	}else{
@@ -815,7 +846,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     int FitsInput::read(FITS::HDUType t, char *addr, int nb) { 
 	// read next nb bytes into addr
 	if (m_rec_type != FITS::HDURecord || t != m_hdu_type || (!m_header_done)) {
-	    errmsg(BADOPER,"Illegal operation on FITS input");
+	    errmsg(BADOPER,"[FitsInput::read()] Illegal operation on FITS input");
 	    return 0;
 	}
 	if (m_curr_size == 0) {
@@ -828,12 +859,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (m_bytepos == m_recsize) {
 	    m_curr = m_fin.read();
 	    if (!m_curr) {
-		errmsg(BADEOF,"Unexpected end of file.");
+		errmsg(BADEOF,"[FitsInput::read()] Unexpected end of file");
 		m_rec_type = FITS::EndOfFile;
 		return -1;
 	    }
 	    if (m_fin.err()) {
-		errmsg(IOERR,"Error reading first data record.");
+		errmsg(IOERR,"[FitsInput::read()] Unrecognizable first data record.");
 		m_rec_type = FITS::UnrecognizableRecord;
 		return -1;
 	    }
@@ -852,12 +883,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		addr += m_recsize - m_bytepos;
 	    	m_curr = m_fin.read();
 	    	if (!m_curr) {
-		    errmsg(BADEOF,"Unexpected end of file.");
+		    errmsg(BADEOF,"[FitsInput::read()] Unexpected end of file");
 		    m_rec_type = FITS::EndOfFile;
 		    return -1;
 	    	}
 	    	if (m_fin.err()) {
-		    errmsg(IOERR,"Error reading first data record.");
+		    errmsg(IOERR,"[FitsInput::read()] Unrecognizable data record.");
 		    m_rec_type = FITS::UnrecognizableRecord;
 		    return -1;
 	    	}
@@ -877,7 +908,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // number of bytes that is actually skipped.
     int FitsInput::skip(FITS::HDUType t, OFF_T nb) { // skip next nb bytes. Original comment                                         															
 	if (m_rec_type != FITS::HDURecord || t != m_hdu_type || (!m_header_done)) {
-	    errmsg(BADOPER,"Illegal operation on FITS input");
+	    errmsg(BADOPER,"[FitsInput::skip()] Illegal operation on FITS input");
 	    return 0;
 	}
 	// determine how many byte of data left within the current hdu data unit. Keep in mind 
@@ -894,12 +925,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (m_bytepos == m_recsize) {
 	    m_curr = m_fin.read();
 	    if (!m_curr) {
-		errmsg(BADEOF,"Unexpected end of file.");
+		errmsg(BADEOF,"[FitsInput::skip()] Unexpected end of file");
 		m_rec_type = FITS::EndOfFile;
 		return -1;
 	    }
 	    if (m_fin.err()) {
-		errmsg(IOERR,"Error reading first data record.");
+		errmsg(IOERR,"[FitsInput::skip()] Failed to read first data record.");
 		m_rec_type = FITS::UnrecognizableRecord;
 		return -1;
 	    }
@@ -935,7 +966,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if( l_postogo < ((m_fptr->Fptr)->filesize) ){
 		if(ffmbyt(m_fptr, l_postogo, REPORT_EOF, &l_status)>0 ){
 		    fits_report_error(stderr, l_status); // print error report
-		    errmsg(BADOPER,"bytepos setting error!");
+		    errmsg(BADOPER,"[FitsInput::skip()] bytepos setting error!");
 		    return -1;
 		}
 	    }else{
@@ -951,12 +982,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // position pointer to the end of the last complete record to skip.
 	    m_curr = m_fin.read();
 	    if (!m_curr) {
-		errmsg(BADEOF,"Reached the end of the file.");
+                //Is this an error?
+		errmsg(BADEOF,"[FitsInput::skip()] Reached the end of the file.");
 		m_rec_type = FITS::EndOfFile;
 		return -1;
 	    }
 	    if (m_fin.err()) {
-		errmsg(IOERR,"Error reading(skipping) data record.");
+		errmsg(IOERR,"[FitsInput::skip()] Failed to read/skip data record.");
 		m_rec_type = FITS::UnrecognizableRecord;
 		return -1;
 	    } 
@@ -975,7 +1007,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // beginning of the data unit of the next hdu ( by calling read_header_rec()); 
     void FitsInput::skip_all(FITS::HDUType t) {
 	if (m_rec_type != FITS::HDURecord || t != m_hdu_type || (!m_header_done)) {
-	    errmsg(BADOPER,"Illegal operation on FITS input");
+	    errmsg(BADOPER,"[FitsInput::skip_all()] Illegal operation on FITS input");
 	    return;
 	}
 	if (m_curr_size == 0) {
@@ -988,7 +1020,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int l_status = 0;
 	if (ffghof(m_fptr, &l_headstart, &l_datastart, &l_dataend, &l_status) > 0){
 	    fits_report_error(stderr, l_status); /* print error report */
-	    errmsg(BADSIZE,"[FitsInput::skip_all()()]Error computing size of data.");
+	    errmsg(BADSIZE,"[FitsInput::skip_all()] Failed to get the size of current hdu.");
 	    return;
 	}
 	// Determine how many byte of data left within the current hdu data unit.
@@ -997,7 +1029,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( l_dataend < ((m_fptr->Fptr)->filesize) ){
 	    if(ffmbyt(m_fptr, l_dataend, REPORT_EOF, &l_status)>0 ){
 		fits_report_error(stderr, l_status); // print error report
-		errmsg(BADOPER,"bytepos setting error!");
+		errmsg(BADOPER,"[FitsInput::skip_all()] bytepos setting error!");
 		m_rec_type = FITS::UnrecognizableRecord;
 		return;
 	    }
@@ -1050,7 +1082,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	} else if (m_rec_type != FITS::HDURecord) {
 	    errmsg(BADOPER,"[FitsOutput::write_hdr()] Catastrophic error!  Illegal record type.");
-	    cout<<"[FitsOutput::write_hdr()] Illeagal record type."<<endl;
+	    //cout<<"[FitsOutput::write_hdr()] Illeagal record type."<<endl;
 	    m_rec_type = FITS::EndOfFile;
 	    return -1;
 	} else {
@@ -1186,7 +1218,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cout<<"[FitsOutput::write()] is t == m_hdu_type? t =  "<< t << endl;
 	if ((bytes + m_curr_size) > m_data_size) {
 	    errmsg(BADOPER,"[FitsOutput::write] Attempt to write too much data -- truncated");
-	    cout<<"[FitsOutput::write] Attempt to write too much data -- truncated" << endl;
+	    //cout<<"[FitsOutput::write] Attempt to write too much data -- truncated" << endl;
 	    bytes = m_data_size - m_curr_size;
 	}
 	if (bytes <= (m_recsize - m_bytepos)) {
