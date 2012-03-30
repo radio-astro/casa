@@ -105,7 +105,7 @@ public:
     virtual vector<OptionType> optionTypes() const {
         return vector<OptionType>(); }
     virtual vector<RSOption> optionValues() const { return vector<RSOption>();}
-    virtual void setOptionValues(const vector<RSOption>& options) { }
+    virtual void setOptionValues(const vector<RSOption>& /*options*/) { }
     // </group>
 
 protected:
@@ -120,7 +120,7 @@ protected:
     }
     
     // Implements RegionShape::setShapeSpecificProperties.
-    virtual void setShapeSpecificProperties(const RecordInterface& props) { }
+    virtual void setShapeSpecificProperties(const RecordInterface& /*props*/) { }
     
     // Updates screen coords using world/pixel coords and the given WorldCanvas
     virtual bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
@@ -268,7 +268,7 @@ public:
     vector<String> optionNames() const { return vector<String>(); }
     vector<OptionType> optionTypes() const { return vector<OptionType>(); }
     vector<RSOption> optionValues() const { return vector<RSOption>();}
-    void setOptionValues(const vector<RSOption>& options) { }
+    void setOptionValues(const vector<RSOption>& /*options*/) { }
     // </group>
 
 protected:
@@ -285,7 +285,7 @@ protected:
     }
     
     // Implements RegionShape::setShapeSpecificProperties.
-    void setShapeSpecificProperties(const RecordInterface& properties) { }
+    void setShapeSpecificProperties(const RecordInterface& /*properties*/) { }
     
     // Updates screen coords using world/pixel coords and the given WorldCanvas
     bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
@@ -576,7 +576,7 @@ protected:
     }
     
     // Implements RegionShape::setShapeSpecificProperties.
-    virtual void setShapeSpecificProperties(const RecordInterface& props) { }
+    virtual void setShapeSpecificProperties(const RecordInterface& /*props*/) { }
     
     // Updates screen coords using world/pixel coords and the given WorldCanvas
     virtual bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
@@ -787,7 +787,7 @@ protected:
     }
     
     // Implements RegionShape::setShapeSpecificProperties.
-    void setShapeSpecificProperties(const RecordInterface& properties) { }
+    void setShapeSpecificProperties(const RecordInterface& /*properties*/) { }
     
     // Updates screen coords using world/pixel coords and the given WorldCanvas
     bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
@@ -919,7 +919,7 @@ public:
     vector<String> optionNames() const { return vector<String>(); }
     vector<OptionType> optionTypes() const { return vector<OptionType>(); }
     vector<RSOption> optionValues() const { return vector<RSOption>();}
-    void setOptionValues(const vector<RSOption>& options) { }
+    void setOptionValues(const vector<RSOption>& /*options*/) { }
     // </group>
 
 protected:
@@ -935,7 +935,7 @@ protected:
     }
     
     // Implements RegionShape::setShapeSpecificProperties.
-    void setShapeSpecificProperties(const RecordInterface& properties) { }
+    void setShapeSpecificProperties(const RecordInterface& /*properties*/) { }
     
     // Updates screen coords using world/pixel coords and the given WorldCanvas
     bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);

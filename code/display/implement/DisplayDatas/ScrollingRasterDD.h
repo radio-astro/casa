@@ -128,7 +128,7 @@ protected:
 
   // Set Spectral preference -> not used here.
   virtual void setSpectralPreference (
-    CoordinateSystem& cSys, const String&, const String& ){}
+    CoordinateSystem& /*cSys*/, const String&, const String& ){}
   
   void setHeaderMin(Float x){ itsHeaderMin = x; }
   void setHeaderMax(Float x){ itsHeaderMax = x; }

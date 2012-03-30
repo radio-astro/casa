@@ -166,7 +166,7 @@ public:
 
   // If applicable, this function will add a point to the shape in the
   // most meaningful location.
-  virtual void addPoint(const Vector<Float>& newPoint) { };
+  virtual void addPoint(const Vector<Float>& /*newPoint*/) { };
 
   // Rotate the shape about its center by a set angle (angle in degrees).
   virtual void rotate(const Float& angle) = 0;

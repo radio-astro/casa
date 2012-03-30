@@ -30,7 +30,7 @@ class QtPCColorTable : public PixelCanvasColorTable {
   
   virtual Bool staticSize() { return True; }
   
-  virtual Bool resize(uInt nReds, uInt nGreens, uInt nBlues) { return False;  }
+  virtual Bool resize(uInt /*nReds*/, uInt /*nGreens*/, uInt /*nBlues*/) { return False;  }
 
   virtual void nColors(uInt &n1, uInt &n2, uInt &n3) const {
     n1 = 256; n2 = 256; n3 = 256;  }
@@ -78,65 +78,65 @@ class QtPCColorTable : public PixelCanvasColorTable {
   
   //# The one of these really needed when/if non-Index (3-channel)
   //  ColorModels are implemented for QtPixelCanvas.
-  virtual void mapToColor3(Array<uLong> & out,
-			   const Array<uInt> & chan1in,
-			   const Array<uInt> & chan2in,
-			   const Array<uInt> & chan3in) {  }
+  virtual void mapToColor3(Array<uLong> & /*out*/,
+			   const Array<uInt> & /*chan1in*/,
+			   const Array<uInt> & /*chan2in*/,
+			   const Array<uInt> & /*chan3in*/) {  }
   
 
   //# irrelevant, unused versions:
-  virtual void mapToColor(const Colormap * map, 
-			  Array<uChar> & outArray, 
-			  const Array<uChar> & inArray, 
-			  Bool rangeCheck = True) const {  }
+  virtual void mapToColor(const Colormap * /*map*/,
+			  Array<uChar> & /*outArray*/,
+			  const Array<uChar> & /*inArray*/,
+			  Bool /*rangeCheck*/ = True) const {  }
 
-  virtual void mapToColor(const Colormap * map, 
-			  Array<uShort> & outArray, 
-			  const Array<uShort> & inArray, 
-			  Bool rangeCheck = True) const {  }
+  virtual void mapToColor(const Colormap * /*map*/,
+			  Array<uShort> & /*outArray*/,
+			  const Array<uShort> & /*inArray*/,
+			  Bool /*rangeCheck*/ = True) const {  }
 
-  virtual void mapToColor(const Colormap * map,
-			  Array<uLong> & outArray, 
-			  const Array<uLong> & inArray, 
-			  Bool rangeCheck = True) const {  }
+  virtual void mapToColor(const Colormap * /*map*/,
+			  Array<uLong> & /*outArray*/,
+			  const Array<uLong> & /*inArray*/,
+			  Bool /*rangeCheck*/ = True) const {  }
 
-  virtual void mapToColor(const Colormap * map, 
-			  Array<uChar> & inOutArray, 
-			  Bool rangeCheck = True) const {  }
+  virtual void mapToColor(const Colormap * /*map*/,
+			  Array<uChar> & /*inOutArray*/,
+			  Bool /*rangeCheck*/ = True) const {  }
 
-  virtual void mapToColor(const Colormap * map, 
-			  Array<uShort> & inOutArray, 
-			  Bool rangeCheck = True) const {  }
+  virtual void mapToColor(const Colormap * /*map*/,
+			  Array<uShort> & /*inOutArray*/,
+			  Bool /*rangeCheck*/ = True) const {  }
 
-  virtual void mapToColor(const Colormap * map, 
-			  Array<uInt> & inOutArray, 
-			  Bool rangeCheck = True) const {  }
+  virtual void mapToColor(const Colormap * /*map*/,
+			  Array<uInt> & /*inOutArray*/,
+			  Bool /*rangeCheck*/ = True) const {  }
 
-  virtual void mapToColor(const Colormap * map, 
-			  Array<uLong> & inOutArray, 
-			  Bool rangeCheck = True) const {  }
+  virtual void mapToColor(const Colormap * /*map*/,
+			  Array<uLong> & /*inOutArray*/,
+			  Bool /*rangeCheck*/ = True) const {  }
 
-  virtual void mapToColor3(Array<uLong> & out,
-			   const Array<Float> & chan1in,
-			   const Array<Float> & chan2in,
-			   const Array<Float> & chan3in) {  }
-  virtual void mapToColor3(Array<uLong> & out,
-			   const Array<Double> & chan1in,
-			   const Array<Double> & chan2in,
-			   const Array<Double> & chan3in) {  }
+  virtual void mapToColor3(Array<uLong> & /*out*/,
+			   const Array<Float> & /*chan1in*/,
+			   const Array<Float> & /*chan2in*/,
+			   const Array<Float> & /*chan3in*/) {  }
+  virtual void mapToColor3(Array<uLong> & /*out*/,
+			   const Array<Double> & /*chan1in*/,
+			   const Array<Double> & /*chan2in*/,
+			   const Array<Double> & /*chan3in*/) {  }
   
-  virtual void mapToColor3(Array<uLong> & out,
-			   const Array<uShort> & chan1in,
-			   const Array<uShort> & chan2in,
-			   const Array<uShort> & chan3in) {  }
+  virtual void mapToColor3(Array<uLong> & /*out*/,
+			   const Array<uShort> & /*chan1in*/,
+			   const Array<uShort> & /*chan2in*/,
+			   const Array<uShort> & /*chan3in*/) {  }
   
   virtual Bool colorSpaceMap(Display::ColorModel, 
-				   const Array<Float> & chan1in, 
-				   const Array<Float> & chan2in, 
-				   const Array<Float> & chan3in, 
-				   Array<Float> & chan1out, 
-				   Array<Float> & chan2out, 
-				   Array<Float> & chan3out) { return False;  }
+				   const Array<Float> & /*chan1in*/,
+				   const Array<Float> & /*chan2in*/,
+				   const Array<Float> & /*chan3in*/,
+				   Array<Float> & /*chan1out*/,
+				   Array<Float> & /*chan2out*/,
+				   Array<Float> & /*chan3out*/) { return False;  }
 		// (could move X11 version down to base class and use
 		// that -- it has no X11 dependencies...)
  

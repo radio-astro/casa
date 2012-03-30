@@ -2049,7 +2049,7 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
 
   
 //--------------------------------------------------------------------------
-Bool MSAsRaster::draw_(Display::RefreshReason reason,
+Bool MSAsRaster::draw_(Display::RefreshReason /*reason*/,
 		       WorldCanvasHolder &wch, WorldCanvas &wc)  {
   // (!)
   // The MSAsRasterDM only holds the drawlist handle; all the drawing data
@@ -4050,7 +4050,7 @@ String MSAsRaster::avgPos( const String &dim, int v) {
 
 //--------------------------------------------------------------------------
 String MSAsRaster::showPosition(const Vector<Double> &world,
-				const Bool& displayAxesOnly) {
+				const Bool& /*displayAxesOnly*/) {
   // for position tracking--formatted data value at given coordinate.
   // #dk (Still to do: convert this to use of MSpos_. Also, add MSpos_
   //      method to return frequency GHz).
@@ -4202,7 +4202,7 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
 }
 
 bool MSAsRaster::showPosition( viewer::RegionInfo::stats_t &stat_list, const Vector<Double> &world,
-			       const Bool& displayAxesOnly ) {
+			       const Bool& /*displayAxesOnly*/ ) {
     // for position tracking--formatted data value at given coordinate.
     // #dk (Still to do: convert this to use of MSpos_. Also, add MSpos_
     //      method to return frequency GHz).

@@ -441,7 +441,7 @@ public:
   // world coordinates.  Derived DDs can override according to their
   // individual capabilities (PADD and ACDD match axis codes).
   // Overriding DDs should set csConformed_ to the value returned.
-  virtual Bool conformsToCS(const WorldCanvas& wc) {
+  virtual Bool conformsToCS(const WorldCanvas& /*wc*/) {
     csConformed_ = True;
     return csConformed_;  }
 
@@ -624,7 +624,7 @@ public:
   // which has none registered on it yet.  The DD can set the initial
   // animator position in this case by overriding this method to set
   // preferredZIndex and return True.
-  virtual Bool zIndexHint(Int& preferredZIndex) const { return False;  }
+  virtual Bool zIndexHint(Int& /*preferredZIndex*/) const { return False;  }
 
   // Overide DisplayEH::handleEvent. This base class on forwards the
   // event on to listeners

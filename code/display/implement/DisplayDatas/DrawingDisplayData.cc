@@ -273,10 +273,10 @@ void DrawingDisplayData::doubleClick(const Int objectID) {
   cerr << "double click on object " << objectID << " detected" << endl;
 }
 
-DrawingDisplayData::DrawingDisplayData(const DrawingDisplayData &other) {
+DrawingDisplayData::DrawingDisplayData(const DrawingDisplayData &/*other*/) {
 }
 
-void DrawingDisplayData::operator=(const DrawingDisplayData &other) {
+void DrawingDisplayData::operator=(const DrawingDisplayData &/*other*/) {
 }
 
 void DrawingDisplayData::installDefaultOptions() {

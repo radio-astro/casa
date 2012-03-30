@@ -394,7 +394,7 @@ void QtAnnotatorGui::markerReleased(QMouseEvent *event)
 }
 
 void QtAnnotatorGui::confirmToolKitChange(const QString tool, 
-              const Qt::MouseButton key, const bool getOption)
+              const Qt::MouseButton key, const bool /*getOption*/)
 {
     //The receiver of this signal can decide whether is a command 'pointer',
     //'move', 'delete' and mouseKey id
@@ -545,7 +545,7 @@ void QtAnnotatorGui::canvasLockChanged(int idx)
     //     << canvastype[idx].toStdString() 
     //     << endl;
 }
-void QtAnnotatorGui::buttonClicked(int i)
+void QtAnnotatorGui::buttonClicked(int /*i*/)
 {
     // std::cout << "Qt 4.1 -- left button clicked" << i << " -> " <<
     // tools[i].toStdString() << std::endl;
