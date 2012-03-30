@@ -1189,9 +1189,9 @@ Int BasePlot::clearFlags()
 /*********************************************************************************/
 /* Compute the combined plot range */
 Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin, 
-     Double &ymax, Bool showflags, Bool columnsxaxis, String flagversion, 
-     Int averagenrows, String connectpoints, Bool doscalingcorrection, 
-     String multicolour, Bool honourxflags)
+     Double &ymax, Bool showflags, Bool /*columnsxaxis*/, String flagversion,
+     Int averagenrows, String /*connectpoints*/, Bool doscalingcorrection,
+     String multicolour, Bool /*honourxflags*/)
 {
    String fnname = "setPlotRange";
 #if LOG0
@@ -3822,7 +3822,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
 //
 //
 ////////////////////////////////////////////////////////////////////
-Int BasePlot::getFlags(String flagversion, String msname)
+Int BasePlot::getFlags(String /*flagversion*/, String msname)
 {
    String fnname = "getFlags";
    log->FnEnter(fnname + "(flageversion, msname)", clname);
@@ -3912,7 +3912,7 @@ Int BasePlot::getFlags(String flagversion, String msname)
 /*********************************************************************************/
 /* Set Flags */
 /* Directly write to disk. */
-Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
+Int BasePlot::flagData(Int /*diskwrite*/, Int /*setrowflag*/, Int direction)
 {
 
 
@@ -4212,7 +4212,7 @@ void BasePlot::BasePlotError(String msg)
 }
 /*********************************************************************************/
 
-Int BasePlot::flagData(Int direction, String msname, 
+Int BasePlot::flagData(Int direction, String /*msname*/,
                        String ext)
 {
 
