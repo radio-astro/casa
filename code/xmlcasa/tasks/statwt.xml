@@ -138,7 +138,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     depends on theoretical estimates of the noise, require (reasonably) correct
     weights and sigmas.  statwt empirically measures the visibility scatter
     (typically as a function of time, antenna, and/or baseline) and uses that
-    to set WEIGHT and SIGMA.
+    to set WEIGHT and SIGMA. It is important that all necessary calibrations 
+    are applied to the data prior to running this task for correct determination of
+    weights and sigmas. 
     
     Note: Some of the parameters (byantenna, sepacs, fitcorr, and timebin) 
           are not fully implemeted for CASA 3.4.
