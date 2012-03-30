@@ -2393,8 +2393,15 @@ specified component</shortdescription>
     this function are ignored. There are no other parameters needed to
     specify a constant spectrum.
 
-    But if the spectrum is 'spectral index', the index argument is
+    But if the spectrum is 'spectral index', the {\tt index} argument is
     needed to fully specify the spectrum by using the index argument.  
+
+    If the spectrum is 'tabular', then {\tt index} is ignored but the three parameters 
+    {\tt tabularfreqs, tabularflux and tabularframe} are considered. {\tt tabularfreqs} and {\tt tabularflux} have to be list of same lengths and larger than 2. You need at least 2 samples to interpolate the spectral value in between. 
+    The flux of the source is interpolated from these values. Extrappolation outside the range given in {\tt tabularfreqs} is not done.
+    {\tt tabularfreqs} should be float values in 'Hz'
+    {\tt tabularflux} should be float values in 'Jy'
+
 <!-- The line below is a lie ...as the code does not allow for a vector..
      may be a wish 
     
@@ -2411,17 +2418,21 @@ specified component</shortdescription>
   <input>
     
      <param type="int" name="which">
-     <description>A vector of indices specifying the components to modify.
-     A vector with indices between 0 and one less than the list length, inclusively</description>
+     <description>The index specifying the component to modify.
+     A value between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="type">
      <description>The new spectrum type.
-     A string that is either 'constant or 'spectral index'</description>
+     A string that is either 'constant or 'spectral index' or 'tabular'</description>
      <value>spectral index</value>
-     <value>Constant</value>
+     <allowed kind="enum">
+       <value>spectral index</value>
+       <value>constant</value>
+       <value>tabular</value>
+     </allowed>
      </param>
-    
+     
      <!-- <param type="doubleArray" name="index"> -->
      <param type="double" name="index">
      <description>The spectral index.</description>
@@ -2429,21 +2440,49 @@ specified component</shortdescription>
      <!-- <value type="vector"><value>1.0</value></value> -->
      <value>0.0</value>
      </param>
+
+     <param type="doubleArray" name="tabularfreqs">
+       <description>The frequencies of for the tabular values, in Hz</description>
+       <value type="vector">
+	 <value>1.0e11</value>
+       </value>
+     </param>
+
+     <param type="doubleArray" name="tabularflux">
+       <description> tabular flux density values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>1.0</value>
+       </value>
+     </param>
+     <param type="string" name="tabularframe">
+       <description> The frame for which the frequencies given are in</description>
+       <value>LSRK</value>
+     </param>
   </input>
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
+      
       cl.open('centarusA.cl');
       cl.setspectrum(2, 'spectral index', -0.5);
       print cl.getcomponent(2)['spectrum']['index']
-    
-  </example>
-  <comments>
-    This example revises the model for Centaurus-A changing the
+      cl.done()
+
+      This example revises the model for Centaurus-A changing the
     spectral index of all the components in the left lobe. The output
     from the print statement is \verb|[-0.5 0 0 0]|
-  </comments>
+
+    cl.addcomponent(shape='point', flux=[1.0, 0.0, 0.0, 0.0], dir='J2000 19h00m00 -20d00m00')
+    cl.setspectrum(which=0, type='tabular', tabularfreqs=[1.0e9, 1.1e9, 1.4e9], tabularflux=[1.0, 0.9, 0.75])
+    cl.rename('my19hcomp.cl')
+    cl.done()
+    
+   In this example a component is created from scratch as a point source
+   The spectrum is set to, say, measured values at 3 frequencies (1GHz, 1.1GHz and 1.4GHz) to 1.0Jy, 0.9Jy, 0.75Jy respectively.
+    Any frequency in between the range 1 to 1.4 GHz the flux will be estimated by interpolation.
+
+
+  </example>
 </method>
 
  
