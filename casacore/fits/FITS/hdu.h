@@ -725,8 +725,8 @@ class PrimaryTable : public PrimaryArray<TYPE> {
 	char* object() const 	   { return object_x; }
 	char* telescop()  const	   { return telescop_x; }
 	char* instrume()  const	   { return instrume_x; }
-	double dateobs()  const { return dateobs_x; }
-	double datemap()  const { return datemap_x; }
+	char* dateobs()  const { return dateobs_x; }
+	char* datemap()  const { return datemap_x; }
 	char* bunit()  const	   { return bunit_x; }
 	float bscal()  const { return bscale_x; }
 	float bzero()  const { return bzero_x; }
@@ -737,8 +737,8 @@ class PrimaryTable : public PrimaryArray<TYPE> {
         char* object_x;      //OBJECT
         char* telescop_x;    //TELESCOP
         char* instrume_x;    //INSTRUME
-        Double dateobs_x;    //DATE-OBS
-        Double datemap_x;    //DATE-MAP
+        char* dateobs_x;    //DATE-OBS
+        char* datemap_x;    //DATE-MAP
         Float bscale_x;      //BSCALE
         Float bzero_x;       //BZERO
         char* bunit_x;       //BUNIT
@@ -755,15 +755,34 @@ class PrimaryTable : public PrimaryArray<TYPE> {
 	using PrimaryArray<TYPE>::errmsg;
 	using PrimaryArray<TYPE>::init_data_unit;
 	using PrimaryArray<TYPE>::pa_assign;
+	using PrimaryArray<TYPE>::asgdbl;
+	using PrimaryArray<TYPE>::nelements;
+	using PrimaryArray<TYPE>::localitemsize;
+	using PrimaryArray<TYPE>::fitsitemsize;
+	using PrimaryArray<TYPE>::read_data;
+	using PrimaryArray<TYPE>::write_data;
 	using PrimaryArray<TYPE>::char_null;
 	using PrimaryArray<TYPE>::kwlist_;
 	using PrimaryArray<TYPE>::errfn;
+	using PrimaryArray<TYPE>::err_status;
 	using PrimaryArray<TYPE>::hdu_type;
 	using PrimaryArray<TYPE>::data_type;
 	using PrimaryArray<TYPE>::fits_data_size;
 	using PrimaryArray<TYPE>::fits_item_size;
 	using PrimaryArray<TYPE>::array;
+	using PrimaryArray<TYPE>::totsize;
+	using PrimaryArray<TYPE>::dimn;
+	using PrimaryArray<TYPE>::no_dims;
+	using PrimaryArray<TYPE>::factor;
+	using PrimaryArray<TYPE>::ctype_x;
+	using PrimaryArray<TYPE>::crpix_x;
+	using PrimaryArray<TYPE>::crota_x;
+	using PrimaryArray<TYPE>::crval_x;
+	using PrimaryArray<TYPE>::cdelt_x;
 	using PrimaryArray<TYPE>::BADOPER;
+	using PrimaryArray<TYPE>::OK;
+	using PrimaryArray<TYPE>::NOMEM;
+	using PrimaryArray<TYPE>::BADIO;
 };
 
 typedef PrimaryTable<unsigned char> BytePrimaryTable;
@@ -1090,6 +1109,8 @@ class BinaryTableExtension : public ExtensionHeaderDataUnit {
 	FitsBase &field(int i) const	{ return *fld[i]; }
 	// get current row
 	Int currrow() const		{ return curr_row; }
+	// sets field addresses in the current row
+	//void set_fitsrow(Int);
 
     protected:
 	BinaryTableExtension(FitsInput &, FITS::HDUType, 
