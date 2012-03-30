@@ -206,7 +206,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             del sel
 
 	    # Reload plotter if necessary
-            sd.plotter._assert_plotter(mode="reload")
+            sd.plotter._assert_plotter(action="reload")
 
 	    # Set subplot layout
 	    if subplot > -1:
