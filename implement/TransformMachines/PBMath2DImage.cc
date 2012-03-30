@@ -172,10 +172,10 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
 			  const Array<Complex>& in,
 			  Array<Complex>& out,
 			  Vector<Int>& polmap,
-			  Bool inverse,
-			  Bool conjugate,
+			  Bool /*inverse*/,
+			  Bool /*conjugate*/,
 			  Int ipower,  // ie, 1=VP, 2=PB
-			  Float cutoff,
+			  Float /*cutoff*/,
 			  Bool circular,
 			  Bool forward)
 {
@@ -299,7 +299,7 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
 			  const Array<Float>& in,
 			  Array<Float>& out,
 			  Vector<Int>& polmap,
-			  Float cutoff,
+			  Float /*cutoff*/,
 			  Bool circular)
 {
   LogIO os(LogOrigin("PBMath2DImage", "applyJones"));
@@ -436,7 +436,7 @@ ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
 					      ImageInterface<Complex>& out,
 					      const MDirection& sp,
 					      const Quantity parAngle,	      
-					      const BeamSquint::SquintType doSquint,
+					      const BeamSquint::SquintType /*doSquint*/,
 					      Bool inverse,
 					      Bool conjugate,
 					      Int ipower,  // ie, 1=VP, 2=PB
@@ -542,8 +542,9 @@ ImageInterface<Float>& PBMath2DImage::apply(const ImageInterface<Float>& in,
 					    ImageInterface<Float>& out,
 					    const MDirection& sp,
 					    const Quantity parAngle,	      
-					    const BeamSquint::SquintType doSquint,
-					    Float cutoff, Int ipower)
+					    const BeamSquint::SquintType /*doSquint*/,
+					    Float cutoff,
+					    Int /*ipower*/)
 {
   LogIO os(LogOrigin("PBMath2DImage", "apply"));
 
@@ -621,11 +622,11 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
 				   const MDirection& sp,
 				   const Quantity frequency,	      
 				   const Quantity parAngle,	      
-				   const BeamSquint::SquintType doSquint,
-				   Bool inverse,
-				   Bool conjugate,
+				   const BeamSquint::SquintType /*doSquint*/,
+				   Bool /*inverse*/,
+				   Bool /*conjugate*/,
 				   Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
-				   Float cutoff,
+				   Float /*cutoff*/,
 				   Bool forward)
 {
   LogIO os(LogOrigin("PBMath2DImage", "apply"));

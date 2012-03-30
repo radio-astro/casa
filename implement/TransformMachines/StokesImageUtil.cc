@@ -404,7 +404,7 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& 
   
   Int nx = psf.shape()(map(0));
   Int ny = psf.shape()(map(1));
-  Int nchan = psf.shape()(map(3));
+  //// Int nchan = psf.shape()(map(3)); // apparently not used and no side effects
   Int px=0;
   Int py=0;
   Float bamp=0;
@@ -1731,7 +1731,7 @@ void StokesImageUtil::changeCStokesRep(ImageInterface<Complex>& image,
   StokesCoordinate
     stokesCoord=coords.stokesCoordinate(stokesIndex);
 
-  Int npol=stokesCoord.stokes().nelements();
+  ///// Int npol=stokesCoord.stokes().nelements(); // apparently not used and no side effects
  
   /* STOKESDBG */ //cout << "Util::changeCStokesRep - input - stokescoord : " << stokesCoord.stokes() << "   npol : " << npol << endl;
 
