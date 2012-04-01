@@ -249,18 +249,18 @@ initPyBind(void)
 // Send out a Python list to python 
 // Used to memory-map PyArrayObjects in TPPlotter, to the python namespace.
 static PyObject *
-PyBind_readXdata(PyObject *self, PyObject* args)
+PyBind_readXdata(PyObject */*self*/, PyObject* /*args*/)
 {
    return plotx_p;
 }
 static PyObject *
-PyBind_readYdata(PyObject *self, PyObject* args)
+PyBind_readYdata(PyObject */*self*/, PyObject* /*args*/)
 {
    return ploty_p;
 }
 ///*********** Mark Region ************/
 static PyObject *
-PyBind_markregion(PyObject *self, PyObject* list)
+PyBind_markregion(PyObject */*self*/, PyObject* list)
 {
    int len;
    double xmin,xmax,ymin,ymax;
@@ -311,7 +311,7 @@ PyBind_markregion(PyObject *self, PyObject* list)
 }
 ///*********** Flag Data ************/
 static PyObject *
-PyBind_flagdata(PyObject *self, PyObject* args)
+PyBind_flagdata(PyObject */*self*/, PyObject* /*args*/)
 {
    if(GBB != NULL) GBB->flagdata();
    else 
@@ -322,7 +322,7 @@ PyBind_flagdata(PyObject *self, PyObject* args)
 }
 ///*********** Unflag Data ************/
 static PyObject *
-PyBind_unflagdata(PyObject *self, PyObject* args)
+PyBind_unflagdata(PyObject */*self*/, PyObject* /*args*/)
 {
    if(GBB != NULL) GBB->unflagdata();
    else
@@ -332,7 +332,7 @@ PyBind_unflagdata(PyObject *self, PyObject* args)
 }
 ///*********** Locate Data ************/
 static PyObject *
-PyBind_locatedata(PyObject *self, PyObject* args)
+PyBind_locatedata(PyObject */*self*/, PyObject* /*args*/)
 {
    if(GBB != NULL) GBB->locatedata();
    else
@@ -342,7 +342,7 @@ PyBind_locatedata(PyObject *self, PyObject* args)
 }
 ///*********** IterPlotNext ************/
 static PyObject *
-PyBind_iterplotnext(PyObject *self, PyObject* args)
+PyBind_iterplotnext(PyObject */*self*/, PyObject* /*args*/)
 {
    if(GBB != NULL) GBB->iterplotnext();
    else
@@ -352,7 +352,7 @@ PyBind_iterplotnext(PyObject *self, PyObject* args)
 }
 ///*********** IterPlotStop ************/
 static PyObject *
-PyBind_iterplotstop(PyObject *self, PyObject* args)
+PyBind_iterplotstop(PyObject */*self*/, PyObject* /*args*/)
 {
    if(GBB != NULL) GBB->iterplotstop();
    else
@@ -362,7 +362,7 @@ PyBind_iterplotstop(PyObject *self, PyObject* args)
 }
 ///*********** ClearPlot ************/
 static PyObject *
-PyBind_clearplot(PyObject *self, PyObject* args)
+PyBind_clearplot(PyObject */*self*/, PyObject* /*args*/)
 {
    if(GBB != NULL) GBB->clearplot();
    else 
@@ -372,7 +372,7 @@ PyBind_clearplot(PyObject *self, PyObject* args)
 }
 ///*********** Quit ************/
 static PyObject *
-PyBind_quit(PyObject *self, PyObject* args)
+PyBind_quit(PyObject */*self*/, PyObject* args)
 {
         int closewin;
    PyArg_ParseTuple (args,"i", &closewin) ; 

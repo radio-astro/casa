@@ -53,6 +53,25 @@ logsink::logsink()
   globalsink = false;
   logname = theLogName ;
   //version();
+
+   string tmpname = "" ;
+      String logfileKey="logfile.default";
+      String logname2;
+      if(!Aipsrc::find(logname2, logfileKey)){
+         tmpname = "casapy.log";
+      } else {
+         tmpname = logname2;
+      }
+   //std::cout << "logfile.default: " << tmpname << std::endl;
+   if(tmpname != "null") {
+      casa::File filein( tmpname ) ;
+      logname = filein.path().absoluteName() ;
+      //static_cast<TSLogSink*>(thelogsink)->setLogSink(logname);
+   }
+   else
+      //thelogsink = new NullLogSink();
+      ;
+      
 }
 
 std::string logsink::version(){
@@ -102,7 +121,7 @@ bool logsink::filter(const std::string &level)
     }
 	bool rstat(true);
 	LogMessage::Priority priority = LogMessage::NORMAL;
-        if (level == "DEBUG")
+        if (level == "DEBUG" || level == "DEBUGGING")
            priority = LogMessage::DEBUGGING;
         else if (level == "DEBUG1")
            priority = LogMessage::DEBUG1;
@@ -120,7 +139,7 @@ bool logsink::filter(const std::string &level)
            priority = LogMessage::NORMAL4;
         else if (level == "NORMAL5")
            priority = LogMessage::NORMAL5;
-        else if (level == "INFO")
+        else if (level == "INFO" || level == "NORMAL")
            priority = LogMessage::NORMAL;
         else if (level == "INFO1")
            priority = LogMessage::NORMAL1;
@@ -134,7 +153,7 @@ bool logsink::filter(const std::string &level)
            priority = LogMessage::NORMAL5;
         else if (level == "WARN")
            priority = LogMessage::WARN;
-        else if (level == "ERROR")
+        else if (level == "ERROR" || level == "SEVERE")
            priority = LogMessage::SEVERE;
 	else 
 		rstat = false;
@@ -173,7 +192,7 @@ logsink::postLocally(const std::string& message,
     //cout << "(*taskname==\"\")=" <<  (*taskname == "") << endl;
     thelogsink->setTaskName(*taskname);
     //LogSink().globalSink().setTaskName(*taskname);
-    if (priority == "DEBUG")
+    if (priority == "DEBUG" || priority == "DEBUGGING")
        messagePriority = LogMessage::DEBUGGING;
     else if (priority == "DEBUG1")
        messagePriority = LogMessage::DEBUG1;

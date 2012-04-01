@@ -223,6 +223,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # handle mode='mfs' explicitly
         if (mode=='mfs'):
             start=0;
+            outframe=''
         
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):

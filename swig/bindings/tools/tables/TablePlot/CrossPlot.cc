@@ -111,7 +111,7 @@ CrossPlot::~CrossPlot()
 
 
 /*********************************************************************************/
-Int CrossPlot::createXTENS(Vector<String> &datastr)
+Int CrossPlot::createXTENS(Vector<String> &/*datastr*/)
 {
    String fnname= "createXTENS";
 #if LOG0
@@ -537,7 +537,7 @@ Bool CrossPlot::selectedPoint(Int np,Int nr)
 }
 
 /*********************************************************************************/
-Int CrossPlot::computeXAverages(Int averagenrows, Int remrows)
+Int CrossPlot::computeXAverages(Int /*averagenrows*/, Int /*remrows*/)
 {
    //Ahaaa - do nothing !!! Because nothing happens to
    // channel and correlation indices, when row-averaging is done.
