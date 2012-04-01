@@ -354,7 +354,7 @@ namespace casa {
 	return option == INTERACT || option == SETOPTIONS ? true : false;
     }
 
-    QVariant QtCleanPanelGui::setoptions(const QMap<QString,QVariant> &input, int id) {
+    QVariant QtCleanPanelGui::setoptions(const QMap<QString,QVariant> &input, int /*id*/) {
       if(input.contains("niter"))
 	 niterED_->setText(input["niter"].toString());
        if(input.contains("ncycle"))
@@ -365,7 +365,7 @@ namespace casa {
 	return QVariant(true);
     }
 
-    QVariant QtCleanPanelGui::start_interact( const QVariant &input, int id ) {
+    QVariant QtCleanPanelGui::start_interact( const QVariant &/*input*/, int id ) {
 	if ( ! in_interact_mode ) {
 	    in_interact_mode = true;
 	    interact_id = id;

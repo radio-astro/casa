@@ -72,7 +72,7 @@ class DDDRectangle : public DDDObject {
   // Event handlers.  The parent DrawingDisplayData will distribute
   // events as necessary to the various DDDObjects which comprise it.
   // <group>
-  virtual void operator()(const WCRefreshEvent &ev) {;};
+  virtual void operator()(const WCRefreshEvent &/*ev*/) {;};
   virtual void operator()(const WCPositionEvent &ev);
   virtual void operator()(const WCMotionEvent &ev);
   // </group>

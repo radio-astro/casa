@@ -992,8 +992,8 @@ PBMath::getMDirection(const RecordInterface& rec, const String& item,
 };
 
 
-void PBMath::initByDiameter(Double diameter, Bool useSymmetricBeam, 
-			    Double frequency){
+void PBMath::initByDiameter(Double diameter, Bool /*useSymmetricBeam*/,
+			    Double /*frequency*/){
   
   // This attempts to reproduce the AIRY pattern VLA PB
   Vector<Float> vlanum(19);
@@ -1033,7 +1033,7 @@ void PBMath::initByDiameter(Double diameter, Bool useSymmetricBeam,
 
 void PBMath::initByTelescope(PBMath::CommonPB myPBType, 
 			     Bool useSymmetricBeam, 
-			     Double frequency) 
+			     Double /*frequency*/)
 {
 
  // Remember, these are fit parameters for the PB, not the PB

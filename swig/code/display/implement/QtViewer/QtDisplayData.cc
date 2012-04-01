@@ -1059,7 +1059,7 @@ void QtDisplayData::unlock( ) {
 }
 
 
-void QtDisplayData::registerNotice(QtDisplayPanel* qdp) {
+void QtDisplayData::registerNotice(QtDisplayPanel* /*qdp*/) {
   // Called [only] by QtDisplayPanels to notify
   // the QDD that it has been registered there.
   
@@ -1070,7 +1070,7 @@ void QtDisplayData::registerNotice(QtDisplayPanel* qdp) {
 
 }
 
-void QtDisplayData::unregisterNotice(QtDisplayPanel* qdp) {
+void QtDisplayData::unregisterNotice(QtDisplayPanel* /*qdp*/) {
   // Called [only] by QtDisplayPanels to notify
   // the QDD that it is about to be unregistered there.
   
@@ -2022,7 +2022,7 @@ Float QtDisplayData::colorBarLabelSpaceAdj() {
 
 ImageRegion* QtDisplayData::mouseToImageRegion(
      Record mouseRegion, WorldCanvasHolder* wch,
-     String& extChan, String& extPol) {
+     String& extChan, String& /*extPol*/) {
   
   if (dd_ == 0 || (im_ == 0 && cim_ == 0)) 
      return 0;

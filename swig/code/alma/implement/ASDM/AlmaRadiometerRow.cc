@@ -808,7 +808,7 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianIStream& eis) {
 	 * will be compared with those of this.
 	 * @return a boolean.
 	 */
-	bool AlmaRadiometerRow::equalByRequiredValue(AlmaRadiometerRow* x) {
+	bool AlmaRadiometerRow::equalByRequiredValue(AlmaRadiometerRow* /*x*/) {
 		
 		return true;
 	}	

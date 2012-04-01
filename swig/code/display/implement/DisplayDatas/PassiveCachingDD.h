@@ -109,8 +109,8 @@ class PassiveCachingDD : public CachingDisplayData {
   // coordinates: it is a passive DisplayData.
 
   virtual void refreshEH(const WCRefreshEvent &ev);
-  virtual Bool sizeControl(WorldCanvasHolder &wcHolder, 
-			   AttributeBuffer &holderBuf) 
+  virtual Bool sizeControl(WorldCanvasHolder &/*wcHolder*/,
+			   AttributeBuffer &/*holderBuf*/)
     { return False; }
 
   // Tidy up the elements of this DisplayData.

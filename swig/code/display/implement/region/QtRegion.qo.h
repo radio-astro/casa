@@ -87,7 +87,7 @@ namespace casa {
 		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(Region::zIndex,0);
 		virtual bool regionVisible( ) const DISPLAY_PURE_VIRTUAL(Region::regionVisible,true);
 
-		virtual void regionCenter( double &x, double &y ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
+		virtual void regionCenter( double &/*x*/, double &/*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
 
 		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(Region::refresh,);
 		virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
@@ -160,8 +160,9 @@ namespace casa {
 		// need to be able to retrieve our peer (the non-GUI dependent)
 		// Region class pointer...
 		virtual Region *fetch_my_region( ) DISPLAY_PURE_VIRTUAL(Region::fetch_my_region,0);
-		virtual void fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
-						   std::vector<std::pair<double,double> > &world_pts ) const 
+		virtual void fetch_region_details( Region::RegionTypes &/*type*/,
+		                                   std::vector<std::pair<int,int> > &/*pixel_pts*/,
+						   std::vector<std::pair<double,double> > &/*world_pts*/ ) const
 						DISPLAY_PURE_VIRTUAL(Region::fetch_region_details,);
 
 

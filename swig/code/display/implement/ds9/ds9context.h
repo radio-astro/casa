@@ -79,8 +79,8 @@ namespace casa {
 	    public:
 		ds9context( WorldCanvas *wc ) : wc_(wc) { }
 
-		double mapAngleFromRef(double angle, CoordSystem sys, SkyFrame sky) { return 0; }
-		double mapAngleToRef(double angle, CoordSystem sys, SkyFrame sky) { return 0; }
+		double mapAngleFromRef(double /*angle*/, CoordSystem /*sys*/, SkyFrame /*sky*/) { return 0; }
+		double mapAngleToRef(double /*angle*/, CoordSystem /*sys*/, SkyFrame /*sky*/) { return 0; }
 		// from Base::findFits(globalTile)->mapLenToRef(...)
 		double mapLenToRef(double d, CoordSystem sys, SkyFormat format=DEGREES);
 		// from Base::findFits(globalTile)->mapLenToRef(...)
@@ -90,108 +90,108 @@ namespace casa {
 
 		void resetCompositeMarker() { }
 
-		void createContourPolygonCmd( const char* color, int* dash, int width, const char* font,
-					      const char* text, unsigned short prop, const char* comment, 
-					      const std::list<Tag>& tag ) { }
-		void createCompassCmd( const Vector& center, double r, const char* north, const char* east, 
-				       int na, int ea, CoordSystem sys, SkyFrame sky, const char* color, int* dash, 
-				       int width, const char* font, const char* text, unsigned short prop,
-				       const char* comment, const std::list<Tag>& tag ) { }
-		void createCompositeCmd( const Vector& center, double angle, int global, const char* color, int* dash, 
-					 int width, const char* font, const char* text, unsigned short prop, 
-					 const char* comment, const std::list<Tag>& tag ) { }
-		void createVectCmd( const Vector& center, const Vector& p2, int arrow,const char* color, int* dash, 
-				    int width, const char* font, const char* text, unsigned short prop,
-				    const char* comment, const std::list<Tag>& tag ) { }
-		void createVectCmd( const Vector& center, double mag, double ang, int arrow, const char* color, int* dash, 
-				    int width, const char* font, const char* text, unsigned short prop,
-				    const char* comment, const std::list<Tag>& tag ) { }
+		void createContourPolygonCmd( const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+					      const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+					      const std::list<Tag>& /*tag*/ ) { }
+		void createCompassCmd( const Vector& /*center*/, double /*r*/, const char* /*north*/, const char* /*east*/,
+				       int /*na*/, int /*ea*/, CoordSystem /*sys*/, SkyFrame /*sky*/, const char* /*color*/, int* /*dash*/,
+				       int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				       const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createCompositeCmd( const Vector& /*center*/, double /*angle*/, int /*global*/, const char* /*color*/, int* /*dash*/,
+					 int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+					 const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createVectCmd( const Vector& /*center*/, const Vector& /*p2*/, int /*arrow*/,const char* /*color*/, int* /*dash*/,
+				    int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				    const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createVectCmd( const Vector& /*center*/, double /*mag*/, double /*ang*/, int /*arrow*/, const char* /*color*/, int* /*dash*/,
+				    int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				    const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
 
-		void createProjectionCmd( const Vector& center, const Vector& p2, double w, const char* mvcb,
-					  const char* delcb, const char* color, int* dash, int width,
-					  const char* font, const char* text, unsigned short prop,
-					  const char* comment, const std::list<Tag>& tag ) { }
-		void createRulerCmd( const Vector& center, const Vector& p2, CoordSystem sys, SkyFrame sky,
-				     CoordSystem distsys, SkyFormat distformat, const char* color, int* dash, 
-				     int width, const char* font, const char* text, unsigned short prop,
-				     const char* comment, const std::list<Tag>& tag ) { }
-		void createCircle3dCmd( const Vector& center, double radius, const char* mvcb,
-					const char* delcb, const char* color, int* dash, int width,
-					const char* font, const char* text, unsigned short prop,
-					const char* comment, const std::list<Tag>& tag ) { }
-		void createAnnulusCmd( const Vector& center, double start, double stop, int num,
-				       const char* color, int* dash, int width, const char* font,
-				       const char* text, unsigned short prop, const char* comment, 
-				       const std::list<Tag>& tag ) { }
-		void createAnnulusCmd( const Vector& center, int num, double* radii, const char* color, int* dash, 
-				       int width, const char* font, const char* text, unsigned short prop,
-				       const char* comment, const std::list<Tag>& tag ) { }
-		void createCpandaCmd( const Vector& center, double ang1, double ang2, int an, 
-				      double rad1, double rad2, int rn, const char* color, int* dash, 
-				      int width, const char* font, const char* text, unsigned short prop,
-				      const char* comment, const std::list<Tag>& tag ) { }
-		void createCpandaCmd( const Vector& center, int an, double* a, int rn, double* r,
-				      const char* color, int* dash, int width, const char* font,
-				      const char* text, unsigned short prop, const char* comment, 
-				      const std::list<Tag>& tag ) { }
-		void createEllipseAnnulusCmd( const Vector& center, const Vector& inner,
-					      const Vector& outer, int num, double angle,
-					      const char* color, int* dash, int width, const char* font, 
-					      const char* text, unsigned short prop, const char* comment, 
-					      const std::list<Tag>& tag ) { }
-		void createEllipseAnnulusCmd( const Vector& center, int num, Vector* radii, double angle,
-					      const char* color, int* dash, int width, const char* font, 
-					      const char* text, unsigned short prop, const char* comment, 
-					      const std::list<Tag>& tag ) { }
-		void createEpandaCmd( const Vector& center, double ang1, double ang2, int an,
-				      const Vector& rad1, const Vector& rad2, int rn, double angle,
-				      const char* color, int* dash, int width, const char* font,
-				      const char* text, unsigned short prop, const char* comment, 
-				      const std::list<Tag>& tag ) { }
-		void createEpandaCmd( const Vector& center, int an, double* a, int rn, Vector* r,
-				      double angle, const char* color, int* dash, int width, const char* font,
-				      const char* text, unsigned short prop, const char* comment, 
-				      const std::list<Tag>& tag ) { }
-		void createLineCmd( const Vector& center, const Vector& p2, int arrow1, int arrow2,
-				    const char* color, int* dash, int width, const char* font,
-				    const char* text, unsigned short prop,
-				    const char* comment, const std::list<Tag>& tag ) { }
-		void createBoxAnnulusCmd( const Vector& center, const Vector& inner, const Vector& outer, 
-					  int num, double angle, const char* color, int* dash, 
-					  int width, const char* font, const char* text, unsigned short prop,
-					  const char* comment, const std::list<Tag>& tag ) { }
-		void createBoxAnnulusCmd( const Vector& center, int num, Vector* size, double angle, 
-					  const char* color, int* dash, int width, const char* font, 
-					  const char* text, unsigned short prop, const char* comment, 
-					  const std::list<Tag>& tag ) { }
+		void createProjectionCmd( const Vector& /*center*/, const Vector& /*p2*/, double /*w*/, const char* /*mvcb*/,
+					  const char* /*delcb*/, const char* /*color*/, int* /*dash*/, int /*width*/,
+					  const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+					  const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createRulerCmd( const Vector& /*center*/, const Vector& /*p2*/, CoordSystem /*sys*/, SkyFrame /*sky*/,
+				     CoordSystem /*distsys*/, SkyFormat /*distformat*/, const char* /*color*/, int* /*dash*/,
+				     int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				     const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createCircle3dCmd( const Vector& /*center*/, double /*radius*/, const char* /*mvcb*/,
+					const char* /*delcb*/, const char* /*color*/, int* /*dash*/, int /*width*/,
+					const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+					const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createAnnulusCmd( const Vector& /*center*/, double /*start*/, double /*stop*/, int /*num*/,
+				       const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				       const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+				       const std::list<Tag>& /*tag*/ ) { }
+		void createAnnulusCmd( const Vector& /*center*/, int /*num*/, double* /*radii*/, const char* /*color*/, int* /*dash*/,
+				       int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				       const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createCpandaCmd( const Vector& /*center*/, double /*ang1*/, double /*ang2*/, int /*an*/,
+				      double /*rad1*/, double /*rad2*/, int /*rn*/, const char* /*color*/, int* /*dash*/,
+				      int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				      const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createCpandaCmd( const Vector& /*center*/, int /*an*/, double* /*a*/, int /*rn*/, double* /*r*/,
+				      const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				      const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+				      const std::list<Tag>& /*tag*/ ) { }
+		void createEllipseAnnulusCmd( const Vector& /*center*/, const Vector& /*inner*/,
+					      const Vector& /*outer*/, int /*num*/, double /*angle*/,
+					      const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+					      const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+					      const std::list<Tag>& /*tag*/ ) { }
+		void createEllipseAnnulusCmd( const Vector& /*center*/, int /*num*/, Vector* /*radii*/, double /*angle*/,
+					      const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+					      const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+					      const std::list<Tag>& /*tag*/ ) { }
+		void createEpandaCmd( const Vector& /*center*/, double /*ang1*/, double /*ang2*/, int /*an*/,
+				      const Vector& /*rad1*/, const Vector& /*rad2*/, int /*rn*/, double /*angle*/,
+				      const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				      const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+				      const std::list<Tag>& /*tag*/ ) { }
+		void createEpandaCmd( const Vector& /*center*/, int /*an*/, double* /*a*/, int /*rn*/, Vector* /*r*/,
+				      double /*angle*/, const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				      const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+				      const std::list<Tag>& /*tag*/ ) { }
+		void createLineCmd( const Vector& /*center*/, const Vector& /*p2*/, int /*arrow1*/, int /*arrow2*/,
+				    const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				    const char* /*text*/, unsigned short /*prop*/,
+				    const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createBoxAnnulusCmd( const Vector& /*center*/, const Vector& /*inner*/, const Vector& /*outer*/,
+					  int /*num*/, double /*angle*/, const char* /*color*/, int* /*dash*/,
+					  int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+					  const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
+		void createBoxAnnulusCmd( const Vector& /*center*/, int /*num*/, Vector* /*size*/, double /*angle*/,
+					  const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+					  const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+					  const std::list<Tag>& /*tag*/ ) { }
 
-		void createBpandaCmd( const Vector& center, double ang1, double ang2, int an,
-				      const Vector& rad1, const Vector& rad2, int rn, double angle,
-				      const char* color, int* dash, int width, const char* font,
-				      const char* text, unsigned short prop, const char* comment, 
-				      const std::list<Tag>& tag ) { }
-		void createBpandaCmd( const Vector& center, int an, double* a, int rn, Vector* r,
-				      double angle,const char* color, int* dash, int width,
-				      const char* font, const char* text, unsigned short prop,
-				      const char* comment, const std::list<Tag>& tag ) { }
+		void createBpandaCmd( const Vector& /*center*/, double /*ang1*/, double /*ang2*/, int /*an*/,
+				      const Vector& /*rad1*/, const Vector& /*rad2*/, int /*rn*/, double /*angle*/,
+				      const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				      const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+				      const std::list<Tag>& /*tag*/ ) { }
+		void createBpandaCmd( const Vector& /*center*/, int /*an*/, double* /*a*/, int /*rn*/, Vector* /*r*/,
+				      double /*angle*/,const char* /*color*/, int* /*dash*/, int /*width*/,
+				      const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				      const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
 
-		void createTextCmd( const Vector& center, double angle, int rotate, const char* color, int* dash, 
-				    int width, const char* font, const char* text, unsigned short prop,
-				    const char* comment, const std::list<Tag>& tag ) { }
+		void createTextCmd( const Vector& /*center*/, double /*angle*/, int /*rotate*/, const char* /*color*/, int* /*dash*/,
+				    int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				    const char* /*comment*/, const std::list<Tag>& /*tag*/ ) { }
 
 
 		// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-		void createBoxCmd( const Vector& center, const Vector& size, double angle,
-				   const char* color, int* dash, int width, const char* font,
-				   const char* text, unsigned short prop, const char* comment, 
-				   const std::list<Tag>& tag );
-		void createEllipseCmd( const Vector& center, const Vector& radius, double angle,
-				       const char* color, int* dash, int width, const char* font,
-				       const char* text, unsigned short prop, const char* comment, 
-				       const std::list<Tag>& tag );
-		void createCircleCmd( const Vector& center, double radius, const char* color, int* dash, 
-				      int width, const char* font, const char* text, unsigned short prop, 
-				      const char* comment, const std::list<Tag>& tag );
+		void createBoxCmd( const Vector& /*center*/, const Vector& /*size*/, double /*angle*/,
+				   const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				   const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+				   const std::list<Tag>& /*tag*/ );
+		void createEllipseCmd( const Vector& /*center*/, const Vector& /*radius*/, double /*angle*/,
+				       const char* /*color*/, int* /*dash*/, int /*width*/, const char* /*font*/,
+				       const char* /*text*/, unsigned short /*prop*/, const char* /*comment*/,
+				       const std::list<Tag>& /*tag*/ );
+		void createCircleCmd( const Vector& /*center*/, double /*radius*/, const char* /*color*/, int* /*dash*/,
+				      int /*width*/, const char* /*font*/, const char* /*text*/, unsigned short /*prop*/,
+				      const char* /*comment*/, const std::list<Tag>& /*tag*/ );
 		void createPolygonCmd( const Vector& center, const Vector& bb, const char* color, int* dash, 
 				       int width, const char* font, const char* text, unsigned short prop,
 				       const char* comment, const std::list<Tag>& tag );

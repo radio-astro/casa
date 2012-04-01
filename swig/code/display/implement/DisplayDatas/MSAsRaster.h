@@ -330,7 +330,7 @@ class MSAsRaster: public ActiveCaching2dDD {
   // <group>
   MSAsRaster(): mspos_(this) {  }
   MSAsRaster(const MSAsRaster &other): ActiveCaching2dDD(other), mspos_(this) {  }
-  MSAsRaster& operator=(const MSAsRaster &other) { return *this;  }
+  MSAsRaster& operator=(const MSAsRaster &/*other*/) { return *this;  }
   // </group>
 
   // Initialization common to all useful constructors
@@ -1351,7 +1351,7 @@ class MSAsRasterDM : public CachingDisplayMethod {
   // <group>
   MSAsRasterDM() {  }
   MSAsRasterDM(const MSAsRasterDM &other) : CachingDisplayMethod(other) {  }
-  MSAsRasterDM& operator=(const MSAsRasterDM &other) { return *this;  }
+  MSAsRasterDM& operator=(const MSAsRasterDM &/*other*/) { return *this;  }
   // </group>
   
 };

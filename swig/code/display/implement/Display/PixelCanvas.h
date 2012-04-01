@@ -217,11 +217,11 @@ public:
   
   // TODO: These should become abstract
   // Set the font via the DisplayLibrary Font class
-  virtual Bool setFont(DLFont* font) 
+  virtual Bool setFont(DLFont* /*font*/)
   { return False; }
 
   // Set the font to font name / size
-  virtual Bool setFont(const String& fontName, const Int fontSize) 
+  virtual Bool setFont(const String& /*fontName*/, const Int /*fontSize*/)
   { return False; }
 
   // (Cacheable) Draw text using that font aligned in some way to the
@@ -231,18 +231,18 @@ public:
 
   // TODO This should become abstract - NYI in GLPixelCanvas currently
   // Draw text at a specified angle. 
-  virtual void drawText(Int x, Int y, const String &text, 
-			const Float& angle,
-			Display::TextAlign alignment = Display::AlignCenter)
+  virtual void drawText(Int /*x*/, Int /*y*/, const String &/*text*/,
+			const Float& /*angle*/,
+			Display::TextAlign /*alignment*/ = Display::AlignCenter)
   { }
 
   // TODO : This should become abstract
   // Determine the width / height of a string of text based on 
   // current settings.
   // <group>
-  virtual Int textWidth(const String& text) 
+  virtual Int textWidth(const String& /*text*/)
   { return -1; }
-  virtual Int textHeight(const String& text) 
+  virtual Int textHeight(const String& /*text*/)
   { return -1; }
   // </group>
 
@@ -261,10 +261,10 @@ public:
   // otherwise they will be transparent (letting whatever was drawn
   // previously at that point show through).
   // <group>
-  virtual void drawImage(const Int &x, const Int &y, 
-			 const Matrix<uInt> &data, 
-			 const Matrix<Bool> &mask,
-			 Bool opaqueMask=False) 
+  virtual void drawImage(const Int &/*x*/, const Int &/*y*/,
+			 const Matrix<uInt> &/*data*/,
+			 const Matrix<Bool> &/*mask*/,
+			 Bool /*opaqueMask*/=False)
     { return; }
   // </group>
 
@@ -642,7 +642,7 @@ public:
   // (Not Cacheable) resize request.  returns true if window was resized. 
   // Will refresh if doCallbacks is True.
   //#dk virtual Bool resize(uInt reqXSize, uInt reqYSize, Bool doCallbacks = True) = 0;
-  virtual Bool resize(uInt reqXSize, uInt reqYSize, Bool doCallbacks = True) {
+  virtual Bool resize(uInt /*reqXSize*/, uInt /*reqYSize*/, Bool /*doCallbacks*/ = True) {
     return False;  }
   
   // (Not Cacheable) resize the colortable by requesting a new number of cells

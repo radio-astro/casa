@@ -132,7 +132,7 @@ class MultiWCTool : public DisplayTool,
   // disable event handling.  If skipRefresh is false and the tool was showing,
   // it also calls refresh() to erase.  (The caller should set skipRefresh=True
   // (only) if it will handle refresh itself).
-  virtual void reset(Bool skipRefresh=False) {  }
+  virtual void reset(Bool /*skipRefresh*/=False) {  }
 
  protected:
 
@@ -146,8 +146,8 @@ class MultiWCTool : public DisplayTool,
   virtual void otherKeyReleased(const WCPositionEvent &ev);
   virtual void moved(const WCMotionEvent &ev);
   virtual void updateRegion() {}
-  virtual void clicked(Int x, Int y) {}
-  virtual void doubleClicked(Int x, Int y) {}
+  virtual void clicked(Int /*x*/, Int /*y*/) {}
+  virtual void doubleClicked(Int /*x*/, Int /*y*/) {}
   // </group>
 
   // Draw whatever should be drawn (if anything) on current WC.

@@ -89,7 +89,7 @@ public:
 
   // General DisplayShape functionality
   // <group>
-  virtual void rotate(const Float& angle) {};
+  virtual void rotate(const Float& /*angle*/) {};
   virtual void setCenter(const Float& xPos, const Float& yPos);
   virtual Bool inObject(const Float& dX, const Float& dY);
   virtual void changePoint(const Vector<Float>& newPos);
@@ -99,8 +99,8 @@ public:
   // Circle specific functionality
   // <group>
   virtual void setRadius(const Float& radius);
-  virtual void setMajorAxis(const Float& major) {};
-  virtual void setMinorAxis(const Float& minor) {};
+  virtual void setMajorAxis(const Float& /*major*/) {};
+  virtual void setMinorAxis(const Float& /*minor*/) {};
   // </group>
 
   // Get and set options

@@ -146,6 +146,8 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
 	 // Check if the sub ftm can calculate its own residuals....
 	 canComputeResiduals_p = subftm_p->canComputeResiduals();
        }
+
+     return * this;
 }
   
   //----------------------------------------------------------------------

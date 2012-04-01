@@ -66,7 +66,7 @@ DSMarker::DSMarker(const Float& xPos, const Float& yPos,
   updateHandle();
 }
 
-DSMarker::DSMarker(const Record& settings) {
+DSMarker::DSMarker(const Record& /*settings*/) {
 
 
 }

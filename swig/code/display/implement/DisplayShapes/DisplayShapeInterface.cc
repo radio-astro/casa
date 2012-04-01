@@ -389,13 +389,13 @@ Float DisplayShapeInterface::pixToRelHeight(const Float pix) {
 }
 
 
-Record DisplayShapeInterface::pixToWorldOpts(const Record& pix) {
+Record DisplayShapeInterface::pixToWorldOpts(const Record& /*pix*/) {
   //NYI
   Record null;
   return null;
 }
 
-Record DisplayShapeInterface::worldToPixOpts(const Record& world) {
+Record DisplayShapeInterface::worldToPixOpts(const Record& /*world*/) {
   Record null;
   return null;
 }

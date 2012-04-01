@@ -245,7 +245,7 @@ PBMathInterface::applyPB2(SkyComponent& in,
 
 
 void
-PBMathInterface::summary(Int nValues)
+PBMathInterface::summary(Int /*nValues*/)
 {
   LogIO os(LogOrigin("PBMathInterface", "summary"));
   if (isThisVP_p) {

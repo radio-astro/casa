@@ -93,9 +93,9 @@ Bool PBMath2D::ok()
 
 
 ImageRegion* 
-PBMath2D::extent (const ImageInterface<Complex>& in, const MDirection& pointDir,
-		  const Int row, const Float fPad,  const Int iChan,  
-		  const SkyJones::SizeType sizeType)
+PBMath2D::extent (const ImageInterface<Complex>& /*in*/, const MDirection& /*pointDir*/,
+		  const Int row, const Float /*fPad*/,  const Int /*iChan*/,
+		  const SkyJones::SizeType /*sizeType*/)
 {
   if (row) {} // Not used yet
 
@@ -103,16 +103,16 @@ PBMath2D::extent (const ImageInterface<Complex>& in, const MDirection& pointDir,
 };
 
 ImageRegion* 
-PBMath2D::extent (const ImageInterface<Float>& in, const MDirection& pointDir,
-                  const Int row, const Float fPad, const Int iChan, 
-		  const SkyJones::SizeType sizeType)
+PBMath2D::extent (const ImageInterface<Float>& /*in*/, const MDirection& /*pointDir*/,
+                  const Int row, const Float /*fPad*/, const Int /*iChan*/,
+		  const SkyJones::SizeType /*sizeType*/)
 {
   if (row) {} // unused
   return  ( new ImageRegion() );
 };
 
 
-Int PBMath2D::support(const CoordinateSystem& cs){
+Int PBMath2D::support(const CoordinateSystem& /*cs*/){
 
   return 0;
 
