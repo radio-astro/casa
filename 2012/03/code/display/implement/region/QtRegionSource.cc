@@ -43,18 +43,41 @@
 namespace casa {
     namespace viewer {
 
-	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) : RegionSource(rc), panel_(panel) {
+	QtRegionSourceKernel::QtRegionSourceKernel( QtDisplayPanelGui *panel ) : panel_(panel) {
 	    connect( panel_->regionDock( ), SIGNAL(loadRegions( bool &, const QString &, const QString &)), SLOT(loadRegions(bool &, const QString &, const QString &)) );
 	}
 
-	QtRegionSource::~QtRegionSource( ) { }
+	QtRegionSourceKernel::~QtRegionSourceKernel( ) { }
 
-	// std::tr1::shared_ptr<Rectangle> QtRegionSource::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
+	void QtRegionSourceKernel::revokeRegion( Region *r ) {
+	    std::map<Region*,RegionCreator*>::iterator it = creator_of_region.find(r);
+	    if ( it != creator_of_region.end( ) ) {
+		RegionCreator *creator = it->second;
+		creator_of_region.erase(it);
+		creator->revokeRegion(r);
+	    }
+	}
+
+	void QtRegionSourceKernel::dtorCalled( const dtorNotifier *r ) {
+	    RegionSourceKernel::dtorCalled( r );
+	    std::map<Region*,RegionCreator*>::iterator it = creator_of_region.find((Region*)r);
+	    if ( it != creator_of_region.end( ) ) {
+		creator_of_region.erase(it);
+	    }
+	}
+
+	// std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
 	//     return std::tr1::shared_ptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
 	// }
-	std::tr1::shared_ptr<Rectangle> QtRegionSource::rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+	std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 	    QtRectangle *result = new QtRectangle( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 
+	    // save Region to RegionSource mapping for later revocation...
+	    creator_of_region[result] = rc;
+
+	    // register for dtor callback...
+	    register_new_region( result );
+
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -62,13 +85,24 @@ namespace casa {
 	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
+	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
-	std::tr1::shared_ptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, double x1, double y1 ) {
+	std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) {
 	    QtPolygon *result = new QtPolygon( this, wc, x1, y1, true );
 
+	    // save Region to RegionSource mapping for later revocation...
+	    creator_of_region[result] = rc;
+
+	    // register for dtor callback...
+	    register_new_region( result );
+
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -76,57 +110,92 @@ namespace casa {
 	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
+	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+
 	    return std::tr1::shared_ptr<Polygon>(result);
 	    // return std::tr1::shared_ptr<Polygon>( );
 	}
 
-	std::tr1::shared_ptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
+	std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
 	    QtPolygon *result = new QtPolygon( this, wc, pts, true );
 
+	    // save Region to RegionSource mapping for later revocation...
+	    creator_of_region[result] = rc;
+
+	    // register for dtor callback...
+	    register_new_region( result );
+
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Polygon>(result);
 	    // return std::tr1::shared_ptr<Polygon>( );
 	}
 
-	std::tr1::shared_ptr<Rectangle> QtRegionSource::ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+	std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 	    QtEllipse *result = new QtEllipse( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 
+	    // save Region to RegionSource mapping for later revocation...
+	    creator_of_region[result] = rc;
+
+	    // register for dtor callback...
+	    register_new_region( result );
+
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
-	std::tr1::shared_ptr<Rectangle> QtRegionSource::point( WorldCanvas *wc, double x, double y ) {
+	std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::point( RegionCreator *rc, WorldCanvas *wc, double x, double y ) {
 	    QtPoint *result = new QtPoint( this, wc, x, y, true );
 
+	    // save Region to RegionSource mapping for later revocation...
+	    creator_of_region[result] = rc;
+
+	    // register for dtor callback...
+	    register_new_region( result );
+
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
-	QtRegionDock *QtRegionSource::dock( ) { return panel_->regionDock( ); }
-	int QtRegionSource::numFrames( ) const { return panel_->numFrames( ); }
+	QtRegionDock *QtRegionSourceKernel::dock( ) { return panel_->regionDock( ); }
+	int QtRegionSourceKernel::numFrames( ) const { return panel_->numFrames( ); }
 
-	void QtRegionSource::loadRegions( bool &handled, const QString &path, const QString &type ) {
+	void QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ) {
 	    if ( ! handled ) {
 		handled = true;
 		ConstListIter<WorldCanvas*> wcl = panel_->displayPanel()->panelDisplay()->myWCLI;
@@ -145,17 +214,17 @@ namespace casa {
 			casa::viewer::ds9parser parser;
 			parser.parse_file( context, path.toAscii( ).constData( ) );
 		    } else {
-			fprintf( stderr, "QtRegionSource::loadRegions( bool &handled, const QString &path, const QString &type ):\n" );
+			fprintf( stderr, "QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ):\n" );
 			fprintf( stderr, "\tinternal error, invalid type: %s...\n", type.toAscii( ).constData( ) );
 		    }
 		} else {
-		    fprintf( stderr, "QtRegionSource::loadRegions( bool &handled, const QString &path, const QString &type ):\n" );
+		    fprintf( stderr, "QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ):\n" );
 		    fprintf( stderr, "\tinternal error, no world canvas...\n" );
 		}
 	    }
 	}
 
-	void QtRegionSource::load_crtf_regions( WorldCanvas *wc, const QString &path ) {
+	void QtRegionSourceKernel::load_crtf_regions( WorldCanvas *wc, const QString &path ) {
 	    // find viewers's coordinate system type...
 	    const CoordinateSystem &viewer_cs = wc->coordinateSystem( );
 	    MDirection::Types cstype = get_coordinate_type( viewer_cs );
@@ -208,7 +277,7 @@ namespace casa {
 		     annlinestyle == AnnotationBase::DOTTED ? Region::DotLine : Region::SolidLine );
 	}
 
-	void QtRegionSource::load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *rectangle ) {
+	void QtRegionSourceKernel::load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *rectangle ) {
 
 	    MDirection::Types ann_cstype = get_coordinate_type( rectangle->getCsys( ) );
 	    if ( ann_cstype == MDirection::EXTRA ) return;
@@ -238,7 +307,7 @@ namespace casa {
 	}
 
 
-	void QtRegionSource::load_crtf_ellipse( WorldCanvas *wc, MDirection::Types cstype, const AnnEllipse *ellipse ) {
+	void QtRegionSourceKernel::load_crtf_ellipse( WorldCanvas *wc, MDirection::Types cstype, const AnnEllipse *ellipse ) {
 	    MDirection::Types ann_cstype = get_coordinate_type( ellipse->getCsys( ) );
 	    if ( ann_cstype == MDirection::EXTRA ) return;
 
@@ -269,7 +338,7 @@ namespace casa {
 	}
 
 
-	void QtRegionSource::load_crtf_point( WorldCanvas *wc, MDirection::Types cstype, const AnnSymbol *symbol ) {
+	void QtRegionSourceKernel::load_crtf_point( WorldCanvas *wc, MDirection::Types cstype, const AnnSymbol *symbol ) {
 
 	    MDirection::Types ann_cstype = get_coordinate_type( symbol->getCsys( ) );
 	    if ( ann_cstype == MDirection::EXTRA ) return;
@@ -293,7 +362,7 @@ namespace casa {
 					     symbol->getColorString( ), line_style, false );
 	}
 
-	void QtRegionSource::load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon ) {
+	void QtRegionSourceKernel::load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon ) {
 
 	    MDirection::Types ann_cstype = get_coordinate_type( polygon->getCsys( ) );
 	    if ( ann_cstype == MDirection::EXTRA ) return;
@@ -318,6 +387,12 @@ namespace casa {
 					    polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
 					    polygon->getColorString( ), line_style, polygon->isAnnotationOnly( ) );
 	}
+
+	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) :
+		RegionSource( rc, shared_kernel_ptr_type(new QtRegionSourceKernel(panel)) ) { }
+
+	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel, const shared_kernel_ptr_type &kernel ) :
+		RegionSource( rc, kernel ) { }
 
     }
 }

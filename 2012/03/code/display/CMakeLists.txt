@@ -376,6 +376,7 @@ casa_add_library( display
   implement/Utilities/DlHandle.cc
   implement/Utilities/DlTarget.cc
   implement/Utilities/Lowlevel.cc
+  implement/Utilities/dtor.cc
   implement/region/QtRegion.cc
   implement/region/QtRectangle.cc
   implement/region/QtPolygon.cc

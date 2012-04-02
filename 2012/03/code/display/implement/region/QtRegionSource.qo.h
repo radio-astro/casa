@@ -29,6 +29,7 @@
 #ifndef REGION_QTREGIONSOURCE_H_
 #define REGION_QTREGIONSOURCE_H_
 
+#include <map>
 #include <QObject>
 #include <display/region/RegionSource.h>
 
@@ -48,27 +49,20 @@ namespace casa {
 	class QtRegion;
 	class QtRegionDock;
 
-	class QtRegionSource : public QObject, public RegionSource {
+	class QtRegionSourceKernel : public QObject, public RegionSourceKernel {
 	    Q_OBJECT
 	    public:
-		QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel );
-
-		/* std::tr1::shared_ptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ); */
-		std::tr1::shared_ptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
-		std::tr1::shared_ptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 );
-		std::tr1::shared_ptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
-
-		// ellipse is derived from rectangle... so while this should be "std::tr1::shared_ptr<Ellipse>" this would preclude
-		// the direct reuse of the Rectangle code (which only differs by region creation)... perhaps a case where
-		// smart pointers are not so smart (in not mirroring the inheritance hiearchy)... though perhaps it can be
-		// generalized to "std::tr1::shared_ptr<Region>"...
-		std::tr1::shared_ptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
-		std::tr1::shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y );
+		QtRegionSourceKernel( QtDisplayPanelGui *panel );
 
 		QtRegionDock *dock( );
 		int numFrames( ) const;
 
-		~QtRegionSource( );
+		~QtRegionSourceKernel( );
+
+		void revokeRegion( Region *r );
+
+		// inherited pure-virtual from dtorNotifiee, removes deleted regions...
+		void dtorCalled( const dtorNotifier * );
 
 	    signals:
 		void regionCreated( int, const QString &shape, const QString &name,
@@ -78,6 +72,26 @@ namespace casa {
 
 		void regionUpdate( int, const QList<double> &world_x, const QList<double> &world_y,
 				   const QList<int> &pixel_x, const QList<int> &pixel_y );
+
+		void regionUpdateResponse( int, const QString &shape, const QString &name,
+					   const QList<double> &world_x, const QList<double> &world_y,
+					   const QList<int> &pixel_x, const QList<int> &pixel_y,
+					   const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+
+	    protected:
+		friend class QtRegionSource;
+
+		/* std::tr1::shared_ptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ); */
+		std::tr1::shared_ptr<Rectangle> rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+		std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 );
+		std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
+
+		// ellipse is derived from rectangle... so while this should be "std::tr1::shared_ptr<Ellipse>" this would preclude
+		// the direct reuse of the Rectangle code (which only differs by region creation)... perhaps a case where
+		// smart pointers are not so smart (in not mirroring the inheritance hiearchy)... though perhaps it can be
+		// generalized to "std::tr1::shared_ptr<Region>"...
+		std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+		std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y );
 
 	    protected slots:
 		void loadRegions( bool &handled, const QString &path, const QString &type );
@@ -91,7 +105,19 @@ namespace casa {
 		void load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon );
 
 		QtDisplayPanelGui *panel_;
+
+		std::map<Region*,RegionCreator*> creator_of_region;
+
 	};
+
+	class QtRegionSource : public RegionSource {
+	    public:
+		QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel );
+	    protected:
+		friend class QtRegionSourceFactory;
+		QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel, const shared_kernel_ptr_type &kernel );
+	};
+
     }
 }
 

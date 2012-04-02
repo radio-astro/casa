@@ -247,13 +247,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 \setlongtables
 \begin{longtable}{|lccccl|}
 \caption{
-Items recognized by the range, select, getdata and\break putdata functions.
-Items marked with a \dag\ are only available in interferometric measurement sets.
-Items marked with a \ddag\ are only
-available in interferometric measurement sets that have been processed
-with calibrator or imager.
-Items marked with a \all\ do not require
-all the data in the selected measurement set to have the same shape.
+Items recognized by the range, select, getdata and\break putdata functions.\\
+Items marked with a \dag\ are only available in interferometric measurement sets.\\
+Items marked with a \ddag\ are only available in interferometric measurement sets\\
+that have been processed with calibrator or imager.  Items marked with a \all\ do\\
+not require all the data in the selected measurement set to have the same shape.
 }
 \\ \hline
                      &amp; range &amp; select &amp; getdata &amp; putdata &amp; comment\\ \hline
