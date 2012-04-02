@@ -155,18 +155,18 @@ std::string calanalysis::viscal() {
 // --- ///
 
 ::casac::record* calanalysis::get( const std::vector<std::string>& field,
-    const std::vector<std::string>& antenna1,
-    const std::vector<std::string>& antenna2, const double starttime,
-    const double stoptime, const std::vector<std::string>& feed,
-    const std::vector<std::string>& spw, const std::vector<int>& startchan,
-    const std::vector<int>& stopchan, const std::string& axis,
-    const std::string& ap ) {
+  const std::vector<std::string>& antenna1,
+  const std::vector<std::string>& antenna2, const double starttime,
+  const double stoptime, const std::vector<std::string>& feed,
+  const std::vector<std::string>& spw, const std::vector<int>& startchan,
+  const std::vector<int>& stopchan, const std::string& axis,
+  const std::string& ap, const double jumpmax ) {
 
   // Initialize the field parameter
 
   uInt uiNumField = field.size();
   Vector<uInt> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi( field[f].c_str() );
+  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi(field[f].c_str());
 
 
   // Initialize the antenna parameters
@@ -207,8 +207,8 @@ std::string calanalysis::viscal() {
   uInt uiNumSPW = spw.size();
 
   if ( startchan.size() != uiNumSPW || stopchan.size() != uiNumSPW ) {
-    String oError( "The number of startchan and/or stopchan must be the same " );
-    oError += "as the number of spw";
+    String oError( "The number of startchan and/or stopchan must be the " );
+    oError += "same as the number of spw";
     throw( AipsError( oError ) );
   }
 
@@ -249,6 +249,11 @@ std::string calanalysis::viscal() {
   }
 
 
+  // Initialize the initial jump parameter
+
+  Double dJumpMax = jumpmax;
+
+
   // Initialize the arguments (NONE)
 
   CalStats::ARG<CalStats::NONE> oArg;
@@ -261,7 +266,7 @@ std::string calanalysis::viscal() {
   try {
     oOutput = poCA->stats<CalStats::NONE>( oField, oAntenna1, oAntenna2,
         dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
-        eAxisIterUserID, eRAP, oArg );
+        eAxisIterUserID, eRAP, dJumpMax, oArg );
   }
   catch( AipsError oAipsError ) {
     throw( oAipsError );
@@ -300,8 +305,8 @@ std::string calanalysis::viscal() {
         oRecIter.insert( std::string("antenna2"), oAntenna2 );
 
         oRecIter.insert( std::string("spw"), spw );
-        oRecIter.insert( std::string("startchan"), startchan );
-	oRecIter.insert( std::string("stopchan"), stopchan );
+        oRecIter.insert( std::string("startChan"), startchan );
+	oRecIter.insert( std::string("stopChan"), stopchan );
 
         std::string oFeedKey( "feed" );
 	std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
@@ -367,20 +372,20 @@ std::string calanalysis::viscal() {
 
 // --- ///
 
-::casac::record* calanalysis::fit(const std::vector<std::string>& field,
-    const std::vector<std::string>& antenna1,
-    const std::vector<std::string>& antenna2, const double starttime,
-    const double stoptime, const std::vector<std::string>& feed,
-    const std::vector<std::string>& spw, const std::vector<int>& startchan,
-    const std::vector<int>& stopchan, const std::string& axis,
-    const std::string& order, const std::string& type, const bool weight,
-    const std::string& ap ) {
+::casac::record* calanalysis::fit( const std::vector<std::string>& field,
+  const std::vector<std::string>& antenna1,
+  const std::vector<std::string>& antenna2, const double starttime,
+  const double stoptime, const std::vector<std::string>& feed,
+  const std::vector<std::string>& spw, const std::vector<int>& startchan,
+  const std::vector<int>& stopchan, const std::string& axis,
+  const std::string& order, const std::string& type, const bool weight,
+  const std::string& ap, const double jumpmax ) {
 
   // Initialize the field parameter
 
   uInt uiNumField = field.size();
   Vector<uInt> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi( field[f].c_str() );
+  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi(field[f].c_str());
 
 
   // Initialize the antenna parameters
@@ -492,6 +497,11 @@ std::string calanalysis::viscal() {
   }
 
 
+  // Initialize the initial jump parameter
+
+  Double dJumpMax = jumpmax;
+
+
   // Call the CalAnalysis::stats<T>() member function for getting and fitting
 
   Vector<CalAnalysis::OUTPUT<CalStatsFitter::FIT> > oOutput;
@@ -499,7 +509,7 @@ std::string calanalysis::viscal() {
   try {
     oOutput = poCA->stats<CalStatsFitter::FIT>( oField, oAntenna1, oAntenna2,
         dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
-        eAxisIterUserID, eRAP, oArg );
+        eAxisIterUserID, eRAP, dJumpMax, oArg );
   }
   catch( AipsError oAipsError ) {
     throw( oAipsError );
@@ -538,8 +548,8 @@ std::string calanalysis::viscal() {
         oRecIter.insert( std::string("antenna2"), oAntenna2 );
 
         oRecIter.insert( std::string("spw"), spw );
-        oRecIter.insert( std::string("startchan"), startchan );
-	oRecIter.insert( std::string("stopchan"), stopchan );
+        oRecIter.insert( std::string("startChan"), startchan );
+	oRecIter.insert( std::string("stopChan"), stopchan );
 
         std::string oFeedKey( "feed" );
         std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
