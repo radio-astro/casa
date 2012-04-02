@@ -610,7 +610,7 @@ public:
 	casa::LogIO *logger_p;
 
 	// Measurement set section
-	String msname_p;
+	String tablename_p;
 	MSSelection *measurementSetSelection_p;
 	Vector<String> *antennaNames_p;
 	ROScalarMeasColumn<MPosition> *antennaPositions_p;

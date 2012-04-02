@@ -31,8 +31,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double timeInterval):
-		msname_p(msname), iterationApproach_p(iterationApproach)
+FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Double timeInterval):
+		tablename_p(tablename), iterationApproach_p(iterationApproach)
 {
 	// Initialize logger
 	logger_p = new LogIO(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));

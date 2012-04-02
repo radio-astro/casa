@@ -31,8 +31,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagCalTableHandler::FlagCalTableHandler(string msname, uShort iterationApproach, Double timeInterval):
-		FlagDataHandler(msname,iterationApproach,timeInterval)
+FlagCalTableHandler::FlagCalTableHandler(string tablename, uShort iterationApproach, Double timeInterval):
+		FlagDataHandler(tablename,iterationApproach,timeInterval)
 {
 	selectedCalTable_p = NULL;
 	originalCalTable_p = NULL;
@@ -65,7 +65,7 @@ bool
 FlagCalTableHandler::open()
 {
 	if (originalCalTable_p) delete originalCalTable_p;
-	originalCalTable_p = new NewCalTable(msname_p,Table::Update,Table::Plain);
+	originalCalTable_p = new NewCalTable(tablename_p,Table::Update,Table::Plain);
 
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalCalTable_p->field());

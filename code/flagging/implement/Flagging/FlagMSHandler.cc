@@ -32,8 +32,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagMSHandler::FlagMSHandler(string msname, uShort iterationApproach, Double timeInterval):
-		FlagDataHandler(msname,iterationApproach,timeInterval)
+FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double timeInterval):
+		FlagDataHandler(tablename,iterationApproach,timeInterval)
 {
 	selectedMeasurementSet_p = NULL;
 	originalMeasurementSet_p = NULL;
@@ -72,7 +72,7 @@ FlagMSHandler::open()
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
-	originalMeasurementSet_p = new MeasurementSet(msname_p,Table::Update);
+	originalMeasurementSet_p = new MeasurementSet(tablename_p,Table::Update);
 
 	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
