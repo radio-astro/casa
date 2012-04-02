@@ -12,8 +12,8 @@
 namespace casa {
     namespace viewer {
 
-	QtRegion::QtRegion( QtRegionSource *factory ) :
-			source_(factory), dock_(factory->dock()), name_(""), hold_signals(0),
+	QtRegion::QtRegion( QtRegionSourceKernel *factory ) :
+			source_(factory), dock_(factory->dock( )), name_(""), hold_signals(0),
 			z_index_within_range(true), id_(QtId::get_id( )) {
 	    statistics_visible = position_visible = false;
 	    statistics_update_needed = position_update_needed = true;
@@ -27,7 +27,7 @@ namespace casa {
 	    dock_->addRegion(mystate);
 	}
 
-	QtRegion::QtRegion( const QString &nme, QtRegionSource *factory, bool hold_signals_ ) :
+      QtRegion::QtRegion( const QString &nme, QtRegionSourceKernel *factory, bool hold_signals_ ) :
 			source_(factory), dock_(factory->dock()), name_(nme), hold_signals(hold_signals_ ? 1 : 0),
 			z_index_within_range(true), id_(QtId::get_id( )) {
 	    statistics_visible = position_visible = false;
@@ -87,6 +87,19 @@ namespace casa {
 	}
 
 	void QtRegion::selectedInCanvas( ) { dock_->selectRegion(mystate); }
+
+	void QtRegion::emitUpdate( ) {
+	    Region::RegionTypes type;
+	    QList<int> pixelx, pixely;
+	    QList<double> worldx, worldy;
+
+	    fetch_details( type, pixelx, pixely, worldx, worldy );
+
+	    emit regionUpdateResponse( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" :
+						     type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
+				       QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
+				       QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
+	}
 
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
@@ -278,8 +291,8 @@ namespace casa {
 		    }
 		    break;
 		case RegionChangeLabel:
-		    fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",
-			     id_, lineColor( ).c_str( ), textValue( ).c_str( ), textFont( ).c_str( ), textFontStyle( ), textFontSize( ) );
+		    // fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",
+		    // 	     id_, lineColor( ).c_str( ), textValue( ).c_str( ), textFont( ).c_str( ), textFontStyle( ), textFontSize( ) );
 		    break;
 	    }
 	}

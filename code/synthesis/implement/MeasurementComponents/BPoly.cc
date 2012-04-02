@@ -41,6 +41,7 @@
 #include <casa/System/PGPlotter.h>
 #include <synthesis/CalTables/BJonesMBuf.h>
 #include <synthesis/CalTables/BJonesMCol.h>
+#include <synthesis/CalTables/NewCalTable.h>
 #include <ms/MeasurementSets/MSSpWindowIndex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -173,6 +174,20 @@ void BJonesPoly::setApply(const Record& applypar)
 {
 // Set the applypar parameters
 
+// Call parent (loadMemCalTable is no overloaded)
+
+
+  nChanParList()=vs_p->numberChan();
+  startChanList()=vs_p->startChan();
+
+  BJones::setApply(applypar);
+
+  // The old BPOLY never used calWt=True; preserve
+  //  this behavior for now
+  calWt()=False;
+
+  /*
+
   // Extract the parameters
   if (applypar.isDefined("table"))
     calTableName() = applypar.asString("table");
@@ -225,633 +240,12 @@ void BJonesPoly::setApply(const Record& applypar)
   setApplied(True);
   setSolved(False);
 
+  */
+
 };
 
 //----------------------------------------------------------------------------
 
-// This is a new version which packages the baseline data properly for the
-//  Gildas routines and grids each spectrum.  It also does more sanity
-//  checking, logging, and produces a nicer plot.
-
-void BJonesPoly::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
-{
-// Solver for the polynomial bandpass solution
-// Input:
-//    me           VisEquation&         Measurement Equation (ME) in
-//                                      which this Jones matrix resides
-// Output:
-//    solve        Bool                 True is solution succeeded
-//                                      else False
-//
-
-// TODO:
-//   1. Make pointers private, make delete function and use it 
-//   2. Use antenna names
-//
-
-
-  LogIO os (LogOrigin("BJonesPoly", "selfGatherAndSolve()", WHERE));
-
-  os << LogIO::NORMAL
-     << "Fitting bandpass amplitude and phase polynomials."
-     << LogIO::POST;
-  os << LogIO::NORMAL 
-     << "Polynomial degree for amplitude is " << degamp_p 
-     << LogIO::POST;
-  os << LogIO::NORMAL 
-     << "Polynomial degree for phase is " << degphase_p 
-     << LogIO::POST;
-
-  // Bool to short-circuit operation
-  Bool ok(True);
-
-  // Arrange for iteration over data
-  Block<Int> columns;
-  // avoid scan iteration
-  columns.resize(4);
-  columns[0]=MS::ARRAY_ID;
-  columns[1]=MS::FIELD_ID;         // TBD: problematic for multi-field?
-  columns[2]=MS::DATA_DESC_ID;
-  columns[3]=MS::TIME;
-  vs.resetVisIter(columns,interval());
-  VisIter& vi(vs.iter());
-  VisBuffer vb(vi);
-
-  // Initialize the baseline index
-  Vector<Int> ant1(nBln(), -1);
-  Vector<Int> ant2(nBln(), -1);
-  Vector<Int> numFreqChan(nSpw(), 0);
-
-  // make gridded freq array
-  // The minimum number of frequency channels required for a solution
-  //  is the number of coefficients in the fit.  For a gridded spectrum,
-  //  filled from irregularly spaced input spectral windows, it is possible
-  //  that only very few channels get filled.  So, we will be conservative
-  //  and make a gridded spectrum with 2*ncoeff channels, where ncoeff is
-  //  the maximum of the number of coefficients requested for the phase and
-  //  amp solutions. We will then check to make sure that a sufficient
-  //  number of gridded slots will be filled by the input frequency channels.
-
-
-  Int nPH(0);
-  Double minfreq(DBL_MAX), maxfreq(0.0), maxdf(0.0);
-  PtrBlock<Vector<Double>*> freq; freq.resize(nSpw()); freq=0;
-  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-    vi.origin();
-    Int spwid=vi.spectralWindow();
-    numFreqChan(spwid) = vs.numberChan()(spwid);
-    freq[spwid] = new Vector<Double>;
-    (*freq[spwid])=vb.frequency();
-    Double df2=abs((*freq[spwid])(1)-(*freq[spwid])(0))/2.0;
-    maxdf=max(maxdf,2.0*df2);
-    minfreq=min(minfreq,min((*freq[spwid])));
-    maxfreq=max(maxfreq,max((*freq[spwid])));
-
-    Int ncorr(vb.corrType().nelements());
-    nPH= max(nPH,min(ncorr,2));
-  }
-  minfreq=minfreq-maxdf/2.0;
-  maxfreq=maxfreq+maxdf/2.0;
-
-  // minfreq is the low edge of the lowest channel
-  // maxfreq is the high edge of the highest channel
-  // nPH is the number of parallel-hand correlations present
-
-
-  Double freqstep;
-  Int nFreqGrid;
-
-  // Derive grid spacing/number from requested poly degree
-  // FOR NOW, it is less error-prone to use input spacing
-  //  nFreqGrid=2*(max(degamp_p,degphase_p)+1);
-  //  nFreqGrid=max(nFreqGrid,16);  // no fewer than 16, in any case.
-  //  freqstep=((maxfreq-minfreq)/Double(nFreqGrid));
-
-  // Grid spacing is (multiple of?) maximum input channel spacing
-  freqstep=maxdf;
-  nFreqGrid = Int ((maxfreq-minfreq)/freqstep+0.5);
-
-  // Fill the gridded frequency list
-  Vector<Double> totalFreq(nFreqGrid,0.0);
-  for (Int i=0;i<nFreqGrid;i++) {
-    totalFreq(i)=minfreq + freqstep*(Double(i)+0.5);
-  }
-
-  // Populate the frequency grid with the input frequency channels,
-  //  and demand that enough (?) will get filled.
-  Vector<Bool> freqGridOk(nFreqGrid,False);
-  for (Int ispw=0;ispw<nSpw();ispw++) {
-    if (freq[ispw]) {
-      for (Int ichan=0;ichan<numFreqChan(ispw);ichan++) {
-	Int chanidx=(Int) floor(((*freq[ispw])(ichan)-minfreq)/freqstep);
-	if(chanidx >= nFreqGrid){
-	  cout << "spw " << ispw <<" " <<  chanidx << endl;
-	}
-	freqGridOk(chanidx)=True;
-      }
-    }
-  }
-
-  // Sanity check on polynomial order and grid count
-  Int nok=ntrue(freqGridOk);
-  if (nok < (degamp_p+1) ) {
-    os << LogIO::SEVERE 
-       << "Selected spectral window(s) nominally fill only " << nok << " grid points." 
-       << LogIO::POST;
-    os << LogIO::SEVERE 
-       << "Reduce degamp by at least " << degamp_p+1-nok << " and try again." 
-       << LogIO::POST;
-    ok=False;
-  }
-  if (nok < (degphase_p+1) ) {
-    os << LogIO::SEVERE 
-       << "Selected spectral window(s) nominally fill only " << nok << " grid points." 
-       << LogIO::POST;
-    os << LogIO::SEVERE 
-       << "Reduce degphase by at least " << degphase_p+1-nok << " and try again." 
-       << LogIO::POST;
-    ok=False;
-  }
-  // If either degree vs nGrid test failed, quit here
-  if (!ok) throw(AipsError("Invalid polynomial degree specification"));
-
-  // Report spectral information
-  os << LogIO::NORMAL 
-     << "Spectral grid for fit will have " << nFreqGrid
-     << " points spaced by " << freqstep/1000.0 << " kHz."
-     << LogIO::POST;
-
-  os << LogIO::NORMAL 
-     << "Polynomial solution will be valid over frequency range: "
-     << totalFreq(0) << "-" << totalFreq(nFreqGrid-1) << " Hz."
-     << LogIO::POST;
-
-  os << LogIO::NORMAL 
-     << "Total bandwidth: "
-     << freqstep*Double(nFreqGrid)/1000.0 << " kHz."
-     << LogIO::POST;
-
-
-  // We must keep track of good ants and baselines
-  Vector<Bool> antok(nAnt(),False);
-  Matrix<Bool> bslok(nAnt(),nAnt(),False);
-  Int nGoodBasl=0;
-  Matrix<Int> bslidx(nAnt(),nAnt(),-1);
-  Matrix<Int> antOkChan(nFreqGrid, nAnt(),0);
-  Vector<Int> ant1num, ant2num;  // clic solver antenna numbers (1-based, contiguous)
-  ant1num.resize(nBln());
-  ant2num.resize(nBln());
-  Vector<Int> ant1idx, ant2idx;  // MS.ANTENNA indices (for plot, storage)
-  ant1idx.resize(nBln());
-  ant2idx.resize(nBln());
-
-  PtrBlock<Matrix<Complex>*> accumVis(nPH,NULL);
-  PtrBlock<Matrix<Double>*> accumWeight(nPH,NULL);
-  PtrBlock<Vector<Complex>*> normVis(nPH,NULL);
-  PtrBlock<Vector<Double>*> normWeight(nPH,NULL);
-
-  for (Int i=0;i<nPH;++i) {
-    accumVis[i] = new Matrix<Complex>(nFreqGrid, nBln()); (*accumVis[i])=Complex(0.0,0.0);
-    accumWeight[i] = new Matrix<Double>(nFreqGrid, nBln()); (*accumWeight[i])=0.0;
-    normVis[i] = new Vector<Complex>(nBln()); (*normVis[i])=Complex(0.0,0.0);
-    normWeight[i] = new Vector<Double>(nBln()); (*normWeight[i])=0.0;
-  }
-
-  Vector<Int> indexSpw;
-
-  // By constraint, this solver should see data only from one sideband.
-  // Pick up the frequency group name from the current spectral window
-  // accordingly.
-  String freqGroup("");
-
-  Double timeref(-1.0);
-  Double timewtsum(0.0);
-
-  // Iterate, accumulating the averaged spectrum for each 
-  // spectral window sub-band.
-  Int chunk;
-  for (chunk=0, vi.originChunks(); vi.moreChunks(); vi.nextChunk(), chunk++) {
-
-    // Extract the current visibility buffer spectral window id.
-    // and number for frequency channels
-
-    Int spwid = vi.spectralWindow();
-    Int nChan = vs.numberChan()(spwid);
-    Int nCorr = vb.corrType().nelements();
-    freqGroup = freqGrpName(spwid);
-    
-    Vector<Int> polidx(2,0);
-    polidx(1)=nCorr-1;   // TBD: should be pol-sensitive!
-
-    os << LogIO::NORMAL << "Accumulating spw id = " << spwid
-       << ", nchan= " << nChan 
-       << " (freq group= " << freqGroup << ") for fit."       
-       << LogIO::POST;
-
-    // Compute the corrected and corrupted data at the position of
-    // this Jones matrix in the Measurement Equation. The corrupted
-    // data are the model visibilities propagated along the ME from
-    // the sky to the immediate right of the current Jones matrix.
-    // The corrected data are the observed data corrected for all
-    // Jones matrices up to the immediate left of the current Jones
-    // matrix.
-  
-
-    // Arrange to accumulate
-    VisBuffAccumulator vba(nAnt(),preavg(),False);
-    
-    // Collapse each timestamp in this chunk according to VisEq
-    //  with calibration and averaging
-    for (vi.origin(); vi.more(); vi++) {
-      
-      // This forces data/model/wt I/O, and
-      //   applies any prior calibrations
-      ve.collapse(vb);
-
-      // If permitted/required by solvable component, normalize
-      if (normalizable()) 
-	vb.normalize();
-
-      // Accumulate collapsed vb in a time average
-      vba.accumulate(vb);
-      
-      // Accumulate timestamp
-      if (timeref<0.0) timeref=vb.time()(0);
-      timewtsum+=1.0;
-      solTimeStamp+=(vb.time()(0)-timeref);
-
-      if (solFldId<0)
-	solFldId=vb.fieldId();
-      if (solSpwId<0)
-	solSpwId=vb.spectralWindow();
-
-    }
-    vba.finalizeAverage();
-
-    // The VisBuffer to work with in solve
-    VisBuffer& svb(vba.aveVisBuff());
-
-    // Data and model values
-    Complex data;
-
-    // Compute the amplitude and phase spectrum for this spectral window
-    for (Int row=0; row < svb.nRow(); row++) {
-      // Antenna indices
-      Int a1 = svb.antenna1()(row);
-      Int a2 = svb.antenna2()(row);
-      Vector<Double> rowwt(2,0.0);
-      for (Int iph=0;iph<nPH;++iph)
-	rowwt(iph) = svb.weightMat()(polidx(iph),row);
-
-      // Reject auto-correlation data, zero weights, fully-flagged spectra
-      if ( (a1 != a2) && 
-           (sum(rowwt) > 0) && 
-	   nfalse(svb.flag().column(row)) > 0 ) {
-
-	// These ants, this baseline is ok (there is at least some good data here)
-	antok(a1)=True;
-	antok(a2)=True;
-	if (!bslok(a1,a2)) {   // first visit to this baseline
-	  bslok(a1,a2)=True;
-	  bslidx(a1,a2)=nGoodBasl++;
-	  ant1idx(bslidx(a1,a2))=a1;
-	  ant2idx(bslidx(a1,a2))=a2;
-	}
-
-	// Loop over the frequency channels
-	for (Int ichan=0; ichan < nChan; ichan++) {
-	  // Reject flagged/masked channels
-	  if (!svb.flag()(ichan,row) && !maskedChannel(ichan, nChan)) {
-
-	    for (Int iph=0;iph<nPH;++iph) {
-	    
-	      data = svb.visCube()(polidx(iph),ichan,row);
-	      
-	      // accumulate accumVis, accumWeight
-	      if (abs(data) > 0 && rowwt(iph)>0.0) {
-		Vector<Double> freq1=svb.frequency();
-		Int chanidx=(Int) floor((freq1(ichan)-minfreq)/freqstep);
-		(*accumVis[iph])(chanidx,bslidx(a1,a2))+=(Complex(rowwt(iph),0.0)*data);
-		(*accumWeight[iph])(chanidx,bslidx(a1,a2))+=rowwt(iph);
-		
-		// count this channel good for these ants
-		antOkChan(chanidx,a1)++;
-		antOkChan(chanidx,a2)++;
-		
-		// Accumulate data normalizing factor (visnorm)
-		(*normVis[iph])(bslidx(a1,a2))+=(Complex(rowwt(iph),0.0)*data);
-		(*normWeight[iph])(bslidx(a1,a2))+=rowwt(iph);
-		
-		// cout << row << " " << ichan << " " << chanidx << " "
-		//   << data << " " << rowwt << " "
-		//   << accumVis(chanidx,bslidx(a1,a2)) << " "
-		//   << accumWeight(chanidx,bslidx(a1,a2)) << endl;
-	      }
-
-	    }
-
-	  };
-	};
-      };
-    };
-  }; // for (chunk...) iteration
-
-  if (timewtsum>0.0)
-    solTimeStamp/=timewtsum;
-  solTimeStamp+=timeref;
-
-  //  cout << "solFldId     = " << solFldId << endl;
-  //  cout << "solSpwId     = " << solSpwId << endl;
-  //  cout << "solTimeStamp = " << MVTime(solTimeStamp/C::day).string( MVTime::YMD,7) << endl;
-
-  // Delete freq PtrBlock
-  for (Int ispw=0;ispw<nSpw();ispw++) {
-    if (freq[ispw]) { delete freq[ispw]; freq[ispw]=0; }
-  }
-
-  // Form a contiguous 1-based antenna index list 
-  Vector<Int> antnum(nAnt(),-1);
-  Int antcount=0;
-  for (Int iant=0;iant<nAnt();iant++) {
-    if (antok(iant)) antnum(iant)=(++antcount);
-  }
-  for (Int ibl=0;ibl<nGoodBasl;ibl++) {
-    ant1num(ibl)=antnum(ant1idx(ibl));
-    ant2num(ibl)=antnum(ant2idx(ibl));
-  }
-  ant1num.resize(nGoodBasl,True);
-  ant2num.resize(nGoodBasl,True);
-  ant1idx.resize(nGoodBasl,True);
-  ant2idx.resize(nGoodBasl,True);  
-
-
-  Int nGoodAnt=Int(ntrue(antok));
-
-  os << LogIO::NORMAL 
-     << "Found data for " << nGoodBasl 
-     << " baselines among " << nGoodAnt
-     << " antennas."
-     << LogIO::POST;
-
-  //  cout << "antOkChan = " << antOkChan << endl;
-
-  // BPoly is nominally dual-pol
-  Matrix<Double> ampCoeff(nAnt(), 2*(degamp_p+1),0.0);       // solutions stored here later
-  Matrix<Double> phaseCoeff(nAnt(), 2*(degphase_p+1), 0.0);  // solutions stored here later
-
-  PtrBlock<Matrix<Double>*> totalWeight(nPH,NULL), totalPhase(nPH,NULL), totalAmp(nPH,NULL);
-
-  for (Int iph=0;iph<nPH;++iph) {
-
-    totalAmp[iph] = new Matrix<Double>(nFreqGrid, nGoodBasl); (*totalAmp[iph])=0.0;
-    totalPhase[iph] = new Matrix<Double>(nFreqGrid, nGoodBasl); (*totalPhase[iph])=0.0;
-    totalWeight[iph] = new Matrix<Double>(nFreqGrid, nGoodBasl); (*totalWeight[iph])=0.0;
-
-    for (Int ibl=0;ibl<nGoodBasl;ibl++) {
-      ant1num(ibl)=antnum(ant1idx(ibl));
-      ant2num(ibl)=antnum(ant2idx(ibl));
-      if ( (*normWeight[iph])(ibl)> 0.0)
-	(*normVis[iph])(ibl)/=(static_cast<Complex>((*normWeight[iph])(ibl)));
-      for (Int ichan=0;ichan<nFreqGrid;ichan++) {
-	Double &wt=(*accumWeight[iph])(ichan,ibl);
-	// insist at least 4 baselines with good data for these antennas in this channel
-	if (wt > 0 &&
-	    antOkChan(ichan,ant1idx(ibl)) > 3 &&   
-	    antOkChan(ichan,ant2idx(ibl)) > 3 ) {
-	  (*accumVis[iph])(ichan,ibl)/= (static_cast<Complex>(wt));
-	  
-	  // If requested, normalize the data, if possible
-	  if (visnorm_p)
-	    if (abs((*normVis[iph])(ibl))>0.0 )
-	      (*accumVis[iph])(ichan,ibl)/=(*normVis[iph])(ibl);
-	    else
-	      (*accumVis[iph])(ichan,ibl)=0.0; // causes problems in polyant?
-	  
-  
-	  (*totalAmp[iph])(ichan,ibl)=static_cast<Double>(log(abs((*accumVis[iph])(ichan,ibl))));
-	  // Note phase sign convention!
-	  (*totalPhase[iph])(ichan,ibl)=static_cast<Double>(-1.0*arg((*accumVis[iph])(ichan,ibl)));
-	  (*totalWeight[iph])(ichan,ibl)=wt;
-	}
-      }
-
-    }
-
-    if ( accumVis[iph] )    delete accumVis[iph];
-    if ( accumWeight[iph] ) delete accumWeight[iph];
-    if ( normVis[iph] )     delete normVis[iph];
-    if ( normWeight[iph] )  delete normWeight[iph];
-    accumVis[iph]=NULL;
-    accumWeight[iph]=NULL;
-    normVis[iph]=NULL;
-    normWeight[iph]=NULL;
-        
-    // GILDAS solver uses one-relative antenna numbers
-    Int refantenna = refant() + 1;
-    
-    // First fit the bandpass amplitude
-    os << LogIO::NORMAL 
-       << "Fitting amplitude polynomial."
-       << LogIO::POST;
-    
-    Int degree = degamp_p + 1;
-    Int iy = 1;
-    Bool dum;
-    Vector<Double> rmsAmpFit2(nGoodBasl,0.0);
-    Matrix<Double> ampCoeff2(nGoodAnt, degree, 1.0);
-   
-    {
-      // Create work arrays
-      Vector<Double> wk1(degree);
-      Vector<Double> wk2(degree*degree*nGoodAnt*nGoodAnt);
-      Vector<Double> wk3(degree*nGoodAnt);
-      
-      // Call the CLIC solver for amplitude
-      polyant(&iy,
-	      &nFreqGrid,
-	      &nGoodBasl,
-	      ant1num.getStorage(dum),
-	      ant2num.getStorage(dum),
-	      &refantenna,
-	      &degree,
-	      &nGoodAnt,
-	      totalFreq.getStorage(dum),
-	      totalAmp[iph]->getStorage(dum),
-	      totalWeight[iph]->getStorage(dum),
-	      wk1.getStorage(dum),
-	      wk2.getStorage(dum),
-	      wk3.getStorage(dum),
-	      rmsAmpFit2.getStorage(dum),
-	      ampCoeff2.getStorage(dum));
-    }
-
-    if (totalAmp[iph]) delete totalAmp[iph];
-    totalAmp[iph]=NULL;
-
-    os << LogIO::NORMAL 
-       << "Per-baseline RMS log(Amp) statistics: (min/mean/max) = "
-       << min(rmsAmpFit2) << "/" << mean(rmsAmpFit2) << "/" << max(rmsAmpFit2)
-       << LogIO::POST;
-    
-    // Now fit the bandpass phase
-    os << LogIO::NORMAL 
-       << "Fitting phase polynomial."
-       << LogIO::POST;
-    
-    // Call the CLIC solver for phase
-    degree = degphase_p + 1;
-    iy = 2;
-    Vector<Double> rmsPhaseFit2(nGoodBasl,0.0);
-    Matrix<Double> phaseCoeff2(nGoodAnt, degree, 123.0);
-    
-    {
-      // Create work arrays
-      Vector<Double> wk6(degree);
-      Vector<Double> wk7(degree*degree*nGoodAnt*nGoodAnt);
-      Vector<Double> wk8(degree*nGoodAnt);
-      
-      polyant(&iy,
-	      &nFreqGrid,
-	      &nGoodBasl,
-	      ant1num.getStorage(dum),
-	      ant2num.getStorage(dum),
-	      &refantenna,
-	      &degree,
-	      &nGoodAnt,
-	      totalFreq.getStorage(dum),
-	      totalPhase[iph]->getStorage(dum),
-	      totalWeight[iph]->getStorage(dum),
-	      wk6.getStorage(dum),
-	      wk7.getStorage(dum),
-	      wk8.getStorage(dum),
-	      rmsPhaseFit2.getStorage(dum),
-	      phaseCoeff2.getStorage(dum));
-    }
-
-    if (totalPhase[iph]) delete totalPhase[iph];
-    if (totalWeight[iph]) delete totalWeight[iph];
-    totalPhase[iph]=NULL;
-    totalWeight[iph]=NULL;
-
-    os << LogIO::NORMAL 
-       << "Per baseline RMS phase (deg) statistics: (min/mean/max) = "
-       << min(rmsPhaseFit2)*180.0/C::pi << "/" 
-       << mean(rmsPhaseFit2)*180.0/C::pi << "/" 
-       << max(rmsPhaseFit2)*180.0/C::pi
-       << LogIO::POST;
-    
-    // Expand solutions into full antenna list
-    IPosition iplo(1,iph*(degphase_p+1));
-    IPosition iphi(1,(iph+1)*(degphase_p+1)-1);
-    IPosition ialo(1,iph*(degamp_p+1));
-    IPosition iahi(1,(iph+1)*(degamp_p+1)-1);
-    
-    for (Int iant=0;iant<nAnt();iant++) {
-      if (antok(iant)) {
-	ampCoeff.row(iant)(ialo,iahi)=ampCoeff2.row(antnum(iant)-1);
-	phaseCoeff.row(iant)(iplo,iphi)=phaseCoeff2.row(antnum(iant)-1);
-      }
-    }
-
-    // plot amplitude and phase baseline data/solutions
-    //  plotsolve2(totalFreq, totalAmp, totalPhase, totalWeight, ant1idx, ant2idx,
-    //	     rmsAmpFit2, ampCoeff, rmsPhaseFit2, phaseCoeff);
-    
-  } // iph
-
-  Int nChanTotal=nFreqGrid;
-  Double meanfreq=mean(totalFreq);
-  
-  // Compute the reference frequency and reference phasor
-  Vector<Complex> refAmp;
-  Vector<MFrequency> refFreq;
-  refAmp.resize(nAnt());
-  refFreq.resize(nAnt());  
-  for (Int k=0; k < nAnt(); k++) {
-    refAmp(k) = Complex(1.0,0); 
-    refFreq(k) = MFrequency(Quantity(meanfreq, "Hz"));
-  }; 
-  
-  // Frequency range
-  Double loFreq = totalFreq(0);
-  Double hiFreq = totalFreq(nChanTotal-1);
-  
-  Matrix<Double> validDomain(nAnt(), 2);
-  validDomain.column(0) = loFreq;
-  validDomain.column(1) = hiFreq;
-  // TBD: 
-  //  Double edgefreq(maskedge_p*(hiFreq-loFreq));
-  //  validDomain.column(0) = loFreq + edgefreq;
-  //  validDomain.column(1) = hiFreq - edgefreq;
-  
-  // Normalize the output calibration solutions if required
-  Vector<Complex> scaleFactor(nAnt(), Complex(1,0));
-
-  if (solnorm()) {
-    os << LogIO::NORMAL 
-       << "Normalizing antenna-based solutions."
-       << LogIO::POST;
-
-    Vector<Double> Ca, Cp;
-    for (Int iph=0;iph<nPH;++iph) {
-
-      IPosition iplo(1,iph*(degphase_p+1));
-      IPosition iphi(1,(iph+1)*(degphase_p+1)-1);
-      IPosition ialo(1,iph*(degamp_p+1));
-      IPosition iahi(1,(iph+1)*(degamp_p+1)-1);
-
-      // Loop over antenna
-      for (Int iant=0; iant < nAnt(); iant++) {
-
-	Ca.reference(ampCoeff.row(iant)(ialo,iahi));
-	Cp.reference(phaseCoeff.row(iant)(iplo,iphi));
-
-
-	// Normalize mean phasor across the spectrum
-	Int nChAve(0);
-	Complex meanPha(0,0);
-	Double meanAmp(0);
-	for (Int chan=0; chan < nChanTotal; chan++) {
-	  // only use channels that participated in the fit
-	  if (antOkChan(chan,iant) > 3) {
-
-	    nChAve++;
-	    Double ampval = getChebVal(Ca, loFreq, hiFreq,
-				       totalFreq(chan));
-	    Double phaseval = getChebVal(Cp, loFreq, hiFreq,
-					 totalFreq(chan));
-
-	    meanPha += Complex(cos(phaseval), sin(phaseval));
-	    meanAmp += exp(ampval);
-
-	  };
-	}
-	// Normalize by adjusting the zeroth order term
-	if (nChAve>0) {
-	  meanPha/=Complex(nChAve);
-	  meanAmp/=Double(nChAve);
-
-	  //	  cout << "mean B = " << meanAmp << " " << arg(meanPha)*180.0/C::pi << endl;
-	  
-	  Ca(0)-=2.0*log(meanAmp);
-	  Cp(0)-=2.0*arg(meanPha);
-	}
-      };
-    }
-  };
-    
-  // Update the output calibration table
-  Vector<Int> antId(nAnt());
-  indgen(antId);
-  Vector<String> polyType(nAnt(), "CHEBYSHEV");
-  Vector<String> phaseUnits(nAnt(), "RADIANS");
-  Vector<Int> refAnt(nAnt(), refant());
-  
-  
-  updateCalTable (freqGroup, antId, polyType, scaleFactor, validDomain,
-		  ampCoeff, phaseCoeff, phaseUnits, refAmp, refFreq, refAnt);
-  
-};
 
 void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 {
@@ -1614,7 +1008,7 @@ Bool BJonesPoly::maskedChannel (const Int& chan, const Int& nChan)
 
 //----------------------------------------------------------------------------
     
-void BJonesPoly::load (const String& applyTable) 
+void BJonesPoly::loadMemCalTable (String applyTable,String field)
 {
 // Load and cache the polynomial bandpass corrections
 // Input:
@@ -1629,11 +1023,17 @@ void BJonesPoly::load (const String& applyTable)
 //   BPOLY will thus behave as if it were an ordinary B (except for the
 //   fact that currently it CANNOT be time-dependent).
 
+  // Generate a NCT in memory to hold the BPOLY as a B
+  ct_=new NewCalTable("BpolyAsB.temp",VisCalEnum::COMPLEX,"B Jones",msName(),False);
+
   // Open the BJonesPoly calibration table
   BJonesPolyTable calTable(applyTable, Table::Update);
 
   // Ensure sort on TIME, so CalSet is filled in order
-  Block <String> sortCol(1,"TIME");
+  Block <String> sortCol(3);
+  sortCol[0]="CAL_DESC_ID";
+  sortCol[1]="TIME";
+  sortCol[2]="ANTENNA1";
   calTable.sort2(sortCol);
 
   // Attach a calibration table columns accessor
@@ -1641,14 +1041,9 @@ void BJonesPoly::load (const String& applyTable)
 
   // Fill the bandpass correction cache
   Int nrows = calTable.nRowMain();
-
-  Vector<Int> nTime_(nSpw());
-  nTime_=0;
   Int nDesc = calTable.nRowDesc();
 
   // A matrix to show which spws to be calibrated by each caldesc
-  Matrix<Bool> spwmask(nSpw(),nDesc,False);
-
   Vector<Int> spwmap(nDesc,-1);
   for (Int idesc=0;idesc<nDesc;++idesc) {
 
@@ -1662,24 +1057,15 @@ void BJonesPoly::load (const String& applyTable)
     if (nSpw > 1) {};  // ERROR!!!  Should only be one spw per cal desc!
     spwmap(idesc)=spwId(0);
 
-    // Set spwmask
-    spwmask.column(idesc)(spwMap()==spwId(0))=True;
-    
-    //    cout << idesc << " " << boolalpha << spwmask.column(idesc) << endl;
+    currSpw()=spwId(0);
+    Vector<Double> freq = freqAxis(currSpw());
 
-    // Get slot count for this desc
-    ostringstream thisDesc;
-    thisDesc << "CAL_DESC_ID==" << idesc;
-    CalTable thisDescTab = calTable.select(thisDesc.str());
-    nTime_(spwmask.column(idesc))=thisDescTab.nRowMain()/nAnt();
+    // Set SPW subtable freqs
+    IPosition blc(1,startChan()), trc(1,startChan()+nChanPar()-1);
+    ct_->setSpwFreqs(currSpw(),freq(blc,trc));
 
   }
   
-  if (cs_) delete cs_;
-  cs_ = new CalSet<Complex>(nSpw());
-  cs().resize(nPar(),nChanParList(),nElem(),nTime_);
-  cs().startChan()=startChanList();
-
   // We will fill in a _sampled_ bandpass from the Cheby coeffs
   for (Int ispw=0; ispw<nSpw(); ispw++) {
     currSpw()=ispw;
@@ -1691,16 +1077,22 @@ void BJonesPoly::load (const String& applyTable)
     invalidateCalMat();      
   }
 
-  IPosition ipos(3,0,0,0);
-  IPosition ipos4(4,0,0,0,0);
 
-  Vector<Int> iTime(nSpw(),-1);
+  // Inflate the solve arrays, so we can fill them
+  initSolvePar();
 
   for (Int row=0; row < nrows; row++) {
 
+    Int idesc = col.calDescId().asInt(row);
+ 
+    Double thisTime=col.time().asdouble(row);
+    Int thisSpw=spwmap(idesc);
+
     // Antenna id.
     Int antennaId = col.antenna1().asInt(row);
-    ipos(2)=ipos4(2)=antennaId;
+
+    currSpw()=thisSpw;
+    refTime()=thisTime;
 
     // Frequency group name
     String freqGrpName = col.freqGrpName().asString(row);
@@ -1738,8 +1130,6 @@ void BJonesPoly::load (const String& applyTable)
     // Loop over all spectral window id.'s in this frequency group
     //    Vector<Int> spwIds = spwIdsInGroup(freqGrpName);
 
-    Int idesc = col.calDescId().asInt(row);
-
       // This cal desc
     CalDescRecord calDescRec(calTable.getRowDesc(idesc));
 
@@ -1747,109 +1137,68 @@ void BJonesPoly::load (const String& applyTable)
     Vector<Int> spwIds;
     calDescRec.getSpwId(spwIds);
 
-    if (False) {
-      Vector<Int> spwList;
-      calDescRec.getSpwId(spwList);
-
-      Int nspwIds=spwList.nelements();
-      // Add spwMap'd spws to list to calculate
-      for (Int ispw=0;ispw<nSpw();++ispw) {
-	if (!anyEQ(spwList,ispw) &&             // not already in list
-	    anyEQ(spwList,spwMap()(ispw))) {    // spwMap says add to list
-	  nspwIds++;
-	  spwList.resize(nspwIds,True);
-	  spwList(nspwIds-1)=ispw;
-	}
+      
+    Vector<Double> freq = freqAxis(currSpw());
+    
+    Double x1 = freqDomain(0);
+    Double x2 = freqDomain(1);
+    
+    for (Int ipol=0;ipol<2;ipol++) {
+      
+      Vector<Double> ac(ampCoeff.column(ipol));
+      Vector<Double> pc(phaseCoeff.column(ipol));
+      
+      // Only do non-triv calc if coeffs are non-triv
+      if (anyNE(ac,Double(0.0)) ||
+	  anyNE(pc,Double(0.0)) ) {
+	
+	// Loop over frequency channel
+	for (Int chan=0; chan < nChanPar(); chan++) {
+	  
+	  Double ampval(1.0),phaseval(0.0);
+	  // only if in domain, calculate Cheby
+	  Double thisfreq(freq(chan+startChan()));
+	  if (thisfreq >=x1 && thisfreq <= x2) {
+	    ampval = getChebVal(ac, x1, x2, thisfreq);
+	    phaseval = getChebVal(pc, x1, x2, thisfreq);
+	    solveAllCPar()(ipol,chan,antennaId)= factor *
+	      Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
+	    solveAllParOK()(ipol,chan,antennaId)= True;
+	  }
+	  else {
+	    // Unflagged unit calibration for now
+	    solveAllCPar()(ipol,chan,antennaId)= Complex(1.0);
+	    solveAllParOK()(ipol,chan,antennaId)= True;
+	  }	      
+	}	   
       }
-      cout << row << "  spwIds = " << spwIds << "  spwMap() = " << spwMap() << " spwList   = " << spwList << endl;
+      
+    } // ipol
+
+    // Every nAnt rows, store the result
+    if ((row+1)%nAnt()==0) {
+      ct_->fillAntBasedMainRows(nAnt(),refTime(),0.0,-1,currSpw(),
+                                -1,Vector<Int>(),-1,
+                                solveAllCPar(),!solveAllParOK(),
+                                solveAllParErr(),solveAllParSNR());
+
+      // reset arrays
+      solveAllCPar().set(Complex(1.0));
+      solveAllParOK().set(False);
+      solveAllParErr().set(0.0);
+      solveAllParSNR().set(1.0);
 
     }
 
-    // TBD: need to append user-specified spwmap to the spwIds list here.
+  }   // rows
 
-
-    //    for (uInt k=0; k < spwIds.nelements(); k++) {
-    for (Int k=0; k < nSpw(); k++) {
-
-      // If this spw supposed to get this desc
-      if (spwmask(k,idesc)) {
-
-      // Fill the bandpass correction cache
-
-      //      Int spwId = spwIds(k);
-      Int spwId = k;
-
-      currSpw()=spwId;
-      
-      // If first row for this timestamp
-      if (row%nAnt()==0) {
-	iTime(currSpw())++;
-	Int islot=iTime(currSpw());
-	cs().time(currSpw())(islot) = col.time().asdouble(row);
-	ipos4(3)=islot;
-	//	Double t0=86400.0*floor(cs().time(currSpw())(islot)/86400.0);
-      }
-      
-      Vector<Double> freq = freqAxis(spwId);
-      
-      Double x1 = freqDomain(0);
-      Double x2 = freqDomain(1);
-      
-      for (Int ipol=0;ipol<2;ipol++) {
-	
-	Vector<Double> ac(ampCoeff.column(ipol));
-	Vector<Double> pc(phaseCoeff.column(ipol));
-	
-	// Only do non-triv calc if coeffs are non-triv
-	if (anyNE(ac,Double(0.0)) ||
-	    anyNE(pc,Double(0.0)) ) {
-	  
-	  ipos(0)=ipos4(0)=ipol;
-	  
-	  // Loop over frequency channel
-	  for (Int chan=0; chan < nChanPar(); chan++) {
-	    ipos(1)=ipos4(1)=chan;
-	    
-	    Double ampval(1.0),phaseval(0.0);
-	    // only if in domain, calculate Cheby
-	    Double thisfreq(freq(chan+startChan()));
-	    if (thisfreq >=x1 && thisfreq <= x2) {
-	      ampval = getChebVal(ac, x1, x2, thisfreq);
-	      phaseval = getChebVal(pc, x1, x2, thisfreq);
-	      //currCPar()(ipos) 
-	      cs().par(currSpw())(ipos4) = factor *
-		Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
-	      
-	      // Set flag for valid cache value 
-	      //	      currParOK()(ipos) = True;
-	      cs().parOK(currSpw())(ipos4) = True;
-	    }
-	    else {
-	      // Unflagged unit calibration for now
-	      cs().par(currSpw())(ipos4) = Complex(1.0);
-	      cs().parOK(currSpw())(ipos4) = True;
-	    }	      
-	  }	   
-	}
-	else {
-	  // All coeffs are zero
-	  cs().par(currSpw())(ipos4) = Complex(1.0);
-	  cs().parOK(currSpw())(ipos4) = True;
-	  //  currCPar()(ipos) = Complex(1.0);
-	}
-	
-      } // ipol
-      } // spwmask(k)
-    };  // k  (spws)
-  };   // rows
-
-  cs().setSpwOK();
-
-  // Form the CalInterp object:
-  if (cint_) delete cint_;
-  cint_ = new CalInterp(cs(),tInterpType(),"nearest");
-
-  ci().setSpwMap(Vector<Int>(nSpw(),-1));
+  /*
+  String cTN;
+  cTN=calTableName();
+  calTableName()=calTableName()+".BpolyAsB";
+  storeNCT();
+  calTableName()=cTN;
+  */
 
   return;
 }

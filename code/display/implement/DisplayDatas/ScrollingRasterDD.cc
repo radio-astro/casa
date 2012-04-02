@@ -177,7 +177,7 @@ void ScrollingRasterDD::initLattice(const Float aHeaderMin,
   recreateEmptyLattices();
 }
 
-void ScrollingRasterDD::initLattice(const Record &rec)
+void ScrollingRasterDD::initLattice(const Record &/*rec*/)
 {
 #ifdef CDEBUG
   cerr << "ScrollingRasterDD::initLattice(Record) called" << endl;
@@ -423,7 +423,7 @@ void ScrollingRasterDD::updateLatticeStatistics() {
 }
 
 
-String ScrollingRasterDD::showValue(const Vector<Double> &world) {
+String ScrollingRasterDD::showValue(const Vector<Double> &/*world*/) {
   String temp="";
   return temp;
 }
@@ -607,7 +607,7 @@ void ScrollingRasterDD::setDefaultOptions() {
   setOptions(rec, recout);
 }
 
-Bool ScrollingRasterDD::labelAxes(const WCRefreshEvent &ev) {
+Bool ScrollingRasterDD::labelAxes(const WCRefreshEvent &/*ev*/) {
   return False;
 }
 
@@ -636,11 +636,11 @@ ScrollingRasterDD::ScrollingRasterDD(uInt mAxis, uInt scanNo):
 }
 
 // (Required) copy constructor.
-ScrollingRasterDD::ScrollingRasterDD(const ScrollingRasterDD &other) {
+ScrollingRasterDD::ScrollingRasterDD(const ScrollingRasterDD &/*other*/) {
 }
 
 // (Required) copy assignment.
-void ScrollingRasterDD::operator=(const ScrollingRasterDD &other) {
+void ScrollingRasterDD::operator=(const ScrollingRasterDD &/*other*/) {
 }
 
 

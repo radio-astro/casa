@@ -198,7 +198,7 @@ public:
   virtual void update(PixelCanvas* pc);
   
   // Overwrite this to fire glish events.
-  virtual void annotEvent(const String& event) {};
+  virtual void annotEvent(const String& /*event*/) {};
 
   // Functions for changing the co-ords system of a shape
   // <group>  

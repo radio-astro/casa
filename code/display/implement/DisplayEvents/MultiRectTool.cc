@@ -170,7 +170,8 @@ void MultiRectTool::disable() {
     }
 
     void MultiRectTool::keyReleased(const WCPositionEvent &ev) {
-	Bool wasActive = itsActive; itsActive = False;
+	Bool wasActive = itsActive;
+	itsActive = False;
 	if ( rectangles.size( ) == 0 ) {
 	    if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
 		Int x = ev.pixX();
@@ -355,7 +356,7 @@ void MultiRectTool::get(Int &x1, Int &y1) const {
   x1 = ifloor(pix(0)+.5); y1 = ifloor(pix(1)+.5);  }
 
 
-    void MultiRectTool::draw(const WCRefreshEvent &ev) {
+    void MultiRectTool::draw(const WCRefreshEvent &/*ev*/) {
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter )
 	    (*iter)->draw( );
     }
@@ -718,7 +719,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return -1;
     }
 
-    void MultiRectTool::update_stats(const WCMotionEvent &ev) {
+    void MultiRectTool::update_stats(const WCMotionEvent &/*ev*/) {
 	if( ! rectangleDefined() || itsCurrentWC==0 ) return;
 
 	WorldCanvasHolder *wch = pd_->wcHolder(itsCurrentWC);
@@ -859,7 +860,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
-    void MultiRectTool::checkPoint( WorldCanvas *wc, State &state ) {
+    void MultiRectTool::checkPoint( WorldCanvas */*wc*/, State &state ) {
 	for ( rectanglelist::iterator iter = ((MultiRectTool*) this)->rectangles.begin(); iter != rectangles.end(); ++iter ) {
 	    viewer::Region::PointInfo point_state = (*iter)->checkPoint( state.x(), state.y() );
 	    // should consider introducing a cptr_ref which somehow allows creating a
@@ -876,7 +877,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return multi_rect_tool_region_set;
     }
 
-    bool MultiRectTool::create( viewer::Region::RegionTypes region_type, WorldCanvas *wc,
+    bool MultiRectTool::create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas *wc,
 				const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {

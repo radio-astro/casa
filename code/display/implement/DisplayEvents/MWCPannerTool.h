@@ -113,8 +113,8 @@ class MWCPannerTool : public MultiWCTool, public DTVisible {
 
   // Output callback to indicate that we have zoomed.  Override to
   // handle, if needed.
-  virtual void zoomed(const Vector<Double> &linBlc, 
-                      const Vector<Double> &linTrc) {  };
+  virtual void zoomed(const Vector<Double> &/*linBlc*/,
+                      const Vector<Double> &/*linTrc*/) {  };
 
  private:
 

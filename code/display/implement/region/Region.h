@@ -34,6 +34,7 @@
 #include <images/Images/ImageStatistics.h>
 #include <measures/Measures/MDirection.h>
 #include <display/region/RegionInfo.h>
+#include <display/Utilities/dtor.h>
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
@@ -109,7 +110,7 @@ namespace casa {
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 	// this means that coordinate transformation is required each time the region is drawn.
-	class Region {
+	class Region : public dtorNotifier {
 	    public:
 
 		/* enum states { undisplayed, inactive, highlighted, selected }; */
@@ -165,7 +166,7 @@ namespace casa {
 		virtual int textFontStyle( ) const DISPLAY_PURE_VIRTUAL(Region::textFontStyle,0);
 		virtual std::string textValue( ) const DISPLAY_PURE_VIRTUAL(Region::textValue,"");
 		virtual TextPosition textPosition( ) const DISPLAY_PURE_VIRTUAL(Region::textPosition,BottomText);
-		virtual void textPositionDelta( int &x, int &y ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
+		virtual void textPositionDelta( int &/*x*/, int &/*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
 
 		virtual void setLabel( const std::string &l ) = 0;
 		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
@@ -190,7 +191,7 @@ namespace casa {
 		// hierarchy, but rather it is within the Qt portion... thus this function
 		// to fetch it...   <drs>
 		virtual int numFrames( ) const DISPLAY_PURE_VIRTUAL(Region::numFrames,0);
-		virtual void zRange( int &min, int &max ) const DISPLAY_PURE_VIRTUAL(Region::zRange,);
+		virtual void zRange( int &/*min*/, int &/*max*/ ) const DISPLAY_PURE_VIRTUAL(Region::zRange,);
 		int zIndex( ) const;
 		bool regionVisible( ) const { return visible_; }
 
@@ -212,12 +213,13 @@ namespace casa {
 		virtual PointInfo checkPoint( double x, double y ) const = 0;
 
 		// returns OR'ed set of MouseState...
-		virtual unsigned int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
+		virtual unsigned int mouseMovement( double /*x*/, double /*y*/, bool /*other_selected*/ )
+		DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
 		virtual void draw( );
 
 		// indicates that region movement requires that the statistcs be updated...
-		virtual void updateStateInfo( bool region_modified ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
+		virtual void updateStateInfo( bool /*region_modified*/ ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
 
 		bool selected( ) const { return selected_; }
 
@@ -245,9 +247,12 @@ namespace casa {
 		virtual void mark_toggle( ) = 0;
 
 		// in "linear" coordinates...
-		virtual void boundingRectangle( double &blc_x, double &blc_y, double &trc_x, double &trc_y ) const
-			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
+		virtual void boundingRectangle (double &/*blc_x*/, double &/*blc_y*/, double &/*trc_x*/,
+		                                double &/*trc_y*/) const
+		DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
+		virtual void emitUpdate( )
+			DISPLAY_PURE_VIRTUAL(Region::emitUpdate,);
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( )
 			DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,new std::list<RegionInfo>( ));
@@ -263,7 +268,7 @@ namespace casa {
 		Coord current_region_coordsys( ) const;
 		MDirection::Types current_casa_coordsys( ) const;
 
-		virtual void drawRegion( bool selected ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
+		virtual void drawRegion( bool /*selected*/ ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
 
 		LineStyle current_ls;

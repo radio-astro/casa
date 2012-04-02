@@ -1,5 +1,5 @@
 #include <display/region/QtPoint.qo.h>
-#include <display/region/QtRegionSource.qo.h>
+#include <display/region/RegionSource.h>
 
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/Display/WorldCanvas.h>
@@ -7,10 +7,10 @@
 
 namespace casa {
     namespace viewer {
-	// QtPoint::QtPoint( QtRegionSource *factory, double blc_x, double blc_y, double trc_x, double trc_y ) : 
+	// QtPoint::QtPoint( RegionSource *factory, double blc_x, double blc_y, double trc_x, double trc_y ) : 
 	// 			QtRegion("point",factory), Point(blc_x, blc_y, trc_x, trc_y) { }
 
-	QtPoint::QtPoint( QtRegionSource *factory, WorldCanvas *wc, double x, double y, bool hold_signals ) :
+	QtPoint::QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals ) :
 				QtRegion("point", factory, hold_signals), Point(wc, x, y) {
 	    mystate->init( );
 	    mystate->disableAnnotation(true);

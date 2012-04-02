@@ -351,7 +351,7 @@ class TablePlot
       // of the table is reached. It can also be called before the 
       // iterations end, to cleanly terminate the
       // iterations when desired.
-      Int iterMultiPlotStop( Bool rmplotter) {
+      Int iterMultiPlotStop( Bool /*rmplotter*/) {
          iterMultiPlotStop();
          return 0;
       };

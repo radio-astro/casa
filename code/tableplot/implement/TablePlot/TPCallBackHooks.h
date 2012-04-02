@@ -100,23 +100,23 @@ class TPConvertBase
       //
 
       // X-axis convert methods
-      virtual inline Double Xconvert(Double x, Int tblRow, Int tblNum)
+      virtual inline Double Xconvert(Double x, Int /*tblRow*/, Int /*tblNum*/)
           {return x;};
       
-      virtual inline Double Xconvert_row(Double x, Int tblRow, Int tblNum)
+      virtual inline Double Xconvert_row(Double x, Int /*tblRow*/, Int /*tblNum*/)
           {return x;};
 
-      virtual inline Double Xconvert_col(Double x, Int tblRow, Int tblNum)
+      virtual inline Double Xconvert_col(Double x, Int /*tblRow*/, Int /*tblNum*/)
           {return x;};
 
       // Y-axis convert methods
-      virtual inline Double Yconvert(Double y, Int tblRow, Int tblNum)
+      virtual inline Double Yconvert(Double y, Int /*tblRow*/, Int /*tblNum*/)
           {return y;};
       
-      virtual inline Double Yconvert_row(Double y, Int tblRow, Int tblNum)
+      virtual inline Double Yconvert_row(Double y, Int /*tblRow*/, Int /*tblNum*/)
           {return y;};
       
-      virtual inline Double Yconvert_col(Double y, Int tblRow, Int tblNum)
+      virtual inline Double Yconvert_col(Double y, Int /*tblRow*/, Int /*tblNum*/)
           {return y;};
 };
 
@@ -227,10 +227,10 @@ class TPGuiCallBackHooks
        // this method is called (per BasePlot/Table)
        //   so any external flag-propagation can be carried out
        // Called from TablePlot::flagData.
-       virtual Bool flagdata(String tablename){return True;};
-       virtual Bool flagdata(Int f, Vector<String> collist,
-                            Matrix<Double> infomat,Vector<String> cpol,
-                            Bool ave = False){
+       virtual Bool flagdata(String /*tablename*/){return True;};
+       virtual Bool flagdata(Int /*f*/, Vector<String> /*collist*/,
+                            Matrix<Double> /*infomat*/,Vector<String> /*cpol*/,
+                            Bool /*ave*/ = False){
                   return True;
        }
 
@@ -238,8 +238,8 @@ class TPGuiCallBackHooks
        // is called immediately after
        //   each BasePlot destructor.
        // Called from TablePlot::deleteBasePlot.
-       virtual Bool releasetable(Int nrows, Int ncols, Int panel, 
-           String tablename)
+       virtual Bool releasetable(Int /*nrows*/, Int /*ncols*/, Int /*panel*/,
+           String /*tablename*/)
        {return True;};
        
        // A function to allow the creation of customized labels for
@@ -301,7 +301,7 @@ class TPConvertTimeX : public TPConvertBase
       TPConvertTimeX(){};
       ~TPConvertTimeX(){};
 
-      inline Double Xconvert(Double x,Int tblRow,Int tblNum){
+      inline Double Xconvert(Double x,Int /*tblRow*/,Int /*tblNum*/){
           return x/NSECINYEAR + MJDZERO;
       };
 };
@@ -311,7 +311,7 @@ class TPConvertTimeY : public TPConvertBase
    public :
       TPConvertTimeY(){};
       ~TPConvertTimeY(){};
-      inline Double Yconvert(Double y,Int tblRow,Int tblNum){
+      inline Double Yconvert(Double y,Int /*tblRow*/,Int /*tblNum*/){
          return y/NSECINYEAR + MJDZERO;
       };
 };
@@ -321,10 +321,10 @@ class TPConvertTimeXY : public TPConvertBase
    public :
       TPConvertTimeXY(){};
       ~TPConvertTimeXY(){};
-      inline Double Xconvert_row(Double x,Int tblRow,Int tblNum){
+      inline Double Xconvert_row(Double x,Int /*tblRow*/,Int /*tblNum*/){
          return x/NSECINYEAR + MJDZERO;
       };
-      inline Double Yconvert_col(Double x,Int tblRow,Int tblNum){
+      inline Double Yconvert_col(Double x,Int /*tblRow*/,Int /*tblNum*/){
          return x/NSECINYEAR + MJDZERO;
       };
 };
@@ -342,7 +342,7 @@ class TPConvertChanToFreq : public TPConvertBase
       // we don't need to convert the row values (polarizations)
       // Setting ColumnsXaxis to False forces only the column values
       // to be plotted.
-      inline Double Xconvert_col(Double x,Int tblRow,Int tblNum){
+      inline Double Xconvert_col(Double x,Int /*tblRow*/,Int /*tblNum*/){
          return x*interval + offset;
       };
 

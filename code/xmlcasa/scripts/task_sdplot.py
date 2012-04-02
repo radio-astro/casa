@@ -206,12 +206,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             del sel
 
 	    # Reload plotter if necessary
-	    if not sd.plotter._plotter or sd.plotter._plotter.is_dead:
-		    if hasattr(sd.plotter,'_plotter') and \
-			   hasattr(sd.plotter._plotter.figmgr,'casabar'):
-			    del sd.plotter._plotter.figmgr.casabar
-		    sd.plotter._plotter = sd.plotter._newplotter()
-		    sd.plotter._plotter.figmgr.casabar=sd.plotter._new_custombar()
+            sd.plotter._assert_plotter(action="reload")
 
 	    # Set subplot layout
 	    if subplot > -1:
@@ -381,7 +376,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    # legend position
 		    loc=1
 		    if plotstyle: loc=legendloc
-		    sd.plotter._plotter.legend(loc)
+		    sd.plotter.set_legend(mode=loc)
 		    
 		    # The actual plotting
 		    sd.plotter.plot()

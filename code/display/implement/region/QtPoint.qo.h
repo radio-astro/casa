@@ -35,8 +35,6 @@
 namespace casa {
     namespace viewer {
 
-	class QtRegionSource;
-
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 	// this means that coordinate transformation is required each time the region is drawn.
@@ -86,7 +84,7 @@ namespace casa {
 		bool regionVisible( ) const { return Region::regionVisible( ); }
 		void regionCenter( double &x, double &y ) const { Point::regionCenter( x, y ); }
 
-		QtPoint( QtRegionSource *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false );
+		QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false );
 
 		// qt-event -> QtRegion -> QtPoint -> Region::refresh( )
 		void refresh( ) { Point::refresh( ); }
@@ -114,6 +112,8 @@ namespace casa {
 		void mark_toggle( ) { QtRegion::mark_toggle( ); }
 
 		void output( ds9writer &out ) const;
+
+		void emitUpdate( ) { QtRegion::emitUpdate( ); }
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Point::generate_dds_statistics( ); }

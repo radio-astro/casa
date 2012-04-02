@@ -79,8 +79,8 @@ void SLog::FnPass(String fnname, String clname) {
    out("-- Pass --", fnname, clname, LogMessage::DEBUG1);
 }
 
-void SLog::out(const String &msg, const String& fnname,
-               const String& clname, 
+void SLog::out(const String &msg, const String& /*fnname*/,
+               const String& /*clname*/,
 	       LogMessage::Priority msglevel,
 	       Bool onconsole) {
    if (msglevel >= LOGLEVEL) {

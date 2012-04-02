@@ -79,7 +79,7 @@ DDDPolygon::DDDPolygon(const Record &description, DrawingDisplayData *owner)
 DDDPolygon::~DDDPolygon() {
 }
 
-void DDDPolygon::draw(const Display::RefreshReason &reason,
+void DDDPolygon::draw(const Display::RefreshReason &/*reason*/,
                       WorldCanvas* pWorldCanvas) 
 {
   itsWorldCanvasPtr = pWorldCanvas;

@@ -129,18 +129,18 @@ public:
   // we might, but as yet we have no use, and sometimes people think that 
   // have clicked on a marker when actually they are on a handle. This 
   // makes it appear as though the marker isn't moving. 
-  virtual Bool whichHandle(const Float& xPos, const Float& yPos,
-			   Int& active) {
+  virtual Bool whichHandle(const Float& /*xPos*/, const Float& /*yPos*/,
+			   Int& /*active*/) {
     return False;
   }
 
   // These functions do not apply for DSMarkers. They are here to ensure
   // no strange behavior
   // <group>
-  virtual void rotate(const Float& angle) {};  
-  virtual void changePoint(const Vector<Float>& newPos) {};
-  virtual void changePoint(const Vector<Float>& newPoint, 
-			   const Int nPoint) {};
+  virtual void rotate(const Float& /*angle*/) {};
+  virtual void changePoint(const Vector<Float>& /*newPos*/) {};
+  virtual void changePoint(const Vector<Float>& /*newPoint*/,
+			   const Int /*nPoint*/) {};
   // </group>
 
   //  virtual void recalculateScreenPosition();

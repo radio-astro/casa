@@ -264,7 +264,7 @@ class PrincipalAxesDD : public DisplayData {
 
   // Derived classes will implement if applicable (at present,
   // LatticePADDs may draw if they have an image with beam data).
-  virtual void drawBeamEllipse_(WorldCanvas* wc) {  }
+  virtual void drawBeamEllipse_(WorldCanvas* /*wc*/) {  }
   
   // allow PrincipalAxesDM objects to access the coord system in 
   // parent PrincipalAxesDD object

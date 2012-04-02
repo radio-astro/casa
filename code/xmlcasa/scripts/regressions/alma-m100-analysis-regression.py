@@ -294,9 +294,11 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     tsysinterp = 'nearest'
+    tsysspwmap=[]
     if(casadef.casa_version>='3.4.0'):
         print "Using linear interpolation for Tsys in applycal ..."
         tsysinterp='linear'
+        tsysspwmap=[0,9,0,11,0,13,0,15]
 
     for myfield in ['3c273 - Bandpass','Titan','3c273 - Phase','1224+213 Phase','M100']:
         print "Field ", myfield
@@ -304,7 +306,8 @@ if(mystep in thesteps):
             applycal(vis=name+'.ms', 
                      spw='1,3,5,7',
                      field=myfield, gainfield=[myfield,myfield,'',''],
-                     interp=['nearest',tsysinterp,'nearest','nearest'], 
+                     interp=['nearest',tsysinterp,'nearest','nearest'],
+                     spwmap=[[],tsysspwmap,[],[]],
                      gaintable=['cal-wvr_'+name,'cal-tsys_'+name+'.fdm','cal-delay_'+name+'.K','cal-antpos_'+name],
                      flagbackup=F)
 

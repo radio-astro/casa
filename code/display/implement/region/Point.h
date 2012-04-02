@@ -49,7 +49,7 @@ namespace casa {
 		Point( WorldCanvas *wc, double x, double y ) :
 		    Rectangle( wc, x, y, x, y ) { }
 
-		int clickHandle( double x, double y ) const { return 0; }
+		int clickHandle( double /*x*/, double /*y*/ ) const { return 0; }
 
 		bool clickWithin( double x, double y ) const;
 

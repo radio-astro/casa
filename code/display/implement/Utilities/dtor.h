@@ -1,4 +1,4 @@
-//# RegionSource.cc: base region factory for generating regions
+//# dtor.h: base class for notification of object destruction
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,37 +23,37 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
-#include <display/region/RegionSource.h>
-#include <algorithm>
+//# $Id$
+
+
+#ifndef VIEWER_DTOR_H_
+#define VIEWER_DTOR_H_
+#include <list>
 
 namespace casa {
     namespace viewer {
-	RegionSourceKernel::~RegionSourceKernel( ) {
-	    for ( std::list<Region*>::iterator it = created_regions.begin( ); it != created_regions.end( ); ++it )
-		(*it)->removeNotifiee(this);
-	}
 
-	void RegionSourceKernel::dtorCalled( const dtorNotifier *dtor ) {
-	    std::list<Region*>::iterator it = std::find(created_regions.begin( ), created_regions.end( ), dtor);
-	    if ( it != created_regions.end( ) ) {
-		created_regions.erase(it);
-	    }
-	}
+	class dtorNotifier;
 
-	// this should be declared within RegionSourceKernel::generateExistingRegionUpdates( ),
-	// but it chokes gcc version 4.2.1 (Apple Inc. build 5666) (dot 3)
-	struct functor {
-	    void operator( )( Region *element ) { element->emitUpdate( ); }
+	class dtorNotifiee {
+	    public:
+		dtorNotifiee( ) { }
+		virtual ~dtorNotifiee( ) { }
+		virtual void dtorCalled( const dtorNotifier * ) = 0;
 	};
-	void RegionSourceKernel::generateExistingRegionUpdates( ) {
-	    std::for_each( created_regions.begin( ), created_regions.end( ), functor( ) );
-	}
 
-	void RegionSourceKernel::register_new_region( Region *region ) {
-	    created_regions.push_back(region);
-	    region->addNotifiee(this);
-	}
-	
+	class dtorNotifier {
+	    public:
+		dtorNotifier( ) { }
+		// signals any dtorNotifiee's that are registered
+		~dtorNotifier( );
+		void addNotifiee( dtorNotifiee * );
+		void removeNotifiee( dtorNotifiee * );
+	    private:
+		std::list<dtorNotifiee*> registrants;
+
+	};
     }
 }
+
+#endif

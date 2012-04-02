@@ -516,8 +516,8 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
 
   // (Cacheable) Draw a component of a multi-channel image, storing it
   // in buffers until flushComponentImages() is called.
-  virtual void drawImage(const Matrix<uInt> &data, const Int &x, const Int &y,
-			 const Display::ColorComponent &colorcomponent) {  }
+  virtual void drawImage(const Matrix<uInt> &/*data*/, const Int &/*x*/, const Int &/*y*/,
+			 const Display::ColorComponent &/*colorcomponent*/) {  }
 
 
   
@@ -526,10 +526,11 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
   void setColorModel(Display::ColorModel colorModel);
 
   // Fill one of the channel buffers.
-  virtual void bufferComponent(const Matrix<uInt> &data,
-			       const Int &x, const Int &y,
-			       const Display::ColorComponent 
-			       &colorcomponent) {  }
+  virtual void bufferComponent(const Matrix<uInt> &/*data*/,
+			       const Int &/*x*/,
+			       const Int &/*y*/,
+			       const Display::ColorComponent &/*colorcomponent*/)
+  {  }
 
   // (NOT CACHEABLE!) Flush the component buffers.
   virtual void flushComponentBuffers() {  }
@@ -554,8 +555,8 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
   // Draw a set of points, specifying a color per point to
   // be drawn.  
   // <group>
-  virtual void drawColoredPoints(const Vector<Int> &x1, const Vector<Int> &y1,
-				 const Vector<uInt> &colors) {
+  virtual void drawColoredPoints(const Vector<Int> &/*x1*/, const Vector<Int> &/*y1*/,
+				 const Vector<uInt> &/*colors*/) {
      // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   }
   virtual void drawColoredPoints(const Matrix<Int> &xy,
@@ -578,7 +579,7 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
   
   virtual Int textHeight(const String& text);
   
-  virtual void setHSVColor(float h, float s, float v) {  }
+  virtual void setHSVColor(float /*h*/, float /*s*/, float /*v*/) {  }
  
 
   // (Cacheable) Draw a single point using current color
@@ -791,11 +792,11 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
   virtual void enablePositionEvents() {  }
   virtual void disablePositionEvents() {  }
   
-  virtual void translateAllLists(Int xt, Int yt) {  }
-  virtual void translateList(uInt list, Int xt, Int yt) {  }
+  virtual void translateAllLists(Int /*xt*/, Int /*yt*/) {  }
+  virtual void translateList(uInt /*list*/, Int /*xt*/, Int /*yt*/) {  }
   
   virtual Bool setFont(const String &fontName);
-  virtual Bool setFont(DLFont* font) { return False; }
+  virtual Bool setFont(DLFont* /*font*/) { return False; }
   virtual Bool setFont(const String& fontName, const Int fontSize);
   
   // These setFont methods are NOT in PixelCanvas.
@@ -805,21 +806,21 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
                        bool italic);
   // </group>
   
-  virtual void drawImage(const Matrix<Int> &data, Int x, Int y) {  }
-  virtual void drawImage(const Matrix<uLong> &data, Int x, Int y) {  }
+  virtual void drawImage(const Matrix<Int> &/*data*/, Int /*x*/, Int /*y*/) {  }
+  virtual void drawImage(const Matrix<uLong> &/*data*/, Int /*x*/, Int /*y*/) {  }
   virtual void drawImage(const Matrix<Float> &data, Int x, Int y);
-  virtual void drawImage(const Matrix<Double> &data, Int x, Int y) {  }
+  virtual void drawImage(const Matrix<Double> &/*data*/, Int /*x*/, Int /*y*/) {  }
   
-  virtual void drawImage(const Matrix<uInt> &data, Int x, Int y, 
-			 uInt xzoom, uInt yzoom) {  }
-  virtual void drawImage(const Matrix<Int> &data, Int x, Int y, 
-			 uInt xzoom, uInt yzoom) {  }
-  virtual void drawImage(const Matrix<uLong> &data, Int x, Int y, 
-			 uInt xzoom, uInt yzoom) {  }
-  virtual void drawImage(const Matrix<Float> &data, Int x, Int y, 
-			 uInt xzoom, uInt yzoom) {  }
-  virtual void drawImage(const Matrix<Double> &data, Int x, Int y, 
-			 uInt xzoom, uInt yzoom) {  }
+  virtual void drawImage(const Matrix<uInt> &/*data*/, Int /*x*/, Int /*y*/,
+			 uInt /*xzoom*/, uInt /*yzoom*/) {  }
+  virtual void drawImage(const Matrix<Int> &/*data*/, Int /*x*/, Int /*y*/,
+			 uInt /*xzoom*/, uInt /*yzoom*/) {  }
+  virtual void drawImage(const Matrix<uLong> &/*data*/, Int /*x*/, Int /*y*/,
+			 uInt /*xzoom*/, uInt /*yzoom*/) {  }
+  virtual void drawImage(const Matrix<Float> &/*data*/, Int /*x*/, Int /*y*/,
+			 uInt /*xzoom*/, uInt /*yzoom*/) {  }
+  virtual void drawImage(const Matrix<Double> &/*data*/, Int /*x*/, Int /*y*/,
+			 uInt /*xzoom*/, uInt /*yzoom*/) {  }
 
 
   // (Cacheable) Set current color (works in RGB or colormap mode)
@@ -869,8 +870,8 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
   // can be used to position graphics.  Together with pushMatrix and
   // popMatrix it can be used to build heirarchical scenes.
   // <group>
-  virtual void translate(Int xt, Int yt) {  }
-  virtual void getTranslation(Int &xt, Int &yt) const {  }
+  virtual void translate(Int /*xt*/, Int /*yt*/) {  }
+  virtual void getTranslation(Int &/*xt*/, Int &/*yt*/) const {  }
   virtual Int xTranslation() const { return 0;  }
   virtual Int yTranslation() const { return 0;  }
   // </group>
@@ -882,15 +883,15 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
 
   
     
-  virtual void drawColoredEllipses(const Matrix<Float> &centres,
-	const Vector<Float> &smajor, const Vector<Float> &sminor,
-	const Vector<Float> &pangle, const Vector<uInt> &colors,
-	const Float &scale = 1.0, const Bool &outline = True) {  }
+  virtual void drawColoredEllipses(const Matrix<Float> &/*centres*/,
+	const Vector<Float> &/*smajor*/, const Vector<Float> &/*sminor*/,
+	const Vector<Float> &/*pangle*/, const Vector<uInt> &/*colors*/,
+	const Float &/*scale*/ = 1.0, const Bool &/*outline*/ = True) {  }
   
-  virtual void drawColoredPoints(const Vector<Float> &x1,
-          const Vector<Float> &y1, const Vector<uInt> &colors) {  }
-  virtual void drawColoredPoints(const Vector<Double> &x1,
-          const Vector<Double> &y1, const Vector<uInt> &colors) {  }
+  virtual void drawColoredPoints(const Vector<Float> &/*x1*/,
+          const Vector<Float> &/*y1*/, const Vector<uInt> &/*colors*/) {  }
+  virtual void drawColoredPoints(const Vector<Double> &/*x1*/,
+          const Vector<Double> &/*y1*/, const Vector<uInt> &/*colors*/) {  }
   virtual void drawColoredPoints(const Matrix<Float> &xy,
 				 const Vector<uInt> &colors) {
     drawColoredPoints(xy.column(0), xy.column(1), colors);  }
@@ -899,9 +900,9 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
     drawColoredPoints(xy.column(0), xy.column(1), colors);  }
   
   
-  virtual void getClipWindow(Int &x1, Int &y1, Int &x2, Int &y2) {  }
+  virtual void getClipWindow(Int &/*x1*/, Int &/*y1*/, Int &/*x2*/, Int &/*y2*/) {  }
   
-  virtual void setPcctbl(PixelCanvasColorTable * pcctbl) {  }
+  virtual void setPcctbl(PixelCanvasColorTable * /*pcctbl*/) {  }
 
 };	// class QtPixelCanvas
 

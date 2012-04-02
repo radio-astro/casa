@@ -104,7 +104,7 @@ public:
 
   // Solve 
   //   (old self-directed gather and solve)
-  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
+  //  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
   //   (new per-solution self-solving inside generic gather)
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
@@ -116,6 +116,8 @@ protected:
 
   // Calculate current parameters
   virtual void calcPar();
+
+  virtual void loadMemCalTable (String applyTable,String field);
 
 private:
 
@@ -165,7 +167,7 @@ private:
 
   // Load bandpass parameters from a calibration table and
   // pre-compute the corrections (and their inverse)
-  void load (const String& applyTable);
+  //  void load (const String& applyTable);
 
   // Utility function to return the bandwidth-weighted average 
   // frequency for a set of spectral window id.'s
