@@ -267,12 +267,17 @@ void InterpolateArray1D<Domain,Range>::interpolatePtr(PtrBlock<Range*>& yout,
 	else if (where == 0) {
 	  for (Int j=0; j<ny; j++) yout[i][j]=yin[0][j];
 	}
-	else if (xin[where] - x_req < static_cast<Domain>(.5)) {
-            //static_cast required to get .5 coerced for SGI compiler
-	  for (Int j=0; j<ny; j++) yout[i][j]=yin[where][j];
-	}
 	else {
-	  for (Int j=0; j<ny; j++) yout[i][j]=yin[where-1][j];
+	  Domain diff=(xin[where]-x_req);
+	  //static_cast required to get .5 coerced for SGI compiler:
+	  if (diff < static_cast<Domain>(.5)*(xin[where]-xin[where-1])) { 
+            // closer to next
+	    for (Int j=0; j<ny; j++) yout[i][j]=yin[where][j];
+	  }
+	  else {
+            // closer to previous
+	    for (Int j=0; j<ny; j++) yout[i][j]=yin[where-1][j];
+	  }
 	}
       }
       return;
@@ -426,17 +431,22 @@ void InterpolateArray1D<Domain,Range>::interpolatePtr(PtrBlock<Range*>& yout,
 	    youtFlags[i][j]=((x_req==xin[0])||extrapolate ? yinFlags[0][j] : flag);
 	  } 
 	}
-	else if (xin[where] - x_req < static_cast<Domain>(.5)) {
-            //static_cast required to get .5 coerced for SGI compiler
-	  for (Int j=0; j<ny; j++) {
-	    yout[i][j]=yin[where][j];
-	    youtFlags[i][j]=yinFlags[where][j];
-	  }
-	}
 	else {
-	  for (Int j=0; j<ny; j++) {
-	    yout[i][j]=yin[where-1][j];
-	    youtFlags[i][j]=yinFlags[where-1][j];
+	  Domain diff=(xin[where] - x_req);
+	  //static_cast required to get .5 coerced for SGI compiler:
+	  if (diff < static_cast<Domain>(.5)*(xin[where]-xin[where-1])) { 
+            // closer to next
+	    for (Int j=0; j<ny; j++) {
+	      yout[i][j]=yin[where][j];
+	      youtFlags[i][j]=yinFlags[where][j];
+	    }
+	  }
+	  else {
+            // closer to previous
+	    for (Int j=0; j<ny; j++) {
+	      yout[i][j]=yin[where-1][j];
+	      youtFlags[i][j]=yinFlags[where-1][j];
+	    }
 	  }
 	}
       }
