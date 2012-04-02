@@ -245,7 +245,7 @@ class CalAnalysis {
         const Vector<String>& oFeedIn, const Vector<uInt>& oSPWIn,
         const Vector<uInt>& oStartChannelIn, const Vector<uInt>& oStopChannelIn,
         const CalStats::AXIS& eAxisIterUserID, const RAP& eRAP,
-        const CalStats::ARG<T>& oArg );
+        const Double& dJumpMax, const CalStats::ARG<T>& oArg );
 
     // Function to determine whether a value is present in an array
     template <typename T>
@@ -385,6 +385,15 @@ eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
                   FREQUENCY or TIME iteration axes (user defined).
 eRAP            - This reference to a CalAnalysis::RAP enum contains either
                   REAL, AMPLITUDE, or PHASE.
+dJumpMax        - This reference to a Double variable contains the maximum
+                  deviation from +/- M_PI for adjacent points to be unwrapped
+                  by +/- 2.0*M_PI (in radians).  This parameter is always used
+                  when the specified iteration axis is CalStats::FREQUENCY
+                  (unwrapping along the CalStats::TIME axis).  If the specified
+                  iteration axis is CalStats::TIME (unwrapping along the
+                  CalStats::FREQUENCY axis), this parameter selects the type of
+                  unwrapping (dJumpMax==0.0 --> group-delay unwrapping, dJumpMax
+                  != 0.0 --> simple unwrapping).
 oArg<T>         - This reference to a CalStats::ARG<T> instance contains the
                   extra input parameters.
 
@@ -403,6 +412,8 @@ Modification history:
               Updated this code to reflect changes in NewCalTabIter (now
               ROCTIter) and other classes.  Added a RAP enum as an input
               parameter.
+2012 Apr 02 - Nick Elias, NRAO
+              Input parameter dJumpMax added.
 
 */
 
@@ -415,7 +426,7 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     const Double& dStopTimeIn, const Vector<String>& oFeedIn,
     const Vector<uInt>& oSPWIn, const Vector<uInt>& oStartChannelIn,
     const Vector<uInt>& oStopChannelIn, const CalStats::AXIS& eAxisIterUserID,
-    const RAP& eRAP, const CalStats::ARG<T>& oArg ) {
+    const RAP& eRAP, const Double& dJumpMax, const CalStats::ARG<T>& oArg ) {
 
   // Initialize the output vector containing statistics versus field ID, antenna
   // 1, and antenna 2
@@ -451,9 +462,9 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
   }
 
 
-  // Check the feeds, time range, spectral windows, and channels and create
-  // the temporary vectors.  The temporary total frequency vector is also
-  // created.
+  // Check the feeds, time range, spectral windows, channels, and maximum jump
+  // parameter and create the temporary vectors.  The temporary total frequency
+  // vector is also created.
 
   Vector<String> oFeedTemp = Vector<String>();
   Bool bFeed = feed( oFeedIn, oFeedTemp );
@@ -487,6 +498,12 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
   if ( !bFreq ) {
     LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid frequencies" << LogIO::POST;
+    return( *poOutput );
+  }
+
+  if ( dJumpMax < 0.0 ) {
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "Invalid maximum jump parameter" << LogIO::POST;
     return( *poOutput );
   }
 
@@ -551,7 +568,8 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
           break;
 	case (uInt) PHASE:
 	  poCS = (CalStats*) new CalStatsPhase( oParamDC, oParamErrD, oFlag,
-              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True );
+              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True,
+              dJumpMax );
           break;
         default:
           throw( AipsError( "Invalid parameter (REAL, AMPLITUDE, or PHASE)" ) );

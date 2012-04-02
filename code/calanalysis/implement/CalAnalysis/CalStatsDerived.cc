@@ -87,11 +87,8 @@ This class feeds real data to the CalStats base class..
 NB: The FEED axis is always included as an iteration axis by default because one
 cannot perform a fit along it.  The other iteration axis is defined by the user.
 
-NB: I do not employ the direct call to the corresponding CalStats constructor.
-I initialize an instance of this CalStatsReal class by creating a local instance
-of CalStats and copying its state to the state of this CalStatsReal instance.
-Yes, it's not as elegant, but it is easy to read and required for CalStatsAmp
-and CalStatsPhase classes, anyway.
+NB: The default CalStats constructor is called first as the default, then the
+standard one is called at the end.
 
 Inputs:
 -------
@@ -126,7 +123,7 @@ Modification history:
 CalStatsReal::CalStatsReal( const Cube<Double>& oValue,
     const Cube<Double>& oValueErr, const Cube<Bool>& oFlag,
     const Vector<String>& oFeed, const Vector<Double>& oFrequency,
-    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser )
+    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUserID )
     : CalStats() {
 
   // Create an instance of the CalStats base class constructor and copy its
@@ -136,7 +133,7 @@ CalStatsReal::CalStatsReal( const Cube<Double>& oValue,
 
   try {
     poCS = new CalStats( oValue, oValueErr, oFlag, oFeed, oFrequency, oTime,
-        eAxisIterUser );
+        eAxisIterUserID );
   }
   catch ( AipsError oAE ) {
     throw( oAE );
@@ -262,9 +259,8 @@ and initializes the CalStats base class.
 NB: The FEED axis is always included as an iteration axis by default because one
 cannot perform a fit along it.  The other iteration axis is defined by the user.
 
-NB: If normalization is selected, it is performed along the FREQUENCY axis.
-
-NB: The default CalStats constructor is called.
+NB: The default CalStats constructor is called first as the default, then the
+standard one is called at the end.
 
 NB: The are no input data real-imaginary cross correlations available, so the
 amplitude errors do not include them.
@@ -302,6 +298,9 @@ Modification history:
 2012 Mar 28 - Nick Elias, NRAO
               Changed the normalization code so that vectors are iteratively fed
               to CalStatsAmp::norm().
+2012 Mar 29 - Nick Elias, NRAO
+              Member function can now normalize along the frequency and time
+              axes.
 
 */
 
@@ -310,7 +309,7 @@ Modification history:
 CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oValue,
     const Cube<Double>& oValueErr, const Cube<Bool>& oFlag,
     const Vector<String>& oFeed, const Vector<Double>& oFrequency,
-    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser,
+    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUserID,
     const Bool& bNorm ) : CalStats() {
 
   // Calculate the amplitudes and their errors
@@ -323,7 +322,7 @@ CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oValue,
   // Create the iterators.  The input flag cube is copied since it cannot be
   // modified.
 
-  IPosition oIterShape( 2, (ssize_t) CalStats::FEED, (ssize_t) CalStats::TIME );
+  IPosition oIterShape( 2, (ssize_t) CalStats::FEED, eAxisIterUserID );
 
   Cube<Bool> oFlagCopy( oFlag.copy() );
   ArrayIterator<Bool> oFlagIter( oFlagCopy, oIterShape, False );
@@ -336,13 +335,19 @@ CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oValue,
 
   while ( bNorm && !oAmpIter.pastEnd() ) {
 
-    uInt uiNumFrequency = oFrequency.nelements();
-    IPosition oShape( 1, uiNumFrequency );
+    uInt uiNumAbs = 0;
+    if ( eAxisIterUserID == CalStats::TIME ) {
+      uiNumAbs = oFrequency.nelements();
+    } else {
+      uiNumAbs = oTime.nelements();
+    }
 
-    if ( uiNumFrequency <= 1 ) {
+    if ( uiNumAbs <= 1 ) {
       oFlagIter.next(); oAmpIter.next(); oAmpErrIter.next();
       continue;
     }
+
+    IPosition oShape( 1, uiNumAbs );
 
     Vector<Bool> oFlagV( oFlagIter.array().copy().reform(oShape) );
     Vector<Double> oAmpV( oAmpIter.array().copy().reform(oShape) );
@@ -366,7 +371,7 @@ CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oValue,
 
   try {
     poCS = new CalStats( oAmp, oAmpErr, oFlagCopy, oFeed, oFrequency, oTime,
-        eAxisIterUser );
+        eAxisIterUserID );
   }
   catch ( AipsError oAE ) {
     throw( oAE );
@@ -498,33 +503,33 @@ void CalStatsAmp::norm( Vector<Double>& oAmp, Vector<Double>& oAmpErr,
   Vector<Double> oAmpErrC( oAmpErrM.getCompressedArray() );
 
 
-  // Return if the length of the frequency axis is unity
+  // Return if the length of the abscissa is unity
 
-  uInt uiNumFrequencyC = oAmpC.nelements();
+  uInt uiNumAbsC = oAmpC.nelements();
 
-  if ( uiNumFrequencyC <= 1 ) {
+  if ( uiNumAbsC <= 1 ) {
     LogIO log( LogOrigin( "CalStatsAmp", "norm", WHERE ) );
     log << LogIO::WARN
-        << "Frequency axis has a dimension <= 1, no normalization"
+        << "Abscissa has a dimension <= 1, no normalization"
         << LogIO::POST;
     return;
   }
 
 
-  // Normalize the amplitudes and their errors along the frequency axis.  Flag
-  // all low amplitudes.
+  // Normalize the amplitudes and their errors along the abscissa.  Flag all low
+  // amplitudes.
 
   Double dAmpMax = max( oAmpC );
 
   Vector<Bool> oFlagLow( oAmp <= (Double) 1.0E-08*dAmpMax );
   oFlag = oFlag || oFlagLow;
 
-  uInt uiNumFrequency = oAmp.nelements();
+  uInt uiNumAbs = oAmp.nelements();
 
-  for ( uInt f=0; f<uiNumFrequency; f++ ) {
-    if ( !oFlag[f] ) {
-      oAmp[f] /= dAmpMax;
-      oAmpErr[f] /= dAmpMax;
+  for ( uInt a=0; a<uiNumAbs; a++ ) {
+    if ( !oFlag[a] ) {
+      oAmp[a] /= dAmpMax;
+      oAmpErr[a] /= dAmpMax;
     }
   }
 
@@ -568,7 +573,10 @@ CalStatsPhase  - This generic constructor converts complex data to amplitudes
 
 CalStatsPhase public static member functions:
 ---------------------------------------------
-unwrap - This member function unwraps the phases.
+unwrapGD     - This member function unwraps the phases along the frequency axis
+               with respect to the group delay.
+unwrapSimple - This member function performs a simple unwrapping procedure for
+               both frequency and temporal abscissae.
 
 CalStatsPhase private static member functions:
 ----------------------------------------------
@@ -589,6 +597,9 @@ Modification history:
               Private static member functions fringePacket2() and maxLocation()
               added. Private static member variables NUM_ITER_UNWRAP and
               NEW_RANGE_FACTOR added.
+2012 Mar 30 - Nick Elias, NRAO
+              Public static member function unwrap() renamed to unwrapGD().
+              Public static member function unwrapSimple() added.
 
 */
 
@@ -608,15 +619,19 @@ initializes the CalStats base class.
 NB: The FEED axis is always included as an iteration axis by default because one
 cannot perform a fit along it.  The other iteration axis is defined by the user.
 
-NB: If unwrapping is selected, it is performed along the FREQUENCY axis.
-
 NB: All flags corresponding to amplitudes less then 1.0E-08 times the peak
-amplitude (along the FREQUENCY axis) are updated to True.
+amplitude are updated to True.
 
-NB: The default CalStats constructor is called.
+NB: The default CalStats constructor is called first as the default, then the
+standard one is called at the end.
 
 NB: The are no input data real-imaginary cross correlations available, so the
-amplitude errors do not include them.
+phase errors do not include them.
+
+NB: For unwrapping along the time axis (iteration axis CalStats::FREQUENCY), the
+unwrapSimple() function is used.  For unwrapping along the frequency axis
+(iteration axis CalStats::TIME), dJumpMax==0.0 leads to unwrapGD() while
+dJumpMax!=0.0 leads to unwrapSimple().
 
 Inputs:
 -------
@@ -632,9 +647,19 @@ oFrequency      - This reference to a Vector<Double> instance is the frequency
 oTime           - This reference to a Vector<Double> instance is the time
                   abscissae.
 eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
-                  FREQUENCY or TIME iteration axes (user defined).
+                  CalStats::FREQUENCY or CalStats::TIME iteration axes (user
+                  defined).
 bUnwrap         - This reference to a Bool variable contains the unwrapping flag
                   (True = unwrap, False = don't unwrap).
+dJumpMax        - This reference to a Double variable contains the maximum
+                  deviation from +/- M_PI for adjacent points to be unwrapped
+                  by +/- 2.0*M_PI (in radians).  This parameter is always used
+                  when the specified iteration axis is CalStats::FREQUENCY
+                  (unwrapping along the CalStats::TIME axis).  If the specified
+                  iteration axis is CalStats::TIME (unwrapping along the
+                  CalStats::FREQUENCY axis), this parameter selects the type of
+                  unwrapping (dJumpMax==0.0 --> group-delay unwrapping, dJumpMax
+                  != 0.0 --> simple unwrapping).
 
 Outputs:
 --------
@@ -652,7 +677,9 @@ Modification history:
               Value error input parameter changed from DComplex to Double.
 2012 Mar 28 - Nick Elias, NRAO
               Changed the unwrapping code so that vectors are iteratively fed to
-              CalStatsPhase::unwrap().
+              CalStatsPhase::unwrapSimple() or CalStatsPhase::unwrapGD().
+2012 Apr 01 - Nick Elias, NRAO
+              Input parameter dJumpMax added.
 
 */
 
@@ -661,10 +688,10 @@ Modification history:
 CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
     const Cube<Double>& oValueErr, const Cube<Bool>& oFlag,
     const Vector<String>& oFeed, const Vector<Double>& oFrequency,
-    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUser,
-    const Bool& bUnwrap ) : CalStats() {
+    const Vector<Double>& oTime, const CalStats::AXIS& eAxisIterUserID,
+    const Bool& bUnwrap, const Double& dJumpMax ) : CalStats() {
 
-  // Calculate the phases and their initial errors (set to 0.0)
+  // Calculate the phases and the initial phase error cube (set to 0.0)
 
   Cube<Double> oPhase( phase(oValue) );
 
@@ -674,7 +701,7 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
   // Create the iterators.  The input flag cube is copied since it cannot be
   // modified.
 
-  IPosition oIterShape( 2, (ssize_t) CalStats::FEED, (ssize_t) CalStats::TIME );
+  IPosition oIterShape( 2, (ssize_t) CalStats::FEED, eAxisIterUserID );
 
   ReadOnlyArrayIterator<DComplex> oValueIter( oValue, oIterShape, False );
   ReadOnlyArrayIterator<Double> oValueErrIter( oValueErr, oIterShape, False );
@@ -690,18 +717,32 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
 
   while ( bUnwrap && !oPhaseIter.pastEnd() ) {
 
-    uInt uiNumFrequency = oFrequency.nelements();
-    IPosition oShape( 1, uiNumFrequency );
+    uInt uiNumAbs = 0;
+    if ( eAxisIterUserID == CalStats::TIME ) {
+      uiNumAbs = oFrequency.nelements();
+    } else {
+      uiNumAbs = oTime.nelements();
+    }
 
-    if ( uiNumFrequency <= 1 ) {
+    if ( uiNumAbs <= 1 ) {
       oFlagIter.next(); oPhaseIter.next();
       continue;
     }
 
+    IPosition oShape( 1, uiNumAbs );
+
     Vector<Bool> oFlagV( oFlagIter.array().copy().reform(oShape) );
     Vector<Double> oPhaseV( oPhaseIter.array().copy().reform(oShape) );
 
-    unwrap( oPhaseV, oFrequency, oFlagV );
+    if ( eAxisIterUserID == CalStats::TIME ) {
+      if ( dJumpMax == 0.0 ) {
+        unwrapGD( oPhaseV, oFrequency, oFlagV );
+      } else {
+        unwrapSimple( oPhaseV, dJumpMax, oFlagV );
+      }
+    } else {
+      unwrapSimple( oPhaseV, dJumpMax, oFlagV );
+    }
 
     oPhaseIter.array() = oPhaseV;
 
@@ -710,9 +751,9 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
   }
 
 
-  // Reset the flag iterator since it will be used again
+  // Reset the iterators
 
-  oFlagIter.reset();
+  oFlagIter.reset(); oPhaseIter.next();
 
 
   // Calculate the phase errors.  They require dividing by amplitude.  Set the
@@ -723,8 +764,8 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
 
   while ( !oValueIter.pastEnd() ) {
 
-    uInt uiNumFrequency = oValueIter.array().nelements();
-    IPosition oShape( 1, uiNumFrequency );
+    uInt uiNumAbs = oValueIter.array().nelements();
+    IPosition oShape( 1, uiNumAbs );
 
     Vector<Double> oPhaseErrV( oShape );
 
@@ -739,11 +780,11 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
     oFlagV = oFlagV || oFlagLow;
     oFlagIter.array() = oFlagV;
 
-    for ( uInt f=0; f<uiNumFrequency; f++ ) {
-      if ( !oFlagV[f] ) {
-        oPhaseErrV[f] = oValueErrV[f] / oAmpV[f];
+    for ( uInt a=0; a<uiNumAbs; a++ ) {
+      if ( !oFlagV[a] ) {
+        oPhaseErrV[a] = oValueErrV[a] / oAmpV[a];
       } else {
-        oPhaseErrV[f] = (Double) M_PI;
+        oPhaseErrV[a] = (Double) M_PI;
       }
     }
 
@@ -762,7 +803,7 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
 
   try {
     poCS = new CalStats( oPhase, oPhaseErr, oFlagCopy, oFeed, oFrequency, oTime,
-        eAxisIterUser );
+        eAxisIterUserID );
   }
   catch ( AipsError oAE ) {
     throw( oAE );
@@ -838,11 +879,101 @@ CalStatsPhase::~CalStatsPhase( void ) {}
 
 /*
 
-CalStatsPhase::unwrap
+CalStatsPhase::unwrapSimple
 
 Description:
 ------------
-This member function unwraps the phases.
+This member function performs a simple unwrapping procedure for both frequency
+and temporal abscissae.
+
+Algorithm:
+----------
+* If the first point is a little less than +M_PI and the second point is a
+  little more than -M_PI, add 2.0*M_PI to the second point.
+* If the first point is a little more than -M_PI and the second point is a
+  ittle less than +M_PI, subtract 2.0*M_PI from the second point.
+* "A little more" means within dJumpMax of +/- M_PI.
+* Flagged data are ignored, which could be a problem if a lot of them occur
+  sequentially.
+
+Inputs:
+-------
+oPhase   - This reference to a Vector<Double> instance contains the wrapped
+           phases.
+dJumpMax - This reference to a Double variable contains the maximum deviation
+           from +/- M_PI for adjacent points to be unwrapped by +/- 2.0*M_PI (in
+           radians).
+oFlag    - This reference to a Vector<Bool> instance contains the flags.
+
+Outputs:
+--------
+oPhase - This reference to a Vector<Double> instance contains the unwrapped
+         phases.
+
+Modification history:
+---------------------
+2012 Mar 30 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalStatsPhase::unwrapSimple( Vector<Double>& oPhase,
+    const Double& dJumpMax, const Vector<Bool>& oFlag ) {
+
+  // Initialize the number of elements and make an immutable copy of the input
+  // phase vector
+
+  uInt uiNumAbs = oPhase.nelements();
+
+  Vector<Double> oPhaseIn( oPhase.copy() );
+
+
+  // Perform the simple unwrapping.  The unwrapping occurs if subsequent points
+  // are both within dJumpMax of M_PI or -M_PI.  Flagged data are ignored.
+
+  for ( uInt a=1; a<uiNumAbs; a++ ) {
+
+    if ( oFlag[a-1] ) continue;
+
+    uInt a2 = 0;
+    for ( a2=a; a2<uiNumAbs; a2++ ) {
+      if ( !oFlag[a2] ) break;
+    }
+    if ( a2 >= uiNumAbs ) return;
+
+    // The first point is a little less than +M_PI and the second point is a
+    // little more than -M_PI, add 2.0*M_PI to the second point
+    if ( M_PI-oPhaseIn[a-1] <= dJumpMax && M_PI+oPhaseIn[a2] <= dJumpMax ) {
+      for ( uInt a3=a2; a3<uiNumAbs; a3++ ) oPhase[a3] += 2.0 * M_PI;
+    }
+
+    // The first point is a little more than -M_PI and the second point is a
+    // little less than +M_PI, subtract 2.0*M_PI from the second point
+    if ( M_PI+oPhaseIn[a-1] <= dJumpMax && M_PI-oPhaseIn[a2] <= dJumpMax ) {
+      for ( uInt a3=a2; a3<uiNumAbs; a3++ ) oPhase[a3] -= 2.0 * M_PI;
+    }
+
+  }
+
+
+  // Return
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalStatsPhase::unwrapGD
+
+Description:
+------------
+This member function unwraps the phases along the frequency axis with respect to
+the group delay.
 
 NB: The unwrapping is applied only along the frequency axis.  The unwrapping is
 applied only when the number of unflagged frequencies is greater than 1 (setting
@@ -929,7 +1060,7 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-void CalStatsPhase::unwrap( Vector<Double>& oPhase,
+void CalStatsPhase::unwrapGD( Vector<Double>& oPhase,
     const Vector<Double>& oFrequency, const Vector<Bool>& oFlag ) {
 
   // Eliminate the flagged phases and frequencies
