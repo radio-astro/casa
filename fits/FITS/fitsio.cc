@@ -774,7 +774,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	} else{
            //cout << "FitsInput::process_header - t=" << t << " hdu_type=" << m_hdu_type << endl; 
-	   //read_header_rec();
+	   read_header_rec();
 	}
 	return 0;
     }
