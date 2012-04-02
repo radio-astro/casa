@@ -47,18 +47,16 @@ using namespace casa::async;
 //#include <boost/bind.hpp>
 #include <boost/function.hpp>
 
+#include "UtilJ.h"
+
 using namespace boost;
 using namespace casa::utilj;
 using namespace std;
-
-#include "UtilJ.h"
+using namespace casa::asyncio;
 
 #define Log(level, ...) \
         {if (AsynchronousInterface::logThis (level)) \
     Logger::get()->log (__VA_ARGS__);};
-
-using namespace casa::utilj;
-using namespace casa::asyncio;
 
 namespace casa {
 
@@ -203,12 +201,18 @@ VLAT::createFillerDictionary ()
 
     fillerDictionary_p.clear();
 
+    fillerDictionary_p.add (VisBufferComponents::AllBeamOffsetsZero,
+                           vlatFunctor0 (& VisBufferAsync::fillAllBeamOffsetsZero));
+    fillerDictionary_p.add (VisBufferComponents::AntennaMounts,
+                           vlatFunctor0 (& VisBufferAsync::fillAntennaMounts));
     fillerDictionary_p.add (VisBufferComponents::Ant1,
                            vlatFunctor0 (& VisBuffer::fillAnt1));
     fillerDictionary_p.add (VisBufferComponents::Ant2,
                            vlatFunctor0 (& VisBuffer::fillAnt2));
     fillerDictionary_p.add (VisBufferComponents::ArrayId,
                            vlatFunctor0 (& VisBuffer::fillArrayId));
+    fillerDictionary_p.add (VisBufferComponents::BeamOffsets,
+                           vlatFunctor0 (& VisBufferAsync::fillBeamOffsets));
     fillerDictionary_p.add (VisBufferComponents::Channel,
                            vlatFunctor0 (& VisBuffer::fillChannel));
     fillerDictionary_p.add (VisBufferComponents::Cjones,
@@ -222,21 +226,21 @@ VLAT::createFillerDictionary ()
                            vlatFunctor1(& VisBuffer::fillVisCube,
                                         VisibilityIterator::Corrected));
     fillerDictionary_p.add (VisBufferComponents::DataDescriptionId,
-                           vlatFunctor0 (& VisBuffer::fillDDID));
-    fillerDictionary_p.add (VisBufferComponents::Direction1,
-                           vlatFunctor0 (& VisBuffer::fillDirection1));
-    fillerDictionary_p.add (VisBufferComponents::Direction2,
-                           vlatFunctor0 (& VisBuffer::fillDirection2));
+                           vlatFunctor0 (& VisBuffer::fillDataDescriptionId));
+//    fillerDictionary_p.add (VisBufferComponents::Direction1,
+//                           vlatFunctor0 (& VisBuffer::fillDirection1));
+//    fillerDictionary_p.add (VisBufferComponents::Direction2,
+//                           vlatFunctor0 (& VisBuffer::fillDirection2));
     fillerDictionary_p.add (VisBufferComponents::Exposure,
                            vlatFunctor0 (& VisBuffer::fillExposure));
     fillerDictionary_p.add (VisBufferComponents::Feed1,
                            vlatFunctor0 (& VisBuffer::fillFeed1));
-    fillerDictionary_p.add (VisBufferComponents::Feed1_pa,
-                           vlatFunctor0 (& VisBuffer::fillFeed1_pa));
+//    fillerDictionary_p.add (VisBufferComponents::Feed1_pa,
+//                           vlatFunctor0 (& VisBuffer::fillFeed1_pa));
     fillerDictionary_p.add (VisBufferComponents::Feed2,
                            vlatFunctor0 (& VisBuffer::fillFeed2));
-    fillerDictionary_p.add (VisBufferComponents::Feed2_pa,
-                           vlatFunctor0 (& VisBuffer::fillFeed2_pa));
+//    fillerDictionary_p.add (VisBufferComponents::Feed2_pa,
+//                           vlatFunctor0 (& VisBuffer::fillFeed2_pa));
     fillerDictionary_p.add (VisBufferComponents::FieldId,
                            vlatFunctor0 (& VisBuffer::fillFieldId));
     fillerDictionary_p.add (VisBufferComponents::Flag,
@@ -277,6 +281,8 @@ VLAT::createFillerDictionary ()
                            vlatFunctor0 (& VisBuffer::fillPolFrame));
     fillerDictionary_p.add (VisBufferComponents::ProcessorId,
                            vlatFunctor0 (& VisBuffer::fillProcessorId));
+    fillerDictionary_p.add (VisBufferComponents::ReceptorAngles,
+                           vlatFunctor0 (& VisBufferAsync::fillReceptorAngles));
     fillerDictionary_p.add (VisBufferComponents::Scan,
                            vlatFunctor0 (& VisBuffer::fillScan));
     fillerDictionary_p.add (VisBufferComponents::Sigma,
@@ -304,7 +310,7 @@ VLAT::createFillerDictionary ()
     fillerDictionary_p.add (VisBufferComponents::WeightSpectrum,
                            vlatFunctor0 (& VisBuffer::fillWeightSpectrum));
 
-    assert (fillerDictionary_p.size() == VisBufferComponents::N_VisBufferComponents);
+    // assert (fillerDictionary_p.size() == VisBufferComponents::N_VisBufferComponents);
     // Every supported prefetch column needs a filler
 
     //fillerDependencies_p.add ();
@@ -362,7 +368,7 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
 {
     datum->getVisBuffer()->setVisibilityShape (visibilityIterator_p->visibilityShape ());
 
-    datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
+    //////datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
 
     datum->getVisBuffer()->setPolarizationId (visibilityIterator_p->polarizationId());
 
@@ -398,7 +404,7 @@ VLAT::fillDatumMiscellanyBefore (VlaDatum * datum)
                                               visibilityIterator_p->newFieldId(),
                                               visibilityIterator_p->newSpectralWindow());
     datum->getVisBuffer()->setNAntennas (visibilityIterator_p->getNAntennas ());
-    datum->getVisBuffer()->setMEpoch (visibilityIterator_p->getMEpoch ());
+    datum->getVisBuffer()->setMEpoch (visibilityIterator_p->getEpoch ());
     datum->getVisBuffer()->setReceptor0Angle (visibilityIterator_p->getReceptor0Angle());
 
     fillLsrInfo (datum);
@@ -521,7 +527,8 @@ VLAT::run ()
     // Log thread initiation
 
     Logger::get()->registerName ("VLAT");
-    Log (1, "VLAT starting execution; tid=%d\n", gettid());
+    String writable = writeIterator_p != NULL ? "writable" : "readonly";
+    Log (1, "VLAT starting execution; tid=%d; VI is %s.\n", gettid(), writable.c_str());
 
     LogIO logIo (LogOrigin ("VLAT"));
     logIo << "starting execution; tid=" << gettid() << endl << LogIO::POST;

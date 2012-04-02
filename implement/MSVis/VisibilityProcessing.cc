@@ -37,12 +37,29 @@ namespace vpf {
     {if (level <= VpEngine::getLogLevel()) \
          VpEngine::log (__VA_ARGS__);}
 
+
+//SimpleVp::SimpleVp (const String & name, const String & input, const String & output)
+//: VisibilityProcessor (name,
+//                       vector<String> (1, input),
+//                       output.empty() ? vector<String> () : vector<String> (1, output))
+//{}
+//
+//SimpleVp::~SimpleVp ()
+//{}
+//
+//void
+//SimpleVp::validateImpl ()
+//{
+//    throwIfAnyPortsUnconnected ();
+//}
+
+
 SplitterVp::SplitterVp (const String & name,
-                        const vector<String> & inputNames,
+                        const String & inputName,
                         const vector<String> & outputNames)
-: VisibilityProcessor (name, inputNames, outputNames)
+: VisibilityProcessor (name, vector<String> (1, inputName), outputNames)
 {
-    ThrowIf (inputNames.size() != 1, "Exactly one input is required.");
+    ThrowIf (inputName.size() != 1, "Exactly one input is required.");
     ThrowIf (outputNames.size () < 1, "At least one output is required.");
 }
 
@@ -84,6 +101,14 @@ SplitterVp::doProcessingImpl (ProcessingType processingType ,
     return processingResult;
 }
 
+void
+SplitterVp::validateImpl ()
+{
+    throwIfAnyInputsUnconnected ();
+    ThrowIf (getOutputs (True).empty(),
+             utilj::format ("SplitterVp %s has no outputs connected.", getFullName().c_str()));
+}
+
 
 SubchunkIndex::SubchunkIndex (Int chunkNumber, Int subChunkNumber, Int iteration)
 : chunkNumber_p (chunkNumber), iteration_p (iteration), subChunkNumber_p (subChunkNumber)
@@ -120,6 +145,20 @@ String
 SubchunkIndex::toString() const
 {
     return format ("(%d,%d,%d)", chunkNumber_p, subChunkNumber_p, iteration_p);
+}
+
+VisibilityProcessorStub::ProcessingResult
+VisibilityProcessorStub::doProcessingImpl (ProcessingType /*processingType*/,
+                                           VpData & /*inputData*/,
+                                           const SubchunkIndex & /*subChunkIndex*/)
+{
+    Throw ("Stub does not permit processing.");
+}
+
+void
+VisibilityProcessorStub::validateImpl ()
+{
+    Throw ("Stub does not permit validation.");
 }
 
 
@@ -159,9 +198,9 @@ VisibilityProcessor::VisibilityProcessor (const String & name,
   vpEngine_p (0)
 
 {
-    VpPort::Type portType = makeIoPorts ? VpPort::InOutput : VpPort::Input;
+    VpPort::Type portType = makeIoPorts ? VpPort::InOut : VpPort::Input;
     vpInputs_p = definePorts (inputNames, portType, "input");
-    portType = makeIoPorts ? VpPort::InOutput : VpPort::Output;
+    portType = makeIoPorts ? VpPort::InOut : VpPort::Output;
     vpOutputs_p = definePorts (outputNames, portType, "output");
 }
 
@@ -546,84 +585,121 @@ VpContainer::chunkStart (const SubchunkIndex & sci)
 }
 
 void
-VpContainer::connect (VpPort & output, VpPort & input)
+VpContainer::connect (const String &  sourcePortName,
+                      VisibilityProcessor * sinkVp, const String &  sinkPortName)
+{
+    connect (this, sourcePortName, sinkVp, sinkPortName);
+}
+
+void
+VpContainer::connect (VisibilityProcessor * sourceVp, const String &  sourcePortName,
+                      const String &  sinkPortName)
+{
+    connect (sourceVp, sourcePortName, this, sinkPortName);
+}
+
+pair<VpPort, VpPort>
+VpContainer::validateConnectionPorts (VisibilityProcessor * sourceVp,
+                                      const String &  sourcePortName,
+                                      VisibilityProcessor * sinkVp,
+                                      const String &  sinkPortName)
+{
+    // Does the owning VP really support these ports?
+
+    ThrowIf (sourceVp != this && ! sourceVp->getOutputs ().contains (sourcePortName),
+             format ("Visibility processor %s in %s does not have output %s",
+                     sourceVp->getName().c_str(), getName().c_str(),
+                     sourcePortName.c_str()));
+
+    ThrowIf (sourceVp == this && ! getInputs().contains (sourcePortName),
+             format ("Visibility processor container %s in %s does not have input %s",
+                     sourceVp->getName().c_str(), getName().c_str(),
+                     sourcePortName.c_str()));
+
+    ThrowIf (sinkVp != this && ! sinkVp->getInputs ().contains (sinkPortName),
+             format ("Visibility processor %s in %s does not have input %s",
+                     sinkVp->getName().c_str(), getName().c_str(),
+                     sinkPortName.c_str()));
+
+    ThrowIf (sinkVp == this && ! getOutputs().contains (sinkPortName),
+             format ("Visibility processor container %s in %s does not have output %s",
+                     sinkVp->getName().c_str(), getName().c_str(),
+                     sinkPortName.c_str()));
+
+    // Are the ports already in use?
+
+    VpPort sink = (sinkVp == this) ? sinkVp->getOutput (sinkPortName)
+                                   : sinkVp->getInput (sinkPortName);
+    VpPort source = (sourceVp == this) ? sourceVp->getInput (sourcePortName)
+                                       : sourceVp->getOutput (sourcePortName);
+
+    ThrowIf (utilj::containsKey (source, network_p),
+             format ("Output %s already in use for visibility processor %s in %s",
+                     source.getName().c_str(), sourceVp->getName().c_str(), getName().c_str()));
+
+    ThrowIf (utilj::containsKey (sink, networkReverse_p),
+             format ("Input %s already in use for visibility processor %s in %s",
+                     sink.getName().c_str(), sinkVp->getName().c_str(), getName().c_str()));
+
+    return make_pair (source, sink);
+}
+
+void
+VpContainer::connect (VisibilityProcessor * sourceVp, const String &  sourcePortName,
+                      VisibilityProcessor * sinkVp, const String &  sinkPortName)
 {
     // Validate the requested connection
     // =================================
 
-    VisibilityProcessor * inputVp = input.getVp();
-    VisibilityProcessor * outputVp = output.getVp();
-
     // Do they refer to a VP in this container?
 
-    ThrowIf (! contains (outputVp) && outputVp != this,
+    ThrowIf (! contains (sourceVp) && sourceVp != this,
              format ("No such visibility processor %s in %s.",
-                     outputVp->getName().c_str(), getName().c_str()));
-    ThrowIf (! contains (inputVp) && inputVp != this,
+                     sourceVp->getName().c_str(), getName().c_str()));
+    ThrowIf (! contains (sinkVp) && sinkVp != this,
              format ("No such visibility processor %s in %s.",
-                     inputVp->getName().c_str(), getName().c_str()));
+                     sinkVp->getName().c_str(), getName().c_str()));
 
-    // Does the owning VP really support these ports?
-
-    ThrowIf (! outputVp->getOutputs ().contains (output) &&
-             ! (outputVp == this && getInputs().contains (output)),
-             format ("Visibility processor %s in %s does not have output %s",
-                     outputVp->getName().c_str(), getName().c_str(),
-                     output.getName().c_str()));
-
-    ThrowIf (! inputVp->getInputs ().contains (input) &&
-             ! (inputVp == this && getOutputs().contains (input)),
-             format ("Visibility processor %s in %s does not have input %s",
-                     inputVp->getName().c_str(), getName().c_str(),
-                     input.getName().c_str()));
-
-    // Are the ports already in use?
-
-    ThrowIf (utilj::containsKey (output, network_p),
-             format ("Output %s already in use for visibility processor %s in %s",
-                     output.getName().c_str(), outputVp->getName().c_str(), getName().c_str()));
-
-    ThrowIf (utilj::containsKey (input, networkReverse_p),
-             format ("Input %s already in use for visibility processor %s in %s",
-                     input.getName().c_str(), inputVp->getName().c_str(), getName().c_str()));
+    VpPort sink, source;
+    boost::tie (source, sink) = validateConnectionPorts (sourceVp, sourcePortName, sinkVp, sinkPortName);
 
     // See if this is a connection to the container inputs or outputs or
     // a normal connection between VPs
 
-    Bool containerConnect = (output.getType() == input.getType()) &&
-                            ((output.isType(VpPort::Input) && outputVp == this) ||
-                             (input.isType(VpPort::Output) && inputVp == this));
+    Bool containerConnect = (source.getType() == sink.getType()) &&
+                            ((source.isType(VpPort::Input) && sourceVp == this) ||
+                             (sink.isType(VpPort::Output) && sinkVp == this));
 
-    Bool normalConnect = output.isType (VpPort::Output) && input.isType (VpPort::Input);
+    Bool normalConnect = source.isType (VpPort::Output) && sink.isType (VpPort::Input);
 
-    Bool selfConnect = outputVp == inputVp; // detects loop back
+    Bool selfConnect = sourceVp == sinkVp; // detects loop back
 
     ThrowIf (! (normalConnect ||  containerConnect) || selfConnect,
-             format ("Cannot connect %s:%s to %s:%s in %s", outputVp->getName ().c_str(),
-                     output.getName ().c_str (), inputVp->getName().c_str (),
-                     input.getName ().c_str (), getName().c_str()));
+             format ("Cannot connect %s:%s to %s:%s in %s", sourceVp->getName ().c_str(),
+                     source.getName ().c_str (), sinkVp->getName().c_str (),
+                     sink.getName ().c_str (), getName().c_str()));
 
     // The validation is over, so actually do the connection.
 
-    network_p [output] = input;
-    networkReverse_p.insert (input);
+    network_p [source] = sink;
+    networkReverse_p.insert (sink);
 
     // Inform the real ports (i.e., not the copies) that they are connected
     // N.B.: Container ports are in/out and are intended to be doubly connected,
     //       from the inside and from the outside of the container.
 
-    if (output.isType (VpPort::Input)){
-        outputVp->getInputRef (output.getName()).setConnectedOutput ();
+    if (source.isType (VpPort::Input)){
+        sourceVp->getInputRef (source.getName()).setConnectedOutput ();
     }
     else{
-        outputVp->getOutputRef (output.getName()).setConnectedOutput ();
+        sourceVp->getOutputRef (source.getName()).setConnectedOutput ();
     }
 
-    if (input.isType (VpPort::Output)){
-        inputVp->getOutputRef (input.getName()).setConnectedInput ();
+    if (sink.isType (VpPort::Output)){
+        sinkVp->getOutputRef (sink.getName()).setConnectedInput ();
     }
     else{
-        inputVp->getInputRef (input.getName()).setConnectedInput ();
+        sinkVp->getInputRef (sink.getName()).setConnectedInput ();
     }
 }
 
@@ -782,7 +858,8 @@ VpContainer::fillWithSequence (VisibilityProcessor * first, ...)
 	    ThrowIf ((* vp2)->getInputs().empty(),
 	             format ("Visibility processor %s has no inputs.", (* vp2)->getName().c_str()));
 
-	    connect ((* vp)->getOutputs().front(), (* vp2)->getInputs().front());
+	    connect (* vp, (* vp)->getOutputs().front().getName(),
+	             * vp2, (* vp2)->getInputs().front().getName());
 
 	}
 
@@ -792,13 +869,15 @@ VpContainer::fillWithSequence (VisibilityProcessor * first, ...)
 	         format ("First node in sequence, %s, has no inputs",
 	                 vps_p.front()->getName().c_str()));
 
-	connect (getInputs().front(), vps_p.front()->getInputs().front());
+	connect (getInputs().front().getName(),
+	         vps_p.front(), vps_p.front()->getInputs().front().getName());
 
 	if (! getOutputs().empty()  && ! vps_p.back()->getOutputs().empty()){
 
 	    // Connect up output of last node with output of container
 
-	    connect (getOutputs().front(), vps_p.back()->getOutputs().front());
+	    connect (vps_p.back(), vps_p.back()->getInputs().front().getName(),
+	             getOutputs().front().getName());
 
 	}
 }
@@ -1099,11 +1178,12 @@ VpData::getSelection (const VpPorts & ports, bool missingIsOk) const
 Int VpEngine::logLevel_p = std::numeric_limits<int>::min();
 LogIO * VpEngine::logIo_p = NULL;
 LogSink * VpEngine::logSink_p = NULL;
-Bool VpEngine::loggingInitialized_p = VpEngine::initializeLogging ();
+Bool VpEngine::loggingInitialized_p = False;
 
 Bool
 VpEngine::initializeLogging()
 {
+
     AipsrcValue<Int>::find (logLevel_p, getAipsRcBase () + ".debug.logLevel",
                             std::numeric_limits<int>::min());
 
@@ -1117,6 +1197,8 @@ VpEngine::initializeLogging()
         * logIo_p << "VisibilityProcessing logging enabled; level=" << logLevel_p << endl << LogIO::POST;
 
     }
+
+    loggingInitialized_p = True;
 
     return True;
 }
@@ -1142,17 +1224,32 @@ VpEngine::getVi ()
 void
 VpEngine::log (const String & formatString, ...)
 {
-	va_list vaList;
+    if (! loggingInitialized_p){
+        initializeLogging ();
+    }
 
-	va_start (vaList, formatString);
+    va_list vaList;
 
-	String result = formatV (formatString.c_str(), vaList);
+    va_start (vaList, formatString);
 
-	va_end (vaList);
+    String result = formatV (formatString.c_str(), vaList);
 
-	(* logIo_p) << result << endl << LogIO::POST;
+    va_end (vaList);
+
+    (* logIo_p) << result << endl << LogIO::POST;
 }
 
+void
+VpEngine::process (VisibilityProcessor & processor,
+                   ROVisibilityIterator & vi,
+                   const String & inputPortName)
+{
+    ThrowIf (! processor.getInputs ().contains (inputPortName),
+             utilj::format ("VisibilityProcessor %s does not have an input port '%s'",
+                            processor.getName().c_str(), inputPortName.c_str()));
+
+    process (processor, vi, processor.getInput (inputPortName));
+}
 
 void
 VpEngine::process (VisibilityProcessor & processor,

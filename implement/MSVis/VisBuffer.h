@@ -495,10 +495,10 @@ public:
       return visIter_p->polarizationId();
     } 
     virtual Int& dataDescriptionIdRef() {
-      return ddidOK_p ? ddid_p : This->fillDDID();
+      return dataDescriptionIdOK_p ? dataDescriptionId_p : This->fillDataDescriptionId ();
     }
     virtual Int dataDescriptionId() const {
-      return ddidOK_p ? ddid_p : This->fillDDID();
+      return dataDescriptionIdOK_p ? dataDescriptionId_p : This->fillDataDescriptionId ();
     }
     virtual Vector<Double>& time() {
         return timeOK_p ? time_p : fillTime();
@@ -867,6 +867,8 @@ private:
     // validate the cache
     virtual void validate();
 
+    void checkVisIterBase (const char * func, const char * file, int line, const char * extra = "") const;
+
     template<typename T>
     static void cacheCopyArray (Bool & newStatus,
                                 Bool oldStatus,
@@ -959,7 +961,7 @@ private:
     virtual Vector<Int>& fillChannel();
     virtual Vector<SquareMatrix<Complex, 2> >& fillCjones();
     virtual Vector<Int>& fillCorrType();
-    virtual Int & fillDDID();
+    virtual Int & fillDataDescriptionId ();
     virtual Vector<MDirection>& fillDirection1();
     virtual Vector<MDirection>& fillDirection2();
     virtual Vector<Double>& fillExposure();
@@ -1029,7 +1031,7 @@ Bool item ## OK_p;
     CacheStatus (correctedVisCube);
     CacheStatus (correctedVisibility);
     CacheStatus (corrType);
-    CacheStatus (ddid);
+    CacheStatus (dataDescriptionId);
     CacheStatus (direction1);
     CacheStatus (direction2);
     CacheStatus (exposure);
@@ -1083,7 +1085,7 @@ Bool item ## OK_p;
     Cube<Complex> correctedVisCube_p;
     Matrix<CStokesVector> correctedVisibility_p;
     Vector<Int> corrType_p;
-    Int ddid_p;
+    Int dataDescriptionId_p;
     Vector<MDirection> direction1_p; //where the first antenna/feed is pointed to
     Vector<MDirection> direction2_p; //where the second antenna/feed is pointed to
     Vector<Double> exposure_p;
