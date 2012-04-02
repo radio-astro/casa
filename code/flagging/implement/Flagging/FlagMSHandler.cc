@@ -281,6 +281,10 @@ FlagMSHandler::selectData()
 	if (!spwSelection_p.empty())
 	{
 		*logger_p << LogIO::NORMAL << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
+		if (measurementSetSelection_p->getChanList().size())
+		{
+			inrowSelection_p = true;
+		}
 	}
 
 	if (!baselineSelection_p.empty())
@@ -810,7 +814,7 @@ FlagMSHandler::flushFlags()
 		flushFlags_p = false;
 	}
 
-	if (flushFlagRow_p)
+	if ((flushFlagRow_p) and (!inrowSelection_p))
 	{
 		rwVisibilityIterator_p->setFlagRow(modifiedFlagRow_p);
 		flushFlagRow_p = false;

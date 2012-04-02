@@ -33,6 +33,9 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Exceptions/Error.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/TableIter.h>
+#include <tables/Tables/TableVector.h>
 
 #include <casa/sstream.h>
 
@@ -163,6 +166,125 @@ void smoothCT(NewCalTable ct,
     ctiter.next();
   } // ispw
 	
+}
+
+void assignCTScanField(NewCalTable& ct, String msName, 
+		       Bool doField, Bool doScan) {
+
+  // TBD: verify msName is present and is an MS
+
+  // Arrange to iterate only on SCAN  (and SPW?)
+  Table mstab(msName,Table::Old);
+
+  // How many scans in total?
+  ROTableVector<Int> allscansTV(mstab,"SCAN_NUMBER");
+  Vector<Int> allscans=allscansTV.makeVector();
+  Int nScan=genSort(allscans,(Sort::QuickSort | Sort::NoDuplicates));
+
+  //  cout << "Found " << nScan << " scans in " << msName << "." << endl;
+
+  // Workspace
+  Vector<Int> scanlist(nScan,-1);
+  Vector<Double> timelo(nScan,DBL_MIN);
+  Vector<Double> timehi(nScan,DBL_MAX);
+  Vector<Int> fieldlist(nScan,-1);
+  Vector<uInt> ord;
+  {
+    Block<String> cols(1);
+    cols[0]="SCAN_NUMBER";
+    TableIterator mstiter(mstab,cols);
+    
+    // Get time boundares and fields for each scan
+    Int iscan(0);
+    while (!mstiter.pastEnd()) {
+      Table thistab(mstiter.table());
+      
+      Int scan=ROTableVector<Int>(thistab,"SCAN_NUMBER")(0);
+      scanlist(iscan)=scan;
+      
+      fieldlist(iscan)=ROTableVector<Int>(thistab,"FIELD_ID")(0);
+      
+      Vector<Double> times=ROTableVector<Double>(thistab,"TIME").makeVector();
+      timelo(iscan)=min(times)-1e-5;
+      timehi(iscan)=max(times);
+      
+      mstiter.next();
+      ++iscan;
+    }
+
+
+    // Ensure time orderliness
+    genSort(ord,timehi);
+
+    /*
+    cout << "scanlist=" << scanlist << endl;
+    cout << "fieldlist=" << fieldlist << endl;
+    cout << "timelo=" << timelo-timelo(0) << endl;
+    cout << "timehi=" << timehi-timelo(0) << endl;
+    cout << "ord.nelements() = " << ord.nelements() << endl;
+    cout << "ord = " << ord << endl;
+    */
+
+  }
+
+  Double rTime=timelo(ord(0));
+
+  // Now iterate throught the NCT and set field and scan according to time
+  Block<String> cols(1);
+  cols[0]="TIME";
+  CTIter ctiter(ct,cols);
+
+  Int itime(0);
+  Int thisScan(0);
+  Int thisField(0);
+  while (!ctiter.pastEnd()) {
+    Double thisTime=ctiter.thisTime();
+
+    //    cout.precision(12);
+    //    cout << "thisTime = " << thisTime-rTime << endl;
+
+    // If time before first MS time, just use first
+    if (thisTime<timehi(ord(0))) {
+      itime=0;
+      //      cout << " Pre: ";
+    }
+    // If time after last MS time, use last
+    else if (thisTime>timelo(ord(nScan-1))) {
+      itime=nScan-1;
+      //      cout << " Post: ";
+    }
+    else if (thisTime>timehi(ord(itime))) {
+
+      // Isolate correct time index
+      while (thisTime>timehi(ord(itime))&& itime<nScan) {
+	//	cout << itime << " " << thisTime-rTime << ">" << timehi(ord(itime))-rTime << endl;
+	++itime;
+      }
+      //      cout << " Found: ";
+    }
+    else 
+      //      cout << " Still: ";
+
+    thisScan=scanlist(ord(itime));
+    thisField=fieldlist(ord(itime));
+
+    /*
+    cout << " itime=" << itime << " "
+	 << timelo(ord(itime))-rTime << " < "
+	 << thisTime-rTime << " < "
+	 << timehi(ord(itime))-rTime
+	 << " s=" << thisScan << " f=" << thisField << endl;
+    */
+
+    // Set the field and scan
+    if (doField) 
+      ctiter.setfield(thisField);
+    if (doScan) 
+      ctiter.setscan(thisScan);
+    
+    ctiter.next();
+  }
+
 }
 
 } //# NAMESPACE CASA - END

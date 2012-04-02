@@ -42,10 +42,7 @@ Requires:
 <xsl:for-each select="aps:method">
 	\ahlink{<xsl:value-of select="@name"/>}{<xsl:value-of select="$modulename"/>:<xsl:value-of select="$toolname"/>.<xsl:value-of select="@name"/>} <xsl:text disable-output-escaping="yes">&amp;</xsl:text><xsl:apply-templates select="aps:shortdescription"/> \\
 </xsl:for-each>
-<xsl:apply-templates select="aps:task"/>
 \end{longtable}
-
-<xsl:apply-templates select="aps:description"/>
 
 <xsl:for-each select="aps:method">
       <xsl:call-template name="domethod">

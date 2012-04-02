@@ -34,6 +34,7 @@
 #include <images/Images/ImageStatistics.h>
 #include <measures/Measures/MDirection.h>
 #include <display/region/RegionInfo.h>
+#include <display/Utilities/dtor.h>
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
@@ -109,7 +110,7 @@ namespace casa {
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 	// this means that coordinate transformation is required each time the region is drawn.
-	class Region {
+	class Region : public dtorNotifier {
 	    public:
 
 		/* enum states { undisplayed, inactive, highlighted, selected }; */
@@ -248,6 +249,8 @@ namespace casa {
 		virtual void boundingRectangle( double &blc_x, double &blc_y, double &trc_x, double &trc_y ) const
 			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
+		virtual void emitUpdate( )
+			DISPLAY_PURE_VIRTUAL(Region::emitUpdate,);
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( )
 			DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,new std::list<RegionInfo>( ));

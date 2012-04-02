@@ -1386,19 +1386,6 @@ void QtDisplayPanelGui::showImageProfile() {
 			{
 			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
 			    if (pos) {
-				viewer::QtRegionSource *qrs = dynamic_cast<viewer::QtRegionSource*>(pos->getRegionSource( ));
-				if ( qrs ) {
-				    connect( qrs, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
-								       const QList<double> &, const QList<int> &, const QList<int> &,
-								       const QString &, const QString &, const QString &, int, int ) ),
-					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-									const QList<double> &, const QList<int> &, const QList<int> &,
-									const QString &, const QString &, const QString &, int, int ) ) );
-				    connect( qrs, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
-									const QList<int> &, const QList<int> & ) ),
-					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
-									   const QList<int> &, const QList<int> & ) ) );
-				}
 
 				connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 							       const Vector<Double>, const Vector<Double>, const ProfileType)),
@@ -1406,6 +1393,31 @@ void QtDisplayPanelGui::showImageProfile() {
 								   const Vector<Double>, const Vector<Double>, const ProfileType)));
 				connect( profile_, SIGNAL(coordinateChange(const String&)),
 					 pos, SLOT(setCoordType(const String&)));
+
+				// one region source is shared among all of the tools...
+				// so there is no need to connect these signals for all of the tools...
+				std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+
+				if ( qrs ) {
+				    connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
+										const QList<double> &, const QList<int> &, const QList<int> &,
+										const QString &, const QString &, const QString &, int, int ) ),
+					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+									const QList<double> &, const QList<int> &, const QList<int> &,
+									const QString &, const QString &, const QString &, int, int ) ) );
+				    connect( qrs.get( ), SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
+									       const QList<int> &, const QList<int> & ) ),
+					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
+									   const QList<int> &, const QList<int> & ) ) );
+				    connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
+										       const QList<double> &, const QList<int> &, const QList<int> &,
+										       const QString &, const QString &, const QString &, int, int ) ),
+					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+									const QList<double> &, const QList<int> &, const QList<int> &,
+									const QString &, const QString &, const QString &, int, int ) ) );
+
+				}
+
 			    } else {
 				QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
 				if (pos) {
@@ -1423,21 +1435,6 @@ void QtDisplayPanelGui::showImageProfile() {
 			{
 			    QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 			    if (rect) {
-				// this is the *new* region implementation... all events come from region source...
-				viewer::QtRegionSource *qrs = dynamic_cast<viewer::QtRegionSource*>(rect->getRegionSource( ));
-				if ( qrs ) {
-				    connect( qrs, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
-								       const QList<double> &, const QList<int> &, const QList<int> &,
-								       const QString &, const QString &, const QString &, int, int ) ),
-					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-									const QList<double> &, const QList<int> &, const QList<int> &,
-									const QString &, const QString &, const QString &, int, int ) ) );
-				    connect( qrs, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
-									const QList<int> &, const QList<int> & ) ),
-					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
-									   const QList<int> &, const QList<int> & ) ) );
-				}
-
 				connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 								const Vector<Double>, const Vector<Double>, const ProfileType)),
 					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
@@ -1461,20 +1458,6 @@ void QtDisplayPanelGui::showImageProfile() {
 			{
 			    QtEllipseTool *ellipse = dynamic_cast<QtEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 			    if (ellipse) {
-				viewer::QtRegionSource *qrs = dynamic_cast<viewer::QtRegionSource*>(ellipse->getRegionSource( ));
-				if ( qrs ) {
-				    connect( qrs, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
-								       const QList<double> &, const QList<int> &, const QList<int> &,
-								       const QString &, const QString &, const QString &, int, int ) ),
-					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-									const QList<double> &, const QList<int> &, const QList<int> &,
-									const QString &, const QString &, const QString &, int, int ) ) );
-				    connect( qrs, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
-									const QList<int> &, const QList<int> & ) ),
-					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
-									   const QList<int> &, const QList<int> & ) ) );
-				}
-
 				connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 								   const Vector<Double>, const Vector<Double>, const ProfileType )),
 					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
@@ -1498,20 +1481,6 @@ void QtDisplayPanelGui::showImageProfile() {
 			{
 			    QtPolyTool *poly = dynamic_cast<QtPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
 			    if (poly) {
-				viewer::QtRegionSource *qrs = dynamic_cast<viewer::QtRegionSource*>(poly->getRegionSource( ));
-				if ( qrs ) {
-				    connect( qrs, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
-								       const QList<double> &, const QList<int> &, const QList<int> &,
-								       const QString &, const QString &, const QString &, int, int ) ),
-					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-									const QList<double> &, const QList<int> &, const QList<int> &,
-									const QString &, const QString &, const QString &, int, int ) ) );
-				    connect( qrs, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
-									const QList<int> &, const QList<int> & ) ),
-					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
-									   const QList<int> &, const QList<int> & ) ) );
-				}
-
 				connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 								const Vector<Double>, const Vector<Double>, const ProfileType )),
 					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
@@ -1565,6 +1534,14 @@ void QtDisplayPanelGui::showImageProfile() {
 		 profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
 	emit overlay(overlap);
     }
+    PanelDisplay* ppd = qdp_->panelDisplay();
+    QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+    if (rect) {
+	// this is the *new* region implementation... all events come from region source...
+	std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+	qrs->generateExistingRegionUpdates( );
+    }
+
 }
 
 

@@ -93,8 +93,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Destructor
 	    virtual ~MultiEllipseTool() { }
   
-	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
-  
 	    // returns a set which indicates regions this creator creates...
 	    const std::set<viewer::Region::RegionTypes> &regionsCreated( ) const;
 
