@@ -144,7 +144,7 @@ class asapgrid:
 
            'box': 1 pixel
            'sf': 3 pixels
-           'gauss': 3 pixels (width is used as HWHM)
+           'gauss': 1 pixel (width is used as HWHM)
 
         func -- Function type ('box', 'sf', 'gauss').
         width -- Width of convolution function. Default (-1) is to
