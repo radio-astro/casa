@@ -348,7 +348,7 @@ FlagMSHandler::checkMaxMemory()
 		if (groupTimeSteps_p)
 		{
 			rwVisibilityIterator_p->setRowBlocking(rwVisibilityIterator_p->nRowChunk());
-			if (rwVisibilityIterator_p->nRowChunk() > maxChunkRows) maxChunkRows = rwVisibilityIterator_p->nRowChunk();
+			if (rwVisibilityIterator_p->nRowChunk() > (Int) maxChunkRows) maxChunkRows = rwVisibilityIterator_p->nRowChunk();
 		}
 
 		// Iterate over vis buffers
@@ -665,7 +665,7 @@ FlagMSHandler::nextBuffer()
 		if (bufferNo == 1)
 		{
 			String corrs = "[ ";
-			for (uInt corr_i=0;corr_i<visibilityBuffer_p->get()->nCorr();corr_i++)
+			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
 			{
 				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
 			}

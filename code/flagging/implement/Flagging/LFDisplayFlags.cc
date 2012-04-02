@@ -110,7 +110,7 @@ namespace casa {
     freqlist_p.assign(inVb.frequency());
     freqlist_p = freqlist_p/1e+09;
     //    cout << "field : " << thisfield << "spw : " << thisspw_p <<  "Freq list : " << freqlist_p << endl;
-    AlwaysAssert(thisfield >=0 && thisfield < fieldnames_p.nelements() , AipsError);
+    AlwaysAssert(/*thisfield >=0 && */ thisfield < fieldnames_p.nelements() , AipsError);
 
 
     // Build and launch the GUI on first entry
@@ -132,18 +132,18 @@ namespace casa {
     AlwaysAssert( NumB == baselineFlag.nelements() , AipsError );
 
     // Iterate through the full chunk of data    
-    for(Int bs=0;bs<NumB;bs++) // Start Baseline Loop
+    for(Int bs=0;bs<(Int) NumB;bs++) // Start Baseline Loop
       {
-        AlwaysAssert(bs>=0 && bs<NumB, AipsError);
+        AlwaysAssert(/*bs>=0 && */ bs<NumB, AipsError);
 	Ants(bs,&a1,&a2);
-	AlwaysAssert( a1>=0 && a1<antnames_p.nelements(), AipsError );
-	AlwaysAssert( a2>=0 && a2<antnames_p.nelements(), AipsError );
+	AlwaysAssert( /* a1>=0 && */ a1<antnames_p.nelements(), AipsError );
+	AlwaysAssert( /* a2>=0 && */ a2<antnames_p.nelements(), AipsError );
 	//cout << "baseline : " << bs << " ants : " << a1 << "," << a2 << endl;
 	if( (a1 != a2)  &&  baselineFlag[bs]==True && ShowPlots) // If only cross-correlations, and if baseline exists in data
 	  {
 	    os << LogIO::NORMAL << antnames_p[a1] << "-" << antnames_p[a2] << " : " ;
 	    //cout << "Nants : " << antnames_p.nelements() << "  " << antnames_p[a1] << "-" << antnames_p[a2] << " : for ants : " << a1 << " and " << a2 << endl;
-	    for(int pl=0;pl<NumP;pl++)  // Start Correlation Loop
+	    for(int pl=0;pl<(int) NumP;pl++)  // Start Correlation Loop
 	      {
 		runningsum=0;
 		runningflag=0;
@@ -260,7 +260,7 @@ namespace casa {
     // Print Flag Counts to the logger....
     if(chunk_count>0)  os << LogIO::NORMAL << " --> Flagged " << 100*chunk_flags/chunk_count << "% ";
     else os << LogIO::NORMAL << " --> No data to flag" ;
-    for(int pl=0;pl<NumP;pl++)  
+    for(int pl=0;pl<(int) NumP;pl++)
       {
 	if(corr_count[pl]>0) 	os << " [" << corrlist_p[pl] << "]:" << 100*corr_flags[pl]/corr_count[pl] ;
 	else os << " [" << corrlist_p[pl] << "]: No data" ;
@@ -409,7 +409,7 @@ namespace casa {
     loc.push_back("top");
     plotter_p->loaddock(dock_xml_p,"bottom",loc,panels_p[0].getInt());
 
-      
+      return True;
 
   }
   
@@ -440,13 +440,14 @@ namespace casa {
     plotter_p->raster(dbus::af(data), xdim,ydim, "Hot Metal 1", frame);
   }
 
-  void LFDisplayFlags::DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
+  void LFDisplayFlags::DisplayLine(Int /*xdim*/, Vector<Double> &xdata, Vector<Float> &ydata, String label,
+                                   String color, Bool hold, uInt frame)
   {
     if( hold==False ) plotter_p->erase( frame );
     plotter_p->line(dbus::af(xdata), dbus::af(ydata),color,label,frame);
   }
 
-  void LFDisplayFlags::DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
+  void LFDisplayFlags::DisplayScatter(Int /*xdim*/, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
     if( hold==False ) plotter_p->erase( frame );
     plotter_p->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"dot",1,4,frame);

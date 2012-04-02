@@ -252,7 +252,7 @@ FlagCalTableHandler::generateIterator()
 // Translate sorting columns from Block<Int> format to Block<string> format
 // -----------------------------------------------------------------------
 Block<String>
-FlagCalTableHandler::getSortColumns(Block<Int> intCols)
+FlagCalTableHandler::getSortColumns(Block<Int> /*intCols*/)
 {
 	Block<String> strCols(2);
 	strCols[0] = "FIELD_ID";
@@ -370,7 +370,7 @@ FlagCalTableHandler::nextBuffer()
 		{
 			Vector<Int> scan = visibilityBuffer_p->get()->scan();
 			String corrs = "[ ";
-			for (uInt corr_i=0;corr_i<visibilityBuffer_p->get()->nCorr();corr_i++)
+			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
 			{
 				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
 			}
@@ -676,7 +676,7 @@ Vector<Int>& CTBuffer::corrType()
 	{
 		if (!CTnRowOK_p) nCorr();
 		corrType_p.resize(nCorr_p,False);
-		for (uInt corr_i=0;corr_i<nCorr_p;corr_i++)
+		for (uInt corr_i=0;corr_i<(uInt) nCorr_p;corr_i++)
 		{
 			corrType_p[corr_i] =  Stokes::NumberOfTypes+corr_i;
 		}

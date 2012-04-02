@@ -1165,9 +1165,9 @@ Calibrater::correct()
 
         // Pass each timestamp (VisBuffer) to VisEquation for correction
         Bool calwt(calWt());
-        Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
-        uncalspw.set(False);		        // instead of bombing the user
-                                                // in a loop.
+        map <Int, Bool> uncalspw;	// Used to accumulate error messages
+                                        // instead of bombing the user
+                                        // in a loop.
 
         for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 
@@ -1175,6 +1175,8 @@ Calibrater::correct()
 
                 uInt spw = vb->spectralWindow();
                 if (ve_p->spwOK(spw)){
+
+                    uncalspw[spw] = false;
 
                     // If we are going to update the weights, reset them first
                     // TBD: move this to VisEquation::correct?
@@ -1205,11 +1207,15 @@ Calibrater::correct()
             }
         }
 
-        vs_p->flush(); // Flush to disk
+        vs_p->flush (); // Flush to disk
 
         // Now that we're out of the loop, summarize any errors.
 
-        retval = summarize_uncalspws(uncalspw, "correct");
+        Vector<Bool> uncalibrated (uncalspw.size(), False);
+        for (int i = 0; i < uncalspw.size(); i++){
+            uncalibrated [i] = uncalspw [i];
+        }
+        retval = summarize_uncalspws(uncalibrated, "correct");
     }
     catch (AipsError x) {
         logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
@@ -1293,33 +1299,6 @@ Calibrater::configureForCorrection ()
     return whichOutCol;
 }
 
-//Bool
-//Calibrater::correctUsingVpf ()
-//{
-//    Bool result = False;
-//
-//    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
-//
-//    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
-//
-//    VpEngine vpEngine;
-//
-//    try{
-//
-//        vpEngine.process (* correctorVp, * vi);
-//        result = True;
-//    }
-//    catch (AipsError & e){
-//
-//        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
-//                   << LogIO::NORMAL;
-//
-//    }
-//
-//    return result;
-//
-//}
-
 Bool
 Calibrater::correctUsingVpf ()
 {
@@ -1332,8 +1311,8 @@ Calibrater::correctUsingVpf ()
     vpContainer->add (correctorVp.get());
     vpContainer->add (writerVp.get());
 
-    vpContainer->connect (correctorVp->getOutputRef ("Out"), writerVp->getInputRef ("In"));
-    vpContainer->connect (vpContainer->getInputRef ("In"), correctorVp->getInputRef ("In"));
+    vpContainer->connect (correctorVp.get(), "Out", writerVp.get(), "In");
+    vpContainer->connect ("In", correctorVp.get(), "In");
 
     ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
 
@@ -3386,7 +3365,6 @@ CorrectorVp::doProcessingImpl (ProcessingType processingType,
         if (calculateWeights_p){
             inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
         }
-
 
         VpData output;
         VpPort outputPort = getOutputs () [0];

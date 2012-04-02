@@ -130,8 +130,8 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
                                      const Vector<Int> &smoothAxes,
                                      const Vector<String> &kernels,
                                      const Vector<Quantity> &kernelWidths,
-                                     const Vector<Float> &includepix,
-                                     const Vector<Float> &excludepix,
+                                     const Vector<Float> &/*includepix*/,
+                                     const Vector<Float> &/*excludepix*/,
                                      const Double peaksnr,
                                      const Double stddev,
                                      const String &velocityType,
@@ -198,7 +198,7 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
 //     *itsLog << LogIO::NORMAL 
 //             << "Split MS by FIELD_ID, DATA_DESC_ID, and ANTENNA1"  
 //             << LogIO::POST ;
-    Bool done = False ;
+    ///// unused Bool done = False ;
     uInt numIter = 0 ;
     for ( iter.origin() ; iter.more() ; iter++ ) {
       PtrBlock<MeasurementSet *> tmpMoments ;

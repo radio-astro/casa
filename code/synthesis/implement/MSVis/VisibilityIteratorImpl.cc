@@ -1066,7 +1066,7 @@ VisibilityIteratorReadImpl::getNAntennas () const
 }
 
 MEpoch
-VisibilityIteratorReadImpl::getMEpoch () const
+VisibilityIteratorReadImpl::getEpoch () const
 {
     MEpoch mEpoch = msIter_p.msColumns ().timeMeas ()(0);
 
@@ -1604,14 +1604,15 @@ VisibilityIteratorReadImpl::feed_pa (Double time) const
         // Set up the Epoch using the absolute MJD in seconds
         // get the Epoch reference from the column
 
-        MEpoch mEpoch = msIter_p.msColumns ().timeMeas ()(0);
+        MEpoch mEpoch = getEpoch ();
 
-        Int nAnt = msIter_p.receptorAngle ().shape ()(1);
+        const Matrix<Double> & angles = receptorAngles ().xyPlane(0);
+        Int nAnt = angles.shape ()(1);
 
         Vector<Float> receptor0Angle (nAnt, 0);
 
         for (int i = 0; i < nAnt; i++) {
-            receptor0Angle [i] = msIter_p.receptorAngle ()(0, i);
+            receptor0Angle [i] = angles (0, i);
         }
 
         cache_p.feedpa_p.assign (feed_paCalculate (time, msd_p, nAnt, mEpoch, receptor0Angle));

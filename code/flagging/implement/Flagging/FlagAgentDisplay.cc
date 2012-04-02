@@ -384,11 +384,11 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     if(dataDisplay_p)
       {
 	// Make and send plots for each polarization
-	for(int pl=0;pl<nPolarizations_p;pl++)  // Start Correlation Loop
+	for(int pl=0;pl<(int) nPolarizations_p;pl++)  // Start Correlation Loop
 	  {
 	    runningsum=0; runningflag=0;  runningpreflag=0;
 	    origspectrum=0.0; flagspectrum=0.0; precountspec=0.0; countspec=0.0;
-	    for(int ch=0;ch<nChannels;ch++)  // Start Channel Loop
+	    for(int ch=0;ch<(int) nChannels;ch++)  // Start Channel Loop
 	      { 
 		for(uInt tm=0;tm<nTimes;tm++)  // Start Time Loop
 		  {       
@@ -741,7 +741,7 @@ FlagReport
 				    std::vector<int>( ),legendloc,zoomloc,0,false,false);
     if(nPolarizations_p>1)
       {
-	for(Int i=1;i<nPolarizations_p;i++)
+	for(Int i=1;i<(int) nPolarizations_p;i++)
 	  {
 	    panels_p[i] = dataplotter_p->panel( "", "", "", "",
 					    std::vector<int>( ),legendloc,zoomloc,panels_p[i-1].getInt(),false,false);
@@ -754,7 +754,7 @@ FlagReport
 						   std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
     if(nPolarizations_p>1)
       {
-	for(int i=nPolarizations_p+1;i<2*nPolarizations_p;i++)
+	for(int i=(int) nPolarizations_p+1;i<2*nPolarizations_p;i++)
 	  {
 	    panels_p[i] = dataplotter_p->panel( "", "", "", "",
 					    std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
@@ -799,7 +799,7 @@ FlagReport
     loc.push_back("top");
     dataplotter_p->loaddock(dock_xml_p,"bottom",loc,panels_p[0].getInt());
     
-    
+    return True;
     
   }// end buildDataPlotWindow
 
@@ -830,6 +830,8 @@ FlagReport
     loc.push_back("top");
     reportplotter_p->loaddock(report_dock_xml_p,"bottom",loc,report_panels_p[0].getInt());
     
+    return True;
+
   }// end buildReportPlotWindow
   
   
@@ -909,7 +911,7 @@ FlagReport
   
   void FlagAgentDisplay::DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame)
   {
-    if(data.nelements() != xdim*ydim)
+    if(data.nelements() != (uInt) xdim*ydim)
       {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 	*logger_p << LogIO::WARN << "Error in data XY dimensions. Not plotting" << LogIO::POST;
@@ -925,7 +927,7 @@ FlagReport
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void FlagAgentDisplay::DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
+  void FlagAgentDisplay::DisplayLine(Int /*xdim*/, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
     if(xdata.nelements() != ydata.nelements())
       {
@@ -938,7 +940,7 @@ FlagReport
   }
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void FlagAgentDisplay::DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
+  void FlagAgentDisplay::DisplayScatter(Int /*xdim*/, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
     if(xdata.nelements() != ydata.nelements())
       {
@@ -994,7 +996,7 @@ FlagReport
 	  {
 	    Vector<Double>pointerror(2);
 	    Vector<Double>xval(2);
-	    for ( Int onepoint=0; onepoint<error.nelements(); onepoint++)
+	    for ( Int onepoint=0; onepoint<(Int) error.nelements(); onepoint++)
 	      {
 		xval[0]=xdata[onepoint];
 		xval[1]=xdata[onepoint];
@@ -1007,7 +1009,7 @@ FlagReport
 	  {
 	    Vector<Double>pointerror(2);
 	    Vector<Double>xval(2);
-	    for ( Int onepoint=0; onepoint<error.nelements(); onepoint++)
+	    for ( Int onepoint=0; onepoint<(Int) error.nelements(); onepoint++)
 	      {
 		xval[0]=xdata[onepoint];
 		xval[1]=xdata[onepoint];
@@ -1020,7 +1022,7 @@ FlagReport
 	  {
 	    // Check Circle shape ( if not zero, must match xdata,ydata)
 	    Vector<Double>xval(1),yval(1);
-	    for ( Int onepoint=0; onepoint<error.nelements(); onepoint++)
+	    for ( Int onepoint=0; onepoint<(Int) error.nelements(); onepoint++)
 	      {
 		xval[0]=xdata[onepoint];
 		yval[0]=ydata[onepoint];
@@ -1166,6 +1168,7 @@ FlagReport
 </ui>\
 ";
     
+    return True;
     
   }// end of SetLayout
   
@@ -1173,7 +1176,7 @@ FlagReport
   Bool FlagAgentDisplay :: setReportLayout()
   {
     
-    report_dock_xml_p = "\ 
+    report_dock_xml_p = "\
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 <ui version=\"4.0\">\
  <class>dock01</class>\
@@ -1245,6 +1248,7 @@ FlagReport
 </ui>\
 ";
 
+    return True;
 
   }
 

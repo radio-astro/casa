@@ -560,7 +560,7 @@ public:
 	virtual bool nextBuffer() {return false;}
 	virtual bool flushFlags() {return false;}
 	virtual String getTableName() {return String("none");}
-	virtual bool parseExpression(MSSelection &parser) {return true;}
+	virtual bool parseExpression(MSSelection &/*parser*/) {return true;}
 
 	// Set the iteration approach
 	void setIterationApproach(uShort iterationApproach);

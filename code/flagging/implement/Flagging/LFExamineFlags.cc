@@ -114,18 +114,18 @@ namespace casa {
     AlwaysAssert( NumB == baselineFlag.nelements() , AipsError );
 
     // Iterate through the full chunk of data    
-    for(Int bs=0;bs<NumB;bs++) // Start Baseline Loop
+    for(Int bs=0;bs<(Int)NumB;bs++) // Start Baseline Loop
       {
-        AlwaysAssert(bs>=0 && bs<NumB, AipsError);
+        AlwaysAssert(bs>=0 && bs<(Int) NumB, AipsError);
 	Ants(bs,&a1,&a2);
-	AlwaysAssert( a1>=0 && a1<antnames_p.nelements(), AipsError );
-	AlwaysAssert( a2>=0 && a2<antnames_p.nelements(), AipsError );
+	AlwaysAssert( /*a1>=0 && */ a1<antnames_p.nelements(), AipsError );
+	AlwaysAssert( /* a2>=0 && */ a2<antnames_p.nelements(), AipsError );
 	//cout << "baseline : " << bs << " ants : " << a1 << "," << a2 << endl;
 	if( (a1 != a2)  &&  baselineFlag[bs]==True) // If only cross-correlations, and if baseline exists in data
 	  {
-	    for(int pl=0;pl<NumP;pl++)  // Start Correlation Loop
+	    for(int pl=0;pl<(int)NumP;pl++)  // Start Correlation Loop
 	      {
-		for(int ch=0;ch<NumC;ch++)  // Start Channel Loop
+		for(int ch=0;ch<(int)NumC;ch++)  // Start Channel Loop
 		  { 
 		    for(uInt tm=0;tm<NumT;tm++)  // Start Time Loop
 		      {       
@@ -207,7 +207,7 @@ namespace casa {
     allcounts["spw"][spwstr.str()] += chunk_count;
     
     // Accumulate channel counts
-    for(int ch=0;ch<NumC;ch++)
+    for(int ch=0;ch<(int) NumC;ch++)
       { 
 	stringstream chanstr;
 	chanstr << fieldid << ":" << spw << ":" << ch;
@@ -229,7 +229,7 @@ namespace casa {
       }
     
     // Accumulate correlation counts    
-    for(int pl=0;pl<NumP;pl++)  
+    for(int pl=0;pl<(int) NumP;pl++)
       {
 	stringstream corrstr;
 	corrstr << spw << ":" << pl;
@@ -258,7 +258,7 @@ namespace casa {
     vb.msColumns().polarization().corrType().get(0,corrtypes);
 
     corrlist_p.resize(corrtypes.nelements());
-    for(Int i=0;i<corrtypes.nelements();i++)
+    for(Int i=0;i<(int) corrtypes.nelements();i++)
         corrlist_p[i] = Stokes::name((Stokes::StokesTypes)corrtypes[i]);
 
     fieldnames_p = vb.msColumns().field().name().getColumn();

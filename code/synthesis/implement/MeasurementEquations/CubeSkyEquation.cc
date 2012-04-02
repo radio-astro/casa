@@ -650,14 +650,16 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
 
+    ////if people want to use model but it isn't there
+
+    if(!noModelCol_p)
+      noModelCol_p=rvi_p->msColumns().modelData().isNull();
+
     ROVisibilityIterator * oldRvi = NULL;
     VisibilityIterator * oldWvi = NULL;
 
     configureAsyncIo (oldRvi, oldWvi);
 
-    ////if people want to use model but it isn't there
-    if(!noModelCol_p)
-      noModelCol_p=rvi_p->msColumns().modelData().isNull();
 
     //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();

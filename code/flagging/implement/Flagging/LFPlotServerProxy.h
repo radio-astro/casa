@@ -43,7 +43,7 @@ class FlagPlotServerProxy : public PlotServerProxy {
 	    casa::DBusSession::instance( ).dispatcher( ).leave( );
             returnvalue = "Quit";
 	}
-	void closing(const int32_t& panel, const bool &gone) {
+	void closing(const int32_t& /*panel*/, const bool &/*gone*/) {
 	    casa::DBusSession::instance( ).dispatcher( ).leave( );
 	    //std::cout << "closing panel: " << panel << " (" << gone << ")..." << std::endl;
             returnvalue = "Quit";
@@ -89,14 +89,14 @@ class FlagPlotServerProxy : public PlotServerProxy {
 	    }
 	}
 
-	void button(const int32_t& panel, const std::string& name) { 
+	void button(const int32_t& /*panel*/, const std::string& name) {
 	  //std::cout << "button: " << name << "/" << panel << std::endl;
               returnvalue = name;
 	      //	      std::cout << returnvalue << std::endl;
  	      casa::DBusSession::instance( ).dispatcher( ).leave( );
 	}
 
-	void check(const int32_t& panel, const std::string& name, const int32_t& state) {
+	void check(const int32_t& /*panel*/, const std::string& name, const int32_t& state) {
 	  //std::cout << "check: " << name << "/" << panel << " <" << state << ">" << std::endl;
 	  stringstream rval;
 	  rval << name << ":"<< state;

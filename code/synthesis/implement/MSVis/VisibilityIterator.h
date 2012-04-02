@@ -28,28 +28,31 @@
 #ifndef MSVIS_VISIBILITYITERATOR_H
 #define MSVIS_VISIBILITYITERATOR_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Slicer.h>
+#include <casa/BasicSL/String.h>
 #include <casa/Containers/Stack.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <measures/Measures/Stokes.h>
-#include <measures/Measures/MeasConvert.h>
 #include <casa/Quanta/MVDoppler.h>
+#include <casa/aips.h>
 #include <measures/Measures/MCDoppler.h>
 #include <measures/Measures/MDoppler.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/Stokes.h>
+#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MeasurementSets/MSIter.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <scimath/Mathematics/RigidVector.h>
+#include <scimath/Mathematics/SquareMatrix.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBufferComponents.h>
+#include <synthesis/MSVis/VisImagingWeight.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
-#include <casa/BasicSL/String.h>
-#include <scimath/Mathematics/SquareMatrix.h>
-#include <scimath/Mathematics/RigidVector.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <synthesis/MSVis/StokesVector.h>
-#include <synthesis/MSVis/VisImagingWeight.h>
-#include <synthesis/MSVis/VisBufferComponents.h>
-#include <ms/MeasurementSets/MSIter.h>
+
 #include <map>
+#include <set>
+#include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -132,8 +135,6 @@ public:
     static PrefetchColumns prefetchAllColumnsExcept (Int firstColumn, ...);
     static PrefetchColumns prefetchColumns (Int firstColumn, ...);
 };
-
-
 
 } // end namespace asyncio
 
@@ -716,7 +717,7 @@ public:
   const MeasurementSet & getMeasurementSet() const;;
   Int getMeasurementSetId() const;
   Int getNAntennas () const;
-  MEpoch getMEpoch () const;
+  MEpoch getEpoch () const;
   ///////////////MFrequency::Types getObservatoryFrequencyType () const; //???
   ///////////////MPosition getObservatoryPosition () const;
   ///////////////MDirection getPhaseCenter () const;
@@ -777,7 +778,7 @@ protected:
                            MPosition & observatoryPositon,
                            MDirection & phaseCenter,
                            Bool & velocitySelection) const;
-  vector<MeasurementSet> getMeasurementSets () const;
+  std::vector<MeasurementSet> getMeasurementSets () const;
   const MSDerivedValues & getMSD () const; // for use by Async I/O *ONLY*
   // update the DATA slicer
   virtual void updateSlicer();
