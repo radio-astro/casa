@@ -288,7 +288,9 @@ const M &MeasConvert<M>::operator()(typename M::Types mr) {
 template<class M>
 void MeasConvert<M>::init() {
   cvdat = new typename M::MCType();
-  for (Int i=0; i<4; i++) result[i] = new M();
+  for (Int i=0; i<4; i++){
+      result[i] = new M();
+  }
   locres = new typename M::MVType();
 }
 
