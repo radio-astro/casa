@@ -1,4 +1,4 @@
-//# RegionSource.cc: base region factory for generating regions
+//# dtor.cc: classes for managing the notification of deleted objects
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,36 +24,34 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <display/region/RegionSource.h>
+#include <display/Utilities/dtor.h>
 #include <algorithm>
 
 namespace casa {
     namespace viewer {
-	RegionSourceKernel::~RegionSourceKernel( ) {
-	    for ( std::list<Region*>::iterator it = created_regions.begin( ); it != created_regions.end( ); ++it )
-		(*it)->removeNotifiee(this);
+
+	void dtorNotifier::addNotifiee( dtorNotifiee *notifiee ) {
+	    registrants.push_back(notifiee);
 	}
 
-	void RegionSourceKernel::dtorCalled( const dtorNotifier *dtor ) {
-	    std::list<Region*>::iterator it = std::find(created_regions.begin( ), created_regions.end( ), dtor);
-	    if ( it != created_regions.end( ) ) {
-		created_regions.erase(it);
-	    }
+	void dtorNotifier::removeNotifiee( dtorNotifiee *notifiee ) {
+	    std::list<dtorNotifiee*>::iterator it = std::find( registrants.begin( ), registrants.end( ), notifiee );
+	    if ( it != registrants.end( ) ) registrants.erase(it);
 	}
 
-	// this should be declared within RegionSourceKernel::generateExistingRegionUpdates( ),
+	// this should be declared within dtorNotifier::~dtorNotifier( ),
 	// but it chokes gcc version 4.2.1 (Apple Inc. build 5666) (dot 3)
 	struct functor {
-	    void operator( )( Region *element ) { element->emitUpdate( ); }
+	    functor( const dtorNotifier *notifier ) : self(notifier) { }
+	    void operator( )( dtorNotifiee *element ) { element->dtorCalled(self); }
+	    const dtorNotifier *self;
 	};
-	void RegionSourceKernel::generateExistingRegionUpdates( ) {
-	    std::for_each( created_regions.begin( ), created_regions.end( ), functor( ) );
-	}
 
-	void RegionSourceKernel::register_new_region( Region *region ) {
-	    created_regions.push_back(region);
-	    region->addNotifiee(this);
+	dtorNotifier::~dtorNotifier( ) {
+	    std::for_each( registrants.begin( ), registrants.end( ), functor(this) );
 	}
-	
     }
 }
+
+
+	

@@ -1,5 +1,5 @@
 #include <display/region/QtEllipse.qo.h>
-#include <display/region/QtRegionSource.qo.h>
+#include <display/region/RegionSource.h>
 
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/Display/WorldCanvas.h>
@@ -7,10 +7,10 @@
 
 namespace casa {
     namespace viewer {
-	// QtEllipse::QtEllipse( QtRegionSource *factory, double blc_x, double blc_y, double trc_x, double trc_y ) : 
+	// QtEllipse::QtEllipse( RegionSource *factory, double blc_x, double blc_y, double trc_x, double trc_y ) : 
 	// 			QtRegion("ellipse",factory), Ellipse(blc_x, blc_y, trc_x, trc_y) { }
 
-	QtEllipse::QtEllipse( QtRegionSource *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y, bool hold_signals ) :
+	QtEllipse::QtEllipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y, bool hold_signals ) :
 				QtRegion("ellipse",factory, hold_signals), Ellipse(wc, blc_x, blc_y, trc_x, trc_y) { mystate->init( ); }
 
 	QtEllipse::~QtEllipse( ) { }
