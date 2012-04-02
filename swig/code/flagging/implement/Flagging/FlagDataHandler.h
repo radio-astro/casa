@@ -654,6 +654,7 @@ protected:
 
 	// Data Selection ranges
 	bool anySelection_p;
+	bool inrowSelection_p;
 	casa::String arraySelection_p;
 	casa::String fieldSelection_p;
 	casa::String scanSelection_p;

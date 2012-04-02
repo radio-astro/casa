@@ -15,6 +15,7 @@ namespace casa {
 		QtRegionSourceFactory( QtDisplayPanelGui *panel ) : panel_(panel) { }
 		~QtRegionSourceFactory( ) { }
 	    private:
+		RegionSource::shared_kernel_ptr_type kernel_;
 		QtDisplayPanelGui *panel_;
 	};
     }

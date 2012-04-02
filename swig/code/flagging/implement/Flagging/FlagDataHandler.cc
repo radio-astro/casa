@@ -102,6 +102,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 
 	// Initialize selection ranges
 	anySelection_p = false;
+	inrowSelection_p = false;
 	timeSelection_p = String("");
 	baselineSelection_p = String("");
 	fieldSelection_p = String("");
