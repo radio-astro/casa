@@ -1169,8 +1169,8 @@ void PrimaryTable<TYPE>::pt_assign() {
         object_x = assign(FITS::OBJECT);
         telescop_x = assign(FITS::TELESCOP);
         instrume_x = assign(FITS::INSTRUME);
-        //dateobs_x = kwlist_(FITS::DATE_OBS)->asDouble();
-        //datemap_x = kwlist_(FITS::DATE_MAP)->asDouble();
+        dateobs_x = assign(FITS::DATE_OBS);
+        datemap_x = assign(FITS::DATE_MAP);
         //bscale_x = kwlist_(FITS::BSCALE)->asFloat();
         //bzero_x = kwlist_(FITS::BZERO)->asFloat();
         //bunit_x = assign(FITS::BUNIT);
@@ -1179,7 +1179,8 @@ void PrimaryTable<TYPE>::pt_assign() {
 }
 template <class TYPE>
 int PrimaryTable<TYPE>::read() {
-	return PrimaryTable<TYPE>::read();
+	//return PrimaryArray<TYPE>::read();
+        return 0;
 }
 //====================================================================================================
 // write required keywords for PrimaryTable
