@@ -27,27 +27,11 @@ if (APPLE)
 
     elseif (CMAKE_SYSTEM MATCHES ^Darwin-10)
 
-        if (CASA_SYSTEM_PROCESSOR MATCHES x86_64)
-
             set  (casa_packages /opt/casa/darwin10-64b) # Darwin 10 64-bit
-
-        else (CASA_SYSTEM_PROCESSOR MATCHES x86_64)
-
-            set (casa_packages /opt/casa/core2-apple-darwin10) # Darwin 10 32-bit
-
-        endif (CASA_SYSTEM_PROCESSOR MATCHES x86_64)
 
     elseif  (CMAKE_SYSTEM MATCHES ^Darwin-11)
 
-        if (CASA_SYSTEM_PROCESSOR MATCHES x86_64)
-
 	    set  (casa_packages /opt/casa/darwin11) # Darwin 11 64-bit
-
-        else (CASA_SYSTEM_PROCESSOR MATCHES x86_64)
-
-	    messge (FATAL_ERROR "Not expecting Darwin 11 with 32-bit processor")
-
-        endif (CASA_SYSTEM_PROCESSOR MATCHES x86_64)
 
     else()
         message (WARNING "Unsupported Mac: ${CMAKE_SYSTEM}")
