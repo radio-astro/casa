@@ -359,6 +359,17 @@ manually.
     <value></value>
   </param>
 
+  <param type="double" name="jumpmax">
+    <description>
+      The maximum deviation from +/- M_PI for adjacent points to be unwrapped
+      by +/- 2.0*M_PI.  This parameter must always used when the specified
+      iteration axis is "FREQUENCY" (unwrapping along the "TIME" axis).  If the
+      specified iteration axis is "TIME" (unwrapping along the "FREQUENCY"),
+      this parameter selects the type of unwrapping (jumpmax == 0.0 --> use
+      group-delay unwrapping, otherwise jumpmax != 0.0 --> simple unwrapping).
+    </description>
+  </param>
+
 </input>
 
 <returns type="any">
@@ -497,6 +508,17 @@ manually.
       ignored.
     </description>
     <value></value>
+  </param>
+
+  <param type="double" name="jumpmax">
+    <description>
+      The maximum deviation from +/- M_PI for adjacent points to be unwrapped
+      by +/- 2.0*M_PI.  This parameter must always used when the specified
+      iteration axis is "FREQUENCY" (unwrapping along the "TIME" axis).  If the
+      specified iteration axis is "TIME" (unwrapping along the "FREQUENCY"),
+      this parameter selects the type of unwrapping (jumpmax == 0.0 --> use
+      group-delay unwrapping, otherwise jumpmax != 0.0 --> simple unwrapping).
+    </description>
   </param>
 
 </input>

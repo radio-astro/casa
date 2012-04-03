@@ -762,7 +762,9 @@ class specfit_test(unittest.TestCase):
                 if i == 0:
                     exp = 16
                 else:
-                    exp = 7
+                    exp = 6
+                    #print "valid " + str(res["valid"])
+                    #print "*** fwhm " + str(res["gs"]["fwhm"])
                 self.assertTrue(res["valid"].sum() == exp)
             i = i+1
           
