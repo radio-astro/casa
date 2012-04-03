@@ -263,10 +263,6 @@ private:
 // introduced by DBCON.
 // </synopsis>
 
-// <todo asof="1999/08/16">
-//   <li> So far we interpret AN, FQ and SU tables only
-// </todo>
-
 class MSFitsInput
 {
   // This is an implementation helper class used to store 'local' data
@@ -303,8 +299,6 @@ protected:
 
   // Fill the Observation and ObsLog tables
   void fillObsTables();
-  void fillHistoryTable(ConstFitsKeywordList &kwl); 
-
 
   // Fill the main table from the Primary group data
   // if we have enough memory try to do it in mem
@@ -314,6 +308,25 @@ protected:
 
   // Read a binary table extension of type AIPS AN and create an antenna table
   void fillAntennaTable(BinaryTable& bt);
+
+  // Read a binary table extension and update history table
+  void fillHistoryTable(ConstFitsKeywordList& kwl);
+
+  //extract axis information
+  void getAxisInfo(ConstFitsKeywordList&);
+
+  //extract axis information
+  void sortPolarizations();
+
+  void fillPolarizationTable();
+
+   //verify that the fits contains visibility data
+   void checkRequiredAxis();
+
+   void fillSpectralWindowTable(BinaryTable& bt);
+
+  // fill observation, polarization, description, main tables from FITS UV table
+  void fillOtherUVTables(BinaryTable& bt, BinaryTable& fq);
 
   // fill spectralwindow table from FITS FQ table + header info
   void fillSpectralWindowTable(BinaryTable& bt, Int nSpW);

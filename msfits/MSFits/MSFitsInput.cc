@@ -414,7 +414,8 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
            << "obsType=" << obsType
            << LogIO::POST;
            
-    Int nField = 0, nSpW = 0;
+
+
 
     useAltrval = False;
 
@@ -438,6 +439,7 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
     FITSDateUtil::fromFITS(timeVal, epochRef, date, "UTC");
     obsTime(0) = timeVal.second();
     obsTime(1) = timeVal.second();
+    cout << "timeVal=" << timeVal << endl;
     cout << "obstime=" << obsTime(0) << " " << obsTime(1) << endl;
 
     
@@ -460,7 +462,10 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
             //cout << "Data type is " << infile_p->datatype() << endl;
             itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
                    << LogIO::DEBUG1 << "Binary Table HDU ------>>>" << LogIO::POST;
-            while (infile_p->hdutype() == FITS::BinaryTableHDU) {
+
+            BinaryTable* fqTab = 0;
+            while (moreToDo &&
+                   infile_p->hdutype() == FITS::BinaryTableHDU) {
                 itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
                        << LogIO::DEBUG1
                        << "Found binary table of type "
@@ -480,12 +485,13 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
                 if (type.contains("AN")) {
                     nAnt_p = bt->nrows();
                     fillAntennaTable(*bt);
-                //} else if (type.contains("FQ")) {
-                //    nSpW = bt->nrows();
-                //    fillSpectralWindowTable(*bt, nSpW);
                 } 
+                else if (type.contains("FQ")) {
+                	//Int nSpW = bt->nrows();
+                    fqTab = &(*bt);
+                }
                 else if (type.contains("SU")) {
-                    nField = bt->nrows();
+                	Int nField = bt->nrows();
                     fillFieldTable(*bt, nField);
                     setFreqFrameVar(*bt);
                     //in case spectral window was already filled
@@ -494,10 +500,11 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
                     //}
                 } 
                 else if (type.contains("UV")) {
-                    showBinaryTable(*bt);
+                    //showBinaryTable(*bt);
+                    fillOtherUVTables(*bt, *fqTab);
                     //bt->fullTable();
                     moreToDo = false;
-		    }
+		        }
                 else {
                     //bt->fullTable();
                     //infile_p->skip_all(FITS::BinaryTableHDU);
@@ -508,6 +515,8 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
                 itsLog << LogOrigin("MSFitsInput", "readPrimaryTable")
                        << LogIO::DEBUG1 << "<<<------ Binary Table HDU" << LogIO::POST;
             }
+
+            //fill source table
         }
     }
 
@@ -522,13 +531,16 @@ void MSFitsInput::readFitsFile(Int obsType) {
     if (infile_p->hdutype() == FITS::PrimaryGroupHDU) {
         readRandomGroupUVFits(obsType);
     } else if (infile_p->hdutype() == FITS::PrimaryTableHDU) {
-        cout << "Primary Table uvfits not yet handled!" << endl;
+        itsLog << LogOrigin("MSFitsInput", "readFitsFile")
+           << LogIO::SEVERE
+           << "Primary Table uvfits not yet handled!"
+           << LogIO::EXCEPTION;
         //readPrimaryTableUVFits(obsType);
     } 
     else {
         itsLog << LogOrigin("MSFitsInput", "readFitsFile")
-           << LogIO::NORMAL << "unhandled extension type! "
-           << LogIO::POST;
+           << LogIO::SEVERE << "unhandled extension type! "
+           << LogIO::EXCEPTION;
     }
 }
 
@@ -551,6 +563,7 @@ Bool MSFitsInput::checkInput(FitsInput& infile) {
     
     //visibilty must be one of these type
     if (infile.hdutype() != FITS::PrimaryGroupHDU &&
+        infile.hdutype() != FITS::PrimaryArrayHDU &&
     	 infile.hdutype() != FITS::PrimaryTableHDU) {
         itsLog << LogOrigin("MSFitsInput", "checkInput")
                << "Error, neither primary group nor primary table"
@@ -599,6 +612,9 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
         refPix_p(i) = static_cast<Double> (priGroup_p.crpix(i));
         delta_p(i) = static_cast<Double> (priGroup_p.cdelt(i));
     }
+
+    checkRequiredAxis();
+    /*
     // Check if required axes are there
     if (getIndex(coordType_p, "COMPLEX") < 0) {
         itsLog << "Data does not have a COMPLEX axis" << LogIO::EXCEPTION;
@@ -620,7 +636,10 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
             < 0)) {
         itsLog << "Data does not have a DEC axis" << LogIO::EXCEPTION;
     }
+    */
 
+    sortPolarizations();
+    /*
     // Sort out the order of the polarizations and find the sort indices
     // to put them in 'standard' order: PP,PQ,QP,QQ
     const uInt iPol = getIndex(coordType_p, "STOKES");
@@ -701,6 +720,7 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
                     << Stokes::name(cType) << LogIO::POST;
         }
     }
+    */
     // Save the object name, we may need it (for single source fits)
     const FitsKeyword* kwp;
     object_p = (kwp = priGroup_p.kw(FITS::OBJECT)) ? kwp->asString()
@@ -1886,20 +1906,24 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
 
     MSSpWindowColumns& msSpW(msc_p->spectralWindow());
     MSDataDescColumns& msDD(msc_p->dataDescription());
-    MSPolarizationColumns& msPol(msc_p->polarization());
+    ;
     Int iFreq = getIndex(coordType_p, "FREQ");
     Int nChan = nPixel_p(iFreq);
-    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
     // assume spectral line, make source table to allow restfreq to be entered
-    if (nChan > 33)
-        addSourceTable_p = True;
+        if (nChan > 33)
+            addSourceTable_p = True;
 
+    fillPolarizationTable();
+    /*
+    MSPolarizationColumns& msPol(msc_p->polarization());
+    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
     // fill out the polarization info (only single entry allowed in fits input)
     ms_p.polarization().addRow();
     msPol.numCorr().put(0, nCorr);
     msPol.corrType().put(0, corrType_p);
     msPol.corrProduct().put(0, corrProduct_p);
     msPol.flagRow().put(0, False);
+    */
 
     //  Table fqTab=bt.fullTable("",Table::Scratch);
     Table fqTab = bt.fullTable();
@@ -1988,31 +2012,37 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
 }
 
 void MSFitsInput::fillSpectralWindowTable() {
-    MSSpWindowColumns& msSpW(msc_p->spectralWindow());
-    MSDataDescColumns& msDD(msc_p->dataDescription());
-    MSPolarizationColumns& msPol(msc_p->polarization());
-    Int iFreq = getIndex(coordType_p, "FREQ");
-    Int nChan = nPixel_p(iFreq);
-    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
-    // assume spectral line, make source table to allow restfreq to be entered
-    if (nChan > 33)
-        addSourceTable_p = True;
 
+    fillPolarizationTable();
+    /*
+    MSPolarizationColumns& msPol(msc_p->polarization());
+    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
     // fill out the polarization info (only single entry allowed in fits input)
     ms_p.polarization().addRow();
     msPol.numCorr().put(0, nCorr);
     msPol.corrType().put(0, corrType_p);
     msPol.corrProduct().put(0, corrProduct_p);
     msPol.flagRow().put(0, False);
+    */
 
     Int spw = 0;
-    ms_p.spectralWindow().addRow();
-    ms_p.dataDescription().addRow();
 
+    MSDataDescColumns& msDD(msc_p->dataDescription());
+    ms_p.dataDescription().addRow();
     msDD.spectralWindowId().put(spw, spw);
     msDD.polarizationId().put(spw, 0);
     msDD.flagRow().put(spw, False);
 
+    MSSpWindowColumns& msSpW(msc_p->spectralWindow());
+
+    Int iFreq = getIndex(coordType_p, "FREQ");
+    Int nChan = nPixel_p(iFreq);
+
+    // assume spectral line, make source table to allow restfreq to be entered
+    if (nChan > 33)
+        addSourceTable_p = True;
+
+    ms_p.spectralWindow().addRow();
     msSpW.name().put(spw, "none");
     msSpW.ifConvChain().put(spw, 0);
     msSpW.numChan().put(spw, nChan);
@@ -2468,9 +2498,358 @@ void MSFitsInput::updateSpectralWindowTable() {
 
 }
 
-// Local Variables: 
-// compile-command: "gmake MSFitsInput"
-// End: 
+void MSFitsInput::checkRequiredAxis() {
+   // Check if required axes are there
+   if (getIndex(coordType_p, "COMPLEX") < 0) {
+       itsLog << "Data does not have a COMPLEX axis" << LogIO::EXCEPTION;
+   }
+   if (getIndex(coordType_p, "STOKES") < 0) {
+       itsLog << "Data does not have a STOKES axis" << LogIO::EXCEPTION;
+   }
+   if (getIndex(coordType_p, "FREQ") < 0) {
+       itsLog << "Data does not have a FREQ axis" << LogIO::EXCEPTION;
+   }
+   if ((getIndex(coordType_p, "RA") < 0) && (getIndex(coordType_p, "RA---SIN")
+           < 0) && (getIndex(coordType_p, "RA---NCP") < 0) && (getIndex(
+           coordType_p, "RA---SCP") < 0)) {
+       itsLog << "Data does not have a RA axis" << LogIO::EXCEPTION;
+   }
+   if ((getIndex(coordType_p, "DEC") < 0)
+           && (getIndex(coordType_p, "DEC--SIN") < 0) && (getIndex(
+           coordType_p, "DEC--NCP") < 0) && (getIndex(coordType_p, "DEC--SCP")
+           < 0)) {
+       itsLog << "Data does not have a DEC axis" << LogIO::EXCEPTION;
+   }
+}
+
+void MSFitsInput::getAxisInfo(ConstFitsKeywordList& kwl) {
+    // Extracts the axis related info. from the UV table keyword list and
+    // saves them in the arrays.
+	kwl.first();
+    const Regex trailing(" *$");
+
+    const FitsKeyword *kw;
+    String table = (kw = kwl(FITS::EXTNAME)) ? kw->asString() : "";
+    if (!table.contains("UV")) {
+    	 itsLog << "This is not a uv table!" << LogIO::EXCEPTION;
+    }
+    const Int nAxis = kwl(FITS::TFIELDS)->asInt();
+    if (nAxis < 1) {
+        itsLog << "Data has no axes!" << LogIO::EXCEPTION;
+    }
+
+    String tdim = kwl("TDIM")->asString();
+    //cout << "tdim=" << tdim << endl;
+    IPosition ipos;
+    FITSKeywordUtil::fromTDIM(ipos, tdim);
+
+    uInt shp =ipos.nelements();
+    //cout << "ipos=" << shp << endl;
+
+    nPixel_p.resize(shp);
+    refVal_p.resize(shp);
+    refPix_p.resize(shp);
+    delta_p.resize(shp);
+    coordType_p.resize(shp);
+
+    for (uInt i = 0; i < shp; i++) {
+        nPixel_p(i) = ipos(i);
+        if (nPixel_p(i) < 0) {
+            itsLog << "Axes " << i << " cannot have a negative value"
+                    << LogIO::EXCEPTION;
+        }
+        const char* tmp;
+
+        tmp = (String::toString(i + 1).append("CTYP").append(String::toString(nAxis))).chars();
+        coordType_p(i) = String(kwl(tmp)->asString()).before(trailing);
+
+        tmp = (String::toString(i + 1).append("CRVL").append(String::toString(nAxis))).chars();
+        refVal_p(i) = kwl(tmp)->asDouble();
+
+        tmp = (String::toString(i + 1).append("CRPX").append(String::toString(nAxis))).chars();
+        refPix_p(i) = kwl(tmp)->asDouble();
+
+        tmp = (String::toString(i + 1).append("CDLT").append(String::toString(nAxis))).chars();
+        delta_p(i) = kwl(tmp)->asDouble();
+
+        //tmp = (String::toString(i + 1).append("CROT").append(String::toString(nAxis))).chars();
+        //cRot_p(i) = kwl(tmp)->asDouble();
+    }
+    cout << "coordType=" << coordType_p << endl;
+    cout << "refVal=" << refVal_p<< endl;
+    cout << "refPix=" << refPix_p << endl;
+    cout << "delta=" << delta_p << endl;
+}
+
+void MSFitsInput::sortPolarizations() {
+    // Sort out the order of the polarizations and find the sort indices
+    // to put them in 'standard' order: PP,PQ,QP,QQ
+    const uInt iPol = getIndex(coordType_p, "STOKES");
+    const uInt numCorr = nPixel_p(iPol);
+    corrType_p.resize(numCorr);
+    for (uInt i = 0; i < numCorr; i++) {
+        // note: 1-based ref pix
+        corrType_p(i) = ifloor(refVal_p(iPol) + (i + 1 - refPix_p(iPol))
+                * delta_p(iPol) + 0.5);
+        // convert AIPS-convention Stokes description to aips++ enum
+        switch (corrType_p(i)) {
+        case -8:
+            corrType_p(i) = Stokes::YX;
+            break;
+        case -7:
+            corrType_p(i) = Stokes::XY;
+            break;
+        case -6:
+            corrType_p(i) = Stokes::YY;
+            break;
+        case -5:
+            corrType_p(i) = Stokes::XX;
+            break;
+        case -4:
+            corrType_p(i) = Stokes::LR;
+            break;
+        case -3:
+            corrType_p(i) = Stokes::RL;
+            break;
+        case -2:
+            corrType_p(i) = Stokes::LL;
+            break;
+        case -1:
+            corrType_p(i) = Stokes::RR;
+            break;
+        default:
+            if (corrType_p(i) < 0) {
+                itsLog << "Unknown Correlation type: " << corrType_p(i)
+                        << LogIO::EXCEPTION;
+            }
+        }
+    }
+    Vector<Int> tmp(corrType_p.copy());
+    // Sort the polarizations to standard order. Could probably use
+    // GenSortIndirect here.
+    GenSort<Int>::sort(corrType_p);
+    corrIndex_p.resize(numCorr);
+    // Get the sort indices to rearrange the data to standard order
+    for (uInt i = 0; i < numCorr; i++) {
+        for (uInt j = 0; j < numCorr; j++) {
+            if (corrType_p(j) == tmp(i))
+                corrIndex_p[i] = j;
+        }
+    }
+    
+    // Figure out the correlation products from the polarizations
+    corrProduct_p.resize(2, numCorr);
+    corrProduct_p = 0;
+    for (uInt i = 0; i < numCorr; i++) {
+        const Stokes::StokesTypes cType = Stokes::type(corrType_p(i));
+        Fallible<Int> receptor = Stokes::receptor1(cType);
+        Bool warn = False;
+        if (receptor.isValid()) {
+            corrProduct_p(0, i) = receptor;
+        } else if (!warn) {
+            warn = True;
+            itsLog << LogIO::WARN
+                    << "Cannot deduce receptor 1 for correlations of type: "
+                    << Stokes::name(cType) << LogIO::POST;
+        }
+        receptor = Stokes::receptor2(cType);
+        if (receptor.isValid()) {
+            corrProduct_p(1, i) = receptor;
+        } else if (!warn) {
+            warn = True;
+            itsLog << LogIO::WARN
+                    << "Cannot deduce receptor 2 for correlations of type: "
+                    << Stokes::name(cType) << LogIO::POST;
+        }
+    }
+}
+
+void MSFitsInput::fillPolarizationTable() {
+    MSPolarizationColumns& msPol(msc_p->polarization());
+    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
+
+    // fill out the polarization info (only single entry allowed in fits input)
+    ms_p.polarization().addRow();
+    msPol.numCorr().put(0, nCorr);
+    msPol.corrType().put(0, corrType_p);
+    msPol.corrProduct().put(0, corrProduct_p);
+    msPol.flagRow().put(0, False);
+}
+
+void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt) {
+
+    MSSpWindowColumns& msSpW(msc_p->spectralWindow());
+    MSDataDescColumns& msDD(msc_p->dataDescription());
+
+    /*
+    Int iFreq = getIndex(coordType_p, "FREQ");
+    Int nChan = nPixel_p(iFreq);
+    // assume spectral line, make source table to allow restfreq to be entered
+        if (nChan > 33)
+            addSourceTable_p = True;
+
+     //  Table fqTab=bt.fullTable("",Table::Scratch);
+      */
+     const Regex trailing(" *$"); // trailing blanks
+     ConstFitsKeywordList kwl = bt.kwlist();
+     const FitsKeyword* kw;
+     kwl.first();
+     Int nIF = (kw = kwl("NO_IF")) ? kw->asInt() : 1;
+     nIF_p = nIF;
+
+    Table fqTab = bt.fullTable();
+    Int nRow = fqTab.nrow();
+    ROScalarColumn<Int> colFrqSel(fqTab, "FRQSEL");
+    Matrix<Double> ifFreq(nIF_p, nRow);
+    Matrix<Float> chWidth(nIF_p, nRow);
+    Matrix<Float> totalBandwidth(nIF_p, nRow);
+    // The type of the column changes according to the number of entries
+    if (nIF_p == 1) {
+        ROScalarColumn<Double> colIFFreq(fqTab, "IF FREQ");
+        ROScalarColumn<Float> colChWidth(fqTab, "CH WIDTH");
+        ROScalarColumn<Float> colTotalBandwidth(fqTab, "TOTAL BANDWIDTH");
+        for (Int i = 0; i < nRow; i++) {
+            ifFreq(0, i) = colIFFreq(i);
+            chWidth(0, i) = colChWidth(i);
+            totalBandwidth(0, i) = colTotalBandwidth(i);
+        }
+    }
+    else {
+        ROArrayColumn<Double> colIFFreq(fqTab, "IF FREQ");
+        ROArrayColumn<Float> colChWidth(fqTab, "CH WIDTH");
+        ROArrayColumn<Float> colTotalBandwidth(fqTab, "TOTAL BANDWIDTH");
+        colIFFreq.getColumn(ifFreq);
+        colChWidth.getColumn(chWidth);
+        colTotalBandwidth.getColumn(totalBandwidth);
+    }
+
+    Int nSpW = nRow;
+    Int iFreq = getIndex(coordType_p, "FREQ");
+    Int nChan = nPixel_p(iFreq);
+
+    for (Int spw = 0; spw < nSpW; spw++) {
+        ms_p.spectralWindow().addRow();
+        ms_p.dataDescription().addRow();
+
+        msDD.spectralWindowId().put(spw, spw);
+        msDD.polarizationId().put(spw, 0);
+        msDD.flagRow().put(spw, False);
+        Int ifc = 0;
+        Int freqGroup = 0;
+        if (nIF_p > 0) {
+            ifc = spw % nIF_p;
+            freqGroup = spw / nIF_p;
+        }
+        Int fqRow = spw / max(1, nIF_p);
+        if (fqRow != colFrqSel(fqRow) - 1)
+            itsLog << LogOrigin("MSFitsInput", "fillSpectralWindowTable")
+                   << LogIO::SEVERE
+                    << "Trouble interpreting FQ table, id's may be wrong"
+                    << LogIO::POST;
+        msSpW.name().put(spw, "none");
+        msSpW.ifConvChain().put(spw, ifc);
+        msSpW.numChan().put(spw, nChan);
+        Double refChan = refPix_p(iFreq);
+        // using data from FQ table
+        Double refFreq = refVal_p(iFreq) + ifFreq(ifc, fqRow);
+
+        Double chanBandwidth = chWidth(ifc, fqRow);
+        Vector<Double> chanFreq(nChan), resolution(nChan);
+        for (Int i = 0; i < nChan; i++) {
+            chanFreq(i) = refFreq + (i + 1 - refChan) * chanBandwidth;
+        }
+        resolution = abs(chanBandwidth);
+
+        //if altrval (and altrpix) fits keywords exist use
+        //recalucalated values instead of the data form FQ table
+        /*
+        if (useAltrval) {
+
+            refFreq = refFreq_p;
+            chanFreq = chanFreq_p;
+        }
+        */
+        msSpW.chanFreq().put(spw, chanFreq);
+        msSpW.chanWidth().put(spw, resolution);
+        msSpW.effectiveBW().put(spw, resolution);
+        msSpW.refFrequency().put(spw, refFreq);
+        msSpW.resolution().put(spw, resolution);
+        msSpW.totalBandwidth().put(spw, totalBandwidth(ifc, fqRow));
+        if (chanBandwidth > 0) {
+            msSpW.netSideband().put(spw, 1);
+        }
+        else {
+            msSpW.netSideband().put(spw, -1);
+        }
+        msSpW.freqGroup().put(spw, freqGroup);
+        msSpW.freqGroupName().put(spw, "none");
+        msSpW.flagRow().put(spw, False);
+        // set the reference frames for frequency
+        //msSpW.measFreqRef().put(spw, freqsys_p);
+    }
+}
+
+void MSFitsInput::fillOtherUVTables(BinaryTable& bt, BinaryTable& fqTab) {
+    const Regex trailing(" *$"); // trailing blanks
+    //TableRecord btKeywords = bt.getKeywords();
+
+    ConstFitsKeywordList kwl = bt.kwlist();
+    const FitsKeyword* kw;
+
+    kwl.first();
+
+    FitsKeywordList pkw = kwl;
+    cout << "UV table keywords:\n" << pkw << endl;
+
+    //////////fill observation table>>>>>>>>>>>
+    ms_p.observation().addRow();
+    String observer;
+    observer = (kw = kwl(FITS::OBSERVER)) ? kw->asString() : "";
+    observer = observer.before(trailing);
+    MSObservationColumns msObsCol(ms_p.observation());
+    msObsCol.observer().put(0, observer);
+    String telescope = (kw = kwl(FITS::TELESCOP)) ? kw->asString() : "unknown";
+    telescope = telescope.before(trailing);
+    if (telescope == "HATCREEK")
+        telescope = "BIMA";
+    String instrume = (kw = kwl(FITS::INSTRUME)) ? kw->asString() : "unknown";
+    instrume = instrume.before(trailing);
+    msObsCol.telescopeName().put(0, telescope);
+    msObsCol.scheduleType().put(0, "");
+    msObsCol.project().put(0, "");
+
+    Double epoch = (kw = kwl(FITS::EPOCH)) ? kw->asDouble() : 2000;
+
+    String date;
+    date = (kw = kwl(FITS::DATE_OBS)) ? kw->asString() : "";
+    if (date == "")
+        date = "2000-01-01";
+    String date_map;
+    date_map = (kw = kwl(FITS::DATE_MAP)) ? kw->asString() : "";
+    MVTime timeVal, timeRel;
+    MEpoch::Types epochRef;
+    FITSDateUtil::fromFITS(timeVal, epochRef, date, "UTC");
+    FITSDateUtil::fromFITS(timeRel, epochRef, date_map, "UTC");
+    Vector<Double> times(2);
+    times(0) = timeVal.second();
+    times(1) = timeVal.second(); 
+    obsTime(0) = times(0);
+    obsTime(1) = times(1);
+
+    msObsCol.timeRange().put(0, times);
+    msObsCol.releaseDate().put(0, timeRel.second());
+    msObsCol.flagRow().put(0, False);
+    //<<<<<<<<<<<<<<<fill observation table/////////
+
+
+    fillHistoryTable(kwl);
+
+    getAxisInfo(kwl);
+    sortPolarizations();
+    fillPolarizationTable();
+    fillSpectralWindowTable(fqTab);
+}
+
 
 } //# NAMESPACE CASA - END
 
