@@ -54,7 +54,7 @@ namespace casa {
 	    Q_OBJECT
 	    public:
 
-		enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeLabel, RegionChangeDelete };
+		enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeLabel, RegionChangeDelete, RegionChangeStatsUpdate };
 
 		// create a deginerate region just to gain access to the load regions dialog...
 		QtRegion( QtRegionSourceKernel *factory );

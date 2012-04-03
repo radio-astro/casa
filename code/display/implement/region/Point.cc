@@ -25,7 +25,7 @@ namespace casa {
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 	    double wx, wy;
-	    linear_to_world( wc_, blc_x, blc_y, wx, wy );
+	    try { linear_to_world( wc_, blc_x, blc_y, wx, wy ); } catch (...) { return 0; }
 	    const Vector<String> &units = wc_->worldAxisUnits( );
 
 	    Quantity qx( wx, units[0] );
@@ -33,8 +33,8 @@ namespace casa {
 
 	    const DisplayData *dd = wc_->displaylist().front();
 
-	    Vector<Stokes::StokesTypes> stokes;
-	    Int polaxis = CoordinateUtil::findStokesAxis(stokes, cs);
+	    // Vector<Stokes::StokesTypes> stokes;
+	    // Int polaxis = CoordinateUtil::findStokesAxis(stokes, cs);
 
 	    AnnSymbol *symbol = 0;
 	    try {
@@ -57,10 +57,10 @@ namespace casa {
 	    type = PointRegion;
 
 	    double wblc_x, wblc_y;
-	    linear_to_world( wc_, blc_x, blc_y, wblc_x, wblc_y );
+	    try { linear_to_world( wc_, blc_x, blc_y, wblc_x, wblc_y ); } catch(...) { return; }
 
 	    double pblc_x, pblc_y;
-	    linear_to_pixel( wc_, blc_x, blc_y, pblc_x, pblc_y );
+	    try { linear_to_pixel( wc_, blc_x, blc_y, pblc_x, pblc_y ); } catch(...) { return; }
 
 	    pixel_pts.resize(1);
 	    pixel_pts[0].first = pblc_x;
@@ -81,7 +81,7 @@ namespace casa {
 	    regionCenter( center_x, center_y );
 
 	    int x, y;
-	    linear_to_screen( wc_, blc_x, blc_y, x, y );
+	    try { linear_to_screen( wc_, blc_x, blc_y, x, y ); } catch(...) { return; }
 	    // drawing symbols would slot in here...
 	    pc->drawFilledRectangle( x-1, y-1, x+1, y+1 );
 
@@ -99,7 +99,7 @@ namespace casa {
 
 	bool Point::clickWithin( double xd, double yd ) const {
 	    int x, y, ptx, pty;
-	    linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty );
+	    try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return false; }
 	    if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius )
 		return true;
 	    else
@@ -110,7 +110,7 @@ namespace casa {
 	Region::PointInfo Point::checkPoint( double xd, double yd ) const {
 	    unsigned int result = 0;
 	    int x, y, ptx, pty;
-	    linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty );
+	    try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return Region::PointInfo(0,0,PointOutside); }
 
 	    if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius )
 		result |= PointInside;
@@ -125,7 +125,7 @@ namespace casa {
 	    if ( visible_ == false ) return result;
 
 	    int x, y, ptx, pty;
-	    linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty );
+	    try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return 0; }
 
 	    if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius ) {
 		result |= MouseSelected;
