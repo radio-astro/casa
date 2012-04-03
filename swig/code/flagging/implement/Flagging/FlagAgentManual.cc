@@ -36,7 +36,7 @@ FlagAgentManual::~FlagAgentManual()
 }
 
 bool
-FlagAgentManual::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentManual::computeRowFlags(const VisBuffer &/*visBuffer*/, FlagMapper &/*flags*/, uInt /*row*/)
 {
 	return true;
 

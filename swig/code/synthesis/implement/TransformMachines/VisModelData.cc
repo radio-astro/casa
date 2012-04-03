@@ -212,7 +212,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
 
 
-  void VisModelData::addModel(const Record& rec,  const Vector<Int>& msids, const VisBuffer& vb){
+  void VisModelData::addModel(const Record& rec,  const Vector<Int>& /*msids*/, const VisBuffer& vb){
     
 
 

@@ -32,8 +32,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagMSHandler::FlagMSHandler(string msname, uShort iterationApproach, Double timeInterval):
-		FlagDataHandler(msname,iterationApproach,timeInterval)
+FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double timeInterval):
+		FlagDataHandler(tablename,iterationApproach,timeInterval)
 {
 	selectedMeasurementSet_p = NULL;
 	originalMeasurementSet_p = NULL;
@@ -72,7 +72,7 @@ FlagMSHandler::open()
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
-	originalMeasurementSet_p = new MeasurementSet(msname_p,Table::Update);
+	originalMeasurementSet_p = new MeasurementSet(tablename_p,Table::Update);
 
 	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
@@ -107,67 +107,67 @@ FlagMSHandler::open()
 				case Stokes::Q:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product Q found" << LogIO::POST;
-					corrProducts_p->push_back("Q");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("Q")) == corrProducts_p->end()) corrProducts_p->push_back("Q");
 					break;
 				}
 				case Stokes::U:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product U found" << LogIO::POST;
-					corrProducts_p->push_back("U");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("U")) == corrProducts_p->end()) corrProducts_p->push_back("U");
 					break;
 				}
 				case Stokes::V:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product V found" << LogIO::POST;
-					corrProducts_p->push_back("V");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("V")) == corrProducts_p->end()) corrProducts_p->push_back("V");
 					break;
 				}
 				case Stokes::XX:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product XX found" << LogIO::POST;
-					corrProducts_p->push_back("XX");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("XX")) == corrProducts_p->end()) corrProducts_p->push_back("XX");
 					break;
 				}
 				case Stokes::YY:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product YY found" << LogIO::POST;
-					corrProducts_p->push_back("YY");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("YY")) == corrProducts_p->end()) corrProducts_p->push_back("YY");
 					break;
 				}
 				case Stokes::XY:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product XY found" << LogIO::POST;
-					corrProducts_p->push_back("XY");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("XY")) == corrProducts_p->end()) corrProducts_p->push_back("XY");
 					break;
 				}
 				case Stokes::YX:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product YX found" << LogIO::POST;
-					corrProducts_p->push_back("YX");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("YX")) == corrProducts_p->end()) corrProducts_p->push_back("YX");
 					break;
 				}
 				case Stokes::RR:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product RR found" << LogIO::POST;
-					corrProducts_p->push_back("RR");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("RR")) == corrProducts_p->end()) corrProducts_p->push_back("RR");
 					break;
 				}
 				case Stokes::LL:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product LL found" << LogIO::POST;
-					corrProducts_p->push_back("LL");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("LL")) == corrProducts_p->end()) corrProducts_p->push_back("LL");
 					break;
 				}
 				case Stokes::RL:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product RL found" << LogIO::POST;
-					corrProducts_p->push_back("RL");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("RL")) == corrProducts_p->end()) corrProducts_p->push_back("RL");
 					break;
 				}
 				case Stokes::LR:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product LR found" << LogIO::POST;
-					corrProducts_p->push_back("LR");
+					if (find(corrProducts_p->begin(),corrProducts_p->end(),String("LR")) == corrProducts_p->end()) corrProducts_p->push_back("LR");
 					break;
 				}
 				default:
@@ -348,7 +348,7 @@ FlagMSHandler::checkMaxMemory()
 		if (groupTimeSteps_p)
 		{
 			rwVisibilityIterator_p->setRowBlocking(rwVisibilityIterator_p->nRowChunk());
-			if (rwVisibilityIterator_p->nRowChunk() > maxChunkRows) maxChunkRows = rwVisibilityIterator_p->nRowChunk();
+			if (rwVisibilityIterator_p->nRowChunk() > (Int) maxChunkRows) maxChunkRows = rwVisibilityIterator_p->nRowChunk();
 		}
 
 		// Iterate over vis buffers
@@ -665,7 +665,7 @@ FlagMSHandler::nextBuffer()
 		if (bufferNo == 1)
 		{
 			String corrs = "[ ";
-			for (uInt corr_i=0;corr_i<visibilityBuffer_p->get()->nCorr();corr_i++)
+			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
 			{
 				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
 			}

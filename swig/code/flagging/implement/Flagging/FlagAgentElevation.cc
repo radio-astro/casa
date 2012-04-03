@@ -162,7 +162,7 @@ FlagAgentElevation::preProcessBufferCore(const VisBuffer &visBuffer)
 }
 
 bool
-FlagAgentElevation::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentElevation::computeRowFlags(const VisBuffer &/*visBuffer*/, FlagMapper &/*flags*/, uInt row)
 {
     double antenna1_elevation = antennaPointingMap_p.at(row).at(0);
     double antenna2_elevation = antennaPointingMap_p.at(row).at(1);

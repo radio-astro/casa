@@ -31,8 +31,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double timeInterval):
-		msname_p(msname), iterationApproach_p(iterationApproach)
+FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Double timeInterval):
+		tablename_p(tablename), iterationApproach_p(iterationApproach)
 {
 	// Initialize logger
 	logger_p = new LogIO(LogOrigin("FlagDataHandler",__FUNCTION__,WHERE));
@@ -1693,7 +1693,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (WVR - I) not available");
+			//throw AipsError("Requested correlation product (WVR - I) not available");
 		}
 	}
 	if (expression_p.find("XX") != string::npos)
@@ -1709,7 +1709,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (XX) not available");
+			//throw AipsError("Requested correlation product (XX) not available");
 		}
 	}
 	if (expression_p.find("YY") != string::npos)
@@ -1725,7 +1725,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (YY) not available");
+			//throw AipsError("Requested correlation product (YY) not available");
 		}
 	}
 	if (expression_p.find("XY") != string::npos)
@@ -1741,7 +1741,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (XY) not available");
+			//throw AipsError("Requested correlation product (XY) not available");
 		}
 	}
 	if (expression_p.find("YX") != string::npos)
@@ -1757,7 +1757,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (YX) not available");
+			//throw AipsError("Requested correlation product (YX) not available");
 		}
 	}
 	if (expression_p.find("RR") != string::npos)
@@ -1773,7 +1773,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (RR) not available");
+			//throw AipsError("Requested correlation product (RR) not available");
 		}
 	}
 	if (expression_p.find("LL") != string::npos)
@@ -1789,7 +1789,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (LL) not available");
+			//throw AipsError("Requested correlation product (LL) not available");
 		}
 	}
 	if (expression_p.find("LR") != string::npos)
@@ -1805,7 +1805,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (LR) not available");
+			//throw AipsError("Requested correlation product (LR) not available");
 		}
 	}
 	if (expression_p.find("RL") != string::npos)
@@ -1821,7 +1821,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested polarization parameter (RL) not available");
+			//throw AipsError("Requested correlation product (RL) not available");
 		}
 	}
 	if (expression_p.find("I") != string::npos)
@@ -1857,7 +1857,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Stokes parameter (I) cannot be computed from available polarizations");
+			//throw AipsError("Requested Stokes parameter (I) cannot be computed from available polarizations");
 		}
 	}
 	if (expression_p.find("Q") != string::npos)
@@ -1893,7 +1893,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Stokes parameter (Q) cannot be computed from available polarizations");
+			//throw AipsError("Requested Stokes parameter (Q) cannot be computed from available polarizations");
 		}
 	}
 	if (expression_p.find("U") != string::npos)
@@ -1929,7 +1929,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Stokes parameter (U) cannot be computed from available polarizations");
+			//throw AipsError("Requested Stokes parameter (U) cannot be computed from available polarizations");
 		}
 	}
 	if ((expression_p.find("V") != string::npos) and (expression_p.find("WVR") == string::npos))
@@ -1965,7 +1965,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Stokes parameter (V) cannot be computed from available polarizations");
+			//throw AipsError("Requested Stokes parameter (V) cannot be computed from available polarizations");
 		}
 	}
 	if (expression_p.find("Sol1") != string::npos)
@@ -1981,7 +1981,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Calibration solution element (Sol1) not available");
+			//throw AipsError("Requested Calibration solution element (Sol1) not available");
 		}
 	}
 	if (expression_p.find("Sol2") != string::npos)
@@ -1997,7 +1997,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Calibration solution element (Sol1) not available");
+			//throw AipsError("Requested Calibration solution element (Sol1) not available");
 		}
 	}
 	if (expression_p.find("Sol3") != string::npos)
@@ -2013,7 +2013,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Calibration solution element (Sol1) not available");
+			//throw AipsError("Requested Calibration solution element (Sol1) not available");
 		}
 	}
 	if (expression_p.find("Sol4") != string::npos)
@@ -2029,14 +2029,14 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 		}
 		else
 		{
-			throw AipsError("Requested Calibration solution element (Sol1) not available");
+			//throw AipsError("Requested Calibration solution element (Sol1) not available");
 		}
 	}
 
 
 	if (!matchExpression)
 	{
-		throw AipsError("Unknown polarization requested, (" + expression_p + ") supported types are: XX,YY,XY,YX,RR,LL,RL,LR,I,Q,U,V");
+		//throw AipsError("Unknown polarization requested, (" + expression_p + ") supported types are: XX,YY,XY,YX,RR,LL,RL,LR,I,Q,U,V");
 	}
 }
 
@@ -2365,7 +2365,7 @@ FlagMapper::setExpressionMapping(vector< vector<uInt> > selectedCorrelations)
 	selectedCorrelations_p = selectedCorrelations;
 	if (selectedCorrelations_p.empty())
 	{
-		throw AipsError("None of the correlations is eligible for flagging");
+		//throw AipsError("None of the correlations is eligible for flagging");
 	}
 }
 

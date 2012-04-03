@@ -150,7 +150,7 @@ namespace casa {
 	    double lin_blc_x, lin_blc_y, lin_trc_x, lin_trc_y;
 	    boundingRectangle( lin_blc_x, lin_blc_y, lin_trc_x, lin_trc_y );
 	    int blc_x, blc_y, trc_x, trc_y;
-	    linear_to_screen( wc_, lin_blc_x, lin_blc_y, lin_trc_x, lin_trc_y, blc_x, blc_y, trc_x, trc_y );
+	    try { linear_to_screen( wc_, lin_blc_x, lin_blc_y, lin_trc_x, lin_trc_y, blc_x, blc_y, trc_x, trc_y ); } catch(...) { return; }
 
 	    int x, y;
 	    int dx, dy;
@@ -342,13 +342,13 @@ namespace casa {
 		// this impiles that the coordinate system does not have a direction coordinate...
 		// so it is probably a measurement set... treat as a pixel coordinate for now...
 		double center_x, center_y;
-		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
+		try { linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y ); } catch(...) { return; }
 		x = as_string(center_x);
 		y = as_string(center_y);
 
 		// set bounding width/height
 		double p_blc_x, p_blc_y, p_trc_x, p_trc_y;
-		linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y );
+		try { linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y ); } catch(...) { return; }
 		bounding_width = fabs(p_trc_x-p_blc_x);
 		bounding_height = fabs(p_trc_y-p_blc_y);
 
@@ -363,7 +363,7 @@ namespace casa {
 	    // seting bounding units
 	    if ( bounding_units == "pixel" ) {
 		double p_blc_x, p_blc_y, p_trc_x, p_trc_y;
-		linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y );
+		try { linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y ); } catch(...) { return; }
 		bounding_width = fabs(p_trc_x-p_blc_x);
 		bounding_height = fabs(p_trc_y-p_blc_y);
 	    } else {
@@ -371,11 +371,11 @@ namespace casa {
 	    }
 
 	    if ( coord == cvcs ) {
-		linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y );
+		try { linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y ); } catch(...) { return; }
 		convert_units( result_x, units[0], new_x_units, result_y, units[1], new_y_units );
 
 	    } else {
-		linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y );
+		try { linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y ); } catch(...) { return; }
 		Quantum<Vector<double> > result = convert_angle( result_x, units[0], result_y, units[1], cccs, viewer_to_casa(coord) );
 		result_x = result.getValue(as_string(new_x_units))(0);
 		result_y = result.getValue(as_string(new_y_units))(1);
@@ -386,7 +386,7 @@ namespace casa {
 	    
 	    if ( new_x_units == Pixel ) {
 		double center_x, center_y;
-		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
+		try { linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y ); } catch(...) { return; }
 		x = as_string(center_x);
 	    } else if ( new_x_units == Sexagesimal ) {
 		if ( axis_labels(0) == "Declination" || (coord != Region::J2000 && coord != Region::B1950) ) {
@@ -409,7 +409,7 @@ namespace casa {
 
 	    if ( new_y_units == Pixel ) {
 		double center_x, center_y;
-		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
+		try { linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y ); } catch(...) { return; }
 		y = as_string(center_y);
 	    } else if ( new_y_units == Sexagesimal ) {
 		if ( axis_labels(1) == "Declination"  || (coord != Region::J2000 && coord != Region::B1950) ) {
@@ -458,14 +458,14 @@ namespace casa {
 		double pix_x = atof(x.c_str( ));
 		double pix_y = atof(y.c_str( ));
 
-		pixel_to_linear( wc_, pix_x, pix_y, new_center_x, new_center_y );
+		try { pixel_to_linear( wc_, pix_x, pix_y, new_center_x, new_center_y ); } catch(...) { return; }
 
 		double x_off = atof(width.c_str( ))/2.0;
 		double y_off = atof(height.c_str( ))/2.0;
 
 		double dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y;
 
-		pixel_to_linear( wc_, cur_center_x - x_off, cur_center_y - y_off, cur_center_x + x_off, cur_center_y + y_off, dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y );
+		try { pixel_to_linear( wc_, cur_center_x - x_off, cur_center_y - y_off, cur_center_x + x_off, cur_center_y + y_off, dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y ); } catch(...) { return; }
 		double new_blc_x = (dd_blc_x <= dd_trc_x ? dd_blc_x : dd_trc_x);
 		double new_blc_y = (dd_blc_y <= dd_trc_y ? dd_blc_y : dd_trc_y);
 		double new_trc_x = (dd_blc_x >= dd_trc_x ? dd_blc_x : dd_trc_x);
@@ -544,7 +544,7 @@ namespace casa {
 		new_center_y = wrap_angle(yq.getValue("rad"),worldq.getValue()(1));
 
 		// convert new center to linear coordinates...
-		world_to_linear( wc_, new_center_x, new_center_y, new_center_x, new_center_y );
+		try { world_to_linear( wc_, new_center_x, new_center_y, new_center_x, new_center_y ); } catch(...) { return; }
 
 	    }
 
@@ -693,15 +693,18 @@ namespace casa {
 	    static Vector<Double> worldv(2);
 
 	    // BEGIN - critical section
-	    if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
+	    if ( cs.nWorldAxes( ) != worldv.nelements( ) )
 		worldv.resize(cs.nWorldAxes( ));
-		worldv = cs.referenceValue( );
-	    }
 
-	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) ) {
+	    worldv = cs.referenceValue( );
+
+	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) )
 		pixelv.resize(cs.nPixelAxes( ));
-		pixelv = cs.referencePixel( );
-	    }
+
+	    pixelv = cs.referencePixel( );
+
+	    const DisplayData *dd = wc->displaylist().front();
+	    std::vector<int> vec = dd->displayAxes( );
 
 	    worldv(0) = world_x1;
 	    worldv(1) = world_y1;
@@ -730,15 +733,16 @@ namespace casa {
 
 	    // BEGIN - critical section
 
-	    if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
+	    if ( cs.nWorldAxes( ) != worldv.nelements( ) )
 		worldv.resize(cs.nWorldAxes( ));
-		worldv = cs.referenceValue( );
-	    }
 
-	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) ) {
+	    worldv = cs.referenceValue( );
+
+
+	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) )
 		pixelv.resize(cs.nPixelAxes( ));
-		pixelv = cs.referencePixel( );
-	    }
+
+	    pixelv = cs.referencePixel( );
 
 	    worldv(0) = world_x1;
 	    worldv(1) = world_y1;
@@ -1015,15 +1019,15 @@ namespace casa {
 	    static Vector<Double> worldv(2);
 
 	    // BEGIN - critical section
-	    if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
+	    if ( cs.nWorldAxes( ) != worldv.nelements( ) )
 		worldv.resize(cs.nWorldAxes( ));
-		worldv = cs.referenceValue( );
-	    }
 
-	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) ) {
+	    worldv = cs.referenceValue( );
+
+	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) )
 		pixelv.resize(cs.nPixelAxes( ));
-		pixelv = cs.referencePixel( );
-	    }
+
+	    pixelv = cs.referencePixel( );
 
 	    pixelv(0) = pix_x1;
 	    pixelv(1) = pix_y1;
@@ -1048,15 +1052,15 @@ namespace casa {
 	    static Vector<Double> worldv(2);
 
 	    // BEGIN - critical section
-	    if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
+	    if ( cs.nWorldAxes( ) != worldv.nelements( ) )
 		worldv.resize(cs.nWorldAxes( ));
-		worldv = cs.referenceValue( );
-	    }
 
-	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) ) {
+	    worldv = cs.referenceValue( );
+
+	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) )
 		pixelv.resize(cs.nPixelAxes( ));
-		pixelv = cs.referencePixel( );
-	    }
+
+	    pixelv = cs.referencePixel( );
 
 	    pixelv(0) = pix_x1;
 	    pixelv(1) = pix_y1;

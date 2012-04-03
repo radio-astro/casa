@@ -62,8 +62,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Record getParameters();
 
     // Run the algorithm
-    virtual Bool runMethod(const VisBuffer &inVb, Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
-		   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP)
+    virtual Bool runMethod(const VisBuffer &/*inVb*/, Cube<Float> &/*inVisc*/, Cube<Bool> &/*inFlagc*/,
+                           Cube<Bool> &/*inPreFlagc*/, uInt /*numT*/, uInt /*numAnt*/, uInt /*numB*/,
+                           uInt /*numC*/, uInt /*numP*/)
     {throw(AipsError("DisplayFlags::runMethod requires more inputs than supplied"));};    
 
     // Requires list of other flagmethods

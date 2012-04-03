@@ -173,7 +173,7 @@ FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
 	// Read in channel-frequencies.
 	// RVU : I'm not sure if this should go here, or in the FlagDataHandler so that all agents get it.
 	Vector<Double> flist(visBuffer.frequency());
-	for(Int i=0;i<flist.nelements();i++)
+	for(Int i=0;i<(Int) flist.nelements();i++)
 	  frequencyList[spw].push_back(flist[i]);
 
 	return;
@@ -377,7 +377,7 @@ FlagAgentSummary::buildFlagCountPlots()
                        antkey++)
 		 {
 	                  Int antId = 0; //antCount; // this needs to find the antenna-id for the antenna name.... aaaaah.
-			  for(antId=0; antId<flagDataHandler_p->antennaNames_p->nelements(); antId++)
+			  for(antId=0; antId<(Int) flagDataHandler_p->antennaNames_p->nelements(); antId++)
 			  {
 			          if( flagDataHandler_p->antennaNames_p->operator()(antId) 
                                       == String(antkey->first) ) break;
@@ -413,7 +413,7 @@ FlagAgentSummary::buildFlagCountPlots()
 			  antName1 = antName2 =  String(basekey->first);
 			  antName1 = antName1.before("&&");
 			  antName2 = antName2.after("&&");
-			  for(Int antId=0; antId<flagDataHandler_p->antennaNames_p->nelements(); antId++)
+			  for(Int antId=0; antId<(Int) flagDataHandler_p->antennaNames_p->nelements(); antId++)
 			  {
 			          if( flagDataHandler_p->antennaNames_p->operator()(antId) == antName1 ) antId1 = antId;
 			          if( flagDataHandler_p->antennaNames_p->operator()(antId) == antName2 ) antId2 = antId;

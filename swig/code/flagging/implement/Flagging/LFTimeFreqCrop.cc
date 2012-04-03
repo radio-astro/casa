@@ -249,9 +249,9 @@ namespace casa {
       {
 	// Calc the mean across axes1 (with flags)
 	mval=0.0;mcnt=0;
-	for(uInt i1=0;i1<mind[1];i1++)
+	for(uInt i1=0;i1<(uInt) mind[1];i1++)
 	  {
-	    if(mind[0]==NumC)// if i0 is channel, and i1 is time
+	    if(mind[0]==(Int) NumC)// if i0 is channel, and i1 is time
 	      {
 		if(!flagc(pl,i0,((i1*NumB)+bs)))
 		  {
@@ -286,7 +286,7 @@ namespace casa {
 	  {
 	    /* LineFit to flag off a line fit in frequency */
 	    //flagBP=False;
-	    for(uInt i0=0;i0<mind[0];i0++)
+	    for(uInt i0=0;i0<(uInt) mind[0];i0++)
 	      if(tempDat[i0]==0) tempFlag[i0]=True;
 	    Int maxnp = MaxNPieces;
 	    MaxNPieces=1;
@@ -312,13 +312,13 @@ namespace casa {
 
     // Now, iterate through the data again and flag.
     // This time, iterate in reverse order : for each i1, get all i0
-    for(uInt i1=0;i1<mind[1];i1++)
+    for(uInt i1=0;i1<(uInt) mind[1];i1++)
       {
 	/* Divide (or subtract) out the clean bandpass */
 	tempDat=0,tempFlag=0;
 	for(int i0=0;i0<mind[0];i0++)
 	  {
-	    if(mind[0]==NumC)// if i0 is channel, and i1 is time
+	    if(mind[0]==(Int) NumC)// if i0 is channel, and i1 is time
 	      {
 		tempFlag[i0] = flagc(pl,i0,((i1*NumB)+bs));
 		if(tempFlag[i0]==False) tempDat[i0] = visc(pl,i0,((i1*NumB)+bs))/cleanArr(pl,bs,i0);
@@ -385,7 +385,7 @@ namespace casa {
 	/* Fill the flags into the visbuffer array */
 	for(Int i0=0;i0<mind[0];i0++)
 	  {
-	    if(mind[0]==NumC)// if i0 is channel, and i1 is time
+	    if(mind[0]==(Int) NumC)// if i0 is channel, and i1 is time
 	      {
 		flagc(pl,i0,((i1*NumB)+bs))=tempFlag[i0];
 	      }
@@ -425,7 +425,6 @@ namespace casa {
    */
   Float LFTimeFreqCrop :: calcVar(Vector<Float> vect, Vector<Bool> flag, Vector<Float> fit)
   {
-    Float var=0;
     int n=0,cnt=0;
     n = vect.nelements() < fit.nelements() ? vect.nelements() : fit.nelements();
     for(int i=0;i<n;i++)
@@ -453,7 +452,7 @@ namespace casa {
 	//cout << "validvals : " << validvals << endl;
 	//cout << "median : " << med << endl;
 	
-	for(int i=0;i<validvals.nelements();i++)
+	for(int i=0;i<(int) validvals.nelements();i++)
 	  validvals[i] = fabs( validvals[i]-med );
 	
 	med = median(validvals,False);
@@ -502,7 +501,7 @@ namespace casa {
   void LFTimeFreqCrop :: FitPiecewisePoly(Vector<Float> data, Vector<Bool> flag, Vector<Float> fit)
   {
     //    Int step=0,ind=0;
-    Int deg=0,start=0;
+    Int deg=0;
     Int left=0,right=0;
     //  Int le=0,ri=0;
     Float sd,TOL=3;
@@ -570,7 +569,7 @@ namespace casa {
 	//     if(j==3) {deg = 3;npieces=7;}
 	//     if(j==4) {deg = 3;npieces=8;}
 	
-	npieces = MIN(2*j+1, MaxNPieces);
+	npieces = MIN(2*j+1, (uInt) MaxNPieces);
 	if(j>1) {deg=2;}
 	if(j>2) {deg=3;}
 	deg = MIN(deg,MaxDeg);
@@ -610,10 +609,10 @@ namespace casa {
 	    winstart = i-offset;
 	    winend = i+offset;
 	    if(winstart<0)winstart=0;
-	    if(winend>=tdata.nelements())winend=tdata.nelements()-1;
+	    if(winend>=(uInt) tdata.nelements())winend=tdata.nelements()-1;
 	    if(winend <= winstart) break;
 	    winsum=0.0;
-	    for(uInt wi=winstart;wi<=winend;++wi)
+	    for(uInt wi=winstart;wi<=(uInt) winend;++wi)
 	      winsum += fit[wi];
 	    fit[i] = winsum/(winend-winstart+1);
 	  }
@@ -728,7 +727,6 @@ namespace casa {
   {
     AlwaysAssert(monspec.nelements()==NumC, AipsError);
     Float sd;
-    uInt cnt;
     sd=0.0; 
     
     /*
@@ -751,7 +749,7 @@ namespace casa {
       sd /= NumT;
     */
     
-    for(int ch=0;ch<NumC;ch++)
+    for(int ch=0;ch<(int) NumC;ch++)
       monspec[ch] = cleanBP(pl,bs,ch);;
     
     return True;

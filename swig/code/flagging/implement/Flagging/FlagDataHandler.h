@@ -560,7 +560,7 @@ public:
 	virtual bool nextBuffer() {return false;}
 	virtual bool flushFlags() {return false;}
 	virtual String getTableName() {return String("none");}
-	virtual bool parseExpression(MSSelection &parser) {return true;}
+	virtual bool parseExpression(MSSelection &/*parser*/) {return true;}
 
 	// Set the iteration approach
 	void setIterationApproach(uShort iterationApproach);
@@ -610,7 +610,7 @@ public:
 	casa::LogIO *logger_p;
 
 	// Measurement set section
-	String msname_p;
+	String tablename_p;
 	MSSelection *measurementSetSelection_p;
 	Vector<String> *antennaNames_p;
 	ROScalarMeasColumn<MPosition> *antennaPositions_p;

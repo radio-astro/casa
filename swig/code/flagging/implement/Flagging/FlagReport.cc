@@ -219,6 +219,8 @@ FlagReport::FlagReport(String type,String name, String title, String xlabel,
 	  }
 	
       }
+
+    return True;
   }
   
   //----------------------------------------------------------------------------------------------

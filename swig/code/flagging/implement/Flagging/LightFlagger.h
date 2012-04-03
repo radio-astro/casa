@@ -168,8 +168,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		     uInt numT, uInt numAnt, uInt numB, uInt numC, uInt nPol);
 
     MeasurementSet   ms_p,  mssel_p;
-    VisSet *vs_p;
     MSSelection mss_p;
+    VisSet *vs_p;
 
     // List of flagging agents
     Vector<CountedPtr<LFBase> >  flagmethods_p;

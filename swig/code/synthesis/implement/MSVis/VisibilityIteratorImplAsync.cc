@@ -39,7 +39,7 @@ using namespace casa::asyncio;
                "Modify VisBuffer, mark components as dirty and use VisibilityIterator::writeBack.");
 
 #define ThrowIfNoVbaAttached() \
-        ThrowIf (visBufferAsync_p != 0, "No VisBufferAsync attached to VI; try doing vi.origin() first.");
+        ThrowIf (visBufferAsync_p == 0, "No VisBufferAsync attached to VI; try doing vi.origin() first.");
 
 
 namespace casa {
@@ -133,6 +133,23 @@ ViReadImplAsync::advance ()
     fillVisBuffer ();
 }
 
+Bool
+ViReadImplAsync::allBeamOffsetsZero () const
+{
+    ThrowIf (visBufferAsync_p == NULL, "No attached VisBufferAsync");
+
+    return visBufferAsync_p -> getAllBeamOffsetsZero ();
+}
+
+const Vector<String> &
+ViReadImplAsync::antennaMounts () const
+{
+    ThrowIf (visBufferAsync_p == NULL, "No attached VisBufferAsync");
+
+    return visBufferAsync_p -> getAntennaMounts ();
+}
+
+
 void
 ViReadImplAsync::attachVisBuffer (VisBuffer & vb0)
 {
@@ -159,27 +176,51 @@ ViReadImplAsync::augmentPrefetchColumns (const PrefetchColumns & prefetchColumns
     PrefetchColumns prefetchColumns = prefetchColumnsBase;
 
     if (contains (VisBufferComponents::Direction1, prefetchColumns)){
+        prefetchColumns.insert (VisBufferComponents::AllBeamOffsetsZero);
+        prefetchColumns.insert (VisBufferComponents::AntennaMounts);
         prefetchColumns.insert (VisBufferComponents::Feed1_pa);
+        prefetchColumns.erase (VisBufferComponents::Direction1);
     }
 
     if (contains (VisBufferComponents::Direction2, prefetchColumns)){
+        prefetchColumns.insert (VisBufferComponents::AllBeamOffsetsZero);
+        prefetchColumns.insert (VisBufferComponents::AntennaMounts);
         prefetchColumns.insert (VisBufferComponents::Feed2_pa);
+        prefetchColumns.erase (VisBufferComponents::Direction2);
     }
 
     if (contains (VisBufferComponents::Feed1_pa, prefetchColumns)){
-        prefetchColumns.insert (VisBufferComponents::Feed1);
         prefetchColumns.insert (VisBufferComponents::Ant1);
+        prefetchColumns.insert (VisBufferComponents::Feed1);
+        prefetchColumns.insert (VisBufferComponents::PhaseCenter);
+        prefetchColumns.insert (VisBufferComponents::ReceptorAngles);
         prefetchColumns.insert (VisBufferComponents::Time);
+        prefetchColumns.insert (VisBufferComponents::TimeInterval);
+        prefetchColumns.erase (VisBufferComponents::Feed1_pa);
     }
 
     if (contains (VisBufferComponents::Feed2_pa, prefetchColumns)){
-        prefetchColumns.insert (VisBufferComponents::Feed2);
         prefetchColumns.insert (VisBufferComponents::Ant2);
+        prefetchColumns.insert (VisBufferComponents::Feed2);
+        prefetchColumns.insert (VisBufferComponents::PhaseCenter);
+        prefetchColumns.insert (VisBufferComponents::ReceptorAngles);
         prefetchColumns.insert (VisBufferComponents::Time);
+        prefetchColumns.insert (VisBufferComponents::TimeInterval);
+        prefetchColumns.erase (VisBufferComponents::Feed2_pa);
     }
 
     return prefetchColumns;
 }
+
+const Cube<RigidVector<Double, 2> >&
+ViReadImplAsync::getBeamOffsets () const
+{
+    ThrowIf (visBufferAsync_p == NULL, "No attached VisBufferAsync");
+
+    return visBufferAsync_p -> getBeamOffsets ();
+}
+
+
 
 VisibilityIteratorReadImpl *
 ViReadImplAsync::clone () const
@@ -197,13 +238,15 @@ ViReadImplAsync::construct(const Block<MeasurementSet> & mss,
 {
     AsynchronousInterface::initializeLogging();
 
-    Logger::get()->registerName ("Main");
+    casa::async::Logger::get()->registerName ("Main");
 
     visBufferAsync_p = NULL;
 
     for (uint i = 0; i < mss.size(); i++){
         measurementSets_p.push_back (mss [i]);
     }
+
+    msId_p = -1;
 
     // Create and initialize the Asynchronous Interface
 
@@ -300,6 +343,8 @@ ViReadImplAsync::fillVisBuffer()
 
         Assert (visBufferAsync_p != NULL);
 
+        msId_p = visBufferAsync_p->msId ();
+
         // If a VisBufferAsync is attached, then copy the prefetched VisBuffer into it.
 
         if (! vbaWrapperStack_p.empty ()){
@@ -348,6 +393,14 @@ ViReadImplAsync::getDefaultNBuffers ()
     AipsrcValue<Int>::find (nBuffers, ROVisibilityIterator::getAipsRcBase () + ".nBuffers", 2);
 
     return nBuffers;
+}
+
+MEpoch
+ViReadImplAsync::getEpoch () const
+{
+    ThrowIf (visBufferAsync_p == NULL, "No attached VisBufferAsync");
+
+    return visBufferAsync_p -> mEpoch_p;
 }
 
 //ViReadImplAsync::PrefetchColumns
@@ -413,9 +466,9 @@ ViReadImplAsync::msColumns() const
 Int
 ViReadImplAsync::msId() const
 {
-    ThrowIfNoVbaAttached ();
+    ThrowIf (msId_p < 0, "MS ID value not currently known.");
 
-    return visBufferAsync_p->getOldMSId ();
+    return msId_p;
 }
 
 
@@ -465,6 +518,8 @@ ViReadImplAsync::origin ()
     subchunk_p.resetSubChunk();
 
     fillVisBuffer ();
+
+    updateMsd ();
 }
 
 void
@@ -503,6 +558,27 @@ ViReadImplAsync::readComplete()
         vlaData_p->readComplete (subchunk_p);
     }
 }
+
+void
+ViReadImplAsync::updateMsd ()
+{
+    ThrowIf (visBufferAsync_p == NULL, "No attached VisBufferAsync");
+
+    msd_p.setAntennas (visBufferAsync_p->msColumns().antenna());
+
+    MDirection phaseCenter = visBufferAsync_p -> getPhaseCenter();
+    msd_p.setFieldCenter (phaseCenter);
+}
+
+
+const Cube<Double>&
+ViReadImplAsync::receptorAngles() const
+{
+    ThrowIf (visBufferAsync_p == NULL, "No attached VisBufferAsync");
+
+    return visBufferAsync_p -> getReceptorAngles ();
+}
+
 
 void
 ViReadImplAsync::saveMss (const Block<MeasurementSet> & mss)
@@ -714,6 +790,8 @@ ViWriteImplAsync::putModel(const RecordInterface& rec, Bool iscomponentlist, Boo
                          iscomponentlist, incremental);
 
 }
+
+
 
 void
 ViWriteImplAsync::setFlag(const Matrix<Bool>& flag)

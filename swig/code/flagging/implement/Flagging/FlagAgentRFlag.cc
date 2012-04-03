@@ -220,7 +220,8 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    uInt nDevs = shape[0];
 			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
 			    {
-			    	pair<Int,Int> field_spw = std::make_pair(timedev(dev_i,0),timedev(dev_i,1));
+			    	pair<Int,Int> field_spw = std::make_pair((Int)timedev(dev_i,0),
+			    	                                         (Int)timedev(dev_i,1));
 			    	field_spw_noise_map_p[field_spw] = timedev(dev_i,2);
 			    	user_field_spw_noise_map_p[field_spw] = True;
 			    	*logger_p << LogIO::DEBUG1 << "timedev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
@@ -334,10 +335,10 @@ Double FlagAgentRFlag::median(vector<Double> &data)
 	return med;
 }
 
-Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &dataSquared,vector<Double> &counts)
+Double FlagAgentRFlag::computeThreshold(vector<Double> &data,vector<Double> &/*dataSquared*/,vector<Double> &counts)
 {
 	// Declare working variables
-	Double avg,avgSquared,std;
+	Double avg;//,avgSquared,std;
 
 	// Produce samples for median
 	vector<Double> samplesForMedian(data.size(),0);
@@ -631,10 +632,10 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 	// NOTE: It is better to operate in channel/polarization sequence for data contiguity
 	if ( (noise == 0) or ((noise > 0) and (doflag_p == true) and (prepass_p == false)) )
 	{
-		for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+		for (uInt chan_j=0;chan_j<(uInt)nChannels;chan_j++)
 		{
 			// Compute variance
-			for (uInt pol_k=0;pol_k<nPols;pol_k++)
+			for (uInt pol_k=0;pol_k<(uInt)nPols;pol_k++)
 			{
 				SumWeight = 0;
 				StdTotal = 0;
@@ -647,7 +648,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 				AverageImag = 0;
 				StdImag = 0;
 
-				for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
+				for (uInt timestep_i=timeStart;timestep_i<=(uInt) timeStop;timestep_i++)
 				{
 					// Ignore data point if it is already flagged
 					// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
@@ -711,7 +712,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 	{
 		for (uInt timestep_i=centralTime;timestep_i<=centralTime;timestep_i++)
 		{
-			for (uInt pol_k=0;pol_k<nPols;pol_k++)
+			for (uInt pol_k=0;pol_k<(uInt) nPols;pol_k++)
 			{
 				// NOTE: To apply the robust coefficients we need some initial values of avg/std
 				//       In AIPS they simply use Std=1000 for the first iteration
@@ -730,7 +731,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 					SumImag = 0;
 					SumImagSquare = 0;
 
-					for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+					for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
 					{
 						// Ignore data point if it is already flagged or weight is <= 0
 						// NOTE: In our case visibilities come w/o weights, so we check only vs flags
@@ -781,7 +782,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 
 				if (scutof==0)
 				{
-					for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+					for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
 					{
 						// Ignore data point if it is already flagged
 						// NOTE: In our case visibilities come w/o weights, so we check vs flags instead
@@ -814,7 +815,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 							(StdReal < spectralmin_p) or
 							(StdImag < spectralmin_p)		)
 					{
-						for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+						for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
 						{
 							if (!flags.getModifiedFlags(pol_k,chan_j,timestep_i))
 							{
@@ -826,7 +827,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 					// Check each channel separately vs the scutof level
 					else
 					{
-						for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+						for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
 						{
 							visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
 							if (	(abs(visibility.real()-AverageReal)>scutof) or
@@ -878,7 +879,8 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 }
 
 bool
-FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,
+                                        FlagMapper &flags,Int /*antenna1*/,Int /*antenna2*/,vector<uInt> &/*rows*/)
 {
 	// Set logger origin
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
@@ -948,7 +950,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 
 
 	uInt effectiveNTimeSteps;
-	if (nTimesteps > nTimeSteps_p)
+	if (nTimesteps > (Int) nTimeSteps_p)
 	{
 		effectiveNTimeSteps = nTimeSteps_p;
 	}
@@ -974,7 +976,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 
 	// End time range: Move only central point (only for spectral analysis)
 	// We set start/stop time with decreasing values to deactivate time analysis
-	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<nTimesteps;timestep_i++)
+	for (uInt timestep_i=nTimesteps-effectiveNTimeStepsDelta;timestep_i<(uInt) nTimesteps;timestep_i++)
 	{
 		// computeAntennaPairFlagsCore(field_spw,scutof,nTimesteps-effectiveNTimeSteps,nTimesteps-1,timestep_i,visibilities,flags);
 		computeAntennaPairFlagsCore(field_spw,noise,scutof,-1,-2,timestep_i,visibilities,flags);

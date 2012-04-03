@@ -689,7 +689,7 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	}
 
 	// Print the MS summary stats
-	agents_list_p.msSummary();
+	agents_list_p.tableSummary();
 	if (writeflags)
 		os << LogIO::NORMAL << "=> " << "Writing flags to the MS" << LogIO::POST;
 	else

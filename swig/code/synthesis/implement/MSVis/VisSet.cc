@@ -453,7 +453,9 @@ void VisSet::initCalSet(Int /*calSet*/)
 
 void VisSet::flush() {
   if(iter_p->newMS()){
-    ms_p=(*blockOfMS_p)[iter_p->msId()];
+      Int msId = iter_p->msId();
+
+      ms_p=(*blockOfMS_p)[msId];
   }
   ms_p.flush();
 };

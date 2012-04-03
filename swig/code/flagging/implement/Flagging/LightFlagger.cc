@@ -335,7 +335,7 @@ namespace casa {
 	AlwaysAssert(timecnt == NumT, AipsError);
 	
         // Run all the flagging methods in sequence (except for the display)
-	for(Int i=0; i<flagmethods_p.nelements(); i++)
+	for(Int i=0; i<(Int) flagmethods_p.nelements(); i++)
 	  {
 	    AlwaysAssert(!flagmethods_p[i].null(), AipsError);
 	    //os << "Running method : " << flagmethods_p[i]->methodName() << LogIO::POST;
@@ -473,9 +473,7 @@ namespace casa {
     // Make a copy of the original flags - to compare before/after statistics. Fill this also
     //preflagc.assign(flagc);
     
-    Bool tfl;
     uInt baselineindex = 0, rowindex=0;
-    Int countflags=0, countpnts=0;
     for(uInt pl=0;pl<NumP;pl++)
       {
 	// Iterate through rows in the visbuffer, filling data and flags
@@ -532,7 +530,6 @@ namespace casa {
     AlwaysAssert( VisCubeShp[1] == (flagcube.shape())[1] , AipsError);
     AlwaysAssert( (flagcube.shape())[2] <= NumB , AipsError);
     
-    Bool tfl;
     uInt baselineindex=0;
     Int countflags=0, countpnts=0;
     for(uInt pl=0;pl<NumP;pl++)
@@ -602,7 +599,7 @@ namespace casa {
   //-----------------------------------------------------------------------  
   //  /* Return baseline index from a pair of antenna numbers - upper triangle storage */
   //-----------------------------------------------------------------------  
-  uInt LightFlagger :: BaselineIndex(uInt row, uInt a1, uInt a2)
+  uInt LightFlagger :: BaselineIndex(uInt /*row*/, uInt a1, uInt a2)
   {
     return ( (NumAnt)*((NumAnt)+1)/2 - ((NumAnt)-a1)*((NumAnt)-a1+1)/2 + (a2 - a1) );
   }

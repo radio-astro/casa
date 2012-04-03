@@ -182,7 +182,8 @@ FlagAgentClipping::setAgentParameters(Record config)
 }
 
 bool
-FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
+FlagAgentClipping::computeInRowFlags(const VisBuffer &/*visBuffer*/, VisMapper &visibilities,
+                                     FlagMapper &flags, uInt row)
 {
 	// Get flag cube size
 	Float visExpression;
@@ -194,9 +195,9 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 		visExpression = 0;
 		nAverage = 0;
 
-		for (uInt chan_i=0;chan_i<nChannels;chan_i++)
+		for (uInt chan_i=0;chan_i<(uInt) nChannels;chan_i++)
 		{
-			for (uInt pol_i=0;pol_i<nPols;pol_i++)
+			for (uInt pol_i=0;pol_i<(uInt)nPols;pol_i++)
 			{
 				// If none of the correlations involved in the expression
 				// are flagged, then take into account this channel
@@ -214,9 +215,9 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 			visExpression /= nAverage;
 			if ((*this.*checkVis_p)(visExpression))
 			{
-				for (uInt chan_i=0;chan_i<nChannels;chan_i++)
+				for (uInt chan_i=0;chan_i<(uInt)nChannels;chan_i++)
 				{
-					for (uInt pol_i=0;pol_i<nPols;pol_i++)
+					for (uInt pol_i=0;pol_i<(uInt) nPols;pol_i++)
 					{
 						flags.applyFlag(pol_i,chan_i,row);
 					}
@@ -227,9 +228,9 @@ FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visi
 	}
 	else
 	{
-		for (uInt chan_i=0;chan_i<nChannels;chan_i++)
+		for (uInt chan_i=0;chan_i<(uInt) nChannels;chan_i++)
 		{
-			for (uInt pol_i=0;pol_i<nPols;pol_i++)
+			for (uInt pol_i=0;pol_i<(uInt) nPols;pol_i++)
 			{
 				visExpression = visibilities(pol_i,chan_i,row);
 				if ((*this.*checkVis_p)(visExpression))
