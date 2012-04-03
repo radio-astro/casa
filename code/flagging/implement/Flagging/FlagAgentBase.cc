@@ -185,7 +185,7 @@ FlagAgentBase::initialize()
    flag_p = true;
    /// Mapping config
    dataColumn_p = "data";
-   expression_p = "ABS 1";
+   expression_p = "ABS ALL";
    dataReference_p = DATA;
    /// Profiling and testing config
    profiling_p = false;
