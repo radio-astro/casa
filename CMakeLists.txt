@@ -37,7 +37,7 @@ option (ENABLE_MULTI_THREADING "" NO)
 # links.  Also defines CASA_THREAD_NEUTRAL and USE_BOOST_SHARED_PTR
 # symbols in the compilation flags.
 
-option (CASA_THREAD_NEUTRAL "" YES) 
+option (CASA_THREAD_NEUTRAL "" NO) 
 
 # Define the compiler flags to be used.
 # Note: -Wshadow and -Wunreachable-code give (too) many warnings.
@@ -63,101 +63,6 @@ if (HDF5_ROOT_DIR)
     set (ENV{HDF5_ROOT} ${HDF5_ROOT_DIR})
 endif (HDF5_ROOT_DIR)
 
-###################################
-#
-# CASA_THREAD_NEUTRAL
-#
-# Sets up the build configuration to support CASA thread neutrality
-# by finding the appropriate boost headers and libraries. There are
-# two steps: 1) If the user has not provided the location to start 
-# looking for boost (via BOOST_ROOT) then the location of the CASA
-# distributed packages is determined and made to be the first place
-# searched by the find_package module
-
-# Determine the location of CASA-distributed packages if a primary 
-# directory was not provided.
-
-
-# if (NOT BOOST_ROOT)
-#
-#   # Normally this file will determine where to start looking for the boost
-#   # packages however, the user can override that via the BOOST_ROOT variable.
-#   # N.B.: In theory the user could also specify it using the shell environment but
-#   # by if a value is set before calling find_package, the environmental
-#   # variable is ignored by the FindBoost module.
-#
-#   if (APPLE)
-#
-#     if (CASA_THREAD_NEUTRAL)
-#
-#       # The Apple logic for determining the location is available in code's
-#       # CMakeLists.txt, but there are lots of other quirky things in that which
-#       # ought to be considered before dropping it in here.  So for now just
-#       # issue a warning and ignore this feature on the Apple.
-#
-#       message( WARNING "CASA_THREAD_NEUTRAL not yet supported on Apple hosts." )
-#       set (CASA_THREAD_NEUTRAL NO)
-#
-#     endif (CASA_THREAD_NEUTRAL)
-#
-#   elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
-#
-#     if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-#       set( casa_packages /usr/lib64/casapy )
-#     else()
-#       set( casa_packages /usr/lib/casapy )
-#
-#   else()
-#     message( WARNING "Unsupported system: ${CMAKE_SYSTEM_NAME}" )
-#   endif()
-
-# endif (NOT BOOST_ROOT)
-
-if (CASA_THREAD_NEUTRAL)
-
-    if (NOT BOOST_ROOT)
-
-        include (CasaDistributionFinder RESULT_VARIABLE foundIt)
-
-	if (foundIt STREQUAL NOTFOUND)
-	    message (WARNING "CMake module CasaDistributionFinder required for CASA_THREAD_NEUTRALITY")
-	    message (WARNING "unless BOOST_ROOT is set.")
-            message (FATAL_ERROR "Could not find find CasaDistributionFinder module.")
-	endif (foundIt STREQUAL NOTFOUND)
-
-        set( BOOST_ROOT ${casa_packages}/include)
-
-    endif(NOT BOOST_ROOT)
-
-    set( boost_components thread serialization)
-    set( min_boost_version 1.41.0)
-
-    find_package( Boost ${min_boost_version} REQUIRED ${boost_components} )
-
-    if (NOT Boost_FOUND)
-      message( FATAL_ERROR "Boost with version >= ${min_boost_version} could not be found. Please check!" )
-    endif (NOT Boost_FOUND)
-
-    set (CASA_THREAD_NEUTRALITY "Yes") # for reporting only
-
-    # Set up these to variables to be used to flesh out a header file template later in
-    # this file.
-
-    set (CASA_THREAD_NEUTRAL_DEFINE "#define CASA_THREAD_NEUTRAL")
-    set (USE_BOOST_SHARED_PTR_DEFINE "#define USE_BOOST_SHARED_PTR")
-
-else (CASA_THREAD_NEUTRAL)
-
-    set (CASA_THREAD_NEUTRALITY "No") # for reporting only
-
-endif (CASA_THREAD_NEUTRAL)
-
-# Now configure the include file so that it records the thread neutrality-related settings for use
-# by outside code using casacore.  When thread neutrality is not enabled the file will
-# end up having no defines it it.  However, if it is not present then the compilations will fail.
-
-configure_file (casa/Utilities/CasaThreadNeutrality.h.in ${CMAKE_BINARY_DIR}/casa/Utilities/CasaThreadNeutrality.h)
-
 #################################
 #
 # Find out which modules to build.
@@ -170,6 +75,10 @@ set (_usebison NO)
 set (_uselapack NO)
 set (_usefits NO)
 set (_usewcs NO)
+#
+# NRAO/ALMA thread neutral build
+#
+include (ThreadNeutral RESULT_VARIABLE foundit)
 set (_modules casa)
 if (NOT ${MODULE} STREQUAL "casa")
     set (_modules ${_modules} tables)
@@ -245,10 +154,6 @@ endif (DL_FOUND)
 if (READLINE_FOUND)
     add_definitions(-DHAVE_READLINE)
 endif (READLINE_FOUND)
-
-if (Boost_FOUND)
-    include_directories (${Boost_INCLUDE_DIRS})
-endif (Boost_FOUND)
 
 # Thread support.
 set(_errmsg "FIXME: Don't know how to enable thread support for ")
