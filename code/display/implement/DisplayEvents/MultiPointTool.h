@@ -96,6 +96,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // returns a set which indicates regions this creator creates...
 	    const std::set<viewer::Region::RegionTypes> &regionsCreated( ) const;
 
+	    RegionToolTypes type( ) const { return POINTTOOL; }
+
 	protected:
 
 	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;
