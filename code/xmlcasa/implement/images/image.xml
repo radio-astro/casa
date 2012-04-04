@@ -4508,8 +4508,9 @@ ERROR ESTIMATES
 
 The reported estimated errors are the maxima from two methods. In the first method, errors are calculated
 according to the description given in AIPS++ Note 224: AIPS++ Least Squares Background available at
-http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (as outlined
-by Ed Fomalont in CAS-1860), the following algorithms are used to compute the various errors.
+http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (Condon et al
+1998AJ.115.1693; Richards et al. 1999MNRAS.306..954), the following algorithms are used to
+compute the various errors.
 
 R = rms of residual image
 P = fitted peak intensity
@@ -4517,8 +4518,8 @@ S = P/R (signal to noise)
 
 longitude error = (FWHM beam width in longitude direction)/(2*S)
 latitude error = (FWHM beam width in latitude direction)/(2*S)
-FWHM of major axis error = (FWHM beam along major axis)/sqrt(S)
-FWHM of minor axis error = (FWHM beam along minor axis)/sqrt(S)
+FWHM of major axis error = (FWHM beam along major axis)/S
+FWHM of minor axis error = (FWHM beam along minor axis)/S
 position angle error is calculated via standard error propogation of the FWHM major and minor axes sizes and errors
 flux error is computed via standard error propogation of the peak intensity and its error and the FWHM major
 and minor axes sizes and their errors.
@@ -4544,6 +4545,8 @@ assumptions do not hold if for example, there is structure in the noise of the i
 by deconvolution has structure), the area being fit lies in a negative bowl, in extended emission, or on an image
 artifact (eg ripple), or the source(s) is nongaussian (eg a disk or more complex function convolved with a gaussian;
 just because something looks gaussian to the human image analysis system does not necessarily mean it is).
+In addition, in the case of an image produced from interferometric observations, the errors given are appropriate for
+good uv plane coverage. They may be a factor of two or more higher for sparse arrays or snapshots.
 In short, fitcomponents() is not a silver bullet for determining parameters in flawed images and reported errors
 should be interpreted cautiously in the vast majority of all "real life" cases. The closer the source being fit is to
 fulfilling these assumptions the more realistic reported errors will be.
