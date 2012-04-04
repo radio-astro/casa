@@ -1165,8 +1165,8 @@ Calibrater::correct()
 
         // Pass each timestamp (VisBuffer) to VisEquation for correction
         Bool calwt(calWt());
-        map <Int, Bool> uncalspw;	// Used to accumulate error messages
-                                        // instead of bombing the user
+        Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
+        uncalspw.set(False);		        // instead of bombing the user
                                         // in a loop.
 
         for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
@@ -1175,8 +1175,6 @@ Calibrater::correct()
 
                 uInt spw = vb->spectralWindow();
                 if (ve_p->spwOK(spw)){
-
-                    uncalspw[spw] = false;
 
                     // If we are going to update the weights, reset them first
                     // TBD: move this to VisEquation::correct?
@@ -1211,11 +1209,7 @@ Calibrater::correct()
 
         // Now that we're out of the loop, summarize any errors.
 
-        Vector<Bool> uncalibrated (uncalspw.size(), False);
-        for (int i = 0; i < uncalspw.size(); i++){
-            uncalibrated [i] = uncalspw [i];
-        }
-        retval = summarize_uncalspws(uncalibrated, "correct");
+        retval = summarize_uncalspws(uncalspw, "correct");
     }
     catch (AipsError x) {
         logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
