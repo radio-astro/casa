@@ -90,9 +90,6 @@ Description:
 ------------
 This class acts as the interface between the ROCTIter and CalAnalysis classes.
 
-NB: I may replace msName(), parType(), polBasis(), and visCal() with a single
-function whose second argument is the keyword name.
-
 In a nutshell:
 --------------
 * The constructor gets the information from the new format calibration table.
@@ -117,6 +114,9 @@ In a nutshell:
     function calculates the desired statistics which are stored in a vector
     of OUTPUT<T> instances.
 
+NB: There are a lot of get/set member functions.  Unfortunately, they could not
+    be overloaded with the same names.
+
 Nested classes:
 ---------------
 OUTPUT<T> - This nested class contains the outputs for the
@@ -127,14 +127,23 @@ Class public member functions:
 CalAnalysis  - This constructor gets information from the new format calibration
                table for further processing by the stats<T>() function.
 ~CalAnalysis - This destructor deallocates the internal memory of an instance.
-msName       - This function returns the associated MS name.
-parType      - This function returns the parameter type (Complex or Float).
-polBasis     - This function returns the polarization basis (linear or
-               circular).
-visCal       - This function returns the visibility calibration type.
+calName      - This member function returns the new format calibration table
+               name private variable.
+msName       - This member function returns the associated MS name private
+               variable.
+visCal       - This member function returns the visibility calibration type
+               private variable.
+parType      - This member function returns the parameter type ("Complex" or
+               "Float") private variable.
+polBasis     - This member function returns the polarization basis ("L" or "C")
+               private variable.
+feed         - This member function returns the feeds private variable.
+time         - This member function returns the times private variable.
+spw          - This member function returns the spws private variable.
+numspw       - This member function returns the number of spws private variable.
 
-Class template public stats member functions:
----------------------------------------------
+Class template public member functions:
+---------------------------------------
 stats<T> - This member function is the main user interface for calculating the
            statistics for all iterations.  Allowed T: CalStats::NONE only
            returns the input data, CalStatsFitter::FIT calculates fit
@@ -142,17 +151,43 @@ stats<T> - This member function is the main user interface for calculating the
 
 Class template public static member functions:
 ----------------------------------------------
-exists<T>       - This member function determines whether a value appears in a
-                  vector.
-uniqueNoSort<T> - This member function returns an unsorted and unique vector
-                  from an input vector.
+exists<T> - This member function determines whether a value appears in a vector.
+unique<T> - This member function returns a unique vector from an input vector.
 
 Class private member functions:
 -------------------------------
-feed        - This member function checks the input feed vector and returns the
+calNameGet  - This member function gets the new format calibration table name
+              from the new format calibration table.
+calNameSet  - This member function sets the new format calibration table name
+              private variable.
+msNameGet   - This member function gets the associated MS name from the new
+              format calibration table.
+msNameSet   - This member function sets the associated MS name private variable.
+visCalGet   - This member function gets the visibility calibration type from the
+              new format calibration table.
+visCalSet   - This member function sets the visibility calibration type private
+              variable.
+parTypeGet  - This member function gets the parameter type ("Complex" or
+              "Float") from the new format calibration table.
+parTypeSet  - This member function sets the parameter type ("Complex" or
+              "Float") private variable.
+polBasisGet - This member function gets the polarization basis ("L" or "C") from
+              the new format calibration table.
+polBasisSet - This member function sets the polarization basis ("L" or "C")
+              private variable.
+feedGet     - This member function gets the feeds from the new format
+              calibration table.
+feedSet     - This member function sets the feeds private variables.
+feedCheck   - This member function checks the input feed vector and returns the
               fixed feed vector.
-time        - This member function checks the time range and returns the
+timeGet     - This member function gets the times from the new format
+              calibration table.
+timeSet     - This member function sets the times private variables.
+timeCheck   - This member function checks the time range and returns the
               corresponding time vector.
+spwGet      - This member function gets the spws from the new format calibration
+              table.
+spwSet      - This member function sets the spws private variables.
 spw_channel - This member functions checks the input spectral window and channel
               vectors and returns the fixed spectral window and channel vectors.
 freq        - This member function creates the total frequency vector based on
@@ -178,22 +213,31 @@ Modification history:
 ---------------------
 2012 Jan 20 - Nick Elias, NRAO
               Initial version created with public member functions CalAnalysis()
-              (generic), ~CalAnalysis(), tableType(), polBasis(); template
-              public stats member function stats<T>(); class template public
-              static functions exists<T>() and uniqueNoSort<T>(); private member
-              functions feed(), time(), spw_channel(), freq(); template private
-              member functions parse(), and select<T>(); and protected member
-              functions CalAnalysis() (default), CalAnalysis() (copy), and
+              (generic), ~CalAnalysis(); template static public member function
+              stats<T>(); template public member functions exists<T>() and
+              unique<T>(); private member functions tableType(), polBasisGet(),
+              feedCheck(), timeCheck(), spw_channel(), freq(); template private
+              member functions parse<T>(), and select<T>(); and protected member
+	      functions CalAnalysis() (default), CalAnalysis() (copy), and
               operator=().
 2012 Feb 14 - Nick Elias, NRAO
               Updated this code to reflect changes in NewCalTabIter (now
               ROCTIter) and other classes.  Added the RAP enum.
 2012 Mar 13 - Nick Elias, NRAO
-              Public member function tableType() renamed to parType().  Public
-              member functions visCal() and msName() added.
+              Public member function tableType() renamed to parTypeGet().
+              Private member functions msNameGet() and visCalGet() added.
 2012 Mar 14 - Nick Elias, NRAO
-              I added the spectral window ID, start channel, and stop channel
-              to the nested OUTPUT<T> class.
+              Spectral window ID, start channel, and stop channel added to the
+              nested OUTPUT<T> class.
+2012 Apr 03 - Nick Elias, NRAO
+              Private member function calNameGet() added.  Public member
+              functions calName(), msName(), visCal(), parType(), and polBasis()
+              added.
+2012 Apr 04 - Nick Elias, NRAO
+              Private member functions calNameSet(), msNameSet(), visCalSet(),
+              parTypeSet(), polBasisSet(), feedGet(), feedSet(), timeGet(),
+              timeSet(), spwGet(), and spwSet() added.  Public member functions
+              feed(), time(), spw(), and numspw() added.
 
 */
 
@@ -228,11 +272,18 @@ class CalAnalysis {
     // Destructor
     virtual ~CalAnalysis( void );
 
-    // Get main table keywords
-    String& parType( const String& oTableName );
-    String& polBasis( const String& oTableName );
-    String& visCal( const String& oTableName );
-    String& msName( const String& oTableName );
+    // Return the calibration table name and keyword private variables
+    String& calName( void ) const;
+    String& msName( void ) const;
+    String& visCal( void ) const;
+    String& parType( void ) const;
+    String& polBasis( void ) const;
+
+    // Get the feeds, times, spws, number of spws, xxx
+    Vector<String>& feed( void ) const;
+    Vector<Double>& time( void ) const;
+    Vector<uInt>& spw( void ) const;
+    uInt& numspw( void ) const;
 
     // Calculate statistics for the specified fields, antennas, time range,
     // feeds, spectral windows, and channels (allowed T: CalStats::NONE gets
@@ -253,23 +304,48 @@ class CalAnalysis {
 
     // Function to return unsorted unique values of a vector
     template <typename T>
-    static Vector<T>& uniqueNoSort( const Vector<T>& oVector );
+    static Vector<T>& unique( const Vector<T>& oVector );
 
   private:
 
+    // Classes for new-format calibration table and iterator
     NewCalTable* poNCT;
     ROCTIter* poNCTIter;
-
-    String oParType;
     
-    uInt uiNumFeed;
-    Vector<String> oFeed;
+    // Get calibration table name and set the private variable
+    String& calNameGet( const String& oTableName );
+    String oCalName; void calNameSet( const String& oCalNameIn );
 
-    uInt uiNumTime;
-    Vector<Double> oTime;
+    // Get associated MS name and set the private variable
+    String& msNameGet( const String& oTableName );
+    String oMSName; void msNameSet( const String& oMSNameIn );
 
-    uInt uiNumSPW;
-    Vector<uInt> oSPW;
+    // Get visibility calibration type and set the private variable
+    String& visCalGet( const String& oTableName );
+    String oVisCal; void visCalSet( const String& oVisCalIn );
+
+    // Get parameter column type and set the private variable
+    String& parTypeGet( const String& oTableName );
+    String oParType; void parTypeSet( const String& oParTypeIn );
+
+    // Get polarization basis and set the private variable
+    String& polBasisGet( const String& oTableName );
+    String oPolBasis; void polBasisSet( const String& oPolBasisIn );
+
+    // Get the feeds and set the private variables
+    Vector<String>& feedGet( const String& oTableName );
+    uInt uiNumFeed; Vector<String> oFeed;
+    void feedSet( const Vector<String>& oFeedIn );
+
+    // Get the times and set the private variables
+    Vector<Double>& timeGet( const String& oTableName );
+    uInt uiNumTime; Vector<Double> oTime;
+    void timeSet( const Vector<Double>& oTimeIn );
+
+    // Get the spws and set the private variables
+    Vector<uInt>& spwGet( const String& oTableName );
+    uInt uiNumSPW; Vector<uInt> oSPW;
+    void spwSet( const Vector<uInt>& oSPWIn );
 
     uInt uiNumFreq;
     Vector<uInt> oNumFreq;
@@ -277,8 +353,9 @@ class CalAnalysis {
 
     // These functions check the inputs against possible values and return
     // unsorted unique values
-    Bool feed( const Vector<String>& oFeedIn, Vector<String>& oFeedOut ) const;
-    Bool time( const Double& dStartTimeIn, const Double& dStopTimeIn,
+    Bool feedCheck( const Vector<String>& oFeedIn,
+        Vector<String>& oFeedOut ) const;
+    Bool timeCheck( const Double& dStartTimeIn, const Double& dStopTimeIn,
         Vector<Double>& oTimeOut ) const;
     Bool spw_channel( const Vector<uInt>& oSPWIn,
         const Vector<uInt>& oStartChannelIn, const Vector<uInt>& oStopChannelIn,
@@ -313,7 +390,7 @@ class CalAnalysis {
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// Start of CalAnalysis::stats<T> template public fit member function
+// Start of CalAnalysis template public member functions
 // -----------------------------------------------------------------------------
 
 /*
@@ -461,13 +538,19 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     return( *poOutput );
   }
 
+  if ( dJumpMax < 0.0 ) {
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "Invalid maximum jump parameter" << LogIO::POST;
+    return( *poOutput );
+  }
 
-  // Check the feeds, time range, spectral windows, channels, and maximum jump
-  // parameter and create the temporary vectors.  The temporary total frequency
-  // vector is also created.
+
+  // Check the feeds, time range, spectral windows, and channels, then create
+  // the temporary vectors.  The temporary total frequency vector is also
+  // created.
 
   Vector<String> oFeedTemp = Vector<String>();
-  Bool bFeed = feed( oFeedIn, oFeedTemp );
+  Bool bFeed = feedCheck( oFeedIn, oFeedTemp );
   if ( !bFeed ) {
     LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid feed ID(s)" << LogIO::POST;
@@ -475,7 +558,7 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
   }
 
   Vector<Double> oTimeTemp = Vector<Double>();
-  Bool bTime = time( dStartTimeIn, dStopTimeIn, oTimeTemp );
+  Bool bTime = timeCheck( dStartTimeIn, dStopTimeIn, oTimeTemp );
   if ( !bTime ) {
     LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid time range" << LogIO::POST;
@@ -498,12 +581,6 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
   if ( !bFreq ) {
     LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid frequencies" << LogIO::POST;
-    return( *poOutput );
-  }
-
-  if ( dJumpMax < 0.0 ) {
-    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << LogIO::WARN << "Invalid maximum jump parameter" << LogIO::POST;
     return( *poOutput );
   }
 
@@ -606,11 +683,11 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 }
 
 // -----------------------------------------------------------------------------
-// End of CalAnalysis::stats<T> template public fit member function
+// End of CalAnalysis template public member functions
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// Start of CalAnalysis static template public member functions
+// Start of CalAnalysis template static public member functions
 // -----------------------------------------------------------------------------
 
 /*
@@ -658,11 +735,11 @@ Bool& CalAnalysis::exists( const T& tValue, const Vector<T>& oValue ) {
 
 /*
 
-CalAnalysis::uniqueNoSort<T>
+CalAnalysis::unique<T>
 
 Description:
 ------------
-This member function returns an unsorted and unique vector from an input vector.
+This member function returns a unique sorted vector from an input vector.
 
 Inputs:
 -------
@@ -670,8 +747,8 @@ oVector - This reference to a Vector<T> instance contains the values.
 
 Outputs:
 --------
-The reference to the unsorted and unique Vector<T> instance, returned via the
-function value.
+The reference to the unique sorted Vector<T> instance, returned via the function
+value.
 
 Modification history:
 ---------------------
@@ -683,14 +760,14 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 template <typename T>
-Vector<T>& CalAnalysis::uniqueNoSort( const Vector<T>& oVector ) {
+Vector<T>& CalAnalysis::unique( const Vector<T>& oVector ) {
 
-  // Initialize the unique and unsorted vector
+  // Initialize the unique vector
 
   Vector<T>* poVectorUnique = new Vector<T>();
 
 
-  // Form the unique and unsorted vector
+  // Form the unique vector
 
   for ( uInt v1=0; v1<oVector.nelements(); v1++ ) {
 
@@ -711,14 +788,22 @@ Vector<T>& CalAnalysis::uniqueNoSort( const Vector<T>& oVector ) {
   }
 
 
-  // Return the unique and unsorted vector
+  // Sort the unique vector
+
+  Sort::Order eOrder = Sort::Ascending;
+  Int iOptions = Sort::QuickSort;
+
+  GenSort<T>::sort( *poVectorUnique, eOrder, (int) iOptions );
+
+
+  // Return the unique sorted vector
 
   return( *poVectorUnique );
 
 }
 
 // -----------------------------------------------------------------------------
-// End of CalAnalysis static template public member functions
+// End of CalAnalysis template static public member functions
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
