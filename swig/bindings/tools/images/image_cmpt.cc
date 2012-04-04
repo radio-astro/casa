@@ -291,18 +291,18 @@ casac::image * image::collapse(
 	}
 }
 
-image* image::imagecalc(const string& outfile, const string& pixels,
-		const bool overwrite) {
+image* image::imagecalc(
+	const string& outfile, const string& pixels,
+	const bool overwrite
+) {
+	LogIO log = _log.get() == 0 ? LogIO() : *_log;
+	log << _ORIGIN;
 	try {
-		if (_log.get() == 0) {
-			_log.reset(new LogIO());
-		}
-		*_log << _ORIGIN;
-		_image.reset(new ImageAnalysis());
-		return new ::casac::image(_image->imagecalc(outfile, pixels, overwrite));
+		std::auto_ptr<ImageAnalysis> ia(new ImageAnalysis());
+		return new ::casac::image(ia->imagecalc(outfile, pixels, overwrite));
 	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+		log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }

@@ -75,7 +75,7 @@ def flagdata2(vis = None,
 
     # DEPRECATE THIS TASK
     casalog.post('**************************************************','WARN')
-    casalog.post('   THIS TASK IS OBSOLETE AND WILL BE DEPRECATED', 'WARN')
+    casalog.post('   THIS TASK (flagdata2) IS OBSOLETE AND WILL BE DEPRECATED', 'WARN')
     casalog.post('','WARN')
     casalog.post('             USE THE TASK tflagdata', 'WARN')
     casalog.post('**************************************************','WARN')

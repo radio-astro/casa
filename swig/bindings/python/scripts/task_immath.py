@@ -313,7 +313,8 @@ def immath(
             lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
             lpolexpr = lpolexpr + ")"
             lpol = tmpFilePrefix + "_lpol.im"
-            _myia.imagecalc(pixels=lpolexpr, outfile=lpol)
+            res = _myia.imagecalc(pixels=lpolexpr, outfile=lpol)
+            res.done()
 
     elif mode=='poli':
         [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
@@ -354,17 +355,16 @@ def immath(
         expr = _immath_expr_from_varnames(expr, varnames, filenames)
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
         try:
-            _myia.imagecalc(pixels=expr, outfile=outfile)
-
+            res = _myia.imagecalc(pixels=expr, outfile=outfile)
+            
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
-            	_myia.open(outfile)
                 csys = _myia.coordsys()
                 if isTPol:
                     csys.setstokes('Ptotal')
                 elif isLPol:
                     csys.setstokes('Plinear')
-                _myia.setcoordsys(csys.torecord())
+                res.setcoordsys(csys.torecord())
             _myia.done()
             if (doPolThresh):
                 _immath_createPolMask(polithresh, lpol, outfile)
@@ -457,7 +457,7 @@ def immath(
 
     try:
         # Do the calculation
-        _myia.imagecalc(pixels=expr, outfile=outfile )
+        res = _myia.imagecalc(pixels=expr, outfile=outfile )
 
         # modify stokes type for polarization intensity image
         if (  mode=="poli" ):                
@@ -466,8 +466,8 @@ def immath(
                 csys.setstokes('Ptotal')
             elif isLPol:
                 csys.setstokes('Plinear')
-            _myia.setcoordsys(csys.torecord())
-
+            res.setcoordsys(csys.torecord())
+        res.done()
         if (doPolThresh):
             _immath_createPolMask(polithresh, lpol, outfile)
 
