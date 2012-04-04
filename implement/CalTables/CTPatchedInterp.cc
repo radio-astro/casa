@@ -439,6 +439,8 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
   Int flparmod=nFPar_/nPar_;    // for indexing the flag Matrices on the par axis
 
+  Bool unWrapPhase=flparmod>1;
+
   //  cout << "nFPar_,nPar_,flparmod = " << nFPar_ << "," << nPar_ << "," << flparmod << endl;
 
   fres=0.0;
@@ -471,6 +473,14 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
       fflgi.set(False);  // none are flagged
       continue;
     }
+
+    if (ifpar%2==1 && unWrapPhase) {
+      for (Int i=1;i<mtresi.nelements();++i) {
+        while ( (mtresi(i)-mtresi(i-1))>C::pi ) mtresi(i)-=C::_2pi;
+        while ( (mtresi(i)-mtresi(i-1))<-C::pi ) mtresi(i)+=C::_2pi;
+      }
+    }
+
 
     // TBD: ensure phases tracked on freq axis...
 
