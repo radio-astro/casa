@@ -94,7 +94,7 @@ table::open(const std::string& tablename, const ::casac::record& lockoptions, co
         rstat = True;
     } catch (AipsError x) {
         *itsLog << LogOrigin(__func__, tablename);
-        *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+        *itsLog << LogIO::SEVERE << LogIO::POST;
         RETHROW(x);
     }
     return rstat;
@@ -128,9 +128,9 @@ table::create(const std::string& tablename, const ::casac::record& tabledesc,
    rstat = True;
  }
  catch (AipsError x) {
-   *itsLog << LogOrigin("create", "")
-           << LogIO::SEVERE
-           << x.getMesg() << LogIO::POST;
+   //*itsLog << LogOrigin("create", "")
+   //        << LogIO::SEVERE
+   //        << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;  
@@ -150,7 +150,7 @@ table::flush()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -170,7 +170,7 @@ table::resync()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -187,7 +187,7 @@ table::close()
     itsTable = 0;
     rstat = True;
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -285,7 +285,7 @@ table::fromfits(const std::string& tablename, const std::string& fitsfile, const
     
     
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -308,7 +308,7 @@ table::copy(const std::string& newtablename, const bool deep, const bool valueco
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST; }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -330,7 +330,7 @@ table::copyrows(const std::string& outtable, const int startrowin, const int sta
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -344,7 +344,7 @@ table::done()
  try {
     rstat = close();
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -362,7 +362,7 @@ table::iswritable()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -380,7 +380,7 @@ table::endianformat()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
      }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -399,7 +399,7 @@ table::lock(const bool write, const int nattempts)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -418,7 +418,7 @@ table::unlock()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -436,7 +436,7 @@ table::datachanged()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -454,7 +454,7 @@ table::haslock(const bool write)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -472,7 +472,7 @@ table::lockoptions()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -490,7 +490,7 @@ table::ismultiused(const bool checksubtables)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -525,7 +525,7 @@ table::browse()
             *itsLog << LogIO::NORMAL << "Table rendered" << LogIO::POST;
          }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -572,7 +572,7 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 		
 	}	    
     } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+	//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
     return rstat;
@@ -593,8 +593,8 @@ table::taql(const std::string& taqlcommand)
              << "No table specified, please open first" << LogIO::POST;
    }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() 
-            << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() 
+    //        << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -629,8 +629,8 @@ table::query(const std::string& query, const std::string& name,
              << "No table specified, please open first" << LogIO::POST;
    }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() 
-            << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() 
+    //        << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -653,7 +653,7 @@ table::calc(const std::string& expr)
 	 }
 	      // TODO : IMPLEMENT ME HERE !
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -671,7 +671,7 @@ table::selectrows(const std::vector<int>& rownrs, const std::string& name)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -690,7 +690,7 @@ table::info()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -713,7 +713,7 @@ table::putinfo(const ::casac::record& value)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -732,7 +732,7 @@ table::addreadmeline(const std::string& value)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -814,8 +814,8 @@ table::summary(const bool recurse)
    }
    // TODO : IMPLEMENT ME HERE !
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE 
-            << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE 
+    //        << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -834,7 +834,7 @@ table::colnames()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -855,7 +855,7 @@ table::rownumbers(const ::casac::record& tab, const int nbytes)
 	 }
 	      // TODO : IMPLEMENT ME HERE !
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -882,7 +882,7 @@ table::setmaxcachesize(const std::string& columnname, const int nbytes)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -900,7 +900,7 @@ table::isscalarcol(const std::string& columnname)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -919,7 +919,7 @@ table::isvarcol(const std::string& columnname)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -964,7 +964,7 @@ table::ncols()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -983,7 +983,7 @@ table::nrows()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1002,7 +1002,7 @@ table::addrows(const int nrow)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1021,7 +1021,7 @@ table::removerows(const std::vector<int>& rownrs)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1045,7 +1045,7 @@ table::addcols(const ::casac::record& desc, const ::casac::record& dminfo)
            *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1064,7 +1064,7 @@ table::renamecol(const std::string& oldname, const std::string& newname)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1083,7 +1083,7 @@ table::removecols(const std::vector<std::string>& columnames)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1102,7 +1102,7 @@ table::iscelldefined(const std::string& columnname, const int rownr)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1121,7 +1121,7 @@ table::getcell(const std::string& columnname, const int rownr)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1140,7 +1140,7 @@ table::getcellslice(const std::string& columnname, const int rownr, const std::v
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1160,7 +1160,7 @@ table::getcol(const std::string& columnname, const int startrow, const int nrow,
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1179,7 +1179,7 @@ table::getvarcol(const std::string& columnname, const int startrow, const int nr
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1199,7 +1199,7 @@ table::getcolslice(const std::string& columnname, const std::vector<int>& blc, c
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1230,7 +1230,7 @@ table::putcell(const std::string& columnname, const std::vector<int>& rownr,
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1262,7 +1262,7 @@ table::putcellslice(const std::string& columnname, const int rownr,
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1293,7 +1293,7 @@ table::putcol(const std::string& columnname, const ::casac::variant& value,
      *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
    }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1324,7 +1324,7 @@ table::putvarcol(const std::string& columnname, const ::casac::record& value,
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1362,7 +1362,7 @@ table::putcolslice(const std::string& columnname, const ::casac::variant& value,
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1382,7 +1382,7 @@ table::getcolshapestring(const std::string& columnname, const int startrow, cons
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1413,7 +1413,7 @@ table::getkeyword(const ::casac::variant& keyword)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1431,7 +1431,7 @@ table::getkeywords()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1467,7 +1467,7 @@ table::getcolkeyword(const std::string& columnname, const ::casac::variant& keyw
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1485,7 +1485,7 @@ table::getcolkeywords(const std::string& columnname)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1517,7 +1517,7 @@ table::putkeyword(const ::casac::variant& keyword, const ::casac::variant& value
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1538,7 +1538,7 @@ table::putkeywords(const ::casac::record& value)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1570,7 +1570,7 @@ table::putcolkeyword(const std::string& columnname, const ::casac::variant& keyw
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1591,7 +1591,7 @@ table::putcolkeywords(const std::string& columnname, const ::casac::record& valu
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1622,7 +1622,7 @@ table::removekeyword(const ::casac::variant& keyword)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1653,7 +1653,7 @@ table::removecolkeyword(const std::string& columnname, const ::casac::variant& k
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1671,7 +1671,7 @@ table::getdminfo()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1690,7 +1690,7 @@ table::keywordnames()
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1709,7 +1709,7 @@ table::fieldnames(const std::string& keyword)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1728,7 +1728,7 @@ table::colkeywordnames(const std::string& columnname)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1747,7 +1747,7 @@ table::colfieldnames(const std::string& columnname, const std::string& keyword)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1765,7 +1765,7 @@ table::getdesc(const bool actual)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1783,7 +1783,7 @@ table::getcoldesc(const std::string& columnname)
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1818,7 +1818,7 @@ table::ok()
 		 rstat = True;
 	 }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1876,7 +1876,7 @@ bool table::fromascii(const std::string& tablename, const std::string& asciifile
       // itsTable = new casa::TableProxy(asciifile, headerfile, String(tablename));
       rstatus = true;
    } catch (AipsError x) {
-      *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
 return rstatus;
@@ -2011,7 +2011,7 @@ bool table::fromASDM(const std::string& tablename, const std::string& xmlfile){
    myXMLUtil.readXMLFile(outTab, XMLfile, tablename);
    rstatus=true;
  } catch (AipsError x) {
-      *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
       RETHROW(x);
  }
 
@@ -2044,7 +2044,7 @@ table::statistics(const std::string& column,
             *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
         }
     } catch (AipsError x) {
-        *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+        //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
         RETHROW(x);
     } catch (std::exception &e) {
         *itsLog << LogIO::SEVERE << e.what() << LogIO::POST;
@@ -2078,7 +2078,7 @@ table::showcache(const bool verbose)
 	 rstat.push_back(cache(i)->tableName());
      } 
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
