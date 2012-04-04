@@ -223,7 +223,7 @@ private:
 	    Array<Bool>& pixelMask, Bool& converged,
 	    Double& zeroLevelOffsetSolution,
 	    Double& zeroLevelOffsetError,
-	    const uInt& chan, const String& stokesString,
+	    const uInt& chan,
 		const Vector<String>& models, Record& inputEstimate,
 		const Bool fitIt,
 		const Bool deconvolveIt, const Bool list,
