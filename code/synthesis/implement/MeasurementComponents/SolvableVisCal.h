@@ -94,6 +94,7 @@ public:
   inline Int&         minblperant()    { return minblperant_; };
   inline String&      apmode()         { return apmode_; };
   inline String&      solint()         { return solint_; };
+  inline String&      fsolint()        { return fsolint_; };
   inline Double&      preavg()         { return preavg_; };
   inline Bool&        solnorm()        { return solnorm_;};
   inline Float&       minSNR()         { return minSNR_; };
@@ -202,6 +203,12 @@ public:
 
   // Hazard a guess at the parameters (solveCPar) given the data
   virtual void guessPar(VisBuffer& vb)=0;
+
+  // Freq-dep solint values 
+  inline Double& fintervalHz() { return fintervalHz_; };
+  inline Double& fintervalCh() { return fintervalCh_(currSpw()); };  // for current Spw
+  Matrix<Int> chanAveBounds()  { return chanAveBounds_(currSpw()); }; // for current Spw
+  Matrix<Int> chanAveBounds(Int spw)  { return chanAveBounds_(spw); }; 
 
   // Access to current solution parameters and matrices
   inline virtual Cube<Complex>& solveCPar()   {return (*solveCPar_[currSpw()]);};
@@ -390,6 +397,9 @@ protected:
   // Set matrix channelization according to a VisSet
   virtual void setSolveChannelization(VisSet& vs);
 
+  // Calculate chan averaging bounds
+  virtual void setFracChanAve();
+
   // Fill CalSet meta-data according to a VisSet
   void fillMetaData(VisSet& vs);
 
@@ -493,8 +503,16 @@ private:
   // Solving mode
   String apmode_;
 
-  // User-specified solint (string)
+  // User-specified time-dep solint (string)
   String solint_;
+
+  // User-specified freq-dep solint info
+  String fsolint_;
+  Double fintervalHz_;
+  Vector<Double> fintervalCh_;   // (nSpw)
+
+  // Channel averaging bounds
+  Vector<Matrix<Int> > chanAveBounds_;  // (nSpw)(2,nOutChan)
 
   // Preavering interval
   Double preavg_;
