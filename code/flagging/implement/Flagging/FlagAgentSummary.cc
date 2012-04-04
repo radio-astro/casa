@@ -470,8 +470,6 @@ FlagAgentSummary::buildFlagCountPlots()
 
             // NOTE: We need to handle directly the storage array, because it seems that the dimension steps are switched
             Array<Float> antScanView( IPosition(2, accumflags["scan"].size(),totalNAnt) , (Float)0);
-            cout 	<< "Dim 1 is " << accumflags["scan"].size() << " step 1 is " << antScanView.steps()[0]
-                    << " Dim 2 is " << totalNAnt << " step 2 is " << antScanView.steps()[1] << endl;
             Bool deleteIt = False;
             Float* antScanViewPtr = antScanView.getStorage(deleteIt);
 

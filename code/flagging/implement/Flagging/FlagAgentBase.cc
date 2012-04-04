@@ -1243,7 +1243,7 @@ FlagAgentBase::isZero(Double number)
 bool
 FlagAgentBase::isNaN(Float number)
 {
-	bool result = isnan(number);
+	bool result = !isfinite(number);
 	chunkNaNs_p += result;
 	return result;
 }
@@ -1251,7 +1251,7 @@ FlagAgentBase::isNaN(Float number)
 bool
 FlagAgentBase::isNaN(Double number)
 {
-	bool result = isnan(number);
+	bool result = !isfinite(number);
 	chunkNaNs_p += result;
 	return result;
 }
