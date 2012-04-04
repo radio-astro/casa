@@ -277,6 +277,13 @@ FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags,
 	{
 	        accumtotal["baseline"][baseline] += rowTotal;
 	        accumflags["baseline"][baseline] += rowFlags;
+	        accumAntScantotal[antenna1][scan] += rowTotal;
+	        accumAntScanflags[antenna1][scan] += rowFlags;
+	        if (antenna1 != antenna2)
+	        {
+	        	accumAntScantotal[antenna2][scan] += rowTotal;
+	        	accumAntScanflags[antenna2][scan] += rowFlags;
+	        }
 	}
 
 	accumTotalFlags += rowFlags;
@@ -435,6 +442,61 @@ FlagAgentSummary::buildFlagCountPlots()
 		 countRepList.addReport( subRep3 );
 	 }
 
+        // jagonzal: CAS-3450
+        if(nBase>0 && baselineCounts==True)
+        {
+        	Int totalNAnt = flagDataHandler_p->antennaNames_p->size();
+        	// Add ant1xant2 summary views
+            FlagReport subRep4 = FlagReport("plotraster",agentName_p,"% Flagged per baseline", "Antenna 1", "Antenna 2");
+            Array<Float> ant1ant2View( IPosition(2, totalNAnt, totalNAnt) , (Float)0);
+            std::pair<Int,Int> ant1ant2;
+            Float percentageFlagged;
+            for (map<std::string, uInt64>::const_iterator	basekey = accumtotal["baseline"].begin();
+            												basekey != accumtotal["baseline"].end();
+            												basekey++)
+            {
+            	ant1ant2 = flagDataHandler_p->baselineToAnt1Ant2_p[basekey->first];
+            	percentageFlagged = (Float)100*((Double)accumflags["baseline"][basekey->first] / (Double)accumtotal["baseline"][basekey->first]);
+            	ant1ant2View(IPosition(2, ant1ant2.first, ant1ant2.second)) = percentageFlagged;
+            	ant1ant2View(IPosition(2, ant1ant2.second, ant1ant2.first)) = percentageFlagged;
+
+            }
+
+            subRep4.addData(ant1ant2View);
+            countRepList.addReport( subRep4 );
+
+            // Add ant1xscan summary views
+            FlagReport subRep5 = FlagReport("plotraster",agentName_p,"% Flagged per antenna and scan", "Scan relative index", "% Flagged per antenna");
+
+            // NOTE: We need to handle directly the storage array, because it seems that the dimension steps are switched
+            Array<Float> antScanView( IPosition(2, accumflags["scan"].size(),totalNAnt) , (Float)0);
+            cout 	<< "Dim 1 is " << accumflags["scan"].size() << " step 1 is " << antScanView.steps()[0]
+                    << " Dim 2 is " << totalNAnt << " step 2 is " << antScanView.steps()[1] << endl;
+            Bool deleteIt = False;
+            Float* antScanViewPtr = antScanView.getStorage(deleteIt);
+
+
+            uInt scanIdx,antennaIdx = 0;
+            for (map<Int, std::map<Int, uInt64> >::const_iterator	antkey = accumAntScantotal.begin();
+            														antkey != accumAntScantotal.end();
+            														antkey++)
+            {
+            	scanIdx = 0;
+            	for (map<Int, uInt64>::const_iterator	scankey = antkey->second.begin();
+            											scankey != antkey->second.end();
+            											scankey++)
+            	{
+            		percentageFlagged = (Float)100*((Double)accumAntScanflags[antkey->first][scankey->first] / (Double)accumAntScantotal[antkey->first][scankey->first]);
+            		antScanViewPtr[totalNAnt*scanIdx + antkey->first] = percentageFlagged;
+            		scanIdx += 1;
+            	}
+            	antennaIdx += 1;
+            }
+
+            subRep5.addData(antScanView);
+            countRepList.addReport( subRep5 );
+        }
+
 
        return countRepList;
 }
@@ -532,6 +594,52 @@ FlagAgentSummary::getResult()
 		}
 
 		result.defineRecord("spw:correlation", stats_key1);
+	}
+
+	if (baselineCounts)
+	{
+		Record stats_key1;
+
+		for (map<Int, map<Int, uInt64> >::iterator key1 = accumAntScantotal.begin();key1 != accumAntScantotal.end();key1++)
+		{
+			// Construct antenna name
+			stringstream antenna_stringStream;
+			antenna_stringStream << flagDataHandler_p->antennaNames_p->operator()(key1->first);
+
+			for (map<Int, uInt64>::const_iterator key2 = key1->second.begin();key2 != key1->second.end();key2++)
+			{
+				// Construct scan name
+				stringstream scan_stringStream;
+				scan_stringStream << key2->first;
+
+				Record stats_key2;
+
+				stats_key2.define("flagged", (Double) accumAntScanflags[key1->first][key2->first]);
+				stats_key2.define("total", (Double) key2->second);
+
+				// Construct spw:correlation string as first key (Polarization already comes as a string)
+				stats_key1.defineRecord(antenna_stringStream.str() + ":" + scan_stringStream.str(), stats_key2);
+
+				// Calculate percentage flagged
+				stringstream percentage;
+				percentage.precision(3);percentage.fixed;
+				if( key2->second > 0 )
+				{
+				  percentage << " (" << 100.0 *
+                                                        (Double) accumAntScanflags[key1->first][key2->first]/
+				    (Double) key2->second << "%)";
+				}
+
+				*logger_p 	<< LogIO::NORMAL
+						<< " Spw:" << key1->first << " Correlation:" << key2->first
+						<< " flagged: " <<  (Double) accumAntScanflags[key1->first][key2->first]
+						<< " total: " <<  (Double) key2->second
+				                << percentage.str()
+						<< LogIO::POST;
+			}
+		}
+
+		result.defineRecord("antenna:scan", stats_key1);
 	}
 
 	for (map<string, map<string, uInt64> >::iterator key1 = accumtotal.begin();key1 != accumtotal.end();key1++)

@@ -83,6 +83,21 @@ FlagMSHandler::open()
 	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
 	antennaPositions_p = new ROScalarMeasColumn<MPosition>(antennaSubTable->positionMeas());
 
+	// File the baseline to Ant1xAnt2 map
+	String baseline;
+	std::pair<Int,Int> ant1ant2;
+	for (Int ant1Idx=0;ant1Idx<antennaNames_p->size();ant1Idx++)
+	{
+		for (Int ant2Idx=ant1Idx+1;ant2Idx<antennaNames_p->size();ant2Idx++)
+		{
+			ant1ant2.first = ant1Idx;
+			ant1ant2.second = ant2Idx;
+			baseline = antennaNames_p->operator()(ant1Idx) + "&&" + antennaNames_p->operator()(ant2Idx);
+			baselineToAnt1Ant2_p[baseline] = ant1ant2;
+			Ant1Ant2ToBaseline_p[ant1ant2] = baseline;
+		}
+	}
+
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
 	fieldNames_p = new Vector<String>(fieldSubTable->name().getColumn());
