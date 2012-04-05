@@ -155,7 +155,14 @@ calibrations can be applied on the fly.
 		<allowed kind="enum">
 			<value>nearest</value>
 			<value>linear</value>
-			<value>aipslin</value>
+                        <value>nearest,nearest</value>
+			<value>linear,nearest</value>
+			<value>nearest,linear</value>
+			<value>linear,linear</value>
+			<value>nearest,cubic</value>
+			<value>linear,cubic</value>
+			<value>nearest,spline</value>
+			<value>linear,spline</value>
 			<value></value>
 		</allowed>
 	</param>
@@ -369,11 +376,22 @@ calibrations can be applied on the fly.
                example: gainfield='0~3'
                         gainfield=['0~3','4~6'] means use field 0 through 3
                           from first gain file, field 4 through 6 for second.
-      interp -- Interpolation mode (in time) to use for each gaintable
-                default: '' --&gt; 'linear' for all gaintable(s)
-                example: interp='nearest'
-                         interp=['nearest','linear']
-                Options: 'nearest', 'linear', 'aipslin'
+      interp -- Interpolation type (in time[,freq]) to use for each gaintable.
+                When frequency interpolation is relevant (B, Df, Xf),
+                separate time-dependent and freq-dependent interp
+                types with a comma (freq _after_ the comma).                
+                Specifications for frequency are ignored when the
+                calibration table has no channel-dependence.
+                default: '' --&gt; 'linear,linear' for all gaintable(s)
+                example: interp='nearest'   (in time, freq-dep will be
+                                             linear, if relevant)
+                         interp='linear,cubic'  (linear in time, cubic
+                                                 in freq)
+                         interp=',spline'  (spline in freq; linear in
+                                            time by default)
+                         interp=['nearest,spline','linear']  (for multiple gaintables)
+                Options: Time: 'nearest', 'linear'
+                         Freq: 'nearest', 'linear', 'cubic', 'spline'
       spwmap -- Spectral windows combinations to form for gaintable(s)
                 default: [] (apply solutions from each spw to that spw only)
                 Example:  spwmap=[0,0,1,1] means apply the caltable solutions

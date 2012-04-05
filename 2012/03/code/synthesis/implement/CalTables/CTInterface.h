@@ -58,7 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual const MeasurementSet* asMS() 
     {
       //{throw(AipsError("asMS() called from CTInterface class"));}
-      cerr << "asMS() called from CTInterface class" << endl;
+      //cerr << "asMS() called from CTInterface class" << endl;
       //return static_cast<const MeasurementSet *>(table());
       return NULL;
     }

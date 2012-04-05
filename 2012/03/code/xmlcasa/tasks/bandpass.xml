@@ -80,7 +80,7 @@ is recommended in most applications.
 	</param>
 
         <param type="any" name="solint">
-                <description>Solution interval</description>
+                <description>Solution interval in time[,freq]</description>
                 <any type="variant"/>
                 <value type="string">inf</value>
         </param>
@@ -170,7 +170,14 @@ is recommended in most applications.
 		<allowed kind="enum">
 			<value>nearest</value>
 			<value>linear</value>
-			<value>aipslin</value>
+		        <value>nearest,nearest</value>
+			<value>linear,nearest</value>
+			<value>nearest,linear</value>
+			<value>linear,linear</value>
+			<value>nearest,cubic</value>
+			<value>linear,cubic</value>
+			<value>nearest,spline</value>
+			<value>linear,spline</value>
 			<value></value>
 		</allowed>
 	</param>
@@ -293,14 +300,32 @@ is recommended in most applications.
        msselect -- Optional complex data selection (ignore for now)
 
        --- Solution parameters
-       solint --  Solution interval (units optional) 
-              default: 'inf' (~infinite, up to boundaries controlled by combine); 
-              Options: 'inf' (~infinite), 'int' (per integration), any float
+       solint --  Solution interval in time (units optional), and (optionally)
+                   in frequency.  Frequency pre-averaging can be
+                   specified after a comma in units of channels or Hz.
+                   If nothing is specified for frequency, no freq pre-averaging 
+                   will be done.
+       default: 'inf' (~infinite, up to boundaries controlled by combine,
+                       with no pre-averaging in frequency)
+              Options for time: 'inf' (~infinite), 'int' (per integration), any float
                        or integer value with or without units
+              Options for freq: an integer with 'ch' suffix will enforce
+                                pre-averaging by the specified number
+                                of channels.
+                                a numeric value suffixed with frequency
+                                units (e.g., 'Hz','kHz','MHz') will enforce
+                                pre-averaging by an integral number of 
+                                channels amounting to no more than the
+                                specified bandwidth
               examples: solint='1min'; solint='60s', solint=60 --&gt; 1 minute
                         solint='0s'; solint=0; solint='int' --&gt; per integration
-                        solint-'-1s'; solint='inf' --&gt; ~infinite, up to boundaries
+                        solint='-1s'; solint='inf' --&gt; ~infinite, up to boundaries
                         enforced by combine
+                        solint='inf,8Mhz' --&gt; ~infinite in time, with 
+                                                  8MHz pre-average in freq
+                        solint='int,32ch' --&gt; per-integration in time,
+                                                  with 32-channel pre-average
+                                                  in freq
        combine -- Data axes to combine for solving
               default: 'scan' --&gt; solutions will break at field and spw boundaries,
                         but may extend over multiple scans (per field and spw) up
@@ -367,11 +392,22 @@ is recommended in most applications.
                same syntax as field
                example: gainfield='0~3'
                         gainfield=['0~3','4~6']
-      interp -- Interpolation mode (in time) to use for each gaintable
-                default: '' --&gt; 'linear' for all gaintable(s)
-                example: interp='nearest'
-                         interp=['nearest','linear']
-                Options: 'nearest', 'linear', 'aipslin'
+      interp -- Interpolation type (in time[,freq]) to use for each gaintable.
+                When frequency interpolation is relevant (B, Df, Xf),
+                separate time-dependent and freq-dependent interp
+                types with a comma (freq _after_ the comma).                
+                Specifications for frequency are ignored when the
+                calibration table has no channel-dependence.
+                default: '' --&gt; 'linear,linear' for all gaintable(s)
+                example: interp='nearest'   (in time, freq-dep will be
+                                             linear, if relevant)
+                         interp='linear,cubic'  (linear in time, cubic
+                                                 in freq)
+                         interp=',spline'  (spline in freq; linear in
+                                            time by default)
+                         interp=['nearest,spline','linear']  (for multiple gaintables)
+                Options: Time: 'nearest', 'linear'
+                         Freq: 'nearest', 'linear', 'cubic', 'spline'
       spwmap -- Spectral windows combinations to form for gaintable(s)
                 default: [] (apply solutions from each spw to that spw only)
                 Example:  spwmap=[0,0,1,1] means apply the caltable solutions

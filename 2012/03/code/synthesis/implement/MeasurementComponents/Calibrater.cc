@@ -1587,6 +1587,7 @@ Bool Calibrater::genericGatherAndSolve() {
 
 	// Collapse each timestamp in this chunk according to VisEq
 	//  with calibration and averaging
+	Bool verb(True);
 	for (vi.origin(); vi.more(); vi++) {
 	  
 	  // Force read of the field Id
@@ -1606,6 +1607,16 @@ Bool Calibrater::genericGatherAndSolve() {
 	  // If this solve not freqdep, and channels not averaged yet, do so
 	  if (!svc_p->freqDepMat() && vb.nChannel()>1)
 	    vb.freqAveCubes();
+
+	  if (svc_p->freqDepPar() && 
+	      svc_p->fsolint()!="none" &&
+	      svc_p->fintervalCh()>0.0) {
+	    //	    cout << "svc_p->currSpw() = " << svc_p->currSpw() << endl;
+	    if (verb) cout << "vb.numberChan() = " << vb.nChannel();
+	    vb.channelAve(svc_p->chanAveBounds(spw));
+	    if (verb) cout << "-->" << vb.nChannel() << endl;
+	    verb=False;  // suppress future verbosity
+	  }
 	  
 	  // Accumulate collapsed vb in a time average
 	  //  (only if the vb contains any unflagged data)

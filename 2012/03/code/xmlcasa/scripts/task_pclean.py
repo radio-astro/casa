@@ -1,6 +1,6 @@
 from parallel.pimager import pimager
 import pdb
-from simple_cluster import simple_cluster
+import simple_cluster
 import string
 import commands
 from taskinit import *
@@ -39,8 +39,8 @@ def pclean(vis=None,
            outertaper=None,
            selectdata=None,
            timerange=None,
-           uvrange=None, antenna=None, scan=None, observation=None
-           ):
+           uvrange=None, antenna=None, scan=None, observation=None, pbcorr=None,
+           clusterdef=None):
               
 
     """ Invert and deconvolve images with parallel engines
@@ -120,7 +120,9 @@ def pclean(vis=None,
                 tmppc = phasecenter
             phasecenter = tmppc
                 
-
+    if((clusterdef != '') and os.path.exists(clusterdef)):
+        cl=simple_cluster.simple_cluster() 
+        cl.init_cluster(clusterdef)
 ####checking done
     #I'll assume this machine is representative in memory
     arch=os.uname()[0].lower()
@@ -131,7 +133,7 @@ def pclean(vis=None,
         totmem=string.atof(commands.getoutput('sysctl hw.memsize').split()[1])
 
     
-    cluster=simple_cluster.getCluster()._cluster
+    cluster=simple_cluster.simple_cluster.getCluster()._cluster
     numproc=len(cluster.get_engines())
     numprocperhost=len(cluster.get_engines())/len(cluster.get_nodes()) if (len(cluster.get_nodes()) >0 ) else 1
 
@@ -157,7 +159,8 @@ def pclean(vis=None,
                   contclean=(not overwrite), uvtaper=uvtaper, outertaper=outertaper,
                   timerange=timerange,
                   uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
-                  visinmem=False, maskimage=mask, interactive=interactive, numthreads=1)
+                  visinmem=False, maskimage=mask, interactive=interactive, 
+                  numthreads=1, pbcorr=pbcorr)
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
@@ -191,13 +194,15 @@ def pclean(vis=None,
                       uvtaper=uvtaper, outertaper=outertaper,
                       timerange=timerange,
                       uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
-                      contclean=[(not overwrite), True][interactive and k>0], visinmem=False, numthreads=1)
+                      contclean=[(not overwrite), True][interactive and k>0], visinmem=False, numthreads=1, pbcorr=pbcorr)
             if(interactive and (k < interloop)) :
                 myim,=gentools(['im'])
-                myim.drawmask(imagename+'.residual', mask)
+                retval=myim.drawmask(imagename+'.residual', mask)
                 myim.done()
                 ###make sure the damn images are not kept locked
                 del myim
+                if(retval==2):
+                    break;
 #parallel_clean=pclean
     
 
