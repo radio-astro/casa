@@ -414,13 +414,6 @@ vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	newEstFile.outputFile = &_newEstimatesFileName;
 	newEstFile.required = False;
 	newEstFile.replaceable = True;
-	/*
-	ImageInputProcessor::OutputStruct logFile;
-	logFile.label = "log file";
-	logFile.outputFile = &_logfileName;
-	logFile.required = False;
-	logFile.replaceable = True;
-	*/
 
 	vector<ImageInputProcessor::OutputStruct> outputs(3);
 	outputs[0] = residualIm;
@@ -714,8 +707,8 @@ void ImageFitter::_setSizes() {
 					(
 						xBeamVal*sinPA * xBeamVal*sinPA
 						+ yBeamVal*cosPA * yBeamVal*cosPA
-					)/signalToNoise
-				)
+					)
+				)/signalToNoise
 			)
 		);
 		_minorAxisErrors[i].setValue(
@@ -725,11 +718,10 @@ void ImageFitter::_setSizes() {
 					(
 						xBeamVal*cosPA * xBeamVal*cosPA
 						+ yBeamVal*sinPA * yBeamVal*sinPA
-					)/signalToNoise
-				)
+					)
+				)/signalToNoise
 			)
 		);
-
 		Double posAngleRad = _positionAngles[i].getValue(Unit("rad"));
 		Quantity posAngErrorFromSN = _positionAngles[i] * sqrt(
 				_majorAxisErrors[i]/_majorAxes[i] * _majorAxisErrors[i]/_majorAxes[i]

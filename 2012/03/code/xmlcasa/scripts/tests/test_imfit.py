@@ -308,7 +308,7 @@ class imfit_test(unittest.TestCase):
                     success = False
                     msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
                 got = clist['component0']['shape']['majoraxiserror']['value']
-                expected = 0.09198805
+                expected = 0.0188108125957
                 epsilon = 1e-6
                 if (not near(got, expected, epsilon)):
                     success = False
@@ -322,11 +322,13 @@ class imfit_test(unittest.TestCase):
                 # Minor axis test
                 got = clist['component0']['shape']['minoraxis']['value']
                 expected = 18.86450
+
                 if (not near(got, expected, epsilon)):
                     success = False
                     msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
                 got = clist['component0']['shape']['minoraxiserror']['value']
-                expected = 0.091988052
+                expected = 0.0207481352015
+
                 if (not near(got, expected, epsilon)):
                     success = False
                     msgs += method + "Minor axis error test failure, got " + str(got) + " expected " + str(expected) + "\n"

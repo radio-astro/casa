@@ -493,11 +493,11 @@ namespace casa {
 	    if ( _drawing_points_.size( ) == 0 ) return;
 
 	    int x1, y1, x2, y2;
-	    linear_to_screen( wc_, _drawing_points_[0].first, _drawing_points_[0].second, x1, y1 );
+	    try { linear_to_screen( wc_, _drawing_points_[0].first, _drawing_points_[0].second, x1, y1 ); } catch(...) { return; }
 	      
 	    int first_x = x1, first_y = y1;
 	    for ( unsigned int i=1; i < _drawing_points_.size( ); ++i ) {
-		linear_to_screen( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x2, y2 );
+		try { linear_to_screen( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x2, y2 ); } catch(...) { return; }
 		pc->drawLine(x1,y1,x2,y2);
 		x1 = x2;
 		y1 = y2;
@@ -510,7 +510,7 @@ namespace casa {
 		// get bounding rectangle...
 		double blc_x, blc_y, trc_x, trc_y;
 		boundingRectangle( blc_x, blc_y, trc_x, trc_y );
-		linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 );
+		try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
 
 		// compute handle size...
 		Int w = x2 - x1;
@@ -552,9 +552,13 @@ namespace casa {
 
 		    for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
 			int h_blc_x, h_blc_y, h_trc_x, h_trc_y;
-			linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, _drawing_points_[i].second - handle_delta_y / 2.0,
-					       _drawing_points_[i].first + handle_delta_x / 2.0, _drawing_points_[i].second + handle_delta_y / 2.0,
-					       h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+			try {
+			    linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
+					      _drawing_points_[i].second - handle_delta_y / 2.0,
+					      _drawing_points_[i].first + handle_delta_x / 2.0, 
+					      _drawing_points_[i].second + handle_delta_y / 2.0,
+					      h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+			} catch(...) { return; }
 
 			pc->drawFilledRectangle( h_blc_x, h_blc_y, h_trc_x, h_trc_y );
 		    }
@@ -574,7 +578,7 @@ namespace casa {
 	    Vector<Quantity> yv(_drawing_points_.size( ));
 	    for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
 		double x,y;
-		linear_to_world( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x, y );
+		try { linear_to_world( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x, y ); } catch(...) { return 0; }
 		xv[i] = Quantity(x,units[0]);
 		yv[i] = Quantity(y,units[1]);
 	    }
@@ -621,12 +625,12 @@ namespace casa {
 	    for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
 
 		double wx, wy;
-		linear_to_world( wc_, _drawing_points_[i].first, _drawing_points_[i].second, wx, wy );
+		try { linear_to_world( wc_, _drawing_points_[i].first, _drawing_points_[i].second, wx, wy ); } catch(...) { return; }
 		world_pts[i].first = wx;
 		world_pts[i].second = wy;
 
 		double px, py;
-		linear_to_pixel( wc_, _drawing_points_[i].first, _drawing_points_[i].second, px, py );
+		try { linear_to_pixel( wc_, _drawing_points_[i].first, _drawing_points_[i].second, px, py ); } catch(...) { return; }
 		pixel_pts[i].first = px;
 		pixel_pts[i].second = py;
 	    }

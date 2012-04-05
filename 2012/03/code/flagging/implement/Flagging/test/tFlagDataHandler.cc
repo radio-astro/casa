@@ -91,7 +91,7 @@ void unflag(string inputFile,uShort iterationMode)
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -200,7 +200,7 @@ void flag(string inputFile,uShort iterationMode,uShort testMode,String flagmode,
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -289,7 +289,7 @@ void summary(string inputFile,uShort iterationMode)
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -382,7 +382,7 @@ void display(string inputFile,uShort iterationMode,uShort testMode,Record record
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();

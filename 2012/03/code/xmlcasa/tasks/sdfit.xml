@@ -244,8 +244,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         field -- selection string for selecting scans by name
                 default: '' (no name selection)
                 example: 'FLS3a*'
-                         this selection is in addition to scanlist
-                         and iflist
+                this selection is in addition to scanlist and iflist
         iflist -- list of IF id numbers to select
                 default: [] (use all IFs)
                 example: [15]

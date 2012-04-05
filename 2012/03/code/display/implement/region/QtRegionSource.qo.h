@@ -38,6 +38,7 @@ class QStackedWidget;
 namespace casa {
 
     class QtDisplayPanelGui;
+    class QtDisplayData;
 
     class AnnRectBox;
     class AnnEllipse;
@@ -95,6 +96,7 @@ namespace casa {
 
 	    protected slots:
 		void loadRegions( bool &handled, const QString &path, const QString &type );
+		void updateRegionState(QtDisplayData*);
 
 	    private: 
 

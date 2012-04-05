@@ -45,6 +45,8 @@ namespace casa {
 
 	QtRegionSourceKernel::QtRegionSourceKernel( QtDisplayPanelGui *panel ) : panel_(panel) {
 	    connect( panel_->regionDock( ), SIGNAL(loadRegions( bool &, const QString &, const QString &)), SLOT(loadRegions(bool &, const QString &, const QString &)) );
+	    connect( panel_, SIGNAL(axisToolUpdate(QtDisplayData*)), this, SLOT(updateRegionState(QtDisplayData*)) );
+	    
 	}
 
 	QtRegionSourceKernel::~QtRegionSourceKernel( ) { }
@@ -194,6 +196,10 @@ namespace casa {
 
 	QtRegionDock *QtRegionSourceKernel::dock( ) { return panel_->regionDock( ); }
 	int QtRegionSourceKernel::numFrames( ) const { return panel_->numFrames( ); }
+
+	void QtRegionSourceKernel::updateRegionState(QtDisplayData*) {
+	    generateExistingRegionUpdates( );
+	}
 
 	void QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ) {
 	    if ( ! handled ) {

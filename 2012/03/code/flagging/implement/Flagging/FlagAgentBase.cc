@@ -164,8 +164,8 @@ FlagAgentBase::initialize()
    // Initialize counters
    chunkFlags_p = 0;
    chunkNaNs_p = 0;
-   msFlags_p = 0;
-   msNaNs_p = 0;
+   tableFlags_p = 0;
+   tableNaNs_p = 0;
    visBufferFlags_p = 0;
 
    //// Initialize configuration ////
@@ -185,7 +185,7 @@ FlagAgentBase::initialize()
    flag_p = true;
    /// Mapping config
    dataColumn_p = "data";
-   expression_p = "ABS 1";
+   expression_p = "ABS ALL";
    dataReference_p = DATA;
    /// Profiling and testing config
    profiling_p = false;
@@ -1243,7 +1243,7 @@ FlagAgentBase::isZero(Double number)
 bool
 FlagAgentBase::isNaN(Float number)
 {
-	bool result = isnan(number);
+	bool result = !isfinite(number);
 	chunkNaNs_p += result;
 	return result;
 }
@@ -1251,7 +1251,7 @@ FlagAgentBase::isNaN(Float number)
 bool
 FlagAgentBase::isNaN(Double number)
 {
-	bool result = isnan(number);
+	bool result = !isfinite(number);
 	chunkNaNs_p += result;
 	return result;
 }
@@ -1264,7 +1264,7 @@ FlagAgentBase::chunkSummary()
 	// With this check we skip cases like summary or display
 	if (chunkFlags_p > 0)
 	{
-		msFlags_p +=  chunkFlags_p;
+		tableFlags_p +=  chunkFlags_p;
 		if (flag_p)
 		{
 			*logger_p << logLevel_p << "=> "  << "Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
@@ -1280,7 +1280,7 @@ FlagAgentBase::chunkSummary()
 	// we should not have NaNs, so it is better not to print this log if possible
 	if (chunkNaNs_p > 0)
 	{
-		msNaNs_p += chunkNaNs_p;
+		tableNaNs_p += chunkNaNs_p;
 		*logger_p << logLevel_p << "=> "  << "Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
 	}
 
@@ -1291,30 +1291,30 @@ FlagAgentBase::chunkSummary()
 }
 
 void
-FlagAgentBase::msSummary()
+FlagAgentBase::tableSummary()
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	// With this check we skip cases like summary or display
-	if (msFlags_p > 0)
+	if (tableFlags_p > 0)
 	{
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> "  << "Total data flagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << "Percentage of data flagged in table selection: " <<  100.0*tableFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> "  << "Total data unflagged in MS: " <<  100.0*msFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << logLevel_p << "=> "  << "Percentage of data un-flagged in table selection: " <<  100.0*tableFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 	}
 
-	if (msNaNs_p > 0)
+	if (tableNaNs_p > 0)
 	{
-		*logger_p << logLevel_p << "=> "  << "Total number NaNs detected in MS: " <<  (Double)msNaNs_p << LogIO::POST;
+		*logger_p << logLevel_p << "=> "  << "Total number NaNs detected in table selection: " <<  (Double)tableNaNs_p << LogIO::POST;
 	}
 
-	msFlags_p = 0;
-	msNaNs_p = 0;
+	tableFlags_p = 0;
+	tableNaNs_p = 0;
 	return;
 }
 
@@ -2334,11 +2334,11 @@ void FlagAgentList::chunkSummary()
 	return;
 }
 
-void FlagAgentList::msSummary()
+void FlagAgentList::tableSummary()
 {
 	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
-		(*iterator_p)->msSummary();
+		(*iterator_p)->tableSummary();
 	}
 
 	return;
