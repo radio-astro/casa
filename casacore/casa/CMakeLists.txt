@@ -205,6 +205,7 @@ casa_casa
 ${de_libraries}
 ${libm}
 dl
+${Boost_LIBRARIES}
 )
 
 install (
@@ -566,6 +567,7 @@ Utilities/Template.h
 Utilities/Template.tcc
 Utilities/ValType.h
 Utilities/ValTypeId.h
+${CMAKE_BINARY_DIR}/casa/Utilities/CasaThreadNeutrality.h
 DESTINATION include/casacore/casa/Utilities
 )
 

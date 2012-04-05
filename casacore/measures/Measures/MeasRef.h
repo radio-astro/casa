@@ -179,7 +179,7 @@ private:
   public:
     // Constructor
     // <note role=warning> Next one must be in-line for (some?) compilers </note>
-    RefRep() : type(Ms::DEFAULT), offmp(0), frame(), cnt(1) {}
+    RefRep() : type(Ms::DEFAULT), offmp(0), frame() {}
     // Destructor
     // <note role=warning> Next one must be in-line for (some?) compilers </note>
     ~RefRep() {delete offmp;} 
@@ -192,12 +192,11 @@ private:
     // Reference frame
     MeasFrame frame;
     // </group>
-    // Usage count
-    Int cnt;
   };
   
   //# Data
-  RefRep *rep;
+  Bool empty_p;
+  CountedPtr<RefRep> rep_p;
   
   //# Member functions
   // Create an instance of MeasRef
