@@ -386,7 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 // (fieldExpr_p != "")     ||     
 	 // (antennaExpr_p != "")     || 
 	 (timeExpr_p != "") ||         // Will be opened-up for CalTables in the future
-	 (spwExpr_p != "")  ||         // Will be opened-up for CalTables in the future
+	 // (spwExpr_p != "")  ||         // Will be opened-up for CalTables in the future
 	 (scanExpr_p != "") || (observationExpr_p != "") || (arrayExpr_p != "") || (uvDistExpr_p != "") ||
 	 (taqlExpr_p != "") || (polnExpr_p != "")        || (stateExpr_p != "")
 	 ))
