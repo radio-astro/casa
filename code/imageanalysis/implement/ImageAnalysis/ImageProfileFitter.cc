@@ -1767,6 +1767,7 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 		if (
 			amp < _goodAmpRange[0]
 			|| amp > _goodAmpRange[1]
+			|| fabs(pcf->getAmplErr()/amp) > 100
 		) {
 			return False;
 		}
@@ -1782,9 +1783,10 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 	}
 	if (_goodFWHMRange.size() == 2) {
 		Double fwhm = pcf->getFWHM();
-		if (
+        if (
 			fwhm < _goodFWHMRange[0]
 			|| fwhm > _goodFWHMRange[1]
+			|| fabs(pcf->getFWHMErr()/fwhm) > 100
 		) {
 			return False;
 		}

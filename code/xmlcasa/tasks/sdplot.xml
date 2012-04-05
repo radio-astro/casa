@@ -387,28 +387,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         scanlist -- list of scan numbers to process
                 default: [] (use all scans)
                 example: [21,22,23,24]
-                         this selection is in addition to field
-                         iflist, pollist, and beamlist
+                this selection is in addition to field, iflist, pollist,
+                and beamlist
         field -- selection string for selecting scans by name
                 default: '' (no name selection)
                 example: 'FLS3a*'
-                         this selection is in addition to scanlist
-                         iflist, pollist, and beamlist
+                this selection is in addition to scanlist, iflist, pollist,
+                and beamlist
         iflist -- list of IF id numbers to select
                 default: [] (use all IFs)
                 example: [15]
-                         this selection is in addition to scanlist
-                         field, pollist, and beamlist
+                this selection is in addition to scanlist, field, pollist,
+                and beamlist
         pollist -- list of polarization id numbers to select
                 default: [] (use all polarizations)
                 example: [1]
-                         this selection is in addition to scanlist,
-                         field, iflist, and beamlist
+                this selection is in addition to scanlist, field, iflist,
+                and beamlist
         beamlist -- list of beam id numbers to select
                 default: [] (use all beams)
                 example: [1]
-                         this selection is in addition to scanlist,
-                         field, iflist, and pollist
+                this selection is in addition to scanlist, field, iflist,
+                and pollist
         scanaverage -- average integs within scans
                 options: (bool) True,False
                 default: False
@@ -537,8 +537,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (str) filename.eps,.ps,.png
                 default: '' (no hardcopy)
                 example: 'specplot.eps','specplot.png'
-                         Note this autodetects the format from
-                         the suffix (.eps,.ps,.png).
+                Note this autodetects the format from the suffix (.eps,.ps,.png).
         overwrite -- overwrite the output file if already exists
                 options: (bool) True,False
                 default: False

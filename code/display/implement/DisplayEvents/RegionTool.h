@@ -40,6 +40,8 @@ namespace casa {
 	    typedef std::set<viewer::Region*> region_list_type;
 	    typedef std::map<viewer::Region*,viewer::Region::PointInfo> region_map_type;
 
+	    enum RegionToolTypes { POLYTOOL, RECTTOOL, POINTTOOL, ELLIPSETOOL };
+
 	    class State {
 		public:
 		    State( WorldCanvas *wc, double X, double Y ) : wc_(wc), x_(X), y_(Y), refresh_count(0) {  }
@@ -108,6 +110,8 @@ namespace casa {
 	    // because they see a double-click from both the RegionToolManager and MultiWCTool)...
 	    void enable() { }
 	    void disable() { }
+
+	    virtual RegionToolTypes type( ) const = 0;
 
     };
 }

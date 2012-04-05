@@ -23,7 +23,7 @@ namespace casa {
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 	    double wx, wy;
-	    linear_to_world( wc_, (blc_x + trc_x) / 2.0, (blc_y + trc_y) / 2.0, wx, wy );
+	    try { linear_to_world( wc_, (blc_x + trc_x) / 2.0, (blc_y + trc_y) / 2.0, wx, wy ); } catch(...) { return 0; }
 	    const Vector<String> &units = wc_->worldAxisUnits( );
 
 	    Quantity qx( wx, units[0] );
@@ -31,7 +31,7 @@ namespace casa {
 
 	    Quantity minor, major, rot;
 	    double wblc_x, wblc_y, wtrc_x, wtrc_y;
-	    linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
+	    try { linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y ); } catch(...) { return 0; }
 	    // The position angle (rot) is the angle between north and the major axis of the
 	    // ellipse, measured to the east (clockwise in standard astronomical coordinates
 	    //  where the longitude increases with decreasing x).
@@ -89,8 +89,8 @@ namespace casa {
 
 	    int x1, y1, x2, y2;
 	    int cx, cy;
-	    linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 );
-	    linear_to_screen( wc_, center_x, center_y, cx, cy );
+	    try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
+	    try { linear_to_screen( wc_, center_x, center_y, cx, cy ); } catch(...) { return; }
 
 	    pc->drawEllipse(cx, cy, cx - x1, cy - y1, 0.0, True, 1.0, 1.0);
 

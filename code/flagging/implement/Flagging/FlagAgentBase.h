@@ -67,7 +67,7 @@ public:
 	void terminate ();
 	void queueProcess();
 	void chunkSummary();
-	void msSummary();
+	void tableSummary();
 	void completeProcess();
 	void * run ();
 
@@ -182,8 +182,8 @@ protected:
 	// Flag counters
 	uInt64 chunkFlags_p;
 	uInt64 chunkNaNs_p;
-	uInt64 msFlags_p;
-	uInt64 msNaNs_p;
+	uInt64 tableFlags_p;
+	uInt64 tableNaNs_p;
 	uInt64 visBufferFlags_p;
 	bool flagRow_p;
 
@@ -285,7 +285,7 @@ class FlagAgentList
 		void join ();
 		void apply(bool sequential = false);
 		void chunkSummary();
-		void msSummary();
+		void tableSummary();
 		void setProfiling(bool enable);
 		void setCheckMode(bool enable);
 

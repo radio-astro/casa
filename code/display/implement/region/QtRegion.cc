@@ -161,6 +161,10 @@ namespace casa {
 
 	void QtRegion::refresh_statistics_event( bool visible ) {
 	    statistics_visible = visible;
+	    if ( hold_signals ) {
+		held_signals[RegionChangeStatsUpdate] = true;
+		return;
+	    }
 	    updateStateInfo( false );
 	}
 
@@ -312,6 +316,10 @@ namespace casa {
 		    signal_region_change(RegionChangeLabel);
 		}
 	    }
+
+	    if ( held_signals[RegionChangeStatsUpdate] )
+		updateStateInfo( false );
+
 	    clear_signal_cache( );
 	}
 

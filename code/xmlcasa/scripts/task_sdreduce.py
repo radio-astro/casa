@@ -12,7 +12,7 @@ from sdcal import sdcal
 from sdsmooth import sdsmooth
 from sdbaseline import sdbaseline
 
-def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 
         a=inspect.stack()
         stacklevel=0
@@ -117,7 +117,7 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler,
               #sdsmooth.defaults()
               tmpoutfile = sdsmoothout 
               #sdsmooth(infile=tmpinfile, kernel=kernel, kwidth=kwidth, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
-              sdsmooth(infile=tmpinfile, antenna=antenna, kernel=kernel, kwidth=kwidth, verify=verifysm, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
+              sdsmooth(infile=tmpinfile, antenna=antenna, kernel=kernel, kwidth=kwidth, chanwidth=chanwidth, verify=verifysm, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
               tmpinfile = tmpoutfile
               #tmpfilelist+=tmpoutfile+' '
               if not os.path.exists(tmpinfile):

@@ -204,7 +204,7 @@ namespace casa {
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 	    double wblc_x, wblc_y, wtrc_x, wtrc_y;
-	    linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
+	    try { linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y ); } catch(...) { return 0; }
 	    const Vector<String> &units = wc_->worldAxisUnits( );
 
 	    Quantity qblc_x( wblc_x, units[0] );
@@ -249,10 +249,10 @@ namespace casa {
 	    type = RectRegion;
 
 	    double wblc_x, wblc_y, wtrc_x, wtrc_y;
-	    linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
+	    try { linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y ); } catch(...) { return; }
 
 	    double pblc_x, pblc_y, ptrc_x, ptrc_y;
-	    linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y );
+	    try { linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y ); } catch(...) { return; }
 
 	    pixel_pts.resize(2);
 	    pixel_pts[0].first = pblc_x;
@@ -275,7 +275,7 @@ namespace casa {
 	    if(pc==0) return;
 
 	    int x1, y1, x2, y2;
-	    linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 );
+	    try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
 	    pc->drawRectangle( x1, y1, x2, y2 );
 
 	    if ( selected ) {
@@ -362,7 +362,7 @@ namespace casa {
 	    RegionInfo::stats_t *result = new RegionInfo::stats_t( );
 	  
 	    Vector<Double> pos(2);
-	    linear_to_world( wc_, x, y, pos[0], pos[1] );
+	    try { linear_to_world( wc_, x, y, pos[0], pos[1] ); } catch(...) { return result; }
 
 	    bool ok = msar->showPosition( *result, pos );
 	    return result;

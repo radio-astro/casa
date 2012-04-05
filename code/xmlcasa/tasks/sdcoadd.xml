@@ -208,7 +208,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (bool) True,False
                 default: False
                 example: if True, this happens in read-in
-                         For GBT, set False!
+                For GBT, set False!
         timeaverage -- average times for multiple scan cycles
                 options: (bool) True,False
                 default: False

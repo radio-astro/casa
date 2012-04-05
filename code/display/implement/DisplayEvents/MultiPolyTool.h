@@ -123,6 +123,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const std::string &label, const std::string &font, int font_size, int font_style,
 			 const std::string &font_color, const std::string &line_color, viewer::Region::LineStyle line_style, bool );
 
+	    RegionToolTypes type( ) const { return POLYTOOL; }
+
 	protected:
 
 	    // Functions called by the base class event handling operators--and
