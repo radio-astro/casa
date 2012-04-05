@@ -10,7 +10,7 @@
 // compiles using casacore (e.g., casa itself) will
 // have symbols defined the same was as in the casacore
 // build.  This provides a coordination between the
-// casa and casacore build with out introducing to
+// casa and casacore build with out introducing too
 // much coupling.  -- Jim Jacobs 2012-03-01
 
 #if ! defined (CASA_THREAD_NEUTRALITY_H)
