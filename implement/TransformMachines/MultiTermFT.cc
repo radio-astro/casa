@@ -376,7 +376,7 @@ void MultiTermFT::initMaps(const VisBuffer& vb){
   //---------------------------------------------------------------------------------------------------
   Bool MultiTermFT::fromRecord(String& error, const RecordInterface& inRec)
   {
-    if(dbg_p) cout << "MTFT :: fromRecord for term " << thisterm_p << endl;
+    
     Bool retval = True;
     
     if(!FTMachine::fromRecord(error, inRec))
@@ -391,6 +391,7 @@ void MultiTermFT::initMaps(const VisBuffer& vb){
     inRec.get("subftname",subFTMname_p);
     inRec.get("nterms",nterms_p);
     inRec.get("thisterm",thisterm_p);
+    //if(dbg_p) cout << "MTFT :: fromRecord for term " << thisterm_p << endl;
     inRec.get("reffreq",reffreq_p);
     inRec.get("dbg", dbg_p);
     inRec.get("dotime", dotime_p);
