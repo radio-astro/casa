@@ -1172,9 +1172,9 @@ class cleanhelper:
             if(len(restoringbeam)==3):
                 resbpa=qa.quantity(restoringbeam[2], 'deg')
                 if(resbpa['unit']==''):
-                    resbmin=restoringbeam[2]+'deg'
+                    resbpa=restoringbeam[2]+'deg'
         if((resbmaj != '') and (resbmin != '')):
-           self.im.setbeam(resbmaj, resbmin, resbpa)
+           self.im.setbeam(bmaj=resbmaj, bmin=resbmin, bpa=resbpa)
         
     def convertmodelimage(self, modelimages=[], outputmodel='',imindex=0):
         """
